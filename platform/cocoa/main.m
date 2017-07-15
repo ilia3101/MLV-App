@@ -51,6 +51,7 @@ NSWindow * window;
 int frameChanged;
 /* What frame we r on */
 int currentFrameIndex;
+double frameSliderPosition;
 /* To pause frame drawing, above 0 = paused */
 int dontDraw;
 
@@ -182,7 +183,7 @@ int NSApplicationMain(int argc, const char * argv[])
     processingSetExposureStops(processingSettings, 1.2);
     /* Link video with processing settings */
     setMlvProcessing(videoMLV, processingSettings);
-    /* Limit frame cache to suitable amount of RAM (~33% at 8GB and below ~50% at 16GB and up and up) */
+    /* Limit frame cache to suitable amount of RAM (~33% at 8GB and below, ~50% at 16GB, then up and up) */
     cacheSizeMB = (int)(0.66666f * (float)(MAC_RAM - 4000));
     if (MAC_RAM < 7500) cacheSizeMB = MAC_RAM * 0.33;
     NSLog(@"Cache size = %iMB, or %i percent of RAM", cacheSizeMB, (int)((float)cacheSizeMB / (float)MAC_RAM * 100));
@@ -196,10 +197,11 @@ int NSApplicationMain(int argc, const char * argv[])
 
     /* ...lets start at 5D2 resolution because that's my camera */
 
-    int imageSize = 1880 * 1056 * 3;
-
-    /* This will be freed and allocated soo many times */
-    rawImage = malloc( imageSize );
+    { 
+        int imageSize = 1880 * 1056 * 3;
+        /* This will be freed and allocated soo many times */
+        rawImage = malloc( imageSize ); 
+    }
 
     /* NSBitmapImageRep lets you display bitmap data n stuff in CrApple things like NSImageView */
     rawBitmap = [ [NSBitmapImageRep alloc] 

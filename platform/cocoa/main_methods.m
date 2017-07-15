@@ -44,6 +44,7 @@ extern int dontDraw;
 
 /* What frame we r on */
 extern int currentFrameIndex;
+extern double frameSliderPosition;
 
 /* We always set MLV object to this amount of cache */
 extern int cacheSizeMB;
@@ -137,8 +138,8 @@ extern int cacheSizeMB;
 
                 /* Allow drawing frames */
                 dontDraw = 0;
-                /* All MLV frames have at least one frame, so this should be safe */
-                currentFrameIndex = 0;
+                /* Set current frame where slider is at */
+                currentFrameIndex = (int)( frameSliderPosition * (getMlvFrames(videoMLV)-1) );
                 /* So view updates and shows new clip */
                 frameChanged++;
 
@@ -189,6 +190,7 @@ extern int cacheSizeMB;
 -(void)timelineSliderMethod
 {
     currentFrameIndex = (int)( [self doubleValue] * (getMlvFrames(videoMLV)-1) );
+    frameSliderPosition = [self doubleValue];
 
     frameChanged++;
 }

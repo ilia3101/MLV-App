@@ -8,6 +8,7 @@ NSTextField * labelName = [ \
     initWithFrame: NSMakeRect( RIGHT_SIDEBAR_LABEL(slotNumber, ELEMENT_HEIGHT, offset) ) \
 ]; \
 [labelName setLabelStyle]; /* From useful_methods.h */ \
+/*[labelName setFont:[NSFont fontWithName:@"Helvetica" size:12.7]];*/ \
 [labelName anchorTop: YES]; \
 [labelName anchorRight: YES]; \
 [labelName setStringValue: labelString]; \
