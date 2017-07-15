@@ -89,6 +89,8 @@ void cache_mlv_frames(mlvObject_t * video)
         /* Only debayer if frame is not already cached and has not been requested to stop */
         if (!video->cached_frames[frame_index] && !video->stop_caching)
         {
+            video->currently_caching = frame_index;
+
             /* Use memory within our block */
             video->rgb_raw_frames[frame_index] = video->cache_memory_block + (frame_size_rgb * frame_index);
 

@@ -151,11 +151,18 @@ void getMlvRawFrameDebayered(mlvObject_t * video, int frameIndex, uint16_t * out
     {
         memcpy(outputFrame, video->rgb_raw_frames[frameIndex], frame_size);
     }
+    /* Maybe this frame is currently being cached... */
+    else if (video->is_caching && (video->currently_caching == frameIndex))
+    {
+        /* Wait until frame/caching is done... TODO: maybe use mutex or soemhting in the future */
+        while ((video->currently_caching == frameIndex) || !video->is_caching) usleep(100);
+        memcpy(outputFrame, video->rgb_raw_frames[frameIndex], frame_size);
+    }
     /* Else do debayering etc */
     else
     {
         float * raw_frame = malloc(width * height * sizeof(float));
-        get_mlv_raw_frame_debayered(video, frameIndex, raw_frame, outputFrame, 0);
+        get_mlv_raw_frame_debayered(video, frameIndex, raw_frame, outputFrame, doesMlvAlwaysUseAmaze(video));
         free(raw_frame);
     }
 }
@@ -180,7 +187,7 @@ void getMlvProcessedFrame8(mlvObject_t * video, int frameIndex, uint8_t * output
     getMlvRawFrameDebayered(video, frameIndex, unprocessed_frame);
 
     /* Do processing.......... */
-    applyProcessingObject( video->processing, 
+    applyProcessingObject( video->processing,
                            width, height,
                            unprocessed_frame,
                            processed_frame );
@@ -239,9 +246,7 @@ void freeMlvObject(mlvObject_t * video)
     /* Free all memory */
     free(video->frame_offsets);
 
-    /*** Free cache stuff ***/
-
-    /* make sure its stopped using silly trick */
+    /* Stop caching and make sure using silly sleep trick */
     video->stop_caching = 1;
     while (video->is_caching) usleep(100);
 

@@ -60,6 +60,12 @@ typedef struct {
     /* Will be set to 1 for cache thread to stop (probably only by freeMlvObject) */
     int stop_caching;
 
+    /* Decides whether or not AMaZE *has* to be used or not, normally disabled for smooth playback */
+    int use_amaze;
+
+    /* If a frame is currently being cached in the background this will indicate which frame index, so frame request can wait for it to finish */
+    int currently_caching;
+
     /* Basically how much we can cache(can be set by MB or frames or bytes) */
     uint64_t cache_limit_bytes;
     uint64_t cache_limit_frames;

@@ -20,7 +20,7 @@ mlvObject_t * initMlvObject();
 /* Prints everything you'll ever need to know */
 void printMlvInfo(mlvObject_t * video);
 
-/* Reads an MLV file in to a video object(mlvObject_t struct) 
+/* Reads an MLV file in to a video object(mlvObject_t struct)
  * only puts frame indexes and metadata in to the mlvObject_t, 
  * no debayering or processing */
 void openMlvClip(mlvObject_t * video, char * mlvPath);
@@ -78,12 +78,21 @@ void getMlvNiceXyzToRgbMatrix(mlvObject_t * video, double * outputMatrix);
 /* Useful setting macros (functions) */
 
 /* Set/reset framerate */
-#define setMlvFramerateCustom(video, newFramerate) (video)->frame_rate = (newFramerate)
+#define setMlvFramerateCustom(video, newFrameRate) (video)->frame_rate = (newFrameRate)
 #define setMlvFramerateDefault(video) (video)->frame_rate = (video)->frame_rate_default
 
 /* How many cores CPU has (defaultly set to 4 which works from laptop i5 up to big i7) */
 #define setMlvCpuCores(video, cores) (video)->cpu_cores = (cores)
 #define getMlvCpuCores(video) (video)->cpu_cores
+
+/* Use setMlvAlwaysUseAmaze() to always get AMaZE frames, for best quality always */
+#define setMlvAlwaysUseAmaze(video) (video)->use_amaze = 1
+/* Or this one for speed/ultimate playback performance, will give AMaZE if it is in cache, 
+ * or bilinear if cached AMaZE frame is not avalible in cache */
+#define setMlvDontAlwaysUseAmaze(video) (video)->use_amaze = 0
+
+/* This is pretty much private */
+#define doesMlvAlwaysUseAmaze(video) (video)->use_amaze
 
 
 /******************************** 
