@@ -59,7 +59,7 @@ void getMlvRawFrameFloat(mlvObject_t * video, int frameIndex, float * outputFram
             break;
 
         case 12:
-            /* 8 pixels every 14 bytes */
+            /* 8 pixels every 12 bytes */
             for (int raw_byte = 0; raw_byte < raw_frame_size; raw_byte += 12)
             {
                 /* Use the raw_pixblock struct to split up the bytes into parts of pixels */
@@ -82,7 +82,7 @@ void getMlvRawFrameFloat(mlvObject_t * video, int frameIndex, float * outputFram
             break;
 
         case 10:
-            /* 8 pixels every 14 bytes */
+            /* 8 pixels every 10 bytes */
             for (int raw_byte = 0; raw_byte < raw_frame_size; raw_byte += 10)
             {
                 /* Use the raw_pixblock struct to split up the bytes into parts of pixels */
