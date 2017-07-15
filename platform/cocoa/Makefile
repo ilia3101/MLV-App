@@ -3,15 +3,16 @@ appname = "MLV App"
 
 # List of all objects to link
 objects = main.o video_mlv.o debayer.o amaze_demosaic.o raw_processing.o \
-	      main_methods.o useful_methods.o background_thread.o matrix.o camera_matrices.o
+	      main_methods.o useful_methods.o background_thread.o matrix.o \
+		  camera_matrices.o frame_caching.o
 
 # Compiler
 CC = gcc # Normal
 
 # Flags for link and objects
 mainflags = -O3 -Ofast
-linkflags = $(mainflags) -mmacosx-version-min=10.5
-cflags := $(mainflags) -c
+linkflags = $(mainflags) -mmacosx-version-min=10.6 -lm -pthread
+cflags := $(mainflags) -c -mmacosx-version-min=10.6
 
 # Link all objects with main flags
 main : $(objects)
@@ -32,6 +33,9 @@ useful_methods.o : gui_stuff/useful_methods.m
 
 video_mlv.o : ../../src/mlv/video_mlv.c
 	$(CC) $(cflags) ../../src/mlv/video_mlv.c
+
+frame_caching.o : ../../src/mlv/frame_caching.c
+	$(CC) $(cflags) ../../src/mlv/frame_caching.c
 
 camera_matrices.o : ../../src/mlv/camera_matrices.c
 	$(CC) $(cflags) ../../src/mlv/camera_matrices.c

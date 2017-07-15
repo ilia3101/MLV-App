@@ -32,6 +32,14 @@ void mapMlvFrames(mlvObject_t * video, int limit);
 /* Frees all memory and closes file */
 void freeMlvObject(mlvObject_t * video);
 
+/* For setting how much can be cached - "MegaBytes" == MebiBytes (thanks dmilligan) */
+void setMlvRawCacheLimitMegaBytes(mlvObject_t * video, uint64_t megaByteLimit);
+void setMlvRawCacheLimitFrames(mlvObject_t * video, uint64_t frameLimit);
+/* Useful maybe */
+#define getMlvRawCacheLimitMegaBytes(video) (video)->cache_limit_mb
+/* And here's an UNUSED (at this moment) macrofuntion - ignored */
+#define setMlvCacheStartFrame(video, startFrame) (video)->cache_start_frame = (startFrame)
+
 /* Links processing settings() with an MLV object */
 void setMlvProcessing(mlvObject_t * video, processingObject_t * processing);
 
@@ -44,6 +52,9 @@ void getMlvProcessedFrame16(mlvObject_t * video, int frameIndex, uint16_t * outp
  * Needs memory to return to, sized: sizeof(float) * getMlvHeight(urvid) * getMlvWidth(urvid)
  * Output values will be in range 0-65535 (16 bit), float is only because AMAzE uses it */
 void getMlvRawFrameFloat(mlvObject_t * video, int frameIndex, float * outputFrame);
+
+/* Gets a debayered 16 bit frame - used in getMlvProcessedFrame8 and 16 (when that begins to exist) */
+void getMlvRawFrameDebayered(mlvObject_t * video, int frameIndex, uint16_t * outputFrame);
 
 /* Used for processing, gets the matrix that does camera -> XYZ */
 void getMlvXyzToCameraMatrix(mlvObject_t * video, double * outputMatrix);
@@ -67,17 +78,27 @@ void getMlvNiceXyzToRgbMatrix(mlvObject_t * video, double * outputMatrix);
 /* Useful setting macros (functions) */
 
 /* Set/reset framerate */
-#define setMlvFramerateCustom(mlvObject, newFramerate) (mlvObject)->frame_rate = (newFramerate)
-#define setMlvFramerateDefault(mlvObject) (mlvObject)->frame_rate = (mlvObject)->frame_rate_default
+#define setMlvFramerateCustom(video, newFramerate) (video)->frame_rate = (newFramerate)
+#define setMlvFramerateDefault(video) (video)->frame_rate = (video)->frame_rate_default
 
-/* How many MB can be used to cache RAW images(debayered but unprocessed) */
-#define setMlvCacheStartFrame(mlvObject, startFrame) (mlvObject)->cache_start_frame = (startFrame)
-/* How many MegaBytes can be cached */
-#define setMlvRawCacheLimit(mlvObject, megaByteLimit) (mlvObject)->cache_limit_mb = (megaByteLimit)
+/* How many cores CPU has (defaultly set to 4 which works from laptop i5 up to big i7) */
+#define setMlvCpuCores(video, cores) (video)->cpu_cores = (cores)
+#define getMlvCpuCores(video) (video)->cpu_cores
 
-/* How many cores CPU has (defaultly set to 4 which works for laptop i5 to big i7) */
-#define setMlvCpuCores(mlvObject, cores) (mlvObject)->cpu_cores = (cores)
-#define getMlvCpuCores(mlvObject) (mlvObject)->cpu_cores
+
+/******************************** 
+ ********* PRIVATE AREA *********
+ ********************************/
+
+void cache_mlv_frames(mlvObject_t * video);
+
+/* Gets a debayered frame; how is it different from getMlvRawFrameDebayered?... it doesn't get it from cache ever
+ * also you must allocate it some temporary memory because that's how it works and you shouldnt be looking anyway */
+void get_mlv_raw_frame_debayered( mlvObject_t * video, 
+                                  int frame_index, 
+                                  float * temp_memory, 
+                                  uint16_t * output_frame, 
+                                  int debayer_type ); /* Debayer type: 0=bilinear 1=amaze */
 
 
 #endif

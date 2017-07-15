@@ -45,6 +45,8 @@ extern int dontDraw;
 /* What frame we r on */
 extern int currentFrameIndex;
 
+/* We always set MLV object to this amount of cache */
+extern int cacheSizeMB;
 
 /* Button methods */
 
@@ -98,7 +100,7 @@ extern int currentFrameIndex;
                 setMlvProcessing(videoMLV, processingSettings);
 
                 /* Limit frame cache to 38% of RAM size (its fast anyway) */
-                setMlvRawCacheLimit(videoMLV, (int)(MAC_RAM * 0.38));
+                setMlvRawCacheLimitMegaBytes(videoMLV, (uint64_t)(cacheSizeMB));
                 /* Tell it how many cores we habe so it can be optimal */
                 setMlvCpuCores(videoMLV, MAC_CORES);
 
@@ -147,6 +149,7 @@ extern int currentFrameIndex;
     } ];
 }
 
+/* (unfinished btw) */
 -(void)exportBmpSequence 
 {
     /* Create open panel */
@@ -213,8 +216,6 @@ extern int currentFrameIndex;
      * of the slider, and it can go down to 0.0 and up to 3.6 */
     double saturationSliderValue = [self doubleValue] * 2.0;
     double saturationValue = pow( saturationSliderValue, log(3.6)/log(2.0) );
-
-    NSLog(@"saturationValue: %f", saturationValue);
 
     /* Yea whatever */
     processingSetSaturation(processingSettings, saturationValue);

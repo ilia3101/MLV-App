@@ -28,8 +28,8 @@ void debayerAmaze(uint16_t * debayerto, float * bayerdata, int width, int height
     float ** blue2d = (float **)malloc(height * sizeof(float *));
     for (int y = 0; y < height; ++y) blue2d[y] = (float *)(blue1d+(y*width));
 
-    /* If threads is 1 just do a normal amaze */
-    if (threads == 1)
+    /* If threads is < 2 just do a normal amaze */
+    if (threads < 2)
     {
         /* run the Amaze */
         demosaic( & (amazeinfo_t) {
