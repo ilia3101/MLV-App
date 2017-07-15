@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <pthread.h>
 
 #include "video_mlv.h"
@@ -139,36 +140,44 @@ void setMlvProcessing(mlvObject_t * video, processingObject_t * processing)
     /* DONE? */
 }
 
+void getMlvRawFrameDebayered(mlvObject_t * video, int frameIndex, uint16_t * outputFrame)
+{
+    int width = getMlvWidth(video);
+    int height = getMlvHeight(video);
+    int frame_size = width * height * sizeof(uint16_t) * 3;
+
+    /* If frame is cached just giv it */
+    if (video->cached_frames[frameIndex])
+    {
+        memcpy(outputFrame, video->rgb_raw_frames[frameIndex], frame_size);
+    }
+    /* Else do debayering etc */
+    else
+    {
+        float * raw_frame = malloc(width * height * sizeof(float));
+        get_mlv_raw_frame_debayered(video, frameIndex, raw_frame, outputFrame, 0);
+        free(raw_frame);
+    }
+}
+
 /* Get a processed frame in 8 bit */
 void getMlvProcessedFrame8(mlvObject_t * video, int frameIndex, uint8_t * outputFrame)
 {
     /* Useful */
-    int width = video->RAWI.xRes;
-    int height = video->RAWI.yRes;
+    int width = getMlvWidth(video);
+    int height = getMlvHeight(video);
 
     /* How many bytes is RAW frame */
     int raw_frame_size = width * height;
     int rgb_frame_size = raw_frame_size * 3;
 
-    /* Memory for RAW data */
-    float * raw_frame = malloc( raw_frame_size * sizeof(float) );
     /* Unprocessed debayered frame (RGB) */
     uint16_t * unprocessed_frame = malloc( rgb_frame_size * sizeof(uint16_t) );
     /* Processed frame (RGB) */
     uint16_t * processed_frame = malloc( rgb_frame_size * sizeof(uint16_t) );
 
     /* Get the raw data in B&W */
-    getMlvRawFrameFloat(video, frameIndex, raw_frame);
-
-    /* Debayering is done before ANYTHING, black or white level correction,
-     * exposure etc is done after, so that debayered but unprocessed frames 
-     * can be stored and don't have to be demosaiced again for small changes */
-
-    /* Debayer - using ~75% of cores (why this fixes the BIG pink stripes? ...how would i know) */
-    debayerAmaze(unprocessed_frame, raw_frame, width, height, (int)((float)getMlvCpuCores(video) * 0.75f));
-
-    /* Finished */
-    free(raw_frame);
+    getMlvRawFrameDebayered(video, frameIndex, unprocessed_frame);
 
     /* Do processing.......... */
     applyProcessingObject( video->processing, 
@@ -201,12 +210,12 @@ mlvObject_t * initMlvObjectWithClip(char * mlvPath)
  * resize it, simply do free followed by malloc */
 mlvObject_t * initMlvObject()
 {
-    mlvObject_t * video = (mlvObject_t *)malloc( sizeof(mlvObject_t) );
+    mlvObject_t * video = (mlvObject_t *)calloc( 1, sizeof(mlvObject_t) );
     /* Just 1 element for now */
     video->frame_offsets = (uint32_t *)malloc( sizeof(uint32_t) );
 
-    /* Set cache limit to allow 1 second of 1080p and be safe for all computers */
-    setMlvRawCacheLimit(video, 290);
+    /* Set cache limit to allow ~1 second of 1080p and be safe for low ram PCs */
+    setMlvRawCacheLimitMegaBytes(video, 290);
     setMlvCacheStartFrame(video, 0); /* Just in case */
 
     /* Seems about right */
@@ -227,6 +236,25 @@ void freeMlvObject(mlvObject_t * video)
     fclose(video->file);
     /* Free all memory */
     free(video->frame_offsets);
+
+    /*** Free cache stuff ***/
+
+    /* make sure its stopped using silly trick */
+    video->stop_caching = 1;
+    while (video->is_caching) usleep(100);
+
+    for (int f = 0; f < video->frames; ++f)
+    {
+        /* If frame is cached we can free it */
+        if (video->cached_frames[f])
+        {
+            free(video->rgb_raw_frames[f]);
+        }
+    }
+    /* Now free these */
+    free(video->cached_frames);
+    free(video->rgb_raw_frames);
+
     /* Main 1 */
     free(video);
 }
@@ -307,25 +335,25 @@ void openMlvClip(mlvObject_t * video, char * mlvPath)
     }
 
     /* We work in an imaginary 14 bit world, so if its 10/12 bit, blackwhite levels shall be multiplied */
-    if (getMlvBitdepth(video) != 14)
+    if (getMlvBitdepth(video) == 12)
     {
         /* We can be cheeky with the macros like this (maybe they could be renamed without 'get') */
         getMlvBlackLevel(video) *= 4;
         getMlvWhiteLevel(video) *= 4;
-
-        /* Even more in case of 10bpp */
-        if (getMlvBitdepth(video) == 10)
-        {
-            getMlvBlackLevel(video) *= 4;
-            getMlvWhiteLevel(video) *= 4;
-        }
+    }
+    else if (getMlvBitdepth(video) == 10)
+    {
+        getMlvBlackLevel(video) *= 16;
+        getMlvWhiteLevel(video) *= 16;
     }
 
     /* let's be kind and repair black level if it's broken (OMG IT WORKS!) */
     if ((getMlvBlackLevel(video) < 1700) || (getMlvBlackLevel(video) > 2200))
     {
-        if ( (getMlvCamera(video)[11] == 'D' && getMlvCamera(video)[20] != 'I')
-             ||
+        int old_black_level = getMlvBlackLevel(video);
+
+        /* Camera specific stuff */
+        if ( (getMlvCamera(video)[11] == 'D' && getMlvCamera(video)[20] != 'I') ||
              (getMlvCamera(video)[10] == '5' && getMlvCamera(video)[12] == 'D') )
         {
             /* 5D2 and 50D black level */
@@ -336,6 +364,11 @@ void openMlvClip(mlvObject_t * video, char * mlvPath)
             /* All other camz */
             getMlvBlackLevel(video) = 2048;
         }
+
+        /* User needs to know how amazingly kind we are */
+        printf("\nPSA!!!\nYour black level was wrong!\n");
+        printf("It was: %i, and has been changed to: %i, which should be right for your %s\n\n", 
+            old_black_level, getMlvBlackLevel(video), getMlvCamera(video));
     }
 
     video->block_num = block_num;
@@ -345,11 +378,14 @@ void openMlvClip(mlvObject_t * video, char * mlvPath)
     /* Calculate framerate */
     video->frame_rate = (double)video->MLVI.sourceFpsNom / (double)video->MLVI.sourceFpsDenom;
 
+    /* Make sure frame cache number is up to date by rerunning thiz */
+    setMlvRawCacheLimitMegaBytes(video, getMlvRawCacheLimitMegaBytes(video));
+
     /* For frame cache */
     free(video->rgb_raw_frames);
     free(video->cached_frames);
     video->rgb_raw_frames = (uint16_t **)malloc( sizeof(uint16_t *) * frame_total );
-    video->cached_frames = (uint8_t *)malloc( sizeof(uint8_t) * frame_total );
+    video->cached_frames = (uint8_t *)calloc( sizeof(uint8_t), frame_total );
 }
 
 
@@ -413,6 +449,8 @@ void mapMlvFrames(mlvObject_t * video, int limit)
 
         if (limit != 0 && frame_total == limit) break;
     }
+
+    video->is_active = 1;
 }
 
 

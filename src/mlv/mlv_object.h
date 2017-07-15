@@ -6,6 +6,10 @@
 /* TO have processingObject_t */
 #include "../processing/processing_object.h"
 
+/* I guess this has to happen for pthread_t */
+#include "pthread.h"
+
+
 /* An awkward structure for handling an MLV
  * Would be difficult to adapt for .RAW 
  * ToDo: adapt for .M00 .M01 stuff */
@@ -14,6 +18,9 @@ typedef struct {
     /* Will get used when adapted to handle .M00 .M01 */
     int filenum;
     int block_num; /* How many file blocks in MLV file */
+
+    /* 0=no, 1=yes, mlv file open */
+    int is_active;
 
     /* MLV/Lite file(s) */
     FILE * file;
@@ -42,11 +49,26 @@ typedef struct {
     processingObject_t * processing;
 
 
-    /* Cache area - "PRIVATE", used by getMlvProcessedFrame and things (or will be...) */
+    /************************************************************
+     *** CACHE AREA - used by getMlvProcessedFrame and things ***
+     ************************************************************/
 
-    int cache_limit_mb; /* How many MB of frames can be cached... 
+    /* 0 = no, 1 = (yes... cache thread is alive right now) */
+    int is_caching;
+    pthread_t cache_thread;
+
+    /* Will be set to 1 for cache thread to stop (probably only by freeMlvObject) */
+    int stop_caching;
+
+    /* Basically how much we can cache(can be set by MB or frames or bytes) */
+    uint64_t cache_limit_bytes;
+    uint64_t cache_limit_frames;
+    uint64_t cache_limit_mb; /* How many MB of frames can be cached... 
      * Debayered frames are cached with 16 bit channel bitdepth (48bpp) */
-    int cache_start_frame;
+
+    /* Not used, cache always starts at frame zero... for now */
+    uint64_t cache_start_frame;
+
     uint8_t * cached_frames; /* Basically an array with as many elements as frames, 
      * for each frame: 0(false) = frame is cached, 1 or more(true) = frame is cached */
     uint16_t ** rgb_raw_frames; /* Pointers to 16/48bpp debayered RGB frames */

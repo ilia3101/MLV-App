@@ -54,6 +54,9 @@ int currentFrameIndex;
 /* To pause frame drawing, above 0 = paused */
 int dontDraw;
 
+/* How much cache */
+int cacheSizeMB;
+
 
 int main(int argc, char * argv[])
 {
@@ -62,7 +65,7 @@ int main(int argc, char * argv[])
 }
 
 
-int NSApplicationMain()
+int NSApplicationMain(int argc, const char * argv[])
 {
     /* Don't draw as there's no clip loaded */
     dontDraw = 1;
@@ -96,10 +99,9 @@ int NSApplicationMain()
 
     /* App title with build info */
     {
-        char * host_name = malloc( 1024 );
+        char host_name[1024];
         gethostname(host_name, 1023); /* Computer's name */
-        [window setTitle: [NSString stringWithFormat: @ APP_NAME " (" __DATE__ " " __TIME__ " @%s)", host_name]]; 
-        free(host_name);
+        [window setTitle: [NSString stringWithFormat: @ APP_NAME " (" __DATE__ " " __TIME__ " @%s)", host_name]];
     }
 
 
@@ -180,8 +182,11 @@ int NSApplicationMain()
     processingSetExposureStops(processingSettings, 1.2);
     /* Link video with processing settings */
     setMlvProcessing(videoMLV, processingSettings);
-    /* Limit frame cache to 38% of RAM size (its fast anyway) */
-    setMlvRawCacheLimit(videoMLV, (int)(MAC_RAM * 0.38));
+    /* Limit frame cache to suitable amount of RAM (~33% at 8GB and below ~50% at 16GB and up and up) */
+    cacheSizeMB = (int)(0.66666f * (float)(MAC_RAM - 4000));
+    if (MAC_RAM < 7500) cacheSizeMB = MAC_RAM * 0.33;
+    NSLog(@"Cache size = %iMB, or %i percent of RAM", cacheSizeMB, (int)((float)cacheSizeMB / (float)MAC_RAM * 100));
+    setMlvRawCacheLimitMegaBytes(videoMLV, cacheSizeMB);
 
     /*
      *******************************************************************************
@@ -227,14 +232,11 @@ int NSApplicationMain()
     [previewWindow setAutoresizingMask: (NSViewHeightSizable | NSViewWidthSizable) ];
     // [previewWindow setTarget:previewWindow];
 
-    /* Don't know what fuckery this is */
     rawImageObject = [[NSImage alloc] initWithSize: NSMakeSize(1880,1056) ];
     [rawImageObject addRepresentation:rawBitmap];
 
-
     [previewWindow setImage: rawImageObject];
     [[window contentView] addSubview: previewWindow];
-
 
     /* Slider for moving thourhg the clip */
     NSSlider * timelineSlider = [
@@ -248,7 +250,6 @@ int NSApplicationMain()
     [timelineSlider anchorLeft: YES];
     [timelineSlider setAutoresizingMask: NSViewWidthSizable ];
     [[window contentView] addSubview: timelineSlider];
-
 
 
     /* Start the FPS timer on background thread */
