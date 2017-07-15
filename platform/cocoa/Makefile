@@ -10,7 +10,7 @@ objects = main.o video_mlv.o debayer.o amaze_demosaic.o raw_processing.o \
 CC = gcc # Normal
 
 # Flags for link and objects
-mainflags = -O3 -Ofast
+mainflags = -O3 -Ofast -m64
 linkflags = $(mainflags) -mmacosx-version-min=10.6 -lm -pthread
 cflags := $(mainflags) -c -mmacosx-version-min=10.6
 

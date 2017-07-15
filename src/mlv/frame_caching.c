@@ -20,6 +20,9 @@ void setMlvRawCacheLimitMegaBytes(mlvObject_t * video, uint64_t megaByteLimit)
     video->cache_limit_mb = megaByteLimit;
     video->cache_limit_bytes = bytes_limit;
 
+    /* Resize cache block */
+    video->cache_memory_block = realloc(video->cache_memory_block, bytes_limit);
+
     /* Protection against zero division, cuz that causes "Floating point exception: 8"... 
      * ...LOL there's not even a floating point in sight */
     if (frame_size != 0 && video->is_active)
@@ -51,6 +54,9 @@ void setMlvRawCacheLimitFrames(mlvObject_t * video, uint64_t frameLimit)
         video->cache_limit_mb = mbyte_limit;
         video->cache_limit_frames = frameLimit;
 
+        /* Resize cache block */
+        video->cache_memory_block = realloc(video->cache_memory_block, bytes_limit);
+
         /* Begin updating cached frames */
         if (!video->is_caching)
         {
@@ -69,7 +75,7 @@ void cache_mlv_frames(mlvObject_t * video)
     int height = getMlvHeight(video);
     int threads = getMlvCpuCores(video) / 2 + 1;
     int cache_frames = MIN((int)video->cache_limit_frames, (int)video->frames);
-    size_t frame_size_rgb = width * height * sizeof(uint16_t) * 3;
+    int frame_size_rgb = width * height * 3;
 
     float * raw_frame = malloc( getMlvWidth(video) * getMlvHeight(video) * sizeof(float) );
 
@@ -83,7 +89,8 @@ void cache_mlv_frames(mlvObject_t * video)
         /* Only debayer if frame is not already cached and has not been requested to stop */
         if (!video->cached_frames[frame_index] && !video->stop_caching)
         {
-            video->rgb_raw_frames[frame_index] = (uint16_t *)malloc( frame_size_rgb );
+            /* Use memory within our block */
+            video->rgb_raw_frames[frame_index] = video->cache_memory_block + (frame_size_rgb * frame_index);
 
             /* debayer_type 1, we want to cache AMaZE frames */
             get_mlv_raw_frame_debayered(video, frame_index, raw_frame, video->rgb_raw_frames[frame_index], 1);

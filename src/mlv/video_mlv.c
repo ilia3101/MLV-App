@@ -214,16 +214,18 @@ mlvObject_t * initMlvObject()
     /* Just 1 element for now */
     video->frame_offsets = (uint32_t *)malloc( sizeof(uint32_t) );
 
+    /* Cache things, only one element for now as it is empty */
+    video->rgb_raw_frames = (uint16_t **)malloc( sizeof(uint16_t *) );
+    video->cached_frames = (uint8_t *)malloc( sizeof(uint8_t) );
+    /* All frames in one block of memory for least mallocing during usage */
+    video->cache_memory_block = (uint16_t *)malloc( sizeof(uint16_t) );
+
     /* Set cache limit to allow ~1 second of 1080p and be safe for low ram PCs */
     setMlvRawCacheLimitMegaBytes(video, 290);
     setMlvCacheStartFrame(video, 0); /* Just in case */
 
     /* Seems about right */
     setMlvCpuCores(video, 4);
-
-    /* Cache things, only one element for now as it is empty */
-    video->rgb_raw_frames = (uint16_t **)malloc( sizeof(uint16_t *) );
-    video->cached_frames = (uint8_t *)malloc( sizeof(uint8_t) );
 
     /* Retun pointer */
     return video;
@@ -243,17 +245,10 @@ void freeMlvObject(mlvObject_t * video)
     video->stop_caching = 1;
     while (video->is_caching) usleep(100);
 
-    for (int f = 0; f < video->frames; ++f)
-    {
-        /* If frame is cached we can free it */
-        if (video->cached_frames[f])
-        {
-            free(video->rgb_raw_frames[f]);
-        }
-    }
     /* Now free these */
     free(video->cached_frames);
     free(video->rgb_raw_frames);
+    free(video->cache_memory_block);
 
     /* Main 1 */
     free(video);

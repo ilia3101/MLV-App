@@ -73,6 +73,10 @@ typedef struct {
      * for each frame: 0(false) = frame is cached, 1 or more(true) = frame is cached */
     uint16_t ** rgb_raw_frames; /* Pointers to 16/48bpp debayered RGB frames */
 
+    /* Massive block of memory for all frames that will be cached, pointers in rgb_raw_frames will point within here, 
+     * using one big block block to try and avoid fragmentation (I feel that may be one of the causes of growth) */
+    uint16_t * cache_memory_block;
+
     /* How many cores, will not neccesarily determine number of threads made in any case, but helps */
     int cpu_cores; /* Default 4 */
 
