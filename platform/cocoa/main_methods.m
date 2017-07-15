@@ -49,6 +49,77 @@ extern double frameSliderPosition;
 /* We always set MLV object to this amount of cache */
 extern int cacheSizeMB;
 
+
+/* This is now a function so that it can be accessedd from any part of the app, not just a button press */
+void setAppNewMlvClip(char * mlvPathString, char * mlvFileName)
+{
+    /* Set app name to include MLV clip's name */
+    [window setTitle: [NSString stringWithFormat: @ APP_NAME " | %s", mlvFileName]];
+
+    /* Don't allow drawing frames, incase of adjustments during loading */
+    dontDraw = 1;
+
+    /* Destroy it just for simplicity... and make a new one */
+    freeMlvObject(videoMLV);
+
+    /* Create a NEW object with a NEW MLV clip! */
+    videoMLV = initMlvObjectWithClip( (char *)mlvPathString );
+
+    /* This funtion really SHOULD be integrated with the one above */
+    mapMlvFrames(videoMLV, 0);
+
+    /* If use has terminal this is useful */
+    printMlvInfo(videoMLV);
+
+    /* This needs to be joined (or segmentation fault 11 :D) */
+    setMlvProcessing(videoMLV, processingSettings);
+
+    /* Limit frame cache to 38% of RAM size (its fast anyway) */
+    setMlvRawCacheLimitMegaBytes(videoMLV, (uint64_t)(cacheSizeMB));
+    /* Tell it how many cores we habe so it can be optimal */
+    setMlvCpuCores(videoMLV, MAC_CORES);
+
+    /* Adjust image size(probably) */
+    [previewWindow setImage: nil];
+
+    /* I think this is like free() */
+    [rawImageObject release];
+    [rawBitmap release];
+
+    /* Size may need changing */
+    free(rawImage);
+    rawImage = malloc( sizeof(uint8_t) * 3 * getMlvWidth(videoMLV) * getMlvHeight(videoMLV) );
+
+    /* Now reallocate and set up all imagey-objecty things */
+    rawBitmap = [ [NSBitmapImageRep alloc]
+                  initWithBitmapDataPlanes: (unsigned char * _Nullable * _Nullable)&rawImage 
+                  /* initWithBitmapDataPlanes: NULL */
+                  pixelsWide: getMlvWidth(videoMLV)
+                  pixelsHigh: getMlvHeight(videoMLV)
+                  bitsPerSample: 8
+                  samplesPerPixel: 3
+                  hasAlpha: NO 
+                  isPlanar: NO
+                  colorSpaceName: @"NSDeviceRGBColorSpace"
+                  bitmapFormat: 0
+                  bytesPerRow: getMlvWidth(videoMLV) * 3
+                  bitsPerPixel: 24 ];
+
+    rawImageObject = [[NSImage alloc] initWithSize: NSMakeSize(getMlvWidth(videoMLV),getMlvHeight(videoMLV)) ];
+    [rawImageObject addRepresentation:rawBitmap];
+
+    [previewWindow setImage: rawImageObject];
+
+    /* Allow drawing frames */
+    dontDraw = 0;
+    /* Set current frame where slider is at */
+    currentFrameIndex = (int)( frameSliderPosition * (getMlvFrames(videoMLV)-1) );
+    /* So view updates and shows new clip */
+    frameChanged++;
+
+    /* End of MLV opening stuff */
+}
+
 /* Button methods */
 
 @implementation NSButton (mainMethods)
@@ -66,7 +137,7 @@ extern int cacheSizeMB;
     /* Can only choose MLV files */
     [panel setAllowedFileTypes: [NSArray arrayWithObject: @"mlv"]];
 
-    [panel beginWithCompletionHandler: ^ (NSInteger result) 
+    [panel beginWithCompletionHandler: ^ (NSInteger result)
     {
         if (result == NSFileHandlingPanelOKButton)
         {
@@ -76,74 +147,7 @@ extern int cacheSizeMB;
                 const char * mlvPathString = [fileURL.path UTF8String];
                 const char * mlvFileName = [[[fileURL.path lastPathComponent] stringByDeletingPathExtension] UTF8String];
 
-                int pathLength = strlen(mlvPathString);
-                NSLog(@"New MLV file: %s, strlen: %i", mlvPathString, pathLength);
-
-                /* Set app name to include MLV clip's name */
-                [window setTitle: [NSString stringWithFormat: @ APP_NAME " | %s", mlvFileName]];
-
-                /* Don't allow drawing frames, incase of adjustments during loading */
-                dontDraw = 1;
-
-                /* Destroy it just for simplicity... and make a new one */
-                freeMlvObject(videoMLV);
-
-                /* Create a NEW object with a NEW MLV clip! */
-                videoMLV = initMlvObjectWithClip( (char *)mlvPathString );
-
-                /* This funtion really SHOULD be integrated with the one above */
-                mapMlvFrames(videoMLV, 0);
-
-                /* If use has terminal this is useful */
-                printMlvInfo(videoMLV);
-
-                /* This needs to be joined (or segmentation fault 11 :D) */
-                setMlvProcessing(videoMLV, processingSettings);
-
-                /* Limit frame cache to 38% of RAM size (its fast anyway) */
-                setMlvRawCacheLimitMegaBytes(videoMLV, (uint64_t)(cacheSizeMB));
-                /* Tell it how many cores we habe so it can be optimal */
-                setMlvCpuCores(videoMLV, MAC_CORES);
-
-                /* Adjust image size(probably) */
-                [previewWindow setImage: nil];
-
-                /* I think this is like free() */
-                [rawImageObject release];
-                [rawBitmap release];
-
-                /* Size may need changing */
-                free(rawImage);
-                rawImage = malloc( sizeof(uint8_t) * 3 * getMlvWidth(videoMLV) * getMlvHeight(videoMLV) );
-
-                /* Now reallocate and set up all imagey-objecty things */
-                rawBitmap = [ [NSBitmapImageRep alloc]
-                              initWithBitmapDataPlanes: (unsigned char * _Nullable * _Nullable)&rawImage 
-                              /* initWithBitmapDataPlanes: NULL */
-                              pixelsWide: getMlvWidth(videoMLV)
-                              pixelsHigh: getMlvHeight(videoMLV)
-                              bitsPerSample: 8
-                              samplesPerPixel: 3
-                              hasAlpha: NO 
-                              isPlanar: NO
-                              colorSpaceName: @"NSDeviceRGBColorSpace"
-                              bitmapFormat: 0
-                              bytesPerRow: getMlvWidth(videoMLV) * 3
-                              bitsPerPixel: 24 ];
-
-                rawImageObject = [[NSImage alloc] initWithSize: NSMakeSize(getMlvWidth(videoMLV),getMlvHeight(videoMLV)) ];
-                [rawImageObject addRepresentation:rawBitmap];
-
-                [previewWindow setImage: rawImageObject];
-
-                /* Allow drawing frames */
-                dontDraw = 0;
-                /* Set current frame where slider is at */
-                currentFrameIndex = (int)( frameSliderPosition * (getMlvFrames(videoMLV)-1) );
-                /* So view updates and shows new clip */
-                frameChanged++;
-
-                /* End of MLV opening stuff */
+                setAppNewMlvClip((char *)mlvPathString, (char *)mlvFileName);
             }
         }
         [panel release];

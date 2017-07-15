@@ -3,9 +3,10 @@
 
 /* Methods that actually do stuff related to MLV on user interface interactions */
 
+/* This is a function as it may be used in more than one place */
+void setAppNewMlvClip(char * mlvPathString, char * mlvFileName);
 
 /* Button methods */
-
 @interface NSButton (mainMethods)
 
 /* Opens a dialog to select MLV file + sets MLV file to that */
@@ -16,7 +17,6 @@
 @end
 
 /* Slider methods */
-
 @interface NSSlider (mainMethods)
 
 /* I think its clear what these do... */

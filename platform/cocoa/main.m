@@ -7,8 +7,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
 #include <math.h>
-
 /* Host name */
 #include <unistd.h>
 
@@ -252,6 +252,25 @@ int NSApplicationMain(int argc, const char * argv[])
     [timelineSlider anchorLeft: YES];
     [timelineSlider setAutoresizingMask: NSViewWidthSizable ];
     [[window contentView] addSubview: timelineSlider];
+
+
+    /* If commandline arguments were used load clip... */
+    if (argc > 1)
+    {
+        /* Hardcoded for now as 1st argument is clip */
+        char * mlvPath = (char *)argv[1];
+        char * mlvName = mlvPath;
+        int clipNameStart = strlen(mlvPath) - 1;
+
+        /* Point to just name */
+        while (mlvPath[clipNameStart] != '/')
+        {
+            mlvName = mlvPath + clipNameStart;
+            clipNameStart--;
+        }
+
+        setAppNewMlvClip(mlvPath, mlvName);
+    }
 
 
     /* Start the FPS timer on background thread */
