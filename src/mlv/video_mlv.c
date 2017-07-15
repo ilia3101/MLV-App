@@ -343,8 +343,8 @@ void openMlvClip(mlvObject_t * video, char * mlvPath)
     }
     else if (getMlvBitdepth(video) == 10)
     {
-        getMlvBlackLevel(video) *= 4;
-        getMlvWhiteLevel(video) *= 4;
+        getMlvBlackLevel(video) *= 16;
+        getMlvWhiteLevel(video) *= 16;
     }
 
     /* let's be kind and repair black level if it's broken (OMG IT WORKS!) */
