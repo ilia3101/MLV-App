@@ -20,14 +20,14 @@ void setMlvRawCacheLimitMegaBytes(mlvObject_t * video, uint64_t megaByteLimit)
     video->cache_limit_mb = megaByteLimit;
     video->cache_limit_bytes = bytes_limit;
 
-    /* Resize cache block */
-    video->cache_memory_block = realloc(video->cache_memory_block, bytes_limit);
 
     /* Protection against zero division, cuz that causes "Floating point exception: 8"... 
      * ...LOL there's not even a floating point in sight */
-    if (frame_size != 0 && video->is_active)
+    if (video->is_active && frame_size != 0)
     {
         uint64_t frame_limit = (uint64_t)bytes_limit / (uint64_t)frame_size;
+        uint64_t cache_whole = frame_size * getMlvFrames(video);
+
         video->cache_limit_frames = frame_limit;
 
         printf("\nEnough memory allowed to cache %i frames (%i MiB)\n\n", (int)frame_limit, (int)megaByteLimit);
@@ -37,25 +37,32 @@ void setMlvRawCacheLimitMegaBytes(mlvObject_t * video, uint64_t megaByteLimit)
         {
             pthread_create(&video->cache_thread, NULL, (void *)cache_mlv_frames, (void *)video);
         }
+
+        /* Resize cache block - to maximum allowed or enough to fit whole clip if it is smaller */
+        video->cache_memory_block = realloc(video->cache_memory_block, MIN(bytes_limit, cache_whole));
     }
+
+    /* No else - if video is not active we won't waste RAM */
 }
 
+/* Not recommended */
 void setMlvRawCacheLimitFrames(mlvObject_t * video, uint64_t frameLimit)
 {
     uint64_t frame_size = getMlvWidth(video) * getMlvHeight(video) * sizeof(uint16_t) * 3;
 
     /* Do only if clip is loaded */
-    if (frame_size != 0 && video->is_active)
+    if (video->is_active && frame_size != 0)
     {
         uint64_t bytes_limit = frame_size * frameLimit;
         uint64_t mbyte_limit = bytes_limit / (1 << 20);
+        uint64_t cache_whole = frame_size * getMlvFrames(video);
 
         video->cache_limit_bytes = bytes_limit;
         video->cache_limit_mb = mbyte_limit;
         video->cache_limit_frames = frameLimit;
 
-        /* Resize cache block */
-        video->cache_memory_block = realloc(video->cache_memory_block, bytes_limit);
+        /* Resize cache block - to maximum allowed or enough to fit whole clip if it is smaller */
+        video->cache_memory_block = realloc(video->cache_memory_block, MIN(bytes_limit, cache_whole));
 
         /* Begin updating cached frames */
         if (!video->is_caching)
