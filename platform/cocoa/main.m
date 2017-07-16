@@ -260,6 +260,7 @@ int NSApplicationMain(int argc, const char * argv[])
         /* Hardcoded for now as 1st argument is clip */
         char * mlvPath = (char *)argv[1];
         char * mlvName = mlvPath;
+        char * extension = mlvName + strlen(mlvPath) - 3;
         int clipNameStart = strlen(mlvPath) - 1;
 
         /* Point to just name */
@@ -269,7 +270,12 @@ int NSApplicationMain(int argc, const char * argv[])
             clipNameStart--;
         }
 
-        setAppNewMlvClip(mlvPath, mlvName);
+        /* Only allow if file has MLV extension */
+        if ( (extension[0] == 'm' && extension[1] == 'l' && extension[2] == 'v') ||
+             (extension[0] == 'M' && extension[1] == 'L' && extension[2] == 'V')  )
+        {
+            setAppNewMlvClip(mlvPath, mlvName);
+        }
     }
 
 
