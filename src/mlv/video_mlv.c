@@ -241,6 +241,8 @@ mlvObject_t * initMlvObject()
 /* Free all memory and close file */
 void freeMlvObject(mlvObject_t * video)
 {
+    isMlvActive(video) = 0;
+
     /* Close MLV file */
     fclose(video->file);
     /* Free all memory */
@@ -450,7 +452,7 @@ void mapMlvFrames(mlvObject_t * video, int limit)
         if (limit != 0 && frame_total == limit) break;
     }
 
-    video->is_active = 1;
+    isMlvActive(video) = 1;
 }
 
 

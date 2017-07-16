@@ -36,6 +36,8 @@
 mlvObject_t * videoMLV;
 processingObject_t * processingSettings;
 
+char * MLVClipName;
+
 /* Holds rawBitmap inside it or something */
 NSImage * rawImageObject;
 /* Holds a (THE) processed frame that is displayed */
@@ -68,6 +70,9 @@ int main(int argc, char * argv[])
 
 int NSApplicationMain(int argc, const char * argv[])
 {
+    /* Just for easyness */
+    MLVClipName = malloc(1);
+
     /* Don't draw as there's no clip loaded */
     dontDraw = 1;
 
@@ -164,7 +169,7 @@ int NSApplicationMain(int argc, const char * argv[])
     /* Open MLV file button */
     CREATE_BUTTON_LEFT_TOP( openMLVButton, 0, openMlvDialog, 0, @"Open MLV File" );
     /* Export a silly BMP sequence (we r that desparate) */
-    // CREATE_BUTTON_LEFT_BOTTOM( exportSequenceButton, 0, exportBmpSequence, 1, @"Export BMP Sequence" );
+    CREATE_BUTTON_LEFT_BOTTOM( exportSequenceButton, 0, exportBmpSequence, 1, @"Export BMP Sequence" );
     /* Black level user input/adjustment */
     // CREATE_INPUT_WITH_LABEL_LEFT( blackLevelEntry, 1, blackLevelSet, 0, @"Black Level:" );
 

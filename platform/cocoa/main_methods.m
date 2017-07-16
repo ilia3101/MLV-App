@@ -13,12 +13,17 @@
 
 #include "background_thread.h"
 
+/* My horrible old bitmap export module (temporary export solution) */
+#include "../../src/imageio/imageio.h"
+
 /* Methods for user interface interactions 
  * this is where some real code goes */
 
 /* Make sure we hav these - or dusnt work :[ */
 extern mlvObject_t * videoMLV;
 extern processingObject_t * processingSettings;
+
+extern char * MLVClipName;
 
 extern NSImage * rawImageObject;
 /* Holds a (the) processed frame that is displayed
@@ -53,6 +58,10 @@ extern int cacheSizeMB;
 /* This is now a function so that it can be accessedd from any part of the app, not just a button press */
 void setAppNewMlvClip(char * mlvPathString, char * mlvFileName)
 {
+    free(MLVClipName);
+    MLVClipName = malloc( strlen(mlvFileName) );
+    memcpy(MLVClipName, mlvFileName, strlen(mlvFileName));
+
     /* Set app name to include MLV clip's name */
     [window setTitle: [NSString stringWithFormat: @ APP_NAME " | %s", mlvFileName]];
 
@@ -154,34 +163,69 @@ void setAppNewMlvClip(char * mlvPathString, char * mlvFileName)
     } ];
 }
 
-/* (unfinished btw) */
+/* This feature is very temporary(bad) - will be replaced by prores and stuff */
 -(void)exportBmpSequence 
 {
-    /* Create open panel */
-    NSOpenPanel * panel = [[NSOpenPanel openPanel] retain];
+    if (isMlvActive(videoMLV))
+    {    
+        /* Create open panel */
+        NSOpenPanel * panel = [[NSOpenPanel openPanel] retain];
 
-    [panel setCanChooseFiles: NO];
-    [panel setCanChooseDirectories: YES];
-    [panel setAllowsMultipleSelection: YES];
+        [panel setCanChooseFiles: NO];
+        [panel setCanChooseDirectories: YES];
+        [panel setAllowsMultipleSelection: NO];
 
-    /* Can only choose MLV files */
-    [panel setAllowedFileTypes: [NSArray arrayWithObject: @"mlv"]];
-
-    [panel beginWithCompletionHandler: ^ (NSInteger result) 
-    {
-        if (result == NSFileHandlingPanelOKButton)
+        [panel beginWithCompletionHandler: ^ (NSInteger result) 
         {
-            /* What stackoverflow said */
-            for (NSURL * fileURL in [panel URLs])
+            if (result == NSFileHandlingPanelOKButton)
             {
-                const char * mlvPathString = [fileURL.path UTF8String];
-                const char * mlvFileName = [[[fileURL.path lastPathComponent] stringByDeletingPathExtension] UTF8String];
+                for (NSURL * pathURL in [panel URLs])
+                {
+                    char * pathString = (char *)[pathURL.path UTF8String];
+                    char * exportPath = malloc(2048);
+                    int imageSize = getMlvWidth(videoMLV) * getMlvHeight(videoMLV) * 3;
 
-                NSLog(@"Export to: %s", mlvPathString);
+                    /* Export */
+                    imagestruct mlvImage = { getMlvWidth(videoMLV), 
+                                             getMlvHeight(videoMLV), 
+                                             malloc( imageSize ), 1 };
+
+                    /* So we always get amaze frames for exporting */
+                    setMlvAlwaysUseAmaze(videoMLV);
+
+                    for (int f = 0; f < getMlvFrames(videoMLV); ++f)
+                    {
+                        /* Generate file name for frame */
+                        snprintf(exportPath, 2047, "%s/%.8s_%.5i.BMP", pathString, MLVClipName, f);
+
+                        /* Get processed frame */
+                        getMlvProcessedFrame8(videoMLV, f, mlvImage.imagedata);
+
+                        /* Swap B/R (remember this is temporary code) */
+                        uint8_t temp;
+                        uint8_t * end = mlvImage.imagedata + imageSize;
+                        for (uint8_t * pix = mlvImage.imagedata; pix < end; pix += 3)
+                        {
+                            temp = pix[0];
+                            pix[0] = pix[2];
+                            pix[2] = temp;
+                        }
+
+                        /* Write BMP */
+                        write_bmp3_24(&mlvImage, exportPath);
+
+                        NSLog(@"Exported frame %i to: %s", f, exportPath);
+                    }
+
+                    setMlvDontAlwaysUseAmaze(videoMLV);
+
+                    free(mlvImage.imagedata);
+                    free(exportPath);
+                }
             }
-        }
-        [panel release];
-    } ];
+            [panel release];
+        } ];
+    }
 }
 
 @end

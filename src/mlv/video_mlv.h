@@ -61,6 +61,9 @@ void getMlvXyzToCameraMatrix(mlvObject_t * video, double * outputMatrix);
 /* To get a nice/generic XYZ to RGB matrix */
 void getMlvNiceXyzToRgbMatrix(mlvObject_t * video, double * outputMatrix);
 
+/* Do something like this before doing things: if (isMlvActive(your_mlvObject)) */
+#define isMlvActive(video) (video)->is_active
+
 /* Useful getting macros */
 #define getMlvWidth(video) (video)->RAWI.xRes
 #define getMlvHeight(video) (video)->RAWI.yRes

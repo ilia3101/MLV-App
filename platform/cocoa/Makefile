@@ -4,7 +4,7 @@ appname = "MLV App"
 # List of all objects to link
 objects = main.o video_mlv.o debayer.o amaze_demosaic.o raw_processing.o \
 	      main_methods.o useful_methods.o background_thread.o matrix.o \
-		  camera_matrices.o frame_caching.o
+		  camera_matrices.o frame_caching.o bitmap.o
 
 # Compiler
 CC = gcc # Normal
@@ -51,6 +51,9 @@ raw_processing.o : ../../src/processing/raw_processing.c
 
 matrix.o : ../../src/matrix/matrix.c
 	$(CC) $(cflags) ../../src/matrix/matrix.c
+
+bitmap.o : ../../src/imageio/bitmap/bitmap.c
+	$(CC) $(cflags) ../../src/imageio/bitmap/bitmap.c
 
 
 # Type 'make clean' to remove mess

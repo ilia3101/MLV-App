@@ -8,8 +8,8 @@ typedef struct
     uint16_t    height;     /* Height of image                  */
     uint8_t  *  imagedata;  /* Image data - 8 bit only          */
 
-    uint8_t     alpha;      /* Transparency? 1 = yes, 0 = no    */
-    uint8_t  *  alphadata;  /* Alpha data, possibly unused      */
+    int flip_image;         /* Cos BMP is like that             */
+
 }  imagestruct;
 
 #endif

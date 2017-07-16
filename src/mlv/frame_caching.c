@@ -23,7 +23,7 @@ void setMlvRawCacheLimitMegaBytes(mlvObject_t * video, uint64_t megaByteLimit)
 
     /* Protection against zero division, cuz that causes "Floating point exception: 8"... 
      * ...LOL there's not even a floating point in sight */
-    if (video->is_active && frame_size != 0)
+    if (isMlvActive(video) && frame_size != 0)
     {
         uint64_t frame_limit = (uint64_t)bytes_limit / (uint64_t)frame_size;
         uint64_t cache_whole = frame_size * getMlvFrames(video);
@@ -51,7 +51,7 @@ void setMlvRawCacheLimitFrames(mlvObject_t * video, uint64_t frameLimit)
     uint64_t frame_size = getMlvWidth(video) * getMlvHeight(video) * sizeof(uint16_t) * 3;
 
     /* Do only if clip is loaded */
-    if (video->is_active && frame_size != 0)
+    if (isMlvActive(video) && frame_size != 0)
     {
         uint64_t bytes_limit = frame_size * frameLimit;
         uint64_t mbyte_limit = bytes_limit / (1 << 20);
