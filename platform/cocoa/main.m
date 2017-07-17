@@ -28,6 +28,9 @@
 /* Important stuff */
 #include "background_thread.h"
 
+/* This file is generated temorarily during compile time */
+#include "app_window_title.h"
+
 
 /* Here comes some very global variables */
 
@@ -103,12 +106,8 @@ int NSApplicationMain(int argc, const char * argv[])
     [window setMinSize: NSMakeSize(WINDOW_WIDTH_MINIMUM, WINDOW_HEIGHT_MINIMUM)];
 
 
-    /* App title with build info */
-    {
-        char host_name[1024];
-        gethostname(host_name, 1023); /* Computer's name */
-        [window setTitle: [NSString stringWithFormat: @ APP_NAME " (" __DATE__ " " __TIME__ " @%s)", host_name]];
-    }
+    /* App title with build info - a generated macro during compilation */
+    [window setTitle: @APP_WINDOW_TITLE];
 
 
     /* If DARK_STYLE is true set window to dark theme 

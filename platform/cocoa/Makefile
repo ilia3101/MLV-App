@@ -15,8 +15,13 @@ linkflags = $(mainflags) -mmacosx-version-min=10.6 -lm -pthread
 cflags := $(mainflags) -c -mmacosx-version-min=10.6
 
 # Link all objects with main flags
+# Running some cheeky compiletime code to generate window title with hostname
 main : $(objects)
-	$(CC) $(mainflags) $(objects) -o $(appname) -framework Cocoa
+	$(CC) compile_time_code.c -o compile_time_code; \
+	./compile_time_code; \
+	$(CC) $(mainflags) $(objects) -o $(appname) -framework Cocoa; \
+	rm compile_time_code; \
+	rm app_window_title.h;
 
 # Making all objects...
 main.o : main.m
