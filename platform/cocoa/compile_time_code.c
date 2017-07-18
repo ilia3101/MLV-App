@@ -29,7 +29,7 @@ int main(int argc, char * argv[])
     fprintf(app_name_header, "#ifndef _app_window_title_h_\n");
     fprintf(app_name_header, "#define _app_window_title_h_\n\n");
     fprintf(app_name_header, "#define APP_WINDOW_TITLE \"%s\"\n\n", app_name);
-    fprintf(app_name_header, "%s\n", "#endif");
+    fprintf(app_name_header, "#endif\n");
 
     fclose(app_name_header);
 
