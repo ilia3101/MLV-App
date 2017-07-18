@@ -130,8 +130,8 @@ void get_mlv_raw_frame_debayered( mlvObject_t * video,
 
     if (debayer_type)
     {
-        /* Debayer AMAZEly - using some of the cores (why this fixes the PHAT pink stripes? ...how would i know) */
-        debayerAmaze(output_frame, temp_memory, width, height, getMlvCpuCores(video) / 2 + 1);
+        /* Debayer AMAZEly - using all cores! */
+        debayerAmaze(output_frame, temp_memory, width, height, getMlvCpuCores(video));
     }
     else
     {
