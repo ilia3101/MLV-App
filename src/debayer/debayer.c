@@ -45,16 +45,22 @@ void debayerAmaze(uint16_t * debayerto, float * bayerdata, int width, int height
     /* Else do multithreading */
     else
     {
-        uint16_t startchunk_y[threads];
-        uint16_t endchunk_y[threads];
+        int startchunk_y[threads];
+        int endchunk_y[threads];
+
+        /* How big each thread's chunk is, multiple of 2 - or debayer 
+         * would start on wrong pixel and magenta stripes appear */
+        int chunk_height = height / threads;
+        chunk_height -= chunk_height % 2;
 
         /* Calculate chunks of image for each thread */
         for (int thread = 0; thread < threads; ++thread)
         {
-            startchunk_y[thread] = ( (height) / threads ) * thread;
-            endchunk_y[thread] = ( ( (height) / threads ) * (thread + 1) );
+            startchunk_y[thread] = chunk_height * thread;
+            endchunk_y[thread] = chunk_height * (thread + 1);
         }
 
+        /* Last chunk must reach end of frame */
         endchunk_y[threads-1] = height;
 
         pthread_t thread_id[threads];
