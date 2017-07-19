@@ -5,6 +5,7 @@
 #include <QMessageBox>
 #include <QProcess>
 #include <QThread>
+#include <QTime>
 
 #define VERSION "0.1 alpha"
 
@@ -17,8 +18,10 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    //Init the Info Dialog
     m_pInfoDialog = new InfoDialog( this );
 
+    //Dont show the Faithful combobox
     ui->comboBox->setVisible( false );
 
     //Set bools for draw rules
@@ -60,6 +63,14 @@ MainWindow::MainWindow(QWidget *parent) :
     //m_pCachingStatus->setFrameStyle(QFrame::Panel | QFrame::Sunken);
     statusBar()->addWidget( m_pCachingStatus );
 
+    //Set up fps status label
+    m_pFpsStatus = new QLabel( statusBar() );
+    m_pFpsStatus->setMaximumWidth( 100 );
+    m_pFpsStatus->setMinimumWidth( 100 );
+    m_pFpsStatus->setText( tr( "Playback: 0 fps" ) );
+    //m_pFpsStatus->setFrameStyle(QFrame::Panel | QFrame::Sunken);
+    statusBar()->addWidget( m_pFpsStatus );
+
     //m_timerId = startTimer( 16 ); //60fps
     m_timerId = startTimer( 40 ); //25fps
     m_timerCacheId = startTimer( 1000 ); //1fps
@@ -77,6 +88,9 @@ MainWindow::~MainWindow()
 //Timer
 void MainWindow::timerEvent(QTimerEvent *t)
 {
+    static QTime lastTime;
+
+    //Main timer
     if( t->timerId() == m_timerId )
     {
         //Playback
@@ -99,10 +113,19 @@ void MainWindow::timerEvent(QTimerEvent *t)
         {
             m_frameChanged = false; //first do this, if there are changes between rendering
             drawFrame();
+
+            //Time measurement
+            QTime nowTime = QTime::currentTime();
+            if( lastTime.msecsTo( nowTime ) != 0 ) m_pFpsStatus->setText( tr( "Playback: %1 fps" ).arg( (int)( 1000 / lastTime.msecsTo( nowTime ) ) ) );
+            lastTime = nowTime;
+        }
+        else
+        {
+            m_pFpsStatus->setText( tr( "Playback: 0 fps" ) );
         }
         return;
     }
-    //Caching Status
+    //Caching Status timer
     else if( t->timerId() == m_timerCacheId )
     {
         if( m_fileLoaded && m_pMlvObject->is_caching )
@@ -147,7 +170,7 @@ void MainWindow::drawFrame()
     m_pRawImageLabel->setPixmap( QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
                                                          .scaled( desWidth,
                                                                   desHeight,
-                                                                  Qt::KeepAspectRatio, Qt::SmoothTransformation) ) );
+                                                                  Qt::KeepAspectRatio, Qt::SmoothTransformation) ) ); //alternative: Qt::FastTransformation
     m_pRawImageLabel->setMinimumSize( 1, 1 ); //Otherwise window won't be smaller than picture
     m_pRawImageLabel->setAlignment( Qt::AlignCenter ); //Always in the middle
 
@@ -189,6 +212,11 @@ void MainWindow::on_actionOpen_triggered()
     /* Tell it how many cores we have so it can be optimal */
     setMlvCpuCores( m_pMlvObject, QThread::idealThreadCount() );
 
+    //Adapt the RawImage to actual size
+    int imageSize = getMlvWidth( m_pMlvObject ) * getMlvHeight( m_pMlvObject ) * 3;
+    free( m_pRawImage );
+    m_pRawImage = ( uint8_t* )malloc( imageSize );
+
     //Set Clip Info to Dialog
     m_pInfoDialog->ui->tableWidget->item( 0, 1 )->setText( QString( "%1" ).arg( (char*)getMlvCamera( m_pMlvObject ) ) );
     m_pInfoDialog->ui->tableWidget->item( 1, 1 )->setText( QString( "%1" ).arg( (char*)getMlvLens( m_pMlvObject ) ) );
@@ -197,7 +225,7 @@ void MainWindow::on_actionOpen_triggered()
     m_pInfoDialog->ui->tableWidget->item( 4, 1 )->setText( QString( "%1" ).arg( (int)getMlvFrames( m_pMlvObject ) ) );
     m_pInfoDialog->ui->tableWidget->item( 5, 1 )->setText( QString( "%1 fps" ).arg( (int)getMlvFramerate( m_pMlvObject ) ) );
     m_pInfoDialog->ui->tableWidget->item( 6, 1 )->setText( QString( "%1 µs" ).arg( getMlvShutter( m_pMlvObject ) ) );
-    m_pInfoDialog->ui->tableWidget->item( 7, 1 )->setText( QString( "f %1" ).arg( getMlvAperture( m_pMlvObject )/100.0, 0, 'f', 1 ) );
+    m_pInfoDialog->ui->tableWidget->item( 7, 1 )->setText( QString( "f %1" ).arg( getMlvAperture( m_pMlvObject ) / 100.0, 0, 'f', 1 ) );
     m_pInfoDialog->ui->tableWidget->item( 8, 1 )->setText( QString( "%1" ).arg( (int)getMlvIso( m_pMlvObject ) ) );
 
     //Adapt slider to clip and move to position 0
