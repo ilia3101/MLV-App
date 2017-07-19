@@ -393,7 +393,7 @@ void openMlvClip(mlvObject_t * video, char * mlvPath)
 
 /* mapMlvFrames function will get byte offsets of every frame in the file, run this
  * after mlvObject_t is initialised and video is opened, or you won't have frames */
-void mapMlvFrames(mlvObject_t * video, int limit)
+void mapMlvFrames(mlvObject_t * video, uint32_t limit)
 {
     /* Getting size of file in bytes */
     fseek(video->file, 0, SEEK_END); /* Go to end */
