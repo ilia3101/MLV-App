@@ -27,7 +27,7 @@ void openMlvClip(mlvObject_t * video, char * mlvPath);
 
 /* Goes through the files and record's every frame's offset from
  * start of the file in the .frame_offsets property */
-void mapMlvFrames(mlvObject_t * video, int limit);
+void mapMlvFrames(mlvObject_t * video, uint32_t limit);
 
 /* Frees all memory and closes file */
 void freeMlvObject(mlvObject_t * video);
@@ -77,6 +77,9 @@ void getMlvNiceXyzToRgbMatrix(mlvObject_t * video, double * outputMatrix);
 #define getMlvVersion(video) (video)->MLVI.versionString
 #define getMlvBlackLevel(video) (video)->RAWI.raw_info.black_level
 #define getMlvWhiteLevel(video) (video)->RAWI.raw_info.white_level
+#define getMlvIso(video) (video)->EXPO.isoValue
+#define getMlvShutter(video) (video)->EXPO.shutterValue
+#define getMlvAperture(video) (video)->LENS.aperture
 
 /* Useful setting macros (functions) */
 
