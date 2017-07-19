@@ -2,11 +2,19 @@
 #ifndef _mlv_includes_
 #define _mlv_includes_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* MLV reading part */
 #include "mlv/video_mlv.h"
 
 /* RAW processing part */
 #include "processing/raw_processing.h"
 #include "debayer/debayer.h"
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
