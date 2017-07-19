@@ -80,7 +80,7 @@ void cache_mlv_frames(mlvObject_t * video)
 {
     int width = getMlvWidth(video);
     int height = getMlvHeight(video);
-    int threads = getMlvCpuCores(video) / 2 + 1;
+    //int threads = getMlvCpuCores(video) / 2 + 1;
     int cache_frames = MIN((int)video->cache_limit_frames, (int)video->frames);
     int frame_size_rgb = width * height * 3;
 

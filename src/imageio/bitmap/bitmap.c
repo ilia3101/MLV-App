@@ -276,7 +276,7 @@ imagestruct bmpread(char * imagename)
     /* Memory to store image */
     uint8_t * imagedata = (uint8_t *)malloc(imagesize * sizeof(uint8_t));
     fseek(file, offset, SEEK_SET); /* Move to start of image */
-    int v;
+    uint32_t v;
     for (v = 0; v < imageheight; v++)
     {
         fseek(file, ( offset + v * paddedwidth ), SEEK_SET); /* Move to current row */

@@ -99,7 +99,7 @@ void applyProcessingObject( processingObject_t * processing,
 
     memcpy(outputImage, inputImage, img_s * sizeof(uint16_t));
 
-    uint16_t * test = malloc(sizeof(uint16_t) * 65536);
+    //uint16_t * test = malloc(sizeof(uint16_t) * 65536);
 
     /* Apply some precalcuolated settings */
     for (int i = 0; i < img_s; ++i)
@@ -241,7 +241,7 @@ void processingSetExposureStops(processingObject_t * processing, double exposure
     processing->exposure_stops = exposureStops;
 
     /* Real value of exposure(not stops) */
-    double exposure_value = pow(2, exposureStops);
+    //double exposure_value = pow(2, exposureStops);
 
     processing_update_matrices(processing);
 }

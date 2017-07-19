@@ -114,8 +114,8 @@ void getMlvRawFrameFloat(mlvObject_t * video, int frameIndex, float * outputFram
 
 void setMlvProcessing(mlvObject_t * video, processingObject_t * processing)
 {
-    double camera_matrix[9];
-    double xyz_to_rgb_matrix[9];
+    //double camera_matrix[9];
+    //double xyz_to_rgb_matrix[9];
 
     /* Easy bit */
     video->processing = processing;

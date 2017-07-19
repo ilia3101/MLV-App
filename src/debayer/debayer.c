@@ -92,7 +92,7 @@ void debayerAmaze(uint16_t * debayerto, float * bayerdata, int width, int height
 
     }
 
-    int rgb_pixels = pixelsize * 3;
+    //int rgb_pixels = pixelsize * 3;
 
     /* Giv back as RGB, not separate channels */
     for (int i = 0; i < pixelsize; i++)
