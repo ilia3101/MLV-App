@@ -347,18 +347,25 @@ void MainWindow::on_actionExport_triggered()
     //Stop playback if active
     ui->actionPlay->setChecked( false );
 
+    QString saveFileName = m_lastSaveFileName.left( m_lastSaveFileName.lastIndexOf( "." ) );
+    saveFileName.append( ".bmp" );
+
     //File Dialog
     QString fileName = QFileDialog::getSaveFileName( this, tr("Export..."),
-                                                    m_lastSaveFileName.left( m_lastSaveFileName.lastIndexOf( "/" ) ),
-                                                    tr("Bitmap (*.bmp)") );
+                                                    saveFileName,
+                                                    tr("Images (*.bmp *.png *.jpg)") );
 
-    //Exit if not an MLV file or aborted
-    if( fileName == QString( "" ) && !fileName.endsWith( ".bmp", Qt::CaseInsensitive ) ) return;
-
-    m_lastSaveFileName = fileName;
+    //Exit if not an BMP file or aborted
+    if( fileName == QString( "" )
+            && ( !fileName.endsWith( ".bmp", Qt::CaseInsensitive )
+                 || !fileName.endsWith( ".png", Qt::CaseInsensitive )
+                 || !fileName.endsWith( ".jpg", Qt::CaseInsensitive ) ) ) return;
 
     //Disable GUI drawing
     m_dontDraw = true;
+
+    // we always get amaze frames for exporting
+    setMlvAlwaysUseAmaze( m_pMlvObject );
 
     for( uint32_t i = 0; i < getMlvFrames( m_pMlvObject ); i++ )
     {
@@ -371,9 +378,25 @@ void MainWindow::on_actionExport_triggered()
         getMlvProcessedFrame8( m_pMlvObject, i, m_pRawImage );
 
         //Write file
-        QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
-                .save( numberedFileName, "bmp", -1 );
+        if( fileName.endsWith( ".bmp", Qt::CaseInsensitive ) )
+        {
+            QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
+                    .save( numberedFileName, "bmp", -1 );
+        }
+        else if( fileName.endsWith( ".png", Qt::CaseInsensitive ) )
+        {
+            QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
+                    .save( numberedFileName, "png", -1 );
+        }
+        else if( fileName.endsWith( ".jpg", Qt::CaseInsensitive ) )
+        {
+            QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
+                    .save( numberedFileName, "jpg", 100 );
+        }
     }
+
+    //If we don't like amaze we switch it off again
+    if( !ui->checkBoxUseAmaze->isChecked() ) setMlvDontAlwaysUseAmaze( m_pMlvObject );
 
     //Enable GUI drawing
     m_dontDraw = false;
