@@ -151,6 +151,11 @@ void getMlvRawFrameDebayered(mlvObject_t * video, int frameIndex, uint16_t * out
     {
         memcpy(outputFrame, video->rgb_raw_frames[frameIndex], frame_size);
     }
+    /* Else if this frame was requested last time and is sitting in the single frame cache */
+    else if (video->current_cached_frame == frameIndex)
+    {
+        memcpy(outputFrame, video->rgb_raw_current_frame, frame_size);
+    }
     /* Maybe this frame is currently being cached... */
     else if (video->is_caching && (video->currently_caching == frameIndex))
     {
@@ -158,12 +163,14 @@ void getMlvRawFrameDebayered(mlvObject_t * video, int frameIndex, uint16_t * out
         while ((video->currently_caching == frameIndex) || !video->is_caching) usleep(100);
         memcpy(outputFrame, video->rgb_raw_frames[frameIndex], frame_size);
     }
-    /* Else do debayering etc */
+    /* Else do debayering etc -  and store in the 'current frame' cache */
     else
     {
         float * raw_frame = malloc(width * height * sizeof(float));
-        get_mlv_raw_frame_debayered(video, frameIndex, raw_frame, outputFrame, doesMlvAlwaysUseAmaze(video));
+        get_mlv_raw_frame_debayered(video, frameIndex, raw_frame, video->rgb_raw_current_frame, doesMlvAlwaysUseAmaze(video));
         free(raw_frame);
+        memcpy(outputFrame, video->rgb_raw_current_frame, frame_size);
+        video->current_cached_frame = frameIndex;
     }
 }
 
@@ -223,6 +230,7 @@ mlvObject_t * initMlvObject()
 
     /* Cache things, only one element for now as it is empty */
     video->rgb_raw_frames = (uint16_t **)malloc( sizeof(uint16_t *) );
+    video->rgb_raw_current_frame = (uint16_t *)malloc( sizeof(uint16_t) );
     video->cached_frames = (uint8_t *)malloc( sizeof(uint8_t) );
     /* All frames in one block of memory for least mallocing during usage */
     video->cache_memory_block = (uint16_t *)malloc( sizeof(uint16_t) );
@@ -255,6 +263,7 @@ void freeMlvObject(mlvObject_t * video)
     /* Now free these */
     free(video->cached_frames);
     free(video->rgb_raw_frames);
+    free(video->rgb_raw_current_frame);
     free(video->cache_memory_block);
 
     /* Main 1 */
@@ -385,8 +394,10 @@ void openMlvClip(mlvObject_t * video, char * mlvPath)
 
     /* For frame cache */
     free(video->rgb_raw_frames);
+    free(video->rgb_raw_current_frame);
     free(video->cached_frames);
     video->rgb_raw_frames = (uint16_t **)malloc( sizeof(uint16_t *) * frame_total );
+    video->rgb_raw_current_frame = (uint16_t *)malloc( getMlvWidth(video) * getMlvHeight(video) * 3 * sizeof(uint16_t) );
     video->cached_frames = (uint8_t *)calloc( sizeof(uint8_t), frame_total );
 }
 

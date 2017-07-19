@@ -79,6 +79,10 @@ typedef struct {
      * for each frame: 0(false) = frame is cached, 1 or more(true) = frame is cached */
     uint16_t ** rgb_raw_frames; /* Pointers to 16/48bpp debayered RGB frames */
 
+    /* A single cached frame, speeds up when asking for the same (non-cached) frame over and over again */
+    uint64_t current_cached_frame; int times_requested;
+    uint16_t * rgb_raw_current_frame;
+
     /* Massive block of memory for all frames that will be cached, pointers in rgb_raw_frames will point within here, 
      * using one big block block to try and avoid fragmentation (I feel that may be one of the causes of growth) */
     uint16_t * cache_memory_block;
