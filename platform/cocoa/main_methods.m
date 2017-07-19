@@ -163,8 +163,9 @@ void setAppNewMlvClip(char * mlvPathString, char * mlvFileName)
     } ];
 }
 
-/* This feature is very temporary(bad) - will be replaced by prores and stuff */
--(void)exportBmpSequence 
+/* Yes, I duplicated the same method, the whole image-export thing is temporary
+ * (and I couldn't be bothered to firgure out a format dropdown menu in save panel) */
+-(void)exportJpegSequence 
 {
     if (isMlvActive(videoMLV))
     {    
@@ -183,43 +184,76 @@ void setAppNewMlvClip(char * mlvPathString, char * mlvFileName)
                 {
                     char * pathString = (char *)[pathURL.path UTF8String];
                     char * exportPath = malloc(2048);
-                    int imageSize = getMlvWidth(videoMLV) * getMlvHeight(videoMLV) * 3;
-
-                    /* Export */
-                    imagestruct mlvImage = { getMlvWidth(videoMLV), 
-                                             getMlvHeight(videoMLV), 
-                                             malloc( imageSize ), 1 };
 
                     /* So we always get amaze frames for exporting */
                     setMlvAlwaysUseAmaze(videoMLV);
 
+                    /* We will use the same NSBitmapImageRep as for exporting as for preview window */
                     for (int f = 0; f < getMlvFrames(videoMLV); ++f)
                     {
                         /* Generate file name for frame */
-                        snprintf(exportPath, 2047, "%s/%.8s_%.5i.BMP", pathString, MLVClipName, f);
+                        snprintf(exportPath, 2047, "%s/%.8s_%.5i.jpg", pathString, MLVClipName, f);
 
                         /* Get processed frame */
-                        getMlvProcessedFrame8(videoMLV, f, mlvImage.imagedata);
+                        getMlvProcessedFrame8(videoMLV, f, rawImage);
 
-                        /* Swap B/R (remember this is temporary code) */
-                        uint8_t temp;
-                        uint8_t * end = mlvImage.imagedata + imageSize;
-                        for (uint8_t * pix = mlvImage.imagedata; pix < end; pix += 3)
-                        {
-                            temp = pix[0];
-                            pix[0] = pix[2];
-                            pix[2] = temp;
-                        }
-
-                        /* Write BMP */
-                        write_bmp3_24(&mlvImage, exportPath);
+                        /* Export */
+                        NSData * imageFile = [rawBitmap representationUsingType: NSJPEGFileType properties: nil];
+                        [imageFile writeToFile: [NSString stringWithUTF8String:exportPath] atomically: NO];
 
                         NSLog(@"Exported frame %i to: %s", f, exportPath);
                     }
 
                     setMlvDontAlwaysUseAmaze(videoMLV);
 
-                    free(mlvImage.imagedata);
+                    free(exportPath);
+                }
+            }
+            [panel release];
+        } ];
+    }
+}
+-(void)exportPngSequence 
+{
+    if (isMlvActive(videoMLV))
+    {    
+        /* Create open panel */
+        NSOpenPanel * panel = [[NSOpenPanel openPanel] retain];
+
+        [panel setCanChooseFiles: NO];
+        [panel setCanChooseDirectories: YES];
+        [panel setAllowsMultipleSelection: NO];
+
+        [panel beginWithCompletionHandler: ^ (NSInteger result) 
+        {
+            if (result == NSFileHandlingPanelOKButton)
+            {
+                for (NSURL * pathURL in [panel URLs])
+                {
+                    char * pathString = (char *)[pathURL.path UTF8String];
+                    char * exportPath = malloc(2048);
+
+                    /* So we always get amaze frames for exporting */
+                    setMlvAlwaysUseAmaze(videoMLV);
+
+                    /* We will use the same NSBitmapImageRep as for exporting as for preview window */
+                    for (int f = 0; f < getMlvFrames(videoMLV); ++f)
+                    {
+                        /* Generate file name for frame */
+                        snprintf(exportPath, 2047, "%s/%.8s_%.5i.png", pathString, MLVClipName, f);
+
+                        /* Get processed frame */
+                        getMlvProcessedFrame8(videoMLV, f, rawImage);
+
+                        /* Export */
+                        NSData * imageFile = [rawBitmap representationUsingType: NSPNGFileType properties: nil];
+                        [imageFile writeToFile: [NSString stringWithUTF8String:exportPath] atomically: NO];
+
+                        NSLog(@"Exported frame %i to: %s", f, exportPath);
+                    }
+
+                    setMlvDontAlwaysUseAmaze(videoMLV);
+
                     free(exportPath);
                 }
             }

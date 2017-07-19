@@ -19,6 +19,7 @@ cflags := $(mainflags) -c -mmacosx-version-min=10.6
 main :
 	$(CC) compile_time_code.c -o compile_time_code; \
 	./compile_time_code; \
+	rm main.o; \
 	make build; \
 	rm compile_time_code; \
 	rm app_window_title.h
