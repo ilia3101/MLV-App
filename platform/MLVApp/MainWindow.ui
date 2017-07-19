@@ -890,7 +890,7 @@
     </iconset>
    </property>
    <property name="text">
-    <string>Open...</string>
+    <string>Open MLV...</string>
    </property>
    <property name="toolTip">
     <string>Open a MLV file...</string>

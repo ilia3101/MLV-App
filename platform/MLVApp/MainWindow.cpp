@@ -4,11 +4,11 @@
 
 #include <QMessageBox>
 #include <QProcess>
+#include <QThread>
 
 #define VERSION "0.1 alpha"
 
 #define MAX_RAM 2048
-#define MAX_CORES 2
 
 //Constructor
 MainWindow::MainWindow(QWidget *parent) :
@@ -52,15 +52,24 @@ MainWindow::MainWindow(QWidget *parent) :
     m_layoutFrame->addWidget( m_pRawImageLabel );
     m_layoutFrame->setContentsMargins( 0, 0, 0, 0 );
 
+    //Set up caching status label
+    m_pCachingStatus = new QLabel( statusBar() );
+    m_pCachingStatus->setMaximumWidth( 100 );
+    m_pCachingStatus->setMinimumWidth( 100 );
+    m_pCachingStatus->setText( tr( "Caching: idle" ) );
+    //m_pCachingStatus->setFrameStyle(QFrame::Panel | QFrame::Sunken);
+    statusBar()->addWidget( m_pCachingStatus );
+
     //m_timerId = startTimer( 16 ); //60fps
     m_timerId = startTimer( 40 ); //25fps
-    //m_timerId = startTimer( 1000 ); //1fps
+    m_timerCacheId = startTimer( 1000 ); //1fps
 }
 
 //Destructor
 MainWindow::~MainWindow()
 {
     killTimer( m_timerId );
+    killTimer( m_timerCacheId );
     delete m_pInfoDialog;
     delete ui;
 }
@@ -85,12 +94,25 @@ void MainWindow::timerEvent(QTimerEvent *t)
             }
         }
 
+        //Trigger Drawing
         if( !m_frameStillDrawing && m_frameChanged && !m_dontDraw )
         {
             m_frameChanged = false; //first do this, if there are changes between rendering
             drawFrame();
         }
         return;
+    }
+    //Caching Status
+    else if( t->timerId() == m_timerCacheId )
+    {
+        if( m_fileLoaded && m_pMlvObject->is_caching )
+        {
+            m_pCachingStatus->setText( tr( "Caching: active" ) );
+        }
+        else
+        {
+            m_pCachingStatus->setText( tr( "Caching: idle" ) );
+        }
     }
 }
 
@@ -140,10 +162,10 @@ void MainWindow::on_actionOpen_triggered()
                                                     m_lastSaveFileName.left( m_lastSaveFileName.lastIndexOf( "/" ) ),
                                                     tr("Magic Lantern Video (*.mlv)") );
 
-    m_lastSaveFileName = fileName;
-
     //Exit if not an MLV file or aborted
     if( fileName == QString( "" ) && !fileName.endsWith( ".mlv", Qt::CaseInsensitive ) ) return;
+
+    m_lastSaveFileName = fileName;
 
     //Set window title to filename
     this->setWindowTitle( QString( "MLV App | %1" ).arg( fileName ) );
@@ -165,7 +187,7 @@ void MainWindow::on_actionOpen_triggered()
     //* Limit frame cache to defined size of RAM */
     setMlvRawCacheLimitMegaBytes( m_pMlvObject, MAX_RAM );
     /* Tell it how many cores we have so it can be optimal */
-    setMlvCpuCores( m_pMlvObject, MAX_CORES );
+    setMlvCpuCores( m_pMlvObject, QThread::idealThreadCount() );
 
     //Set Clip Info to Dialog
     m_pInfoDialog->ui->tableWidget->item( 0, 1 )->setText( QString( "%1" ).arg( (char*)getMlvCamera( m_pMlvObject ) ) );
@@ -174,6 +196,9 @@ void MainWindow::on_actionOpen_triggered()
     m_pInfoDialog->ui->tableWidget->item( 3, 1 )->setText( QString( "%1 pixel" ).arg( (int)getMlvHeight( m_pMlvObject ) ) );
     m_pInfoDialog->ui->tableWidget->item( 4, 1 )->setText( QString( "%1" ).arg( (int)getMlvFrames( m_pMlvObject ) ) );
     m_pInfoDialog->ui->tableWidget->item( 5, 1 )->setText( QString( "%1 fps" ).arg( (int)getMlvFramerate( m_pMlvObject ) ) );
+    m_pInfoDialog->ui->tableWidget->item( 6, 1 )->setText( QString( "%1 µs" ).arg( getMlvShutter( m_pMlvObject ) ) );
+    m_pInfoDialog->ui->tableWidget->item( 7, 1 )->setText( QString( "f %1" ).arg( getMlvAperture( m_pMlvObject )/100.0, 0, 'f', 1 ) );
+    m_pInfoDialog->ui->tableWidget->item( 8, 1 )->setText( QString( "%1" ).arg( (int)getMlvIso( m_pMlvObject ) ) );
 
     //Adapt slider to clip and move to position 0
     ui->horizontalSliderPosition->setValue( 0 );
@@ -314,4 +339,42 @@ void MainWindow::on_horizontalSliderLighten_valueChanged(int position)
 void MainWindow::on_actionGoto_First_Frame_triggered()
 {
     ui->horizontalSliderPosition->setValue( 0 );
+}
+
+//Export clip
+void MainWindow::on_actionExport_triggered()
+{
+    //Stop playback if active
+    ui->actionPlay->setChecked( false );
+
+    //File Dialog
+    QString fileName = QFileDialog::getSaveFileName( this, tr("Export..."),
+                                                    m_lastSaveFileName.left( m_lastSaveFileName.lastIndexOf( "/" ) ),
+                                                    tr("Bitmap (*.bmp)") );
+
+    //Exit if not an MLV file or aborted
+    if( fileName == QString( "" ) && !fileName.endsWith( ".bmp", Qt::CaseInsensitive ) ) return;
+
+    m_lastSaveFileName = fileName;
+
+    //Disable GUI drawing
+    m_dontDraw = true;
+
+    for( uint32_t i = 0; i < getMlvFrames( m_pMlvObject ); i++ )
+    {
+        //Append frame number
+        QString numberedFileName = fileName.left( fileName.lastIndexOf( "." ) );
+        numberedFileName.append( QString( "_%1" ).arg( (uint)i, 5, 10, QChar( '0' ) ) );
+        numberedFileName.append( fileName.right( 4 ) );
+
+        //Get frame from library
+        getMlvProcessedFrame8( m_pMlvObject, i, m_pRawImage );
+
+        //Write file
+        QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
+                .save( numberedFileName, "bmp", -1 );
+    }
+
+    //Enable GUI drawing
+    m_dontDraw = false;
 }

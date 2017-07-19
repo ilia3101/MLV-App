@@ -42,8 +42,8 @@ private slots:
     void on_horizontalSliderLS_valueChanged(int position);
     void on_horizontalSliderLR_valueChanged(int position);
     void on_horizontalSliderLighten_valueChanged(int position);
-
     void on_actionGoto_First_Frame_triggered();
+    void on_actionExport_triggered();
 
 private:
     Ui::MainWindow *ui;
@@ -51,6 +51,7 @@ private:
     mlvObject_t *m_pMlvObject;
     processingObject_t *m_pProcessingObject;
     QLabel *m_pRawImageLabel;
+    QLabel *m_pCachingStatus;
     uint8_t *m_pRawImage;
     bool m_frameChanged;
     int m_currentFrameIndex;
@@ -58,6 +59,7 @@ private:
     bool m_frameStillDrawing;
     bool m_fileLoaded;
     int m_timerId;
+    int m_timerCacheId;
     QString m_lastSaveFileName;
     void drawFrame();
 };
