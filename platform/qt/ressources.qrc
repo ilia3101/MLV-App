@@ -1,0 +1,31 @@
+<RCC>
+    <qresource prefix="/IMG">
+        <file>IMG/addtab.png</file>
+        <file>IMG/closetab.png</file>
+        <file>IMG/configure.png</file>
+        <file>IMG/edit.png</file>
+        <file>IMG/editcopy.png</file>
+        <file>IMG/editpaste.png</file>
+        <file>IMG/exportfile.png</file>
+        <file>IMG/filenew.png</file>
+        <file>IMG/fileopen.png</file>
+        <file>IMG/fileprint.png</file>
+        <file>IMG/filesave.png</file>
+        <file>IMG/Fullscreen-icon.png</file>
+        <file>IMG/media-forward-32.png</file>
+        <file>IMG/media-pause-32.png</file>
+        <file>IMG/media-play-32.png</file>
+        <file>IMG/media-seek-backward-32.png</file>
+        <file>IMG/media-seek-forward-32.png</file>
+        <file>IMG/media-skip-backward-32.png</file>
+        <file>IMG/media-skip-forward-32.png</file>
+        <file>IMG/media-stop-32.png</file>
+        <file>IMG/next.png</file>
+        <file>IMG/prev.png</file>
+        <file>IMG/zoomin.png</file>
+        <file>IMG/zoomout.png</file>
+        <file>IMG/information-icon.png</file>
+        <file>IMG/Magic_Lantern_logo.png</file>
+        <file>IMG/Magic_Lantern_logo_b.png</file>
+    </qresource>
+</RCC>
