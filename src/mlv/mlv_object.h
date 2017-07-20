@@ -64,7 +64,7 @@ typedef struct {
     int use_amaze;
 
     /* If a frame is currently being cached in the background this will indicate which frame index, so frame request can wait for it to finish */
-    int currently_caching;
+    uint32_t currently_caching;
 
     /* Basically how much we can cache(can be set by MB or frames or bytes) */
     uint64_t cache_limit_bytes;
@@ -80,7 +80,7 @@ typedef struct {
     uint16_t ** rgb_raw_frames; /* Pointers to 16/48bpp debayered RGB frames */
 
     /* A single cached frame, speeds up when asking for the same (non-cached) frame over and over again */
-    uint64_t current_cached_frame; int times_requested;
+    uint32_t current_cached_frame; int times_requested;
     uint16_t * rgb_raw_current_frame;
 
     /* Massive block of memory for all frames that will be cached, pointers in rgb_raw_frames will point within here, 

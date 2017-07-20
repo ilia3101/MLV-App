@@ -848,14 +848,8 @@
     </property>
     <addaction name="actionAbout"/>
    </widget>
-   <widget class="QMenu" name="menuSettings">
-    <property name="title">
-     <string>Settings</string>
-    </property>
-   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
-   <addaction name="menuSettings"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
@@ -881,13 +875,14 @@
    <addaction name="actionClip_Information"/>
    <addaction name="actionGoto_First_Frame"/>
    <addaction name="actionPlay"/>
+   <addaction name="actionLoop"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <action name="actionOpen">
    <property name="icon">
-    <iconset>
-     <normalon>:/IMG/IMG/fileopen.png</normalon>
-    </iconset>
+    <iconset resource="ressources.qrc">
+     <normaloff>:/RetinaIMG/RetinaIMG/Folder-Open-icon.png</normaloff>
+     <normalon>:/IMG/IMG/fileopen.png</normalon>:/RetinaIMG/RetinaIMG/Folder-Open-icon.png</iconset>
    </property>
    <property name="text">
     <string>Open MLV...</string>
@@ -902,7 +897,7 @@
   <action name="actionCopyRecept">
    <property name="icon">
     <iconset resource="ressources.qrc">
-     <normaloff>:/IMG/IMG/editcopy.png</normaloff>:/IMG/IMG/editcopy.png</iconset>
+     <normaloff>:/RetinaIMG/RetinaIMG/File-Copy-icon.png</normaloff>:/RetinaIMG/RetinaIMG/File-Copy-icon.png</iconset>
    </property>
    <property name="text">
     <string>Copy Receipt</string>
@@ -917,7 +912,7 @@
   <action name="actionPasteReceipt">
    <property name="icon">
     <iconset resource="ressources.qrc">
-     <normaloff>:/IMG/IMG/editpaste.png</normaloff>:/IMG/IMG/editpaste.png</iconset>
+     <normaloff>:/RetinaIMG/RetinaIMG/Paste-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Paste-icon.png</iconset>
    </property>
    <property name="text">
     <string>Paste Receipt</string>
@@ -945,7 +940,7 @@
   <action name="actionExport">
    <property name="icon">
     <iconset resource="ressources.qrc">
-     <normaloff>:/IMG/IMG/exportfile.png</normaloff>:/IMG/IMG/exportfile.png</iconset>
+     <normaloff>:/RetinaIMG/RetinaIMG/Export-To-File-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Export-To-File-icon.png</iconset>
    </property>
    <property name="text">
     <string>Export...</string>
@@ -978,7 +973,7 @@
    </property>
    <property name="icon">
     <iconset resource="ressources.qrc">
-     <normaloff>:/IMG/IMG/media-play-32.png</normaloff>:/IMG/IMG/media-play-32.png</iconset>
+     <normaloff>:/AudioVideoIcons/AudioVideoIcons/play-icon.png</normaloff>:/AudioVideoIcons/AudioVideoIcons/play-icon.png</iconset>
    </property>
    <property name="text">
     <string>Play</string>
@@ -993,7 +988,7 @@
   <action name="actionGoto_First_Frame">
    <property name="icon">
     <iconset resource="ressources.qrc">
-     <normaloff>:/IMG/IMG/media-skip-backward-32.png</normaloff>:/IMG/IMG/media-skip-backward-32.png</iconset>
+     <normaloff>:/AudioVideoIcons/AudioVideoIcons/first-track-icon.png</normaloff>:/AudioVideoIcons/AudioVideoIcons/first-track-icon.png</iconset>
    </property>
    <property name="text">
     <string>Goto First Frame</string>
@@ -1003,6 +998,21 @@
    </property>
    <property name="shortcut">
     <string>Return</string>
+   </property>
+  </action>
+  <action name="actionLoop">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="ressources.qrc">
+     <normaloff>:/AudioVideoIcons/AudioVideoIcons/replay-icon.png</normaloff>:/AudioVideoIcons/AudioVideoIcons/replay-icon.png</iconset>
+   </property>
+   <property name="text">
+    <string>Loop</string>
+   </property>
+   <property name="toolTip">
+    <string>Never ending playback</string>
    </property>
   </action>
  </widget>

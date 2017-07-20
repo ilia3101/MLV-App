@@ -140,7 +140,7 @@ void setMlvProcessing(mlvObject_t * video, processingObject_t * processing)
     /* DONE? */
 }
 
-void getMlvRawFrameDebayered(mlvObject_t * video, int frameIndex, uint16_t * outputFrame)
+void getMlvRawFrameDebayered(mlvObject_t * video, uint32_t frameIndex, uint16_t * outputFrame)
 {
     int width = getMlvWidth(video);
     int height = getMlvHeight(video);
@@ -152,10 +152,11 @@ void getMlvRawFrameDebayered(mlvObject_t * video, int frameIndex, uint16_t * out
         memcpy(outputFrame, video->rgb_raw_frames[frameIndex], frame_size);
     }
     /* Else if this frame was requested last time and is sitting in the single frame cache */
-    else if (video->current_cached_frame == frameIndex)
+    //Commented out by masc: the very first frame (index=0) comes corrupted to the GUI! Ilia, please fix.
+    /*else if (video->current_cached_frame == frameIndex)
     {
         memcpy(outputFrame, video->rgb_raw_current_frame, frame_size);
-    }
+    }*/
     /* Maybe this frame is currently being cached... */
     else if (video->is_caching && (video->currently_caching == frameIndex))
     {

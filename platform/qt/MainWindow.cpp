@@ -23,12 +23,17 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //Dont show the Faithful combobox
     ui->comboBox->setVisible( false );
+    //Disable unused (for now) actions
+    ui->actionCopyRecept->setEnabled( false );
+    ui->actionPasteReceipt->setEnabled( false );
 
     //Set bools for draw rules
     m_dontDraw = true;
     m_frameStillDrawing = false;
     m_frameChanged = false;
     m_fileLoaded = false;
+
+    //Default "last" path
     m_lastSaveFileName = QString( "/Users/" );
 
     /* Initialise the MLV object so it is actually useful */
@@ -96,10 +101,19 @@ void MainWindow::timerEvent(QTimerEvent *t)
         //Playback
         if( ui->actionPlay->isChecked() )
         {
-            //Stop when on last frame
+            //when on last frame
             if( ui->horizontalSliderPosition->value() >= ui->horizontalSliderPosition->maximum() )
             {
-                ui->actionPlay->setChecked( false );
+                if( ui->actionLoop->isChecked() )
+                {
+                    //Loop, goto first frame
+                    ui->horizontalSliderPosition->setValue( 0 );
+                }
+                else
+                {
+                    //Stop
+                    ui->actionPlay->setChecked( false );
+                }
             }
             else
             {
@@ -146,6 +160,22 @@ void MainWindow::resizeEvent(QResizeEvent *event)
     event->accept();
 }
 
+// Intercept FileOpen events
+bool MainWindow::event(QEvent *event)
+{
+    if (event->type() == QEvent::FileOpen) {
+        QFileOpenEvent *openEvent = static_cast<QFileOpenEvent *>(event);
+        //Exit if not an MLV file or aborted
+        QString fileName = openEvent->file();
+        if( fileName == QString( "" ) && !fileName.endsWith( ".mlv", Qt::CaseInsensitive ) ) return false;
+        //Save last file name
+        m_lastSaveFileName = fileName;
+        //Open MLV
+        openMlv( fileName );
+    }
+    return QMainWindow::event(event);
+}
+
 //Draw a raw picture to the gui
 void MainWindow::drawFrame()
 {
@@ -156,9 +186,9 @@ void MainWindow::drawFrame()
 
     //Some math to have the picture exactly in the frame
     int actWidth = ui->frame->width();
+    int actHeight = ui->frame->height();
     int desWidth = actWidth;
     int desHeight = actWidth * getMlvHeight(m_pMlvObject) / getMlvWidth(m_pMlvObject);
-    int actHeight = ui->frame->height();
     if( desHeight > actHeight )
     {
         desHeight = actHeight;
@@ -177,7 +207,7 @@ void MainWindow::drawFrame()
     m_frameStillDrawing = false;
 }
 
-//Open MLV
+//Open MLV Dialog
 void MainWindow::on_actionOpen_triggered()
 {
     //Open File Dialog
@@ -188,8 +218,16 @@ void MainWindow::on_actionOpen_triggered()
     //Exit if not an MLV file or aborted
     if( fileName == QString( "" ) && !fileName.endsWith( ".mlv", Qt::CaseInsensitive ) ) return;
 
+    //Save last file name
     m_lastSaveFileName = fileName;
 
+    //Open the file
+    openMlv( fileName );
+}
+
+//Open MLV procedure
+void MainWindow::openMlv( QString fileName )
+{
     //Set window title to filename
     this->setWindowTitle( QString( "MLV App | %1" ).arg( fileName ) );
 

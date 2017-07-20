@@ -8,6 +8,7 @@
 #include <QDebug>
 #include <QTimerEvent>
 #include <QResizeEvent>
+#include <QFileOpenEvent>
 #include "../../src/mlv_include.h"
 #include "InfoDialog.h"
 
@@ -26,6 +27,7 @@ public:
 protected:
     void timerEvent( QTimerEvent *t );
     void resizeEvent( QResizeEvent *event );
+    bool event( QEvent *event );
 
 private slots:
     void on_actionOpen_triggered();
@@ -63,6 +65,7 @@ private:
     int m_timerCacheId;
     QString m_lastSaveFileName;
     void drawFrame();
+    void openMlv( QString fileName );
 };
 
 #endif // MAINWINDOW_H

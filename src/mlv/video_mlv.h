@@ -54,7 +54,7 @@ void getMlvProcessedFrame16(mlvObject_t * video, int frameIndex, uint16_t * outp
 void getMlvRawFrameFloat(mlvObject_t * video, int frameIndex, float * outputFrame);
 
 /* Gets a debayered 16 bit frame - used in getMlvProcessedFrame8 and 16 (when that begins to exist) */
-void getMlvRawFrameDebayered(mlvObject_t * video, int frameIndex, uint16_t * outputFrame);
+void getMlvRawFrameDebayered(mlvObject_t * video, uint32_t frameIndex, uint16_t * outputFrame);
 
 /* Used for processing, gets the matrix that does camera -> XYZ */
 void getMlvXyzToCameraMatrix(mlvObject_t * video, double * outputMatrix);

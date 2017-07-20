@@ -28,4 +28,26 @@
         <file>IMG/Magic_Lantern_logo.png</file>
         <file>IMG/Magic_Lantern_logo_b.png</file>
     </qresource>
+    <qresource prefix="/RetinaIMG">
+        <file>RetinaIMG/Export-To-File-icon.png</file>
+        <file>RetinaIMG/File-Copy-icon.png</file>
+        <file>RetinaIMG/File-New-icon.png</file>
+        <file>RetinaIMG/Folder-Open-icon.png</file>
+        <file>RetinaIMG/Paste-icon.png</file>
+        <file>RetinaIMG/Save-icon.png</file>
+        <file>RetinaIMG/Settings-icon.png</file>
+    </qresource>
+    <qresource prefix="/AudioVideoIcons">
+        <file>AudioVideoIcons/audio-icon.png</file>
+        <file>AudioVideoIcons/audio-off-icon.png</file>
+        <file>AudioVideoIcons/first-track-icon.png</file>
+        <file>AudioVideoIcons/forward-icon.png</file>
+        <file>AudioVideoIcons/last-track-icon.png</file>
+        <file>AudioVideoIcons/pause-icon.png</file>
+        <file>AudioVideoIcons/play-icon.png</file>
+        <file>AudioVideoIcons/replay-icon.png</file>
+        <file>AudioVideoIcons/rewind-icon.png</file>
+        <file>AudioVideoIcons/shuffle-icon.png</file>
+        <file>AudioVideoIcons/stop-icon.png</file>
+    </qresource>
 </RCC>

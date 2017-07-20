@@ -57,7 +57,8 @@ HEADERS += \
     ../../src/processing/processing_object.h \
     ../../src/processing/raw_processing.h \
     ../../src/mlv_include.h \
-    InfoDialog.h
+    InfoDialog.h \
+    MyApplication.h
 
 
 FORMS += \
@@ -66,3 +67,8 @@ FORMS += \
 
 RESOURCES += \
     ressources.qrc
+
+QMAKE_INFO_PLIST = Info.plist
+
+DISTFILES += \
+    Info.plist
