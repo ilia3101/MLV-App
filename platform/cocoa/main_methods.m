@@ -13,8 +13,6 @@
 
 #include "background_thread.h"
 
-/* My horrible old bitmap export module (temporary export solution) */
-#include "../../src/imageio/imageio.h"
 
 /* Methods for user interface interactions 
  * this is where some real code goes */
