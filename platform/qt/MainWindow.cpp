@@ -248,7 +248,9 @@ void MainWindow::openMlv( QString fileName )
     //* Limit frame cache to defined size of RAM */
     setMlvRawCacheLimitMegaBytes( m_pMlvObject, MAX_RAM );
     /* Tell it how many cores we have so it can be optimal */
-    setMlvCpuCores( m_pMlvObject, QThread::idealThreadCount() );
+    int cores = QThread::idealThreadCount();
+    if( cores > 1 ) cores -= 1; // -1 for the processing
+    setMlvCpuCores( m_pMlvObject, cores );
 
     //Adapt the RawImage to actual size
     int imageSize = getMlvWidth( m_pMlvObject ) * getMlvHeight( m_pMlvObject ) * 3;
