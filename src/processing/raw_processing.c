@@ -22,7 +22,7 @@
 /* Initialises processing thing with memory */
 processingObject_t * initProcessingObject()
 {
-    processingObject_t * processing = (processingObject_t *)malloc( sizeof(processingObject_t) );
+    processingObject_t * processing = (processingObject_t *)calloc( 1, sizeof(processingObject_t) );
 
     processing->pre_calc_curves = malloc( 65536 * sizeof(uint16_t) );
     processing->pre_calc_gamma  = malloc( 65536 * sizeof(uint16_t) );
