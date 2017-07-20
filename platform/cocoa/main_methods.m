@@ -83,8 +83,8 @@ void setAppNewMlvClip(char * mlvPathString, char * mlvFileName)
 
     /* Limit frame cache to 38% of RAM size (its fast anyway) */
     setMlvRawCacheLimitMegaBytes(videoMLV, (uint64_t)(cacheSizeMB));
-    /* Tell it how many cores we habe so it can be optimal */
-    setMlvCpuCores(videoMLV, MAC_CORES);
+    /* Tell it slightly less cores than we have, so background caching does not slow down UI interaction */
+    setMlvCpuCores(videoMLV, (MAC_CORES / 2 + 1));
 
     /* Adjust image size(probably) */
     [previewWindow setImage: nil];
