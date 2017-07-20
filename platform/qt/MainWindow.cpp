@@ -94,10 +94,20 @@ MainWindow::~MainWindow()
 void MainWindow::timerEvent(QTimerEvent *t)
 {
     static QTime lastTime;
+    static int8_t countTimeDown = -1;
 
     //Main timer
     if( t->timerId() == m_timerId )
     {
+        //Give free one core for responsive GUI
+        if( m_frameChanged )
+        {
+            countTimeDown = 3; //3 secs
+            int cores = QThread::idealThreadCount();
+            if( cores > 1 ) cores -= 1; // -1 for the processing
+            setMlvCpuCores( m_pMlvObject, cores );
+        }
+
         //Playback
         if( ui->actionPlay->isChecked() )
         {
@@ -139,9 +149,10 @@ void MainWindow::timerEvent(QTimerEvent *t)
         }
         return;
     }
-    //Caching Status timer
+    //1sec Timer
     else if( t->timerId() == m_timerCacheId )
     {
+        //Caching Status Label
         if( m_fileLoaded && m_pMlvObject->is_caching )
         {
             m_pCachingStatus->setText( tr( "Caching: active" ) );
@@ -150,6 +161,10 @@ void MainWindow::timerEvent(QTimerEvent *t)
         {
             m_pCachingStatus->setText( tr( "Caching: idle" ) );
         }
+
+        //get all cores again
+        if( countTimeDown == 0 ) setMlvCpuCores( m_pMlvObject, QThread::idealThreadCount() );
+        if( countTimeDown >= 0 ) countTimeDown--;
     }
 }
 
@@ -248,9 +263,7 @@ void MainWindow::openMlv( QString fileName )
     //* Limit frame cache to defined size of RAM */
     setMlvRawCacheLimitMegaBytes( m_pMlvObject, MAX_RAM );
     /* Tell it how many cores we have so it can be optimal */
-    int cores = QThread::idealThreadCount();
-    if( cores > 1 ) cores -= 1; // -1 for the processing
-    setMlvCpuCores( m_pMlvObject, cores );
+    setMlvCpuCores( m_pMlvObject, QThread::idealThreadCount() );
 
     //Adapt the RawImage to actual size
     int imageSize = getMlvWidth( m_pMlvObject ) * getMlvHeight( m_pMlvObject ) * 3;
