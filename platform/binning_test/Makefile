@@ -18,7 +18,8 @@ endif
 
 # List of all objects to link
 objects = main.o bitmap.o debayer.o amaze_demosaic.o  \
-	raw_processing.o video_mlv.o matrix.o camera_matrices.o
+	raw_processing.o video_mlv.o matrix.o camera_matrices.o \
+	frame_caching.o
 
 # Flags for link and objects
 mainflags = -Ofast -DNDEBUG -Wall #-Werror # no debugging
@@ -56,6 +57,9 @@ raw_processing.o : ../../src/processing/raw_processing.c
 
 video_mlv.o : ../../src/mlv/video_mlv.c
 	$(CC) $(cflags) ../../src/mlv/video_mlv.c
+
+frame_caching.o : ../../src/mlv/frame_caching.c
+	$(CC) $(amazeflags) ../../src/mlv/frame_caching.c
 
 camera_matrices.o : ../../src/mlv/camera_matrices.c
 	$(CC) $(cflags) ../../src/mlv/camera_matrices.c
