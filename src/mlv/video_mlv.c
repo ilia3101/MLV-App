@@ -383,6 +383,12 @@ void openMlvClip(mlvObject_t * video, char * mlvPath)
             old_black_level, getMlvBlackLevel(video), getMlvCamera(video));
     }
 
+    /* If black level is below 15000, set it to 15000, anything lower seems to low */
+    if ((getMlvWhiteLevel(video) < 15000) || (getMlvWhiteLevel(video) > 16383))
+    {
+        getMlvBlackLevel(video) = 15000;
+    }
+
     video->block_num = block_num;
 
     /* Set frame count in video object */
