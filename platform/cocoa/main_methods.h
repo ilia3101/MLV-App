@@ -36,5 +36,11 @@ void setAppNewMlvClip(char * mlvPathString, char * mlvFileName);
 
 @end
 
+/* NSImageView stuff */
+@interface NSImageView (mainMethods)
+
+-(void)updatePreviewWindow;
+
+@end
 
 #endif

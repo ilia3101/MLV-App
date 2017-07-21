@@ -7,6 +7,8 @@
 #include <stdint.h>
 #include <pthread.h>
 
+#include "main_methods.h"
+
 #include "background_thread.h"
 
 #include "../../src/mlv_include.h"
@@ -96,10 +98,9 @@ void draw_frame()
     /* Get dhe frame(8 bit cos most screens are) */
     getMlvProcessedFrame8(videoMLV, currentFrameIndex, rawImage);
 
-    /* Update/refresh the view... this seems to be the buggiest part of the 
-     * whole program, please hlp make better playback if you know how to do that */
-    [previewWindow setImage: nil];
-    [previewWindow setImage: rawImageObject];
+    /* Update/refresh the view on main thread */
+    SEL updateMethodSelector = @selector(updatePreviewWindow);
+    [previewWindow performSelectorOnMainThread: updateMethodSelector withObject: nil waitUntilDone: YES];
 
     /* Doesn't seem to help the issues with old images remaining (not my bugs!) */
     [window update];
