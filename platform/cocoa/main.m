@@ -158,6 +158,17 @@ int NSApplicationMain(int argc, const char * argv[])
     //CREATE_SLIDER_RIGHT( sharpnessSlider, sharpnessLabel, sharpnessValueLabel, @"Sharpen", 10, sharpnessMethod, BLOCK_OFFSET * 2, 0.0 );
     /* Maybe we won't have sharpness */
 
+    /* To set always use AMaZE on/off */
+    NSButton * alwaysUseAmazeSelector = [ [NSButton alloc] 
+                                          initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(11, ELEMENT_HEIGHT, 11) )];
+    [alwaysUseAmazeSelector setButtonType: NSSwitchButton];
+    [alwaysUseAmazeSelector setTitle: @"Always use AMaZE"];
+    [alwaysUseAmazeSelector anchorRight: YES];
+    [alwaysUseAmazeSelector anchorTop: YES];
+    [alwaysUseAmazeSelector setTarget: alwaysUseAmazeSelector];
+    [alwaysUseAmazeSelector setAction: @selector(toggleAlwaysAmaze)];
+    [[window contentView] addSubview: alwaysUseAmazeSelector];
+
     /*
      *******************************************************************************
      * LEFT SIDEBAR STUFF

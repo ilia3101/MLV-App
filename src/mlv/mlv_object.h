@@ -80,6 +80,7 @@ typedef struct {
     uint16_t ** rgb_raw_frames; /* Pointers to 16/48bpp debayered RGB frames */
 
     /* A single cached frame, speeds up when asking for the same (non-cached) frame over and over again */
+    int current_cached_frame_active;
     uint32_t current_cached_frame; int times_requested;
     uint16_t * rgb_raw_current_frame;
 

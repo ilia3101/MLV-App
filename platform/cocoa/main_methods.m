@@ -131,6 +131,19 @@ void setAppNewMlvClip(char * mlvPathString, char * mlvFileName)
 
 @implementation NSButton (mainMethods)
 
+/* Enables/disables always AMaZE requirement */
+-(void)toggleAlwaysAmaze
+{
+    if ([self state] == NSOnState) 
+    {
+        setMlvAlwaysUseAmaze(videoMLV);
+    }
+    else 
+    {
+        setMlvDontAlwaysUseAmaze(videoMLV);
+    }
+}
+
 /* Open file dialog + set new MLV clip */
 -(void)openMlvDialog
 {

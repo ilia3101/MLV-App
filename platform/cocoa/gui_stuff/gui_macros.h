@@ -18,6 +18,7 @@ NSTextField * valueLabelName = [ \
     [NSTextField alloc]  \
     initWithFrame: NSMakeRect( RIGHT_SIDEBAR_VALUE_LABEL(slotNumber, ELEMENT_HEIGHT, offset) ) \
 ]; \
+[valueLabelName setFont:[NSFont fontWithName:@"Courier" size:12.7]]; \
 [valueLabelName setLabelStyle]; /* From useful_methods.h */ \
 [valueLabelName anchorTop: YES]; \
 [valueLabelName anchorRight: YES]; \

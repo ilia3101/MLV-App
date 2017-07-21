@@ -152,11 +152,10 @@ void getMlvRawFrameDebayered(mlvObject_t * video, uint32_t frameIndex, uint16_t 
         memcpy(outputFrame, video->rgb_raw_frames[frameIndex], frame_size);
     }
     /* Else if this frame was requested last time and is sitting in the single frame cache */
-    //Commented out by masc: the very first frame (index=0) comes corrupted to the GUI! Ilia, please fix.
-    /*else if (video->current_cached_frame == frameIndex)
+    else if (video->current_cached_frame_active && video->current_cached_frame == frameIndex)
     {
         memcpy(outputFrame, video->rgb_raw_current_frame, frame_size);
-    }*/
+    }
     /* Maybe this frame is currently being cached... */
     else if (video->is_caching && (video->currently_caching == frameIndex))
     {
@@ -171,6 +170,7 @@ void getMlvRawFrameDebayered(mlvObject_t * video, uint32_t frameIndex, uint16_t 
         get_mlv_raw_frame_debayered(video, frameIndex, raw_frame, video->rgb_raw_current_frame, doesMlvAlwaysUseAmaze(video));
         free(raw_frame);
         memcpy(outputFrame, video->rgb_raw_current_frame, frame_size);
+        video->current_cached_frame_active = 1;
         video->current_cached_frame = frameIndex;
     }
 }
