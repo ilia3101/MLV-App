@@ -27,10 +27,6 @@ processingObject_t * initProcessingObject()
     processing->pre_calc_curves = malloc( 65536 * sizeof(uint16_t) );
     processing->pre_calc_gamma  = malloc( 65536 * sizeof(uint16_t) );
     processing->pre_calc_levels = malloc( 65536 * sizeof(uint16_t) );
-    /* These are unused... right now */
-    processing->pre_calc_sat_x  = malloc( 65536 * sizeof(uint16_t) );
-    processing->pre_calc_sat_y  = malloc( 65536 * sizeof( int32_t) );
-    /* Used until I integrate my proper quick saturation algorithm */
     processing->pre_calc_sat    = malloc( 131072 * sizeof(int32_t) );
 
     /* For precalculated matrix values */
@@ -98,8 +94,6 @@ void applyProcessingObject( processingObject_t * processing,
     uint16_t * img_end = img + img_s;
 
     memcpy(outputImage, inputImage, img_s * sizeof(uint16_t));
-
-    //uint16_t * test = malloc(sizeof(uint16_t) * 65536);
 
     /* Apply some precalcuolated settings */
     for (int i = 0; i < img_s; ++i)
@@ -240,9 +234,6 @@ void processingSetExposureStops(processingObject_t * processing, double exposure
 {
     processing->exposure_stops = exposureStops;
 
-    /* Real value of exposure(not stops) */
-    //double exposure_value = pow(2, exposureStops);
-
     processing_update_matrices(processing);
 }
 
@@ -252,27 +243,7 @@ void processingSetSaturation(processingObject_t * processing, double saturationF
 {
     processing->saturation = saturationFactor;
 
-    /*********************************
-     * START OF NOT YET WORKING CODE *
-     *********************************/
-
-    /* The saturation algorithm is the same as usual, just rearranged 
-     * for simplicity(speed), so that most of it can be precalculated */
-    double y_multiplier = (1.0 - saturationFactor);
-
-    /* Precalculation (for the not-working-yet algorithm) */
-    for (int i = 0; i < 65536; ++i)
-    {
-        processing->pre_calc_sat_x[i] = (uint16_t)(i * saturationFactor);
-        processing->pre_calc_sat_x[i] = MAX( MIN(processing->pre_calc_sat_x[i], 65535), 0);
-        processing->pre_calc_sat_y[i] = (int32_t)(i * y_multiplier);
-    }
-
-    /*********************************
-     *  END OF NOT YET WORKING CODE  *
-     *********************************/
-
-    /* Precaluclate for the crappy algorithm: */
+    /* Precaluclate for the algorithm */
     for (int i = 0; i < 131072; ++i)
     {
         double value = (i - 65536) * saturationFactor;
@@ -385,8 +356,6 @@ void freeProcessingObject(processingObject_t * processing)
     free(processing->pre_calc_curves);
     free(processing->pre_calc_gamma);
     free(processing->pre_calc_levels);
-    free(processing->pre_calc_sat_x);
-    free(processing->pre_calc_sat_y);
     free(processing->pre_calc_sat);
     for (int i = 0; i < 9; ++i) free(processing->pre_calc_matrix[i]);
     free(processing);

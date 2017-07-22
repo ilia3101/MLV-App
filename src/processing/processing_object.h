@@ -45,10 +45,7 @@ typedef struct {
     uint16_t * pre_calc_curves;
     uint16_t * pre_calc_levels; /* For black level and white level */
     uint16_t * pre_calc_gamma;
-    /* For de super quick saturation algorythm (not working yet) */
-    uint16_t * pre_calc_sat_x;
-    int32_t  * pre_calc_sat_y;
-    /* Temporary fix(to speed up the crappy one) */
+    /* Precalculated values for saturation */
     int32_t  * pre_calc_sat;
 
 } processingObject_t;
