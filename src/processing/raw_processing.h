@@ -46,6 +46,7 @@ void processingSetLightening(processingObject_t * processing, double lighten); /
 
 /* Just don't touch this or keep at ~3, or 2.2 if you like S0NY */
 void processingSetGamma(processingObject_t * processing, double gammaValue);
+#define processingGetGamma(processing) processing->gamma_power
 
 
 

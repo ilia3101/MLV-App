@@ -175,21 +175,18 @@ void getMlvRawFrameDebayered(mlvObject_t * video, uint32_t frameIndex, uint16_t 
     }
 }
 
-/* Get a processed frame in 8 bit */
-void getMlvProcessedFrame8(mlvObject_t * video, int frameIndex, uint8_t * outputFrame)
+/* Get a processed frame in 16 bit */
+void getMlvProcessedFrame16(mlvObject_t * video, int frameIndex, uint16_t * outputFrame)
 {
     /* Useful */
     int width = getMlvWidth(video);
     int height = getMlvHeight(video);
 
-    /* How many bytes is RAW frame */
-    int raw_frame_size = width * height;
-    int rgb_frame_size = raw_frame_size * 3;
+    /* Size of RAW frame */
+    int rgb_frame_size = height * width * 3;
 
     /* Unprocessed debayered frame (RGB) */
     uint16_t * unprocessed_frame = malloc( rgb_frame_size * sizeof(uint16_t) );
-    /* Processed frame (RGB) */
-    uint16_t * processed_frame = malloc( rgb_frame_size * sizeof(uint16_t) );
 
     /* Get the raw data in B&W */
     getMlvRawFrameDebayered(video, frameIndex, unprocessed_frame);
@@ -198,7 +195,21 @@ void getMlvProcessedFrame8(mlvObject_t * video, int frameIndex, uint8_t * output
     applyProcessingObject( video->processing,
                            width, height,
                            unprocessed_frame,
-                           processed_frame );
+                           outputFrame );
+
+    free(unprocessed_frame);
+}
+
+/* Get a processed frame in 8 bit */
+void getMlvProcessedFrame8(mlvObject_t * video, int frameIndex, uint8_t * outputFrame)
+{
+    /* Size of RAW frame */
+    int rgb_frame_size = getMlvWidth(video) * getMlvHeight(video) * 3;
+
+    /* Processed frame (RGB) */
+    uint16_t * processed_frame = malloc( rgb_frame_size * sizeof(uint16_t) );
+
+    getMlvProcessedFrame16(video, frameIndex, processed_frame);
 
     /* Copy (and 8-bitize) */
     for (int i = 0; i < rgb_frame_size; ++i)
@@ -206,7 +217,6 @@ void getMlvProcessedFrame8(mlvObject_t * video, int frameIndex, uint8_t * output
         outputFrame[i] = processed_frame[i] >> 8;
     }
 
-    free(unprocessed_frame);
     free(processed_frame);
 }
 
