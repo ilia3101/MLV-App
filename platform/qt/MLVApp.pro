@@ -39,7 +39,8 @@ SOURCES += \
     ../../src/mlv/video_mlv.c \
     ../../src/processing/processing.c \
     ../../src/processing/raw_processing.c \
-    InfoDialog.cpp
+    InfoDialog.cpp \
+    StatusDialog.cpp
 
 
 HEADERS += \
@@ -58,12 +59,14 @@ HEADERS += \
     ../../src/processing/raw_processing.h \
     ../../src/mlv_include.h \
     InfoDialog.h \
-    MyApplication.h
+    MyApplication.h \
+    StatusDialog.h
 
 
 FORMS += \
         MainWindow.ui \
-    InfoDialog.ui
+    InfoDialog.ui \
+    StatusDialog.ui
 
 RESOURCES += \
     ressources.qrc
@@ -71,4 +74,5 @@ RESOURCES += \
 QMAKE_INFO_PLIST = Info.plist
 
 DISTFILES += \
-    Info.plist
+    Info.plist \
+    FFmpeg/ffmpeg

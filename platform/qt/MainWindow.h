@@ -11,6 +11,7 @@
 #include <QFileOpenEvent>
 #include "../../src/mlv_include.h"
 #include "InfoDialog.h"
+#include "StatusDialog.h"
 
 namespace Ui {
 class MainWindow;
@@ -47,9 +48,12 @@ private slots:
     void on_actionGoto_First_Frame_triggered();
     void on_actionExport_triggered();
 
+    void on_checkBoxHighLightReconstruction_toggled(bool checked);
+
 private:
     Ui::MainWindow *ui;
     InfoDialog *m_pInfoDialog;
+    StatusDialog *m_pStatusDialog;
     mlvObject_t *m_pMlvObject;
     processingObject_t *m_pProcessingObject;
     QLabel *m_pRawImageLabel;

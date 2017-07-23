@@ -7,7 +7,7 @@
 #include <QThread>
 #include <QTime>
 
-#define VERSION "0.1 alpha"
+#define VERSION "0.2 alpha"
 
 #define MAX_RAM 2048
 
@@ -18,8 +18,9 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    //Init the Info Dialog
+    //Init the Dialogs
     m_pInfoDialog = new InfoDialog( this );
+    m_pStatusDialog = new StatusDialog( this );
 
     //Dont show the Faithful combobox
     ui->comboBox->setVisible( false );
@@ -86,6 +87,7 @@ MainWindow::~MainWindow()
 {
     killTimer( m_timerId );
     killTimer( m_timerCacheId );
+    delete m_pStatusDialog;
     delete m_pInfoDialog;
     delete ui;
 }
@@ -423,24 +425,33 @@ void MainWindow::on_actionGoto_First_Frame_triggered()
 }
 
 //Export clip
+//Making a ProRes file:
+/*
+$ ffmpeg -r 25 -i frame%04d.png -c:v prores_ks -profile:v 4444 output.mov
+  ...or...                      -c:v prores_ks -profile:v hq   output.mov
+  ...or...                      -c:v prores                    output.mov
+*/
 void MainWindow::on_actionExport_triggered()
 {
     //Stop playback if active
     ui->actionPlay->setChecked( false );
 
     QString saveFileName = m_lastSaveFileName.left( m_lastSaveFileName.lastIndexOf( "." ) );
-    saveFileName.append( ".bmp" );
+    saveFileName.append( ".mov" );
 
     //File Dialog
     QString fileName = QFileDialog::getSaveFileName( this, tr("Export..."),
                                                     saveFileName,
-                                                    tr("Images (*.bmp *.png *.jpg)") );
+                                                    tr("Movie (*.mov)") );
 
-    //Exit if not an BMP file or aborted
+    //Exit if not an MOV file or aborted
     if( fileName == QString( "" )
-            && ( !fileName.endsWith( ".bmp", Qt::CaseInsensitive )
-                 || !fileName.endsWith( ".png", Qt::CaseInsensitive )
-                 || !fileName.endsWith( ".jpg", Qt::CaseInsensitive ) ) ) return;
+            && ( !fileName.endsWith( ".mov", Qt::CaseInsensitive ) ) ) return;
+
+    //Delete file if exists
+    QFile *file = new QFile( fileName );
+    if( file->exists() ) file->remove();
+    delete file;
 
     //Disable GUI drawing
     m_dontDraw = true;
@@ -448,32 +459,29 @@ void MainWindow::on_actionExport_triggered()
     // we always get amaze frames for exporting
     setMlvAlwaysUseAmaze( m_pMlvObject );
 
+    //StatusDialog
+    m_pStatusDialog->ui->progressBar->setMaximum( getMlvFrames( m_pMlvObject ) );
+    m_pStatusDialog->ui->progressBar->setValue( 0 );
+    m_pStatusDialog->show();
+
+    //Create temp pngs
     for( uint32_t i = 0; i < getMlvFrames( m_pMlvObject ); i++ )
     {
         //Append frame number
         QString numberedFileName = fileName.left( fileName.lastIndexOf( "." ) );
         numberedFileName.append( QString( "_%1" ).arg( (uint)i, 5, 10, QChar( '0' ) ) );
-        numberedFileName.append( fileName.right( 4 ) );
+        numberedFileName.append( QString( ".png" ) );
 
         //Get frame from library
         getMlvProcessedFrame8( m_pMlvObject, i, m_pRawImage );
 
         //Write file
-        if( fileName.endsWith( ".bmp", Qt::CaseInsensitive ) )
-        {
-            QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
-                    .save( numberedFileName, "bmp", -1 );
-        }
-        else if( fileName.endsWith( ".png", Qt::CaseInsensitive ) )
-        {
-            QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
+        QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
                     .save( numberedFileName, "png", -1 );
-        }
-        else if( fileName.endsWith( ".jpg", Qt::CaseInsensitive ) )
-        {
-            QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
-                    .save( numberedFileName, "jpg", 100 );
-        }
+
+        m_pStatusDialog->ui->progressBar->setValue( i );
+        m_pStatusDialog->ui->progressBar->repaint();
+        qApp->processEvents();
     }
 
     //If we don't like amaze we switch it off again
@@ -481,4 +489,46 @@ void MainWindow::on_actionExport_triggered()
 
     //Enable GUI drawing
     m_dontDraw = false;
+
+    QString numberedFileName = fileName.left( fileName.lastIndexOf( "." ) );
+    QString output = numberedFileName;
+    numberedFileName.append( QString( "_\%05d" ) );
+    numberedFileName.append( QString( ".png" ) );
+    output.append( QString( ".mov" ) );
+
+    QString program = QCoreApplication::applicationDirPath();
+    program.append( QString( "/ffmpeg\"" ) );
+    program.prepend( QString( "\"" ) );
+    program.append( QString( " -r 25 -i %1 -c:v prores_ks -profile:v 4444 %2" ).arg( numberedFileName ).arg( output ) );
+    qDebug() << program;
+    QProcess::execute( program );
+
+    //Update Status
+    m_pStatusDialog->ui->progressBar->setValue( m_pStatusDialog->ui->progressBar->maximum() );
+    m_pStatusDialog->ui->progressBar->repaint();
+    qApp->processEvents();
+
+    //Clean up
+    for( uint32_t i = 0; i < getMlvFrames( m_pMlvObject ); i++ )
+    {
+        //Append frame number
+        QString numberedFileName = fileName.left( fileName.lastIndexOf( "." ) );
+        numberedFileName.append( QString( "_%1" ).arg( (uint)i, 5, 10, QChar( '0' ) ) );
+        numberedFileName.append( QString( ".png" ) );
+
+        //Delete file
+        QFile *file = new QFile( numberedFileName );
+        if( file->exists() ) file->remove();
+        delete file;
+    }
+
+    //Hide Status Dialog
+    m_pStatusDialog->hide();
+}
+
+void MainWindow::on_checkBoxHighLightReconstruction_toggled(bool checked)
+{
+    if( checked ) processingEnableHighlightReconstruction( m_pProcessingObject );
+    else processingDisableHighlightReconstruction( m_pProcessingObject );
+    m_frameChanged = true;
 }

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1194</width>
-    <height>765</height>
+    <width>1197</width>
+    <height>792</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -791,6 +791,13 @@
        </widget>
       </item>
       <item>
+       <widget class="QCheckBox" name="checkBoxHighLightReconstruction">
+        <property name="text">
+         <string>Highlight reconstruction</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QCheckBox" name="checkBoxUseAmaze">
         <property name="text">
          <string>Always use AMaZE</string>
@@ -822,7 +829,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1194</width>
+     <width>1197</width>
      <height>22</height>
     </rect>
    </property>
