@@ -7,6 +7,10 @@ typedef struct {
     /* (RAW) white and black levels */
     int black_level, white_level;
 
+    /* Do highlight reconstrucion? It's slow */
+    int highlight_reconstruction;
+    uint16_t highest_green; /* Used for reconstruction */
+
     /* Double is classy */
 
     /* Camera's matrix - will need to be set on opening clip, default set for 5D Mark II */

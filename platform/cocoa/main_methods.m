@@ -137,10 +137,27 @@ void setAppNewMlvClip(char * mlvPathString, char * mlvFileName)
     if ([self state] == NSOnState) 
     {
         setMlvAlwaysUseAmaze(videoMLV);
+        frameChanged++;
     }
     else 
     {
         setMlvDontAlwaysUseAmaze(videoMLV);
+        frameChanged++;
+    }
+}
+
+/* Enables/disables highlight reconstruction */
+-(void)toggleHighlightReconstruction
+{
+    if ([self state] == NSOnState) 
+    {
+        processingEnableHighlightReconstruction(processingSettings);
+        frameChanged++;
+    }
+    else 
+    {
+        processingDisableHighlightReconstruction(processingSettings);
+        frameChanged++;
     }
 }
 

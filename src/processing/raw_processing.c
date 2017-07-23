@@ -10,14 +10,12 @@
 /* Matrix functions which are useful */
 #include "../matrix/matrix.h"
 
-/* Because why compile a whole .o just for this? */
-#include "processing.c"
-
-
 #define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
 #define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
 #define LIMIT16(X) MAX(MIN(X, 65535), 0)
 
+/* Because why compile a whole .o just for this? */
+#include "processing.c"
 
 /* Initialises processing thing with memory */
 processingObject_t * initProcessingObject()
@@ -114,6 +112,19 @@ void applyProcessingObject( processingObject_t * processing,
         pix[2] = LIMIT16(pix2);
     }
 
+    /* Now highlilght reconstruction */
+    if (processing->highest_green < 65535 && processing->highlight_reconstruction)
+    {
+        for (uint16_t * pix = img; pix < img_end; pix += 3)
+        {
+            /* Check if its the highest green value possible */
+            if (pix[1] == processing->highest_green)
+            {
+                pix[1] = (pix[0] + pix[2]) / 2;
+            }
+        }
+    }
+
     /* Gamma */
     for (int i = 0; i < img_s; ++i)
     {
@@ -122,7 +133,7 @@ void applyProcessingObject( processingObject_t * processing,
 
     /* Now saturation (looks way better after gamma) 
      * Also this algorithm is slow, but temporary */
-    for (uint16_t * pix = img; pix < img_end; pix += 3)
+    for (uint16_t * pix = outputImage; pix < img_end; pix += 3)
     {
         /* Pixel brightness = 4/16 R, 11/16 G, 1/16 blue; Try swapping the channels, it will look worse */
         int32_t Y1 = ((pix[0] << 2) + (pix[1] * 11) + pix[2]) >> 4;

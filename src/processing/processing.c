@@ -84,6 +84,9 @@ void processing_update_matrices(processingObject_t * processing)
     /* Temporary working matrix */
     double temp_matrix_a[9];
 
+    /* (for shorter code) */
+    int32_t ** pm = processing->pre_calc_matrix;
+
     /* Exposure */
     double exposure_factor = pow(2.0, processing->exposure_stops);
 
@@ -121,9 +124,12 @@ void processing_update_matrices(processingObject_t * processing)
     {
         for (int j = 0; j < 65536; ++j)
         {
-            processing->pre_calc_matrix[i][j] = (int32_t)((double)j * processing->final_matrix[i]);
+            pm[i][j] = (int32_t)((double)j * processing->final_matrix[i]);
         }
     }
+
+    /* Highest green value - pixels at this value will need to be reconstructed */
+    processing->highest_green = LIMIT16(pm[3][65535] + pm[4][65535] + pm[5][65535]);
 
     /* This is nice */
     printMatrix(processing->final_matrix);

@@ -158,9 +158,20 @@ int NSApplicationMain(int argc, const char * argv[])
     //CREATE_SLIDER_RIGHT( sharpnessSlider, sharpnessLabel, sharpnessValueLabel, @"Sharpen", 10, sharpnessMethod, BLOCK_OFFSET * 2, 0.0 );
     /* Maybe we won't have sharpness */
 
+    /* Enable/disable highlight reconstruction */
+    NSButton * highlightReconstructionSelector = [ [NSButton alloc] 
+                                                   initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(11, ELEMENT_HEIGHT, 16) )];
+    [highlightReconstructionSelector setButtonType: NSSwitchButton];
+    [highlightReconstructionSelector setTitle: @"Highlight Reconstruction"];
+    [highlightReconstructionSelector anchorRight: YES];
+    [highlightReconstructionSelector anchorTop: YES];
+    [highlightReconstructionSelector setTarget: highlightReconstructionSelector];
+    [highlightReconstructionSelector setAction: @selector(toggleHighlightReconstruction)];
+    [[window contentView] addSubview: highlightReconstructionSelector];
+
     /* To set always use AMaZE on/off */
     NSButton * alwaysUseAmazeSelector = [ [NSButton alloc] 
-                                          initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(11, ELEMENT_HEIGHT, 11) )];
+                                          initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(12, ELEMENT_HEIGHT, 30) )];
     [alwaysUseAmazeSelector setButtonType: NSSwitchButton];
     [alwaysUseAmazeSelector setTitle: @"Always use AMaZE"];
     [alwaysUseAmazeSelector anchorRight: YES];
@@ -193,6 +204,8 @@ int NSApplicationMain(int argc, const char * argv[])
     videoMLV = initMlvObject();
     /* Intialise the processing settings object */
     processingSettings = initProcessingObject();
+    /* Allow highlight reconstruction */
+    processingDisableHighlightReconstruction(processingSettings);
     /* Set exposure to + 1.2 stops instead of correct 0.0, this is to give the impression 
      * (to those that believe) that highlights are recoverable (shhh don't tell) */
     processingSetExposureStops(processingSettings, 1.2);

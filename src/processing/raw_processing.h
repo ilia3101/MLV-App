@@ -50,6 +50,12 @@ void processingSetGamma(processingObject_t * processing, double gammaValue);
 
 
 
+/* Enable/disable highlight reconstruction */
+#define processingEnableHighlightReconstruction(processing) (processing)->highlight_reconstruction = 1
+#define processingDisableHighlightReconstruction(processing) (processing)->highlight_reconstruction = 0
+
+
+
 /* Those ML matrices, camera specific */
 void processingSetXyzToCamMatrix(processingObject_t * processing, double * xyzToCamMatrix);
 /* This is whatever, probably doesn't need touching */
