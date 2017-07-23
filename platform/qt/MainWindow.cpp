@@ -278,7 +278,7 @@ void MainWindow::openMlv( QString fileName )
     m_pInfoDialog->ui->tableWidget->item( 2, 1 )->setText( QString( "%1 pixel" ).arg( (int)getMlvWidth( m_pMlvObject ) ) );
     m_pInfoDialog->ui->tableWidget->item( 3, 1 )->setText( QString( "%1 pixel" ).arg( (int)getMlvHeight( m_pMlvObject ) ) );
     m_pInfoDialog->ui->tableWidget->item( 4, 1 )->setText( QString( "%1" ).arg( (int)getMlvFrames( m_pMlvObject ) ) );
-    m_pInfoDialog->ui->tableWidget->item( 5, 1 )->setText( QString( "%1 fps" ).arg( (int)getMlvFramerate( m_pMlvObject ) ) );
+    m_pInfoDialog->ui->tableWidget->item( 5, 1 )->setText( QString( "%1 fps" ).arg( getMlvFramerate( m_pMlvObject ) ) );
     m_pInfoDialog->ui->tableWidget->item( 6, 1 )->setText( QString( "%1 µs" ).arg( getMlvShutter( m_pMlvObject ) ) );
     m_pInfoDialog->ui->tableWidget->item( 7, 1 )->setText( QString( "f %1" ).arg( getMlvAperture( m_pMlvObject ) / 100.0, 0, 'f', 1 ) );
     m_pInfoDialog->ui->tableWidget->item( 8, 1 )->setText( QString( "%1" ).arg( (int)getMlvIso( m_pMlvObject ) ) );
@@ -499,7 +499,10 @@ void MainWindow::on_actionExport_triggered()
     QString program = QCoreApplication::applicationDirPath();
     program.append( QString( "/ffmpeg\"" ) );
     program.prepend( QString( "\"" ) );
-    program.append( QString( " -r 25 -i %1 -c:v prores_ks -profile:v 4444 %2" ).arg( numberedFileName ).arg( output ) );
+    program.append( QString( " -r %1 -i \"%2\" -c:v prores_ks -profile:v 4444 \"%3\"" )
+                    .arg( getMlvFramerate( m_pMlvObject ) )
+                    .arg( numberedFileName )
+                    .arg( output ) );
     qDebug() << program;
     QProcess::execute( program );
 
