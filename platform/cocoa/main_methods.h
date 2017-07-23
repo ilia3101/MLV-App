@@ -9,6 +9,8 @@ void setAppNewMlvClip(char * mlvPathString, char * mlvFileName);
 /* Button methods */
 @interface NSButton (mainMethods)
 
+/* Enable/disable highlight reconstruction */
+-(void)toggleHighlightReconstruction;
 /* Enables/disables always AMaZE requirement */
 -(void)toggleAlwaysAmaze;
 /* Opens a dialog to select MLV file + sets MLV file to that */
