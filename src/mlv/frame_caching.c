@@ -78,11 +78,11 @@ void setMlvRawCacheLimitFrames(mlvObject_t * video, uint64_t frameLimit)
 /* TODO: add removing old/un-needed frames ability */
 void cache_mlv_frames(mlvObject_t * video)
 {
-    int width = getMlvWidth(video);
-    int height = getMlvHeight(video);
+    uint32_t width = getMlvWidth(video);
+    uint32_t height = getMlvHeight(video);
     //int threads = getMlvCpuCores(video) / 2 + 1;
-    int cache_frames = MIN((int)video->cache_limit_frames, (int)video->frames);
-    int frame_size_rgb = width * height * 3;
+    uint32_t cache_frames = MIN((int)video->cache_limit_frames, (int)video->frames);
+    uint32_t frame_size_rgb = width * height * 3;
 
     float * raw_frame = malloc( getMlvWidth(video) * getMlvHeight(video) * sizeof(float) );
 
@@ -91,7 +91,7 @@ void cache_mlv_frames(mlvObject_t * video)
     printf("\nTotal frames %i, Cache limit frames: %i\n\n", (int)video->frames, (int)video->cache_limit_frames);
 
     /* Cache until done */
-    for (int frame_index = 0; frame_index < cache_frames; ++frame_index)
+    for (uint32_t frame_index = 0; frame_index < cache_frames; ++frame_index)
     {
         /* Only debayer if frame is not already cached and has not been requested to stop */
         if (!video->cached_frames[frame_index] && !video->stop_caching)
