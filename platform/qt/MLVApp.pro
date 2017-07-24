@@ -60,7 +60,8 @@ HEADERS += \
     ../../src/mlv_include.h \
     InfoDialog.h \
     MyApplication.h \
-    StatusDialog.h
+    StatusDialog.h \
+    SystemMemory.h
 
 
 FORMS += \

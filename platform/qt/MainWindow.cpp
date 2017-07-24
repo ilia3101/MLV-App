@@ -7,9 +7,9 @@
 #include <QThread>
 #include <QTime>
 
-#define VERSION "0.2 alpha"
+#include "SystemMemory.h"
 
-#define MAX_RAM 2048
+#define VERSION "0.2 alpha"
 
 //Constructor
 MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
@@ -37,6 +37,13 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     //Default "last" path
     m_lastSaveFileName = QString( "/Users/" );
 
+    //Get the amount of RAM
+    uint32_t maxRam = getTotalSystemMemory() / 1024 / 1024;
+    /* Limit frame cache to suitable amount of RAM (~33% at 8GB and below, ~50% at 16GB, then up and up) */
+    m_cacheSizeMB = (int)(0.66666f * (float)(maxRam - 4000));
+    if (maxRam < 7500) m_cacheSizeMB = maxRam * 0.33;
+    qDebug() << "Set m_cacheSizeMB to:" << m_cacheSizeMB << "MB of" << maxRam << "MB of total Memory";
+
     /* Initialise the MLV object so it is actually useful */
     m_pMlvObject = initMlvObject();
     /* Intialise the processing settings object */
@@ -47,7 +54,7 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     /* Link video with processing settings */
     setMlvProcessing( m_pMlvObject, m_pProcessingObject );
     /* Limit frame cache to MAX_RAM size */
-    setMlvRawCacheLimitMegaBytes( m_pMlvObject, MAX_RAM );
+    setMlvRawCacheLimitMegaBytes( m_pMlvObject, m_cacheSizeMB );
     /* Use AMaZE */
     setMlvDontAlwaysUseAmaze( m_pMlvObject );
 
@@ -278,7 +285,7 @@ void MainWindow::openMlv( QString fileName )
     /* This needs to be joined (or segmentation fault 11 :D) */
     setMlvProcessing( m_pMlvObject, m_pProcessingObject );
     //* Limit frame cache to defined size of RAM */
-    setMlvRawCacheLimitMegaBytes( m_pMlvObject, MAX_RAM );
+    setMlvRawCacheLimitMegaBytes( m_pMlvObject, m_cacheSizeMB );
     /* Tell it how many cores we have so it can be optimal */
     setMlvCpuCores( m_pMlvObject, QThread::idealThreadCount() );
 

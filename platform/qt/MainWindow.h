@@ -60,6 +60,7 @@ private:
     QLabel *m_pCachingStatus;
     QLabel *m_pFpsStatus;
     uint8_t *m_pRawImage;
+    uint32_t m_cacheSizeMB;
     bool m_frameChanged;
     int m_currentFrameIndex;
     bool m_dontDraw;
