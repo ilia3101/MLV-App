@@ -42,8 +42,8 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     //Get the amount of RAM
     uint32_t maxRam = getTotalSystemMemory() / 1024 / 1024;
     /* Limit frame cache to suitable amount of RAM (~33% at 8GB and below, ~50% at 16GB, then up and up) */
-    m_cacheSizeMB = (int)(0.66666f * (float)(maxRam - 4000));
     if (maxRam < 7500) m_cacheSizeMB = maxRam * 0.33;
+    else m_cacheSizeMB = (uint32_t)(0.66666f * (float)(maxRam - 4000));
     qDebug() << "Set m_cacheSizeMB to:" << m_cacheSizeMB << "MB of" << maxRam << "MB of total Memory";
 
     /* Initialise the MLV object so it is actually useful */
