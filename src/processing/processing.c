@@ -129,7 +129,7 @@ void processing_update_matrices(processingObject_t * processing)
     }
 
     /* Highest green value - pixels at this value will need to be reconstructed */
-    processing->highest_green = LIMIT16(pm[3][65535] + pm[4][65535] + pm[5][65535]);
+    processing->highest_green = LIMIT16(MAX(pm[3][65535],pm[3][0]) + MAX(pm[4][65535],pm[4][0]) + MAX(pm[5][65535],pm[5][0]));
 
     /* This is nice */
     printMatrix(processing->final_matrix);
