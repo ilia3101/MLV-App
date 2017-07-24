@@ -63,6 +63,7 @@ private:
     uint32_t m_cacheSizeMB;
     bool m_frameChanged;
     int m_currentFrameIndex;
+    double m_newPosDropMode;
     bool m_dontDraw;
     bool m_frameStillDrawing;
     bool m_fileLoaded;

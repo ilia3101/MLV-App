@@ -122,11 +122,14 @@ void MainWindow::timerEvent(QTimerEvent *t)
     static QTime lastTime;              //Last Time a picture was rendered
     static int8_t countTimeDown = -1;   //Time in seconds for CPU countdown
     static int timeDiff = 0;            //TimeDiff between 2 rendered frames in Playback
-    static double newJumpPos;           //Position to jump to, if in Drop Frame Mode
 
     //Main timer
     if( t->timerId() == m_timerId )
     {
+        //Time measurement
+        QTime nowTime = QTime::currentTime();
+        timeDiff = lastTime.msecsTo( nowTime );
+
         //Give free one core for responsive GUI
         if( m_frameChanged )
         {
@@ -163,18 +166,18 @@ void MainWindow::timerEvent(QTimerEvent *t)
                 //Drop Frame Mode: calc picture for actual time
                 else
                 {
-                    newJumpPos += ((double)getMlvFramerate( m_pMlvObject ) * (double)timeDiff / 1000.0);
-                    if( ui->actionLoop->isChecked() && ( newJumpPos > getMlvFrames( m_pMlvObject ) ) )
+                    m_newPosDropMode += ((double)getMlvFramerate( m_pMlvObject ) * (double)timeDiff / 1000.0);
+                    if( ui->actionLoop->isChecked() && ( m_newPosDropMode > getMlvFrames( m_pMlvObject ) ) )
                     {
-                        newJumpPos -= getMlvFrames( m_pMlvObject );
+                        m_newPosDropMode -= getMlvFrames( m_pMlvObject );
                     }
-                    ui->horizontalSliderPosition->setValue( newJumpPos );
+                    ui->horizontalSliderPosition->setValue( m_newPosDropMode );
                 }
             }
         }
         else
         {
-            newJumpPos = ui->horizontalSliderPosition->value();
+            m_newPosDropMode = ui->horizontalSliderPosition->value();
         }
 
         //Trigger Drawing
@@ -183,9 +186,7 @@ void MainWindow::timerEvent(QTimerEvent *t)
             m_frameChanged = false; //first do this, if there are changes between rendering
             drawFrame();
 
-            //Time measurement
-            QTime nowTime = QTime::currentTime();
-            timeDiff = lastTime.msecsTo( nowTime );
+            //fps measurement
             if( timeDiff != 0 ) m_pFpsStatus->setText( tr( "Playback: %1 fps" ).arg( (int)( 1000 / lastTime.msecsTo( nowTime ) ) ) );
             lastTime = nowTime;
 
@@ -195,7 +196,7 @@ void MainWindow::timerEvent(QTimerEvent *t)
         else
         {
             m_pFpsStatus->setText( tr( "Playback: 0 fps" ) );
-            lastTime = QTime::currentTime(); //do that for calculation of timeDiff;
+            lastTime = QTime::currentTime(); //do that for calculation of timeDiff for DropFrameMode;
 
         }
         return;
@@ -474,6 +475,7 @@ void MainWindow::on_horizontalSliderLighten_valueChanged(int position)
 void MainWindow::on_actionGoto_First_Frame_triggered()
 {
     ui->horizontalSliderPosition->setValue( 0 );
+    m_newPosDropMode = 0;
 }
 
 //Export clip
