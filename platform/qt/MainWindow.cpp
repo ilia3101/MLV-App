@@ -40,7 +40,7 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     m_lastSaveFileName = QString( "/Users/" );
 
     //Get the amount of RAM
-    uint32_t maxRam = getTotalSystemMemory() / 1024 / 1024;
+    uint32_t maxRam = getMemorySize() / 1024 / 1024;
     /* Limit frame cache to suitable amount of RAM (~33% at 8GB and below, ~50% at 16GB, then up and up) */
     if (maxRam < 7500) m_cacheSizeMB = maxRam * 0.33;
     else m_cacheSizeMB = (uint32_t)(0.66666f * (float)(maxRam - 4000));
