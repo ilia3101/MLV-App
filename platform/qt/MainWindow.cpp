@@ -27,6 +27,8 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     //Disable unused (for now) actions
     ui->actionCopyRecept->setEnabled( false );
     ui->actionPasteReceipt->setEnabled( false );
+    //Disable export until file opened!
+    ui->actionExport->setEnabled( false );
 
     //Set bools for draw rules
     m_dontDraw = true;
@@ -284,7 +286,7 @@ void MainWindow::openMlv( QString fileName )
     printMlvInfo( m_pMlvObject );
     /* This needs to be joined (or segmentation fault 11 :D) */
     setMlvProcessing( m_pMlvObject, m_pProcessingObject );
-    //* Limit frame cache to defined size of RAM */
+    /* Limit frame cache to defined size of RAM */
     setMlvRawCacheLimitMegaBytes( m_pMlvObject, m_cacheSizeMB );
     /* Tell it how many cores we have so it can be optimal */
     setMlvCpuCores( m_pMlvObject, QThread::idealThreadCount() );
@@ -316,6 +318,9 @@ void MainWindow::openMlv( QString fileName )
 
     //enable drawing
     m_dontDraw = false;
+
+    //Enable export now
+    ui->actionExport->setEnabled( true );
 
     m_frameChanged = true;
 }
