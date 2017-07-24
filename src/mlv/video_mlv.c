@@ -106,10 +106,12 @@ void getMlvRawFrameFloat(mlvObject_t * video, int frameIndex, float * outputFram
 
         /* Placeholder coming up */
 
-        case 69:
+        case 123456789:
             /* Do losssless decompression stuff */
             break;
     }
+    
+    free(RAWFrame);
 }
 
 void setMlvProcessing(mlvObject_t * video, processingObject_t * processing)
