@@ -855,8 +855,19 @@
     </property>
     <addaction name="actionAbout"/>
    </widget>
+   <widget class="QMenu" name="menuPlayback">
+    <property name="title">
+     <string>Playback</string>
+    </property>
+    <addaction name="actionGoto_First_Frame"/>
+    <addaction name="actionPlay"/>
+    <addaction name="actionLoop"/>
+    <addaction name="separator"/>
+    <addaction name="actionDropFrameMode"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
+   <addaction name="menuPlayback"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
@@ -1020,6 +1031,14 @@
    </property>
    <property name="toolTip">
     <string>Never ending playback</string>
+   </property>
+  </action>
+  <action name="actionDropFrameMode">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Drop Frame Mode</string>
    </property>
   </action>
  </widget>
