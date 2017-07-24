@@ -12,7 +12,7 @@
 #define MAX_RAM 2048
 
 //Constructor
-MainWindow::MainWindow(QWidget *parent) :
+MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
@@ -80,6 +80,21 @@ MainWindow::MainWindow(QWidget *parent) :
     //m_timerId = startTimer( 16 ); //60fps
     m_timerId = startTimer( 40 ); //25fps
     m_timerCacheId = startTimer( 1000 ); //1fps
+
+    //"Open with" for Windows or scripts
+    if( argc > 1 )
+    {
+        QString fileName = QString( "%1" ).arg( argv[1] );
+
+        //Exit if not an MLV file or aborted
+        if( fileName == QString( "" ) && !fileName.endsWith( ".mlv", Qt::CaseInsensitive ) ) return;
+
+        //Save last file name
+        m_lastSaveFileName = fileName;
+
+        //Open the file
+        openMlv( fileName );
+    }
 }
 
 //Destructor
