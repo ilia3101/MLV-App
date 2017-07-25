@@ -18,17 +18,8 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
 {
     ui->setupUi(this);
 
-    //Init the Dialogs
-    m_pInfoDialog = new InfoDialog( this );
-    m_pStatusDialog = new StatusDialog( this );
-
-    //Dont show the Faithful combobox
-    ui->comboBox->setVisible( false );
-    //Disable unused (for now) actions
-    ui->actionCopyRecept->setEnabled( false );
-    ui->actionPasteReceipt->setEnabled( false );
-    //Disable export until file opened!
-    ui->actionExport->setEnabled( false );
+    //Init the GUI
+    initGui();
 
     //Set bools for draw rules
     m_dontDraw = true;
@@ -39,55 +30,11 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     //Default "last" path
     m_lastSaveFileName = QString( "/Users/" );
 
-    //Get the amount of RAM
-    uint32_t maxRam = getMemorySize() / 1024 / 1024;
-    /* Limit frame cache to suitable amount of RAM (~33% at 8GB and below, ~50% at 16GB, then up and up) */
-    if (maxRam < 7500) m_cacheSizeMB = maxRam * 0.33;
-    else m_cacheSizeMB = (uint32_t)(0.66666f * (float)(maxRam - 4000));
-    qDebug() << "Set m_cacheSizeMB to:" << m_cacheSizeMB << "MB of" << maxRam << "MB of total Memory";
+    //Init the lib
+    initLib();
 
-    /* Initialise the MLV object so it is actually useful */
-    m_pMlvObject = initMlvObject();
-    /* Intialise the processing settings object */
-    m_pProcessingObject = initProcessingObject();
-    /* Set exposure to + 1.2 stops instead of correct 0.0, this is to give the impression
-     * (to those that believe) that highlights are recoverable (shhh don't tell) */
-    processingSetExposureStops( m_pProcessingObject, 1.2 );
-    /* Link video with processing settings */
-    setMlvProcessing( m_pMlvObject, m_pProcessingObject );
-    /* Limit frame cache to MAX_RAM size */
-    setMlvRawCacheLimitMegaBytes( m_pMlvObject, m_cacheSizeMB );
-    /* Use AMaZE */
-    setMlvDontAlwaysUseAmaze( m_pMlvObject );
-
-    int imageSize = 1856 * 1044 * 3;
-    m_pRawImage = ( uint8_t* )malloc( imageSize );
-
-    //Set up image in GUI
-    m_pRawImageLabel = new QLabel( this );
-    QHBoxLayout* m_layoutFrame;
-    m_layoutFrame = new QHBoxLayout( ui->frame );
-    m_layoutFrame->addWidget( m_pRawImageLabel );
-    m_layoutFrame->setContentsMargins( 0, 0, 0, 0 );
-
-    //Set up caching status label
-    m_pCachingStatus = new QLabel( statusBar() );
-    m_pCachingStatus->setMaximumWidth( 100 );
-    m_pCachingStatus->setMinimumWidth( 100 );
-    m_pCachingStatus->setText( tr( "Caching: idle" ) );
-    //m_pCachingStatus->setFrameStyle(QFrame::Panel | QFrame::Sunken);
-    statusBar()->addWidget( m_pCachingStatus );
-
-    //Set up fps status label
-    m_pFpsStatus = new QLabel( statusBar() );
-    m_pFpsStatus->setMaximumWidth( 100 );
-    m_pFpsStatus->setMinimumWidth( 100 );
-    m_pFpsStatus->setText( tr( "Playback: 0 fps" ) );
-    //m_pFpsStatus->setFrameStyle(QFrame::Panel | QFrame::Sunken);
-    statusBar()->addWidget( m_pFpsStatus );
-
-    //m_timerId = startTimer( 16 ); //60fps
-    m_timerId = startTimer( 40 ); //25fps
+    //Set timers
+    m_timerId = startTimer( 40 ); //25fps initially only, is set after import
     m_timerCacheId = startTimer( 1000 ); //1fps
 
     //"Open with" for Windows or scripts
@@ -130,6 +77,9 @@ void MainWindow::timerEvent(QTimerEvent *t)
         QTime nowTime = QTime::currentTime();
         timeDiff = lastTime.msecsTo( nowTime );
 
+        //Playback
+        playbackHandling( timeDiff );
+
         //Give free one core for responsive GUI
         if( m_frameChanged )
         {
@@ -137,47 +87,6 @@ void MainWindow::timerEvent(QTimerEvent *t)
             int cores = QThread::idealThreadCount();
             if( cores > 1 ) cores -= 1; // -1 for the processing
             setMlvCpuCores( m_pMlvObject, cores );
-        }
-
-        //Playback
-        if( ui->actionPlay->isChecked() )
-        {
-            //when on last frame
-            if( ui->horizontalSliderPosition->value() >= ui->horizontalSliderPosition->maximum() )
-            {
-                if( ui->actionLoop->isChecked() )
-                {
-                    //Loop, goto first frame
-                    ui->horizontalSliderPosition->setValue( 0 );
-                }
-                else
-                {
-                    //Stop
-                    ui->actionPlay->setChecked( false );
-                }
-            }
-            else
-            {
-                //Normal mode: next frame
-                if( !ui->actionDropFrameMode->isChecked() )
-                {
-                    ui->horizontalSliderPosition->setValue( ui->horizontalSliderPosition->value() + 1 );
-                }
-                //Drop Frame Mode: calc picture for actual time
-                else
-                {
-                    m_newPosDropMode += ((double)getMlvFramerate( m_pMlvObject ) * (double)timeDiff / 1000.0);
-                    if( ui->actionLoop->isChecked() && ( m_newPosDropMode > getMlvFrames( m_pMlvObject ) ) )
-                    {
-                        m_newPosDropMode -= getMlvFrames( m_pMlvObject );
-                    }
-                    ui->horizontalSliderPosition->setValue( m_newPosDropMode );
-                }
-            }
-        }
-        else
-        {
-            m_newPosDropMode = ui->horizontalSliderPosition->value();
         }
 
         //Trigger Drawing
@@ -351,6 +260,118 @@ void MainWindow::openMlv( QString fileName )
     m_frameChanged = true;
 }
 
+//Handles the playback and must be triggered from timer
+void MainWindow::playbackHandling(int timeDiff)
+{
+    if( ui->actionPlay->isChecked() )
+    {
+        //when on last frame
+        if( ui->horizontalSliderPosition->value() >= ui->horizontalSliderPosition->maximum() )
+        {
+            if( ui->actionLoop->isChecked() )
+            {
+                //Loop, goto first frame
+                ui->horizontalSliderPosition->setValue( 0 );
+            }
+            else
+            {
+                //Stop
+                ui->actionPlay->setChecked( false );
+            }
+        }
+        else
+        {
+            //Normal mode: next frame
+            if( !ui->actionDropFrameMode->isChecked() )
+            {
+                ui->horizontalSliderPosition->setValue( ui->horizontalSliderPosition->value() + 1 );
+                m_newPosDropMode = ui->horizontalSliderPosition->value(); //track it also, for mode changing
+            }
+            //Drop Frame Mode: calc picture for actual time
+            else
+            {
+                m_newPosDropMode += ((double)getMlvFramerate( m_pMlvObject ) * (double)timeDiff / 1000.0);
+                if( ui->actionLoop->isChecked() && ( m_newPosDropMode > getMlvFrames( m_pMlvObject ) ) )
+                {
+                    m_newPosDropMode -= getMlvFrames( m_pMlvObject );
+                }
+                ui->horizontalSliderPosition->setValue( m_newPosDropMode );
+            }
+        }
+    }
+    else
+    {
+        m_newPosDropMode = ui->horizontalSliderPosition->value(); //track it also when playback is off
+    }
+}
+
+//Initialize the GUI
+void MainWindow::initGui( void )
+{
+    //Init the Dialogs
+    m_pInfoDialog = new InfoDialog( this );
+    m_pStatusDialog = new StatusDialog( this );
+
+    //Dont show the Faithful combobox
+    ui->comboBox->setVisible( false );
+    //Disable unused (for now) actions
+    ui->actionCopyRecept->setEnabled( false );
+    ui->actionPasteReceipt->setEnabled( false );
+    //Disable export until file opened!
+    ui->actionExport->setEnabled( false );
+
+    //Set up image in GUI
+    m_pRawImageLabel = new QLabel( this );
+    QHBoxLayout* m_layoutFrame;
+    m_layoutFrame = new QHBoxLayout( ui->frame );
+    m_layoutFrame->addWidget( m_pRawImageLabel );
+    m_layoutFrame->setContentsMargins( 0, 0, 0, 0 );
+
+    //Set up caching status label
+    m_pCachingStatus = new QLabel( statusBar() );
+    m_pCachingStatus->setMaximumWidth( 100 );
+    m_pCachingStatus->setMinimumWidth( 100 );
+    m_pCachingStatus->setText( tr( "Caching: idle" ) );
+    //m_pCachingStatus->setFrameStyle(QFrame::Panel | QFrame::Sunken);
+    statusBar()->addWidget( m_pCachingStatus );
+
+    //Set up fps status label
+    m_pFpsStatus = new QLabel( statusBar() );
+    m_pFpsStatus->setMaximumWidth( 110 );
+    m_pFpsStatus->setMinimumWidth( 110 );
+    m_pFpsStatus->setText( tr( "Playback: 0 fps" ) );
+    //m_pFpsStatus->setFrameStyle(QFrame::Panel | QFrame::Sunken);
+    statusBar()->addWidget( m_pFpsStatus );
+}
+
+//Initialize the library
+void MainWindow::initLib( void )
+{
+    //Get the amount of RAM
+    uint32_t maxRam = getMemorySize() / 1024 / 1024;
+    /* Limit frame cache to suitable amount of RAM (~33% at 8GB and below, ~50% at 16GB, then up and up) */
+    if (maxRam < 7500) m_cacheSizeMB = maxRam * 0.33;
+    else m_cacheSizeMB = (uint32_t)(0.66666f * (float)(maxRam - 4000));
+    qDebug() << "Set m_cacheSizeMB to:" << m_cacheSizeMB << "MB of" << maxRam << "MB of total Memory";
+
+    /* Initialise the MLV object so it is actually useful */
+    m_pMlvObject = initMlvObject();
+    /* Intialise the processing settings object */
+    m_pProcessingObject = initProcessingObject();
+    /* Set exposure to + 1.2 stops instead of correct 0.0, this is to give the impression
+     * (to those that believe) that highlights are recoverable (shhh don't tell) */
+    processingSetExposureStops( m_pProcessingObject, 1.2 );
+    /* Link video with processing settings */
+    setMlvProcessing( m_pMlvObject, m_pProcessingObject );
+    /* Limit frame cache to MAX_RAM size */
+    setMlvRawCacheLimitMegaBytes( m_pMlvObject, m_cacheSizeMB );
+    /* Use AMaZE */
+    setMlvDontAlwaysUseAmaze( m_pMlvObject );
+
+    int imageSize = 1856 * 1044 * 3;
+    m_pRawImage = ( uint8_t* )malloc( imageSize );
+}
+
 //About Window
 void MainWindow::on_actionAbout_triggered()
 {
@@ -391,7 +412,6 @@ void MainWindow::on_checkBoxUseAmaze_toggled(bool checked)
         /* Don't use AMaZE */
         setMlvDontAlwaysUseAmaze( m_pMlvObject );
     }
-    qDebug() << "Use AMaZE:" << checked;
     m_frameChanged = true;
 }
 
@@ -583,6 +603,7 @@ void MainWindow::on_actionExport_triggered()
     m_pStatusDialog->hide();
 }
 
+//Enable / Disable the highlight reconstruction
 void MainWindow::on_checkBoxHighLightReconstruction_toggled(bool checked)
 {
     if( checked ) processingEnableHighlightReconstruction( m_pProcessingObject );

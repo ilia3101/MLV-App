@@ -47,7 +47,6 @@ private slots:
     void on_horizontalSliderLighten_valueChanged(int position);
     void on_actionGoto_First_Frame_triggered();
     void on_actionExport_triggered();
-
     void on_checkBoxHighLightReconstruction_toggled(bool checked);
 
 private:
@@ -72,6 +71,9 @@ private:
     QString m_lastSaveFileName;
     void drawFrame();
     void openMlv( QString fileName );
+    void playbackHandling( int timeDiff );
+    void initGui( void );
+    void initLib( void );
 };
 
 #endif // MAINWINDOW_H
