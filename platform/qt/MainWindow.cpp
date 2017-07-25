@@ -7,6 +7,7 @@
 #include <QThread>
 #include <QTime>
 #include <QSettings>
+#include <QDesktopWidget>
 
 #include "SystemMemory.h"
 
@@ -382,7 +383,13 @@ void MainWindow::readSettings()
     QSettings set( QSettings::UserScope, "magiclantern.MLVApp", "MLVApp" );
     set.beginGroup( "MainWindow" );
     if( !set.value( "size", 0 ).toInt() ) resize( set.value( "size", QSize( 1200, 700 ) ).toSize() );
-    if( !set.value( "pos", 0 ).toInt() ) move( set.value( "pos", QPoint( 100, 100 ) ).toPoint() );
+    if( !set.value( "pos", 0 ).toInt() )
+    {
+        QPoint point = set.value( "pos", QPoint( 100, 100 ) ).toPoint();
+        if( point.x() > QApplication::desktop()->screenGeometry().width() ) point.setX( 100 );
+        if( point.y() > QApplication::desktop()->screenGeometry().height() ) point.setY( 100 );
+        move( point );
+    }
     if( set.value( "maximized", false ).toBool() ) setWindowState( windowState() | Qt::WindowMaximized );
     set.endGroup();
     if( set.value( "dragFrameMode", false ).toBool() ) ui->actionDropFrameMode->setChecked( true );
