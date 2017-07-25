@@ -483,6 +483,13 @@ void mapMlvFrames(mlvObject_t * video, uint32_t limit)
     }
 
     isMlvActive(video) = 1;
+
+    /* Start caching */
+    if (!video->is_caching)
+    {
+        /* cache on bg thread */
+        pthread_create(&video->cache_thread, NULL, (void *)cache_mlv_frames, (void *)video);
+    }
 }
 
 
