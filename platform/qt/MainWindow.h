@@ -74,6 +74,8 @@ private:
     void playbackHandling( int timeDiff );
     void initGui( void );
     void initLib( void );
+    void readSettings( void );
+    void writeSettings( void );
 };
 
 #endif // MAINWINDOW_H

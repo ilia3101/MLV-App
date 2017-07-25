@@ -6,6 +6,7 @@
 #include <QProcess>
 #include <QThread>
 #include <QTime>
+#include <QSettings>
 
 #include "SystemMemory.h"
 
@@ -26,9 +27,6 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     m_frameStillDrawing = false;
     m_frameChanged = false;
     m_fileLoaded = false;
-
-    //Default "last" path
-    m_lastSaveFileName = QString( "/Users/" );
 
     //Init the lib
     initLib();
@@ -56,6 +54,9 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
 //Destructor
 MainWindow::~MainWindow()
 {
+    //Save settings
+    writeSettings();
+
     killTimer( m_timerId );
     killTimer( m_timerCacheId );
     delete m_pStatusDialog;
@@ -342,6 +343,9 @@ void MainWindow::initGui( void )
     m_pFpsStatus->setText( tr( "Playback: 0 fps" ) );
     //m_pFpsStatus->setFrameStyle(QFrame::Panel | QFrame::Sunken);
     statusBar()->addWidget( m_pFpsStatus );
+
+    //Read Settings
+    readSettings();
 }
 
 //Initialize the library
@@ -370,6 +374,35 @@ void MainWindow::initLib( void )
 
     int imageSize = 1856 * 1044 * 3;
     m_pRawImage = ( uint8_t* )malloc( imageSize );
+}
+
+//Read some settings from registry
+void MainWindow::readSettings()
+{
+    QSettings set( QSettings::UserScope, "magiclantern.MLVApp", "MLVApp" );
+    set.beginGroup( "MainWindow" );
+    if( !set.value( "size", 0 ).toInt() ) resize( set.value( "size", QSize( 1200, 700 ) ).toSize() );
+    if( !set.value( "pos", 0 ).toInt() ) move( set.value( "pos", QPoint( 100, 100 ) ).toPoint() );
+    if( set.value( "maximized", false ).toBool() ) setWindowState( windowState() | Qt::WindowMaximized );
+    set.endGroup();
+    if( set.value( "dragFrameMode", false ).toBool() ) ui->actionDropFrameMode->setChecked( true );
+    m_lastSaveFileName = set.value( "lastFileName", QString( "/Users/" ) ).toString();
+}
+
+//Save some settings to registry
+void MainWindow::writeSettings()
+{
+    QSettings set( QSettings::UserScope, "magiclantern.MLVApp", "MLVApp" );
+    set.beginGroup( "MainWindow" );
+    set.setValue( "maximized", (bool)( windowState() & Qt::WindowMaximized ) );
+    if( !( windowState() & Qt::WindowMaximized ) && !( windowState() & Qt::WindowFullScreen ) )
+    {
+        set.setValue( "size", size() );
+        set.setValue( "pos", pos() );
+    }
+    set.endGroup();
+    set.setValue( "dragFrameMode", ui->actionDropFrameMode->isChecked() );
+    set.setValue( "lastFileName", m_lastSaveFileName );
 }
 
 //About Window
