@@ -864,6 +864,9 @@
     <addaction name="actionLoop"/>
     <addaction name="separator"/>
     <addaction name="actionDropFrameMode"/>
+    <addaction name="separator"/>
+    <addaction name="actionZoomFit"/>
+    <addaction name="actionZoom100"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -1039,6 +1042,30 @@
    </property>
    <property name="text">
     <string>Drop Frame Mode</string>
+   </property>
+  </action>
+  <action name="actionZoomFit">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="ressources.qrc">
+     <normaloff>:/RetinaIMG/RetinaIMG/Actions-zoom-fit-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Actions-zoom-fit-icon.png</iconset>
+   </property>
+   <property name="text">
+    <string>Zoom: fit</string>
+   </property>
+  </action>
+  <action name="actionZoom100">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="ressources.qrc">
+     <normaloff>:/RetinaIMG/RetinaIMG/Actions-zoom-100-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Actions-zoom-100-icon.png</iconset>
+   </property>
+   <property name="text">
+    <string>Zoom: 100%</string>
    </property>
   </action>
  </widget>

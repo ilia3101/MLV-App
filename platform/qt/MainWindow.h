@@ -48,6 +48,8 @@ private slots:
     void on_actionGoto_First_Frame_triggered();
     void on_actionExport_triggered();
     void on_checkBoxHighLightReconstruction_toggled(bool checked);
+    void on_actionZoomFit_triggered();
+    void on_actionZoom100_triggered();
 
 private:
     Ui::MainWindow *ui;

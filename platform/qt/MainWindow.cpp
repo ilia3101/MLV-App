@@ -162,23 +162,35 @@ void MainWindow::drawFrame()
     //Get frame from library
     getMlvProcessedFrame8( m_pMlvObject, ui->horizontalSliderPosition->value(), m_pRawImage );
 
-    //Some math to have the picture exactly in the frame
-    int actWidth = ui->frame->width();
-    int actHeight = ui->frame->height();
-    int desWidth = actWidth;
-    int desHeight = actWidth * getMlvHeight(m_pMlvObject) / getMlvWidth(m_pMlvObject);
-    if( desHeight > actHeight )
-    {
-        desHeight = actHeight;
-        desWidth = actHeight * getMlvWidth(m_pMlvObject) / getMlvHeight(m_pMlvObject);
-    }
-
-    //Bring frame to GUI
     m_pRawImageLabel->setScaledContents(false); //Otherwise Ratio is broken
-    m_pRawImageLabel->setPixmap( QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
-                                                         .scaled( desWidth,
-                                                                  desHeight,
-                                                                  Qt::KeepAspectRatio, Qt::SmoothTransformation) ) ); //alternative: Qt::FastTransformation
+
+    if( ui->actionZoomFit->isChecked() )
+    {
+        //Some math to have the picture exactly in the frame
+        int actWidth = ui->frame->width();
+        int actHeight = ui->frame->height();
+        int desWidth = actWidth;
+        int desHeight = actWidth * getMlvHeight(m_pMlvObject) / getMlvWidth(m_pMlvObject);
+        if( desHeight > actHeight )
+        {
+            desHeight = actHeight;
+            desWidth = actHeight * getMlvWidth(m_pMlvObject) / getMlvHeight(m_pMlvObject);
+        }
+
+        //Bring frame to GUI (fit to window)
+        m_pRawImageLabel->setPixmap( QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
+                                                             .scaled( desWidth,
+                                                                      desHeight,
+                                                                      Qt::KeepAspectRatio, Qt::SmoothTransformation) ) ); //alternative: Qt::FastTransformation
+    }
+    else
+    {
+        //Bring frame to GUI (100%)
+        m_pRawImageLabel->setPixmap( QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
+                                                             .scaled( getMlvWidth(m_pMlvObject),
+                                                                      getMlvHeight(m_pMlvObject),
+                                                                      Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation) ) ); //alternative: Qt::FastTransformation
+    }
     m_pRawImageLabel->setMinimumSize( 1, 1 ); //Otherwise window won't be smaller than picture
     m_pRawImageLabel->setAlignment( Qt::AlignCenter ); //Always in the middle
 
@@ -393,6 +405,16 @@ void MainWindow::readSettings()
     if( set.value( "maximized", false ).toBool() ) setWindowState( windowState() | Qt::WindowMaximized );
     set.endGroup();
     if( set.value( "dragFrameMode", false ).toBool() ) ui->actionDropFrameMode->setChecked( true );
+    if( set.value( "zoomModeFit", true ).toBool() )
+    {
+        ui->actionZoomFit->setChecked( true );
+        ui->actionZoom100->setChecked( false );
+    }
+    else
+    {
+        ui->actionZoomFit->setChecked( false );
+        ui->actionZoom100->setChecked( true );
+    }
     m_lastSaveFileName = set.value( "lastFileName", QString( "/Users/" ) ).toString();
 }
 
@@ -409,6 +431,7 @@ void MainWindow::writeSettings()
     }
     set.endGroup();
     set.setValue( "dragFrameMode", ui->actionDropFrameMode->isChecked() );
+    set.setValue( "zoomModeFit", ui->actionZoomFit->isChecked() );
     set.setValue( "lastFileName", m_lastSaveFileName );
 }
 
@@ -648,5 +671,21 @@ void MainWindow::on_checkBoxHighLightReconstruction_toggled(bool checked)
 {
     if( checked ) processingEnableHighlightReconstruction( m_pProcessingObject );
     else processingDisableHighlightReconstruction( m_pProcessingObject );
+    m_frameChanged = true;
+}
+
+//Click on Zoom: fit
+void MainWindow::on_actionZoomFit_triggered()
+{
+    ui->actionZoomFit->setChecked( true );
+    ui->actionZoom100->setChecked( false );
+    m_frameChanged = true;
+}
+
+//Click on Zoom: 100%
+void MainWindow::on_actionZoom100_triggered()
+{
+    ui->actionZoomFit->setChecked( false );
+    ui->actionZoom100->setChecked( true );
     m_frameChanged = true;
 }
