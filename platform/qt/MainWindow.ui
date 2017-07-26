@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1197</width>
-    <height>792</height>
+    <height>901</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -50,6 +50,34 @@
     </item>
     <item row="0" column="1">
      <layout class="QVBoxLayout" name="verticalLayout_2">
+      <item>
+       <widget class="QFrame" name="frameHistogram">
+        <property name="minimumSize">
+         <size>
+          <width>200</width>
+          <height>70</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>200</width>
+          <height>70</height>
+         </size>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">background-color: rgb(0, 0, 0);</string>
+        </property>
+        <property name="frameShape">
+         <enum>QFrame::NoFrame</enum>
+        </property>
+        <property name="frameShadow">
+         <enum>QFrame::Plain</enum>
+        </property>
+        <property name="lineWidth">
+         <number>0</number>
+        </property>
+       </widget>
+      </item>
       <item>
        <widget class="QComboBox" name="comboBox">
         <property name="minimumSize">
@@ -867,6 +895,8 @@
     <addaction name="separator"/>
     <addaction name="actionZoomFit"/>
     <addaction name="actionZoom100"/>
+    <addaction name="separator"/>
+    <addaction name="actionShowHistogram"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -1066,6 +1096,14 @@
    </property>
    <property name="text">
     <string>Zoom: 100%</string>
+   </property>
+  </action>
+  <action name="actionShowHistogram">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Histogram</string>
    </property>
   </action>
  </widget>

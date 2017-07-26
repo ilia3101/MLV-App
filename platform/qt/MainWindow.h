@@ -12,6 +12,7 @@
 #include "../../src/mlv_include.h"
 #include "InfoDialog.h"
 #include "StatusDialog.h"
+#include "Histogram.h"
 
 namespace Ui {
 class MainWindow;
@@ -51,13 +52,17 @@ private slots:
     void on_actionZoomFit_triggered();
     void on_actionZoom100_triggered();
 
+    void on_actionShowHistogram_triggered(bool checked);
+
 private:
     Ui::MainWindow *ui;
     InfoDialog *m_pInfoDialog;
     StatusDialog *m_pStatusDialog;
+    Histogram *m_pHistogram;
     mlvObject_t *m_pMlvObject;
     processingObject_t *m_pProcessingObject;
     QLabel *m_pRawImageLabel;
+    QLabel *m_pHistogramLabel;
     QLabel *m_pCachingStatus;
     QLabel *m_pFpsStatus;
     uint8_t *m_pRawImage;

@@ -40,7 +40,8 @@ SOURCES += \
     ../../src/processing/processing.c \
     ../../src/processing/raw_processing.c \
     InfoDialog.cpp \
-    StatusDialog.cpp
+    StatusDialog.cpp \
+    Histogram.cpp
 
 
 HEADERS += \
@@ -61,7 +62,8 @@ HEADERS += \
     InfoDialog.h \
     MyApplication.h \
     StatusDialog.h \
-    SystemMemory.h
+    SystemMemory.h \
+    Histogram.h
 
 
 FORMS += \
