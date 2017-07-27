@@ -41,7 +41,8 @@ SOURCES += \
     ../../src/processing/raw_processing.c \
     InfoDialog.cpp \
     StatusDialog.cpp \
-    Histogram.cpp
+    Histogram.cpp \
+    WaveFormMonitor.cpp
 
 
 HEADERS += \
@@ -63,7 +64,8 @@ HEADERS += \
     MyApplication.h \
     StatusDialog.h \
     SystemMemory.h \
-    Histogram.h
+    Histogram.h \
+    WaveFormMonitor.h
 
 
 FORMS += \

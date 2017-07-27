@@ -211,6 +211,14 @@ void MainWindow::drawFrame()
                                                                    Qt::IgnoreAspectRatio, Qt::FastTransformation) ) );
         ui->labelHistogram->setAlignment( Qt::AlignCenter ); //Always in the middle
     }
+    else if( ui->actionShowWaveFormMonitor->isChecked() )
+    {
+        ui->labelHistogram->setPixmap( QPixmap::fromImage( m_pWaveFormMonitor->getWaveFormMonitorFromRaw( m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject) )
+                                                          .scaled( 200,
+                                                                   70,
+                                                                   Qt::IgnoreAspectRatio, Qt::FastTransformation) ) );
+        ui->labelHistogram->setAlignment( Qt::AlignCenter ); //Always in the middle
+    }
     m_frameStillDrawing = false;
 }
 
@@ -238,8 +246,9 @@ void MainWindow::openMlv( QString fileName )
     //Set window title to filename
     this->setWindowTitle( QString( "MLV App | %1" ).arg( fileName ) );
 
-    //disable drawing and kill old timer
+    //disable drawing and kill old timer and old WaveFormMonitor
     killTimer( m_timerId );
+    delete m_pWaveFormMonitor;
     m_dontDraw = true;
 
     /* Destroy it just for simplicity... and make a new one */
@@ -279,6 +288,9 @@ void MainWindow::openMlv( QString fileName )
 
     //Restart timer
     m_timerId = startTimer( (int)( 1000.0 / getMlvFramerate( m_pMlvObject ) ) );
+
+    //Load WaveFormMonitor
+    m_pWaveFormMonitor = new WaveFormMonitor( getMlvWidth( m_pMlvObject ) );
 
     m_fileLoaded = true;
 
@@ -347,6 +359,7 @@ void MainWindow::initGui( void )
     m_pStatusDialog = new StatusDialog( this );
     m_pHistogram = new Histogram();
     ui->actionShowHistogram->setChecked( true );
+    m_pWaveFormMonitor = new WaveFormMonitor( 200 );
 
     //Dont show the Faithful combobox
     ui->comboBox->setVisible( false );
@@ -716,4 +729,20 @@ void MainWindow::on_actionZoom100_triggered()
 void MainWindow::on_actionShowHistogram_triggered(bool checked)
 {
     ui->labelHistogram->setVisible( checked );
+    if( checked )
+    {
+        ui->actionShowWaveFormMonitor->setChecked( false );
+        m_frameChanged = true;
+    }
+}
+
+//Show Histogram or not
+void MainWindow::on_actionShowWaveFormMonitor_triggered(bool checked)
+{
+    ui->labelHistogram->setVisible( checked );
+    if( checked )
+    {
+        ui->actionShowHistogram->setChecked( false );
+        m_frameChanged = true;
+    }
 }

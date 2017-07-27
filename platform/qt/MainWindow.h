@@ -20,6 +20,7 @@
 #include "InfoDialog.h"
 #include "StatusDialog.h"
 #include "Histogram.h"
+#include "WaveFormMonitor.h"
 
 namespace Ui {
 class MainWindow;
@@ -61,11 +62,14 @@ private slots:
 
     void on_actionShowHistogram_triggered(bool checked);
 
+    void on_actionShowWaveFormMonitor_triggered(bool checked);
+
 private:
     Ui::MainWindow *ui;
     InfoDialog *m_pInfoDialog;
     StatusDialog *m_pStatusDialog;
     Histogram *m_pHistogram;
+    WaveFormMonitor *m_pWaveFormMonitor;
     mlvObject_t *m_pMlvObject;
     processingObject_t *m_pProcessingObject;
     QLabel *m_pRawImageLabel;

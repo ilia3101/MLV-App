@@ -897,6 +897,7 @@
     <addaction name="actionZoom100"/>
     <addaction name="separator"/>
     <addaction name="actionShowHistogram"/>
+    <addaction name="actionShowWaveFormMonitor"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -1104,6 +1105,14 @@
    </property>
    <property name="text">
     <string>Show Histogram</string>
+   </property>
+  </action>
+  <action name="actionShowWaveFormMonitor">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show WaveFormMonitor</string>
    </property>
   </action>
  </widget>
