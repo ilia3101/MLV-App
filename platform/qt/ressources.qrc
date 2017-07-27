@@ -3,6 +3,7 @@
         <file>IMG/information-icon.png</file>
         <file>IMG/Magic_Lantern_logo.png</file>
         <file>IMG/Magic_Lantern_logo_b.png</file>
+        <file>IMG/Histogram.png</file>
     </qresource>
     <qresource prefix="/RetinaIMG">
         <file>RetinaIMG/Export-To-File-icon.png</file>

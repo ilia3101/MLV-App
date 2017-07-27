@@ -62,7 +62,6 @@ private:
     mlvObject_t *m_pMlvObject;
     processingObject_t *m_pProcessingObject;
     QLabel *m_pRawImageLabel;
-    QLabel *m_pHistogramLabel;
     QLabel *m_pCachingStatus;
     QLabel *m_pFpsStatus;
     uint8_t *m_pRawImage;

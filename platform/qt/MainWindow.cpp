@@ -197,12 +197,11 @@ void MainWindow::drawFrame()
     //GetHistogram
     if( ui->actionShowHistogram->isChecked() )
     {
-        m_pHistogramLabel->setPixmap( QPixmap::fromImage( m_pHistogram->getHistogramFromImg( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 ) )
-                                                      .scaled( 200,
-                                                               70,
-                                                               Qt::KeepAspectRatio, Qt::FastTransformation) ) );
-        m_pHistogramLabel->setMinimumSize( 1, 1 ); //Otherwise window won't be smaller than picture
-        m_pHistogramLabel->setAlignment( Qt::AlignCenter ); //Always in the middle
+        ui->labelHistogram->setPixmap( QPixmap::fromImage( m_pHistogram->getHistogramFromRaw( m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject) )
+                                                          .scaled( 200,
+                                                                   70,
+                                                                   Qt::IgnoreAspectRatio, Qt::FastTransformation) ) );
+        ui->labelHistogram->setAlignment( Qt::AlignCenter ); //Always in the middle
     }
     m_frameStillDrawing = false;
 }
@@ -352,13 +351,6 @@ void MainWindow::initGui( void )
     m_layoutFrame = new QHBoxLayout( ui->frame );
     m_layoutFrame->addWidget( m_pRawImageLabel );
     m_layoutFrame->setContentsMargins( 0, 0, 0, 0 );
-
-    //Set up histogram in GUI
-    m_pHistogramLabel = new QLabel( this );
-    QHBoxLayout* m_layoutHisto;
-    m_layoutHisto = new QHBoxLayout( ui->frameHistogram );
-    m_layoutHisto->addWidget( m_pHistogramLabel );
-    m_layoutHisto->setContentsMargins( 0, 0, 0, 0 );
 
     //Set up caching status label
     m_pCachingStatus = new QLabel( statusBar() );
@@ -712,5 +704,5 @@ void MainWindow::on_actionZoom100_triggered()
 //Show Histogram or not
 void MainWindow::on_actionShowHistogram_triggered(bool checked)
 {
-    ui->frameHistogram->setVisible( checked );
+    ui->labelHistogram->setVisible( checked );
 }
