@@ -7,10 +7,9 @@
 
 #include "WaveFormMonitor.h"
 
-//the higher these values, the higher the performance
-//the lower these values, the higher the quality
+//the higher this values, the higher the performance
+//the lower this values, the higher the quality
 #define MERGE 16 //must be 2^x
-#define SKIP 16 //must be <= MERGE and be 2^x
 
 //Constructor
 WaveFormMonitor::WaveFormMonitor( uint16_t width )
@@ -27,24 +26,21 @@ WaveFormMonitor::~WaveFormMonitor()
 //Make wave form monitor from Raw Image (8bit R, 8bit G, 8bit B,...)
 QImage WaveFormMonitor::getWaveFormMonitorFromRaw(uint8_t *m_pRawImage, uint16_t width, uint16_t height)
 {
-    double factor = 10.0 * SKIP / MERGE;
+    double factor = 10.0;
 
     uint32_t tableR[256] = {0};
     uint32_t tableG[256] = {0};
     uint32_t tableB[256] = {0};
 
-    for( int x = 0; x < width; x=x+2 )
+    for( int x = 0; x < width; x = x + MERGE )
     {
         //Sum the columns
         for( int y = 0; y < height; y++ )
         {
             //Merging and skipping lines for performance
-            for( int i = 0; i < MERGE; i = i + SKIP )
-            {
-                tableR[ m_pRawImage[ ( ( x + i + ( width * y ) ) * 3 ) + 0 ] ]++;
-                tableG[ m_pRawImage[ ( ( x + i + ( width * y ) ) * 3 ) + 1 ] ]++;
-                tableB[ m_pRawImage[ ( ( x + i + ( width * y ) ) * 3 ) + 2 ] ]++;
-            }
+            tableR[ m_pRawImage[ ( ( x + ( width * y ) ) * 3 ) + 0 ] ]++;
+            tableG[ m_pRawImage[ ( ( x + ( width * y ) ) * 3 ) + 1 ] ]++;
+            tableB[ m_pRawImage[ ( ( x + ( width * y ) ) * 3 ) + 2 ] ]++;
         }
 
         for( uint16_t y = 0; y <= 255; y++ )
