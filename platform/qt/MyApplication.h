@@ -1,3 +1,10 @@
+/*!
+ * \file MyApplication.h
+ * \author masc4ii
+ * \copyright 2017
+ * \brief Catch some file open information and send it to main window
+ */
+
 #ifndef MYAPPLICATION_H
 #define MYAPPLICATION_H
 

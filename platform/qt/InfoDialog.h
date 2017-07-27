@@ -1,3 +1,10 @@
+/*!
+ * \file InfoDialog.h
+ * \author masc4ii
+ * \copyright 2017
+ * \brief Just a dialog with a table for information
+ */
+
 #ifndef INFODIALOG_H
 #define INFODIALOG_H
 

@@ -41,7 +41,7 @@
 #ifndef _raw_h_
 #define _raw_h_
 
-
+#include "stdint.h"
 
 /**
 * 14-bit encoding:

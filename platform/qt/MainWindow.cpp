@@ -1,3 +1,10 @@
+/*!
+ * \file MainWindow.cpp
+ * \author masc4ii
+ * \copyright 2017
+ * \brief The main window
+ */
+
 #include "MainWindow.h"
 #include "ui_MainWindow.h"
 #include "math.h"
@@ -60,6 +67,7 @@ MainWindow::~MainWindow()
 
     killTimer( m_timerId );
     killTimer( m_timerCacheId );
+    delete m_pHistogram;
     delete m_pStatusDialog;
     delete m_pInfoDialog;
     delete ui;
@@ -331,6 +339,9 @@ void MainWindow::playbackHandling(int timeDiff)
 //Initialize the GUI
 void MainWindow::initGui( void )
 {
+    //We dont want a context menu which could disable the menu bar
+    setContextMenuPolicy(Qt::NoContextMenu);
+
     //Init the Dialogs
     m_pInfoDialog = new InfoDialog( this );
     m_pStatusDialog = new StatusDialog( this );

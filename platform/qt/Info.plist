@@ -23,7 +23,7 @@
 		<string>mlv</string>
 	</array>
 	<key>CFBundleTypeRole</key>
-	<string>Viewer</string>
+        <string>Viewer</string>
 	<key>CFBundleShortVersionString</key>
         <string>0.2 alpha</string>
 </dict>

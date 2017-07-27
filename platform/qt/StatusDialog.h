@@ -1,3 +1,10 @@
+/*!
+ * \file StatusDialog.h
+ * \author masc4ii
+ * \copyright 2017
+ * \brief Just a dialog with a progress bar
+ */
+
 #ifndef STATUSDIALOG_H
 #define STATUSDIALOG_H
 

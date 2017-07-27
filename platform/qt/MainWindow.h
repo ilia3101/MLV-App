@@ -1,3 +1,10 @@
+/*!
+ * \file MainWindow.h
+ * \author masc4ii
+ * \copyright 2017
+ * \brief The main window
+ */
+
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 

@@ -1,3 +1,10 @@
+/*!
+ * \file main.cpp
+ * \author masc4ii
+ * \copyright 2017
+ * \brief The main... the start of the horror
+ */
+
 #include "MainWindow.h"
 #include "MyApplication.h"
 
