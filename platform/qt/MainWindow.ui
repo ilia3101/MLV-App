@@ -826,16 +826,6 @@
        </widget>
       </item>
       <item>
-       <widget class="QCheckBox" name="checkBoxUseAmaze">
-        <property name="text">
-         <string>Always use AMaZE</string>
-        </property>
-        <property name="checked">
-         <bool>false</bool>
-        </property>
-       </widget>
-      </item>
-      <item>
        <spacer name="verticalSpacer_2">
         <property name="orientation">
          <enum>Qt::Vertical</enum>
@@ -892,6 +882,7 @@
     <addaction name="actionLoop"/>
     <addaction name="separator"/>
     <addaction name="actionDropFrameMode"/>
+    <addaction name="actionAlwaysUseAMaZE"/>
     <addaction name="separator"/>
     <addaction name="actionZoomFit"/>
     <addaction name="actionZoom100"/>
@@ -1112,7 +1103,18 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Show WaveFormMonitor</string>
+    <string>Show Waveform Monitor</string>
+   </property>
+   <property name="toolTip">
+    <string>Show Waveform Monitor</string>
+   </property>
+  </action>
+  <action name="actionAlwaysUseAMaZE">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Always Use AMaZE</string>
    </property>
   </action>
  </widget>

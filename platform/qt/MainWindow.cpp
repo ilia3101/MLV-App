@@ -18,7 +18,7 @@
 
 #include "SystemMemory.h"
 
-#define VERSION "0.2 alpha"
+#define VERSION "0.3 alpha"
 
 //Constructor
 MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
@@ -216,7 +216,7 @@ void MainWindow::drawFrame()
         ui->labelHistogram->setPixmap( QPixmap::fromImage( m_pWaveFormMonitor->getWaveFormMonitorFromRaw( m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject) )
                                                           .scaled( 200,
                                                                    70,
-                                                                   Qt::IgnoreAspectRatio, Qt::FastTransformation) ) );
+                                                                   Qt::IgnoreAspectRatio, Qt::SmoothTransformation) ) );
         ui->labelHistogram->setAlignment( Qt::AlignCenter ); //Always in the middle
     }
     m_frameStillDrawing = false;
@@ -497,22 +497,6 @@ void MainWindow::on_horizontalSliderPosition_valueChanged(void)
     m_frameChanged = true;
 }
 
-//Use AMaZE or not
-void MainWindow::on_checkBoxUseAmaze_toggled(bool checked)
-{
-    if( checked )
-    {
-        /* Use AMaZE */
-        setMlvAlwaysUseAmaze( m_pMlvObject );
-    }
-    else
-    {
-        /* Don't use AMaZE */
-        setMlvDontAlwaysUseAmaze( m_pMlvObject );
-    }
-    m_frameChanged = true;
-}
-
 //Show Info Dialog
 void MainWindow::on_actionClip_Information_triggered()
 {
@@ -657,7 +641,7 @@ void MainWindow::on_actionExport_triggered()
     }
 
     //If we don't like amaze we switch it off again
-    if( !ui->checkBoxUseAmaze->isChecked() ) setMlvDontAlwaysUseAmaze( m_pMlvObject );
+    if( !ui->actionAlwaysUseAMaZE->isChecked() ) setMlvDontAlwaysUseAmaze( m_pMlvObject );
 
     //Enable GUI drawing
     m_dontDraw = false;
@@ -745,4 +729,20 @@ void MainWindow::on_actionShowWaveFormMonitor_triggered(bool checked)
         ui->actionShowHistogram->setChecked( false );
         m_frameChanged = true;
     }
+}
+
+//Use AMaZE or not
+void MainWindow::on_actionAlwaysUseAMaZE_triggered(bool checked)
+{
+    if( checked )
+    {
+        /* Use AMaZE */
+        setMlvAlwaysUseAmaze( m_pMlvObject );
+    }
+    else
+    {
+        /* Don't use AMaZE */
+        setMlvDontAlwaysUseAmaze( m_pMlvObject );
+    }
+    m_frameChanged = true;
 }

@@ -43,7 +43,6 @@ private slots:
     void on_actionOpen_triggered();
     void on_actionAbout_triggered();
     void on_horizontalSliderPosition_valueChanged(void);
-    void on_checkBoxUseAmaze_toggled(bool checked);
     void on_actionClip_Information_triggered();
     void on_horizontalSliderExposure_valueChanged(int position);
     void on_horizontalSliderTemperature_valueChanged(int position);
@@ -59,10 +58,9 @@ private slots:
     void on_checkBoxHighLightReconstruction_toggled(bool checked);
     void on_actionZoomFit_triggered();
     void on_actionZoom100_triggered();
-
     void on_actionShowHistogram_triggered(bool checked);
-
     void on_actionShowWaveFormMonitor_triggered(bool checked);
+    void on_actionAlwaysUseAMaZE_triggered(bool checked);
 
 private:
     Ui::MainWindow *ui;

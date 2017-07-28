@@ -2,7 +2,7 @@
  * \file WaveFormMonitor.h
  * \author masc4ii
  * \copyright 2017
- * \brief Draws a RGB WaveFormMonitor for an image
+ * \brief Draws a RGB WaveForm Monitor for an image
  */
 
 #ifndef WAVEFORMMONITOR_H

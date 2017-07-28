@@ -2,13 +2,14 @@
  * \file WaveFormMonitor.cpp
  * \author masc4ii
  * \copyright 2017
- * \brief Draws a RGB WaveFormMonitor for an image
+ * \brief Draws a RGB WaveForm Monitor for an image
  */
 
 #include "WaveFormMonitor.h"
 
-//the higher this values, the higher the performance
-//the lower this values, the higher the quality
+//The higher this values, the higher the performance
+//The lower this values, the higher the quality
+//We skip only columns, because it is really ugly if not...
 #define MERGE 16 //must be 2^x
 
 //Constructor
@@ -23,10 +24,10 @@ WaveFormMonitor::~WaveFormMonitor()
     delete m_pWaveForm;
 }
 
-//Make wave form monitor from Raw Image (8bit R, 8bit G, 8bit B,...)
+//Make waveform monitor from Raw Image (8bit R, 8bit G, 8bit B,...)
 QImage WaveFormMonitor::getWaveFormMonitorFromRaw(uint8_t *m_pRawImage, uint16_t width, uint16_t height)
 {
-    double factor = 10.0;
+    double factor = 10.0; //Intensity Factor, maybe make it a parameter one day...
 
     uint32_t tableR[256] = {0};
     uint32_t tableG[256] = {0};
