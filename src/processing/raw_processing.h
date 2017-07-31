@@ -118,7 +118,8 @@ double add_contrast( double pixel,
 
 /* Returns multipliers for white balance by (linearly) interpolating measured 
  * Canon values... stupidly simple, also range limited to 2500-10000 */
-void get_kelvin_multipliers(double kelvin, double * multiplier_output);
+void get_kelvin_multipliers_rgb(double kelvin, double * multiplier_output);
+void get_kelvin_multipliers_xyz(double T, double * RGB);
 
 /* Calculates final_matrix, incorporating white balance, exposure and all the XYZ stuff */
 void processing_update_matrices(processingObject_t * processing);

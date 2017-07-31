@@ -131,16 +131,11 @@ static struct cam_matrices cam_matrices[] =
     }
 };
 
-/* http://www.cs.utah.edu/~halzahaw/CS7650/Project2/project2_index.html */
-double xyz_to_rgb_a[9] = {
-    3.2407100, -1.537260, -0.4985710, 
-   -0.9692580,  1.875990,  0.0415557,
-    0.0556352, -0.203996,  1.0570700
-};
-double xyz_to_rgb_b[9] = {
-    2.5623, -1.1661, -0.3962,
-   -1.0215,  1.9778,  0.0437,
-    0.0752, -0.2562,  1.1810
+
+static const double xyz_to_rgb[] = {
+    3.240710, -0.9692580,  0.0556352,
+   -1.537260,  1.8759900, -0.2039960,
+   -0.498571,  0.0415557,  1.0570700
 };
 
 /* Gives a XYZ to RGB matrix (my own interpretation of "RGB") */
@@ -168,7 +163,7 @@ void getMlvNiceXyzToRgbMatrix(mlvObject_t * video, double * outputMatrix)
     /* Matrices must be flipped :( */
     for (int i = 0; i < 9; ++i)
     {
-        outputMatrix[i] = xyz_to_rgb_b[diag_flip(i)];
+        outputMatrix[i] = (double)xyz_to_rgb[i];
     }
 }
 
@@ -177,7 +172,7 @@ void getMlvNiceXyzToRgbMatrix(mlvObject_t * video, double * outputMatrix)
 void getMlvXyzToCameraMatrix(mlvObject_t * video, double * outputMatrix)
 {
     double camera_matrix[9] = {1, 0, 0, 0, 1, 0, 0, 0, 1};
-    int32_t * original_matrix = NULL;
+    int32_t * original_matrix;
     uint8_t * camera_name = video->IDNT.cameraName;
 
     /* Identify camera */
@@ -196,6 +191,7 @@ void getMlvXyzToCameraMatrix(mlvObject_t * video, double * outputMatrix)
             {
                 /* 5D Mark II */
                 original_matrix = cam_matrices[1].ColorMatrix2;
+                printf("\n\n\n\n\n\nCamera matrix is 5D\n\n\n\n\n");
             }
         }
         else if (camera_name[11] == '0')
@@ -268,12 +264,12 @@ void getMlvXyzToCameraMatrix(mlvObject_t * video, double * outputMatrix)
     else if (camera_name[10] == '1')
     {
         /* 100D or 1100D (and 1200-16900D) */
-        if (camera_name[10] == '1')
+        if (camera_name[11] == '1')
         {
             /* It is 1100D */
             original_matrix = cam_matrices[11].ColorMatrix2;
         }
-        else if (camera_name[10] == '0')
+        else if (camera_name[11] == '0')
         {
             /* Is 100D, hopefully 650D matrix will do */
             original_matrix = cam_matrices[9].ColorMatrix2;
@@ -293,7 +289,10 @@ void getMlvXyzToCameraMatrix(mlvObject_t * video, double * outputMatrix)
     /* Convert the silly integere matrix to floaty point */
     matrixRemoveDividers(original_matrix, camera_matrix);
     /* giv */
-    memcpy(outputMatrix, camera_matrix, sizeof(double) * 9);
+    for (int i = 0; i < 9; ++i)
+    {
+        outputMatrix[i] = camera_matrix[i];
+    }
 
     printf("Camera matrix:\n");
     printMatrix(camera_matrix);

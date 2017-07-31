@@ -20,7 +20,7 @@
 /* Initialises processing thing with memory */
 processingObject_t * initProcessingObject()
 {
-    processingObject_t * processing = (processingObject_t *)calloc( 1, sizeof(processingObject_t) );
+    processingObject_t * processing = calloc( 1, sizeof(processingObject_t) );
 
     processing->pre_calc_curves = malloc( 65536 * sizeof(uint16_t) );
     processing->pre_calc_gamma  = malloc( 65536 * sizeof(uint16_t) );
@@ -270,7 +270,7 @@ void processingSetWhiteBalance(processingObject_t * processing, double WBKelvin,
     processing->wb_tint = WBTint;
     
     /* Kalkulate channel (yes in cone space... soon) multipliers */
-    get_kelvin_multipliers(WBKelvin, processing->wb_multipliers);
+    get_kelvin_multipliers_rgb(WBKelvin, processing->wb_multipliers);
 
     /* Do tint (green and red channel seem to be main ones) */
     processing->wb_multipliers[2] += (WBTint / 11.0);
