@@ -225,11 +225,7 @@ int NSApplicationMain(int argc, const char * argv[])
 
     /* ...lets start at 5D2 resolution because that's my camera */
 
-    { 
-        int imageSize = 1880 * 1056 * 3;
-        /* This will be freed and allocated soo many times */
-        rawImage = malloc( imageSize ); 
-    }
+    rawImage = malloc( 1880 * 1056 * 3 * sizeof(uint8_t) ); 
 
     /* NSBitmapImageRep lets you display bitmap data n stuff in CrApple things like NSImageView */
     rawBitmap = [ [NSBitmapImageRep alloc] 

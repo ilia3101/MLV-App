@@ -6,7 +6,7 @@ What is MLV App? A cross platform RAW conversion software that works **natively*
 ```
 $ git clone https://github.com/ilia3101/MLV-App.git
 $ cd MLV-App/platform/cocoa
-$ make
+$ make app
 ```
 More coming soon (for Qt)
 ### Where is the code?

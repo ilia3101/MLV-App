@@ -24,6 +24,21 @@ main :
 	rm compile_time_code; \
 	rm app_window_title.h
 
+# run 'make app' to get a .app bundle 
+app :
+	rm $(appname).app; \
+	$(CC) generate_info_plist.c -o generate_info_plist; \
+	./generate_info_plist $(appname); \
+	make main; \
+	mkdir $(appname).app; \
+	mkdir $(appname).app/Contents; \
+	mkdir $(appname).app/Contents/MacOS; \
+	mkdir $(appname).app/Contents/Resources; \
+	cp -i $(appname) $(appname).app/Contents/MacOS/; \
+	cp -i info.plist $(appname).app/Contents/; \
+	rm generate_info_plist; \
+	rm info.plist; \
+
 # Actual linking and compiling happens here
 build : $(objects)
 	$(CC) $(mainflags) $(objects) -o $(appname) -framework Cocoa;
@@ -66,4 +81,4 @@ matrix.o : ../../src/matrix/matrix.c
 # Type 'make clean' to remove mess
 .PHONY : clean
 clean : # Removes the program and object files 
-	rm $(appname) $(objects)
+	rm -rf $(appname) $(appname).app $(objects)
