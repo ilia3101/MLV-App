@@ -189,8 +189,9 @@ int NSApplicationMain(int argc, const char * argv[])
     /* Open MLV file button */
     CREATE_BUTTON_LEFT_TOP( openMLVButton, 0, openMlvDialog, 0, @"Open MLV File" );
     /* Export an image sequence (temporary) - these buttons look awkward and awful :[ */
-    CREATE_BUTTON_LEFT_BOTTOM( exportJpegSequenceButton, 1, exportJpegSequence, 1, @"Export JPEG Sequence" );
-    CREATE_BUTTON_LEFT_BOTTOM( exportPngSequenceButton, 0, exportPngSequence, 1, @"Export PNG Sequence" );
+    // CREATE_BUTTON_LEFT_BOTTOM( exportJpegSequenceButton, 1, exportJpegSequence, 1, @"Export JPEG Sequence" );
+    // CREATE_BUTTON_LEFT_BOTTOM( exportPngSequenceButton, 0, exportPngSequence, 1, @"Export PNG Sequence" );
+    CREATE_BUTTON_LEFT_BOTTOM( exportProRes4444Button, 0, exportProRes4444, 1, @"Export ProRes 4444" );
     /* Black level user input/adjustment */
     // CREATE_INPUT_WITH_LABEL_LEFT( blackLevelEntry, 1, blackLevelSet, 0, @"Black Level:" );
 

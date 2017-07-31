@@ -1,6 +1,6 @@
 #include <math.h>
 #include <string.h>
-#include <mach/mach.h>
+#include <unistd.h>
 
 #import "Cocoa/Cocoa.h"
 
@@ -191,9 +191,9 @@ void setAppNewMlvClip(char * mlvPathString, char * mlvFileName)
     } ];
 }
 
-/* Yes, I duplicated the same method, the whole image-export thing is temporary
- * (and I couldn't be bothered to firgure out a format dropdown menu in save panel) */
--(void)exportJpegSequence 
+
+/* Exports to Prores 4444 (currently with ffmpeg and intermediate PNG - no AVfoundation yet) */
+-(void)exportProRes4444
 {
     if (isMlvActive(videoMLV))
     {    
@@ -212,6 +212,15 @@ void setAppNewMlvClip(char * mlvPathString, char * mlvFileName)
                 {
                     char * pathString = (char *)[pathURL.path UTF8String];
                     char * exportPath = malloc(2048);
+                    char * exportDir = malloc(2048);
+                    char * commandStr = malloc(2048);
+
+                    /* Hidden directory path */
+                    snprintf(exportDir, 2047, "%s/.temp_png", pathString);
+
+                    /* Create hidden directory */
+                    snprintf(commandStr, 2047, "mkdir %s", exportDir);
+                    system(commandStr);
 
                     /* So we always get amaze frames for exporting */
                     setMlvAlwaysUseAmaze(videoMLV);
@@ -220,55 +229,7 @@ void setAppNewMlvClip(char * mlvPathString, char * mlvFileName)
                     for (int f = 0; f < getMlvFrames(videoMLV); ++f)
                     {
                         /* Generate file name for frame */
-                        snprintf(exportPath, 2047, "%s/%.8s_%.5i.jpg", pathString, MLVClipName, f);
-
-                        /* Get processed frame */
-                        getMlvProcessedFrame8(videoMLV, f, rawImage);
-
-                        /* Export */
-                        NSData * imageFile = [rawBitmap representationUsingType: NSJPEGFileType properties: nil];
-                        [imageFile writeToFile: [NSString stringWithUTF8String:exportPath] atomically: NO];
-
-                        NSLog(@"Exported frame %i to: %s", f, exportPath);
-                    }
-
-                    setMlvDontAlwaysUseAmaze(videoMLV);
-
-                    free(exportPath);
-                }
-            }
-            [panel release];
-        } ];
-    }
-}
--(void)exportPngSequence 
-{
-    if (isMlvActive(videoMLV))
-    {    
-        /* Create open panel */
-        NSOpenPanel * panel = [[NSOpenPanel openPanel] retain];
-
-        [panel setCanChooseFiles: NO];
-        [panel setCanChooseDirectories: YES];
-        [panel setAllowsMultipleSelection: NO];
-
-        [panel beginWithCompletionHandler: ^ (NSInteger result) 
-        {
-            if (result == NSFileHandlingPanelOKButton)
-            {
-                for (NSURL * pathURL in [panel URLs])
-                {
-                    char * pathString = (char *)[pathURL.path UTF8String];
-                    char * exportPath = malloc(2048);
-
-                    /* So we always get amaze frames for exporting */
-                    setMlvAlwaysUseAmaze(videoMLV);
-
-                    /* We will use the same NSBitmapImageRep as for exporting as for preview window */
-                    for (int f = 0; f < getMlvFrames(videoMLV); ++f)
-                    {
-                        /* Generate file name for frame */
-                        snprintf(exportPath, 2047, "%s/%.8s_%.5i.png", pathString, MLVClipName, f);
+                        snprintf(exportPath, 2047, "%s/frame_%.5i.png", exportDir, f);
 
                         /* Get processed frame */
                         getMlvProcessedFrame8(videoMLV, f, rawImage);
@@ -282,7 +243,21 @@ void setAppNewMlvClip(char * mlvPathString, char * mlvFileName)
 
                     setMlvDontAlwaysUseAmaze(videoMLV);
 
+                    /* Run ffmpeg to create ProRes file */
+                    char * ffmpegPath = (char *)[[[NSBundle mainBundle] pathForResource:@"ffmpeg" ofType: nil] UTF8String];
+                    snprintf(commandStr, 2047, "\"%s\" -i %s/frame_%s.png -c:v prores_ks -profile:v 4444 %s/%.8s.mov", ffmpegPath, exportDir, "\%05d", pathString, MLVClipName);
+                    system(commandStr);
+
+                    /* Delete hidden directory */
+                    snprintf(commandStr, 2047, "rm -rf %s", exportDir);
+                    system(commandStr);
+
+                    // snprintf(commandStr, 2047, "rm -rf %s", exportDir);
+                    // system(commandStr);
+
                     free(exportPath);
+                    free(exportDir);
+                    free(commandStr);
                 }
             }
             [panel release];

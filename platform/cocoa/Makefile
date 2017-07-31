@@ -24,18 +24,22 @@ main :
 	rm compile_time_code; \
 	rm app_window_title.h
 
-# run 'make app' to get a .app bundle 
+# run 'make app' to get a .app bundle
+# we steal masc's Qt ffmpeg :) (remember, ffmpeg is temporary in Cocoa app)
 app :
 	rm $(appname).app; \
 	$(CC) generate_info_plist.c -o generate_info_plist; \
 	./generate_info_plist $(appname); \
 	make main; \
+	rm -rf $(appname).app; \
 	mkdir $(appname).app; \
 	mkdir $(appname).app/Contents; \
 	mkdir $(appname).app/Contents/MacOS; \
 	mkdir $(appname).app/Contents/Resources; \
 	cp -i $(appname) $(appname).app/Contents/MacOS/; \
 	cp -i info.plist $(appname).app/Contents/; \
+	unzip ../qt/FFmpeg/ffmpegOSX.zip -d $(appname).app/Contents/Resources; \
+	rm -rf $(appname).app/Contents/Resources/__MACOSX; \
 	rm generate_info_plist; \
 	rm info.plist; \
 

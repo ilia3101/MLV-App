@@ -15,9 +15,8 @@ void setAppNewMlvClip(char * mlvPathString, char * mlvFileName);
 -(void)toggleAlwaysAmaze;
 /* Opens a dialog to select MLV file + sets MLV file to that */
 -(void)openMlvDialog;
-/* Opens a dialog to select export location, then exports images */
--(void)exportJpegSequence;
--(void)exportPngSequence;
+/* Opens a dialog to select export location, then exports a mov clip with prores! */
+-(void)exportProRes4444;
 
 @end
 
