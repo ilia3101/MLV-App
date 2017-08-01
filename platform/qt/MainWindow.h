@@ -84,8 +84,9 @@ private:
     int m_timerId;
     int m_timerCacheId;
     QString m_lastSaveFileName;
-    void drawFrame();
+    void drawFrame( void );
     void openMlv( QString fileName );
+    void exportFFmpeg( QString fileName );
     void playbackHandling( int timeDiff );
     void initGui( void );
     void initLib( void );
