@@ -180,6 +180,17 @@ int NSApplicationMain(int argc, const char * argv[])
     [alwaysUseAmazeSelector setAction: @selector(toggleAlwaysAmaze)];
     [[window contentView] addSubview: alwaysUseAmazeSelector];
 
+    /* To set enable/disable tonemapping */
+    NSButton * tonemappingSelector = [ [NSButton alloc] 
+                                       initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(13, ELEMENT_HEIGHT, 44) )];
+    [tonemappingSelector setButtonType: NSSwitchButton];
+    [tonemappingSelector setTitle: @"Reinhard Tonemapping"];
+    [tonemappingSelector anchorRight: YES];
+    [tonemappingSelector anchorTop: YES];
+    [tonemappingSelector setTarget: tonemappingSelector];
+    [tonemappingSelector setAction: @selector(toggleTonemapping)];
+    [[window contentView] addSubview: tonemappingSelector];
+
     /*
      *******************************************************************************
      * LEFT SIDEBAR STUFF

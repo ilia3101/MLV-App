@@ -97,6 +97,12 @@ void processingSetSaturation(processingObject_t * processing, double saturationF
 
 
 
+/* Enable/disable tonemapping */
+void processingEnableTonemapping(processingObject_t * processing);
+void processingDisableTonemapping(processingObject_t * processing);
+
+
+
 /*
  *******************************************************************************
  * THE FOLLOWING FUNCTIONS ARE PRIVATE AND NO USE OUTSIDE OF raw_processing.c

@@ -81,7 +81,7 @@ void setAppNewMlvClip(char * mlvPathString, char * mlvFileName)
     /* This needs to be joined (or segmentation fault 11 :D) */
     setMlvProcessing(videoMLV, processingSettings);
 
-    /* Limit frame cache to 38% of RAM size (its fast anyway) */
+    /* Limit frame cache to amount of RAM we decided earlier */
     setMlvRawCacheLimitMegaBytes(videoMLV, (uint64_t)(cacheSizeMB));
     /* Tell it slightly less cores than we have, so background caching does not slow down UI interaction */
     setMlvCpuCores(videoMLV, (MAC_CORES / 2 + 1));
@@ -157,6 +157,21 @@ void setAppNewMlvClip(char * mlvPathString, char * mlvFileName)
     else 
     {
         processingDisableHighlightReconstruction(processingSettings);
+        frameChanged++;
+    }
+}
+
+/* Enable/disable tonemapping */
+-(void)toggleTonemapping
+{
+    if ([self state] == NSOnState) 
+    {
+        processingEnableTonemapping(processingSettings);
+        frameChanged++;
+    }
+    else 
+    {
+        processingDisableTonemapping(processingSettings);
         frameChanged++;
     }
 }
@@ -245,7 +260,8 @@ void setAppNewMlvClip(char * mlvPathString, char * mlvFileName)
 
                     /* Run ffmpeg to create ProRes file */
                     char * ffmpegPath = (char *)[[[NSBundle mainBundle] pathForResource:@"ffmpeg" ofType: nil] UTF8String];
-                    snprintf(commandStr, 2047, "\"%s\" -i %s/frame_%s.png -c:v prores_ks -profile:v 4444 %s/%.8s.mov", ffmpegPath, exportDir, "\%05d", pathString, MLVClipName);
+                    snprintf( commandStr, 2047, "\"%s\" -i %s/frame_%s.png -framerate %f -c:v prores_ks -profile:v 4444 %s/%.8s.mov", 
+                              ffmpegPath, exportDir, "\%05d", getMlvFramerate(videoMLV), pathString, MLVClipName);
                     system(commandStr);
 
                     /* Delete hidden directory */

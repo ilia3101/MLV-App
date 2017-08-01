@@ -13,6 +13,8 @@ void setAppNewMlvClip(char * mlvPathString, char * mlvFileName);
 -(void)toggleHighlightReconstruction;
 /* Enables/disables always AMaZE requirement */
 -(void)toggleAlwaysAmaze;
+/* Enables/disables processing tonemapping */
+-(void)toggleTonemapping;
 /* Opens a dialog to select MLV file + sets MLV file to that */
 -(void)openMlvDialog;
 /* Opens a dialog to select export location, then exports a mov clip with prores! */

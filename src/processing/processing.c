@@ -119,9 +119,6 @@ void processing_update_matrices(processingObject_t * processing)
     /* (for shorter code) */
     int32_t ** pm = processing->pre_calc_matrix;
 
-    /* Exposure */
-    double exposure_factor = pow(2.0, processing->exposure_stops);
-
     /* Create a camera to XYZ matrix in temp_matrix_a */
     invertMatrix(processing->xyz_to_cam_matrix, temp_matrix_a);
 
@@ -147,8 +144,12 @@ void processing_update_matrices(processingObject_t * processing)
                       processing->xyz_to_rgb_matrix,
                       processing->final_matrix );
 
-    /* Apply exposure to all matrix values */
-    for (int i = 0; i < 9; ++i) processing->final_matrix[i] *= exposure_factor;
+    /* Exposure, done here if smaller than 0, or no tonemapping - else done at gamma function */
+    if (processing->exposure_stops < 0.0 || !processing->tone_mapping)
+    {
+        double exposure_factor = pow(2.0, processing->exposure_stops);
+        for (int i = 0; i < 9; ++i) processing->final_matrix[i] *= exposure_factor;
+    }
 
     /* Matrix stuff done I guess */
 
@@ -162,7 +163,7 @@ void processing_update_matrices(processingObject_t * processing)
     }
 
     /* Highest green value - pixels at this value will need to be reconstructed */
-    processing->highest_green = LIMIT16(MAX(pm[3][65535],pm[3][0]) + MAX(pm[4][65535],pm[4][0]) + MAX(pm[5][65535],pm[5][0]));
+    processing->highest_green = processing->pre_calc_gamma[ LIMIT16(MAX(pm[3][65535],pm[3][0]) + MAX(pm[4][65535],pm[4][0]) + MAX(pm[5][65535],pm[5][0])) ];
 
     /* This is nice */
     printMatrix(processing->final_matrix);

@@ -112,8 +112,14 @@ void applyProcessingObject( processingObject_t * processing,
         pix[2] = LIMIT16(pix2);
     }
 
+    /* Gamma */
+    for (int i = 0; i < img_s; ++i)
+    {
+        outputImage[i] = processing->pre_calc_gamma[ outputImage[i] ];
+    }
+
     /* Now highlilght reconstruction */
-    if (processing->highest_green < 65535 && processing->highlight_reconstruction)
+    if (processing->exposure_stops < 0.0 && processing->highest_green < 65535 && processing->highlight_reconstruction)
     {
         for (uint16_t * pix = img; pix < img_end; pix += 3)
         {
@@ -123,12 +129,6 @@ void applyProcessingObject( processingObject_t * processing,
                 pix[1] = (pix[0] + pix[2]) / 2;
             }
         }
-    }
-
-    /* Gamma */
-    for (int i = 0; i < img_s; ++i)
-    {
-        outputImage[i] = processing->pre_calc_gamma[ outputImage[i] ];
     }
 
     /* Now saturation (looks way better after gamma) 
@@ -245,6 +245,7 @@ void processingSetExposureStops(processingObject_t * processing, double exposure
 {
     processing->exposure_stops = exposureStops;
 
+    processingSetGamma(processing, processing->gamma_power);
     processing_update_matrices(processing);
 }
 
@@ -301,7 +302,7 @@ void processingSetWhiteBalanceTint(processingObject_t * processing, double WBTin
                                WBTint );
 }
 
-/* Set gamma, 2.6 is about right */
+/* Set gamma */
 void processingSetGamma(processingObject_t * processing, double gammaValue)
 {
     processing->gamma_power = gammaValue;
@@ -309,13 +310,51 @@ void processingSetGamma(processingObject_t * processing, double gammaValue)
     /* Needs to be inverse */
     double gamma = 1.0 / gammaValue;
 
-    /* Precalculate the curve as always */
-    for (int i = 0; i < 65536; ++i)
+    if (processing->exposure_stops < 0.0 || !processing->tone_mapping)
     {
-        processing->pre_calc_gamma[i] = (uint16_t)(65535.0 * pow((double)i/65535.0, gamma));
+        /* Precalculate the curve */
+        for (int i = 0; i < 65536; ++i)
+        {
+            /* Tone mapping also (reinhard) */
+            double pixel = (double)i/65535.0;
+            if (processing->tone_mapping) pixel /= (1.0 + pixel);
+            processing->pre_calc_gamma[i] = (uint16_t)(65535.0 * pow(pixel, gamma));
+        }
+    }
+    /* Else exposure done here if it is positive */
+    else
+    {
+        /* Exposure */
+        double exposure_factor = pow(2.0, processing->exposure_stops);
+        /* Precalculate the curve */
+        for (int i = 0; i < 65536; ++i)
+        {
+            /* Tone mapping also (reinhard) */
+            double pixel = (double)i/65535.0;
+            pixel *= exposure_factor;
+            pixel /= (1.0 + pixel);
+            pixel = 65535.0 * pow(pixel, gamma);
+            pixel = LIMIT16(pixel);
+            processing->pre_calc_gamma[i] = pixel;
+        }
     }
 }
 
+void processingEnableTonemapping(processingObject_t * processing)
+{
+    (processing)->tone_mapping = 1;
+    /* This will update everything necessary to enable tonemapping */
+    processingSetGamma(processing, processing->gamma_power);
+    processing_update_matrices(processing);
+}
+
+void processingDisableTonemapping(processingObject_t * processing) 
+{
+    (processing)->tone_mapping = 0;
+    /* This will update everything necessary to disable tonemapping */
+    processingSetGamma(processing, processing->gamma_power);
+    processing_update_matrices(processing);
+}
 
 /* Set black and white level */
 void processingSetBlackAndWhiteLevel( processingObject_t * processing, 
