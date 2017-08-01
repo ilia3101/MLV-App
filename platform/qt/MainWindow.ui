@@ -856,8 +856,12 @@
      <string>File</string>
     </property>
     <addaction name="actionOpen"/>
+    <addaction name="separator"/>
     <addaction name="actionClip_Information"/>
+    <addaction name="separator"/>
     <addaction name="actionExport"/>
+    <addaction name="actionExportSettings"/>
+    <addaction name="separator"/>
     <addaction name="actionQuit"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
@@ -1115,6 +1119,15 @@
    </property>
    <property name="text">
     <string>Always Use AMaZE</string>
+   </property>
+  </action>
+  <action name="actionExportSettings">
+   <property name="icon">
+    <iconset resource="ressources.qrc">
+     <normaloff>:/RetinaIMG/RetinaIMG/Settings-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Settings-icon.png</iconset>
+   </property>
+   <property name="text">
+    <string>Export Settings</string>
    </property>
   </action>
  </widget>

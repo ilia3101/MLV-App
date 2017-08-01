@@ -19,6 +19,7 @@
 //#include "ffmpegWrapper.h"
 
 #include "SystemMemory.h"
+#include "ExportSettingsDialog.h"
 
 #define VERSION "0.3 alpha"
 
@@ -519,6 +520,7 @@ void MainWindow::readSettings()
         ui->actionZoom100->setChecked( true );
     }
     m_lastSaveFileName = set.value( "lastFileName", QString( "/Users/" ) ).toString();
+    m_codecProfile = set.value( "codecProfile", 4 ).toUInt();
 }
 
 //Save some settings to registry
@@ -536,6 +538,7 @@ void MainWindow::writeSettings()
     set.setValue( "dragFrameMode", ui->actionDropFrameMode->isChecked() );
     set.setValue( "zoomModeFit", ui->actionZoomFit->isChecked() );
     set.setValue( "lastFileName", m_lastSaveFileName );
+    set.setValue( "codecProfile", m_codecProfile );
 }
 
 //About Window
@@ -727,9 +730,10 @@ void MainWindow::on_actionExport_triggered()
     QString program = QCoreApplication::applicationDirPath();
     program.append( QString( "/ffmpeg\"" ) );
     program.prepend( QString( "\"" ) );
-    program.append( QString( " -r %1 -i \"%2\" -c:v prores_ks -profile:v 4444 \"%3\"" )
+    program.append( QString( " -r %1 -i \"%2\" -c:v prores_ks -profile:v %3 \"%4\"" )
                     .arg( getMlvFramerate( m_pMlvObject ) )
                     .arg( numberedFileName )
+                    .arg( m_codecProfile )
                     .arg( output ) );
     qDebug() << program;
     QProcess::execute( program );
@@ -817,4 +821,13 @@ void MainWindow::on_actionAlwaysUseAMaZE_triggered(bool checked)
         setMlvDontAlwaysUseAmaze( m_pMlvObject );
     }
     m_frameChanged = true;
+}
+
+//Select the codec
+void MainWindow::on_actionExportSettings_triggered()
+{
+    ExportSettingsDialog *pExportSettings = new ExportSettingsDialog( this, m_codecProfile );
+    pExportSettings->exec();
+    m_codecProfile = pExportSettings->getEncoderSetting();
+    delete pExportSettings;
 }

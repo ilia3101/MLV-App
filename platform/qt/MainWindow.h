@@ -62,6 +62,8 @@ private slots:
     void on_actionShowWaveFormMonitor_triggered(bool checked);
     void on_actionAlwaysUseAMaZE_triggered(bool checked);
 
+    void on_actionExportSettings_triggered();
+
 private:
     Ui::MainWindow *ui;
     InfoDialog *m_pInfoDialog;
@@ -75,6 +77,7 @@ private:
     QLabel *m_pFpsStatus;
     uint8_t *m_pRawImage;
     uint32_t m_cacheSizeMB;
+    uint8_t m_codecProfile;
     bool m_frameChanged;
     int m_currentFrameIndex;
     double m_newPosDropMode;

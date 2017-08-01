@@ -53,7 +53,8 @@ SOURCES += \
     InfoDialog.cpp \
     StatusDialog.cpp \
     Histogram.cpp \
-    WaveFormMonitor.cpp
+    WaveFormMonitor.cpp \
+    ExportSettingsDialog.cpp
 
 
 HEADERS += \
@@ -76,14 +77,16 @@ HEADERS += \
     StatusDialog.h \
     SystemMemory.h \
     Histogram.h \
-    WaveFormMonitor.h #\
+    WaveFormMonitor.h \ #\
+    ExportSettingsDialog.h
     #ffmpegWrapper.h
 
 
 FORMS += \
         MainWindow.ui \
     InfoDialog.ui \
-    StatusDialog.ui
+    StatusDialog.ui \
+    ExportSettingsDialog.ui
 
 RESOURCES += \
     ressources.qrc
