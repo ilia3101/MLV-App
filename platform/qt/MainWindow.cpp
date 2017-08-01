@@ -16,7 +16,7 @@
 #include <QSettings>
 #include <QDesktopWidget>
 
-#include "ffmpegWrapper.h"
+//#include "ffmpegWrapper.h"
 
 #include "SystemMemory.h"
 
@@ -308,7 +308,7 @@ void MainWindow::openMlv( QString fileName )
 //export the video with FFmpeg library
 void MainWindow::exportFFmpeg( QString fileName )
 {
-    qDebug() << "AVCodec Version:" << avcodec_version();
+    /*qDebug() << "AVCodec Version:" << avcodec_version();
     qDebug() << "AVCodec Config:" << avcodec_configuration();
     qDebug() << "AVCodec License:" << avcodec_license();
 
@@ -339,7 +339,7 @@ void MainWindow::exportFFmpeg( QString fileName )
     c->width = getMlvWidth(m_pMlvObject);
     c->height = getMlvHeight(m_pMlvObject);
 
-    /* open it */
+    //open it
     if (avcodec_open2(c, codec, NULL) < 0) {
         qDebug() << "Could not open codec";
         return;
@@ -368,7 +368,7 @@ void MainWindow::exportFFmpeg( QString fileName )
     fclose(f);
 
     avcodec_free_context(&c);
-    av_frame_free(&frame);
+    av_frame_free(&frame);*/
 }
 
 //Handles the playback and must be triggered from timer
