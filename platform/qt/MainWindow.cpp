@@ -16,8 +16,6 @@
 #include <QSettings>
 #include <QDesktopWidget>
 
-//#include "ffmpegWrapper.h"
-
 #include "SystemMemory.h"
 #include "ExportSettingsDialog.h"
 
@@ -304,72 +302,6 @@ void MainWindow::openMlv( QString fileName )
     ui->actionExport->setEnabled( true );
 
     m_frameChanged = true;
-}
-
-//export the video with FFmpeg library
-void MainWindow::exportFFmpeg( QString fileName )
-{
-    /*qDebug() << "AVCodec Version:" << avcodec_version();
-    qDebug() << "AVCodec Config:" << avcodec_configuration();
-    qDebug() << "AVCodec License:" << avcodec_license();
-
-    avcodec_register_all();
-
-    const AVCodec *codec;
-    AVCodecContext *c = NULL;
-    AVFrame *frame;
-    //AVPacket pkt;
-    FILE *f;
-
-    codec = avcodec_find_encoder_by_name("prores_ks");
-    if (!codec) {
-        qDebug() << "Codec not found.";
-        return;
-    }
-    qDebug() << "ID of encoder:" << codec->id;
-
-    c = avcodec_alloc_context3(codec);
-    if (!c) {
-        qDebug() << "Could not allocate video codec context";
-        return;
-    }
-
-    c->framerate = (AVRational){25, 1};
-    c->time_base = (AVRational){1, 25};
-    c->pix_fmt = AV_PIX_FMT_YUV422P10LE;
-    c->width = getMlvWidth(m_pMlvObject);
-    c->height = getMlvHeight(m_pMlvObject);
-
-    //open it
-    if (avcodec_open2(c, codec, NULL) < 0) {
-        qDebug() << "Could not open codec";
-        return;
-    }
-
-    f = fopen(fileName.toLatin1().data(), "wb");
-    if (!f) {
-        qDebug() << "Could not open", fileName;
-        return;
-    }
-
-    frame = av_frame_alloc();
-    if (!frame) {
-        qDebug() << "Could not allocate video frame";
-        return;
-    }
-
-    frame->width = getMlvWidth(m_pMlvObject);
-    frame->height = getMlvHeight(m_pMlvObject);
-    frame->format = AV_PIX_FMT_RGB48LE;
-
-
-
-
-
-    fclose(f);
-
-    avcodec_free_context(&c);
-    av_frame_free(&frame);*/
 }
 
 //Handles the playback and must be triggered from timer
@@ -675,10 +607,6 @@ void MainWindow::on_actionExport_triggered()
     if( fileName == QString( "" )
             && ( !fileName.endsWith( ".mov", Qt::CaseInsensitive ) ) ) return;
 
-    //And here comes the ffmpeg library function
-    //exportFFmpeg( fileName );
-    //return;
-
     //Delete file if exists
     QFile *file = new QFile( fileName );
     if( file->exists() ) file->remove();
@@ -766,6 +694,14 @@ void MainWindow::on_checkBoxHighLightReconstruction_toggled(bool checked)
 {
     if( checked ) processingEnableHighlightReconstruction( m_pProcessingObject );
     else processingDisableHighlightReconstruction( m_pProcessingObject );
+    m_frameChanged = true;
+}
+
+//Enable / Disable Reinhard Tonemapping
+void MainWindow::on_checkBoxReinhardTonemapping_toggled(bool checked)
+{
+    if( checked ) processingEnableTonemapping( m_pProcessingObject );
+    else processingDisableTonemapping( m_pProcessingObject );
     m_frameChanged = true;
 }
 

@@ -56,12 +56,12 @@ private slots:
     void on_actionGoto_First_Frame_triggered();
     void on_actionExport_triggered();
     void on_checkBoxHighLightReconstruction_toggled(bool checked);
+    void on_checkBoxReinhardTonemapping_toggled(bool checked);
     void on_actionZoomFit_triggered();
     void on_actionZoom100_triggered();
     void on_actionShowHistogram_triggered(bool checked);
     void on_actionShowWaveFormMonitor_triggered(bool checked);
     void on_actionAlwaysUseAMaZE_triggered(bool checked);
-
     void on_actionExportSettings_triggered();
 
 private:
@@ -89,7 +89,6 @@ private:
     QString m_lastSaveFileName;
     void drawFrame( void );
     void openMlv( QString fileName );
-    void exportFFmpeg( QString fileName );
     void playbackHandling( int timeDiff );
     void initGui( void );
     void initLib( void );

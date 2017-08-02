@@ -27,17 +27,6 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #win32: QMAKE_CFLAGS_RELEASE += -msse2 -std=c99
 #linux-g++*: QMAKE_CFLAGS_RELEASE += -msse2 -std=c99
 
-#macx: INCLUDEPATH += /usr/local/include/
-#macx: LIBS += -L/usr/local/lib/ -lavformat -lavcodec -lswscale -lavutil -lswresample
-#macx: LIBS += -framework QuartzCore -framework QuartzCore -framework AppKit -framework OpenGL -framework QuartzCore \
-#              -framework AppKit -framework OpenGL -framework QTKit -framework Foundation -framework QuartzCore \
-#              -framework CoreVideo -framework Foundation -framework AVFoundation -framework CoreMedia -framework CoreFoundation \
-#              -framework VideoToolbox -framework CoreMedia -framework CoreVideo -framework CoreFoundation -framework AudioToolbox \
-#              -framework CoreMedia -framework VideoDecodeAcceleration -framework CoreFoundation -framework QuartzCore \
-#              -liconv -Wl,-framework,CoreFoundation -Wl,-framework,Security -framework CoreGraphics -lm -lbz2 -lz -framework CoreServices
-# Requied for some C99 defines
-#DEFINES += __STDC_CONSTANT_MACROS
-
 SOURCES += \
         main.cpp \
         MainWindow.cpp \

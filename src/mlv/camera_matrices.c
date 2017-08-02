@@ -274,6 +274,10 @@ void getMlvXyzToCameraMatrix(mlvObject_t * video, double * outputMatrix)
             /* Is 100D, hopefully 650D matrix will do */
             original_matrix = cam_matrices[9].ColorMatrix2;
         }
+        else
+        {
+            //TODO: Ilia, please fix: in this case original_matrix is uninitialized
+        }
     }
     else if (camera_name[10] == 'M')
     {
