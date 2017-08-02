@@ -46,7 +46,7 @@ processingObject_t * initProcessingObject()
     processingSetWhiteBalance(processing, 6250.0, 0.0);
     processingSetBlackAndWhiteLevel(processing, 8192.0, 64000.0); /* 16 bit! */
     processingSetExposureStops(processing, 0.0);
-    processingSetGamma(processing, 2.2);
+    processingSetGamma(processing, 3.15);
     processingSetSaturation(processing, 1.0);
     processingSetContrast(processing, 0.73, 5.175, 0.5, 0.0, 0.0);
 
