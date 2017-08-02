@@ -44,7 +44,15 @@ void processingSetLightening(processingObject_t * processing, double lighten); /
 
 
 
-/* Just don't touch this or keep at ~3, or 2.2 if you like S0NY */
+/* 3-way correction, range of saturation and hue is 0.0-1.0 (Currently not doing anything) */
+void processingSet3WayCorrection( processingObject_t * processing,
+                                  double highlightHue, double highlightSaturation,
+                                  double midtoneHue, double midtoneSaturation,
+                                  double shadowHue, double shadowSaturation );
+
+
+
+/* Just don't touch this or keep at ~2.2 (or more for a lighter image) */
 void processingSetGamma(processingObject_t * processing, double gammaValue);
 #define processingGetGamma(processing) processing->gamma_power
 
@@ -129,5 +137,17 @@ void get_kelvin_multipliers_xyz(double T, double * RGB);
 
 /* Calculates final_matrix, incorporating white balance, exposure and all the XYZ stuff */
 void processing_update_matrices(processingObject_t * processing);
+
+/* Precalculates curve with contrast and colour correction */
+void processing_update_curves(processingObject_t * processing);
+
+/* Pretty good function */
+void hsv_to_rgb(double hue, double saturation, double value, double * rgb);
+
+/* 3 way colour correction */
+void colour_correct_3_way( double * rgb,
+                           double h_hue, double h_sat,
+                           double m_hue, double m_sat,
+                           double s_hue, double s_sat );
 
 #endif

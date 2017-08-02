@@ -22,10 +22,12 @@ processingObject_t * initProcessingObject()
 {
     processingObject_t * processing = calloc( 1, sizeof(processingObject_t) );
 
-    processing->pre_calc_curves = malloc( 65536 * sizeof(uint16_t) );
-    processing->pre_calc_gamma  = malloc( 65536 * sizeof(uint16_t) );
-    processing->pre_calc_levels = malloc( 65536 * sizeof(uint16_t) );
-    processing->pre_calc_sat    = malloc( 131072 * sizeof(int32_t) );
+    processing->pre_calc_curve_r = malloc( 65536 * sizeof(uint16_t) );
+    processing->pre_calc_curve_g = malloc( 65536 * sizeof(uint16_t) );
+    processing->pre_calc_curve_b = malloc( 65536 * sizeof(uint16_t) );
+    processing->pre_calc_gamma   = malloc( 65536 * sizeof(uint16_t) );
+    processing->pre_calc_levels  = malloc( 65536 * sizeof(uint16_t) );
+    processing->pre_calc_sat     = malloc( 131072 * sizeof(int32_t) );
 
     /* For precalculated matrix values */
     for (int i = 0; i < 9; ++i)
@@ -44,7 +46,7 @@ processingObject_t * initProcessingObject()
     processingSetWhiteBalance(processing, 6250.0, 0.0);
     processingSetBlackAndWhiteLevel(processing, 8192.0, 64000.0); /* 16 bit! */
     processingSetExposureStops(processing, 0.0);
-    processingSetGamma(processing, 3.15);
+    processingSetGamma(processing, 2.2);
     processingSetSaturation(processing, 1.0);
     processingSetContrast(processing, 0.73, 5.175, 0.5, 0.0, 0.0);
 
@@ -150,9 +152,11 @@ void applyProcessingObject( processingObject_t * processing,
     }
 
     /* Contrast Curve (OMG putting this after gamma made it 999x better) */
-    for (int i = 0; i < img_s; ++i)
+    for (uint16_t * pix = outputImage; pix < img_end; pix += 3)
     {
-        outputImage[i] = processing->pre_calc_curves[ outputImage[i] ];
+        pix[0] = processing->pre_calc_curve_r[ pix[0] ];
+        pix[1] = processing->pre_calc_curve_r[ pix[1] ];
+        pix[2] = processing->pre_calc_curve_r[ pix[2] ];
     }
 }
 
@@ -171,73 +175,33 @@ void processingSetContrast( processingObject_t * processing,
     processing->dark_contrast_range = DCRange;
     processing->lighten = lighten;
 
-    /* Precalculate the contrast(curve) from 0 to 1 */
-    for (int i = 0; i < 65536; ++i)
-    {
-        /* Pixel 0-1 */
-        double pixel_value = (double)i / (double)65535.0;
-
-        /* Add contrast to pixel */
-        pixel_value = add_contrast( pixel_value,
-                                    DCRange, DCFactor, 
-                                    LCRange, LCFactor );
-
-        /* 'Lighten' */
-        pixel_value = pow(pixel_value, 0.6 - lighten * 0.3);
-
-        /* Restore to original 0-65535 range */
-        pixel_value *= 65535.0;
-
-        processing->pre_calc_curves[i] = (uint16_t)pixel_value;
-    }
-
-    /* DONE */
+    processing_update_curves(processing);
 }
 
 void processingSetDCRange(processingObject_t * processing, double DCRange)
 {
-    processingSetContrast( processing, 
-                           DCRange,
-                           processingGetDCFactor(processing),
-                           processingGetLCRange(processing),
-                           processingGetLCFactor(processing),
-                           processingGetLightening(processing) );
+    processing->dark_contrast_range = DCRange;
+    processing_update_curves(processing);
 }
 void processingSetDCFactor(processingObject_t * processing, double DCFactor)
 {
-    processingSetContrast( processing, 
-                           processingGetDCRange(processing),
-                           DCFactor,
-                           processingGetLCRange(processing),
-                           processingGetLCFactor(processing),
-                           processingGetLightening(processing) );
+    processing->dark_contrast_factor = DCFactor;
+    processing_update_curves(processing);
 }
 void processingSetLCRange(processingObject_t * processing, double LCRange) 
 {
-    processingSetContrast( processing, 
-                           processingGetDCRange(processing),
-                           processingGetDCFactor(processing),
-                           LCRange,
-                           processingGetLCFactor(processing),
-                           processingGetLightening(processing) );
+    processing->light_contrast_range = LCRange;
+    processing_update_curves(processing);
 }
 void processingSetLCFactor(processingObject_t * processing, double LCFactor)
 {
-    processingSetContrast( processing, 
-                           processingGetDCRange(processing),
-                           processingGetDCFactor(processing),
-                           processingGetLCRange(processing),
-                           LCFactor,
-                           processingGetLightening(processing) );
+    processing->light_contrast_factor = LCFactor;
+    processing_update_curves(processing);
 }
 void processingSetLightening(processingObject_t * processing, double lighten)
 {
-    processingSetContrast( processing, 
-                           processingGetDCRange(processing),
-                           processingGetDCFactor(processing),
-                           processingGetLCRange(processing),
-                           processingGetLCFactor(processing),
-                           lighten );
+    processing->lighten = lighten;
+    processing_update_curves(processing);
 }
 
 /* Have a guess what this does */
@@ -340,6 +304,22 @@ void processingSetGamma(processingObject_t * processing, double gammaValue)
     }
 }
 
+/* Range of saturation and hue is 0.0-1.0 */
+void processingSet3WayCorrection( processingObject_t * processing,
+                                  double highlightHue, double highlightSaturation,
+                                  double midtoneHue, double midtoneSaturation,
+                                  double shadowHue, double shadowSaturation )
+{
+    processing->highlight_hue = highlightHue;
+    processing->highlight_sat = highlightSaturation;
+    processing->midtone_hue = midtoneHue;
+    processing->midtone_sat = midtoneSaturation;
+    processing->shadow_hue = shadowHue;
+    processing->shadow_sat = shadowSaturation;
+
+    processing_update_curves(processing);
+}
+
 void processingEnableTonemapping(processingObject_t * processing)
 {
     (processing)->tone_mapping = 1;
@@ -403,7 +383,9 @@ void processingSetWhiteLevel(processingObject_t * processing, int whiteLevel)
 /* Decomissions a processing object completely(I hope) */
 void freeProcessingObject(processingObject_t * processing)
 {
-    free(processing->pre_calc_curves);
+    free(processing->pre_calc_curve_r);
+    free(processing->pre_calc_curve_g);
+    free(processing->pre_calc_curve_b);
     free(processing->pre_calc_gamma);
     free(processing->pre_calc_levels);
     free(processing->pre_calc_sat);

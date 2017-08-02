@@ -70,13 +70,6 @@ void get_kelvin_multipliers_xyz(double kelvin, double * multiplier_output)
     multiplier_output[1] *= 0.75;
 }
 
-/* now fix for XYZ :[ */
-    // for (int i = 0; i < 3; ++i) multiplier_output[i] -= 1.0;
-    // multiplier_output[0]
-    // for (int i = 0; i < 3; ++i) multiplier_output[i] += 1.0;
-
-
-
 /* Adds contrast(S-curve) to a value in a unique(or not) way */
 double add_contrast ( double pixel, /* Range 0.0 - 1.0 */
                       double dark_contrast_range, 
@@ -106,6 +99,127 @@ double add_contrast ( double pixel, /* Range 0.0 - 1.0 */
     return pixel;
 }
 
+void hsv_to_rgb(double hue, double saturation, double value, double * rgb)
+{
+    /* Red channel */
+    if (hue < (120.0/360.0) && hue > (240.0/360.0))
+    {
+        if (hue < (60.0/360.0) || hue > (300.0/360.0))
+        {
+            rgb[0] = 1.0;
+        }
+        else
+        {
+            rgb[0] = hue;
+            if (hue > (240.0/360.0)) rgb[0] = 1.0 - rgb[0];
+            rgb[0] -= 60.0/360.0;
+            rgb[0] *= 6.0;
+        }
+    }
+    /* Green channel */
+    if (hue < (240.0/360.0))
+    {
+        if (hue > (60.0/360.0) && hue < (180.0/360.0))
+        {
+            rgb[1] = 1.0;
+        }
+        else
+        {
+            rgb[1] = hue;
+            if (rgb[1] > (180.0/360.0)) rgb[1] = (240.0/360.0) - rgb[1];
+            rgb[1] *= 6.0;
+        }
+    }
+    /* Blue channel */
+    if (hue > (120.0/360.0))
+    {
+        if (hue > (180.0/360.0) && hue < (300.0/360.0))
+        {
+            rgb[2] = 1.0;
+        }
+        else
+        {
+            if (hue > (300.0/360.0)) rgb[2] = 1.0 - rgb[2];
+            else rgb[2] = hue - (120.0/360.0);
+            rgb[2] *= 6.0;
+        }
+    }
+
+    /* Saturation + value */
+    for (int i = 0; i < 3; ++i)
+    {
+        /* Desaturate */
+        rgb[i] = rgb[i] * saturation + (1.0 - saturation);
+        /* Value */
+        rgb[i] *= value;
+    }
+}
+
+static double array_average(double * array, int length)
+{
+    double average = 0.0;
+    for (int i = 0; i < length; ++i)
+    {
+        average += array[i];
+    }
+    average /= (double)length;
+    return average;
+}
+
+void colour_correct_3_way( double * rgb,
+                           double h_hue, double h_sat,
+                           double m_hue, double m_sat,
+                           double s_hue, double s_sat )
+{
+    /* Not done :[ */
+}
+
+void processing_update_curves(processingObject_t * processing)
+{
+    /* For 3 way colour correction (highlights and shadows) */
+    // double colour_highlights[3];
+    // hsv_to_rgb(processing->highlight_hue, 1.0, 1.0 colour_highlights);
+
+    // double lighten_pow = 0.6 - processing->lighten * 0.3;
+    double lighten_pow = 1.0 - processing->lighten;
+
+    /* Precalculate the contrast(curve) from 0 to 1 */
+    for (int i = 0; i < 65536; ++i)
+    {
+        double pixel_value/*, pixel_rgb[3]*/;
+
+        /* Pixel 0-1 */
+        pixel_value = (double)i / (double)65535.0;
+
+        /* Add contrast to pixel */
+        pixel_value = add_contrast( pixel_value,
+                                    processing->dark_contrast_range, 
+                                    processing->dark_contrast_factor, 
+                                    processing->light_contrast_range, 
+                                    processing->light_contrast_factor );
+
+        /* 'Lighten' */
+        pixel_value = pow(pixel_value, lighten_pow);
+
+        /* 3 way correction is not on right now */
+
+        // /* Do 3-way colour correction */
+        // pixel_rgb[0] = pixel_value;
+        // pixel_rgb[1] = pixel_value;
+        // pixel_rgb[2] = pixel_value;
+
+        // /* Restore to original 0-65535 range */
+        // pixel_rgb[0] *= 65535.0;
+        // pixel_rgb[1] *= 65535.0;
+        // pixel_rgb[2] *= 65535.0;
+
+        pixel_value *= 65535.0;
+
+        processing->pre_calc_curve_r[i] = (uint16_t)pixel_value;
+        processing->pre_calc_curve_g[i] = (uint16_t)pixel_value;
+        processing->pre_calc_curve_b[i] = (uint16_t)pixel_value;
+    }
+}
 
 /* Calculates the final matrix (processing->main_matrix), and precalculates all the values;
  * Combines: exposure + white balance + camera specific adjustment all in one matrix! */

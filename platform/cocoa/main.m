@@ -224,9 +224,9 @@ int NSApplicationMain(int argc, const char * argv[])
     /* Link video with processing settings */
     setMlvProcessing(videoMLV, processingSettings);
     /* Limit frame cache to suitable amount of RAM (~33% at 8GB and below, ~50% at 16GB, then up and up) */
-    cacheSizeMB = (int)(0.66666f * (float)(MAC_RAM - 4000));
+    cacheSizeMB = (int)(0.66666 * (double)(MAC_RAM - 4000));
     if (MAC_RAM < 7500) cacheSizeMB = MAC_RAM * 0.33;
-    NSLog(@"Cache size = %iMB, or %i percent of RAM", cacheSizeMB, (int)((float)cacheSizeMB / (float)MAC_RAM * 100));
+    NSLog(@"Cache size = %iMB, or %i percent of RAM", cacheSizeMB, (int)((double)cacheSizeMB / (double)MAC_RAM * 100));
     setMlvRawCacheLimitMegaBytes(videoMLV, cacheSizeMB);
 
     /*

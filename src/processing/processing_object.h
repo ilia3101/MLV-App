@@ -39,9 +39,19 @@ typedef struct {
     double     dark_contrast_factor; /* 0 - 5 */
     double     dark_contrast_range; /* 0 - 1, or how much of the value range will be affected */
 
-    /* Gamma should be ~2.2 technically, but we get better highlight rolloff with values like 3 */
+    /* 3 way colour correction */
+    /* Hue is 0.0 - 1.0 */
+    double     highlight_hue;
+    double     midtone_hue;
+    double     shadow_hue;
+    /* Saturation also 0.0 - 1.0 */
+    double     highlight_sat;
+    double     midtone_sat;
+    double     shadow_sat;
+
+    /* Gamma should be ~2.2 technically, but highger values look ok too */
     double     gamma_power;
-    /* Limited to 0.0 - 0.6 range, helps avoid horrible SONY(TM) HIGHLIGHTS (aka bad rolloff) */
+    /* Limited to 0.0 - 0.6 range */
     double     lighten;
 
     /* For whitebalance */
@@ -49,7 +59,9 @@ typedef struct {
     
     /* These are pre-calculated curves / values for contrast and stuff 
      * will be calculated on setting changes, values 0-65535 */
-    uint16_t * pre_calc_curves;
+    uint16_t * pre_calc_curve_r;
+    uint16_t * pre_calc_curve_g;
+    uint16_t * pre_calc_curve_b;
     uint16_t * pre_calc_levels; /* For black level and white level */
     uint16_t * pre_calc_gamma;
     /* Precalculated values for saturation */
