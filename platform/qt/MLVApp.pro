@@ -28,6 +28,9 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 #linux-g++*: QMAKE_CFLAGS_RELEASE += -msse2 -std=c99
 
+##############
+#libpng: unchecking Add build library search path to DYLD_LIBRARY_PATH and DYLD_FRAMEWORK_PATH checkbox in my project Run section!!!
+##############
 #OSX: unzip qt/libpng16/lpng1631.zip (libpng 1.6.31) before, ./configure, make check, make install
 macx: INCLUDEPATH += /usr/local/include/libpng16/
 macx: LIBS += -L/usr/local/lib/ -lz -lpng
@@ -36,6 +39,7 @@ macx: LIBS += -L/usr/local/lib/ -lz -lpng
 win32: INCLUDEPATH += libpng16/include/
 win32: LIBS += -L..\qt\libpng16\lib -llibpng \
                -L..\qt\zlib -lzlib1
+##############
 
 SOURCES += \
         main.cpp \
