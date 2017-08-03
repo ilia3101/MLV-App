@@ -25,10 +25,17 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #QMAKE_CFLAGS_RELEASE += -O3 -msse4.1 -mssse3 -msse3 -msse2 -msse
 #QMAKE_CXXFLAGS_RELEASE += -O3 -msse4.1 -mssse3 -msse3 -msse2 -msse
 #win32: QMAKE_CFLAGS_RELEASE += -msse2 -std=c99
+
 #linux-g++*: QMAKE_CFLAGS_RELEASE += -msse2 -std=c99
 
-macx: INCLUDEPATH += /usr/local/include/
+#OSX: unzip qt/libpng16/lpng1631.zip (libpng 1.6.31) before, ./configure, make check, make install
+macx: INCLUDEPATH += /usr/local/include/libpng16/
 macx: LIBS += -L/usr/local/lib/ -lz -lpng
+
+#Win: is precompiled with mingw32, so should work out of the box
+win32: INCLUDEPATH += libpng16/include/
+win32: LIBS += -L..\qt\libpng16\lib -llibpng \
+               -L..\qt\zlib -lzlib1
 
 SOURCES += \
         main.cpp \

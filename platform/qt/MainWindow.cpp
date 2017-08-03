@@ -15,7 +15,7 @@
 #include <QTime>
 #include <QSettings>
 #include <QDesktopWidget>
-#include <libpng16/png.h>
+#include <png.h>
 
 #include "SystemMemory.h"
 #include "ExportSettingsDialog.h"
