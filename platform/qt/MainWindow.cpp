@@ -474,26 +474,6 @@ void MainWindow::writeSettings()
     set.setValue( "codecProfile", m_codecProfile );
 }
 
-//Export a 16bit png frame
-void MainWindow::exportPng16(QString fileName, uint32_t frame)
-{
-    png_image image;
-    memset( &image, 0, sizeof image );
-    image.version = PNG_IMAGE_VERSION;
-    image.format = PNG_FORMAT_LINEAR_RGB;
-    image.width = getMlvWidth( m_pMlvObject );
-    image.height = getMlvHeight( m_pMlvObject );
-    png_bytep buffer;
-    buffer = (png_bytep)malloc( PNG_IMAGE_SIZE( image ) );
-
-    //Get frame from library
-    getMlvProcessedFrame16( m_pMlvObject, frame, (uint16_t*)buffer );
-
-    png_image_write_to_file( &image, fileName.toLatin1().data(), 0, buffer, 0, NULL );
-    free( buffer );
-    png_image_free( &image );
-}
-
 //About Window
 void MainWindow::on_actionAbout_triggered()
 {
@@ -640,11 +620,12 @@ void MainWindow::on_actionExport_triggered()
     setMlvAlwaysUseAmaze( m_pMlvObject );
 
     //StatusDialog
-    m_pStatusDialog->ui->progressBar->setMaximum( getMlvFrames( m_pMlvObject ) );
+    m_pStatusDialog->ui->progressBar->setMaximum( getMlvFrames( m_pMlvObject ) * 2 );
     m_pStatusDialog->ui->progressBar->setValue( 0 );
     m_pStatusDialog->show();
 
     //Create temp pngs
+    QThreadPool *threadPool = new QThreadPool( this );
     for( uint32_t i = 0; i < getMlvFrames( m_pMlvObject ); i++ )
     {
         //Append frame number
@@ -652,12 +633,18 @@ void MainWindow::on_actionExport_triggered()
         numberedFileName.append( QString( "_%1" ).arg( (uint)i, 5, 10, QChar( '0' ) ) );
         numberedFileName.append( QString( ".png" ) );
 
-        exportPng16( numberedFileName, i );
-
-        m_pStatusDialog->ui->progressBar->setValue( i );
-        m_pStatusDialog->ui->progressBar->repaint();
-        qApp->processEvents();
+        RenderPngTask *pngTask = new RenderPngTask( m_pMlvObject, numberedFileName, i );
+        threadPool->start( pngTask );
     }
+    while( !threadPool->waitForDone() ){}
+    threadPool->clear();
+    delete threadPool;
+    qDebug() << "PNGs READY!";
+
+    //Update Progressbar
+    m_pStatusDialog->ui->progressBar->setValue( getMlvFrames( m_pMlvObject ) );
+    m_pStatusDialog->ui->progressBar->repaint();
+    qApp->processEvents();
 
     //If we don't like amaze we switch it off again
     if( !ui->actionAlwaysUseAMaZE->isChecked() ) setMlvDontAlwaysUseAmaze( m_pMlvObject );
@@ -782,4 +769,24 @@ void MainWindow::on_actionExportSettings_triggered()
     pExportSettings->exec();
     m_codecProfile = pExportSettings->getEncoderSetting();
     delete pExportSettings;
+}
+
+//Export a 16bit png frame in a task
+void RenderPngTask::run()
+{
+    png_image image;
+    memset( &image, 0, sizeof image );
+    image.version = PNG_IMAGE_VERSION;
+    image.format = PNG_FORMAT_LINEAR_RGB;
+    image.width = getMlvWidth( m_pMlvObject );
+    image.height = getMlvHeight( m_pMlvObject );
+    png_bytep buffer;
+    buffer = (png_bytep)malloc( PNG_IMAGE_SIZE( image ) );
+
+    //Get frame from library
+    getMlvProcessedFrame16( m_pMlvObject, m_frame, (uint16_t*)buffer );
+
+    png_image_write_to_file( &image, m_fileName.toLatin1().data(), 0, buffer, 0, NULL );
+    free( buffer );
+    png_image_free( &image );
 }

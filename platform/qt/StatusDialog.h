@@ -23,6 +23,14 @@ public:
     explicit StatusDialog(QWidget *parent = 0);
     ~StatusDialog();
     Ui::StatusDialog *ui;
+
+public slots:
+    void incrementProgressBar( void )
+    {
+        ui->progressBar->setValue( ui->progressBar->value() + 1 );
+        ui->progressBar->repaint();
+        qApp->processEvents();
+    }
 };
 
 #endif // STATUSDIALOG_H

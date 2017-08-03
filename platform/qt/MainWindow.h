@@ -16,6 +16,7 @@
 #include <QTimerEvent>
 #include <QResizeEvent>
 #include <QFileOpenEvent>
+#include <QThreadPool>
 #include "../../src/mlv_include.h"
 #include "InfoDialog.h"
 #include "StatusDialog.h"
@@ -94,7 +95,23 @@ private:
     void initLib( void );
     void readSettings( void );
     void writeSettings( void );
-    void exportPng16( QString fileName, uint32_t frame );
+};
+
+class RenderPngTask : public QRunnable
+{
+public:
+    RenderPngTask( mlvObject_t *pMlvObject, QString fileName, int frame = 0 )
+    {
+        m_frame = frame;
+        m_pMlvObject = pMlvObject;
+        m_fileName = fileName;
+    }
+private:
+    void run();
+
+    int m_frame;
+    QString m_fileName;
+    mlvObject_t *m_pMlvObject;
 };
 
 #endif // MAINWINDOW_H
