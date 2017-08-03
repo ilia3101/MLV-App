@@ -15,12 +15,16 @@
 #include <QTime>
 #include <QSettings>
 #include <QDesktopWidget>
+#include <QMutex>
 #include <png.h>
 
 #include "SystemMemory.h"
 #include "ExportSettingsDialog.h"
 
 #define VERSION "0.3 alpha"
+
+QMutex gMutex;
+uint8_t gPngThreadsRunning = 0;
 
 //Constructor
 MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
@@ -625,6 +629,7 @@ void MainWindow::on_actionExport_triggered()
     m_pStatusDialog->show();
 
     //Create temp pngs
+    gPngThreadsRunning = getMlvFrames( m_pMlvObject );
     QThreadPool *threadPool = new QThreadPool( this );
     for( uint32_t i = 0; i < getMlvFrames( m_pMlvObject ); i++ )
     {
@@ -636,7 +641,15 @@ void MainWindow::on_actionExport_triggered()
         RenderPngTask *pngTask = new RenderPngTask( m_pMlvObject, numberedFileName, i );
         threadPool->start( pngTask );
     }
-    while( !threadPool->waitForDone() ){}
+
+    while( !threadPool->waitForDone(500) )
+    {
+        gMutex.lock();
+        m_pStatusDialog->ui->progressBar->setValue( getMlvFrames( m_pMlvObject ) - gPngThreadsRunning );
+        gMutex.unlock();
+        m_pStatusDialog->ui->progressBar->repaint();
+        qApp->processEvents();
+    }
     threadPool->clear();
     delete threadPool;
     qDebug() << "PNGs READY!";
@@ -789,4 +802,8 @@ void RenderPngTask::run()
     png_image_write_to_file( &image, m_fileName.toLatin1().data(), 0, buffer, 0, NULL );
     free( buffer );
     png_image_free( &image );
+
+    gMutex.lock();
+    gPngThreadsRunning--;
+    gMutex.unlock();
 }
