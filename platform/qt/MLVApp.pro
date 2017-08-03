@@ -27,6 +27,9 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #win32: QMAKE_CFLAGS_RELEASE += -msse2 -std=c99
 #linux-g++*: QMAKE_CFLAGS_RELEASE += -msse2 -std=c99
 
+macx: INCLUDEPATH += /usr/local/include/
+macx: LIBS += -L/usr/local/lib/ -lz -lpng
+
 SOURCES += \
         main.cpp \
         MainWindow.cpp \
@@ -44,7 +47,6 @@ SOURCES += \
     Histogram.cpp \
     WaveFormMonitor.cpp \
     ExportSettingsDialog.cpp
-
 
 HEADERS += \
         MainWindow.h \
@@ -66,10 +68,8 @@ HEADERS += \
     StatusDialog.h \
     SystemMemory.h \
     Histogram.h \
-    WaveFormMonitor.h \ #\
+    WaveFormMonitor.h \
     ExportSettingsDialog.h
-    #ffmpegWrapper.h
-
 
 FORMS += \
         MainWindow.ui \

@@ -25,7 +25,13 @@ ExportSettingsDialog::~ExportSettingsDialog()
 }
 
 //Get Codec Profile
-uint8_t ExportSettingsDialog::getEncoderSetting()
+uint8_t ExportSettingsDialog::getEncoderSetting(void)
 {
     return ui->comboBoxCodec->currentIndex();
+}
+
+//Get state of Export Audio Checkbox
+bool ExportSettingsDialog::getExportAudio(void)
+{
+    return ui->checkBoxExportAudio->isChecked();
 }

@@ -15,6 +15,7 @@
 #include <QTime>
 #include <QSettings>
 #include <QDesktopWidget>
+#include <libpng16/png.h>
 
 #include "SystemMemory.h"
 #include "ExportSettingsDialog.h"
@@ -209,7 +210,7 @@ void MainWindow::drawFrame( void )
         ui->labelHistogram->setPixmap( QPixmap::fromImage( m_pHistogram->getHistogramFromRaw( m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject) )
                                                           .scaled( 200,
                                                                    70,
-                                                                   Qt::IgnoreAspectRatio, Qt::FastTransformation) ) );
+                                                                   Qt::IgnoreAspectRatio, Qt::SmoothTransformation) ) ); //alternative: Qt::FastTransformation
         ui->labelHistogram->setAlignment( Qt::AlignCenter ); //Always in the middle
     }
     else if( ui->actionShowWaveFormMonitor->isChecked() )
@@ -217,7 +218,7 @@ void MainWindow::drawFrame( void )
         ui->labelHistogram->setPixmap( QPixmap::fromImage( m_pWaveFormMonitor->getWaveFormMonitorFromRaw( m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject) )
                                                           .scaled( 200,
                                                                    70,
-                                                                   Qt::IgnoreAspectRatio, Qt::SmoothTransformation) ) );
+                                                                   Qt::IgnoreAspectRatio, Qt::SmoothTransformation) ) ); //alternative: Qt::FastTransformation
         ui->labelHistogram->setAlignment( Qt::AlignCenter ); //Always in the middle
     }
     m_frameStillDrawing = false;
@@ -473,6 +474,26 @@ void MainWindow::writeSettings()
     set.setValue( "codecProfile", m_codecProfile );
 }
 
+//Export a 16bit png frame
+void MainWindow::exportPng16(QString fileName, uint32_t frame)
+{
+    png_image image;
+    memset( &image, 0, sizeof image );
+    image.version = PNG_IMAGE_VERSION;
+    image.format = PNG_FORMAT_LINEAR_RGB;
+    image.width = getMlvWidth( m_pMlvObject );
+    image.height = getMlvHeight( m_pMlvObject );
+    png_bytep buffer;
+    buffer = (png_bytep)malloc( PNG_IMAGE_SIZE( image ) );
+
+    //Get frame from library
+    getMlvProcessedFrame16( m_pMlvObject, frame, (uint16_t*)buffer );
+
+    png_image_write_to_file( &image, fileName.toLatin1().data(), 0, buffer, 0, NULL );
+    free( buffer );
+    png_image_free( &image );
+}
+
 //About Window
 void MainWindow::on_actionAbout_triggered()
 {
@@ -631,12 +652,7 @@ void MainWindow::on_actionExport_triggered()
         numberedFileName.append( QString( "_%1" ).arg( (uint)i, 5, 10, QChar( '0' ) ) );
         numberedFileName.append( QString( ".png" ) );
 
-        //Get frame from library
-        getMlvProcessedFrame8( m_pMlvObject, i, m_pRawImage );
-
-        //Write file
-        QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
-                    .save( numberedFileName, "png", -1 );
+        exportPng16( numberedFileName, i );
 
         m_pStatusDialog->ui->progressBar->setValue( i );
         m_pStatusDialog->ui->progressBar->repaint();

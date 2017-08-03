@@ -94,6 +94,7 @@ private:
     void initLib( void );
     void readSettings( void );
     void writeSettings( void );
+    void exportPng16( QString fileName, uint32_t frame );
 };
 
 #endif // MAINWINDOW_H

@@ -21,7 +21,8 @@ class ExportSettingsDialog : public QDialog
 public:
     explicit ExportSettingsDialog(QWidget *parent = 0, uint8_t currentCodecProfile = 0);
     ~ExportSettingsDialog();
-    uint8_t getEncoderSetting();
+    uint8_t getEncoderSetting(void);
+    bool getExportAudio(void);
 
 private:
     Ui::ExportSettingsDialog *ui;
