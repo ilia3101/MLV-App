@@ -94,8 +94,8 @@ RESOURCES += \
 DISTFILES += \
     Info.plist
 
-macx: QMAKE_INFO_PLIST = Info.plist
 macx: ICON = MLVAPP.icns
-macx: FFMPEG_FILES.files = FFmpeg/ffmpeg #Unzip the file before building the App!!!
-macx: FFMPEG_FILES.path = Contents/MacOS
-macx: QMAKE_BUNDLE_DATA += FFMPEG_FILES
+QMAKE_INFO_PLIST = Info.plist
+FFMPEG_FILES.files = FFmpeg/ffmpeg #Unzip the file before building the App!!!
+FFMPEG_FILES.path = Contents/MacOS
+QMAKE_BUNDLE_DATA += FFMPEG_FILES
