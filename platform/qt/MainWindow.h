@@ -17,6 +17,7 @@
 #include <QResizeEvent>
 #include <QFileOpenEvent>
 #include <QThreadPool>
+#include <QProcess>
 #include "../../src/mlv_include.h"
 #include "InfoDialog.h"
 #include "StatusDialog.h"
@@ -88,6 +89,8 @@ private:
     int m_timerId;
     int m_timerCacheId;
     QString m_lastSaveFileName;
+    QString m_lastMovFileName;
+    QProcess *m_pFFmpeg;
     void drawFrame( void );
     void openMlv( QString fileName );
     void playbackHandling( int timeDiff );
@@ -95,6 +98,11 @@ private:
     void initLib( void );
     void readSettings( void );
     void writeSettings( void );
+    void startExport( QString fileName );
+
+private slots:
+    void readFFmpegOutput( void );
+    void endExport( void );
 };
 
 class RenderPngTask : public QRunnable

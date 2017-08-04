@@ -10,7 +10,6 @@
 #include "math.h"
 
 #include <QMessageBox>
-#include <QProcess>
 #include <QThread>
 #include <QTime>
 #include <QSettings>
@@ -49,6 +48,11 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     m_timerId = startTimer( 40 ); //25fps initially only, is set after import
     m_timerCacheId = startTimer( 1000 ); //1fps
 
+    //Prepare FFmpeg process
+    m_pFFmpeg = new QProcess( this );
+    connect( m_pFFmpeg, SIGNAL(finished(int)), this, SLOT(endExport()) );
+    connect( m_pFFmpeg, SIGNAL(readyReadStandardError()), this, SLOT(readFFmpegOutput()) );
+
     //"Open with" for Windows or scripts
     if( argc > 1 )
     {
@@ -70,6 +74,10 @@ MainWindow::~MainWindow()
 {
     //Save settings
     writeSettings();
+
+    disconnect( m_pFFmpeg, SIGNAL(finished(int)), this, SLOT(endExport()) );
+    disconnect( m_pFFmpeg, SIGNAL(readyReadStandardError()), this, SLOT(readFFmpegOutput()) );
+    delete m_pFFmpeg;
 
     killTimer( m_timerId );
     killTimer( m_timerCacheId );
@@ -478,6 +486,123 @@ void MainWindow::writeSettings()
     set.setValue( "codecProfile", m_codecProfile );
 }
 
+//Start exporting a MOV via PNG48
+void MainWindow::startExport(QString fileName)
+{
+    //Delete file if exists
+    QFile *file = new QFile( fileName );
+    if( file->exists() ) file->remove();
+    delete file;
+
+    //Save the fileName for endExport()
+    m_lastMovFileName = fileName;
+
+    //Disable GUI drawing
+    m_dontDraw = true;
+
+    // we always get amaze frames for exporting
+    setMlvAlwaysUseAmaze( m_pMlvObject );
+
+    //StatusDialog
+    m_pStatusDialog->ui->progressBar->setMaximum( getMlvFrames( m_pMlvObject ) * 2 );
+    m_pStatusDialog->ui->progressBar->setValue( 0 );
+    m_pStatusDialog->show();
+
+    //Create temp pngs
+    gPngThreadsTodo = getMlvFrames( m_pMlvObject );
+    QThreadPool *threadPool = new QThreadPool( this );
+    for( uint32_t i = 0; i < getMlvFrames( m_pMlvObject ); i++ )
+    {
+        //Append frame number
+        QString numberedFileName = fileName.left( fileName.lastIndexOf( "." ) );
+        numberedFileName.append( QString( "_%1" ).arg( (uint)i, 5, 10, QChar( '0' ) ) );
+        numberedFileName.append( QString( ".png" ) );
+
+        RenderPngTask *pngTask = new RenderPngTask( m_pMlvObject, numberedFileName, i );
+        threadPool->start( pngTask );
+    }
+
+    while( !threadPool->waitForDone(50) )
+    {
+        gMutex.lock();
+        m_pStatusDialog->ui->progressBar->setValue( getMlvFrames( m_pMlvObject ) - gPngThreadsTodo );
+        gMutex.unlock();
+        m_pStatusDialog->ui->progressBar->repaint();
+        qApp->processEvents();
+    }
+    threadPool->clear();
+    delete threadPool;
+    qDebug() << "PNGs READY!";
+
+    //Update Progressbar
+    m_pStatusDialog->ui->progressBar->setValue( getMlvFrames( m_pMlvObject ) );
+    m_pStatusDialog->ui->progressBar->repaint();
+    qApp->processEvents();
+
+    //If we don't like amaze we switch it off again
+    if( !ui->actionAlwaysUseAMaZE->isChecked() ) setMlvDontAlwaysUseAmaze( m_pMlvObject );
+
+    //Enable GUI drawing
+    m_dontDraw = false;
+
+    QString numberedFileName = fileName.left( fileName.lastIndexOf( "." ) );
+    QString output = numberedFileName;
+    numberedFileName.append( QString( "_\%05d" ) );
+    numberedFileName.append( QString( ".png" ) );
+    output.append( QString( ".mov" ) );
+
+    QString program = QCoreApplication::applicationDirPath();
+    program.append( QString( "/ffmpeg\"" ) );
+    program.prepend( QString( "\"" ) );
+    program.append( QString( " -r %1 -i \"%2\" -c:v prores_ks -profile:v %3 \"%4\"" )
+                    .arg( getMlvFramerate( m_pMlvObject ) )
+                    .arg( numberedFileName )
+                    .arg( m_codecProfile )
+                    .arg( output ) );
+    //qDebug() << program;
+
+    //Start FFmpeg
+    m_pFFmpeg->start( program );
+}
+
+//Edit progressbar from FFmpeg output
+void MainWindow::readFFmpegOutput( void )
+{
+    QString output = m_pFFmpeg->readAllStandardError();
+    if( !output.startsWith( "frame=" ) ) return;
+
+    //Filter the frame number out and edit progressbar
+    output = output.left( output.indexOf("fps=") - 1 ); //Kill everything after frame number
+    output = output.right( output.length() - 6 ); //Kill "frame="
+    m_pStatusDialog->ui->progressBar->setValue( getMlvFrames( m_pMlvObject ) + output.toUInt() );
+}
+
+//Clean up export pngs
+void MainWindow::endExport( void )
+{
+    //Update Status
+    m_pStatusDialog->ui->progressBar->setValue( m_pStatusDialog->ui->progressBar->maximum() );
+    m_pStatusDialog->ui->progressBar->repaint();
+    qApp->processEvents();
+
+    //Clean up
+    for( uint32_t i = 0; i < getMlvFrames( m_pMlvObject ); i++ )
+    {
+        //Append frame number
+        QString numberedFileName = m_lastMovFileName.left( m_lastMovFileName.lastIndexOf( "." ) );
+        numberedFileName.append( QString( "_%1" ).arg( (uint)i, 5, 10, QChar( '0' ) ) );
+        numberedFileName.append( QString( ".png" ) );
+
+        //Delete file
+        QFile *file = new QFile( numberedFileName );
+        if( file->exists() ) file->remove();
+        delete file;
+    }
+
+    //Hide Status Dialog
+    m_pStatusDialog->hide();
+}
+
 //About Window
 void MainWindow::on_actionAbout_triggered()
 {
@@ -613,97 +738,7 @@ void MainWindow::on_actionExport_triggered()
     if( fileName == QString( "" )
             && ( !fileName.endsWith( ".mov", Qt::CaseInsensitive ) ) ) return;
 
-    //Delete file if exists
-    QFile *file = new QFile( fileName );
-    if( file->exists() ) file->remove();
-    delete file;
-
-    //Disable GUI drawing
-    m_dontDraw = true;
-
-    // we always get amaze frames for exporting
-    setMlvAlwaysUseAmaze( m_pMlvObject );
-
-    //StatusDialog
-    m_pStatusDialog->ui->progressBar->setMaximum( getMlvFrames( m_pMlvObject ) * 2 );
-    m_pStatusDialog->ui->progressBar->setValue( 0 );
-    m_pStatusDialog->show();
-
-    //Create temp pngs
-    gPngThreadsTodo = getMlvFrames( m_pMlvObject );
-    QThreadPool *threadPool = new QThreadPool( this );
-    for( uint32_t i = 0; i < getMlvFrames( m_pMlvObject ); i++ )
-    {
-        //Append frame number
-        QString numberedFileName = fileName.left( fileName.lastIndexOf( "." ) );
-        numberedFileName.append( QString( "_%1" ).arg( (uint)i, 5, 10, QChar( '0' ) ) );
-        numberedFileName.append( QString( ".png" ) );
-
-        RenderPngTask *pngTask = new RenderPngTask( m_pMlvObject, numberedFileName, i );
-        threadPool->start( pngTask );
-    }
-
-    while( !threadPool->waitForDone(500) )
-    {
-        gMutex.lock();
-        m_pStatusDialog->ui->progressBar->setValue( getMlvFrames( m_pMlvObject ) - gPngThreadsTodo );
-        gMutex.unlock();
-        m_pStatusDialog->ui->progressBar->repaint();
-        qApp->processEvents();
-    }
-    threadPool->clear();
-    delete threadPool;
-    qDebug() << "PNGs READY!";
-
-    //Update Progressbar
-    m_pStatusDialog->ui->progressBar->setValue( getMlvFrames( m_pMlvObject ) );
-    m_pStatusDialog->ui->progressBar->repaint();
-    qApp->processEvents();
-
-    //If we don't like amaze we switch it off again
-    if( !ui->actionAlwaysUseAMaZE->isChecked() ) setMlvDontAlwaysUseAmaze( m_pMlvObject );
-
-    //Enable GUI drawing
-    m_dontDraw = false;
-
-    QString numberedFileName = fileName.left( fileName.lastIndexOf( "." ) );
-    QString output = numberedFileName;
-    numberedFileName.append( QString( "_\%05d" ) );
-    numberedFileName.append( QString( ".png" ) );
-    output.append( QString( ".mov" ) );
-
-    QString program = QCoreApplication::applicationDirPath();
-    program.append( QString( "/ffmpeg\"" ) );
-    program.prepend( QString( "\"" ) );
-    program.append( QString( " -r %1 -i \"%2\" -c:v prores_ks -profile:v %3 \"%4\"" )
-                    .arg( getMlvFramerate( m_pMlvObject ) )
-                    .arg( numberedFileName )
-                    .arg( m_codecProfile )
-                    .arg( output ) );
-    qDebug() << program;
-    QProcess::execute( program );
-
-    //Update Status
-    m_pStatusDialog->ui->progressBar->setValue( m_pStatusDialog->ui->progressBar->maximum() );
-    m_pStatusDialog->ui->progressBar->repaint();
-    qApp->processEvents();
-
-    //Clean up
-    for( uint32_t i = 0; i < getMlvFrames( m_pMlvObject ); i++ )
-    {
-        //Append frame number
-        QString numberedFileName = fileName.left( fileName.lastIndexOf( "." ) );
-        numberedFileName.append( QString( "_%1" ).arg( (uint)i, 5, 10, QChar( '0' ) ) );
-        numberedFileName.append( QString( ".png" ) );
-
-        //Delete file
-        QFile *file = new QFile( numberedFileName );
-        if( file->exists() ) file->remove();
-        delete file;
-    }
-
-    //Hide Status Dialog
-    m_pStatusDialog->hide();
+    startExport( fileName );
 }
 
 //Enable / Disable the highlight reconstruction
