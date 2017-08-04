@@ -17,6 +17,7 @@
         <file>RetinaIMG/Actions-zoom-fit-icon.png</file>
         <file>RetinaIMG/Actions-zoom-in-icon.png</file>
         <file>RetinaIMG/Actions-zoom-out-icon.png</file>
+        <file>RetinaIMG/MLVAPP.png</file>
     </qresource>
     <qresource prefix="/AudioVideoIcons">
         <file>AudioVideoIcons/audio-icon.png</file>

@@ -528,8 +528,9 @@ void MainWindow::on_horizontalSliderTemperature_valueChanged(int position)
 
 void MainWindow::on_horizontalSliderTint_valueChanged(int position)
 {
-    ui->label_TintVal->setText( QString("%1").arg( position ) );
-    processingSetWhiteBalanceTint( m_pProcessingObject, position );
+    double value = position / 10.0;
+    ui->label_TintVal->setText( QString("%1").arg( value, 0, 'f', 1 ) );
+    processingSetWhiteBalanceTint( m_pProcessingObject, value );
     m_frameChanged = true;
 }
 
