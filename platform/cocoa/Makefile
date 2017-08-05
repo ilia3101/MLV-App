@@ -4,7 +4,7 @@ appname = "MLV App"
 # List of all objects to link
 objects = main.o video_mlv.o debayer.o amaze_demosaic.o raw_processing.o \
 	      main_methods.o useful_methods.o background_thread.o matrix.o \
-		  camera_matrices.o frame_caching.o
+		  camera_matrices.o frame_caching.o lj92.o
 
 # Compiler
 CC = gcc # Normal
@@ -62,6 +62,9 @@ useful_methods.o : gui_stuff/useful_methods.m
 
 video_mlv.o : ../../src/mlv/video_mlv.c
 	$(CC) $(cflags) ../../src/mlv/video_mlv.c
+
+lj92.o : ../../src/mlv/liblj92/lj92.c
+	$(CC) $(cflags) ../../src/mlv/liblj92/lj92.c
 
 frame_caching.o : ../../src/mlv/frame_caching.c
 	$(CC) $(cflags) ../../src/mlv/frame_caching.c

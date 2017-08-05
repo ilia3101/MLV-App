@@ -42,7 +42,9 @@ typedef struct {
     double      real_frame_rate; /* ...Because framerate is not explicitly stored in the file */
     double      frame_rate; /* User may want to override it */
     uint32_t    frames; /* Number of frames */
-    uint32_t  * frame_offsets; /* Offsets to the start of frames in the file, computed on opening file */
+    uint64_t  * frame_offsets; /* Offsets to the start of frames in the file, computed on opening file */
+    uint32_t  * frame_sizes; /* Frame sizes - only exists if video is losslessly compressed */
+    uint32_t    frame_size; /* NOT counting compression factor */
 
 
     /* Image processing object pointer (it is to be made separately) */
@@ -81,7 +83,7 @@ typedef struct {
 
     /* A single cached frame, speeds up when asking for the same (non-cached) frame over and over again */
     int current_cached_frame_active;
-    uint32_t current_cached_frame; int times_requested;
+    uint64_t current_cached_frame; int times_requested;
     uint16_t * rgb_raw_current_frame;
 
     /* Massive block of memory for all frames that will be cached, pointers in rgb_raw_frames will point within here, 

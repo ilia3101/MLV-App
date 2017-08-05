@@ -27,7 +27,7 @@ void openMlvClip(mlvObject_t * video, char * mlvPath);
 
 /* Goes through the files and record's every frame's offset from
  * start of the file in the .frame_offsets property */
-void mapMlvFrames(mlvObject_t * video, uint32_t limit);
+void mapMlvFrames(mlvObject_t * video, uint64_t limit);
 
 /* Frees all memory and closes file */
 void freeMlvObject(mlvObject_t * video);
@@ -47,16 +47,16 @@ void setMlvProcessing(mlvObject_t * video, processingObject_t * processing);
 
 /* Functions for getting processed MLV frames - uses the 'processing' module,
  * Avalible in 8 and 16 bit! Neither is faster as processing for both is done in 16 bit */
-void getMlvProcessedFrame8(mlvObject_t * video, int frameIndex, uint8_t * outputFrame);
-void getMlvProcessedFrame16(mlvObject_t * video, int frameIndex, uint16_t * outputFrame);
+void getMlvProcessedFrame8(mlvObject_t * video, uint64_t frameIndex, uint8_t * outputFrame);
+void getMlvProcessedFrame16(mlvObject_t * video, uint64_t frameIndex, uint16_t * outputFrame);
 
 /* Unpacks the bits of a frame to get a bayer B&W image (without black level correction)
  * Needs memory to return to, sized: sizeof(float) * getMlvHeight(urvid) * getMlvWidth(urvid)
  * Output values will be in range 0-65535 (16 bit), float is only because AMAzE uses it */
-void getMlvRawFrameFloat(mlvObject_t * video, int frameIndex, float * outputFrame);
+void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outputFrame);
 
 /* Gets a debayered 16 bit frame - used in getMlvProcessedFrame8 and 16 (when that begins to exist) */
-void getMlvRawFrameDebayered(mlvObject_t * video, uint32_t frameIndex, uint16_t * outputFrame);
+void getMlvRawFrameDebayered(mlvObject_t * video, uint64_t frameIndex, uint16_t * outputFrame);
 
 /* Used for processing, gets the matrix that does camera -> XYZ */
 void getMlvXyzToCameraMatrix(mlvObject_t * video, double * outputMatrix);
@@ -101,6 +101,7 @@ void getMlvNiceXyzToRgbMatrix(mlvObject_t * video, double * outputMatrix);
 
 /* This is pretty much private */
 #define doesMlvAlwaysUseAmaze(video) (video)->use_amaze
+#define getMlvVideoClass(video) (video)->MLVI.videoClass
 
 
 /******************************** 

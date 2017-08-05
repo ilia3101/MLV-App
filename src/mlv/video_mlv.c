@@ -14,10 +14,13 @@
 /* Processing module */
 #include "../processing/raw_processing.h"
 
+/* Lossless decompression */
+#include "liblj92/lj92.h"
+
 /* Unpacks the bits of a frame to get a bayer B&W image (without black level correction)
  * Needs memory to return to, sized: sizeof(float) * getMlvHeight(urvid) * getMlvWidth(urvid)
  * Output image's pixels will be in range 0-65535 as if it is 16 bit integers */
-void getMlvRawFrameFloat(mlvObject_t * video, int frameIndex, float * outputFrame)
+void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outputFrame)
 {
     int bitdepth = video->RAWI.raw_info.bits_per_pixel;
     int width = video->RAWI.xRes;
@@ -31,8 +34,39 @@ void getMlvRawFrameFloat(mlvObject_t * video, int frameIndex, float * outputFram
 
     /* Move to start of frame in file and read the RAW data */
     fseek(video->file, video->frame_offsets[frameIndex], SEEK_SET);
-    fread(RAWFrame, sizeof(uint8_t), raw_frame_size, video->file);
 
+    /* If size is smaller than it should be, it must be compressed */
+    if (video->frame_sizes[frameIndex] < video->frame_size)
+    {
+        int components = 1;
+        int raw_data_size = video->frame_sizes[frameIndex];
+        int pixels_count = width * height;
+
+        fread(RAWFrame, sizeof(uint8_t), raw_data_size, video->file);
+
+        uint16_t * decoded_frame = (uint16_t *)malloc(width * height * sizeof(uint16_t));
+
+        lj92 decoder_object;
+
+        lj92_open(&decoder_object, RAWFrame, raw_data_size, &width, &height, &bitdepth, &components);
+        lj92_decode(decoder_object, decoded_frame, 1, 0, NULL, 0);
+
+        for (int i = 0; i < pixels_count; ++i)
+        {
+            outputFrame[i] = (float)(decoded_frame[i] << 2);
+        }
+
+        lj92_close(decoder_object);
+        free(decoded_frame);
+
+        return;
+    }
+    else
+    {
+        fread(RAWFrame, sizeof(uint8_t), raw_frame_size, video->file);
+    }
+
+    /* Is not compressed */
     switch (bitdepth)
     {
         case 14:
@@ -46,7 +80,7 @@ void getMlvRawFrameFloat(mlvObject_t * video, int frameIndex, float * outputFram
                 float * out_pixel = outputFrame + ((raw_byte/14) * 8);
 
                 /* Join the pieces of pixels a-h from raw_pixblock and left shift 2 to get 16 bit values */
-                 * out_pixel = (float) ( (pixel->a) << 2 );
+                * out_pixel = (float) ( (pixel->a) << 2 );
                 out_pixel[1] = (float) ( (pixel->b_lo | (pixel->b_hi << 12)) << 2 );
                 out_pixel[2] = (float) ( (pixel->c_lo | (pixel->c_hi << 10)) << 2 );
                 out_pixel[3] = (float) ( (pixel->d_lo | (pixel->d_hi <<  8)) << 2 );
@@ -69,7 +103,7 @@ void getMlvRawFrameFloat(mlvObject_t * video, int frameIndex, float * outputFram
                 float * out_pixel = outputFrame + ((raw_byte/12) * 8);
 
                 /* Join the pieces of pixels a-h from raw_pixblock and left shift 2 to get 16 bit values */
-                 * out_pixel = (float) ( (pixel->a) << 4 );
+                * out_pixel = (float) ( (pixel->a) << 4 );
                 out_pixel[1] = (float) ( (pixel->b_lo | (pixel->b_hi << 8)) << 4 );
                 out_pixel[2] = (float) ( (pixel->c_lo | (pixel->c_hi << 4)) << 4 );
                 out_pixel[3] = (float) ( (pixel->d) << 4 );
@@ -92,7 +126,7 @@ void getMlvRawFrameFloat(mlvObject_t * video, int frameIndex, float * outputFram
                 float * out_pixel = outputFrame + ((raw_byte/10) * 8);
 
                 /* Join the pieces of pixels a-h from raw_pixblock and left shift 2 to get 16 bit values */
-                 * out_pixel = (float) ( (pixel->a) << 6 );
+                * out_pixel = (float) ( (pixel->a) << 6 );
                 out_pixel[1] = (float) ( (pixel->b_lo | (pixel->b_hi << 4)) << 6 );
                 out_pixel[2] = (float) ( (pixel->c) << 6 );
                 out_pixel[3] = (float) ( (pixel->d_lo | (pixel->d_hi << 8)) << 6 );
@@ -102,12 +136,6 @@ void getMlvRawFrameFloat(mlvObject_t * video, int frameIndex, float * outputFram
                 out_pixel[7] = (float) ( (pixel->h) << 6 );
             }
 
-            break;
-
-        /* Placeholder coming up */
-
-        case 123456789:
-            /* Do losssless decompression stuff */
             break;
     }
     
@@ -142,7 +170,7 @@ void setMlvProcessing(mlvObject_t * video, processingObject_t * processing)
     /* DONE? */
 }
 
-void getMlvRawFrameDebayered(mlvObject_t * video, uint32_t frameIndex, uint16_t * outputFrame)
+void getMlvRawFrameDebayered(mlvObject_t * video, uint64_t frameIndex, uint16_t * outputFrame)
 {
     int width = getMlvWidth(video);
     int height = getMlvHeight(video);
@@ -178,7 +206,7 @@ void getMlvRawFrameDebayered(mlvObject_t * video, uint32_t frameIndex, uint16_t 
 }
 
 /* Get a processed frame in 16 bit */
-void getMlvProcessedFrame16(mlvObject_t * video, int frameIndex, uint16_t * outputFrame)
+void getMlvProcessedFrame16(mlvObject_t * video, uint64_t frameIndex, uint16_t * outputFrame)
 {
     /* Useful */
     int width = getMlvWidth(video);
@@ -203,7 +231,7 @@ void getMlvProcessedFrame16(mlvObject_t * video, int frameIndex, uint16_t * outp
 }
 
 /* Get a processed frame in 8 bit */
-void getMlvProcessedFrame8(mlvObject_t * video, int frameIndex, uint8_t * outputFrame)
+void getMlvProcessedFrame8(mlvObject_t * video, uint64_t frameIndex, uint8_t * outputFrame)
 {
     /* Size of RAW frame */
     int rgb_frame_size = getMlvWidth(video) * getMlvHeight(video) * 3;
@@ -239,7 +267,8 @@ mlvObject_t * initMlvObject()
 {
     mlvObject_t * video = (mlvObject_t *)calloc( 1, sizeof(mlvObject_t) );
     /* Just 1 element for now */
-    video->frame_offsets = (uint32_t *)malloc( sizeof(uint32_t) );
+    video->frame_offsets = (uint64_t *)malloc( sizeof(uint64_t) );
+    video->frame_sizes = (uint32_t *)malloc( sizeof(uint32_t) );
 
     /* Cache things, only one element for now as it is empty */
     video->rgb_raw_frames = (uint16_t **)malloc( sizeof(uint16_t *) );
@@ -278,6 +307,7 @@ void freeMlvObject(mlvObject_t * video)
     free(video->rgb_raw_frames);
     free(video->rgb_raw_current_frame);
     free(video->cache_memory_block);
+    free(video->frame_sizes);
 
     /* Main 1 */
     free(video);
@@ -294,7 +324,7 @@ void openMlvClip(mlvObject_t * video, char * mlvPath)
 
     /* Getting size of file in bytes */
     fseek(video->file, 0, SEEK_END);
-    uint32_t file_size = ftell(video->file);
+    uint64_t file_size = ftell(video->file);
 
     char block_name[4]; /* Read header name to this */
     uint32_t block_size; /* Size of block */
@@ -306,13 +336,13 @@ void openMlvClip(mlvObject_t * video, char * mlvPath)
     while (ftell(video->file) < file_size) /* Check if were at end of file yet */
     {
         /* Record position to go back to it later if block is read */
-        uint32_t block_start = ftell(video->file);
+        uint64_t block_start = ftell(video->file);
         /* Read block name */
         fread(&block_name, sizeof(char), 4, video->file);
         /* Read size of block to block_size variable */
         fread(&block_size, sizeof(uint32_t), 1, video->file);
         /* Next block location */
-        uint32_t next_block = block_start + block_size;
+        uint64_t next_block =  (uint64_t)block_start +  (uint64_t)block_size;
 
         /* Go back to start of block for next bit */
         fseek(video->file, block_start, SEEK_SET);
@@ -403,6 +433,9 @@ void openMlvClip(mlvObject_t * video, char * mlvPath)
 
     video->block_num = block_num;
 
+    /* NON compressed frame size */
+    video->frame_size = (getMlvHeight(video) * getMlvWidth(video) * getMlvBitdepth(video)) / 8;
+
     /* Set frame count in video object */
     video->frames = frame_total;
     /* Calculate framerate */
@@ -423,11 +456,11 @@ void openMlvClip(mlvObject_t * video, char * mlvPath)
 
 /* mapMlvFrames function will get byte offsets of every frame in the file, run this
  * after mlvObject_t is initialised and video is opened, or you won't have frames */
-void mapMlvFrames(mlvObject_t * video, uint32_t limit)
+void mapMlvFrames(mlvObject_t * video, uint64_t limit)
 {
     /* Getting size of file in bytes */
     fseek(video->file, 0, SEEK_END); /* Go to end */
-    int file_size = ftell(video->file); /* Get positions */
+    uint64_t file_size = ftell(video->file); /* Get positions */
 
     char block_name[4]; /* Read header name to this */
     uint32_t block_size; /* Size of block */
@@ -439,18 +472,20 @@ void mapMlvFrames(mlvObject_t * video, uint32_t limit)
 
     /* Memory 4 all frame offsets */
     free(video->frame_offsets);
-    video->frame_offsets = (uint32_t *)malloc( (video->frames) * sizeof(uint32_t) );
+    video->frame_offsets = (uint64_t *)malloc( (video->frames) * sizeof(uint64_t) );
+    free(video->frame_sizes);
+    video->frame_sizes = (uint32_t *)malloc( (video->frames) * sizeof(uint32_t) );
 
     while (ftell(video->file) < file_size) /* Check if end of file yet */
     {
         /* Record position to go back to it later when block is read */
-        uint32_t block_start = ftell(video->file);
+        uint64_t block_start = ftell(video->file);
         /* Read block name */
         fread(&block_name, sizeof(char), 4, video->file);
         /* Read size of block to block_size variable */
         fread(&block_size, sizeof(uint32_t), 1, video->file);
         /* Next block location */
-        uint32_t next_block = block_start + block_size;
+        uint64_t next_block = (uint64_t)block_start + (uint64_t)block_size;
         
         /* Is it frame block? */
         if ( strncmp(block_name, "VIDF", 4) == 0 )
@@ -466,12 +501,15 @@ void mapMlvFrames(mlvObject_t * video, uint32_t limit)
             /* Get frame offset from current location */
             fread(&frame_offset, sizeof(uint32_t), 1, video->file);
 
-            printf("frame %i/%i, %iMB / %i Bytes from start of file\n",
+            printf("frame %i/%i, %lluMB / %llu Bytes from start of file\n",
             frame_num, video->frames, (block_start + frame_offset) >> 20, 
             (block_start + frame_offset));
 
             /* Video frame start = current location + frame offset */
             video->frame_offsets[frame_num] = ftell(video->file) + frame_offset;
+
+            /* Measure frame size if lossless */
+            video->frame_sizes[frame_num] = block_size - (sizeof(mlv_vidf_hdr_t) + frame_offset);
 
             frame_total++;
         }
