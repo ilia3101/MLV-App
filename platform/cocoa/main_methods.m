@@ -260,8 +260,8 @@ void setAppNewMlvClip(char * mlvPathString, char * mlvFileName)
 
                     /* Run ffmpeg to create ProRes file */
                     char * ffmpegPath = (char *)[[[NSBundle mainBundle] pathForResource:@"ffmpeg" ofType: nil] UTF8String];
-                    snprintf( commandStr, 2047, "\"%s\" -i %s/frame_%s.png -framerate %f -c:v prores_ks -profile:v 4444 %s/%.8s.mov", 
-                              ffmpegPath, exportDir, "\%05d", getMlvFramerate(videoMLV), pathString, MLVClipName);
+                    snprintf( commandStr, 2047, "\"%s\" -r %f -i %s/frame_%s.png -c:v prores_ks -profile:v 4444 %s/%.8s.mov", 
+                              ffmpegPath, getMlvFramerate(videoMLV), exportDir, "\%05d", pathString, MLVClipName);
                     system(commandStr);
 
                     /* Delete hidden directory */
