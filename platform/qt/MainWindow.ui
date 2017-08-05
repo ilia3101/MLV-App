@@ -225,7 +225,7 @@
            <enum>Qt::RightToLeft</enum>
           </property>
           <property name="text">
-           <string>5000 K</string>
+           <string>6250 K</string>
           </property>
          </widget>
         </item>
@@ -258,7 +258,7 @@
          <number>10000</number>
         </property>
         <property name="value">
-         <number>5000</number>
+         <number>6250</number>
         </property>
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
