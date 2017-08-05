@@ -51,6 +51,7 @@ SOURCES += \
     ../../src/mlv/camera_matrices.c \
     ../../src/mlv/frame_caching.c \
     ../../src/mlv/video_mlv.c \
+    ../../src/mlv/liblj92/lj92.c \
     ../../src/processing/processing.c \
     ../../src/processing/raw_processing.c \
     InfoDialog.cpp \
@@ -71,6 +72,7 @@ HEADERS += \
     ../../src/mlv/mlv_object.h \
     ../../src/mlv/raw.h \
     ../../src/mlv/video_mlv.h \
+    ../../src/mlv/liblj92/lj92.h \
     ../../src/processing/processing_object.h \
     ../../src/processing/raw_processing.h \
     ../../src/mlv_include.h \
@@ -92,7 +94,8 @@ RESOURCES += \
     ressources.qrc
 
 DISTFILES += \
-    Info.plist
+    Info.plist \
+    ../../src/imageio/README.md
 
 macx: ICON = MLVAPP.icns
 QMAKE_INFO_PLIST = Info.plist
