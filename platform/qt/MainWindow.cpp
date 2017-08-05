@@ -20,7 +20,7 @@
 #include "SystemMemory.h"
 #include "ExportSettingsDialog.h"
 
-#define VERSION "0.3 alpha"
+#define VERSION "0.4 alpha"
 
 QMutex gMutex;
 uint32_t gPngThreadsTodo = 0;
