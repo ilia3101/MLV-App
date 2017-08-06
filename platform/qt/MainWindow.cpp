@@ -66,6 +66,10 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
 
         //Open the file
         openMlv( fileName );
+        on_actionResetReceipt_triggered();
+
+        //Add to SessionList
+        addFileToSession( fileName );
     }
 }
 
@@ -74,6 +78,7 @@ MainWindow::~MainWindow()
 {
     //Save settings
     writeSettings();
+    delete m_pReceiptClipboard;
 
     disconnect( m_pFFmpeg, SIGNAL(finished(int)), this, SLOT(endExport()) );
     disconnect( m_pFFmpeg, SIGNAL(readyReadStandardError()), this, SLOT(readFFmpegOutput()) );
@@ -172,6 +177,9 @@ bool MainWindow::event(QEvent *event)
         m_lastSaveFileName = fileName;
         //Open MLV
         openMlv( fileName );
+        on_actionResetReceipt_triggered();
+        //Add to SessionList
+        addFileToSession( fileName );
     }
     return QMainWindow::event(event);
 }
@@ -252,6 +260,10 @@ void MainWindow::on_actionOpen_triggered()
 
     //Open the file
     openMlv( fileName );
+    on_actionResetReceipt_triggered();
+
+    //Add file to Sessionlist
+    addFileToSession( fileName );
 }
 
 //Open MLV procedure
@@ -378,8 +390,8 @@ void MainWindow::initGui( void )
     //Dont show the Faithful combobox
     ui->comboBox->setVisible( false );
     //Disable unused (for now) actions
-    ui->actionCopyRecept->setEnabled( false );
     ui->actionPasteReceipt->setEnabled( false );
+    ui->dockWidgetSession->setVisible( false );
     //Disable export until file opened!
     ui->actionExport->setEnabled( false );
 
@@ -408,6 +420,9 @@ void MainWindow::initGui( void )
 
     //Read Settings
     readSettings();
+
+    //Init clipboard
+    m_pReceiptClipboard = new ReceiptSettings();
 }
 
 //Initialize the library
@@ -563,6 +578,49 @@ void MainWindow::startExport(QString fileName)
 
     //Start FFmpeg
     m_pFFmpeg->start( program );
+}
+
+//Adds the fileName to the Session List
+void MainWindow::addFileToSession(QString fileName)
+{
+    QListWidgetItem *item = new QListWidgetItem( QFileInfo(fileName).fileName() );
+    item->setToolTip( fileName );
+    ui->listWidgetSession->addItem( item );
+}
+
+//Set the edit sliders to settings
+void MainWindow::setSliders(ReceiptSettings *receipt)
+{
+    ui->horizontalSliderExposure->setValue( receipt->exposure() );
+    ui->horizontalSliderTemperature->setValue( receipt->temperature() );
+    ui->horizontalSliderTint->setValue( receipt->tint() );
+    ui->horizontalSliderSaturation->setValue( receipt->saturation() );
+
+    ui->horizontalSliderDS->setValue( receipt->ds() );
+    ui->horizontalSliderDR->setValue( receipt->dr() );
+    ui->horizontalSliderLS->setValue( receipt->ls() );
+    ui->horizontalSliderLR->setValue( receipt->lr() );
+
+    ui->horizontalSliderLighten->setValue( receipt->lightening() );
+
+    ui->checkBoxHighLightReconstruction->setChecked( receipt->isHighlightReconstruction() );
+    ui->checkBoxReinhardTonemapping->setChecked( receipt->isReinhardTonemapping() );
+}
+
+//Set the receipt from sliders
+void MainWindow::setReceipt(ReceiptSettings *receipt)
+{
+    receipt->setExposure( ui->horizontalSliderExposure->value() );
+    receipt->setTemperature( ui->horizontalSliderTemperature->value() );
+    receipt->setTint( ui->horizontalSliderTint->value() );
+    receipt->setSaturation( ui->horizontalSliderSaturation->value() );
+    receipt->setDs( ui->horizontalSliderDS->value() );
+    receipt->setDr( ui->horizontalSliderDR->value() );
+    receipt->setLs( ui->horizontalSliderLS->value() );
+    receipt->setLr( ui->horizontalSliderLR->value() );
+    receipt->setLightening( ui->horizontalSliderLighten->value() );
+    receipt->setHighlightReconstruction( ui->checkBoxHighLightReconstruction->isChecked() );
+    receipt->setReinhardTonemapping( ui->checkBoxReinhardTonemapping->isChecked() );
 }
 
 //Edit progressbar from FFmpeg output
@@ -820,6 +878,27 @@ void MainWindow::on_actionExportSettings_triggered()
     delete pExportSettings;
 }
 
+//Reset the edit sliders to default
+void MainWindow::on_actionResetReceipt_triggered()
+{
+    ReceiptSettings *sliders = new ReceiptSettings(); //default
+    setSliders( sliders );
+    delete sliders;
+}
+
+//Copy receipt to clipboard
+void MainWindow::on_actionCopyRecept_triggered()
+{
+    setReceipt( m_pReceiptClipboard );
+    ui->actionPasteReceipt->setEnabled( true );
+}
+
+//Paste receipt from clipboard
+void MainWindow::on_actionPasteReceipt_triggered()
+{
+    setSliders( m_pReceiptClipboard );
+}
+
 //Export a 16bit png frame in a task
 void RenderPngTask::run()
 {
@@ -842,4 +921,26 @@ void RenderPngTask::run()
     gMutex.lock();
     gPngThreadsTodo--;
     gMutex.unlock();
+}
+
+//FileName in SessionList doubleClicked
+void MainWindow::on_listWidgetSession_doubleClicked(const QModelIndex &index)
+{
+    openMlv( ui->listWidgetSession->item( index.row() )->toolTip() );
+}
+
+//Sessionlist visibility changed -> redraw picture
+void MainWindow::on_dockWidgetSession_visibilityChanged(bool visible)
+{
+    ui->actionShowSessionArea->setChecked( visible );
+    qApp->processEvents();
+    m_frameChanged = true;
+}
+
+//Edit area visibility changed -> redraw picture
+void MainWindow::on_dockWidgetEdit_visibilityChanged(bool visible)
+{
+    ui->actionShowEditArea->setChecked( visible );
+    qApp->processEvents();
+    m_frameChanged = true;
 }

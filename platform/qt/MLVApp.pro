@@ -58,7 +58,8 @@ SOURCES += \
     StatusDialog.cpp \
     Histogram.cpp \
     WaveFormMonitor.cpp \
-    ExportSettingsDialog.cpp
+    ExportSettingsDialog.cpp \
+    ReceiptSettings.cpp
 
 HEADERS += \
         MainWindow.h \
@@ -82,7 +83,8 @@ HEADERS += \
     SystemMemory.h \
     Histogram.h \
     WaveFormMonitor.h \
-    ExportSettingsDialog.h
+    ExportSettingsDialog.h \
+    ReceiptSettings.h
 
 FORMS += \
         MainWindow.ui \

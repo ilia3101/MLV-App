@@ -23,6 +23,7 @@
 #include "StatusDialog.h"
 #include "Histogram.h"
 #include "WaveFormMonitor.h"
+#include "ReceiptSettings.h"
 
 namespace Ui {
 class MainWindow;
@@ -65,6 +66,14 @@ private slots:
     void on_actionShowWaveFormMonitor_triggered(bool checked);
     void on_actionAlwaysUseAMaZE_triggered(bool checked);
     void on_actionExportSettings_triggered();
+    void on_actionResetReceipt_triggered();
+    void on_actionCopyRecept_triggered();
+    void on_actionPasteReceipt_triggered();
+    void readFFmpegOutput( void );
+    void endExport( void );
+    void on_listWidgetSession_doubleClicked(const QModelIndex &index);
+    void on_dockWidgetSession_visibilityChanged(bool visible);
+    void on_dockWidgetEdit_visibilityChanged(bool visible);
 
 private:
     Ui::MainWindow *ui;
@@ -91,6 +100,7 @@ private:
     QString m_lastSaveFileName;
     QString m_lastMovFileName;
     QProcess *m_pFFmpeg;
+    ReceiptSettings *m_pReceiptClipboard;
     void drawFrame( void );
     void openMlv( QString fileName );
     void playbackHandling( int timeDiff );
@@ -99,10 +109,12 @@ private:
     void readSettings( void );
     void writeSettings( void );
     void startExport( QString fileName );
-
-private slots:
-    void readFFmpegOutput( void );
-    void endExport( void );
+    void addFileToSession( QString fileName );
+    void deleteFileFromSession( int index );
+    bool isFileInSession( QString fileName );
+    void editFileInSession( int index );
+    void setSliders( ReceiptSettings *sliders );
+    void setReceipt( ReceiptSettings *sliders );
 };
 
 class RenderPngTask : public QRunnable
