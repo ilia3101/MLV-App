@@ -70,12 +70,13 @@ private slots:
     void on_actionResetReceipt_triggered();
     void on_actionCopyRecept_triggered();
     void on_actionPasteReceipt_triggered();
+    void on_actionOpenSession_triggered();
+    void on_actionSaveSession_triggered();
     void readFFmpegOutput( void );
     void endExport( void );
     void on_listWidgetSession_activated(const QModelIndex &index);
     void on_dockWidgetSession_visibilityChanged(bool visible);
     void on_dockWidgetEdit_visibilityChanged(bool visible);
-
 
 private:
     Ui::MainWindow *ui;
@@ -114,9 +115,8 @@ private:
     void writeSettings( void );
     void startExport( QString fileName );
     void addFileToSession( QString fileName );
-    void deleteFileFromSession( int index );
+    void deleteFileFromSession( int index ); //TODO
     bool isFileInSession( QString fileName );
-    void editFileInSession( int index );
     void setSliders( ReceiptSettings *sliders );
     void setReceipt( ReceiptSettings *sliders );
 };

@@ -15,6 +15,7 @@
 #include <QSettings>
 #include <QDesktopWidget>
 #include <QMutex>
+#include <QXmlStreamWriter>
 #include <png.h>
 
 #include "SystemMemory.h"
@@ -947,6 +948,131 @@ void MainWindow::on_actionCopyRecept_triggered()
 void MainWindow::on_actionPasteReceipt_triggered()
 {
     setSliders( m_pReceiptClipboard );
+}
+
+//Open Session
+void MainWindow::on_actionOpenSession_triggered()
+{
+    QString path = QFileInfo( m_lastSaveFileName ).absolutePath();
+    QString filename = QFileDialog::getOpenFileName(this,
+                                           tr("Open Xml"), path,
+                                           tr("Xml files (*.xml)"));
+
+    QXmlStreamReader Rxml;
+
+    QFile file(filename);
+
+    if( !file.open(QIODevice::ReadOnly | QFile::Text) )
+    {
+        /*std::cerr << "Error: Cannot read file " << qPrintable(filename)
+                  << ": " << qPrintable(file.errorString())
+                  << std::endl;
+        */
+    }
+
+    Rxml.setDevice(&file);
+    Rxml.readNext();
+
+    while(!Rxml.atEnd())
+    {
+        if(Rxml.isStartElement())
+        {
+            if(Rxml.name() == "MLV_FILE")
+            {
+                //New Item & new Receipt
+                while(!Rxml.atEnd())
+                {
+                    if(Rxml.isEndElement())
+                    {
+                       Rxml.readNext();
+                       break;
+                    }
+                    else if(Rxml.isCharacters())
+                    {
+                       Rxml.readNext();
+                    }
+                    else if(Rxml.isStartElement())
+                    {
+                        if(Rxml.name() == "File")
+                        {
+                            Rxml.readElementText();
+                            //OpenMLV
+                        }
+                        else if(Rxml.name() == "Exposure")
+                        {
+                            Rxml.readElementText();
+                            //
+                        }
+                        else if(Rxml.name() == "Temperature")
+                        {
+                            Rxml.readElementText();
+                        }
+                        Rxml.readNext();
+                    }
+                    else
+                    {
+                        Rxml.readNext();
+                    }
+                }
+            }
+        }
+        else
+        {
+            Rxml.readNext();
+        }
+    }
+
+    file.close();
+    /*
+    if (Rxml.hasError())
+    {
+        std::cerr << "Error: Failed to parse file "
+             << qPrintable(filename) << ": "
+             << qPrintable(Rxml.errorString()) << std::endl;
+    }
+    else if (file.error() != QFile::NoError)
+    {
+        std::cerr << "Error: Cannot read file " << qPrintable(filename)
+              << ": " << qPrintable(file.errorString())
+              << std::endl;
+    }
+    */
+}
+
+//Save Session
+void MainWindow::on_actionSaveSession_triggered()
+{
+    QString path = QFileInfo( m_lastSaveFileName ).absolutePath();
+    QString filename = QFileDialog::getSaveFileName(this,
+                                           tr("Save Xml"), path,
+                                           tr("Xml files (*.xml)"));
+
+    QFile file(filename);
+    file.open(QIODevice::WriteOnly);
+
+    QXmlStreamWriter xmlWriter(&file);
+    xmlWriter.setAutoFormatting(true);
+    xmlWriter.writeStartDocument( "MLVAppSession" );
+
+    for( int i = 0; i < ui->listWidgetSession->count(); i++ )
+    {
+        xmlWriter.writeStartElement( "MLV_FILE" );
+        xmlWriter.writeTextElement( "File",                    ui->listWidgetSession->item(i)->toolTip() );
+        xmlWriter.writeTextElement( "Exposure",                QString( "%1" ).arg( m_pSessionReceipts.at(i)->exposure() ) );
+        xmlWriter.writeTextElement( "Temperature",             QString( "%1" ).arg( m_pSessionReceipts.at(i)->temperature() ) );
+        xmlWriter.writeTextElement( "Tint",                    QString( "%1" ).arg( m_pSessionReceipts.at(i)->tint() ) );
+        xmlWriter.writeTextElement( "Saturation",              QString( "%1" ).arg( m_pSessionReceipts.at(i)->saturation() ) );
+        xmlWriter.writeTextElement( "Ds",                      QString( "%1" ).arg( m_pSessionReceipts.at(i)->ds() ) );
+        xmlWriter.writeTextElement( "Dr",                      QString( "%1" ).arg( m_pSessionReceipts.at(i)->dr() ) );
+        xmlWriter.writeTextElement( "Ls",                      QString( "%1" ).arg( m_pSessionReceipts.at(i)->ls() ) );
+        xmlWriter.writeTextElement( "Lr",                      QString( "%1" ).arg( m_pSessionReceipts.at(i)->lr() ) );
+        xmlWriter.writeTextElement( "Lightening",              QString( "%1" ).arg( m_pSessionReceipts.at(i)->lightening() ) );
+        xmlWriter.writeTextElement( "HighlightReconstruction", QString( "%1" ).arg( m_pSessionReceipts.at(i)->isHighlightReconstruction() ) );
+        xmlWriter.writeTextElement( "ReinhardTonemapping",     QString( "%1" ).arg( m_pSessionReceipts.at(i)->isReinhardTonemapping() ) );
+        xmlWriter.writeEndElement();
+    }
+
+    file.close();
 }
 
 //Export a 16bit png frame in a task
