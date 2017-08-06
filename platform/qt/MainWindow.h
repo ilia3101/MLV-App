@@ -18,6 +18,7 @@
 #include <QFileOpenEvent>
 #include <QThreadPool>
 #include <QProcess>
+#include <QVector>
 #include "../../src/mlv_include.h"
 #include "InfoDialog.h"
 #include "StatusDialog.h"
@@ -71,9 +72,10 @@ private slots:
     void on_actionPasteReceipt_triggered();
     void readFFmpegOutput( void );
     void endExport( void );
-    void on_listWidgetSession_doubleClicked(const QModelIndex &index);
+    void on_listWidgetSession_activated(const QModelIndex &index);
     void on_dockWidgetSession_visibilityChanged(bool visible);
     void on_dockWidgetEdit_visibilityChanged(bool visible);
+
 
 private:
     Ui::MainWindow *ui;
@@ -101,6 +103,8 @@ private:
     QString m_lastMovFileName;
     QProcess *m_pFFmpeg;
     ReceiptSettings *m_pReceiptClipboard;
+    QVector<ReceiptSettings*> m_pSessionReceipts;
+    int m_lastActiveClipInSession;
     void drawFrame( void );
     void openMlv( QString fileName );
     void playbackHandling( int timeDiff );

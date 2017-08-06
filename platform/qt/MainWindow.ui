@@ -1201,7 +1201,7 @@
     <string>Jump to first frame...</string>
    </property>
    <property name="shortcut">
-    <string>Return</string>
+    <string>X</string>
    </property>
   </action>
   <action name="actionLoop">
@@ -1403,22 +1403,6 @@
    <signal>triggered()</signal>
    <receiver>MainWindow</receiver>
    <slot>close()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>598</x>
-     <y>450</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>actionShowEditArea</sender>
-   <signal>triggered()</signal>
-   <receiver>MainWindow</receiver>
-   <slot>refreshFrame()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>-1</x>

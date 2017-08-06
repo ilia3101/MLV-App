@@ -61,15 +61,22 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
         //Exit if not an MLV file or aborted
         if( fileName == QString( "" ) && !fileName.endsWith( ".mlv", Qt::CaseInsensitive ) ) return;
 
+        //File is already opened? Error!
+        if( isFileInSession( fileName ) )
+        {
+            QMessageBox::information( this, tr( "Import MLV" ), tr( "File is already opened in session!" ) );
+            return;
+        }
+
         //Save last file name
         m_lastSaveFileName = fileName;
+
+        //Add to SessionList
+        addFileToSession( fileName );
 
         //Open the file
         openMlv( fileName );
         on_actionResetReceipt_triggered();
-
-        //Add to SessionList
-        addFileToSession( fileName );
     }
 }
 
@@ -173,13 +180,21 @@ bool MainWindow::event(QEvent *event)
         //Exit if not an MLV file or aborted
         QString fileName = openEvent->file();
         if( fileName == QString( "" ) && !fileName.endsWith( ".mlv", Qt::CaseInsensitive ) ) return false;
-        //Save last file name
-        m_lastSaveFileName = fileName;
-        //Open MLV
-        openMlv( fileName );
-        on_actionResetReceipt_triggered();
-        //Add to SessionList
-        addFileToSession( fileName );
+        //File is already opened? Error!
+        if( isFileInSession( fileName ) )
+        {
+            QMessageBox::information( this, tr( "Import MLV" ), tr( "File is already opened in session!" ) );
+        }
+        else
+        {
+            //Save last file name
+            m_lastSaveFileName = fileName;
+            //Add to SessionList
+            addFileToSession( fileName );
+            //Open MLV
+            openMlv( fileName );
+            on_actionResetReceipt_triggered();
+        }
     }
     return QMainWindow::event(event);
 }
@@ -255,15 +270,22 @@ void MainWindow::on_actionOpen_triggered()
     //Exit if not an MLV file or aborted
     if( fileName == QString( "" ) && !fileName.endsWith( ".mlv", Qt::CaseInsensitive ) ) return;
 
+    //File is already opened? Error!
+    if( isFileInSession( fileName ) )
+    {
+        QMessageBox::information( this, tr( "Import MLV" ), tr( "File is already opened in session!" ) );
+        return;
+    }
+
     //Save last file name
     m_lastSaveFileName = fileName;
+
+    //Add file to Sessionlist
+    addFileToSession( fileName );
 
     //Open the file
     openMlv( fileName );
     on_actionResetReceipt_triggered();
-
-    //Add file to Sessionlist
-    addFileToSession( fileName );
 }
 
 //Open MLV procedure
@@ -391,7 +413,6 @@ void MainWindow::initGui( void )
     ui->comboBox->setVisible( false );
     //Disable unused (for now) actions
     ui->actionPasteReceipt->setEnabled( false );
-    ui->dockWidgetSession->setVisible( false );
     //Disable export until file opened!
     ui->actionExport->setEnabled( false );
 
@@ -423,6 +444,9 @@ void MainWindow::initGui( void )
 
     //Init clipboard
     m_pReceiptClipboard = new ReceiptSettings();
+
+    //Init session settings
+    m_pSessionReceipts.clear();
 }
 
 //Initialize the library
@@ -583,9 +607,35 @@ void MainWindow::startExport(QString fileName)
 //Adds the fileName to the Session List
 void MainWindow::addFileToSession(QString fileName)
 {
+    //Save settings of actual clip (if there is one)
+    qDebug() << "m_pSessionReceipts.count()" << m_pSessionReceipts.count();
+    if( m_pSessionReceipts.count() > 0 )
+    {
+        setReceipt( m_pSessionReceipts.at( m_lastActiveClipInSession ) );
+    }
+    //Add to session list
     QListWidgetItem *item = new QListWidgetItem( QFileInfo(fileName).fileName() );
     item->setToolTip( fileName );
     ui->listWidgetSession->addItem( item );
+    //Set sliders
+    ReceiptSettings *sliders = new ReceiptSettings(); //default
+    m_pSessionReceipts.append( sliders );
+    //Save index of active clip
+    m_lastActiveClipInSession = ui->listWidgetSession->row( item );
+    qDebug() << "m_lastActiveClipInSession" << m_lastActiveClipInSession;
+}
+
+//returns true if file is already in session
+bool MainWindow::isFileInSession(QString fileName)
+{
+    for( int i = 0; i < ui->listWidgetSession->count(); i++ )
+    {
+        if( ui->listWidgetSession->item( i )->toolTip() == fileName )
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 //Set the edit sliders to settings
@@ -924,9 +974,17 @@ void RenderPngTask::run()
 }
 
 //FileName in SessionList doubleClicked
-void MainWindow::on_listWidgetSession_doubleClicked(const QModelIndex &index)
+void MainWindow::on_listWidgetSession_activated(const QModelIndex &index)
 {
+    //Save slider receipt
+    setReceipt( m_pSessionReceipts.at( m_lastActiveClipInSession ) );
+    //Open new MLV
     openMlv( ui->listWidgetSession->item( index.row() )->toolTip() );
+    //Set sliders to receipt
+    setSliders( m_pSessionReceipts.at( index.row() ) );
+    //Save new position in session
+    m_lastActiveClipInSession = index.row();
+    qDebug() << "m_lastActiveClipInSession" << m_lastActiveClipInSession;
 }
 
 //Sessionlist visibility changed -> redraw picture
