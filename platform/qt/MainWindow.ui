@@ -1258,6 +1258,9 @@
    <property name="text">
     <string>Show Histogram</string>
    </property>
+   <property name="shortcut">
+    <string>H</string>
+   </property>
   </action>
   <action name="actionShowWaveFormMonitor">
    <property name="checkable">
@@ -1268,6 +1271,9 @@
    </property>
    <property name="toolTip">
     <string>Show Waveform Monitor</string>
+   </property>
+   <property name="shortcut">
+    <string>W</string>
    </property>
   </action>
   <action name="actionAlwaysUseAMaZE">
@@ -1294,6 +1300,9 @@
    <property name="text">
     <string>Show Session Area</string>
    </property>
+   <property name="shortcut">
+    <string>S</string>
+   </property>
   </action>
   <action name="actionShowEditArea">
    <property name="checkable">
@@ -1301,6 +1310,9 @@
    </property>
    <property name="text">
     <string>Show Edit Area</string>
+   </property>
+   <property name="shortcut">
+    <string>E</string>
    </property>
   </action>
   <action name="actionResetReceipt">
