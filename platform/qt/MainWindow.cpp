@@ -609,7 +609,6 @@ void MainWindow::startExport(QString fileName)
 void MainWindow::addFileToSession(QString fileName)
 {
     //Save settings of actual clip (if there is one)
-    qDebug() << "m_pSessionReceipts.count()" << m_pSessionReceipts.count();
     if( m_pSessionReceipts.count() > 0 )
     {
         setReceipt( m_pSessionReceipts.at( m_lastActiveClipInSession ) );
@@ -623,7 +622,9 @@ void MainWindow::addFileToSession(QString fileName)
     m_pSessionReceipts.append( sliders );
     //Save index of active clip
     m_lastActiveClipInSession = ui->listWidgetSession->row( item );
-    qDebug() << "m_lastActiveClipInSession" << m_lastActiveClipInSession;
+    //Set this row to current row
+    ui->listWidgetSession->clearSelection();
+    ui->listWidgetSession->setCurrentItem( item );
 }
 
 //returns true if file is already in session
