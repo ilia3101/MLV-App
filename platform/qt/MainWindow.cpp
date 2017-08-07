@@ -970,7 +970,6 @@ void MainWindow::on_actionOpenSession_triggered()
     }
 
     Rxml.setDevice(&file);
-    int i = 0;
     while( !Rxml.atEnd() )
     {
         Rxml.readNext();
@@ -991,17 +990,18 @@ void MainWindow::on_actionOpenSession_triggered()
                     addFileToSession( fileName );
                     //Open the file
                     openMlv( fileName );
+
                     while( !Rxml.atEnd() && !Rxml.isEndElement() )
                     {
                         Rxml.readNext();
                         if( Rxml.isStartElement() && Rxml.name() == "exposure" )
                         {
-                            qDebug() << "Exposure!" << Rxml.readElementText();
+                            m_pSessionReceipts.last()->setExposure( Rxml.readElementText().toInt() );
                             Rxml.readNext();
                         }
                         else if( Rxml.isStartElement() && Rxml.name() == "temperature" )
                         {
-                            qDebug() << "Temperature!" << Rxml.readElementText();
+                            m_pSessionReceipts.last()->setTemperature( Rxml.readElementText().toInt() );
                             Rxml.readNext();
                         }
                         else if( Rxml.isStartElement() && Rxml.name() == "tint" )
@@ -1056,6 +1056,7 @@ void MainWindow::on_actionOpenSession_triggered()
                         }
                     }
                     Rxml.readNext();
+                    setSliders( m_pSessionReceipts.last() );
                 }
                 else if( Rxml.isEndElement() )
                 {
@@ -1070,9 +1071,8 @@ void MainWindow::on_actionOpenSession_triggered()
 
     if (Rxml.hasError())
     {
-        QMessageBox::critical( this, tr( "Open Session" ), tr( "Error: Failed to parse file! %1 - Line %2" )
-                               .arg( Rxml.errorString() )
-                               .arg( i ));
+        QMessageBox::critical( this, tr( "Open Session" ), tr( "Error: Failed to parse file! %1" )
+                               .arg( Rxml.errorString() ) );
         return;
     }
     else if (file.error() != QFile::NoError)
