@@ -965,79 +965,121 @@ void MainWindow::on_actionOpenSession_triggered()
 
     if( !file.open(QIODevice::ReadOnly | QFile::Text) )
     {
-        /*std::cerr << "Error: Cannot read file " << qPrintable(filename)
-                  << ": " << qPrintable(file.errorString())
-                  << std::endl;
-        */
+        QMessageBox::critical( this, tr( "Open Session" ), tr( "Error: Cannot open file!" ) );
+        return;
     }
 
     Rxml.setDevice(&file);
-    Rxml.readNext();
-
-    while(!Rxml.atEnd())
+    int i = 0;
+    while( !Rxml.atEnd() )
     {
-        if(Rxml.isStartElement())
+        Rxml.readNext();
+        qDebug() << "InWhile";
+        if( Rxml.isStartElement() && Rxml.name() == "mlv_files" )
         {
-            if(Rxml.name() == "MLV_FILE")
+            qDebug() << "StartElem";
+            while( !Rxml.atEnd() && !Rxml.isEndElement() )
             {
-                //New Item & new Receipt
-                while(!Rxml.atEnd())
+                Rxml.readNext();
+                if( Rxml.isStartElement() && Rxml.name() == "clip" )
                 {
-                    if(Rxml.isEndElement())
-                    {
-                       Rxml.readNext();
-                       break;
-                    }
-                    else if(Rxml.isCharacters())
-                    {
-                       Rxml.readNext();
-                    }
-                    else if(Rxml.isStartElement())
-                    {
-                        if(Rxml.name() == "File")
-                        {
-                            Rxml.readElementText();
-                            //OpenMLV
-                        }
-                        else if(Rxml.name() == "Exposure")
-                        {
-                            Rxml.readElementText();
-                            //
-                        }
-                        else if(Rxml.name() == "Temperature")
-                        {
-                            Rxml.readElementText();
-                        }
-                        Rxml.readNext();
-                    }
-                    else
+                    //qDebug() << "Clip!" << Rxml.attributes().at(0).name() << Rxml.attributes().at(0).value();
+                    QString fileName = Rxml.attributes().at(0).value().toString();
+                    //Save last file name
+                    m_lastSaveFileName = fileName;
+                    //Add file to Sessionlist
+                    addFileToSession( fileName );
+                    //Open the file
+                    openMlv( fileName );
+                    while( !Rxml.atEnd() && !Rxml.isEndElement() )
                     {
                         Rxml.readNext();
+                        if( Rxml.isStartElement() && Rxml.name() == "exposure" )
+                        {
+                            qDebug() << "Exposure!" << Rxml.readElementText();
+                            Rxml.readNext();
+                        }
+                        else if( Rxml.isStartElement() && Rxml.name() == "temperature" )
+                        {
+                            qDebug() << "Temperature!" << Rxml.readElementText();
+                            Rxml.readNext();
+                        }
+                        else if( Rxml.isStartElement() && Rxml.name() == "tint" )
+                        {
+                            qDebug() << "Tint!" << Rxml.readElementText();
+                            Rxml.readNext();
+                        }
+                        else if( Rxml.isStartElement() && Rxml.name() == "saturation" )
+                        {
+                            qDebug() << "Saturation!" << Rxml.readElementText();
+                            Rxml.readNext();
+                        }
+                        else if( Rxml.isStartElement() && Rxml.name() == "ls" )
+                        {
+                            qDebug() << "Ls!" << Rxml.readElementText();
+                            Rxml.readNext();
+                        }
+                        else if( Rxml.isStartElement() && Rxml.name() == "lr" )
+                        {
+                            qDebug() << "Lr!" << Rxml.readElementText();
+                            Rxml.readNext();
+                        }
+                        else if( Rxml.isStartElement() && Rxml.name() == "ds" )
+                        {
+                            qDebug() << "Ds!" << Rxml.readElementText();
+                            Rxml.readNext();
+                        }
+                        else if( Rxml.isStartElement() && Rxml.name() == "dr" )
+                        {
+                            qDebug() << "Dr!" << Rxml.readElementText();
+                            Rxml.readNext();
+                        }
+                        else if( Rxml.isStartElement() && Rxml.name() == "lightening" )
+                        {
+                            qDebug() << "Lightening!" << Rxml.readElementText();
+                            Rxml.readNext();
+                        }
+                        else if( Rxml.isStartElement() && Rxml.name() == "highlightReconstruction" )
+                        {
+                            qDebug() << "HighlightReconstruction!" << Rxml.readElementText();
+                            Rxml.readNext();
+                        }
+                        else if( Rxml.isStartElement() && Rxml.name() == "reinhardTonemapping" )
+                        {
+                            qDebug() << "ReinhardTonemapping!" << Rxml.readElementText();
+                            Rxml.readNext();
+                        }
+                        else if( Rxml.isStartElement() ) //future features
+                        {
+                            Rxml.readElementText();
+                            Rxml.readNext();
+                        }
                     }
+                    Rxml.readNext();
+                }
+                else if( Rxml.isEndElement() )
+                {
+                    qDebug() << "EndElement! (clip)";
+                    Rxml.readNext();
                 }
             }
-        }
-        else
-        {
-            Rxml.readNext();
         }
     }
 
     file.close();
-    /*
+
     if (Rxml.hasError())
     {
-        std::cerr << "Error: Failed to parse file "
-             << qPrintable(filename) << ": "
-             << qPrintable(Rxml.errorString()) << std::endl;
+        QMessageBox::critical( this, tr( "Open Session" ), tr( "Error: Failed to parse file! %1 - Line %2" )
+                               .arg( Rxml.errorString() )
+                               .arg( i ));
+        return;
     }
     else if (file.error() != QFile::NoError)
     {
-        std::cerr << "Error: Cannot read file " << qPrintable(filename)
-              << ": " << qPrintable(file.errorString())
-              << std::endl;
+        QMessageBox::critical( this, tr( "Open Session" ), tr( "Error: Cannot read file! %1" ).arg( file.errorString() ) );
+        return;
     }
-    */
 }
 
 //Save Session
@@ -1053,25 +1095,30 @@ void MainWindow::on_actionSaveSession_triggered()
 
     QXmlStreamWriter xmlWriter(&file);
     xmlWriter.setAutoFormatting(true);
-    xmlWriter.writeStartDocument( "MLVAppSession" );
+    xmlWriter.writeStartDocument();
 
+    xmlWriter.writeStartElement( "mlv_files" );
     for( int i = 0; i < ui->listWidgetSession->count(); i++ )
     {
-        xmlWriter.writeStartElement( "MLV_FILE" );
-        xmlWriter.writeTextElement( "File",                    ui->listWidgetSession->item(i)->toolTip() );
-        xmlWriter.writeTextElement( "Exposure",                QString( "%1" ).arg( m_pSessionReceipts.at(i)->exposure() ) );
-        xmlWriter.writeTextElement( "Temperature",             QString( "%1" ).arg( m_pSessionReceipts.at(i)->temperature() ) );
-        xmlWriter.writeTextElement( "Tint",                    QString( "%1" ).arg( m_pSessionReceipts.at(i)->tint() ) );
-        xmlWriter.writeTextElement( "Saturation",              QString( "%1" ).arg( m_pSessionReceipts.at(i)->saturation() ) );
-        xmlWriter.writeTextElement( "Ds",                      QString( "%1" ).arg( m_pSessionReceipts.at(i)->ds() ) );
-        xmlWriter.writeTextElement( "Dr",                      QString( "%1" ).arg( m_pSessionReceipts.at(i)->dr() ) );
-        xmlWriter.writeTextElement( "Ls",                      QString( "%1" ).arg( m_pSessionReceipts.at(i)->ls() ) );
-        xmlWriter.writeTextElement( "Lr",                      QString( "%1" ).arg( m_pSessionReceipts.at(i)->lr() ) );
-        xmlWriter.writeTextElement( "Lightening",              QString( "%1" ).arg( m_pSessionReceipts.at(i)->lightening() ) );
-        xmlWriter.writeTextElement( "HighlightReconstruction", QString( "%1" ).arg( m_pSessionReceipts.at(i)->isHighlightReconstruction() ) );
-        xmlWriter.writeTextElement( "ReinhardTonemapping",     QString( "%1" ).arg( m_pSessionReceipts.at(i)->isReinhardTonemapping() ) );
+
+        xmlWriter.writeStartElement( "clip" );
+        xmlWriter.writeAttribute( "file", ui->listWidgetSession->item(i)->toolTip() );
+        xmlWriter.writeTextElement( "exposure",                QString( "%1" ).arg( m_pSessionReceipts.at(i)->exposure() ) );
+        xmlWriter.writeTextElement( "temperature",             QString( "%1" ).arg( m_pSessionReceipts.at(i)->temperature() ) );
+        xmlWriter.writeTextElement( "tint",                    QString( "%1" ).arg( m_pSessionReceipts.at(i)->tint() ) );
+        xmlWriter.writeTextElement( "saturation",              QString( "%1" ).arg( m_pSessionReceipts.at(i)->saturation() ) );
+        xmlWriter.writeTextElement( "ds",                      QString( "%1" ).arg( m_pSessionReceipts.at(i)->ds() ) );
+        xmlWriter.writeTextElement( "dr",                      QString( "%1" ).arg( m_pSessionReceipts.at(i)->dr() ) );
+        xmlWriter.writeTextElement( "ls",                      QString( "%1" ).arg( m_pSessionReceipts.at(i)->ls() ) );
+        xmlWriter.writeTextElement( "lr",                      QString( "%1" ).arg( m_pSessionReceipts.at(i)->lr() ) );
+        xmlWriter.writeTextElement( "lightening",              QString( "%1" ).arg( m_pSessionReceipts.at(i)->lightening() ) );
+        xmlWriter.writeTextElement( "highlightReconstruction", QString( "%1" ).arg( m_pSessionReceipts.at(i)->isHighlightReconstruction() ) );
+        xmlWriter.writeTextElement( "reinhardTonemapping",     QString( "%1" ).arg( m_pSessionReceipts.at(i)->isReinhardTonemapping() ) );
         xmlWriter.writeEndElement();
     }
+    xmlWriter.writeEndElement();
+
+    xmlWriter.writeEndDocument();
 
     file.close();
 }

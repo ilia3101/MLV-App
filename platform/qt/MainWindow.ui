@@ -1344,7 +1344,7 @@
   </action>
   <action name="actionOpenSession">
    <property name="enabled">
-    <bool>false</bool>
+    <bool>true</bool>
    </property>
    <property name="icon">
     <iconset resource="ressources.qrc">
