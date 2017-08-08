@@ -1277,3 +1277,32 @@ void MainWindow::on_dockWidgetEdit_visibilityChanged(bool visible)
     qApp->processEvents();
     m_frameChanged = true;
 }
+
+//Rightclick on SessionList
+void MainWindow::on_listWidgetSession_customContextMenuRequested(const QPoint &pos)
+{
+    if( ui->listWidgetSession->count() <= 0 ) return;
+    if( ui->listWidgetSession->selectedItems().size() <= 0 ) return;
+
+    // Handle global position
+    QPoint globalPos = ui->listWidgetSession->mapToGlobal( pos );
+
+    // Create menu and insert some actions
+    QMenu myMenu;
+    myMenu.addAction("Delete selected file(s) from session",  this, SLOT( deleteFileFromSession() ) );
+
+    // Show context menu at handling position
+    myMenu.exec( globalPos );
+}
+
+void MainWindow::deleteFileFromSession( void )
+{
+    //If multiple selection is on, we need to erase all selected items
+    for( int i = ui->listWidgetSession->selectedItems().size(); i > 0; i-- )
+    {
+        //Remove item from Session List
+        //delete ui->listWidgetSession->selectedItems().at( i - 1 );
+        //Remove slider memory
+        //m_pSessionReceipts.removeOne( ??? );
+    }
+}

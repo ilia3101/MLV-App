@@ -78,6 +78,8 @@ private slots:
     void on_listWidgetSession_activated(const QModelIndex &index);
     void on_dockWidgetSession_visibilityChanged(bool visible);
     void on_dockWidgetEdit_visibilityChanged(bool visible);
+    void on_listWidgetSession_customContextMenuRequested(const QPoint &pos);
+    void deleteFileFromSession( void ); //TODO
 
 private:
     Ui::MainWindow *ui;
@@ -116,7 +118,6 @@ private:
     void writeSettings( void );
     void startExport( QString fileName );
     void addFileToSession( QString fileName );
-    void deleteFileFromSession( int index ); //TODO
     void openSession( QString fileName );
     void saveSession( QString fileName );
     void deleteSession( void );

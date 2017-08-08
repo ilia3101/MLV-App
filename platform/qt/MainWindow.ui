@@ -1034,7 +1034,7 @@
    <property name="minimumSize">
     <size>
      <width>150</width>
-     <height>124</height>
+     <height>166</height>
     </size>
    </property>
    <property name="maximumSize">
@@ -1056,33 +1056,28 @@
     <number>1</number>
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_2">
-    <layout class="QGridLayout" name="gridLayout_2">
-     <property name="leftMargin">
-      <number>0</number>
+    <widget class="QListWidget" name="listWidgetSession">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>0</y>
+       <width>150</width>
+       <height>800</height>
+      </rect>
      </property>
-     <property name="topMargin">
-      <number>0</number>
+     <property name="contextMenuPolicy">
+      <enum>Qt::CustomContextMenu</enum>
      </property>
-     <property name="rightMargin">
-      <number>0</number>
+     <property name="alternatingRowColors">
+      <bool>true</bool>
      </property>
-     <property name="bottomMargin">
-      <number>0</number>
+     <property name="selectionMode">
+      <enum>QAbstractItemView::ExtendedSelection</enum>
      </property>
-     <item row="0" column="0">
-      <widget class="QListWidget" name="listWidgetSession">
-       <property name="alternatingRowColors">
-        <bool>true</bool>
-       </property>
-       <property name="selectionMode">
-        <enum>QAbstractItemView::ExtendedSelection</enum>
-       </property>
-       <property name="sortingEnabled">
-        <bool>false</bool>
-       </property>
-      </widget>
-     </item>
-    </layout>
+     <property name="sortingEnabled">
+      <bool>false</bool>
+     </property>
+    </widget>
    </widget>
   </widget>
   <action name="actionOpen">
