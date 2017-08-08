@@ -1295,14 +1295,30 @@ void MainWindow::on_listWidgetSession_customContextMenuRequested(const QPoint &p
     myMenu.exec( globalPos );
 }
 
+//Delete selected files from session
 void MainWindow::deleteFileFromSession( void )
 {
     //If multiple selection is on, we need to erase all selected items
     for( int i = ui->listWidgetSession->selectedItems().size(); i > 0; i-- )
     {
+        int row = ui->listWidgetSession->row( ui->listWidgetSession->selectedItems().at( i - 1 ) );
+        qDebug() << "Delete row:" << row;
         //Remove item from Session List
-        //delete ui->listWidgetSession->selectedItems().at( i - 1 );
+        delete ui->listWidgetSession->selectedItems().at( i - 1 );
         //Remove slider memory
-        //m_pSessionReceipts.removeOne( ??? );
+        m_pSessionReceipts.removeAt( row );
+    }
+    //if there is at least one...
+    if( ui->listWidgetSession->count() > 0 )
+    {
+        //Open first!
+        ui->listWidgetSession->setCurrentRow( 0 );
+        setSliders( m_pSessionReceipts.at( 0 ) );
+        openMlv( ui->listWidgetSession->item( 0 )->toolTip() );
+    }
+    else
+    {
+        //All black
+        deleteSession();
     }
 }
