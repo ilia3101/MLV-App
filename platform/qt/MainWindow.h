@@ -70,6 +70,7 @@ private slots:
     void on_actionResetReceipt_triggered();
     void on_actionCopyRecept_triggered();
     void on_actionPasteReceipt_triggered();
+    void on_actionNewSession_triggered();
     void on_actionOpenSession_triggered();
     void on_actionSaveSession_triggered();
     void readFFmpegOutput( void );
@@ -116,6 +117,9 @@ private:
     void startExport( QString fileName );
     void addFileToSession( QString fileName );
     void deleteFileFromSession( int index ); //TODO
+    void openSession( QString fileName );
+    void saveSession( QString fileName );
+    void deleteSession( void );
     bool isFileInSession( QString fileName );
     void setSliders( ReceiptSettings *sliders );
     void setReceipt( ReceiptSettings *sliders );

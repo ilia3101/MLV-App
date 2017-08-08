@@ -60,24 +60,31 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
         QString fileName = QString( "%1" ).arg( argv[1] );
 
         //Exit if not an MLV file or aborted
-        if( fileName == QString( "" ) && !fileName.endsWith( ".mlv", Qt::CaseInsensitive ) ) return;
-
-        //File is already opened? Error!
-        if( isFileInSession( fileName ) )
+        if( QFile(fileName).exists() && fileName.endsWith( ".mlv", Qt::CaseInsensitive ) )
         {
-            QMessageBox::information( this, tr( "Import MLV" ), tr( "File is already opened in session!" ) );
-            return;
+            //File is already opened? Error!
+            if( isFileInSession( fileName ) )
+            {
+                QMessageBox::information( this, tr( "Import MLV" ), tr( "File is already opened in session!" ) );
+                return;
+            }
+
+            //Save last file name
+            m_lastSaveFileName = fileName;
+
+            //Add to SessionList
+            addFileToSession( fileName );
+
+            //Open the file
+            openMlv( fileName );
+            on_actionResetReceipt_triggered();
         }
-
-        //Save last file name
-        m_lastSaveFileName = fileName;
-
-        //Add to SessionList
-        addFileToSession( fileName );
-
-        //Open the file
-        openMlv( fileName );
-        on_actionResetReceipt_triggered();
+        else if( QFile(fileName).exists() && fileName.endsWith( ".masxml", Qt::CaseInsensitive ) )
+        {
+            openSession( fileName );
+            //Save last file name
+            m_lastSaveFileName = fileName;
+        }
     }
 }
 
@@ -176,26 +183,36 @@ void MainWindow::resizeEvent(QResizeEvent *event)
 // Intercept FileOpen events
 bool MainWindow::event(QEvent *event)
 {
-    if (event->type() == QEvent::FileOpen) {
+    if (event->type() == QEvent::FileOpen)
+    {
         QFileOpenEvent *openEvent = static_cast<QFileOpenEvent *>(event);
         //Exit if not an MLV file or aborted
         QString fileName = openEvent->file();
-        if( fileName == QString( "" ) && !fileName.endsWith( ".mlv", Qt::CaseInsensitive ) ) return false;
-        //File is already opened? Error!
-        if( isFileInSession( fileName ) )
+        if( QFile(fileName).exists() && fileName.endsWith( ".mlv", Qt::CaseInsensitive ) )
         {
-            QMessageBox::information( this, tr( "Import MLV" ), tr( "File is already opened in session!" ) );
+            //File is already opened? Error!
+            if( isFileInSession( fileName ) )
+            {
+                QMessageBox::information( this, tr( "Import MLV" ), tr( "File is already opened in session!" ) );
+            }
+            else
+            {
+                //Save last file name
+                m_lastSaveFileName = fileName;
+                //Add to SessionList
+                addFileToSession( fileName );
+                //Open MLV
+                openMlv( fileName );
+                on_actionResetReceipt_triggered();
+            }
         }
-        else
+        else if( QFile(fileName).exists() && fileName.endsWith( ".masxml", Qt::CaseInsensitive ) )
         {
+            openSession( fileName );
             //Save last file name
             m_lastSaveFileName = fileName;
-            //Add to SessionList
-            addFileToSession( fileName );
-            //Open MLV
-            openMlv( fileName );
-            on_actionResetReceipt_triggered();
         }
+        else return false;
     }
     return QMainWindow::event(event);
 }
@@ -529,6 +546,9 @@ void MainWindow::writeSettings()
 //Start exporting a MOV via PNG48
 void MainWindow::startExport(QString fileName)
 {
+    //Save slider receipt
+    setReceipt( m_pSessionReceipts.at( m_lastActiveClipInSession ) );
+
     //Delete file if exists
     QFile *file = new QFile( fileName );
     if( file->exists() ) file->remove();
@@ -625,6 +645,228 @@ void MainWindow::addFileToSession(QString fileName)
     //Set this row to current row
     ui->listWidgetSession->clearSelection();
     ui->listWidgetSession->setCurrentItem( item );
+}
+
+//Open a session file
+void MainWindow::openSession(QString fileName)
+{
+    QXmlStreamReader Rxml;
+    QFile file(fileName);
+    if( !file.open(QIODevice::ReadOnly | QFile::Text) )
+    {
+        return;
+    }
+
+    //Clear the last session
+    deleteSession();
+
+    //Parse
+    Rxml.setDevice(&file);
+    while( !Rxml.atEnd() )
+    {
+        Rxml.readNext();
+        //qDebug() << "InWhile";
+        if( Rxml.isStartElement() && Rxml.name() == "mlv_files" )
+        {
+            //qDebug() << "StartElem";
+            while( !Rxml.atEnd() && !Rxml.isEndElement() )
+            {
+                Rxml.readNext();
+                if( Rxml.isStartElement() && Rxml.name() == "clip" )
+                {
+                    //qDebug() << "Clip!" << Rxml.attributes().at(0).name() << Rxml.attributes().at(0).value();
+                    QString fileName = Rxml.attributes().at(0).value().toString();
+
+                    if( QFile( fileName ).exists() )
+                    {
+                        //Save last file name
+                        m_lastSaveFileName = fileName;
+                        //Add file to Sessionlist
+                        addFileToSession( fileName );
+                        //Open the file
+                        openMlv( fileName );
+
+                        while( !Rxml.atEnd() && !Rxml.isEndElement() )
+                        {
+                            Rxml.readNext();
+                            if( Rxml.isStartElement() && Rxml.name() == "exposure" )
+                            {
+                                m_pSessionReceipts.last()->setExposure( Rxml.readElementText().toInt() );
+                                Rxml.readNext();
+                            }
+                            else if( Rxml.isStartElement() && Rxml.name() == "temperature" )
+                            {
+                                m_pSessionReceipts.last()->setTemperature( Rxml.readElementText().toInt() );
+                                Rxml.readNext();
+                            }
+                            else if( Rxml.isStartElement() && Rxml.name() == "tint" )
+                            {
+                                m_pSessionReceipts.last()->setTint( Rxml.readElementText().toInt() );
+                                Rxml.readNext();
+                            }
+                            else if( Rxml.isStartElement() && Rxml.name() == "saturation" )
+                            {
+                                m_pSessionReceipts.last()->setSaturation( Rxml.readElementText().toInt() );
+                                Rxml.readNext();
+                            }
+                            else if( Rxml.isStartElement() && Rxml.name() == "ls" )
+                            {
+                                m_pSessionReceipts.last()->setLs( Rxml.readElementText().toInt() );
+                                Rxml.readNext();
+                            }
+                            else if( Rxml.isStartElement() && Rxml.name() == "lr" )
+                            {
+                                m_pSessionReceipts.last()->setLr( Rxml.readElementText().toInt() );
+                                Rxml.readNext();
+                            }
+                            else if( Rxml.isStartElement() && Rxml.name() == "ds" )
+                            {
+                                m_pSessionReceipts.last()->setDs( Rxml.readElementText().toInt() );
+                                Rxml.readNext();
+                            }
+                            else if( Rxml.isStartElement() && Rxml.name() == "dr" )
+                            {
+                                m_pSessionReceipts.last()->setDr( Rxml.readElementText().toInt() );
+                                Rxml.readNext();
+                            }
+                            else if( Rxml.isStartElement() && Rxml.name() == "lightening" )
+                            {
+                                m_pSessionReceipts.last()->setLightening( Rxml.readElementText().toInt() );
+                                Rxml.readNext();
+                            }
+                            else if( Rxml.isStartElement() && Rxml.name() == "highlightReconstruction" )
+                            {
+                                m_pSessionReceipts.last()->setHighlightReconstruction( (bool)Rxml.readElementText().toInt() );
+                                Rxml.readNext();
+                            }
+                            else if( Rxml.isStartElement() && Rxml.name() == "reinhardTonemapping" )
+                            {
+                                m_pSessionReceipts.last()->setReinhardTonemapping( (bool)Rxml.readElementText().toInt() );
+                                Rxml.readNext();
+                            }
+                            else if( Rxml.isStartElement() ) //future features
+                            {
+                                Rxml.readElementText();
+                                Rxml.readNext();
+                            }
+                        }
+                    }
+                    else
+                    {
+                        QMessageBox::critical( this, tr( "Open Session Error" ), tr( "File not found: \r\n%1" ).arg( fileName ) );
+                        //If file does not exist we just parse uninteresting data in the right way
+                        while( !Rxml.atEnd() && !Rxml.isEndElement() )
+                        {
+                            Rxml.readNext();
+                            if( Rxml.isStartElement() ) //future features
+                            {
+                                Rxml.readElementText();
+                                Rxml.readNext();
+                            }
+                        }
+                    }
+                    Rxml.readNext();
+                    setSliders( m_pSessionReceipts.last() );
+                }
+                else if( Rxml.isEndElement() )
+                {
+                    //qDebug() << "EndElement! (clip)";
+                    Rxml.readNext();
+                }
+            }
+        }
+    }
+
+    file.close();
+
+    if (Rxml.hasError())
+    {
+        QMessageBox::critical( this, tr( "Open Session" ), tr( "Error: Failed to parse file! %1" )
+                               .arg( Rxml.errorString() ) );
+        return;
+    }
+    else if (file.error() != QFile::NoError)
+    {
+        QMessageBox::critical( this, tr( "Open Session" ), tr( "Error: Cannot read file! %1" ).arg( file.errorString() ) );
+        return;
+    }
+}
+
+//Save Session
+void MainWindow::saveSession(QString fileName)
+{
+    //Save slider receipt
+    setReceipt( m_pSessionReceipts.at( m_lastActiveClipInSession ) );
+
+    QFile file(fileName);
+    file.open(QIODevice::WriteOnly);
+
+    QXmlStreamWriter xmlWriter(&file);
+    xmlWriter.setAutoFormatting(true);
+    xmlWriter.writeStartDocument();
+
+    xmlWriter.writeStartElement( "mlv_files" );
+    for( int i = 0; i < ui->listWidgetSession->count(); i++ )
+    {
+        xmlWriter.writeStartElement( "clip" );
+        xmlWriter.writeAttribute( "file", ui->listWidgetSession->item(i)->toolTip() );
+        xmlWriter.writeTextElement( "exposure",                QString( "%1" ).arg( m_pSessionReceipts.at(i)->exposure() ) );
+        xmlWriter.writeTextElement( "temperature",             QString( "%1" ).arg( m_pSessionReceipts.at(i)->temperature() ) );
+        xmlWriter.writeTextElement( "tint",                    QString( "%1" ).arg( m_pSessionReceipts.at(i)->tint() ) );
+        xmlWriter.writeTextElement( "saturation",              QString( "%1" ).arg( m_pSessionReceipts.at(i)->saturation() ) );
+        xmlWriter.writeTextElement( "ds",                      QString( "%1" ).arg( m_pSessionReceipts.at(i)->ds() ) );
+        xmlWriter.writeTextElement( "dr",                      QString( "%1" ).arg( m_pSessionReceipts.at(i)->dr() ) );
+        xmlWriter.writeTextElement( "ls",                      QString( "%1" ).arg( m_pSessionReceipts.at(i)->ls() ) );
+        xmlWriter.writeTextElement( "lr",                      QString( "%1" ).arg( m_pSessionReceipts.at(i)->lr() ) );
+        xmlWriter.writeTextElement( "lightening",              QString( "%1" ).arg( m_pSessionReceipts.at(i)->lightening() ) );
+        xmlWriter.writeTextElement( "highlightReconstruction", QString( "%1" ).arg( m_pSessionReceipts.at(i)->isHighlightReconstruction() ) );
+        xmlWriter.writeTextElement( "reinhardTonemapping",     QString( "%1" ).arg( m_pSessionReceipts.at(i)->isReinhardTonemapping() ) );
+        xmlWriter.writeEndElement();
+    }
+    xmlWriter.writeEndElement();
+
+    xmlWriter.writeEndDocument();
+
+    file.close();
+}
+
+//Delete all clips from Session
+void MainWindow::deleteSession()
+{
+    //Clear the memory
+    m_pSessionReceipts.clear();
+    ui->listWidgetSession->clear();
+
+    //Set window title to filename
+    this->setWindowTitle( QString( "MLV App" ) );
+
+    //disable drawing and kill old timer and old WaveFormMonitor
+    m_fileLoaded = false;
+    m_dontDraw = true;
+
+    //Set Labels black
+    ui->labelHistogram->setPixmap( QPixmap( ":/IMG/IMG/Histogram.png" ) );
+    m_pRawImageLabel->setPixmap( QPixmap( ":/IMG/IMG/Histogram.png" ) );
+
+    //And reset sliders
+    on_actionResetReceipt_triggered();
+
+    //Export not possible without mlv file
+    ui->actionExport->setEnabled( false );
+
+    //Set Clip Info to Dialog
+    m_pInfoDialog->ui->tableWidget->item( 0, 1 )->setText( "-" );
+    m_pInfoDialog->ui->tableWidget->item( 1, 1 )->setText( "-" );
+    m_pInfoDialog->ui->tableWidget->item( 2, 1 )->setText( "-" );
+    m_pInfoDialog->ui->tableWidget->item( 3, 1 )->setText( "-" );
+    m_pInfoDialog->ui->tableWidget->item( 4, 1 )->setText( "-" );
+    m_pInfoDialog->ui->tableWidget->item( 5, 1 )->setText( "-" );
+    m_pInfoDialog->ui->tableWidget->item( 6, 1 )->setText( "-" );
+    m_pInfoDialog->ui->tableWidget->item( 7, 1 )->setText( "-" );
+    m_pInfoDialog->ui->tableWidget->item( 8, 1 )->setText( "-" );
+
+    //Adapt slider to clip and move to position 0
+    ui->horizontalSliderPosition->setValue( 0 );
 }
 
 //returns true if file is already in session
@@ -951,176 +1193,35 @@ void MainWindow::on_actionPasteReceipt_triggered()
     setSliders( m_pReceiptClipboard );
 }
 
+//New Session
+void MainWindow::on_actionNewSession_triggered()
+{
+    deleteSession();
+    //open empty mlv
+    //clear info dialog
+    //clear histogram, waveform and picture
+}
+
 //Open Session
 void MainWindow::on_actionOpenSession_triggered()
 {
     QString path = QFileInfo( m_lastSaveFileName ).absolutePath();
-    QString filename = QFileDialog::getOpenFileName(this,
-                                           tr("Open Xml"), path,
-                                           tr("Xml files (*.xml)"));
+    QString fileName = QFileDialog::getOpenFileName(this,
+                                           tr("Open MLV App Session Xml"), path,
+                                           tr("MLV App Session Xml files (*.masxml)"));
 
-    QXmlStreamReader Rxml;
-
-    QFile file(filename);
-
-    if( !file.open(QIODevice::ReadOnly | QFile::Text) )
-    {
-        QMessageBox::critical( this, tr( "Open Session" ), tr( "Error: Cannot open file!" ) );
-        return;
-    }
-
-    Rxml.setDevice(&file);
-    while( !Rxml.atEnd() )
-    {
-        Rxml.readNext();
-        qDebug() << "InWhile";
-        if( Rxml.isStartElement() && Rxml.name() == "mlv_files" )
-        {
-            qDebug() << "StartElem";
-            while( !Rxml.atEnd() && !Rxml.isEndElement() )
-            {
-                Rxml.readNext();
-                if( Rxml.isStartElement() && Rxml.name() == "clip" )
-                {
-                    //qDebug() << "Clip!" << Rxml.attributes().at(0).name() << Rxml.attributes().at(0).value();
-                    QString fileName = Rxml.attributes().at(0).value().toString();
-                    //Save last file name
-                    m_lastSaveFileName = fileName;
-                    //Add file to Sessionlist
-                    addFileToSession( fileName );
-                    //Open the file
-                    openMlv( fileName );
-
-                    while( !Rxml.atEnd() && !Rxml.isEndElement() )
-                    {
-                        Rxml.readNext();
-                        if( Rxml.isStartElement() && Rxml.name() == "exposure" )
-                        {
-                            m_pSessionReceipts.last()->setExposure( Rxml.readElementText().toInt() );
-                            Rxml.readNext();
-                        }
-                        else if( Rxml.isStartElement() && Rxml.name() == "temperature" )
-                        {
-                            m_pSessionReceipts.last()->setTemperature( Rxml.readElementText().toInt() );
-                            Rxml.readNext();
-                        }
-                        else if( Rxml.isStartElement() && Rxml.name() == "tint" )
-                        {
-                            qDebug() << "Tint!" << Rxml.readElementText();
-                            Rxml.readNext();
-                        }
-                        else if( Rxml.isStartElement() && Rxml.name() == "saturation" )
-                        {
-                            qDebug() << "Saturation!" << Rxml.readElementText();
-                            Rxml.readNext();
-                        }
-                        else if( Rxml.isStartElement() && Rxml.name() == "ls" )
-                        {
-                            qDebug() << "Ls!" << Rxml.readElementText();
-                            Rxml.readNext();
-                        }
-                        else if( Rxml.isStartElement() && Rxml.name() == "lr" )
-                        {
-                            qDebug() << "Lr!" << Rxml.readElementText();
-                            Rxml.readNext();
-                        }
-                        else if( Rxml.isStartElement() && Rxml.name() == "ds" )
-                        {
-                            qDebug() << "Ds!" << Rxml.readElementText();
-                            Rxml.readNext();
-                        }
-                        else if( Rxml.isStartElement() && Rxml.name() == "dr" )
-                        {
-                            qDebug() << "Dr!" << Rxml.readElementText();
-                            Rxml.readNext();
-                        }
-                        else if( Rxml.isStartElement() && Rxml.name() == "lightening" )
-                        {
-                            qDebug() << "Lightening!" << Rxml.readElementText();
-                            Rxml.readNext();
-                        }
-                        else if( Rxml.isStartElement() && Rxml.name() == "highlightReconstruction" )
-                        {
-                            qDebug() << "HighlightReconstruction!" << Rxml.readElementText();
-                            Rxml.readNext();
-                        }
-                        else if( Rxml.isStartElement() && Rxml.name() == "reinhardTonemapping" )
-                        {
-                            qDebug() << "ReinhardTonemapping!" << Rxml.readElementText();
-                            Rxml.readNext();
-                        }
-                        else if( Rxml.isStartElement() ) //future features
-                        {
-                            Rxml.readElementText();
-                            Rxml.readNext();
-                        }
-                    }
-                    Rxml.readNext();
-                    setSliders( m_pSessionReceipts.last() );
-                }
-                else if( Rxml.isEndElement() )
-                {
-                    qDebug() << "EndElement! (clip)";
-                    Rxml.readNext();
-                }
-            }
-        }
-    }
-
-    file.close();
-
-    if (Rxml.hasError())
-    {
-        QMessageBox::critical( this, tr( "Open Session" ), tr( "Error: Failed to parse file! %1" )
-                               .arg( Rxml.errorString() ) );
-        return;
-    }
-    else if (file.error() != QFile::NoError)
-    {
-        QMessageBox::critical( this, tr( "Open Session" ), tr( "Error: Cannot read file! %1" ).arg( file.errorString() ) );
-        return;
-    }
+    openSession( fileName );
 }
 
 //Save Session
 void MainWindow::on_actionSaveSession_triggered()
 {
     QString path = QFileInfo( m_lastSaveFileName ).absolutePath();
-    QString filename = QFileDialog::getSaveFileName(this,
-                                           tr("Save Xml"), path,
-                                           tr("Xml files (*.xml)"));
+    QString fileName = QFileDialog::getSaveFileName(this,
+                                           tr("Save MLV App Session Xml"), path,
+                                           tr("MLV App Session Xml files (*.masxml)"));
 
-    QFile file(filename);
-    file.open(QIODevice::WriteOnly);
-
-    QXmlStreamWriter xmlWriter(&file);
-    xmlWriter.setAutoFormatting(true);
-    xmlWriter.writeStartDocument();
-
-    xmlWriter.writeStartElement( "mlv_files" );
-    for( int i = 0; i < ui->listWidgetSession->count(); i++ )
-    {
-
-        xmlWriter.writeStartElement( "clip" );
-        xmlWriter.writeAttribute( "file", ui->listWidgetSession->item(i)->toolTip() );
-        xmlWriter.writeTextElement( "exposure",                QString( "%1" ).arg( m_pSessionReceipts.at(i)->exposure() ) );
-        xmlWriter.writeTextElement( "temperature",             QString( "%1" ).arg( m_pSessionReceipts.at(i)->temperature() ) );
-        xmlWriter.writeTextElement( "tint",                    QString( "%1" ).arg( m_pSessionReceipts.at(i)->tint() ) );
-        xmlWriter.writeTextElement( "saturation",              QString( "%1" ).arg( m_pSessionReceipts.at(i)->saturation() ) );
-        xmlWriter.writeTextElement( "ds",                      QString( "%1" ).arg( m_pSessionReceipts.at(i)->ds() ) );
-        xmlWriter.writeTextElement( "dr",                      QString( "%1" ).arg( m_pSessionReceipts.at(i)->dr() ) );
-        xmlWriter.writeTextElement( "ls",                      QString( "%1" ).arg( m_pSessionReceipts.at(i)->ls() ) );
-        xmlWriter.writeTextElement( "lr",                      QString( "%1" ).arg( m_pSessionReceipts.at(i)->lr() ) );
-        xmlWriter.writeTextElement( "lightening",              QString( "%1" ).arg( m_pSessionReceipts.at(i)->lightening() ) );
-        xmlWriter.writeTextElement( "highlightReconstruction", QString( "%1" ).arg( m_pSessionReceipts.at(i)->isHighlightReconstruction() ) );
-        xmlWriter.writeTextElement( "reinhardTonemapping",     QString( "%1" ).arg( m_pSessionReceipts.at(i)->isReinhardTonemapping() ) );
-        xmlWriter.writeEndElement();
-    }
-    xmlWriter.writeEndElement();
-
-    xmlWriter.writeEndDocument();
-
-    file.close();
+    saveSession( fileName );
 }
 
 //Export a 16bit png frame in a task

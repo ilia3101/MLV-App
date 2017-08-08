@@ -152,6 +152,9 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
+   <addaction name="actionNewSession"/>
+   <addaction name="actionOpenSession"/>
+   <addaction name="actionSaveSession"/>
    <addaction name="actionOpen"/>
    <addaction name="actionExport"/>
    <addaction name="actionCopyRecept"/>
@@ -1072,7 +1075,7 @@
         <bool>true</bool>
        </property>
        <property name="selectionMode">
-        <enum>QAbstractItemView::ContiguousSelection</enum>
+        <enum>QAbstractItemView::ExtendedSelection</enum>
        </property>
        <property name="sortingEnabled">
         <bool>false</bool>
@@ -1329,7 +1332,7 @@
   </action>
   <action name="actionNewSession">
    <property name="enabled">
-    <bool>false</bool>
+    <bool>true</bool>
    </property>
    <property name="icon">
     <iconset resource="ressources.qrc">
