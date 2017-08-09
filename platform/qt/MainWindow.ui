@@ -38,6 +38,9 @@
      <layout class="QVBoxLayout" name="verticalLayout">
       <item>
        <widget class="QFrame" name="frame">
+        <property name="contextMenuPolicy">
+         <enum>Qt::CustomContextMenu</enum>
+        </property>
         <property name="acceptDrops">
          <bool>false</bool>
         </property>
@@ -119,6 +122,7 @@
     <addaction name="separator"/>
     <addaction name="actionZoomFit"/>
     <addaction name="actionZoom100"/>
+    <addaction name="actionFullscreen"/>
    </widget>
    <widget class="QMenu" name="menuView">
     <property name="title">
@@ -211,6 +215,9 @@
            <height>70</height>
           </size>
          </property>
+         <property name="contextMenuPolicy">
+          <enum>Qt::CustomContextMenu</enum>
+         </property>
          <property name="lineWidth">
           <number>0</number>
          </property>
@@ -277,11 +284,14 @@
           </spacer>
          </item>
          <item>
-          <widget class="QLabel" name="label_ExposureVal">
+          <widget class="DoubleClickLabel" name="label_ExposureVal">
            <property name="font">
             <font>
              <pointsize>10</pointsize>
             </font>
+           </property>
+           <property name="contextMenuPolicy">
+            <enum>Qt::CustomContextMenu</enum>
            </property>
            <property name="layoutDirection">
             <enum>Qt::RightToLeft</enum>
@@ -361,7 +371,7 @@
           </spacer>
          </item>
          <item>
-          <widget class="QLabel" name="label_TemperatureVal">
+          <widget class="DoubleClickLabel" name="label_TemperatureVal">
            <property name="font">
             <font>
              <pointsize>10</pointsize>
@@ -445,7 +455,7 @@
           </spacer>
          </item>
          <item>
-          <widget class="QLabel" name="label_TintVal">
+          <widget class="DoubleClickLabel" name="label_TintVal">
            <property name="font">
             <font>
              <pointsize>10</pointsize>
@@ -529,7 +539,7 @@
           </spacer>
          </item>
          <item>
-          <widget class="QLabel" name="label_SaturationVal">
+          <widget class="DoubleClickLabel" name="label_SaturationVal">
            <property name="font">
             <font>
              <pointsize>10</pointsize>
@@ -617,7 +627,7 @@
           </spacer>
          </item>
          <item>
-          <widget class="QLabel" name="label_DsVal">
+          <widget class="DoubleClickLabel" name="label_DsVal">
            <property name="font">
             <font>
              <pointsize>10</pointsize>
@@ -698,7 +708,7 @@
           </spacer>
          </item>
          <item>
-          <widget class="QLabel" name="label_DrVal">
+          <widget class="DoubleClickLabel" name="label_DrVal">
            <property name="font">
             <font>
              <pointsize>10</pointsize>
@@ -779,7 +789,7 @@
           </spacer>
          </item>
          <item>
-          <widget class="QLabel" name="label_LsVal">
+          <widget class="DoubleClickLabel" name="label_LsVal">
            <property name="font">
             <font>
              <pointsize>10</pointsize>
@@ -857,7 +867,7 @@
           </spacer>
          </item>
          <item>
-          <widget class="QLabel" name="label_LrVal">
+          <widget class="DoubleClickLabel" name="label_LrVal">
            <property name="font">
             <font>
              <pointsize>10</pointsize>
@@ -938,7 +948,7 @@
           </spacer>
          </item>
          <item>
-          <widget class="QLabel" name="label_LightenVal">
+          <widget class="DoubleClickLabel" name="label_LightenVal">
            <property name="font">
             <font>
              <pointsize>10</pointsize>
@@ -1056,28 +1066,36 @@
     <number>1</number>
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_2">
-    <widget class="QListWidget" name="listWidgetSession">
-     <property name="geometry">
-      <rect>
-       <x>0</x>
-       <y>0</y>
-       <width>150</width>
-       <height>800</height>
-      </rect>
+    <layout class="QGridLayout" name="gridLayout_2">
+     <property name="leftMargin">
+      <number>0</number>
      </property>
-     <property name="contextMenuPolicy">
-      <enum>Qt::CustomContextMenu</enum>
+     <property name="topMargin">
+      <number>0</number>
      </property>
-     <property name="alternatingRowColors">
-      <bool>true</bool>
+     <property name="rightMargin">
+      <number>0</number>
      </property>
-     <property name="selectionMode">
-      <enum>QAbstractItemView::ExtendedSelection</enum>
+     <property name="bottomMargin">
+      <number>0</number>
      </property>
-     <property name="sortingEnabled">
-      <bool>false</bool>
-     </property>
-    </widget>
+     <item row="0" column="0">
+      <widget class="QListWidget" name="listWidgetSession">
+       <property name="contextMenuPolicy">
+        <enum>Qt::CustomContextMenu</enum>
+       </property>
+       <property name="alternatingRowColors">
+        <bool>true</bool>
+       </property>
+       <property name="selectionMode">
+        <enum>QAbstractItemView::ExtendedSelection</enum>
+       </property>
+       <property name="sortingEnabled">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </widget>
   </widget>
   <action name="actionOpen">
@@ -1370,8 +1388,30 @@
     <string>Ctrl+S</string>
    </property>
   </action>
+  <action name="actionFullscreen">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="ressources.qrc">
+     <normaloff>:/RetinaIMG/RetinaIMG/Actions-window-fullscreen-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Actions-window-fullscreen-icon.png</iconset>
+   </property>
+   <property name="text">
+    <string>Fullscreen</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+F</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>DoubleClickLabel</class>
+   <extends>QLabel</extends>
+   <header>DoubleClickLabel.h</header>
+  </customwidget>
+ </customwidgets>
  <resources>
   <include location="ressources.qrc"/>
  </resources>

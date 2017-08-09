@@ -59,7 +59,9 @@ SOURCES += \
     Histogram.cpp \
     WaveFormMonitor.cpp \
     ExportSettingsDialog.cpp \
-    ReceiptSettings.cpp
+    ReceiptSettings.cpp \
+    EditSliderValueDialog.cpp \
+    DoubleClickLabel.cpp
 
 HEADERS += \
         MainWindow.h \
@@ -84,13 +86,16 @@ HEADERS += \
     Histogram.h \
     WaveFormMonitor.h \
     ExportSettingsDialog.h \
-    ReceiptSettings.h
+    ReceiptSettings.h \
+    EditSliderValueDialog.h \
+    DoubleClickLabel.h
 
 FORMS += \
         MainWindow.ui \
     InfoDialog.ui \
     StatusDialog.ui \
-    ExportSettingsDialog.ui
+    ExportSettingsDialog.ui \
+    EditSliderValueDialog.ui
 
 RESOURCES += \
     ressources.qrc

@@ -78,6 +78,7 @@ void setMlvRawCacheLimitFrames(mlvObject_t * video, uint64_t frameLimit)
 /* TODO: add removing old/un-needed frames ability */
 void cache_mlv_frames(mlvObject_t * video)
 {
+    return;
     video->is_caching = 1;
 
     uint32_t width = getMlvWidth(video);

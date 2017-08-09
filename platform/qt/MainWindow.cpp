@@ -16,10 +16,12 @@
 #include <QDesktopWidget>
 #include <QMutex>
 #include <QXmlStreamWriter>
+#include <QDesktopWidget>
 #include <png.h>
 
 #include "SystemMemory.h"
 #include "ExportSettingsDialog.h"
+#include "EditSliderValueDialog.h"
 
 #define VERSION "0.4 alpha"
 
@@ -426,7 +428,9 @@ void MainWindow::initGui( void )
     m_pHistogram = new Histogram();
     ui->actionShowHistogram->setChecked( true );
     m_pWaveFormMonitor = new WaveFormMonitor( 200 );
-
+#ifndef WIN32
+    ui->actionFullscreen->setVisible( false );
+#endif
     //Dont show the Faithful combobox
     ui->comboBox->setVisible( false );
     //Disable unused (for now) actions
@@ -902,7 +906,7 @@ void MainWindow::setSliders(ReceiptSettings *receipt)
 }
 
 //Set the receipt from sliders
-void MainWindow::setReceipt(ReceiptSettings *receipt)
+void MainWindow::setReceipt( ReceiptSettings *receipt )
 {
     receipt->setExposure( ui->horizontalSliderExposure->value() );
     receipt->setTemperature( ui->horizontalSliderTemperature->value() );
@@ -915,6 +919,20 @@ void MainWindow::setReceipt(ReceiptSettings *receipt)
     receipt->setLightening( ui->horizontalSliderLighten->value() );
     receipt->setHighlightReconstruction( ui->checkBoxHighLightReconstruction->isChecked() );
     receipt->setReinhardTonemapping( ui->checkBoxReinhardTonemapping->isChecked() );
+}
+
+//Show the file in
+void MainWindow::showFileInEditor( int row )
+{
+    //Save slider receipt
+    setReceipt( m_pSessionReceipts.at( m_lastActiveClipInSession ) );
+    //Open new MLV
+    openMlv( ui->listWidgetSession->item( row )->toolTip() );
+    //Set sliders to receipt
+    setSliders( m_pSessionReceipts.at( row ) );
+    //Save new position in session
+    m_lastActiveClipInSession = row;
+    qDebug() << "m_lastActiveClipInSession" << m_lastActiveClipInSession;
 }
 
 //Edit progressbar from FFmpeg output
@@ -1067,12 +1085,6 @@ void MainWindow::on_actionGoto_First_Frame_triggered()
 }
 
 //Export clip
-//Making a ProRes file:
-/*
-$ ffmpeg -r 25 -i frame%04d.png -c:v prores_ks -profile:v 4444 output.mov
-  ...or...                      -c:v prores_ks -profile:v hq   output.mov
-  ...or...                      -c:v prores                    output.mov
-*/
 void MainWindow::on_actionExport_triggered()
 {
     //Stop playback if active
@@ -1251,15 +1263,7 @@ void RenderPngTask::run()
 //FileName in SessionList doubleClicked
 void MainWindow::on_listWidgetSession_activated(const QModelIndex &index)
 {
-    //Save slider receipt
-    setReceipt( m_pSessionReceipts.at( m_lastActiveClipInSession ) );
-    //Open new MLV
-    openMlv( ui->listWidgetSession->item( index.row() )->toolTip() );
-    //Set sliders to receipt
-    setSliders( m_pSessionReceipts.at( index.row() ) );
-    //Save new position in session
-    m_lastActiveClipInSession = index.row();
-    qDebug() << "m_lastActiveClipInSession" << m_lastActiveClipInSession;
+    showFileInEditor( index.row() );
 }
 
 //Sessionlist visibility changed -> redraw picture
@@ -1289,8 +1293,16 @@ void MainWindow::on_listWidgetSession_customContextMenuRequested(const QPoint &p
 
     // Create menu and insert some actions
     QMenu myMenu;
-    myMenu.addAction("Delete selected file(s) from session",  this, SLOT( deleteFileFromSession() ) );
-
+    if( ui->listWidgetSession->selectedItems().size() == 1 )
+    {
+        myMenu.addAction("Show in Editor",  this, SLOT( rightClickShowFile() ) );
+        myMenu.addAction("Select all",  this, SLOT( selectAllFiles() ) );
+        myMenu.addAction("Delete selected file from session",  this, SLOT( deleteFileFromSession() ) );
+    }
+    else
+    {
+        myMenu.addAction("Delete selected files from session",  this, SLOT( deleteFileFromSession() ) );
+    }
     // Show context menu at handling position
     myMenu.exec( globalPos );
 }
@@ -1321,4 +1333,162 @@ void MainWindow::deleteFileFromSession( void )
         //All black
         deleteSession();
     }
+}
+
+//Shows the file, which is selected via contextmenu
+void MainWindow::rightClickShowFile( void )
+{
+    showFileInEditor( ui->listWidgetSession->currentRow() );
+}
+
+//Select all files in SessionList
+void MainWindow::selectAllFiles( void )
+{
+    ui->listWidgetSession->selectAll();
+}
+
+//Contextmenu on picture
+void MainWindow::on_frame_customContextMenuRequested(const QPoint &pos)
+{
+    // Handle global position
+    QPoint globalPos = ui->frame->mapToGlobal( pos );
+
+    // Create menu and insert some actions
+    QMenu myMenu;
+    myMenu.addAction( ui->actionZoomFit );
+    myMenu.addAction( ui->actionZoom100 );
+    if( ui->frame->isFullScreen() )
+    {
+        myMenu.addSeparator();
+        myMenu.addAction( ui->actionGoto_First_Frame );
+        myMenu.addAction( ui->actionPlay );
+        myMenu.addAction( ui->actionLoop );
+        myMenu.addSeparator();
+    }
+    // Show context menu at handling position
+    myMenu.exec( globalPos );
+}
+
+//Contextmenu on scope
+void MainWindow::on_labelHistogram_customContextMenuRequested(const QPoint &pos)
+{
+    // Handle global position
+    QPoint globalPos = ui->labelHistogram->mapToGlobal( pos );
+
+    // Create menu and insert some actions
+    QMenu myMenu;
+    myMenu.addAction( ui->actionShowHistogram );
+    myMenu.addAction( ui->actionShowWaveFormMonitor );
+    // Show context menu at handling position
+    myMenu.exec( globalPos );
+}
+
+//DoubleClick on Exposure Label
+void MainWindow::on_label_ExposureVal_doubleClicked( void )
+{
+    EditSliderValueDialog editSlider;
+    editSlider.autoSetup( ui->horizontalSliderExposure, ui->label_ExposureVal, 0.01, 2, 100.0 );
+    editSlider.exec();
+    ui->horizontalSliderExposure->setValue( editSlider.getValue() );
+}
+
+//DoubleClick on Temperature Label
+void MainWindow::on_label_TemperatureVal_doubleClicked()
+{
+    EditSliderValueDialog editSlider;
+    editSlider.autoSetup( ui->horizontalSliderTemperature, ui->label_TemperatureVal, 1.0, 0, 1.0 );
+    editSlider.ui->doubleSpinBox->setValue( ui->label_TemperatureVal->text().left(5).toInt() );
+    editSlider.ui->doubleSpinBox->selectAll();
+    editSlider.exec();
+    ui->horizontalSliderTemperature->setValue( editSlider.getValue() );
+}
+
+//DoubleClick on Tint Label
+void MainWindow::on_label_TintVal_doubleClicked()
+{
+    EditSliderValueDialog editSlider;
+    editSlider.autoSetup( ui->horizontalSliderTint, ui->label_TintVal, 0.1, 1, 10.0 );
+    editSlider.exec();
+    ui->horizontalSliderTint->setValue( editSlider.getValue() );
+}
+
+//DoubleClick on Saturation Label
+void MainWindow::on_label_SaturationVal_doubleClicked()
+{
+    EditSliderValueDialog editSlider;
+    editSlider.ui->doubleSpinBox->setMinimum( 0.0 );
+    editSlider.ui->doubleSpinBox->setMaximum( 3.6 );
+    editSlider.ui->doubleSpinBox->setDecimals( 2 );
+    editSlider.ui->doubleSpinBox->setSingleStep( 0.01 );
+    editSlider.ui->doubleSpinBox->setValue( ui->label_SaturationVal->text().toDouble() );
+    editSlider.ui->doubleSpinBox->selectAll();
+    QPoint pos;
+    pos.setX(0);
+    pos.setY(0);
+    pos = ui->label_SaturationVal->mapToGlobal( pos );
+    editSlider.setGeometry( pos.x(), pos.y(), 0, 0 );
+    editSlider.exec();
+    ui->horizontalSliderSaturation->setValue( pow( editSlider.ui->doubleSpinBox->value(), log( 2.0 )/log( 3.6 ) ) * 100.0 / 2.0 );
+}
+
+//DoubleClick on Dr Label
+void MainWindow::on_label_DrVal_doubleClicked()
+{
+    EditSliderValueDialog editSlider;
+    editSlider.autoSetup( ui->horizontalSliderDR, ui->label_DrVal, 0.01, 2, 100.0 );
+    editSlider.exec();
+    ui->horizontalSliderDR->setValue( editSlider.getValue() );
+}
+
+//DoubleClick on Ds Label
+void MainWindow::on_label_DsVal_doubleClicked()
+{
+    EditSliderValueDialog editSlider;
+    editSlider.autoSetup( ui->horizontalSliderDS, ui->label_DsVal, 0.1, 1, 10.0 );
+    editSlider.exec();
+    ui->horizontalSliderDS->setValue( editSlider.getValue() );
+}
+
+//DoubleClick on Lr Label
+void MainWindow::on_label_LrVal_doubleClicked()
+{
+    EditSliderValueDialog editSlider;
+    editSlider.autoSetup( ui->horizontalSliderLR, ui->label_LrVal, 0.01, 2, 100.0 );
+    editSlider.exec();
+    ui->horizontalSliderLR->setValue( editSlider.getValue() );
+}
+
+//DoubleClick on Ls Label
+void MainWindow::on_label_LsVal_doubleClicked()
+{
+    EditSliderValueDialog editSlider;
+    editSlider.autoSetup( ui->horizontalSliderLS, ui->label_LsVal, 0.1, 1, 10.0 );
+    editSlider.exec();
+    ui->horizontalSliderLS->setValue( editSlider.getValue() );
+}
+
+//DoubleClick on Lighten Label
+void MainWindow::on_label_LightenVal_doubleClicked()
+{
+    EditSliderValueDialog editSlider;
+    editSlider.autoSetup( ui->horizontalSliderLighten, ui->label_LightenVal, 0.01, 2, 100.0 );
+    editSlider.exec();
+    ui->horizontalSliderLighten->setValue( editSlider.getValue() );
+}
+
+//Fullscreen Mode
+void MainWindow::on_actionFullscreen_triggered( bool checked )
+{
+    if( checked )
+    {
+        ui->frame->setWindowFlags( Qt::Dialog );
+        ui->frame->showFullScreen();
+    }
+    else
+    {
+        ui->frame->setWindowFlags( Qt::Widget );
+        ui->frame->showNormal();
+    }
+    qApp->processEvents();
+    m_frameChanged = true;
 }

@@ -79,7 +79,22 @@ private slots:
     void on_dockWidgetSession_visibilityChanged(bool visible);
     void on_dockWidgetEdit_visibilityChanged(bool visible);
     void on_listWidgetSession_customContextMenuRequested(const QPoint &pos);
-    void deleteFileFromSession( void ); //TODO
+    void deleteFileFromSession( void );
+    void rightClickShowFile( void );
+    void selectAllFiles( void );
+    void on_frame_customContextMenuRequested(const QPoint &pos);
+    void on_labelHistogram_customContextMenuRequested(const QPoint &pos);
+    void on_label_ExposureVal_doubleClicked( void );
+    void on_label_TemperatureVal_doubleClicked( void );
+    void on_label_TintVal_doubleClicked( void );
+    void on_label_SaturationVal_doubleClicked( void );
+    void on_label_DrVal_doubleClicked( void );
+    void on_label_DsVal_doubleClicked( void );
+    void on_label_LrVal_doubleClicked( void );
+    void on_label_LsVal_doubleClicked( void );
+    void on_label_LightenVal_doubleClicked( void );
+
+    void on_actionFullscreen_triggered(bool checked);
 
 private:
     Ui::MainWindow *ui;
@@ -124,6 +139,7 @@ private:
     bool isFileInSession( QString fileName );
     void setSliders( ReceiptSettings *sliders );
     void setReceipt( ReceiptSettings *sliders );
+    void showFileInEditor( int row );
 };
 
 class RenderPngTask : public QRunnable
