@@ -37,7 +37,7 @@ void EditSliderValueDialog::autoSetup(QSlider *slider, DoubleClickLabel *label, 
     pos.setX(0);
     pos.setY(0);
     pos = label->mapToGlobal( pos );
-    setGeometry( pos.x(), pos.y(), 0, 0 );
+    setGeometry( pos.x(), pos.y(), 80, 20 );
 }
 
 //Get the value of the spinbox multimlied with factor

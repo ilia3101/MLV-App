@@ -428,9 +428,8 @@ void MainWindow::initGui( void )
     m_pHistogram = new Histogram();
     ui->actionShowHistogram->setChecked( true );
     m_pWaveFormMonitor = new WaveFormMonitor( 200 );
-#ifndef WIN32
+    //Fullscreen does not work will, so disable
     ui->actionFullscreen->setVisible( false );
-#endif
     //Dont show the Faithful combobox
     ui->comboBox->setVisible( false );
     //Disable unused (for now) actions
