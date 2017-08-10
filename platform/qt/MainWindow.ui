@@ -1297,7 +1297,7 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Always Use AMaZE</string>
+    <string>Use AMaZE for preview</string>
    </property>
   </action>
   <action name="actionExportSettings">

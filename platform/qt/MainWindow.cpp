@@ -1615,6 +1615,8 @@ void RenderPngTask::run()
     png_bytep buffer;
     buffer = (png_bytep)malloc( PNG_IMAGE_SIZE( image ) );
 
+    //Only use one CPU here, to avoid errors
+    setMlvCpuCores( m_pMlvObject, 1 );
     //Get frame from library
     getMlvProcessedFrame16( m_pMlvObject, m_frame, (uint16_t*)buffer );
 
