@@ -365,6 +365,10 @@ void MainWindow::openMlv( QString fileName )
     //Load WaveFormMonitor
     m_pWaveFormMonitor = new WaveFormMonitor( getMlvWidth( m_pMlvObject ) );
 
+    //Always use amaze?
+    if( ui->actionAlwaysUseAMaZE->isChecked() ) setMlvAlwaysUseAmaze( m_pMlvObject );
+    else setMlvDontAlwaysUseAmaze( m_pMlvObject );
+
     m_fileLoaded = true;
 
     //enable drawing
