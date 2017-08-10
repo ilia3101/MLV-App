@@ -93,8 +93,8 @@ private slots:
     void on_label_LrVal_doubleClicked( void );
     void on_label_LsVal_doubleClicked( void );
     void on_label_LightenVal_doubleClicked( void );
-
     void on_actionFullscreen_triggered(bool checked);
+    void exportHandler( void );
 
 private:
     Ui::MainWindow *ui;
@@ -119,10 +119,10 @@ private:
     int m_timerId;
     int m_timerCacheId;
     QString m_lastSaveFileName;
-    QString m_lastMovFileName;
     QProcess *m_pFFmpeg;
     ReceiptSettings *m_pReceiptClipboard;
     QVector<ReceiptSettings*> m_pSessionReceipts;
+    QVector<ReceiptSettings*> m_exportQueue;
     int m_lastActiveClipInSession;
     void drawFrame( void );
     void openMlv( QString fileName );
@@ -140,12 +140,16 @@ private:
     void setSliders( ReceiptSettings *sliders );
     void setReceipt( ReceiptSettings *sliders );
     void showFileInEditor( int row );
+    void addClipToExportQueue( int row, QString fileName );
+
+signals:
+    void exportReady( void );
 };
 
 class RenderPngTask : public QRunnable
 {
 public:
-    RenderPngTask( mlvObject_t *pMlvObject, QString fileName, int frame = 0 )
+    RenderPngTask( mlvObject_t *pMlvObject, QString fileName, uint32_t frame = 0 )
     {
         m_frame = frame;
         m_pMlvObject = pMlvObject;
@@ -154,7 +158,7 @@ public:
 private:
     void run();
 
-    int m_frame;
+    uint32_t m_frame;
     QString m_fileName;
     mlvObject_t *m_pMlvObject;
 };

@@ -55,6 +55,8 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     m_pFFmpeg = new QProcess( this );
     connect( m_pFFmpeg, SIGNAL(finished(int)), this, SLOT(endExport()) );
     connect( m_pFFmpeg, SIGNAL(readyReadStandardError()), this, SLOT(readFFmpegOutput()) );
+    //Connect Export Handler
+    connect( this, SIGNAL(exportReady()), this, SLOT(exportHandler()) );
 
     //"Open with" for Windows or scripts
     if( argc > 1 )
@@ -282,6 +284,9 @@ void MainWindow::drawFrame( void )
 //Open MLV Dialog
 void MainWindow::on_actionOpen_triggered()
 {
+    //Stop playback if active
+    ui->actionPlay->setChecked( false );
+
     //Open File Dialog
     QString fileName = QFileDialog::getOpenFileName( this, tr("Open MLV..."),
                                                     m_lastSaveFileName.left( m_lastSaveFileName.lastIndexOf( "/" ) ),
@@ -468,6 +473,9 @@ void MainWindow::initGui( void )
 
     //Init session settings
     m_pSessionReceipts.clear();
+
+    //Init export Queue
+    m_exportQueue.clear();
 }
 
 //Initialize the library
@@ -549,16 +557,10 @@ void MainWindow::writeSettings()
 //Start exporting a MOV via PNG48
 void MainWindow::startExport(QString fileName)
 {
-    //Save slider receipt
-    setReceipt( m_pSessionReceipts.at( m_lastActiveClipInSession ) );
-
     //Delete file if exists
     QFile *file = new QFile( fileName );
     if( file->exists() ) file->remove();
     delete file;
-
-    //Save the fileName for endExport()
-    m_lastMovFileName = fileName;
 
     //Disable GUI drawing
     m_dontDraw = true;
@@ -574,6 +576,7 @@ void MainWindow::startExport(QString fileName)
     //Create temp pngs
     gPngThreadsTodo = getMlvFrames( m_pMlvObject );
     QThreadPool *threadPool = new QThreadPool( this );
+    //threadPool->setMaxThreadCount( 1 );
     for( uint32_t i = 0; i < getMlvFrames( m_pMlvObject ); i++ )
     {
         //Append frame number
@@ -604,9 +607,6 @@ void MainWindow::startExport(QString fileName)
 
     //If we don't like amaze we switch it off again
     if( !ui->actionAlwaysUseAMaZE->isChecked() ) setMlvDontAlwaysUseAmaze( m_pMlvObject );
-
-    //Enable GUI drawing
-    m_dontDraw = false;
 
     QString numberedFileName = fileName.left( fileName.lastIndexOf( "." ) );
     QString output = numberedFileName;
@@ -642,6 +642,7 @@ void MainWindow::addFileToSession(QString fileName)
     ui->listWidgetSession->addItem( item );
     //Set sliders
     ReceiptSettings *sliders = new ReceiptSettings(); //default
+    sliders->setFileName( fileName );
     m_pSessionReceipts.append( sliders );
     //Save index of active clip
     m_lastActiveClipInSession = ui->listWidgetSession->row( item );
@@ -688,6 +689,7 @@ void MainWindow::openSession(QString fileName)
                         addFileToSession( fileName );
                         //Open the file
                         openMlv( fileName );
+                        m_pSessionReceipts.last()->setFileName( fileName );
 
                         while( !Rxml.atEnd() && !Rxml.isEndElement() )
                         {
@@ -934,6 +936,26 @@ void MainWindow::showFileInEditor( int row )
     qDebug() << "m_lastActiveClipInSession" << m_lastActiveClipInSession;
 }
 
+//Add the clip in SessionList position "row" at last position in ExportQueue
+void MainWindow::addClipToExportQueue(int row, QString fileName)
+{
+    ReceiptSettings *receipt = new ReceiptSettings();
+    receipt->setExposure( m_pSessionReceipts.at( row )->exposure() );
+    receipt->setTemperature( m_pSessionReceipts.at( row )->temperature() );
+    receipt->setTint( m_pSessionReceipts.at( row )->tint() );
+    receipt->setSaturation( m_pSessionReceipts.at( row )->saturation() );
+    receipt->setDr( m_pSessionReceipts.at( row )->dr() );
+    receipt->setDs( m_pSessionReceipts.at( row )->ds() );
+    receipt->setLr( m_pSessionReceipts.at( row )->lr() );
+    receipt->setLs( m_pSessionReceipts.at( row )->ls() );
+    receipt->setLightening( m_pSessionReceipts.at( row )->lightening() );
+    receipt->setHighlightReconstruction( m_pSessionReceipts.at( row )->isHighlightReconstruction() );
+    receipt->setReinhardTonemapping( m_pSessionReceipts.at( row )->isReinhardTonemapping() );
+    receipt->setFileName( m_pSessionReceipts.at( row )->fileName() );
+    receipt->setExportFileName( fileName );
+    m_exportQueue.append( receipt );
+}
+
 //Edit progressbar from FFmpeg output
 void MainWindow::readFFmpegOutput( void )
 {
@@ -958,7 +980,7 @@ void MainWindow::endExport( void )
     for( uint32_t i = 0; i < getMlvFrames( m_pMlvObject ); i++ )
     {
         //Append frame number
-        QString numberedFileName = m_lastMovFileName.left( m_lastMovFileName.lastIndexOf( "." ) );
+        QString numberedFileName = m_exportQueue.first()->exportFileName().left( m_exportQueue.first()->exportFileName().lastIndexOf( "." ) );
         numberedFileName.append( QString( "_%1" ).arg( (uint)i, 5, 10, QChar( '0' ) ) );
         numberedFileName.append( QString( ".png" ) );
 
@@ -968,8 +990,8 @@ void MainWindow::endExport( void )
         delete file;
     }
 
-    //Hide Status Dialog
-    m_pStatusDialog->hide();
+    //Emit Ready-Signal
+    emit exportReady();
 }
 
 //About Window
@@ -1089,19 +1111,59 @@ void MainWindow::on_actionExport_triggered()
     //Stop playback if active
     ui->actionPlay->setChecked( false );
 
+    //Save slider receipt
+    setReceipt( m_pSessionReceipts.at( m_lastActiveClipInSession ) );
+
     QString saveFileName = m_lastSaveFileName.left( m_lastSaveFileName.lastIndexOf( "." ) );
     saveFileName.append( ".mov" );
 
-    //File Dialog
-    QString fileName = QFileDialog::getSaveFileName( this, tr("Export..."),
-                                                    saveFileName,
-                                                    tr("Movie (*.mov)") );
+    //If one file is selected
+    if( ui->listWidgetSession->selectedItems().count() <= 1 )
+    {
+        //File Dialog
+        QString fileName = QFileDialog::getSaveFileName( this, tr("Export..."),
+                                                        saveFileName,
+                                                        tr("Movie (*.mov)") );
 
-    //Exit if not an MOV file or aborted
-    if( fileName == QString( "" )
-            && ( !fileName.endsWith( ".mov", Qt::CaseInsensitive ) ) ) return;
+        //Exit if not an MOV file or aborted
+        if( fileName == QString( "" )
+                && ( !fileName.endsWith( ".mov", Qt::CaseInsensitive ) ) ) return;
 
-    startExport( fileName );
+        //Get receipt into queue
+        addClipToExportQueue( m_lastActiveClipInSession, fileName );
+    }
+    //if multiple files selected
+    else
+    {
+        qDebug() << "!Multiple Export!";
+        //Folder Dialog
+        QString folderName = QFileDialog::getExistingDirectory(this, tr("Chose Export Folder"),
+                                                          QFileInfo( saveFileName ).absolutePath(),
+                                                          QFileDialog::ShowDirsOnly
+                                                          | QFileDialog::DontResolveSymlinks);
+
+        if( folderName.length() == 0 ) return;
+
+        //for all selected
+        for( int row = 0; row < ui->listWidgetSession->count(); row++ )
+        {
+            if( !ui->listWidgetSession->item( row )->isSelected() ) continue;
+
+            //Create Path+Name
+            QString fileName = ui->listWidgetSession->item( row )->text().replace( ".mlv", ".mov", Qt::CaseInsensitive );
+            fileName.prepend( "/" );
+            fileName.prepend( folderName );
+
+            //Get receipt into queue
+            addClipToExportQueue( row, fileName );
+        }
+    }
+    //Block GUI
+    setEnabled( false );
+    m_pStatusDialog->setEnabled( true );
+
+    //startExport
+    exportHandler();
 }
 
 //Enable / Disable the highlight reconstruction
@@ -1177,6 +1239,9 @@ void MainWindow::on_actionAlwaysUseAMaZE_triggered(bool checked)
 //Select the codec
 void MainWindow::on_actionExportSettings_triggered()
 {
+    //Stop playback if active
+    ui->actionPlay->setChecked( false );
+
     ExportSettingsDialog *pExportSettings = new ExportSettingsDialog( this, m_codecProfile );
     pExportSettings->exec();
     m_codecProfile = pExportSettings->getEncoderSetting();
@@ -1216,6 +1281,9 @@ void MainWindow::on_actionNewSession_triggered()
 //Open Session
 void MainWindow::on_actionOpenSession_triggered()
 {
+    //Stop playback if active
+    ui->actionPlay->setChecked( false );
+
     QString path = QFileInfo( m_lastSaveFileName ).absolutePath();
     QString fileName = QFileDialog::getOpenFileName(this,
                                            tr("Open MLV App Session Xml"), path,
@@ -1227,36 +1295,15 @@ void MainWindow::on_actionOpenSession_triggered()
 //Save Session
 void MainWindow::on_actionSaveSession_triggered()
 {
+    //Stop playback if active
+    ui->actionPlay->setChecked( false );
+
     QString path = QFileInfo( m_lastSaveFileName ).absolutePath();
     QString fileName = QFileDialog::getSaveFileName(this,
                                            tr("Save MLV App Session Xml"), path,
                                            tr("MLV App Session Xml files (*.masxml)"));
 
     saveSession( fileName );
-}
-
-//Export a 16bit png frame in a task
-void RenderPngTask::run()
-{
-    png_image image;
-    memset( &image, 0, sizeof image );
-    image.version = PNG_IMAGE_VERSION;
-    image.format = PNG_FORMAT_LINEAR_RGB;
-    image.width = getMlvWidth( m_pMlvObject );
-    image.height = getMlvHeight( m_pMlvObject );
-    png_bytep buffer;
-    buffer = (png_bytep)malloc( PNG_IMAGE_SIZE( image ) );
-
-    //Get frame from library
-    getMlvProcessedFrame16( m_pMlvObject, m_frame, (uint16_t*)buffer );
-
-    png_image_write_to_file( &image, m_fileName.toLatin1().data(), 0, buffer, 0, NULL );
-    free( buffer );
-    png_image_free( &image );
-
-    gMutex.lock();
-    gPngThreadsTodo--;
-    gMutex.unlock();
 }
 
 //FileName in SessionList doubleClicked
@@ -1425,7 +1472,7 @@ void MainWindow::on_label_SaturationVal_doubleClicked()
     pos.setX(0);
     pos.setY(0);
     pos = ui->label_SaturationVal->mapToGlobal( pos );
-    editSlider.setGeometry( pos.x(), pos.y(), 0, 0 );
+    editSlider.setGeometry( pos.x(), pos.y(), 80, 20 );
     editSlider.exec();
     ui->horizontalSliderSaturation->setValue( pow( editSlider.ui->doubleSpinBox->value(), log( 2.0 )/log( 3.6 ) ) * 100.0 / 2.0 );
 }
@@ -1490,4 +1537,92 @@ void MainWindow::on_actionFullscreen_triggered( bool checked )
     }
     qApp->processEvents();
     m_frameChanged = true;
+}
+
+//Handles all export tasks, for batch export
+//Must be called on export start
+//Gets called when one export is ready
+void MainWindow::exportHandler( void )
+{
+    static bool exportRunning = false;
+    static int numberOfJobs = 1;
+    static int jobNumber = 0;
+    //Was started?
+    if( exportRunning )
+    {
+        //Cut first job!
+        if( !m_exportQueue.empty() ) //Only to avoid crashes
+        {
+            ReceiptSettings *receipt = m_exportQueue.takeFirst();
+            delete receipt;
+        }
+    }
+    else
+    {
+        //If not running save number of jobs
+        numberOfJobs = m_exportQueue.count();
+        jobNumber = 0;
+    }
+    //Are there jobs?
+    if( !m_exportQueue.empty() )
+    {
+        //Next job!
+        exportRunning = true;
+        jobNumber++;
+        //Open file and settings
+        openMlv( m_exportQueue.first()->fileName() );
+        //Set sliders to receipt
+        setSliders( m_exportQueue.first() );
+        qApp->processEvents();
+        //Fill label in StatusDialog
+        m_pStatusDialog->ui->label->setText( tr( "%1/%2 - %3" )
+                                             .arg( jobNumber )
+                                             .arg( numberOfJobs )
+                                             .arg( QFileInfo( m_exportQueue.first()->fileName() ).fileName() ) );
+
+        //Start it
+        startExport( m_exportQueue.first()->exportFileName() );
+        return;
+    }
+    //Else if all planned exports are ready
+    else
+    {
+        //Hide Status Dialog
+        m_pStatusDialog->hide();
+        //Enable GUI drawing
+        m_dontDraw = false;
+        //Open last file which was opened before export
+        openMlv( m_pSessionReceipts.at( m_lastActiveClipInSession )->fileName() );
+        setSliders( m_pSessionReceipts.at( m_lastActiveClipInSession ) );
+        //Unblock GUI
+        setEnabled( true );
+        //Export is ready
+        exportRunning = false;
+
+        QMessageBox::information( this, tr( "Export" ), tr( "Export is ready." ) );
+    }
+}
+
+//Export a 16bit png frame in a task
+void RenderPngTask::run()
+{
+    png_image image;
+    memset( &image, 0, sizeof image );
+    image.version = PNG_IMAGE_VERSION;
+    image.format = PNG_FORMAT_LINEAR_RGB;
+    image.width = getMlvWidth( m_pMlvObject );
+    image.height = getMlvHeight( m_pMlvObject );
+    png_bytep buffer;
+    buffer = (png_bytep)malloc( PNG_IMAGE_SIZE( image ) );
+
+    //Get frame from library
+    getMlvProcessedFrame16( m_pMlvObject, m_frame, (uint16_t*)buffer );
+
+    png_image_write_to_file( &image, m_fileName.toLatin1().data(), 0, buffer, 0, NULL );
+    free( buffer );
+    png_image_free( &image );
+
+    gMutex.lock();
+    gPngThreadsTodo--;
+    gMutex.unlock();
 }

@@ -1108,7 +1108,7 @@
     <string>Import MLV</string>
    </property>
    <property name="toolTip">
-    <string>Import a MLV file...</string>
+    <string>Import a MLV file to the session...</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+I</string>
@@ -1163,10 +1163,10 @@
      <normaloff>:/RetinaIMG/RetinaIMG/Export-To-File-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Export-To-File-icon.png</iconset>
    </property>
    <property name="text">
-    <string>Export...</string>
+    <string>Export selected clips</string>
    </property>
    <property name="toolTip">
-    <string>Export file...</string>
+    <string>Export selected clips</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+E</string>

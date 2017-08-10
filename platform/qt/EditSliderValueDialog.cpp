@@ -13,7 +13,11 @@ EditSliderValueDialog::EditSliderValueDialog(QWidget *parent) :
     ui(new Ui::EditSliderValueDialog)
 {
     ui->setupUi(this);
+#ifdef WIN32
+    setWindowFlags( Qt::Dialog | Qt::WindowCloseButtonHint | Qt::CustomizeWindowHint );
+#else
     setWindowFlags( Qt::Tool | Qt::WindowCloseButtonHint | Qt::CustomizeWindowHint );
+#endif
     m_factor = 1.0;
 }
 
