@@ -23,9 +23,10 @@
 #include "ExportSettingsDialog.h"
 #include "EditSliderValueDialog.h"
 
-#define VERSION "0.4 alpha"
+#define VERSION "0.5 alpha"
 
 QMutex gMutex;
+QMutex gMutexPng16;
 uint32_t gPngThreadsTodo = 0;
 
 //Constructor
@@ -611,6 +612,9 @@ void MainWindow::startExport(QString fileName)
 
     //If we don't like amaze we switch it off again
     if( !ui->actionAlwaysUseAMaZE->isChecked() ) setMlvDontAlwaysUseAmaze( m_pMlvObject );
+
+    //Enable GUI drawing
+    m_dontDraw = false;
 
     QString numberedFileName = fileName.left( fileName.lastIndexOf( "." ) );
     QString output = numberedFileName;
@@ -1577,7 +1581,6 @@ void MainWindow::exportHandler( void )
         openMlv( m_exportQueue.first()->fileName() );
         //Set sliders to receipt
         setSliders( m_exportQueue.first() );
-        qApp->processEvents();
         //Fill label in StatusDialog
         m_pStatusDialog->ui->label->setText( tr( "%1/%2 - %3" )
                                              .arg( jobNumber )
@@ -1593,8 +1596,6 @@ void MainWindow::exportHandler( void )
     {
         //Hide Status Dialog
         m_pStatusDialog->hide();
-        //Enable GUI drawing
-        m_dontDraw = false;
         //Open last file which was opened before export
         openMlv( m_pSessionReceipts.at( m_lastActiveClipInSession )->fileName() );
         setSliders( m_pSessionReceipts.at( m_lastActiveClipInSession ) );
@@ -1619,10 +1620,10 @@ void RenderPngTask::run()
     png_bytep buffer;
     buffer = (png_bytep)malloc( PNG_IMAGE_SIZE( image ) );
 
-    //Only use one CPU here, to avoid errors
-    setMlvCpuCores( m_pMlvObject, 1 );
     //Get frame from library
+    gMutexPng16.lock();
     getMlvProcessedFrame16( m_pMlvObject, m_frame, (uint16_t*)buffer );
+    gMutexPng16.unlock();
 
     png_image_write_to_file( &image, m_fileName.toLatin1().data(), 0, buffer, 0, NULL );
     free( buffer );
