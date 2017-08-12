@@ -87,8 +87,6 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
         else if( QFile(fileName).exists() && fileName.endsWith( ".masxml", Qt::CaseInsensitive ) )
         {
             openSession( fileName );
-            //Save last file name
-            m_lastSaveFileName = fileName;
         }
     }
 }
@@ -214,8 +212,6 @@ bool MainWindow::event(QEvent *event)
         else if( QFile(fileName).exists() && fileName.endsWith( ".masxml", Qt::CaseInsensitive ) )
         {
             openSession( fileName );
-            //Save last file name
-            m_lastSaveFileName = fileName;
         }
         else return false;
     }
@@ -289,29 +285,36 @@ void MainWindow::on_actionOpen_triggered()
     ui->actionPlay->setChecked( false );
 
     //Open File Dialog
-    QString fileName = QFileDialog::getOpenFileName( this, tr("Open MLV..."),
+    QStringList files = QFileDialog::getOpenFileNames( this, tr("Open one or more MLV..."),
                                                     m_lastSaveFileName.left( m_lastSaveFileName.lastIndexOf( "/" ) ),
                                                     tr("Magic Lantern Video (*.mlv)") );
 
-    //Exit if not an MLV file or aborted
-    if( fileName == QString( "" ) && !fileName.endsWith( ".mlv", Qt::CaseInsensitive ) ) return;
+    if( files.empty() ) return;
 
-    //File is already opened? Error!
-    if( isFileInSession( fileName ) )
+    for( int i = 0; i < files.count(); i++ )
     {
-        QMessageBox::information( this, tr( "Import MLV" ), tr( "File is already opened in session!" ) );
-        return;
+        QString fileName = files.at(i);
+
+        //Exit if not an MLV file or aborted
+        if( fileName == QString( "" ) && !fileName.endsWith( ".mlv", Qt::CaseInsensitive ) ) continue;
+
+        //File is already opened? Error!
+        if( isFileInSession( fileName ) )
+        {
+            QMessageBox::information( this, tr( "Import MLV" ), tr( "File %1 is already opened in session!" ).arg( fileName ) );
+            continue;
+        }
+
+        //Save last file name
+        m_lastSaveFileName = fileName;
+
+        //Add file to Sessionlist
+        addFileToSession( fileName );
+
+        //Open the file
+        openMlv( fileName );
+        on_actionResetReceipt_triggered();
     }
-
-    //Save last file name
-    m_lastSaveFileName = fileName;
-
-    //Add file to Sessionlist
-    addFileToSession( fileName );
-
-    //Open the file
-    openMlv( fileName );
-    on_actionResetReceipt_triggered();
 }
 
 //Open MLV procedure
