@@ -1125,7 +1125,9 @@ void MainWindow::on_actionExport_triggered()
     //Save slider receipt
     setReceipt( m_pSessionReceipts.at( m_lastActiveClipInSession ) );
 
-    QString saveFileName = m_lastSaveFileName.left( m_lastSaveFileName.lastIndexOf( "." ) );
+    //Filename proposal in dependency to actual file
+    QString saveFileName = m_pSessionReceipts.at( m_lastActiveClipInSession )->fileName();
+    saveFileName = saveFileName.left( m_lastSaveFileName.lastIndexOf( "." ) );
     saveFileName.append( ".mov" );
 
     //If one file is selected
