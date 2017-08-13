@@ -6,6 +6,7 @@
  */
 
 #include "Histogram.h"
+#include "math.h"
 
 //Constructor
 Histogram::Histogram()
@@ -40,6 +41,11 @@ QImage Histogram::getHistogramFromImg( QImage *img )
     uint32_t highestVal = 0;
     for( uint16_t x = 0; x <= 255; x++ )
     {
+        //We scale something in between linear and log
+        if( tableR[x] ) tableR[x] = 100.0 * log( tableR[x] ) + tableR[x] / 10.0;
+        if( tableG[x] ) tableG[x] = 100.0 * log( tableG[x] ) + tableG[x] / 10.0;
+        if( tableB[x] ) tableB[x] = 100.0 * log( tableB[x] ) + tableB[x] / 10.0;
+        //and search the highest value
         if( tableR[x] > highestVal ) highestVal = tableR[x];
         if( tableG[x] > highestVal ) highestVal = tableG[x];
         if( tableB[x] > highestVal ) highestVal = tableB[x];
@@ -85,6 +91,11 @@ QImage Histogram::getHistogramFromRaw(uint8_t *m_pRawImage, uint16_t width, uint
     uint32_t highestVal = 0;
     for( uint16_t x = 0; x <= 255; x++ )
     {
+        //We scale something in between linear and log
+        if( tableR[x] ) tableR[x] = 100.0 * log( tableR[x] ) + tableR[x] / 10.0;
+        if( tableG[x] ) tableG[x] = 100.0 * log( tableG[x] ) + tableG[x] / 10.0;
+        if( tableB[x] ) tableB[x] = 100.0 * log( tableB[x] ) + tableB[x] / 10.0;
+        //and search the highest value
         if( tableR[x] > highestVal ) highestVal = tableR[x];
         if( tableG[x] > highestVal ) highestVal = tableG[x];
         if( tableB[x] > highestVal ) highestVal = tableB[x];
