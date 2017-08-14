@@ -1286,9 +1286,6 @@ void MainWindow::on_actionPasteReceipt_triggered()
 void MainWindow::on_actionNewSession_triggered()
 {
     deleteSession();
-    //open empty mlv
-    //clear info dialog
-    //clear histogram, waveform and picture
 }
 
 //Open Session
@@ -1301,6 +1298,9 @@ void MainWindow::on_actionOpenSession_triggered()
     QString fileName = QFileDialog::getOpenFileName(this,
                                            tr("Open MLV App Session Xml"), path,
                                            tr("MLV App Session Xml files (*.masxml)"));
+
+    //Abort selected
+    if( fileName.count() == 0 ) return;
 
     openSession( fileName );
 }
@@ -1315,6 +1315,9 @@ void MainWindow::on_actionSaveSession_triggered()
     QString fileName = QFileDialog::getSaveFileName(this,
                                            tr("Save MLV App Session Xml"), path,
                                            tr("MLV App Session Xml files (*.masxml)"));
+
+    //Abort selected
+    if( fileName.count() == 0 ) return;
 
     saveSession( fileName );
 }
