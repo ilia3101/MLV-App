@@ -289,7 +289,7 @@ void MainWindow::on_actionOpen_triggered()
     //Open File Dialog
     QStringList files = QFileDialog::getOpenFileNames( this, tr("Open one or more MLV..."),
                                                     m_lastSaveFileName.left( m_lastSaveFileName.lastIndexOf( "/" ) ),
-                                                    tr("Magic Lantern Video (*.mlv)") );
+                                                    tr("Magic Lantern Video (*.mlv *.MLV)") );
 
     if( files.empty() ) return;
 

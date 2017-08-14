@@ -22,11 +22,13 @@ DEFINES += QT_DEPRECATED_WARNINGS
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
-#QMAKE_CFLAGS_RELEASE += -O3 -msse4.1 -mssse3 -msse3 -msse2 -msse
-#QMAKE_CXXFLAGS_RELEASE += -O3 -msse4.1 -mssse3 -msse3 -msse2 -msse
-#win32: QMAKE_CFLAGS_RELEASE += -msse2 -std=c99
+# Windows
+win32: QMAKE_CFLAGS_RELEASE += -msse2 #-std=c99
 
-#linux-g++*: QMAKE_CFLAGS_RELEASE += -msse2 -std=c99
+# Linux
+linux-g++*: QMAKE_CFLAGS_RELEASE += -O3 -msse4.1 -mssse3 -msse3 -msse2 -msse
+linux-g++*: INCLUDEPATH += /usr/local/include/
+linux-g++*: LIBS += -L/usr/local/lib/ -lz -lpng
 
 ##############
 #libpng: unchecking Add build library search path to DYLD_LIBRARY_PATH and DYLD_FRAMEWORK_PATH checkbox in my project Run section!!!
