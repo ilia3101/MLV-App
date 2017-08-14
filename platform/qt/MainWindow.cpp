@@ -82,6 +82,7 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
 
             //Open the file
             openMlv( fileName );
+            previewPicture( ui->listWidgetSession->count() - 1 );
             on_actionResetReceipt_triggered();
         }
         else if( QFile(fileName).exists() && fileName.endsWith( ".masxml", Qt::CaseInsensitive ) )
@@ -206,6 +207,7 @@ bool MainWindow::event(QEvent *event)
                 addFileToSession( fileName );
                 //Open MLV
                 openMlv( fileName );
+                previewPicture( ui->listWidgetSession->count() - 1 );
                 on_actionResetReceipt_triggered();
             }
         }
@@ -313,6 +315,7 @@ void MainWindow::on_actionOpen_triggered()
 
         //Open the file
         openMlv( fileName );
+        previewPicture( ui->listWidgetSession->count() - 1 );
         on_actionResetReceipt_triggered();
     }
 }
@@ -358,6 +361,7 @@ void MainWindow::openMlv( QString fileName )
     m_pInfoDialog->ui->tableWidget->item( 6, 1 )->setText( QString( "%1 µs" ).arg( getMlvShutter( m_pMlvObject ) ) );
     m_pInfoDialog->ui->tableWidget->item( 7, 1 )->setText( QString( "f %1" ).arg( getMlvAperture( m_pMlvObject ) / 100.0, 0, 'f', 1 ) );
     m_pInfoDialog->ui->tableWidget->item( 8, 1 )->setText( QString( "%1" ).arg( (int)getMlvIso( m_pMlvObject ) ) );
+    m_pInfoDialog->ui->tableWidget->item( 9, 1 )->setText( QString( "%1 bits" ).arg( getMlvBitdepth( m_pMlvObject ) ) );
 
     //Adapt slider to clip and move to position 0
     ui->horizontalSliderPosition->setValue( 0 );
@@ -542,6 +546,7 @@ void MainWindow::readSettings()
     }
     m_lastSaveFileName = set.value( "lastFileName", QString( "/Users/" ) ).toString();
     m_codecProfile = set.value( "codecProfile", 4 ).toUInt();
+    m_previewMode = set.value( "previewMode", 1 ).toUInt();
 }
 
 //Save some settings to registry
@@ -560,6 +565,7 @@ void MainWindow::writeSettings()
     set.setValue( "zoomModeFit", ui->actionZoomFit->isChecked() );
     set.setValue( "lastFileName", m_lastSaveFileName );
     set.setValue( "codecProfile", m_codecProfile );
+    set.setValue( "previewMode", m_previewMode );
 }
 
 //Start exporting a MOV via PNG48
@@ -701,6 +707,7 @@ void MainWindow::openSession(QString fileName)
                         //Open the file
                         openMlv( fileName );
                         m_pSessionReceipts.last()->setFileName( fileName );
+                        previewPicture( ui->listWidgetSession->count() - 1 );
 
                         while( !Rxml.atEnd() && !Rxml.isEndElement() )
                         {
@@ -880,6 +887,7 @@ void MainWindow::deleteSession()
     m_pInfoDialog->ui->tableWidget->item( 6, 1 )->setText( "-" );
     m_pInfoDialog->ui->tableWidget->item( 7, 1 )->setText( "-" );
     m_pInfoDialog->ui->tableWidget->item( 8, 1 )->setText( "-" );
+    m_pInfoDialog->ui->tableWidget->item( 9, 1 )->setText( "-" );
 
     //Adapt slider to clip and move to position 0
     ui->horizontalSliderPosition->setValue( 0 );
@@ -965,6 +973,40 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     receipt->setFileName( m_pSessionReceipts.at( row )->fileName() );
     receipt->setExportFileName( fileName );
     m_exportQueue.append( receipt );
+}
+
+//Handles preview pictures - make sure that right clip for row is loaded before!
+void MainWindow::previewPicture( int row )
+{
+    //Get frame from library
+    getMlvProcessedFrame8( m_pMlvObject, getMlvFrames( m_pMlvObject ) / 2, m_pRawImage );
+
+    //Display in SessionList
+    ui->listWidgetSession->item( row )->setIcon( QIcon( QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
+                                                                            .scaled( getMlvWidth(m_pMlvObject) / 10.0,
+                                                                                     getMlvHeight(m_pMlvObject) / 10.0,
+                                                                                     Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation) ) ) );
+    setPreviewMode();
+}
+
+//Sets the preview mode
+void MainWindow::setPreviewMode( void )
+{
+    if( m_previewMode == 1 )
+    {
+        ui->listWidgetSession->setViewMode( QListView::ListMode );
+        ui->listWidgetSession->setIconSize( QSize( 50, 30 ) );
+    }
+    else if( m_previewMode == 2 )
+    {
+        ui->listWidgetSession->setViewMode( QListView::IconMode );
+        ui->listWidgetSession->setIconSize( QSize( ui->listWidgetSession->width()-30, 100 ) );
+    }
+    else
+    {
+        ui->listWidgetSession->setViewMode( QListView::ListMode );
+        ui->listWidgetSession->setIconSize( QSize( 0, 0 ) );
+    }
 }
 
 //Edit progressbar from FFmpeg output
@@ -1255,10 +1297,13 @@ void MainWindow::on_actionExportSettings_triggered()
     //Stop playback if active
     ui->actionPlay->setChecked( false );
 
-    ExportSettingsDialog *pExportSettings = new ExportSettingsDialog( this, m_codecProfile );
+    ExportSettingsDialog *pExportSettings = new ExportSettingsDialog( this, m_codecProfile, m_previewMode );
     pExportSettings->exec();
-    m_codecProfile = pExportSettings->getEncoderSetting();
+    m_codecProfile = pExportSettings->encoderSetting();
+    m_previewMode = pExportSettings->previewMode();
     delete pExportSettings;
+
+    setPreviewMode();
 }
 
 //Reset the edit sliders to default

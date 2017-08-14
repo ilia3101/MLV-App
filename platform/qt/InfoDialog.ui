@@ -71,12 +71,17 @@
      </row>
      <row>
       <property name="text">
-       <string>Neue Zeile</string>
+       <string>8</string>
       </property>
      </row>
      <row>
       <property name="text">
        <string>9</string>
+      </property>
+     </row>
+     <row>
+      <property name="text">
+       <string>10</string>
       </property>
      </row>
      <column>
@@ -175,6 +180,16 @@
       </property>
      </item>
      <item row="8" column="1">
+      <property name="text">
+       <string>-</string>
+      </property>
+     </item>
+     <item row="9" column="0">
+      <property name="text">
+       <string>Bit Depth</string>
+      </property>
+     </item>
+     <item row="9" column="1">
       <property name="text">
        <string>-</string>
       </property>

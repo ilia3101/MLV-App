@@ -19,10 +19,11 @@ class ExportSettingsDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit ExportSettingsDialog(QWidget *parent = 0, uint8_t currentCodecProfile = 0);
+    explicit ExportSettingsDialog(QWidget *parent = 0, uint8_t currentCodecProfile = 0, uint8_t previewMode = 0);
     ~ExportSettingsDialog();
-    uint8_t getEncoderSetting(void);
-    bool getExportAudio(void);
+    uint8_t encoderSetting(void);
+    bool isExportAudioEnabled(void);
+    uint8_t previewMode(void);
 
 private:
     Ui::ExportSettingsDialog *ui;

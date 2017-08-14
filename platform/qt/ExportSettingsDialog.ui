@@ -6,15 +6,116 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>303</width>
-    <height>115</height>
+    <width>381</width>
+    <height>244</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Export Settings</string>
+   <string>Preferences</string>
   </property>
-  <layout class="QGridLayout" name="gridLayout">
-   <item row="2" column="0">
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QGroupBox" name="groupBox">
+     <property name="title">
+      <string>File Export</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_2">
+      <item row="0" column="0">
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        <item>
+         <widget class="QLabel" name="label">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Codec</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="comboBoxCodec">
+          <item>
+           <property name="text">
+            <string>Apple ProRes 422 Proxy</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Apple ProRes 422 LT</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Apple ProRes 422</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Apple ProRes 422 HQ</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Apple ProRes 4444</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="1" column="0">
+       <widget class="QCheckBox" name="checkBoxExportAudio">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="text">
+         <string>Export audio</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBox_2">
+     <property name="title">
+      <string>Preview Pictures</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="0" column="0">
+       <widget class="QRadioButton" name="radioButtonPreviewDisabled">
+        <property name="text">
+         <string>Disabled</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QRadioButton" name="radioButtonPreviewList">
+        <property name="text">
+         <string>List mode</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QRadioButton" name="radioButtonPreviewIcon">
+        <property name="text">
+         <string>Picture mode</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
     <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
       <spacer name="horizontalSpacer">
@@ -37,65 +138,6 @@
       </widget>
      </item>
     </layout>
-   </item>
-   <item row="0" column="0">
-    <layout class="QHBoxLayout" name="horizontalLayout">
-     <item>
-      <widget class="QLabel" name="label">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="text">
-        <string>Codec</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QComboBox" name="comboBoxCodec">
-       <item>
-        <property name="text">
-         <string>Apple ProRes 422 Proxy</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Apple ProRes 422 LT</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Apple ProRes 422</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Apple ProRes 422 HQ</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Apple ProRes 4444</string>
-        </property>
-       </item>
-      </widget>
-     </item>
-    </layout>
-   </item>
-   <item row="1" column="0">
-    <widget class="QCheckBox" name="checkBoxExportAudio">
-     <property name="enabled">
-      <bool>false</bool>
-     </property>
-     <property name="text">
-      <string>Export audio</string>
-     </property>
-     <property name="checked">
-      <bool>true</bool>
-     </property>
-    </widget>
    </item>
   </layout>
  </widget>

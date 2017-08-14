@@ -1043,13 +1043,13 @@
    </property>
    <property name="minimumSize">
     <size>
-     <width>150</width>
+     <width>170</width>
      <height>166</height>
     </size>
    </property>
    <property name="maximumSize">
     <size>
-     <width>150</width>
+     <width>170</width>
      <height>524287</height>
     </size>
    </property>
@@ -1083,6 +1083,9 @@
       <widget class="QListWidget" name="listWidgetSession">
        <property name="contextMenuPolicy">
         <enum>Qt::CustomContextMenu</enum>
+       </property>
+       <property name="horizontalScrollBarPolicy">
+        <enum>Qt::ScrollBarAlwaysOff</enum>
        </property>
        <property name="alternatingRowColors">
         <bool>true</bool>
@@ -1306,7 +1309,10 @@
      <normaloff>:/RetinaIMG/RetinaIMG/Settings-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Settings-icon.png</iconset>
    </property>
    <property name="text">
-    <string>Export Settings</string>
+    <string>Preferences</string>
+   </property>
+   <property name="toolTip">
+    <string>Preferences</string>
    </property>
   </action>
   <action name="actionShowSessionArea">

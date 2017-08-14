@@ -110,6 +110,7 @@ private:
     uint8_t *m_pRawImage;
     uint32_t m_cacheSizeMB;
     uint8_t m_codecProfile;
+    uint8_t m_previewMode;
     bool m_frameChanged;
     int m_currentFrameIndex;
     double m_newPosDropMode;
@@ -141,6 +142,8 @@ private:
     void setReceipt( ReceiptSettings *sliders );
     void showFileInEditor( int row );
     void addClipToExportQueue( int row, QString fileName );
+    void previewPicture( int row );
+    void setPreviewMode( void );
 
 signals:
     void exportReady( void );

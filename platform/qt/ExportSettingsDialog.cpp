@@ -9,13 +9,16 @@
 #include "ui_ExportSettingsDialog.h"
 
 //Constructor
-ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, uint8_t currentCodecProfile) :
+ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, uint8_t currentCodecProfile, uint8_t previewMode) :
     QDialog(parent),
     ui(new Ui::ExportSettingsDialog)
 {
     ui->setupUi(this);
     setWindowFlags( Qt::Dialog | Qt::WindowTitleHint | Qt::WindowCloseButtonHint );
     ui->comboBoxCodec->setCurrentIndex( currentCodecProfile );
+    if( previewMode == 1 ) ui->radioButtonPreviewList->setChecked( true );
+    else if( previewMode == 2 ) ui->radioButtonPreviewIcon->setChecked( true );
+    else ui->radioButtonPreviewDisabled->setChecked( true );
 }
 
 //Destructor
@@ -25,13 +28,15 @@ ExportSettingsDialog::~ExportSettingsDialog()
 }
 
 //Get Codec Profile
-uint8_t ExportSettingsDialog::getEncoderSetting(void)
+uint8_t ExportSettingsDialog::encoderSetting(void)
 {
     return ui->comboBoxCodec->currentIndex();
 }
 
-//Get state of Export Audio Checkbox
-bool ExportSettingsDialog::getExportAudio(void)
+//Get Preview Mode
+uint8_t ExportSettingsDialog::previewMode()
 {
-    return ui->checkBoxExportAudio->isChecked();
+    if( ui->radioButtonPreviewList->isChecked() ) return 1;
+    if( ui->radioButtonPreviewIcon->isChecked() ) return 2;
+    else return 0;
 }
