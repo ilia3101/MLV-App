@@ -87,10 +87,9 @@
     <addaction name="actionSaveSession"/>
     <addaction name="separator"/>
     <addaction name="actionOpen"/>
-    <addaction name="separator"/>
     <addaction name="actionClip_Information"/>
-    <addaction name="separator"/>
     <addaction name="actionExport"/>
+    <addaction name="separator"/>
     <addaction name="actionExportSettings"/>
     <addaction name="separator"/>
     <addaction name="actionQuit"/>

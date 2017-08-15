@@ -294,7 +294,7 @@ void freeMlvObject(mlvObject_t * video)
     isMlvActive(video) = 0;
 
     /* Close MLV file */
-    fclose(video->file);
+    if(video->file) fclose(video->file);
     /* Free all memory */
     free(video->frame_offsets);
 
