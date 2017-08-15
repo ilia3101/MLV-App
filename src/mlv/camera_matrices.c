@@ -191,7 +191,9 @@ void getMlvXyzToCameraMatrix(mlvObject_t * video, double * outputMatrix)
             {
                 /* 5D Mark II */
                 original_matrix = cam_matrices[1].ColorMatrix2;
+#ifndef STDOUT_SILENT
                 printf("\n\n\n\n\n\nCamera matrix is 5D\n\n\n\n\n");
+#endif
             }
         }
         else if (camera_name[11] == '0')
@@ -297,9 +299,9 @@ void getMlvXyzToCameraMatrix(mlvObject_t * video, double * outputMatrix)
     {
         outputMatrix[i] = camera_matrix[i];
     }
-
+#ifndef STDOUT_SILENT
     printf("Camera matrix:\n");
     printMatrix(camera_matrix);
-
+#endif
     /* r3turn o; */
 }

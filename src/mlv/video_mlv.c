@@ -380,7 +380,9 @@ void openMlvClip(mlvObject_t * video, char * mlvPath)
             fread(&video->DISO, sizeof(mlv_diso_hdr_t), 1, video->file);
 
         /* Printing stuff for fun */
+#ifndef STDOUT_SILENT
         printf("Block #%4i  |  %.4s  |%9i Bytes\n", block_num, block_name, block_size);
+#endif
 
         /* Move to next block */
         fseek(video->file, next_block, SEEK_SET);
@@ -420,9 +422,11 @@ void openMlvClip(mlvObject_t * video, char * mlvPath)
         }
 
         /* User needs to know how amazingly kind we are */
+#ifndef STDOUT_SILENT
         printf("\nPSA!!!\nYour black level was wrong!\n");
         printf("It was: %i, and has been changed to: %i, which should be right for your %s\n\n", 
             old_black_level, getMlvBlackLevel(video), getMlvCamera(video));
+#endif
     }
 
     /* If black level is below 15000, set it to 15000, anything lower seems to low */
@@ -501,9 +505,11 @@ void mapMlvFrames(mlvObject_t * video, uint64_t limit)
             /* Get frame offset from current location */
             fread(&frame_offset, sizeof(uint32_t), 1, video->file);
 
+#ifndef STDOUT_SILENT
             printf("frame %i/%i, %lluMB / %llu Bytes from start of file\n",
             frame_num, video->frames, (block_start + frame_offset) >> 20, 
             (block_start + frame_offset));
+#endif
 
             /* Video frame start = current location + frame offset */
             video->frame_offsets[frame_num] = ftell(video->file) + frame_offset;

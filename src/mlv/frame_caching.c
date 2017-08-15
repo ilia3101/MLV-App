@@ -29,9 +29,9 @@ void setMlvRawCacheLimitMegaBytes(mlvObject_t * video, uint64_t megaByteLimit)
         uint64_t cache_whole = frame_size * getMlvFrames(video);
 
         video->cache_limit_frames = frame_limit;
-
+#ifndef STDOUT_SILENT
         printf("\nEnough memory allowed to cache %i frames (%i MiB)\n\n", (int)frame_limit, (int)megaByteLimit);
-
+#endif
         /* Resize cache block - to maximum allowed or enough to fit whole clip if it is smaller */
         video->cache_memory_block = realloc(video->cache_memory_block, MIN(bytes_limit, cache_whole));
 
@@ -87,9 +87,9 @@ void cache_mlv_frames(mlvObject_t * video)
     uint32_t frame_size_rgb = width * height * 3;
 
     float * raw_frame = malloc( getMlvWidth(video) * getMlvHeight(video) * sizeof(float) );
-
+#ifndef STDOUT_SILENT
     printf("\nTotal frames %i, Cache limit frames: %i\n\n", (int)video->frames, (int)video->cache_limit_frames);
-
+#endif
     /* Cache until done */
     for (uint32_t frame_index = 0; frame_index < cache_frames; ++frame_index)
     {
@@ -105,8 +105,9 @@ void cache_mlv_frames(mlvObject_t * video)
             get_mlv_raw_frame_debayered(video, frame_index, raw_frame, video->rgb_raw_frames[frame_index], 1);
 
             video->cached_frames[frame_index] = 1;
-
+#ifndef STDOUT_SILENT
             printf("Debayered frame %i/%i has been cached.\n", frame_index, cache_frames);
+#endif
         }
     }
 

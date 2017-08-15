@@ -338,7 +338,9 @@ void MainWindow::openMlv( QString fileName )
     /* This funtion really SHOULD be integrated with the one above */
     mapMlvFrames( m_pMlvObject, 0 );
     /* If use has terminal this is useful */
+#ifndef STDOUT_SILENT
     printMlvInfo( m_pMlvObject );
+#endif
     /* This needs to be joined (or segmentation fault 11 :D) */
     setMlvProcessing( m_pMlvObject, m_pProcessingObject );
     /* Limit frame cache to defined size of RAM */
