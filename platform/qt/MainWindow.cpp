@@ -498,7 +498,7 @@ void MainWindow::initLib( void )
     /* Limit frame cache to suitable amount of RAM (~33% at 8GB and below, ~50% at 16GB, then up and up) */
     if (maxRam < 7500) m_cacheSizeMB = maxRam * 0.33;
     else m_cacheSizeMB = (uint32_t)(0.66666f * (float)(maxRam - 4000));
-    qDebug() << "Set m_cacheSizeMB to:" << m_cacheSizeMB << "MB of" << maxRam << "MB of total Memory";
+    //qDebug() << "Set m_cacheSizeMB to:" << m_cacheSizeMB << "MB of" << maxRam << "MB of total Memory";
 
     /* Initialise the MLV object so it is actually useful */
     m_pMlvObject = initMlvObject();
@@ -612,7 +612,6 @@ void MainWindow::startExport(QString fileName)
     }
     threadPool->clear();
     delete threadPool;
-    qDebug() << "PNGs READY!";
 
     //Update Progressbar
     m_pStatusDialog->ui->progressBar->setValue( getMlvFrames( m_pMlvObject ) );
@@ -952,7 +951,6 @@ void MainWindow::showFileInEditor( int row )
     setSliders( m_pSessionReceipts.at( row ) );
     //Save new position in session
     m_lastActiveClipInSession = row;
-    qDebug() << "m_lastActiveClipInSession" << m_lastActiveClipInSession;
 }
 
 //Add the clip in SessionList position "row" at last position in ExportQueue
@@ -1190,7 +1188,6 @@ void MainWindow::on_actionExport_triggered()
     //if multiple files selected
     else
     {
-        qDebug() << "!Multiple Export!";
         //Folder Dialog
         QString folderName = QFileDialog::getExistingDirectory(this, tr("Chose Export Folder"),
                                                           QFileInfo( saveFileName ).absolutePath(),
@@ -1421,7 +1418,6 @@ void MainWindow::deleteFileFromSession( void )
     for( int i = ui->listWidgetSession->selectedItems().size(); i > 0; i-- )
     {
         int row = ui->listWidgetSession->row( ui->listWidgetSession->selectedItems().at( i - 1 ) );
-        qDebug() << "Delete row:" << row;
         //Remove item from Session List
         delete ui->listWidgetSession->selectedItems().at( i - 1 );
         //Remove slider memory
