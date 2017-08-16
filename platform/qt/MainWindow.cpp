@@ -82,8 +82,8 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
 
             //Open the file
             openMlv( fileName );
-            previewPicture( ui->listWidgetSession->count() - 1 );
             on_actionResetReceipt_triggered();
+            previewPicture( ui->listWidgetSession->count() - 1 );
         }
         else if( QFile(fileName).exists() && fileName.endsWith( ".masxml", Qt::CaseInsensitive ) )
         {
@@ -207,8 +207,8 @@ bool MainWindow::event(QEvent *event)
                 addFileToSession( fileName );
                 //Open MLV
                 openMlv( fileName );
-                previewPicture( ui->listWidgetSession->count() - 1 );
                 on_actionResetReceipt_triggered();
+                previewPicture( ui->listWidgetSession->count() - 1 );
             }
         }
         else if( QFile(fileName).exists() && fileName.endsWith( ".masxml", Qt::CaseInsensitive ) )
@@ -315,8 +315,8 @@ void MainWindow::on_actionOpen_triggered()
 
         //Open the file
         openMlv( fileName );
-        previewPicture( ui->listWidgetSession->count() - 1 );
         on_actionResetReceipt_triggered();
+        previewPicture( ui->listWidgetSession->count() - 1 );
     }
 }
 
@@ -708,7 +708,6 @@ void MainWindow::openSession(QString fileName)
                         //Open the file
                         openMlv( fileName );
                         m_pSessionReceipts.last()->setFileName( fileName );
-                        previewPicture( ui->listWidgetSession->count() - 1 );
 
                         while( !Rxml.atEnd() && !Rxml.isEndElement() )
                         {
@@ -774,6 +773,8 @@ void MainWindow::openSession(QString fileName)
                                 Rxml.readNext();
                             }
                         }
+                        setSliders( m_pSessionReceipts.last() );
+                        previewPicture( ui->listWidgetSession->count() - 1 );
                     }
                     else
                     {
@@ -790,7 +791,6 @@ void MainWindow::openSession(QString fileName)
                         }
                     }
                     Rxml.readNext();
-                    setSliders( m_pSessionReceipts.last() );
                 }
                 else if( Rxml.isEndElement() )
                 {
