@@ -94,21 +94,21 @@ static inline int FC(int row, int col)
      _a * _a; })
 
 /* from RT sleef.c */
-__inline float xmul2f(float d) {
+static INLINE float xmul2f(float d) {
 	if (*(int*)&d & 0x7FFFFFFF) { // if f==0 do nothing
 		*(int*)&d += 1 << 23; // add 1 to the exponent
 		}
 	return d;
 }
 
-__inline float xdiv2f(float d) {
+static INLINE float xdiv2f(float d) {
 	if (*(int*)&d & 0x7FFFFFFF) { // if f==0 do nothing
 		*(int*)&d -= 1 << 23; // sub 1 from the exponent
 		}
 	return d;
 }
 
-__inline float xdivf( float d, int n){
+static INLINE float xdivf( float d, int n){
 	if (*(int*)&d & 0x7FFFFFFF) { // if f==0 do nothing
 		*(int*)&d -= n << 23; // add n to the exponent
 		}
