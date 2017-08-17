@@ -265,21 +265,21 @@ imagestruct bmpread(char * imagename)
     FILE * file = fopen(imagename,"rb");
     uint32_t imagewidth, imageheight, offset;
     /* Read where image data will start(probably 54) */
-    fseek(file, 10, SEEK_SET);
+    fseeko(file, 10, SEEK_SET);
     fread(&offset, sizeof(uint32_t), 1, file);
     /* Read image height and width */
-    fseek(file, 18, SEEK_SET);
+    fseeko(file, 18, SEEK_SET);
     fread(&imagewidth, sizeof(uint32_t), 1, file);
     fread(&imageheight, sizeof(uint32_t), 1, file);
     uint32_t paddedwidth = pad(imagewidth * 3, 4); /* Calculate padded width in bytes */
     uint32_t imagesize = imageheight * imagewidth * 3; /* Total size of image bytes without padding */
     /* Memory to store image */
     uint8_t * imagedata = (uint8_t *)malloc(imagesize * sizeof(uint8_t));
-    fseek(file, offset, SEEK_SET); /* Move to start of image */
+    fseeko(file, offset, SEEK_SET); /* Move to start of image */
     uint32_t v;
     for (v = 0; v < imageheight; v++)
     {
-        fseek(file, ( offset + v * paddedwidth ), SEEK_SET); /* Move to current row */
+        fseeko(file, ( offset + v * paddedwidth ), SEEK_SET); /* Move to current row */
         fread(&imagedata[v * imagewidth * 3], sizeof(uint8_t), (imagewidth * 3), file); /* Read row */
     }
     fclose(file); /* Close file */
