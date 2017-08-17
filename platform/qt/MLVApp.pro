@@ -73,7 +73,9 @@ SOURCES += \
     ExportSettingsDialog.cpp \
     ReceiptSettings.cpp \
     EditSliderValueDialog.cpp \
-    DoubleClickLabel.cpp
+    DoubleClickLabel.cpp \
+    ../../src/processing/chroma_smooth.c \
+    ../../src/processing/pixel_proc.c
 
 HEADERS += \
         MainWindow.h \
@@ -100,7 +102,10 @@ HEADERS += \
     ExportSettingsDialog.h \
     ReceiptSettings.h \
     EditSliderValueDialog.h \
-    DoubleClickLabel.h
+    DoubleClickLabel.h \
+    ../../src/processing/pixel_proc.h \
+    ../../src/processing/wirth.h \
+    ../../src/processing/opt_med.h
 
 FORMS += \
         MainWindow.ui \
