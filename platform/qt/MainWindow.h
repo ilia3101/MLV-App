@@ -9,8 +9,6 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <QImage>
-#include <QLabel>
 #include <QFileDialog>
 #include <QDebug>
 #include <QTimerEvent>
@@ -19,6 +17,7 @@
 #include <QThreadPool>
 #include <QProcess>
 #include <QVector>
+#include <QGraphicsPixmapItem>
 #include "../../src/mlv_include.h"
 #include "InfoDialog.h"
 #include "StatusDialog.h"
@@ -82,7 +81,7 @@ private slots:
     void deleteFileFromSession( void );
     void rightClickShowFile( void );
     void selectAllFiles( void );
-    void on_frame_customContextMenuRequested(const QPoint &pos);
+    void pictureCustomContextMenuRequested(const QPoint &pos);
     void on_labelHistogram_customContextMenuRequested(const QPoint &pos);
     void on_label_ExposureVal_doubleClicked( void );
     void on_label_TemperatureVal_doubleClicked( void );
@@ -104,7 +103,8 @@ private:
     WaveFormMonitor *m_pWaveFormMonitor;
     mlvObject_t *m_pMlvObject;
     processingObject_t *m_pProcessingObject;
-    QLabel *m_pRawImageLabel;
+    QGraphicsPixmapItem *m_pGraphicsItem;
+    QGraphicsScene* m_pScene;
     QLabel *m_pCachingStatus;
     QLabel *m_pFpsStatus;
     uint8_t *m_pRawImage;

@@ -17,6 +17,8 @@
 #include <QMutex>
 #include <QXmlStreamWriter>
 #include <QDesktopWidget>
+#include <QScrollBar>
+#include <QScreen>
 #include <png.h>
 
 #include "SystemMemory.h"
@@ -228,13 +230,21 @@ void MainWindow::drawFrame( void )
     //Get frame from library
     getMlvProcessedFrame8( m_pMlvObject, ui->horizontalSliderPosition->value(), m_pRawImage );
 
-    m_pRawImageLabel->setScaledContents(false); //Otherwise Ratio is broken
-
     if( ui->actionZoomFit->isChecked() )
     {
         //Some math to have the picture exactly in the frame
-        int actWidth = ui->frame->width();
-        int actHeight = ui->frame->height();
+        int actWidth;
+        int actHeight;
+        if( ui->actionFullscreen->isChecked() )
+        {
+            actWidth = QApplication::primaryScreen()->size().width();
+            actHeight = QApplication::primaryScreen()->size().height();
+        }
+        else
+        {
+            actWidth = ui->graphicsView->width();
+            actHeight = ui->graphicsView->height();
+        }
         int desWidth = actWidth;
         int desHeight = actWidth * getMlvHeight(m_pMlvObject) / getMlvWidth(m_pMlvObject);
         if( desHeight > actHeight )
@@ -244,21 +254,18 @@ void MainWindow::drawFrame( void )
         }
 
         //Bring frame to GUI (fit to window)
-        m_pRawImageLabel->setPixmap( QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
-                                                             .scaled( desWidth,
-                                                                      desHeight,
-                                                                      Qt::KeepAspectRatio, Qt::SmoothTransformation) ) ); //alternative: Qt::FastTransformation
+        m_pGraphicsItem->setPixmap( QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
+                                                        .scaled( desWidth,
+                                                                 desHeight,
+                                                                 Qt::KeepAspectRatio, Qt::SmoothTransformation) ) ); //alternative: Qt::FastTransformation
+        m_pScene->setSceneRect( 0, 0, desWidth, desHeight );
     }
     else
     {
         //Bring frame to GUI (100%)
-        m_pRawImageLabel->setPixmap( QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
-                                                             .scaled( getMlvWidth(m_pMlvObject),
-                                                                      getMlvHeight(m_pMlvObject),
-                                                                      Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation) ) ); //alternative: Qt::FastTransformation
+        m_pGraphicsItem->setPixmap( QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 ) ) );
+        m_pScene->setSceneRect( 0, 0, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject) );
     }
-    m_pRawImageLabel->setMinimumSize( 1, 1 ); //Otherwise window won't be smaller than picture
-    m_pRawImageLabel->setAlignment( Qt::AlignCenter ); //Always in the middle
 
     //GetHistogram
     if( ui->actionShowHistogram->isChecked() )
@@ -455,13 +462,18 @@ void MainWindow::initGui( void )
     ui->actionPasteReceipt->setEnabled( false );
     //Disable export until file opened!
     ui->actionExport->setEnabled( false );
+    //Set fit to screen as default zoom
+    ui->actionZoomFit->setChecked( true );
+    ui->actionZoom100->setChecked( false );
 
     //Set up image in GUI
-    m_pRawImageLabel = new QLabel( this );
-    QHBoxLayout* m_layoutFrame;
-    m_layoutFrame = new QHBoxLayout( ui->frame );
-    m_layoutFrame->addWidget( m_pRawImageLabel );
-    m_layoutFrame->setContentsMargins( 0, 0, 0, 0 );
+    QImage image(":/IMG/IMG/histogram.png");
+    m_pGraphicsItem = new QGraphicsPixmapItem( QPixmap::fromImage(image) );
+    m_pScene = new QGraphicsScene( this );
+    m_pScene->addItem( m_pGraphicsItem );
+    ui->graphicsView->setScene( m_pScene );
+    ui->graphicsView->show();
+    connect( ui->graphicsView, SIGNAL( customContextMenuRequested(QPoint) ), this, SLOT( pictureCustomContextMenuRequested(QPoint) ) );
 
     //Set up caching status label
     m_pCachingStatus = new QLabel( statusBar() );
@@ -536,16 +548,6 @@ void MainWindow::readSettings()
     if( set.value( "maximized", false ).toBool() ) setWindowState( windowState() | Qt::WindowMaximized );
     set.endGroup();
     if( set.value( "dragFrameMode", false ).toBool() ) ui->actionDropFrameMode->setChecked( true );
-    if( set.value( "zoomModeFit", true ).toBool() )
-    {
-        ui->actionZoomFit->setChecked( true );
-        ui->actionZoom100->setChecked( false );
-    }
-    else
-    {
-        ui->actionZoomFit->setChecked( false );
-        ui->actionZoom100->setChecked( true );
-    }
     m_lastSaveFileName = set.value( "lastFileName", QString( "/Users/" ) ).toString();
     m_codecProfile = set.value( "codecProfile", 4 ).toUInt();
     m_previewMode = set.value( "previewMode", 1 ).toUInt();
@@ -564,7 +566,6 @@ void MainWindow::writeSettings()
     }
     set.endGroup();
     set.setValue( "dragFrameMode", ui->actionDropFrameMode->isChecked() );
-    set.setValue( "zoomModeFit", ui->actionZoomFit->isChecked() );
     set.setValue( "lastFileName", m_lastSaveFileName );
     set.setValue( "codecProfile", m_codecProfile );
     set.setValue( "previewMode", m_previewMode );
@@ -870,7 +871,8 @@ void MainWindow::deleteSession()
 
     //Set Labels black
     ui->labelHistogram->setPixmap( QPixmap( ":/IMG/IMG/Histogram.png" ) );
-    m_pRawImageLabel->setPixmap( QPixmap( ":/IMG/IMG/Histogram.png" ) );
+    m_pGraphicsItem->setPixmap( QPixmap( ":/IMG/IMG/Histogram.png" ) );
+    m_pScene->setSceneRect( 0, 0, 10, 10 );
 
     //And reset sliders
     on_actionResetReceipt_triggered();
@@ -1249,7 +1251,11 @@ void MainWindow::on_actionZoom100_triggered()
 {
     ui->actionZoomFit->setChecked( false );
     ui->actionZoom100->setChecked( true );
+    if( !m_fileLoaded ) return;
     m_frameChanged = true;
+    drawFrame();
+    ui->graphicsView->horizontalScrollBar()->setValue( ( getMlvWidth(m_pMlvObject) - ui->graphicsView->width() ) / 2 );
+    ui->graphicsView->verticalScrollBar()->setValue( ( getMlvHeight(m_pMlvObject) - ui->graphicsView->height() ) / 2 );
 }
 
 //Show Histogram or not
@@ -1453,16 +1459,16 @@ void MainWindow::selectAllFiles( void )
 }
 
 //Contextmenu on picture
-void MainWindow::on_frame_customContextMenuRequested(const QPoint &pos)
+void MainWindow::pictureCustomContextMenuRequested(const QPoint &pos)
 {
     // Handle global position
-    QPoint globalPos = ui->frame->mapToGlobal( pos );
+    QPoint globalPos = ui->graphicsView->mapToGlobal( pos );
 
     // Create menu and insert some actions
     QMenu myMenu;
     myMenu.addAction( ui->actionZoomFit );
     myMenu.addAction( ui->actionZoom100 );
-    if( ui->frame->isFullScreen() )
+    if( ui->graphicsView->isFullScreen() )
     {
         myMenu.addSeparator();
         myMenu.addAction( ui->actionGoto_First_Frame );
@@ -1586,13 +1592,13 @@ void MainWindow::on_actionFullscreen_triggered( bool checked )
 {
     if( checked )
     {
-        ui->frame->setWindowFlags( Qt::Dialog );
-        ui->frame->showFullScreen();
+        ui->graphicsView->setWindowFlags( Qt::Dialog );
+        ui->graphicsView->showFullScreen();
     }
     else
     {
-        ui->frame->setWindowFlags( Qt::Widget );
-        ui->frame->showNormal();
+        ui->graphicsView->setWindowFlags( Qt::Widget );
+        ui->graphicsView->showNormal();
     }
     qApp->processEvents();
     m_frameChanged = true;
