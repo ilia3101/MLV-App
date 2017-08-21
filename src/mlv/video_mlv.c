@@ -324,7 +324,7 @@ void openMlvClip(mlvObject_t * video, char * mlvPath)
 
     /* Getting size of file in bytes */
     fseeko(video->file, 0, SEEK_END);
-    uint64_t file_size = ftell(video->file);
+    uint64_t file_size = ftello(video->file);
 
     char block_name[4]; /* Read header name to this */
     uint32_t block_size; /* Size of block */
@@ -333,10 +333,10 @@ void openMlvClip(mlvObject_t * video, char * mlvPath)
 
     fseeko(video->file, 0, SEEK_SET); /* Start of file */
 
-    while (ftell(video->file) < file_size) /* Check if were at end of file yet */
+    while (ftello(video->file) < file_size) /* Check if were at end of file yet */
     {
         /* Record position to go back to it later if block is read */
-        uint64_t block_start = ftell(video->file);
+        uint64_t block_start = ftello(video->file);
         /* Read block name */
         fread(&block_name, sizeof(char), 4, video->file);
         /* Read size of block to block_size variable */
@@ -464,7 +464,7 @@ void mapMlvFrames(mlvObject_t * video, uint64_t limit)
 {
     /* Getting size of file in bytes */
     fseeko(video->file, 0, SEEK_END); /* Go to end */
-    uint64_t file_size = ftell(video->file); /* Get positions */
+    uint64_t file_size = ftello(video->file); /* Get positions */
 
     char block_name[4]; /* Read header name to this */
     uint32_t block_size; /* Size of block */
@@ -480,10 +480,10 @@ void mapMlvFrames(mlvObject_t * video, uint64_t limit)
     free(video->frame_sizes);
     video->frame_sizes = (uint32_t *)malloc( (video->frames) * sizeof(uint32_t) );
 
-    while (ftell(video->file) < file_size) /* Check if end of file yet */
+    while (ftello(video->file) < file_size) /* Check if end of file yet */
     {
         /* Record position to go back to it later when block is read */
-        uint64_t block_start = ftell(video->file);
+        uint64_t block_start = ftello(video->file);
         /* Read block name */
         fread(&block_name, sizeof(char), 4, video->file);
         /* Read size of block to block_size variable */
@@ -512,7 +512,7 @@ void mapMlvFrames(mlvObject_t * video, uint64_t limit)
 #endif
 
             /* Video frame start = current location + frame offset */
-            video->frame_offsets[frame_num] = ftell(video->file) + frame_offset;
+            video->frame_offsets[frame_num] = ftello(video->file) + frame_offset;
 
             /* Measure frame size if lossless */
             video->frame_sizes[frame_num] = block_size - (sizeof(mlv_vidf_hdr_t) + frame_offset);
