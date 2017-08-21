@@ -46,6 +46,7 @@ QImage Histogram::getHistogramFromImg( QImage *img )
         if( tableG[x] ) tableG[x] = 100.0 * log( tableG[x] ) + tableG[x] / 10.0;
         if( tableB[x] ) tableB[x] = 100.0 * log( tableB[x] ) + tableB[x] / 10.0;
         //and search the highest value
+        if( x < 3 || x > 252 ) continue; //but do not normalize at the lowest or highest end
         if( tableR[x] > highestVal ) highestVal = tableR[x];
         if( tableG[x] > highestVal ) highestVal = tableG[x];
         if( tableB[x] > highestVal ) highestVal = tableB[x];
@@ -96,6 +97,7 @@ QImage Histogram::getHistogramFromRaw(uint8_t *m_pRawImage, uint16_t width, uint
         if( tableG[x] ) tableG[x] = 100.0 * log( tableG[x] ) + tableG[x] / 10.0;
         if( tableB[x] ) tableB[x] = 100.0 * log( tableB[x] ) + tableB[x] / 10.0;
         //and search the highest value
+        if( x < 3 || x > 252 ) continue; //but do not normalize at the lowest or highest end
         if( tableR[x] > highestVal ) highestVal = tableR[x];
         if( tableG[x] > highestVal ) highestVal = tableG[x];
         if( tableB[x] > highestVal ) highestVal = tableB[x];
