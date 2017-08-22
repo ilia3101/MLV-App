@@ -80,17 +80,17 @@ static inline int FC(int row, int col)
 #define COERCE(x,lo,hi) MAX(min((x),(hi)),(lo))
 
 #define min(a,b) \
-   ({ typeof ((a)+(b)) _a = (a); \
-      typeof ((a)+(b)) _b = (b); \
+   ({ __typeof__ ((a)+(b)) _a = (a); \
+      __typeof__ ((a)+(b)) _b = (b); \
      _a < _b ? _a : _b; })
 
 #define MAX(a,b) \
-   ({ typeof ((a)+(b)) _a = (a); \
-       typeof ((a)+(b)) _b = (b); \
+   ({ __typeof__ ((a)+(b)) _a = (a); \
+      __typeof__ ((a)+(b)) _b = (b); \
      _a > _b ? _a : _b; })
 
 #define SQR(a) \
-   ({ typeof (a) _a = (a); \
+   ({ __typeof__ (a) _a = (a); \
      _a * _a; })
 
 /* from RT sleef.c */
