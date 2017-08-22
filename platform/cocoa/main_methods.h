@@ -3,6 +3,9 @@
 
 /* Methods that actually do stuff related to MLV on user interface interactions */
 
+/* Initialises app UI */
+void initAppWithGod();
+
 /* This is a function as it may be used in more than one place */
 void setAppNewMlvClip(char * mlvPathString, char * mlvFileName);
 

@@ -13,30 +13,11 @@
 
 #include "../../src/mlv_include.h"
 
-/* What frame we r on */
-extern int currentFrameIndex;
-/* ++ this on changes such as settings adjustments or on playback to go to next frame */
-extern int frameChanged;
-/* Used to stop drawing */
-extern int dontDraw;
-/* Main thing */
-extern mlvObject_t * videoMLV;
-/* Holds rawBitmap inside it */
-extern NSImage * rawImageObject;
-/* Holds a (the) processed frame that is displayed
- * Will be changed with methods from this file */
-extern NSBitmapImageRep * rawBitmap;
-/* The image data of ^^^^^^^^^^^^^^^ */
-extern uint8_t * rawImage;
-/* This is the view, so we can refresh it
- * by doing: 
- *     [previewWindow setImage: tempImage]; // NULL or nil causes crash of OS
- *     [previewWindow setImage: rawImageObject]; 
- * Sets an empty image, then back to the proper one */
-extern NSImageView * previewWindow;
+/* God object used to share globals (type) */
+#include "godobject.h"
+/* The godobject itsself */
+extern godObject_t * App;
 
-/* App window */
-extern NSWindow * window;
 
 /* The threads */
 static pthread_t timing_thread;
@@ -64,7 +45,7 @@ void framerate_timer()
     {
         /* Delay in usecs or somehting, recalculated in case of a user change.
          * Also minus 20, just to compensate for all the stuff idk how long it all takes */
-        delayU = (int) (1000000.0f / getMlvFramerate(videoMLV) - 20.0f);
+        delayU = (int) (1000000.0f / getMlvFramerate(App->videoMLV) - 20.0f);
 
         /* Don't allow frame rates(refresh rates) above 60fps ish */
         if (delayU < 16000.0f)
@@ -76,12 +57,12 @@ void framerate_timer()
         usleep(delayU);
 
         /* If frame is not still drawing and needs updating, draw again */
-        if (!frame_still_drawing && frameChanged && !dontDraw)
+        if (!frame_still_drawing && App->frameChanged && !App->dontDraw)
         {
             /* I don't care if this is inefficient */
             pthread_create(&draw_thread, NULL, (void *)draw_frame, NULL);
             /* Reset this */
-            frameChanged = 0;
+            App->frameChanged = 0;
         }
     }
 }
@@ -96,14 +77,14 @@ void draw_frame()
     /* Draw frame and update view now */
 
     /* Get dhe frame(8 bit cos most screens are) */
-    getMlvProcessedFrame8(videoMLV, currentFrameIndex, rawImage);
+    getMlvProcessedFrame8(App->videoMLV, App->currentFrameIndex, App->rawImage);
 
     /* Update/refresh the view on main thread */
     SEL updateMethodSelector = @selector(updatePreviewWindow);
-    [previewWindow performSelectorOnMainThread: updateMethodSelector withObject: nil waitUntilDone: YES];
+    [App->previewWindow performSelectorOnMainThread: updateMethodSelector withObject: nil waitUntilDone: YES];
 
     /* Doesn't seem to help the issues with old images remaining (not my bugs!) */
-    [window update];
+    [App->window update];
 
     /* Reset, we don't want to stop */
     frame_still_drawing = 0;

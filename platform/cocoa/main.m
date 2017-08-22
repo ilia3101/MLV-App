@@ -30,37 +30,10 @@
 /* This file is generated temorarily during compile time */
 #include "app_window_title.h"
 
-
-/* Here comes some very global variables */
-
-/* The main video object that the app will use for
- * handling MLV videos and processing them */
-mlvObject_t * videoMLV;
-processingObject_t * processingSettings;
-
-char * MLVClipName;
-
-/* Holds rawBitmap inside it or something */
-NSImage * rawImageObject;
-/* Holds a (THE) processed frame that is displayed */
-NSBitmapImageRep * rawBitmap;
-/* Yes, displayed image will be 8 bit, as most monitors are */
-uint8_t * rawImage;
-/* The actual view that will display it */
-NSImageView * previewWindow;
-/* THE application window */
-NSWindow * window;
-
-/* ++ this on adjustments to redraw or on playback to go draw next frame */
-int frameChanged;
-/* What frame we r on */
-int currentFrameIndex;
-double frameSliderPosition;
-/* To pause frame drawing, above 0 = paused */
-int dontDraw;
-
-/* How much cache */
-int cacheSizeMB;
+/* God object used to share globals (type) */
+#include "godobject.h"
+/* The godobject itsself */
+godObject_t * App;
 
 
 int main(int argc, char * argv[])
@@ -72,11 +45,14 @@ int main(int argc, char * argv[])
 
 int NSApplicationMain(int argc, const char * argv[])
 {
+    /* We make the god opbject */
+    App = calloc(1,sizeof(godObject_t));
+
     /* Just for easyness */
-    MLVClipName = malloc(1);
+    App->MLVClipName = malloc(1);
 
     /* Don't draw as there's no clip loaded */
-    dontDraw = 1;
+    App->dontDraw = 1;
 
     /* Don't know the purpose of this :[ */
     [NSApplication sharedApplication];
@@ -91,34 +67,34 @@ int NSApplicationMain(int argc, const char * argv[])
         | NSMiniaturizableWindowMask | NSFullSizeContentViewWindowMask;
 
     /* Make the window */
-    window = [ [NSWindow alloc]
-               initWithContentRect:
-               /* Load window in center of screen */
-               NSMakeRect( (SCREEN_WIDTH  -  WINDOW_WIDTH) / 2, 
-                           (SCREEN_HEIGHT - WINDOW_HEIGHT) / 2,
-                           (WINDOW_WIDTH), (WINDOW_HEIGHT) )
-               styleMask: windowStyle
-               backing: NSBackingStoreBuffered
-               defer: NO ];
+    App->window = [ [NSWindow alloc]
+                    initWithContentRect:
+                    /* Load window in center of screen */
+                    NSMakeRect( (SCREEN_WIDTH  -  WINDOW_WIDTH) / 2, 
+                                (SCREEN_HEIGHT - WINDOW_HEIGHT) / 2,
+                                (WINDOW_WIDTH), (WINDOW_HEIGHT) )
+                    styleMask: windowStyle
+                    backing: NSBackingStoreBuffered
+                    defer: NO ];
 
     /* Make minimum size */
-    [window setMinSize: NSMakeSize(WINDOW_WIDTH_MINIMUM, WINDOW_HEIGHT_MINIMUM)];
+    [App->window setMinSize: NSMakeSize(WINDOW_WIDTH_MINIMUM, WINDOW_HEIGHT_MINIMUM)];
 
 
     /* App title with build info - a generated macro during compilation */
-    [window setTitle: @APP_WINDOW_TITLE];
+    [App->window setTitle: @APP_WINDOW_TITLE];
 
 
     /* If DARK_STYLE is true set window to dark theme 
      * Settings are in app_design.h */
     #if DARK_STYLE == 1
-    window.appearance = [NSAppearance appearanceNamed: NSAppearanceNameVibrantDark];
+    App->window.appearance = [NSAppearance appearanceNamed: NSAppearanceNameVibrantDark];
     #elif DARK_STYLE == 0 
     // window.appearance = [NSAppearance appearanceNamed: NSAppearanceNameVibrantLight];
     #endif
 
     /* Remove titlebar */
-    window.titlebarAppearsTransparent = true;
+    App->window.titlebarAppearsTransparent = true;
 
     /* Processing style selector */
     NSPopUpButton * processingStyle = [
@@ -129,7 +105,7 @@ int NSApplicationMain(int argc, const char * argv[])
     [processingStyle anchorTop: YES];
     [processingStyle addItemWithTitle: @"Faithful"];
     // [processingStyle addItemWithTitle: @"Milo"];
-    [[window contentView] addSubview: processingStyle];
+    [[App->window contentView] addSubview: processingStyle];
 
     /* Yes, macros -  Az u can tell by the capietals.
      * I don't want to add hundreds of lines of Objective C 
@@ -142,20 +118,20 @@ int NSApplicationMain(int argc, const char * argv[])
      */
 
     /* First block of sliders */
-    CREATE_SLIDER_RIGHT( exposureSlider, exposureLabel, exposureValueLabel, @"Exposure", 1, exposureSliderMethod, 0, 0.5 );
-    CREATE_SLIDER_RIGHT( saturationSlider, saturationLabel, saturationValueLabel, @"Saturation", 2, saturationSliderMethod, 0, 0.5 );
-    CREATE_SLIDER_RIGHT( kelvinSlider, kelvinLabel, kelvinValueLabel, @"Temperature", 3, kelvinSliderMethod, 0, 0.5 );
-    CREATE_SLIDER_RIGHT( tintSlider, tintLabel, tintValueLabel, @"Tint", 4, tintSliderMethod, 0, 0.5 );
+    CREATE_SLIDER_RIGHT( App->exposureSlider, App->exposureLabel, App->exposureValueLabel, @"Exposure", 1, exposureSliderMethod, 0, 0.5 );
+    CREATE_SLIDER_RIGHT( App->saturationSlider, App->saturationLabel, App->saturationValueLabel, @"Saturation", 2, saturationSliderMethod, 0, 0.5 );
+    CREATE_SLIDER_RIGHT( App->kelvinSlider, App->kelvinLabel, App->kelvinValueLabel, @"Temperature", 3, kelvinSliderMethod, 0, 0.5 );
+    CREATE_SLIDER_RIGHT( App->tintSlider, App->tintLabel, App->tintValueLabel, @"Tint", 4, tintSliderMethod, 0, 0.5 );
 
     /* Second block of sliders */
-    CREATE_SLIDER_RIGHT( darkStrengthSlider, darkStrengthLabel, darkStrengthValueLabel, @"Dark Strength", 5, darkStrengthMethod, BLOCK_OFFSET, 0.23 );
-    CREATE_SLIDER_RIGHT( darkRangeSlider, darkRangeLabel, darkRangeValueLabel, @"Dark Range", 6, darkRangeMethod, BLOCK_OFFSET, 0.73 );
-    CREATE_SLIDER_RIGHT( lightStrengthSlider, lightStrengthLabel, lightStrengthValueLabel, @"Light Strength", 7, lightStrengthMethod, BLOCK_OFFSET, 0.0 );
-    CREATE_SLIDER_RIGHT( lightRangeSlider, lightRangeLabel, lightRangeValueLabel, @"Light Range", 8, lightRangeMethod, BLOCK_OFFSET, 0.5 );
-    CREATE_SLIDER_RIGHT( lightenSlider, lightenLabel, lightenValueLabel, @"Lighten", 9, lightenMethod, BLOCK_OFFSET, 0.0 );
+    CREATE_SLIDER_RIGHT( App->darkStrengthSlider, App->darkStrengthLabel, App->darkStrengthValueLabel, @"Dark Strength", 5, darkStrengthMethod, BLOCK_OFFSET, 0.23 );
+    CREATE_SLIDER_RIGHT( App->darkRangeSlider, App->darkRangeLabel, App->darkRangeValueLabel, @"Dark Range", 6, darkRangeMethod, BLOCK_OFFSET, 0.73 );
+    CREATE_SLIDER_RIGHT( App->lightStrengthSlider, App->lightStrengthLabel, App->lightStrengthValueLabel, @"Light Strength", 7, lightStrengthMethod, BLOCK_OFFSET, 0.0 );
+    CREATE_SLIDER_RIGHT( App->lightRangeSlider, App->lightRangeLabel, App->lightRangeValueLabel, @"Light Range", 8, lightRangeMethod, BLOCK_OFFSET, 0.5 );
+    CREATE_SLIDER_RIGHT( App->lightenSlider, App->lightenLabel, App->lightenValueLabel, @"Lighten", 9, lightenMethod, BLOCK_OFFSET, 0.0 );
 
     /* Third block */
-    //CREATE_SLIDER_RIGHT( sharpnessSlider, sharpnessLabel, sharpnessValueLabel, @"Sharpen", 10, sharpnessMethod, BLOCK_OFFSET * 2, 0.0 );
+    //CREATE_SLIDER_RIGHT( App->sharpnessSlider, sharpnessLabel, sharpnessValueLabel, @"Sharpen", 10, sharpnessMethod, BLOCK_OFFSET * 2, 0.0 );
     /* Maybe we won't have sharpness */
 
     /* Enable/disable highlight reconstruction */
@@ -167,7 +143,7 @@ int NSApplicationMain(int argc, const char * argv[])
     [highlightReconstructionSelector anchorTop: YES];
     [highlightReconstructionSelector setTarget: highlightReconstructionSelector];
     [highlightReconstructionSelector setAction: @selector(toggleHighlightReconstruction)];
-    [[window contentView] addSubview: highlightReconstructionSelector];
+    [[App->window contentView] addSubview: highlightReconstructionSelector];
 
     /* To set always use AMaZE on/off */
     NSButton * alwaysUseAmazeSelector = [ [NSButton alloc] 
@@ -178,7 +154,7 @@ int NSApplicationMain(int argc, const char * argv[])
     [alwaysUseAmazeSelector anchorTop: YES];
     [alwaysUseAmazeSelector setTarget: alwaysUseAmazeSelector];
     [alwaysUseAmazeSelector setAction: @selector(toggleAlwaysAmaze)];
-    [[window contentView] addSubview: alwaysUseAmazeSelector];
+    [[App->window contentView] addSubview: alwaysUseAmazeSelector];
 
     /* To set enable/disable tonemapping */
     NSButton * tonemappingSelector = [ [NSButton alloc] 
@@ -189,7 +165,7 @@ int NSApplicationMain(int argc, const char * argv[])
     [tonemappingSelector anchorTop: YES];
     [tonemappingSelector setTarget: tonemappingSelector];
     [tonemappingSelector setAction: @selector(toggleTonemapping)];
-    [[window contentView] addSubview: tonemappingSelector];
+    [[App->window contentView] addSubview: tonemappingSelector];
 
     /*
      *******************************************************************************
@@ -213,21 +189,21 @@ int NSApplicationMain(int argc, const char * argv[])
      */
 
     /* Initialise the MLV object so it is actually useful */
-    videoMLV = initMlvObject();
+    App->videoMLV = initMlvObject();
     /* Intialise the processing settings object */
-    processingSettings = initProcessingObject();
+    App->processingSettings = initProcessingObject();
     /* Allow highlight reconstruction */
-    processingDisableHighlightReconstruction(processingSettings);
+    processingDisableHighlightReconstruction(App->processingSettings);
     /* Set exposure to + 1.2 stops instead of correct 0.0, this is to give the impression 
      * (to those that believe) that highlights are recoverable (shhh don't tell) */
-    processingSetExposureStops(processingSettings, 1.2);
+    processingSetExposureStops(App->processingSettings, 1.2);
     /* Link video with processing settings */
-    setMlvProcessing(videoMLV, processingSettings);
+    setMlvProcessing(App->videoMLV, App->processingSettings);
     /* Limit frame cache to suitable amount of RAM (~33% at 8GB and below, ~50% at 16GB, then up and up) */
-    cacheSizeMB = (int)(0.66666 * (double)(MAC_RAM - 4000));
-    if (MAC_RAM < 7500) cacheSizeMB = MAC_RAM * 0.33;
-    NSLog(@"Cache size = %iMB, or %i percent of RAM", cacheSizeMB, (int)((double)cacheSizeMB / (double)MAC_RAM * 100));
-    setMlvRawCacheLimitMegaBytes(videoMLV, cacheSizeMB);
+    App->cacheSizeMB = (int)(0.66666 * (double)(MAC_RAM - 4000));
+    if (MAC_RAM < 7500) App->cacheSizeMB = MAC_RAM * 0.33;
+    NSLog(@"Cache size = %iMB, or %i percent of RAM", App->cacheSizeMB, (int)((double)App->cacheSizeMB / (double)MAC_RAM * 100));
+    setMlvRawCacheLimitMegaBytes(App->videoMLV, App->cacheSizeMB);
 
     /*
      *******************************************************************************
@@ -237,11 +213,11 @@ int NSApplicationMain(int argc, const char * argv[])
 
     /* ...lets start at 5D2 resolution because that's my camera */
 
-    rawImage = malloc( 1880 * 1056 * 3 * sizeof(uint8_t) ); 
+    App->rawImage = malloc( 1880 * 1056 * 3 * sizeof(uint8_t) ); 
 
     /* NSBitmapImageRep lets you display bitmap data n stuff in CrApple things like NSImageView */
-    rawBitmap = [ [NSBitmapImageRep alloc] 
-                  initWithBitmapDataPlanes: (unsigned char * _Nullable * _Nullable)&rawImage 
+    App->rawBitmap = [ [NSBitmapImageRep alloc] 
+                  initWithBitmapDataPlanes: (unsigned char * _Nullable * _Nullable)&App->rawImage 
                   /* initWithBitmapDataPlanes: NULL */
                   pixelsWide: 1880
                   pixelsHigh: 1056
@@ -258,23 +234,23 @@ int NSApplicationMain(int argc, const char * argv[])
 
 
     /* Will display our video */
-    previewWindow = [ [NSImageView alloc]
-                      initWithFrame: NSMakeRect(PREVIEW_WINDOW_LOCATION) ];
+    App->previewWindow = [ [NSImageView alloc]
+                           initWithFrame: NSMakeRect(PREVIEW_WINDOW_LOCATION) ];
 
     /* Bezel alternatives: NSImageFrameGrayBezel NSImageFrameNone */
-    [previewWindow setImageFrameStyle: NSImageFrameGrayBezel];
-    [previewWindow setImageAlignment: NSImageAlignCenter];
+    [App->previewWindow setImageFrameStyle: NSImageFrameGrayBezel];
+    [App->previewWindow setImageAlignment: NSImageAlignCenter];
     /* Scaling alternatives: NSScaleToFit - NSImageScaleProportionallyDown - NSScaleNone */
-    [previewWindow setImageScaling: NSImageScaleProportionallyDown];
+    [App->previewWindow setImageScaling: NSImageScaleProportionallyDown];
     /* NSImageView doesn't need to be anchored for some reason, just works anyway */
-    [previewWindow setAutoresizingMask: (NSViewHeightSizable | NSViewWidthSizable) ];
+    [App->previewWindow setAutoresizingMask: (NSViewHeightSizable | NSViewWidthSizable) ];
     // [previewWindow setTarget:previewWindow];
 
-    rawImageObject = [[NSImage alloc] initWithSize: NSMakeSize(1880,1056) ];
-    [rawImageObject addRepresentation:rawBitmap];
+    App->rawImageObject = [[NSImage alloc] initWithSize: NSMakeSize(1880,1056) ];
+    [App->rawImageObject addRepresentation:App->rawBitmap];
 
-    [previewWindow setImage: rawImageObject];
-    [[window contentView] addSubview: previewWindow];
+    [App->previewWindow setImage: App->rawImageObject];
+    [[App->window contentView] addSubview: App->previewWindow];
 
     /* Slider for moving thourhg the clip */
     NSSlider * timelineSlider = [
@@ -287,7 +263,7 @@ int NSApplicationMain(int argc, const char * argv[])
     [timelineSlider anchorRight: YES];
     [timelineSlider anchorLeft: YES];
     [timelineSlider setAutoresizingMask: NSViewWidthSizable ];
-    [[window contentView] addSubview: timelineSlider];
+    [[App->window contentView] addSubview: timelineSlider];
 
 
     /* If commandline arguments were used load clip... */
@@ -315,12 +291,16 @@ int NSApplicationMain(int argc, const char * argv[])
     }
 
 
+    /* Init UI */
+    initAppWithGod();
+
+
     /* Start the FPS timer on background thread */
     beginFrameDrawing();
 
 
     /* Show the window or something */
-    [window orderFrontRegardless];
+    [App->window orderFrontRegardless];
     [NSApp run];
 
     return 0;

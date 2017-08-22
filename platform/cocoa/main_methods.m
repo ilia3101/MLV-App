@@ -1,3 +1,6 @@
+/* Methods for user interface interactions 
+ * this is where some real code goes */
+
 #include <math.h>
 #include <string.h>
 #include <unistd.h>
@@ -13,116 +16,99 @@
 
 #include "background_thread.h"
 
+/* God object used to share globals (type) */
+#include "godobject.h"
+/* The godobject itsself */
+extern godObject_t * App;
 
-/* Methods for user interface interactions 
- * this is where some real code goes */
 
-/* Make sure we hav these - or dusnt work :[ */
-extern mlvObject_t * videoMLV;
-extern processingObject_t * processingSettings;
-
-extern char * MLVClipName;
-
-extern NSImage * rawImageObject;
-/* Holds a (the) processed frame that is displayed
- * Will be changed with methods from this file */
-extern NSBitmapImageRep * rawBitmap;
-/* The image data of ^^^^^^^^^^^^^^^ */
-extern uint8_t * rawImage;
-
-/* This is the view, so we can refresh it
- * by doing: 
- *     [previewWindow setImage: tempImage];
- *     [previewWindow setImage: rawImageObject]; 
- * Sets an empty image, then back to the proper one */
-extern NSImageView * previewWindow;
-
-/* App window */
-extern NSWindow * window;
-
-/* ++ this on changes such as settings adjustments or on playback to go to next frame */
-extern int frameChanged;
-/* To stop frame rendeirng if needed */
-extern int dontDraw;
-
-/* What frame we r on */
-extern int currentFrameIndex;
-extern double frameSliderPosition;
-
-/* We always set MLV object to this amount of cache */
-extern int cacheSizeMB;
+/* Initialises value labels with correct slider values */
+void initAppWithGod()
+{
+    /* I really need a slider struct/object ugh :[ */
+    [App->exposureSlider exposureSliderMethod];
+    [App->saturationSlider saturationSliderMethod];
+    [App->kelvinSlider kelvinSliderMethod];
+    [App->tintSlider tintSliderMethod];
+    [App->darkStrengthSlider darkStrengthMethod];
+    [App->darkRangeSlider darkRangeMethod];
+    [App->lightStrengthSlider lightStrengthMethod];
+    [App->lightRangeSlider lightRangeMethod];
+    [App->lightenSlider lightenMethod];
+    App->frameChanged = 0;
+}
 
 
 /* This is now a function so that it can be accessedd from any part of the app, not just a button press */
 void setAppNewMlvClip(char * mlvPathString, char * mlvFileName)
 {
-    free(MLVClipName);
-    MLVClipName = malloc( strlen(mlvFileName) );
-    memcpy(MLVClipName, mlvFileName, strlen(mlvFileName));
+    free(App->MLVClipName);
+    App->MLVClipName = malloc( strlen(mlvFileName) );
+    memcpy(App->MLVClipName, mlvFileName, strlen(mlvFileName));
 
     /* Set app name to include MLV clip's name */
-    [window setTitle: [NSString stringWithFormat: @ APP_NAME " | %s", mlvFileName]];
+    [App->window setTitle: [NSString stringWithFormat: @ APP_NAME " | %s", mlvFileName]];
 
     /* Don't allow drawing frames, incase of adjustments during loading */
-    dontDraw = 1;
+    App->dontDraw = 1;
 
     /* Destroy it just for simplicity... and make a new one */
-    freeMlvObject(videoMLV);
+    freeMlvObject(App->videoMLV);
 
     /* Create a NEW object with a NEW MLV clip! */
-    videoMLV = initMlvObjectWithClip( (char *)mlvPathString );
+    App->videoMLV = initMlvObjectWithClip( (char *)mlvPathString );
 
     /* This funtion really SHOULD be integrated with the one above */
-    mapMlvFrames(videoMLV, 0);
+    mapMlvFrames(App->videoMLV, 0);
 
     /* If use has terminal this is useful */
-    printMlvInfo(videoMLV);
+    printMlvInfo(App->videoMLV);
 
     /* This needs to be joined (or segmentation fault 11 :D) */
-    setMlvProcessing(videoMLV, processingSettings);
+    setMlvProcessing(App->videoMLV, App->processingSettings);
 
     /* Limit frame cache to amount of RAM we decided earlier */
-    setMlvRawCacheLimitMegaBytes(videoMLV, (uint64_t)(cacheSizeMB));
+    setMlvRawCacheLimitMegaBytes(App->videoMLV, (uint64_t)(App->cacheSizeMB));
     /* Tell it slightly less cores than we have, so background caching does not slow down UI interaction */
-    setMlvCpuCores(videoMLV, (MAC_CORES / 2 + 1));
+    setMlvCpuCores(App->videoMLV, (MAC_CORES / 2 + 1));
 
     /* Adjust image size(probably) */
-    [previewWindow setImage: nil];
+    [App->previewWindow setImage: nil];
 
     /* I think this is like free() */
-    [rawImageObject release];
-    [rawBitmap release];
+    [App->rawImageObject release];
+    [App->rawBitmap release];
 
     /* Size may need changing */
-    free(rawImage);
-    rawImage = malloc( sizeof(uint8_t) * 3 * getMlvWidth(videoMLV) * getMlvHeight(videoMLV) );
+    free(App->rawImage);
+    App->rawImage = malloc( sizeof(uint8_t) * 3 * getMlvWidth(App->videoMLV) * getMlvHeight(App->videoMLV) );
 
     /* Now reallocate and set up all imagey-objecty things */
-    rawBitmap = [ [NSBitmapImageRep alloc]
-                  initWithBitmapDataPlanes: (unsigned char * _Nullable * _Nullable)&rawImage 
-                  /* initWithBitmapDataPlanes: NULL */
-                  pixelsWide: getMlvWidth(videoMLV)
-                  pixelsHigh: getMlvHeight(videoMLV)
-                  bitsPerSample: 8
-                  samplesPerPixel: 3
-                  hasAlpha: NO 
-                  isPlanar: NO
-                  colorSpaceName: @"NSDeviceRGBColorSpace"
-                  bitmapFormat: 0
-                  bytesPerRow: getMlvWidth(videoMLV) * 3
-                  bitsPerPixel: 24 ];
+    App->rawBitmap = [ [NSBitmapImageRep alloc]
+                       initWithBitmapDataPlanes: (unsigned char * _Nullable * _Nullable)&App->rawImage 
+                       /* initWithBitmapDataPlanes: NULL */
+                       pixelsWide: getMlvWidth(App->videoMLV)
+                       pixelsHigh: getMlvHeight(App->videoMLV)
+                       bitsPerSample: 8
+                       samplesPerPixel: 3
+                       hasAlpha: NO 
+                       isPlanar: NO
+                       colorSpaceName: @"NSDeviceRGBColorSpace"
+                       bitmapFormat: 0
+                       bytesPerRow: getMlvWidth(App->videoMLV) * 3
+                       bitsPerPixel: 24 ];
 
-    rawImageObject = [[NSImage alloc] initWithSize: NSMakeSize(getMlvWidth(videoMLV),getMlvHeight(videoMLV)) ];
-    [rawImageObject addRepresentation:rawBitmap];
+    App->rawImageObject = [[NSImage alloc] initWithSize: NSMakeSize(getMlvWidth(App->videoMLV),getMlvHeight(App->videoMLV)) ];
+    [App->rawImageObject addRepresentation:App->rawBitmap];
 
-    [previewWindow setImage: rawImageObject];
+    [App->previewWindow setImage: App->rawImageObject];
 
     /* Allow drawing frames */
-    dontDraw = 0;
+    App->dontDraw = 0;
     /* Set current frame where slider is at */
-    currentFrameIndex = (int)( frameSliderPosition * (getMlvFrames(videoMLV)-1) );
+    App->currentFrameIndex = (int)( App->frameSliderPosition * (getMlvFrames(App->videoMLV)-1) );
     /* So view updates and shows new clip */
-    frameChanged++;
+    App->frameChanged++;
 
     /* End of MLV opening stuff */
 }
@@ -136,13 +122,13 @@ void setAppNewMlvClip(char * mlvPathString, char * mlvFileName)
 {
     if ([self state] == NSOnState) 
     {
-        setMlvAlwaysUseAmaze(videoMLV);
-        frameChanged++;
+        setMlvAlwaysUseAmaze(App->videoMLV);
+        App->frameChanged++;
     }
     else 
     {
-        setMlvDontAlwaysUseAmaze(videoMLV);
-        frameChanged++;
+        setMlvDontAlwaysUseAmaze(App->videoMLV);
+        App->frameChanged++;
     }
 }
 
@@ -151,13 +137,13 @@ void setAppNewMlvClip(char * mlvPathString, char * mlvFileName)
 {
     if ([self state] == NSOnState) 
     {
-        processingEnableHighlightReconstruction(processingSettings);
-        frameChanged++;
+        processingEnableHighlightReconstruction(App->processingSettings);
+        App->frameChanged++;
     }
     else 
     {
-        processingDisableHighlightReconstruction(processingSettings);
-        frameChanged++;
+        processingDisableHighlightReconstruction(App->processingSettings);
+        App->frameChanged++;
     }
 }
 
@@ -166,13 +152,13 @@ void setAppNewMlvClip(char * mlvPathString, char * mlvFileName)
 {
     if ([self state] == NSOnState) 
     {
-        processingEnableTonemapping(processingSettings);
-        frameChanged++;
+        processingEnableTonemapping(App->processingSettings);
+        App->frameChanged++;
     }
     else 
     {
-        processingDisableTonemapping(processingSettings);
-        frameChanged++;
+        processingDisableTonemapping(App->processingSettings);
+        App->frameChanged++;
     }
 }
 
@@ -210,7 +196,7 @@ void setAppNewMlvClip(char * mlvPathString, char * mlvFileName)
 /* Exports to Prores 4444 (currently with ffmpeg and intermediate PNG - no AVfoundation yet) */
 -(void)exportProRes4444
 {
-    if (isMlvActive(videoMLV))
+    if (isMlvActive(App->videoMLV))
     {    
         /* Create open panel */
         NSOpenPanel * panel = [[NSOpenPanel openPanel] retain];
@@ -238,30 +224,30 @@ void setAppNewMlvClip(char * mlvPathString, char * mlvFileName)
                     system(commandStr);
 
                     /* So we always get amaze frames for exporting */
-                    setMlvAlwaysUseAmaze(videoMLV);
+                    setMlvAlwaysUseAmaze(App->videoMLV);
 
                     /* We will use the same NSBitmapImageRep as for exporting as for preview window */
-                    for (int f = 0; f < getMlvFrames(videoMLV); ++f)
+                    for (int f = 0; f < getMlvFrames(App->videoMLV); ++f)
                     {
                         /* Generate file name for frame */
                         snprintf(exportPath, 2047, "%s/frame_%.5i.png", exportDir, f);
 
                         /* Get processed frame */
-                        getMlvProcessedFrame8(videoMLV, f, rawImage);
+                        getMlvProcessedFrame8(App->videoMLV, f, App->rawImage);
 
                         /* Export */
-                        NSData * imageFile = [rawBitmap representationUsingType: NSPNGFileType properties: nil];
+                        NSData * imageFile = [App->rawBitmap representationUsingType: NSPNGFileType properties: nil];
                         [imageFile writeToFile: [NSString stringWithUTF8String:exportPath] atomically: NO];
 
                         NSLog(@"Exported frame %i to: %s", f, exportPath);
                     }
 
-                    setMlvDontAlwaysUseAmaze(videoMLV);
+                    setMlvDontAlwaysUseAmaze(App->videoMLV);
 
                     /* Run ffmpeg to create ProRes file */
                     char * ffmpegPath = (char *)[[[NSBundle mainBundle] pathForResource:@"ffmpeg" ofType: nil] UTF8String];
                     snprintf( commandStr, 2047, "\"%s\" -r %f -i %s/frame_%s.png -c:v prores_ks -profile:v 4444 %s/%.8s.mov", 
-                              ffmpegPath, getMlvFramerate(videoMLV), exportDir, "\%05d", pathString, MLVClipName);
+                              ffmpegPath, getMlvFramerate(App->videoMLV), exportDir, "\%05d", pathString, App->MLVClipName);
                     system(commandStr);
 
                     /* Delete hidden directory */
@@ -290,10 +276,10 @@ void setAppNewMlvClip(char * mlvPathString, char * mlvFileName)
 /* Change frame based on time slider */
 -(void)timelineSliderMethod
 {
-    currentFrameIndex = (int)( [self doubleValue] * (getMlvFrames(videoMLV)-1) );
-    frameSliderPosition = [self doubleValue];
+    App->currentFrameIndex = (int)( [self doubleValue] * (getMlvFrames(App->videoMLV)-1) );
+    App->frameSliderPosition = [self doubleValue];
 
-    frameChanged++;
+    App->frameChanged++;
 }
 
 /* Following are all processing adjustments */
@@ -308,9 +294,11 @@ void setAppNewMlvClip(char * mlvPathString, char * mlvFileName)
     double exposureValueStops = ([self doubleValue] - 0.5) * 8.0 + 1.2;
 
     /* Set processing object's exposure now */
-    processingSetExposureStops(processingSettings, exposureValueStops);
+    processingSetExposureStops(App->processingSettings, exposureValueStops);
 
-    frameChanged++;
+    [App->exposureValueLabel setStringValue: [NSString stringWithFormat:@"%6.3f", exposureValueStops - 1.2]];
+
+    App->frameChanged++;
 }
 
 -(void)saturationSliderMethod 
@@ -321,9 +309,11 @@ void setAppNewMlvClip(char * mlvPathString, char * mlvFileName)
     double saturationValue = pow( saturationSliderValue, log(3.6)/log(2.0) );
 
     /* Yea whatever */
-    processingSetSaturation(processingSettings, saturationValue);
+    processingSetSaturation(App->processingSettings, saturationValue);
 
-    frameChanged++;
+    [App->saturationValueLabel setStringValue: [NSString stringWithFormat:@"%6.3f", saturationValue]];
+
+    App->frameChanged++;
 }
 
 -(void)kelvinSliderMethod 
@@ -332,9 +322,11 @@ void setAppNewMlvClip(char * mlvPathString, char * mlvFileName)
     double kelvinValue = [self doubleValue] * 7500.0 + 2500.0;
 
     /* Set processing object white balance */
-    processingSetWhiteBalanceKelvin(processingSettings, kelvinValue);
+    processingSetWhiteBalanceKelvin(App->processingSettings, kelvinValue);
 
-    frameChanged++;
+    [App->kelvinValueLabel setStringValue: [NSString stringWithFormat:@"%5.dk", (int)kelvinValue]];
+
+    App->frameChanged++;
 }
 
 -(void)tintSliderMethod
@@ -351,27 +343,34 @@ void setAppNewMlvClip(char * mlvPathString, char * mlvFileName)
     if (tintSliderValue < 0) tintValue = -tintValue;
 
     /* Set processing object white balance */
-    processingSetWhiteBalanceTint(processingSettings, tintValue);
+    processingSetWhiteBalanceTint(App->processingSettings, tintValue);
 
-    frameChanged++;
+    [App->tintValueLabel setStringValue: [NSString stringWithFormat:@"%6.3f", ([self doubleValue] - 0.5) * 2 ]];
+
+    App->frameChanged++;
 }
 
 /* All contrast/curve settings */
 -(void)darkStrengthMethod {
-    processingSetDCFactor(processingSettings, [self doubleValue] * 22.5);
-    frameChanged++;
+    processingSetDCFactor(App->processingSettings, [self doubleValue] * 22.5);
+    [App->darkStrengthValueLabel setStringValue: [NSString stringWithFormat:@"%6.3f", [self doubleValue]]];
+    App->frameChanged++;
 } -(void)darkRangeMethod {
-    processingSetDCRange(processingSettings, [self doubleValue]);
-    frameChanged++;
+    processingSetDCRange(App->processingSettings, [self doubleValue]);
+    [App->darkRangeValueLabel setStringValue: [NSString stringWithFormat:@"%6.3f", [self doubleValue]]];
+    App->frameChanged++;
 } -(void)lightStrengthMethod {
-    processingSetLCFactor(processingSettings, [self doubleValue] * 11.2);
-    frameChanged++;
+    processingSetLCFactor(App->processingSettings, [self doubleValue] * 11.2);
+    [App->lightStrengthValueLabel setStringValue: [NSString stringWithFormat:@"%6.3f", [self doubleValue]]];
+    App->frameChanged++;
 } -(void)lightRangeMethod {
-    processingSetLCRange(processingSettings, [self doubleValue]);
-    frameChanged++;
+    processingSetLCRange(App->processingSettings, [self doubleValue]);
+    [App->lightRangeValueLabel setStringValue: [NSString stringWithFormat:@"%6.3f", [self doubleValue]]];
+    App->frameChanged++;
 } -(void)lightenMethod {
-    processingSetLightening(processingSettings, [self doubleValue] * 0.6);
-    frameChanged++;
+    processingSetLightening(App->processingSettings, [self doubleValue] * 0.6);
+    [App->lightenValueLabel setStringValue: [NSString stringWithFormat:@"%6.3f", [self doubleValue]]];
+    App->frameChanged++;
 }
 
 @end
@@ -383,7 +382,7 @@ void setAppNewMlvClip(char * mlvPathString, char * mlvFileName)
 -(void)updatePreviewWindow
 {
     [self setImage: nil];
-    [self setImage: rawImageObject];
+    [self setImage: App->rawImageObject];
     [self setNeedsDisplay: YES];
 }
 

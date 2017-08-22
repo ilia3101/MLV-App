@@ -3,7 +3,7 @@
 /* Creates a slider + labels on the right sidebar */
 #define CREATE_SLIDER_RIGHT( sliderName, labelName, valueLabelName, labelString, slotNumber, methodName, offset, defaultValueDouble ) \
  \
-NSTextField * labelName = [ \
+labelName = [ \
     [NSTextField alloc]  \
     initWithFrame: NSMakeRect( RIGHT_SIDEBAR_LABEL(slotNumber, ELEMENT_HEIGHT, offset) ) \
 ]; \
@@ -12,9 +12,9 @@ NSTextField * labelName = [ \
 [labelName anchorTop: YES]; \
 [labelName anchorRight: YES]; \
 [labelName setStringValue: labelString]; \
-[[window contentView] addSubview: labelName]; \
+[[App->window contentView] addSubview: labelName]; \
  \
-NSTextField * valueLabelName = [ \
+valueLabelName = [ \
     [NSTextField alloc]  \
     initWithFrame: NSMakeRect( RIGHT_SIDEBAR_VALUE_LABEL(slotNumber, ELEMENT_HEIGHT, offset) ) \
 ]; \
@@ -23,9 +23,9 @@ NSTextField * valueLabelName = [ \
 [valueLabelName anchorTop: YES]; \
 [valueLabelName anchorRight: YES]; \
 [valueLabelName setStringValue: @"1.0"]; \
-[[window contentView] addSubview: valueLabelName]; \
+[[App->window contentView] addSubview: valueLabelName]; \
  \
-NSSlider * sliderName = [ \
+sliderName = [ \
     [NSSlider alloc] \
     initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(slotNumber, ELEMENT_HEIGHT, offset) ) \
 ]; \
@@ -34,7 +34,7 @@ NSSlider * sliderName = [ \
 [sliderName setDoubleValue: defaultValueDouble]; \
 [sliderName anchorRight: YES]; \
 [sliderName anchorTop: YES]; \
-[[window contentView] addSubview: sliderName];
+[[App->window contentView] addSubview: sliderName];
 
 /* Adding more than 1 button causes segmentation fault 11. Something is broken. */
 
@@ -50,7 +50,7 @@ NSButton * buttonName = [ \
 [buttonName setTitle: buttonText]; \
 [buttonName anchorLeft: YES]; \
 [buttonName anchorTop: YES]; \
-[[window contentView] addSubview: buttonName];
+[[App->window contentView] addSubview: buttonName];
 
 
 /* Creates an button on the left sidebar */
@@ -65,7 +65,7 @@ NSButton * buttonName = [ \
 [buttonName setTitle: buttonText]; \
 [buttonName anchorLeft: YES]; \
 [buttonName anchorBottom: YES]; \
-[[window contentView] addSubview: buttonName];
+[[App->window contentView] addSubview: buttonName];
 
 
 /* Creates an button on the right sidebar */
@@ -80,4 +80,4 @@ NSTextField * inputName = [ \
 [inputName setAction: @selector(methodName)]; \
 /*[inputName anchorLeft: YES]; \
 [inputName anchorTop: YES];*/ \
-[[window contentView] addSubview: inputName];
+[[App->window contentView] addSubview: inputName];
