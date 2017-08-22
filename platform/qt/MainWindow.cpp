@@ -25,7 +25,7 @@
 #include "ExportSettingsDialog.h"
 #include "EditSliderValueDialog.h"
 
-#define VERSION "0.5 alpha"
+#define VERSION "0.6 alpha"
 
 QMutex gMutex;
 QMutex gMutexPng16;
@@ -454,7 +454,7 @@ void MainWindow::initGui( void )
     m_pHistogram = new Histogram();
     ui->actionShowHistogram->setChecked( true );
     m_pWaveFormMonitor = new WaveFormMonitor( 200 );
-    //Fullscreen does not work will, so disable
+    //Fullscreen does not work well, so disable
     ui->actionFullscreen->setVisible( false );
     //Dont show the Faithful combobox
     ui->comboBox->setVisible( false );
