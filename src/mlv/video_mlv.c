@@ -17,6 +17,24 @@
 /* Lossless decompression */
 #include "liblj92/lj92.h"
 
+static uint32_t file_set_pos(FILE *stream, uint64_t offset, int whence)
+{
+#if defined(__WIN32)
+    return fseeko64(stream, offset, whence);
+#else
+    return fseeko(stream, offset, whence);
+#endif
+}
+
+static uint32_t file_get_pos(FILE *stream)
+{
+#if defined(__WIN32)
+    return ftello64(stream);
+#else
+    return ftello(stream);
+#endif
+}
+
 /* Unpacks the bits of a frame to get a bayer B&W image (without black level correction)
  * Needs memory to return to, sized: sizeof(float) * getMlvHeight(urvid) * getMlvWidth(urvid)
  * Output image's pixels will be in range 0-65535 as if it is 16 bit integers */
@@ -33,7 +51,7 @@ void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outpu
     uint8_t * RAWFrame = (uint8_t *)malloc( raw_frame_size );
 
     /* Move to start of frame in file and read the RAW data */
-    fseeko(video->file, video->frame_offsets[frameIndex], SEEK_SET);
+    file_set_pos(video->file, video->frame_offsets[frameIndex], SEEK_SET);
 
     /* If size is smaller than it should be, it must be compressed */
     if (video->frame_sizes[frameIndex] < video->frame_size)
@@ -323,20 +341,20 @@ void openMlvClip(mlvObject_t * video, char * mlvPath)
     video->file = (FILE *)fopen(mlvPath, "rb");
 
     /* Getting size of file in bytes */
-    fseeko(video->file, 0, SEEK_END);
-    uint64_t file_size = ftello(video->file);
+    file_set_pos(video->file, 0, SEEK_END);
+    uint64_t file_size = file_get_pos(video->file);
 
     char block_name[4]; /* Read header name to this */
     uint32_t block_size; /* Size of block */
     uint32_t block_num = 0; /* Number of blocks in file */
     uint32_t frame_total = 0; /* Number of frames in video */
 
-    fseeko(video->file, 0, SEEK_SET); /* Start of file */
+    file_set_pos(video->file, 0, SEEK_SET); /* Start of file */
 
-    while (ftello(video->file) < file_size) /* Check if were at end of file yet */
+    while (file_get_pos(video->file) < file_size) /* Check if were at end of file yet */
     {
         /* Record position to go back to it later if block is read */
-        uint64_t block_start = ftello(video->file);
+        uint64_t block_start = file_get_pos(video->file);
         /* Read block name */
         fread(&block_name, sizeof(char), 4, video->file);
         /* Read size of block to block_size variable */
@@ -345,7 +363,7 @@ void openMlvClip(mlvObject_t * video, char * mlvPath)
         uint64_t next_block =  (uint64_t)block_start +  (uint64_t)block_size;
 
         /* Go back to start of block for next bit */
-        fseeko(video->file, block_start, SEEK_SET);
+        file_set_pos(video->file, block_start, SEEK_SET);
 
         /* Now check what kind of block it is and read it in to the mlv object */
 
@@ -385,7 +403,7 @@ void openMlvClip(mlvObject_t * video, char * mlvPath)
 #endif
 
         /* Move to next block */
-        fseeko(video->file, next_block, SEEK_SET);
+        file_set_pos(video->file, next_block, SEEK_SET);
 
         block_num++;
     }
@@ -463,8 +481,8 @@ void openMlvClip(mlvObject_t * video, char * mlvPath)
 void mapMlvFrames(mlvObject_t * video, uint64_t limit)
 {
     /* Getting size of file in bytes */
-    fseeko(video->file, 0, SEEK_END); /* Go to end */
-    uint64_t file_size = ftello(video->file); /* Get positions */
+    file_set_pos(video->file, 0, SEEK_END); /* Go to end */
+    uint64_t file_size = file_get_pos(video->file); /* Get positions */
 
     char block_name[4]; /* Read header name to this */
     uint32_t block_size; /* Size of block */
@@ -472,7 +490,7 @@ void mapMlvFrames(mlvObject_t * video, uint64_t limit)
     uint32_t frame_num = 0; /* Number of frames in video */
     uint32_t frame_total = 0; /* Number of frames in video */
 
-    fseeko(video->file, 0, SEEK_SET); /* Start of file */
+    file_set_pos(video->file, 0, SEEK_SET); /* Start of file */
 
     /* Memory 4 all frame offsets */
     free(video->frame_offsets);
@@ -480,10 +498,10 @@ void mapMlvFrames(mlvObject_t * video, uint64_t limit)
     free(video->frame_sizes);
     video->frame_sizes = (uint32_t *)malloc( (video->frames) * sizeof(uint32_t) );
 
-    while (ftello(video->file) < file_size) /* Check if end of file yet */
+    while (file_get_pos(video->file) < file_size) /* Check if end of file yet */
     {
         /* Record position to go back to it later when block is read */
-        uint64_t block_start = ftello(video->file);
+        uint64_t block_start = file_get_pos(video->file);
         /* Read block name */
         fread(&block_name, sizeof(char), 4, video->file);
         /* Read size of block to block_size variable */
@@ -494,13 +512,13 @@ void mapMlvFrames(mlvObject_t * video, uint64_t limit)
         /* Is it frame block? */
         if ( strncmp(block_name, "VIDF", 4) == 0 )
         {
-            fseeko(video->file, 8, SEEK_CUR); /* skip 8 bytes */
+            file_set_pos(video->file, 8, SEEK_CUR); /* skip 8 bytes */
 
             /* I've heard MLV frames can be out of order... 
              * So check its number... */
             fread(&frame_num, sizeof(uint32_t), 1, video->file);
 
-            fseeko(video->file, 8, SEEK_CUR); /* skip 8 bytes */
+            file_set_pos(video->file, 8, SEEK_CUR); /* skip 8 bytes */
 
             /* Get frame offset from current location */
             fread(&frame_offset, sizeof(uint32_t), 1, video->file);
@@ -512,7 +530,7 @@ void mapMlvFrames(mlvObject_t * video, uint64_t limit)
 #endif
 
             /* Video frame start = current location + frame offset */
-            video->frame_offsets[frame_num] = ftello(video->file) + frame_offset;
+            video->frame_offsets[frame_num] = file_get_pos(video->file) + frame_offset;
 
             /* Measure frame size if lossless */
             video->frame_sizes[frame_num] = block_size - (sizeof(mlv_vidf_hdr_t) + frame_offset);
@@ -521,7 +539,7 @@ void mapMlvFrames(mlvObject_t * video, uint64_t limit)
         }
 
         /* Move to next block */
-        fseeko(video->file, next_block, SEEK_SET);
+        file_set_pos(video->file, next_block, SEEK_SET);
 
         if (limit != 0 && frame_total == limit) break;
     }
