@@ -8,20 +8,29 @@
 #include <unistd.h>
 
 #define TAB "    "
+#define NL "\n"
+
+#define XML_TAG_A(TYPE, EXTRAS) "<" TYPE EXTRAS ">"
+#define XML_TAG_B(TYPE) "</" TYPE ">"
+#define XML_TAG_C(TYPE) "<" TYPE "/>"
+
+/* Leave extras blank probably */
+#define XML_TAG(TYPE, INFO, EXTRAS) \
+    XML_TAG_A(TYPE, EXTRAS) INFO XML_TAG_B(TYPE)
 
 #define INFO_PLIST_START \
-	"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" \
-	"<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">" \
-	"<plist version=\"1.0\">\n" \
-	"<dict>\n"
+    XML_TAG_A("?xml", " version=\"1.0\" encoding=\"UTF-8\"?") NL \
+	XML_TAG_A("!DOCTYPE", " plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"") NL \
+	XML_TAG_A("plist", " version=\"1.0\"") NL \
+    XML_TAG_A("dict", "") NL
 
 #define INFO_PLIST_END \
-	"</dict>\n" \
-	"</plist>\n" \
+    XML_TAG_B("dict") NL \
+	XML_TAG_B("plist") NL
 
 #define INFO_PLIST_PROPERTY(KEY, STRING) \
-	TAB "<key>" KEY "</key>\n" \
-	TAB "<string>" STRING "</string>\n"
+    TAB XML_TAG("key", KEY, "") NL \
+    TAB XML_TAG("string", STRING, "") NL
 
 
 /* App name should be single commandline argument */
@@ -42,8 +51,9 @@ int main(int argc, char * argv[])
     fprintf(info_plist, INFO_PLIST_PROPERTY("CFBundlePackageType", "APPL"));
     fprintf(info_plist, INFO_PLIST_PROPERTY("CFBundleVersion", "(%s @%s)"), __DATE__, host_name);
     fprintf(info_plist, INFO_PLIST_PROPERTY("LSMinimumSystemVersion", "10.6.0"));
-    fprintf(info_plist, TAB "<key>LSUIElement</key>\n" TAB "<false/>\n");
-    fprintf(info_plist, INFO_PLIST_PROPERTY("NSHumanReadableCopyright", "© 2017 Ilia Sibiryakov"));
+    fprintf(info_plist, INFO_PLIST_PROPERTY("CFBundleIconFile", "mlvapp.icns"));
+    fprintf(info_plist, TAB XML_TAG("key", "LSUIElement", "") NL TAB XML_TAG_C("false") NL);
+    fprintf(info_plist, INFO_PLIST_PROPERTY("NSHumanReadableCopyright", "© 2017 Ilia Sibiryakov (GPLv3)"));
     fprintf(info_plist, INFO_PLIST_END);
 
     fclose(info_plist);

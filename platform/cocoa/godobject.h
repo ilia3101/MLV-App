@@ -34,6 +34,14 @@ typedef struct {
     * lightRangeLabel, * lightRangeValueLabel,
     * lightenLabel, * lightenValueLabel;
 
+    /* Buttons */
+    NSButton * openMLVButton;
+    NSButton * exportProRes4444Button;
+    /* Buttons (Checkboxes) */
+    NSButton * highlightReconstructionSelector;
+    NSButton * alwaysUseAmazeSelector;
+    NSButton * tonemappingSelector;
+
     /* The main video object that the app will use for
      * handling MLV videos and processing them */
     mlvObject_t * videoMLV;

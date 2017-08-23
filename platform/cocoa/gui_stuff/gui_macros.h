@@ -40,7 +40,7 @@ sliderName = [ \
 
 /* Creates an button on the left sidebar */
 #define CREATE_BUTTON_LEFT_TOP( buttonName, slotNumber, methodName, offset, buttonText ) \
-NSButton * buttonName = [ \
+buttonName = [ \
     [NSButton alloc] \
     initWithFrame: NSMakeRect( LEFT_SIDEBAR_ELEMENT_TOP(slotNumber, ELEMENT_HEIGHT, offset) ) \
 ]; \
@@ -55,7 +55,7 @@ NSButton * buttonName = [ \
 
 /* Creates an button on the left sidebar */
 #define CREATE_BUTTON_LEFT_BOTTOM( buttonName, slotNumber, methodName, offset, buttonText ) \
-NSButton * buttonName = [ \
+buttonName = [ \
     [NSButton alloc] \
     initWithFrame: NSMakeRect( LEFT_SIDEBAR_ELEMENT_BOTTOM(slotNumber, ELEMENT_HEIGHT, offset) ) \
 ]; \

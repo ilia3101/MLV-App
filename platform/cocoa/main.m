@@ -135,37 +135,37 @@ int NSApplicationMain(int argc, const char * argv[])
     /* Maybe we won't have sharpness */
 
     /* Enable/disable highlight reconstruction */
-    NSButton * highlightReconstructionSelector = [ [NSButton alloc] 
-                                                   initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(11, ELEMENT_HEIGHT, 16) )];
-    [highlightReconstructionSelector setButtonType: NSSwitchButton];
-    [highlightReconstructionSelector setTitle: @"Highlight Reconstruction"];
-    [highlightReconstructionSelector anchorRight: YES];
-    [highlightReconstructionSelector anchorTop: YES];
-    [highlightReconstructionSelector setTarget: highlightReconstructionSelector];
-    [highlightReconstructionSelector setAction: @selector(toggleHighlightReconstruction)];
-    [[App->window contentView] addSubview: highlightReconstructionSelector];
+    App->highlightReconstructionSelector = [ [NSButton alloc] 
+                                             initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(11, ELEMENT_HEIGHT, 16) )];
+    [App->highlightReconstructionSelector setButtonType: NSSwitchButton];
+    [App->highlightReconstructionSelector setTitle: @"Highlight Reconstruction"];
+    [App->highlightReconstructionSelector anchorRight: YES];
+    [App->highlightReconstructionSelector anchorTop: YES];
+    [App->highlightReconstructionSelector setTarget: App->highlightReconstructionSelector];
+    [App->highlightReconstructionSelector setAction: @selector(toggleHighlightReconstruction)];
+    [[App->window contentView] addSubview: App->highlightReconstructionSelector];
 
     /* To set always use AMaZE on/off */
-    NSButton * alwaysUseAmazeSelector = [ [NSButton alloc] 
-                                          initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(12, ELEMENT_HEIGHT, 30) )];
-    [alwaysUseAmazeSelector setButtonType: NSSwitchButton];
-    [alwaysUseAmazeSelector setTitle: @"Always use AMaZE"];
-    [alwaysUseAmazeSelector anchorRight: YES];
-    [alwaysUseAmazeSelector anchorTop: YES];
-    [alwaysUseAmazeSelector setTarget: alwaysUseAmazeSelector];
-    [alwaysUseAmazeSelector setAction: @selector(toggleAlwaysAmaze)];
-    [[App->window contentView] addSubview: alwaysUseAmazeSelector];
+    App->alwaysUseAmazeSelector = [ [NSButton alloc] 
+                                    initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(12, ELEMENT_HEIGHT, 30) )];
+    [App->alwaysUseAmazeSelector setButtonType: NSSwitchButton];
+    [App->alwaysUseAmazeSelector setTitle: @"Always use AMaZE"];
+    [App->alwaysUseAmazeSelector anchorRight: YES];
+    [App->alwaysUseAmazeSelector anchorTop: YES];
+    [App->alwaysUseAmazeSelector setTarget: App->alwaysUseAmazeSelector];
+    [App->alwaysUseAmazeSelector setAction: @selector(toggleAlwaysAmaze)];
+    [[App->window contentView] addSubview: App->alwaysUseAmazeSelector];
 
     /* To set enable/disable tonemapping */
-    NSButton * tonemappingSelector = [ [NSButton alloc] 
-                                       initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(13, ELEMENT_HEIGHT, 44) )];
-    [tonemappingSelector setButtonType: NSSwitchButton];
-    [tonemappingSelector setTitle: @"Reinhard Tonemapping"];
-    [tonemappingSelector anchorRight: YES];
-    [tonemappingSelector anchorTop: YES];
-    [tonemappingSelector setTarget: tonemappingSelector];
-    [tonemappingSelector setAction: @selector(toggleTonemapping)];
-    [[App->window contentView] addSubview: tonemappingSelector];
+    App->tonemappingSelector = [ [NSButton alloc] 
+                                 initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(13, ELEMENT_HEIGHT, 44) )];
+    [App->tonemappingSelector setButtonType: NSSwitchButton];
+    [App->tonemappingSelector setTitle: @"Reinhard Tonemapping"];
+    [App->tonemappingSelector anchorRight: YES];
+    [App->tonemappingSelector anchorTop: YES];
+    [App->tonemappingSelector setTarget: App->tonemappingSelector];
+    [App->tonemappingSelector setAction: @selector(toggleTonemapping)];
+    [[App->window contentView] addSubview: App->tonemappingSelector];
 
     /*
      *******************************************************************************
@@ -174,11 +174,11 @@ int NSApplicationMain(int argc, const char * argv[])
      */
 
     /* Open MLV file button */
-    CREATE_BUTTON_LEFT_TOP( openMLVButton, 0, openMlvDialog, 0, @"Open MLV File" );
+    CREATE_BUTTON_LEFT_TOP( App->openMLVButton, 0, openMlvDialog, 0, @"Open MLV File" );
     /* Export an image sequence (temporary) - these buttons look awkward and awful :[ */
     // CREATE_BUTTON_LEFT_BOTTOM( exportJpegSequenceButton, 1, exportJpegSequence, 1, @"Export JPEG Sequence" );
     // CREATE_BUTTON_LEFT_BOTTOM( exportPngSequenceButton, 0, exportPngSequence, 1, @"Export PNG Sequence" );
-    CREATE_BUTTON_LEFT_BOTTOM( exportProRes4444Button, 0, exportProRes4444, 1, @"Export ProRes 4444" );
+    CREATE_BUTTON_LEFT_BOTTOM( App->exportProRes4444Button, 0, exportProRes4444, 1, @"Export ProRes 4444" );
     /* Black level user input/adjustment */
     // CREATE_INPUT_WITH_LABEL_LEFT( blackLevelEntry, 1, blackLevelSet, 0, @"Black Level:" );
 
