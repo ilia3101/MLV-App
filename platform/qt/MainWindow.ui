@@ -130,6 +130,7 @@
     <addaction name="separator"/>
     <addaction name="actionDropFrameMode"/>
     <addaction name="actionAlwaysUseAMaZE"/>
+    <addaction name="actionCaching"/>
     <addaction name="separator"/>
     <addaction name="actionZoomFit"/>
     <addaction name="actionZoom100"/>
@@ -1418,6 +1419,14 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+F</string>
+   </property>
+  </action>
+  <action name="actionCaching">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Caching</string>
    </property>
   </action>
  </widget>

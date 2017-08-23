@@ -72,6 +72,7 @@ private slots:
     void on_actionNewSession_triggered();
     void on_actionOpenSession_triggered();
     void on_actionSaveSession_triggered();
+    void on_actionCaching_triggered( bool checked );
     void readFFmpegOutput( void );
     void endExport( void );
     void on_listWidgetSession_activated(const QModelIndex &index);
@@ -94,6 +95,7 @@ private slots:
     void on_label_LightenVal_doubleClicked( void );
     void on_actionFullscreen_triggered(bool checked);
     void exportHandler( void );
+
 
 private:
     Ui::MainWindow *ui;

@@ -352,6 +352,8 @@ void MainWindow::openMlv( QString fileName )
     setMlvProcessing( m_pMlvObject, m_pProcessingObject );
     /* Limit frame cache to defined size of RAM */
     setMlvRawCacheLimitMegaBytes( m_pMlvObject, m_cacheSizeMB );
+    /* Caching */
+    //ui->actionCaching->isChecked()
     /* Tell it how many cores we have so it can be optimal */
     setMlvCpuCores( m_pMlvObject, QThread::idealThreadCount() );
 
@@ -368,7 +370,7 @@ void MainWindow::openMlv( QString fileName )
     m_pInfoDialog->ui->tableWidget->item( 4, 1 )->setText( QString( "%1" ).arg( (int)getMlvFrames( m_pMlvObject ) ) );
     m_pInfoDialog->ui->tableWidget->item( 5, 1 )->setText( QString( "%1 fps" ).arg( getMlvFramerate( m_pMlvObject ) ) );
     m_pInfoDialog->ui->tableWidget->item( 6, 1 )->setText( QString( "%1 µs" ).arg( getMlvShutter( m_pMlvObject ) ) );
-    m_pInfoDialog->ui->tableWidget->item( 7, 1 )->setText( QString( "f %1" ).arg( getMlvAperture( m_pMlvObject ) / 100.0, 0, 'f', 1 ) );
+    m_pInfoDialog->ui->tableWidget->item( 7, 1 )->setText( QString( "f/%1" ).arg( getMlvAperture( m_pMlvObject ) / 100.0, 0, 'f', 1 ) );
     m_pInfoDialog->ui->tableWidget->item( 8, 1 )->setText( QString( "%1" ).arg( (int)getMlvIso( m_pMlvObject ) ) );
     m_pInfoDialog->ui->tableWidget->item( 9, 1 )->setText( QString( "%1 bits" ).arg( getMlvBitdepth( m_pMlvObject ) ) );
 
@@ -551,6 +553,7 @@ void MainWindow::readSettings()
     m_lastSaveFileName = set.value( "lastFileName", QString( "/Users/" ) ).toString();
     m_codecProfile = set.value( "codecProfile", 4 ).toUInt();
     m_previewMode = set.value( "previewMode", 1 ).toUInt();
+    if( set.value( "caching", false ).toBool() ) ui->actionCaching->setChecked( true );
 }
 
 //Save some settings to registry
@@ -569,6 +572,7 @@ void MainWindow::writeSettings()
     set.setValue( "lastFileName", m_lastSaveFileName );
     set.setValue( "codecProfile", m_codecProfile );
     set.setValue( "previewMode", m_previewMode );
+    set.setValue( "caching", ui->actionCaching->isChecked() );
 }
 
 //Start exporting a MOV via PNG48
@@ -1370,6 +1374,12 @@ void MainWindow::on_actionSaveSession_triggered()
     if( fileName.count() == 0 ) return;
 
     saveSession( fileName );
+}
+
+//En-/Disable Caching
+void MainWindow::on_actionCaching_triggered(bool checked)
+{
+
 }
 
 //FileName in SessionList doubleClicked
