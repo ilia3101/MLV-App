@@ -98,10 +98,16 @@ void setAppNewMlvClip(char * mlvPathString, char * mlvFileName)
                        bytesPerRow: getMlvWidth(App->videoMLV) * 3
                        bitsPerPixel: 24 ];
 
-    App->rawImageObject = [[NSImage alloc] initWithSize: NSMakeSize(getMlvWidth(App->videoMLV),getMlvHeight(App->videoMLV)) ];
+    App->rawImageObject = [[NSImage alloc] initWithSize: NSMakeSize(getMlvWidth(App->videoMLV),getMlvHeight(App->videoMLV))];
     [App->rawImageObject addRepresentation:App->rawBitmap];
 
     [App->previewWindow setImage: App->rawImageObject];
+
+    /* If ALways AMaZE was set, set it again on new clip */
+    if ([App->alwaysUseAmazeSelector state] == NSOnState)
+    {
+        setMlvAlwaysUseAmaze(App->videoMLV);
+    }
 
     /* Allow drawing frames */
     App->dontDraw = 0;
