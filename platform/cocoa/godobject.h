@@ -3,8 +3,31 @@
 
 #import "Cocoa/Cocoa.h"
 
-/* Just a god object for the Cocoa GUI, because I literally can't be asked to learn the proper way of doing this stuff */
+/* Info about a clip, for handling many in a session. All clips share same processing object */
+typedef struct {
 
+    /* MLV object */
+    mlvObject_t * video;
+
+    /* Easier to set slider positions than using actual processing values */
+    struct {
+        double exposureSlider;
+        double saturationSlider;
+        double kelvinSlider;
+        double tintSlider;
+        double darkStrengthSlider;
+        double darkRangeSlider;
+        double lightStrengthSlider;
+        double lightRangeSlider;
+        double lightenSlider;
+        int highlightReconstructionSelector;
+        int alwaysUseAmazeSelector;
+        int tonemappingSelector;
+    } settings;
+
+} clipInfo_t;
+
+/* Just a god object for the Cocoa GUI, because I literally can't be asked to learn the proper way of doing this stuff */
 typedef struct {
 
     /* THE application window */
@@ -41,6 +64,21 @@ typedef struct {
     NSButton * highlightReconstructionSelector;
     NSButton * alwaysUseAmazeSelector;
     NSButton * tonemappingSelector;
+
+    /****************************************
+     **           SESSION STUFF            **
+     ****************************************/
+
+    /* Number of clips */
+    int clipCount;
+    /* List of clips loaded (in session) */
+    NSTableView * clipTable;
+    /* Info about each one (array as long as clipcount) */
+    clipInfo_t * clipInfo;
+
+    /****************************************
+     **        END OF SESSION STUFF        **
+     ****************************************/
 
     /* The main video object that the app will use for
      * handling MLV videos and processing them */

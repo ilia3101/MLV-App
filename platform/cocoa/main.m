@@ -182,6 +182,15 @@ int NSApplicationMain(int argc, const char * argv[])
     /* Black level user input/adjustment */
     // CREATE_INPUT_WITH_LABEL_LEFT( blackLevelEntry, 1, blackLevelSet, 0, @"Black Level:" );
 
+    /* NSTableView - List of all clips currently open (session) */
+    // NSScrollView * tableContainer = [[NSScrollView alloc] initWithFrame:NSMakeRect(10, 10, 380, 200)];
+
+    // NSTableColumn * column = [[NSTableColumn alloc] initWithIdentifier:@"id"];
+    // App->clipTable = [ [NSTableView alloc] 
+    //                    initWithFrame: NSMakeRect(10,200,100,100)];
+    // [App->clipTable addTableColumn:column];
+    // [[App->window contentView] addSubview: App->tonemappingSelector];
+
     /*
      *******************************************************************************
      * MLV AND PROCESSING STUFF
@@ -217,20 +226,20 @@ int NSApplicationMain(int argc, const char * argv[])
 
     /* NSBitmapImageRep lets you display bitmap data n stuff in CrApple things like NSImageView */
     App->rawBitmap = [ [NSBitmapImageRep alloc] 
-                  initWithBitmapDataPlanes: (unsigned char * _Nullable * _Nullable)&App->rawImage 
-                  /* initWithBitmapDataPlanes: NULL */
-                  pixelsWide: 1880
-                  pixelsHigh: 1056
-                  bitsPerSample: 8
-                  samplesPerPixel: 3
-                  hasAlpha: NO 
-                  isPlanar: NO 
-                  /* Colour spaces: NSDeviceRGBColorSpace NSCalibratedRGBColorSpace */
-                  colorSpaceName: @"NSDeviceRGBColorSpace"
-                  bitmapFormat: 0
-                  /* every pixel = 1 byte * 3 channels */
-                  bytesPerRow: 1880 * 3
-                  bitsPerPixel: 24 ];
+                       initWithBitmapDataPlanes: (unsigned char * _Nullable * _Nullable)&App->rawImage 
+                       /* initWithBitmapDataPlanes: NULL */
+                       pixelsWide: 1880
+                       pixelsHigh: 1056
+                       bitsPerSample: 8
+                       samplesPerPixel: 3
+                       hasAlpha: NO 
+                       isPlanar: NO 
+                       /* Colour spaces: NSDeviceRGBColorSpace NSCalibratedRGBColorSpace */
+                       colorSpaceName: @"NSDeviceRGBColorSpace"
+                       bitmapFormat: 0
+                       /* every pixel = 1 byte * 3 channels */
+                       bytesPerRow: 1880 * 3
+                       bitsPerPixel: 24 ];
 
 
     /* Will display our video */

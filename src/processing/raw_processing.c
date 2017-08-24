@@ -299,7 +299,7 @@ static double ReinhardTonemap(double value)
 }
 
 /* Choose tonemapping function */
-#define TONEMAP(X) UnchartedTonemap(X)
+#define TONEMAP(X) ReinhardTonemap(X)
 
 /* Set gamma */
 void processingSetGamma(processingObject_t * processing, double gammaValue)
