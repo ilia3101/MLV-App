@@ -266,6 +266,41 @@ void processingSetWhiteBalanceTint(processingObject_t * processing, double WBTin
                                WBTint );
 }
 
+/* Tonemapping info from http://filmicworlds.com/blog/filmic-tonemapping-operators/ */
+
+/* Values for uncharted tonemapping... they can be adjusted */
+double u_A = 0.15;
+double u_B = 0.50;
+double u_C = 0.10;
+double u_D = 0.20;
+double u_E = 0.02;
+double u_F = 0.30;
+double u_W = 11.2; /* White point */
+double u_bias = 2.0;
+
+/* Uncharted tonemapping base funtion */
+static double uncharted_tonemap(double value)
+{
+    return (((value*(u_A*value+u_C*u_B)+u_D*u_E) / (value*(u_A*value+u_B)+u_D*u_F)) - (u_E/u_F));
+}
+
+/* Wrapper with white scaling */
+static double UnchartedTonemap(double value)
+{
+    value = uncharted_tonemap(u_bias * value);
+    /* White scale */
+    value *= (1.0 / uncharted_tonemap(u_W));
+    return value;
+}
+
+static double ReinhardTonemap(double value)
+{
+    return value / (1.0 + value);
+}
+
+/* Choose tonemapping function */
+#define TONEMAP(X) UnchartedTonemap(X)
+
 /* Set gamma */
 void processingSetGamma(processingObject_t * processing, double gammaValue)
 {
@@ -276,12 +311,12 @@ void processingSetGamma(processingObject_t * processing, double gammaValue)
 
     if (processing->exposure_stops < 0.0 || !processing->tone_mapping)
     {
-        /* Precalculate the curve */
+        /* Precalculate the exposure curve */
         for (int i = 0; i < 65536; ++i)
         {
             /* Tone mapping also (reinhard) */
             double pixel = (double)i/65535.0;
-            if (processing->tone_mapping) pixel /= (1.0 + pixel);
+            if (processing->tone_mapping) pixel = TONEMAP(pixel);
             processing->pre_calc_gamma[i] = (uint16_t)(65535.0 * pow(pixel, gamma));
         }
     }
@@ -296,7 +331,7 @@ void processingSetGamma(processingObject_t * processing, double gammaValue)
             /* Tone mapping also (reinhard) */
             double pixel = (double)i/65535.0;
             pixel *= exposure_factor;
-            pixel /= (1.0 + pixel);
+            pixel = TONEMAP(pixel);
             pixel = 65535.0 * pow(pixel, gamma);
             pixel = LIMIT16(pixel);
             processing->pre_calc_gamma[i] = pixel;

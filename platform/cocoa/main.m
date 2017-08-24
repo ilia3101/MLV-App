@@ -160,7 +160,7 @@ int NSApplicationMain(int argc, const char * argv[])
     App->tonemappingSelector = [ [NSButton alloc] 
                                  initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(13, ELEMENT_HEIGHT, 44) )];
     [App->tonemappingSelector setButtonType: NSSwitchButton];
-    [App->tonemappingSelector setTitle: @"Reinhard Tonemapping"];
+    [App->tonemappingSelector setTitle: @"Apply Tonemapping"];
     [App->tonemappingSelector anchorRight: YES];
     [App->tonemappingSelector anchorTop: YES];
     [App->tonemappingSelector setTarget: App->tonemappingSelector];
