@@ -465,8 +465,6 @@ void MainWindow::initGui( void )
     ui->actionFullscreen->setVisible( false );
     //Disable caching by default to avoid crashes
     ui->actionCaching->setVisible( false );
-    //Dont show the Faithful combobox
-    ui->comboBox->setVisible( false );
     //Disable unused (for now) actions
     ui->actionPasteReceipt->setEnabled( false );
     //Disable export until file opened!

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1197</width>
-    <height>901</height>
+    <height>846</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -242,27 +242,6 @@
          <property name="alignment">
           <set>Qt::AlignCenter</set>
          </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QComboBox" name="comboBox">
-         <property name="minimumSize">
-          <size>
-           <width>200</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>200</width>
-           <height>16777215</height>
-          </size>
-         </property>
-         <item>
-          <property name="text">
-           <string>Faithful</string>
-          </property>
-         </item>
         </widget>
        </item>
        <item>
@@ -1024,7 +1003,7 @@
        <item>
         <widget class="QCheckBox" name="checkBoxReinhardTonemapping">
          <property name="text">
-          <string>Reinhard tonemapping</string>
+          <string>Apply tonemapping</string>
          </property>
         </widget>
        </item>
