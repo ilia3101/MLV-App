@@ -652,16 +652,28 @@ void MainWindow::startExport(QString fileName)
     QString output = numberedFileName;
     numberedFileName.append( QString( "_\%05d" ) );
     numberedFileName.append( QString( ".png" ) );
-    output.append( QString( ".mov" ) );
 
     QString program = QCoreApplication::applicationDirPath();
     program.append( QString( "/ffmpeg\"" ) );
     program.prepend( QString( "\"" ) );
-    program.append( QString( " -r %1 -i \"%2\" -c:v prores_ks -profile:v %3 \"%4\"" )
+    if( m_codecProfile == CODEC_AVIRAW )
+    {
+        output.append( QString( ".avi" ) );
+        program.append( QString( " -r %1 -i \"%2\" -c:v rawvideo -pix_fmt %3 \"%4\"" )
+                    .arg( getMlvFramerate( m_pMlvObject ) )
+                    .arg( numberedFileName )
+                    .arg( "yuv420p" )
+                    .arg( output ) );
+    }
+    else
+    {
+        output.append( QString( ".mov" ) );
+        program.append( QString( " -r %1 -i \"%2\" -c:v prores_ks -profile:v %3 \"%4\"" )
                     .arg( getMlvFramerate( m_pMlvObject ) )
                     .arg( numberedFileName )
                     .arg( m_codecProfile )
                     .arg( output ) );
+    }
     //qDebug() << program;
 
     //Start FFmpeg
@@ -1079,7 +1091,7 @@ void MainWindow::on_actionAbout_triggered()
                               "<body><h3>%1</h3>"
                               " <p>%1 v%2</p>"
                              /* " <p>Library v%3.%4 rev%5</p>"*/
-                              " <p>%6.</p>"
+                              " <p>%6</p>"
                               " <p>See <a href='%7'>%7</a> for more information.</p>"
                               " </body></html>" )
                              .arg( "MLV App" )
@@ -1087,7 +1099,7 @@ void MainWindow::on_actionAbout_triggered()
                              /*.arg( 0 )
                              .arg( 0 )
                              .arg( 0 )*/
-                             .arg( "by Ilia3101 & masc" )
+                             .arg( "by Ilia3101 & masc. Thanks to bouncyball and others for the support!" )
                              .arg( "https://github.com/ilia3101/MLV-App" ) );
 }
 
@@ -1192,8 +1204,21 @@ void MainWindow::on_actionExport_triggered()
 
     //Filename proposal in dependency to actual file
     QString saveFileName = m_pSessionReceipts.at( m_lastActiveClipInSession )->fileName();
+    QString fileType;
+    QString fileEnding;
     saveFileName = saveFileName.left( m_lastSaveFileName.lastIndexOf( "." ) );
-    saveFileName.append( ".mov" );
+    if( m_codecProfile == CODEC_AVIRAW )
+    {
+        saveFileName.append( ".avi" );
+        fileType = tr("Audio Video Interleave (*.avi)");
+        fileEnding = ".avi";
+    }
+    else
+    {
+        saveFileName.append( ".mov" );
+        fileType = tr("Movie (*.mov)");
+        fileEnding = ".mov";
+    }
 
     //If one file is selected
     if( ui->listWidgetSession->selectedItems().count() <= 1 )
@@ -1201,11 +1226,11 @@ void MainWindow::on_actionExport_triggered()
         //File Dialog
         QString fileName = QFileDialog::getSaveFileName( this, tr("Export..."),
                                                         saveFileName,
-                                                        tr("Movie (*.mov)") );
+                                                        fileType );
 
         //Exit if not an MOV file or aborted
         if( fileName == QString( "" )
-                && ( !fileName.endsWith( ".mov", Qt::CaseInsensitive ) ) ) return;
+                && ( !fileName.endsWith( fileEnding, Qt::CaseInsensitive ) && m_codecProfile != CODEC_AVIRAW ) ) return;
 
         //Get receipt into queue
         addClipToExportQueue( m_lastActiveClipInSession, fileName );
@@ -1227,7 +1252,7 @@ void MainWindow::on_actionExport_triggered()
             if( !ui->listWidgetSession->item( row )->isSelected() ) continue;
 
             //Create Path+Name
-            QString fileName = ui->listWidgetSession->item( row )->text().replace( ".mlv", ".mov", Qt::CaseInsensitive );
+            QString fileName = ui->listWidgetSession->item( row )->text().replace( ".mlv", fileEnding, Qt::CaseInsensitive );
             fileName.prepend( "/" );
             fileName.prepend( folderName );
 

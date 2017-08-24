@@ -10,6 +10,13 @@
 
 #include <QDialog>
 
+#define CODEC_PRORES422PROXY 0
+#define CODEC_PRORES422LT    1
+#define CODEC_PRORES422ST    2
+#define CODEC_PRORES422HQ    3
+#define CODEC_PRORES4444     4
+#define CODEC_AVIRAW         5
+
 namespace Ui {
 class ExportSettingsDialog;
 }
