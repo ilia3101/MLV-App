@@ -58,9 +58,6 @@ void setAppNewMlvClip(char * mlvPathString, char * mlvFileName)
     /* Create a NEW object with a NEW MLV clip! */
     App->videoMLV = initMlvObjectWithClip( (char *)mlvPathString );
 
-    /* This funtion really SHOULD be integrated with the one above */
-    mapMlvFrames(App->videoMLV, 0);
-
     /* If use has terminal this is useful */
     printMlvInfo(App->videoMLV);
 
