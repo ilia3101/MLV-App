@@ -1228,9 +1228,9 @@ void MainWindow::on_actionExport_triggered()
                                                         saveFileName,
                                                         fileType );
 
-        //Exit if not an MOV file or aborted
+        //Exit if not an MOV/AVI file or aborted
         if( fileName == QString( "" )
-                && ( !fileName.endsWith( fileEnding, Qt::CaseInsensitive ) && m_codecProfile != CODEC_AVIRAW ) ) return;
+                && !fileName.endsWith( fileEnding, Qt::CaseInsensitive ) ) return;
 
         //Get receipt into queue
         addClipToExportQueue( m_lastActiveClipInSession, fileName );
