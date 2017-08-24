@@ -342,8 +342,6 @@ void MainWindow::openMlv( QString fileName )
     freeMlvObject( m_pMlvObject );
     /* Create a NEW object with a NEW MLV clip! */
     m_pMlvObject = initMlvObjectWithClip( fileName.toLatin1().data() );
-    /* This funtion really SHOULD be integrated with the one above */
-    mapMlvFrames( m_pMlvObject, 0 );
     /* Caching */
     if( ui->actionCaching->isChecked() )
     {
@@ -465,6 +463,8 @@ void MainWindow::initGui( void )
     m_pWaveFormMonitor = new WaveFormMonitor( 200 );
     //Fullscreen does not work well, so disable
     ui->actionFullscreen->setVisible( false );
+    //Disable caching by default to avoid crashes
+    ui->actionCaching->setVisible( false );
     //Dont show the Faithful combobox
     ui->comboBox->setVisible( false );
     //Disable unused (for now) actions
@@ -569,7 +569,8 @@ void MainWindow::readSettings()
     m_lastSaveFileName = set.value( "lastFileName", QString( "/Users/" ) ).toString();
     m_codecProfile = set.value( "codecProfile", 4 ).toUInt();
     m_previewMode = set.value( "previewMode", 1 ).toUInt();
-    if( set.value( "caching", false ).toBool() ) ui->actionCaching->setChecked( true );
+    //if( set.value( "caching", false ).toBool() ) ui->actionCaching->setChecked( true );
+    ui->actionCaching->setChecked( false );
 }
 
 //Save some settings to registry
