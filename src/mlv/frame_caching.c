@@ -2,12 +2,32 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <pthread.h>
 
 #include "video_mlv.h"
 #include "../debayer/debayer.h"
 
 #define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
+
+
+void disableMlvCaching(mlvObject_t * video)
+{
+    /* Stop caching and make sure by waiting */
+    video->stop_caching = 1;
+    while (video->is_caching) usleep(100);
+    /* Remove the memory (it's a tradition in MLV App libraries to leave a couple of bytes) */
+    free(video->cache_memory_block);
+    video->cache_memory_block = malloc(2);
+}
+
+void enableMlvCaching(mlvObject_t * video)
+{
+    /* Allow the thread */
+    video->stop_caching = 0;
+    /* This will reset the memory and start cache thread */
+    setMlvRawCacheLimitMegaBytes(video, video->cache_limit_mb);
+}
 
 /* Hmmmm, did anyone need 2 ways of doing this? */
 
@@ -78,7 +98,8 @@ void setMlvRawCacheLimitFrames(mlvObject_t * video, uint64_t frameLimit)
 /* TODO: add removing old/un-needed frames ability */
 void cache_mlv_frames(mlvObject_t * video)
 {
-    return;
+    if (video->stop_caching) return;
+
     video->is_caching = 1;
 
     uint32_t width = getMlvWidth(video);
