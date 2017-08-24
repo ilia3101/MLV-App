@@ -344,6 +344,15 @@ void MainWindow::openMlv( QString fileName )
     m_pMlvObject = initMlvObjectWithClip( fileName.toLatin1().data() );
     /* This funtion really SHOULD be integrated with the one above */
     mapMlvFrames( m_pMlvObject, 0 );
+    /* Caching */
+    if( ui->actionCaching->isChecked() )
+    {
+        enableMlvCaching( m_pMlvObject );
+    }
+    else
+    {
+        disableMlvCaching( m_pMlvObject );
+    }
     /* If use has terminal this is useful */
 #ifndef STDOUT_SILENT
     printMlvInfo( m_pMlvObject );
@@ -352,8 +361,6 @@ void MainWindow::openMlv( QString fileName )
     setMlvProcessing( m_pMlvObject, m_pProcessingObject );
     /* Limit frame cache to defined size of RAM */
     setMlvRawCacheLimitMegaBytes( m_pMlvObject, m_cacheSizeMB );
-    /* Caching */
-    //ui->actionCaching->isChecked()
     /* Tell it how many cores we have so it can be optimal */
     setMlvCpuCores( m_pMlvObject, QThread::idealThreadCount() );
 
@@ -529,6 +536,15 @@ void MainWindow::initLib( void )
     setMlvRawCacheLimitMegaBytes( m_pMlvObject, m_cacheSizeMB );
     /* Use AMaZE */
     setMlvDontAlwaysUseAmaze( m_pMlvObject );
+    /* Caching */
+    if( ui->actionCaching->isChecked() )
+    {
+        enableMlvCaching( m_pMlvObject );
+    }
+    else
+    {
+        disableMlvCaching( m_pMlvObject );
+    }
 
     int imageSize = 1856 * 1044 * 3;
     m_pRawImage = ( uint8_t* )malloc( imageSize );
@@ -1379,7 +1395,14 @@ void MainWindow::on_actionSaveSession_triggered()
 //En-/Disable Caching
 void MainWindow::on_actionCaching_triggered(bool checked)
 {
-
+    if( checked )
+    {
+        enableMlvCaching( m_pMlvObject );
+    }
+    else
+    {
+        disableMlvCaching( m_pMlvObject );
+    }
 }
 
 //FileName in SessionList doubleClicked
