@@ -197,7 +197,9 @@ void getMlvRawFrameDebayered(mlvObject_t * video, uint64_t frameIndex, uint16_t 
     /* If frame is cached just giv it */
     if (video->cached_frames[frameIndex])
     {
+        pthread_mutex_lock(&video->cache_mutex);
         memcpy(outputFrame, video->rgb_raw_frames[frameIndex], frame_size);
+        pthread_mutex_unlock(&video->cache_mutex);
     }
     /* Else if this frame was requested last time and is sitting in the single frame cache */
     else if (video->current_cached_frame_active && video->current_cached_frame == frameIndex)
@@ -207,9 +209,10 @@ void getMlvRawFrameDebayered(mlvObject_t * video, uint64_t frameIndex, uint16_t 
     /* Maybe this frame is currently being cached... */
     else if (video->is_caching && (video->currently_caching == frameIndex))
     {
-        /* Wait until frame/caching is done... TODO: maybe use mutex or soemhting in the future */
-        while ((video->currently_caching == frameIndex) || !video->is_caching) usleep(100);
+        /* Wait until frame/caching is done... TODO: use mutex - DONE! :) */
+        pthread_mutex_lock(&video->cache_mutex);
         memcpy(outputFrame, video->rgb_raw_frames[frameIndex], frame_size);
+        pthread_mutex_unlock(&video->cache_mutex);
     }
     /* Else do debayering etc -  and store in the 'current frame' cache */
     else
@@ -301,6 +304,9 @@ mlvObject_t * initMlvObject()
 
     /* Seems about right */
     setMlvCpuCores(video, 4);
+
+    /* Will avoid memory conflicts with cache thread etc */
+    pthread_mutex_init(&video->cache_mutex, NULL);
 
     /* Retun pointer */
     return video;
@@ -438,13 +444,6 @@ void openMlvClip(mlvObject_t * video, char * mlvPath)
             /* All other camz */
             getMlvBlackLevel(video) = 2048;
         }
-
-        /* User needs to know how amazingly kind we are */
-#ifndef STDOUT_SILENT
-        printf("\nPSA!!!\nYour black level was wrong!\n");
-        printf("It was: %i, and has been changed to: %i, which should be right for your %s\n\n", 
-            old_black_level, getMlvBlackLevel(video), getMlvCamera(video));
-#endif
     }
 
     /* If black level is below 15000, set it to 15000, anything lower seems to low */

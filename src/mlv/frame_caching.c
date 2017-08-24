@@ -119,11 +119,16 @@ void cache_mlv_frames(mlvObject_t * video)
         {
             video->currently_caching = frame_index;
 
+            /* Avoid accessing cache memory at the same time as other functions */
+            pthread_mutex_lock(&video->cache_mutex);
+
             /* Use memory within our block */
             video->rgb_raw_frames[frame_index] = video->cache_memory_block + (frame_size_rgb * frame_index);
 
             /* debayer_type 1, we want to cache AMaZE frames */
             get_mlv_raw_frame_debayered(video, frame_index, raw_frame, video->rgb_raw_frames[frame_index], 1);
+
+            pthread_mutex_unlock(&video->cache_mutex);
 
             video->cached_frames[frame_index] = 1;
 #ifndef STDOUT_SILENT
