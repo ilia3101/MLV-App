@@ -13,6 +13,16 @@ void freeProcessingObject(processingObject_t * processing);
 
 
 
+/* Set image profile possible TODO: make image profile a type, so custom ones can be developed */
+void processingSetImageProfile(processingObject_t * processing, int imageProfile);
+/* imageProfile argument options: */
+#define PROFILE_STANDARD    0   /* Gamma Corrected */
+#define PROFILE_TONEMAPPED  1   /* Gamma Corrected + Tonemapped */
+#define PROFILE_ALEXA_LOG   2   /* Alexa log (Also known as Log-C) */
+#define PROFILE_LINEAR      3   /* Linear, idk who would want this */
+
+
+
 /* Process a RAW frame with settings from a processing object
  * - image must be debayered and RGB plz + thx! */
 void applyProcessingObject( processingObject_t * processing,
@@ -105,9 +115,9 @@ void processingSetSaturation(processingObject_t * processing, double saturationF
 
 
 
-/* Enable/disable tonemapping */
-void processingEnableTonemapping(processingObject_t * processing);
-void processingDisableTonemapping(processingObject_t * processing);
+/* Enable/disable tonemapping - DEPRECATED!!! (made private) */
+#define processingEnableTonemapping(processing) processing_enable_tonemapping(processing)
+#define processingDisableTonemapping(processing) processing_disable_tonemapping(processing)
 
 
 
@@ -129,6 +139,10 @@ double add_contrast( double pixel,
                      double dark_contrast_factor, 
                      double light_contrast_range, 
                      double light_contrast_factor );
+
+/* Enable/disable tonemapping - DEPRECATED!!! */
+void processing_enable_tonemapping(processingObject_t * processing);
+void processing_disable_tonemapping(processingObject_t * processing);
 
 /* Returns multipliers for white balance by (linearly) interpolating measured 
  * Canon values... stupidly simple, also range limited to 2500-10000 */

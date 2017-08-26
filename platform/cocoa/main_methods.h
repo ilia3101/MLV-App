@@ -1,5 +1,5 @@
-#ifndef _main_methods_
-#define _main_methods_
+#ifndef _main_methods_h_
+#define _main_methods_h_
 
 /* Methods that actually do stuff related to MLV on user interface interactions */
 
@@ -22,6 +22,14 @@ void setAppNewMlvClip(char * mlvPathString, char * mlvFileName);
 -(void)openMlvDialog;
 /* Opens a dialog to select export location, then exports a mov clip with prores! */
 -(void)exportProRes4444;
+
+@end
+
+/* NSPopUpButton methods */
+@interface NSPopUpButton (mainMethods)
+
+/* Select processing image profile */
+-(void)toggleImageProfile;
 
 @end
 

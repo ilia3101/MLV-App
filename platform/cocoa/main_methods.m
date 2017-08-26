@@ -272,8 +272,22 @@ void setAppNewMlvClip(char * mlvPathString, char * mlvFileName)
 
 @end
 
-/* Slider methods */
 
+/* NSPopUpButton methods */
+@implementation NSPopUpButton (mainMethods)
+
+/* Select processing image profile */
+-(void)toggleImageProfile
+{
+    /* Indexes of menu items correspond to defines of processing profiles */
+    processingSetImageProfile(App->processingSettings, (int)[self indexOfSelectedItem]);
+    App->frameChanged++;
+}
+
+@end
+
+
+/* Slider methods */
 @implementation NSSlider (mainMethods)
 
 /* Change frame based on time slider */

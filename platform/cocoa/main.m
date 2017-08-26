@@ -36,6 +36,10 @@
 godObject_t * App;
 
 
+/* Default image profile when app is loaded */
+#define DEFAULT_IMAGE_PROFILE_APP PROFILE_TONEMAPPED
+
+
 int main(int argc, char * argv[])
 {
     /* Apple documentation says this is right way to do things */
@@ -97,15 +101,18 @@ int NSApplicationMain(int argc, const char * argv[])
     App->window.titlebarAppearsTransparent = true;
 
     /* Processing style selector */
-    NSPopUpButton * processingStyle = [
-        [NSPopUpButton alloc]
-        initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(0,24,19) )
-    ];
-    [processingStyle anchorRight: YES];
-    [processingStyle anchorTop: YES];
-    [processingStyle addItemWithTitle: @"Faithful"];
-    // [processingStyle addItemWithTitle: @"Milo"];
-    [[App->window contentView] addSubview: processingStyle];
+    App->imageProfile = [ [NSPopUpButton alloc]
+                          initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(0,24,19) ) ];
+    [App->imageProfile anchorRight: YES];
+    [App->imageProfile anchorTop: YES];
+    [App->imageProfile insertItemWithTitle: @"Standard" atIndex: PROFILE_STANDARD];
+    [App->imageProfile insertItemWithTitle: @"Tonemapped" atIndex: PROFILE_TONEMAPPED];
+    [App->imageProfile insertItemWithTitle: @"Alexa Log" atIndex: PROFILE_ALEXA_LOG];
+    [App->imageProfile insertItemWithTitle: @"Linear" atIndex: PROFILE_LINEAR];
+    [App->imageProfile setTarget: App->imageProfile];
+    [App->imageProfile setAction: @selector(toggleImageProfile)];
+    [App->imageProfile selectItemAtIndex: DEFAULT_IMAGE_PROFILE_APP];
+    [[App->window contentView] addSubview: App->imageProfile];
 
     /* Yes, macros -  Az u can tell by the capietals.
      * I don't want to add hundreds of lines of Objective C 
@@ -135,7 +142,7 @@ int NSApplicationMain(int argc, const char * argv[])
     /* Maybe we won't have sharpness */
 
     /* Enable/disable highlight reconstruction */
-    App->highlightReconstructionSelector = [ [NSButton alloc] 
+    App->highlightReconstructionSelector = [ [NSButton alloc]
                                              initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(11, ELEMENT_HEIGHT, 16) )];
     [App->highlightReconstructionSelector setButtonType: NSSwitchButton];
     [App->highlightReconstructionSelector setTitle: @"Highlight Reconstruction"];
@@ -146,7 +153,7 @@ int NSApplicationMain(int argc, const char * argv[])
     [[App->window contentView] addSubview: App->highlightReconstructionSelector];
 
     /* To set always use AMaZE on/off */
-    App->alwaysUseAmazeSelector = [ [NSButton alloc] 
+    App->alwaysUseAmazeSelector = [ [NSButton alloc]
                                     initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(12, ELEMENT_HEIGHT, 30) )];
     [App->alwaysUseAmazeSelector setButtonType: NSSwitchButton];
     [App->alwaysUseAmazeSelector setTitle: @"Always use AMaZE"];
@@ -156,17 +163,6 @@ int NSApplicationMain(int argc, const char * argv[])
     [App->alwaysUseAmazeSelector setAction: @selector(toggleAlwaysAmaze)];
     [[App->window contentView] addSubview: App->alwaysUseAmazeSelector];
 
-    /* To set enable/disable tonemapping */
-    App->tonemappingSelector = [ [NSButton alloc] 
-                                 initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(13, ELEMENT_HEIGHT, 44) )];
-    [App->tonemappingSelector setButtonType: NSSwitchButton];
-    [App->tonemappingSelector setTitle: @"Apply Tonemapping"];
-    [App->tonemappingSelector anchorRight: YES];
-    [App->tonemappingSelector anchorTop: YES];
-    [App->tonemappingSelector setTarget: App->tonemappingSelector];
-    [App->tonemappingSelector setAction: @selector(toggleTonemapping)];
-    [[App->window contentView] addSubview: App->tonemappingSelector];
-
     /*
      *******************************************************************************
      * LEFT SIDEBAR STUFF
@@ -175,12 +171,8 @@ int NSApplicationMain(int argc, const char * argv[])
 
     /* Open MLV file button */
     CREATE_BUTTON_LEFT_TOP( App->openMLVButton, 0, openMlvDialog, 0, @"Open MLV File" );
-    /* Export an image sequence (temporary) - these buttons look awkward and awful :[ */
-    // CREATE_BUTTON_LEFT_BOTTOM( exportJpegSequenceButton, 1, exportJpegSequence, 1, @"Export JPEG Sequence" );
-    // CREATE_BUTTON_LEFT_BOTTOM( exportPngSequenceButton, 0, exportPngSequence, 1, @"Export PNG Sequence" );
+    // CREATE_BUTTON_LEFT_TOP( App->openMLVButton, 1, openMlvDialog, 6, @"Open Session" ); /* Commented out as not working yet */
     CREATE_BUTTON_LEFT_BOTTOM( App->exportProRes4444Button, 0, exportProRes4444, 1, @"Export ProRes 4444" );
-    /* Black level user input/adjustment */
-    // CREATE_INPUT_WITH_LABEL_LEFT( blackLevelEntry, 1, blackLevelSet, 0, @"Black Level:" );
 
     /* NSTableView - List of all clips currently open (session) */
     // NSScrollView * tableContainer = [[NSScrollView alloc] initWithFrame:NSMakeRect(10, 10, 380, 200)];
@@ -206,6 +198,8 @@ int NSApplicationMain(int argc, const char * argv[])
     /* Set exposure to + 1.2 stops instead of correct 0.0, this is to give the impression 
      * (to those that believe) that highlights are recoverable (shhh don't tell) */
     processingSetExposureStops(App->processingSettings, 1.2);
+    /* TEST */
+    processingSetImageProfile(App->processingSettings, DEFAULT_IMAGE_PROFILE_APP);
     /* Link video with processing settings */
     setMlvProcessing(App->videoMLV, App->processingSettings);
     /* Limit frame cache to suitable amount of RAM (~33% at 8GB and below, ~50% at 16GB, then up and up) */

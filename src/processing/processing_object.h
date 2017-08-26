@@ -4,6 +4,13 @@
 /* Processing settings structure (a mess) */
 typedef struct {
 
+    /* Image profile, options:
+     * STANDARD   - Gamma Corrected
+     * TONEMAPPED - Gamma Corrected + Tonemapped
+     * ALEXA_LOG  - Alexa log (Also known as Log-C)
+     * LINEAR     - Linear, idk who would want this */
+    int image_profile;
+
     /* (RAW) white and black levels */
     int black_level, white_level;
 
@@ -61,11 +68,12 @@ typedef struct {
      * will be calculated on setting changes, values 0-65535 */
     uint16_t * pre_calc_curve_r;
     uint16_t * pre_calc_curve_g;
-    uint16_t * pre_calc_curve_b;
+    uint16_t * pre_calc_curve_b; int use_rgb_curves; /* The r, g and b curves can be disabled */
     uint16_t * pre_calc_levels; /* For black level and white level */
     uint16_t * pre_calc_gamma;
+    uint16_t * pre_calc_o_curve; int use_o_curve; /* Output curve - not always used */
     /* Precalculated values for saturation */
-    int32_t  * pre_calc_sat;
+    int32_t  * pre_calc_sat; int use_saturation; /* Saturation is disable-able */
 
 } processingObject_t;
 

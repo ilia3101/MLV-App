@@ -10,6 +10,8 @@
 /* Matrix functions which are useful */
 #include "../matrix/matrix.h"
 
+#define STANDARD_GAMMA 3.15
+
 #define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
 #define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
 #define LIMIT16(X) MAX(MIN(X, 65535), 0)
@@ -27,6 +29,7 @@ processingObject_t * initProcessingObject()
     processing->pre_calc_curve_b = malloc( 65536 * sizeof(uint16_t) );
     processing->pre_calc_gamma   = malloc( 65536 * sizeof(uint16_t) );
     processing->pre_calc_levels  = malloc( 65536 * sizeof(uint16_t) );
+    processing->pre_calc_o_curve = malloc( 65535 * sizeof(uint16_t) );
     processing->pre_calc_sat     = malloc( 131072 * sizeof(int32_t) );
 
     /* For precalculated matrix values */
@@ -46,14 +49,65 @@ processingObject_t * initProcessingObject()
     processingSetWhiteBalance(processing, 6250.0, 0.0);
     processingSetBlackAndWhiteLevel(processing, 8192.0, 64000.0); /* 16 bit! */
     processingSetExposureStops(processing, 0.0);
-    processingSetGamma(processing, 3.15);
+    processingSetGamma(processing, STANDARD_GAMMA);
     processingSetSaturation(processing, 1.0);
     processingSetContrast(processing, 0.73, 5.175, 0.5, 0.0, 0.0);
+    processingSetImageProfile(processing, PROFILE_TONEMAPPED);
 
     /* Just in case (should be done tho already) */
     processing_update_matrices(processing);
     
     return processing;
+}
+
+void processingSetImageProfile(processingObject_t * processing, int imageProfile)
+{
+    processing->image_profile = imageProfile;
+
+    if (imageProfile == PROFILE_STANDARD)
+    {
+        /* output curve is not used in this case */
+        processing->use_o_curve = 0;
+        processing->use_rgb_curves = 1;
+        processing->use_saturation = 1;
+        processingSetGamma(processing, STANDARD_GAMMA);
+        processing_disable_tonemapping(processing);
+    }
+    else if (imageProfile == PROFILE_TONEMAPPED)
+    {
+        processing->use_o_curve = 0;
+        processing->use_rgb_curves = 1;
+        processing->use_saturation = 1;
+        processingSetGamma(processing, STANDARD_GAMMA);
+        processing_enable_tonemapping(processing);
+    }
+    /* Alexa Log info from: http://www.vocas.nl/webfm_send/964 */
+    else if (imageProfile == PROFILE_ALEXA_LOG)
+    {
+        processing->use_o_curve = 1;
+        processing->use_rgb_curves = 0;
+        processing->use_saturation = 0;
+        /* Calculate Alexa Log curve (iso 800 version) */
+        for (int i = 0; i < 65536; ++i)
+        {
+            double value = (double)i / 65535.0;
+            value = (value > 0.010591) ? (0.247190 * log10(5.555556 * value + 0.052272) + 0.385537) : (5.367655 * value + 0.092809);
+            value *= 65535.0;
+            processing->pre_calc_o_curve[i] = (uint16_t)value;
+        }
+        /* We won't even need gamma here */
+        processingSetGamma(processing, 1.0);
+        processing_disable_tonemapping(processing);
+    }
+    else if (imageProfile == PROFILE_LINEAR)
+    {
+        processing->use_o_curve = 0;
+        processing->use_rgb_curves = 1;
+        processing->use_saturation = 1;
+        processingSetGamma(processing, 1.0);
+        processing_disable_tonemapping(processing);
+    }
+    else return;
 }
 
 
@@ -133,30 +187,44 @@ void applyProcessingObject( processingObject_t * processing,
         }
     }
 
-    /* Now saturation (looks way better after gamma) 
-     * Also this algorithm is slow, but temporary */
-    for (uint16_t * pix = outputImage; pix < img_end; pix += 3)
+    if (processing->use_saturation)
     {
-        /* Pixel brightness = 4/16 R, 11/16 G, 1/16 blue; Try swapping the channels, it will look worse */
-        int32_t Y1 = ((pix[0] << 2) + (pix[1] * 11) + pix[2]) >> 4;
-        int32_t Y2 = Y1 - 65536;
+        /* Now saturation (looks way better after gamma) */
+        for (uint16_t * pix = outputImage; pix < img_end; pix += 3)
+        {
+            /* Pixel brightness = 4/16 R, 11/16 G, 1/16 blue; Try swapping the channels, it will look worse */
+            int32_t Y1 = ((pix[0] << 2) + (pix[1] * 11) + pix[2]) >> 4;
+            int32_t Y2 = Y1 - 65536;
 
-        /* Increase difference between channels and the saturation midpoint */
-        int32_t pix0 = processing->pre_calc_sat[pix[0] - Y2] + Y1;
-        int32_t pix1 = processing->pre_calc_sat[pix[1] - Y2] + Y1;
-        int32_t pix2 = processing->pre_calc_sat[pix[2] - Y2] + Y1;
+            /* Increase difference between channels and the saturation midpoint */
+            int32_t pix0 = processing->pre_calc_sat[pix[0] - Y2] + Y1;
+            int32_t pix1 = processing->pre_calc_sat[pix[1] - Y2] + Y1;
+            int32_t pix2 = processing->pre_calc_sat[pix[2] - Y2] + Y1;
 
-        pix[0] = LIMIT16(pix0);
-        pix[1] = LIMIT16(pix1);
-        pix[2] = LIMIT16(pix2);
+            pix[0] = LIMIT16(pix0);
+            pix[1] = LIMIT16(pix1);
+            pix[2] = LIMIT16(pix2);
+        }
     }
 
-    /* Contrast Curve (OMG putting this after gamma made it 999x better) */
-    for (uint16_t * pix = outputImage; pix < img_end; pix += 3)
+    if (processing->use_rgb_curves)
     {
-        pix[0] = processing->pre_calc_curve_r[ pix[0] ];
-        pix[1] = processing->pre_calc_curve_r[ pix[1] ];
-        pix[2] = processing->pre_calc_curve_r[ pix[2] ];
+        /* Contrast Curve (OMG putting this after gamma made it 999x better) */
+        for (uint16_t * pix = outputImage; pix < img_end; pix += 3)
+        {
+            pix[0] = processing->pre_calc_curve_r[ pix[0] ];
+            pix[1] = processing->pre_calc_curve_r[ pix[1] ];
+            pix[2] = processing->pre_calc_curve_r[ pix[2] ];
+        }
+    }
+
+    /* Ouput curve (if needed) */
+    if (processing->use_o_curve)
+    {
+        for (int i = 0; i < img_s; ++i)
+        {
+            outputImage[i] = processing->pre_calc_o_curve[ outputImage[i] ];
+        }
     }
 }
 
@@ -355,7 +423,7 @@ void processingSet3WayCorrection( processingObject_t * processing,
     processing_update_curves(processing);
 }
 
-void processingEnableTonemapping(processingObject_t * processing)
+void processing_enable_tonemapping(processingObject_t * processing)
 {
     (processing)->tone_mapping = 1;
     /* This will update everything necessary to enable tonemapping */
@@ -363,7 +431,7 @@ void processingEnableTonemapping(processingObject_t * processing)
     processing_update_matrices(processing);
 }
 
-void processingDisableTonemapping(processingObject_t * processing) 
+void processing_disable_tonemapping(processingObject_t * processing) 
 {
     (processing)->tone_mapping = 0;
     /* This will update everything necessary to disable tonemapping */
@@ -423,6 +491,7 @@ void freeProcessingObject(processingObject_t * processing)
     free(processing->pre_calc_curve_b);
     free(processing->pre_calc_gamma);
     free(processing->pre_calc_levels);
+    free(processing->pre_calc_o_curve);
     free(processing->pre_calc_sat);
     for (int i = 0; i < 9; ++i) free(processing->pre_calc_matrix[i]);
     free(processing);

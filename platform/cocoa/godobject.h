@@ -65,16 +65,23 @@ typedef struct {
     NSButton * alwaysUseAmazeSelector;
     NSButton * tonemappingSelector;
 
+    /* Select image profile */
+    NSPopUpButton * imageProfile;
+
     /****************************************
      **           SESSION STUFF            **
      ****************************************/
 
-    /* Number of clips */
-    int clipCount;
-    /* List of clips loaded (in session) */
-    NSTableView * clipTable;
-    /* Info about each one (array as long as clipcount) */
-    clipInfo_t * clipInfo;
+    struct {
+
+        /* Number of clips */
+        int clipCount;
+        /* List of clips loaded (in session) */
+        NSTableView * clipTable;
+        /* Info about each one (array as long as clipcount) */
+        clipInfo_t * clipInfo;
+
+    } session;
 
     /****************************************
      **        END OF SESSION STUFF        **
