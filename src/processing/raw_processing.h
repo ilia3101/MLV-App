@@ -18,10 +18,10 @@ void processingSetImageProfile(processingObject_t * processing, int imageProfile
 /* imageProfile argument options: */
 #define PROFILE_STANDARD    0   /* Gamma Corrected */
 #define PROFILE_TONEMAPPED  1   /* Gamma Corrected + Tonemapped */
-// #define PROFILE_CANON_LOG   2   /* Canon C-Log */
+// #define PROFILE_CANON_LOG   2   /* Canon C-Log (commented out - not working) */
 #define PROFILE_ALEXA_LOG   2   /* Alexa log (A form of Log-C) */
 #define PROFILE_CINEON_LOG  3   /* Cineon Log */
-#define PROFILE_SONY_LOG    4   /* Sony S-Log  */
+#define PROFILE_SONY_LOG_3  4   /* Sony S-Log 3 */
 #define PROFILE_LINEAR      5   /* Linear, idk who would want this */
 
 

@@ -5,10 +5,12 @@
 typedef struct {
 
     /* Image profile, options:
-     * STANDARD   - Gamma Corrected
-     * TONEMAPPED - Gamma Corrected + Tonemapped
-     * ALEXA_LOG  - Alexa log (Also known as Log-C)
-     * LINEAR     - Linear, idk who would want this */
+     * PROFILE_STANDARD   : Gamma Corrected
+     * PROFILE_TONEMAPPED : Gamma Corrected + Tonemapped
+     * PROFILE_ALEXA_LOG  : Alexa log (A form of Log-C)
+     * PROFILE_CINEON_LOG : Cineon Log
+     * PROFILE_SONY_LOG_3 : Sony S-Log 3
+     * PROFILE_LINEAR     : Linear, idk who would want this */
     int image_profile;
 
     /* (RAW) white and black levels */
@@ -20,6 +22,8 @@ typedef struct {
 
     /* Do tonemapping? */
     int tone_mapping;
+    /* Pick any tonemapping function */
+    double (* tone_mapping_function)(double);
 
     /* Double is classy */
 
@@ -71,7 +75,6 @@ typedef struct {
     uint16_t * pre_calc_curve_b; int use_rgb_curves; /* The r, g and b curves can be disabled */
     uint16_t * pre_calc_levels; /* For black level and white level */
     uint16_t * pre_calc_gamma;
-    uint16_t * pre_calc_o_curve; int use_o_curve; /* Output curve - not always used */
     /* Precalculated values for saturation */
     int32_t  * pre_calc_sat; int use_saturation; /* Saturation is disable-able */
 

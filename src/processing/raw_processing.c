@@ -29,7 +29,6 @@ processingObject_t * initProcessingObject()
     processing->pre_calc_curve_b = malloc( 65536 * sizeof(uint16_t) );
     processing->pre_calc_gamma   = malloc( 65536 * sizeof(uint16_t) );
     processing->pre_calc_levels  = malloc( 65536 * sizeof(uint16_t) );
-    processing->pre_calc_o_curve = malloc( 65535 * sizeof(uint16_t) );
     processing->pre_calc_sat     = malloc( 131072 * sizeof(int32_t) );
 
     /* For precalculated matrix values */
@@ -66,101 +65,71 @@ void processingSetImageProfile(processingObject_t * processing, int imageProfile
 
     if (imageProfile == PROFILE_STANDARD)
     {
-        /* output curve is not used in this case */
-        processing->use_o_curve = 0;
         processing->use_rgb_curves = 1;
         processing->use_saturation = 1;
-        processingSetGamma(processing, STANDARD_GAMMA);
         processing_disable_tonemapping(processing);
+        processingSetGamma(processing, STANDARD_GAMMA);
     }
     else if (imageProfile == PROFILE_TONEMAPPED)
     {
-        processing->use_o_curve = 0;
         processing->use_rgb_curves = 1;
         processing->use_saturation = 1;
-        processingSetGamma(processing, STANDARD_GAMMA);
+
+        /* Choose tonemapping function */
+        processing->tone_mapping_function = &ReinhardTonemap;
+
         processing_enable_tonemapping(processing);
+        processingSetGamma(processing, STANDARD_GAMMA);
     }
     /* Canon-Log info from: http://learn.usa.canon.com/app/pdfs/white_papers/White_Paper_Clog_optoelectronic.pdf */
     // else if (imageProfile == PROFILE_CANON_LOG) /* Can't seem to get this right */
     // {
-    //     processing->use_o_curve = 1;
     //     processing->use_rgb_curves = 0;
     //     processing->use_saturation = 0;
 
-    //     /* Calculate Canon-Log curve */
-    //     for (int i = 0; i < 65536; ++i)
-    //     {
-    //         double value = (double)i / 65535.0;
-    //         value = 0.529136 * log10(value * 10.1596) + 0.0730597;
-    //         value *= 65535.0;
-    //         processing->pre_calc_o_curve[i] = (uint16_t)LIMIT16(value);
-    //     }
+    //     processing->tone_mapping_function = &CanonCLogTonemap;
 
     //     processingSetGamma(processing, 1.0);
-    //     processing_disable_tonemapping(processing);
+    //     processing_enable_tonemapping(processing);
     // }
     /* Alexa Log info from: http://www.vocas.nl/webfm_send/964 */
     else if (imageProfile == PROFILE_ALEXA_LOG)
     {
-        processing->use_o_curve = 1;
         processing->use_rgb_curves = 0;
         processing->use_saturation = 0;
 
-        /* Calculate Alexa Log curve (iso 800 version) */
-        for (int i = 0; i < 65536; ++i)
-        {
-            double value = (double)i / 65535.0;
-            value = (value > 0.010591) ? (0.247190 * log10(5.555556 * value + 0.052272) + 0.385537) : (5.367655 * value + 0.092809);
-            value *= 65535.0;
-            processing->pre_calc_o_curve[i] = (uint16_t)value;
-        }
+        /* Choose tonemapping function */
+        processing->tone_mapping_function = &AlexaLogCTonemap;
 
+        /* Log profiles are a type of tonemapping, so must be enabled */
+        processing_enable_tonemapping(processing);
         /* We won't even need gamma here */
         processingSetGamma(processing, 1.0);
-        processing_disable_tonemapping(processing);
     }
     /* More Log info from: http://www.magiclantern.fm/forum/index.php?topic=15801.msg158145#msg158145 */
     else if (imageProfile == PROFILE_CINEON_LOG)
     {
-        processing->use_o_curve = 1;
         processing->use_rgb_curves = 0;
         processing->use_saturation = 0;
 
-        /* Calculate Cineon curve */
-        for (int i = 0; i < 65536; ++i)
-        {
-            double value = (double)i / 65535.0;
-            value = (((log10(value * (1.0 - 0.0108) + 0.0108)) * 300) + 685) / 1023;
-            value *= 65535.0;
-            processing->pre_calc_o_curve[i] = (uint16_t)value;
-        }
+        processing->tone_mapping_function = &CineonLogTonemap;
 
+        processing_enable_tonemapping(processing);
         processingSetGamma(processing, 1.0);
-        processing_disable_tonemapping(processing);
     }
-    /* Sony Log info from: https://pro.sony.com/bbsccms/assets/files/mkt/cinema/solutions/slog_manual.pdf */
-    else if (imageProfile == PROFILE_SONY_LOG)
+    /* Sony Log formula from: https://www.sony.de/pro/support/attachment/1237494271390/1237494271406/technical-summary-for-s-gamut3-cine-s-log3-and-s-gamut3-s-log3.pdf */
+    else if (imageProfile == PROFILE_SONY_LOG_3)
     {
-        processing->use_o_curve = 1;
         processing->use_rgb_curves = 0;
         processing->use_saturation = 0;
 
-        /* Calculate S-Log curve */
-        for (int i = 0; i < 65536; ++i)
-        {
-            double value = (double)i / 65535.0;
-            value = (0.432699 * log10((value * 10.0) + 0.037584) + 0.616596) + 0.03;
-            value *= 65535.0;
-            processing->pre_calc_o_curve[i] = (uint16_t)LIMIT16(value);
-        }
+        processing->tone_mapping_function = &SonySLogTonemap;
 
+        processing_enable_tonemapping(processing);
         processingSetGamma(processing, 1.0);
-        processing_disable_tonemapping(processing);
     }
     else if (imageProfile == PROFILE_LINEAR)
     {
-        processing->use_o_curve = 0;
         processing->use_rgb_curves = 1;
         processing->use_saturation = 1;
         processingSetGamma(processing, 1.0);
@@ -272,17 +241,8 @@ void applyProcessingObject( processingObject_t * processing,
         for (uint16_t * pix = outputImage; pix < img_end; pix += 3)
         {
             pix[0] = processing->pre_calc_curve_r[ pix[0] ];
-            pix[1] = processing->pre_calc_curve_r[ pix[1] ];
-            pix[2] = processing->pre_calc_curve_r[ pix[2] ];
-        }
-    }
-
-    /* Ouput curve (if needed) */
-    if (processing->use_o_curve)
-    {
-        for (int i = 0; i < img_s; ++i)
-        {
-            outputImage[i] = processing->pre_calc_o_curve[ outputImage[i] ];
+            pix[1] = processing->pre_calc_curve_g[ pix[1] ];
+            pix[2] = processing->pre_calc_curve_b[ pix[2] ];
         }
     }
 }
@@ -393,42 +353,8 @@ void processingSetWhiteBalanceTint(processingObject_t * processing, double WBTin
                                WBTint );
 }
 
-/* Tonemapping info from http://filmicworlds.com/blog/filmic-tonemapping-operators/ */
 
-/* Values for uncharted tonemapping... they can be adjusted */
-double u_A = 0.15;
-double u_B = 0.50;
-double u_C = 0.10;
-double u_D = 0.20;
-double u_E = 0.02;
-double u_F = 0.30;
-double u_W = 11.2; /* White point */
-double u_bias = 2.0;
-
-/* Uncharted tonemapping base funtion */
-static double uncharted_tonemap(double value)
-{
-    return (((value*(u_A*value+u_C*u_B)+u_D*u_E) / (value*(u_A*value+u_B)+u_D*u_F)) - (u_E/u_F));
-}
-
-/* Wrapper with white scaling */
-static double UnchartedTonemap(double value)
-{
-    value = uncharted_tonemap(u_bias * value);
-    /* White scale */
-    value *= (1.0 / uncharted_tonemap(u_W));
-    return value;
-}
-
-static double ReinhardTonemap(double value)
-{
-    return value / (1.0 + value);
-}
-
-/* Choose tonemapping function */
-#define TONEMAP(X) ReinhardTonemap(X)
-
-/* Set gamma */
+/* Set gamma (Log-ing / tonemapping done here) */
 void processingSetGamma(processingObject_t * processing, double gammaValue)
 {
     processing->gamma_power = gammaValue;
@@ -443,7 +369,7 @@ void processingSetGamma(processingObject_t * processing, double gammaValue)
         {
             /* Tone mapping also (reinhard) */
             double pixel = (double)i/65535.0;
-            if (processing->tone_mapping) pixel = TONEMAP(pixel);
+            if (processing->tone_mapping) pixel = processing->tone_mapping_function(pixel);
             processing->pre_calc_gamma[i] = (uint16_t)(65535.0 * pow(pixel, gamma));
         }
     }
@@ -458,7 +384,7 @@ void processingSetGamma(processingObject_t * processing, double gammaValue)
             /* Tone mapping also (reinhard) */
             double pixel = (double)i/65535.0;
             pixel *= exposure_factor;
-            pixel = TONEMAP(pixel);
+            pixel = processing->tone_mapping_function(pixel);
             pixel = 65535.0 * pow(pixel, gamma);
             pixel = LIMIT16(pixel);
             processing->pre_calc_gamma[i] = pixel;
@@ -550,7 +476,6 @@ void freeProcessingObject(processingObject_t * processing)
     free(processing->pre_calc_curve_b);
     free(processing->pre_calc_gamma);
     free(processing->pre_calc_levels);
-    free(processing->pre_calc_o_curve);
     free(processing->pre_calc_sat);
     for (int i = 0; i < 9; ++i) free(processing->pre_calc_matrix[i]);
     free(processing);
