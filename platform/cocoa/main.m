@@ -107,7 +107,10 @@ int NSApplicationMain(int argc, const char * argv[])
     [App->imageProfile anchorTop: YES];
     [App->imageProfile insertItemWithTitle: @"Standard" atIndex: PROFILE_STANDARD];
     [App->imageProfile insertItemWithTitle: @"Tonemapped" atIndex: PROFILE_TONEMAPPED];
-    [App->imageProfile insertItemWithTitle: @"Alexa Log" atIndex: PROFILE_ALEXA_LOG];
+    // [App->imageProfile insertItemWithTitle: @"Canon-Log" atIndex: PROFILE_CANON_LOG];
+    [App->imageProfile insertItemWithTitle: @"Alexa Log-C" atIndex: PROFILE_ALEXA_LOG];
+    [App->imageProfile insertItemWithTitle: @"Cineon Log" atIndex: PROFILE_CINEON_LOG];
+    [App->imageProfile insertItemWithTitle: @"Sony S-Log" atIndex: PROFILE_SONY_LOG];
     [App->imageProfile insertItemWithTitle: @"Linear" atIndex: PROFILE_LINEAR];
     [App->imageProfile setTarget: App->imageProfile];
     [App->imageProfile setAction: @selector(toggleImageProfile)];

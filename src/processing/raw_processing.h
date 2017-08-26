@@ -18,8 +18,11 @@ void processingSetImageProfile(processingObject_t * processing, int imageProfile
 /* imageProfile argument options: */
 #define PROFILE_STANDARD    0   /* Gamma Corrected */
 #define PROFILE_TONEMAPPED  1   /* Gamma Corrected + Tonemapped */
-#define PROFILE_ALEXA_LOG   2   /* Alexa log (Also known as Log-C) */
-#define PROFILE_LINEAR      3   /* Linear, idk who would want this */
+// #define PROFILE_CANON_LOG   2   /* Canon C-Log */
+#define PROFILE_ALEXA_LOG   2   /* Alexa log (A form of Log-C) */
+#define PROFILE_CINEON_LOG  3   /* Cineon Log */
+#define PROFILE_SONY_LOG    4   /* Sony S-Log  */
+#define PROFILE_LINEAR      5   /* Linear, idk who would want this */
 
 
 
@@ -140,7 +143,7 @@ double add_contrast( double pixel,
                      double light_contrast_range, 
                      double light_contrast_factor );
 
-/* Enable/disable tonemapping - DEPRECATED!!! */
+/* Enable/disable tonemapping */
 void processing_enable_tonemapping(processingObject_t * processing);
 void processing_disable_tonemapping(processingObject_t * processing);
 

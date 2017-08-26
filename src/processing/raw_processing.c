@@ -81,12 +81,32 @@ void processingSetImageProfile(processingObject_t * processing, int imageProfile
         processingSetGamma(processing, STANDARD_GAMMA);
         processing_enable_tonemapping(processing);
     }
+    /* Canon-Log info from: http://learn.usa.canon.com/app/pdfs/white_papers/White_Paper_Clog_optoelectronic.pdf */
+    // else if (imageProfile == PROFILE_CANON_LOG) /* Can't seem to get this right */
+    // {
+    //     processing->use_o_curve = 1;
+    //     processing->use_rgb_curves = 0;
+    //     processing->use_saturation = 0;
+
+    //     /* Calculate Canon-Log curve */
+    //     for (int i = 0; i < 65536; ++i)
+    //     {
+    //         double value = (double)i / 65535.0;
+    //         value = 0.529136 * log10(value * 10.1596) + 0.0730597;
+    //         value *= 65535.0;
+    //         processing->pre_calc_o_curve[i] = (uint16_t)LIMIT16(value);
+    //     }
+
+    //     processingSetGamma(processing, 1.0);
+    //     processing_disable_tonemapping(processing);
+    // }
     /* Alexa Log info from: http://www.vocas.nl/webfm_send/964 */
     else if (imageProfile == PROFILE_ALEXA_LOG)
     {
         processing->use_o_curve = 1;
         processing->use_rgb_curves = 0;
         processing->use_saturation = 0;
+
         /* Calculate Alexa Log curve (iso 800 version) */
         for (int i = 0; i < 65536; ++i)
         {
@@ -95,7 +115,46 @@ void processingSetImageProfile(processingObject_t * processing, int imageProfile
             value *= 65535.0;
             processing->pre_calc_o_curve[i] = (uint16_t)value;
         }
+
         /* We won't even need gamma here */
+        processingSetGamma(processing, 1.0);
+        processing_disable_tonemapping(processing);
+    }
+    /* More Log info from: http://www.magiclantern.fm/forum/index.php?topic=15801.msg158145#msg158145 */
+    else if (imageProfile == PROFILE_CINEON_LOG)
+    {
+        processing->use_o_curve = 1;
+        processing->use_rgb_curves = 0;
+        processing->use_saturation = 0;
+
+        /* Calculate Cineon curve */
+        for (int i = 0; i < 65536; ++i)
+        {
+            double value = (double)i / 65535.0;
+            value = (((log10(value * (1.0 - 0.0108) + 0.0108)) * 300) + 685) / 1023;
+            value *= 65535.0;
+            processing->pre_calc_o_curve[i] = (uint16_t)value;
+        }
+
+        processingSetGamma(processing, 1.0);
+        processing_disable_tonemapping(processing);
+    }
+    /* Sony Log info from: https://pro.sony.com/bbsccms/assets/files/mkt/cinema/solutions/slog_manual.pdf */
+    else if (imageProfile == PROFILE_SONY_LOG)
+    {
+        processing->use_o_curve = 1;
+        processing->use_rgb_curves = 0;
+        processing->use_saturation = 0;
+
+        /* Calculate S-Log curve */
+        for (int i = 0; i < 65536; ++i)
+        {
+            double value = (double)i / 65535.0;
+            value = (0.432699 * log10((value * 10.0) + 0.037584) + 0.616596) + 0.03;
+            value *= 65535.0;
+            processing->pre_calc_o_curve[i] = (uint16_t)LIMIT16(value);
+        }
+
         processingSetGamma(processing, 1.0);
         processing_disable_tonemapping(processing);
     }
