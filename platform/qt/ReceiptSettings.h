@@ -24,7 +24,7 @@ public:
     void setLs( int value )         {m_ls = value;}
     void setLightening( int value ) {m_lightening = value;}
     void setHighlightReconstruction( bool on ){m_highlightReconstruction = on;}
-    void setReinhardTonemapping( bool on )    {m_reinhardTonemapping = on;}
+    void setProfile( uint8_t num )  {m_profile = num;}
     void setFileName( QString fileName )      {m_fileName = fileName;}
     void setExportFileName( QString fileName ){m_exportFileName = fileName;}
     int exposure( void )   {return m_exposure;}
@@ -37,7 +37,7 @@ public:
     int ls( void )         {return m_ls;}
     int lightening( void ) {return m_lightening;}
     bool isHighlightReconstruction( void ){return m_highlightReconstruction;}
-    bool isReinhardTonemapping( void )    {return m_reinhardTonemapping;}
+    uint8_t profile( void ){return m_profile;}
     QString fileName( void ){return m_fileName;}
     QString exportFileName( void ){return m_exportFileName;}
 
@@ -52,7 +52,7 @@ private:
     int m_ls;
     int m_lightening;
     bool m_highlightReconstruction;
-    bool m_reinhardTonemapping;
+    uint8_t m_profile;
     QString m_fileName;
     QString m_exportFileName;
 };

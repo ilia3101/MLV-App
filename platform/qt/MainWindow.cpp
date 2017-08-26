@@ -794,9 +794,9 @@ void MainWindow::openSession(QString fileName)
                                 m_pSessionReceipts.last()->setHighlightReconstruction( (bool)Rxml.readElementText().toInt() );
                                 Rxml.readNext();
                             }
-                            else if( Rxml.isStartElement() && Rxml.name() == "reinhardTonemapping" )
+                            else if( Rxml.isStartElement() && Rxml.name() == "profile" )
                             {
-                                m_pSessionReceipts.last()->setReinhardTonemapping( (bool)Rxml.readElementText().toInt() );
+                                m_pSessionReceipts.last()->setProfile( (uint8_t)Rxml.readElementText().toUInt() );
                                 Rxml.readNext();
                             }
                             else if( Rxml.isStartElement() ) //future features
@@ -876,7 +876,7 @@ void MainWindow::saveSession(QString fileName)
         xmlWriter.writeTextElement( "lr",                      QString( "%1" ).arg( m_pSessionReceipts.at(i)->lr() ) );
         xmlWriter.writeTextElement( "lightening",              QString( "%1" ).arg( m_pSessionReceipts.at(i)->lightening() ) );
         xmlWriter.writeTextElement( "highlightReconstruction", QString( "%1" ).arg( m_pSessionReceipts.at(i)->isHighlightReconstruction() ) );
-        xmlWriter.writeTextElement( "reinhardTonemapping",     QString( "%1" ).arg( m_pSessionReceipts.at(i)->isReinhardTonemapping() ) );
+        xmlWriter.writeTextElement( "profile",                 QString( "%1" ).arg( m_pSessionReceipts.at(i)->profile() ) );
         xmlWriter.writeEndElement();
     }
     xmlWriter.writeEndElement();
@@ -956,7 +956,7 @@ void MainWindow::setSliders(ReceiptSettings *receipt)
     ui->horizontalSliderLighten->setValue( receipt->lightening() );
 
     ui->checkBoxHighLightReconstruction->setChecked( receipt->isHighlightReconstruction() );
-    ui->checkBoxReinhardTonemapping->setChecked( receipt->isReinhardTonemapping() );
+    ui->comboBoxProfile->setCurrentIndex( receipt->profile() );
 }
 
 //Set the receipt from sliders
@@ -972,7 +972,7 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     receipt->setLr( ui->horizontalSliderLR->value() );
     receipt->setLightening( ui->horizontalSliderLighten->value() );
     receipt->setHighlightReconstruction( ui->checkBoxHighLightReconstruction->isChecked() );
-    receipt->setReinhardTonemapping( ui->checkBoxReinhardTonemapping->isChecked() );
+    receipt->setProfile( ui->comboBoxProfile->currentIndex() );
 }
 
 //Show the file in
@@ -1002,7 +1002,7 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     receipt->setLs( m_pSessionReceipts.at( row )->ls() );
     receipt->setLightening( m_pSessionReceipts.at( row )->lightening() );
     receipt->setHighlightReconstruction( m_pSessionReceipts.at( row )->isHighlightReconstruction() );
-    receipt->setReinhardTonemapping( m_pSessionReceipts.at( row )->isReinhardTonemapping() );
+    receipt->setProfile( m_pSessionReceipts.at( row )->profile() );
     receipt->setFileName( m_pSessionReceipts.at( row )->fileName() );
     receipt->setExportFileName( fileName );
     m_exportQueue.append( receipt );
@@ -1274,11 +1274,10 @@ void MainWindow::on_checkBoxHighLightReconstruction_toggled(bool checked)
     m_frameChanged = true;
 }
 
-//Enable / Disable Reinhard Tonemapping
-void MainWindow::on_checkBoxReinhardTonemapping_toggled(bool checked)
+//Chose profile
+void MainWindow::on_comboBoxProfile_activated(int index)
 {
-    if( checked ) processingEnableTonemapping( m_pProcessingObject );
-    else processingDisableTonemapping( m_pProcessingObject );
+    processingSetImageProfile(m_pProcessingObject, index);
     m_frameChanged = true;
 }
 

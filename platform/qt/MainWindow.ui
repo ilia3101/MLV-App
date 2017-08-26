@@ -1001,10 +1001,37 @@
         </widget>
        </item>
        <item>
-        <widget class="QCheckBox" name="checkBoxReinhardTonemapping">
-         <property name="text">
-          <string>Apply tonemapping</string>
-         </property>
+        <widget class="QComboBox" name="comboBoxProfile">
+         <item>
+          <property name="text">
+           <string>Standard</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Tonemapped</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Alexa Log-C</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Cineon Log</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Sony S-Log3</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Linear</string>
+          </property>
+         </item>
         </widget>
        </item>
        <item>

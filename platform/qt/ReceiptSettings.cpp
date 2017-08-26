@@ -20,5 +20,5 @@ ReceiptSettings::ReceiptSettings()
     m_lr = 50;
     m_lightening = 0;
     m_highlightReconstruction = false;
-    m_reinhardTonemapping = false;
+    m_profile = 0;
 }
