@@ -530,6 +530,7 @@ void MainWindow::initLib( void )
     processingSetExposureStops( m_pProcessingObject, 1.2 );
     /* Link video with processing settings */
     setMlvProcessing( m_pMlvObject, m_pProcessingObject );
+    processingSetImageProfile(m_pProcessingObject, PROFILE_STANDARD);
     /* Limit frame cache to MAX_RAM size */
     setMlvRawCacheLimitMegaBytes( m_pMlvObject, m_cacheSizeMB );
     /* Use AMaZE */
@@ -1275,7 +1276,7 @@ void MainWindow::on_checkBoxHighLightReconstruction_toggled(bool checked)
 }
 
 //Chose profile
-void MainWindow::on_comboBoxProfile_activated(int index)
+void MainWindow::on_comboBoxProfile_currentIndexChanged(int index)
 {
     processingSetImageProfile(m_pProcessingObject, index);
     m_frameChanged = true;
