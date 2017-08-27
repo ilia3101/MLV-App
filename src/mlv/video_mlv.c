@@ -446,11 +446,8 @@ void openMlvClip(mlvObject_t * video, char * mlvPath)
         }
     }
 
-    /* If black level is below 15000, set it to 15000, anything lower seems to low */
-    if ((getMlvWhiteLevel(video) < 15000) || (getMlvWhiteLevel(video) > 16383))
-    {
-        getMlvWhiteLevel(video) = 15000;
-    }
+    /* Lowering white level a bit avoids pink grain in highlihgt reconstruction */
+    getMlvWhiteLevel(video) = (double)getMlvWhiteLevel(video) * 0.993;
 
     video->block_num = block_num;
 

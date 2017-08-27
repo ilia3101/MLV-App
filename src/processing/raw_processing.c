@@ -160,8 +160,8 @@ void processingSetXyzToRgbMatrix(processingObject_t * processing, double * xyzTo
  * - image must be debayered and RGB plz + thx! */
 void applyProcessingObject( processingObject_t * processing, 
                             int imageX, int imageY, 
-                            uint16_t * inputImage, 
-                            uint16_t * outputImage )
+                            uint16_t * restrict inputImage, 
+                            uint16_t * restrict outputImage )
 {
     /* Begin image processing... */
 
