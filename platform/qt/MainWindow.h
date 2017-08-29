@@ -120,6 +120,8 @@ private:
     bool m_fileLoaded;
     int m_timerId;
     int m_timerCacheId;
+    bool m_fpsOverride;
+    double m_frameRate;
     QString m_lastSaveFileName;
     QProcess *m_pFFmpeg;
     ReceiptSettings *m_pReceiptClipboard;
@@ -145,6 +147,7 @@ private:
     void addClipToExportQueue( int row, QString fileName );
     void previewPicture( int row );
     void setPreviewMode( void );
+    double getFramerate( void );
 
 signals:
     void exportReady( void );

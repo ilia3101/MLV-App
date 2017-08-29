@@ -9,7 +9,7 @@
 #include "ui_ExportSettingsDialog.h"
 
 //Constructor
-ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, uint8_t currentCodecProfile, uint8_t previewMode) :
+ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, uint8_t currentCodecProfile, uint8_t previewMode, bool fpsOverride, double fps) :
     QDialog(parent),
     ui(new Ui::ExportSettingsDialog)
 {
@@ -19,6 +19,8 @@ ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, uint8_t currentCodec
     if( previewMode == 1 ) ui->radioButtonPreviewList->setChecked( true );
     else if( previewMode == 2 ) ui->radioButtonPreviewIcon->setChecked( true );
     else ui->radioButtonPreviewDisabled->setChecked( true );
+    ui->checkBoxFpsOverride->setChecked( fpsOverride );
+    ui->doubleSpinBoxFps->setValue( fps );
 }
 
 //Destructor
@@ -39,4 +41,16 @@ uint8_t ExportSettingsDialog::previewMode()
     if( ui->radioButtonPreviewList->isChecked() ) return 1;
     if( ui->radioButtonPreviewIcon->isChecked() ) return 2;
     else return 0;
+}
+
+//Get if fps override
+bool ExportSettingsDialog::isFpsOverride()
+{
+    return ui->checkBoxFpsOverride->isChecked();
+}
+
+//Get fps
+double ExportSettingsDialog::getFps()
+{
+    return ui->doubleSpinBoxFps->value();
 }

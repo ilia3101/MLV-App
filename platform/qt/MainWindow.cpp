@@ -150,7 +150,7 @@ void MainWindow::timerEvent(QTimerEvent *t)
             lastTime = nowTime;
 
             //When playback is off, the timeDiff is set to 0 for DropFrameMode
-            if( !ui->actionPlay->isChecked() ) timeDiff = 1000 / getMlvFramerate( m_pMlvObject );
+            if( !ui->actionPlay->isChecked() ) timeDiff = 1000 / getFramerate();
         }
         else
         {
@@ -384,7 +384,7 @@ void MainWindow::openMlv( QString fileName )
     ui->horizontalSliderPosition->setMaximum( getMlvFrames( m_pMlvObject ) - 1 );
 
     //Restart timer
-    m_timerId = startTimer( (int)( 1000.0 / getMlvFramerate( m_pMlvObject ) ) );
+    m_timerId = startTimer( (int)( 1000.0 / getFramerate() ) );
 
     //Load WaveFormMonitor
     m_pWaveFormMonitor = new WaveFormMonitor( getMlvWidth( m_pMlvObject ) );
@@ -434,7 +434,7 @@ void MainWindow::playbackHandling(int timeDiff)
             //Drop Frame Mode: calc picture for actual time
             else
             {
-                m_newPosDropMode += ((double)getMlvFramerate( m_pMlvObject ) * (double)timeDiff / 1000.0);
+                m_newPosDropMode += (getFramerate() * (double)timeDiff / 1000.0);
                 if( ui->actionLoop->isChecked() && ( m_newPosDropMode > getMlvFrames( m_pMlvObject ) ) )
                 {
                     m_newPosDropMode -= getMlvFrames( m_pMlvObject );
@@ -454,6 +454,10 @@ void MainWindow::initGui( void )
 {
     //We dont want a context menu which could disable the menu bar
     setContextMenuPolicy(Qt::NoContextMenu);
+
+    //Init values
+    m_fpsOverride = false;
+    m_frameRate = 25;
 
     //Init the Dialogs
     m_pInfoDialog = new InfoDialog( this );
@@ -659,7 +663,7 @@ void MainWindow::startExport(QString fileName)
     {
         output.append( QString( ".avi" ) );
         program.append( QString( " -r %1 -i \"%2\" -c:v rawvideo -pix_fmt %3 \"%4\"" )
-                    .arg( getMlvFramerate( m_pMlvObject ) )
+                    .arg( getFramerate() )
                     .arg( numberedFileName )
                     .arg( "yuv420p" )
                     .arg( output ) );
@@ -668,7 +672,7 @@ void MainWindow::startExport(QString fileName)
     {
         output.append( QString( ".mov" ) );
         program.append( QString( " -r %1 -i \"%2\" -c:v prores_ks -profile:v %3 \"%4\"" )
-                    .arg( getMlvFramerate( m_pMlvObject ) )
+                    .arg( getFramerate() )
                     .arg( numberedFileName )
                     .arg( m_codecProfile )
                     .arg( output ) );
@@ -1043,6 +1047,13 @@ void MainWindow::setPreviewMode( void )
     }
 }
 
+//Get the framerate. Override or Original
+double MainWindow::getFramerate( void )
+{
+    if( m_fpsOverride ) return m_frameRate;
+    else return getMlvFramerate( m_pMlvObject );
+}
+
 //Edit progressbar from FFmpeg output
 void MainWindow::readFFmpegOutput( void )
 {
@@ -1346,11 +1357,17 @@ void MainWindow::on_actionExportSettings_triggered()
     //Stop playback if active
     ui->actionPlay->setChecked( false );
 
-    ExportSettingsDialog *pExportSettings = new ExportSettingsDialog( this, m_codecProfile, m_previewMode );
+    ExportSettingsDialog *pExportSettings = new ExportSettingsDialog( this, m_codecProfile, m_previewMode, m_fpsOverride, m_frameRate );
     pExportSettings->exec();
     m_codecProfile = pExportSettings->encoderSetting();
     m_previewMode = pExportSettings->previewMode();
+    m_fpsOverride = pExportSettings->isFpsOverride();
+    m_frameRate = pExportSettings->getFps();
     delete pExportSettings;
+
+    //Restart timer with chosen framerate
+    killTimer( m_timerId );
+    m_timerId = startTimer( (int)( 1000.0 / getFramerate() ) );
 
     setPreviewMode();
 }
