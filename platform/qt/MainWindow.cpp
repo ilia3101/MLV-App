@@ -46,6 +46,7 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     m_frameStillDrawing = false;
     m_frameChanged = false;
     m_fileLoaded = false;
+    m_fpsOverride = false;
 
     //Init the lib
     initLib();
@@ -455,10 +456,6 @@ void MainWindow::initGui( void )
     //We dont want a context menu which could disable the menu bar
     setContextMenuPolicy(Qt::NoContextMenu);
 
-    //Init values
-    m_fpsOverride = false;
-    m_frameRate = 25;
-
     //Init the Dialogs
     m_pInfoDialog = new InfoDialog( this );
     m_pStatusDialog = new StatusDialog( this );
@@ -574,6 +571,7 @@ void MainWindow::readSettings()
     m_previewMode = set.value( "previewMode", 1 ).toUInt();
     //if( set.value( "caching", false ).toBool() ) ui->actionCaching->setChecked( true );
     ui->actionCaching->setChecked( false );
+    m_frameRate = set.value( "frameRate", 25 ).toDouble();
 }
 
 //Save some settings to registry
@@ -593,6 +591,7 @@ void MainWindow::writeSettings()
     set.setValue( "codecProfile", m_codecProfile );
     set.setValue( "previewMode", m_previewMode );
     set.setValue( "caching", ui->actionCaching->isChecked() );
+    set.setValue( "frameRate", m_frameRate );
 }
 
 //Start exporting a MOV via PNG48
@@ -1366,9 +1365,11 @@ void MainWindow::on_actionExportSettings_triggered()
     delete pExportSettings;
 
     //Restart timer with chosen framerate
-    killTimer( m_timerId );
-    m_timerId = startTimer( (int)( 1000.0 / getFramerate() ) );
-
+    if( m_fileLoaded )
+    {
+        killTimer( m_timerId );
+        m_timerId = startTimer( (int)( 1000.0 / getFramerate() ) );
+    }
     setPreviewMode();
 }
 
