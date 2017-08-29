@@ -211,6 +211,16 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>comboBoxCodec</tabstop>
+  <tabstop>checkBoxFpsOverride</tabstop>
+  <tabstop>doubleSpinBoxFps</tabstop>
+  <tabstop>checkBoxExportAudio</tabstop>
+  <tabstop>radioButtonPreviewDisabled</tabstop>
+  <tabstop>radioButtonPreviewList</tabstop>
+  <tabstop>radioButtonPreviewIcon</tabstop>
+  <tabstop>pushButtonClose</tabstop>
+ </tabstops>
  <resources/>
  <connections>
   <connection>

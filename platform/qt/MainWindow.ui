@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1197</width>
-    <height>846</height>
+    <height>855</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -1444,6 +1444,22 @@
    <header>DoubleClickLabel.h</header>
   </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>listWidgetSession</tabstop>
+  <tabstop>graphicsView</tabstop>
+  <tabstop>horizontalSliderExposure</tabstop>
+  <tabstop>horizontalSliderTemperature</tabstop>
+  <tabstop>horizontalSliderTint</tabstop>
+  <tabstop>horizontalSliderSaturation</tabstop>
+  <tabstop>horizontalSliderDS</tabstop>
+  <tabstop>horizontalSliderDR</tabstop>
+  <tabstop>horizontalSliderLS</tabstop>
+  <tabstop>horizontalSliderLR</tabstop>
+  <tabstop>horizontalSliderLighten</tabstop>
+  <tabstop>checkBoxHighLightReconstruction</tabstop>
+  <tabstop>comboBoxProfile</tabstop>
+  <tabstop>horizontalSliderPosition</tabstop>
+ </tabstops>
  <resources>
   <include location="ressources.qrc"/>
  </resources>
