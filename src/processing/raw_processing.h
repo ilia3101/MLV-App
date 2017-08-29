@@ -30,8 +30,8 @@ void processingSetImageProfile(processingObject_t * processing, int imageProfile
  * - image must be debayered and RGB plz + thx! */
 void applyProcessingObject( processingObject_t * processing,
                             int imageX, int imageY,
-                            uint16_t * restrict inputImage,
-                            uint16_t * restrict outputImage );
+                            uint16_t * __restrict inputImage,
+                            uint16_t * __restrict outputImage );
 
 
 
