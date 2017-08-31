@@ -9,23 +9,23 @@
 #define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
 
 /* AmAZeMEmE debayer easier to use */
-void debayerAmaze(uint16_t * restrict debayerto, float * restrict bayerdata, int width, int height, int threads)
+void debayerAmaze(uint16_t * __restrict debayerto, float * __restrict bayerdata, int width, int height, int threads)
 {
     int pixelsize = width * height;
 
     /* AmAZeMEmE wants an image as floating points and 2d arrey as well */
-    float ** restrict imagefloat2d = (float **)malloc(height * sizeof(float *));
+    float ** __restrict imagefloat2d = (float **)malloc(height * sizeof(float *));
     for (int y = 0; y < height; ++y) imagefloat2d[y] = (float *)(bayerdata+(y*width));
 
     /* AmAZe also wants to return floats, so heres memeory 4 it */
-    float  * restrict red1d = (float *)malloc(pixelsize * sizeof(float));
-    float ** restrict red2d = (float **)malloc(height * sizeof(float *));
+    float  * __restrict red1d = (float *)malloc(pixelsize * sizeof(float));
+    float ** __restrict red2d = (float **)malloc(height * sizeof(float *));
     for (int y = 0; y < height; ++y) red2d[y] = (float *)(red1d+(y*width));
-    float  * restrict green1d = (float *)malloc(pixelsize * sizeof(float));
-    float ** restrict green2d = (float **)malloc(height * sizeof(float *));
+    float  * __restrict green1d = (float *)malloc(pixelsize * sizeof(float));
+    float ** __restrict green2d = (float **)malloc(height * sizeof(float *));
     for (int y = 0; y < height; ++y) green2d[y] = (float *)(green1d+(y*width));
-    float  * restrict blue1d = (float *)malloc(pixelsize * sizeof(float));
-    float ** restrict blue2d = (float **)malloc(height * sizeof(float *));
+    float  * __restrict blue1d = (float *)malloc(pixelsize * sizeof(float));
+    float ** __restrict blue2d = (float **)malloc(height * sizeof(float *));
     for (int y = 0; y < height; ++y) blue2d[y] = (float *)(blue1d+(y*width));
 
     /* If threads is < 2 just do a normal amaze */
@@ -114,7 +114,7 @@ void debayerAmaze(uint16_t * restrict debayerto, float * restrict bayerdata, int
 
 
 /* Quite quick bilinear debayer, floating point sadly; threads argument is unused */
-void debayerBasic(uint16_t * restrict debayerto, float * restrict bayerdata, int width, int height, int threads)
+void debayerBasic(uint16_t * __restrict debayerto, float * __restrict bayerdata, int width, int height, int threads)
 {
     /* Debayer pixel size(limit with 1 pixel border to avoid seg fault, fix blank pixels L8ter) */
     int pixelsizeDB = width * (height - 1); /* How many pixels to go through in debayer (height - 1 to avoid bottom row) */
