@@ -1513,6 +1513,7 @@ void MainWindow::deleteFileFromSession( void )
         ui->listWidgetSession->setCurrentRow( 0 );
         setSliders( m_pSessionReceipts.at( 0 ) );
         openMlv( ui->listWidgetSession->item( 0 )->toolTip() );
+        m_lastActiveClipInSession = 0;
     }
     else
     {
