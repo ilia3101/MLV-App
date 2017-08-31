@@ -63,8 +63,6 @@ void getMlvRawFrameDebayered(mlvObject_t * video, uint64_t frameIndex, uint16_t 
 
 /* Used for processing, gets the matrix that does camera -> XYZ */
 void getMlvXyzToCameraMatrix(mlvObject_t * video, double * outputMatrix);
-/* To get a nice/generic XYZ to RGB matrix */
-void getMlvNiceXyzToRgbMatrix(mlvObject_t * video, double * outputMatrix);
 
 /* Do something like this before doing things: if (isMlvActive(your_mlvObject)) */
 #define isMlvActive(video) (video)->is_active

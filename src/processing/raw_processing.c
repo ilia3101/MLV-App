@@ -160,13 +160,13 @@ void processingSetXyzToRgbMatrix(processingObject_t * processing, double * xyzTo
  * - image must be debayered and RGB plz + thx! */
 void applyProcessingObject( processingObject_t * processing, 
                             int imageX, int imageY, 
-                            uint16_t * __restrict inputImage, 
-                            uint16_t * __restrict outputImage )
+                            uint16_t * restrict inputImage, 
+                            uint16_t * restrict outputImage )
 {
     /* Begin image processing... */
 
     /* (for shorter code) */
-    int32_t ** pm = processing->pre_calc_matrix; /* 'pm' STANDS FOR PRECALCULATED MATRIX */
+    int32_t ** pm = processing->pre_calc_matrix;
     uint16_t * img = outputImage;
 
     /* Number of elements */
@@ -390,6 +390,8 @@ void processingSetGamma(processingObject_t * processing, double gammaValue)
             processing->pre_calc_gamma[i] = pixel;
         }
     }
+    /* So highlight reconstruction works */
+    processing_update_highest_green(processing);
 }
 
 /* Range of saturation and hue is 0.0-1.0 */

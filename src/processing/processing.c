@@ -36,13 +36,13 @@ double u_W = 11.2; /* White point */
 double u_bias = 2.0;
 
 /* Uncharted tonemapping base funtion */
-static double uncharted_tonemap(double value)
+double uncharted_tonemap(double value)
 {
     return (((value*(u_A*value+u_C*u_B)+u_D*u_E) / (value*(u_A*value+u_B)+u_D*u_F)) - (u_E/u_F));
 }
 
 /* Wrapper with white scaling */
-static double UnchartedTonemap(double value)
+double UnchartedTonemap(double value)
 {
     value = uncharted_tonemap(u_bias * value);
     /* White scale */
@@ -50,32 +50,32 @@ static double UnchartedTonemap(double value)
     return value;
 }
 
-static double ReinhardTonemap(double value)
+double ReinhardTonemap(double value)
 {
     return value / (1.0 + value);
 }
 
 /* Canon C-Log: http://learn.usa.canon.com/app/pdfs/white_papers/White_Paper_Clog_optoelectronic.pdf */
-static double CanonCLogTonemap(double value) /* Might not be working right */
+double CanonCLogTonemap(double value) /* Might not be working right */
 {
     /* Works in percentage(I think, so 10.1596 multiplier changed to 1015.96) */
     return (0.529136 * log10(value*1015.96 + 1.0) + 0.0730597);
 }
 
 /* Calculate Alexa Log curve (iso 800 version), from here: http://www.vocas.nl/webfm_send/964 */
-static double AlexaLogCTonemap(double value)
+double AlexaLogCTonemap(double value)
 {
     return (value > 0.010591) ? (0.247190 * log10(5.555556 * value + 0.052272) + 0.385537) : (5.367655 * value + 0.092809);
 }
 
 /* Cineon Log, formula from here: http://www.magiclantern.fm/forum/index.php?topic=15801.msg158145#msg158145 */
-static double CineonLogTonemap(double value)
+double CineonLogTonemap(double value)
 {
     return ((log10(value * (1.0 - 0.0108) + 0.0108)) * 300 + 685) / 1023;
 }
 
 /* Sony S-Log3, from here: https://www.sony.de/pro/support/attachment/1237494271390/1237494271406/technical-summary-for-s-gamut3-cine-s-log3-and-s-gamut3-s-log3.pdf */
-static double SonySLogTonemap(double value)
+double SonySLogTonemap(double value)
 {
     if (value >= 0.01125000) 
         return (420.0 + log10((value + 0.01) / (0.18 + 0.01)) * 261.5) / 1023.0;
@@ -336,6 +336,7 @@ void processing_update_matrices(processingObject_t * processing)
         }
     }
 
+    processing_update_highest_green(processing);
     /* Highest green value - pixels at this value will need to be reconstructed */
     processing->highest_green = processing->pre_calc_gamma[ LIMIT16(MAX(pm[3][65535],pm[3][0]) + MAX(pm[4][65535],pm[4][0]) + MAX(pm[5][65535],pm[5][0])) ];
 
@@ -343,4 +344,12 @@ void processing_update_matrices(processingObject_t * processing)
     printMatrix(processing->final_matrix);
 
     /* done? */
+}
+
+void processing_update_highest_green(processingObject_t * processing)
+{
+    /* Highest green value - pixels at this value will need to be reconstructed */
+    processing->highest_green = processing->pre_calc_gamma[ LIMIT16( MAX(processing->pre_calc_matrix[3][65535],processing->pre_calc_matrix[3][0]) 
+                                                                   + MAX(processing->pre_calc_matrix[4][65535],processing->pre_calc_matrix[4][0]) 
+                                                                   + MAX(processing->pre_calc_matrix[5][65535],processing->pre_calc_matrix[5][0]) ) ];
 }

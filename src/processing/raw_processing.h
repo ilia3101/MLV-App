@@ -30,8 +30,8 @@ void processingSetImageProfile(processingObject_t * processing, int imageProfile
  * - image must be debayered and RGB plz + thx! */
 void applyProcessingObject( processingObject_t * processing,
                             int imageX, int imageY,
-                            uint16_t * __restrict inputImage,
-                            uint16_t * __restrict outputImage );
+                            uint16_t * restrict inputImage,
+                            uint16_t * restrict outputImage );
 
 
 
@@ -155,6 +155,9 @@ void get_kelvin_multipliers_xyz(double T, double * RGB);
 /* Calculates final_matrix, incorporating white balance, exposure and all the XYZ stuff */
 void processing_update_matrices(processingObject_t * processing);
 
+/* Calculates green clip value, so highlight reconstruction can work */
+void processing_update_highest_green(processingObject_t * processing);
+
 /* Precalculates curve with contrast and colour correction */
 void processing_update_curves(processingObject_t * processing);
 
@@ -166,5 +169,20 @@ void colour_correct_3_way( double * rgb,
                            double h_hue, double h_sat,
                            double m_hue, double m_sat,
                            double s_hue, double s_sat );
+
+/* Tonemapping funtions */
+
+/* Uncharted and Reinhard: http://filmicworlds.com/blog/filmic-tonemapping-operators/ */
+double uncharted_tonemap(double value);
+double UnchartedTonemap(double value);
+double ReinhardTonemap(double value);
+/* Canon C-Log: http://learn.usa.canon.com/app/pdfs/white_papers/White_Paper_Clog_optoelectronic.pdf */
+double CanonCLogTonemap(double value); /* Not working right */
+/* Calculate Alexa Log curve (iso 800 version), from here: http://www.vocas.nl/webfm_send/964 */
+double AlexaLogCTonemap(double value);
+/* Cineon Log, formula from here: http://www.magiclantern.fm/forum/index.php?topic=15801.msg158145#msg158145 */
+double CineonLogTonemap(double value);
+/* Sony S-Log3, from here: https://www.sony.de/pro/support/attachment/1237494271390/1237494271406/technical-summary-for-s-gamut3-cine-s-log3-and-s-gamut3-s-log3.pdf */
+double SonySLogTonemap(double value);
 
 #endif

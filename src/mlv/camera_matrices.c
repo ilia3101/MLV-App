@@ -138,34 +138,6 @@ static const double xyz_to_rgb[] = {
    -0.498571,  0.0415557,  1.0570700
 };
 
-/* Gives a XYZ to RGB matrix (my own interpretation of "RGB") */
-void getMlvNiceXyzToRgbMatrix(mlvObject_t * video, double * outputMatrix)
-{
-    double matrix_a[9];
-    double matrix_b[9];
-
-    double matrix_final[9];
-
-    /* I quite like the 5D Mark II's matrix as an RGB matrix */
-    matrixRemoveDividers(cam_matrices[1].ColorMatrix2, matrix_a);
-    /* Also the EOS M's is pretty nice */
-    matrixRemoveDividers(cam_matrices[12].ColorMatrix2, matrix_b);
-
-    /* Blend a and b */
-    for (int i = 0; i < 9; ++i)
-    {
-        matrix_final[i] = (matrix_a[i] / 2) + (matrix_b[i] / 2);
-    }
-
-    /* giv */
-    // memcpy(outputMatrix, matrix_final, sizeof(double) * 9);
-    // memcpy(outputMatrix, xyz_to_rgb, sizeof(double) * 9);
-    /* Matrices must be flipped :( */
-    for (int i = 0; i < 9; ++i)
-    {
-        outputMatrix[i] = (double)xyz_to_rgb[i];
-    }
-}
 
 /* Quite hacked together, hopefully there's no errors in the name picking logic.
  * Should I use cameraModel instead? how? */
