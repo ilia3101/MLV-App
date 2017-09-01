@@ -1497,6 +1497,8 @@ void MainWindow::on_listWidgetSession_customContextMenuRequested(const QPoint &p
 //Delete selected files from session
 void MainWindow::deleteFileFromSession( void )
 {
+    //Save slider receipt
+    setReceipt( m_pSessionReceipts.at( m_lastActiveClipInSession ) );
     //If multiple selection is on, we need to erase all selected items
     for( int i = ui->listWidgetSession->selectedItems().size(); i > 0; i-- )
     {
