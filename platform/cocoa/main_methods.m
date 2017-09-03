@@ -114,6 +114,11 @@ void setAppNewMlvClip(char * mlvPathString, char * mlvFileName)
     App->frameChanged++;
 
     /* End of MLV opening stuff */
+
+    /* Audio test - seems to crash when in an app bundle :[ */
+    FILE * WAVEFile = fopen("TEST.wav", "wb");
+    writeMlvAudioToWave(App->videoMLV, WAVEFile);
+    fclose(WAVEFile);
 }
 
 /* Button methods */
@@ -278,6 +283,15 @@ void setAppNewMlvClip(char * mlvPathString, char * mlvFileName)
 
 /* Select processing image profile */
 -(void)toggleImageProfile
+{
+    /* Indexes of menu items correspond to defines of processing profiles */
+    processingSetImageProfile(App->processingSettings, (int)[self indexOfSelectedItem]);
+    App->frameChanged++;
+}
+
+
+/* Select processing image profile */
+-(void)toggleVideoFormat
 {
     /* Indexes of menu items correspond to defines of processing profiles */
     processingSetImageProfile(App->processingSettings, (int)[self indexOfSelectedItem]);

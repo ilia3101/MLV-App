@@ -66,6 +66,9 @@ useful_methods.o : gui_stuff/useful_methods.m
 video_mlv.o : ../../src/mlv/video_mlv.c
 	$(CC) $(cflags) ../../src/mlv/video_mlv.c
 
+audio_mlv.o : ../../src/mlv/audio_mlv.c
+	$(CC) $(cflags) ../../src/mlv/audio_mlv.c
+
 lj92.o : ../../src/mlv/liblj92/lj92.c
 	$(CC) $(cflags) ../../src/mlv/liblj92/lj92.c
 

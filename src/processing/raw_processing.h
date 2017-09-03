@@ -77,10 +77,8 @@ void processingSetGamma(processingObject_t * processing, double gammaValue);
 
 
 
-/* Those ML matrices, camera specific */
-void processingSetXyzToCamMatrix(processingObject_t * processing, double * xyzToCamMatrix);
-/* This is whatever, probably doesn't need touching */
-void processingSetXyzToRgbMatrix(processingObject_t * processing, double * xyzToRgbMatrix);
+/* Set Camera RAW -> sRGB matrix */
+void processingCamTosRGBMatrix(processingObject_t * processing, double * camTosRGBMatrix);
 
 
 

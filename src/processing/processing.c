@@ -293,14 +293,14 @@ void processing_update_matrices(processingObject_t * processing)
     /* (for shorter code) */
     int32_t ** pm = processing->pre_calc_matrix;
 
-    /* Create a camera to XYZ matrix in temp_matrix_a */
-    invertMatrix(processing->xyz_to_cam_matrix, temp_matrix_a);
+    /* Create a camera to sRGB matrix in temp_matrix_a */
+    // memcpy(temp_matrix_a, processing->cam_to_sRGB_matrix, 9 * sizeof(double));
+    memcpy(temp_matrix_a, (double *)id_matrix, 9 * sizeof(double)); /* just nothjng for now */
 
     /* whitebalance */
 
-    /* Convert XYZ to eye cone space -> to temp_matrix_b */
     // multiplyMatrices(temp_matrix_a, (double *)ciecam02, temp_matrix_b); /* No ciecam for now */
-    multiplyMatrices(temp_matrix_a, (double *)id_matrix, temp_matrix_b);
+    multiplyMatrices(temp_matrix_a, (double *)id_matrix, temp_matrix_b); /* (nothing) */
     memcpy(temp_matrix_a, temp_matrix_b, 9 * sizeof(double));
 
     /* Multiply channels */
@@ -309,9 +309,9 @@ void processing_update_matrices(processingObject_t * processing)
     for (int i = 6; i < 9; ++i) temp_matrix_b[i] *= processing->wb_multipliers[2];
 
     /* Convert back to XYZ space from cone space -> to temp_matrix_a */
-    invertMatrix((double *)ciecam02, temp_matrix_c);
+    // invertMatrix((double *)ciecam02, temp_matrix_c);
     // multiplyMatrices(temp_matrix_b, temp_matrix_c, temp_matrix_a); /* No ciecam for now */
-    multiplyMatrices(temp_matrix_b, (double *)id_matrix, temp_matrix_a);
+    multiplyMatrices(temp_matrix_b, (double *)id_matrix, temp_matrix_a); /* aka do nothing */
 
     /* Multiply the currently XYZ matrix back to RGB in to final_matrix */
     multiplyMatrices( temp_matrix_a,

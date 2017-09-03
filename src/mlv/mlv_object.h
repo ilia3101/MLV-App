@@ -11,8 +11,7 @@
 
 
 /* An awkward structure for handling an MLV
- * Would be difficult to adapt for .RAW 
- * ToDo: adapt for .M00 .M01 stuff */
+ * TODO: adapt for .M00 .M01 stuff */
 typedef struct {
 
     /* Will get used when adapted to handle .M00 .M01 */
@@ -27,7 +26,7 @@ typedef struct {
 
     /* For access to MLV headers */
     mlv_file_hdr_t    MLVI;
-    mlv_audf_hdr_t    AUDF;
+    mlv_audf_hdr_t    AUDF; /* Last AUDF header read */
     mlv_rawi_hdr_t    RAWI;
     mlv_vidf_hdr_t    VIDF; /* One of many VIDFs(don't know if they're different) */
     mlv_wavi_hdr_t    WAVI;
@@ -38,13 +37,18 @@ typedef struct {
     mlv_info_hdr_t    INFO;
     mlv_diso_hdr_t    DISO;
 
-    /* Useful info for using */
+    /* Video info */
     double      real_frame_rate; /* ...Because framerate is not explicitly stored in the file */
-    double      frame_rate; /* User may want to override it */
-    uint32_t    frames; /* Number of frames */
-    uint64_t  * frame_offsets; /* Offsets to the start of frames in the file, computed on opening file */
-    uint32_t  * frame_sizes; /* Frame sizes - only exists if video is losslessly compressed */
-    uint32_t    frame_size; /* NOT counting compression factor */
+    double      frame_rate;      /* User may want to override it */
+    uint32_t    frames;          /* Number of frames */
+    uint64_t  * frame_offsets;   /* Offsets to the start of frames in the file, computed on opening file */
+    uint32_t  * frame_sizes;     /* Frame sizes - only exists if video is losslessly compressed */
+    uint32_t    frame_size;      /* NOT counting compression factor */
+
+    /* Audio info */
+    uint32_t    audios;        /* Number of audio blocks */
+    uint64_t  * audio_offsets; /* Offsets to the starts of audios */
+    uint32_t  * audio_sizes;   /* Size of the audio sections */
 
 
     /* Image processing object pointer (it is to be made separately) */

@@ -68,6 +68,9 @@ typedef struct {
     /* Select image profile */
     NSPopUpButton * imageProfile;
 
+    /* Select video export format */
+    NSPopUpButton * videoFormat;
+
     /****************************************
      **           SESSION STUFF            **
      ****************************************/
@@ -94,6 +97,9 @@ typedef struct {
     char * MLVClipName;
     
     double frameSliderPosition;
+
+    /* String for exporting using ffmpeg command - TEMPORARY unil avfoundation */
+    char * ffmpegFormatString;
 
     /* ++ this on adjustments to redraw or on playback to go draw next frame */
     int frameChanged;

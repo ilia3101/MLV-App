@@ -35,6 +35,15 @@ static uint32_t file_get_pos(FILE *stream)
 #endif
 }
 
+#ifndef STDOUT_SILENT
+#define DEBUG(CODE) CODE
+#else
+#define DEBUG(CODE)
+#endif
+
+/* Just to be separate */
+#include "audio_mlv.c"
+
 /* Unpacks the bits of a frame to get a bayer B&W image (without black level correction)
  * Needs memory to return to, sized: sizeof(float) * getMlvHeight(urvid) * getMlvWidth(urvid)
  * Output image's pixels will be in range 0-65535 as if it is 16 bit integers */
@@ -162,8 +171,7 @@ void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outpu
 
 void setMlvProcessing(mlvObject_t * video, processingObject_t * processing)
 {
-    // double camera_matrix[9];
-    // double xyz_to_rgb_matrix[9];
+    double camera_matrix[9];
 
     /* Easy bit */
     video->processing = processing;
@@ -172,13 +180,9 @@ void setMlvProcessing(mlvObject_t * video, processingObject_t * processing)
      * processing object defaults to 1,0,0,0,1,0,0,0,1) */
 
     /* Get camera matrix for MLV clip and set it in the processing object */
-    // getMlvXyzToCameraMatrix(video, camera_matrix);
-    /* Set Camera to XYZ */
-    // processingSetXyzToCamMatrix(processing, camera_matrix);
-
-    /* Get and set some XYZ to RGB matrix(a funky one) */
-    // getMlvNiceXyzToRgbMatrix(video, xyz_to_rgb_matrix);
-    // processingSetXyzToRgbMatrix(processing, xyz_to_rgb_matrix);
+    getMlvCameraTosRGBMatrix(video, camera_matrix);
+    /* Set Camera to RGB */
+    processingCamTosRGBMatrix(processing, camera_matrix); /* Still not used in processing cos not working right */
 
     /* BLACK / WHITE level */
     processingSetBlackAndWhiteLevel( processing, 
@@ -354,6 +358,7 @@ void openMlvClip(mlvObject_t * video, char * mlvPath)
     uint32_t block_size; /* Size of block */
     uint32_t block_num = 0; /* Number of blocks in file */
     uint32_t frame_total = 0; /* Number of frames in video */
+    uint32_t audio_frame_total = 0; /* Number of audio blocks in video */
 
     file_set_pos(video->file, 0, SEEK_SET); /* Start of file */
 
@@ -374,18 +379,24 @@ void openMlvClip(mlvObject_t * video, char * mlvPath)
         /* Now check what kind of block it is and read it in to the mlv object */
 
         /* Is a frame block */
-        if ( strncmp(block_name, "VIDF", 4) == 0 ) 
+        if ( strncmp(block_name, "VIDF", 4) == 0 )
         {   
             /* Read block info to VIDF part(only once) */
             if (frame_total < 1) fread(&video->VIDF, sizeof(mlv_vidf_hdr_t), 1, video->file);
             /* Keep track of number of frames */
             frame_total++;
         }
+        /* Or audio */
+        else if ( strncmp(block_name, "AUDF", 4) == 0 )
+        {   
+            /* Read block info to AUDF part(only once) */
+            if (audio_frame_total < 1) fread(&video->AUDF, sizeof(mlv_audf_hdr_t), 1, video->file);;
+            /* Keep track of number of 'audio frames' */
+            audio_frame_total++;
+        }
         /* Nowhere did it say that the "MLVI" block == mlv_file_hdr_t / "FILE" */
         else if ( strncmp(block_name, "MLVI", 4) == 0 || strncmp(block_name, "FILE", 4) == 0 )
             fread(&video->MLVI, sizeof(mlv_file_hdr_t), 1, video->file);
-        else if ( strncmp(block_name, "AUDF", 4) == 0 )
-            fread(&video->AUDF, sizeof(mlv_audf_hdr_t), 1, video->file);
         else if ( strncmp(block_name, "RAWI", 4) == 0 )
             fread(&video->RAWI, sizeof(mlv_rawi_hdr_t), 1, video->file);
         else if ( strncmp(block_name, "WAVI", 4) == 0 )
@@ -404,9 +415,7 @@ void openMlvClip(mlvObject_t * video, char * mlvPath)
             fread(&video->DISO, sizeof(mlv_diso_hdr_t), 1, video->file);
 
         /* Printing stuff for fun */
-#ifndef STDOUT_SILENT
-        printf("Block #%4i  |  %.4s  |%9i Bytes\n", block_num, block_name, block_size);
-#endif
+        DEBUG( printf("Block #%4i  |  %.4s  |%9i Bytes\n", block_num, block_name, block_size); )
 
         /* Move to next block */
         file_set_pos(video->file, next_block, SEEK_SET);
@@ -458,6 +467,8 @@ void openMlvClip(mlvObject_t * video, char * mlvPath)
     video->frames = frame_total;
     /* Calculate framerate */
     video->frame_rate = (double)video->MLVI.sourceFpsNom / (double)video->MLVI.sourceFpsDenom;
+    /* Set audio count in video object */
+    video->audios = audio_frame_total;
 
     /* Make sure frame cache number is up to date by rerunning thiz */
     setMlvRawCacheLimitMegaBytes(video, getMlvRawCacheLimitMegaBytes(video));
@@ -472,8 +483,7 @@ void openMlvClip(mlvObject_t * video, char * mlvPath)
 }
 
 
-/* mapMlvFrames function will get byte offsets of every frame in the file, run this
- * after mlvObject_t is initialised and video is opened, or you won't have frames */
+/* mapMlvFrames function will get byte offsets of every frame (and audio block) in the file */
 void mapMlvFrames(mlvObject_t * video, uint64_t limit)
 {
     /* Getting size of file in bytes */
@@ -483,16 +493,20 @@ void mapMlvFrames(mlvObject_t * video, uint64_t limit)
     char block_name[4]; /* Read header name to this */
     uint32_t block_size; /* Size of block */
     uint32_t frame_offset; /* Offset to (a)frame from start of VIDF block */
-    uint32_t frame_num = 0; /* Number of frames in video */
-    uint32_t frame_total = 0; /* Number of frames in video */
+    uint32_t frame_num = 0; /* Current frame index */
+    uint32_t frame_total = 0; /* Total */
 
     file_set_pos(video->file, 0, SEEK_SET); /* Start of file */
 
-    /* Memory 4 all frame offsets */
+    /* Memory 4 all frame & audio block offsets */
     free(video->frame_offsets);
     video->frame_offsets = (uint64_t *)malloc( (video->frames) * sizeof(uint64_t) );
     free(video->frame_sizes);
     video->frame_sizes = (uint32_t *)malloc( (video->frames) * sizeof(uint32_t) );
+    free(video->audio_offsets);
+    video->audio_offsets = (uint64_t *)malloc( (video->audios) * sizeof(uint64_t) );
+    free(video->audio_sizes);
+    video->audio_sizes = (uint32_t *)malloc( (video->audios) * sizeof(uint32_t) );
 
     while (file_get_pos(video->file) < file_size) /* Check if end of file yet */
     {
@@ -519,11 +533,9 @@ void mapMlvFrames(mlvObject_t * video, uint64_t limit)
             /* Get frame offset from current location */
             fread(&frame_offset, sizeof(uint32_t), 1, video->file);
 
-#ifndef STDOUT_SILENT
-            printf("frame %i/%i, %lluMB / %llu Bytes from start of file\n",
+            DEBUG( printf("frame %i/%i, %lluMB / %llu Bytes from start of file\n",
             frame_num, video->frames, (block_start + frame_offset) >> 20, 
-            (block_start + frame_offset));
-#endif
+            (block_start + frame_offset)); )
 
             /* Video frame start = current location + frame offset */
             video->frame_offsets[frame_num] = file_get_pos(video->file) + frame_offset;
@@ -532,6 +544,27 @@ void mapMlvFrames(mlvObject_t * video, uint64_t limit)
             video->frame_sizes[frame_num] = block_size - (sizeof(mlv_vidf_hdr_t) + frame_offset);
 
             frame_total++;
+        }
+        /* Or audio block */
+        else if ( strncmp(block_name, "AUDF", 4) == 0 )
+        {
+            file_set_pos(video->file, 8, SEEK_CUR); /* skip 8 bytes */
+
+            /* Get audio frame's index */
+            fread(&frame_num, sizeof(uint32_t), 1, video->file);
+
+            /* Get frame offset from current location */
+            fread(&frame_offset, sizeof(uint32_t), 1, video->file);
+
+            DEBUG( printf("AUDF/audio block %i/%i,  %lluMB / %llu Bytes from start of file\n", 
+            frame_num, video->audios, (block_start + frame_offset) >> 20, 
+            (block_start + frame_offset)); )
+
+            /* Audio frame data start = current location + frame offset */
+            video->audio_offsets[frame_num] = file_get_pos(video->file) + frame_offset;
+
+            /* Size of audio */
+            video->audio_sizes[frame_num] = block_size - (sizeof(mlv_audf_hdr_t) + frame_offset);
         }
 
         /* Move to next block */

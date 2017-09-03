@@ -25,8 +25,8 @@ void printMlvInfo(mlvObject_t * video);
  * no debayering or processing */
 void openMlvClip(mlvObject_t * video, char * mlvPath);
 
-/* Goes through the files and record's every frame's offset from
- * start of the file in the .frame_offsets property */
+/* Goes through the files and records every frame's offset from
+ * start of the file in the ->frame_offsets property (AUDFs also) */
 void mapMlvFrames(mlvObject_t * video, uint64_t limit);
 
 /* Frees all memory and closes file */
@@ -61,8 +61,15 @@ void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outpu
 /* Gets a debayered 16 bit frame - used in getMlvProcessedFrame8 and 16 (when that begins to exist) */
 void getMlvRawFrameDebayered(mlvObject_t * video, uint64_t frameIndex, uint16_t * outputFrame);
 
-/* Used for processing, gets the matrix that does camera -> XYZ */
-void getMlvXyzToCameraMatrix(mlvObject_t * video, double * outputMatrix);
+/* For processing only, no use to average library user ;) Camera RGB -> sRGB */
+void getMlvCameraTosRGBMatrix(mlvObject_t * video, double * outputMatrix); /* Still havent had any success here */
+
+/* When allocating memory for audio use this */
+uint64_t getMlvAudioSize(mlvObject_t * video);
+/* Gets all audio data 4 u */
+void getMlvAudioData(mlvObject_t * video, uint16_t * outputAudio);
+/* Writes the MLV's audio in WAVE format to a given file path */
+void writeMlvAudioToWave(mlvObject_t * video, char * path);
 
 /* Do something like this before doing things: if (isMlvActive(your_mlvObject)) */
 #define isMlvActive(video) (video)->is_active

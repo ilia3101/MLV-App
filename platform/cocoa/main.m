@@ -100,6 +100,14 @@ int NSApplicationMain(int argc, const char * argv[])
     /* Remove titlebar */
     App->window.titlebarAppearsTransparent = true;
 
+    /* Use of Objecive-C is minimised through massive macros */
+
+    /*
+     *******************************************************************************
+     * RIGHT SIDEBAR STUFF
+     *******************************************************************************
+     */
+
     /* Processing style selector */
     App->imageProfile = [ [NSPopUpButton alloc]
                           initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(0,24,19) ) ];
@@ -116,16 +124,6 @@ int NSApplicationMain(int argc, const char * argv[])
     [App->imageProfile setAction: @selector(toggleImageProfile)];
     [App->imageProfile selectItemAtIndex: DEFAULT_IMAGE_PROFILE_APP];
     [[App->window contentView] addSubview: App->imageProfile];
-
-    /* Yes, macros -  Az u can tell by the capietals.
-     * I don't want to add hundreds of lines of Objective C 
-     * to the world, just to make some buttons for some app */
-
-    /*
-     *******************************************************************************
-     * RIGHT SIDEBAR STUFF
-     *******************************************************************************
-     */
 
     /* First block of sliders */
     CREATE_SLIDER_RIGHT( App->exposureSlider, App->exposureLabel, App->exposureValueLabel, @"Exposure", 1, exposureSliderMethod, 0, 0.5 );
@@ -176,6 +174,20 @@ int NSApplicationMain(int argc, const char * argv[])
     CREATE_BUTTON_LEFT_TOP( App->openMLVButton, 0, openMlvDialog, 0, @"Open MLV File" );
     // CREATE_BUTTON_LEFT_TOP( App->openMLVButton, 1, openMlvDialog, 6, @"Open Session" ); /* Commented out as not working yet */
     CREATE_BUTTON_LEFT_BOTTOM( App->exportProRes4444Button, 0, exportProRes4444, 1, @"Export ProRes 4444" );
+
+    /* Export format selector */
+    // App->videoFormat = [ [NSPopUpButton alloc]
+    //                      initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(0,24,19) ) ];
+    // [App->imageProfile anchorRight: YES];
+    // [App->imageProfile anchorTop: YES];
+    // [App->imageProfile insertItemWithTitle: @"ProRes 422 Proxy" atIndex: 0];
+    // [App->imageProfile insertItemWithTitle: @"ProRes 422 LT" atIndex: 1];
+    // [App->imageProfile insertItemWithTitle: @"ProRes 422 Normal" atIndex: 1];
+    // [App->imageProfile insertItemWithTitle: @"ProRes 422 HQ" atIndex: 1];
+    // [App->imageProfile setTarget: App->imageProfile];
+    // [App->imageProfile setAction: @selector(toggleProResFormat)];
+    // [App->imageProfile selectItemAtIndex: DEFAULT_IMAGE_PROFILE_APP];
+    // [[App->window contentView] addSubview: App->imageProfile];
 
     /* NSTableView - List of all clips currently open (session) */
     // NSScrollView * tableContainer = [[NSScrollView alloc] initWithFrame:NSMakeRect(10, 10, 380, 200)];

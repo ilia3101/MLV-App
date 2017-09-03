@@ -13,12 +13,6 @@
 #include "mlv.h"
 #include "../matrix/matrix.h"
 
-/* ColorMatrix2 is the important one I think. ARGH!
- * Apparently it turns camera's raw into XYZ, so I 
- * reverse and use it, please confirm if that's right */
-
-/* Also, what are 'forward' matrices? */
-
 struct cam_matrices {
     char * camera;
     int32_t ColorMatrix1[18];
@@ -131,6 +125,11 @@ static struct cam_matrices cam_matrices[] =
     }
 };
 
+/* Matrices from DXO */
+double matrix_5d2[9] = {  2.25, -1.50,  0.25,
+                         -0.26,  1.62, -0.36,
+                         -0.04, -0.40,  1.43  };
+
 
 static const double xyz_to_rgb[] = {
     3.240710, -0.9692580,  0.0556352,
@@ -139,9 +138,8 @@ static const double xyz_to_rgb[] = {
 };
 
 
-/* Quite hacked together, hopefully there's no errors in the name picking logic.
- * Should I use cameraModel instead? how? */
-void getMlvXyzToCameraMatrix(mlvObject_t * video, double * outputMatrix)
+/* Provides a DXO matrix from camera space to sRGB */
+void getMlvCameraTosRGBMatrix(mlvObject_t * video, double * outputMatrix)
 {
     double camera_matrix[9] = {1, 0, 0, 0, 1, 0, 0, 0, 1};
     int32_t * original_matrix;
@@ -162,10 +160,7 @@ void getMlvXyzToCameraMatrix(mlvObject_t * video, double * outputMatrix)
             else
             {
                 /* 5D Mark II */
-                original_matrix = cam_matrices[1].ColorMatrix2;
-#ifndef STDOUT_SILENT
-                printf("\n\n\n\n\n\nCamera matrix is 5D\n\n\n\n\n");
-#endif
+                // original_matrix = matrix_5d2;
             }
         }
         else if (camera_name[11] == '0')
@@ -266,14 +261,13 @@ void getMlvXyzToCameraMatrix(mlvObject_t * video, double * outputMatrix)
 
     /* Convert the silly integere matrix to floaty point */
     matrixRemoveDividers(original_matrix, camera_matrix);
+
+    double out[9];
+    invertMatrix(matrix_5d2, out);
+
     /* giv */
     for (int i = 0; i < 9; ++i)
     {
-        outputMatrix[i] = camera_matrix[i];
+        outputMatrix[i] = out[i];
     }
-#ifndef STDOUT_SILENT
-    printf("Camera matrix:\n");
-    printMatrix(camera_matrix);
-#endif
-    /* r3turn o; */
 }

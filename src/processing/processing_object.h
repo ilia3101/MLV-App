@@ -28,7 +28,7 @@ typedef struct {
     /* Double is classy */
 
     /* Camera's matrix - will need to be set on opening clip, default set for 5D Mark II */
-    double xyz_to_cam_matrix[9];
+    double cam_to_sRGB_matrix[9];
     /* What is used to turn XYZ produced form previious matrix into RGB image */
     double xyz_to_rgb_matrix[9];
     /* Main matrix: combined white balance + exposure + whatever the cmaera matrix does */

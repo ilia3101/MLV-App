@@ -30,6 +30,8 @@ void setAppNewMlvClip(char * mlvPathString, char * mlvFileName);
 
 /* Select processing image profile */
 -(void)toggleImageProfile;
+/* Select video format (currently only ProRes options) */
+-(void)toggleVideoFormat;
 
 @end
 

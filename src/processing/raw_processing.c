@@ -36,9 +36,9 @@ processingObject_t * initProcessingObject()
         processing->pre_calc_matrix[i] = malloc( 65536 * sizeof(int32_t) );
 
     /* A nothing matrix */
-    processing->xyz_to_cam_matrix[0] = 1.0;
-    processing->xyz_to_cam_matrix[4] = 1.0;
-    processing->xyz_to_cam_matrix[8] = 1.0;
+    processing->cam_to_sRGB_matrix[0] = 1.0;
+    processing->cam_to_sRGB_matrix[4] = 1.0;
+    processing->cam_to_sRGB_matrix[8] = 1.0;
     /* Different matrix BTW */
     processing->xyz_to_rgb_matrix[0] = 1.0;
     processing->xyz_to_rgb_matrix[4] = 1.0;
@@ -140,17 +140,9 @@ void processingSetImageProfile(processingObject_t * processing, int imageProfile
 
 
 /* Takes those matrices I learned about on the forum */
-void processingSetXyzToCamMatrix(processingObject_t * processing, double * xyzToCamMatrix)
+void processingCamTosRGBMatrix(processingObject_t * processing, double * camTosRGBMatrix)
 {
-    memcpy(processing->xyz_to_cam_matrix, xyzToCamMatrix, sizeof(double) * 9);
-    /* Calculates final main matrix */
-    processing_update_matrices(processing);
-}
-
-/* Fun :DDDDDDD */
-void processingSetXyzToRgbMatrix(processingObject_t * processing, double * xyzToCamMatrix)
-{
-    memcpy(processing->xyz_to_rgb_matrix, xyzToCamMatrix, sizeof(double) * 9);
+    memcpy(processing->cam_to_sRGB_matrix, camTosRGBMatrix, sizeof(double) * 9);
     /* Calculates final main matrix */
     processing_update_matrices(processing);
 }
