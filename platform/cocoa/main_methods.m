@@ -116,9 +116,7 @@ void setAppNewMlvClip(char * mlvPathString, char * mlvFileName)
     /* End of MLV opening stuff */
 
     /* Audio test - seems to crash when in an app bundle :[ */
-    FILE * WAVEFile = fopen("TEST.wav", "wb");
-    writeMlvAudioToWave(App->videoMLV, WAVEFile);
-    fclose(WAVEFile);
+    writeMlvAudioToWave(App->videoMLV, "test.wav");
 }
 
 /* Button methods */

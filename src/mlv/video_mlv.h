@@ -64,12 +64,12 @@ void getMlvRawFrameDebayered(mlvObject_t * video, uint64_t frameIndex, uint16_t 
 /* For processing only, no use to average library user ;) Camera RGB -> sRGB */
 void getMlvCameraTosRGBMatrix(mlvObject_t * video, double * outputMatrix); /* Still havent had any success here */
 
+/* Writes the MLV's audio in WAVE format to a given file path */
+void writeMlvAudioToWave(mlvObject_t * video, char * path);
 /* When allocating memory for audio use this */
 uint64_t getMlvAudioSize(mlvObject_t * video);
 /* Gets all audio data 4 u */
 void getMlvAudioData(mlvObject_t * video, uint16_t * outputAudio);
-/* Writes the MLV's audio in WAVE format to a given file path */
-void writeMlvAudioToWave(mlvObject_t * video, char * path);
 
 /* Do something like this before doing things: if (isMlvActive(your_mlvObject)) */
 #define isMlvActive(video) (video)->is_active
