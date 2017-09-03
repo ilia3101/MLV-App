@@ -379,6 +379,17 @@ void MainWindow::openMlv( QString fileName )
     m_pInfoDialog->ui->tableWidget->item( 7, 1 )->setText( QString( "f/%1" ).arg( getMlvAperture( m_pMlvObject ) / 100.0, 0, 'f', 1 ) );
     m_pInfoDialog->ui->tableWidget->item( 8, 1 )->setText( QString( "%1" ).arg( (int)getMlvIso( m_pMlvObject ) ) );
     m_pInfoDialog->ui->tableWidget->item( 9, 1 )->setText( QString( "%1 bits" ).arg( getMlvBitdepth( m_pMlvObject ) ) );
+    if( doesMlvHaveAudio( m_pMlvObject ) )
+    {
+        m_pInfoDialog->ui->tableWidget->item( 10, 1 )->setText( QString( "%1 channel(s), %2 kHz" )
+                                                                .arg( getMlvAudioChannels( m_pMlvObject ) )
+                                                                .arg( getMlvSampleRate( m_pMlvObject ) ) );
+    }
+    else
+    {
+        m_pInfoDialog->ui->tableWidget->item( 10, 1 )->setText( QString( "-" ) );
+    }
+
 
     //Adapt slider to clip and move to position 0
     ui->horizontalSliderPosition->setValue( 0 );
@@ -661,7 +672,7 @@ void MainWindow::startExport(QString fileName)
     //Audio Export
     QString ffmpegAudioCommand;
     ffmpegAudioCommand.clear();
-    if( m_audioExportEnabled ) // & if audio available
+    if( m_audioExportEnabled && doesMlvHaveAudio( m_pMlvObject ) )
     {
         writeMlvAudioToWave(m_pMlvObject, wavFileName.toLatin1().data());
         ffmpegAudioCommand = QString( "-i \"%1\" -c:a copy " ).arg( wavFileName );
@@ -942,6 +953,7 @@ void MainWindow::deleteSession()
     m_pInfoDialog->ui->tableWidget->item( 7, 1 )->setText( "-" );
     m_pInfoDialog->ui->tableWidget->item( 8, 1 )->setText( "-" );
     m_pInfoDialog->ui->tableWidget->item( 9, 1 )->setText( "-" );
+    m_pInfoDialog->ui->tableWidget->item( 10, 1 )->setText( "-" );
 
     //Adapt slider to clip and move to position 0
     ui->horizontalSliderPosition->setValue( 0 );
