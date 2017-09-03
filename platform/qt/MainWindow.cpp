@@ -572,6 +572,7 @@ void MainWindow::readSettings()
     //if( set.value( "caching", false ).toBool() ) ui->actionCaching->setChecked( true );
     ui->actionCaching->setChecked( false );
     m_frameRate = set.value( "frameRate", 25 ).toDouble();
+    m_audioExportEnabled = set.value( "audioExportEnabled", true ).toBool();
 }
 
 //Save some settings to registry
@@ -592,6 +593,7 @@ void MainWindow::writeSettings()
     set.setValue( "previewMode", m_previewMode );
     set.setValue( "caching", ui->actionCaching->isChecked() );
     set.setValue( "frameRate", m_frameRate );
+    set.setValue( "audioExportEnabled", m_audioExportEnabled );
 }
 
 //Start exporting a MOV via PNG48
@@ -654,7 +656,18 @@ void MainWindow::startExport(QString fileName)
     QString output = numberedFileName;
     numberedFileName.append( QString( "_\%05d" ) );
     numberedFileName.append( QString( ".png" ) );
+    QString wavFileName = QString( "%1.wav" ).arg( output );
 
+    //Audio Export
+    QString ffmpegAudioCommand;
+    ffmpegAudioCommand.clear();
+    if( m_audioExportEnabled ) // & if audio available
+    {
+        writeMlvAudioToWave(m_pMlvObject, wavFileName.toLatin1().data());
+        ffmpegAudioCommand = QString( "-i \"%1\" -c:a copy " ).arg( wavFileName );
+    }
+
+    //FFMpeg export
     QString program = QCoreApplication::applicationDirPath();
     program.append( QString( "/ffmpeg\"" ) );
     program.prepend( QString( "\"" ) );
@@ -676,6 +689,9 @@ void MainWindow::startExport(QString fileName)
                     .arg( m_codecProfile )
                     .arg( output ) );
     }
+    //There is a %5 in the string, so another arg is not possible - so do that:
+    program.insert( program.indexOf( "-c:v" ), ffmpegAudioCommand );
+
     //qDebug() << program;
 
     //Start FFmpeg
@@ -1086,6 +1102,11 @@ void MainWindow::endExport( void )
         if( file->exists() ) file->remove();
         delete file;
     }
+    //Delete wav file
+    QString wavFileName = QString( "%1.wav" ).arg( m_exportQueue.first()->exportFileName().left( m_exportQueue.first()->exportFileName().lastIndexOf( "." ) ) );
+    QFile *file = new QFile( wavFileName );
+    if( file->exists() ) file->remove();
+    delete file;
 
     //Emit Ready-Signal
     emit exportReady();
@@ -1356,12 +1377,13 @@ void MainWindow::on_actionExportSettings_triggered()
     //Stop playback if active
     ui->actionPlay->setChecked( false );
 
-    ExportSettingsDialog *pExportSettings = new ExportSettingsDialog( this, m_codecProfile, m_previewMode, m_fpsOverride, m_frameRate );
+    ExportSettingsDialog *pExportSettings = new ExportSettingsDialog( this, m_codecProfile, m_previewMode, m_fpsOverride, m_frameRate, m_audioExportEnabled );
     pExportSettings->exec();
     m_codecProfile = pExportSettings->encoderSetting();
     m_previewMode = pExportSettings->previewMode();
     m_fpsOverride = pExportSettings->isFpsOverride();
     m_frameRate = pExportSettings->getFps();
+    m_audioExportEnabled = pExportSettings->isExportAudioEnabled();
     delete pExportSettings;
 
     //Restart timer with chosen framerate

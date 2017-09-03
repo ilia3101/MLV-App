@@ -9,7 +9,7 @@
 #include "ui_ExportSettingsDialog.h"
 
 //Constructor
-ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, uint8_t currentCodecProfile, uint8_t previewMode, bool fpsOverride, double fps) :
+ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, uint8_t currentCodecProfile, uint8_t previewMode, bool fpsOverride, double fps, bool exportAudio) :
     QDialog(parent),
     ui(new Ui::ExportSettingsDialog)
 {
@@ -21,6 +21,7 @@ ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, uint8_t currentCodec
     else ui->radioButtonPreviewDisabled->setChecked( true );
     ui->checkBoxFpsOverride->setChecked( fpsOverride );
     ui->doubleSpinBoxFps->setValue( fps );
+    ui->checkBoxExportAudio->setChecked( exportAudio );
 }
 
 //Destructor
@@ -53,4 +54,10 @@ bool ExportSettingsDialog::isFpsOverride()
 double ExportSettingsDialog::getFps()
 {
     return ui->doubleSpinBoxFps->value();
+}
+
+//Get export audio checkbox checked
+bool ExportSettingsDialog::isExportAudioEnabled()
+{
+    return ui->checkBoxExportAudio->isChecked();
 }

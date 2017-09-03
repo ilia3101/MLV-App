@@ -77,7 +77,8 @@ SOURCES += \
     EditSliderValueDialog.cpp \
     DoubleClickLabel.cpp \
     ../../src/processing/chroma_smooth.c \
-    ../../src/processing/pixel_proc.c
+    ../../src/processing/pixel_proc.c \
+    ../../src/mlv/audio_mlv.c
 
 HEADERS += \
         MainWindow.h \
