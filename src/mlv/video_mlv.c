@@ -85,85 +85,82 @@ void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outpu
 
         lj92_close(decoder_object);
         free(decoded_frame);
-
-        return;
     }
-    else
+    else /* Is not compressed */
     {
         fread(RAWFrame, sizeof(uint8_t), raw_frame_size, video->file);
-    }
 
-    /* Is not compressed */
-    switch (bitdepth)
-    {
-        case 14:
-            /* 8 pixels every 14 bytes */
-            for (int raw_byte = 0; raw_byte < raw_frame_size; raw_byte += 14)
-            {
-                /* Use the raw_pixblock struct to split up the bytes into parts of pixels */
-                raw_pixblock_14 * pixel = (raw_pixblock_14 *)(RAWFrame + raw_byte);
+        switch (bitdepth)
+        {
+            case 14:
+                /* 8 pixels every 14 bytes */
+                for (int raw_byte = 0; raw_byte < raw_frame_size; raw_byte += 14)
+                {
+                    /* Use the raw_pixblock struct to split up the bytes into parts of pixels */
+                    raw_pixblock_14 * pixel = (raw_pixblock_14 *)(RAWFrame + raw_byte);
 
-                /* Location in output image */
-                float * out_pixel = outputFrame + ((raw_byte/14) * 8);
+                    /* Location in output image */
+                    float * out_pixel = outputFrame + ((raw_byte/14) * 8);
 
-                /* Join the pieces of pixels a-h from raw_pixblock and left shift 2 to get 16 bit values */
-                * out_pixel = (float) ( (pixel->a) << 2 );
-                out_pixel[1] = (float) ( (pixel->b_lo | (pixel->b_hi << 12)) << 2 );
-                out_pixel[2] = (float) ( (pixel->c_lo | (pixel->c_hi << 10)) << 2 );
-                out_pixel[3] = (float) ( (pixel->d_lo | (pixel->d_hi <<  8)) << 2 );
-                out_pixel[4] = (float) ( (pixel->e_lo | (pixel->e_hi <<  6)) << 2 );
-                out_pixel[5] = (float) ( (pixel->f_lo | (pixel->f_hi <<  4)) << 2 );
-                out_pixel[6] = (float) ( (pixel->g_lo | (pixel->g_hi <<  2)) << 2 );
-                out_pixel[7] = (float) ( (pixel->h) << 2 );
-            }
+                    /* Join the pieces of pixels a-h from raw_pixblock and left shift 2 to get 16 bit values */
+                    * out_pixel = (float) ( (pixel->a) << 2 );
+                    out_pixel[1] = (float) ( (pixel->b_lo | (pixel->b_hi << 12)) << 2 );
+                    out_pixel[2] = (float) ( (pixel->c_lo | (pixel->c_hi << 10)) << 2 );
+                    out_pixel[3] = (float) ( (pixel->d_lo | (pixel->d_hi <<  8)) << 2 );
+                    out_pixel[4] = (float) ( (pixel->e_lo | (pixel->e_hi <<  6)) << 2 );
+                    out_pixel[5] = (float) ( (pixel->f_lo | (pixel->f_hi <<  4)) << 2 );
+                    out_pixel[6] = (float) ( (pixel->g_lo | (pixel->g_hi <<  2)) << 2 );
+                    out_pixel[7] = (float) ( (pixel->h) << 2 );
+                }
 
-            break;
+                break;
 
-        case 12:
-            /* 8 pixels every 12 bytes */
-            for (int raw_byte = 0; raw_byte < raw_frame_size; raw_byte += 12)
-            {
-                /* Use the raw_pixblock struct to split up the bytes into parts of pixels */
-                raw_pixblock_12 * pixel = (raw_pixblock_12 *)(RAWFrame + raw_byte);
+            case 12:
+                /* 8 pixels every 12 bytes */
+                for (int raw_byte = 0; raw_byte < raw_frame_size; raw_byte += 12)
+                {
+                    /* Use the raw_pixblock struct to split up the bytes into parts of pixels */
+                    raw_pixblock_12 * pixel = (raw_pixblock_12 *)(RAWFrame + raw_byte);
 
-                /* Location in output image */
-                float * out_pixel = outputFrame + ((raw_byte/12) * 8);
+                    /* Location in output image */
+                    float * out_pixel = outputFrame + ((raw_byte/12) * 8);
 
-                /* Join the pieces of pixels a-h from raw_pixblock and left shift 2 to get 16 bit values */
-                * out_pixel = (float) ( (pixel->a) << 4 );
-                out_pixel[1] = (float) ( (pixel->b_lo | (pixel->b_hi << 8)) << 4 );
-                out_pixel[2] = (float) ( (pixel->c_lo | (pixel->c_hi << 4)) << 4 );
-                out_pixel[3] = (float) ( (pixel->d) << 4 );
-                out_pixel[4] = (float) ( (pixel->e) << 4 );
-                out_pixel[5] = (float) ( (pixel->f_lo | (pixel->f_hi << 8)) << 4 );
-                out_pixel[6] = (float) ( (pixel->g_lo | (pixel->g_hi << 4)) << 4 );
-                out_pixel[7] = (float) ( (pixel->h) << 4 );
-            }
+                    /* Join the pieces of pixels a-h from raw_pixblock and left shift 2 to get 16 bit values */
+                    * out_pixel = (float) ( (pixel->a) << 4 );
+                    out_pixel[1] = (float) ( (pixel->b_lo | (pixel->b_hi << 8)) << 4 );
+                    out_pixel[2] = (float) ( (pixel->c_lo | (pixel->c_hi << 4)) << 4 );
+                    out_pixel[3] = (float) ( (pixel->d) << 4 );
+                    out_pixel[4] = (float) ( (pixel->e) << 4 );
+                    out_pixel[5] = (float) ( (pixel->f_lo | (pixel->f_hi << 8)) << 4 );
+                    out_pixel[6] = (float) ( (pixel->g_lo | (pixel->g_hi << 4)) << 4 );
+                    out_pixel[7] = (float) ( (pixel->h) << 4 );
+                }
 
-            break;
+                break;
 
-        case 10:
-            /* 8 pixels every 10 bytes */
-            for (int raw_byte = 0; raw_byte < raw_frame_size; raw_byte += 10)
-            {
-                /* Use the raw_pixblock struct to split up the bytes into parts of pixels */
-                raw_pixblock_10 * pixel = (raw_pixblock_10 *)(RAWFrame + raw_byte);
+            case 10:
+                /* 8 pixels every 10 bytes */
+                for (int raw_byte = 0; raw_byte < raw_frame_size; raw_byte += 10)
+                {
+                    /* Use the raw_pixblock struct to split up the bytes into parts of pixels */
+                    raw_pixblock_10 * pixel = (raw_pixblock_10 *)(RAWFrame + raw_byte);
 
-                /* Location in output image */
-                float * out_pixel = outputFrame + ((raw_byte/10) * 8);
+                    /* Location in output image */
+                    float * out_pixel = outputFrame + ((raw_byte/10) * 8);
 
-                /* Join the pieces of pixels a-h from raw_pixblock and left shift 2 to get 16 bit values */
-                * out_pixel = (float) ( (pixel->a) << 6 );
-                out_pixel[1] = (float) ( (pixel->b_lo | (pixel->b_hi << 4)) << 6 );
-                out_pixel[2] = (float) ( (pixel->c) << 6 );
-                out_pixel[3] = (float) ( (pixel->d_lo | (pixel->d_hi << 8)) << 6 );
-                out_pixel[4] = (float) ( (pixel->e_lo | (pixel->e_hi << 2)) << 6 );
-                out_pixel[5] = (float) ( (pixel->f) << 6 );
-                out_pixel[6] = (float) ( (pixel->g_lo | (pixel->g_hi << 6)) << 6 );
-                out_pixel[7] = (float) ( (pixel->h) << 6 );
-            }
+                    /* Join the pieces of pixels a-h from raw_pixblock and left shift 2 to get 16 bit values */
+                    * out_pixel = (float) ( (pixel->a) << 6 );
+                    out_pixel[1] = (float) ( (pixel->b_lo | (pixel->b_hi << 4)) << 6 );
+                    out_pixel[2] = (float) ( (pixel->c) << 6 );
+                    out_pixel[3] = (float) ( (pixel->d_lo | (pixel->d_hi << 8)) << 6 );
+                    out_pixel[4] = (float) ( (pixel->e_lo | (pixel->e_hi << 2)) << 6 );
+                    out_pixel[5] = (float) ( (pixel->f) << 6 );
+                    out_pixel[6] = (float) ( (pixel->g_lo | (pixel->g_hi << 6)) << 6 );
+                    out_pixel[7] = (float) ( (pixel->h) << 6 );
+                }
 
-            break;
+                break;
+        }
     }
     
     free(RAWFrame);

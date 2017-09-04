@@ -90,7 +90,7 @@ void getMlvAudioData(mlvObject_t * video, uint16_t * outputAudio);
 #define getMlvIso(video) (video)->EXPO.isoValue
 #define getMlvShutter(video) (video)->EXPO.shutterValue
 #define getMlvAperture(video) (video)->LENS.aperture
-#define doesMlvHaveAudio(video) (bool)(video)->MLVI.audioClass
+#define doesMlvHaveAudio(video) (video)->MLVI.audioClass
 #define getMlvSampleRate(video) (video)->WAVI.samplingRate
 #define getMlvAudioChannels(video) (video)->WAVI.channels
 
