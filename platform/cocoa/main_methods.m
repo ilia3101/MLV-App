@@ -116,7 +116,7 @@ void setAppNewMlvClip(char * mlvPathString, char * mlvFileName)
     /* End of MLV opening stuff */
 
     /* Audio test - seems to crash when in an app bundle :[ */
-    writeMlvAudioToWave(App->videoMLV, "test.wav");
+    //writeMlvAudioToWave(App->videoMLV, "test.wav");
 }
 
 /* Button methods */
