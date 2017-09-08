@@ -4,15 +4,16 @@ appname = "MLV App"
 # List of all objects to link
 objects = main.o video_mlv.o debayer.o amaze_demosaic.o raw_processing.o \
 	      main_methods.o useful_methods.o background_thread.o matrix.o \
-		  camera_matrices.o frame_caching.o lj92.o session_methods.o
+		  camera_matrices.o frame_caching.o lj92.o session_methods.o \
+		  delegate.o
 
 # Compiler
 CC = gcc # Normal
 
 # Flags for link and objects
-mainflags = -O3 -Ofast -m64
-linkflags = $(mainflags) -mmacosx-version-min=10.6 -lm -pthread
-cflags := $(mainflags) -c -mmacosx-version-min=10.6
+mainflags = -mmacosx-version-min=10.10 -O3 -Ofast -m64
+linkflags = $(mainflags) -lm -pthread
+cflags := $(mainflags) -c
 
 # Run some cheeky compiletime code to generate window title with hostname
 # Then call the build rule to actually build it
@@ -40,6 +41,7 @@ app :
 	cp -i info.plist $(appname).app/Contents/; \
 	unzip ../qt/FFmpeg/ffmpegOSX.zip -d $(appname).app/Contents/Resources; \
 	rm -rf $(appname).app/Contents/Resources/__MACOSX; \
+	cp ../../src/icon/icon.icns $(appname).app/Contents/Resources/MLV\ App.icns; \
 	rm generate_info_plist; \
 	rm info.plist; \
 
@@ -53,6 +55,9 @@ main.o : main.m
 
 main_methods.o : main_methods.m
 	$(CC) $(cflags) main_methods.m
+
+delegate.o : delegate.m
+	$(CC) $(cflags) delegate.m
 
 session_methods.o : session_methods.m
 	$(CC) $(cflags) session_methods.m

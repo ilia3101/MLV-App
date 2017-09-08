@@ -40,8 +40,27 @@ void initAppWithGod()
 
 
 /* This is now a function so that it can be accessedd from any part of the app, not just a button press */
-void setAppNewMlvClip(char * mlvPathString, char * mlvFileName)
+int setAppNewMlvClip(char * mlvPath)
 {
+    /* Setting app ttle to MLV file name... */
+    char * mlvFileName = mlvPath;
+    char * extension = mlvPath + strlen(mlvPath) - 3;
+    int clipNameStart = strlen(mlvPath) - 1;
+
+    /* Point to just name */
+    while (mlvPath[clipNameStart] != '/')
+    {
+        mlvFileName = mlvPath + clipNameStart;
+        clipNameStart--;
+    }
+
+    /* Only allow if file has MLV extension */
+    if ( !( (extension[0] == 'm' && extension[1] == 'l' && extension[2] == 'v') ||
+            (extension[0] == 'M' && extension[1] == 'L' && extension[2] == 'V')  ) )
+    {
+        return 1;
+    }
+
     free(App->MLVClipName);
     App->MLVClipName = malloc( strlen(mlvFileName) );
     memcpy(App->MLVClipName, mlvFileName, strlen(mlvFileName));
@@ -56,7 +75,7 @@ void setAppNewMlvClip(char * mlvPathString, char * mlvFileName)
     freeMlvObject(App->videoMLV);
 
     /* Create a NEW object with a NEW MLV clip! */
-    App->videoMLV = initMlvObjectWithClip( (char *)mlvPathString );
+    App->videoMLV = initMlvObjectWithClip( (char *)mlvPath );
 
     /* If use has terminal this is useful */
     printMlvInfo(App->videoMLV);
@@ -117,6 +136,8 @@ void setAppNewMlvClip(char * mlvPathString, char * mlvFileName)
 
     /* Audio test - seems to crash when in an app bundle :[ */
     //writeMlvAudioToWave(App->videoMLV, "test.wav");
+
+    return 0;
 }
 
 /* Button methods */
@@ -189,9 +210,7 @@ void setAppNewMlvClip(char * mlvPathString, char * mlvFileName)
             for (NSURL * fileURL in [panel URLs])
             {
                 const char * mlvPathString = [fileURL.path UTF8String];
-                const char * mlvFileName = [[[fileURL.path lastPathComponent] stringByDeletingPathExtension] UTF8String];
-
-                setAppNewMlvClip((char *)mlvPathString, (char *)mlvFileName);
+                setAppNewMlvClip((char *)mlvPathString);
             }
         }
         [panel release];
@@ -207,9 +226,12 @@ void setAppNewMlvClip(char * mlvPathString, char * mlvFileName)
         /* Create open panel */
         NSOpenPanel * panel = [[NSOpenPanel openPanel] retain];
 
+        [panel setPrompt:[NSString stringWithFormat:@"Export Here"]];
+
         [panel setCanChooseFiles: NO];
         [panel setCanChooseDirectories: YES];
         [panel setAllowsMultipleSelection: NO];
+        [panel setCanCreateDirectories: YES];
 
         [panel beginWithCompletionHandler: ^ (NSInteger result) 
         {

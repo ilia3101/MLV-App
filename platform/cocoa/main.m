@@ -35,6 +35,9 @@
 /* The godobject itsself */
 godObject_t * App;
 
+/* App delegate */
+#include "delegate.h"
+
 
 /* Default image profile when app is loaded */
 #define DEFAULT_IMAGE_PROFILE_APP PROFILE_TONEMAPPED
@@ -49,6 +52,10 @@ int main(int argc, char * argv[])
 
 int NSApplicationMain(int argc, const char * argv[])
 {
+    /* http://www.gnustep.it/nicola/Tutorials/FirstGUIApplication/node3.html */
+    [NSApplication sharedApplication];
+    [NSApp setDelegate: [MLVAppDelegate new]];
+
     /* We make the god opbject */
     App = calloc(1,sizeof(godObject_t));
 
@@ -57,9 +64,6 @@ int NSApplicationMain(int argc, const char * argv[])
 
     /* Don't draw as there's no clip loaded */
     App->dontDraw = 1;
-
-    /* Don't know the purpose of this :[ */
-    [NSApplication sharedApplication];
 
     /* Some stuff we may use */
     NSLog(@"Screen width: %.0f, height: %.0f", SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -287,25 +291,7 @@ int NSApplicationMain(int argc, const char * argv[])
     /* If commandline arguments were used load clip... */
     if (argc > 1)
     {
-        /* Hardcoded for now as 1st argument is clip */
-        char * mlvPath = (char *)argv[1];
-        char * mlvName = mlvPath;
-        char * extension = mlvName + strlen(mlvPath) - 3;
-        int clipNameStart = strlen(mlvPath) - 1;
-
-        /* Point to just name */
-        while (mlvPath[clipNameStart] != '/')
-        {
-            mlvName = mlvPath + clipNameStart;
-            clipNameStart--;
-        }
-
-        /* Only allow if file has MLV extension */
-        if ( (extension[0] == 'm' && extension[1] == 'l' && extension[2] == 'v') ||
-             (extension[0] == 'M' && extension[1] == 'L' && extension[2] == 'V')  )
-        {
-            setAppNewMlvClip(mlvPath, mlvName);
-        }
+        setAppNewMlvClip((char *)argv[1]);
     }
 
 

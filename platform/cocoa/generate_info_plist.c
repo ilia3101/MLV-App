@@ -51,9 +51,24 @@ int main(int argc, char * argv[])
     fprintf(info_plist, INFO_PLIST_PROPERTY("CFBundlePackageType", "APPL"));
     fprintf(info_plist, INFO_PLIST_PROPERTY("CFBundleVersion", "(%s @%s)"), __DATE__, host_name);
     fprintf(info_plist, INFO_PLIST_PROPERTY("LSMinimumSystemVersion", "10.6.0"));
-    fprintf(info_plist, INFO_PLIST_PROPERTY("CFBundleIconFile", "mlvapp.icns"));
+    fprintf(info_plist, INFO_PLIST_PROPERTY("CFBundleIconFile", "MLV App.icns"));
     fprintf(info_plist, TAB XML_TAG("key", "LSUIElement", "") NL TAB XML_TAG_C("false") NL);
     fprintf(info_plist, INFO_PLIST_PROPERTY("NSHumanReadableCopyright", "© 2017 Ilia Sibiryakov (GPLv3)"));
+    fprintf(info_plist, INFO_PLIST_PROPERTY("CFBundleIconFile", "MLV App.icns"));
+    /* MLV files r supported */
+    fprintf(info_plist, TAB XML_TAG("key", "CFBundleDocumentTypes", "") NL);
+    fprintf(info_plist, TAB XML_TAG_A("array","") NL);
+    fprintf(info_plist, TAB TAB XML_TAG_A("dict","") NL);
+    fprintf(info_plist, TAB TAB TAB XML_TAG("key", "CFBundleTypeExtensions", "") NL);
+    fprintf(info_plist, TAB TAB TAB XML_TAG_A("array", "") NL);
+    fprintf(info_plist, TAB TAB TAB TAB XML_TAG("string", "MLV", "") NL);
+    fprintf(info_plist, TAB TAB TAB XML_TAG_B("array") NL);
+    fprintf(info_plist, TAB TAB TAB XML_TAG("key", "LSHandlerRank", "") NL);
+    fprintf(info_plist, TAB TAB TAB XML_TAG("string", "Default", "") NL);
+    fprintf(info_plist, TAB TAB TAB XML_TAG("key", "CFBundleTypeRole", "") NL);
+    fprintf(info_plist, TAB TAB TAB XML_TAG("string", "Viewer", "") NL);
+    fprintf(info_plist, TAB TAB XML_TAG_B("dict") NL);
+    fprintf(info_plist, TAB XML_TAG_B("array") NL);
     fprintf(info_plist, INFO_PLIST_END);
 
     fclose(info_plist);

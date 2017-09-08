@@ -7,7 +7,7 @@
 void initAppWithGod();
 
 /* This is a function as it may be used in more than one place */
-void setAppNewMlvClip(char * mlvPathString, char * mlvFileName);
+int setAppNewMlvClip(char * mlvPath); /* 0=fail 1=ok */
 
 /* Button methods */
 @interface NSButton (mainMethods)

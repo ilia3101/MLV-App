@@ -30,6 +30,9 @@ typedef struct {
 /* Just a god object for the Cocoa GUI, because I literally can't be asked to learn the proper way of doing this stuff */
 typedef struct {
 
+    /* To deal with deprecated APIs in the future */
+    int macOSVersion;
+
     /* THE application window */
     NSWindow * window;
     /* The actual view that will display it */
