@@ -77,6 +77,28 @@
         </property>
        </widget>
       </item>
+      <item>
+       <widget class="QLabel" name="labelAudioTrack">
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>32</height>
+         </size>
+        </property>
+        <property name="lineWidth">
+         <number>0</number>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="pixmap">
+         <pixmap resource="ressources.qrc">:/IMG/IMG/Histogram.png</pixmap>
+        </property>
+        <property name="scaledContents">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
      </layout>
     </item>
    </layout>
@@ -142,6 +164,7 @@
     </property>
     <addaction name="actionShowSessionArea"/>
     <addaction name="actionShowEditArea"/>
+    <addaction name="actionShowAudioTrack"/>
     <addaction name="separator"/>
     <addaction name="actionShowHistogram"/>
     <addaction name="actionShowWaveFormMonitor"/>
@@ -1435,6 +1458,20 @@
     <string>Caching</string>
    </property>
   </action>
+  <action name="actionShowAudioTrack">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Audio Track</string>
+   </property>
+   <property name="shortcut">
+    <string>Shift+A</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
@@ -1509,6 +1546,22 @@
     <hint type="destinationlabel">
      <x>598</x>
      <y>450</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionShowAudioTrack</sender>
+   <signal>triggered(bool)</signal>
+   <receiver>labelAudioTrack</receiver>
+   <slot>setVisible(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>567</x>
+     <y>811</y>
     </hint>
    </hints>
   </connection>

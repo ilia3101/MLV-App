@@ -78,7 +78,8 @@ SOURCES += \
     DoubleClickLabel.cpp \
     ../../src/processing/chroma_smooth.c \
     ../../src/processing/pixel_proc.c \
-    ../../src/mlv/audio_mlv.c
+    ../../src/mlv/audio_mlv.c \
+    AudioWave.cpp
 
 HEADERS += \
         MainWindow.h \
@@ -108,7 +109,8 @@ HEADERS += \
     DoubleClickLabel.h \
     ../../src/processing/pixel_proc.h \
     ../../src/processing/wirth.h \
-    ../../src/processing/opt_med.h
+    ../../src/processing/opt_med.h \
+    AudioWave.h
 
 FORMS += \
         MainWindow.ui \

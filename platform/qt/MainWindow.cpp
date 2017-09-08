@@ -108,6 +108,7 @@ MainWindow::~MainWindow()
 
     killTimer( m_timerId );
     killTimer( m_timerCacheId );
+    delete m_pAudioWave;
     delete m_pHistogram;
     delete m_pStatusDialog;
     delete m_pInfoDialog;
@@ -405,6 +406,13 @@ void MainWindow::openMlv( QString fileName )
     if( ui->actionAlwaysUseAMaZE->isChecked() ) setMlvAlwaysUseAmaze( m_pMlvObject );
     else setMlvDontAlwaysUseAmaze( m_pMlvObject );
 
+    //Audio Track
+    /*uint64_t audio_size = getMlvAudioSize( m_pMlvObject );
+    uint16_t * audio_data = ( uint16_t * ) malloc( audio_size );
+    getMlvAudioData( m_pMlvObject, audio_data );
+    ui->labelAudioTrack->setPixmap( QPixmap::fromImage( m_pAudioWave->getMonoWave( audio_data, audio_size, ui->labelAudioTrack->width() ) ) );
+    free( audio_data );*/
+
     m_fileLoaded = true;
 
     //enable drawing
@@ -473,6 +481,11 @@ void MainWindow::initGui( void )
     m_pHistogram = new Histogram();
     ui->actionShowHistogram->setChecked( true );
     m_pWaveFormMonitor = new WaveFormMonitor( 200 );
+    //AudioTrackWave
+    m_pAudioWave = new AudioWave();
+    ui->labelAudioTrack->setPixmap( QPixmap::fromImage( m_pAudioWave->getMonoWave( NULL, 0, 100 ) ) );
+    ui->actionShowAudioTrack->setVisible( false );
+    ui->labelAudioTrack->setVisible( false );
     //Fullscreen does not work well, so disable
     ui->actionFullscreen->setVisible( false );
     //Disable caching by default to avoid crashes

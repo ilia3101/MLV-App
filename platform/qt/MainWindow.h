@@ -23,6 +23,7 @@
 #include "StatusDialog.h"
 #include "Histogram.h"
 #include "WaveFormMonitor.h"
+#include "AudioWave.h"
 #include "ReceiptSettings.h"
 
 namespace Ui {
@@ -102,6 +103,7 @@ private:
     StatusDialog *m_pStatusDialog;
     Histogram *m_pHistogram;
     WaveFormMonitor *m_pWaveFormMonitor;
+    AudioWave *m_pAudioWave;
     mlvObject_t *m_pMlvObject;
     processingObject_t *m_pProcessingObject;
     QGraphicsPixmapItem *m_pGraphicsItem;
