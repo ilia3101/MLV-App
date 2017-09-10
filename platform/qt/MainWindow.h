@@ -18,6 +18,9 @@
 #include <QProcess>
 #include <QVector>
 #include <QGraphicsPixmapItem>
+#include <QByteArray>
+#include <QDataStream>
+#include <QAudioOutput>
 #include "../../src/mlv_include.h"
 #include "InfoDialog.h"
 #include "StatusDialog.h"
@@ -97,6 +100,8 @@ private slots:
     void on_actionFullscreen_triggered(bool checked);
     void exportHandler( void );
 
+    void on_actionPlay_triggered(bool checked);
+
 private:
     Ui::MainWindow *ui;
     InfoDialog *m_pInfoDialog;
@@ -131,6 +136,9 @@ private:
     QVector<ReceiptSettings*> m_pSessionReceipts;
     QVector<ReceiptSettings*> m_exportQueue;
     int m_lastActiveClipInSession;
+    QByteArray *m_pByteArrayAudio;
+    QDataStream *m_pAudioStream;
+    QAudioOutput *m_pAudioOutput;
     void drawFrame( void );
     void openMlv( QString fileName );
     void playbackHandling( int timeDiff );

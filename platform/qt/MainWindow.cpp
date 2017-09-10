@@ -947,6 +947,9 @@ void MainWindow::deleteSession()
     m_pGraphicsItem->setPixmap( QPixmap( ":/IMG/IMG/Histogram.png" ) );
     m_pScene->setSceneRect( 0, 0, 10, 10 );
 
+    //Fake no audio track
+    paintAudioTrack();
+
     //And reset sliders
     on_actionResetReceipt_triggered();
 
@@ -1095,12 +1098,21 @@ double MainWindow::getFramerate( void )
 //Paint the Audio Track Wave to GUI
 void MainWindow::paintAudioTrack( void )
 {
-    if( !m_fileLoaded ) return;
+    //Fake graphic if nothing is loaded
+    if( !m_fileLoaded )
+    {
+        ui->labelAudioTrack->setPixmap( QPixmap::fromImage( m_pAudioWave->getMonoWave( NULL, 0, ui->labelAudioTrack->width() ) ) );
+        ui->labelAudioTrack->setEnabled( false );
+        return;
+    }
+    //Make it disabled if clip has no audio
     ui->labelAudioTrack->setEnabled( doesMlvHaveAudio( m_pMlvObject ) );
+    //Also fake graphic if no audio in clip
     if( !doesMlvHaveAudio( m_pMlvObject ) )
     {
         ui->labelAudioTrack->setPixmap( QPixmap::fromImage( m_pAudioWave->getMonoWave( NULL, 0, ui->labelAudioTrack->width() ) ) );
     }
+    //Load audio data and paint
     else
     {
         uint64_t audio_size = getMlvAudioSize( m_pMlvObject );
@@ -1833,4 +1845,49 @@ void RenderPngTask::run()
     gMutex.lock();
     gPngThreadsTodo--;
     gMutex.unlock();
+}
+
+//Play button pressed or toggled
+void MainWindow::on_actionPlay_triggered(bool checked)
+{
+    /*
+    if( !checked )
+    {
+        //Stop Audio
+        delete m_pAudioOutput;
+        delete m_pAudioStream;
+        delete m_pByteArrayAudio;
+    }
+    else
+    {
+        //Start Audio
+        //Set up the format, eg.
+        QAudioFormat format;
+        format.setSampleRate( getMlvSampleRate( m_pMlvObject ) );
+        format.setChannelCount( getMlvAudioChannels( m_pMlvObject ) );
+        format.setSampleSize( 16 );
+        format.setCodec( "audio/pcm" );
+        format.setByteOrder( QAudioFormat::LittleEndian );
+        format.setSampleType( QAudioFormat::SignedInt );
+        m_pAudioOutput = new QAudioOutput( format, this );
+
+        m_pByteArrayAudio = new QByteArray();
+        m_pAudioStream = new QDataStream(m_pByteArrayAudio, QIODevice::ReadWrite);
+
+        uint64_t audio_size = getMlvAudioSize( m_pMlvObject );
+        int16_t * audio_data = ( int16_t * ) malloc( audio_size );
+        getMlvAudioData( m_pMlvObject, ( int16_t* )audio_data );
+
+        for( uint64_t x = 0; x < audio_size/sizeof(int16_t); x++ )
+        {
+            (*m_pAudioStream) << audio_data[x];
+        }
+
+        m_pAudioStream->device()->seek(0);
+        m_pAudioOutput->setBufferSize( 32768000 );
+        m_pAudioOutput->setVolume( 0.5 );
+        m_pAudioOutput->start( m_pAudioStream->device() );
+        free( audio_data );
+    }
+    */
 }
