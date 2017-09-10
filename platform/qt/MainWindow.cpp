@@ -690,9 +690,13 @@ void MainWindow::startExport(QString fileName)
     }
 
     //FFMpeg export
+#ifdef __linux__
+    QString program = QString( "ffmpeg" );
+#else
     QString program = QCoreApplication::applicationDirPath();
     program.append( QString( "/ffmpeg\"" ) );
     program.prepend( QString( "\"" ) );
+#endif
     if( m_codecProfile == CODEC_AVIRAW )
     {
         output.append( QString( ".avi" ) );
