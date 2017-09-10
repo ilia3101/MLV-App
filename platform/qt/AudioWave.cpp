@@ -1,4 +1,6 @@
 #include <QDebug>
+#include <QLinearGradient>
+#include <QPainter>
 #include "AudioWave.h"
 #include "math.h"
 
@@ -34,8 +36,16 @@ QImage AudioWave::getMonoWave(int16_t *pAudioTrack, uint64_t audioSize, uint16_t
     if( width == 0 ) return *m_pAudioWave;
     delete m_pAudioWave;
     m_pAudioWave = new QImage( width, 32, QImage::Format_RGB888 );
-    m_pAudioWave->fill( Qt::darkGreen );
 
+    //Background with gradient
+    QRect rect( 0, 0, width, 32 );
+    QPainter painter( m_pAudioWave );
+    QLinearGradient gradient( rect.topLeft(), (rect.topLeft() + rect.bottomLeft()) / 2 ); // diagonal gradient from top-left to bottom-right
+    gradient.setColorAt( 0, QColor( 99, 120, 106, 255 ) );
+    gradient.setColorAt( 1, QColor( 43, 74, 53, 255 ) );
+    painter.fillRect(rect, gradient);
+
+    //If no data -> no wave -> return
     if( pAudioTrack == NULL ) return *m_pAudioWave;
 
     uint64_t pointPackageSize = audioSize / (uint64_t)width / sizeof(int16_t);
@@ -68,7 +78,7 @@ QImage AudioWave::getMonoWave(int16_t *pAudioTrack, uint64_t audioSize, uint16_t
         //Paint point
         for( int i = 0; i < y; i++ )
         {
-            QColor color = QColor( m_red[i], m_green[i], 0, 0 );
+            QColor color = QColor( m_red[i], m_green[i], 100, 255 );
             m_pAudioWave->setPixelColor( x, 31 - i, color );
         }
     }
