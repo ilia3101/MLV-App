@@ -184,7 +184,11 @@ void MainWindow::timerEvent(QTimerEvent *t)
 //Window resized -> scale picture
 void MainWindow::resizeEvent(QResizeEvent *event)
 {
-    if( m_fileLoaded ) drawFrame();
+    if( m_fileLoaded )
+    {
+        drawFrame();
+        paintAudioTrack();
+    }
     event->accept();
 }
 
@@ -406,14 +410,10 @@ void MainWindow::openMlv( QString fileName )
     if( ui->actionAlwaysUseAMaZE->isChecked() ) setMlvAlwaysUseAmaze( m_pMlvObject );
     else setMlvDontAlwaysUseAmaze( m_pMlvObject );
 
-    //Audio Track
-    /*uint64_t audio_size = getMlvAudioSize( m_pMlvObject );
-    uint16_t * audio_data = ( uint16_t * ) malloc( audio_size );
-    getMlvAudioData( m_pMlvObject, audio_data );
-    ui->labelAudioTrack->setPixmap( QPixmap::fromImage( m_pAudioWave->getMonoWave( audio_data, audio_size, ui->labelAudioTrack->width() ) ) );
-    free( audio_data );*/
-
     m_fileLoaded = true;
+
+    //Audio Track
+    paintAudioTrack();
 
     //enable drawing
     m_dontDraw = false;
@@ -484,8 +484,6 @@ void MainWindow::initGui( void )
     //AudioTrackWave
     m_pAudioWave = new AudioWave();
     ui->labelAudioTrack->setPixmap( QPixmap::fromImage( m_pAudioWave->getMonoWave( NULL, 0, 100 ) ) );
-    ui->actionShowAudioTrack->setVisible( false );
-    ui->labelAudioTrack->setVisible( false );
     //Fullscreen does not work well, so disable
     ui->actionFullscreen->setVisible( false );
     //Disable caching by default to avoid crashes
@@ -1092,6 +1090,27 @@ double MainWindow::getFramerate( void )
 {
     if( m_fpsOverride ) return m_frameRate;
     else return getMlvFramerate( m_pMlvObject );
+}
+
+//Paint the Audio Track Wave to GUI
+void MainWindow::paintAudioTrack( void )
+{
+    if( !m_fileLoaded ) return;
+    ui->labelAudioTrack->setEnabled( doesMlvHaveAudio( m_pMlvObject ) );
+    if( !doesMlvHaveAudio( m_pMlvObject ) )
+    {
+        ui->labelAudioTrack->setPixmap( QPixmap::fromImage( m_pAudioWave->getMonoWave( NULL, 0, ui->labelAudioTrack->width() ) ) );
+    }
+    else
+    {
+        uint64_t audio_size = getMlvAudioSize( m_pMlvObject );
+        int16_t * audio_data = ( int16_t * ) malloc( audio_size );
+        getMlvAudioData( m_pMlvObject, ( int16_t* )audio_data );
+        ui->labelAudioTrack->setPixmap( QPixmap::fromImage( m_pAudioWave->getMonoWave( audio_data, audio_size, ui->labelAudioTrack->width() ) ) );
+        free( audio_data );
+    }
+    ui->labelAudioTrack->setMinimumSize( 1, 1 ); //Otherwise window won't be smaller than picture
+    ui->labelAudioTrack->setAlignment( Qt::AlignCenter ); //Always in the middle
 }
 
 //Edit progressbar from FFmpeg output

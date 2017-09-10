@@ -1,10 +1,25 @@
 #include <QDebug>
 #include "AudioWave.h"
+#include "math.h"
 
 //Constructor
 AudioWave::AudioWave()
 {
     m_pAudioWave = new QImage( 1000, 32, QImage::Format_RGB888 );
+
+    //Calc colors for Track
+    for( int x = 0; x < 32; x++ )
+    {
+        //red lut
+        m_red[x] = 32 * x - 480;
+        if( m_red[x] > 255 ) m_red[x] = 255;
+        if( m_red[x] < 0 ) m_red[x] = 0;
+
+        //green lut
+        m_green[x] = -32 * x + 992;
+        if( m_green[x] > 255 ) m_green[x] = 255;
+        if( m_green[x] < 0 ) m_green[x] = 0;
+    }
 }
 
 //Destructor
@@ -13,8 +28,8 @@ AudioWave::~AudioWave()
     delete m_pAudioWave;
 }
 
-//Make a image of the audio track - as mono
-QImage AudioWave::getMonoWave(uint16_t *pAudioTrack, uint64_t audioSize, uint16_t width)
+//Make a image of the audio track - as mono, mirror negative part to positive part
+QImage AudioWave::getMonoWave(int16_t *pAudioTrack, uint64_t audioSize, uint16_t width)
 {
     if( width == 0 ) return *m_pAudioWave;
     delete m_pAudioWave;
@@ -23,32 +38,38 @@ QImage AudioWave::getMonoWave(uint16_t *pAudioTrack, uint64_t audioSize, uint16_
 
     if( pAudioTrack == NULL ) return *m_pAudioWave;
 
-    uint64_t pointPackageSize = audioSize / (uint64_t)width / sizeof(uint16_t);
+    uint64_t pointPackageSize = audioSize / (uint64_t)width / sizeof(int16_t);
 
     //For each point in the graphic
     for( uint64_t x = 0; x < (uint64_t)width; x++ )
     {
-        uint16_t y = 0;
+        int16_t y = 0;
 
         //pack samples to
         for( uint64_t i = 0; i < pointPackageSize; i++ )
         {
-            if( pAudioTrack[ sizeof(uint16_t) * ( ( pointPackageSize * x ) + i ) ] > y )
+            //positive part
+            if( pAudioTrack[ ( ( pointPackageSize * x ) + i ) ] > y )
             {
-                y = pAudioTrack[ sizeof(uint16_t) * ( ( pointPackageSize * x ) + i ) ];
+                y = pAudioTrack[ ( ( pointPackageSize * x ) + i ) ];
+            }
+            //negativ part (mirrored)
+            else if( pAudioTrack[ ( ( pointPackageSize * x ) + i ) ] < -y )
+            {
+                y = -pAudioTrack[ ( ( pointPackageSize * x ) + i ) ];
             }
         }
 
-        //From 16bit to 5bit --> height of 32 pixel
-        y = y >> 11;
+        //Some funny math to make it nice at max height of 32 pixel
+        y = ( 100.0 * log( y ) + y / 10.0)  / 116;
+        //And make it safe
         if( y > 31 ) y = 31;
-
-        //qDebug() << "AudioTrackImageDebug:" << width << x << y << pointPackageSize << audioSize << sizeof(uint16_t) * ( ( pointPackageSize * x ) + pointPackageSize );
 
         //Paint point
         for( int i = 0; i < y; i++ )
         {
-            m_pAudioWave->setPixelColor( x, 31 - i, Qt::green );
+            QColor color = QColor( m_red[i], m_green[i], 0, 0 );
+            m_pAudioWave->setPixelColor( x, 31 - i, color );
         }
     }
 

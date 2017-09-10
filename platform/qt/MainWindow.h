@@ -151,6 +151,7 @@ private:
     void previewPicture( int row );
     void setPreviewMode( void );
     double getFramerate( void );
+    void paintAudioTrack( void );
 
 signals:
     void exportReady( void );

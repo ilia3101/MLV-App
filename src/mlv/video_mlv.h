@@ -69,7 +69,7 @@ void writeMlvAudioToWave(mlvObject_t * video, char * path);
 /* When allocating memory for audio use this */
 uint64_t getMlvAudioSize(mlvObject_t * video);
 /* Gets all audio data 4 u */
-void getMlvAudioData(mlvObject_t * video, uint16_t * outputAudio);
+void getMlvAudioData(mlvObject_t * video, int16_t * outputAudio);
 
 /* Do something like this before doing things: if (isMlvActive(your_mlvObject)) */
 #define isMlvActive(video) (video)->is_active

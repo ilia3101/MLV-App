@@ -79,6 +79,9 @@
       </item>
       <item>
        <widget class="QLabel" name="labelAudioTrack">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
         <property name="maximumSize">
          <size>
           <width>16777215</width>
@@ -1469,7 +1472,7 @@
     <string>Show Audio Track</string>
    </property>
    <property name="shortcut">
-    <string>Shift+A</string>
+    <string>A</string>
    </property>
   </action>
  </widget>

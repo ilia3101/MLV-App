@@ -27,7 +27,7 @@ void writeMlvAudioToWave(mlvObject_t * video, char * path)
     uint64_t file_size = audio_size + sizeof(wave_header_t);
 
     /* Get audio */
-    uint16_t * audio_data = malloc( audio_size );
+    int16_t * audio_data = malloc( audio_size );
     getMlvAudioData(video, audio_data);
 
     wave_header_t wave_header = {
@@ -68,7 +68,7 @@ uint64_t getMlvAudioSize(mlvObject_t * video)
     return size;
 }
 
-void getMlvAudioData(mlvObject_t * video, uint16_t * outputAudio)
+void getMlvAudioData(mlvObject_t * video, int16_t * outputAudio)
 {
     /* Keep track of bytes of audio */
     uint64_t audio_size = 0;
