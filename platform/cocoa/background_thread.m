@@ -80,11 +80,10 @@ void draw_frame()
     getMlvProcessedFrame8(App->videoMLV, App->currentFrameIndex, App->rawImage);
 
     /* Update/refresh the view on main thread */
-    SEL updateMethodSelector = @selector(updateView);
-    [App->previewWindow performSelectorOnMainThread: updateMethodSelector withObject: nil waitUntilDone: YES];
+    [App->previewWindow performSelectorOnMainThread: @selector(updateView) withObject: nil waitUntilDone: YES];
 
     /* This is also very important */
-    [App->window update];
+    [App->window performSelectorOnMainThread: @selector(update) withObject: nil waitUntilDone: YES];
 
     /* Reset, we don't want to stop */
     frame_still_drawing = 0;

@@ -224,7 +224,7 @@ int setAppNewMlvClip(char * mlvPath)
     if (isMlvActive(App->videoMLV))
     {    
         /* Create open panel */
-        NSOpenPanel * panel = [NSOpenPanel openPanel];
+        NSOpenPanel * panel = [[NSOpenPanel openPanel] retain];
 
         [panel setPrompt:[NSString stringWithFormat:@"Export Here"]];
 
@@ -254,13 +254,11 @@ int setAppNewMlvClip(char * mlvPath)
                     /* So we always get amaze frames for exporting */
                     setMlvAlwaysUseAmaze(App->videoMLV);
 
-                    /* Progress window */
-
                     /* We will use the same NSBitmapImageRep as for exporting as for preview window */
                     for (int f = 0; f < getMlvFrames(App->videoMLV); ++f)
                     {
                         /* Generate file name for frame */
-                        snprintf(exportPath, 2047, "%s/%s_frame_%.5i.png", exportDir, App->MLVClipName, f);
+                        snprintf(exportPath, 2047, "%s/%.8s_frame_%.5i.png", exportDir, App->MLVClipName, f);
 
                         /* Get processed frame */
                         getMlvProcessedFrame8(App->videoMLV, f, App->rawImage);
@@ -276,16 +274,13 @@ int setAppNewMlvClip(char * mlvPath)
 
                     /* Run ffmpeg to create ProRes file */
                     char * ffmpegPath = (char *)[[[NSBundle mainBundle] pathForResource:@"ffmpeg" ofType: nil] UTF8String];
-                    snprintf( commandStr, 2047, "\"%s\" -r %f -i %s/%s_frame_%s.png -c:v prores_ks -profile:v 4444 %s/%.8s.mov", 
+                    snprintf( commandStr, 2047, "\"%s\" -r %f -i %s/%.8s_frame_%s.png -c:v prores_ks -profile:v 4444 %s/%.8s.mov", 
                               ffmpegPath, getMlvFramerate(App->videoMLV), exportDir, App->MLVClipName, "\%05d", pathString, App->MLVClipName);
                     system(commandStr);
 
                     /* Delete hidden directory */
                     snprintf(commandStr, 2047, "rm -rf %s", exportDir);
                     system(commandStr);
-
-                    // snprintf(commandStr, 2047, "rm -rf %s", exportDir);
-                    // system(commandStr);
 
                     free(exportPath);
                     free(exportDir);
@@ -297,8 +292,6 @@ int setAppNewMlvClip(char * mlvPath)
                     notification.informativeText = [NSString stringWithFormat:@"Finished exporting."];
                     notification.soundName = NSUserNotificationDefaultSoundName;
                     [[NSUserNotificationCenter defaultUserNotificationCenter] deliverNotification:notification];
-
-                    NSLog(@"\n\n\n\n\n\n STILL ALIVE \n\n\n\n\n\n\n");
                 }
             }
             [panel release];

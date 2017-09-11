@@ -12,7 +12,7 @@ CC = gcc # Normal
 
 # Flags for link and objects
 mainflags = -mmacosx-version-min=10.10 -O3 -Ofast -m64
-linkflags = $(mainflags) -lm -pthread -Framework QuartzCore
+linkflags = $(mainflags) -lm -pthread
 cflags := $(mainflags) -c
 
 # Run some cheeky compiletime code to generate window title with hostname
@@ -100,4 +100,4 @@ matrix.o : ../../src/matrix/matrix.c
 # Type 'make clean' to remove mess
 .PHONY : clean
 clean : # Removes the program and object files 
-	rm -rf $(appname) $(appname).app $(objects)
+	rm -rf $(appname) $(appname).app $(objects) *.o

@@ -15,13 +15,6 @@ typedef struct {
      * PROFILE_LINEAR     : Linear, idk who would want this */
     image_profile_t * image_profile; /* Affects following two parameters */
 
-    /* Colour gamut, options:
-     * COLGAMUT_SRGB_709  : sRGB / rec.709 Colour
-     * COLGAMUT_ADOBE_RG  : Adobe RGB
-     * COLGAMUT_XYZ       : If you need it :[ */
-    int output_colour_gamut;
-    int output_curve;
-
     /* (RAW) white and black levels */
     int black_level, white_level;
 
