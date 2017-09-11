@@ -1,7 +1,14 @@
 #ifndef _godobject_h_
 #define _godobject_h_
 
-#import "Cocoa/Cocoa.h"
+#import <Cocoa/Cocoa.h>
+
+/* MLV OpenGL based view */
+#include "mlv_view.h"
+
+/* MLV stuff */
+#include "../../src/mlv_include.h"
+
 
 /* Info about a clip, for handling many in a session. All clips share same processing object */
 typedef struct {
@@ -30,13 +37,10 @@ typedef struct {
 /* Just a god object for the Cocoa GUI, because I literally can't be asked to learn the proper way of doing this stuff */
 typedef struct {
 
-    /* To deal with deprecated APIs in the future */
-    int macOSVersion;
-
     /* THE application window */
     NSWindow * window;
     /* The actual view that will display it */
-    NSImageView * previewWindow;
+    MLVView * previewWindow;
     /* Holds rawBitmap inside it or something */
     NSImage * rawImageObject;
     /* Holds a (THE) processed frame that is displayed */

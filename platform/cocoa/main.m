@@ -1,7 +1,7 @@
 /* Main file for mac
  * Objective C gui. */
 
-#import "Cocoa/Cocoa.h"
+#import <Cocoa/Cocoa.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,6 +18,9 @@
 #include "gui_stuff/app_design.h"
 #include "gui_stuff/gui_macros.h"
 
+/* MacOS version */
+#include "AvailabilityMacros.h"
+
 /* PC info */
 #include "mac_info.h"
 
@@ -28,7 +31,7 @@
 #include "background_thread.h"
 
 /* This file is generated temorarily during compile time */
-#include "app_window_title.h"
+#include "app_defines.h"
 
 /* God object used to share globals (type) */
 #include "godobject.h"
@@ -38,6 +41,8 @@ godObject_t * App;
 /* App delegate */
 #include "delegate.h"
 
+/* MLV OpenGL based view */
+#include "mlv_view.h"
 
 /* Default image profile when app is loaded */
 #define DEFAULT_IMAGE_PROFILE_APP PROFILE_TONEMAPPED
@@ -72,7 +77,7 @@ int NSApplicationMain(int argc, const char * argv[])
 
     /* Some style properties for the window... */
     NSUInteger windowStyle = NSTitledWindowMask | NSClosableWindowMask | NSResizableWindowMask 
-        | NSMiniaturizableWindowMask | NSFullSizeContentViewWindowMask;
+        | NSMiniaturizableWindowMask | NSWindowStyleMaskFullSizeContentView;
 
     /* Make the window */
     App->window = [ [NSWindow alloc]
@@ -96,7 +101,11 @@ int NSApplicationMain(int argc, const char * argv[])
     /* If DARK_STYLE is true set window to dark theme 
      * Settings are in app_design.h */
     #if DARK_STYLE == 1
-    App->window.appearance = [NSAppearance appearanceNamed: NSAppearanceNameVibrantDark];
+    /* Dark style is only supported in OSX 10.10 and up */
+    if (floor(kCFCoreFoundationVersionNumber) > kCFCoreFoundationVersionNumber10_9)
+    {
+        App->window.appearance = [NSAppearance appearanceNamed: NSAppearanceNameVibrantDark];
+    }
     #elif DARK_STYLE == 0 
     // window.appearance = [NSAppearance appearanceNamed: NSAppearanceNameVibrantLight];
     #endif
@@ -256,7 +265,7 @@ int NSApplicationMain(int argc, const char * argv[])
 
 
     /* Will display our video */
-    App->previewWindow = [ [NSImageView alloc]
+    App->previewWindow = [ [MLVView alloc]
                            initWithFrame: NSMakeRect(PREVIEW_WINDOW_LOCATION) ];
 
     /* Bezel alternatives: NSImageFrameGrayBezel NSImageFrameNone */
@@ -270,6 +279,9 @@ int NSApplicationMain(int argc, const char * argv[])
 
     App->rawImageObject = [[NSImage alloc] initWithSize: NSMakeSize(1880,1056) ];
     [App->rawImageObject addRepresentation:App->rawBitmap];
+
+    /* Don't allow cache, so that it updates the view instead of freezing */
+    [App->rawImageObject setCacheMode: NSImageCacheNever];
 
     [App->previewWindow setImage: App->rawImageObject];
     [[App->window contentView] addSubview: App->previewWindow];
@@ -305,6 +317,16 @@ int NSApplicationMain(int argc, const char * argv[])
 
     /* Show the window or something */
     [App->window orderFrontRegardless];
+
+    // NSRect frame = NSMakeRect(0, 0, 566, 566);
+    // NSWindow * window  = [[[NSWindow alloc] initWithContentRect:frame
+    //                       styleMask:NSTitledWindowMask | NSClosableWindowMask
+    //                       backing:NSBackingStoreBuffered
+    //                       defer:NO] autorelease];
+    // [window setTitle:@"MLV App Update"];
+    // window.appearance = [NSAppearance appearanceNamed: NSAppearanceNameVibrantDark];
+    // [window makeKeyAndOrderFront:NSApp];
+
     [NSApp run];
 
     return 0;

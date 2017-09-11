@@ -5,31 +5,31 @@ appname = "MLV App"
 objects = main.o video_mlv.o debayer.o amaze_demosaic.o raw_processing.o \
 	      main_methods.o useful_methods.o background_thread.o matrix.o \
 		  camera_matrices.o frame_caching.o lj92.o session_methods.o \
-		  delegate.o
+		  delegate.o mlv_view.o
 
 # Compiler
 CC = gcc # Normal
 
 # Flags for link and objects
 mainflags = -mmacosx-version-min=10.10 -O3 -Ofast -m64
-linkflags = $(mainflags) -lm -pthread
+linkflags = $(mainflags) -lm -pthread -Framework QuartzCore
 cflags := $(mainflags) -c
 
 # Run some cheeky compiletime code to generate window title with hostname
 # Then call the build rule to actually build it
 main :
-	$(CC) compile_time_code.c -o compile_time_code; \
+	$(CC) $(mainflags) compile_time_code.m -o compile_time_code -framework Cocoa; \
 	./compile_time_code; \
 	rm main.o; \
 	make build; \
 	rm compile_time_code; \
-	rm app_window_title.h
+	rm app_defines.h
 
 # run 'make app' to get a .app bundle
 # we steal masc's Qt ffmpeg :) (remember, ffmpeg is temporary in Cocoa app)
 app :
 	rm $(appname).app; \
-	$(CC) generate_info_plist.c -o generate_info_plist; \
+	$(CC) $(mainflags) generate_info_plist.c -o generate_info_plist; \
 	./generate_info_plist $(appname); \
 	make main; \
 	rm -rf $(appname).app; \
@@ -39,6 +39,7 @@ app :
 	mkdir $(appname).app/Contents/Resources; \
 	cp -i $(appname) $(appname).app/Contents/MacOS/; \
 	cp -i info.plist $(appname).app/Contents/; \
+	cp -i checkupdate.py $(appname).app/Contents/Resources/; \
 	unzip ../qt/FFmpeg/ffmpegOSX.zip -d $(appname).app/Contents/Resources; \
 	rm -rf $(appname).app/Contents/Resources/__MACOSX; \
 	cp ../../src/icon/icon.icns $(appname).app/Contents/Resources/MLV\ App.icns; \
@@ -52,6 +53,9 @@ build : $(objects)
 # Making all objects...
 main.o : main.m
 	$(CC) $(cflags) main.m
+
+mlv_view.o : mlv_view.m
+	$(CC) $(cflags) mlv_view.m
 
 main_methods.o : main_methods.m
 	$(CC) $(cflags) main_methods.m

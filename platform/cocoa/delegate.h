@@ -5,8 +5,14 @@
 
 @interface MLVAppDelegate : NSObject <NSApplicationDelegate>
 
+/* What happens when app loads (update checks etc) */
+- (void)applicationDidFinishLaunching: (NSApplication *)sender;
+
 /* To do "Open With" */
 - (BOOL)application: (NSApplication *)sender openFile: (NSString *)filename;
+
+/* Close when window closes */
+- (BOOL)applicationShouldTerminateAfterLastWindowClosed: (NSApplication *)sender;
 
 @end
 

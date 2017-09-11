@@ -54,11 +54,5 @@ int setAppNewMlvClip(char * mlvPath); /* 0=fail 1=ok */
 
 @end
 
-/* NSImageView stuff */
-@interface NSImageView (mainMethods)
-
--(void)updatePreviewWindow;
-
-@end
 
 #endif

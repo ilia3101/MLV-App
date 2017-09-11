@@ -80,10 +80,10 @@ void draw_frame()
     getMlvProcessedFrame8(App->videoMLV, App->currentFrameIndex, App->rawImage);
 
     /* Update/refresh the view on main thread */
-    SEL updateMethodSelector = @selector(updatePreviewWindow);
+    SEL updateMethodSelector = @selector(updateView);
     [App->previewWindow performSelectorOnMainThread: updateMethodSelector withObject: nil waitUntilDone: YES];
 
-    /* Doesn't seem to help the issues with old images remaining (not my bugs!) */
+    /* This is also very important */
     [App->window update];
 
     /* Reset, we don't want to stop */
