@@ -40,7 +40,7 @@ QImage AudioWave::getMonoWave(int16_t *pAudioTrack, uint64_t audioSize, uint16_t
     //Background with gradient
     QRect rect( 0, 0, width, 32 );
     QPainter painter( m_pAudioWave );
-    QLinearGradient gradient( rect.topLeft(), (rect.topLeft() + rect.bottomLeft()) / 2 ); // diagonal gradient from top-left to bottom-right
+    QLinearGradient gradient( rect.topLeft(), (rect.topLeft() + rect.bottomLeft() ) / 2 ); // diagonal gradient from top-left to bottom-right
     gradient.setColorAt( 0, QColor( 99, 120, 106, 255 ) );
     gradient.setColorAt( 1, QColor( 43, 74, 53, 255 ) );
     painter.fillRect(rect, gradient);
@@ -71,7 +71,7 @@ QImage AudioWave::getMonoWave(int16_t *pAudioTrack, uint64_t audioSize, uint16_t
         }
 
         //Some funny math to make it nice at max height of 32 pixel
-        y = ( 100.0 * log( y ) + y / 10.0)  / 116;
+        y = ( 100.0 * log( y ) + y / 10.0 ) / 116;
         //And make it safe
         if( y > 31 ) y = 31;
 
