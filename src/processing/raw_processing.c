@@ -18,6 +18,8 @@
 
 /* Because why compile a whole .o just for this? */
 #include "processing.c"
+/* Default image profiles */
+#include "image_profiles.c"
 
 /* Initialises processing thing with memory */
 processingObject_t * initProcessingObject()
@@ -61,81 +63,27 @@ processingObject_t * initProcessingObject()
 
 void processingSetImageProfile(processingObject_t * processing, int imageProfile)
 {
-    processing->image_profile = imageProfile;
-
-    if (imageProfile == PROFILE_STANDARD)
+    if (imageProfile >= 0 && imageProfile <= 5)
     {
-        processing->use_rgb_curves = 1;
-        processing->use_saturation = 1;
-        processing_disable_tonemapping(processing);
-        processingSetGamma(processing, STANDARD_GAMMA);
-    }
-    else if (imageProfile == PROFILE_TONEMAPPED)
-    {
-        processing->use_rgb_curves = 1;
-        processing->use_saturation = 1;
-
-        /* Choose tonemapping function */
-        processing->tone_mapping_function = &ReinhardTonemap;
-
-        processing_enable_tonemapping(processing);
-        processingSetGamma(processing, STANDARD_GAMMA);
-    }
-    /* Canon-Log info from: http://learn.usa.canon.com/app/pdfs/white_papers/White_Paper_Clog_optoelectronic.pdf */
-    // else if (imageProfile == PROFILE_CANON_LOG) /* Can't seem to get this right */
-    // {
-    //     processing->use_rgb_curves = 0;
-    //     processing->use_saturation = 0;
-
-    //     processing->tone_mapping_function = &CanonCLogTonemap;
-
-    //     processingSetGamma(processing, 1.0);
-    //     processing_enable_tonemapping(processing);
-    // }
-    /* Alexa Log info from: http://www.vocas.nl/webfm_send/964 */
-    else if (imageProfile == PROFILE_ALEXA_LOG)
-    {
-        processing->use_rgb_curves = 0;
-        processing->use_saturation = 0;
-
-        /* Choose tonemapping function */
-        processing->tone_mapping_function = &AlexaLogCTonemap;
-
-        /* Log profiles are a type of tonemapping, so must be enabled */
-        processing_enable_tonemapping(processing);
-        /* We won't even need gamma here */
-        processingSetGamma(processing, 1.0);
-    }
-    /* More Log info from: http://www.magiclantern.fm/forum/index.php?topic=15801.msg158145#msg158145 */
-    else if (imageProfile == PROFILE_CINEON_LOG)
-    {
-        processing->use_rgb_curves = 0;
-        processing->use_saturation = 0;
-
-        processing->tone_mapping_function = &CineonLogTonemap;
-
-        processing_enable_tonemapping(processing);
-        processingSetGamma(processing, 1.0);
-    }
-    /* Sony Log formula from: https://www.sony.de/pro/support/attachment/1237494271390/1237494271406/technical-summary-for-s-gamut3-cine-s-log3-and-s-gamut3-s-log3.pdf */
-    else if (imageProfile == PROFILE_SONY_LOG_3)
-    {
-        processing->use_rgb_curves = 0;
-        processing->use_saturation = 0;
-
-        processing->tone_mapping_function = &SonySLogTonemap;
-
-        processing_enable_tonemapping(processing);
-        processingSetGamma(processing, 1.0);
-    }
-    else if (imageProfile == PROFILE_LINEAR)
-    {
-        processing->use_rgb_curves = 1;
-        processing->use_saturation = 1;
-        processingSetGamma(processing, 1.0);
-        processing_disable_tonemapping(processing);
+        processingSetCustomImageProfile(processing, &default_image_profiles[imageProfile]);
     }
     else return;
+}
+
+
+/* Image profile strruct needed */
+void processingSetCustomImageProfile(processingObject_t * processing, image_profile_t * imageProfile)
+{
+    processing->image_profile = imageProfile;
+    processing->use_rgb_curves = imageProfile->disable_settings.curves;
+    processing->use_saturation = imageProfile->disable_settings.saturation;
+    processingSetGamma(processing, imageProfile->gamma_power);
+    if (imageProfile->disable_settings.tonemapping)
+    {
+        processing->tone_mapping_function = imageProfile->tone_mapping_function;
+        processing_enable_tonemapping(processing);
+    }
+    else processing_disable_tonemapping(processing);
 }
 
 

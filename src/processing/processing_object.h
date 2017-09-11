@@ -1,6 +1,8 @@
 #ifndef _processing_struct_
 #define _processing_struct_
 
+#include "image_profile.h"
+
 /* Processing settings structure (a mess) */
 typedef struct {
 
@@ -11,7 +13,14 @@ typedef struct {
      * PROFILE_CINEON_LOG : Cineon Log
      * PROFILE_SONY_LOG_3 : Sony S-Log 3
      * PROFILE_LINEAR     : Linear, idk who would want this */
-    int image_profile;
+    image_profile_t * image_profile; /* Affects following two parameters */
+
+    /* Colour gamut, options:
+     * COLGAMUT_SRGB_709  : sRGB / rec.709 Colour
+     * COLGAMUT_ADOBE_RG  : Adobe RGB
+     * COLGAMUT_XYZ       : If you need it :[ */
+    int output_colour_gamut;
+    int output_curve;
 
     /* (RAW) white and black levels */
     int black_level, white_level;

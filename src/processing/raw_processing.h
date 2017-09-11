@@ -13,7 +13,7 @@ void freeProcessingObject(processingObject_t * processing);
 
 
 
-/* Set image profile possible TODO: make image profile a type, so custom ones can be developed */
+/* Set one of default image profiles */
 void processingSetImageProfile(processingObject_t * processing, int imageProfile);
 /* imageProfile argument options: */
 #define PROFILE_STANDARD    0   /* Gamma Corrected */
@@ -23,6 +23,9 @@ void processingSetImageProfile(processingObject_t * processing, int imageProfile
 #define PROFILE_CINEON_LOG  3   /* Cineon Log */
 #define PROFILE_SONY_LOG_3  4   /* Sony S-Log 3 */
 #define PROFILE_LINEAR      5   /* Linear, idk who would want this */
+
+/* Set a custom image profile using the image_profile struct */
+void processingSetCustomImageProfile(processingObject_t * processing, image_profile_t * imageProfile);
 
 
 
