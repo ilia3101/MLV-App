@@ -588,6 +588,7 @@ void MainWindow::readSettings()
     if( set.value( "maximized", false ).toBool() ) setWindowState( windowState() | Qt::WindowMaximized );
     set.endGroup();
     if( set.value( "dragFrameMode", false ).toBool() ) ui->actionDropFrameMode->setChecked( true );
+    if( set.value( "audioOutput", false ).toBool() ) ui->actionAudioOutput->setChecked( true );
     m_lastSaveFileName = set.value( "lastFileName", QString( "/Users/" ) ).toString();
     m_codecProfile = set.value( "codecProfile", 4 ).toUInt();
     m_previewMode = set.value( "previewMode", 1 ).toUInt();
@@ -610,6 +611,7 @@ void MainWindow::writeSettings()
     }
     set.endGroup();
     set.setValue( "dragFrameMode", ui->actionDropFrameMode->isChecked() );
+    set.setValue( "audioOutput", ui->actionAudioOutput->isChecked() );
     set.setValue( "lastFileName", m_lastSaveFileName );
     set.setValue( "codecProfile", m_codecProfile );
     set.setValue( "previewMode", m_previewMode );
@@ -1857,6 +1859,7 @@ void MainWindow::on_actionPlay_triggered(bool checked)
     if( !checked )
     {
         //Stop Audio
+        m_pAudioOutput->stop();
         delete m_pAudioOutput;
         delete m_pAudioStream;
         delete m_pByteArrayAudio;
@@ -1881,16 +1884,16 @@ void MainWindow::on_actionPlay_triggered(bool checked)
         uint8_t * audio_data = ( uint8_t * ) malloc( audio_size );
         getMlvAudioData( m_pMlvObject, ( int16_t* )audio_data );
 
-
         for( uint64_t x = 0; x < audio_size; x++ )
         {
             (*m_pAudioStream) << (uint8_t)audio_data[x];
         }
 
-        m_pAudioStream->device()->seek(0);
+        qint64 position = 4 * (qint64)( ui->horizontalSliderPosition->value() * getMlvSampleRate( m_pMlvObject ) / getMlvFramerate( m_pMlvObject ) );
+        m_pAudioStream->device()->seek( position );
         m_pAudioOutput->setBufferSize( 32768000 );
-        m_pAudioOutput->setVolume( 0.5 );
-        m_pAudioOutput->start( m_pAudioStream->device() );
+        m_pAudioOutput->setVolume( 1.0 );
+        if( ui->actionAudioOutput->isChecked() ) m_pAudioOutput->start( m_pAudioStream->device() );
         free( audio_data );
     }
 }

@@ -153,6 +153,8 @@
     <addaction name="actionPlay"/>
     <addaction name="actionLoop"/>
     <addaction name="separator"/>
+    <addaction name="actionAudioOutput"/>
+    <addaction name="separator"/>
     <addaction name="actionDropFrameMode"/>
     <addaction name="actionAlwaysUseAMaZE"/>
     <addaction name="actionCaching"/>
@@ -1494,6 +1496,24 @@
   <action name="actionMaximize">
    <property name="text">
     <string>Maximize</string>
+   </property>
+  </action>
+  <action name="actionAudioOutput">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="ressources.qrc">
+     <normaloff>:/RetinaIMG/RetinaIMG/speaker-icon.png</normaloff>:/RetinaIMG/RetinaIMG/speaker-icon.png</iconset>
+   </property>
+   <property name="text">
+    <string>Audio Output</string>
+   </property>
+   <property name="toolTip">
+    <string>Audio Output on Playback</string>
    </property>
   </action>
  </widget>
