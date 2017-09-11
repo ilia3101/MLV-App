@@ -1893,7 +1893,8 @@ void MainWindow::on_actionPlay_triggered(bool checked)
         m_pAudioStream->device()->seek( position );
         m_pAudioOutput->setBufferSize( 32768000 );
         m_pAudioOutput->setVolume( 1.0 );
-        if( ui->actionAudioOutput->isChecked() ) m_pAudioOutput->start( m_pAudioStream->device() );
+        if( ui->actionAudioOutput->isChecked()
+         && ui->actionDropFrameMode->isChecked() ) m_pAudioOutput->start( m_pAudioStream->device() );
         free( audio_data );
     }
 }
