@@ -60,7 +60,6 @@ SOURCES += \
         MainWindow.cpp \
     ../../src/debayer/amaze_demosaic.c \
     ../../src/debayer/debayer.c \
-    ../../src/imageio/bitmap/bitmap.c \
     ../../src/matrix/matrix.c \
     ../../src/mlv/camera_matrices.c \
     ../../src/mlv/frame_caching.c \
@@ -85,7 +84,6 @@ HEADERS += \
         MainWindow.h \
     ../../src/debayer/debayer.h \
     ../../src/debayer/helpersse2.h \
-    ../../src/imageio/bitmap/bitmap.h \
     ../../src/imageio/structs/imagestruct.h \
     ../../src/imageio/imageio.h \
     ../../src/matrix/matrix.h \

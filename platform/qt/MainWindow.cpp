@@ -1854,7 +1854,6 @@ void RenderPngTask::run()
 //Play button pressed or toggled
 void MainWindow::on_actionPlay_triggered(bool checked)
 {
-    /*
     if( !checked )
     {
         //Stop Audio
@@ -1879,12 +1878,13 @@ void MainWindow::on_actionPlay_triggered(bool checked)
         m_pAudioStream = new QDataStream(m_pByteArrayAudio, QIODevice::ReadWrite);
 
         uint64_t audio_size = getMlvAudioSize( m_pMlvObject );
-        int16_t * audio_data = ( int16_t * ) malloc( audio_size );
+        uint8_t * audio_data = ( uint8_t * ) malloc( audio_size );
         getMlvAudioData( m_pMlvObject, ( int16_t* )audio_data );
 
-        for( uint64_t x = 0; x < audio_size/sizeof(int16_t); x++ )
+
+        for( uint64_t x = 0; x < audio_size; x++ )
         {
-            (*m_pAudioStream) << audio_data[x];
+            (*m_pAudioStream) << (uint8_t)audio_data[x];
         }
 
         m_pAudioStream->device()->seek(0);
@@ -1893,5 +1893,4 @@ void MainWindow::on_actionPlay_triggered(bool checked)
         m_pAudioOutput->start( m_pAudioStream->device() );
         free( audio_data );
     }
-    */
 }
