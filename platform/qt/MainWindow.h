@@ -82,6 +82,7 @@ private slots:
     void on_listWidgetSession_activated(const QModelIndex &index);
     void on_dockWidgetSession_visibilityChanged(bool visible);
     void on_dockWidgetEdit_visibilityChanged(bool visible);
+    void on_actionShowAudioTrack_triggered(bool checked);
     void on_listWidgetSession_customContextMenuRequested(const QPoint &pos);
     void deleteFileFromSession( void );
     void rightClickShowFile( void );
@@ -99,7 +100,6 @@ private slots:
     void on_label_LightenVal_doubleClicked( void );
     void on_actionFullscreen_triggered(bool checked);
     void exportHandler( void );
-
     void on_actionPlay_triggered(bool checked);
 
 private:

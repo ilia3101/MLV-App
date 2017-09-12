@@ -1594,22 +1594,6 @@
    </hints>
   </connection>
   <connection>
-   <sender>actionShowAudioTrack</sender>
-   <signal>triggered(bool)</signal>
-   <receiver>labelAudioTrack</receiver>
-   <slot>setVisible(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>567</x>
-     <y>811</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
    <sender>actionMinimize</sender>
    <signal>triggered()</signal>
    <receiver>MainWindow</receiver>

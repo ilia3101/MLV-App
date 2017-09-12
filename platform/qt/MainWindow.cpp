@@ -1553,6 +1553,14 @@ void MainWindow::on_dockWidgetEdit_visibilityChanged(bool visible)
     m_frameChanged = true;
 }
 
+//Set visibility of audio track
+void MainWindow::on_actionShowAudioTrack_triggered(bool checked)
+{
+    ui->labelAudioTrack->setVisible( checked );
+    qApp->processEvents();
+    m_frameChanged = true;
+}
+
 //Rightclick on SessionList
 void MainWindow::on_listWidgetSession_customContextMenuRequested(const QPoint &pos)
 {
