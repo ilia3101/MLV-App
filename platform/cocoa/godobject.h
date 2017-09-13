@@ -41,8 +41,6 @@ typedef struct {
     NSWindow * window;
     /* The actual view that will display it */
     MLVView * previewWindow;
-    /* Holds rawBitmap inside it or something */
-    NSImage * rawImageObject;
     /* Holds a (THE) processed frame that is displayed */
     NSBitmapImageRep * rawBitmap;
     /* Yes, displayed image will be 8 bit, as most monitors are */

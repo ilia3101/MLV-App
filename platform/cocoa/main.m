@@ -276,14 +276,8 @@ int NSApplicationMain(int argc, const char * argv[])
     /* NSImageView doesn't need to be anchored for some reason, just works anyway */
     [App->previewWindow setAutoresizingMask: (NSViewHeightSizable | NSViewWidthSizable) ];
     // [previewWindow setTarget:previewWindow];
+    [App->previewWindow setSourceImage:App->rawImage width:1880 height:1056 bitDepth:8];
 
-    App->rawImageObject = [[NSImage alloc] initWithSize: NSMakeSize(1880,1056) ];
-    [App->rawImageObject addRepresentation:App->rawBitmap];
-
-    /* Don't allow cache, so that it updates the view instead of freezing */
-    [App->rawImageObject setCacheMode: NSImageCacheNever];
-
-    [App->previewWindow setImage: App->rawImageObject];
     [[App->window contentView] addSubview: App->previewWindow];
 
     /* Slider for moving thourhg the clip */
@@ -296,7 +290,7 @@ int NSApplicationMain(int argc, const char * argv[])
     [timelineSlider setDoubleValue: 0.0];
     [timelineSlider anchorRight: YES];
     [timelineSlider anchorLeft: YES];
-    [timelineSlider setAutoresizingMask: NSViewWidthSizable ];
+    [timelineSlider setAutoresizingMask: NSViewWidthSizable];
     [[App->window contentView] addSubview: timelineSlider];
 
 

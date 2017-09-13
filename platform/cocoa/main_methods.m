@@ -91,15 +91,12 @@ int setAppNewMlvClip(char * mlvPath)
     /* Adjust image size(probably) */
     [App->previewWindow setImage: nil];
 
-    /* I think this is like free() */
-    [App->rawImageObject release];
-    [App->rawBitmap release];
-
     /* Size may need changing */
     free(App->rawImage);
     App->rawImage = malloc( sizeof(uint8_t) * 3 * getMlvWidth(App->videoMLV) * getMlvHeight(App->videoMLV) );
 
-    /* Now reallocate and set up all imagey-objecty things */
+    /* The bitmap-rep thing is only used for exporting */
+    [App->rawBitmap release];
     App->rawBitmap = [ [NSBitmapImageRep alloc]
                        initWithBitmapDataPlanes: (unsigned char * _Nullable * _Nullable)&App->rawImage 
                        /* initWithBitmapDataPlanes: NULL */
@@ -114,10 +111,7 @@ int setAppNewMlvClip(char * mlvPath)
                        bytesPerRow: getMlvWidth(App->videoMLV) * 3
                        bitsPerPixel: 24 ];
 
-    App->rawImageObject = [[NSImage alloc] initWithSize: NSMakeSize(getMlvWidth(App->videoMLV),getMlvHeight(App->videoMLV))];
-    [App->rawImageObject addRepresentation: App->rawBitmap];
-    [App->rawImageObject setCacheMode: NSImageCacheNever];
-    [App->previewWindow setImage: App->rawImageObject];
+    [App->previewWindow setSourceImage:App->rawImage width:getMlvWidth(App->videoMLV) height:getMlvHeight(App->videoMLV) bitDepth:8];
 
     /* If ALways AMaZE was set, set it again on new clip */
     if ([App->alwaysUseAmazeSelector state] == NSOnState)
