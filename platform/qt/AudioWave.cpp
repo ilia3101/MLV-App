@@ -1,3 +1,10 @@
+/*!
+ * \file AudioWave.cpp
+ * \author masc4ii
+ * \copyright 2017
+ * \brief Paint audio track
+ */
+
 #include <QDebug>
 #include <QLinearGradient>
 #include <QPainter>

@@ -78,7 +78,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QLabel" name="labelAudioTrack">
+       <widget class="ResizeLabel" name="labelAudioTrack">
         <property name="enabled">
          <bool>false</bool>
         </property>
@@ -1523,6 +1523,11 @@
    <class>DoubleClickLabel</class>
    <extends>QLabel</extends>
    <header>DoubleClickLabel.h</header>
+  </customwidget>
+  <customwidget>
+   <class>ResizeLabel</class>
+   <extends>QLabel</extends>
+   <header>ResizeLabel.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>

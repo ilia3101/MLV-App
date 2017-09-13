@@ -78,7 +78,8 @@ SOURCES += \
     ../../src/processing/chroma_smooth.c \
     ../../src/processing/pixel_proc.c \
     ../../src/mlv/audio_mlv.c \
-    AudioWave.cpp
+    AudioWave.cpp \
+    ResizeLabel.cpp
 
 HEADERS += \
         MainWindow.h \
@@ -108,7 +109,8 @@ HEADERS += \
     ../../src/processing/pixel_proc.h \
     ../../src/processing/wirth.h \
     ../../src/processing/opt_med.h \
-    AudioWave.h
+    AudioWave.h \
+    ResizeLabel.h
 
 FORMS += \
         MainWindow.ui \

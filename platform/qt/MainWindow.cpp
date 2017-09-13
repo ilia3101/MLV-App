@@ -187,7 +187,6 @@ void MainWindow::resizeEvent(QResizeEvent *event)
     if( m_fileLoaded )
     {
         drawFrame();
-        paintAudioTrack();
     }
     event->accept();
 }
@@ -1755,6 +1754,12 @@ void MainWindow::on_label_LightenVal_doubleClicked()
     editSlider.autoSetup( ui->horizontalSliderLighten, ui->label_LightenVal, 0.01, 2, 100.0 );
     editSlider.exec();
     ui->horizontalSliderLighten->setValue( editSlider.getValue() );
+}
+
+//Repaint audio if its size changed
+void MainWindow::on_labelAudioTrack_sizeChanged()
+{
+    paintAudioTrack();
 }
 
 //Fullscreen Mode

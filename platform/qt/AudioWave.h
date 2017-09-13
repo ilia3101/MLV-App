@@ -1,3 +1,10 @@
+/*!
+ * \file AudioWave.h
+ * \author masc4ii
+ * \copyright 2017
+ * \brief Paint audio track
+ */
+
 #ifndef AUDIOWAVE_H
 #define AUDIOWAVE_H
 

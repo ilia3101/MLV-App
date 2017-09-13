@@ -98,6 +98,7 @@ private slots:
     void on_label_LrVal_doubleClicked( void );
     void on_label_LsVal_doubleClicked( void );
     void on_label_LightenVal_doubleClicked( void );
+    void on_labelAudioTrack_sizeChanged( void );
     void on_actionFullscreen_triggered(bool checked);
     void exportHandler( void );
     void on_actionPlay_triggered(bool checked);
