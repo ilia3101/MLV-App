@@ -1038,6 +1038,9 @@
        </item>
        <item>
         <widget class="QComboBox" name="comboBoxProfile">
+         <property name="currentText">
+          <string>Tonemapped</string>
+         </property>
          <item>
           <property name="text">
            <string>Standard</string>
