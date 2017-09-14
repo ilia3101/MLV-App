@@ -699,11 +699,16 @@ void MainWindow::startExport(QString fileName)
     program.append( QString( "/ffmpeg\"" ) );
     program.prepend( QString( "\"" ) );
 #endif
+    //Solving the . and , problem at fps in the command
+    QLocale locale = QLocale(QLocale::English, QLocale::UnitedKingdom);
+    locale.setNumberOptions(QLocale::OmitGroupSeparator);
+    QString fps = locale.toString( getFramerate() );
+
     if( m_codecProfile == CODEC_AVIRAW )
     {
         output.append( QString( ".avi" ) );
         program.append( QString( " -r %1 -i \"%2\" -c:v rawvideo -pix_fmt %3 \"%4\"" )
-                    .arg( getFramerate() )
+                    .arg( fps )
                     .arg( numberedFileName )
                     .arg( "yuv420p" )
                     .arg( output ) );
@@ -712,7 +717,7 @@ void MainWindow::startExport(QString fileName)
     {
         output.append( QString( ".mov" ) );
         program.append( QString( " -r %1 -i \"%2\" -c:v prores_ks -profile:v %3 \"%4\"" )
-                    .arg( getFramerate() )
+                    .arg( fps )
                     .arg( numberedFileName )
                     .arg( m_codecProfile )
                     .arg( output ) );
