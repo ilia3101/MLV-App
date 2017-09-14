@@ -173,6 +173,7 @@
     <addaction name="separator"/>
     <addaction name="actionShowHistogram"/>
     <addaction name="actionShowWaveFormMonitor"/>
+    <addaction name="actionShowZebras"/>
    </widget>
    <widget class="QMenu" name="menuWindow">
     <property name="title">
@@ -1039,7 +1040,7 @@
        <item>
         <widget class="QComboBox" name="comboBoxProfile">
          <property name="currentText">
-          <string>Tonemapped</string>
+          <string>Standard</string>
          </property>
          <item>
           <property name="text">
@@ -1517,6 +1518,17 @@
    </property>
    <property name="toolTip">
     <string>Audio Output on Playback</string>
+   </property>
+  </action>
+  <action name="actionShowZebras">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Zebras</string>
+   </property>
+   <property name="shortcut">
+    <string>Z</string>
    </property>
   </action>
  </widget>

@@ -103,6 +103,8 @@ private slots:
     void exportHandler( void );
     void on_actionPlay_triggered(bool checked);
 
+    void on_actionShowZebras_triggered();
+
 private:
     Ui::MainWindow *ui;
     InfoDialog *m_pInfoDialog;
@@ -161,6 +163,7 @@ private:
     void setPreviewMode( void );
     double getFramerate( void );
     void paintAudioTrack( void );
+    void drawZebras( void );
 
 signals:
     void exportReady( void );

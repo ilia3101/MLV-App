@@ -271,6 +271,7 @@ void MainWindow::drawFrame( void )
         m_pGraphicsItem->setPixmap( QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 ) ) );
         m_pScene->setSceneRect( 0, 0, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject) );
     }
+    drawZebras();
 
     //GetHistogram
     if( ui->actionShowHistogram->isChecked() )
@@ -552,7 +553,7 @@ void MainWindow::initLib( void )
     processingSetExposureStops( m_pProcessingObject, 1.2 );
     /* Link video with processing settings */
     setMlvProcessing( m_pMlvObject, m_pProcessingObject );
-    processingSetImageProfile(m_pProcessingObject, PROFILE_STANDARD);
+    processingSetImageProfile(m_pProcessingObject, PROFILE_TONEMAPPED);
     /* Limit frame cache to MAX_RAM size */
     setMlvRawCacheLimitMegaBytes( m_pMlvObject, m_cacheSizeMB );
     /* Use AMaZE */
@@ -1130,6 +1131,33 @@ void MainWindow::paintAudioTrack( void )
     ui->labelAudioTrack->setAlignment( Qt::AlignCenter ); //Always in the middle
 }
 
+//Draw Zebras
+void MainWindow::drawZebras()
+{
+    //If option not checked we do nothing
+    if( !ui->actionShowZebras->isChecked() ) return;
+
+    QImage image = m_pGraphicsItem->pixmap().toImage();
+    for( int y = 0; y < image.height(); y++ )
+    {
+        for( int x = 0; x < image.width(); x++ )
+        {
+            QColor pixel = image.pixelColor( x, y );
+            //Overexposed
+            if( pixel.lightness() >= 252 )
+            {
+                image.setPixelColor( x, y, Qt::red );
+            }
+            //Underexposed
+            if( pixel.lightness() <= 3 )
+            {
+                image.setPixelColor( x, y, Qt::blue );
+            }
+        }
+    }
+    m_pGraphicsItem->setPixmap( QPixmap::fromImage( image ) );
+}
+
 //Edit progressbar from FFmpeg output
 void MainWindow::readFFmpegOutput( void )
 {
@@ -1637,6 +1665,8 @@ void MainWindow::pictureCustomContextMenuRequested(const QPoint &pos)
     QMenu myMenu;
     myMenu.addAction( ui->actionZoomFit );
     myMenu.addAction( ui->actionZoom100 );
+    myMenu.addSeparator();
+    myMenu.addAction( ui->actionShowZebras );
     if( ui->graphicsView->isFullScreen() )
     {
         myMenu.addSeparator();
@@ -1910,4 +1940,10 @@ void MainWindow::on_actionPlay_triggered(bool checked)
          && ui->actionDropFrameMode->isChecked() ) m_pAudioOutput->start( m_pAudioStream->device() );
         free( audio_data );
     }
+}
+
+//Zebras en-/disabled -> redraw
+void MainWindow::on_actionShowZebras_triggered()
+{
+    m_frameChanged = true;
 }
