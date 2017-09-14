@@ -77,7 +77,7 @@ int NSApplicationMain(int argc, const char * argv[])
 
     /* Some style properties for the window... */
     NSUInteger windowStyle = NSTitledWindowMask | NSClosableWindowMask | NSResizableWindowMask 
-        | NSMiniaturizableWindowMask | NSWindowStyleMaskFullSizeContentView;
+        | NSMiniaturizableWindowMask | NSFullSizeContentViewWindowMask;
 
     /* Make the window */
     App->window = [ [NSWindow alloc]
