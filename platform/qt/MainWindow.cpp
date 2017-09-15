@@ -1117,6 +1117,8 @@ void MainWindow::paintAudioTrack( void )
     {
         ui->labelAudioTrack->setPixmap( QPixmap::fromImage( m_pAudioWave->getMonoWave( NULL, 0, ui->labelAudioTrack->width() ) ) );
         ui->labelAudioTrack->setEnabled( false );
+        ui->labelAudioTrack->setMinimumSize( 1, 1 ); //Otherwise window won't be smaller than picture
+        ui->labelAudioTrack->setAlignment( Qt::AlignCenter ); //Always in the middle
         return;
     }
     //Make it disabled if clip has no audio
