@@ -590,6 +590,7 @@ void MainWindow::readSettings()
     set.endGroup();
     if( set.value( "dragFrameMode", false ).toBool() ) ui->actionDropFrameMode->setChecked( true );
     if( set.value( "audioOutput", false ).toBool() ) ui->actionAudioOutput->setChecked( true );
+    if( set.value( "zebras", false ).toBool() ) ui->actionShowZebras->setChecked( true );
     m_lastSaveFileName = set.value( "lastFileName", QString( "/Users/" ) ).toString();
     m_codecProfile = set.value( "codecProfile", 4 ).toUInt();
     m_previewMode = set.value( "previewMode", 1 ).toUInt();
@@ -613,6 +614,7 @@ void MainWindow::writeSettings()
     set.endGroup();
     set.setValue( "dragFrameMode", ui->actionDropFrameMode->isChecked() );
     set.setValue( "audioOutput", ui->actionAudioOutput->isChecked() );
+    set.setValue( "zebras", ui->actionShowZebras->isChecked() );
     set.setValue( "lastFileName", m_lastSaveFileName );
     set.setValue( "codecProfile", m_codecProfile );
     set.setValue( "previewMode", m_previewMode );
