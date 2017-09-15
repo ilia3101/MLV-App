@@ -25,7 +25,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 ##############
 # Silent Mode, deactivate for more debug info
 ##############
-DEFINES += STDOUT_SILENT
+#DEFINES += STDOUT_SILENT
 
 ##############
 # Compiler flags
@@ -65,6 +65,12 @@ SOURCES += \
     ../../src/mlv/frame_caching.c \
     ../../src/mlv/video_mlv.c \
     ../../src/mlv/liblj92/lj92.c \
+    ../../src/mlv/llrawproc/llrawproc.c \
+    ../../src/mlv/llrawproc/pixelproc.c \
+    ../../src/mlv/llrawproc/stripes.c \
+    ../../src/mlv/llrawproc/patternnoise.c \
+    ../../src/mlv/llrawproc/chroma_smooth.c \
+    ../../src/mlv/llrawproc/hist.c \
     ../../src/processing/processing.c \
     ../../src/processing/raw_processing.c \
     InfoDialog.cpp \
@@ -75,8 +81,6 @@ SOURCES += \
     ReceiptSettings.cpp \
     EditSliderValueDialog.cpp \
     DoubleClickLabel.cpp \
-    ../../src/processing/chroma_smooth.c \
-    ../../src/processing/pixel_proc.c \
     ../../src/mlv/audio_mlv.c \
     AudioWave.cpp \
     ResizeLabel.cpp
@@ -93,6 +97,14 @@ HEADERS += \
     ../../src/mlv/raw.h \
     ../../src/mlv/video_mlv.h \
     ../../src/mlv/liblj92/lj92.h \
+    ../../src/mlv/llrawproc/llrawproc_object.h \
+    ../../src/mlv/llrawproc/llrawproc.h \
+    ../../src/mlv/llrawproc/pixelproc.h \
+    ../../src/mlv/llrawproc/stripes.h \
+    ../../src/mlv/llrawproc/patternnoise.h \
+    ../../src/mlv/llrawproc/hist.h \
+    ../../src/mlv/llrawproc/opt_med.h \
+    ../../src/mlv/llrawproc/wirth.h \
     ../../src/processing/processing_object.h \
     ../../src/processing/raw_processing.h \
     ../../src/mlv_include.h \
@@ -106,9 +118,6 @@ HEADERS += \
     ReceiptSettings.h \
     EditSliderValueDialog.h \
     DoubleClickLabel.h \
-    ../../src/processing/pixel_proc.h \
-    ../../src/processing/wirth.h \
-    ../../src/processing/opt_med.h \
     AudioWave.h \
     ResizeLabel.h
 
