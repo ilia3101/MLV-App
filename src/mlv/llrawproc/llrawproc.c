@@ -51,10 +51,10 @@ llrawprocObject_t * initLLRawProcObject()
     llrawprocObject_t * llrawproc = calloc(1, sizeof(llrawprocObject_t));
 
     /* set defaults */
-    llrawproc->vertical_stripes = 2;
+    llrawproc->vertical_stripes = 1;
     llrawproc->focus_pixels = 1;
     llrawproc->fpi_method = 1;
-    llrawproc->bad_pixels = 2;
+    llrawproc->bad_pixels = 1;
     llrawproc->bpi_method = 1;
     llrawproc->chroma_smooth = 0;
     llrawproc->pattern_noise = 0;
