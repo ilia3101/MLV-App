@@ -271,6 +271,7 @@ void MainWindow::drawFrame( void )
         m_pGraphicsItem->setPixmap( QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 ) ) );
         m_pScene->setSceneRect( 0, 0, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject) );
     }
+    //Add zebras on the image
     drawZebras();
 
     //GetHistogram
@@ -1142,7 +1143,9 @@ void MainWindow::drawZebras()
     //If option not checked we do nothing
     if( !ui->actionShowZebras->isChecked() ) return;
 
+    //Get image
     QImage image = m_pGraphicsItem->pixmap().toImage();
+    //Each pixel
     for( int y = 0; y < image.height(); y++ )
     {
         for( int x = 0; x < image.width(); x++ )
@@ -1151,15 +1154,18 @@ void MainWindow::drawZebras()
             //Overexposed
             if( pixel.lightness() >= 252 )
             {
+                //Set color red
                 image.setPixelColor( x, y, Qt::red );
             }
             //Underexposed
             if( pixel.lightness() <= 3 )
             {
+                //Set color blue
                 image.setPixelColor( x, y, Qt::blue );
             }
         }
     }
+    //Set image with zebras to viewer
     m_pGraphicsItem->setPixmap( QPixmap::fromImage( image ) );
 }
 
