@@ -5,6 +5,7 @@
 #include "mlv.h"
 /* TO have processingObject_t */
 #include "../processing/processing_object.h"
+#include "llrawproc/llrawproc_object.h"
 
 /* I guess this has to happen for pthread_t */
 #include "pthread.h"
@@ -53,6 +54,7 @@ typedef struct {
 
     /* Image processing object pointer (it is to be made separately) */
     processingObject_t * processing;
+    llrawprocObject_t * llrawproc;
 
 
     /************************************************************
