@@ -180,9 +180,10 @@ void applyLLRawProcObject(mlvObject_t * video)
     {
         fix_vertical_stripes(&video->llrawproc->stripe_corrections,
                              video->llrawproc->raw_image_buff,
-                             0,
                              video->llrawproc->raw_image_size / 2,
-                             &(video->RAWI.raw_info),
+                             video->llrawproc->mlv_black_level,
+                             video->llrawproc->mlv_white_level,
+                             video->RAWI.raw_info.frame_size,
                              video->RAWI.xRes,
                              video->RAWI.yRes,
                              video->llrawproc->vertical_stripes,

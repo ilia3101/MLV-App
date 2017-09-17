@@ -51,7 +51,7 @@
 #define F2H(ev) COERCE((int)(FIXP_RANGE/2 + ev * FIXP_RANGE/2), 0, FIXP_RANGE-1)
 #define H2F(x) ((double)((x) - FIXP_RANGE/2) / (FIXP_RANGE/2))
 
-static void add_pixel(int * hist, int num[8], int offset, int pa, int pb, struct raw_info * raw_info)
+static void add_pixel(int * hist, int num[8], int offset, int pa, int pb, int32_t white_level)
 {
     int a = pa;
     int b = pb;
@@ -59,7 +59,7 @@ static void add_pixel(int * hist, int num[8], int offset, int pa, int pb, struct
     if (MIN(a,b) < 32)
         return; /* too noisy */
     
-    if (MAX(a,b) > raw_info->white_level / 1.5)
+    if (MAX(a,b) > white_level / 1.5)
         return; /* too bright */
     
     /**
@@ -86,7 +86,13 @@ static void add_pixel(int * hist, int num[8], int offset, int pa, int pb, struct
 }
 
 
-void stripes_compute_correction(stripes_correction * correction, uint16_t * image_data, struct raw_info * raw_info, uint16_t width, uint16_t height)
+void stripes_compute_correction(stripes_correction * correction,
+                                uint16_t * image_data,
+                                int32_t black_level,
+                                int32_t white_level,
+                                int32_t frame_size,
+                                uint16_t width,
+                                uint16_t height)
 {
     int * hist = malloc(sizeof(int) * 8 * FIXP_RANGE);
     int num[8];
@@ -100,16 +106,16 @@ void stripes_compute_correction(stripes_correction * correction, uint16_t * imag
         int row_start = y * width;
         for (int x = row_start; x < row_start + width - 10; x += 8)
         {
-            int pa = image_data[x] - raw_info->black_level;
-            int pb = image_data[x + 1] - raw_info->black_level;
-            int pc = image_data[x + 2] - raw_info->black_level;
-            int pd = image_data[x + 3] - raw_info->black_level;
-            int pe = image_data[x + 4] - raw_info->black_level;
-            int pf = image_data[x + 5] - raw_info->black_level;
-            int pg = image_data[x + 6] - raw_info->black_level;
-            int ph = image_data[x + 7] - raw_info->black_level;
-            int pa2 = image_data[x + 8] - raw_info->black_level;
-            int pb2 = image_data[x + 9] - raw_info->black_level;
+            int pa = image_data[x] - black_level;
+            int pb = image_data[x + 1] - black_level;
+            int pc = image_data[x + 2] - black_level;
+            int pd = image_data[x + 3] - black_level;
+            int pe = image_data[x + 4] - black_level;
+            int pf = image_data[x + 5] - black_level;
+            int pg = image_data[x + 6] - black_level;
+            int ph = image_data[x + 7] - black_level;
+            int pa2 = image_data[x + 8] - black_level;
+            int pb2 = image_data[x + 9] - black_level;
             
             /**
              * weight according to distance between corrected and reference pixels
@@ -117,35 +123,35 @@ void stripes_compute_correction(stripes_correction * correction, uint16_t * imag
              * the improvement is visible in horizontal gradients
              */
             
-            add_pixel(hist, num, 2, pa, pc, raw_info);
-            add_pixel(hist, num, 2, pa, pc, raw_info);
-            add_pixel(hist, num, 2, pa, pc, raw_info);
-            add_pixel(hist, num, 2, pa2, pc, raw_info);
+            add_pixel(hist, num, 2, pa, pc, white_level);
+            add_pixel(hist, num, 2, pa, pc, white_level);
+            add_pixel(hist, num, 2, pa, pc, white_level);
+            add_pixel(hist, num, 2, pa2, pc, white_level);
             
-            add_pixel(hist, num, 3, pb, pd, raw_info);
-            add_pixel(hist, num, 3, pb, pd, raw_info);
-            add_pixel(hist, num, 3, pb, pd, raw_info);
-            add_pixel(hist, num, 3, pb2, pd, raw_info);
+            add_pixel(hist, num, 3, pb, pd, white_level);
+            add_pixel(hist, num, 3, pb, pd, white_level);
+            add_pixel(hist, num, 3, pb, pd, white_level);
+            add_pixel(hist, num, 3, pb2, pd, white_level);
             
-            add_pixel(hist, num, 4, pa, pe, raw_info);
-            add_pixel(hist, num, 4, pa, pe, raw_info);
-            add_pixel(hist, num, 4, pa2, pe, raw_info);
-            add_pixel(hist, num, 4, pa2, pe, raw_info);
+            add_pixel(hist, num, 4, pa, pe, white_level);
+            add_pixel(hist, num, 4, pa, pe, white_level);
+            add_pixel(hist, num, 4, pa2, pe, white_level);
+            add_pixel(hist, num, 4, pa2, pe, white_level);
             
-            add_pixel(hist, num, 5, pb, pf, raw_info);
-            add_pixel(hist, num, 5, pb, pf, raw_info);
-            add_pixel(hist, num, 5, pb2, pf, raw_info);
-            add_pixel(hist, num, 5, pb2, pf, raw_info);
+            add_pixel(hist, num, 5, pb, pf, white_level);
+            add_pixel(hist, num, 5, pb, pf, white_level);
+            add_pixel(hist, num, 5, pb2, pf, white_level);
+            add_pixel(hist, num, 5, pb2, pf, white_level);
             
-            add_pixel(hist, num, 6, pa, pg, raw_info);
-            add_pixel(hist, num, 6, pa2, pg, raw_info);
-            add_pixel(hist, num, 6, pa2, pg, raw_info);
-            add_pixel(hist, num, 6, pa2, pg, raw_info);
+            add_pixel(hist, num, 6, pa, pg, white_level);
+            add_pixel(hist, num, 6, pa2, pg, white_level);
+            add_pixel(hist, num, 6, pa2, pg, white_level);
+            add_pixel(hist, num, 6, pa2, pg, white_level);
             
-            add_pixel(hist, num, 7, pb, ph, raw_info);
-            add_pixel(hist, num, 7, pb2, ph, raw_info);
-            add_pixel(hist, num, 7, pb2, ph, raw_info);
-            add_pixel(hist, num, 7, pb2, ph, raw_info);
+            add_pixel(hist, num, 7, pb, ph, white_level);
+            add_pixel(hist, num, 7, pb2, ph, white_level);
+            add_pixel(hist, num, 7, pb2, ph, white_level);
+            add_pixel(hist, num, 7, pb2, ph, white_level);
         }
     }
     
@@ -163,7 +169,7 @@ void stripes_compute_correction(stripes_correction * correction, uint16_t * imag
     /* compute the median correction factor (this will reject outliers) */
     for (j = 0; j < 8; j++)
     {
-        if (num[j] < raw_info->frame_size / 128) continue;
+        if (num[j] < frame_size / 128) continue;
         int t = 0;
         for (k = 0; k < FIXP_RANGE; k++)
         {
@@ -192,18 +198,22 @@ void stripes_compute_correction(stripes_correction * correction, uint16_t * imag
     free(hist);
 }
 
-void stripes_apply_correction(stripes_correction * correction, uint16_t * image_data, off_t offset, size_t size, struct raw_info * raw_info, uint16_t width)
+void stripes_apply_correction(stripes_correction * correction,
+                              uint16_t * image_data,
+                              size_t size,
+                              int32_t black_level,
+                              int32_t white_level,
+                              uint16_t width)
 {
     /* only apply stripe correction if we need it */
     if(correction == NULL || !correction->correction_needed) return;
     if(width % 8 != 0) return;
 
-    uint16_t black = raw_info->black_level;
-    uint16_t white = raw_info->white_level;
-    size_t start = offset % 8;
+    uint16_t black = black_level;
+    uint16_t white = white_level;
     for(size_t i = 0; i < size; i++)
     {
-        double correction_coeffficient = correction->coeffficients[(i + start) % 8];
+        double correction_coeffficient = correction->coeffficients[(i) % 8];
         if(correction_coeffficient && image_data[i] > black + 64)
         {
             image_data[i] = (uint16_t)MIN(white, (image_data[i] - black) * correction_coeffficient / FIXP_ONE + black);
@@ -211,12 +221,21 @@ void stripes_apply_correction(stripes_correction * correction, uint16_t * image_
     }
 }
 
-void fix_vertical_stripes(stripes_correction * correction, uint16_t * image_data, off_t offset, size_t size, struct raw_info * raw_info, uint16_t width, uint16_t height, int vertical_stripes, int first_time)
+void fix_vertical_stripes(stripes_correction * correction,
+                          uint16_t * image_data,
+                          size_t size,
+                          int32_t black_level,
+                          int32_t white_level,
+                          int32_t frame_size,
+                          uint16_t width,
+                          uint16_t height,
+                          int vertical_stripes,
+                          int first_time)
 {
     /* for speed: only detect correction factors from the first frame if not forced by value 2 */
     if (first_time || vertical_stripes == 2)
     {
-        stripes_compute_correction(correction, image_data, raw_info, width, height);
+        stripes_compute_correction(correction, image_data, black_level, white_level, frame_size, width, height);
 #ifndef STDOUT_SILENT
         const char * method = NULL;
         if (vertical_stripes == 2)
@@ -244,5 +263,5 @@ void fix_vertical_stripes(stripes_correction * correction, uint16_t * image_data
 #endif
     }
 
-    stripes_apply_correction(correction, image_data, offset, size, raw_info, width);
+    stripes_apply_correction(correction, image_data, size, black_level, white_level, width);
 }

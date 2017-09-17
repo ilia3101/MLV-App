@@ -32,8 +32,30 @@ typedef struct {
     int coeffficients[8];
 } stripes_correction;
 
-void fix_vertical_stripes(stripes_correction * correction, uint16_t * image_data, off_t offset, size_t size, struct raw_info * raw_info, uint16_t width, uint16_t height, int vertical_stripes, int first_time);
-void stripes_compute_correction(stripes_correction * correction, uint16_t * image_data, struct raw_info * raw_info, uint16_t width, uint16_t height);
-void stripes_apply_correction(stripes_correction * correction, uint16_t * image_data, off_t offset, size_t size, struct raw_info * raw_info, uint16_t width);
+void fix_vertical_stripes(stripes_correction * correction,
+                          uint16_t * image_data,
+                          size_t size,
+                          int32_t black_level,
+                          int32_t white_level,
+                          int32_t frame_size,
+                          uint16_t width,
+                          uint16_t height,
+                          int vertical_stripes,
+                          int first_time);
+
+void stripes_compute_correction(stripes_correction * correction,
+                                uint16_t * image_data,
+                                int32_t black_level,
+                                int32_t white_level,
+                                int32_t frame_size,
+                                uint16_t width,
+                                uint16_t height);
+
+void stripes_apply_correction(stripes_correction * correction,
+                              uint16_t * image_data,
+                              size_t size,
+                              int32_t black_level,
+                              int32_t white_level,
+                              uint16_t width);
 
 #endif
