@@ -474,6 +474,9 @@ void fix_bad_pixels(pixel_map * bad_pixel_map,
         }
         case 1: // search for bad pixels and save to file if needed
         {
+#ifndef STDOUT_SILENT
+            printf("\nSearching for bad pixel types:\n");
+#endif
             //just guess the dark noise for speed reasons
             int dark_noise = 12 ;
             int dark_min = black - (dark_noise * 8);
