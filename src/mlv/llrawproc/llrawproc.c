@@ -89,8 +89,8 @@ void freeLLRawProcObject(llrawprocObject_t * llrawproc)
 void applyLLRawProcObject(mlvObject_t * video)
 {
     /* initialise LUTs */
-    video->llrawproc->raw2ev = get_raw2ev(video->RAWI.raw_info.black_level, video->RAWI.raw_info.bits_per_pixel);
-    video->llrawproc->ev2raw = get_ev2raw(video->RAWI.raw_info.black_level);
+    video->llrawproc->raw2ev = get_raw2ev(video->llrawproc->mlv_black_level, video->RAWI.raw_info.bits_per_pixel);
+    video->llrawproc->ev2raw = get_ev2raw(video->llrawproc->mlv_black_level);
 
     /* deflicker RAW data */
     if (video->llrawproc->deflicker_target)
@@ -113,7 +113,7 @@ void applyLLRawProcObject(mlvObject_t * video)
             printf("\nFixing pattern noise...\n");
         }
 #endif
-        fix_pattern_noise((int16_t *)video->llrawproc->raw_image_buff, video->RAWI.xRes, video->RAWI.yRes, video->RAWI.raw_info.white_level, 0);
+        fix_pattern_noise((int16_t *)video->llrawproc->raw_image_buff, video->RAWI.xRes, video->RAWI.yRes, video->llrawproc->mlv_white_level, 0);
     }
 
     /* fix focus pixels */
@@ -148,7 +148,7 @@ void applyLLRawProcObject(mlvObject_t * video)
                        video->VIDF.panPosY,
                        video->RAWI.raw_info.width,
                        video->RAWI.raw_info.height,
-                       video->RAWI.raw_info.black_level,
+                       video->llrawproc->mlv_black_level,
                        (video->llrawproc->bad_pixels == 2),
                        video->llrawproc->bpi_method,
                        video->llrawproc->dual_iso,
@@ -169,8 +169,8 @@ void applyLLRawProcObject(mlvObject_t * video)
                       video->llrawproc->raw_image_buff,
                       video->RAWI.xRes,
                       video->RAWI.yRes,
-                      video->RAWI.raw_info.black_level,
-                      video->RAWI.raw_info.white_level,
+                      video->llrawproc->mlv_black_level,
+                      video->llrawproc->mlv_white_level,
                       video->llrawproc->raw2ev,
                       video->llrawproc->ev2raw);
     }

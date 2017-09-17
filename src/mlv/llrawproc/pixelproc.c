@@ -510,14 +510,23 @@ void fix_bad_pixels(pixel_map * bad_pixel_map,
                     
                     if (p < dark_min) //cold pixel
                     {
+#ifndef STDOUT_SILENT
+                        printf("COLD - p = %d, dark_min = %d, dark_max = %d\n", p, dark_min, dark_max);
+#endif
                         add_pixel_to_map(bad_pixel_map, x + cropX, y + cropY);
                     }
                     else if ((raw2ev[p] - raw2ev[-max2] > 2 * EV_RESOLUTION) && (p > dark_max)) //hot pixel
                     {
+#ifndef STDOUT_SILENT
+                        printf("HOT  - p = %d, dark_min = %d, dark_max = %d\n", p, dark_min, dark_max);
+#endif
                         add_pixel_to_map(bad_pixel_map, x + cropX, y + cropY);
                     }
                     else if (aggressive)
                     {
+#ifndef STDOUT_SILENT
+                        printf("AGRR - p = %d, dark_min = %d, dark_max = %d\n", p, dark_min, dark_max);
+#endif
                         int max3 = kth_smallest_int(neighbours, k, 2);
                         if(((raw2ev[p] - raw2ev[-max2] > EV_RESOLUTION) || (raw2ev[p] - raw2ev[-max3] > EV_RESOLUTION)) && (p > dark_max))
                         {

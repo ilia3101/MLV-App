@@ -43,6 +43,12 @@ typedef struct
     int bpm_status;       // bad pixel map status: 0 = not loaded, 1 = loaded, 2 = not exist, 3 = no bad pixels found
     int dual_iso;         // is RAW data dualiso or not (0, 1, for correctly prosessing of bad/focus pixels, can be removed if DISO block parsing is implemented)
 
+    /* original black and white levels from MLV
+       backing them up needed because those values are
+       overwritten right after reading of RAWI header */
+    int mlv_black_level;
+    int mlv_white_level;
+
     /* LUTs */
     int * raw2ev;
     int * ev2raw;

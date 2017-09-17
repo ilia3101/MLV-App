@@ -372,6 +372,10 @@ void openMlvClip(mlvObject_t * video, char * mlvPath)
         block_num++;
     }
 
+    /* back up black and white levels */
+    video->llrawproc->mlv_black_level = getMlvBlackLevel(video);
+    video->llrawproc->mlv_white_level = getMlvWhiteLevel(video);
+
     /* We work in an imaginary 14 bit world, so if its 10/12 bit, blackwhite levels shall be multiplied */
     if (getMlvBitdepth(video) == 12)
     {
