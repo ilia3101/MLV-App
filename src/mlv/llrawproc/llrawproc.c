@@ -34,7 +34,7 @@
 
 static void deflicker(mlvObject_t * video)
 {
-    uint16_t black = video->RAWI.raw_info.black_level;
+    uint16_t black = video->llrawproc->mlv_black_level;
     uint16_t white = (1 << video->RAWI.raw_info.bits_per_pixel) + 1;
 
     struct histogram * hist = hist_create(white);
