@@ -589,7 +589,7 @@ void MainWindow::readSettings()
     if( set.value( "maximized", false ).toBool() ) setWindowState( windowState() | Qt::WindowMaximized );
     set.endGroup();
     if( set.value( "dragFrameMode", false ).toBool() ) ui->actionDropFrameMode->setChecked( true );
-    if( set.value( "audioOutput", false ).toBool() ) ui->actionAudioOutput->setChecked( true );
+    if( set.value( "audioOutput", true ).toBool() ) ui->actionAudioOutput->setChecked( true );
     if( set.value( "zebras", false ).toBool() ) ui->actionShowZebras->setChecked( true );
     m_lastSaveFileName = set.value( "lastFileName", QString( "/Users/" ) ).toString();
     m_codecProfile = set.value( "codecProfile", 4 ).toUInt();
