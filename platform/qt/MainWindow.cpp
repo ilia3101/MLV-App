@@ -1517,7 +1517,23 @@ void MainWindow::on_actionCopyRecept_triggered()
 //Paste receipt from clipboard
 void MainWindow::on_actionPasteReceipt_triggered()
 {
-    setSliders( m_pReceiptClipboard );
+    //If one file is selected
+    if( ui->listWidgetSession->selectedItems().count() <= 1 )
+    {
+        //No matter which clip is selected, the actual clip gets the receipt
+        setSliders( m_pReceiptClipboard );
+    }
+    else
+    {
+        for( int row = 0; row < ui->listWidgetSession->count(); row++ )
+        {
+            if( !ui->listWidgetSession->item( row )->isSelected() ) continue;
+            //Each selected clip gets the receipt
+            QString fileName = m_pSessionReceipts.at(row)->fileName();
+            m_pSessionReceipts.replace( row, m_pReceiptClipboard );
+            m_pSessionReceipts.at(row)->setFileName( fileName );
+        }
+    }
 }
 
 //New Session
