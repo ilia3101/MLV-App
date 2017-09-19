@@ -22,6 +22,8 @@
         <file>RetinaIMG/Recycle-Bin-icon.png</file>
         <file>RetinaIMG/Actions-window-fullscreen-icon.png</file>
         <file>RetinaIMG/speaker-icon.png</file>
+        <file>RetinaIMG/Actions-zoom-200-icon.png</file>
+        <file>RetinaIMG/Actions-zoom-400-icon.png</file>
     </qresource>
     <qresource prefix="/AudioVideoIcons">
         <file>AudioVideoIcons/audio-icon.png</file>
