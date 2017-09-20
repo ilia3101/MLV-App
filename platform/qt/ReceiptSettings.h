@@ -27,6 +27,12 @@ public:
     void setProfile( uint8_t num )  {m_profile = num;}
     void setFileName( QString fileName )      {m_fileName = fileName;}
     void setExportFileName( QString fileName ){m_exportFileName = fileName;}
+    void setVerticalStripes( int mode )       {m_vertical_stripes = mode;}
+    void setFocusPixels( int mode )           {m_focus_pixels = mode;}
+    void setBadPixels( int mode )             {m_bad_pixels = mode;}
+    void setChromaSmooth( int mode )          {m_chroma_smooth = mode;}
+    void setPatternNoise( int on )            {m_pattern_noise = on;}
+    void setDeflickerTarget( int value )      {m_deflicker_target = value;}
     int exposure( void )   {return m_exposure;}
     int temperature( void ){return m_temperature;}
     int tint( void )       {return m_tint;}
@@ -37,6 +43,12 @@ public:
     int ls( void )         {return m_ls;}
     int lightening( void ) {return m_lightening;}
     bool isHighlightReconstruction( void ){return m_highlightReconstruction;}
+    int verticalStripes( void ){return m_vertical_stripes;}
+    int focusPixels( void ){return m_focus_pixels;}
+    int badPixels( void )  {return m_bad_pixels;}
+    int chromaSmooth( void ){return m_chroma_smooth;}
+    int patternNoise( void ){return m_pattern_noise;}
+    int deflickerTarget( void ){return m_deflicker_target;}
     uint8_t profile( void ){return m_profile;}
     QString fileName( void ){return m_fileName;}
     QString exportFileName( void ){return m_exportFileName;}
@@ -52,6 +64,12 @@ private:
     int m_ls;
     int m_lightening;
     bool m_highlightReconstruction;
+    int m_vertical_stripes; // fix vertical stripes, 0 - do not fix", 1 - fix, 2 - calculate for every frame
+    int m_focus_pixels;     // fix focus pixels, false - do not fix, true - fix
+    int m_bad_pixels;       // fix bad pixels, 0 - do not fix, 1 - fix, 2 - makes algorithm aggresive to reveal more bad pixels
+    int m_chroma_smooth;    // chroma smooth, 2 - cs2x2, 3 cs3x3, 5 - cs5x5
+    int m_pattern_noise;    // fix pattern noise (0, 1)
+    int m_deflicker_target; // deflicker value
     uint8_t m_profile;
     QString m_fileName;
     QString m_exportFileName;

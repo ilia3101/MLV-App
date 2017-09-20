@@ -20,5 +20,11 @@ ReceiptSettings::ReceiptSettings()
     m_lr = 50;
     m_lightening = 0;
     m_highlightReconstruction = false;
+    m_vertical_stripes = 0;
+    m_focus_pixels = 0;
+    m_bad_pixels = 0;
+    m_chroma_smooth = 0;
+    m_pattern_noise = 0;
+    m_deflicker_target = 0;
     m_profile = 1;
 }

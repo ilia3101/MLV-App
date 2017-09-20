@@ -873,6 +873,36 @@ void MainWindow::openSession(QString fileName)
                                 m_pSessionReceipts.last()->setProfile( (uint8_t)Rxml.readElementText().toUInt() );
                                 Rxml.readNext();
                             }
+                            else if( Rxml.isStartElement() && Rxml.name() == "verticalStripes" )
+                            {
+                                m_pSessionReceipts.last()->setVerticalStripes( Rxml.readElementText().toInt() );
+                                Rxml.readNext();
+                            }
+                            else if( Rxml.isStartElement() && Rxml.name() == "focusPixels" )
+                            {
+                                m_pSessionReceipts.last()->setFocusPixels( Rxml.readElementText().toInt() );
+                                Rxml.readNext();
+                            }
+                            else if( Rxml.isStartElement() && Rxml.name() == "badPixels" )
+                            {
+                                m_pSessionReceipts.last()->setBadPixels( Rxml.readElementText().toInt() );
+                                Rxml.readNext();
+                            }
+                            else if( Rxml.isStartElement() && Rxml.name() == "chromaSmooth" )
+                            {
+                                m_pSessionReceipts.last()->setChromaSmooth( Rxml.readElementText().toInt() );
+                                Rxml.readNext();
+                            }
+                            else if( Rxml.isStartElement() && Rxml.name() == "patternNoise" )
+                            {
+                                m_pSessionReceipts.last()->setPatternNoise( Rxml.readElementText().toInt() );
+                                Rxml.readNext();
+                            }
+                            else if( Rxml.isStartElement() && Rxml.name() == "deflickerTarget" )
+                            {
+                                m_pSessionReceipts.last()->setDeflickerTarget( Rxml.readElementText().toInt() );
+                                Rxml.readNext();
+                            }
                             else if( Rxml.isStartElement() ) //future features
                             {
                                 Rxml.readElementText();
@@ -951,6 +981,12 @@ void MainWindow::saveSession(QString fileName)
         xmlWriter.writeTextElement( "lightening",              QString( "%1" ).arg( m_pSessionReceipts.at(i)->lightening() ) );
         xmlWriter.writeTextElement( "highlightReconstruction", QString( "%1" ).arg( m_pSessionReceipts.at(i)->isHighlightReconstruction() ) );
         xmlWriter.writeTextElement( "profile",                 QString( "%1" ).arg( m_pSessionReceipts.at(i)->profile() ) );
+        xmlWriter.writeTextElement( "verticalStripes",         QString( "%1" ).arg( m_pSessionReceipts.at(i)->verticalStripes() ) );
+        xmlWriter.writeTextElement( "focusPixels",             QString( "%1" ).arg( m_pSessionReceipts.at(i)->focusPixels() ) );
+        xmlWriter.writeTextElement( "badPixels",               QString( "%1" ).arg( m_pSessionReceipts.at(i)->badPixels() ) );
+        xmlWriter.writeTextElement( "chromaSmooth",            QString( "%1" ).arg( m_pSessionReceipts.at(i)->chromaSmooth() ) );
+        xmlWriter.writeTextElement( "patternNoise",            QString( "%1" ).arg( m_pSessionReceipts.at(i)->patternNoise() ) );
+        xmlWriter.writeTextElement( "deflickerTarget",         QString( "%1" ).arg( m_pSessionReceipts.at(i)->deflickerTarget() ) );
         xmlWriter.writeEndElement();
     }
     xmlWriter.writeEndElement();
@@ -1035,6 +1071,13 @@ void MainWindow::setSliders(ReceiptSettings *receipt)
 
     ui->checkBoxHighLightReconstruction->setChecked( receipt->isHighlightReconstruction() );
     ui->comboBoxProfile->setCurrentIndex( receipt->profile() );
+
+    ui->comboBoxVerticalStripesSwitch->setCurrentIndex( receipt->verticalStripes() );
+    ui->comboBoxFocusPixelSwitch->setCurrentIndex( receipt->focusPixels() );
+    ui->comboBoxBadPixelsSwitch->setCurrentIndex( receipt->badPixels() );
+    ui->comboBoxChromaSmoothSwitch->setCurrentIndex( receipt->chromaSmooth() );
+    ui->comboBoxPatternNoiseSwitch->setCurrentIndex( receipt->patternNoise() );
+    ui->spinBoxDeflickerTarget->setValue( receipt->deflickerTarget() );
 }
 
 //Set the receipt from sliders
@@ -1051,6 +1094,13 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     receipt->setLightening( ui->horizontalSliderLighten->value() );
     receipt->setHighlightReconstruction( ui->checkBoxHighLightReconstruction->isChecked() );
     receipt->setProfile( ui->comboBoxProfile->currentIndex() );
+
+    receipt->setVerticalStripes( ui->comboBoxVerticalStripesSwitch->currentIndex() );
+    receipt->setFocusPixels( ui->comboBoxFocusPixelSwitch->currentIndex() );
+    receipt->setBadPixels( ui->comboBoxBadPixelsSwitch->currentIndex() );
+    receipt->setChromaSmooth( ui->comboBoxChromaSmoothSwitch->currentIndex() );
+    receipt->setPatternNoise( ui->comboBoxPatternNoiseSwitch->currentIndex() );
+    receipt->setDeflickerTarget( ui->spinBoxDeflickerTarget->value() );
 }
 
 //Show the file in
