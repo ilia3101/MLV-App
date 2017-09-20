@@ -1,3 +1,4 @@
+
 /*
  * The following routines have been built from knowledge gathered
  * around the Web. I am not aware of any copyright problem with
@@ -170,3 +171,5 @@ static inline pixelvalue opt_med25(pixelvalue * p)
 
 #undef PIX_SORT
 #undef PIX_SWAP
+
+

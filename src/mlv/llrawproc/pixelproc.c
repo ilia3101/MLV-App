@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2017 The Magic Lantern Team
+ * Copyright (C) 2014 The Magic Lantern Team
+ * Copyright (C) 2017 bouncyball
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -25,10 +26,10 @@
 #include <math.h>
 #include <errno.h>
 
-#include "../mlv/raw.h"
+#include "../raw.h"
 #include "opt_med.h"
 #include "wirth.h"
-#include "pixel_proc.h"
+#include "pixelproc.h"
 
 #define EV_RESOLUTION 65536
 
@@ -55,54 +56,43 @@
 #define FMT_SIZE "%zu"
 #endif
 
-static int MAX_RAWVAL;
-
-void set_max_rawval(int32_t bpp)
+int * get_raw2ev(int black, int32_t bpp)
 {
-    MAX_RAWVAL = pow(2, bpp) - 1;
-}
-
-static int * get_raw2ev(int black)
-{
-    static int raw2ev[EV_RESOLUTION];
+    int max_rawval = pow(2, bpp) - 1;
+    int * raw2ev = (int *)malloc(EV_RESOLUTION*sizeof(int));
     
-    static int initialized = 0;
-    if(!initialized)
+    memset(raw2ev, 0, max_rawval * sizeof(int));
+    int i;
+    for (i = 0; i < max_rawval; i++)
     {
-        memset(raw2ev, 0, MAX_RAWVAL * sizeof(int));
-        int i;
-        for (i = 0; i < MAX_RAWVAL; i++)
-        {
-            raw2ev[i] = log2(MAX(1, i - black)) * EV_RESOLUTION;
-        }
-        initialized = 1;
+        raw2ev[i] = log2(MAX(1, i - black)) * EV_RESOLUTION;
     }
+
     return raw2ev;
 }
 
-static int * get_ev2raw(int black)
+int * get_ev2raw(int black)
 {
-    static int _ev2raw[24*EV_RESOLUTION];
+    int * _ev2raw = (int *)malloc(24*EV_RESOLUTION*sizeof(int));
     int* ev2raw = _ev2raw + 10*EV_RESOLUTION;
 
-    static int initialized = 0;
-    if(!initialized)
+    int i;
+    for (i = -10*EV_RESOLUTION; i < 14*EV_RESOLUTION; i++)
     {
-        int i;
-        for (i = -10*EV_RESOLUTION; i < 14*EV_RESOLUTION; i++)
-        {
-            ev2raw[i] = black + pow(2, (float)i / EV_RESOLUTION);
-        }
-        initialized = 1;
+        ev2raw[i] = black + pow(2, (float)i / EV_RESOLUTION);
     }
+
     return ev2raw;
 }
 
-void chroma_smooth(uint16_t * image_data, int width, int height, int black, int white, int method)
+void free_luts(int * raw2ev, int * ev2raw)
 {
-    int * raw2ev = get_raw2ev(black);
-    int * ev2raw = get_ev2raw(black);
-    
+    if(raw2ev) free(raw2ev);
+    if(ev2raw) free(ev2raw);
+}
+
+void chroma_smooth(int method, uint16_t * image_data, int width, int height, int black, int white, int * raw2ev, int * ev2raw)
+{
     if(raw2ev == NULL) return;
     
     uint16_t * buf = (uint16_t *)malloc(width*height*sizeof(uint16_t));
@@ -124,7 +114,9 @@ void chroma_smooth(uint16_t * image_data, int width, int height, int black, int 
             break;
             
         default:
+#ifndef STDOUT_SILENT
             err_printf("Unsupported chroma smooth method\n");
+#endif
             break;
     }
     
@@ -181,7 +173,7 @@ static inline void interpolate_pixel(uint16_t * image_data, int x, int y, int w,
             neighbours[k++] = -image_data[x+j+(y+i)*w];
         }
     }
-    
+
     /* replace the cold pixel with the median of the neighbours */
     image_data[x + y*w] = -median_int_wirth(neighbours, k);
 }
@@ -270,39 +262,18 @@ static inline void interpolate_around(uint16_t * image_data, int i, int w, int *
 }
 
 /* following code is for bad/focus pixel processing **********************************************/
-
-/* pixel map type */
-enum { PIX_FOCUS, PIX_BAD };
-
-struct pixel_xy
-{
-    int x;
-    int y;
-};
-
-struct pixel_map
-{
-    int type;
-    size_t count;
-    size_t capacity;
-    struct pixel_xy * pixels;
-};
-
-static struct pixel_map focus_pixel_map = { PIX_FOCUS, 0, 0, NULL };
-static struct pixel_map bad_pixel_map = { PIX_BAD, 0, 0, NULL };
-
-static int add_pixel_to_map(struct pixel_map * map, int x, int y)
+static int add_pixel_to_map(pixel_map * map, int x, int y)
 {
     if(!map->capacity)
     {
         map->capacity = 32;
-        map->pixels = malloc(sizeof(struct pixel_xy) * map->capacity);
+        map->pixels = malloc(sizeof(pixel_xy) * map->capacity);
         if(!map->pixels) goto malloc_error;
     }
     else if(map->count >= map->capacity)
     {
         map->capacity *= 2;
-        map->pixels = realloc(map->pixels, sizeof(struct pixel_xy) * map->capacity);
+        map->pixels = realloc(map->pixels, sizeof(pixel_xy) * map->capacity);
         if(!map->pixels) goto malloc_error;
     }
     
@@ -312,13 +283,14 @@ static int add_pixel_to_map(struct pixel_map * map, int x, int y)
     return 1;
 
 malloc_error:
-
+#ifndef STDOUT_SILENT
     err_printf("malloc error\n");
+#endif
     map->count = 0;
     return 0;
 }
 
-static int load_pixel_map(struct pixel_map * map, char * mlv_name, uint32_t camera_id, int raw_width, int raw_height, int dual_iso, int show_progress)
+static int load_pixel_map(pixel_map * map, uint32_t camera_id, int raw_width, int raw_height, int dual_iso)
 {
     const char * file_ext = ".fpm";
     const char * map_type = "focus";
@@ -329,16 +301,8 @@ static int load_pixel_map(struct pixel_map * map, char * mlv_name, uint32_t came
     }
 
     char file_name[1024];
-    strcpy(file_name, mlv_name);
-    char *ext_dot = strrchr(file_name, '.');
-    if(ext_dot) *ext_dot = '\000';
-    strcat(file_name, file_ext);
+    sprintf(file_name, "%x_%ix%i%s", camera_id, raw_width, raw_height, file_ext);
     FILE* f = fopen(file_name, "r");
-    if(!f && !map->type)
-    {
-        sprintf(file_name, "%x_%ix%i.fpm", camera_id, raw_width, raw_height);
-        f = fopen(file_name, "r");
-    }
     if(!f) return 0;
     
     uint32_t cam_id = 0x0;
@@ -355,104 +319,76 @@ static int load_pixel_map(struct pixel_map * map, char * mlv_name, uint32_t came
     {
         add_pixel_to_map(map, x, y);
     }
-    
-    if (show_progress)
+
+#ifndef STDOUT_SILENT
+    printf("\nUsing %s pixel map: '%s'\n"FMT_SIZE" pixels loaded\n", map_type, file_name, map->count);
+    if (dual_iso)
     {
-        printf("\nUsing %s pixel map: '%s'\n"FMT_SIZE" pixels loaded\n", map_type, file_name, map->count);
-        if (dual_iso)
-        {
-            printf("Dualiso interpolation method 'HORIZONTAL'\n");
-        }
+        printf("Dualiso interpolation method 'HORIZONTAL'\n");
     }
-    
+#endif
+
     fclose(f);
     return 1;
 }
 
-static void save_pixel_map(struct pixel_map * map, char * mlv_name, int show_progress)
+void fix_focus_pixels(pixel_map * focus_pixel_map,
+                      int * fpm_status,
+                      uint16_t * image_data,
+                      uint32_t camera_id,
+                      uint16_t width,
+                      uint16_t height,
+                      uint16_t pan_x,
+                      uint16_t pan_y,
+                      int32_t raw_width,
+                      int32_t raw_height,
+                      int average_method,
+                      int dual_iso,
+                      int * raw2ev,
+                      int * ev2raw)
 {
-    const char * file_ext = ".bpm";
-    const char * map_type = "bad";
-    if(!map->type)
-    {
-        file_ext = ".fpm";
-        map_type = "focus";
-    }
+    int w = width;
+    int h = height;
+    int cropX = (pan_x + 7) & ~7;
+    int cropY = pan_y & ~1;
 
-    char file_name[1024];
-    strcpy(file_name, mlv_name);
-    char *ext_dot = strrchr(file_name, '.');
-    if(ext_dot) *ext_dot = '\000';
-    strcat(file_name, file_ext);
-    FILE* f = fopen(file_name, "w");
-
-    if(!f)
-    {
-        if (show_progress)
-        {
-            printf("ERROR: Can not write to %s\n", file_name);
-        }
-        return;
-    }
-    
-    for (size_t i = 0; i < map->count; ++i)
-    {
-        fprintf(f, "%d \t %d\n", map->pixels[i].x, map->pixels[i].y);
-    }
-    
-    if (show_progress)
-    {
-        printf(""FMT_SIZE" %s pixels saved to '%s'\n", map->count, map_type, file_name);
-    }
-    
-    fclose(f);
-}
-
-void fix_focus_pixels(uint16_t * image_data, struct parameter_list par)
-{
-    int w = par.width;
-    int h = par.height;
-    int black = par.black_level;
-    int cropX = (par.pan_x + 7) & ~7;
-    int cropY = par.pan_y & ~1;
-
-    int * raw2ev = get_raw2ev(black);
-    int * ev2raw = get_ev2raw(black);
     if(raw2ev == NULL)
     {
+#ifndef STDOUT_SILENT
         err_printf("raw2ev LUT error\n");
+#endif
         return;
     }
 
-    static int fpm_status = 0; // 0 = not loaded, 1 = loaded, 2 = not exist
-    switch(fpm_status)
+    // fpm_status: 0 = not loaded, 1 = loaded, 2 = not exist
+    switch(*fpm_status)
     {
         case 0: // load fpm
         {
-            if(load_pixel_map(&focus_pixel_map, par.mlv_name, par.camera_id, par.raw_width, par.raw_height, par.dual_iso, par.show_progress))
-                fpm_status = 1;
+            if(load_pixel_map(focus_pixel_map, camera_id, raw_width, raw_height, dual_iso))
+                *fpm_status = 1;
             else
-                fpm_status = 2;
+                *fpm_status = 2;
         }
         case 1: // interpolate pixels
         {
-            for (size_t m = 0; m < focus_pixel_map.count; m++)
+            for (size_t m = 0; m < focus_pixel_map->count; m++)
             {
-                int x = focus_pixel_map.pixels[m].x - cropX;
-                int y = focus_pixel_map.pixels[m].y - cropY;
+                int x = focus_pixel_map->pixels[m].x - cropX;
+                int y = focus_pixel_map->pixels[m].y - cropY;
 
                 int i = x + y*w;
                 if (x > 2 && x < w - 3 && y > 2 && y < h - 3)
                 {
-                    if(par.dual_iso)
+                    if(dual_iso)
                     {
                         interpolate_horizontal(image_data, i, raw2ev, ev2raw);
                     }
-                    else if(par.fpi_method)
+                    else if(average_method) // 1 = raw2dng
                     {
                         interpolate_pixel(image_data, x, y, w, h);
                     }
-                    else
+                    else // 0 = mlvfs
                     {
                         interpolate_around(image_data, i, w, raw2ev, ev2raw);
                     }
@@ -463,7 +399,7 @@ void fix_focus_pixels(uint16_t * image_data, struct parameter_list par)
                     int horizontal_edge = (x >= w - 3 && x < w) || (x >= 0 && x <= 3);
                     int vertical_edge = (y >= h - 3 && y < h) || (y >= 0 && y <= 3);
                     
-                    if (horizontal_edge && !vertical_edge && !par.dual_iso)
+                    if (horizontal_edge && !vertical_edge && !dual_iso)
                     {
                         interpolate_vertical(image_data, i, w, raw2ev, ev2raw);
                     }
@@ -490,38 +426,57 @@ void fix_focus_pixels(uint16_t * image_data, struct parameter_list par)
     }
 }
 
-void fix_bad_pixels(uint16_t * image_data, struct parameter_list par)
-{
-    int w = par.width;
-    int h = par.height;
-    int black = par.black_level;
-    int cropX = (par.pan_x + 7) & ~7;
-    int cropY = par.pan_y & ~1;
+void fix_bad_pixels(pixel_map * bad_pixel_map,
+                    int * bpm_status,
+                    uint16_t * image_data,
+                    uint32_t camera_id,
+                    uint16_t width,
+                    uint16_t height,
+                    uint16_t pan_x,
+                    uint16_t pan_y,
+                    int32_t raw_width,
+                    int32_t raw_height,
+                    int32_t black_level,
+                    int aggressive,
+                    int average_method,
+                    int dual_iso,
+                    int * raw2ev,
+                    int * ev2raw)
 
-    int * raw2ev = get_raw2ev(black);
-    int * ev2raw = get_ev2raw(black);
+{
+    int w = width;
+    int h = height;
+    int black = black_level;
+    int cropX = (pan_x + 7) & ~7;
+    int cropY = pan_y & ~1;
+
     if(raw2ev == NULL)
     {
+#ifndef STDOUT_SILENT
         err_printf("raw2ev LUT error\n");
+#endif
         return;
     }
 
-    static int bpm_status = 0; // 0 = not loaded, 1 = loaded, 2 = not exist, 3 = no bad pixels found
-    switch(bpm_status)
+    // bpm_status: 0 = not loaded, 1 = loaded, 2 = not exist, 3 = no bad pixels found
+    switch(*bpm_status)
     {
         case 0: // load bpm
         {
-            if(load_pixel_map(&bad_pixel_map, par.mlv_name, par.camera_id, par.raw_width, par.raw_height, par.dual_iso, par.show_progress))
+            if(load_pixel_map(bad_pixel_map, camera_id, raw_width, raw_height, dual_iso))
             {
-                bpm_status = 2;
+                *bpm_status = 2;
             }
             else
             {
-                bpm_status = 1;
+                *bpm_status = 1;
             }
         }
         case 1: // search for bad pixels and save to file if needed
         {
+#ifndef STDOUT_SILENT
+            printf("\nSearching for bad pixel types:\n");
+#endif
             //just guess the dark noise for speed reasons
             int dark_noise = 12 ;
             int dark_min = black - (dark_noise * 8);
@@ -558,70 +513,72 @@ void fix_bad_pixels(uint16_t * image_data, struct parameter_list par)
                     
                     if (p < dark_min) //cold pixel
                     {
-                        add_pixel_to_map(&bad_pixel_map, x + cropX, y + cropY);
+#ifndef STDOUT_SILENT
+                        printf("COLD - p = %d, dark_min = %d, dark_max = %d\n", p, dark_min, dark_max);
+#endif
+                        add_pixel_to_map(bad_pixel_map, x + cropX, y + cropY);
                     }
                     else if ((raw2ev[p] - raw2ev[-max2] > 2 * EV_RESOLUTION) && (p > dark_max)) //hot pixel
                     {
-                        add_pixel_to_map(&bad_pixel_map, x + cropX, y + cropY);
+#ifndef STDOUT_SILENT
+                        printf("HOT  - p = %d, dark_min = %d, dark_max = %d\n", p, dark_min, dark_max);
+#endif
+                        add_pixel_to_map(bad_pixel_map, x + cropX, y + cropY);
                     }
-                    else if (par.aggressive)
+                    else if (aggressive)
                     {
+#ifndef STDOUT_SILENT
+                        printf("AGRR - p = %d, dark_min = %d, dark_max = %d\n", p, dark_min, dark_max);
+#endif
                         int max3 = kth_smallest_int(neighbours, k, 2);
                         if(((raw2ev[p] - raw2ev[-max2] > EV_RESOLUTION) || (raw2ev[p] - raw2ev[-max3] > EV_RESOLUTION)) && (p > dark_max))
                         {
-                            add_pixel_to_map(&bad_pixel_map, x + cropX, y + cropY);
+                            add_pixel_to_map(bad_pixel_map, x + cropX, y + cropY);
                         }
                     }
                 }
             }
             
-            if (par.show_progress)
+#ifndef STDOUT_SILENT
+            const char * method = NULL;
+            if (aggressive)
             {
-                const char * method = NULL;
-                if (par.aggressive)
-                {
-                    method = "AGGRESSIVE";
-                }
-                else
-                {
-                    method = "NORMAL";
-                }
-
-                printf("\nUsing bad pixel revealing method: '%s'\n", method);
-                if (par.dual_iso) printf("Dualiso iterpolation method 'HORIZONTAL'\n");
-                printf(""FMT_SIZE" bad pixels found for '%s' (crop: %d, %d)\n", bad_pixel_map.count, par.mlv_name, cropX, cropY);
-                if (!bad_pixel_map.count && par.save_bpm) printf("Bad pixel map file not written\n");
-            }
-
-            if (bad_pixel_map.count)
-            {
-                if (par.save_bpm)
-                {
-                    /* if save_bpm is non zero - save bad pixels to a file */
-                    save_pixel_map(&bad_pixel_map, par.mlv_name, par.show_progress);
-                }
-                bpm_status = 2; // bad pixels found, goto interpolation stage
+                method = "AGGRESSIVE";
             }
             else
             {
-                bpm_status = 3; // bad pixels not found, interpolation not needed
+                method = "NORMAL";
+            }
+
+            printf("\nUsing bad pixel revealing method: '%s'\n", method);
+            if (dual_iso) printf("Dualiso iterpolation method 'HORIZONTAL'\n");
+            printf(""FMT_SIZE" bad pixels found (crop: %d, %d)\n", bad_pixel_map->count, cropX, cropY);
+#endif
+
+            if (bad_pixel_map->count)
+            {
+                *bpm_status = 2; // bad pixels found, goto interpolation stage
+            }
+            else
+            {
+                *bpm_status = 3; // bad pixels not found, interpolation not needed
             }
         }
         case 2: // interpolate pixels
         {
-            for (size_t m = 0; m < bad_pixel_map.count; m++)
+            for (size_t m = 0; m < bad_pixel_map->count; m++)
             {
-                int x = bad_pixel_map.pixels[m].x - cropX;
-                int y = bad_pixel_map.pixels[m].y - cropY;
-               
+                int x = bad_pixel_map->pixels[m].x - cropX;
+                int y = bad_pixel_map->pixels[m].y - cropY;
+
                 int i = x + y*w;
                 if (x > 2 && x < w - 3 && y > 2 && y < h - 3)
                 {
-                    if(par.dual_iso)
+                    if(dual_iso)
                     {
                         interpolate_horizontal(image_data, i, raw2ev, ev2raw);
                     }
-                    else if(par.bpi_method)
+                    else if(average_method)
                     {
                         interpolate_pixel(image_data, x, y, w, h);
                     }
@@ -636,7 +593,7 @@ void fix_bad_pixels(uint16_t * image_data, struct parameter_list par)
                     int horizontal_edge = (x >= w - 3 && x < w) || (x >= 0 && x <= 3);
                     int vertical_edge = (y >= h - 3 && y < h) || (y >= 0 && y <= 3);
 
-                    if (horizontal_edge && !vertical_edge && !par.dual_iso)
+                    if (horizontal_edge && !vertical_edge && !dual_iso)
                     {
                         interpolate_vertical(image_data, i, w, raw2ev, ev2raw);
                     }
@@ -663,8 +620,8 @@ void fix_bad_pixels(uint16_t * image_data, struct parameter_list par)
     }
 }
 
-void free_pixel_maps()
+void free_pixel_maps(pixel_map * focus_pixel_map, pixel_map * bad_pixel_map)
 {
-    if(focus_pixel_map.pixels) free(focus_pixel_map.pixels);
-    if(bad_pixel_map.pixels) free(bad_pixel_map.pixels);
+    if(focus_pixel_map->pixels) free(focus_pixel_map->pixels);
+    if(bad_pixel_map->pixels) free(bad_pixel_map->pixels);
 }

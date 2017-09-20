@@ -1,3 +1,4 @@
+
 /*
  * Algorithm from N. Wirth's book, implementation by N. Devillard.
  * This code in public domain.

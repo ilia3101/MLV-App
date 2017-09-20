@@ -8,6 +8,7 @@
 #include "video_mlv.h"
 #include "raw.h"
 #include "mlv.h"
+#include "llrawproc/llrawproc.h"
 
 /* Debayering module */
 #include "../debayer/debayer.h"
@@ -16,6 +17,8 @@
 
 /* Lossless decompression */
 #include "liblj92/lj92.h"
+
+#define ROR32(v,a) ((v) >> (a) | (v) << (32-(a)))
 
 static uint32_t file_set_pos(FILE *stream, uint64_t offset, int whence)
 {
@@ -52,12 +55,16 @@ void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outpu
     int bitdepth = video->RAWI.raw_info.bits_per_pixel;
     int width = video->RAWI.xRes;
     int height = video->RAWI.yRes;
+    int pixels_count = width * height;
 
     /* How many bytes is RAW frame */
     int raw_frame_size = (width * height * bitdepth) / 8;
+    int unpacked_frame_size = width * height * sizeof(uint16_t);
 
-    /* Memory for RAW data */
+    /* Memory for original RAW data */
     uint8_t * RAWFrame = (uint8_t *)malloc( raw_frame_size );
+    /* Memory for decompressed or bit unpacked RAW data */
+    uint16_t * unpacked_frame = (uint16_t *)malloc( unpacked_frame_size );
 
     /* Move to start of frame in file and read the RAW data */
     file_set_pos(video->file, video->frame_offsets[frameIndex], SEEK_SET);
@@ -65,104 +72,45 @@ void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outpu
     /* If size is smaller than it should be, it must be compressed */
     if (video->frame_sizes[frameIndex] < video->frame_size)
     {
-        int components = 1;
         int raw_data_size = video->frame_sizes[frameIndex];
-        int pixels_count = width * height;
-
         fread(RAWFrame, sizeof(uint8_t), raw_data_size, video->file);
 
-        uint16_t * decoded_frame = (uint16_t *)malloc(width * height * sizeof(uint16_t));
-
+        int components = 1;
         lj92 decoder_object;
-
         lj92_open(&decoder_object, RAWFrame, raw_data_size, &width, &height, &bitdepth, &components);
-        lj92_decode(decoder_object, decoded_frame, 1, 0, NULL, 0);
-
-        for (int i = 0; i < pixels_count; ++i)
-        {
-            outputFrame[i] = (float)(decoded_frame[i] << 2);
-        }
-
+        lj92_decode(decoder_object, unpacked_frame, 1, 0, NULL, 0);
         lj92_close(decoder_object);
-        free(decoded_frame);
     }
-    else /* Is not compressed */
+    else /* If not compressed just unpack to 16bit */
     {
         fread(RAWFrame, sizeof(uint8_t), raw_frame_size, video->file);
 
-        switch (bitdepth)
+        uint32_t mask = (1 << bitdepth) - 1;
+        for (int i = 0; i < pixels_count; ++i)
         {
-            case 14:
-                /* 8 pixels every 14 bytes */
-                for (int raw_byte = 0; raw_byte < raw_frame_size; raw_byte += 14)
-                {
-                    /* Use the raw_pixblock struct to split up the bytes into parts of pixels */
-                    raw_pixblock_14 * pixel = (raw_pixblock_14 *)(RAWFrame + raw_byte);
-
-                    /* Location in output image */
-                    float * out_pixel = outputFrame + ((raw_byte/14) * 8);
-
-                    /* Join the pieces of pixels a-h from raw_pixblock and left shift 2 to get 16 bit values */
-                    * out_pixel = (float) ( (pixel->a) << 2 );
-                    out_pixel[1] = (float) ( (pixel->b_lo | (pixel->b_hi << 12)) << 2 );
-                    out_pixel[2] = (float) ( (pixel->c_lo | (pixel->c_hi << 10)) << 2 );
-                    out_pixel[3] = (float) ( (pixel->d_lo | (pixel->d_hi <<  8)) << 2 );
-                    out_pixel[4] = (float) ( (pixel->e_lo | (pixel->e_hi <<  6)) << 2 );
-                    out_pixel[5] = (float) ( (pixel->f_lo | (pixel->f_hi <<  4)) << 2 );
-                    out_pixel[6] = (float) ( (pixel->g_lo | (pixel->g_hi <<  2)) << 2 );
-                    out_pixel[7] = (float) ( (pixel->h) << 2 );
-                }
-
-                break;
-
-            case 12:
-                /* 8 pixels every 12 bytes */
-                for (int raw_byte = 0; raw_byte < raw_frame_size; raw_byte += 12)
-                {
-                    /* Use the raw_pixblock struct to split up the bytes into parts of pixels */
-                    raw_pixblock_12 * pixel = (raw_pixblock_12 *)(RAWFrame + raw_byte);
-
-                    /* Location in output image */
-                    float * out_pixel = outputFrame + ((raw_byte/12) * 8);
-
-                    /* Join the pieces of pixels a-h from raw_pixblock and left shift 2 to get 16 bit values */
-                    * out_pixel = (float) ( (pixel->a) << 4 );
-                    out_pixel[1] = (float) ( (pixel->b_lo | (pixel->b_hi << 8)) << 4 );
-                    out_pixel[2] = (float) ( (pixel->c_lo | (pixel->c_hi << 4)) << 4 );
-                    out_pixel[3] = (float) ( (pixel->d) << 4 );
-                    out_pixel[4] = (float) ( (pixel->e) << 4 );
-                    out_pixel[5] = (float) ( (pixel->f_lo | (pixel->f_hi << 8)) << 4 );
-                    out_pixel[6] = (float) ( (pixel->g_lo | (pixel->g_hi << 4)) << 4 );
-                    out_pixel[7] = (float) ( (pixel->h) << 4 );
-                }
-
-                break;
-
-            case 10:
-                /* 8 pixels every 10 bytes */
-                for (int raw_byte = 0; raw_byte < raw_frame_size; raw_byte += 10)
-                {
-                    /* Use the raw_pixblock struct to split up the bytes into parts of pixels */
-                    raw_pixblock_10 * pixel = (raw_pixblock_10 *)(RAWFrame + raw_byte);
-
-                    /* Location in output image */
-                    float * out_pixel = outputFrame + ((raw_byte/10) * 8);
-
-                    /* Join the pieces of pixels a-h from raw_pixblock and left shift 2 to get 16 bit values */
-                    * out_pixel = (float) ( (pixel->a) << 6 );
-                    out_pixel[1] = (float) ( (pixel->b_lo | (pixel->b_hi << 4)) << 6 );
-                    out_pixel[2] = (float) ( (pixel->c) << 6 );
-                    out_pixel[3] = (float) ( (pixel->d_lo | (pixel->d_hi << 8)) << 6 );
-                    out_pixel[4] = (float) ( (pixel->e_lo | (pixel->e_hi << 2)) << 6 );
-                    out_pixel[5] = (float) ( (pixel->f) << 6 );
-                    out_pixel[6] = (float) ( (pixel->g_lo | (pixel->g_hi << 6)) << 6 );
-                    out_pixel[7] = (float) ( (pixel->h) << 6 );
-                }
-
-                break;
+            uint32_t bits_offset = i * bitdepth;
+            uint32_t bits_address = bits_offset / 16;
+            uint32_t bits_shift = bits_offset % 16;
+            uint32_t rotate_value = 16 + ((32 - bitdepth) - bits_shift);
+            uint32_t uncorrected_data = *((uint32_t *)&((uint16_t *)RAWFrame)[bits_address]);
+            uint32_t data = ROR32(uncorrected_data, rotate_value);
+            unpacked_frame[i] = (uint16_t)(data & mask);
         }
     }
-    
+
+    /* apply low level raw processing to the unpacked_frame */
+    video->llrawproc->raw_image_buff = unpacked_frame;
+    video->llrawproc->raw_image_size = unpacked_frame_size;
+    applyLLRawProcObject(video);
+
+    /* convert uint16_t raw data -> float raw_data for processing with amaze or bilinear debayer, both need data input as float */
+    int shift_val = 16 - bitdepth;
+    for (int i = 0; i < pixels_count; ++i)
+    {
+        outputFrame[i] = (float)(unpacked_frame[i] << shift_val);
+    }
+
+    free(unpacked_frame);
     free(RAWFrame);
 }
 
@@ -309,6 +257,9 @@ mlvObject_t * initMlvObject()
     /* Will avoid memory conflicts with cache thread etc */
     pthread_mutex_init(&video->cache_mutex, NULL);
 
+    /* init low level raw processing object */
+    video->llrawproc = initLLRawProcObject();
+
     /* Retun pointer */
     return video;
 }
@@ -333,6 +284,7 @@ void freeMlvObject(mlvObject_t * video)
     free(video->rgb_raw_current_frame);
     free(video->cache_memory_block);
     free(video->frame_sizes);
+    free(video->llrawproc);
 
     /* Main 1 */
     free(video);
@@ -419,6 +371,10 @@ void openMlvClip(mlvObject_t * video, char * mlvPath)
 
         block_num++;
     }
+
+    /* back up black and white levels */
+    video->llrawproc->mlv_black_level = getMlvBlackLevel(video);
+    video->llrawproc->mlv_white_level = getMlvWhiteLevel(video);
 
     /* We work in an imaginary 14 bit world, so if its 10/12 bit, blackwhite levels shall be multiplied */
     if (getMlvBitdepth(video) == 12)
