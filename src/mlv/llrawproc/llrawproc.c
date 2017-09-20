@@ -110,10 +110,16 @@ void applyLLRawProcObject(mlvObject_t * video)
 #ifndef STDOUT_SILENT
         if (video->llrawproc->first_time)
         {
-            printf("\nFixing pattern noise...\n");
+            printf("\nFixing pattern noise... ");
         }
 #endif
         fix_pattern_noise((int16_t *)video->llrawproc->raw_image_buff, video->RAWI.xRes, video->RAWI.yRes, video->llrawproc->mlv_white_level, 0);
+#ifndef STDOUT_SILENT
+        if (video->llrawproc->first_time)
+        {
+            printf("Done\n");
+        }
+#endif
     }
 
     /* fix focus pixels */

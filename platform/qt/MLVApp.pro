@@ -25,7 +25,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 ##############
 # Silent Mode, deactivate for more debug info
 ##############
-#DEFINES += STDOUT_SILENT
+DEFINES += STDOUT_SILENT
 
 ##############
 # Compiler flags
@@ -133,8 +133,10 @@ RESOURCES += \
 
 DISTFILES += \
     Info.plist \
-    ../../src/imageio/README.md
+    ../../src/imageio/README.md \
+    MLVAPP.ico
 
+win32: RC_ICONS = MLVAPP.ico
 macx: ICON = MLVAPP.icns
 QMAKE_INFO_PLIST = Info.plist
 FFMPEG_FILES.files = FFmpeg/ffmpeg #Unzip the file before building the App!!!

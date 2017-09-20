@@ -173,7 +173,7 @@ static inline void interpolate_pixel(uint16_t * image_data, int x, int y, int w,
             neighbours[k++] = -image_data[x+j+(y+i)*w];
         }
     }
-    
+
     /* replace the cold pixel with the median of the neighbours */
     image_data[x + y*w] = -median_int_wirth(neighbours, k);
 }
@@ -553,16 +553,10 @@ void fix_bad_pixels(pixel_map * bad_pixel_map,
             printf("\nUsing bad pixel revealing method: '%s'\n", method);
             if (dual_iso) printf("Dualiso iterpolation method 'HORIZONTAL'\n");
             printf(""FMT_SIZE" bad pixels found (crop: %d, %d)\n", bad_pixel_map->count, cropX, cropY);
-            //if (!bad_pixel_map.count && save_bpm) printf("Bad pixel map file not written\n");
 #endif
 
             if (bad_pixel_map->count)
             {
-                //if (save_bpm)
-                //{
-                    /* if save_bpm is non zero - save bad pixels to a file */
-                //    save_pixel_map(&bad_pixel_map);
-                //}
                 *bpm_status = 2; // bad pixels found, goto interpolation stage
             }
             else
@@ -576,7 +570,7 @@ void fix_bad_pixels(pixel_map * bad_pixel_map,
             {
                 int x = bad_pixel_map->pixels[m].x - cropX;
                 int y = bad_pixel_map->pixels[m].y - cropY;
-               
+
                 int i = x + y*w;
                 if (x > 2 && x < w - 3 && y > 2 && y < h - 3)
                 {
