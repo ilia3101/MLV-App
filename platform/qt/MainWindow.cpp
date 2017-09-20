@@ -278,16 +278,16 @@ void MainWindow::drawFrame( void )
     if( ui->actionShowHistogram->isChecked() )
     {
         ui->labelHistogram->setPixmap( QPixmap::fromImage( m_pHistogram->getHistogramFromRaw( m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject) )
-                                                          .scaled( 200,
-                                                                   70,
+                                                          .scaled( ui->labelHistogram->width(),
+                                                                   ui->labelHistogram->height(),
                                                                    Qt::IgnoreAspectRatio, Qt::SmoothTransformation) ) ); //alternative: Qt::FastTransformation
         ui->labelHistogram->setAlignment( Qt::AlignCenter ); //Always in the middle
     }
     else if( ui->actionShowWaveFormMonitor->isChecked() )
     {
         ui->labelHistogram->setPixmap( QPixmap::fromImage( m_pWaveFormMonitor->getWaveFormMonitorFromRaw( m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject) )
-                                                          .scaled( 200,
-                                                                   70,
+                                                          .scaled( ui->labelHistogram->width(),
+                                                                   ui->labelHistogram->height(),
                                                                    Qt::IgnoreAspectRatio, Qt::SmoothTransformation) ) ); //alternative: Qt::FastTransformation
         ui->labelHistogram->setAlignment( Qt::AlignCenter ); //Always in the middle
     }
@@ -1528,7 +1528,13 @@ void MainWindow::on_actionPasteReceipt_triggered()
         for( int row = 0; row < ui->listWidgetSession->count(); row++ )
         {
             if( !ui->listWidgetSession->item( row )->isSelected() ) continue;
-            //Each selected clip gets the receipt
+            //If the actual is selected (may have changed since copy action), set sliders and get receipt
+            if( row == m_lastActiveClipInSession )
+            {
+                setSliders( m_pReceiptClipboard );
+                continue;
+            }
+            //Each other selected clip gets the receipt
             QString fileName = m_pSessionReceipts.at(row)->fileName();
             m_pSessionReceipts.replace( row, m_pReceiptClipboard );
             m_pSessionReceipts.at(row)->setFileName( fileName );
