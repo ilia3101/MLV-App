@@ -66,6 +66,8 @@ private slots:
     void on_comboBoxProfile_currentIndexChanged(int index);
     void on_actionZoomFit_triggered();
     void on_actionZoom100_triggered();
+    void on_actionZoom200_triggered();
+    void on_actionZoom400_triggered();
     void on_actionShowHistogram_triggered(bool checked);
     void on_actionShowWaveFormMonitor_triggered(bool checked);
     void on_actionAlwaysUseAMaZE_triggered(bool checked);

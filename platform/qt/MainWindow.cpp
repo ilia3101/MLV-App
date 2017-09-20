@@ -265,11 +265,29 @@ void MainWindow::drawFrame( void )
                                                                  Qt::KeepAspectRatio, Qt::SmoothTransformation) ) ); //alternative: Qt::FastTransformation
         m_pScene->setSceneRect( 0, 0, desWidth, desHeight );
     }
-    else
+    else if( ui->actionZoom100->isChecked() )
     {
         //Bring frame to GUI (100%)
         m_pGraphicsItem->setPixmap( QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 ) ) );
         m_pScene->setSceneRect( 0, 0, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject) );
+    }
+    else if( ui->actionZoom200->isChecked() )
+    {
+        //Bring frame to GUI (200%)
+        m_pGraphicsItem->setPixmap( QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
+                                                        .scaled( getMlvWidth(m_pMlvObject) * 2,
+                                                                 getMlvHeight(m_pMlvObject) * 2,
+                                                                 Qt::KeepAspectRatio, Qt::SmoothTransformation) ) );
+        m_pScene->setSceneRect( 0, 0, getMlvWidth(m_pMlvObject) * 2, getMlvHeight(m_pMlvObject) * 2 );
+    }
+    else
+    {
+        //Bring frame to GUI (400%)
+        m_pGraphicsItem->setPixmap( QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
+                                                        .scaled( getMlvWidth(m_pMlvObject) * 4,
+                                                                 getMlvHeight(m_pMlvObject) * 4,
+                                                                 Qt::KeepAspectRatio, Qt::SmoothTransformation) ) );
+        m_pScene->setSceneRect( 0, 0, getMlvWidth(m_pMlvObject) * 4, getMlvHeight(m_pMlvObject) * 4 );
     }
     //Add zebras on the image
     drawZebras();
@@ -588,7 +606,7 @@ void MainWindow::readSettings()
     }
     if( set.value( "maximized", false ).toBool() ) setWindowState( windowState() | Qt::WindowMaximized );
     set.endGroup();
-    if( set.value( "dragFrameMode", false ).toBool() ) ui->actionDropFrameMode->setChecked( true );
+    if( set.value( "dragFrameMode", true ).toBool() ) ui->actionDropFrameMode->setChecked( true );
     if( set.value( "audioOutput", true ).toBool() ) ui->actionAudioOutput->setChecked( true );
     if( set.value( "zebras", false ).toBool() ) ui->actionShowZebras->setChecked( true );
     m_lastSaveFileName = set.value( "lastFileName", QString( "/Users/" ) ).toString();
@@ -1422,6 +1440,8 @@ void MainWindow::on_actionZoomFit_triggered()
 {
     ui->actionZoomFit->setChecked( true );
     ui->actionZoom100->setChecked( false );
+    ui->actionZoom200->setChecked( false );
+    ui->actionZoom400->setChecked( false );
     m_frameChanged = true;
 }
 
@@ -1430,11 +1450,41 @@ void MainWindow::on_actionZoom100_triggered()
 {
     ui->actionZoomFit->setChecked( false );
     ui->actionZoom100->setChecked( true );
+    ui->actionZoom200->setChecked( false );
+    ui->actionZoom400->setChecked( false );
     if( !m_fileLoaded ) return;
     m_frameChanged = true;
     drawFrame();
     ui->graphicsView->horizontalScrollBar()->setValue( ( getMlvWidth(m_pMlvObject) - ui->graphicsView->width() ) / 2 );
     ui->graphicsView->verticalScrollBar()->setValue( ( getMlvHeight(m_pMlvObject) - ui->graphicsView->height() ) / 2 );
+}
+
+//Click on Zoom: 200%
+void MainWindow::on_actionZoom200_triggered()
+{
+    ui->actionZoomFit->setChecked( false );
+    ui->actionZoom100->setChecked( false );
+    ui->actionZoom200->setChecked( true );
+    ui->actionZoom400->setChecked( false );
+    if( !m_fileLoaded ) return;
+    m_frameChanged = true;
+    drawFrame();
+    ui->graphicsView->horizontalScrollBar()->setValue( ( ( getMlvWidth(m_pMlvObject) * 2 ) - ui->graphicsView->width() ) / 2 );
+    ui->graphicsView->verticalScrollBar()->setValue( ( ( getMlvHeight(m_pMlvObject) * 2 ) - ui->graphicsView->height() ) / 2 );
+}
+
+//Click on Zoom: 400%
+void MainWindow::on_actionZoom400_triggered()
+{
+    ui->actionZoomFit->setChecked( false );
+    ui->actionZoom100->setChecked( false );
+    ui->actionZoom200->setChecked( false );
+    ui->actionZoom400->setChecked( true );
+    if( !m_fileLoaded ) return;
+    m_frameChanged = true;
+    drawFrame();
+    ui->graphicsView->horizontalScrollBar()->setValue( ( ( getMlvWidth(m_pMlvObject) * 4 ) - ui->graphicsView->width() ) / 2 );
+    ui->graphicsView->verticalScrollBar()->setValue( ( ( getMlvHeight(m_pMlvObject) * 4 ) - ui->graphicsView->height() ) / 2 );
 }
 
 //Show Histogram or not
@@ -1702,6 +1752,8 @@ void MainWindow::pictureCustomContextMenuRequested(const QPoint &pos)
     QMenu myMenu;
     myMenu.addAction( ui->actionZoomFit );
     myMenu.addAction( ui->actionZoom100 );
+    myMenu.addAction( ui->actionZoom200 );
+    myMenu.addAction( ui->actionZoom400 );
     myMenu.addSeparator();
     myMenu.addAction( ui->actionShowZebras );
     if( ui->graphicsView->isFullScreen() )

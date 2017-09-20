@@ -161,6 +161,8 @@
     <addaction name="separator"/>
     <addaction name="actionZoomFit"/>
     <addaction name="actionZoom100"/>
+    <addaction name="actionZoom200"/>
+    <addaction name="actionZoom400"/>
     <addaction name="actionFullscreen"/>
    </widget>
    <widget class="QMenu" name="menuView">
@@ -1976,6 +1978,30 @@
    </property>
    <property name="shortcut">
     <string>Z</string>
+   </property>
+  </action>
+  <action name="actionZoom200">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="ressources.qrc">
+     <normaloff>:/RetinaIMG/RetinaIMG/Actions-zoom-200-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Actions-zoom-200-icon.png</iconset>
+   </property>
+   <property name="text">
+    <string>Zoom: 200%</string>
+   </property>
+  </action>
+  <action name="actionZoom400">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="ressources.qrc">
+     <normaloff>:/RetinaIMG/RetinaIMG/Actions-zoom-400-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Actions-zoom-400-icon.png</iconset>
+   </property>
+   <property name="text">
+    <string>Zoom: 400%</string>
    </property>
   </action>
  </widget>
