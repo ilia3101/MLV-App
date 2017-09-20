@@ -271,22 +271,23 @@ void MainWindow::drawFrame( void )
         m_pGraphicsItem->setPixmap( QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 ) ) );
         m_pScene->setSceneRect( 0, 0, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject) );
     }
+    //Add zebras on the image
     drawZebras();
 
     //GetHistogram
     if( ui->actionShowHistogram->isChecked() )
     {
         ui->labelHistogram->setPixmap( QPixmap::fromImage( m_pHistogram->getHistogramFromRaw( m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject) )
-                                                          .scaled( 200,
-                                                                   70,
+                                                          .scaled( ui->labelHistogram->width(),
+                                                                   ui->labelHistogram->height(),
                                                                    Qt::IgnoreAspectRatio, Qt::SmoothTransformation) ) ); //alternative: Qt::FastTransformation
         ui->labelHistogram->setAlignment( Qt::AlignCenter ); //Always in the middle
     }
     else if( ui->actionShowWaveFormMonitor->isChecked() )
     {
         ui->labelHistogram->setPixmap( QPixmap::fromImage( m_pWaveFormMonitor->getWaveFormMonitorFromRaw( m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject) )
-                                                          .scaled( 200,
-                                                                   70,
+                                                          .scaled( ui->labelHistogram->width(),
+                                                                   ui->labelHistogram->height(),
                                                                    Qt::IgnoreAspectRatio, Qt::SmoothTransformation) ) ); //alternative: Qt::FastTransformation
         ui->labelHistogram->setAlignment( Qt::AlignCenter ); //Always in the middle
     }
@@ -588,7 +589,8 @@ void MainWindow::readSettings()
     if( set.value( "maximized", false ).toBool() ) setWindowState( windowState() | Qt::WindowMaximized );
     set.endGroup();
     if( set.value( "dragFrameMode", false ).toBool() ) ui->actionDropFrameMode->setChecked( true );
-    if( set.value( "audioOutput", false ).toBool() ) ui->actionAudioOutput->setChecked( true );
+    if( set.value( "audioOutput", true ).toBool() ) ui->actionAudioOutput->setChecked( true );
+    if( set.value( "zebras", false ).toBool() ) ui->actionShowZebras->setChecked( true );
     m_lastSaveFileName = set.value( "lastFileName", QString( "/Users/" ) ).toString();
     m_codecProfile = set.value( "codecProfile", 4 ).toUInt();
     m_previewMode = set.value( "previewMode", 1 ).toUInt();
@@ -612,6 +614,7 @@ void MainWindow::writeSettings()
     set.endGroup();
     set.setValue( "dragFrameMode", ui->actionDropFrameMode->isChecked() );
     set.setValue( "audioOutput", ui->actionAudioOutput->isChecked() );
+    set.setValue( "zebras", ui->actionShowZebras->isChecked() );
     set.setValue( "lastFileName", m_lastSaveFileName );
     set.setValue( "codecProfile", m_codecProfile );
     set.setValue( "previewMode", m_previewMode );
@@ -1114,6 +1117,8 @@ void MainWindow::paintAudioTrack( void )
     {
         ui->labelAudioTrack->setPixmap( QPixmap::fromImage( m_pAudioWave->getMonoWave( NULL, 0, ui->labelAudioTrack->width() ) ) );
         ui->labelAudioTrack->setEnabled( false );
+        ui->labelAudioTrack->setMinimumSize( 1, 1 ); //Otherwise window won't be smaller than picture
+        ui->labelAudioTrack->setAlignment( Qt::AlignCenter ); //Always in the middle
         return;
     }
     //Make it disabled if clip has no audio
@@ -1142,7 +1147,9 @@ void MainWindow::drawZebras()
     //If option not checked we do nothing
     if( !ui->actionShowZebras->isChecked() ) return;
 
+    //Get image
     QImage image = m_pGraphicsItem->pixmap().toImage();
+    //Each pixel
     for( int y = 0; y < image.height(); y++ )
     {
         for( int x = 0; x < image.width(); x++ )
@@ -1151,15 +1158,18 @@ void MainWindow::drawZebras()
             //Overexposed
             if( pixel.lightness() >= 252 )
             {
+                //Set color red
                 image.setPixelColor( x, y, Qt::red );
             }
             //Underexposed
             if( pixel.lightness() <= 3 )
             {
+                //Set color blue
                 image.setPixelColor( x, y, Qt::blue );
             }
         }
     }
+    //Set image with zebras to viewer
     m_pGraphicsItem->setPixmap( QPixmap::fromImage( image ) );
 }
 
@@ -1507,7 +1517,29 @@ void MainWindow::on_actionCopyRecept_triggered()
 //Paste receipt from clipboard
 void MainWindow::on_actionPasteReceipt_triggered()
 {
-    setSliders( m_pReceiptClipboard );
+    //If one file is selected
+    if( ui->listWidgetSession->selectedItems().count() <= 1 )
+    {
+        //No matter which clip is selected, the actual clip gets the receipt
+        setSliders( m_pReceiptClipboard );
+    }
+    else
+    {
+        for( int row = 0; row < ui->listWidgetSession->count(); row++ )
+        {
+            if( !ui->listWidgetSession->item( row )->isSelected() ) continue;
+            //If the actual is selected (may have changed since copy action), set sliders and get receipt
+            if( row == m_lastActiveClipInSession )
+            {
+                setSliders( m_pReceiptClipboard );
+                continue;
+            }
+            //Each other selected clip gets the receipt
+            QString fileName = m_pSessionReceipts.at(row)->fileName();
+            m_pSessionReceipts.replace( row, m_pReceiptClipboard );
+            m_pSessionReceipts.at(row)->setFileName( fileName );
+        }
+    }
 }
 
 //New Session
