@@ -75,8 +75,6 @@ SOURCES += \
     ReceiptSettings.cpp \
     EditSliderValueDialog.cpp \
     DoubleClickLabel.cpp \
-    ../../src/processing/chroma_smooth.c \
-    ../../src/processing/pixel_proc.c \
     ../../src/mlv/audio_mlv.c \
     AudioWave.cpp \
     ResizeLabel.cpp
@@ -106,9 +104,6 @@ HEADERS += \
     ReceiptSettings.h \
     EditSliderValueDialog.h \
     DoubleClickLabel.h \
-    ../../src/processing/pixel_proc.h \
-    ../../src/processing/wirth.h \
-    ../../src/processing/opt_med.h \
     AudioWave.h \
     ResizeLabel.h
 
