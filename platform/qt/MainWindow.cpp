@@ -2036,3 +2036,56 @@ void MainWindow::on_actionShowZebras_triggered()
 {
     m_frameChanged = true;
 }
+
+//Combobox Focus Pixel changed
+void MainWindow::on_comboBoxFocusPixelSwitch_currentIndexChanged(int index)
+{
+    m_pMlvObject->llrawproc->focus_pixels = index;
+    m_frameChanged = true;
+}
+
+//Combobox Bad Pixel changed
+void MainWindow::on_comboBoxBadPixelsSwitch_currentIndexChanged(int index)
+{
+    m_pMlvObject->llrawproc->bad_pixels = index;
+    m_frameChanged = true;
+}
+
+//Combobox Chroma Smooth changed
+void MainWindow::on_comboBoxChromaSmoothSwitch_currentIndexChanged(int index)
+{
+    switch( index )
+    {
+    case 0: m_pMlvObject->llrawproc->chroma_smooth = 0;
+        break;
+    case 1: m_pMlvObject->llrawproc->chroma_smooth = 2;
+        break;
+    case 2: m_pMlvObject->llrawproc->chroma_smooth = 3;
+        break;
+    case 3: m_pMlvObject->llrawproc->chroma_smooth = 5;
+        break;
+    default: m_pMlvObject->llrawproc->chroma_smooth = 0;
+    }
+    m_frameChanged = true;
+}
+
+//Combobox Pattern Noise changed
+void MainWindow::on_comboBoxPatternNoiseSwitch_currentIndexChanged(int index)
+{
+    m_pMlvObject->llrawproc->pattern_noise = index;
+    m_frameChanged = true;
+}
+
+//Combobox Vertical Stripes changed
+void MainWindow::on_comboBoxVerticalStripesSwitch_currentIndexChanged(int index)
+{
+    m_pMlvObject->llrawproc->vertical_stripes = index;
+    m_frameChanged = true;
+}
+
+//Value Deflicker Target changed
+void MainWindow::on_spinBoxDeflickerTarget_valueChanged(int arg1)
+{
+    m_pMlvObject->llrawproc->deflicker_target = arg1;
+    m_frameChanged = true;
+}
