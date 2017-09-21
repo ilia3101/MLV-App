@@ -232,8 +232,22 @@ void MainWindow::drawFrame( void )
 {
     m_frameStillDrawing = true;
 
-    //enable low level raw fixes
-    m_pMlvObject->llrawproc->fix_raw = 1;
+    //Performance, if all corrections are off
+    if( ui->comboBoxBadPixelsSwitch->currentIndex() != 0
+     || ui->comboBoxFocusPixelSwitch->currentIndex() != 0
+     || ui->comboBoxChromaSmoothSwitch->currentIndex() != 0
+     || ui->comboBoxPatternNoiseSwitch->currentIndex() != 0
+     || ui->comboBoxVerticalStripesSwitch->currentIndex() != 0
+     || ui->spinBoxDeflickerTarget->value() != 0 )
+    {
+        //enable low level raw fixes
+        m_pMlvObject->llrawproc->fix_raw = 1;
+    }
+    else
+    {
+        //disable low level raw fixes
+        m_pMlvObject->llrawproc->fix_raw = 0;
+    }
 
     //Get frame from library
     getMlvProcessedFrame8( m_pMlvObject, ui->horizontalSliderPosition->value(), m_pRawImage );
@@ -517,6 +531,9 @@ void MainWindow::initGui( void )
     //Set fit to screen as default zoom
     ui->actionZoomFit->setChecked( true );
     ui->actionZoom100->setChecked( false );
+    ui->actionZoom200->setChecked( false );
+    ui->actionZoom400->setChecked( false );
+    m_zoomWasFit = true;
 
     //Set up image in GUI
     QImage image(":/IMG/IMG/histogram.png");
@@ -1525,6 +1542,7 @@ void MainWindow::on_actionZoomFit_triggered()
     ui->actionZoom200->setChecked( false );
     ui->actionZoom400->setChecked( false );
     m_frameChanged = true;
+    m_zoomWasFit = true;
 }
 
 //Click on Zoom: 100%
@@ -1534,11 +1552,26 @@ void MainWindow::on_actionZoom100_triggered()
     ui->actionZoom100->setChecked( true );
     ui->actionZoom200->setChecked( false );
     ui->actionZoom400->setChecked( false );
-    if( !m_fileLoaded ) return;
+    if( !m_fileLoaded )
+    {
+        m_zoomWasFit = false;
+        return;
+    }
+    double relativeScrollBarPosWidth = (double)ui->graphicsView->horizontalScrollBar()->value() / (double)ui->graphicsView->horizontalScrollBar()->maximum();
+    double relativeScrollBarPosHeight = (double)ui->graphicsView->verticalScrollBar()->value() / (double)ui->graphicsView->verticalScrollBar()->maximum();
     m_frameChanged = true;
     drawFrame();
-    ui->graphicsView->horizontalScrollBar()->setValue( ( getMlvWidth(m_pMlvObject) - ui->graphicsView->width() ) / 2 );
-    ui->graphicsView->verticalScrollBar()->setValue( ( getMlvHeight(m_pMlvObject) - ui->graphicsView->height() ) / 2 );
+    if( m_zoomWasFit )
+    {
+        ui->graphicsView->horizontalScrollBar()->setValue( ( getMlvWidth(m_pMlvObject) - ui->graphicsView->width() ) / 2 );
+        ui->graphicsView->verticalScrollBar()->setValue( ( getMlvHeight(m_pMlvObject) - ui->graphicsView->height() ) / 2 );
+    }
+    else
+    {
+        ui->graphicsView->horizontalScrollBar()->setValue( ( getMlvWidth(m_pMlvObject) - ui->graphicsView->width() ) * relativeScrollBarPosWidth );
+        ui->graphicsView->verticalScrollBar()->setValue( ( getMlvHeight(m_pMlvObject) - ui->graphicsView->height() ) * relativeScrollBarPosHeight );
+    }
+    m_zoomWasFit = false;
 }
 
 //Click on Zoom: 200%
@@ -1548,11 +1581,26 @@ void MainWindow::on_actionZoom200_triggered()
     ui->actionZoom100->setChecked( false );
     ui->actionZoom200->setChecked( true );
     ui->actionZoom400->setChecked( false );
-    if( !m_fileLoaded ) return;
+    if( !m_fileLoaded )
+    {
+        m_zoomWasFit = false;
+        return;
+    }
+    double relativeScrollBarPosWidth = (double)ui->graphicsView->horizontalScrollBar()->value() / (double)ui->graphicsView->horizontalScrollBar()->maximum();
+    double relativeScrollBarPosHeight = (double)ui->graphicsView->verticalScrollBar()->value() / (double)ui->graphicsView->verticalScrollBar()->maximum();
     m_frameChanged = true;
     drawFrame();
-    ui->graphicsView->horizontalScrollBar()->setValue( ( ( getMlvWidth(m_pMlvObject) * 2 ) - ui->graphicsView->width() ) / 2 );
-    ui->graphicsView->verticalScrollBar()->setValue( ( ( getMlvHeight(m_pMlvObject) * 2 ) - ui->graphicsView->height() ) / 2 );
+    if( m_zoomWasFit )
+    {
+        ui->graphicsView->horizontalScrollBar()->setValue( ( ( getMlvWidth(m_pMlvObject) * 2 ) - ui->graphicsView->width() ) / 2 );
+        ui->graphicsView->verticalScrollBar()->setValue( ( ( getMlvHeight(m_pMlvObject) * 2 ) - ui->graphicsView->height() ) / 2 );
+    }
+    else
+    {
+        ui->graphicsView->horizontalScrollBar()->setValue( ( ( getMlvWidth(m_pMlvObject) * 2 ) - ui->graphicsView->width() ) * relativeScrollBarPosWidth );
+        ui->graphicsView->verticalScrollBar()->setValue( ( ( getMlvHeight(m_pMlvObject) * 2 ) - ui->graphicsView->height() ) * relativeScrollBarPosHeight );
+    }
+    m_zoomWasFit = false;
 }
 
 //Click on Zoom: 400%
@@ -1562,11 +1610,26 @@ void MainWindow::on_actionZoom400_triggered()
     ui->actionZoom100->setChecked( false );
     ui->actionZoom200->setChecked( false );
     ui->actionZoom400->setChecked( true );
-    if( !m_fileLoaded ) return;
+    if( !m_fileLoaded )
+    {
+        m_zoomWasFit = false;
+        return;
+    }
+    double relativeScrollBarPosWidth = (double)ui->graphicsView->horizontalScrollBar()->value() / (double)ui->graphicsView->horizontalScrollBar()->maximum();
+    double relativeScrollBarPosHeight = (double)ui->graphicsView->verticalScrollBar()->value() / (double)ui->graphicsView->verticalScrollBar()->maximum();
     m_frameChanged = true;
     drawFrame();
-    ui->graphicsView->horizontalScrollBar()->setValue( ( ( getMlvWidth(m_pMlvObject) * 4 ) - ui->graphicsView->width() ) / 2 );
-    ui->graphicsView->verticalScrollBar()->setValue( ( ( getMlvHeight(m_pMlvObject) * 4 ) - ui->graphicsView->height() ) / 2 );
+    if( m_zoomWasFit )
+    {
+        ui->graphicsView->horizontalScrollBar()->setValue( ( ( getMlvWidth(m_pMlvObject) * 4 ) - ui->graphicsView->width() ) / 2 );
+        ui->graphicsView->verticalScrollBar()->setValue( ( ( getMlvHeight(m_pMlvObject) * 4 ) - ui->graphicsView->height() ) / 2 );
+    }
+    else
+    {
+        ui->graphicsView->horizontalScrollBar()->setValue( ( ( getMlvWidth(m_pMlvObject) * 4 ) - ui->graphicsView->width() ) * relativeScrollBarPosWidth );
+        ui->graphicsView->verticalScrollBar()->setValue( ( ( getMlvHeight(m_pMlvObject) * 4 ) - ui->graphicsView->height() ) * relativeScrollBarPosHeight );
+    }
+    m_zoomWasFit = false;
 }
 
 //Show Histogram or not

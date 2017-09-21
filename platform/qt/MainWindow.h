@@ -142,6 +142,7 @@ private:
     bool m_fpsOverride;
     bool m_audioExportEnabled;
     double m_frameRate;
+    bool m_zoomWasFit;
     QString m_lastSaveFileName;
     QProcess *m_pFFmpeg;
     ReceiptSettings *m_pReceiptClipboard;
