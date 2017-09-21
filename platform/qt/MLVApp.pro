@@ -89,8 +89,6 @@ HEADERS += \
         MainWindow.h \
     ../../src/debayer/debayer.h \
     ../../src/debayer/helpersse2.h \
-    ../../src/imageio/structs/imagestruct.h \
-    ../../src/imageio/imageio.h \
     ../../src/matrix/matrix.h \
     ../../src/mlv/mlv.h \
     ../../src/mlv/mlv_object.h \
@@ -133,7 +131,6 @@ RESOURCES += \
 
 DISTFILES += \
     Info.plist \
-    ../../src/imageio/README.md \
     MLVAPP.ico
 
 win32: RC_ICONS = MLVAPP.ico
