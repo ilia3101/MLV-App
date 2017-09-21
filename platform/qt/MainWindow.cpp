@@ -674,6 +674,8 @@ void MainWindow::startExport(QString fileName)
 
     // we always get amaze frames for exporting
     setMlvAlwaysUseAmaze( m_pMlvObject );
+    //enable low level raw fixes
+    m_pMlvObject->llrawproc->fix_raw = 1;
 
     //StatusDialog
     m_pStatusDialog->ui->progressBar->setMaximum( getMlvFrames( m_pMlvObject ) * 2 );
@@ -1177,6 +1179,16 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     receipt->setLightening( m_pSessionReceipts.at( row )->lightening() );
     receipt->setHighlightReconstruction( m_pSessionReceipts.at( row )->isHighlightReconstruction() );
     receipt->setProfile( m_pSessionReceipts.at( row )->profile() );
+
+    receipt->setVerticalStripes( m_pSessionReceipts.at( row )->verticalStripes() );
+    receipt->setFocusPixels( m_pSessionReceipts.at( row )->focusPixels() );
+    receipt->setFpiMethod( m_pSessionReceipts.at( row )->fpiMethod() );
+    receipt->setBadPixels( m_pSessionReceipts.at( row )->badPixels() );
+    receipt->setBpiMethod( m_pSessionReceipts.at( row )->bpiMethod() );
+    receipt->setChromaSmooth( m_pSessionReceipts.at( row )->chromaSmooth() );
+    receipt->setPatternNoise( m_pSessionReceipts.at( row )->patternNoise() );
+    receipt->setDeflickerTarget( m_pSessionReceipts.at( row )->deflickerTarget() );
+
     receipt->setFileName( m_pSessionReceipts.at( row )->fileName() );
     receipt->setExportFileName( fileName );
     m_exportQueue.append( receipt );
@@ -2075,6 +2087,8 @@ void MainWindow::exportHandler( void )
         openMlv( m_exportQueue.first()->fileName() );
         //Set sliders to receipt
         setSliders( m_exportQueue.first() );
+        qApp->processEvents();
+        qDebug() << "m_exportQueue.first()->chromaSmooth()" << m_exportQueue.first()->chromaSmooth();
         //Fill label in StatusDialog
         m_pStatusDialog->ui->label->setText( tr( "%1/%2 - %3" )
                                              .arg( jobNumber )
