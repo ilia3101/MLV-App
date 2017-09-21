@@ -160,7 +160,7 @@ void getMlvCameraTosRGBMatrix(mlvObject_t * video, double * outputMatrix)
             else
             {
                 /* 5D Mark II */
-                // original_matrix = matrix_5d2;
+                original_matrix = matrix_5d2;
             }
         }
         else if (camera_name[11] == '0')

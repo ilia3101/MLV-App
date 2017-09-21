@@ -123,9 +123,9 @@ void setMlvProcessing(mlvObject_t * video, processingObject_t * processing)
      * processing object defaults to 1,0,0,0,1,0,0,0,1) */
 
     /* Get camera matrix for MLV clip and set it in the processing object */
-    getMlvCameraTosRGBMatrix(video, camera_matrix);
+    //getMlvCameraTosRGBMatrix(video, camera_matrix);
     /* Set Camera to RGB */
-    processingCamTosRGBMatrix(processing, camera_matrix); /* Still not used in processing cos not working right */
+    //processingCamTosRGBMatrix(processing, camera_matrix); /* Still not used in processing cos not working right */
 
     /* BLACK / WHITE level */
     processingSetBlackAndWhiteLevel( processing, 
