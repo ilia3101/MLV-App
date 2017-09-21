@@ -12,6 +12,7 @@ extern "C" {
 /* RAW processing part */
 #include "processing/raw_processing.h"
 #include "debayer/debayer.h"
+#include "mlv/llrawproc/llrawproc.h"
 
 #ifdef __cplusplus
 }

@@ -2144,6 +2144,7 @@ void MainWindow::on_comboBoxBadPixelsSwitch_currentIndexChanged(int index)
 {
     //TODO: do it different!!!
     m_pMlvObject->llrawproc->bad_pixels = index;
+    reset_bpm_status(&m_pMlvObject->llrawproc->bad_pixel_map, &m_pMlvObject->llrawproc->bpm_status);
     m_pMlvObject->current_cached_frame_active = 0;
     m_frameChanged = true;
 }

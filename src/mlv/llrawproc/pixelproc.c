@@ -620,6 +620,18 @@ void fix_bad_pixels(pixel_map * bad_pixel_map,
     }
 }
 
+void reset_bpm_status(pixel_map * bad_pixel_map, int * bpm_status)
+{
+    *bpm_status = 0;
+    bad_pixel_map->count = 0;
+    bad_pixel_map->capacity = 0;
+    if(bad_pixel_map->pixels)
+    {
+        free(bad_pixel_map->pixels);
+        bad_pixel_map->pixels = NULL;
+    }
+}
+
 void free_pixel_maps(pixel_map * focus_pixel_map, pixel_map * bad_pixel_map)
 {
     if(focus_pixel_map->pixels) free(focus_pixel_map->pixels);

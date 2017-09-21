@@ -81,6 +81,8 @@ void fix_bad_pixels(pixel_map * bad_pixel_map,
                     int * raw2ev,
                     int * ev2raw);
 
+void reset_bpm_status(pixel_map * bad_pixel_map, int * bpm_status);
+
 /* free bufers used for raw processing */
 void free_pixel_maps(pixel_map * focus_pixel_map, pixel_map * bad_pixel_map);
 
