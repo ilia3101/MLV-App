@@ -1640,26 +1640,18 @@ void MainWindow::on_actionZoom400_triggered()
     m_zoomWasFit = false;
 }
 
-//Show Histogram or not
-void MainWindow::on_actionShowHistogram_triggered(bool checked)
+//Show Histogram
+void MainWindow::on_actionShowHistogram_triggered(void)
 {
-    ui->labelHistogram->setVisible( checked );
-    if( checked )
-    {
-        ui->actionShowWaveFormMonitor->setChecked( false );
-        m_frameChanged = true;
-    }
+    ui->actionShowWaveFormMonitor->setChecked( false );
+    m_frameChanged = true;
 }
 
-//Show Histogram or not
-void MainWindow::on_actionShowWaveFormMonitor_triggered(bool checked)
+//Show Waveform
+void MainWindow::on_actionShowWaveFormMonitor_triggered(void)
 {
-    ui->labelHistogram->setVisible( checked );
-    if( checked )
-    {
-        ui->actionShowHistogram->setChecked( false );
-        m_frameChanged = true;
-    }
+    ui->actionShowHistogram->setChecked( false );
+    m_frameChanged = true;
 }
 
 //Use AMaZE or not
