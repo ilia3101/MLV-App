@@ -1604,6 +1604,7 @@ void MainWindow::on_actionAlwaysUseAMaZE_triggered(bool checked)
         /* Don't use AMaZE */
         setMlvDontAlwaysUseAmaze( m_pMlvObject );
     }
+    m_pMlvObject->current_cached_frame_active = 0;
     m_frameChanged = true;
 }
 
