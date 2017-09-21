@@ -1770,13 +1770,14 @@ void MainWindow::on_listWidgetSession_customContextMenuRequested(const QPoint &p
     QMenu myMenu;
     if( ui->listWidgetSession->selectedItems().size() == 1 )
     {
-        myMenu.addAction("Show in Editor",  this, SLOT( rightClickShowFile() ) );
-        myMenu.addAction("Select all",  this, SLOT( selectAllFiles() ) );
-        myMenu.addAction("Delete selected file from session",  this, SLOT( deleteFileFromSession() ) );
+        myMenu.addAction( "Select all",  this, SLOT( selectAllFiles() ) );
+        myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Image-icon.png" ), "Show in editor",  this, SLOT( rightClickShowFile() ) );
+        myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Delete-icon.png" ), "Delete selected file from session",  this, SLOT( deleteFileFromSession() ) );
     }
     else
     {
-        myMenu.addAction("Delete selected files from session",  this, SLOT( deleteFileFromSession() ) );
+        myMenu.addAction( ui->actionPasteReceipt );
+        myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Delete-icon.png" ), "Delete selected files from session",  this, SLOT( deleteFileFromSession() ) );
     }
     // Show context menu at handling position
     myMenu.exec( globalPos );
