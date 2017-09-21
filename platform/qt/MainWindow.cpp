@@ -886,9 +886,19 @@ void MainWindow::openSession(QString fileName)
                                 m_pSessionReceipts.last()->setFocusPixels( Rxml.readElementText().toInt() );
                                 Rxml.readNext();
                             }
+                            else if( Rxml.isStartElement() && Rxml.name() == "fpiMethod" )
+                            {
+                                m_pSessionReceipts.last()->setFpiMethod( Rxml.readElementText().toInt() );
+                                Rxml.readNext();
+                            }
                             else if( Rxml.isStartElement() && Rxml.name() == "badPixels" )
                             {
                                 m_pSessionReceipts.last()->setBadPixels( Rxml.readElementText().toInt() );
+                                Rxml.readNext();
+                            }
+                            else if( Rxml.isStartElement() && Rxml.name() == "bpiMethod" )
+                            {
+                                m_pSessionReceipts.last()->setBpiMethod( Rxml.readElementText().toInt() );
                                 Rxml.readNext();
                             }
                             else if( Rxml.isStartElement() && Rxml.name() == "chromaSmooth" )
@@ -986,7 +996,9 @@ void MainWindow::saveSession(QString fileName)
         xmlWriter.writeTextElement( "profile",                 QString( "%1" ).arg( m_pSessionReceipts.at(i)->profile() ) );
         xmlWriter.writeTextElement( "verticalStripes",         QString( "%1" ).arg( m_pSessionReceipts.at(i)->verticalStripes() ) );
         xmlWriter.writeTextElement( "focusPixels",             QString( "%1" ).arg( m_pSessionReceipts.at(i)->focusPixels() ) );
+        xmlWriter.writeTextElement( "fpiMethod",               QString( "%1" ).arg( m_pSessionReceipts.at(i)->fpiMethod() ) );
         xmlWriter.writeTextElement( "badPixels",               QString( "%1" ).arg( m_pSessionReceipts.at(i)->badPixels() ) );
+        xmlWriter.writeTextElement( "bpiMethod",               QString( "%1" ).arg( m_pSessionReceipts.at(i)->bpiMethod() ) );
         xmlWriter.writeTextElement( "chromaSmooth",            QString( "%1" ).arg( m_pSessionReceipts.at(i)->chromaSmooth() ) );
         xmlWriter.writeTextElement( "patternNoise",            QString( "%1" ).arg( m_pSessionReceipts.at(i)->patternNoise() ) );
         xmlWriter.writeTextElement( "deflickerTarget",         QString( "%1" ).arg( m_pSessionReceipts.at(i)->deflickerTarget() ) );
@@ -1074,13 +1086,25 @@ void MainWindow::setSliders(ReceiptSettings *receipt)
 
     ui->checkBoxHighLightReconstruction->setChecked( receipt->isHighlightReconstruction() );
     ui->comboBoxProfile->setCurrentIndex( receipt->profile() );
+    on_comboBoxProfile_currentIndexChanged( receipt->profile() );
 
     ui->comboBoxVerticalStripesSwitch->setCurrentIndex( receipt->verticalStripes() );
+    on_comboBoxVerticalStripesSwitch_currentIndexChanged( receipt->verticalStripes() );
     ui->comboBoxFocusPixelSwitch->setCurrentIndex( receipt->focusPixels() );
+    on_comboBoxFocusPixelSwitch_currentIndexChanged( receipt->focusPixels() );
+    ui->comboBoxFocusPixelsInterpolationMethod->setCurrentIndex( receipt->fpiMethod() );
+    on_comboBoxFocusPixelsInterpolationMethod_currentIndexChanged( receipt->fpiMethod() );
     ui->comboBoxBadPixelsSwitch->setCurrentIndex( receipt->badPixels() );
+    on_comboBoxBadPixelsSwitch_currentIndexChanged( receipt->badPixels() );
+    ui->comboBoxBadPixelsInterpolationMethod->setCurrentIndex( receipt->bpiMethod() );
+    on_comboBoxBadPixelsInterpolationMethod_currentIndexChanged( receipt->bpiMethod() );
     ui->comboBoxChromaSmoothSwitch->setCurrentIndex( receipt->chromaSmooth() );
+    on_comboBoxChromaSmoothSwitch_currentIndexChanged( receipt->chromaSmooth() );
     ui->comboBoxPatternNoiseSwitch->setCurrentIndex( receipt->patternNoise() );
+    on_comboBoxPatternNoiseSwitch_currentIndexChanged( receipt->patternNoise() );
     ui->spinBoxDeflickerTarget->setValue( receipt->deflickerTarget() );
+    on_spinBoxDeflickerTarget_valueChanged( receipt->deflickerTarget() );
+    m_pMlvObject->current_cached_frame_active = 0;
 }
 
 //Set the receipt from sliders
@@ -1100,7 +1124,9 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
 
     receipt->setVerticalStripes( ui->comboBoxVerticalStripesSwitch->currentIndex() );
     receipt->setFocusPixels( ui->comboBoxFocusPixelSwitch->currentIndex() );
+    receipt->setFpiMethod( ui->comboBoxFocusPixelsInterpolationMethod->currentIndex() );
     receipt->setBadPixels( ui->comboBoxBadPixelsSwitch->currentIndex() );
+    receipt->setBpiMethod( ui->comboBoxBadPixelsInterpolationMethod->currentIndex() );
     receipt->setChromaSmooth( ui->comboBoxChromaSmoothSwitch->currentIndex() );
     receipt->setPatternNoise( ui->comboBoxPatternNoiseSwitch->currentIndex() );
     receipt->setDeflickerTarget( ui->spinBoxDeflickerTarget->value() );
@@ -2102,11 +2128,29 @@ void MainWindow::on_comboBoxFocusPixelSwitch_currentIndexChanged(int index)
     m_frameChanged = true;
 }
 
+//Combobox Focus Pixel Method changed
+void MainWindow::on_comboBoxFocusPixelsInterpolationMethod_currentIndexChanged(int index)
+{
+    //TODO: do it different!!!
+    m_pMlvObject->llrawproc->fpi_method = index;
+    m_pMlvObject->current_cached_frame_active = 0;
+    m_frameChanged = true;
+}
+
 //Combobox Bad Pixel changed
 void MainWindow::on_comboBoxBadPixelsSwitch_currentIndexChanged(int index)
 {
     //TODO: do it different!!!
     m_pMlvObject->llrawproc->bad_pixels = index;
+    m_pMlvObject->current_cached_frame_active = 0;
+    m_frameChanged = true;
+}
+
+//Combobox Bad Pixel Method changed
+void MainWindow::on_comboBoxBadPixelsInterpolationMethod_currentIndexChanged(int index)
+{
+    //TODO: do it different!!!
+    m_pMlvObject->llrawproc->bpi_method = index;
     m_pMlvObject->current_cached_frame_active = 0;
     m_frameChanged = true;
 }

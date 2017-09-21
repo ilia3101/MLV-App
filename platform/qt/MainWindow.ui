@@ -1174,6 +1174,9 @@
            </property>
            <item>
             <layout class="QHBoxLayout" name="horizontalLayout_13">
+             <property name="spacing">
+              <number>2</number>
+             </property>
              <property name="bottomMargin">
               <number>0</number>
              </property>
@@ -1222,7 +1225,7 @@
                 </font>
                </property>
                <property name="text">
-                <string>Int</string>
+                <string>Method</string>
                </property>
               </widget>
              </item>
@@ -1255,6 +1258,9 @@
            </item>
            <item>
             <layout class="QHBoxLayout" name="horizontalLayout_14">
+             <property name="spacing">
+              <number>2</number>
+             </property>
              <property name="bottomMargin">
               <number>0</number>
              </property>
@@ -1308,7 +1314,7 @@
                 </font>
                </property>
                <property name="text">
-                <string>Int</string>
+                <string>Method</string>
                </property>
               </widget>
              </item>
@@ -1513,6 +1519,9 @@
                </property>
                <property name="alignment">
                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="maximum">
+                <number>9999</number>
                </property>
               </widget>
              </item>

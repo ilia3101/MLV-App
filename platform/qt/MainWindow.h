@@ -106,7 +106,9 @@ private slots:
     void on_actionPlay_triggered(bool checked);
     void on_actionShowZebras_triggered();
     void on_comboBoxFocusPixelSwitch_currentIndexChanged(int index);
+    void on_comboBoxFocusPixelsInterpolationMethod_currentIndexChanged(int index);
     void on_comboBoxBadPixelsSwitch_currentIndexChanged(int index);
+    void on_comboBoxBadPixelsInterpolationMethod_currentIndexChanged(int index);
     void on_comboBoxChromaSmoothSwitch_currentIndexChanged(int index);
     void on_comboBoxPatternNoiseSwitch_currentIndexChanged(int index);
     void on_comboBoxVerticalStripesSwitch_currentIndexChanged(int index);
