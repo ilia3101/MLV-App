@@ -88,6 +88,9 @@ void freeLLRawProcObject(llrawprocObject_t * llrawproc)
 /* all low level raw processing takes place here */
 void applyLLRawProcObject(mlvObject_t * video)
 {
+    /* on fix_raw=0 skip raw processing alltogether */
+    if(!video->llrawproc->fix_raw) return;
+
     /* initialise LUTs */
     video->llrawproc->raw2ev = get_raw2ev(video->llrawproc->mlv_black_level, video->RAWI.raw_info.bits_per_pixel);
     video->llrawproc->ev2raw = get_ev2raw(video->llrawproc->mlv_black_level);

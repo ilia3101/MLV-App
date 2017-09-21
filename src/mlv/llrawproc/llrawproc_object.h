@@ -30,6 +30,7 @@
 typedef struct
 {
     /* flags */ 
+    int fix_raw;          // apply raw fixes or not, 0=do not apply 1=apply
     int vertical_stripes; // fix vertical stripes, 0 - do not fix", 1 - fix, 2 - calculate for every frame
     int focus_pixels;     // fix focus pixels, 0 - do not fix, 1 - fix
     int fpi_method;       // focus pixel interpolation method: 0 - mlvfs, 1 - raw2dng

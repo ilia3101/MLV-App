@@ -232,6 +232,8 @@ void MainWindow::drawFrame( void )
 {
     m_frameStillDrawing = true;
 
+    //enable low level raw fixes
+    m_pMlvObject->llrawproc->fix_raw = 1;
     //Get frame from library
     getMlvProcessedFrame8( m_pMlvObject, ui->horizontalSliderPosition->value(), m_pRawImage );
 
@@ -1139,6 +1141,9 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
 //Handles preview pictures - make sure that right clip for row is loaded before!
 void MainWindow::previewPicture( int row )
 {
+    //disable low level raw fixes for preview
+    m_pMlvObject->llrawproc->fix_raw = 0;
+
     //Get frame from library
     getMlvProcessedFrame8( m_pMlvObject, getMlvFrames( m_pMlvObject ) / 2, m_pRawImage );
 
