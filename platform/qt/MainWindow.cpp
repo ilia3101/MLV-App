@@ -234,6 +234,7 @@ void MainWindow::drawFrame( void )
 
     //enable low level raw fixes
     m_pMlvObject->llrawproc->fix_raw = 1;
+
     //Get frame from library
     getMlvProcessedFrame8( m_pMlvObject, ui->horizontalSliderPosition->value(), m_pRawImage );
 

@@ -32,13 +32,13 @@
 
 #include "../mlv_object.h"
 
-static void deflicker(mlvObject_t * video)
+static void deflicker(mlvObject_t * video, uint16_t * raw_image_buff, size_t raw_image_size)
 {
     uint16_t black = video->llrawproc->mlv_black_level;
     uint16_t white = (1 << video->RAWI.raw_info.bits_per_pixel) + 1;
 
     struct histogram * hist = hist_create(white);
-    hist_add(hist, video->llrawproc->raw_image_buff + 1, (uint32_t)((video->llrawproc->raw_image_size -  1) / 2), 1);
+    hist_add(hist, raw_image_buff + 1, (uint32_t)((raw_image_size - 1) / 2), 1);
     uint16_t median = hist_median(hist);
     double correction = log2((double) (video->llrawproc->deflicker_target - black) / (median - black));
     video->RAWI.raw_info.exposure_bias[0] = correction * 10000;
@@ -72,9 +72,6 @@ llrawprocObject_t * initLLRawProcObject()
     llrawproc->bad_pixel_map.type = PIX_BAD;
     llrawproc->bad_pixel_map.pixels = NULL;
 
-    llrawproc->raw_image_buff = NULL;
-    llrawproc->raw_image_size = 0;
-
     return llrawproc;
 }
 
@@ -86,7 +83,7 @@ void freeLLRawProcObject(llrawprocObject_t * llrawproc)
 }
 
 /* all low level raw processing takes place here */
-void applyLLRawProcObject(mlvObject_t * video)
+void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t raw_image_size)
 {
     /* on fix_raw=0 skip raw processing alltogether */
     if(!video->llrawproc->fix_raw) return;
@@ -104,7 +101,7 @@ void applyLLRawProcObject(mlvObject_t * video)
             printf("\nPer-frame exposure compensation: 'ON'\nDeflicker target: '%d'\n", video->llrawproc->deflicker_target);
         }
 #endif
-        deflicker(video);
+        deflicker(video, raw_image_buff, raw_image_size);
     }
 
     /* fix pattern noise */
@@ -116,7 +113,7 @@ void applyLLRawProcObject(mlvObject_t * video)
             printf("\nFixing pattern noise... ");
         }
 #endif
-        fix_pattern_noise((int16_t *)video->llrawproc->raw_image_buff, video->RAWI.xRes, video->RAWI.yRes, video->llrawproc->mlv_white_level, 0);
+        fix_pattern_noise((int16_t *)raw_image_buff, video->RAWI.xRes, video->RAWI.yRes, video->llrawproc->mlv_white_level, 0);
 #ifndef STDOUT_SILENT
         if (video->llrawproc->first_time)
         {
@@ -130,7 +127,7 @@ void applyLLRawProcObject(mlvObject_t * video)
     {
         fix_focus_pixels(&video->llrawproc->focus_pixel_map,
                          &video->llrawproc->fpm_status,
-                         video->llrawproc->raw_image_buff,
+                         raw_image_buff,
                          video->IDNT.cameraModel,
                          video->RAWI.xRes,
                          video->RAWI.yRes,
@@ -149,7 +146,7 @@ void applyLLRawProcObject(mlvObject_t * video)
     {
         fix_bad_pixels(&video->llrawproc->bad_pixel_map,
                        &video->llrawproc->bpm_status,
-                       video->llrawproc->raw_image_buff,
+                       raw_image_buff,
                        video->IDNT.cameraModel,
                        video->RAWI.xRes,
                        video->RAWI.yRes,
@@ -175,7 +172,7 @@ void applyLLRawProcObject(mlvObject_t * video)
         }
 #endif
         chroma_smooth(video->llrawproc->chroma_smooth,
-                      video->llrawproc->raw_image_buff,
+                      raw_image_buff,
                       video->RAWI.xRes,
                       video->RAWI.yRes,
                       video->llrawproc->mlv_black_level,
@@ -188,8 +185,8 @@ void applyLLRawProcObject(mlvObject_t * video)
     if (video->llrawproc->vertical_stripes)
     {
         fix_vertical_stripes(&video->llrawproc->stripe_corrections,
-                             video->llrawproc->raw_image_buff,
-                             video->llrawproc->raw_image_size / 2,
+                             raw_image_buff,
+                             raw_image_size / 2,
                              video->llrawproc->mlv_black_level,
                              video->llrawproc->mlv_white_level,
                              video->RAWI.raw_info.frame_size,

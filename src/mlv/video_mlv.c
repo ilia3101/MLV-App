@@ -99,9 +99,7 @@ void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outpu
     }
 
     /* apply low level raw processing to the unpacked_frame */
-    video->llrawproc->raw_image_buff = unpacked_frame;
-    video->llrawproc->raw_image_size = unpacked_frame_size;
-    applyLLRawProcObject(video);
+    applyLLRawProcObject(video, unpacked_frame, unpacked_frame_size);
 
     /* convert uint16_t raw data -> float raw_data for processing with amaze or bilinear debayer, both need data input as float */
     int shift_val = 16 - bitdepth;

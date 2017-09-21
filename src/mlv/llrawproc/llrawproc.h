@@ -28,6 +28,6 @@ llrawprocObject_t * initLLRawProcObject();
 void freeLLRawProcObject(llrawprocObject_t * llrawproc);
 
 /* all low level raw processing takes place here */
-void applyLLRawProcObject(mlvObject_t * video);
+void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t raw_image_size);
 
 #endif
