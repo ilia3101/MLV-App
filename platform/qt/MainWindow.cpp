@@ -1341,16 +1341,12 @@ void MainWindow::on_actionAbout_triggered()
                               "<html><img src=':/IMG/IMG/Magic_Lantern_logo_b.png' align='right'/>"
                               "<body><h3>%1</h3>"
                               " <p>%1 v%2</p>"
-                             /* " <p>Library v%3.%4 rev%5</p>"*/
                               " <p>%6</p>"
                               " <p>See <a href='%7'>%7</a> for more information.</p>"
                               " </body></html>" )
                              .arg( "MLV App" )
                              .arg( VERSION )
-                             /*.arg( 0 )
-                             .arg( 0 )
-                             .arg( 0 )*/
-                             .arg( "by Ilia3101 & masc. Thanks to bouncyball and others for the support!" )
+                             .arg( "by Ilia3101, bouncyball & masc." )
                              .arg( "https://github.com/ilia3101/MLV-App" ) );
 }
 
