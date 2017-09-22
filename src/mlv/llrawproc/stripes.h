@@ -41,7 +41,7 @@ void fix_vertical_stripes(stripes_correction * correction,
                           uint16_t width,
                           uint16_t height,
                           int vertical_stripes,
-                          int first_time);
+                          int * compute_stripes);
 
 void stripes_compute_correction(stripes_correction * correction,
                                 uint16_t * image_data,

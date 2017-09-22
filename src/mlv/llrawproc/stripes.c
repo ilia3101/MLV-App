@@ -230,10 +230,10 @@ void fix_vertical_stripes(stripes_correction * correction,
                           uint16_t width,
                           uint16_t height,
                           int vertical_stripes,
-                          int first_time)
+                          int * compute_stripes)
 {
     /* for speed: only detect correction factors from the first frame if not forced by value 2 */
-    if (first_time || vertical_stripes == 2)
+    if (*compute_stripes || vertical_stripes == 2)
     {
         stripes_compute_correction(correction, image_data, black_level, white_level, frame_size, width, height);
 #ifndef STDOUT_SILENT
@@ -261,6 +261,7 @@ void fix_vertical_stripes(stripes_correction * correction,
         }
         printf("\n");
 #endif
+        *compute_stripes = 0;
     }
 
     stripes_apply_correction(correction, image_data, size, black_level, white_level, width);

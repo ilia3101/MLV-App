@@ -62,6 +62,7 @@ llrawprocObject_t * initLLRawProcObject()
     llrawproc->dual_iso = 0;
     llrawproc->fpm_status = 0;
     llrawproc->bpm_status = 0;
+    llrawproc->compute_stripes = 1;
     llrawproc->first_time = 1;
 
     llrawproc->raw2ev = NULL;
@@ -88,11 +89,14 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
     /* on fix_raw=0 skip raw processing alltogether */
     if(!video->llrawproc->fix_raw) return;
 
-    /* initialise LUTs */
+    /* do first time stuff */
     if(video->llrawproc->first_time)
     {
+        /* initialise LUTs */
         video->llrawproc->raw2ev = get_raw2ev(video->llrawproc->mlv_black_level, video->RAWI.raw_info.bits_per_pixel);
         video->llrawproc->ev2raw = get_ev2raw(video->llrawproc->mlv_black_level);
+
+        video->llrawproc->first_time = 0;
     }
 
     /* deflicker RAW data */
@@ -196,8 +200,6 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
                              video->RAWI.xRes,
                              video->RAWI.yRes,
                              video->llrawproc->vertical_stripes,
-                             video->llrawproc->first_time);
+                             &video->llrawproc->compute_stripes);
     }
-
-    video->llrawproc->first_time = 0;
 }

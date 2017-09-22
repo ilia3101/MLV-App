@@ -2243,6 +2243,7 @@ void MainWindow::on_comboBoxVerticalStripesSwitch_currentIndexChanged(int index)
 {
     //TODO: do it different!!!
     m_pMlvObject->llrawproc->vertical_stripes = index;
+    m_pMlvObject->llrawproc->compute_stripes = 1;
     m_pMlvObject->current_cached_frame_active = 0;
     m_frameChanged = true;
 }
