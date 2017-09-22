@@ -150,7 +150,9 @@
      <string>Playback</string>
     </property>
     <addaction name="actionGoto_First_Frame"/>
+    <addaction name="actionPreviousFrame"/>
     <addaction name="actionPlay"/>
+    <addaction name="actionNextFrame"/>
     <addaction name="actionLoop"/>
     <addaction name="separator"/>
     <addaction name="actionAudioOutput"/>
@@ -216,7 +218,9 @@
    <addaction name="actionPasteReceipt"/>
    <addaction name="actionClip_Information"/>
    <addaction name="actionGoto_First_Frame"/>
+   <addaction name="actionPreviousFrame"/>
    <addaction name="actionPlay"/>
+   <addaction name="actionNextFrame"/>
    <addaction name="actionLoop"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
@@ -2056,6 +2060,24 @@
    </property>
    <property name="text">
     <string>Zoom: 400%</string>
+   </property>
+  </action>
+  <action name="actionNextFrame">
+   <property name="icon">
+    <iconset resource="ressources.qrc">
+     <normaloff>:/AudioVideoIcons/AudioVideoIcons/forward-icon.png</normaloff>:/AudioVideoIcons/AudioVideoIcons/forward-icon.png</iconset>
+   </property>
+   <property name="text">
+    <string>Next Frame</string>
+   </property>
+  </action>
+  <action name="actionPreviousFrame">
+   <property name="icon">
+    <iconset resource="ressources.qrc">
+     <normaloff>:/AudioVideoIcons/AudioVideoIcons/rewind-icon.png</normaloff>:/AudioVideoIcons/AudioVideoIcons/rewind-icon.png</iconset>
+   </property>
+   <property name="text">
+    <string>Previous Frame</string>
    </property>
   </action>
  </widget>

@@ -2256,3 +2256,15 @@ void MainWindow::on_spinBoxDeflickerTarget_valueChanged(int arg1)
     m_pMlvObject->current_cached_frame_active = 0;
     m_frameChanged = true;
 }
+
+//Goto next frame
+void MainWindow::on_actionNextFrame_triggered()
+{
+    ui->horizontalSliderPosition->setValue( ui->horizontalSliderPosition->value() + 1 );
+}
+
+//Goto previous frame
+void MainWindow::on_actionPreviousFrame_triggered()
+{
+    ui->horizontalSliderPosition->setValue( ui->horizontalSliderPosition->value() - 1 );
+}
