@@ -89,8 +89,11 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
     if(!video->llrawproc->fix_raw) return;
 
     /* initialise LUTs */
-    video->llrawproc->raw2ev = get_raw2ev(video->llrawproc->mlv_black_level, video->RAWI.raw_info.bits_per_pixel);
-    video->llrawproc->ev2raw = get_ev2raw(video->llrawproc->mlv_black_level);
+    if(video->llrawproc->first_time)
+    {
+        video->llrawproc->raw2ev = get_raw2ev(video->llrawproc->mlv_black_level, video->RAWI.raw_info.bits_per_pixel);
+        video->llrawproc->ev2raw = get_ev2raw(video->llrawproc->mlv_black_level);
+    }
 
     /* deflicker RAW data */
     if (video->llrawproc->deflicker_target)

@@ -347,6 +347,8 @@ void fix_focus_pixels(pixel_map * focus_pixel_map,
                       int * raw2ev,
                       int * ev2raw)
 {
+    if(*fpm_status == 2) return;
+
     int w = width;
     int h = height;
     int cropX = (pan_x + 7) & ~7;
@@ -421,6 +423,7 @@ void fix_focus_pixels(pixel_map * focus_pixel_map,
         }
         default:
         {
+            printf("Muahahaha\n");
             break;
         }
     }
@@ -444,6 +447,8 @@ void fix_bad_pixels(pixel_map * bad_pixel_map,
                     int * ev2raw)
 
 {
+    if(*bpm_status == 3) return;
+
     int w = width;
     int h = height;
     int black = black_level;
