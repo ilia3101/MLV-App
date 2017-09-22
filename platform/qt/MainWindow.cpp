@@ -232,22 +232,8 @@ void MainWindow::drawFrame( void )
 {
     m_frameStillDrawing = true;
 
-    //Performance, if all corrections are off
-    if( ui->comboBoxBadPixelsSwitch->currentIndex() != 0
-     || ui->comboBoxFocusPixelSwitch->currentIndex() != 0
-     || ui->comboBoxChromaSmoothSwitch->currentIndex() != 0
-     || ui->comboBoxPatternNoiseSwitch->currentIndex() != 0
-     || ui->comboBoxVerticalStripesSwitch->currentIndex() != 0
-     || ui->spinBoxDeflickerTarget->value() != 0 )
-    {
-        //enable low level raw fixes
-        m_pMlvObject->llrawproc->fix_raw = 1;
-    }
-    else
-    {
-        //disable low level raw fixes
-        m_pMlvObject->llrawproc->fix_raw = 0;
-    }
+    //enable low level raw fixes
+    m_pMlvObject->llrawproc->fix_raw = 1;
 
     //Get frame from library
     getMlvProcessedFrame8( m_pMlvObject, ui->horizontalSliderPosition->value(), m_pRawImage );
