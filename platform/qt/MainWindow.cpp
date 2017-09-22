@@ -405,7 +405,7 @@ void MainWindow::openMlv( QString fileName )
     m_pInfoDialog->ui->tableWidget->item( 6, 1 )->setText( QString( "%1 µs" ).arg( getMlvShutter( m_pMlvObject ) ) );
     m_pInfoDialog->ui->tableWidget->item( 7, 1 )->setText( QString( "f/%1" ).arg( getMlvAperture( m_pMlvObject ) / 100.0, 0, 'f', 1 ) );
     m_pInfoDialog->ui->tableWidget->item( 8, 1 )->setText( QString( "%1" ).arg( (int)getMlvIso( m_pMlvObject ) ) );
-    m_pInfoDialog->ui->tableWidget->item( 9, 1 )->setText( QString( "%1 bits, %2" ).arg( getMlvBitdepth( m_pMlvObject ) ).arg( !(getMlvVideoClass( m_pMlvObject ) & MLV_VIDEO_CLASS_FLAG_LJ92) ? "Uncompressed" : "Lossless") );
+    m_pInfoDialog->ui->tableWidget->item( 9, 1 )->setText( QString( "%1 bits, %2" ).arg( getMlvBitdepth( m_pMlvObject ) ).arg( getMlvCompression( m_pMlvObject ) ) );
     if( doesMlvHaveAudio( m_pMlvObject ) )
     {
         m_pInfoDialog->ui->tableWidget->item( 10, 1 )->setText( QString( "%1 channel(s), %2 kHz" )

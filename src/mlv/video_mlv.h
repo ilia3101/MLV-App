@@ -79,7 +79,7 @@ void getMlvAudioData(mlvObject_t * video, int16_t * outputAudio);
 #define getMlvHeight(video) (video)->RAWI.yRes
 #define getMlvFrames(video) (video)->frames
 #define getMlvBitdepth(video) (video)->RAWI.raw_info.bits_per_pixel
-#define getMlvVideoClass(video) (video)->MLVI.videoClass
+#define getMlvCompression(video) !((video)->MLVI.videoClass & MLV_VIDEO_CLASS_FLAG_LJ92) ? "Uncompressed" : "Lossless"
 #define getMlvFramerate(video) (video)->frame_rate
 #define getMlvLens(video) (video)->LENS.lensName
 #define getMlvCamera(video) (video)->IDNT.cameraName
