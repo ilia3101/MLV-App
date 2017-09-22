@@ -129,6 +129,7 @@ private:
     QGraphicsScene* m_pScene;
     QLabel *m_pCachingStatus;
     QLabel *m_pFpsStatus;
+    QLabel *m_pFrameNumber;
     uint8_t *m_pRawImage;
     uint32_t m_cacheSizeMB;
     uint8_t m_codecProfile;
@@ -176,6 +177,7 @@ private:
     double getFramerate( void );
     void paintAudioTrack( void );
     void drawZebras( void );
+    void drawFrameNumberLabel( void );
 
 signals:
     void exportReady( void );

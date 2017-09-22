@@ -437,6 +437,9 @@ void MainWindow::openMlv( QString fileName )
     //Audio Track
     paintAudioTrack();
 
+    //Frame label
+    drawFrameNumberLabel();
+
     //enable drawing
     m_dontDraw = false;
 
@@ -545,6 +548,14 @@ void MainWindow::initGui( void )
     m_pFpsStatus->setText( tr( "Playback: 0 fps" ) );
     //m_pFpsStatus->setFrameStyle(QFrame::Panel | QFrame::Sunken);
     statusBar()->addWidget( m_pFpsStatus );
+
+    //Set up frame number label
+    m_pFrameNumber = new QLabel( statusBar() );
+    m_pFrameNumber->setMaximumWidth( 110 );
+    m_pFrameNumber->setMinimumWidth( 110 );
+    drawFrameNumberLabel();
+    //m_pFpsStatus->setFrameStyle(QFrame::Panel | QFrame::Sunken);
+    statusBar()->addWidget( m_pFrameNumber );
 
     //Read Settings
     readSettings();
@@ -1059,6 +1070,9 @@ void MainWindow::deleteSession()
 
     //Adapt slider to clip and move to position 0
     ui->horizontalSliderPosition->setValue( 0 );
+
+    //Set label
+    drawFrameNumberLabel();
 }
 
 //returns true if file is already in session
@@ -1288,6 +1302,21 @@ void MainWindow::drawZebras()
     m_pGraphicsItem->setPixmap( QPixmap::fromImage( image ) );
 }
 
+//Write the frame number into the label
+void MainWindow::drawFrameNumberLabel( void )
+{
+    if( m_fileLoaded )
+    {
+        m_pFrameNumber->setText( tr( "Frame %1/%2" )
+                                 .arg( ui->horizontalSliderPosition->value() + 1 )
+                                 .arg( ui->horizontalSliderPosition->maximum() + 1 ) );
+    }
+    else
+    {
+        m_pFrameNumber->setText( tr( "Frame 0/0" ) );
+    }
+}
+
 //Edit progressbar from FFmpeg output
 void MainWindow::readFFmpegOutput( void )
 {
@@ -1352,6 +1381,8 @@ void MainWindow::on_actionAbout_triggered()
 void MainWindow::on_horizontalSliderPosition_valueChanged(void)
 {
     m_frameChanged = true;
+
+    drawFrameNumberLabel();
 }
 
 //Show Info Dialog
