@@ -25,7 +25,7 @@
 #include "ExportSettingsDialog.h"
 #include "EditSliderValueDialog.h"
 
-#define VERSION "0.7 alpha"
+#define VERSION "0.8 alpha"
 
 QMutex gMutex;
 QMutex gMutexPng16;
