@@ -67,6 +67,10 @@ typedef struct {
     /* Limited to 0.0 - 0.6 range */
     double     lighten;
 
+    /* Sharpen: 0.0-1.0 range; default 0 */
+    double     sharpen;
+    double     sharpen_kernel[5]; /* Sharpen kernel calculated on setting sharpening */
+
     /* For whitebalance */
     double     wb_multipliers[3];
     
@@ -77,6 +81,7 @@ typedef struct {
     uint16_t * pre_calc_curve_b; int use_rgb_curves; /* The r, g and b curves can be disabled */
     uint16_t * pre_calc_levels; /* For black level and white level */
     uint16_t * pre_calc_gamma;
+    int32_t  * pre_calc_sharpen[5];
     /* Precalculated values for saturation */
     int32_t  * pre_calc_sat; int use_saturation; /* Saturation is disable-able */
 

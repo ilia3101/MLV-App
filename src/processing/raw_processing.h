@@ -60,6 +60,12 @@ void processingSetLightening(processingObject_t * processing, double lighten); /
 
 
 
+/* Set sharpening, 0.0-1.0 range */
+void processingSetSharpening(processingObject_t * processing, double sharpen);
+#define processingGetSharpening(processing) (processing)->sharpen
+
+
+
 /* 3-way correction, range of saturation and hue is 0.0-1.0 (Currently not doing anything) */
 void processingSet3WayCorrection( processingObject_t * processing,
                                   double highlightHue, double highlightSaturation,
@@ -70,7 +76,7 @@ void processingSet3WayCorrection( processingObject_t * processing,
 
 /* Just don't touch this or keep at ~2.2 (or more for a lighter image) */
 void processingSetGamma(processingObject_t * processing, double gammaValue);
-#define processingGetGamma(processing) processing->gamma_power
+#define processingGetGamma(processing) (processing)->gamma_power
 
 
 

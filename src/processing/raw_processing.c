@@ -36,6 +36,8 @@ processingObject_t * initProcessingObject()
     /* For precalculated matrix values */
     for (int i = 0; i < 9; ++i)
         processing->pre_calc_matrix[i] = malloc( 65536 * sizeof(int32_t) );
+    for (int i = 0; i < 5; ++i)
+        processing->pre_calc_sharpen[i] = malloc( 65536 * sizeof(int32_t) );
 
     /* A nothing matrix */
     processing->cam_to_sRGB_matrix[0] = 1.0;
@@ -54,6 +56,7 @@ processingObject_t * initProcessingObject()
     processingSetSaturation(processing, 1.0);
     processingSetContrast(processing, 0.73, 5.175, 0.5, 0.0, 0.0);
     processingSetImageProfile(processing, PROFILE_TONEMAPPED);
+    processingSetSharpening(processing, 0.0);
 
     /* Just in case (should be done tho already) */
     processing_update_matrices(processing);
@@ -185,6 +188,30 @@ void applyProcessingObject( processingObject_t * processing,
             pix[2] = processing->pre_calc_curve_b[ pix[2] ];
         }
     }
+
+    if (!(processingGetSharpening(processing) < 0.001))
+    {
+        int32_t ** k = processing->pre_calc_sharpen; /* Sharpen kernel */
+        int y_max = imageY - 1;
+        int x_max = (imageX - 1) * 3; /* X in multiples of 3 for RGB */
+        
+        for (int y = 1; y < y_max; ++y)
+        {
+            uint16_t * row = img + (y * imageX * 3); /* current row */
+            uint16_t * p_row = img + ((y-1) * imageX * 3); /* previous */
+            uint16_t * n_row = img + ((y+1) * imageX * 3); /* next */
+            for (int x = 3; x < x_max; ++x)
+            {
+                int32_t sharp = k[2][row[x]] 
+                              + k[0][p_row[x]]
+                              + k[4][n_row[x]]
+                              + k[1][row[x-3]]
+                              + k[3][row[x+3]];
+                
+                row[x] = LIMIT16(sharp);
+            }
+        }
+    }
 }
 
 /* Set contrast (S-curve really) */
@@ -251,6 +278,31 @@ void processingSetSaturation(processingObject_t * processing, double saturationF
     {
         double value = (i - 65536) * saturationFactor;
         processing->pre_calc_sat[i] = value;
+    }
+}
+
+
+void processingSetSharpening(processingObject_t * processing, double sharpen)
+{
+    processing->sharpen = sharpen;
+
+    /* for some reason ~0.3 is the limit for not getting bluegh artifcats */
+    sharpen *= 0.29;
+
+    /* Sharpening convolution matrix (well, middle 5 elements) */
+    memset(processing->sharpen_kernel, 0, 5 * sizeof(double));
+    processing->sharpen_kernel[0] = -sharpen;
+    processing->sharpen_kernel[1] = -sharpen;
+    processing->sharpen_kernel[3] = -sharpen;
+    processing->sharpen_kernel[4] = -sharpen;
+    processing->sharpen_kernel[2] = 1.0 + (4.0 * sharpen);
+    
+    for (int j = 0; j < 5; ++j)
+    {
+        for (int i = 0; i < 65536; ++i)
+        {
+            processing->pre_calc_sharpen[j][i] = (int32_t)((double)i * processing->sharpen_kernel[j]);
+        }
     }
 }
 
@@ -419,6 +471,7 @@ void freeProcessingObject(processingObject_t * processing)
     free(processing->pre_calc_gamma);
     free(processing->pre_calc_levels);
     free(processing->pre_calc_sat);
-    for (int i = 0; i < 9; ++i) free(processing->pre_calc_matrix[i]);
+    for (int i = 8; i >= 0; --i) free(processing->pre_calc_matrix[i]);
+    for (int i = 4; i >= 0; --i) free(processing->pre_calc_sharpen[i]);
     free(processing);
 }
