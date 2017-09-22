@@ -62,7 +62,7 @@ void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outpu
     int unpacked_frame_size = width * height * sizeof(uint16_t);
 
     /* Memory for original RAW data */
-    uint8_t * RAWFrame = (uint8_t *)malloc( raw_frame_size );
+    uint8_t * raw_frame = (uint8_t *)malloc( raw_frame_size );
     /* Memory for decompressed or bit unpacked RAW data */
     uint16_t * unpacked_frame = (uint16_t *)malloc( unpacked_frame_size );
 
@@ -70,20 +70,20 @@ void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outpu
     file_set_pos(video->file, video->frame_offsets[frameIndex], SEEK_SET);
 
     /* If size is smaller than it should be, it must be compressed */
-    if (video->frame_sizes[frameIndex] < video->frame_size)
+    if (video->MLVI.videoClass & MLV_VIDEO_CLASS_FLAG_LJ92)
     {
         int raw_data_size = video->frame_sizes[frameIndex];
-        fread(RAWFrame, sizeof(uint8_t), raw_data_size, video->file);
+        fread(raw_frame, sizeof(uint8_t), raw_data_size, video->file);
 
         int components = 1;
         lj92 decoder_object;
-        lj92_open(&decoder_object, RAWFrame, raw_data_size, &width, &height, &bitdepth, &components);
+        lj92_open(&decoder_object, raw_frame, raw_data_size, &width, &height, &bitdepth, &components);
         lj92_decode(decoder_object, unpacked_frame, 1, 0, NULL, 0);
         lj92_close(decoder_object);
     }
     else /* If not compressed just unpack to 16bit */
     {
-        fread(RAWFrame, sizeof(uint8_t), raw_frame_size, video->file);
+        fread(raw_frame, sizeof(uint8_t), raw_frame_size, video->file);
 
         uint32_t mask = (1 << bitdepth) - 1;
         for (int i = 0; i < pixels_count; ++i)
@@ -92,7 +92,7 @@ void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outpu
             uint32_t bits_address = bits_offset / 16;
             uint32_t bits_shift = bits_offset % 16;
             uint32_t rotate_value = 16 + ((32 - bitdepth) - bits_shift);
-            uint32_t uncorrected_data = *((uint32_t *)&((uint16_t *)RAWFrame)[bits_address]);
+            uint32_t uncorrected_data = *((uint32_t *)&((uint16_t *)raw_frame)[bits_address]);
             uint32_t data = ROR32(uncorrected_data, rotate_value);
             unpacked_frame[i] = (uint16_t)(data & mask);
         }
@@ -109,7 +109,7 @@ void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outpu
     }
 
     free(unpacked_frame);
-    free(RAWFrame);
+    free(raw_frame);
 }
 
 void setMlvProcessing(mlvObject_t * video, processingObject_t * processing)
