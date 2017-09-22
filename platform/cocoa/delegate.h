@@ -7,6 +7,7 @@
 
 /* What happens when app loads (update checks etc) */
 - (void)applicationDidFinishLaunching: (NSApplication *)sender;
+- (void)applicationWillFinishLaunching: (NSNotification *)notification;
 
 /* To do "Open With" */
 - (BOOL)application: (NSApplication *)sender openFile: (NSString *)filename;

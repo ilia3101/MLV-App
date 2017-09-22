@@ -5,15 +5,17 @@ appname = "MLV App"
 objects = main.o video_mlv.o debayer.o amaze_demosaic.o raw_processing.o \
 	      main_methods.o useful_methods.o background_thread.o matrix.o \
 		  camera_matrices.o frame_caching.o lj92.o session_methods.o \
-		  delegate.o mlv_view.o
+		  delegate.o mlv_view.o llrawproc.o pixelproc.o stripes.o \
+		  patternnoise.o hist.o
 
 # Compiler
-CC = gcc # Normal
+CC = clang
 
 # Flags for link and objects
 mainflags = -mmacosx-version-min=10.10 -O3 -Ofast -m64
-linkflags = $(mainflags) -lm -pthread
+linkflags = $(mainflags) -lm -pthread -lobjc
 cflags := $(mainflags) -c
+objcflags := $(cflags) -x objective-c
 
 # Run some cheeky compiletime code to generate window title with hostname
 # Then call the build rule to actually build it
@@ -52,25 +54,28 @@ build : $(objects)
 
 # Making all objects...
 main.o : main.m
-	$(CC) $(cflags) main.m
+	$(CC) $(objcflags) main.m
 
 mlv_view.o : mlv_view.m
-	$(CC) $(cflags) mlv_view.m
+	$(CC) $(objcflags) mlv_view.m
 
 main_methods.o : main_methods.m
-	$(CC) $(cflags) main_methods.m
+	$(CC) $(objcflags) main_methods.m
 
 delegate.o : delegate.m
-	$(CC) $(cflags) delegate.m
+	$(CC) $(objcflags) delegate.m
 
 session_methods.o : session_methods.m
-	$(CC) $(cflags) session_methods.m
+	$(CC) $(objcflags) session_methods.m
 
 background_thread.o : background_thread.m
-	$(CC) $(cflags) background_thread.m
+	$(CC) $(objcflags) background_thread.m
 
 useful_methods.o : gui_stuff/useful_methods.m
-	$(CC) $(cflags) gui_stuff/useful_methods.m
+	$(CC) $(objcflags) gui_stuff/useful_methods.m
+
+preferences_window : preferences_window.m
+	$(CC) $(objcflags) preferences_window.m
 
 video_mlv.o : ../../src/mlv/video_mlv.c
 	$(CC) $(cflags) ../../src/mlv/video_mlv.c
@@ -95,6 +100,17 @@ raw_processing.o : ../../src/processing/raw_processing.c
 
 matrix.o : ../../src/matrix/matrix.c
 	$(CC) $(cflags) ../../src/matrix/matrix.c
+
+llrawproc.o : ../../src/mlv/llrawproc/llrawproc.c
+	$(CC) $(cflags) ../../src/mlv/llrawproc/llrawproc.c
+pixelproc.o : ../../src/mlv/llrawproc/pixelproc.c
+	$(CC) $(cflags) ../../src/mlv/llrawproc/pixelproc.c
+stripes.o : ../../src/mlv/llrawproc/stripes.c
+	$(CC) $(cflags) ../../src/mlv/llrawproc/stripes.c
+patternnoise.o : ../../src/mlv/llrawproc/patternnoise.c
+	$(CC) $(cflags) ../../src/mlv/llrawproc/patternnoise.c
+hist.o : ../../src/mlv/llrawproc/hist.c
+	$(CC) $(cflags) ../../src/mlv/llrawproc/hist.c
 
 
 # Type 'make clean' to remove mess

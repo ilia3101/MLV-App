@@ -152,12 +152,11 @@ int NSApplicationMain(int argc, const char * argv[])
     CREATE_SLIDER_RIGHT( App->lightenSlider, App->lightenLabel, App->lightenValueLabel, @"Lighten", 9, lightenMethod, BLOCK_OFFSET, 0.0 );
 
     /* Third block */
-    //CREATE_SLIDER_RIGHT( App->sharpnessSlider, sharpnessLabel, sharpnessValueLabel, @"Sharpen", 10, sharpnessMethod, BLOCK_OFFSET * 2, 0.0 );
-    /* Maybe we won't have sharpness */
+    CREATE_SLIDER_RIGHT( App->sharpnessSlider, App->sharpnessLabel, App->sharpnessValueLabel, @"Sharpen", 10, sharpnessMethod, BLOCK_OFFSET * 1.62, 0.0 );
 
     /* Enable/disable highlight reconstruction */
     App->highlightReconstructionSelector = [ [NSButton alloc]
-                                             initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(11, ELEMENT_HEIGHT, 16) )];
+                                             initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(12, ELEMENT_HEIGHT, 16 + BLOCK_OFFSET*0.6) )];
     [App->highlightReconstructionSelector setButtonType: NSSwitchButton];
     [App->highlightReconstructionSelector setTitle: @"Highlight Reconstruction"];
     [App->highlightReconstructionSelector anchorRight: YES];
@@ -168,7 +167,7 @@ int NSApplicationMain(int argc, const char * argv[])
 
     /* To set always use AMaZE on/off */
     App->alwaysUseAmazeSelector = [ [NSButton alloc]
-                                    initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(12, ELEMENT_HEIGHT, 30) )];
+                                    initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(13, ELEMENT_HEIGHT, 30 + BLOCK_OFFSET*0.6) )];
     [App->alwaysUseAmazeSelector setButtonType: NSSwitchButton];
     [App->alwaysUseAmazeSelector setTitle: @"Always use AMaZE"];
     [App->alwaysUseAmazeSelector anchorRight: YES];

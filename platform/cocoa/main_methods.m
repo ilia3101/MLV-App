@@ -35,6 +35,7 @@ void initAppWithGod()
     [App->lightStrengthSlider lightStrengthMethod];
     [App->lightRangeSlider lightRangeMethod];
     [App->lightenSlider lightenMethod];
+    [App->sharpnessSlider sharpnessMethod];
     App->frameChanged = 0;
 }
 
@@ -381,13 +382,13 @@ int setAppNewMlvClip(char * mlvPath)
 -(void)tintSliderMethod
 {
     /* Slider has to be in range -10 to 10, as that sounds about right */
-    double tintSliderValue = [self doubleValue] - 0.5;
+    double tintSliderValue = ([self doubleValue] - 0.5) * 2.0;
     /* Control should be more fine when its closer to zero... */
     double tintValue = tintSliderValue;
     /* Invert for power if negative */
     if (tintValue < 0) tintValue = -tintValue;
     /* Power */
-    tintValue = pow(tintValue, 1.7) * 20.0;
+    tintValue = pow(tintValue, 1.7) * 10.0;
     /* Invert back if needed */
     if (tintSliderValue < 0) tintValue = -tintValue;
 
@@ -419,6 +420,14 @@ int setAppNewMlvClip(char * mlvPath)
 } -(void)lightenMethod {
     processingSetLightening(App->processingSettings, [self doubleValue] * 0.6);
     [App->lightenValueLabel setStringValue: [NSString stringWithFormat:@"%6.3f", [self doubleValue]]];
+    App->frameChanged++;
+}
+
+-(void)sharpnessMethod
+{
+    double sharpnessValue = [self doubleValue];
+    processingSetSharpening(App->processingSettings, sharpnessValue);
+    [App->sharpnessValueLabel setStringValue: [NSString stringWithFormat:@"%6.3f", sharpnessValue]];
     App->frameChanged++;
 }
 

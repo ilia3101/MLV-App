@@ -48,6 +48,7 @@ int setAppNewMlvClip(char * mlvPath); /* 0=fail 1=ok */
 -(void)lightStrengthMethod;
 -(void)lightRangeMethod;
 -(void)lightenMethod;
+-(void)sharpnessMethod;
 
 /* For scrubbijng through the clip */
 -(void)timelineSliderMethod;

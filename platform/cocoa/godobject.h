@@ -51,7 +51,8 @@ typedef struct {
     * saturationSlider, * kelvinSlider,
     * tintSlider, * darkStrengthSlider,
     * darkRangeSlider, * lightStrengthSlider,
-    * lightRangeSlider, * lightenSlider;
+    * lightRangeSlider, * lightenSlider,
+    * sharpnessSlider;
     /* Slider labels */
     NSTextField * exposureLabel, * exposureValueLabel,
     * saturationLabel, * saturationValueLabel, * kelvinLabel, 
@@ -60,7 +61,8 @@ typedef struct {
     * darkRangeLabel, * darkRangeValueLabel,
     * lightStrengthLabel, * lightStrengthValueLabel,
     * lightRangeLabel, * lightRangeValueLabel,
-    * lightenLabel, * lightenValueLabel;
+    * lightenLabel, * lightenValueLabel,
+    * sharpnessLabel, * sharpnessValueLabel;
 
     /* Buttons */
     NSButton * openMLVButton;

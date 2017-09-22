@@ -48,6 +48,9 @@
 
         CGContextRef context = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
 
+        /* Set medium interpolation quality | https://developer.apple.com/documentation/coregraphics/cginterpolationquality?language=objc */
+        CGContextSetInterpolationQuality(context, kCGInterpolationHigh);
+
         /* Custom drawing bounds to keep aspect ratio */
 
         /* Cropped to margin */

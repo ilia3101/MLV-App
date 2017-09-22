@@ -60,6 +60,20 @@ static uint64_t ISO8601toUnix(char * iso_date)
 
 @implementation MLVAppDelegate
 
+- (void)applicationWillFinishLaunching: (NSNotification *)notification
+{
+    NSMenu *newMenu;
+    NSMenuItem *newItem;
+
+    // Add the submenu
+    newItem = [[NSMenuItem allocWithZone:[NSMenu menuZone]] initWithTitle:@"Flashy" action:NULL keyEquivalent:@""];
+    newMenu = [[NSMenu allocWithZone:[NSMenu menuZone]] initWithTitle:@"Flashy"];
+    [newItem setSubmenu:newMenu];
+    [newMenu release];
+    [[NSApp mainMenu] addItem:newItem];
+    [newItem release];
+}
+
 - (void)applicationDidFinishLaunching: (NSNotification *)notification
 {
 
