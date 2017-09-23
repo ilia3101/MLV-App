@@ -193,6 +193,9 @@ void applyProcessingObject( processingObject_t * processing,
         int32_t ** k = processing->pre_calc_sharpen; /* Sharpen kernel */
         int y_max = imageY - 1;
         int x_max = (imageX - 1) * 3; /* X in multiples of 3 for RGB */
+
+        /* Center and outter lut */
+        int32_t * k0 = k[0], * k1 = k[1];
         
         for (int y = 1; y < y_max; ++y)
         {
@@ -202,11 +205,11 @@ void applyProcessingObject( processingObject_t * processing,
             uint16_t * n_row = img + ((y+1) * imageX * 3); /* next */
             for (int x = 3; x < x_max; ++x)
             {
-                int32_t sharp = k[2][row[x]] 
-                              + k[0][p_row[x]]
-                              + k[4][n_row[x]]
-                              + k[1][row[x-3]]
-                              + k[3][row[x+3]];
+                int32_t sharp = k0[row[x]] 
+                              + k1[p_row[x]]
+                              + k1[n_row[x]]
+                              + k1[row[x-3]]
+                              + k1[row[x+3]];
                 
                 out_row[x] = LIMIT16(sharp);
             }
@@ -291,11 +294,8 @@ void processingSetSharpening(processingObject_t * processing, double sharpen)
 
     /* Sharpening convolution matrix (well, middle 5 elements) */
     memset(processing->sharpen_kernel, 0, 5 * sizeof(double));
-    processing->sharpen_kernel[0] = -sharpen;
     processing->sharpen_kernel[1] = -sharpen;
-    processing->sharpen_kernel[3] = -sharpen;
-    processing->sharpen_kernel[4] = -sharpen;
-    processing->sharpen_kernel[2] = 1.0 + (4.0 * sharpen);
+    processing->sharpen_kernel[0] = 1.0 + (4.0 * sharpen);
     
     for (int j = 0; j < 5; ++j)
     {
