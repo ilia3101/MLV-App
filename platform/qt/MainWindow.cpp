@@ -146,6 +146,8 @@ void MainWindow::timerEvent(QTimerEvent *t)
         {
             m_frameChanged = false; //first do this, if there are changes between rendering
             drawFrame();
+            //Allow interaction while playback
+            qApp->processEvents();
 
             //fps measurement
             if( timeDiff != 0 ) m_pFpsStatus->setText( tr( "Playback: %1 fps" ).arg( (int)( 1000 / lastTime.msecsTo( nowTime ) ) ) );
