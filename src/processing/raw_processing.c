@@ -111,9 +111,9 @@ void applyProcessingObject( processingObject_t * processing,
 
     /* (for shorter code) */
     int32_t ** pm = processing->pre_calc_matrix;
+    uint16_t * out_img = outputImage;
     uint16_t * img = inputImage;
     uint16_t * img_end = img + img_s;
-
 
     /* Apply some precalcuolated settings */
     for (int i = 0; i < img_s; ++i)
@@ -156,7 +156,7 @@ void applyProcessingObject( processingObject_t * processing,
     if (processing->use_saturation)
     {
         /* Now saturation (looks way better after gamma) */
-        for (uint16_t * pix = outputImage; pix < img_end; pix += 3)
+        for (uint16_t * pix = img; pix < img_end; pix += 3)
         {
             /* Pixel brightness = 4/16 R, 11/16 G, 1/16 blue; Try swapping the channels, it will look worse */
             int32_t Y1 = ((pix[0] << 2) + (pix[1] * 11) + pix[2]) >> 4;
@@ -176,19 +176,15 @@ void applyProcessingObject( processingObject_t * processing,
     if (processing->use_rgb_curves)
     {
         /* Contrast Curve (OMG putting this after gamma made it 999x better) */
-        for (uint16_t * pix = outputImage; pix < img_end; pix += 3)
+        for (uint16_t * pix = img; pix < img_end; pix += 3)
         {
             pix[0] = processing->pre_calc_curve_r[ pix[0] ];
-            pix[1] = processing->pre_calc_curve_g[ pix[1] ];
-            pix[2] = processing->pre_calc_curve_b[ pix[2] ];
+            pix[1] = processing->pre_calc_curve_r[ pix[1] ];
+            pix[2] = processing->pre_calc_curve_r[ pix[2] ];
         }
     }
-    
-    /* Copy to output image (so theres two copies, for sharpening to work properly) */
-    memcpy(outputImage, inputImage, img_s * sizeof(uint16_t));
-    uint16_t * out_img = outputImage;
 
-    if (!(processingGetSharpening(processing) < 0.001))
+    if (processingGetSharpening(processing) > 0.005)
     {
         int32_t ** k = processing->pre_calc_sharpen; /* Sharpen kernel */
         int y_max = imageY - 1;
@@ -197,12 +193,16 @@ void applyProcessingObject( processingObject_t * processing,
         /* Center and outter lut */
         int32_t * k0 = k[0], * k1 = k[1];
         
+        /* Row length elements */
+        uint32_t rl = imageX * 3;
+
         for (int y = 1; y < y_max; ++y)
         {
-            uint16_t * out_row = out_img + (y * imageX * 3); /* current row ouptut */
-            uint16_t * row = img + (y * imageX * 3); /* current row */
-            uint16_t * p_row = img + ((y-1) * imageX * 3); /* previous */
-            uint16_t * n_row = img + ((y+1) * imageX * 3); /* next */
+            uint16_t * out_row = out_img + (y * rl); /* current row ouptut */
+            uint16_t * row = img + (y * rl); /* current row */
+            uint16_t * p_row = img + ((y-1) * rl); /* previous */
+            uint16_t * n_row = img + ((y+1) * rl); /* next */
+
             for (int x = 3; x < x_max; ++x)
             {
                 int32_t sharp = k0[row[x]] 
@@ -210,10 +210,23 @@ void applyProcessingObject( processingObject_t * processing,
                               + k1[n_row[x]]
                               + k1[row[x-3]]
                               + k1[row[x+3]];
-                
+
                 out_row[x] = LIMIT16(sharp);
             }
+
+            /* Edge pixels */
+            out_row[0] = row[0]; out_row[1] = row[1]; out_row[2] = row[2];
+            out_row += rl; row += rl;
+            out_row[-3] = row[-3]; out_row[-2] = row[-2]; out_row[-1] = row[-1];
         }
+
+        /* Copy top and bottom row */
+        memcpy(outputImage, inputImage, rl * sizeof(uint16_t));
+        memcpy(outputImage + (rl*(imageY-1)), inputImage + (rl*(imageY-1)), rl * sizeof(uint16_t));
+    }
+    else
+    {
+        memcpy(outputImage, inputImage, img_s * sizeof(uint16_t));
     }
 }
 
