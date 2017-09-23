@@ -106,25 +106,20 @@ void applyProcessingObject( processingObject_t * processing,
                             uint16_t * __restrict inputImage, 
                             uint16_t * __restrict outputImage )
 {
-    /* Begin image processing... */
-
-    /* (for shorter code) */
-    int32_t ** pm = processing->pre_calc_matrix;
-    uint16_t * img = outputImage;
-
     /* Number of elements */
     int img_s = imageX * imageY * 3;
 
-    /* Point to the end */
+    /* (for shorter code) */
+    int32_t ** pm = processing->pre_calc_matrix;
+    uint16_t * img = inputImage;
     uint16_t * img_end = img + img_s;
 
-    memcpy(outputImage, inputImage, img_s * sizeof(uint16_t));
 
     /* Apply some precalcuolated settings */
     for (int i = 0; i < img_s; ++i)
     {
         /* Black + white level */
-        outputImage[i] = processing->pre_calc_levels[ outputImage[i] ];
+        img[i] = processing->pre_calc_levels[ img[i] ];
     }
 
     /* NOW MATRIX! (white balance & exposure) */
@@ -142,7 +137,7 @@ void applyProcessingObject( processingObject_t * processing,
     /* Gamma */
     for (int i = 0; i < img_s; ++i)
     {
-        outputImage[i] = processing->pre_calc_gamma[ outputImage[i] ];
+        img[i] = processing->pre_calc_gamma[ img[i] ];
     }
 
     /* Now highlilght reconstruction */
@@ -188,6 +183,10 @@ void applyProcessingObject( processingObject_t * processing,
             pix[2] = processing->pre_calc_curve_b[ pix[2] ];
         }
     }
+    
+    /* Copy to output image (so theres two copies, for sharpening to work properly) */
+    memcpy(outputImage, inputImage, img_s * sizeof(uint16_t));
+    uint16_t * out_img = outputImage;
 
     if (!(processingGetSharpening(processing) < 0.001))
     {
@@ -197,6 +196,7 @@ void applyProcessingObject( processingObject_t * processing,
         
         for (int y = 1; y < y_max; ++y)
         {
+            uint16_t * out_row = out_img + (y * imageX * 3); /* current row ouptut */
             uint16_t * row = img + (y * imageX * 3); /* current row */
             uint16_t * p_row = img + ((y-1) * imageX * 3); /* previous */
             uint16_t * n_row = img + ((y+1) * imageX * 3); /* next */
@@ -208,7 +208,7 @@ void applyProcessingObject( processingObject_t * processing,
                               + k[1][row[x-3]]
                               + k[3][row[x+3]];
                 
-                row[x] = LIMIT16(sharp);
+                out_row[x] = LIMIT16(sharp);
             }
         }
     }
@@ -286,8 +286,8 @@ void processingSetSharpening(processingObject_t * processing, double sharpen)
 {
     processing->sharpen = sharpen;
 
-    /* for some reason ~0.3 is the limit for not getting bluegh artifcats */
-    sharpen *= 0.29;
+    /* Anything more than 0.5 just looks awful */
+    sharpen = pow(sharpen, 1.5) * 0.5;
 
     /* Sharpening convolution matrix (well, middle 5 elements) */
     memset(processing->sharpen_kernel, 0, 5 * sizeof(double));
