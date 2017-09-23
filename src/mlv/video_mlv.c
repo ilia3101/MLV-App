@@ -132,7 +132,15 @@ void setMlvProcessing(mlvObject_t * video, processingObject_t * processing)
                                      getMlvBlackLevel(video) * 4,
                                      getMlvWhiteLevel(video) * 4 );
 
-    /* DONE? */
+    /* If 5D3 or cropmode */
+    if (strlen((char *)getMlvCamera(video)) > 20 || getMlvMaxWidth(video) > 1920)
+    {
+        processingSetSharpeningBias(processing, 0.0);
+    }
+    else /* Sharpening more sideways to hide vertical line skip artifacts a bit */
+    {
+        processingSetSharpeningBias(processing, -0.33);
+    }
 }
 
 void getMlvRawFrameDebayered(mlvObject_t * video, uint64_t frameIndex, uint16_t * outputFrame)

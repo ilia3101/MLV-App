@@ -31,13 +31,14 @@ processingObject_t * initProcessingObject()
     processing->pre_calc_curve_b = malloc( 65536 * sizeof(uint16_t) );
     processing->pre_calc_gamma   = malloc( 65536 * sizeof(uint16_t) );
     processing->pre_calc_levels  = malloc( 65536 * sizeof(uint16_t) );
+    processing->pre_calc_sharp_a = malloc( 65536 * sizeof(uint32_t) );
+    processing->pre_calc_sharp_x = malloc( 65536 * sizeof(uint16_t) );
+    processing->pre_calc_sharp_y = malloc( 65536 * sizeof(uint16_t) );
     processing->pre_calc_sat     = malloc( 131072 * sizeof(int32_t) );
 
     /* For precalculated matrix values */
     for (int i = 0; i < 9; ++i)
         processing->pre_calc_matrix[i] = malloc( 65536 * sizeof(int32_t) );
-    for (int i = 0; i < 5; ++i)
-        processing->pre_calc_sharpen[i] = malloc( 65536 * sizeof(int32_t) );
 
     /* A nothing matrix */
     processing->cam_to_sRGB_matrix[0] = 1.0;
@@ -186,12 +187,13 @@ void applyProcessingObject( processingObject_t * processing,
 
     if (processingGetSharpening(processing) > 0.005)
     {
-        int32_t ** k = processing->pre_calc_sharpen; /* Sharpen kernel */
         int y_max = imageY - 1;
         int x_max = (imageX - 1) * 3; /* X in multiples of 3 for RGB */
 
         /* Center and outter lut */
-        int32_t * k0 = k[0], * k1 = k[1];
+        uint32_t * ka = processing->pre_calc_sharp_a;
+        uint16_t * kx = processing->pre_calc_sharp_x;
+        uint16_t * ky = processing->pre_calc_sharp_y;
         
         /* Row length elements */
         uint32_t rl = imageX * 3;
@@ -205,11 +207,11 @@ void applyProcessingObject( processingObject_t * processing,
 
             for (int x = 3; x < x_max; ++x)
             {
-                int32_t sharp = k0[row[x]] 
-                              + k1[p_row[x]]
-                              + k1[n_row[x]]
-                              + k1[row[x-3]]
-                              + k1[row[x+3]];
+                int32_t sharp = ka[row[x]] 
+                              - ky[p_row[x]]
+                              - ky[n_row[x]]
+                              - kx[row[x-3]]
+                              - kx[row[x+3]];
 
                 out_row[x] = LIMIT16(sharp);
             }
@@ -298,24 +300,31 @@ void processingSetSaturation(processingObject_t * processing, double saturationF
 }
 
 
+/* Set direction bias */
+void processingSetSharpeningBias(processingObject_t * processing, double bias)
+{
+    processing->sharpen_bias = bias;
+    /* Recalculates everythin */
+    processingSetSharpening(processing, processingGetSharpening(processing));
+}
+
+
 void processingSetSharpening(processingObject_t * processing, double sharpen)
 {
     processing->sharpen = sharpen;
 
-    /* Anything more than 0.5 just looks awful */
-    sharpen = pow(sharpen, 1.5) * 0.5;
+    /* Anything more than ~0.5 just looks awful */
+    sharpen = pow(sharpen, 1.5) * 0.55;
 
-    /* Sharpening convolution matrix (well, middle 5 elements) */
-    memset(processing->sharpen_kernel, 0, 5 * sizeof(double));
-    processing->sharpen_kernel[1] = -sharpen;
-    processing->sharpen_kernel[0] = 1.0 + (4.0 * sharpen);
-    
-    for (int j = 0; j < 5; ++j)
+    double sharpen_x = sharpen * (1.0 - processing->sharpen_bias);
+    double sharpen_y = sharpen * (1.0 + processing->sharpen_bias);
+    double sharpen_a = 1.0 + (2.0 * sharpen_x) + (2.0 * sharpen_y);
+
+    for (int i = 0; i < 65536; ++i)
     {
-        for (int i = 0; i < 65536; ++i)
-        {
-            processing->pre_calc_sharpen[j][i] = (int32_t)((double)i * processing->sharpen_kernel[j]);
-        }
+        processing->pre_calc_sharp_a[i] = (uint32_t)((double)i * sharpen_a);
+        processing->pre_calc_sharp_x[i] = (uint16_t)LIMIT16((double)i * sharpen_x);
+        processing->pre_calc_sharp_y[i] = (uint16_t)LIMIT16((double)i * sharpen_y);
     }
 }
 
@@ -484,7 +493,9 @@ void freeProcessingObject(processingObject_t * processing)
     free(processing->pre_calc_gamma);
     free(processing->pre_calc_levels);
     free(processing->pre_calc_sat);
+    free(processing->pre_calc_sharp_a);
+    free(processing->pre_calc_sharp_x);
+    free(processing->pre_calc_sharp_y);
     for (int i = 8; i >= 0; --i) free(processing->pre_calc_matrix[i]);
-    for (int i = 4; i >= 0; --i) free(processing->pre_calc_sharpen[i]);
     free(processing);
 }

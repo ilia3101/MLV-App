@@ -77,6 +77,8 @@ void getMlvAudioData(mlvObject_t * video, int16_t * outputAudio);
 /* Useful getting macros */
 #define getMlvWidth(video) (video)->RAWI.xRes
 #define getMlvHeight(video) (video)->RAWI.yRes
+#define getMlvMaxWidth(video) (video)->RAWI.raw_info.active_area.x2 - (video)->RAWI.raw_info.active_area.x1
+#define getMlvMaxHeight(video) (video)->RAWI.raw_info.active_area.y2 - (video)->RAWI.raw_info.active_area.y1
 #define getMlvFrames(video) (video)->frames
 #define getMlvBitdepth(video) (video)->RAWI.raw_info.bits_per_pixel
 #define getMlvCompression(video) !((video)->MLVI.videoClass & MLV_VIDEO_CLASS_FLAG_LJ92) ? "Uncompressed" : "Lossless"
