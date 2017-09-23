@@ -83,7 +83,8 @@ SOURCES += \
     DoubleClickLabel.cpp \
     ../../src/mlv/audio_mlv.c \
     AudioWave.cpp \
-    ResizeLabel.cpp
+    ResizeLabel.cpp \
+    GraphicsZoomView.cpp
 
 HEADERS += \
         MainWindow.h \
@@ -117,7 +118,8 @@ HEADERS += \
     EditSliderValueDialog.h \
     DoubleClickLabel.h \
     AudioWave.h \
-    ResizeLabel.h
+    ResizeLabel.h \
+    GraphicsZoomView.h
 
 FORMS += \
         MainWindow.ui \
