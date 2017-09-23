@@ -19,6 +19,7 @@
 #include <QDesktopWidget>
 #include <QScrollBar>
 #include <QScreen>
+#include <QMimeData>
 #include <png.h>
 
 #include "SystemMemory.h"
@@ -37,6 +38,7 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    setAcceptDrops(true);
 
     //Set bools for draw rules
     m_dontDraw = true;
@@ -229,6 +231,44 @@ bool MainWindow::event(QEvent *event)
     return QMainWindow::event(event);
 }
 
+//The dragEnterEvent() function is typically used to inform Qt about the types of data that the widget accepts
+void MainWindow::dragEnterEvent(QDragEnterEvent *event)
+{
+    if (event->mimeData()->hasUrls())
+        event->acceptProposedAction();
+}
+
+//The dropEvent() is used to unpack dropped data and handle it in way that is suitable for your application.
+void MainWindow::dropEvent(QDropEvent *event)
+{
+    for( int i = 0; i < event->mimeData()->urls().count(); i++ )
+    {
+        QString fileName = event->mimeData()->urls().at(i).path();
+
+        //Exit if not an MLV file or aborted
+        if( fileName == QString( "" ) || !fileName.endsWith( ".mlv", Qt::CaseInsensitive ) ) continue;
+
+        //File is already opened? Error!
+        if( isFileInSession( fileName ) )
+        {
+            QMessageBox::information( this, tr( "Import MLV" ), tr( "File %1 is already opened in session!" ).arg( fileName ) );
+            continue;
+        }
+
+        //Save last file name
+        m_lastSaveFileName = fileName;
+
+        //Add file to Sessionlist
+        addFileToSession( fileName );
+
+        //Open the file
+        openMlv( fileName );
+        on_actionResetReceipt_triggered();
+        previewPicture( ui->listWidgetSession->count() - 1 );
+    }
+    event->acceptProposedAction();
+}
+
 //Draw a raw picture to the gui
 void MainWindow::drawFrame( void )
 {
@@ -317,7 +357,7 @@ void MainWindow::on_actionOpen_triggered()
         QString fileName = files.at(i);
 
         //Exit if not an MLV file or aborted
-        if( fileName == QString( "" ) && !fileName.endsWith( ".mlv", Qt::CaseInsensitive ) ) continue;
+        if( fileName == QString( "" ) || !fileName.endsWith( ".mlv", Qt::CaseInsensitive ) ) continue;
 
         //File is already opened? Error!
         if( isFileInSession( fileName ) )

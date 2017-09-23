@@ -45,6 +45,8 @@ protected:
     void timerEvent( QTimerEvent *t );
     void resizeEvent( QResizeEvent *event );
     bool event( QEvent *event );
+    void dragEnterEvent(QDragEnterEvent *event);
+    void dropEvent(QDropEvent *event);
 
 private slots:
     void on_actionOpen_triggered();
