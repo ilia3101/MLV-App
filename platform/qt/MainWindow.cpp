@@ -268,29 +268,11 @@ void MainWindow::drawFrame( void )
                                                                  Qt::KeepAspectRatio, Qt::SmoothTransformation) ) ); //alternative: Qt::FastTransformation
         m_pScene->setSceneRect( 0, 0, desWidth, desHeight );
     }
-    else if( ui->actionZoom100->isChecked() )
+    else
     {
         //Bring frame to GUI (100%)
         m_pGraphicsItem->setPixmap( QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 ) ) );
         m_pScene->setSceneRect( 0, 0, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject) );
-    }
-    else if( ui->actionZoom200->isChecked() )
-    {
-        //Bring frame to GUI (200%)
-        m_pGraphicsItem->setPixmap( QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
-                                                        .scaled( getMlvWidth(m_pMlvObject) * 2,
-                                                                 getMlvHeight(m_pMlvObject) * 2,
-                                                                 Qt::KeepAspectRatio, Qt::SmoothTransformation) ) );
-        m_pScene->setSceneRect( 0, 0, getMlvWidth(m_pMlvObject) * 2, getMlvHeight(m_pMlvObject) * 2 );
-    }
-    else
-    {
-        //Bring frame to GUI (400%)
-        m_pGraphicsItem->setPixmap( QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
-                                                        .scaled( getMlvWidth(m_pMlvObject) * 4,
-                                                                 getMlvHeight(m_pMlvObject) * 4,
-                                                                 Qt::KeepAspectRatio, Qt::SmoothTransformation) ) );
-        m_pScene->setSceneRect( 0, 0, getMlvWidth(m_pMlvObject) * 4, getMlvHeight(m_pMlvObject) * 4 );
     }
     //Add zebras on the image
     drawZebras();
@@ -519,10 +501,6 @@ void MainWindow::initGui( void )
     ui->actionExport->setEnabled( false );
     //Set fit to screen as default zoom
     ui->actionZoomFit->setChecked( true );
-    ui->actionZoom100->setChecked( false );
-    ui->actionZoom200->setChecked( false );
-    ui->actionZoom400->setChecked( false );
-    m_zoomWasFit = true;
 
     //Set up image in GUI
     QImage image(":/IMG/IMG/histogram.png");
@@ -1578,101 +1556,37 @@ void MainWindow::on_comboBoxProfile_currentIndexChanged(int index)
 }
 
 //Click on Zoom: fit
-void MainWindow::on_actionZoomFit_triggered()
+void MainWindow::on_actionZoomFit_triggered(bool on)
 {
-    ui->actionZoomFit->setChecked( true );
-    ui->actionZoom100->setChecked( false );
-    ui->actionZoom200->setChecked( false );
-    ui->actionZoom400->setChecked( false );
-    m_frameChanged = true;
-    m_zoomWasFit = true;
+    if( !on )
+    {
+        ui->actionZoomFit->setChecked( false );
+        on_actionZoom100_triggered();
+    }
+    else
+    {
+        ui->graphicsView->resetZoom();
+        ui->graphicsView->setZoomEnabled( false );
+        ui->actionZoomFit->setChecked( true );
+        m_frameChanged = true;
+    }
 }
 
 //Click on Zoom: 100%
 void MainWindow::on_actionZoom100_triggered()
 {
     ui->actionZoomFit->setChecked( false );
-    ui->actionZoom100->setChecked( true );
-    ui->actionZoom200->setChecked( false );
-    ui->actionZoom400->setChecked( false );
     if( !m_fileLoaded )
     {
-        m_zoomWasFit = false;
         return;
     }
-    double relativeScrollBarPosWidth = (double)ui->graphicsView->horizontalScrollBar()->value() / (double)ui->graphicsView->horizontalScrollBar()->maximum();
-    double relativeScrollBarPosHeight = (double)ui->graphicsView->verticalScrollBar()->value() / (double)ui->graphicsView->verticalScrollBar()->maximum();
+    ui->graphicsView->resetZoom();
+    ui->graphicsView->setZoomEnabled( true );
     m_frameChanged = true;
     drawFrame();
-    if( m_zoomWasFit )
-    {
-        ui->graphicsView->horizontalScrollBar()->setValue( ( getMlvWidth(m_pMlvObject) - ui->graphicsView->width() ) / 2 );
-        ui->graphicsView->verticalScrollBar()->setValue( ( getMlvHeight(m_pMlvObject) - ui->graphicsView->height() ) / 2 );
-    }
-    else
-    {
-        ui->graphicsView->horizontalScrollBar()->setValue( ( getMlvWidth(m_pMlvObject) - ui->graphicsView->width() ) * relativeScrollBarPosWidth );
-        ui->graphicsView->verticalScrollBar()->setValue( ( getMlvHeight(m_pMlvObject) - ui->graphicsView->height() ) * relativeScrollBarPosHeight );
-    }
-    m_zoomWasFit = false;
-}
-
-//Click on Zoom: 200%
-void MainWindow::on_actionZoom200_triggered()
-{
-    ui->actionZoomFit->setChecked( false );
-    ui->actionZoom100->setChecked( false );
-    ui->actionZoom200->setChecked( true );
-    ui->actionZoom400->setChecked( false );
-    if( !m_fileLoaded )
-    {
-        m_zoomWasFit = false;
-        return;
-    }
-    double relativeScrollBarPosWidth = (double)ui->graphicsView->horizontalScrollBar()->value() / (double)ui->graphicsView->horizontalScrollBar()->maximum();
-    double relativeScrollBarPosHeight = (double)ui->graphicsView->verticalScrollBar()->value() / (double)ui->graphicsView->verticalScrollBar()->maximum();
-    m_frameChanged = true;
-    drawFrame();
-    if( m_zoomWasFit )
-    {
-        ui->graphicsView->horizontalScrollBar()->setValue( ( ( getMlvWidth(m_pMlvObject) * 2 ) - ui->graphicsView->width() ) / 2 );
-        ui->graphicsView->verticalScrollBar()->setValue( ( ( getMlvHeight(m_pMlvObject) * 2 ) - ui->graphicsView->height() ) / 2 );
-    }
-    else
-    {
-        ui->graphicsView->horizontalScrollBar()->setValue( ( ( getMlvWidth(m_pMlvObject) * 2 ) - ui->graphicsView->width() ) * relativeScrollBarPosWidth );
-        ui->graphicsView->verticalScrollBar()->setValue( ( ( getMlvHeight(m_pMlvObject) * 2 ) - ui->graphicsView->height() ) * relativeScrollBarPosHeight );
-    }
-    m_zoomWasFit = false;
-}
-
-//Click on Zoom: 400%
-void MainWindow::on_actionZoom400_triggered()
-{
-    ui->actionZoomFit->setChecked( false );
-    ui->actionZoom100->setChecked( false );
-    ui->actionZoom200->setChecked( false );
-    ui->actionZoom400->setChecked( true );
-    if( !m_fileLoaded )
-    {
-        m_zoomWasFit = false;
-        return;
-    }
-    double relativeScrollBarPosWidth = (double)ui->graphicsView->horizontalScrollBar()->value() / (double)ui->graphicsView->horizontalScrollBar()->maximum();
-    double relativeScrollBarPosHeight = (double)ui->graphicsView->verticalScrollBar()->value() / (double)ui->graphicsView->verticalScrollBar()->maximum();
-    m_frameChanged = true;
-    drawFrame();
-    if( m_zoomWasFit )
-    {
-        ui->graphicsView->horizontalScrollBar()->setValue( ( ( getMlvWidth(m_pMlvObject) * 4 ) - ui->graphicsView->width() ) / 2 );
-        ui->graphicsView->verticalScrollBar()->setValue( ( ( getMlvHeight(m_pMlvObject) * 4 ) - ui->graphicsView->height() ) / 2 );
-    }
-    else
-    {
-        ui->graphicsView->horizontalScrollBar()->setValue( ( ( getMlvWidth(m_pMlvObject) * 4 ) - ui->graphicsView->width() ) * relativeScrollBarPosWidth );
-        ui->graphicsView->verticalScrollBar()->setValue( ( ( getMlvHeight(m_pMlvObject) * 4 ) - ui->graphicsView->height() ) * relativeScrollBarPosHeight );
-    }
-    m_zoomWasFit = false;
+    update();
+    ui->graphicsView->horizontalScrollBar()->setValue( ( getMlvWidth(m_pMlvObject) - ui->graphicsView->width() ) / 2 );
+    ui->graphicsView->verticalScrollBar()->setValue( ( getMlvHeight(m_pMlvObject) - ui->graphicsView->height() ) / 2 );
 }
 
 //Show Histogram
@@ -1934,8 +1848,6 @@ void MainWindow::pictureCustomContextMenuRequested(const QPoint &pos)
     QMenu myMenu;
     myMenu.addAction( ui->actionZoomFit );
     myMenu.addAction( ui->actionZoom100 );
-    myMenu.addAction( ui->actionZoom200 );
-    myMenu.addAction( ui->actionZoom400 );
     myMenu.addSeparator();
     myMenu.addAction( ui->actionShowZebras );
     if( ui->graphicsView->isFullScreen() )

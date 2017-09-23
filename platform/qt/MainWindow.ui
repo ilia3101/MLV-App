@@ -37,7 +37,7 @@
     <item row="0" column="0">
      <layout class="QVBoxLayout" name="verticalLayout">
       <item>
-       <widget class="QGraphicsView" name="graphicsView">
+       <widget class="GraphicsZoomView" name="graphicsView">
         <property name="contextMenuPolicy">
          <enum>Qt::CustomContextMenu</enum>
         </property>
@@ -163,8 +163,6 @@
     <addaction name="separator"/>
     <addaction name="actionZoomFit"/>
     <addaction name="actionZoom100"/>
-    <addaction name="actionZoom200"/>
-    <addaction name="actionZoom400"/>
     <addaction name="actionFullscreen"/>
    </widget>
    <widget class="QMenu" name="menuView">
@@ -1930,9 +1928,6 @@
    </property>
   </action>
   <action name="actionZoom100">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
    <property name="icon">
     <iconset resource="ressources.qrc">
      <normaloff>:/RetinaIMG/RetinaIMG/Actions-zoom-100-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Actions-zoom-100-icon.png</iconset>
@@ -2144,30 +2139,6 @@
     <string>Z</string>
    </property>
   </action>
-  <action name="actionZoom200">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="icon">
-    <iconset resource="ressources.qrc">
-     <normaloff>:/RetinaIMG/RetinaIMG/Actions-zoom-200-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Actions-zoom-200-icon.png</iconset>
-   </property>
-   <property name="text">
-    <string>Zoom: 200%</string>
-   </property>
-  </action>
-  <action name="actionZoom400">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="icon">
-    <iconset resource="ressources.qrc">
-     <normaloff>:/RetinaIMG/RetinaIMG/Actions-zoom-400-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Actions-zoom-400-icon.png</iconset>
-   </property>
-   <property name="text">
-    <string>Zoom: 400%</string>
-   </property>
-  </action>
   <action name="actionNextFrame">
    <property name="icon">
     <iconset resource="ressources.qrc">
@@ -2198,6 +2169,11 @@
    <class>ResizeLabel</class>
    <extends>QLabel</extends>
    <header>ResizeLabel.h</header>
+  </customwidget>
+  <customwidget>
+   <class>GraphicsZoomView</class>
+   <extends>QGraphicsView</extends>
+   <header>GraphicsZoomView.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>

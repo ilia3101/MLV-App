@@ -65,10 +65,8 @@ private slots:
     void on_actionExport_triggered();
     void on_checkBoxHighLightReconstruction_toggled(bool checked);
     void on_comboBoxProfile_currentIndexChanged(int index);
-    void on_actionZoomFit_triggered();
+    void on_actionZoomFit_triggered(bool on);
     void on_actionZoom100_triggered();
-    void on_actionZoom200_triggered();
-    void on_actionZoom400_triggered();
     void on_actionShowHistogram_triggered(void);
     void on_actionShowWaveFormMonitor_triggered(void);
     void on_actionAlwaysUseAMaZE_triggered(bool checked);
@@ -148,7 +146,6 @@ private:
     bool m_fpsOverride;
     bool m_audioExportEnabled;
     double m_frameRate;
-    bool m_zoomWasFit;
     QString m_lastSaveFileName;
     QProcess *m_pFFmpeg;
     ReceiptSettings *m_pReceiptClipboard;
