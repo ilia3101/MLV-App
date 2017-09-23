@@ -2036,7 +2036,6 @@ void MainWindow::exportHandler( void )
         //Set sliders to receipt
         setSliders( m_exportQueue.first() );
         qApp->processEvents();
-        qDebug() << "m_exportQueue.first()->chromaSmooth()" << m_exportQueue.first()->chromaSmooth();
         //Fill label in StatusDialog
         m_pStatusDialog->ui->label->setText( tr( "%1/%2 - %3" )
                                              .arg( jobNumber )
@@ -2073,6 +2072,7 @@ void RenderPngTask::run()
     image.format = PNG_FORMAT_LINEAR_RGB;
     image.width = getMlvWidth( m_pMlvObject );
     image.height = getMlvHeight( m_pMlvObject );
+    image.flags = PNG_IMAGE_FLAG_16BIT_sRGB;
     png_bytep buffer;
     buffer = (png_bytep)malloc( PNG_IMAGE_SIZE( image ) );
 
