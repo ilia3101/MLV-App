@@ -38,15 +38,15 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
 {
     ui->setupUi(this);
 
-    //Init the GUI
-    initGui();
-
     //Set bools for draw rules
     m_dontDraw = true;
     m_frameStillDrawing = false;
     m_frameChanged = false;
     m_fileLoaded = false;
     m_fpsOverride = false;
+
+    //Init the GUI
+    initGui();
 
     //Init the lib
     initLib();
