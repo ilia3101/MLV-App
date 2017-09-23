@@ -60,6 +60,7 @@ private slots:
     void on_horizontalSliderLS_valueChanged(int position);
     void on_horizontalSliderLR_valueChanged(int position);
     void on_horizontalSliderLighten_valueChanged(int position);
+    void on_horizontalSliderSharpen_valueChanged(int position);
     void on_actionGoto_First_Frame_triggered();
     void on_actionExport_triggered();
     void on_checkBoxHighLightReconstruction_toggled(bool checked);
@@ -100,6 +101,7 @@ private slots:
     void on_label_LrVal_doubleClicked( void );
     void on_label_LsVal_doubleClicked( void );
     void on_label_LightenVal_doubleClicked( void );
+    void on_label_Sharpen_doubleClicked( void );
     void on_labelAudioTrack_sizeChanged( void );
     void on_actionFullscreen_triggered(bool checked);
     void exportHandler( void );
@@ -115,6 +117,7 @@ private slots:
     void on_spinBoxDeflickerTarget_valueChanged(int arg1);
     void on_actionNextFrame_triggered();
     void on_actionPreviousFrame_triggered();
+
 
 private:
     Ui::MainWindow *ui;

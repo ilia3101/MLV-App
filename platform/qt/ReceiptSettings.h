@@ -23,6 +23,7 @@ public:
     void setLr( int value )         {m_lr = value;}
     void setLs( int value )         {m_ls = value;}
     void setLightening( int value ) {m_lightening = value;}
+    void setSharpen( int value )    {m_sharpen = value;}
     void setHighlightReconstruction( bool on ){m_highlightReconstruction = on;}
     void setProfile( uint8_t num )  {m_profile = num;}
     void setFileName( QString fileName )      {m_fileName = fileName;}
@@ -44,6 +45,7 @@ public:
     int lr( void )         {return m_lr;}
     int ls( void )         {return m_ls;}
     int lightening( void ) {return m_lightening;}
+    int sharpen( void )    {return m_sharpen;}
     bool isHighlightReconstruction( void ){return m_highlightReconstruction;}
     int verticalStripes( void ){return m_vertical_stripes;}
     int focusPixels( void ){return m_focus_pixels;}
@@ -67,6 +69,7 @@ private:
     int m_lr;
     int m_ls;
     int m_lightening;
+    int m_sharpen;
     bool m_highlightReconstruction;
     int m_vertical_stripes; // fix vertical stripes, 0 - do not fix", 1 - fix, 2 - calculate for every frame
     int m_focus_pixels;     // fix focus pixels, false - do not fix, true - fix

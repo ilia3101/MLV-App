@@ -882,6 +882,11 @@ void MainWindow::openSession(QString fileName)
                                 m_pSessionReceipts.last()->setLightening( Rxml.readElementText().toInt() );
                                 Rxml.readNext();
                             }
+                            else if( Rxml.isStartElement() && Rxml.name() == "sharpen" )
+                            {
+                                m_pSessionReceipts.last()->setSharpen( Rxml.readElementText().toInt() );
+                                Rxml.readNext();
+                            }
                             else if( Rxml.isStartElement() && Rxml.name() == "highlightReconstruction" )
                             {
                                 m_pSessionReceipts.last()->setHighlightReconstruction( (bool)Rxml.readElementText().toInt() );
@@ -1008,6 +1013,7 @@ void MainWindow::saveSession(QString fileName)
         xmlWriter.writeTextElement( "ls",                      QString( "%1" ).arg( m_pSessionReceipts.at(i)->ls() ) );
         xmlWriter.writeTextElement( "lr",                      QString( "%1" ).arg( m_pSessionReceipts.at(i)->lr() ) );
         xmlWriter.writeTextElement( "lightening",              QString( "%1" ).arg( m_pSessionReceipts.at(i)->lightening() ) );
+        xmlWriter.writeTextElement( "sharpen",                 QString( "%1" ).arg( m_pSessionReceipts.at(i)->sharpen() ) );
         xmlWriter.writeTextElement( "highlightReconstruction", QString( "%1" ).arg( m_pSessionReceipts.at(i)->isHighlightReconstruction() ) );
         xmlWriter.writeTextElement( "profile",                 QString( "%1" ).arg( m_pSessionReceipts.at(i)->profile() ) );
         xmlWriter.writeTextElement( "verticalStripes",         QString( "%1" ).arg( m_pSessionReceipts.at(i)->verticalStripes() ) );
@@ -1103,6 +1109,8 @@ void MainWindow::setSliders(ReceiptSettings *receipt)
 
     ui->horizontalSliderLighten->setValue( receipt->lightening() );
 
+    ui->horizontalSliderSharpen->setValue( receipt->sharpen() );
+
     ui->checkBoxHighLightReconstruction->setChecked( receipt->isHighlightReconstruction() );
     ui->comboBoxProfile->setCurrentIndex( receipt->profile() );
     on_comboBoxProfile_currentIndexChanged( receipt->profile() );
@@ -1138,6 +1146,7 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     receipt->setLs( ui->horizontalSliderLS->value() );
     receipt->setLr( ui->horizontalSliderLR->value() );
     receipt->setLightening( ui->horizontalSliderLighten->value() );
+    receipt->setSharpen( ui->horizontalSliderSharpen->value() );
     receipt->setHighlightReconstruction( ui->checkBoxHighLightReconstruction->isChecked() );
     receipt->setProfile( ui->comboBoxProfile->currentIndex() );
 
@@ -1177,6 +1186,7 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     receipt->setLr( m_pSessionReceipts.at( row )->lr() );
     receipt->setLs( m_pSessionReceipts.at( row )->ls() );
     receipt->setLightening( m_pSessionReceipts.at( row )->lightening() );
+    receipt->setSharpen( m_pSessionReceipts.at( row )->sharpen() );
     receipt->setHighlightReconstruction( m_pSessionReceipts.at( row )->isHighlightReconstruction() );
     receipt->setProfile( m_pSessionReceipts.at( row )->profile() );
 
@@ -1459,6 +1469,14 @@ void MainWindow::on_horizontalSliderLighten_valueChanged(int position)
     double value = position / 100.0;
     processingSetLightening( m_pProcessingObject, value );
     ui->label_LightenVal->setText( QString("%1").arg( value, 0, 'f', 2 ) );
+    m_frameChanged = true;
+}
+
+void MainWindow::on_horizontalSliderSharpen_valueChanged(int position)
+{
+    double value = position / 100.0;
+    processingSetSharpening( m_pProcessingObject, value );
+    ui->label_Sharpen->setText( QString("%1").arg( position ) );
     m_frameChanged = true;
 }
 
@@ -2037,6 +2055,15 @@ void MainWindow::on_label_LightenVal_doubleClicked()
     editSlider.autoSetup( ui->horizontalSliderLighten, ui->label_LightenVal, 0.01, 2, 100.0 );
     editSlider.exec();
     ui->horizontalSliderLighten->setValue( editSlider.getValue() );
+}
+
+//DoubleClick on Sharpen Label
+void MainWindow::on_label_Sharpen_doubleClicked()
+{
+    EditSliderValueDialog editSlider;
+    editSlider.autoSetup( ui->horizontalSliderSharpen, ui->label_Sharpen, 1, 0, 1.0 );
+    editSlider.exec();
+    ui->horizontalSliderSharpen->setValue( editSlider.getValue() );
 }
 
 //Repaint audio if its size changed
