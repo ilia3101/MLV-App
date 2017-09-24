@@ -24,7 +24,12 @@ void GraphicsZoomView::setZoomEnabled(bool on)
 //Reset the zoom to exact 100%
 void GraphicsZoomView::resetZoom()
 {
-    resetTransform();
+    //resetTransform(); //->kills anchor
+    //Calculating this does not kill anchor -> latest anchor will be used
+    qreal percentZoom = 100.0;
+    qreal targetScale = (qreal)percentZoom / 100.0;
+    qreal scaleFactor = targetScale / transform().m11();
+    scale( scaleFactor, scaleFactor );
 }
 
 //Methods for changing the cursor
