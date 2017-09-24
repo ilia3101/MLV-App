@@ -1926,6 +1926,9 @@
    <property name="text">
     <string>Zoom: fit</string>
    </property>
+   <property name="shortcut">
+    <string>F</string>
+   </property>
   </action>
   <action name="actionZoom100">
    <property name="icon">
