@@ -21,6 +21,7 @@
 #include <QScreen>
 #include <QMimeData>
 #include <png.h>
+#include <unistd.h>
 
 #include "SystemMemory.h"
 #include "ExportSettingsDialog.h"
