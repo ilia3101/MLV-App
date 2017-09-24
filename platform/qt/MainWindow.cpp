@@ -37,6 +37,9 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
+    //Change working directory for C part
+    chdir( QCoreApplication::applicationDirPath().toLatin1().data() );
+
     ui->setupUi(this);
     setAcceptDrops(true);
 
