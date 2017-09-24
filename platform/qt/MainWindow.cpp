@@ -247,6 +247,9 @@ void MainWindow::dropEvent(QDropEvent *event)
 
         //Exit if not an MLV file or aborted
         if( fileName == QString( "" ) || !fileName.endsWith( ".mlv", Qt::CaseInsensitive ) ) continue;
+#ifdef WIN32
+        if( fileName.startsWith( "/" ) ) fileName.remove( 0, 1 );
+#endif
 
         //File is already opened? Error!
         if( isFileInSession( fileName ) )
