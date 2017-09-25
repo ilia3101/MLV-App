@@ -1335,6 +1335,11 @@
                  <string>On</string>
                 </property>
                </item>
+               <item>
+                <property name="text">
+                 <string>CropRec</string>
+                </property>
+               </item>
               </widget>
              </item>
             </layout>
