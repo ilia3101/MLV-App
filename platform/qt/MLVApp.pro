@@ -8,7 +8,9 @@ QT       += core gui multimedia
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = "MLV App"
+win32: TARGET = "MLVApp"
+linux-g++*: TARGET = "mlvapp"
+osx: TARGET = "MLV App"
 TEMPLATE = app
 
 # The following define makes your compiler emit warnings if you use
