@@ -41,7 +41,8 @@ app :
 	mkdir $(appname).app/Contents/Resources; \
 	cp -i $(appname) $(appname).app/Contents/MacOS/; \
 	cp -i info.plist $(appname).app/Contents/; \
-	cp -i checkupdate.py $(appname).app/Contents/Resources/; \
+	mkdir $(appname).app/Contents/Resources/pixelmaps; \
+	cp -i ../../src/mlv/llrawproc/pixelmaps/*.fpm $(appname).app/Contents/Resources/pixelmaps; \
 	unzip ../qt/FFmpeg/ffmpegOSX.zip -d $(appname).app/Contents/Resources; \
 	rm -rf $(appname).app/Contents/Resources/__MACOSX; \
 	cp ../../src/icon/icon.icns $(appname).app/Contents/Resources/MLV\ App.icns; \

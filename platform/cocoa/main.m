@@ -8,7 +8,6 @@
 #include <stdint.h>
 #include <string.h>
 #include <math.h>
-/* Host name */
 #include <unistd.h>
 
 #include "main_methods.h"

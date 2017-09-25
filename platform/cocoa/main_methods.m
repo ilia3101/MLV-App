@@ -89,6 +89,9 @@ int setAppNewMlvClip(char * mlvPath)
     /* Tell it slightly less cores than we have, so background caching does not slow down UI interaction */
     setMlvCpuCores(App->videoMLV, (MAC_CORES / 2 + 1));
 
+    /* Enable llrawproc to fix focus pixels etc */
+    App->videoMLV->llrawproc->fix_raw = 1;
+
     /* Adjust image size(probably) */
     [App->previewWindow setImage: nil];
 
