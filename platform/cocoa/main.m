@@ -60,6 +60,9 @@ int NSApplicationMain(int argc, const char * argv[])
     [NSApplication sharedApplication];
     [NSApp setDelegate: [MLVAppDelegate new]];
 
+    /* Set directory fo9r LLRawProc to get it's pixel maps */
+    chdir((char *)[[[NSBundle mainBundle] pathForResource:@"pixelmaps" ofType: nil] UTF8String]);
+
     /* We make the god opbject */
     App = calloc(1,sizeof(godObject_t));
 
