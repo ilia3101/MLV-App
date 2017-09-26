@@ -52,9 +52,12 @@ win32: INCLUDEPATH += libpng16/include/
 win32: LIBS += -L..\qt\libpng16\lib -llibpng \
                -L..\qt\zlib -lzlib1
 
-#Linux
+#Linux (opensuse)
 linux-g++*: INCLUDEPATH += /usr/local/include/
 linux-g++*: LIBS += -L/usr/local/lib/ -lz -lpng
+#Linux (Ubuntu)
+#linux-g++*: INCLUDEPATH += /usr/local/include/libpng16/
+#linux-g++*: LIBS += -L/usr/local/lib/ -lz -lpng16
 ##############
 
 SOURCES += \
