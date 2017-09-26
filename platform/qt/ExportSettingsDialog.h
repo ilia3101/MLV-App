@@ -26,16 +26,21 @@ class ExportSettingsDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit ExportSettingsDialog(QWidget *parent = 0, uint8_t currentCodecProfile = 0, uint8_t previewMode = 0, bool fpsOverride = false, double fps = 25, bool exportAudio = true);
+    explicit ExportSettingsDialog(QWidget *parent = 0, uint8_t currentCodecProfile = 0, uint8_t previewMode = 0, bool fpsOverride = false, double fps = 25, bool exportAudio = true, int style = 0);
     ~ExportSettingsDialog();
     uint8_t encoderSetting(void);
     bool isExportAudioEnabled(void);
     uint8_t previewMode(void);
     bool isFpsOverride(void);
     double getFps(void);
+    int getStyleIndex(void);
+
+private slots:
+    void on_pushButtonClose_clicked();
 
 private:
     Ui::ExportSettingsDialog *ui;
+    int m_styleAtStart;
 };
 
 #endif // EXPORTSETTINGSDIALOG_H

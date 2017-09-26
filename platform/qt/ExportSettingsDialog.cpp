@@ -7,9 +7,10 @@
 
 #include "ExportSettingsDialog.h"
 #include "ui_ExportSettingsDialog.h"
+#include <QMessageBox>
 
 //Constructor
-ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, uint8_t currentCodecProfile, uint8_t previewMode, bool fpsOverride, double fps, bool exportAudio) :
+ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, uint8_t currentCodecProfile, uint8_t previewMode, bool fpsOverride, double fps, bool exportAudio, int style) :
     QDialog(parent),
     ui(new Ui::ExportSettingsDialog)
 {
@@ -22,6 +23,8 @@ ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, uint8_t currentCodec
     ui->checkBoxFpsOverride->setChecked( fpsOverride );
     ui->doubleSpinBoxFps->setValue( fps );
     ui->checkBoxExportAudio->setChecked( exportAudio );
+    ui->comboBoxStyle->setCurrentIndex( style );
+    m_styleAtStart = style;
 }
 
 //Destructor
@@ -56,8 +59,24 @@ double ExportSettingsDialog::getFps()
     return ui->doubleSpinBoxFps->value();
 }
 
+//Get Style Selection
+int ExportSettingsDialog::getStyleIndex()
+{
+    return ui->comboBoxStyle->currentIndex();
+}
+
 //Get export audio checkbox checked
 bool ExportSettingsDialog::isExportAudioEnabled()
 {
     return ui->checkBoxExportAudio->isChecked();
+}
+
+//Close clicked
+void ExportSettingsDialog::on_pushButtonClose_clicked()
+{
+    if( m_styleAtStart != ui->comboBoxStyle->currentIndex() )
+    {
+        QMessageBox::information( this, tr( "Style change" ), tr( "Appearance will be changed on next application start." ) );
+    }
+    close();
 }

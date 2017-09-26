@@ -26,7 +26,9 @@
 #include "SystemMemory.h"
 #include "ExportSettingsDialog.h"
 #include "EditSliderValueDialog.h"
+#include "DarkStyle.h"
 
+#define APPNAME "MLV App"
 #define VERSION "0.8 alpha"
 
 QMutex gMutex;
@@ -660,6 +662,8 @@ void MainWindow::readSettings()
     ui->actionCaching->setChecked( false );
     m_frameRate = set.value( "frameRate", 25 ).toDouble();
     m_audioExportEnabled = set.value( "audioExportEnabled", true ).toBool();
+    m_styleSelection = set.value( "darkStyle", 0 ).toInt();
+    if( m_styleSelection == 1 ) CDarkStyle::assign();
 }
 
 //Save some settings to registry
@@ -683,6 +687,7 @@ void MainWindow::writeSettings()
     set.setValue( "caching", ui->actionCaching->isChecked() );
     set.setValue( "frameRate", m_frameRate );
     set.setValue( "audioExportEnabled", m_audioExportEnabled );
+    set.setValue( "darkStyle", m_styleSelection );
 }
 
 //Start exporting a MOV via PNG48
@@ -1403,18 +1408,24 @@ void MainWindow::endExport( void )
 //About Window
 void MainWindow::on_actionAbout_triggered()
 {
-    QMessageBox::about( this, QString( "About %1" ).arg( "MLV App" ),
+    QMessageBox::about( this, QString( "About %1" ).arg( APPNAME ),
                             QString(
                               "<html><img src=':/IMG/IMG/Magic_Lantern_logo_b.png' align='right'/>"
                               "<body><h3>%1</h3>"
                               " <p>%1 v%2</p>"
                               " <p>%6</p>"
-                              " <p>See <a href='%7'>%7</a> for more information.</p>"
+                              " <p>See <a href='%7'>this site</a> for more information.</p>"
+                              " <p>Darkstyle Copyright (c) 2017, <a href='%8'>Juergen Skrotzky</a></p>"
+                              " <p>Iconsets by <a href='%8'>Double-J Design</a> and <a href='%9'>Daniele De Santis</a> under <a href='%10'>CC4.0</a></p>"
                               " </body></html>" )
-                             .arg( "MLV App" )
+                             .arg( APPNAME )
                              .arg( VERSION )
                              .arg( "by Ilia3101, bouncyball & masc." )
-                             .arg( "https://github.com/ilia3101/MLV-App" ) );
+                             .arg( "https://github.com/ilia3101/MLV-App" )
+                             .arg( "https://github.com/Jorgen-VikingGod" )
+                             .arg( "http://www.doublejdesign.co.uk/" )
+                             .arg( "http://www.danieledesantis.net/" )
+                             .arg( "https://creativecommons.org/licenses/by/4.0/" ) );
 }
 
 //Position Slider
@@ -1644,6 +1655,7 @@ void MainWindow::on_actionZoom100_triggered()
 //Show Histogram
 void MainWindow::on_actionShowHistogram_triggered(void)
 {
+    ui->actionShowHistogram->setChecked( true );
     ui->actionShowWaveFormMonitor->setChecked( false );
     m_frameChanged = true;
 }
@@ -1651,6 +1663,7 @@ void MainWindow::on_actionShowHistogram_triggered(void)
 //Show Waveform
 void MainWindow::on_actionShowWaveFormMonitor_triggered(void)
 {
+    ui->actionShowWaveFormMonitor->setChecked( true );
     ui->actionShowHistogram->setChecked( false );
     m_frameChanged = true;
 }
@@ -1678,13 +1691,14 @@ void MainWindow::on_actionExportSettings_triggered()
     //Stop playback if active
     ui->actionPlay->setChecked( false );
 
-    ExportSettingsDialog *pExportSettings = new ExportSettingsDialog( this, m_codecProfile, m_previewMode, m_fpsOverride, m_frameRate, m_audioExportEnabled );
+    ExportSettingsDialog *pExportSettings = new ExportSettingsDialog( this, m_codecProfile, m_previewMode, m_fpsOverride, m_frameRate, m_audioExportEnabled, m_styleSelection );
     pExportSettings->exec();
     m_codecProfile = pExportSettings->encoderSetting();
     m_previewMode = pExportSettings->previewMode();
     m_fpsOverride = pExportSettings->isFpsOverride();
     m_frameRate = pExportSettings->getFps();
     m_audioExportEnabled = pExportSettings->isExportAudioEnabled();
+    m_styleSelection = pExportSettings->getStyleIndex();
     delete pExportSettings;
 
     //Restart timer with chosen framerate

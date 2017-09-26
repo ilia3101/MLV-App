@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>328</width>
-    <height>285</height>
+    <height>354</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -186,6 +186,29 @@
     </widget>
    </item>
    <item>
+    <widget class="QGroupBox" name="groupBox_3">
+     <property name="title">
+      <string>Application Appearance</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_3">
+      <item row="0" column="0">
+       <widget class="QComboBox" name="comboBoxStyle">
+        <item>
+         <property name="text">
+          <string>Standard</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>DarkStyle</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
     <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
       <spacer name="horizontalSpacer">
@@ -223,22 +246,6 @@
  </tabstops>
  <resources/>
  <connections>
-  <connection>
-   <sender>pushButtonClose</sender>
-   <signal>clicked()</signal>
-   <receiver>ExportSettingsDialog</receiver>
-   <slot>close()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>252</x>
-     <y>63</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>151</x>
-     <y>45</y>
-    </hint>
-   </hints>
-  </connection>
   <connection>
    <sender>checkBoxFpsOverride</sender>
    <signal>toggled(bool)</signal>

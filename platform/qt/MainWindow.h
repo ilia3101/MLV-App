@@ -154,6 +154,7 @@ private:
     QVector<ReceiptSettings*> m_pSessionReceipts;
     QVector<ReceiptSettings*> m_exportQueue;
     int m_lastActiveClipInSession;
+    int m_styleSelection;
     QByteArray *m_pByteArrayAudio;
     QDataStream *m_pAudioStream;
     QAudioOutput *m_pAudioOutput;
