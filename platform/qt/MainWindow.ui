@@ -239,6 +239,18 @@
     <number>2</number>
    </attribute>
    <widget class="QWidget" name="dockWidgetContents">
+    <property name="minimumSize">
+     <size>
+      <width>212</width>
+      <height>0</height>
+     </size>
+    </property>
+    <property name="maximumSize">
+     <size>
+      <width>212</width>
+      <height>16777215</height>
+     </size>
+    </property>
     <layout class="QVBoxLayout" name="verticalLayout_5">
      <property name="spacing">
       <number>0</number>

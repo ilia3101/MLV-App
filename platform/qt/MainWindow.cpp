@@ -1255,16 +1255,19 @@ void MainWindow::setPreviewMode( void )
     {
         ui->listWidgetSession->setViewMode( QListView::ListMode );
         ui->listWidgetSession->setIconSize( QSize( 50, 30 ) );
+        ui->listWidgetSession->setAlternatingRowColors( true );
     }
     else if( m_previewMode == 2 )
     {
         ui->listWidgetSession->setViewMode( QListView::IconMode );
         ui->listWidgetSession->setIconSize( QSize( ui->listWidgetSession->width()-30, 100 ) );
+        ui->listWidgetSession->setAlternatingRowColors( false );
     }
     else
     {
         ui->listWidgetSession->setViewMode( QListView::ListMode );
         ui->listWidgetSession->setIconSize( QSize( 0, 0 ) );
+        ui->listWidgetSession->setAlternatingRowColors( true );
     }
 }
 
