@@ -1882,7 +1882,7 @@
    </property>
    <property name="icon">
     <iconset resource="ressources.qrc">
-     <normaloff>:/AudioVideoIcons/AudioVideoIcons/play-icon.png</normaloff>:/AudioVideoIcons/AudioVideoIcons/play-icon.png</iconset>
+     <normaloff>:/AudioVideoIcons/AudioVideoIcons/Play.png</normaloff>:/AudioVideoIcons/AudioVideoIcons/Play.png</iconset>
    </property>
    <property name="text">
     <string>Play</string>
@@ -1897,7 +1897,7 @@
   <action name="actionGoto_First_Frame">
    <property name="icon">
     <iconset resource="ressources.qrc">
-     <normaloff>:/AudioVideoIcons/AudioVideoIcons/first-track-icon.png</normaloff>:/AudioVideoIcons/AudioVideoIcons/first-track-icon.png</iconset>
+     <normaloff>:/AudioVideoIcons/AudioVideoIcons/FirstFrame.png</normaloff>:/AudioVideoIcons/AudioVideoIcons/FirstFrame.png</iconset>
    </property>
    <property name="text">
     <string>Goto First Frame</string>
@@ -1915,7 +1915,7 @@
    </property>
    <property name="icon">
     <iconset resource="ressources.qrc">
-     <normaloff>:/AudioVideoIcons/AudioVideoIcons/replay-icon.png</normaloff>:/AudioVideoIcons/AudioVideoIcons/replay-icon.png</iconset>
+     <normaloff>:/AudioVideoIcons/AudioVideoIcons/Loop.png</normaloff>:/AudioVideoIcons/AudioVideoIcons/Loop.png</iconset>
    </property>
    <property name="text">
     <string>Loop</string>
@@ -2162,7 +2162,7 @@
   <action name="actionNextFrame">
    <property name="icon">
     <iconset resource="ressources.qrc">
-     <normaloff>:/AudioVideoIcons/AudioVideoIcons/forward-icon.png</normaloff>:/AudioVideoIcons/AudioVideoIcons/forward-icon.png</iconset>
+     <normaloff>:/AudioVideoIcons/AudioVideoIcons/FrameFW.png</normaloff>:/AudioVideoIcons/AudioVideoIcons/FrameFW.png</iconset>
    </property>
    <property name="text">
     <string>Next Frame</string>
@@ -2171,7 +2171,7 @@
   <action name="actionPreviousFrame">
    <property name="icon">
     <iconset resource="ressources.qrc">
-     <normaloff>:/AudioVideoIcons/AudioVideoIcons/rewind-icon.png</normaloff>:/AudioVideoIcons/AudioVideoIcons/rewind-icon.png</iconset>
+     <normaloff>:/AudioVideoIcons/AudioVideoIcons/FrameBW.png</normaloff>:/AudioVideoIcons/AudioVideoIcons/FrameBW.png</iconset>
    </property>
    <property name="text">
     <string>Previous Frame</string>

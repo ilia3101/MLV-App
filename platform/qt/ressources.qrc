@@ -28,16 +28,10 @@
         <file>RetinaIMG/Image-icon.png</file>
     </qresource>
     <qresource prefix="/AudioVideoIcons">
-        <file>AudioVideoIcons/audio-icon.png</file>
-        <file>AudioVideoIcons/audio-off-icon.png</file>
-        <file>AudioVideoIcons/first-track-icon.png</file>
-        <file>AudioVideoIcons/forward-icon.png</file>
-        <file>AudioVideoIcons/last-track-icon.png</file>
-        <file>AudioVideoIcons/pause-icon.png</file>
-        <file>AudioVideoIcons/play-icon.png</file>
-        <file>AudioVideoIcons/replay-icon.png</file>
-        <file>AudioVideoIcons/rewind-icon.png</file>
-        <file>AudioVideoIcons/shuffle-icon.png</file>
-        <file>AudioVideoIcons/stop-icon.png</file>
+        <file>AudioVideoIcons/FirstFrame.png</file>
+        <file>AudioVideoIcons/FrameBW.png</file>
+        <file>AudioVideoIcons/FrameFW.png</file>
+        <file>AudioVideoIcons/Loop.png</file>
+        <file>AudioVideoIcons/Play.png</file>
     </qresource>
 </RCC>
