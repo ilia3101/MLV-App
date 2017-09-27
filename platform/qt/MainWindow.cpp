@@ -1416,7 +1416,7 @@ void MainWindow::on_actionAbout_triggered()
                               " <p>%6</p>"
                               " <p>See <a href='%7'>this site</a> for more information.</p>"
                               " <p>Darkstyle Copyright (c) 2017, <a href='%8'>Juergen Skrotzky</a></p>"
-                              " <p>Iconsets by <a href='%9'>Double-J Design</a> and <a href='%10'>Daniele De Santis</a> under <a href='%11'>CC4.0</a></p>"
+                              " <p>Some icons by <a href='%9'>Double-J Design</a> under <a href='%10'>CC4.0</a></p>"
                               " </body></html>" )
                              .arg( APPNAME )
                              .arg( VERSION )
@@ -1424,7 +1424,6 @@ void MainWindow::on_actionAbout_triggered()
                              .arg( "https://github.com/ilia3101/MLV-App" )
                              .arg( "https://github.com/Jorgen-VikingGod" )
                              .arg( "http://www.doublejdesign.co.uk/" )
-                             .arg( "http://www.danieledesantis.net/" )
                              .arg( "https://creativecommons.org/licenses/by/4.0/" ) );
 }
 
