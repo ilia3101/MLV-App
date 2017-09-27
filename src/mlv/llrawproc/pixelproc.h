@@ -58,6 +58,7 @@ void fix_focus_pixels(pixel_map * focus_pixel_map,
                       uint16_t pan_y,
                       int32_t raw_width,
                       int32_t raw_height,
+                      int crop_rec,
                       int average_method,
                       int dual_iso,
                       int * raw2ev,
@@ -81,6 +82,7 @@ void fix_bad_pixels(pixel_map * bad_pixel_map,
                     int * raw2ev,
                     int * ev2raw);
 
+void reset_fpm_status(pixel_map * focus_pixel_map, int * fpm_status);
 void reset_bpm_status(pixel_map * bad_pixel_map, int * bpm_status);
 
 /* free bufers used for raw processing */

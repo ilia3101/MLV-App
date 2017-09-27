@@ -45,7 +45,7 @@ static void deflicker(mlvObject_t * video, uint16_t * raw_image_buff, size_t raw
     video->RAWI.raw_info.exposure_bias[1] = 10000;
 }
 
-/* Initialises processing thing with memory */
+/* initialise low level raw processing struct */
 llrawprocObject_t * initLLRawProcObject()
 {
     llrawprocObject_t * llrawproc = calloc(1, sizeof(llrawprocObject_t));
@@ -130,7 +130,7 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
     }
 
     /* fix focus pixels */
-    if (video->llrawproc->focus_pixels)
+    if (video->llrawproc->focus_pixels && video->llrawproc->fpm_status < 3)
     {
         fix_focus_pixels(&video->llrawproc->focus_pixel_map,
                          &video->llrawproc->fpm_status,
@@ -142,6 +142,7 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
                          video->VIDF.panPosY,
                          video->RAWI.raw_info.width,
                          video->RAWI.raw_info.height,
+                         (video->llrawproc->focus_pixels == 2),
                          video->llrawproc->fpi_method,
                          video->llrawproc->dual_iso,
                          video->llrawproc->raw2ev,
@@ -149,7 +150,7 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
     }
 
     /* fix bad pixels */
-    if (video->llrawproc->bad_pixels)
+    if (video->llrawproc->bad_pixels && video->llrawproc->bpm_status < 3)
     {
         fix_bad_pixels(&video->llrawproc->bad_pixel_map,
                        &video->llrawproc->bpm_status,

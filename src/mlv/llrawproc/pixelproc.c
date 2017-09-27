@@ -262,6 +262,9 @@ static inline void interpolate_around(uint16_t * image_data, int i, int w, int *
 }
 
 /* following code is for bad/focus pixel processing **********************************************/
+enum pattern { PATTERN_NONE, PATTERN_A, PATTERN_B };
+enum video_mode { MV_NONE, MV_720, MV_1080, MV_1080CROP, MV_ZOOM, MV_CROPREC };
+
 static int add_pixel_to_map(pixel_map * map, int x, int y)
 {
     if(!map->capacity)
@@ -290,7 +293,7 @@ malloc_error:
     return 0;
 }
 
-static int load_pixel_map(pixel_map * map, uint32_t camera_id, int raw_width, int raw_height, int dual_iso)
+static int load_pixel_map(pixel_map * map, uint32_t camera_id, int raw_width, int raw_height)
 {
     const char * file_ext = ".fpm";
     const char * map_type = "focus";
@@ -322,14 +325,391 @@ static int load_pixel_map(pixel_map * map, uint32_t camera_id, int raw_width, in
 
 #ifndef STDOUT_SILENT
     printf("\nUsing %s pixel map: '%s'\n"FMT_SIZE" pixels loaded\n", map_type, file_name, map->count);
-    if (dual_iso)
-    {
-        printf("Dualiso interpolation method 'HORIZONTAL'\n");
-    }
 #endif
 
     fclose(f);
     return 1;
+}
+
+/* generate the focus pixel pattern for mv720 video mode */
+static void fpm_mv720(pixel_map * map, int pattern, int32_t raw_width)
+{
+    int shift = 0;
+
+    // PATTERN_A
+    int fp_start = 290;
+    int fp_end = 465;
+    int x_rep = 8;
+    int y_rep = 12;
+
+    if(pattern == PATTERN_B)
+    {
+        fp_start = 86;
+        fp_end = 669;
+    }
+
+    for(int y = fp_start; y <= fp_end; y++)
+    {
+        if(((y + 3) % y_rep) == 0) shift = 7;
+        else if(((y + 4) % y_rep) == 0) shift = 6;
+        else if(((y + 9) % y_rep) == 0) shift = 3;
+        else if(((y + 10) % y_rep) == 0) shift = 2;
+        else continue;
+
+        for(int x = 72; x <= raw_width; x++)
+        {
+            if(((x + shift) % x_rep) == 0)
+            {
+                add_pixel_to_map(map, x, y);
+            }
+        }
+
+    }
+}
+
+/* generate the focus pixel pattern for mv1080 video mode */
+static void fpm_mv1080(pixel_map * map, int pattern, int32_t raw_width)
+{
+    int shift = 0;
+
+    // PATTERN_A
+    int fp_start = 459;
+    int fp_end = 755;
+    int x_rep = 8;
+    int y_rep = 10;
+
+    if(pattern == PATTERN_B)
+    {
+        fp_start = 119;
+        fp_end = 1095;
+    }
+
+    for(int y = fp_start; y <= fp_end; y++)
+    {
+        if(((y + 0) % y_rep) == 0) shift=0;
+        else if(((y + 1) % y_rep) == 0) shift = 1;
+        else if(((y + 5) % y_rep) == 0) shift = 5;
+        else if(((y + 6) % y_rep) == 0) shift = 4;
+        else continue;
+
+        for(int x = 72; x <= raw_width; x++)
+        {
+            if(((x + shift) % x_rep) == 0)
+            {
+                add_pixel_to_map(map, x, y);
+            }
+        }
+    }
+}
+
+/* generate the focus pixel pattern for mv1080crop video mode */
+static void fpm_mv1080crop(pixel_map * map, int pattern, int32_t raw_width)
+{
+    int shift = 0;
+
+    // PATTERN_A
+    int fp_start = 121;
+    int fp_end = 1013;
+    int x_rep = 24;
+    int y_rep = 60;
+
+    if(pattern == PATTERN_B)
+    {
+        fp_start = 29;
+        fp_end = 1057;
+        x_rep = 12;
+        y_rep = 6;
+    }
+
+    for(int y = fp_start; y <= fp_end; y++)
+    {
+        if(pattern == PATTERN_A)
+        {
+            if(((y + 7) % y_rep) == 0 ) shift = 19;
+            else if(((y + 11) % y_rep) == 0 ) shift = 13;
+            else if(((y + 12) % y_rep) == 0 ) shift = 18;
+            else if(((y + 14) % y_rep) == 0 ) shift = 12;
+            else if(((y + 26) % y_rep) == 0 ) shift = 0;
+            else if(((y + 29) % y_rep) == 0 ) shift = 1;
+            else if(((y + 37) % y_rep) == 0 ) shift = 7;
+            else if(((y + 41) % y_rep) == 0 ) shift = 13;
+            else if(((y + 42) % y_rep) == 0 ) shift = 6;
+            else if(((y + 44) % y_rep) == 0 ) shift = 12;
+            else if(((y + 56) % y_rep) == 0 ) shift = 0;
+            else if(((y + 59) % y_rep) == 0 ) shift = 1;
+            else continue;
+        }
+        else if(pattern == PATTERN_B)
+        {
+            if(((y + 2) % y_rep) == 0 ) shift = 0;
+            else if(((y + 5) % y_rep) == 0 ) shift = 1;
+            else if(((y + 6) % y_rep) == 0 ) shift = 6;
+            else if(((y + 7) % y_rep) == 0 ) shift = 7;
+            else continue;
+        }
+
+        for(int x = 72; x <= raw_width; x++)
+        {
+            if(((x + shift) % x_rep) == 0)
+            {
+                add_pixel_to_map(map, x, y);
+            }
+        }
+    }
+}
+
+/* generate the focus pixel pattern for zoom video mode */
+static void fpm_zoom(pixel_map * map, int pattern, int32_t raw_width)
+{
+    int shift = 0;
+
+    // PATTERN_A
+    int fp_start = 31;
+    int fp_end = 1103;
+    int x_rep = 24;
+    int y_rep = 60;
+
+    if(pattern == PATTERN_B)
+    {
+        fp_start = 28;
+        fp_end = 1105;
+        x_rep = 12;
+        y_rep = 6;
+    }
+
+    for(int y = fp_start; y <= fp_end; y++)
+    {
+        if(pattern == PATTERN_A)
+        {
+            if(((y + 7) % y_rep) == 0) shift = 19;
+            else if(((y + 11) % y_rep) == 0) shift = 13;
+            else if(((y + 12) % y_rep) == 0) shift = 18;
+            else if(((y + 14) % y_rep) == 0) shift = 12;
+            else if(((y + 26) % y_rep) == 0) shift = 0;
+            else if(((y + 29) % y_rep) == 0) shift = 1;
+            else if(((y + 37) % y_rep) == 0) shift = 7;
+            else if(((y + 41) % y_rep) == 0) shift = 13;
+            else if(((y + 42) % y_rep) == 0) shift = 6;
+            else if(((y + 44) % y_rep) == 0) shift = 12;
+            else if(((y + 56) % y_rep) == 0) shift = 0;
+            else if(((y + 59) % y_rep) == 0) shift = 1;
+            else continue;
+        }
+        else if(pattern == PATTERN_B)
+        {
+            if(((y + 2) % y_rep) == 0) shift = 0;
+            else if(((y + 5) % y_rep) == 0) shift = 1;
+            else if(((y + 6) % y_rep) == 0) shift = 6;
+            else if(((y + 7) % y_rep) == 0) shift = 7;
+            else continue;
+        }
+
+        for(int x = 72; x <= raw_width; x++)
+        {
+            if(((x + shift) % x_rep) == 0)
+            {
+                add_pixel_to_map(map, x, y);
+            }
+        }
+    }
+}
+
+/* generate the focus pixel pattern for crop_rec video mode (crop_rec module) */
+static void fpm_crop_rec(pixel_map * map, int pattern, int32_t raw_width)
+{
+    int shift = 0;
+    int shift2 = 0;
+
+    if(pattern == PATTERN_A)
+    {
+        // top part has same pattern as mv1080
+        int fp_start = 219;
+        int fp_end = 289;
+        int x_rep = 8;
+        int y_rep = 10;
+
+        for(int y = fp_start; y <= fp_end; y++)
+        {
+            if(((y + 0) % y_rep) == 0) shift = 0;
+            else if(((y + 1) % y_rep) == 0) shift = 1;
+            else if(((y + 5) % y_rep) == 0) shift = 5;
+            else if(((y + 6) % y_rep) == 0) shift = 4;
+            else continue;
+
+            for(int x = 72; x <= raw_width; x++)
+            {
+                if(((x + shift) % x_rep) == 0)
+                {
+                    add_pixel_to_map(map, x, y);
+                }
+            }
+        }
+
+        // middle part combines the mv1080 and mv720 patterns
+        fp_start = 290;
+        fp_end = 468;
+        x_rep = 8;
+        y_rep = 60;
+
+        for(int y = fp_start; y <= fp_end; y++)
+        {
+            if(((y + 0) % y_rep) == 0) shift = shift2 = 0;
+            else if(((y + 1) % y_rep) == 0) shift = shift2 = 1;
+            else if(((y + 3) % y_rep) == 0) shift = shift2 = 7;
+            else if(((y + 4) % y_rep) == 0) shift = shift2 = 6;
+            else if(((y + 5) % y_rep) == 0) shift = shift2 = 5;
+            else if(((y + 6) % y_rep) == 0) shift = shift2 = 4;
+            else if(((y + 9) % y_rep) == 0) shift = shift2 = 3;
+            else if(((y + 10) % y_rep) == 0)
+            {
+                shift = 0;
+                shift2 = 2;
+            }
+            else if(((y + 11) % y_rep) == 0) shift = shift2 = 1;
+            else if(((y + 15) % y_rep) == 0)
+            {
+                shift = 7;
+                shift2 = 5;
+            }
+            else if(((y + 16) % y_rep) == 0)
+            {
+                shift = 6;
+                shift2 = 4;
+            }
+            else if(((y + 20) % y_rep) == 0) shift = shift2 = 0;
+            else if(((y + 21) % y_rep) == 0)
+            {
+                shift = 3;
+                shift2 = 1;
+            }
+            else if(((y + 22) % y_rep) == 0) shift = shift2 = 2;
+            else if(((y + 25) % y_rep) == 0) shift = shift2 = 5;
+            else if(((y + 26) % y_rep) == 0) shift = shift2 = 4;
+            else if(((y + 27) % y_rep) == 0) shift = shift2 = 7;
+            else if(((y + 28) % y_rep) == 0) shift = shift2 = 6;
+            else if(((y + 30) % y_rep) == 0) shift = shift2 = 0;
+            else if(((y + 31) % y_rep) == 0) shift = shift2 = 1;
+            else if(((y + 33) % y_rep) == 0) shift = shift2 = 3;
+            else if(((y + 34) % y_rep) == 0) shift = shift2 = 2;
+            else if(((y + 35) % y_rep) == 0) shift = shift2 = 5;
+            else if(((y + 36) % y_rep) == 0) shift = shift2 = 4;
+            else if(((y + 39) % y_rep) == 0) shift = shift2 = 7;
+            else if(((y + 40) % y_rep) == 0)
+            {
+                shift = 0;
+                shift2 = 6;
+            }
+            else if(((y + 41) % y_rep) == 0) shift = shift2 = 1;
+            else if(((y + 45) % y_rep) == 0)
+            {
+                shift = 5;
+                shift2 = 3;
+            }
+            else if(((y + 46) % y_rep) == 0)
+            {
+                shift = 4;
+                shift2 = 2;
+            }
+            else if(((y + 50) % y_rep) == 0) shift = shift2 = 0;
+            else if(((y + 51) % y_rep) == 0)
+            {
+                shift = 7;
+                shift2 = 1;
+            }
+            else if(((y + 52) % y_rep) == 0) shift = shift2 = 6;
+            else if(((y + 55) % y_rep) == 0) shift = shift2 = 5;
+            else if(((y + 56) % y_rep) == 0) shift = shift2 = 4;
+            else if(((y + 57) % y_rep) == 0) shift = shift2 = 3;
+            else if(((y + 58) % y_rep) == 0) shift = shift2 = 2;
+            else continue;
+
+            for(int x = 72; x <= raw_width; x++)
+            {
+                if(((x + shift) % x_rep) == 0 || ((x + shift2) % x_rep) == 0)
+                {
+                    add_pixel_to_map(map, x, y);
+                }
+            }
+        }
+
+        // bottom part has same pattern as mv1080
+        fp_start = 469;
+        fp_end = 515;
+        x_rep = 8;
+        y_rep = 10;
+
+        for(int y = fp_start; y <= fp_end; y++)
+        {
+            if(((y + 0) % y_rep) == 0) shift = 0;
+            else if(((y + 1) % y_rep) == 0) shift = 1;
+            else if(((y + 5) % y_rep) == 0) shift = 5;
+            else if(((y + 6) % y_rep) == 0) shift = 4;
+            else continue;
+
+            for(int x = 72; x <= raw_width; x++)
+            {
+                if(((x + shift) % x_rep) == 0)
+                {
+                    add_pixel_to_map(map, x, y);
+                }
+            }
+        }
+    }
+    else if(pattern == PATTERN_B)
+    {
+        fpm_mv720(map, pattern, raw_width); // crop_rec not yet available on the 100D
+    }
+}
+
+/* returns focus pixel pattern A, B or NONE in case of unsupported camera */
+static int fpm_get_pattern(uint32_t camera_model)
+{
+    switch(camera_model)
+    {
+        case 0x80000331: // EOSM
+        case 0x80000301: // 650D
+        case 0x80000326: // 700D
+            return PATTERN_A;
+
+        case 0x80000346: // 100D
+            return PATTERN_B;
+
+        default: // unsupported camera
+            return PATTERN_NONE;
+    }
+}
+
+/* returns video mode name, special case when vid_mode == "crop_rec" */
+static int fpm_get_video_mode(int32_t raw_width, int32_t raw_height, int crop_rec)
+{
+    switch(raw_width)
+    {
+        case 1808:
+            if(raw_height < 900)
+            {
+                if(crop_rec)
+                {
+                    return MV_CROPREC;
+                }
+                else
+                {
+                    return MV_720;
+                }
+            }
+            else
+            {
+                return MV_1080;
+            }
+
+        case 1872:
+            return MV_1080CROP;
+
+        case 2592:
+            return MV_ZOOM;
+
+        default:
+            return MV_NONE;
+    }
 }
 
 void fix_focus_pixels(pixel_map * focus_pixel_map,
@@ -342,13 +722,12 @@ void fix_focus_pixels(pixel_map * focus_pixel_map,
                       uint16_t pan_y,
                       int32_t raw_width,
                       int32_t raw_height,
+                      int crop_rec,
                       int average_method,
                       int dual_iso,
                       int * raw2ev,
                       int * ev2raw)
 {
-    if(*fpm_status == 2) return;
-
     int w = width;
     int h = height;
     int cropX = (pan_x + 7) & ~7;
@@ -362,17 +741,78 @@ void fix_focus_pixels(pixel_map * focus_pixel_map,
         return;
     }
 
-    // fpm_status: 0 = not loaded, 1 = loaded, 2 = not exist
+fpm_check:
+    // fpm_status: 0 = not loaded, 1 = not exists (generate), 2 = loaded/generated (interpolate), 3 = no focus pixel map is generated (unsupported camera)
     switch(*fpm_status)
     {
         case 0: // load fpm
         {
-            if(load_pixel_map(focus_pixel_map, camera_id, raw_width, raw_height, dual_iso))
-                *fpm_status = 1;
-            else
+            if(load_pixel_map(focus_pixel_map, camera_id, raw_width, raw_height))
+            {
                 *fpm_status = 2;
+            }
+            else
+            {
+                *fpm_status = 1;
+            }
+            goto fpm_check;
         }
-        case 1: // interpolate pixels
+        case 1: // generate pixel pattern
+        {
+            enum pattern pattern = fpm_get_pattern(camera_id);
+            if(pattern == PATTERN_NONE)
+            {
+                *fpm_status = 3;
+            }
+            else
+            {
+                enum video_mode video_mode = fpm_get_video_mode(raw_width, raw_height, crop_rec);
+#ifndef STDOUT_SILENT
+                printf("\nGenerating focus pixel map for video mode ");
+#endif
+                switch(video_mode)
+                {
+                    case MV_720:
+#ifndef STDOUT_SILENT
+                        printf("'mv720'\n");
+#endif
+                        fpm_mv720(focus_pixel_map, pattern, raw_width);
+                        break;
+                    case MV_1080:
+#ifndef STDOUT_SILENT
+                        printf("'mv1080'\n");
+#endif
+                        fpm_mv1080(focus_pixel_map, pattern, raw_width);
+                        break;
+                    case MV_1080CROP:
+#ifndef STDOUT_SILENT
+                        printf("'mv1080crop'\n");
+#endif
+                        fpm_mv1080crop(focus_pixel_map, pattern, raw_width);
+                        break;
+                    case MV_ZOOM:
+#ifndef STDOUT_SILENT
+                        printf("'mvZoom'\n");
+#endif
+                        fpm_zoom(focus_pixel_map, pattern, raw_width);
+                        break;
+                    case MV_CROPREC:
+#ifndef STDOUT_SILENT
+                        printf("'mvCrop_rec'\n");
+#endif
+                        fpm_crop_rec(focus_pixel_map, pattern, raw_width);
+                        break;
+                    default:
+                        break;
+                }
+#ifndef STDOUT_SILENT
+                printf(""FMT_SIZE" pixels generated\n", focus_pixel_map->count);
+#endif
+                *fpm_status = 2;
+            }
+            goto fpm_check;
+        }
+        case 2: // interpolate pixels
         {
             for (size_t m = 0; m < focus_pixel_map->count; m++)
             {
@@ -422,10 +862,7 @@ void fix_focus_pixels(pixel_map * focus_pixel_map,
             break;
         }
         default:
-        {
-            printf("Muahahaha\n");
             break;
-        }
     }
 }
 
@@ -447,8 +884,6 @@ void fix_bad_pixels(pixel_map * bad_pixel_map,
                     int * ev2raw)
 
 {
-    if(*bpm_status == 3) return;
-
     int w = width;
     int h = height;
     int black = black_level;
@@ -463,12 +898,13 @@ void fix_bad_pixels(pixel_map * bad_pixel_map,
         return;
     }
 
-    // bpm_status: 0 = not loaded, 1 = loaded, 2 = not exist, 3 = no bad pixels found
+bpm_check:
+    // bpm_status: 0 = not loaded, 1 = not exists (search), 2 = loaded/found (interpolate), 3 = no bad pixels found
     switch(*bpm_status)
     {
         case 0: // load bpm
         {
-            if(load_pixel_map(bad_pixel_map, camera_id, raw_width, raw_height, dual_iso))
+            if(load_pixel_map(bad_pixel_map, camera_id, raw_width, raw_height))
             {
                 *bpm_status = 2;
             }
@@ -476,14 +912,15 @@ void fix_bad_pixels(pixel_map * bad_pixel_map,
             {
                 *bpm_status = 1;
             }
+            goto bpm_check;
         }
-        case 1: // search for bad pixels and save to file if needed
+        case 1: // search for bad pixels
         {
 #ifndef STDOUT_SILENT
             printf("\nSearching for bad pixel types:\n");
 #endif
             //just guess the dark noise for speed reasons
-            int dark_noise = 12 ;
+            int dark_noise = 12;
             int dark_min = black - (dark_noise * 8);
             int dark_max = black + (dark_noise * 8);
             int x,y;
@@ -568,6 +1005,7 @@ void fix_bad_pixels(pixel_map * bad_pixel_map,
             {
                 *bpm_status = 3; // bad pixels not found, interpolation not needed
             }
+            goto bpm_check;
         }
         case 2: // interpolate pixels
         {
@@ -619,9 +1057,19 @@ void fix_bad_pixels(pixel_map * bad_pixel_map,
             break;
         }
         default:
-        {
             break;
-        }
+    }
+}
+
+void reset_fpm_status(pixel_map * focus_pixel_map, int * fpm_status)
+{
+    *fpm_status = 0;
+    focus_pixel_map->count = 0;
+    focus_pixel_map->capacity = 0;
+    if(focus_pixel_map->pixels)
+    {
+        free(focus_pixel_map->pixels);
+        focus_pixel_map->pixels = NULL;
     }
 }
 

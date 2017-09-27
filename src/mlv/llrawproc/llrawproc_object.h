@@ -33,7 +33,7 @@ typedef struct
     int fix_raw;          // apply raw fixes or not, 0=do not apply, 1=apply
     int vertical_stripes; // fix vertical stripes, 0 - do not fix", 1 - fix, 2 - compute stripes for every frame
     int compute_stripes;  // 0 = do not compute stripes, 1 = compute stripes
-    int focus_pixels;     // fix focus pixels, 0 - do not fix, 1 - fix
+    int focus_pixels;     // fix focus pixels, 0 - do not fix, 1 - fix, 2 - generates focus pixel map for crop_rec mode
     int fpi_method;       // focus pixel interpolation method: 0 - mlvfs, 1 - raw2dng
     int fpm_status;       // focus pixel map status: 0 = not loaded, 1 = loaded, 2 = not exist
     int bad_pixels;       // fix bad pixels, 0 - do not fix, 1 - fix, 2 - makes algorithm aggresive to reveal more bad pixels

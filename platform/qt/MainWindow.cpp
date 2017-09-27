@@ -1681,6 +1681,9 @@ void MainWindow::on_actionAlwaysUseAMaZE_triggered(bool checked)
         /* Don't use AMaZE */
         setMlvDontAlwaysUseAmaze( m_pMlvObject );
     }
+    reset_fpm_status(&m_pMlvObject->llrawproc->focus_pixel_map, &m_pMlvObject->llrawproc->fpm_status);
+    reset_bpm_status(&m_pMlvObject->llrawproc->bad_pixel_map, &m_pMlvObject->llrawproc->bpm_status);
+    m_pMlvObject->llrawproc->compute_stripes = 1;
     m_pMlvObject->current_cached_frame_active = 0;
     m_frameChanged = true;
 }
@@ -2213,6 +2216,8 @@ void MainWindow::on_comboBoxFocusPixelSwitch_currentIndexChanged(int index)
 {
     //TODO: do it different!!!
     m_pMlvObject->llrawproc->focus_pixels = index;
+    reset_fpm_status(&m_pMlvObject->llrawproc->focus_pixel_map, &m_pMlvObject->llrawproc->fpm_status);
+    reset_bpm_status(&m_pMlvObject->llrawproc->bad_pixel_map, &m_pMlvObject->llrawproc->bpm_status);
     m_pMlvObject->current_cached_frame_active = 0;
     m_frameChanged = true;
 }
