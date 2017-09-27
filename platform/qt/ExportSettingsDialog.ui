@@ -83,7 +83,7 @@
       <item row="1" column="0">
        <layout class="QHBoxLayout" name="horizontalLayout_3">
         <property name="spacing">
-         <number>-1</number>
+         <number>10</number>
         </property>
         <item>
          <widget class="QCheckBox" name="checkBoxFpsOverride">

@@ -63,7 +63,11 @@ public:
 
     qApp->setPalette(darkPalette);
     // loadstylesheet
+#ifdef WIN32
     QFile qfDarkstyle(QString(":/darkstyle/darkstyle.qss"));
+#else
+    QFile qfDarkstyle(QString(":/darkstyle/darkstyleOSX.qss"));
+#endif
     if (qfDarkstyle.open(QIODevice::ReadOnly | QIODevice::Text))
     {
       // set stylesheet

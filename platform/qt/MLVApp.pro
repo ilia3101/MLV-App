@@ -141,29 +141,8 @@ RESOURCES += \
 DISTFILES += \
     Info.plist \
     MLVAPP.ico \
-    darkstyle/icon_branch_closed.png \
-    darkstyle/icon_branch_end.png \
-    darkstyle/icon_branch_more.png \
-    darkstyle/icon_branch_open.png \
-    darkstyle/icon_checkbox_checked.png \
-    darkstyle/icon_checkbox_checked_disabled.png \
-    darkstyle/icon_checkbox_checked_pressed.png \
-    darkstyle/icon_checkbox_indeterminate.png \
-    darkstyle/icon_checkbox_indeterminate_disabled.png \
-    darkstyle/icon_checkbox_indeterminate_pressed.png \
-    darkstyle/icon_checkbox_unchecked.png \
-    darkstyle/icon_checkbox_unchecked_disabled.png \
-    darkstyle/icon_checkbox_unchecked_pressed.png \
-    darkstyle/icon_close.png \
-    darkstyle/icon_radiobutton_checked.png \
-    darkstyle/icon_radiobutton_checked_disabled.png \
-    darkstyle/icon_radiobutton_checked_pressed.png \
-    darkstyle/icon_radiobutton_unchecked.png \
-    darkstyle/icon_radiobutton_unchecked_disabled.png \
-    darkstyle/icon_radiobutton_unchecked_pressed.png \
-    darkstyle/icon_undock.png \
-    darkstyle/icon_vline.png \
-    darkstyle/darkstyle.qss
+    darkstyle/darkstyle.qss \
+    darkstyle/darkstyleOSX.qss
 
 win32: RC_ICONS = MLVAPP.ico
 macx: ICON = MLVAPP.icns
