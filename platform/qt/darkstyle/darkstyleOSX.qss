@@ -323,7 +323,7 @@ QScrollBar::sub-line:horizontal{
 QSlider::handle:horizontal{
   border-radius:4px;
   border:1px solid rgba(25,25,25,255);
-  background-color:palette(alternate-base);
+  background-color:rgba(125,125,125,255);
   min-height:20px;
   margin:0 -4px;
 }
