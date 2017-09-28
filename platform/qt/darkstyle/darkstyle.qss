@@ -321,7 +321,7 @@ QScrollBar::sub-line:horizontal{
   subcontrol-origin:margin;
 }
 QSlider::handle:horizontal{
-  border-radius:4px;
+  border-radius:7px;
   border:1px solid rgba(25,25,25,255);
   background-color:rgba(125,125,125,255);
   min-height:20px;

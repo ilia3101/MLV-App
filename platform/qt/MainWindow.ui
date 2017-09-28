@@ -72,6 +72,9 @@
       </item>
       <item>
        <widget class="QSlider" name="horizontalSliderPosition">
+        <property name="pageStep">
+         <number>1</number>
+        </property>
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
         </property>
@@ -175,6 +178,7 @@
     <addaction name="separator"/>
     <addaction name="actionShowHistogram"/>
     <addaction name="actionShowWaveFormMonitor"/>
+    <addaction name="actionShowParade"/>
     <addaction name="actionShowZebras"/>
    </widget>
    <widget class="QMenu" name="menuWindow">
@@ -2175,6 +2179,17 @@
    </property>
    <property name="text">
     <string>Previous Frame</string>
+   </property>
+  </action>
+  <action name="actionShowParade">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Parade</string>
+   </property>
+   <property name="shortcut">
+    <string>P</string>
    </property>
   </action>
  </widget>

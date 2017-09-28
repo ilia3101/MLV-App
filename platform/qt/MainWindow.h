@@ -71,6 +71,7 @@ private slots:
     void on_actionZoom100_triggered();
     void on_actionShowHistogram_triggered(void);
     void on_actionShowWaveFormMonitor_triggered(void);
+    void on_actionShowParade_triggered(void);
     void on_actionAlwaysUseAMaZE_triggered(bool checked);
     void on_actionExportSettings_triggered();
     void on_actionResetReceipt_triggered();

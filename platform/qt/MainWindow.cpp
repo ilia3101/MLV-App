@@ -337,9 +337,19 @@ void MainWindow::drawFrame( void )
                                                                    Qt::IgnoreAspectRatio, Qt::SmoothTransformation) ) ); //alternative: Qt::FastTransformation
         ui->labelHistogram->setAlignment( Qt::AlignCenter ); //Always in the middle
     }
+    //Waveform
     else if( ui->actionShowWaveFormMonitor->isChecked() )
     {
         ui->labelHistogram->setPixmap( QPixmap::fromImage( m_pWaveFormMonitor->getWaveFormMonitorFromRaw( m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject) )
+                                                          .scaled( ui->labelHistogram->width(),
+                                                                   ui->labelHistogram->height(),
+                                                                   Qt::IgnoreAspectRatio, Qt::SmoothTransformation) ) ); //alternative: Qt::FastTransformation
+        ui->labelHistogram->setAlignment( Qt::AlignCenter ); //Always in the middle
+    }
+    //Parade
+    else if( ui->actionShowParade->isChecked() )
+    {
+        ui->labelHistogram->setPixmap( QPixmap::fromImage( m_pWaveFormMonitor->getParadeFromRaw( m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject) )
                                                           .scaled( ui->labelHistogram->width(),
                                                                    ui->labelHistogram->height(),
                                                                    Qt::IgnoreAspectRatio, Qt::SmoothTransformation) ) ); //alternative: Qt::FastTransformation
@@ -641,17 +651,8 @@ void MainWindow::initLib( void )
 void MainWindow::readSettings()
 {
     QSettings set( QSettings::UserScope, "magiclantern.MLVApp", "MLVApp" );
-    set.beginGroup( "MainWindow" );
-    if( !set.value( "size", 0 ).toInt() ) resize( set.value( "size", QSize( 1200, 700 ) ).toSize() );
-    if( !set.value( "pos", 0 ).toInt() )
-    {
-        QPoint point = set.value( "pos", QPoint( 100, 100 ) ).toPoint();
-        if( point.x() > QApplication::desktop()->screenGeometry().width() ) point.setX( 100 );
-        if( point.y() > QApplication::desktop()->screenGeometry().height() ) point.setY( 100 );
-        move( point );
-    }
-    if( set.value( "maximized", false ).toBool() ) setWindowState( windowState() | Qt::WindowMaximized );
-    set.endGroup();
+    restoreGeometry( set.value( "mainWindowGeometry" ).toByteArray() );
+    //restoreState( set.value( "mainWindowState" ).toByteArray() ); // create docks, toolbars, etc...
     if( set.value( "dragFrameMode", true ).toBool() ) ui->actionDropFrameMode->setChecked( true );
     if( set.value( "audioOutput", true ).toBool() ) ui->actionAudioOutput->setChecked( true );
     if( set.value( "zebras", false ).toBool() ) ui->actionShowZebras->setChecked( true );
@@ -670,14 +671,8 @@ void MainWindow::readSettings()
 void MainWindow::writeSettings()
 {
     QSettings set( QSettings::UserScope, "magiclantern.MLVApp", "MLVApp" );
-    set.beginGroup( "MainWindow" );
-    set.setValue( "maximized", (bool)( windowState() & Qt::WindowMaximized ) );
-    if( !( windowState() & Qt::WindowMaximized ) && !( windowState() & Qt::WindowFullScreen ) )
-    {
-        set.setValue( "size", size() );
-        set.setValue( "pos", pos() );
-    }
-    set.endGroup();
+    set.setValue( "mainWindowGeometry", saveGeometry() );
+    //set.setValue( "mainWindowState", saveState() ); // docks, toolbars, etc...
     set.setValue( "dragFrameMode", ui->actionDropFrameMode->isChecked() );
     set.setValue( "audioOutput", ui->actionAudioOutput->isChecked() );
     set.setValue( "zebras", ui->actionShowZebras->isChecked() );
@@ -1438,7 +1433,8 @@ void MainWindow::on_horizontalSliderPosition_valueChanged(void)
 //Show Info Dialog
 void MainWindow::on_actionClip_Information_triggered()
 {
-    m_pInfoDialog->show();
+    if( !m_pInfoDialog->isVisible() ) m_pInfoDialog->show();
+    else m_pInfoDialog->hide();
 }
 
 void MainWindow::on_horizontalSliderExposure_valueChanged(int position)
@@ -1656,6 +1652,7 @@ void MainWindow::on_actionShowHistogram_triggered(void)
 {
     ui->actionShowHistogram->setChecked( true );
     ui->actionShowWaveFormMonitor->setChecked( false );
+    ui->actionShowParade->setChecked( false );
     m_frameChanged = true;
 }
 
@@ -1663,6 +1660,16 @@ void MainWindow::on_actionShowHistogram_triggered(void)
 void MainWindow::on_actionShowWaveFormMonitor_triggered(void)
 {
     ui->actionShowWaveFormMonitor->setChecked( true );
+    ui->actionShowHistogram->setChecked( false );
+    ui->actionShowParade->setChecked( false );
+    m_frameChanged = true;
+}
+
+//Show Parade
+void MainWindow::on_actionShowParade_triggered()
+{
+    ui->actionShowParade->setChecked( true );
+    ui->actionShowWaveFormMonitor->setChecked( false );
     ui->actionShowHistogram->setChecked( false );
     m_frameChanged = true;
 }
@@ -1940,6 +1947,7 @@ void MainWindow::on_labelHistogram_customContextMenuRequested(const QPoint &pos)
     QMenu myMenu;
     myMenu.addAction( ui->actionShowHistogram );
     myMenu.addAction( ui->actionShowWaveFormMonitor );
+    myMenu.addAction( ui->actionShowParade );
     // Show context menu at handling position
     myMenu.exec( globalPos );
 }

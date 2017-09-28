@@ -12,7 +12,7 @@ StatusDialog::StatusDialog(QWidget *parent) :
     ui(new Ui::StatusDialog)
 {
     ui->setupUi(this);
-    setWindowFlags( Qt::Window | Qt::WindowTitleHint | Qt::CustomizeWindowHint );
+    setWindowFlags( Qt::Window | Qt::WindowTitleHint | Qt::CustomizeWindowHint | Qt::WindowStaysOnTopHint );
 }
 
 StatusDialog::~StatusDialog()
