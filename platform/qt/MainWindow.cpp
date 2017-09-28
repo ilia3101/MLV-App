@@ -312,11 +312,18 @@ void MainWindow::drawFrame( void )
             desWidth = actHeight * getMlvWidth(m_pMlvObject) / getMlvHeight(m_pMlvObject);
         }
 
+        //Calc Retina Resolution
+        desWidth *= devicePixelRatioF();
+        desHeight *= devicePixelRatioF();
+
         //Bring frame to GUI (fit to window)
         m_pGraphicsItem->setPixmap( QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
                                                         .scaled( desWidth,
                                                                  desHeight,
                                                                  Qt::KeepAspectRatio, Qt::SmoothTransformation) ) ); //alternative: Qt::FastTransformation
+        //Set Picture to Retina
+        m_pGraphicsItem->pixmap().setDevicePixelRatio( devicePixelRatioF() );
+
         m_pScene->setSceneRect( 0, 0, desWidth, desHeight );
     }
     else
