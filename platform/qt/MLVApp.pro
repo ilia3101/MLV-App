@@ -89,7 +89,8 @@ SOURCES += \
     ../../src/mlv/audio_mlv.c \
     AudioWave.cpp \
     ResizeLabel.cpp \
-    GraphicsZoomView.cpp
+    GraphicsZoomView.cpp \
+    JumpSlider.cpp
 
 HEADERS += \
         MainWindow.h \
@@ -125,7 +126,8 @@ HEADERS += \
     AudioWave.h \
     ResizeLabel.h \
     GraphicsZoomView.h \
-    DarkStyle.h
+    DarkStyle.h \
+    JumpSlider.h
 
 FORMS += \
         MainWindow.ui \
