@@ -813,8 +813,8 @@ void MainWindow::addFileToSession(QString fileName)
     {
         setReceipt( m_pSessionReceipts.at( m_lastActiveClipInSession ) );
     }
-    //Add to session list
-    QListWidgetItem *item = new QListWidgetItem( QFileInfo(fileName).fileName() );
+    //Add to session list (empty Pixmap is just spacer)
+    QListWidgetItem *item = new QListWidgetItem( QIcon( QPixmap( 80, 80 ) ), QFileInfo(fileName).fileName() );
     item->setToolTip( fileName );
     ui->listWidgetSession->addItem( item );
     //Set sliders
