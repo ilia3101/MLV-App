@@ -16,11 +16,10 @@
 class JumpSlider : public QSlider
 {
 public:
-    explicit JumpSlider(QWidget* parent = Q_NULLPTR, Qt::WindowFlags f = Qt::WindowFlags());
-    ~JumpSlider();
+    explicit JumpSlider( QWidget* parent = Q_NULLPTR ): QSlider( parent ) {}
 
 protected:
-    void mousePressEvent ( QMouseEvent * event );
+    void mousePressEvent( QMouseEvent * event );
 };
 
 #endif // JUMPSLIDER_H
