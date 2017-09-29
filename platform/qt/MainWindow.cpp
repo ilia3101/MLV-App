@@ -1253,7 +1253,12 @@ void MainWindow::previewPicture( int row )
                                                getMlvHeight(m_pMlvObject) * devicePixelRatio() / 10.0,
                                                Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation) );
     pic.setDevicePixelRatio( devicePixelRatio() );
-    ui->listWidgetSession->item( row )->setIcon( QIcon( pic ) );
+    //Take and insert item, so the scrollbar is set correctly to the size of the picture
+    QListWidgetItem *item = ui->listWidgetSession->takeItem( row );
+    item->setIcon( QIcon( pic ) );
+    ui->listWidgetSession->insertItem( row, item );
+    //And select it
+    ui->listWidgetSession->setCurrentRow( row );
     setPreviewMode();
 }
 
@@ -1278,7 +1283,6 @@ void MainWindow::setPreviewMode( void )
         ui->listWidgetSession->setIconSize( QSize( 0, 0 ) );
         ui->listWidgetSession->setAlternatingRowColors( true );
     }
-    ui->listWidgetSession->setWrapping( false ); //no idea if that is right here, but it actualizes the scrollbar in the right way
 }
 
 //Get the framerate. Override or Original
