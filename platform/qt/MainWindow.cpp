@@ -814,7 +814,7 @@ void MainWindow::addFileToSession(QString fileName)
         setReceipt( m_pSessionReceipts.at( m_lastActiveClipInSession ) );
     }
     //Add to session list (empty Pixmap is just spacer)
-    QListWidgetItem *item = new QListWidgetItem( QIcon( QPixmap( 80, 80 ) ), QFileInfo(fileName).fileName() );
+    QListWidgetItem *item = new QListWidgetItem( QFileInfo(fileName).fileName() );
     item->setToolTip( fileName );
     ui->listWidgetSession->addItem( item );
     //Set sliders
@@ -1278,6 +1278,7 @@ void MainWindow::setPreviewMode( void )
         ui->listWidgetSession->setIconSize( QSize( 0, 0 ) );
         ui->listWidgetSession->setAlternatingRowColors( true );
     }
+    ui->listWidgetSession->setWrapping( false ); //no idea if that is right here, but it actualizes the scrollbar in the right way
 }
 
 //Get the framerate. Override or Original
