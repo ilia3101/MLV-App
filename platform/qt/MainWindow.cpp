@@ -52,6 +52,7 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     m_frameChanged = false;
     m_fileLoaded = false;
     m_fpsOverride = false;
+    m_inOpeningProcess = false;
 
     //Init the GUI
     initGui();
@@ -98,7 +99,9 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
         }
         else if( QFile(fileName).exists() && fileName.endsWith( ".masxml", Qt::CaseInsensitive ) )
         {
+            m_inOpeningProcess = true;
             openSession( fileName );
+            m_inOpeningProcess = false;
         }
     }
 }
@@ -150,7 +153,7 @@ void MainWindow::timerEvent(QTimerEvent *t)
         }
 
         //Trigger Drawing
-        if( !m_frameStillDrawing && m_frameChanged && !m_dontDraw )
+        if( !m_frameStillDrawing && m_frameChanged && !m_dontDraw && !m_inOpeningProcess )
         {
             m_frameChanged = false; //first do this, if there are changes between rendering
             drawFrame();
@@ -230,7 +233,9 @@ bool MainWindow::event(QEvent *event)
         }
         else if( QFile(fileName).exists() && fileName.endsWith( ".masxml", Qt::CaseInsensitive ) )
         {
+            m_inOpeningProcess = true;
             openSession( fileName );
+            m_inOpeningProcess = false;
         }
         else return false;
     }
@@ -247,6 +252,7 @@ void MainWindow::dragEnterEvent(QDragEnterEvent *event)
 //The dropEvent() is used to unpack dropped data and handle it in way that is suitable for your application.
 void MainWindow::dropEvent(QDropEvent *event)
 {
+    m_inOpeningProcess = true;
     for( int i = 0; i < event->mimeData()->urls().count(); i++ )
     {
         QString fileName = event->mimeData()->urls().at(i).path();
@@ -275,6 +281,7 @@ void MainWindow::dropEvent(QDropEvent *event)
         on_actionResetReceipt_triggered();
         previewPicture( ui->listWidgetSession->count() - 1 );
     }
+    m_inOpeningProcess = false;
     event->acceptProposedAction();
 }
 
@@ -376,6 +383,8 @@ void MainWindow::on_actionOpen_triggered()
 
     if( files.empty() ) return;
 
+    m_inOpeningProcess = true;
+
     for( int i = 0; i < files.count(); i++ )
     {
         QString fileName = files.at(i);
@@ -401,6 +410,8 @@ void MainWindow::on_actionOpen_triggered()
         on_actionResetReceipt_triggered();
         previewPicture( ui->listWidgetSession->count() - 1 );
     }
+
+    m_inOpeningProcess = false;
 }
 
 //Open MLV procedure
@@ -826,6 +837,8 @@ void MainWindow::addFileToSession(QString fileName)
     //Set this row to current row
     ui->listWidgetSession->clearSelection();
     ui->listWidgetSession->setCurrentItem( item );
+    //Update App
+    qApp->processEvents();
 }
 
 //Open a session file
@@ -1803,7 +1816,9 @@ void MainWindow::on_actionOpenSession_triggered()
     //Abort selected
     if( fileName.count() == 0 ) return;
 
+    m_inOpeningProcess = true;
     openSession( fileName );
+    m_inOpeningProcess = false;
 }
 
 //Save Session

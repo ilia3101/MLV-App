@@ -31,7 +31,9 @@ void JumpSlider::mousePressEvent(QMouseEvent *event)
            double normalizedPosition = ( adaptedPosY - halfHandleHeight )  / newHeight ;
 
            newVal = minimum() + ( maximum()-minimum() ) * normalizedPosition;
-        } else {
+        }
+        else
+        {
             double halfHandleWidth = ( 0.5 * sr.width() ) + 0.5;
             int adaptedPosX = event->x();
             if ( adaptedPosX < halfHandleWidth )

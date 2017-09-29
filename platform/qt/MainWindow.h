@@ -144,6 +144,7 @@ private:
     bool m_dontDraw;
     bool m_frameStillDrawing;
     bool m_fileLoaded;
+    bool m_inOpeningProcess;
     int m_timerId;
     int m_timerCacheId;
     bool m_fpsOverride;
