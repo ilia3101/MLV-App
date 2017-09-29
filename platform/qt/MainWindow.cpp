@@ -312,18 +312,16 @@ void MainWindow::drawFrame( void )
             desWidth = actHeight * getMlvWidth(m_pMlvObject) / getMlvHeight(m_pMlvObject);
         }
 
-        //Calc Retina Resolution
-        desWidth *= devicePixelRatioF();
-        desHeight *= devicePixelRatioF();
-
-        //Bring frame to GUI (fit to window)
-        m_pGraphicsItem->setPixmap( QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
-                                                        .scaled( desWidth,
-                                                                 desHeight,
-                                                                 Qt::KeepAspectRatio, Qt::SmoothTransformation) ) ); //alternative: Qt::FastTransformation
+        //Get Picture
+        QPixmap pic = QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
+                                          .scaled( desWidth * devicePixelRatio(),
+                                                   desHeight * devicePixelRatio(),
+                                                   Qt::KeepAspectRatio, Qt::SmoothTransformation) );//alternative: Qt::FastTransformation
         //Set Picture to Retina
-        m_pGraphicsItem->pixmap().setDevicePixelRatio( devicePixelRatioF() );
-
+        pic.setDevicePixelRatio( devicePixelRatio() );
+        //Bring frame to GUI (fit to window)
+        m_pGraphicsItem->setPixmap( pic );
+        //Set Scene
         m_pScene->setSceneRect( 0, 0, desWidth, desHeight );
     }
     else
@@ -558,7 +556,9 @@ void MainWindow::initGui( void )
     m_pWaveFormMonitor = new WaveFormMonitor( 200 );
     //AudioTrackWave
     m_pAudioWave = new AudioWave();
-    ui->labelAudioTrack->setPixmap( QPixmap::fromImage( m_pAudioWave->getMonoWave( NULL, 0, 100 ) ) );
+    QPixmap pic = QPixmap::fromImage( m_pAudioWave->getMonoWave( NULL, 0, 100, devicePixelRatio() ) );
+    pic.setDevicePixelRatio( devicePixelRatio() );
+    ui->labelAudioTrack->setPixmap( pic );
     //Fullscreen does not work well, so disable
     ui->actionFullscreen->setVisible( false );
     //Disable caching by default to avoid crashes
@@ -1248,10 +1248,12 @@ void MainWindow::previewPicture( int row )
     getMlvProcessedFrame8( m_pMlvObject, getMlvFrames( m_pMlvObject ) / 2, m_pRawImage );
 
     //Display in SessionList
-    ui->listWidgetSession->item( row )->setIcon( QIcon( QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
-                                                                            .scaled( getMlvWidth(m_pMlvObject) / 10.0,
-                                                                                     getMlvHeight(m_pMlvObject) / 10.0,
-                                                                                     Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation) ) ) );
+    QPixmap pic = QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
+                                      .scaled( getMlvWidth(m_pMlvObject) * devicePixelRatio() / 10.0,
+                                               getMlvHeight(m_pMlvObject) * devicePixelRatio() / 10.0,
+                                               Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation) );
+    pic.setDevicePixelRatio( devicePixelRatio() );
+    ui->listWidgetSession->item( row )->setIcon( QIcon( pic ) );
     setPreviewMode();
 }
 
@@ -1288,10 +1290,13 @@ double MainWindow::getFramerate( void )
 //Paint the Audio Track Wave to GUI
 void MainWindow::paintAudioTrack( void )
 {
+    QPixmap pic;
     //Fake graphic if nothing is loaded
     if( !m_fileLoaded )
     {
-        ui->labelAudioTrack->setPixmap( QPixmap::fromImage( m_pAudioWave->getMonoWave( NULL, 0, ui->labelAudioTrack->width() ) ) );
+        pic = QPixmap::fromImage( m_pAudioWave->getMonoWave( NULL, 0, ui->labelAudioTrack->width(), devicePixelRatio() ) );
+        pic.setDevicePixelRatio( devicePixelRatio() );
+        ui->labelAudioTrack->setPixmap( pic );
         ui->labelAudioTrack->setEnabled( false );
         ui->labelAudioTrack->setMinimumSize( 1, 1 ); //Otherwise window won't be smaller than picture
         ui->labelAudioTrack->setAlignment( Qt::AlignCenter ); //Always in the middle
@@ -1302,7 +1307,9 @@ void MainWindow::paintAudioTrack( void )
     //Also fake graphic if no audio in clip
     if( !doesMlvHaveAudio( m_pMlvObject ) )
     {
-        ui->labelAudioTrack->setPixmap( QPixmap::fromImage( m_pAudioWave->getMonoWave( NULL, 0, ui->labelAudioTrack->width() ) ) );
+        pic = QPixmap::fromImage( m_pAudioWave->getMonoWave( NULL, 0, ui->labelAudioTrack->width(), devicePixelRatio() ) );
+        pic.setDevicePixelRatio( devicePixelRatio() );
+        ui->labelAudioTrack->setPixmap( pic );
     }
     //Load audio data and paint
     else
@@ -1310,7 +1317,9 @@ void MainWindow::paintAudioTrack( void )
         uint64_t audio_size = getMlvAudioSize( m_pMlvObject );
         int16_t* audio_data = ( int16_t* ) malloc( audio_size );
         getMlvAudioData( m_pMlvObject, ( int16_t* )audio_data );
-        ui->labelAudioTrack->setPixmap( QPixmap::fromImage( m_pAudioWave->getMonoWave( audio_data, audio_size, ui->labelAudioTrack->width() ) ) );
+        pic = QPixmap::fromImage( m_pAudioWave->getMonoWave( audio_data, audio_size, ui->labelAudioTrack->width(), devicePixelRatio() ) );
+        pic.setDevicePixelRatio( devicePixelRatio() );
+        ui->labelAudioTrack->setPixmap( pic );
         free( audio_data );
     }
     ui->labelAudioTrack->setMinimumSize( 1, 1 ); //Otherwise window won't be smaller than picture

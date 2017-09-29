@@ -38,14 +38,17 @@ AudioWave::~AudioWave()
 }
 
 //Make a image of the audio track - as mono, mirror negative part to positive part
-QImage AudioWave::getMonoWave(int16_t *pAudioTrack, uint64_t audioSize, uint16_t width)
+QImage AudioWave::getMonoWave(int16_t *pAudioTrack, uint64_t audioSize, uint16_t width, int pixelRatio)
 {
     if( width == 0 ) return *m_pAudioWave;
     delete m_pAudioWave;
-    m_pAudioWave = new QImage( width, 32, QImage::Format_RGB888 );
+
+    width *= pixelRatio;
+
+    m_pAudioWave = new QImage( width, 32 * pixelRatio, QImage::Format_RGB888 );
 
     //Background with gradient
-    QRect rect( 0, 0, width, 32 );
+    QRect rect( 0, 0, width, 32 * pixelRatio );
     QPainter painter( m_pAudioWave );
     QLinearGradient gradient( rect.topLeft(), (rect.topLeft() + rect.bottomLeft() ) / 2 ); // diagonal gradient from top-left to bottom-right
     gradient.setColorAt( 0, QColor( 99, 120, 106, 255 ) );
@@ -78,15 +81,15 @@ QImage AudioWave::getMonoWave(int16_t *pAudioTrack, uint64_t audioSize, uint16_t
         }
 
         //Some funny math to make it nice at max height of 32 pixel
-        y = ( 100.0 * log( y ) + y / 10.0 ) / 116;
+        y = ( 100.0 * log( y ) + y / 10.0 ) / 116 * pixelRatio;
         //And make it safe
-        if( y > 31 ) y = 31;
+        if( y > ( ( 32  * pixelRatio ) - 1 ) ) y = ( 32  * pixelRatio ) - 1;
 
         //Paint point
         for( int i = 0; i < y; i++ )
         {
-            QColor color = QColor( m_red[i], m_green[i], 100, 255 );
-            m_pAudioWave->setPixelColor( x, 31 - i, color );
+            QColor color = QColor( m_red[(int)(i / pixelRatio)], m_green[(int)(i / pixelRatio)], 100, 255 );
+            m_pAudioWave->setPixelColor( x, ( 32  * pixelRatio ) - 1 - i, color );
         }
     }
 

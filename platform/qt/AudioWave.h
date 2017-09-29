@@ -15,7 +15,7 @@ class AudioWave
 public:
     AudioWave();
     ~AudioWave();
-    QImage getMonoWave(int16_t *pAudioTrack, uint64_t audioSize, uint16_t width );
+    QImage getMonoWave(int16_t *pAudioTrack, uint64_t audioSize, uint16_t width, int pixelRatio );
 
 private:
     QImage *m_pAudioWave;
