@@ -213,16 +213,16 @@ int diso_get_preview(struct raw_info * raw_info, uint16_t width, uint16_t height
             }
         }
     }
-    
+#if 0
     //14 to 16 in order to match full cr2hdr output
     size_t count = max_size / 2;
     for(size_t i = 0; i < count; i++)
     {
-        //image_data[i] = image_data[i] << 2;
+        image_data[i] = image_data[i] << 2;
     }
     raw_info->black_level *= 4;
     raw_info->white_level *= 4;
-    
+#endif
     return 1;
 }
 
