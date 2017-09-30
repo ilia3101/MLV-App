@@ -29,5 +29,6 @@ ReceiptSettings::ReceiptSettings()
     m_chroma_smooth = 0;
     m_pattern_noise = 0;
     m_deflicker_target = 0;
+    m_dualIso = 0;
     m_profile = 1;
 }

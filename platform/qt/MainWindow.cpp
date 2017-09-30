@@ -984,6 +984,11 @@ void MainWindow::openSession(QString fileName)
                                 m_pSessionReceipts.last()->setDeflickerTarget( Rxml.readElementText().toInt() );
                                 Rxml.readNext();
                             }
+                            else if( Rxml.isStartElement() && Rxml.name() == "dualIso" )
+                            {
+                                m_pSessionReceipts.last()->setDualIso( Rxml.readElementText().toInt() );
+                                Rxml.readNext();
+                            }
                             else if( Rxml.isStartElement() ) //future features
                             {
                                 Rxml.readElementText();
@@ -1071,6 +1076,7 @@ void MainWindow::saveSession(QString fileName)
         xmlWriter.writeTextElement( "chromaSmooth",            QString( "%1" ).arg( m_pSessionReceipts.at(i)->chromaSmooth() ) );
         xmlWriter.writeTextElement( "patternNoise",            QString( "%1" ).arg( m_pSessionReceipts.at(i)->patternNoise() ) );
         xmlWriter.writeTextElement( "deflickerTarget",         QString( "%1" ).arg( m_pSessionReceipts.at(i)->deflickerTarget() ) );
+        xmlWriter.writeTextElement( "dualIso",                 QString( "%1" ).arg( m_pSessionReceipts.at(i)->dualIso() ) );
         xmlWriter.writeEndElement();
     }
     xmlWriter.writeEndElement();
@@ -1178,6 +1184,8 @@ void MainWindow::setSliders(ReceiptSettings *receipt)
     on_comboBoxPatternNoiseSwitch_currentIndexChanged( receipt->patternNoise() );
     ui->spinBoxDeflickerTarget->setValue( receipt->deflickerTarget() );
     on_spinBoxDeflickerTarget_valueChanged( receipt->deflickerTarget() );
+    ui->comboBoxDualISO->setCurrentIndex( receipt->dualIso() );
+    on_comboBoxDualISO_currentIndexChanged( receipt->dualIso() );
     m_pMlvObject->current_cached_frame_active = 0;
 }
 
@@ -1205,6 +1213,7 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     receipt->setChromaSmooth( ui->comboBoxChromaSmoothSwitch->currentIndex() );
     receipt->setPatternNoise( ui->comboBoxPatternNoiseSwitch->currentIndex() );
     receipt->setDeflickerTarget( ui->spinBoxDeflickerTarget->value() );
+    receipt->setDualIso( ui->comboBoxDualISO->currentIndex() );
 }
 
 //Show the file in
@@ -1245,6 +1254,7 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     receipt->setChromaSmooth( m_pSessionReceipts.at( row )->chromaSmooth() );
     receipt->setPatternNoise( m_pSessionReceipts.at( row )->patternNoise() );
     receipt->setDeflickerTarget( m_pSessionReceipts.at( row )->deflickerTarget() );
+    receipt->setDualIso( m_pSessionReceipts.at( row )->dualIso() );
 
     receipt->setFileName( m_pSessionReceipts.at( row )->fileName() );
     receipt->setExportFileName( fileName );
@@ -2338,6 +2348,13 @@ void MainWindow::on_spinBoxDeflickerTarget_valueChanged(int arg1)
     //TODO: do it different!!!
     m_pMlvObject->llrawproc->deflicker_target = arg1;
     m_pMlvObject->current_cached_frame_active = 0;
+    m_frameChanged = true;
+}
+
+//Combobox DualISO changed
+void MainWindow::on_comboBoxDualISO_currentIndexChanged(int index)
+{
+    m_pMlvObject->llrawproc->dual_iso = index;
     m_frameChanged = true;
 }
 

@@ -36,6 +36,7 @@ public:
     void setChromaSmooth( int mode )          {m_chroma_smooth = mode;}
     void setPatternNoise( int on )            {m_pattern_noise = on;}
     void setDeflickerTarget( int value )      {m_deflicker_target = value;}
+    void setDualIso( int mode )               {m_dualIso = mode;}
     int exposure( void )   {return m_exposure;}
     int temperature( void ){return m_temperature;}
     int tint( void )       {return m_tint;}
@@ -55,6 +56,7 @@ public:
     int chromaSmooth( void ){return m_chroma_smooth;}
     int patternNoise( void ){return m_pattern_noise;}
     int deflickerTarget( void ){return m_deflicker_target;}
+    int dualIso( void )    {return m_dualIso;}
     uint8_t profile( void ){return m_profile;}
     QString fileName( void ){return m_fileName;}
     QString exportFileName( void ){return m_exportFileName;}
@@ -79,6 +81,7 @@ private:
     int m_chroma_smooth;    // chroma smooth, 2 - cs2x2, 3 cs3x3, 5 - cs5x5
     int m_pattern_noise;    // fix pattern noise (0, 1)
     int m_deflicker_target; // deflicker value
+    int m_dualIso;          // DualISO, 0 = off, 1 = on
     uint8_t m_profile;
     QString m_fileName;
     QString m_exportFileName;

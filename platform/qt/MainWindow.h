@@ -116,6 +116,7 @@ private slots:
     void on_comboBoxPatternNoiseSwitch_currentIndexChanged(int index);
     void on_comboBoxVerticalStripesSwitch_currentIndexChanged(int index);
     void on_spinBoxDeflickerTarget_valueChanged(int arg1);
+    void on_comboBoxDualISO_currentIndexChanged(int index);
     void on_actionNextFrame_triggered();
     void on_actionPreviousFrame_triggered();
 
