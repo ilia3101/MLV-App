@@ -81,7 +81,7 @@ private:
     int m_chroma_smooth;    // chroma smooth, 2 - cs2x2, 3 cs3x3, 5 - cs5x5
     int m_pattern_noise;    // fix pattern noise (0, 1)
     int m_deflicker_target; // deflicker value
-    int m_dualIso;          // DualISO, 0 = off, 1 = on
+    int m_dualIso;          // DualISO, 0 = off, 1 = on, 2 = preview
     uint8_t m_profile;
     QString m_fileName;
     QString m_exportFileName;

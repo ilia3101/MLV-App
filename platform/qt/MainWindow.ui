@@ -330,7 +330,7 @@
           </font>
          </property>
          <property name="currentIndex">
-          <number>0</number>
+          <number>1</number>
          </property>
          <property name="usesScrollButtons">
           <bool>false</bool>
@@ -1730,6 +1730,11 @@
                <item>
                 <property name="text">
                  <string>On</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Preview</string>
                 </property>
                </item>
               </widget>
