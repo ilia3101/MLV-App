@@ -72,6 +72,9 @@
       </item>
       <item>
        <widget class="JumpSlider" name="horizontalSliderPosition">
+        <property name="pageStep">
+         <number>1</number>
+        </property>
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
         </property>
@@ -327,7 +330,7 @@
           </font>
          </property>
          <property name="currentIndex">
-          <number>1</number>
+          <number>0</number>
          </property>
          <property name="usesScrollButtons">
           <bool>false</bool>
@@ -1701,6 +1704,11 @@
              </property>
              <item>
               <widget class="QLabel" name="DualISOLabel">
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
                <property name="text">
                 <string>Dual ISO</string>
                </property>
