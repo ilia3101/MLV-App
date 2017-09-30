@@ -28,6 +28,7 @@
 #include "pixelproc.h"
 #include "stripes.h"
 #include "patternnoise.h"
+#include "dualiso.h"
 #include "hist.h"
 
 #include "../mlv_object.h"
@@ -64,6 +65,7 @@ llrawprocObject_t * initLLRawProcObject()
     llrawproc->bpm_status = 0;
     llrawproc->compute_stripes = 1;
     llrawproc->first_time = 1;
+    llrawproc->dual_iso = 0;
 
     llrawproc->raw2ev = NULL;
     llrawproc->ev2raw = NULL;
@@ -170,6 +172,11 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
                        video->llrawproc->ev2raw);
     }
 
+    /* dual iso processing */
+    if (video->llrawproc->dual_iso)
+    {
+        diso_get_preview(&video->RAWI.raw_info, video->RAWI.xRes, video->RAWI.yRes, raw_image_buff, raw_image_size);
+    }
     /* do chroma smoothing */
     if (video->llrawproc->chroma_smooth)
     {

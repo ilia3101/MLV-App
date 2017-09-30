@@ -74,6 +74,7 @@ SOURCES += \
     ../../src/mlv/llrawproc/hist.c \
     ../../src/processing/processing.c \
     ../../src/processing/raw_processing.c \
+    ../../src/mlv/llrawproc/dualiso.c \
     InfoDialog.cpp \
     StatusDialog.cpp \
     Histogram.cpp \
@@ -109,6 +110,7 @@ HEADERS += \
     ../../src/processing/processing_object.h \
     ../../src/processing/raw_processing.h \
     ../../src/mlv_include.h \
+    ../../src/mlv/llrawproc/dualiso.h \
     InfoDialog.h \
     MyApplication.h \
     StatusDialog.h \

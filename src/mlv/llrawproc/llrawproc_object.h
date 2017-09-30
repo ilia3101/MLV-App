@@ -43,7 +43,7 @@ typedef struct
     int pattern_noise;    // fix pattern noise (0, 1)
     int deflicker_target; // deflicker value
     int first_time;       // controls some events which should occur only once per object instance
-    int dual_iso;         // is RAW data dualiso or not (0, 1, for correctly prosessing of bad/focus pixels, can be removed if DISO block parsing is implemented)
+    int dual_iso;         // use dualiso processing, 0 - do not use, 1 - preview mode (low quality), 2 - full 20 bit processing (high quality, slow)
 
     /* original black and white levels from MLV
        backing them up needed because those values are
