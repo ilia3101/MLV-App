@@ -183,10 +183,10 @@ static void CHROMA_SMOOTH_FUNC(int w, int h, CHROMA_SMOOTH_TYPE * inp, CHROMA_SM
 
             /* replace red and blue pixels with filtered values, keep green pixels unchanged */
             /* don't touch overexposed areas */
-            if (out[x   +     y * w] < white)
+            if (out[x   +     y * w] < (unsigned int)white)
                 out[x   +     y * w] = ev2raw[COERCE(gr + dr, -10*EV_RESOLUTION, 14*EV_RESOLUTION-1)];
             
-            if (out[x+1  + (y+1)* w] < white)
+            if (out[x+1  + (y+1)* w] < (unsigned int)white)
                 out[x+1 + (y+1) * w] = ev2raw[COERCE(gb + db, -10*EV_RESOLUTION, 14*EV_RESOLUTION-1)];
         }
     }

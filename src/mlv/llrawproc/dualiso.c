@@ -216,7 +216,7 @@ int diso_get_preview(struct raw_info * raw_info, uint16_t width, uint16_t height
     
     //14 to 16 in order to match full cr2hdr output
     size_t count = max_size / 2;
-    for(int i = 0; i < count; i++)
+    for(size_t i = 0; i < count; i++)
     {
         //image_data[i] = image_data[i] << 2;
     }
@@ -1119,7 +1119,7 @@ static inline void amaze_interpolate(struct raw_info raw_info, uint32_t * raw_bu
                         deep_shadow++;
                     }
                 }
-                else if (raw_get_pixel32(x, y) < white_darkened)
+                else if (raw_get_pixel32(x, y) < (unsigned int)white_darkened)
                 {
                     /* interpolating dark exposure, but we also have good data from the bright one */
                     not_overexposed++;
@@ -1367,7 +1367,7 @@ static inline void fullres_reconstruction(struct raw_info raw_info, uint32_t * f
         {
             if (BRIGHT_ROW)
             {
-                int f = bright[x + y*w];
+                uint32_t f = bright[x + y*w];
                 /* if the brighter copy is overexposed, the guessed pixel for sure has higher brightness */
                 fullres[x + y*w] = f < white_darkened ? f : MAX(f, dark[x + y*w]);
             }
@@ -1626,9 +1626,9 @@ static inline int mix_images(struct raw_info raw_info, uint32_t* fullres, uint32
     }
     UNLOCK(ev2raw_mutex)
     
-    for (int y = 0; y < h; y ++)
+    for (size_t y = 0; y < h; y ++)
     {
-        for (int x = 0; x < w; x ++)
+        for (size_t x = 0; x < w; x ++)
         {
             overexposed[x + y * w] = bright[x + y * w] >= white_darkened || dark[x + y * w] >= white ? 100 : 0;
         }
