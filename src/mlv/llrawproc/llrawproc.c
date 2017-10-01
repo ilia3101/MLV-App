@@ -67,6 +67,7 @@ llrawprocObject_t * initLLRawProcObject()
     llrawproc->first_time = 1;
     llrawproc->dual_iso = 0;
 
+    llrawproc->raw2evf = NULL;
     llrawproc->raw2ev = NULL;
     llrawproc->ev2raw = NULL;
 
@@ -173,12 +174,25 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
     }
 
     /* dual iso processing */
-    if (video->llrawproc->dual_iso)
+    if(video->llrawproc->dual_iso == 1) // full 20bit processing
     {
-        diso_get_preview(&video->RAWI.raw_info, video->RAWI.xRes, video->RAWI.yRes, raw_image_buff, raw_image_size);
+        struct raw_info raw_info = video->RAWI.raw_info;
+        raw_info.width = video->RAWI.xRes;
+        raw_info.height = video->RAWI.yRes;
+        raw_info.pitch = video->RAWI.xRes;
+        raw_info.active_area.x1 = 0;
+        raw_info.active_area.y1 = 0;
+        raw_info.active_area.x2 = raw_info.width;
+        raw_info.active_area.y2 = raw_info.height;
+        diso_get_full20bit(raw_info, raw_image_buff, 1, 1, 1, video->llrawproc->chroma_smooth);
     }
+    else if (video->llrawproc->dual_iso == 2) // preview mode
+    {
+        diso_get_preview(raw_image_buff, video->RAWI.xRes, video->RAWI.yRes, video->llrawproc->mlv_black_level, video->llrawproc->mlv_white_level);
+    }
+
     /* do chroma smoothing */
-    if (video->llrawproc->chroma_smooth)
+    if (video->llrawproc->chroma_smooth && video->llrawproc->dual_iso != 1) // do not smooth 20bit dualiso raw
     {
 #ifndef STDOUT_SILENT
         if (video->llrawproc->first_time)
@@ -202,8 +216,8 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
         fix_vertical_stripes(&video->llrawproc->stripe_corrections,
                              raw_image_buff,
                              raw_image_size / 2,
-                             video->llrawproc->mlv_black_level,
-                             video->llrawproc->mlv_white_level,
+                             (video->llrawproc->dual_iso == 1) ? video->llrawproc->mlv_black_level * 4 : video->llrawproc->mlv_black_level,
+                             (video->llrawproc->dual_iso == 1) ? video->llrawproc->mlv_white_level * 4 : video->llrawproc->mlv_white_level,
                              video->RAWI.raw_info.frame_size,
                              video->RAWI.xRes,
                              video->RAWI.yRes,

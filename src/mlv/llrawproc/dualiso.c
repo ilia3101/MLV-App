@@ -41,11 +41,8 @@
 #define UNLOCK(x) pthread_mutex_unlock(&(x));
 
 //this is just meant to be fast
-int diso_get_preview(struct raw_info * raw_info, uint16_t width, uint16_t height, uint16_t * image_data, size_t max_size)
+int diso_get_preview(uint16_t * image_data, uint16_t width, uint16_t height, int32_t black, int32_t white)
 {
-    uint16_t black = raw_info->black_level;
-    uint16_t white = raw_info->white_level;
-    
     //compute the median of the green channel for each multiple of 4 rows
     uint16_t median[4];
     struct histogram * hist[4];
@@ -213,16 +210,7 @@ int diso_get_preview(struct raw_info * raw_info, uint16_t width, uint16_t height
             }
         }
     }
-#if 0
-    //14 to 16 in order to match full cr2hdr output
-    size_t count = max_size / 2;
-    for(size_t i = 0; i < count; i++)
-    {
-        image_data[i] = image_data[i] << 2;
-    }
-    raw_info->black_level *= 4;
-    raw_info->white_level *= 4;
-#endif
+
     return 1;
 }
 
@@ -403,17 +391,30 @@ float fast_randn05()
     return randn05_cache[(k++) & 1023];
 }
 
+double * get_raw2evf(int black, int32_t bpp)
+{
+    int max_rawval = pow(2, bpp) - 1;
+    double * raw2ev = (double *)malloc(EV_RESOLUTION*sizeof(int));
+
+    memset(raw2ev, 0, max_rawval * sizeof(int));
+    int i;
+    for (i = 0; i < max_rawval; i++)
+    {
+        raw2ev[i] = log2(MAX(1, i - black)) * EV_RESOLUTION;
+    }
+
+    return raw2ev;
+}
+
 /* quick check to see if this looks like a HDR frame */
-static int hdr_check(struct raw_info raw_info, uint16_t * image_data)
+int diso_check(struct raw_info raw_info, uint16_t * image_data, double * raw2evf)
 {
     int black = raw_info.black_level;
     int white = raw_info.white_level;
     
     int w = raw_info.width;
     int h = raw_info.height;
-    
-    double * raw2ev = get_raw2evf(black);
-    
+
     double avg_ev = 0;
     int num = 0;
     for (int y = 2; y < h-2; y ++)
@@ -424,7 +425,7 @@ static int hdr_check(struct raw_info raw_info, uint16_t * image_data)
             int p2 = raw_get_pixel16(x, y+2);
             if ((p > black+32 || p2 > black+32) && p < white && p2 < white)
             {
-                avg_ev += ABS(raw2ev[p2] - raw2ev[p]);
+                avg_ev += ABS(raw2evf[p2] - raw2evf[p]);
                 num++;
             }
         }
@@ -1033,7 +1034,7 @@ static inline void amaze_interpolate(struct raw_info raw_info, uint32_t * raw_bu
                            int winx, int winy, /* crop window for demosaicing */
                            int winw, int winh
                            );
-    
+    printf("muahahaha\n");
     //IDK if AMaZE is actually thread safe, but I'm just going to assume not, rather than inspecting that huge mess of code
     LOCK(amaze_mutex)
     {
@@ -1352,7 +1353,7 @@ static inline void border_interpolate(struct raw_info raw_info, uint32_t * raw_b
     }
 }
 
-static inline void fullres_reconstruction(struct raw_info raw_info, uint32_t * fullres, uint32_t* dark, uint32_t* bright, int white_darkened, int * is_bright)
+static inline void fullres_reconstruction(struct raw_info raw_info, uint32_t * fullres, uint32_t* dark, uint32_t* bright, uint32_t white_darkened, int * is_bright)
 {
     int w = raw_info.width;
     int h = raw_info.height;
@@ -1523,7 +1524,7 @@ static inline void hdr_chroma_smooth(struct raw_info raw_info, uint32_t * input,
     }
 }
 
-static inline int mix_images(struct raw_info raw_info, uint32_t* fullres, uint32_t* fullres_smooth, uint32_t* halfres, uint32_t* halfres_smooth, uint16_t* alias_map, uint32_t* dark, uint32_t* bright, uint16_t * overexposed, int dark_noise, int white_darkened, double corr_ev, double lowiso_dr, int black, int white, int chroma_smooth_method)
+static inline int mix_images(struct raw_info raw_info, uint32_t* fullres, uint32_t* fullres_smooth, uint32_t* halfres, uint32_t* halfres_smooth, uint16_t* alias_map, uint32_t* dark, uint32_t* bright, uint16_t * overexposed, int dark_noise, uint32_t white_darkened, double corr_ev, double lowiso_dr, uint32_t black, uint32_t white, int chroma_smooth_method)
 {
     int w = raw_info.width;
     int h = raw_info.height;
@@ -1571,12 +1572,12 @@ static inline int mix_images(struct raw_info raw_info, uint32_t* fullres, uint32
         double k = (c+1) / 2;
         mix_curve[i] = k;
     }
-    
-    
+
+
     /* for fast EV - raw conversion */
     static int raw2ev[1<<20];   /* EV x EV_RESOLUTION */
     static int ev2raw_0[24*EV_RESOLUTION];
-    static int previous_black = -1;
+    static uint32_t previous_black = -1;
     
     /* handle sub-black values (negative EV) */
     int* ev2raw = ev2raw_0 + 10*EV_RESOLUTION;
@@ -1626,9 +1627,9 @@ static inline int mix_images(struct raw_info raw_info, uint32_t* fullres, uint32
     }
     UNLOCK(ev2raw_mutex)
     
-    for (size_t y = 0; y < h; y ++)
+    for (int y = 0; y < h; y ++)
     {
-        for (size_t x = 0; x < w; x ++)
+        for (int x = 0; x < w; x ++)
         {
             overexposed[x + y * w] = bright[x + y * w] >= white_darkened || dark[x + y * w] >= white ? 100 : 0;
         }
@@ -1773,7 +1774,7 @@ static inline void convert_20_to_16bit(struct raw_info raw_info, uint16_t * imag
             raw_set_pixel_20to16_rand(x, y, raw_buffer_32[x + y*w]);
 }
 
-int hdr_interpolate(struct raw_info raw_info, uint16_t * image_data, int interp_method, int use_fullres, int use_alias_map, int chroma_smooth_method)
+int diso_get_full20bit(struct raw_info raw_info, uint16_t * image_data, int interp_method, int use_fullres, int use_alias_map, int chroma_smooth_method)
 {
     int w = raw_info.width;
     int h = raw_info.height;
@@ -1930,37 +1931,4 @@ int hdr_interpolate(struct raw_info raw_info, uint16_t * image_data, int interp_
     if (halfres_smooth && halfres_smooth != halfres) free(halfres_smooth);
     return ret;
 }
-/*
-int cr2hdr20_convert_data(  struct frame_headers * frame_headers, 
-                            uint16_t * image_data,
-                            int interp_method,
-                            int fullres,
-                            int use_alias_map,
-                            int chroma_smooth_method,
-                            int fix_bad_pixels_mode)
-{
-    struct raw_info raw_info = frame_headers->rawi_hdr.raw_info;
-    raw_info.width = frame_headers->rawi_hdr.xRes;
-    raw_info.height = frame_headers->rawi_hdr.yRes;
-    raw_info.pitch = frame_headers->rawi_hdr.xRes;
-    raw_info.active_area.x1 = 0;
-    raw_info.active_area.y1 = 0;
-    raw_info.active_area.x2 = raw_info.width;
-    raw_info.active_area.y2 = raw_info.height;
-    if (hdr_check(raw_info, image_data))
-    {
-        fix_focus_pixels(frame_headers, image_data, 1);
-        if(fix_bad_pixels_mode)
-        {
-            fix_bad_pixels(frame_headers, image_data, fix_bad_pixels_mode == 2, 1);
-        }
-        if(hdr_interpolate(raw_info, image_data, interp_method, fullres, use_alias_map, chroma_smooth_method))
-        {
-            frame_headers->rawi_hdr.raw_info.black_level *= 4;
-            frame_headers->rawi_hdr.raw_info.white_level *= 4;
-            return 1;
-        }
-    }
-    return 0;
-}
-*/
+

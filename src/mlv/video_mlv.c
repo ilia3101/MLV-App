@@ -103,6 +103,7 @@ void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outpu
 
     /* convert uint16_t raw data -> float raw_data for processing with amaze or bilinear debayer, both need data input as float */
     int shift_val = 16 - bitdepth;
+    if(video->llrawproc->dual_iso == 1) shift_val = 0; // high quality dualiso buffer is 16 bit
     for (int i = 0; i < pixels_count; ++i)
     {
         outputFrame[i] = (float)(unpacked_frame[i] << shift_val);

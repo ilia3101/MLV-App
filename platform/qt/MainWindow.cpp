@@ -2355,6 +2355,7 @@ void MainWindow::on_spinBoxDeflickerTarget_valueChanged(int arg1)
 void MainWindow::on_comboBoxDualISO_currentIndexChanged(int index)
 {
     m_pMlvObject->llrawproc->dual_iso = index;
+    m_pMlvObject->current_cached_frame_active = 0;
     m_frameChanged = true;
 }
 
