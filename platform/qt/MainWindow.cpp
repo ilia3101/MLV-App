@@ -294,7 +294,7 @@ void MainWindow::drawFrame( void )
     m_frameStillDrawing = true;
 
     //enable low level raw fixes (if wanted)
-    on_checkBoxRawFixEnable_clicked( ui->checkBoxRawFixEnable->isChecked() );
+    if( ui->checkBoxRawFixEnable->isChecked() ) m_pMlvObject->llrawproc->fix_raw = 1;
 
     //Get frame from library
     getMlvProcessedFrame8( m_pMlvObject, ui->horizontalSliderPosition->value(), m_pRawImage );
@@ -721,7 +721,7 @@ void MainWindow::startExport(QString fileName)
     // we always get amaze frames for exporting
     setMlvAlwaysUseAmaze( m_pMlvObject );
     //enable low level raw fixes (if wanted)
-    on_checkBoxRawFixEnable_clicked( ui->checkBoxRawFixEnable->isChecked() );
+    if( ui->checkBoxRawFixEnable->isChecked() ) m_pMlvObject->llrawproc->fix_raw = 1;
 
     //StatusDialog
     m_pStatusDialog->ui->progressBar->setMaximum( getMlvFrames( m_pMlvObject ) * 2 );
