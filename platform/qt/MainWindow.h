@@ -184,6 +184,7 @@ private:
     void paintAudioTrack( void );
     void drawZebras( void );
     void drawFrameNumberLabel( void );
+    void setDualIsoIfDetected( void );
 
 signals:
     void exportReady( void );

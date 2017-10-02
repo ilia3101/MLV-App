@@ -95,6 +95,7 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
             //Open the file
             openMlv( fileName );
             on_actionResetReceipt_triggered();
+            setDualIsoIfDetected();
             previewPicture( ui->listWidgetSession->count() - 1 );
         }
         else if( QFile(fileName).exists() && fileName.endsWith( ".masxml", Qt::CaseInsensitive ) )
@@ -228,6 +229,7 @@ bool MainWindow::event(QEvent *event)
                 //Open MLV
                 openMlv( fileName );
                 on_actionResetReceipt_triggered();
+                setDualIsoIfDetected();
                 previewPicture( ui->listWidgetSession->count() - 1 );
             }
         }
@@ -279,6 +281,7 @@ void MainWindow::dropEvent(QDropEvent *event)
         //Open the file
         openMlv( fileName );
         on_actionResetReceipt_triggered();
+        setDualIsoIfDetected();
         previewPicture( ui->listWidgetSession->count() - 1 );
     }
     m_inOpeningProcess = false;
@@ -408,6 +411,7 @@ void MainWindow::on_actionOpen_triggered()
         //Open the file
         openMlv( fileName );
         on_actionResetReceipt_triggered();
+        setDualIsoIfDetected();
         previewPicture( ui->listWidgetSession->count() - 1 );
     }
 
@@ -1398,6 +1402,17 @@ void MainWindow::drawFrameNumberLabel( void )
     else
     {
         m_pFrameNumber->setText( tr( "Frame 0/0" ) );
+    }
+}
+
+//If the actual file is detected as dualIso, we set the combobox dualIso = preview
+void MainWindow::setDualIsoIfDetected( void )
+{
+    //qDebug() << "DualIsoCheck:" << m_pMlvObject->llrawproc->is_dual_iso;
+    if( m_pMlvObject->llrawproc->is_dual_iso )
+    {
+        ui->comboBoxDualISO->setCurrentIndex( 2 ); //2 = Preview
+        on_comboBoxDualISO_currentIndexChanged( 2 );
     }
 }
 

@@ -97,7 +97,7 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
     {
         /* check dual iso */
         video->llrawproc->is_dual_iso = diso_get_preview(raw_image_buff, video->RAWI.xRes, video->RAWI.yRes, video->llrawproc->mlv_black_level, video->llrawproc->mlv_white_level, 1);
-        if(video->llrawproc->is_dual_iso) video->llrawproc->dual_iso = 2; // if dual iso detected set processing to preview mode
+        //if(video->llrawproc->is_dual_iso) video->llrawproc->dual_iso = 2; // if dual iso detected set processing to preview mode
 
         /* initialise LUTs */
         video->llrawproc->raw2ev = get_raw2ev(video->llrawproc->mlv_black_level, video->RAWI.raw_info.bits_per_pixel);
