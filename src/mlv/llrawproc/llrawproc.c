@@ -71,7 +71,6 @@ llrawprocObject_t * initLLRawProcObject()
     llrawproc->diso_alias_map = 1;
     llrawproc->diso_frblending = 1;
 
-
     llrawproc->raw2ev = NULL;
     llrawproc->ev2raw = NULL;
 
