@@ -993,6 +993,21 @@ void MainWindow::openSession(QString fileName)
                                 m_pSessionReceipts.last()->setDualIso( Rxml.readElementText().toInt() );
                                 Rxml.readNext();
                             }
+                            else if( Rxml.isStartElement() && Rxml.name() == "dualIsoInterpolation" )
+                            {
+                                m_pSessionReceipts.last()->setDualIsoInterpolation( Rxml.readElementText().toInt() );
+                                Rxml.readNext();
+                            }
+                            else if( Rxml.isStartElement() && Rxml.name() == "dualIsoAliasMap" )
+                            {
+                                m_pSessionReceipts.last()->setDualIsoAliasMap( Rxml.readElementText().toInt() );
+                                Rxml.readNext();
+                            }
+                            else if( Rxml.isStartElement() && Rxml.name() == "dualIsoFrBlending" )
+                            {
+                                m_pSessionReceipts.last()->setDualIsoFrBlending( Rxml.readElementText().toInt() );
+                                Rxml.readNext();
+                            }
                             else if( Rxml.isStartElement() ) //future features
                             {
                                 Rxml.readElementText();
@@ -1081,6 +1096,9 @@ void MainWindow::saveSession(QString fileName)
         xmlWriter.writeTextElement( "patternNoise",            QString( "%1" ).arg( m_pSessionReceipts.at(i)->patternNoise() ) );
         xmlWriter.writeTextElement( "deflickerTarget",         QString( "%1" ).arg( m_pSessionReceipts.at(i)->deflickerTarget() ) );
         xmlWriter.writeTextElement( "dualIso",                 QString( "%1" ).arg( m_pSessionReceipts.at(i)->dualIso() ) );
+        xmlWriter.writeTextElement( "dualIsoInterpolation",    QString( "%1" ).arg( m_pSessionReceipts.at(i)->dualIsoInterpolation() ) );
+        xmlWriter.writeTextElement( "dualIsoAliasMap",         QString( "%1" ).arg( m_pSessionReceipts.at(i)->dualIsoAliasMap() ) );
+        xmlWriter.writeTextElement( "dualIsoFrBlending",       QString( "%1" ).arg( m_pSessionReceipts.at(i)->dualIsoFrBlending() ) );
         xmlWriter.writeEndElement();
     }
     xmlWriter.writeEndElement();
@@ -1190,6 +1208,12 @@ void MainWindow::setSliders(ReceiptSettings *receipt)
     on_spinBoxDeflickerTarget_valueChanged( receipt->deflickerTarget() );
     ui->comboBoxDualISO->setCurrentIndex( receipt->dualIso() );
     on_comboBoxDualISO_currentIndexChanged( receipt->dualIso() );
+    ui->comboBoxDualISOInterpolation->setCurrentIndex( receipt->dualIsoInterpolation() );
+    on_comboBoxDualISOInterpolation_currentIndexChanged( receipt->dualIsoInterpolation() );
+    ui->comboBoxDualISOAliasMap->setCurrentIndex( receipt->dualIsoAliasMap() );
+    on_comboBoxDualISOAliasMap_currentIndexChanged( receipt->dualIsoAliasMap() );
+    ui->comboBoxDualISOFullresBlending->setCurrentIndex( receipt->dualIsoFrBlending() );
+    on_comboBoxDualISOFullresBlending_currentIndexChanged( receipt->dualIsoFrBlending() );
     m_pMlvObject->current_cached_frame_active = 0;
 }
 
@@ -1218,6 +1242,9 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     receipt->setPatternNoise( ui->comboBoxPatternNoiseSwitch->currentIndex() );
     receipt->setDeflickerTarget( ui->spinBoxDeflickerTarget->value() );
     receipt->setDualIso( ui->comboBoxDualISO->currentIndex() );
+    receipt->setDualIsoInterpolation( ui->comboBoxDualISOInterpolation->currentIndex() );
+    receipt->setDualIsoAliasMap( ui->comboBoxDualISOAliasMap->currentIndex() );
+    receipt->setDualIsoFrBlending( ui->comboBoxDualISOFullresBlending->currentIndex() );
 }
 
 //Show the file in
@@ -1259,6 +1286,9 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     receipt->setPatternNoise( m_pSessionReceipts.at( row )->patternNoise() );
     receipt->setDeflickerTarget( m_pSessionReceipts.at( row )->deflickerTarget() );
     receipt->setDualIso( m_pSessionReceipts.at( row )->dualIso() );
+    receipt->setDualIsoInterpolation( m_pSessionReceipts.at( row )->dualIsoInterpolation() );
+    receipt->setDualIsoAliasMap( m_pSessionReceipts.at( row )->dualIsoAliasMap() );
+    receipt->setDualIsoFrBlending( m_pSessionReceipts.at( row )->dualIsoFrBlending() );
 
     receipt->setFileName( m_pSessionReceipts.at( row )->fileName() );
     receipt->setExportFileName( fileName );
