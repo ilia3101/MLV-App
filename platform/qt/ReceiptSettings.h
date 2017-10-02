@@ -28,6 +28,7 @@ public:
     void setProfile( uint8_t num )  {m_profile = num;}
     void setFileName( QString fileName )      {m_fileName = fileName;}
     void setExportFileName( QString fileName ){m_exportFileName = fileName;}
+    void setRawFixesEnabled( bool on )        {m_rawFixesEnabled = on;}
     void setVerticalStripes( int mode )       {m_vertical_stripes = mode;}
     void setFocusPixels( int mode )           {m_focus_pixels = mode;}
     void setFpiMethod( int mode )             {m_fpi_method = mode;}
@@ -51,6 +52,7 @@ public:
     int lightening( void ) {return m_lightening;}
     int sharpen( void )    {return m_sharpen;}
     bool isHighlightReconstruction( void ){return m_highlightReconstruction;}
+    bool rawFixesEnabled( void ){return m_rawFixesEnabled;}
     int verticalStripes( void ){return m_vertical_stripes;}
     int focusPixels( void ){return m_focus_pixels;}
     int fpiMethod( void )  {return m_fpi_method;}
@@ -79,6 +81,7 @@ private:
     int m_lightening;
     int m_sharpen;
     bool m_highlightReconstruction;
+    bool m_rawFixesEnabled; // Enable/Disable all raw fixes
     int m_vertical_stripes; // fix vertical stripes, 0 - do not fix", 1 - fix, 2 - calculate for every frame
     int m_focus_pixels;     // fix focus pixels, false - do not fix, true - fix
     int m_fpi_method;       // focus pixel interpolation method: 0 - mlvfs, 1 - raw2dng

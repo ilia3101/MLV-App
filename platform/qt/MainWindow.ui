@@ -1314,12 +1314,20 @@
               <number>0</number>
              </property>
              <item>
-              <widget class="QCheckBox" name="checkBoxRawFix">
+              <widget class="QCheckBox" name="checkBoxRawFixEnable">
                <property name="enabled">
                 <bool>true</bool>
                </property>
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
                <property name="text">
-                <string>Raw correction</string>
+                <string>Enable raw correction</string>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
                </property>
               </widget>
              </item>

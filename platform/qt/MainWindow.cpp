@@ -948,6 +948,11 @@ void MainWindow::openSession(QString fileName)
                                 m_pSessionReceipts.last()->setProfile( (uint8_t)Rxml.readElementText().toUInt() );
                                 Rxml.readNext();
                             }
+                            else if( Rxml.isStartElement() && Rxml.name() == "rawFixesEnabled" )
+                            {
+                                m_pSessionReceipts.last()->setRawFixesEnabled( (bool)Rxml.readElementText().toInt() );
+                                Rxml.readNext();
+                            }
                             else if( Rxml.isStartElement() && Rxml.name() == "verticalStripes" )
                             {
                                 m_pSessionReceipts.last()->setVerticalStripes( Rxml.readElementText().toInt() );
@@ -1087,6 +1092,7 @@ void MainWindow::saveSession(QString fileName)
         xmlWriter.writeTextElement( "sharpen",                 QString( "%1" ).arg( m_pSessionReceipts.at(i)->sharpen() ) );
         xmlWriter.writeTextElement( "highlightReconstruction", QString( "%1" ).arg( m_pSessionReceipts.at(i)->isHighlightReconstruction() ) );
         xmlWriter.writeTextElement( "profile",                 QString( "%1" ).arg( m_pSessionReceipts.at(i)->profile() ) );
+        xmlWriter.writeTextElement( "rawFixesEnabled",         QString( "%1" ).arg( m_pSessionReceipts.at(i)->rawFixesEnabled() ) );
         xmlWriter.writeTextElement( "verticalStripes",         QString( "%1" ).arg( m_pSessionReceipts.at(i)->verticalStripes() ) );
         xmlWriter.writeTextElement( "focusPixels",             QString( "%1" ).arg( m_pSessionReceipts.at(i)->focusPixels() ) );
         xmlWriter.writeTextElement( "fpiMethod",               QString( "%1" ).arg( m_pSessionReceipts.at(i)->fpiMethod() ) );
@@ -1187,9 +1193,12 @@ void MainWindow::setSliders(ReceiptSettings *receipt)
     ui->horizontalSliderSharpen->setValue( receipt->sharpen() );
 
     ui->checkBoxHighLightReconstruction->setChecked( receipt->isHighlightReconstruction() );
+    on_checkBoxHighLightReconstruction_toggled( receipt->isHighlightReconstruction() );
     ui->comboBoxProfile->setCurrentIndex( receipt->profile() );
     on_comboBoxProfile_currentIndexChanged( receipt->profile() );
 
+    ui->checkBoxRawFixEnable->setChecked( receipt->rawFixesEnabled() );
+    on_checkBoxRawFixEnable_clicked( receipt->rawFixesEnabled() );
     ui->comboBoxVerticalStripesSwitch->setCurrentIndex( receipt->verticalStripes() );
     on_comboBoxVerticalStripesSwitch_currentIndexChanged( receipt->verticalStripes() );
     ui->comboBoxFocusPixelSwitch->setCurrentIndex( receipt->focusPixels() );
@@ -1233,6 +1242,7 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     receipt->setHighlightReconstruction( ui->checkBoxHighLightReconstruction->isChecked() );
     receipt->setProfile( ui->comboBoxProfile->currentIndex() );
 
+    receipt->setRawFixesEnabled( ui->checkBoxRawFixEnable->isChecked() );
     receipt->setVerticalStripes( ui->comboBoxVerticalStripesSwitch->currentIndex() );
     receipt->setFocusPixels( ui->comboBoxFocusPixelSwitch->currentIndex() );
     receipt->setFpiMethod( ui->comboBoxFocusPixelsInterpolationMethod->currentIndex() );
@@ -1277,6 +1287,7 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     receipt->setHighlightReconstruction( m_pSessionReceipts.at( row )->isHighlightReconstruction() );
     receipt->setProfile( m_pSessionReceipts.at( row )->profile() );
 
+    receipt->setRawFixesEnabled( m_pSessionReceipts.at( row )->rawFixesEnabled() );
     receipt->setVerticalStripes( m_pSessionReceipts.at( row )->verticalStripes() );
     receipt->setFocusPixels( m_pSessionReceipts.at( row )->focusPixels() );
     receipt->setFpiMethod( m_pSessionReceipts.at( row )->fpiMethod() );
@@ -2438,4 +2449,38 @@ void MainWindow::on_actionNextFrame_triggered()
 void MainWindow::on_actionPreviousFrame_triggered()
 {
     ui->horizontalSliderPosition->setValue( ui->horizontalSliderPosition->value() - 1 );
+}
+
+//En-/disable all raw corrections
+void MainWindow::on_checkBoxRawFixEnable_clicked(bool checked)
+{
+    //Set llrawproc en-/disable here
+    //TODO: CODE
+
+    //Set GUI elements
+    ui->FocusPixelsLabel->setEnabled( checked );
+    ui->FocusPixelsInterpolationMethodLabel->setEnabled( checked );
+    ui->BadPixelsLabel->setEnabled( checked );
+    ui->BadPixelsInterpolationMethodLabel->setEnabled( checked );
+    ui->ChromaSmoothLabel->setEnabled( checked );
+    ui->PatternNoiseLabel->setEnabled( checked );
+    ui->VerticalStripesLabel->setEnabled( checked );
+    ui->DeflickerTargetLabel->setEnabled( checked );
+    ui->DualISOLabel->setEnabled( checked );
+    ui->DualISOInterpolationLabel->setEnabled( checked );
+    ui->DualISOAliasMapLabel->setEnabled( checked );
+    ui->DualISOFullresBlendingLabel->setEnabled( checked );
+
+    ui->comboBoxFocusPixelSwitch->setEnabled( checked );
+    ui->comboBoxFocusPixelsInterpolationMethod->setEnabled( checked );
+    ui->comboBoxBadPixelsSwitch->setEnabled( checked );
+    ui->comboBoxBadPixelsInterpolationMethod->setEnabled( checked );
+    ui->comboBoxChromaSmoothSwitch->setEnabled( checked );
+    ui->comboBoxPatternNoiseSwitch->setEnabled( checked );
+    ui->comboBoxVerticalStripesSwitch->setEnabled( checked );
+    ui->spinBoxDeflickerTarget->setEnabled( checked );
+    ui->comboBoxDualISO->setEnabled( checked );
+    ui->comboBoxDualISOInterpolation->setEnabled( checked );
+    ui->comboBoxDualISOAliasMap->setEnabled( checked );
+    ui->comboBoxDualISOFullresBlending->setEnabled( checked );
 }

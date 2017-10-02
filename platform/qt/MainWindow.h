@@ -122,7 +122,7 @@ private slots:
     void on_comboBoxDualISOFullresBlending_currentIndexChanged(int index);
     void on_actionNextFrame_triggered();
     void on_actionPreviousFrame_triggered();
-
+    void on_checkBoxRawFixEnable_clicked(bool checked);
 
 private:
     Ui::MainWindow *ui;
