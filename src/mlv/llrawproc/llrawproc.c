@@ -67,6 +67,10 @@ llrawprocObject_t * initLLRawProcObject()
     llrawproc->first_time = 1;
     llrawproc->dual_iso = 0;
     llrawproc->is_dual_iso = 0;
+    llrawproc->diso_averaging = 1;
+    llrawproc->diso_alias_map = 1;
+    llrawproc->diso_frblending = 1;
+
 
     llrawproc->raw2ev = NULL;
     llrawproc->ev2raw = NULL;
@@ -96,8 +100,13 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
     if(video->llrawproc->first_time)
     {
         /* check dual iso */
-        video->llrawproc->is_dual_iso = diso_get_preview(raw_image_buff, video->RAWI.xRes, video->RAWI.yRes, video->llrawproc->mlv_black_level, video->llrawproc->mlv_white_level, 1);
-        //if(video->llrawproc->is_dual_iso) video->llrawproc->dual_iso = 2; // if dual iso detected set processing to preview mode
+        video->llrawproc->is_dual_iso = diso_get_preview(raw_image_buff,
+                                                         video->RAWI.xRes,
+                                                         video->RAWI.yRes,
+                                                         video->llrawproc->mlv_black_level,
+                                                         video->llrawproc->mlv_white_level,
+                                                         1); // dual iso check mode is on
+        if(video->llrawproc->is_dual_iso) video->llrawproc->dual_iso = 2; // if dual iso detected set processing to preview mode
 
         /* initialise LUTs */
         video->llrawproc->raw2ev = get_raw2ev(video->llrawproc->mlv_black_level, video->RAWI.raw_info.bits_per_pixel);
@@ -192,12 +201,24 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
                 raw_info.active_area.y1 = 0;
                 raw_info.active_area.x2 = raw_info.width;
                 raw_info.active_area.y2 = raw_info.height;
-                diso_get_full20bit(raw_info, raw_image_buff, 1, 1, 1, video->llrawproc->chroma_smooth);
+                raw_info.black_level = video->llrawproc->mlv_black_level;
+                raw_info.white_level = video->llrawproc->mlv_white_level;
+                diso_get_full20bit(raw_info,
+                                   raw_image_buff,
+                                   video->llrawproc->diso_averaging,
+                                   video->llrawproc->diso_alias_map,
+                                   video->llrawproc->diso_frblending,
+                                   video->llrawproc->chroma_smooth);
                 break;
             }
             case 2: // preview mode
             {
-                diso_get_preview(raw_image_buff, video->RAWI.xRes, video->RAWI.yRes, video->llrawproc->mlv_black_level, video->llrawproc->mlv_white_level, 0);
+                diso_get_preview(raw_image_buff,
+                                 video->RAWI.xRes,
+                                 video->RAWI.yRes,
+                                 video->llrawproc->mlv_black_level,
+                                 video->llrawproc->mlv_white_level,
+                                 0); // dual iso check mode is off
                 break;
             }
         }

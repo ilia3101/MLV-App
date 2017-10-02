@@ -2374,6 +2374,30 @@ void MainWindow::on_comboBoxDualISO_currentIndexChanged(int index)
     m_frameChanged = true;
 }
 
+//Combobox DualISO Interpolation changed
+void MainWindow::on_comboBoxDualISOInterpolation_currentIndexChanged(int index)
+{
+    m_pMlvObject->llrawproc->diso_averaging = index;
+    m_pMlvObject->current_cached_frame_active = 0;
+    m_frameChanged = true;
+}
+
+//Combobox DualISO Alias Map changed
+void MainWindow::on_comboBoxDualISOAliasMap_currentIndexChanged(int index)
+{
+    m_pMlvObject->llrawproc->diso_alias_map = index;
+    m_pMlvObject->current_cached_frame_active = 0;
+    m_frameChanged = true;
+}
+
+//Combobox DualISO Fullres Blending changed
+void MainWindow::on_comboBoxDualISOFullresBlending_currentIndexChanged(int index)
+{
+    m_pMlvObject->llrawproc->diso_frblending = index;
+    m_pMlvObject->current_cached_frame_active = 0;
+    m_frameChanged = true;
+}
+
 //Goto next frame
 void MainWindow::on_actionNextFrame_triggered()
 {

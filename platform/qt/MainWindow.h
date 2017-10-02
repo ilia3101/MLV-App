@@ -117,6 +117,9 @@ private slots:
     void on_comboBoxVerticalStripesSwitch_currentIndexChanged(int index);
     void on_spinBoxDeflickerTarget_valueChanged(int arg1);
     void on_comboBoxDualISO_currentIndexChanged(int index);
+    void on_comboBoxDualISOInterpolation_currentIndexChanged(int index);
+    void on_comboBoxDualISOAliasMap_currentIndexChanged(int index);
+    void on_comboBoxDualISOFullresBlending_currentIndexChanged(int index);
     void on_actionNextFrame_triggered();
     void on_actionPreviousFrame_triggered();
 

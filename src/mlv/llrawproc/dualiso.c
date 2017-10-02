@@ -28,6 +28,7 @@
 #include "opt_med.h"
 #include "wirth.h"
 #include <pthread.h>
+#include "../../debayer/debayer.h"
 
 #define EV_RESOLUTION 65536
 #define M_PI 3.14159265358979323846 /* pi */
@@ -989,7 +990,7 @@ static inline void amaze_interpolate(struct raw_info raw_info, uint32_t * raw_bu
         yh++;
         if (yh >= h) break; /* just in case */
     }
-    
+#if 0
     void amaze_demosaic_RT(
                            float** rawData,    /* holds preprocessed pixel values, rawData[i][j] corresponds to the ith row and jth column */
                            float** red,        /* the interpolated red plane */
@@ -998,11 +999,11 @@ static inline void amaze_interpolate(struct raw_info raw_info, uint32_t * raw_bu
                            int winx, int winy, /* crop window for demosaicing */
                            int winw, int winh
                            );
-
+#endif
     //IDK if AMaZE is actually thread safe, but I'm just going to assume not, rather than inspecting that huge mess of code
     LOCK(amaze_mutex)
     {
-        //amaze_demosaic_RT(rawData, red, green, blue, 0, 0, w, h);
+        demosaic(& (amazeinfo_t) { rawData, red, green, blue, 0, 0, w, h, 0 });
     }
     UNLOCK(amaze_mutex)
     
@@ -1750,7 +1751,7 @@ static inline void convert_20_to_16bit(struct raw_info raw_info, uint16_t * imag
             raw_set_pixel_20to16_rand(x, y, raw_buffer_32[x + y*w]);
 }
 
-int diso_get_full20bit(struct raw_info raw_info, uint16_t * image_data, int interp_method, int use_fullres, int use_alias_map, int chroma_smooth_method)
+int diso_get_full20bit(struct raw_info raw_info, uint16_t * image_data, int interp_method, int use_alias_map, int use_fullres, int chroma_smooth_method)
 {
     int w = raw_info.width;
     int h = raw_info.height;
