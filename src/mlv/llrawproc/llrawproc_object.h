@@ -44,6 +44,7 @@ typedef struct
     int deflicker_target; // deflicker value
     int first_time;       // controls some events which should occur only once per object instance
     int dual_iso;         // use dualiso processing, 0 - do not use, 1 - preview mode (low quality), 2 - full 20 bit processing (high quality, slow)
+    int is_dual_iso;      // flag indicateing that this raw data is really dual_iso
 
     /* original black and white levels from MLV
        backing them up needed because those values are

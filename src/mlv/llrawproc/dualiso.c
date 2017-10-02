@@ -41,7 +41,7 @@
 #define UNLOCK(x) pthread_mutex_unlock(&(x));
 
 //this is just meant to be fast
-int diso_get_preview(uint16_t * image_data, uint16_t width, uint16_t height, int32_t black, int32_t white)
+int diso_get_preview(uint16_t * image_data, uint16_t width, uint16_t height, int32_t black, int32_t white, int diso_check)
 {
     //compute the median of the green channel for each multiple of 4 rows
     uint16_t median[4];
@@ -105,6 +105,8 @@ int diso_get_preview(uint16_t * image_data, uint16_t width, uint16_t height, int
         return 0;
     }
     
+    if(diso_check) return 1;
+
     /* compare the two histograms and plot the curve between the two exposures (dark as a function of bright) */
     const int min_pix = 100;                                /* extract a data point every N image pixels */
     int data_size = (width * height / min_pix + 1);                  /* max number of data points */
@@ -389,54 +391,6 @@ float fast_randn05()
 {
     static int k = 0;
     return randn05_cache[(k++) & 1023];
-}
-
-double * get_raw2evf(int black, int32_t bpp)
-{
-    int max_rawval = pow(2, bpp) - 1;
-    double * raw2ev = (double *)malloc(EV_RESOLUTION*sizeof(int));
-
-    memset(raw2ev, 0, max_rawval * sizeof(int));
-    int i;
-    for (i = 0; i < max_rawval; i++)
-    {
-        raw2ev[i] = log2(MAX(1, i - black)) * EV_RESOLUTION;
-    }
-
-    return raw2ev;
-}
-
-/* quick check to see if this looks like a HDR frame */
-int diso_check(struct raw_info raw_info, uint16_t * image_data, double * raw2evf)
-{
-    int black = raw_info.black_level;
-    int white = raw_info.white_level;
-    
-    int w = raw_info.width;
-    int h = raw_info.height;
-
-    double avg_ev = 0;
-    int num = 0;
-    for (int y = 2; y < h-2; y ++)
-    {
-        for (int x = 2; x < w-2; x ++)
-        {
-            int p = raw_get_pixel16(x, y);
-            int p2 = raw_get_pixel16(x, y+2);
-            if ((p > black+32 || p2 > black+32) && p < white && p2 < white)
-            {
-                avg_ev += ABS(raw2evf[p2] - raw2evf[p]);
-                num++;
-            }
-        }
-    }
-    
-    avg_ev /= num;
-    
-    if (avg_ev > 0.5)
-        return 1;
-    
-    return 0;
 }
 
 static int identify_rggb_or_gbrg(struct raw_info raw_info, uint16_t * image_data)
@@ -1229,7 +1183,7 @@ static inline void amaze_interpolate(struct raw_info raw_info, uint32_t * raw_bu
     free(edge_direction);
 }
 
-static inline void mean32_interpolate(struct raw_info raw_info, uint32_t * raw_buffer_32, uint32_t* dark, uint32_t* bright, int black, int white, int white_darkened, int * is_bright)
+static inline void mean23_interpolate(struct raw_info raw_info, uint32_t * raw_buffer_32, uint32_t* dark, uint32_t* bright, int black, int white, int white_darkened, int * is_bright)
 {
     int w = raw_info.width;
     int h = raw_info.height;
@@ -1885,7 +1839,7 @@ int diso_get_full20bit(struct raw_info raw_info, uint16_t * image_data, int inte
         }
         else
         {
-            mean32_interpolate(raw_info, raw_buffer_32, dark, bright, black, white, white_darkened, is_bright);
+            mean23_interpolate(raw_info, raw_buffer_32, dark, bright, black, white, white_darkened, is_bright);
         }
         
         border_interpolate(raw_info, raw_buffer_32, dark, bright, is_bright);

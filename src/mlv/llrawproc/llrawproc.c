@@ -66,6 +66,7 @@ llrawprocObject_t * initLLRawProcObject()
     llrawproc->compute_stripes = 1;
     llrawproc->first_time = 1;
     llrawproc->dual_iso = 0;
+    llrawproc->is_dual_iso = 0;
 
     llrawproc->raw2ev = NULL;
     llrawproc->ev2raw = NULL;
@@ -94,6 +95,9 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
     /* do first time stuff */
     if(video->llrawproc->first_time)
     {
+        /* check dual iso */
+        video->llrawproc->is_dual_iso = diso_get_preview(raw_image_buff, video->RAWI.xRes, video->RAWI.yRes, video->llrawproc->mlv_black_level, video->llrawproc->mlv_white_level, 1);
+
         /* initialise LUTs */
         video->llrawproc->raw2ev = get_raw2ev(video->llrawproc->mlv_black_level, video->RAWI.raw_info.bits_per_pixel);
         video->llrawproc->ev2raw = get_ev2raw(video->llrawproc->mlv_black_level);
@@ -173,22 +177,29 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
     }
 
     /* dual iso processing */
-    if(video->llrawproc->dual_iso == 1) // full 20bit processing
+    if(video->llrawproc->is_dual_iso)
     {
-        struct raw_info raw_info = video->RAWI.raw_info;
-        raw_info.width = video->RAWI.xRes;
-        raw_info.height = video->RAWI.yRes;
-        raw_info.pitch = video->RAWI.xRes;
-        raw_info.active_area.x1 = 0;
-        raw_info.active_area.y1 = 0;
-        raw_info.active_area.x2 = raw_info.width;
-        raw_info.active_area.y2 = raw_info.height;
-        diso_get_full20bit(raw_info, raw_image_buff, 1, 1, 1, video->llrawproc->chroma_smooth);
+        switch(video->llrawproc->dual_iso)
+        {
+            case 1: // full 20bit processing
+            {
+                struct raw_info raw_info = video->RAWI.raw_info;
+                raw_info.width = video->RAWI.xRes;
+                raw_info.height = video->RAWI.yRes;
+                raw_info.pitch = video->RAWI.xRes;
+                raw_info.active_area.x1 = 0;
+                raw_info.active_area.y1 = 0;
+                raw_info.active_area.x2 = raw_info.width;
+                raw_info.active_area.y2 = raw_info.height;
+                diso_get_full20bit(raw_info, raw_image_buff, 1, 1, 1, video->llrawproc->chroma_smooth);
+            }
+            case 2: // preview mode
+            {
+                diso_get_preview(raw_image_buff, video->RAWI.xRes, video->RAWI.yRes, video->llrawproc->mlv_black_level, video->llrawproc->mlv_white_level, 0);
+            }
+        }
     }
-    else if (video->llrawproc->dual_iso == 2) // preview mode
-    {
-        diso_get_preview(raw_image_buff, video->RAWI.xRes, video->RAWI.yRes, video->llrawproc->mlv_black_level, video->llrawproc->mlv_white_level);
-    }
+
 
     /* do chroma smoothing */
     if (video->llrawproc->chroma_smooth && video->llrawproc->dual_iso != 1) // do not smooth 20bit dualiso raw
