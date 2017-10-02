@@ -192,10 +192,12 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
                 raw_info.active_area.x2 = raw_info.width;
                 raw_info.active_area.y2 = raw_info.height;
                 diso_get_full20bit(raw_info, raw_image_buff, 1, 1, 1, video->llrawproc->chroma_smooth);
+                break;
             }
             case 2: // preview mode
             {
                 diso_get_preview(raw_image_buff, video->RAWI.xRes, video->RAWI.yRes, video->llrawproc->mlv_black_level, video->llrawproc->mlv_white_level, 0);
+                break;
             }
         }
     }

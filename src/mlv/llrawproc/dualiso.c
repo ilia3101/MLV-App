@@ -101,7 +101,9 @@ int diso_get_preview(uint16_t * image_data, uint16_t width, uint16_t height, int
     }
     else
     {
-        err_printf("Could not detect dual ISO interlaced lines\n");
+#ifndef STDOUT_SILENT
+        err_printf("\nCould not detect dual ISO interlaced lines\n");
+#endif
         return 0;
     }
     
@@ -282,9 +284,9 @@ static void white_detect(struct raw_info raw_info, uint16_t * image_data, int* w
     /* we assume 14-bit input data; out-of-range white levels may cause crash */
     *white_dark = COERCE(whites[0], 10000, 16383);
     *white_bright = COERCE(whites[1], 5000, 16383);
-    
+#ifndef STDOUT_SILENT
     printf("White levels    : %d %d\n", *white_dark, *white_bright);
-    
+#endif
     free(pixels[0]);
     free(pixels[1]);
 }
@@ -573,18 +575,22 @@ static int identify_bright_and_dark_fields(struct raw_info raw_info, uint16_t * 
     
     for (int i = 0; i < 4; i++)
         is_bright[i] = raw[i] > median_bright;
-    
+#ifndef STDOUT_SILENT
     printf("ISO pattern     : %c%c%c%c %s\n", is_bright[0] ? 'B' : 'd', is_bright[1] ? 'B' : 'd', is_bright[2] ? 'B' : 'd', is_bright[3] ? 'B' : 'd', rggb ? "RGGB" : "GBRG");
-    
+#endif
     if (is_bright[0] + is_bright[1] + is_bright[2] + is_bright[3] != 2)
     {
+#ifndef STDOUT_SILENT
         printf("Bright/dark detection error\n");
+#endif
         return 0;
     }
     
     if (is_bright[0] == is_bright[2] || is_bright[1] == is_bright[3])
     {
+#ifndef STDOUT_SILENT
         printf("Interlacing method not supported\n");
+#endif
         return 0;
     }
     return 1;
@@ -766,14 +772,17 @@ static int match_exposures(struct raw_info raw_info, uint32_t * raw_buffer_32, d
     double factor = 1/a;
     if (factor < 1.2 || !isfinite(factor))
     {
+#ifndef STDOUT_SILENT
         printf("Doesn't look like interlaced ISO\n");
+#endif
         return 0;
     }
     
     *corr_ev = log2(factor);
-    
+#ifndef STDOUT_SILENT
     printf("ISO difference  : %.2f EV (%d)\n", log2(factor), (int)round(factor*100));
     printf("Black delta     : %.2f\n", b/4); /* we want to display black delta for the 14-bit original data, but we have computed it from 16-bit data */
+#endif
     return 1;
 }
 
@@ -833,8 +842,9 @@ static inline double compute_noise(struct raw_info raw_info, uint16_t * image_da
     double noise_avg = 0.0;
     for (int y = 0; y < 4; y++)
         compute_black_noise(raw_info, image_data, 8, raw_info.active_area.x1 - 8, raw_info.active_area.y1/4*4 + 20 + y, raw_info.active_area.y2 - 20, 1, 4, &noise_avg, &noise_std[y]);
-    
+#ifndef STDOUT_SILENT
     printf("Noise levels    : %.02f %.02f %.02f %.02f (14-bit)\n", noise_std[0], noise_std[1], noise_std[2], noise_std[3]);
+#endif
     *dark_noise = MIN(MIN(noise_std[0], noise_std[1]), MIN(noise_std[2], noise_std[3]));
     *bright_noise = MAX(MAX(noise_std[0], noise_std[1]), MAX(noise_std[2], noise_std[3]));
     *dark_noise_ev = log2(*dark_noise);
@@ -988,7 +998,7 @@ static inline void amaze_interpolate(struct raw_info raw_info, uint32_t * raw_bu
                            int winx, int winy, /* crop window for demosaicing */
                            int winw, int winh
                            );
-    printf("muahahaha\n");
+
     //IDK if AMaZE is actually thread safe, but I'm just going to assume not, rather than inspecting that huge mess of code
     LOCK(amaze_mutex)
     {
@@ -1006,9 +1016,9 @@ static inline void amaze_interpolate(struct raw_info raw_info, uint32_t * raw_bu
             blue[y][x] = COERCE(blue[y][x], 0, 0xFFFFF);
         }
     }
-    
+#ifndef STDOUT_SILENT
     printf("Edge-directed interpolation...\n");
-    
+#endif
     //~ printf("Grayscale...\n");
     /* convert to grayscale and de-squeeze for easier processing */
     uint32_t * gray = malloc(w * h * sizeof(gray[0]));
@@ -1128,10 +1138,10 @@ static inline void amaze_interpolate(struct raw_info raw_info, uint32_t * raw_bu
                 edge_direction[x + y*w] = d_best;
             }
         }
-        
+#ifndef STDOUT_SILENT
         printf("Semi-overexposed: %.02f%%\n", semi_overexposed * 100.0 / (semi_overexposed + not_overexposed));
         printf("Deep shadows    : %.02f%%\n", deep_shadow * 100.0 / (deep_shadow + not_shadow));
-        
+#endif
         //~ printf("Actual interpolation...\n");
         
         for (int y = 2; y < h-2; y ++)
@@ -1187,10 +1197,9 @@ static inline void mean23_interpolate(struct raw_info raw_info, uint32_t * raw_b
 {
     int w = raw_info.width;
     int h = raw_info.height;
-    
+#ifndef STDOUT_SILENT
     printf("Interpolation   : mean23\n");
-    
-    
+#endif
     /* for fast EV - raw conversion */
     static int raw2ev[1<<20];   /* EV x EV_RESOLUTION */
     static int ev2raw_0[24*EV_RESOLUTION];
@@ -1314,8 +1323,9 @@ static inline void fullres_reconstruction(struct raw_info raw_info, uint32_t * f
     
     /* reconstruct a full-resolution image (discard interpolated fields whenever possible) */
     /* this has full detail and lowest possible aliasing, but it has high shadow noise and color artifacts when high-iso starts clipping */
-    
+#ifndef STDOUT_SILENT
     printf("Full-res reconstruction...\n");
+#endif
     for (int y = 0; y < h; y ++)
     {
         for (int x = 0; x < w; x ++)
@@ -1342,8 +1352,9 @@ static inline void build_alias_map(struct raw_info raw_info, uint16_t* alias_map
     int h = raw_info.height;
     
     double * fullres_curve = build_fullres_curve(black);
+#ifndef STDOUT_SILENT
     printf("Building alias map...\n");
-    
+#endif
     uint16_t* alias_aux = malloc(w * h * sizeof(uint16_t));
     
     /* build the aliasing maps (where it's likely to get aliasing) */
@@ -1369,8 +1380,9 @@ static inline void build_alias_map(struct raw_info raw_info, uint16_t* alias_map
     }
     
     memcpy(alias_aux, alias_map, w * h * sizeof(uint16_t));
-    
+#ifndef STDOUT_SILENT
     printf("Filtering alias map...\n");
+#endif
     for (int y = 6; y < h-6; y ++)
     {
         for (int x = 6; x < w-6; x ++)
@@ -1392,8 +1404,9 @@ static inline void build_alias_map(struct raw_info raw_info, uint16_t* alias_map
             alias_aux[x + y * w] = -kth_smallest_int(neighbours, COUNT(neighbours), 5);
         }
     }
-    
+#ifndef STDOUT_SILENT
     printf("Smoothing alias map...\n");
+#endif
     /* gaussian blur */
     for (int y = 6; y < h-6; y ++)
     {
@@ -1473,7 +1486,9 @@ static inline void hdr_chroma_smooth(struct raw_info raw_info, uint32_t * input,
             break;
             
         default:
+#ifndef STDOUT_SILENT
             err_printf("Unsupported chroma smooth method\n");
+#endif
             break;
     }
 }
@@ -1500,21 +1515,25 @@ static inline int mix_images(struct raw_info raw_info, uint32_t* fullres, uint32
     /* you get better colors, less noise, but a little more jagged edges if we underestimate the overlap amount */
     /* maybe expose a tuning factor? (preference towards resolution or colors) */
     overlap -= MIN(3, overlap - 3);
-    
+#ifndef STDOUT_SILENT
     printf("ISO overlap     : %.1f EV (approx)\n", overlap);
-    
+#endif
     if (overlap < 0.5)
     {
+#ifndef STDOUT_SILENT
         printf("Overlap error\n");
+#endif
         return 0;
     }
     else if (overlap < 2)
     {
+#ifndef STDOUT_SILENT
         printf("Overlap too small, use a smaller ISO difference for better results.\n");
+#endif
     }
-    
+#ifndef STDOUT_SILENT
     printf("Half-res blending...\n");
-    
+#endif
     /* mixing curve */
     double max_ev = log2(white/64 - black/64);
     double * mix_curve = malloc((1<<20) * sizeof(double));
@@ -1568,7 +1587,9 @@ static inline int mix_images(struct raw_info raw_info, uint32_t* fullres, uint32
         }
         if (chroma_smooth_method)
         {
+#ifndef STDOUT_SILENT
             printf("Chroma smoothing...\n");
+#endif
             memcpy(fullres_smooth, fullres, w * h * sizeof(uint32_t));
             memcpy(halfres_smooth, halfres, w * h * sizeof(uint32_t));
             hdr_chroma_smooth(raw_info, fullres, fullres_smooth, chroma_smooth_method, raw2ev, ev2raw);
@@ -1640,8 +1661,9 @@ static inline void final_blend(struct raw_info raw_info, uint32_t* raw_buffer_32
             build_ev2raw_lut(raw2ev, ev2raw_0, black, white);
             previous_black = black;
         }
-        
+#ifndef STDOUT_SILENT
         printf("Final blending...\n");
+#endif
         for (int y = 0; y < h; y ++)
         {
             for (int x = 0; x < w; x ++)
@@ -1824,8 +1846,9 @@ int diso_get_full20bit(struct raw_info raw_info, uint16_t * image_data, int inte
         /* estimate dynamic range */
         double lowiso_dr = log2(white - black) - dark_noise_ev;
         double highiso_dr = log2(white_bright - black) - bright_noise_ev;
+#ifndef STDOUT_SILENT
         printf("Dynamic range   : %.02f (+) %.02f => %.02f EV (in theory)\n", lowiso_dr, highiso_dr, highiso_dr + corr_ev);
-        
+#endif
         /* correction factor for the bright exposure, which was just darkened */
         double corr = pow(2, corr_ev);
         
@@ -1859,9 +1882,10 @@ int diso_get_full20bit(struct raw_info raw_info, uint16_t * image_data, int inte
             
             /* let's see how much dynamic range we actually got */
             compute_black_noise(raw_info, image_data, 8, raw_info.active_area.x1 - 8, raw_info.active_area.y1 + 20, raw_info.active_area.y2 - 20, 1, 1, &noise_avg, &noise_std[0]);
+#ifndef STDOUT_SILENT
             printf("Noise level     : %.02f (20-bit), ideally %.02f\n", noise_std[0], ideal_noise_std);
             printf("Dynamic range   : %.02f EV (cooked)\n", log2(white - black) - log2(noise_std[0]));
-            
+#endif
             convert_20_to_16bit(raw_info, image_data, raw_buffer_32);
             ret = 1;
         }
