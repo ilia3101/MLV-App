@@ -67,7 +67,6 @@ llrawprocObject_t * initLLRawProcObject()
     llrawproc->first_time = 1;
     llrawproc->dual_iso = 0;
 
-    llrawproc->raw2evf = NULL;
     llrawproc->raw2ev = NULL;
     llrawproc->ev2raw = NULL;
 
