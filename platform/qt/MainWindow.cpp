@@ -293,8 +293,8 @@ void MainWindow::drawFrame( void )
 {
     m_frameStillDrawing = true;
 
-    //enable low level raw fixes
-    m_pMlvObject->llrawproc->fix_raw = 1;
+    //enable low level raw fixes (if wanted)
+    on_checkBoxRawFixEnable_clicked( ui->checkBoxRawFixEnable->isChecked() );
 
     //Get frame from library
     getMlvProcessedFrame8( m_pMlvObject, ui->horizontalSliderPosition->value(), m_pRawImage );
@@ -720,8 +720,8 @@ void MainWindow::startExport(QString fileName)
 
     // we always get amaze frames for exporting
     setMlvAlwaysUseAmaze( m_pMlvObject );
-    //enable low level raw fixes
-    m_pMlvObject->llrawproc->fix_raw = 1;
+    //enable low level raw fixes (if wanted)
+    on_checkBoxRawFixEnable_clicked( ui->checkBoxRawFixEnable->isChecked() );
 
     //StatusDialog
     m_pStatusDialog->ui->progressBar->setMaximum( getMlvFrames( m_pMlvObject ) * 2 );
@@ -2455,7 +2455,10 @@ void MainWindow::on_actionPreviousFrame_triggered()
 void MainWindow::on_checkBoxRawFixEnable_clicked(bool checked)
 {
     //Set llrawproc en-/disable here
-    //TODO: CODE
+    if( checked ) m_pMlvObject->llrawproc->fix_raw = 1;
+    else m_pMlvObject->llrawproc->fix_raw = 0;
+    m_pMlvObject->current_cached_frame_active = 0;
+    m_frameChanged = true;
 
     //Set GUI elements
     ui->FocusPixelsLabel->setEnabled( checked );
