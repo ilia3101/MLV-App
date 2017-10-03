@@ -2411,7 +2411,7 @@ void MainWindow::on_spinBoxDeflickerTarget_valueChanged(int arg1)
 void MainWindow::on_comboBoxDualISO_currentIndexChanged(int index)
 {
     //In preview mode, the other dualIso options are grayed out
-    if( index == 2 )
+    if( ( index == 2 ) || !ui->checkBoxRawFixEnable->isChecked() )
     {
         ui->comboBoxDualISOInterpolation->setEnabled( false );
         ui->comboBoxDualISOAliasMap->setEnabled( false );
@@ -2497,7 +2497,7 @@ void MainWindow::on_checkBoxRawFixEnable_clicked(bool checked)
     ui->comboBoxVerticalStripesSwitch->setEnabled( checked );
     ui->spinBoxDeflickerTarget->setEnabled( checked );
     ui->comboBoxDualISO->setEnabled( checked );
-    ui->comboBoxDualISOInterpolation->setEnabled( checked & ( ui->comboBoxDualISO->currentIndex() != 2 ) );
-    ui->comboBoxDualISOAliasMap->setEnabled( checked & ( ui->comboBoxDualISO->currentIndex() != 2 ) );
-    ui->comboBoxDualISOFullresBlending->setEnabled( checked & ( ui->comboBoxDualISO->currentIndex() != 2 ) );
+    ui->comboBoxDualISOInterpolation->setEnabled( checked && ( ui->comboBoxDualISO->currentIndex() != 2 ) );
+    ui->comboBoxDualISOAliasMap->setEnabled( checked && ( ui->comboBoxDualISO->currentIndex() != 2 ) );
+    ui->comboBoxDualISOFullresBlending->setEnabled( checked && ( ui->comboBoxDualISO->currentIndex() != 2 ) );
 }
