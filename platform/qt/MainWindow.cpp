@@ -2410,6 +2410,20 @@ void MainWindow::on_spinBoxDeflickerTarget_valueChanged(int arg1)
 //Combobox DualISO changed
 void MainWindow::on_comboBoxDualISO_currentIndexChanged(int index)
 {
+    //In preview mode, the other dualIso options are grayed out
+    if( index == 2 )
+    {
+        ui->comboBoxDualISOInterpolation->setEnabled( false );
+        ui->comboBoxDualISOAliasMap->setEnabled( false );
+        ui->comboBoxDualISOFullresBlending->setEnabled( false );
+    }
+    else
+    {
+        ui->comboBoxDualISOInterpolation->setEnabled( true );
+        ui->comboBoxDualISOAliasMap->setEnabled( true );
+        ui->comboBoxDualISOFullresBlending->setEnabled( true );
+    }
+    //Set dualIso mode
     m_pMlvObject->llrawproc->dual_iso = index;
     m_pMlvObject->current_cached_frame_active = 0;
     m_frameChanged = true;
