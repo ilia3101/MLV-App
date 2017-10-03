@@ -60,6 +60,9 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     //Init the lib
     initLib();
 
+    //Setup AudioPlayback
+    m_pAudioPlayback = new AudioPlayback( m_pMlvObject );
+
     //Set timers
     m_timerId = startTimer( 40 ); //25fps initially only, is set after import
     m_timerCacheId = startTimer( 1000 ); //1fps
@@ -120,6 +123,7 @@ MainWindow::~MainWindow()
 
     killTimer( m_timerId );
     killTimer( m_timerCacheId );
+    delete m_pAudioPlayback;
     delete m_pAudioWave;
     delete m_pHistogram;
     delete m_pStatusDialog;
@@ -495,6 +499,9 @@ void MainWindow::openMlv( QString fileName )
     if( ui->actionAlwaysUseAMaZE->isChecked() ) setMlvAlwaysUseAmaze( m_pMlvObject );
     else setMlvDontAlwaysUseAmaze( m_pMlvObject );
 
+    //Load audio
+    m_pAudioPlayback->loadAudio( m_pMlvObject );
+
     m_fileLoaded = true;
 
     //Audio Track
@@ -524,6 +531,14 @@ void MainWindow::playbackHandling(int timeDiff)
             {
                 //Loop, goto first frame
                 ui->horizontalSliderPosition->setValue( 0 );
+                //Reset audio
+                if( ui->actionAudioOutput->isChecked()
+                 && ui->actionDropFrameMode->isChecked() )
+                {
+                    m_pAudioPlayback->stop();
+                    m_pAudioPlayback->jumpToPos( 0 );
+                    m_pAudioPlayback->play();
+                }
             }
             else
             {
@@ -543,9 +558,16 @@ void MainWindow::playbackHandling(int timeDiff)
             else
             {
                 m_newPosDropMode += (getFramerate() * (double)timeDiff / 1000.0);
+                //Loop!
                 if( ui->actionLoop->isChecked() && ( m_newPosDropMode > getMlvFrames( m_pMlvObject ) ) )
                 {
                     m_newPosDropMode -= getMlvFrames( m_pMlvObject );
+                    if( ui->actionAudioOutput->isChecked() )
+                    {
+                        m_pAudioPlayback->stop();
+                        m_pAudioPlayback->jumpToPos( 0 );
+                        m_pAudioPlayback->play();
+                    }
                 }
                 ui->horizontalSliderPosition->setValue( m_newPosDropMode );
             }
@@ -569,6 +591,7 @@ void MainWindow::initGui( void )
     m_pHistogram = new Histogram();
     ui->actionShowHistogram->setChecked( true );
     m_pWaveFormMonitor = new WaveFormMonitor( 200 );
+
     //AudioTrackWave
     m_pAudioWave = new AudioWave();
     QPixmap pic = QPixmap::fromImage( m_pAudioWave->getMonoWave( NULL, 0, 100, devicePixelRatio() ) );
@@ -2271,46 +2294,24 @@ void RenderPngTask::run()
 //Play button pressed or toggled
 void MainWindow::on_actionPlay_triggered(bool checked)
 {
+    //If no audio, we have nothing to do here
+    if( !doesMlvHaveAudio( m_pMlvObject ) ) return;
+
     if( !checked )
     {
         //Stop Audio
-        m_pAudioOutput->stop();
-        delete m_pAudioOutput;
-        delete m_pAudioStream;
-        delete m_pByteArrayAudio;
+        m_pAudioPlayback->stop();
+        qApp->processEvents();
     }
     else
     {
         //Start Audio
-        //Set up the format, eg.
-        QAudioFormat format;
-        format.setSampleRate( getMlvSampleRate( m_pMlvObject ) );
-        format.setChannelCount( getMlvAudioChannels( m_pMlvObject ) );
-        format.setSampleSize( 16 );
-        format.setCodec( "audio/pcm" );
-        format.setByteOrder( QAudioFormat::LittleEndian );
-        format.setSampleType( QAudioFormat::SignedInt );
-        m_pAudioOutput = new QAudioOutput( format, this );
-
-        m_pByteArrayAudio = new QByteArray();
-        m_pAudioStream = new QDataStream(m_pByteArrayAudio, QIODevice::ReadWrite);
-
-        uint64_t audio_size = getMlvAudioSize( m_pMlvObject );
-        uint8_t * audio_data = ( uint8_t * ) malloc( audio_size );
-        getMlvAudioData( m_pMlvObject, ( int16_t* )audio_data );
-
-        for( uint64_t x = 0; x < audio_size; x++ )
-        {
-            (*m_pAudioStream) << (uint8_t)audio_data[x];
-        }
-
-        qint64 position = 4 * (qint64)( ui->horizontalSliderPosition->value() * getMlvSampleRate( m_pMlvObject ) / getMlvFramerate( m_pMlvObject ) );
-        m_pAudioStream->device()->seek( position );
-        m_pAudioOutput->setBufferSize( 32768000 );
-        m_pAudioOutput->setVolume( 1.0 );
         if( ui->actionAudioOutput->isChecked()
-         && ui->actionDropFrameMode->isChecked() ) m_pAudioOutput->start( m_pAudioStream->device() );
-        free( audio_data );
+         && ui->actionDropFrameMode->isChecked() )
+        {
+            m_pAudioPlayback->jumpToPos( ui->horizontalSliderPosition->value() );
+            m_pAudioPlayback->play();
+        }
     }
 }
 

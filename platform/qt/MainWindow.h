@@ -18,9 +18,6 @@
 #include <QProcess>
 #include <QVector>
 #include <QGraphicsPixmapItem>
-#include <QByteArray>
-#include <QDataStream>
-#include <QAudioOutput>
 #include "../../src/mlv_include.h"
 #include "InfoDialog.h"
 #include "StatusDialog.h"
@@ -28,6 +25,7 @@
 #include "WaveFormMonitor.h"
 #include "AudioWave.h"
 #include "ReceiptSettings.h"
+#include "AudioPlayback.h"
 
 namespace Ui {
 class MainWindow;
@@ -131,6 +129,7 @@ private:
     Histogram *m_pHistogram;
     WaveFormMonitor *m_pWaveFormMonitor;
     AudioWave *m_pAudioWave;
+    AudioPlayback *m_pAudioPlayback;
     mlvObject_t *m_pMlvObject;
     processingObject_t *m_pProcessingObject;
     QGraphicsPixmapItem *m_pGraphicsItem;
@@ -161,9 +160,6 @@ private:
     QVector<ReceiptSettings*> m_exportQueue;
     int m_lastActiveClipInSession;
     int m_styleSelection;
-    QByteArray *m_pByteArrayAudio;
-    QDataStream *m_pAudioStream;
-    QAudioOutput *m_pAudioOutput;
     void drawFrame( void );
     void openMlv( QString fileName );
     void playbackHandling( int timeDiff );
