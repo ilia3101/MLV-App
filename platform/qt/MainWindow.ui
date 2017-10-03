@@ -1774,6 +1774,9 @@
              </item>
              <item>
               <widget class="QComboBox" name="comboBoxDualISOInterpolation">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
                <property name="maximumSize">
                 <size>
                  <width>90</width>
@@ -1816,6 +1819,9 @@
              </item>
              <item>
               <widget class="QComboBox" name="comboBoxDualISOAliasMap">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
                <property name="maximumSize">
                 <size>
                  <width>90</width>
@@ -1858,6 +1864,9 @@
              </item>
              <item>
               <widget class="QComboBox" name="comboBoxDualISOFullresBlending">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
                <property name="maximumSize">
                 <size>
                  <width>90</width>
