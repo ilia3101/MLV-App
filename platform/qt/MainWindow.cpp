@@ -1283,6 +1283,8 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
 //Show the file in
 void MainWindow::showFileInEditor( int row )
 {
+    //Stop Playback
+    ui->actionPlay->setChecked( false );
     //Save slider receipt
     setReceipt( m_pSessionReceipts.at( m_lastActiveClipInSession ) );
     //Open new MLV
