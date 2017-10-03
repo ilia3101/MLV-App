@@ -2497,7 +2497,7 @@ void MainWindow::on_checkBoxRawFixEnable_clicked(bool checked)
     ui->comboBoxVerticalStripesSwitch->setEnabled( checked );
     ui->spinBoxDeflickerTarget->setEnabled( checked );
     ui->comboBoxDualISO->setEnabled( checked );
-    ui->comboBoxDualISOInterpolation->setEnabled( checked );
-    ui->comboBoxDualISOAliasMap->setEnabled( checked );
-    ui->comboBoxDualISOFullresBlending->setEnabled( checked );
+    ui->comboBoxDualISOInterpolation->setEnabled( checked & ( ui->comboBoxDualISO->currentIndex() != 2 ) );
+    ui->comboBoxDualISOAliasMap->setEnabled( checked & ( ui->comboBoxDualISO->currentIndex() != 2 ) );
+    ui->comboBoxDualISOFullresBlending->setEnabled( checked & ( ui->comboBoxDualISO->currentIndex() != 2 ) );
 }
