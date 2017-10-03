@@ -814,6 +814,20 @@ fpm_check:
         }
         case 2: // interpolate pixels
         {
+#ifndef STDOUT_SILENT
+            if(dual_iso)
+            {
+                printf("Using fpi method for dualiso: 'HORIZONTAL'\n");
+            }
+            else if(average_method)
+            {
+                printf("Using fpi method: 'RAW2DNG'\n");
+            }
+            else
+            {
+                printf("Using fpi method: 'MLVFS'\n");
+            }
+#endif
             for (size_t m = 0; m < focus_pixel_map->count; m++)
             {
                 int x = focus_pixel_map->pixels[m].x - cropX;
@@ -917,7 +931,16 @@ bpm_check:
         case 1: // search for bad pixels
         {
 #ifndef STDOUT_SILENT
-            printf("\nSearching for bad pixel types:\n");
+            const char * method = NULL;
+            if (aggressive)
+            {
+                method = "AGGRESSIVE";
+            }
+            else
+            {
+                method = "NORMAL";
+            }
+            printf("\nSearching for bad pixels using revealing method: '%s'\n", method);
 #endif
             //just guess the dark noise for speed reasons
             int dark_noise = 12;
@@ -982,19 +1005,7 @@ bpm_check:
             }
             
 #ifndef STDOUT_SILENT
-            const char * method = NULL;
-            if (aggressive)
-            {
-                method = "AGGRESSIVE";
-            }
-            else
-            {
-                method = "NORMAL";
-            }
-
-            printf("\nUsing bad pixel revealing method: '%s'\n", method);
-            if (dual_iso) printf("Dualiso iterpolation method 'HORIZONTAL'\n");
-            printf(""FMT_SIZE" bad pixels found (crop: %d, %d)\n", bad_pixel_map->count, cropX, cropY);
+            printf(""FMT_SIZE" bad pixels found\n", bad_pixel_map->count);
 #endif
 
             if (bad_pixel_map->count)
@@ -1009,6 +1020,20 @@ bpm_check:
         }
         case 2: // interpolate pixels
         {
+#ifndef STDOUT_SILENT
+            if(dual_iso)
+            {
+                printf("Using bpi method for dualiso: 'HORIZONTAL'\n");
+            }
+            else if(average_method)
+            {
+                printf("Using bpi method: 'RAW2DNG'\n");
+            }
+            else
+            {
+                printf("Using bpi method: 'MLVFS'\n");
+            }
+#endif
             for (size_t m = 0; m < bad_pixel_map->count; m++)
             {
                 int x = bad_pixel_map->pixels[m].x - cropX;

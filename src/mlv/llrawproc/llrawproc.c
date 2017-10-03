@@ -118,10 +118,7 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
     if (video->llrawproc->deflicker_target)
     {
 #ifndef STDOUT_SILENT
-        if (video->llrawproc->first_time)
-        {
-            printf("\nPer-frame exposure compensation: 'ON'\nDeflicker target: '%d'\n", video->llrawproc->deflicker_target);
-        }
+        printf("Per-frame exposure compensation: 'ON'\nDeflicker target: '%d'\n\n", video->llrawproc->deflicker_target);
 #endif
         deflicker(video, raw_image_buff, raw_image_size);
     }
@@ -130,17 +127,11 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
     if (video->llrawproc->pattern_noise)
     {
 #ifndef STDOUT_SILENT
-        if (video->llrawproc->first_time)
-        {
-            printf("\nFixing pattern noise... ");
-        }
+        printf("Fixing pattern noise... ");
 #endif
         fix_pattern_noise((int16_t *)raw_image_buff, video->RAWI.xRes, video->RAWI.yRes, video->llrawproc->mlv_white_level, 0);
 #ifndef STDOUT_SILENT
-        if (video->llrawproc->first_time)
-        {
-            printf("Done\n");
-        }
+        printf("Done\n\n");
 #endif
     }
 
@@ -159,7 +150,7 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
                          video->RAWI.raw_info.height,
                          (video->llrawproc->focus_pixels == 2),
                          video->llrawproc->fpi_method,
-                         video->llrawproc->dual_iso,
+                         video->llrawproc->is_dual_iso,
                          video->llrawproc->raw2ev,
                          video->llrawproc->ev2raw);
     }
@@ -180,7 +171,7 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
                        video->llrawproc->mlv_black_level,
                        (video->llrawproc->bad_pixels == 2),
                        video->llrawproc->bpi_method,
-                       video->llrawproc->dual_iso,
+                       video->llrawproc->is_dual_iso,
                        video->llrawproc->raw2ev,
                        video->llrawproc->ev2raw);
     }
@@ -225,13 +216,10 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
 
 
     /* do chroma smoothing */
-    if (video->llrawproc->chroma_smooth && video->llrawproc->dual_iso != 1) // do not smooth 20bit dualiso raw
+    if (video->llrawproc->chroma_smooth && (video->llrawproc->dual_iso != 1 || !video->llrawproc->is_dual_iso)) // do not smooth 20bit dualiso raw
     {
 #ifndef STDOUT_SILENT
-        if (video->llrawproc->first_time)
-        {
-            printf("\nUsing chroma smooth method: '%dx%d'\n", video->llrawproc->chroma_smooth, video->llrawproc->chroma_smooth);
-        }
+            printf("\nUsing chroma smooth method: '%dx%d'\n\n", video->llrawproc->chroma_smooth, video->llrawproc->chroma_smooth);
 #endif
         chroma_smooth(video->llrawproc->chroma_smooth,
                       raw_image_buff,
@@ -249,8 +237,8 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
         fix_vertical_stripes(&video->llrawproc->stripe_corrections,
                              raw_image_buff,
                              raw_image_size / 2,
-                             (video->llrawproc->dual_iso == 1) ? video->llrawproc->mlv_black_level * 4 : video->llrawproc->mlv_black_level,
-                             (video->llrawproc->dual_iso == 1) ? video->llrawproc->mlv_white_level * 4 : video->llrawproc->mlv_white_level,
+                             (video->llrawproc->dual_iso == 1 && video->llrawproc->is_dual_iso) ? video->llrawproc->mlv_black_level * 4 : video->llrawproc->mlv_black_level,
+                             (video->llrawproc->dual_iso == 1 && video->llrawproc->is_dual_iso) ? video->llrawproc->mlv_white_level * 4 : video->llrawproc->mlv_white_level,
                              video->RAWI.raw_info.frame_size,
                              video->RAWI.xRes,
                              video->RAWI.yRes,

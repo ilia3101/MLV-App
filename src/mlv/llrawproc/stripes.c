@@ -259,7 +259,7 @@ void fix_vertical_stripes(stripes_correction * correction,
             else
                 printf("    1  ");
         }
-        printf("\n");
+        printf("\n\n");
 #endif
         *compute_stripes = 0;
     }
