@@ -565,7 +565,7 @@ void MainWindow::playbackHandling(int timeDiff)
                     if( ui->actionAudioOutput->isChecked() )
                     {
                         m_pAudioPlayback->stop();
-                        m_pAudioPlayback->jumpToPos( 0 );
+                        m_pAudioPlayback->jumpToPos( m_newPosDropMode );
                         m_pAudioPlayback->play();
                     }
                 }
