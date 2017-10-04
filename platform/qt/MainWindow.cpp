@@ -98,7 +98,6 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
             //Open the file
             openMlv( fileName );
             on_actionResetReceipt_triggered();
-            setDualIsoIfDetected();
             previewPicture( ui->listWidgetSession->count() - 1 );
         }
         else if( QFile(fileName).exists() && fileName.endsWith( ".masxml", Qt::CaseInsensitive ) )
@@ -233,7 +232,6 @@ bool MainWindow::event(QEvent *event)
                 //Open MLV
                 openMlv( fileName );
                 on_actionResetReceipt_triggered();
-                setDualIsoIfDetected();
                 previewPicture( ui->listWidgetSession->count() - 1 );
             }
         }
@@ -285,7 +283,6 @@ void MainWindow::dropEvent(QDropEvent *event)
         //Open the file
         openMlv( fileName );
         on_actionResetReceipt_triggered();
-        setDualIsoIfDetected();
         previewPicture( ui->listWidgetSession->count() - 1 );
     }
     m_inOpeningProcess = false;
@@ -424,7 +421,6 @@ void MainWindow::on_actionOpen_triggered()
         //Open the file
         openMlv( fileName );
         on_actionResetReceipt_triggered();
-        setDualIsoIfDetected();
         previewPicture( ui->listWidgetSession->count() - 1 );
     }
 
