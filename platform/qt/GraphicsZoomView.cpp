@@ -14,6 +14,11 @@ GraphicsZoomView::GraphicsZoomView(QWidget* parent, Qt::WindowFlags f)
 {
     setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
     m_isZoomEnabled = false;
+    m_cursorPixmap = QPixmap( ":/RetinaIMG/RetinaIMG/Actions-color-picker-icon.png" )
+                                   .scaled( 32 * devicePixelRatio(),
+                                            32 * devicePixelRatio(),
+                                            Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    m_cursorPixmap.setDevicePixelRatio( devicePixelRatio() );
 }
 
 //En-/disable zoom on mouse wheel
@@ -37,19 +42,19 @@ void GraphicsZoomView::resetZoom()
 void GraphicsZoomView::enterEvent(QEvent *event)
 {
     QGraphicsView::enterEvent(event);
-    //viewport()->setCursor(QCursor(QPixmap(":/RetinaIMG/RetinaIMG/Actions-color-picker-icon.png"),-200,-200));
+    //viewport()->setCursor(QCursor(m_cursorPixmap,0,31));
 }
 
 void GraphicsZoomView::mousePressEvent(QMouseEvent *event)
 {
     QGraphicsView::mousePressEvent(event);
-    //viewport()->setCursor(QCursor(QPixmap(":/RetinaIMG/RetinaIMG/Actions-color-picker-icon.png"),-200,-200));
+    //viewport()->setCursor(QCursor(m_cursorPixmap,0,31));
 }
 
 void GraphicsZoomView::mouseReleaseEvent(QMouseEvent *event)
 {
     QGraphicsView::mouseReleaseEvent(event);
-    //viewport()->setCursor(QCursor(QPixmap(":/RetinaIMG/RetinaIMG/Actions-color-picker-icon.png"),-200,-200));
+    //viewport()->setCursor(QCursor(m_cursorPixmap,0,31));
 }
 
 //The mousewheel event

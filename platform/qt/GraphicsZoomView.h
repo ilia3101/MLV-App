@@ -13,6 +13,7 @@
 #include <QWidget>
 #include <Qt>
 #include <QDebug>
+#include <QPixmap>
 
 class GraphicsZoomView : public QGraphicsView
 {
@@ -27,6 +28,7 @@ protected:
     void mouseReleaseEvent(QMouseEvent *event);
     void wheelEvent(QWheelEvent *event);
     bool m_isZoomEnabled;
+    QPixmap m_cursorPixmap;
 };
 
 #endif // GRAPHICSZOOMVIEW_H
