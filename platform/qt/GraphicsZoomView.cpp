@@ -6,6 +6,7 @@
  */
 
 #include "GraphicsZoomView.h"
+#include <QCursor>
 
 //Constructor
 GraphicsZoomView::GraphicsZoomView(QWidget* parent, Qt::WindowFlags f)
@@ -36,19 +37,19 @@ void GraphicsZoomView::resetZoom()
 void GraphicsZoomView::enterEvent(QEvent *event)
 {
     QGraphicsView::enterEvent(event);
-    //viewport()->setCursor(Qt::CrossCursor);
+    //viewport()->setCursor(QCursor(QPixmap(":/RetinaIMG/RetinaIMG/Actions-color-picker-icon.png"),-200,-200));
 }
 
 void GraphicsZoomView::mousePressEvent(QMouseEvent *event)
 {
     QGraphicsView::mousePressEvent(event);
-    //viewport()->setCursor(Qt::CrossCursor);
+    //viewport()->setCursor(QCursor(QPixmap(":/RetinaIMG/RetinaIMG/Actions-color-picker-icon.png"),-200,-200));
 }
 
 void GraphicsZoomView::mouseReleaseEvent(QMouseEvent *event)
 {
     QGraphicsView::mouseReleaseEvent(event);
-    //viewport()->setCursor(Qt::CrossCursor);
+    //viewport()->setCursor(QCursor(QPixmap(":/RetinaIMG/RetinaIMG/Actions-color-picker-icon.png"),-200,-200));
 }
 
 //The mousewheel event
