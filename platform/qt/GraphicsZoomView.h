@@ -17,10 +17,15 @@
 
 class GraphicsZoomView : public QGraphicsView
 {
+    Q_OBJECT
 public:
-    explicit GraphicsZoomView(QWidget* parent = Q_NULLPTR, Qt::WindowFlags f = Qt::WindowFlags());
+    explicit GraphicsZoomView(QWidget *parent = 0);
     void setZoomEnabled(bool on);
     void resetZoom(void);
+    void setWbPickerActive(bool on);
+
+signals:
+    void wbPicked( int x, int y );
 
 protected:
     void enterEvent(QEvent *event);
@@ -28,6 +33,7 @@ protected:
     void mouseReleaseEvent(QMouseEvent *event);
     void wheelEvent(QWheelEvent *event);
     bool m_isZoomEnabled;
+    bool m_isWbPickerActive;
     QPixmap m_cursorPixmap;
 };
 

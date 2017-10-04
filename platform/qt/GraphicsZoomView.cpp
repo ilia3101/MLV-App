@@ -9,11 +9,12 @@
 #include <QCursor>
 
 //Constructor
-GraphicsZoomView::GraphicsZoomView(QWidget* parent, Qt::WindowFlags f)
-    : QGraphicsView(parent)
+GraphicsZoomView::GraphicsZoomView(QWidget *parent) :
+    QGraphicsView(parent)
 {
     setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
     m_isZoomEnabled = false;
+    m_isWbPickerActive = false;
     m_cursorPixmap = QPixmap( ":/RetinaIMG/RetinaIMG/Actions-color-picker-icon.png" )
                                    .scaled( 32 * devicePixelRatio(),
                                             32 * devicePixelRatio(),
@@ -38,6 +39,14 @@ void GraphicsZoomView::resetZoom()
     scale( scaleFactor, scaleFactor );
 }
 
+//Set white balance picker active
+void GraphicsZoomView::setWbPickerActive(bool on)
+{
+    m_isWbPickerActive = on;
+    if( on ) viewport()->setCursor(QCursor(m_cursorPixmap,0,31));
+    else viewport()->setCursor( Qt::OpenHandCursor );
+}
+
 //Methods for changing the cursor
 void GraphicsZoomView::enterEvent(QEvent *event)
 {
@@ -49,6 +58,11 @@ void GraphicsZoomView::mousePressEvent(QMouseEvent *event)
 {
     QGraphicsView::mousePressEvent(event);
     //viewport()->setCursor(QCursor(m_cursorPixmap,0,31));
+    if( m_isWbPickerActive )
+    {
+        m_isWbPickerActive = false;
+        emit wbPicked( event->pos().x(), event->pos().y() );
+    }
 }
 
 void GraphicsZoomView::mouseReleaseEvent(QMouseEvent *event)

@@ -121,6 +121,8 @@ private slots:
     void on_actionNextFrame_triggered();
     void on_actionPreviousFrame_triggered();
     void on_checkBoxRawFixEnable_clicked(bool checked);
+    void on_actionWhiteBalancePicker_triggered(bool checked);
+    void whiteBalancePicked( int x, int y );
 
 private:
     Ui::MainWindow *ui;

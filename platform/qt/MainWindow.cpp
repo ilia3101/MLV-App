@@ -611,6 +611,7 @@ void MainWindow::initGui( void )
     ui->actionZoomFit->setChecked( true );
     //Make whiteBalance picker invisible, so nobody asks why it does not work :-)
     ui->actionWhiteBalancePicker->setVisible( false );
+    connect( ui->graphicsView, SIGNAL( wbPicked(int,int) ), this, SLOT( whiteBalancePicked(int,int) ) );
 
     //Set up image in GUI
     QImage image(":/IMG/IMG/histogram.png");
@@ -2514,4 +2515,17 @@ void MainWindow::on_checkBoxRawFixEnable_clicked(bool checked)
     ui->comboBoxDualISOInterpolation->setEnabled( checked && ( ui->comboBoxDualISO->currentIndex() == 1 ) );
     ui->comboBoxDualISOAliasMap->setEnabled( checked && ( ui->comboBoxDualISO->currentIndex() == 1 ) );
     ui->comboBoxDualISOFullresBlending->setEnabled( checked && ( ui->comboBoxDualISO->currentIndex() == 1 ) );
+}
+
+//Activate & Deactivate wbPicker
+void MainWindow::on_actionWhiteBalancePicker_triggered(bool checked)
+{
+    ui->graphicsView->setWbPickerActive( checked );
+}
+
+//wb picking ready
+void MainWindow::whiteBalancePicked( int x, int y )
+{
+    ui->actionWhiteBalancePicker->setChecked( false );
+    //TODO: send to Ilias lib and get sliderpos
 }
