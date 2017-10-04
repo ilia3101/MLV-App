@@ -609,6 +609,8 @@ void MainWindow::initGui( void )
     ui->actionExport->setEnabled( false );
     //Set fit to screen as default zoom
     ui->actionZoomFit->setChecked( true );
+    //Make whiteBalance picker invisible, so nobody asks why it does not work :-)
+    ui->actionWhiteBalancePicker->setVisible( false );
 
     //Set up image in GUI
     QImage image(":/IMG/IMG/histogram.png");

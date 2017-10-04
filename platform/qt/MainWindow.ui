@@ -141,6 +141,8 @@
     <addaction name="actionCopyRecept"/>
     <addaction name="actionPasteReceipt"/>
     <addaction name="actionResetReceipt"/>
+    <addaction name="separator"/>
+    <addaction name="actionWhiteBalancePicker"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -219,6 +221,7 @@
    <addaction name="actionCopyRecept"/>
    <addaction name="actionPasteReceipt"/>
    <addaction name="actionClip_Information"/>
+   <addaction name="actionWhiteBalancePicker"/>
    <addaction name="actionGoto_First_Frame"/>
    <addaction name="actionPreviousFrame"/>
    <addaction name="actionPlay"/>
@@ -2432,6 +2435,21 @@
    </property>
    <property name="shortcut">
     <string>P</string>
+   </property>
+  </action>
+  <action name="actionWhiteBalancePicker">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="ressources.qrc">
+     <normaloff>:/RetinaIMG/RetinaIMG/Actions-color-picker-grey-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Actions-color-picker-grey-icon.png</iconset>
+   </property>
+   <property name="text">
+    <string>White Balance Picker</string>
+   </property>
+   <property name="shortcut">
+    <string>B</string>
    </property>
   </action>
  </widget>
