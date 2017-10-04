@@ -539,6 +539,7 @@ void MainWindow::playbackHandling(int timeDiff)
                     m_pAudioPlayback->jumpToPos( 0 );
                     m_pAudioPlayback->play();
                 }
+                qApp->processEvents();
             }
             else
             {
@@ -570,6 +571,7 @@ void MainWindow::playbackHandling(int timeDiff)
                     }
                 }
                 ui->horizontalSliderPosition->setValue( m_newPosDropMode );
+                qApp->processEvents();
             }
         }
     }
@@ -1646,6 +1648,16 @@ void MainWindow::on_actionGoto_First_Frame_triggered()
 {
     ui->horizontalSliderPosition->setValue( 0 );
     m_newPosDropMode = 0;
+
+    //Restart audio if playback and audio active
+    if( ui->actionAudioOutput->isChecked()
+     && ui->actionDropFrameMode->isChecked()
+     && ui->actionPlay->isChecked() )
+    {
+        m_pAudioPlayback->stop();
+        m_pAudioPlayback->jumpToPos( m_newPosDropMode );
+        m_pAudioPlayback->play();
+    }
 }
 
 //Export clip
