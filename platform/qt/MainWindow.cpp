@@ -374,6 +374,15 @@ void MainWindow::drawFrame( void )
                                                                    Qt::IgnoreAspectRatio, Qt::SmoothTransformation) ) ); //alternative: Qt::FastTransformation
         ui->labelHistogram->setAlignment( Qt::AlignCenter ); //Always in the middle
     }
+    //Sync Audio
+    if( m_tryToSyncAudio && ui->actionAudioOutput->isChecked() && ui->actionPlay->isChecked() && ui->actionDropFrameMode->isChecked() )
+    {
+        m_tryToSyncAudio = false;
+        m_pAudioPlayback->stop();
+        m_pAudioPlayback->jumpToPos( ui->horizontalSliderPosition->value() );
+        m_pAudioPlayback->play();
+    }
+
     m_frameStillDrawing = false;
 }
 
@@ -531,15 +540,12 @@ void MainWindow::playbackHandling(int timeDiff)
             {
                 //Loop, goto first frame
                 ui->horizontalSliderPosition->setValue( 0 );
-                //Reset audio
+                //Sync audio
                 if( ui->actionAudioOutput->isChecked()
                  && ui->actionDropFrameMode->isChecked() )
                 {
-                    m_pAudioPlayback->stop();
-                    m_pAudioPlayback->jumpToPos( 0 );
-                    m_pAudioPlayback->play();
+                    m_tryToSyncAudio = true;
                 }
-                qApp->processEvents();
             }
             else
             {
@@ -563,15 +569,13 @@ void MainWindow::playbackHandling(int timeDiff)
                 if( ui->actionLoop->isChecked() && ( m_newPosDropMode > getMlvFrames( m_pMlvObject ) ) )
                 {
                     m_newPosDropMode -= getMlvFrames( m_pMlvObject );
+                    //Sync audio
                     if( ui->actionAudioOutput->isChecked() )
                     {
-                        m_pAudioPlayback->stop();
-                        m_pAudioPlayback->jumpToPos( m_newPosDropMode );
-                        m_pAudioPlayback->play();
+                        m_tryToSyncAudio = true;
                     }
                 }
                 ui->horizontalSliderPosition->setValue( m_newPosDropMode );
-                qApp->processEvents();
             }
         }
     }
@@ -1651,14 +1655,12 @@ void MainWindow::on_actionGoto_First_Frame_triggered()
     ui->horizontalSliderPosition->setValue( 0 );
     m_newPosDropMode = 0;
 
-    //Restart audio if playback and audio active
+    //Sync audio if playback and audio active
     if( ui->actionAudioOutput->isChecked()
      && ui->actionDropFrameMode->isChecked()
      && ui->actionPlay->isChecked() )
     {
-        m_pAudioPlayback->stop();
-        m_pAudioPlayback->jumpToPos( m_newPosDropMode );
-        m_pAudioPlayback->play();
+        m_tryToSyncAudio = true;
     }
 }
 
@@ -2325,8 +2327,7 @@ void MainWindow::on_actionPlay_triggered(bool checked)
         if( ui->actionAudioOutput->isChecked()
          && ui->actionDropFrameMode->isChecked() )
         {
-            m_pAudioPlayback->jumpToPos( ui->horizontalSliderPosition->value() );
-            m_pAudioPlayback->play();
+            m_tryToSyncAudio = true;
         }
     }
 }

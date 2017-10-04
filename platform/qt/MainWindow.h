@@ -151,6 +151,7 @@ private:
     int m_timerId;
     int m_timerCacheId;
     bool m_fpsOverride;
+    bool m_tryToSyncAudio;
     bool m_audioExportEnabled;
     double m_frameRate;
     QString m_lastSaveFileName;
