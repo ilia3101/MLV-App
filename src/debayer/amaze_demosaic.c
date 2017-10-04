@@ -1,13 +1,13 @@
 ////////////////////////////////////////////////////////////////
 //
 //			AMaZE demosaic algorithm
-// (Aliasing minimization and Zipper Elimination)
+// (Aliasing Minimization and Zipper Elimination)
 //
 //	copyright (c) 2008-2010  Emil Martinec <ejmartin@uchicago.edu>
 //
 // incorporating ideas of Luis Sanz Rodrigues and Paul Lee
 //
-// original code dated: May 27, 2010, last update 9bd3ef6835e4 (May 15, 2013)
+// original code dated: May 27, 2010, last update 4b77ef6013ae (Jan 16, 2014)
 // https://code.google.com/p/rawtherapee/source/browse/rtengine/amaze_demosaic_RT.cc
 // modified by a1ex for integration with cr2hdr 
 //
@@ -26,134 +26,118 @@
 //
 ////////////////////////////////////////////////////////////////
 
-/* Collapse omp things removed */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
 #include <math.h>
-#include <sys/time.h>
-
+#include <time.h>
 #include "debayer.h"
-
-#ifdef __SSE2__
-    #include "helpersse2.h"
-
-    static INLINE vfloat vabsf(vfloat f) { return (vfloat)vandnotm((vmask)vcast_vf_f(-0.0f), (vmask)f); }
-
-    static INLINE vfloat SQRV(vfloat a){
-	    return _mm_mul_ps( a,a );
-    }
-
-    static INLINE vfloat vself(vmask mask, vfloat x, vfloat y) {
-        return (vfloat)vorm(vandm(mask, (vmask)x), vandnotm(mask, (vmask)y));
-    }
-
-    static INLINE vfloat LIMV( vfloat a, vfloat b, vfloat c ) {
-        return _mm_max_ps( b, _mm_min_ps(a,c));
-    }
-
-    static INLINE vfloat ULIMV( vfloat a, vfloat b, vfloat c  ){
-	    return vself( vmaskf_lt(b,c), LIMV(a,b,c), LIMV(a,c,b));
-    }
-#else
-    #define INLINE inline
-#endif
+#include "sleefsseavx.c"
 
 #define initialGain 1.0 /* IDK */
 
 /* assume RGGB */
 /* see RT rawimage.h */
-
-static int filter = 0x0;
 static inline int FC(int row, int col)
 {
-    if ((row%2) == filter && (col%2) == 0)
+    if ((row%2) == 0 && (col%2) == 0)
         return 0;  /* red */
-    else if ((row%2) != filter && (col%2) == 1)
+    else if ((row%2) == 1 && (col%2) == 1)
         return 2;  /* blue */
     else
         return 1;  /* green */
 }
 
-#define COERCE(x,lo,hi) MAX(min((x),(hi)),(lo))
+#define COERCE(x,lo,hi) MAX(MIN((x),(hi)),(lo))
 
-#define min(a,b) \
-   ({ __typeof__ ((a)+(b)) _a = (a); \
-      __typeof__ ((a)+(b)) _b = (b); \
-     _a < _b ? _a : _b; })
+#ifndef WIN32
+#define MIN(a,b) \
+({ __typeof__ ((a)+(b)) _a = (a); \
+__typeof__ ((a)+(b)) _b = (b); \
+_a < _b ? _a : _b; })
 
 #define MAX(a,b) \
-   ({ __typeof__ ((a)+(b)) _a = (a); \
-      __typeof__ ((a)+(b)) _b = (b); \
-     _a > _b ? _a : _b; })
+({ __typeof__ ((a)+(b)) _a = (a); \
+__typeof__ ((a)+(b)) _b = (b); \
+_a > _b ? _a : _b; })
 
 #define SQR(a) \
-   ({ __typeof__ (a) _a = (a); \
-     _a * _a; })
+({ __typeof__ (a) _a = (a); \
+_a * _a; })
 
+#define min MIN
+#else
+
+#define MIN min
+#define MAX max
+#define SQR(a) (a*a)
+
+
+#endif
+
+#ifndef __SSE2__
 /* from RT sleef.c */
-static INLINE float xmul2f(float d) {
-	if (*(int*)&d & 0x7FFFFFFF) { // if f==0 do nothing
-		*(int*)&d += 1 << 23; // add 1 to the exponent
-		}
-	return d;
+static inline float xmul2f(float d) {
+    if (*(int*)&d & 0x7FFFFFFF) { // if f==0 do nothing
+        *(int*)&d += 1 << 23; // add 1 to the exponent
+    }
+    return d;
+}
+#endif
+
+static inline float xdiv2f(float d) {
+    if (*(int*)&d & 0x7FFFFFFF) { // if f==0 do nothing
+        *(int*)&d -= 1 << 23; // sub 1 from the exponent
+    }
+    return d;
 }
 
-static INLINE float xdiv2f(float d) {
-	if (*(int*)&d & 0x7FFFFFFF) { // if f==0 do nothing
-		*(int*)&d -= 1 << 23; // sub 1 from the exponent
-		}
-	return d;
+static inline float xdivf( float d, int n){
+    if (*(int*)&d & 0x7FFFFFFF) { // if f==0 do nothing
+        *(int*)&d -= n << 23; // add n to the exponent
+    }
+    return d;
 }
-
-static INLINE float xdivf( float d, int n){
-	if (*(int*)&d & 0x7FFFFFFF) { // if f==0 do nothing
-		*(int*)&d -= n << 23; // add n to the exponent
-		}
-	return d;
-}	
 
 /* adapted from rt_math.h */
 #define LIM COERCE
 #define ULIM(a, b, c) (((b) < (c)) ? LIM(a,b,c) : LIM(a,c,b))
 
+#define bool int
 
-void 
-#ifdef __minGW32__ // Needed for win32/mingw (might need include gaurd with another compiler)
-    __attribute__ ((force_align_arg_pointer))
-#endif
-demosaic(
-	amazeinfo_t * inputdata /* All arguments in 1 struct for posix */
-)
+//#undef __SSE2__
 
+#pragma GCC diagnostic ignored "-Wunused-variable"
+
+
+void demosaic(amazeinfo_t * inputdata) /* All arguments in 1 struct for posix */
 {
-	float ** restrict rawData = inputdata->rawData;    /* holds preprocessed pixel values, rawData[i][j] corresponds to the ith row and jth column */
+    //printf ("AMaZE interpolation ...\n");
+
+    float ** restrict rawData = inputdata->rawData;    /* holds preprocessed pixel values, rawData[i][j] corresponds to the ith row and jth column */
     float ** restrict red = inputdata->red;        /* the interpolated red plane */
     float ** restrict green = inputdata->green;      /* the interpolated green plane */
     float ** restrict blue = inputdata->blue;       /* the interpolated blue plane */
     int winx = inputdata->winx; int winy = inputdata->winy; /* crop window for demosaicing */
     int winw = inputdata->winw; int winh = inputdata->winh;
-    int cfa = inputdata->cfa;
 
-    filter = cfa;
-//clock_t	t1,t2;
-//t1 = clock();
+    clock_t	t1,t2;
+    t1 = clock();
 
 #define HCLIP(x) x //is this still necessary???
 	//min(clip_pt,x)
 
-	int width=winw, height=winh;
+    int width=winw, height=winh;
 
 
 	const float clip_pt = 1/initialGain;
 	const float clip_pt8 = 0.8f/initialGain;
 
 
-#define TS 224	 // Tile size; the image is processed in square tiles to lower memory requirements and facilitate multi-threading
-#define TSH	112
-//#define TS6 500
+#define TS 160	 // Tile size; the image is processed in square tiles to lower memory requirements and facilitate multi-threading
+#define TSH 80	 // half of Tile size
+
 	// local variables
 
 
@@ -182,36 +166,28 @@ demosaic(
 	static const float gquinc[4] = {0.169917f, 0.108947f, 0.069855f, 0.0287182f};
 
 	//~ volatile double progress = 0.0;
+
 	// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-struct s_mp {
-	float m;
-	float p;
-};
-struct s_hv {
-	float h;
-	float v;
-};
-#pragma omp parallel
+// Issue 1676
+// Moved from inside the parallel section
+	struct s_hv {
+		float h;
+		float v;
+	};
+
+//~ #pragma omp parallel
 {
 	//position of top/left corner of the tile
 	int top, left;
 	// beginning of storage block for tile
 	char  *buffer;
-	// rgb values
+	// green values
 	float (*rgbgreen);
 
-//	float (*rgb)[3];
-	// horizontal gradient
-//	float (*delh);
-	// vertical gradient
-//	float (*delv);
-	// square of delh
-	float (*delhsq);
-	// square of delv
-	float (*delvsq);
+	// sum of square of horizontal gradient and square of vertical gradient
+	float (*delhvsqsum);
 	// gradient based directional weights for interpolation
-//	float (*dirwts)[2];
 	float (*dirwts0);
 	float (*dirwts1);
 
@@ -219,10 +195,6 @@ struct s_hv {
 	float (*vcd);
 	// horizontally interpolated color differences
 	float (*hcd);
-	// vertically interpolated color differences G-R, G-B
-	float (*vcdnew);
-	// horizontally interpolated color differences
-	float (*hcdnew);
 	// alternative vertical interpolation
 	float (*vcdalt);
 	// alternative horizontal interpolation
@@ -232,7 +204,7 @@ struct s_hv {
 	// weight to give horizontal vs vertical interpolation
 	float (*hvwt);
 	// final interpolated color difference
-	float (*Dgrb)[TS*TS];
+	float (*Dgrb)[TS*TSH];
 //	float (*Dgrb)[2];
 	// gradient in plus (NE/SW) direction
 	float (*delp);
@@ -240,11 +212,8 @@ struct s_hv {
 	float (*delm);
 	// diagonal interpolation of R+B
 	float (*rbint);
+	// horizontal and vertical curvature of interpolated G (used to refine interpolation in Nyquist texture regions)
 	struct s_hv  (*Dgrb2);
-	// horizontal curvature of interpolated G (used to refine interpolation in Nyquist texture regions)
-//	float (*Dgrbh2);
-	// vertical curvature of interpolated G
-//	float (*Dgrbv2);
 	// difference between up/down interpolations of G
 	float (*dgintv);
 	// difference between left/right interpolations of G
@@ -253,7 +222,9 @@ struct s_hv {
 //	float (*Dgrbp1);
 	// diagonal (minus) color difference R-B or G1-G2
 //	float (*Dgrbm1);
-	struct s_mp  (*Dgrbsq1);
+	float (*Dgrbsq1m);
+	float (*Dgrbsq1p);
+//	struct s_mp  (*Dgrbsq1);
 	// square of diagonal color difference
 //	float (*Dgrbpsq1);
 	// square of diagonal color difference
@@ -263,88 +234,45 @@ struct s_hv {
 	// relative weight for combining plus and minus diagonal interpolations
 	float (*pmwt);
 	// interpolated color difference R-B in minus and plus direction
-	struct s_mp  (*rb);
-	// interpolated color difference R-B in plus direction
-//	float (*rbp);
-	// interpolated color difference R-B in minus direction
-//	float (*rbm);
+	float (*rbm);
+	float (*rbp);
 
 	// nyquist texture flag 1=nyquist, 0=not nyquist
 	char   (*nyquist);
 
 #define CLF 1
 	// assign working space
-	buffer = (char *) malloc(29*sizeof(float)*TS*TS - sizeof(float)*TS*TSH + sizeof(char)*TS*TSH+24*CLF*64);
+	buffer = (char *) calloc(22*sizeof(float)*TS*TS + sizeof(char)*TS*TSH+23*CLF*64 + 63, 1);
 	char 	*data;
-    data = (char*)( ( (uintptr_t)(buffer) + (uintptr_t)(63)) / 64 * 64);
-
+	data = (char*)( ( (uintptr_t)buffer + (uintptr_t)63) / 64 * 64);
 
 	//merror(buffer,"amaze_interpolate()");
-	//memset(buffer,0,(34*sizeof(float)+sizeof(int))*TS*TS);
-	// rgb array
-	rgbgreen	= (float (*))			data; //pointers to array
-	
-//	rgb			= (float (*)[3])		data; //pointers to array
-//	delh		= (float (*))			(data +  3*sizeof(float)*TS*TS+1*CLF*64);
-//	delv		= (float (*))			(data +  4*sizeof(float)*TS*TS+2*CLF*64);
-	delhsq		= (float (*))			(data +  1*sizeof(float)*TS*TS+1*CLF*64);
-	delvsq		= (float (*))			(data +  2*sizeof(float)*TS*TS+2*CLF*64);
-	dirwts0		= (float (*)	)		(data +  3*sizeof(float)*TS*TS+3*CLF*64);
-	dirwts1		= (float (*)	)		(data +  4*sizeof(float)*TS*TS+4*CLF*64);
-	
-//	dirwts		= (float (*)[2])		(data +  7*sizeof(float)*TS*TS+5*CLF*64);
-	vcd			= (float (*))			(data +  5*sizeof(float)*TS*TS+5*CLF*64);
-	hcd			= (float (*))			(data +  6*sizeof(float)*TS*TS+6*CLF*64);
-	vcdalt		= (float (*))			(data +  7*sizeof(float)*TS*TS+7*CLF*64);
-	hcdalt		= (float (*))			(data +  8*sizeof(float)*TS*TS+8*CLF*64);
-	cddiffsq	= (float (*))			(data +  9*sizeof(float)*TS*TS+9*CLF*64);
-	hvwt		= (float (*))			(data +  10*sizeof(float)*TS*TS+10*CLF*64);							//compressed			0.5 MB
-	Dgrb		= (float (*)[TS*TS])	(data +  11*sizeof(float)*TS*TS - sizeof(float)*TS*TSH+11*CLF*64);  //compressed
-	delp		= (float (*))			(data +  12*sizeof(float)*TS*TS - sizeof(float)*TS*TSH+12*CLF*64);	// compressed			0.5 MB
-	delm		= (float (*))			(data +  12*sizeof(float)*TS*TS+13*CLF*64);							// compressed			0.5 MB
-	rbint		= (float (*))			(data +  13*sizeof(float)*TS*TS - sizeof(float)*TS*TSH+14*CLF*64);	// compressed			0.5 MB
-	Dgrb2		= (struct s_hv  (*))			(data +  13*sizeof(float)*TS*TS+15*CLF*64);							// compressed			1.0 MB
-//	Dgrbh2		= (float (*))			(data +  19*sizeof(float)*TS*TS);
-//	Dgrbv2		= (float (*))			(data +  20*sizeof(float)*TS*TS);
-	dgintv		= (float (*))			(data +  14*sizeof(float)*TS*TS+16*CLF*64);
-	dginth		= (float (*))			(data +  15*sizeof(float)*TS*TS+17*CLF*64);
-//	Dgrbp1		= (float (*))			(data +  23*sizeof(float)*TS*TS);													1.0 MB
-//	Dgrbm1		= (float (*))			(data +  23*sizeof(float)*TS*TS);													1.0 MB
-	Dgrbsq1		= (struct s_mp  (*))			(data +  16*sizeof(float)*TS*TS+18*CLF*64);							// compressed			1.0 MB
-//	Dgrbpsq1	= (float (*))			(data +  23*sizeof(float)*TS*TS);
-//	Dgrbmsq1	= (float (*))			(data +  24*sizeof(float)*TS*TS);
-	cfa			= (float (*))			(data +  17*sizeof(float)*TS*TS+19*CLF*64);
-	pmwt		= (float (*))			(data +  18*sizeof(float)*TS*TS+20*CLF*64);		// compressed								0.5 MB
-	rb			= (struct s_mp  (*))			(data +  19*sizeof(float)*TS*TS - sizeof(float)*TS*TSH+21*CLF*64);		// compressed		1.0 MB
-	hcdnew      = (float (*))			(data +  20*sizeof(float)*TS*TS+22*CLF*64);
-	vcdnew      = (float (*))			(data +  21*sizeof(float)*TS*TS+23*CLF*64);
-//	rbp			= (float (*))			(data +  30*sizeof(float)*TS*TS);
-//	rbm			= (float (*))			(data +  31*sizeof(float)*TS*TS);
+	rgbgreen   = (float (*))         data; //pointers to array
+	delhvsqsum = (float (*))         ((char*)rgbgreen + sizeof(float)*TS*TS + CLF*64);
+	dirwts0    = (float (*))         ((char*)delhvsqsum + sizeof(float)*TS*TS + CLF*64);
+	dirwts1    = (float (*))         ((char*)dirwts0 + sizeof(float)*TS*TS + CLF*64);
+	vcd        = (float (*))         ((char*)dirwts1 + sizeof(float)*TS*TS + CLF*64);
+	hcd        = (float (*))         ((char*)vcd + sizeof(float)*TS*TS + CLF*64);
+	vcdalt     = (float (*))         ((char*)hcd + sizeof(float)*TS*TS + CLF*64);
+	hcdalt     = (float (*))         ((char*)vcdalt + sizeof(float)*TS*TS + CLF*64);
+	cddiffsq   = (float (*))         ((char*)hcdalt + sizeof(float)*TS*TS + CLF*64);
+	hvwt       = (float (*))         ((char*)cddiffsq + sizeof(float)*TS*TS + CLF*64);
+	Dgrb       = (float (*)[TS*TSH]) ((char*)hvwt + sizeof(float)*TS*TSH + CLF*64);
+	delp       = (float (*))         ((char*)Dgrb + sizeof(float)*TS*TS + CLF*64);
+	delm       = (float (*))         ((char*)delp + sizeof(float)*TS*TSH + CLF*64);
+	rbint      = (float (*))         ((char*)delm + sizeof(float)*TS*TSH + CLF*64);
+	Dgrb2      = (struct s_hv  (*))         ((char*)rbint + sizeof(float)*TS*TSH + CLF*64);
+	dgintv     = (float (*))         ((char*)Dgrb2 + sizeof(float)*TS*TS + CLF*64);
+	dginth     = (float (*))         ((char*)dgintv + sizeof(float)*TS*TS + CLF*64);
+	Dgrbsq1m   = (float (*))         ((char*)dginth + sizeof(float)*TS*TS + CLF*64);
+	Dgrbsq1p   = (float (*))         ((char*)Dgrbsq1m + sizeof(float)*TS*TSH + CLF*64);
+	cfa        = (float (*))         ((char*)Dgrbsq1p + sizeof(float)*TS*TSH + CLF*64);
+	pmwt       = (float (*))         ((char*)cfa + sizeof(float)*TS*TS + CLF*64);
+	rbm        = (float (*))         ((char*)pmwt + sizeof(float)*TS*TSH + CLF*64);
+	rbp        = (float (*))         ((char*)rbm + sizeof(float)*TS*TSH + CLF*64);
 
-	nyquist		= (char (*))				(data +  22*sizeof(float)*TS*TS +24*CLF*64);	//compressed		0.875 MB
+	nyquist    = (char (*))          ((char*)rbp + sizeof(float)*TS*TSH + CLF*64);
 #undef CLF
-	// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-	/*double dt;
-	 clock_t t1, t2;
-
-	 clock_t t1_init,       t2_init       = 0;
-	 clock_t t1_vcdhcd,      t2_vcdhcd      = 0;
-	 clock_t t1_cdvar,		t2_cdvar = 0;
-	 clock_t t1_nyqtest,   t2_nyqtest   = 0;
-	 clock_t t1_areainterp,  t2_areainterp  = 0;
-	 clock_t t1_compare,   t2_compare   = 0;
-	 clock_t t1_diag,   t2_diag   = 0;
-	 clock_t t1_chroma,    t2_chroma    = 0;*/
-
-
-	// start
-	//printf ("AMaZE interpolation ...\n");
-	//t1 = clock();
-
-	// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
 	// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
@@ -355,29 +283,21 @@ struct s_hv {
 		if (FC(0,0)==0) {ey=0; ex=0;} else {ey=1; ex=1;}
 	}
 
-// #pragma omp for schedule(dynamic) collapse(2) 
-    for (top=winy; top < winy+winh; top += 1) 
-        for (left=winx; left < winx+winw; left += 1) {
-            float val = rawData[top][left];
-            val = 64.0f*log2(val);
-            rawData[top][left] = val;
-    } 
 	// Main algorithm: Tile loop
 	//#pragma omp parallel for shared(rawData,height,width,red,green,blue) private(top,left) schedule(dynamic)
 	//code is openmp ready; just have to pull local tile variable declarations inside the tile loop
 
 // Issue 1676
 // use collapse(2) to collapse the 2 loops to one large loop, so there is better scaling
-// #pragma omp for schedule(dynamic) collapse(2) 
-	for (top=winy-16; top < winy+height; top += TS-32)
-		for (left=winx-16; left < winx+width; left += TS-32) {
-            //printf("top %d left %d",top,left);
+//~ #pragma omp for schedule(dynamic) collapse(2) nowait
+    for (top=winy-16; top < winy+height; top += TS-32)
+        for (left=winx-16; left < winx+width; left += TS-32) {
 			memset(nyquist, 0, sizeof(char)*TS*TSH);
 			memset(rbint, 0, sizeof(float)*TS*TSH);
 			//location of tile bottom edge
-			int bottom = min(top+TS,winy+height+16);
+            int bottom = min(top+TS,winy+height+16);
 			//location of tile right edge
-			int right  = min(left+TS, winx+width+16);
+            int right  = min(left+TS, winx+width+16);
 			//tile width  (=TS except for right edge of image)
 			int rr1 = bottom - top;
 			//tile height (=TS except for bottom edge of image)
@@ -385,7 +305,7 @@ struct s_hv {
 
 			//tile vars
 			//counters for pixel location in the image
-			int row, col;
+            int row, col;
 			//min and max row/column in the tile
 			int rrmin, rrmax, ccmin, ccmax;
 			//counters for pixel location within the tile
@@ -396,8 +316,6 @@ struct s_hv {
 			int indx, indx1;
 			//dummy indices
 			int i, j;
-			// +1 or -1
-//			int sgn;
 
 			//color ratios in up/down/left/right directions
 			float cru, crd, crl, crr;
@@ -406,25 +324,24 @@ struct s_hv {
 			//vertical and horizontal G interpolations
 			float Gintv, Ginth;
 			//G interpolated in vert/hor directions using adaptive ratios
-			// float guar, gdar, glar, grar;
+			float guar, gdar, glar, grar;
 			//G interpolated in vert/hor directions using Hamilton-Adams method
-			// float guha, gdha, glha, grha;
+			float guha, gdha, glha, grha;
 			//interpolated G from fusing left/right or up/down
-			// float Ginthar, Ginthha, Gintvar, Gintvha;
+			float Ginthha, Gintvha;
 			//color difference (G-R or G-B) variance in up/down/left/right directions
 			float Dgrbvvaru, Dgrbvvard, Dgrbhvarl, Dgrbhvarr;
+			
 			float uave, dave, lave, rave;
 
 			//color difference variances in vertical and horizontal directions
-			float vcdvar, hcdvar, vcdvar1, hcdvar1;
+			float vcdvar, hcdvar, vcdvar1, hcdvar1, hcdaltvar, vcdaltvar;
 			//adaptive interpolation weight using variance of color differences
 			float varwt;																										// 639 - 644
 			//adaptive interpolation weight using difference of left-right and up-down G interpolations
 			float diffwt;																										// 640 - 644
 			//alternative adaptive weight for combining horizontal/vertical interpolations
 			float hvwtalt;																										// 745 - 748
-			//temporary variables for combining interpolation weights at R and B sites
-//			float vo, ve;
 			//interpolation of G in four directions
 			float gu, gd, gl, gr;
 			//variance of G in vertical/horizontal directions
@@ -446,10 +363,7 @@ struct s_hv {
 			//variance of R-B in plus/minus directions
 			float rbvarm;																										// 843 - 848
 
-
-
 			// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 
 			// rgb from input CFA data
 			// rgb values should be floating point number between 0 and 1
@@ -457,41 +371,45 @@ struct s_hv {
 			// a 16 pixel border is added to each side of the image
 
 			// bookkeeping for borders
-			if (top<winy) {rrmin=16;} else {rrmin=0;}
-			if (left<winx) {ccmin=16;} else {ccmin=0;}
-			if (bottom>(winy+height)) {rrmax=winy+height-top;} else {rrmax=rr1;}
-			if (right>(winx+width)) {ccmax=winx+width-left;} else {ccmax=cc1;}
+            if (top<winy) {rrmin=16;} else {rrmin=0;}
+            if (left<winx) {ccmin=16;} else {ccmin=0;}
+            if (bottom>(winy+height)) {rrmax=winy+height-top;} else {rrmax=rr1;}
+            if (right>(winx+width)) {ccmax=winx+width-left;} else {ccmax=cc1;}
 
 #ifdef __SSE2__
-			const __m128 d65535v = _mm_set1_ps( 65535.0f );
-#endif // __SSE2__
-
-#ifdef __SSE2__
+			const __m128 c65535v = _mm_set1_ps( 65535.0f );
 			__m128	tempv;
 			for (rr=rrmin; rr < rrmax; rr++){
-//				_mm_prefetch( &rawData[rr+top+1][ccmin+left], _MM_HINT_NTA);
-				for (row=rr+top, cc=ccmin; cc < ccmax; cc+=4) {
+				for (row=rr+top, cc=ccmin; cc < ccmax-3; cc+=4) {
 					indx1=rr*TS+cc;
-					tempv = LVFU(rawData[row][cc+left]) / d65535v;
+                    tempv = LVFU(rawData[row][cc+left]) / c65535v;
 					_mm_store_ps( &cfa[indx1], tempv );
 					_mm_store_ps( &rgbgreen[indx1], tempv );
 				}
+				for (; cc < ccmax; cc++) {
+					indx1=rr*TS+cc;
+                    cfa[indx1] = (rawData[row][cc+left])/65535.0f;
+					if(FC(rr,cc)==1)
+						rgbgreen[indx1] = cfa[indx1];
+						
+				}
+
 			}
 			// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 			//fill borders
 			if (rrmin>0) {
 				for (rr=0; rr<16; rr++)
 					for (cc=ccmin,row = 32-rr+top; cc<ccmax; cc++) {
-						cfa[rr*TS+cc] = (rawData[row][cc+left])/65535.0f;
+                        cfa[rr*TS+cc] = (rawData[row][cc+left])/65535.0f;
 						if(FC(rr,cc)==1)
 							rgbgreen[rr*TS+cc] = cfa[rr*TS+cc];
 					}
 			}
 			if (rrmax<rr1) {
-				for (rr=0; rr<16; rr++)
+                for (rr=0; rr<16; rr++)
 					for (cc=ccmin; cc<ccmax; cc+=4) {
 						indx1 = (rrmax+rr)*TS+cc;
-						tempv = LVFU(rawData[(winy+height-rr-2)][left+cc]) / d65535v;
+                        tempv = LVFU(rawData[(winy+height-rr-2)][left+cc]) / c65535v;
 						_mm_store_ps( &cfa[indx1], tempv );
 						_mm_store_ps( &rgbgreen[indx1], tempv );
 					}
@@ -500,7 +418,7 @@ struct s_hv {
 			if (ccmin>0) {
 				for (rr=rrmin; rr<rrmax; rr++)
 					for (cc=0,row = rr + top; cc<16; cc++) {
-						cfa[rr*TS+cc] = (rawData[row][32-cc+left])/65535.0f;
+                        cfa[rr*TS+cc] = (rawData[row][32-cc+left])/65535.0f;
 						if(FC(rr,cc)==1)
 							rgbgreen[rr*TS+cc] = cfa[rr*TS+cc];
 					}
@@ -509,40 +427,17 @@ struct s_hv {
 			if (ccmax<cc1) {
 				for (rr=rrmin; rr<rrmax; rr++)
 					for (cc=0; cc<16; cc++) {
-						cfa[rr*TS+ccmax+cc] = (rawData[(top+rr)][(winx+width-cc-2)])/65535.0f;
+                        cfa[rr*TS+ccmax+cc] = (rawData[(top+rr)][(winx+width-cc-2)])/65535.0f;
 						if(FC(rr,cc)==1)
 							rgbgreen[rr*TS+ccmax+cc] = cfa[rr*TS+ccmax+cc];
 					}
 			}
-
-/*
-			if (ccmin>0) {
-				for (rr=rrmin; rr<rrmax; rr++)
-					for (cc=0,row = rr + top; cc<16; cc+=4) {
-						indx1 = rr*TS+cc;
-						tempv = LVFU(rawData[row][32-cc+left]) / d65535v;
-						_mm_store_ps( &cfa[indx1], tempv );
-						_mm_store_ps( &rgbgreen[indx1], tempv );
-					}
-			}
-*/
-/*
-			if (ccmax<cc1) {
-				for (rr=rrmin; rr<rrmax; rr++)
-					for (cc=0; cc<16; cc+=4) {
-						indx1 = rr*TS+ccmax+cc;
-						tempv = LVFU(rawData[(top+rr)][(winx+width-cc-2)]) / d65535v;
-						_mm_storeu_ps( &cfa[indx1], tempv );
-						_mm_storeu_ps( &rgbgreen[indx1], tempv );
-					}
-			}
-*/
 			//also, fill the image corners
 			if (rrmin>0 && ccmin>0) {
 				for (rr=0; rr<16; rr++)
 					for (cc=0; cc<16; cc+=4) {
 						indx1 = (rr)*TS+cc;
-						tempv = LVFU(rawData[winy+32-rr][winx+32-cc]) / d65535v;
+                        tempv = LVFU(rawData[winy+32-rr][winx+32-cc]) / c65535v;
 						_mm_store_ps( &cfa[indx1], tempv );
 						_mm_store_ps( &rgbgreen[indx1], tempv );
 					}
@@ -551,7 +446,7 @@ struct s_hv {
 				for (rr=0; rr<16; rr++)
 					for (cc=0; cc<16; cc+=4) {
 						indx1 = (rrmax+rr)*TS+ccmax+cc;
-						tempv = LVFU(rawData[(winy+height-rr-2)][(winx+width-cc-2)]) / d65535v;
+                        tempv = LVFU(rawData[(winy+height-rr-2)][(winx+width-cc-2)]) / c65535v;
 						_mm_storeu_ps( &cfa[indx1], tempv );
 						_mm_storeu_ps( &rgbgreen[indx1], tempv );
 					}
@@ -560,7 +455,7 @@ struct s_hv {
 				for (rr=0; rr<16; rr++)
 					for (cc=0; cc<16; cc++) {
 							
-						cfa[(rr)*TS+ccmax+cc] = (rawData[(winy+32-rr)][(winx+width-cc-2)])/65535.0f;
+                        cfa[(rr)*TS+ccmax+cc] = (rawData[(winy+32-rr)][(winx+width-cc-2)])/65535.0f;
 						if(FC(rr,cc)==1)
 							rgbgreen[(rr)*TS+ccmax+cc] = cfa[(rr)*TS+ccmax+cc];
 					}
@@ -568,11 +463,12 @@ struct s_hv {
 			if (rrmax<rr1 && ccmin>0) {
 				for (rr=0; rr<16; rr++)
 					for (cc=0; cc<16; cc++) {
-						cfa[(rrmax+rr)*TS+cc] = (rawData[(winy+height-rr-2)][(winx+32-cc)])/65535.0f;
+                        cfa[(rrmax+rr)*TS+cc] = (rawData[(winy+height-rr-2)][(winx+32-cc)])/65535.0f;
 						if(FC(rr,cc)==1)
 							rgbgreen[(rrmax+rr)*TS+cc] = cfa[(rrmax+rr)*TS+cc];
 					}
-			}				
+			}
+				
 #else
 			for (rr=rrmin; rr < rrmax; rr++)
 				for (row=rr+top, cc=ccmin; cc < ccmax; cc++) {
@@ -667,28 +563,23 @@ struct s_hv {
 					delhv = delhv * delhv;
 					_mm_store_ps( &dirwts0[indx], epsv + vabsf( LVF( cfa[indx+v2] ) - LVF( cfa[indx] )) + vabsf( LVF( cfa[indx] ) - LVF( cfa[indx-v2] )) + delvv );
 					delvv = delvv * delvv;
-					_mm_store_ps( &delhsq[indx], delhv);
-					_mm_store_ps( &delvsq[indx], delvv);
+					_mm_store_ps( &delhvsqsum[indx], delhv + delvv);
 				}
 			}
-
 #else
 			// horizontal and vedrtical gradient
 			float delh,delv;
 			for (rr=2; rr < rr1-2; rr++)
 				for (cc=2, indx=(rr)*TS+cc; cc < cc1-2; cc++, indx++) {
-
 					delh = fabsf(cfa[indx+1]-cfa[indx-1]);
 					delv = fabsf(cfa[indx+v1]-cfa[indx-v1]);
 					dirwts0[indx] = eps+fabsf(cfa[indx+v2]-cfa[indx])+fabsf(cfa[indx]-cfa[indx-v2])+delv;
 					dirwts1[indx] = eps+fabsf(cfa[indx+2]-cfa[indx])+fabsf(cfa[indx]-cfa[indx-2])+delh;//+fabsf(cfa[indx+2]-cfa[indx-2]);
-					delhsq[indx] = SQR(delh);
-					delvsq[indx] = SQR(delv);
+					delhvsqsum[indx] = SQR(delh) + SQR(delv);
 				}
 #endif
 
 #ifdef __SSE2__
-//			__m128	tempv;
 			__m128	Dgrbsq1pv, Dgrbsq1mv,temp2v;
 			for (rr=6; rr < rr1-6; rr++){
 				if((FC(rr,2)&1)==0) {
@@ -698,10 +589,8 @@ struct s_hv {
 						_mm_storeu_ps( &delp[indx>>1], vabsf(LC2VFU(cfa[indx+p1])-LC2VFU(cfa[indx-p1])));
 						_mm_storeu_ps( &delm[indx>>1], vabsf(LC2VFU(cfa[indx+m1])-LC2VFU(cfa[indx-m1])));
 						Dgrbsq1mv = (SQRV(tempv-LC2VFU(cfa[indx+1-m1]))+SQRV(tempv-LC2VFU(cfa[indx+1+m1])));
-						tempv = _mm_shuffle_ps( Dgrbsq1mv, Dgrbsq1pv, _MM_SHUFFLE( 1,0,1,0 ) );
-						_mm_storeu_ps( &Dgrbsq1[indx>>1].m, _mm_shuffle_ps( tempv, tempv, _MM_SHUFFLE( 3,1,2,0 ) ));
-						temp2v = _mm_shuffle_ps( Dgrbsq1mv, Dgrbsq1pv, _MM_SHUFFLE( 3,2,3,2 ) );
-						_mm_storeu_ps( &Dgrbsq1[(indx+4)>>1].m, _mm_shuffle_ps( temp2v, temp2v, _MM_SHUFFLE( 3,1,2,0 ) ));
+						_mm_storeu_ps( &Dgrbsq1m[indx>>1], Dgrbsq1mv );
+						_mm_storeu_ps( &Dgrbsq1p[indx>>1], Dgrbsq1pv );
 					}
 				}
 				else {
@@ -711,10 +600,8 @@ struct s_hv {
 						_mm_storeu_ps( &delp[indx>>1], vabsf(LC2VFU(cfa[indx+1+p1])-LC2VFU(cfa[indx+1-p1])));
 						_mm_storeu_ps( &delm[indx>>1], vabsf(LC2VFU(cfa[indx+1+m1])-LC2VFU(cfa[indx+1-m1])));
 						Dgrbsq1mv = (SQRV(tempv-LC2VFU(cfa[indx-m1]))+SQRV(tempv-LC2VFU(cfa[indx+m1])));
-						tempv = _mm_shuffle_ps( Dgrbsq1mv, Dgrbsq1pv, _MM_SHUFFLE( 1,0,1,0 ) );
-						_mm_storeu_ps( &Dgrbsq1[indx>>1].m, _mm_shuffle_ps( tempv, tempv, _MM_SHUFFLE( 3,1,2,0 ) ));
-						temp2v = _mm_shuffle_ps( Dgrbsq1mv, Dgrbsq1pv, _MM_SHUFFLE( 3,2,3,2 ) );
-						_mm_storeu_ps( &Dgrbsq1[(indx+4)>>1].m, _mm_shuffle_ps( temp2v, temp2v, _MM_SHUFFLE( 3,1,2,0 ) ));
+						_mm_storeu_ps( &Dgrbsq1m[indx>>1], Dgrbsq1mv );
+						_mm_storeu_ps( &Dgrbsq1p[indx>>1], Dgrbsq1pv );
 					}
 				}
 			}
@@ -724,14 +611,14 @@ struct s_hv {
 					for (cc=6, indx=(rr)*TS+cc; cc < cc1-6; cc+=2, indx+=2) {
 						delp[indx>>1] = fabsf(cfa[indx+p1]-cfa[indx-p1]);
 						delm[indx>>1] = fabsf(cfa[indx+m1]-cfa[indx-m1]);
-						Dgrbsq1[indx>>1].p=(SQR(cfa[indx+1]-cfa[indx+1-p1])+SQR(cfa[indx+1]-cfa[indx+1+p1]));
-						Dgrbsq1[indx>>1].m=(SQR(cfa[indx+1]-cfa[indx+1-m1])+SQR(cfa[indx+1]-cfa[indx+1+m1]));
+						Dgrbsq1p[indx>>1]=(SQR(cfa[indx+1]-cfa[indx+1-p1])+SQR(cfa[indx+1]-cfa[indx+1+p1]));
+						Dgrbsq1m[indx>>1]=(SQR(cfa[indx+1]-cfa[indx+1-m1])+SQR(cfa[indx+1]-cfa[indx+1+m1]));
 					}
 				}
 				else {
 					for (cc=6, indx=(rr)*TS+cc; cc < cc1-6; cc+=2, indx+=2) {
-						Dgrbsq1[indx>>1].p=(SQR(cfa[indx]-cfa[indx-p1])+SQR(cfa[indx]-cfa[indx+p1]));
-						Dgrbsq1[indx>>1].m=(SQR(cfa[indx]-cfa[indx-m1])+SQR(cfa[indx]-cfa[indx+m1]));
+						Dgrbsq1p[indx>>1]=(SQR(cfa[indx]-cfa[indx-p1])+SQR(cfa[indx]-cfa[indx+p1]));
+						Dgrbsq1m[indx>>1]=(SQR(cfa[indx]-cfa[indx-m1])+SQR(cfa[indx]-cfa[indx+m1]));
 						delp[indx>>1] = fabsf(cfa[indx+1+p1]-cfa[indx+1-p1]);
 						delm[indx>>1] = fabsf(cfa[indx+1+m1]-cfa[indx+1-m1]);
 					}
@@ -739,16 +626,11 @@ struct s_hv {
 			}
 #endif
 
-
-
-			//t2_init += clock()-t1_init;
 			// end of tile initialization
 			// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 			//interpolate vertical and horizontal color differences
-			//t1_vcdhcd = clock();
 
-			// int	fcswitch = 0;
 #ifdef __SSE2__
 			__m128	sgnv,cruv,crdv,crlv,crrv,guhav,gdhav,glhav,grhav,hwtv,vwtv,Gintvhav,Ginthhav,guarv,gdarv,glarv,grarv;
 			vmask	clipmask;
@@ -765,7 +647,6 @@ struct s_hv {
 			for (rr=4; rr<rr1-4; rr++) {
 				sgnv = -sgnv;
 				for (cc=4,indx=rr*TS+cc; cc<cc1-7; cc+=4,indx+=4) {
-					
 					//color ratios in each cardinal direction
 					cruv = LVF(cfa[indx-v1])*(LVF(dirwts0[indx-v2])+LVF(dirwts0[indx]))/(LVF(dirwts0[indx-v2])*(epsv+LVF(cfa[indx]))+LVF(dirwts0[indx])*(epsv+LVF(cfa[indx-v2])));
 					crdv = LVF(cfa[indx+v1])*(LVF(dirwts0[indx+v2])+LVF(dirwts0[indx]))/(LVF(dirwts0[indx+v2])*(epsv+LVF(cfa[indx]))+LVF(dirwts0[indx])*(epsv+LVF(cfa[indx+v2])));
@@ -808,8 +689,10 @@ struct s_hv {
 				}
 			}
 #else
+			bool	fcswitch;
 			for (rr=4; rr<rr1-4; rr++) {
 				for (cc=4,indx=rr*TS+cc,fcswitch = FC(rr,cc)&1; cc<cc1-4; cc++,indx++) {
+
 					//color ratios in each cardinal direction
 					cru = cfa[indx-v1]*(dirwts0[indx-v2]+dirwts0[indx])/(dirwts0[indx-v2]*(eps+cfa[indx])+dirwts0[indx]*(eps+cfa[indx-v2]));
 					crd = cfa[indx+v1]*(dirwts0[indx+v2]+dirwts0[indx])/(dirwts0[indx+v2]*(eps+cfa[indx])+dirwts0[indx]*(eps+cfa[indx+v2]));
@@ -862,17 +745,14 @@ struct s_hv {
 			
 			}
 #endif
-			//t2_vcdhcd += clock() - t1_vcdhcd;
 
-			//t1_cdvar = clock();
 #ifdef __SSE2__
-			__m128	zerov = _mm_set1_ps( 0.0f );
 			__m128  hcdvarv, vcdvarv;
 			__m128	hcdaltvarv,vcdaltvarv,hcdv,vcdv,hcdaltv,vcdaltv,sgn3v,Ginthv,Gintvv,hcdoldv,vcdoldv;
 			__m128	threev = _mm_set1_ps( 3.0f );
 			__m128 	clip_ptv = _mm_set1_ps( clip_pt );
 			__m128	nsgnv;
-			vmask	hcdmask, vcdmask;
+			vmask	hcdmask, vcdmask,tempmask;
 
 			if( !(FC(4,4)&1) )
 				sgnv = _mm_set_ps( 1.0f, -1.0f, 1.0f, -1.0f );
@@ -900,37 +780,29 @@ struct s_hv {
 					Ginthv = sgnv * hcdv + LVF( cfa[indx] );
 					temp2v = sgn3v * hcdv;
 					hwtv = onev + temp2v / ( epsv + Ginthv + LVF( cfa[indx]));
-					hcdmask = vmaskf_gt( hcdv, zerov );
+					hcdmask = vmaskf_gt( nsgnv * hcdv, ZEROV );
 					hcdoldv = hcdv;
 					tempv = nsgnv * (LVF(cfa[indx]) - ULIMV( Ginthv, LVFU(cfa[indx-1]), LVFU(cfa[indx+1]) ));
 					hcdv = vself( vmaskf_lt( (temp2v), -(LVF(cfa[indx])+Ginthv)), tempv, hwtv*hcdv + (onev - hwtv)*tempv);
 					hcdv = vself( hcdmask, hcdv, hcdoldv );
 					hcdv = vself( vmaskf_gt( Ginthv, clip_ptv), tempv, hcdv);
-					_mm_store_ps( &hcdnew[indx], hcdv);
+					_mm_store_ps( &hcd[indx], hcdv);
 
 					Gintvv = sgnv * vcdv + LVF( cfa[indx] );
 					temp2v = sgn3v * vcdv;
 					vwtv = onev + temp2v / ( epsv + Gintvv + LVF( cfa[indx]));
-					vcdmask = vmaskf_gt( vcdv, zerov );
+					vcdmask = vmaskf_gt( nsgnv * vcdv, ZEROV );
 					vcdoldv = vcdv;
 					tempv = nsgnv * (LVF(cfa[indx]) - ULIMV( Gintvv, LVF(cfa[indx-v1]), LVF(cfa[indx+v1]) ));
 					vcdv = vself( vmaskf_lt( (temp2v), -(LVF(cfa[indx])+Gintvv)), tempv, vwtv*vcdv + (onev - vwtv)*tempv);
 					vcdv = vself( vcdmask, vcdv, vcdoldv );
 					vcdv = vself( vmaskf_gt( Gintvv, clip_ptv), tempv, vcdv);
-					_mm_store_ps( &vcdnew[indx], vcdv);
+					_mm_store_ps( &vcd[indx], vcdv);
 					_mm_storeu_ps(&cddiffsq[indx], SQRV(vcdv-hcdv));
 				}
 
 			}
-			for (rr=4; rr<rr1-4; rr++)
-				for (cc=4,indx=rr*TS+cc; cc<cc1-4; cc++,indx++) {
-					hcd[indx] = hcdnew[indx];
-					vcd[indx] = vcdnew[indx];
-				}
-
 #else
-
-			//t1_cdvar = clock();
 			for (rr=4; rr<rr1-4; rr++) {
 				//for (cc=4+(FC(rr,2)&1),indx=rr*TS+cc,c=FC(rr,cc); cc<cc1-4; cc+=2,indx+=2) {
 				for (cc=4,indx=rr*TS+cc,c=FC(rr,cc)&1; cc<cc1-4; cc++,indx++) {
@@ -998,21 +870,65 @@ struct s_hv {
 						cddiffsq[indx] = SQR(vcd[indx]-hcd[indx]);
 					}
 					c = !c;
-
-//					cddiffsq[indx] = SQR(vcd[indx]-hcd[indx]);
 				}
 			}
 #endif
 
-			for (rr=6; rr<rr1-6; rr++)
+#ifdef __SSE2__
+			__m128	uavev,davev,lavev,ravev,Dgrbvvaruv,Dgrbvvardv,Dgrbhvarlv,Dgrbhvarrv,varwtv,diffwtv,vcdvar1v,hcdvar1v;
+			__m128	epssqv = _mm_set1_ps( epssq );
+			vmask	decmask;
+			for (rr=6; rr<rr1-6; rr++) {
+				for (cc=6+(FC(rr,2)&1),indx=rr*TS+cc; cc<cc1-6; cc+=8,indx+=8) {
+					//compute color difference variances in cardinal directions
+					tempv = LC2VFU(vcd[indx]);
+					uavev = tempv+LC2VFU(vcd[indx-v1])+LC2VFU(vcd[indx-v2])+LC2VFU(vcd[indx-v3]);
+					davev = tempv+LC2VFU(vcd[indx+v1])+LC2VFU(vcd[indx+v2])+LC2VFU(vcd[indx+v3]);
+					Dgrbvvaruv = SQRV(tempv-uavev)+SQRV(LC2VFU(vcd[indx-v1])-uavev)+SQRV(LC2VFU(vcd[indx-v2])-uavev)+SQRV(LC2VFU(vcd[indx-v3])-uavev);
+					Dgrbvvardv = SQRV(tempv-davev)+SQRV(LC2VFU(vcd[indx+v1])-davev)+SQRV(LC2VFU(vcd[indx+v2])-davev)+SQRV(LC2VFU(vcd[indx+v3])-davev);
+
+					hwtv = LC2VFU(dirwts1[indx-1])/(LC2VFU(dirwts1[indx-1])+LC2VFU(dirwts1[indx+1]));
+					vwtv = LC2VFU(dirwts0[indx-v1])/(LC2VFU(dirwts0[indx+v1])+LC2VFU(dirwts0[indx-v1]));
+
+					tempv = LC2VFU(hcd[indx]);
+					lavev = tempv+LC2VFU(hcd[indx-1])+LC2VFU(hcd[indx-2])+LC2VFU(hcd[indx-3]);
+					ravev = tempv+LC2VFU(hcd[indx+1])+LC2VFU(hcd[indx+2])+LC2VFU(hcd[indx+3]);
+					Dgrbhvarlv = SQRV(tempv-lavev)+SQRV(LC2VFU(hcd[indx-1])-lavev)+SQRV(LC2VFU(hcd[indx-2])-lavev)+SQRV(LC2VFU(hcd[indx-3])-lavev);
+					Dgrbhvarrv = SQRV(tempv-ravev)+SQRV(LC2VFU(hcd[indx+1])-ravev)+SQRV(LC2VFU(hcd[indx+2])-ravev)+SQRV(LC2VFU(hcd[indx+3])-ravev);
+
+
+					vcdvarv = epssqv+vwtv*Dgrbvvardv+(onev-vwtv)*Dgrbvvaruv;
+					hcdvarv = epssqv+hwtv*Dgrbhvarrv+(onev-hwtv)*Dgrbhvarlv;
+
+					//compute fluctuations in up/down and left/right interpolations of colors
+					Dgrbvvaruv = (LC2VFU(dgintv[indx]))+(LC2VFU(dgintv[indx-v1]))+(LC2VFU(dgintv[indx-v2]));
+					Dgrbvvardv = (LC2VFU(dgintv[indx]))+(LC2VFU(dgintv[indx+v1]))+(LC2VFU(dgintv[indx+v2]));
+					Dgrbhvarlv = (LC2VFU(dginth[indx]))+(LC2VFU(dginth[indx-1]))+(LC2VFU(dginth[indx-2]));
+					Dgrbhvarrv = (LC2VFU(dginth[indx]))+(LC2VFU(dginth[indx+1]))+(LC2VFU(dginth[indx+2]));
+
+					vcdvar1v = epssqv+vwtv*Dgrbvvardv+(onev-vwtv)*Dgrbvvaruv;
+					hcdvar1v = epssqv+hwtv*Dgrbhvarrv+(onev-hwtv)*Dgrbhvarlv;
+
+					//determine adaptive weights for G interpolation
+					varwtv=hcdvarv/(vcdvarv+hcdvarv);
+					diffwtv=hcdvar1v/(vcdvar1v+hcdvar1v);
+
+					//if both agree on interpolation direction, choose the one with strongest directional discrimination;
+					//otherwise, choose the u/d and l/r difference fluctuation weights
+					decmask = vandm( vmaskf_gt( (zd5v - varwtv) * (zd5v - diffwtv), ZEROV ), vmaskf_lt( vabsf( zd5v - diffwtv), vabsf( zd5v - varwtv) ) );
+					_mm_storeu_ps( &hvwt[indx>>1], vself( decmask, varwtv, diffwtv));
+				}
+			}
+#else
+			for (rr=6; rr<rr1-6; rr++) {
 				for (cc=6+(FC(rr,2)&1),indx=rr*TS+cc; cc<cc1-6; cc+=2,indx+=2) {
 
 					//compute color difference variances in cardinal directions
 
 					uave = vcd[indx]+vcd[indx-v1]+vcd[indx-v2]+vcd[indx-v3];
 					dave = vcd[indx]+vcd[indx+v1]+vcd[indx+v2]+vcd[indx+v3];
-					lave = (hcd[indx]+hcd[indx-1]+hcd[indx-2]+hcd[indx-3]);
-					rave = (hcd[indx]+hcd[indx+1]+hcd[indx+2]+hcd[indx+3]);
+					lave = hcd[indx]+hcd[indx-1]+hcd[indx-2]+hcd[indx-3];
+					rave = hcd[indx]+hcd[indx+1]+hcd[indx+2]+hcd[indx+3];
 
 					Dgrbvvaru = SQR(vcd[indx]-uave)+SQR(vcd[indx-v1]-uave)+SQR(vcd[indx-v2]-uave)+SQR(vcd[indx-v3]-uave);
 					Dgrbvvard = SQR(vcd[indx]-dave)+SQR(vcd[indx+v1]-dave)+SQR(vcd[indx+v2]-dave)+SQR(vcd[indx+v3]-dave);
@@ -1040,47 +956,48 @@ struct s_hv {
 
 					//if both agree on interpolation direction, choose the one with strongest directional discrimination;
 					//otherwise, choose the u/d and l/r difference fluctuation weights
-					if ((0.5-varwt)*(0.5-diffwt)>0 && fabsf(0.5f-diffwt)<fabsf(0.5f-varwt)) {hvwt[indx>>1]=varwt;} else {hvwt[indx>>1]=diffwt;}
+					if ((0.5-varwt)*(0.5-diffwt)>0 && fabsf(0.5-diffwt)<fabsf(0.5-varwt)) {hvwt[indx>>1]=varwt;} else {hvwt[indx>>1]=diffwt;}
 
 					//hvwt[indx]=varwt;
 				}
-			//t2_cdvar += clock() - t1_cdvar;
+			}
 
+#endif
 			// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 			// Nyquist test
-			//t1_nyqtest = clock();
-
 			for (rr=6; rr<rr1-6; rr++)
 				for (cc=6+(FC(rr,2)&1),indx=rr*TS+cc; cc<cc1-6; cc+=2,indx+=2) {
 
 					//nyquist texture test: ask if difference of vcd compared to hcd is larger or smaller than RGGB gradients
 					nyqtest = (gaussodd[0]*cddiffsq[indx]+
-							   gaussodd[1]*(cddiffsq[indx-m1]+cddiffsq[indx+p1]+
-											cddiffsq[indx-p1]+cddiffsq[indx+m1])+
-							   gaussodd[2]*(cddiffsq[indx-v2]+cddiffsq[indx-2]+
-											cddiffsq[indx+2]+cddiffsq[indx+v2])+
-							   gaussodd[3]*(cddiffsq[indx-m2]+cddiffsq[indx+p2]+
-											cddiffsq[indx-p2]+cddiffsq[indx+m2]));
+							   gaussodd[1]*(cddiffsq[(indx-m1)]+cddiffsq[(indx+p1)]+
+											cddiffsq[(indx-p1)]+cddiffsq[(indx+m1)])+
+							   gaussodd[2]*(cddiffsq[(indx-v2)]+cddiffsq[(indx-2)]+
+											cddiffsq[(indx+2)]+cddiffsq[(indx+v2)])+
+							   gaussodd[3]*(cddiffsq[(indx-m2)]+cddiffsq[(indx+p2)]+
+											cddiffsq[(indx-p2)]+cddiffsq[(indx+m2)]));
 
-					nyqtest -= nyqthresh*(gaussgrad[0]*(delhsq[indx]+delvsq[indx])+
-										  gaussgrad[1]*(delhsq[indx-v1]+delvsq[indx-v1]+delhsq[indx+1]+delvsq[indx+1]+
-														delhsq[indx-1]+delvsq[indx-1]+delhsq[indx+v1]+delvsq[indx+v1])+
-										  gaussgrad[2]*(delhsq[indx-m1]+delvsq[indx-m1]+delhsq[indx+p1]+delvsq[indx+p1]+
-														delhsq[indx-p1]+delvsq[indx-p1]+delhsq[indx+m1]+delvsq[indx+m1])+
-										  gaussgrad[3]*(delhsq[indx-v2]+delvsq[indx-v2]+delhsq[indx-2]+delvsq[indx-2]+
-														delhsq[indx+2]+delvsq[indx+2]+delhsq[indx+v2]+delvsq[indx+v2])+
-										  gaussgrad[4]*(delhsq[indx-2*TS-1]+delvsq[indx-2*TS-1]+delhsq[indx-2*TS+1]+delvsq[indx-2*TS+1]+
-														delhsq[indx-TS-2]+delvsq[indx-TS-2]+delhsq[indx-TS+2]+delvsq[indx-TS+2]+
-														delhsq[indx+TS-2]+delvsq[indx+TS-2]+delhsq[indx+TS+2]+delvsq[indx-TS+2]+
-														delhsq[indx+2*TS-1]+delvsq[indx+2*TS-1]+delhsq[indx+2*TS+1]+delvsq[indx+2*TS+1])+
-										  gaussgrad[5]*(delhsq[indx-m2]+delvsq[indx-m2]+delhsq[indx+p2]+delvsq[indx+p2]+
-														delhsq[indx-p2]+delvsq[indx-p2]+delhsq[indx+m2]+delvsq[indx+m2]));
+					nyqtest -= nyqthresh*(gaussgrad[0]*(delhvsqsum[indx])+
+										  gaussgrad[1]*(delhvsqsum[indx-v1]+delhvsqsum[indx+1]+
+														delhvsqsum[indx-1]+delhvsqsum[indx+v1])+
+										  gaussgrad[2]*(delhvsqsum[indx-m1]+delhvsqsum[indx+p1]+
+														delhvsqsum[indx-p1]+delhvsqsum[indx+m1])+
+										  gaussgrad[3]*(delhvsqsum[indx-v2]+delhvsqsum[indx-2]+
+														delhvsqsum[indx+2]+delhvsqsum[indx+v2])+
+										  gaussgrad[4]*(delhvsqsum[indx-2*TS-1]+delhvsqsum[indx-2*TS+1]+
+														delhvsqsum[indx-TS-2]+delhvsqsum[indx-TS+2]+
+														delhvsqsum[indx+TS-2]+delhvsqsum[indx+TS+2]+
+														delhvsqsum[indx+2*TS-1]+delhvsqsum[indx+2*TS+1])+
+										  gaussgrad[5]*(delhvsqsum[indx-m2]+delhvsqsum[indx+p2]+
+														delhvsqsum[indx-p2]+delhvsqsum[indx+m2]));
 
 
-					if (nyqtest>0) {nyquist[indx>>1]=1;}//nyquist=1 for nyquist region
+					if (nyqtest>0) 
+						nyquist[indx>>1]=1;//nyquist=1 for nyquist region
 				}
+
 			unsigned int nyquisttemp;
-			for (rr=8; rr<rr1-8; rr++)
+			for (rr=8; rr<rr1-8; rr++){
 				for (cc=8+(FC(rr,2)&1),indx=rr*TS+cc; cc<cc1-8; cc+=2,indx+=2) {
 
 					nyquisttemp=(nyquist[(indx-v2)>>1]+nyquist[(indx-m1)>>1]+nyquist[(indx+p1)>>1]+
@@ -1091,17 +1008,12 @@ struct s_hv {
 					//or not
 					if (nyquisttemp<4) nyquist[indx>>1]=0;
 				}
-
-			//t2_nyqtest += clock() - t1_nyqtest;
+			}
 			// end of Nyquist test
-			// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-
 
 			// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 			// in areas of Nyquist texture, do area interpolation
-			//t1_areainterp = clock();
 			for (rr=8; rr<rr1-8; rr++)
 				for (cc=8+(FC(rr,2)&1),indx=rr*TS+cc; cc<cc1-8; cc+=2,indx+=2) {
 
@@ -1132,10 +1044,9 @@ struct s_hv {
 
 					}
 				}
-			// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-			//t2_areainterp += clock() - t1_areainterp;
 
 			// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 			//populate G at R/B sites
 			for (rr=8; rr<rr1-8; rr++)
 				for (cc=8+(FC(rr,2)&1),indx=rr*TS+cc; cc<cc1-8; cc+=2,indx+=2) {
@@ -1193,23 +1104,84 @@ struct s_hv {
 
 			// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-			//t1_diag = clock();
-			// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-			// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 			// diagonal interpolation correction
 
-			for (rr=8; rr<rr1-8; rr++)
-				for (cc=8+(FC(rr,2)&1),indx=rr*TS+cc,indx1=indx>>1; cc<cc1-8; cc+=2,indx+=2,indx1++) {
+#ifdef __SSE2__
+			__m128 rbsev,rbnwv,rbnev,rbswv,cfav,rbmv,rbpv,temp1v,wtv;
+			__m128 wtsev, wtnwv, wtnev, wtswv, rbvarmv;
+			__m128 gausseven0v = _mm_set1_ps(gausseven[0]);
+			__m128 gausseven1v = _mm_set1_ps(gausseven[1]);
+			__m128 twov = _mm_set1_ps(2.0f);
+#endif
+			for (rr=8; rr<rr1-8; rr++) {
+#ifdef __SSE2__
+				for (cc=8+(FC(rr,2)&1),indx=rr*TS+cc,indx1=indx>>1; cc<cc1-8; cc+=8,indx+=8,indx1+=4) {
 
-/*
-					rbvarp = epssq + (gausseven[0]*(Dgrbsq1[indx-v1].p+Dgrbsq1[indx-1].p+Dgrbsq1[indx+1].p+Dgrbsq1[indx+v1].p) +
-									gausseven[1]*(Dgrbsq1[indx-v2-1].p+Dgrbsq1[indx-v2+1].p+Dgrbsq1[indx-2-v1].p+Dgrbsq1[indx+2-v1].p+
-												  Dgrbsq1[indx-2+v1].p+Dgrbsq1[indx+2+v1].p+Dgrbsq1[indx+v2-1].p+Dgrbsq1[indx+v2+1].p));
-					rbvarm = epssq + (gausseven[0]*(Dgrbsq1[indx-v1].m+Dgrbsq1[indx-1].m+Dgrbsq1[indx+1].m+Dgrbsq1[indx+v1].m) +
-									gausseven[1]*(Dgrbsq1[indx-v2-1].m+Dgrbsq1[indx-v2+1].m+Dgrbsq1[indx-2-v1].m+Dgrbsq1[indx+2-v1].m+
-												  Dgrbsq1[indx-2+v1].m+Dgrbsq1[indx+2+v1].m+Dgrbsq1[indx+v2-1].m+Dgrbsq1[indx+v2+1].m));
-*/
-					// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+					//diagonal color ratios
+					cfav = LC2VFU(cfa[indx]);
+
+					temp1v = LC2VFU(cfa[indx+m1]);
+					temp2v = LC2VFU(cfa[indx+m2]);
+					rbsev = (temp1v + temp1v) / (epsv + cfav + temp2v );
+					rbsev = vself(vmaskf_lt(vabsf(onev - rbsev), arthreshv), cfav * rbsev, temp1v + zd5v * (cfav - temp2v));
+
+					temp1v = LC2VFU(cfa[indx-m1]);
+					temp2v = LC2VFU(cfa[indx-m2]);
+					rbnwv = (temp1v + temp1v) / (epsv + cfav + temp2v );
+					rbnwv = vself(vmaskf_lt(vabsf(onev - rbnwv), arthreshv), cfav * rbnwv, temp1v + zd5v * (cfav - temp2v));
+
+					temp1v = epsv + LVFU(delm[indx1]);
+					wtsev= temp1v+LVFU(delm[(indx+m1)>>1])+LVFU(delm[(indx+m2)>>1]);//same as for wtu,wtd,wtl,wtr
+					wtnwv= temp1v+LVFU(delm[(indx-m1)>>1])+LVFU(delm[(indx-m2)>>1]);
+
+					rbmv = (wtsev*rbnwv+wtnwv*rbsev)/(wtsev+wtnwv);
+
+					temp1v = ULIMV(rbmv ,LC2VFU(cfa[indx-m1]),LC2VFU(cfa[indx+m1]));
+					wtv = twov * (cfav-rbmv)/(epsv+rbmv+cfav);
+					temp2v = wtv * rbmv + (onev-wtv)*temp1v;
+					
+					temp2v = vself(vmaskf_lt(rbmv + rbmv, cfav), temp1v, temp2v);
+					temp2v = vself(vmaskf_lt(rbmv, cfav), temp2v, rbmv);
+					_mm_storeu_ps(&rbm[indx1], vself(vmaskf_gt(temp2v, clip_ptv), ULIMV(temp2v ,LC2VFU(cfa[indx-m1]),LC2VFU(cfa[indx+m1])), temp2v ));
+
+
+					temp1v = LC2VFU(cfa[indx+p1]);
+					temp2v = LC2VFU(cfa[indx+p2]);
+					rbnev = (temp1v + temp1v) / (epsv + cfav + temp2v );
+					rbnev = vself(vmaskf_lt(vabsf(onev - rbnev), arthreshv), cfav * rbnev, temp1v + zd5v * (cfav - temp2v));
+
+					temp1v = LC2VFU(cfa[indx-p1]);
+					temp2v = LC2VFU(cfa[indx-p2]);
+					rbswv = (temp1v + temp1v) / (epsv + cfav + temp2v );
+					rbswv = vself(vmaskf_lt(vabsf(onev - rbswv), arthreshv), cfav * rbswv, temp1v + zd5v * (cfav - temp2v));
+
+					temp1v = epsv + LVFU(delp[indx1]);
+					wtnev= temp1v+LVFU(delp[(indx+p1)>>1])+LVFU(delp[(indx+p2)>>1]);
+					wtswv= temp1v+LVFU(delp[(indx-p1)>>1])+LVFU(delp[(indx-p2)>>1]);
+
+					rbpv = (wtnev*rbswv+wtswv*rbnev)/(wtnev+wtswv);
+					
+					temp1v = ULIMV(rbpv ,LC2VFU(cfa[indx-p1]),LC2VFU(cfa[indx+p1]));
+					wtv = twov * (cfav-rbpv)/(epsv+rbpv+cfav);
+					temp2v = wtv * rbpv + (onev-wtv)*temp1v;
+					
+					temp2v = vself(vmaskf_lt(rbpv + rbpv, cfav), temp1v, temp2v);
+					temp2v = vself(vmaskf_lt(rbpv, cfav), temp2v, rbpv);
+					_mm_storeu_ps(&rbp[indx1], vself(vmaskf_gt(temp2v, clip_ptv), ULIMV(temp2v ,LC2VFU(cfa[indx-p1]),LC2VFU(cfa[indx+p1])), temp2v ));
+
+
+
+					rbvarmv = epssqv + (gausseven0v*(LVFU(Dgrbsq1m[(indx-v1)>>1])+LVFU(Dgrbsq1m[(indx-1)>>1])+LVFU(Dgrbsq1m[(indx+1)>>1])+LVFU(Dgrbsq1m[(indx+v1)>>1])) +
+									gausseven1v*(LVFU(Dgrbsq1m[(indx-v2-1)>>1])+LVFU(Dgrbsq1m[(indx-v2+1)>>1])+LVFU(Dgrbsq1m[(indx-2-v1)>>1])+LVFU(Dgrbsq1m[(indx+2-v1)>>1])+
+												  LVFU(Dgrbsq1m[(indx-2+v1)>>1])+LVFU(Dgrbsq1m[(indx+2+v1)>>1])+LVFU(Dgrbsq1m[(indx+v2-1)>>1])+LVFU(Dgrbsq1m[(indx+v2+1)>>1])));
+					_mm_storeu_ps(&pmwt[indx1] , rbvarmv/((epssqv + (gausseven0v*(LVFU(Dgrbsq1p[(indx-v1)>>1])+LVFU(Dgrbsq1p[(indx-1)>>1])+LVFU(Dgrbsq1p[(indx+1)>>1])+LVFU(Dgrbsq1p[(indx+v1)>>1])) +
+									gausseven1v*(LVFU(Dgrbsq1p[(indx-v2-1)>>1])+LVFU(Dgrbsq1p[(indx-v2+1)>>1])+LVFU(Dgrbsq1p[(indx-2-v1)>>1])+LVFU(Dgrbsq1p[(indx+2-v1)>>1])+
+												  LVFU(Dgrbsq1p[(indx-2+v1)>>1])+LVFU(Dgrbsq1p[(indx+2+v1)>>1])+LVFU(Dgrbsq1p[(indx+v2-1)>>1])+LVFU(Dgrbsq1p[(indx+v2+1)>>1]))))+rbvarmv));
+
+				}
+
+#else
+				for (cc=8+(FC(rr,2)&1),indx=rr*TS+cc,indx1=indx>>1; cc<cc1-8; cc+=2,indx+=2,indx1++) {
 
 					//diagonal color ratios
 					crse=xmul2f(cfa[indx+m1])/(eps+cfa[indx]+(cfa[indx+m2]));
@@ -1218,14 +1190,22 @@ struct s_hv {
 					crsw=xmul2f(cfa[indx-p1])/(eps+cfa[indx]+(cfa[indx-p2]));
 
 					//assign B/R at R/B sites
-					if (fabsf(1.0f-crse)<arthresh) {rbse=cfa[indx]*crse;}//use this if more precise diag interp is necessary
-					else {rbse=(cfa[indx+m1])+xdiv2f(cfa[indx]-cfa[indx+m2]);}
-					if (fabsf(1.0f-crnw)<arthresh) {rbnw=cfa[indx]*crnw;}
-					else {rbnw=(cfa[indx-m1])+xdiv2f(cfa[indx]-cfa[indx-m2]);}
-					if (fabsf(1.0f-crne)<arthresh) {rbne=cfa[indx]*crne;}
-					else {rbne=(cfa[indx+p1])+xdiv2f(cfa[indx]-cfa[indx+p2]);}
-					if (fabsf(1.0f-crsw)<arthresh) {rbsw=cfa[indx]*crsw;}
-					else {rbsw=(cfa[indx-p1])+xdiv2f(cfa[indx]-cfa[indx-p2]);}
+					if (fabsf(1.0f-crse)<arthresh) 
+						rbse=cfa[indx]*crse;//use this if more precise diag interp is necessary
+					else 
+						rbse=(cfa[indx+m1])+xdiv2f(cfa[indx]-cfa[indx+m2]);
+					if (fabsf(1.0f-crnw)<arthresh) 
+						rbnw=cfa[indx]*crnw;
+					else 
+						rbnw=(cfa[indx-m1])+xdiv2f(cfa[indx]-cfa[indx-m2]);
+					if (fabsf(1.0f-crne)<arthresh) 
+						rbne=cfa[indx]*crne;
+					else 
+						rbne=(cfa[indx+p1])+xdiv2f(cfa[indx]-cfa[indx+p2]);
+					if (fabsf(1.0f-crsw)<arthresh) 
+						rbsw=cfa[indx]*crsw;
+					else 
+						rbsw=(cfa[indx-p1])+xdiv2f(cfa[indx]-cfa[indx-p2]);
 
 					wtse= eps+delm[indx1]+delm[(indx+m1)>>1]+delm[(indx+m2)>>1];//same as for wtu,wtd,wtl,wtr
 					wtnw= eps+delm[indx1]+delm[(indx-m1)>>1]+delm[(indx-m2)>>1];
@@ -1233,41 +1213,41 @@ struct s_hv {
 					wtsw= eps+delp[indx1]+delp[(indx-p1)>>1]+delp[(indx-p2)>>1];
 
 
-					rb[indx1].m = (wtse*rbnw+wtnw*rbse)/(wtse+wtnw);
-					rb[indx1].p = (wtne*rbsw+wtsw*rbne)/(wtne+wtsw);
+					rbm[indx1] = (wtse*rbnw+wtnw*rbse)/(wtse+wtnw);
+					rbp[indx1] = (wtne*rbsw+wtsw*rbne)/(wtne+wtsw);
 /*
 					rbvarp = epssq + (gausseven[0]*(Dgrbsq1[indx-v1].p+Dgrbsq1[indx-1].p+Dgrbsq1[indx+1].p+Dgrbsq1[indx+v1].p) +
 									gausseven[1]*(Dgrbsq1[indx-v2-1].p+Dgrbsq1[indx-v2+1].p+Dgrbsq1[indx-2-v1].p+Dgrbsq1[indx+2-v1].p+
 												  Dgrbsq1[indx-2+v1].p+Dgrbsq1[indx+2+v1].p+Dgrbsq1[indx+v2-1].p+Dgrbsq1[indx+v2+1].p));
 */
-					rbvarm = epssq + (gausseven[0]*(Dgrbsq1[(indx-v1)>>1].m+Dgrbsq1[(indx-1)>>1].m+Dgrbsq1[(indx+1)>>1].m+Dgrbsq1[(indx+v1)>>1].m) +
-									gausseven[1]*(Dgrbsq1[(indx-v2-1)>>1].m+Dgrbsq1[(indx-v2+1)>>1].m+Dgrbsq1[(indx-2-v1)>>1].m+Dgrbsq1[(indx+2-v1)>>1].m+
-												  Dgrbsq1[(indx-2+v1)>>1].m+Dgrbsq1[(indx+2+v1)>>1].m+Dgrbsq1[(indx+v2-1)>>1].m+Dgrbsq1[(indx+v2+1)>>1].m));
-					pmwt[indx1] = rbvarm/((epssq + (gausseven[0]*(Dgrbsq1[(indx-v1)>>1].p+Dgrbsq1[(indx-1)>>1].p+Dgrbsq1[(indx+1)>>1].p+Dgrbsq1[(indx+v1)>>1].p) +
-									gausseven[1]*(Dgrbsq1[(indx-v2-1)>>1].p+Dgrbsq1[(indx-v2+1)>>1].p+Dgrbsq1[(indx-2-v1)>>1].p+Dgrbsq1[(indx+2-v1)>>1].p+
-												  Dgrbsq1[(indx-2+v1)>>1].p+Dgrbsq1[(indx+2+v1)>>1].p+Dgrbsq1[(indx+v2-1)>>1].p+Dgrbsq1[(indx+v2+1)>>1].p)))+rbvarm);
+					rbvarm = epssq + (gausseven[0]*(Dgrbsq1m[(indx-v1)>>1]+Dgrbsq1m[(indx-1)>>1]+Dgrbsq1m[(indx+1)>>1]+Dgrbsq1m[(indx+v1)>>1]) +
+									gausseven[1]*(Dgrbsq1m[(indx-v2-1)>>1]+Dgrbsq1m[(indx-v2+1)>>1]+Dgrbsq1m[(indx-2-v1)>>1]+Dgrbsq1m[(indx+2-v1)>>1]+
+												  Dgrbsq1m[(indx-2+v1)>>1]+Dgrbsq1m[(indx+2+v1)>>1]+Dgrbsq1m[(indx+v2-1)>>1]+Dgrbsq1m[(indx+v2+1)>>1]));
+					pmwt[indx1] = rbvarm/((epssq + (gausseven[0]*(Dgrbsq1p[(indx-v1)>>1]+Dgrbsq1p[(indx-1)>>1]+Dgrbsq1p[(indx+1)>>1]+Dgrbsq1p[(indx+v1)>>1]) +
+									gausseven[1]*(Dgrbsq1p[(indx-v2-1)>>1]+Dgrbsq1p[(indx-v2+1)>>1]+Dgrbsq1p[(indx-2-v1)>>1]+Dgrbsq1p[(indx+2-v1)>>1]+
+												  Dgrbsq1p[(indx-2+v1)>>1]+Dgrbsq1p[(indx+2+v1)>>1]+Dgrbsq1p[(indx+v2-1)>>1]+Dgrbsq1p[(indx+v2+1)>>1])))+rbvarm);
 
 					// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 					//bound the interpolation in regions of high saturation
-					if (rb[indx1].p<cfa[indx]) {
-						if (xmul2f(rb[indx1].p) < cfa[indx]) {
-							rb[indx1].p = ULIM(rb[indx1].p ,cfa[indx-p1],cfa[indx+p1]);
+					if (rbp[indx1]<cfa[indx]) {
+						if (xmul2f(rbp[indx1]) < cfa[indx]) {
+							rbp[indx1] = ULIM(rbp[indx1] ,cfa[indx-p1],cfa[indx+p1]);
 						} else {
-							pwt = xmul2f(cfa[indx]-rb[indx1].p)/(eps+rb[indx1].p+cfa[indx]);
-							rb[indx1].p=pwt*rb[indx1].p + (1.0f-pwt)*ULIM(rb[indx1].p,cfa[indx-p1],cfa[indx+p1]);
+							pwt = xmul2f(cfa[indx]-rbp[indx1])/(eps+rbp[indx1]+cfa[indx]);
+							rbp[indx1]=pwt*rbp[indx1] + (1.0f-pwt)*ULIM(rbp[indx1],cfa[indx-p1],cfa[indx+p1]);
 						}
 					}
-					if (rb[indx1].m<cfa[indx]) {
-						if (xmul2f(rb[indx1].m) < cfa[indx]) {
-							rb[indx1].m = ULIM(rb[indx1].m ,cfa[indx-m1],cfa[indx+m1]);
+					if (rbm[indx1]<cfa[indx]) {
+						if (xmul2f(rbm[indx1]) < cfa[indx]) {
+							rbm[indx1] = ULIM(rbm[indx1] ,cfa[indx-m1],cfa[indx+m1]);
 						} else {
-							mwt = xmul2f(cfa[indx]-rb[indx1].m)/(eps+rb[indx1].m+cfa[indx]);
-							rb[indx1].m=mwt*rb[indx1].m + (1.0f-mwt)*ULIM(rb[indx1].m,cfa[indx-m1],cfa[indx+m1]);
+							mwt = xmul2f(cfa[indx]-rbm[indx1])/(eps+rbm[indx1]+cfa[indx]);
+							rbm[indx1]=mwt*rbm[indx1] + (1.0f-mwt)*ULIM(rbm[indx1],cfa[indx-m1],cfa[indx+m1]);
 						}
 					}
 
-					if (rb[indx1].p > clip_pt) rb[indx1].p=ULIM(rb[indx1].p,cfa[indx-p1],cfa[indx+p1]);//for RT implementation
-					if (rb[indx1].m > clip_pt) rb[indx1].m=ULIM(rb[indx1].m,cfa[indx-m1],cfa[indx+m1]);
+					if (rbp[indx1] > clip_pt) rbp[indx1]=ULIM(rbp[indx1],cfa[indx-p1],cfa[indx+p1]);//for RT implementation
+					if (rbm[indx1] > clip_pt) rbm[indx1]=ULIM(rbm[indx1],cfa[indx-m1],cfa[indx+m1]);
 					//c=2-FC(rr,cc);//for dcraw implementation
 					//if (rbp[indx] > pre_mul[c]) rbp[indx]=ULIM(rbp[indx],cfa[indx-p1],cfa[indx+p1]);
 					//if (rbm[indx] > pre_mul[c]) rbm[indx]=ULIM(rbm[indx],cfa[indx-m1],cfa[indx+m1]);
@@ -1275,25 +1255,41 @@ struct s_hv {
 
 					//rbint[indx] = 0.5*(cfa[indx] + (rbp*rbvarm+rbm*rbvarp)/(rbvarp+rbvarm));//this is R+B, interpolated
 				}
+#endif
+			}
 
-
+#ifdef __SSE2__
+			__m128 pmwtaltv;
+			__m128 zd25v = _mm_set1_ps(0.25f);
+#endif
 			for (rr=10; rr<rr1-10; rr++)
+#ifdef __SSE2__
+				for (cc=10+(FC(rr,2)&1),indx=rr*TS+cc,indx1=indx>>1; cc<cc1-10; cc+=8,indx+=8,indx1+=4) {
+
+					//first ask if one gets more directional discrimination from nearby B/R sites
+					pmwtaltv = zd25v*(LVFU(pmwt[(indx-m1)>>1])+LVFU(pmwt[(indx+p1)>>1])+LVFU(pmwt[(indx-p1)>>1])+LVFU(pmwt[(indx+m1)>>1]));
+					tempv = LVFU(pmwt[indx1]);
+					tempv = vself(vmaskf_lt(vabsf(zd5v-tempv), vabsf(zd5v-pmwtaltv)), pmwtaltv, tempv);
+					_mm_storeu_ps( &pmwt[indx1], tempv);
+					_mm_storeu_ps( &rbint[indx1], zd5v * (LC2VFU(cfa[indx]) + LVFU(rbm[indx1]) * (onev - tempv) + LVFU(rbp[indx1]) * tempv));
+				}
+
+#else
 				for (cc=10+(FC(rr,2)&1),indx=rr*TS+cc,indx1=indx>>1; cc<cc1-10; cc+=2,indx+=2,indx1++) {
 
 					//first ask if one gets more directional discrimination from nearby B/R sites
 					pmwtalt = xdivf(pmwt[(indx-m1)>>1]+pmwt[(indx+p1)>>1]+pmwt[(indx-p1)>>1]+pmwt[(indx+m1)>>1],2);
-//					vo=fabsf(0.5-pmwt[indx1]);
-//					ve=fabsf(0.5-pmwtalt);
-					if (fabsf(0.5f-pmwt[indx1])<fabsf(0.5f-pmwtalt)) {pmwt[indx1]=pmwtalt;}//a better result was obtained from the neighbors
+					if (fabsf(0.5-pmwt[indx1])<fabsf(0.5-pmwtalt)) {pmwt[indx1]=pmwtalt;}//a better result was obtained from the neighbors
 					
-//					if (vo<ve) {pmwt[indx1]=pmwtalt;}//a better result was obtained from the neighbors
-					rbint[indx1] = xdiv2f(cfa[indx] + rb[indx1].m*(1.0f-pmwt[indx1]) + rb[indx1].p*pmwt[indx1]);//this is R+B, interpolated
+					rbint[indx1] = xdiv2f(cfa[indx] + rbm[indx1]*(1.0f-pmwt[indx1]) + rbp[indx1]*pmwt[indx1]);//this is R+B, interpolated
 				}
+#endif
 
 			for (rr=12; rr<rr1-12; rr++)
 				for (cc=12+(FC(rr,2)&1),indx=rr*TS+cc,indx1=indx>>1; cc<cc1-12; cc+=2,indx+=2,indx1++) {
 
-					if (fabsf(0.5f-pmwt[indx>>1])<fabsf(0.5f-hvwt[indx>>1]) ) continue;
+					if (fabsf(0.5f-pmwt[indx>>1])<fabsf(0.5f-hvwt[indx>>1]) )
+						continue;
 
 					//now interpolate G vertically/horizontally using R+B values
 					//unfortunately, since G interpolation cannot be done diagonally this may lead to color shifts
@@ -1356,19 +1352,38 @@ struct s_hv {
 					//rgb[indx][2-FC(rr,cc)]=2*rbint[indx]-cfa[indx];
 				}
 			//end of diagonal interpolation correction
-			//t2_diag += clock() - t1_diag;
-			// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 			// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-			//t1_chroma = clock();
 			//fancy chrominance interpolation
 			//(ey,ex) is location of R site
 			for (rr=13-ey; rr<rr1-12; rr+=2)
-				for (cc=13-ex,indx=rr*TS+cc; cc<cc1-12; cc+=2,indx+=2) {//B coset
-					Dgrb[1][indx>>1]=Dgrb[0][indx>>1];//split out G-B from G-R
-					Dgrb[0][indx>>1]=0;
+				for (cc=13-ex,indx1=(rr*TS+cc)>>1; cc<cc1-12; cc+=2,indx1++) {//B coset
+					Dgrb[1][indx1]=Dgrb[0][indx1];//split out G-B from G-R
+					Dgrb[0][indx1]=0;
 				}
+#ifdef __SSE2__
+//			__m128 wtnwv,wtnev,wtswv,wtsev;
+			__m128 oned325v = _mm_set1_ps( 1.325f );
+			__m128 zd175v = _mm_set1_ps( 0.175f );
+			__m128 zd075v = _mm_set1_ps( 0.075f );
+#endif
 			for (rr=14; rr<rr1-14; rr++)
+#ifdef __SSE2__
+				for (cc=14+(FC(rr,2)&1),indx=rr*TS+cc,c=1-FC(rr,cc)/2; cc<cc1-14; cc+=8,indx+=8) {
+					wtnwv=onev/(epsv+vabsf(LVFU(Dgrb[c][(indx-m1)>>1])-LVFU(Dgrb[c][(indx+m1)>>1]))+vabsf(LVFU(Dgrb[c][(indx-m1)>>1])-LVFU(Dgrb[c][(indx-m3)>>1]))+vabsf(LVFU(Dgrb[c][(indx+m1)>>1])-LVFU(Dgrb[c][(indx-m3)>>1])));
+					wtnev=onev/(epsv+vabsf(LVFU(Dgrb[c][(indx+p1)>>1])-LVFU(Dgrb[c][(indx-p1)>>1]))+vabsf(LVFU(Dgrb[c][(indx+p1)>>1])-LVFU(Dgrb[c][(indx+p3)>>1]))+vabsf(LVFU(Dgrb[c][(indx-p1)>>1])-LVFU(Dgrb[c][(indx+p3)>>1])));
+					wtswv=onev/(epsv+vabsf(LVFU(Dgrb[c][(indx-p1)>>1])-LVFU(Dgrb[c][(indx+p1)>>1]))+vabsf(LVFU(Dgrb[c][(indx-p1)>>1])-LVFU(Dgrb[c][(indx+m3)>>1]))+vabsf(LVFU(Dgrb[c][(indx+p1)>>1])-LVFU(Dgrb[c][(indx-p3)>>1])));
+					wtsev=onev/(epsv+vabsf(LVFU(Dgrb[c][(indx+m1)>>1])-LVFU(Dgrb[c][(indx-m1)>>1]))+vabsf(LVFU(Dgrb[c][(indx+m1)>>1])-LVFU(Dgrb[c][(indx-p3)>>1]))+vabsf(LVFU(Dgrb[c][(indx-m1)>>1])-LVFU(Dgrb[c][(indx+m3)>>1])));
+
+					//Dgrb[indx][c]=(wtnw*Dgrb[indx-m1][c]+wtne*Dgrb[indx+p1][c]+wtsw*Dgrb[indx-p1][c]+wtse*Dgrb[indx+m1][c])/(wtnw+wtne+wtsw+wtse);
+
+					_mm_storeu_ps(&Dgrb[c][indx>>1], (wtnwv*(oned325v*LVFU(Dgrb[c][(indx-m1)>>1])-zd175v*LVFU(Dgrb[c][(indx-m3)>>1])-zd075v*LVFU(Dgrb[c][(indx-m1-2)>>1])-zd075v*LVFU(Dgrb[c][(indx-m1-v2)>>1]) )+
+								   wtnev*(oned325v*LVFU(Dgrb[c][(indx+p1)>>1])-zd175v*LVFU(Dgrb[c][(indx+p3)>>1])-zd075v*LVFU(Dgrb[c][(indx+p1+2)>>1])-zd075v*LVFU(Dgrb[c][(indx+p1+v2)>>1]) )+
+								   wtswv*(oned325v*LVFU(Dgrb[c][(indx-p1)>>1])-zd175v*LVFU(Dgrb[c][(indx-p3)>>1])-zd075v*LVFU(Dgrb[c][(indx-p1-2)>>1])-zd075v*LVFU(Dgrb[c][(indx-p1-v2)>>1]) )+
+								   wtsev*(oned325v*LVFU(Dgrb[c][(indx+m1)>>1])-zd175v*LVFU(Dgrb[c][(indx+m3)>>1])-zd075v*LVFU(Dgrb[c][(indx+m1+2)>>1])-zd075v*LVFU(Dgrb[c][(indx+m1+v2)>>1]) ))/(wtnwv+wtnev+wtswv+wtsev));
+				}
+
+#else
 				for (cc=14+(FC(rr,2)&1),indx=rr*TS+cc,c=1-FC(rr,cc)/2; cc<cc1-14; cc+=2,indx+=2) {
 					wtnw=1.0f/(eps+fabsf(Dgrb[c][(indx-m1)>>1]-Dgrb[c][(indx+m1)>>1])+fabsf(Dgrb[c][(indx-m1)>>1]-Dgrb[c][(indx-m3)>>1])+fabsf(Dgrb[c][(indx+m1)>>1]-Dgrb[c][(indx-m3)>>1]));
 					wtne=1.0f/(eps+fabsf(Dgrb[c][(indx+p1)>>1]-Dgrb[c][(indx-p1)>>1])+fabsf(Dgrb[c][(indx+p1)>>1]-Dgrb[c][(indx+p3)>>1])+fabsf(Dgrb[c][(indx-p1)>>1]-Dgrb[c][(indx+p3)>>1]));
@@ -1382,27 +1397,38 @@ struct s_hv {
 								   wtsw*(1.325f*Dgrb[c][(indx-p1)>>1]-0.175f*Dgrb[c][(indx-p3)>>1]-0.075f*Dgrb[c][(indx-p1-2)>>1]-0.075f*Dgrb[c][(indx-p1-v2)>>1] )+
 								   wtse*(1.325f*Dgrb[c][(indx+m1)>>1]-0.175f*Dgrb[c][(indx+m3)>>1]-0.075f*Dgrb[c][(indx+m1+2)>>1]-0.075f*Dgrb[c][(indx+m1+v2)>>1] ))/(wtnw+wtne+wtsw+wtse);
 				}
+#endif
 			float	temp;
 			for (rr=16; rr<rr1-16; rr++) {
-				if((FC(rr,2)&1)==1)
-					for (cc=16,indx=rr*TS+cc,row=rr+top; cc<cc1-16; cc+=2,indx++) {
+				if((FC(rr,2)&1)==1) {
+					for (cc=16,indx=rr*TS+cc,row=rr+top; cc<cc1-16-(cc1&1); cc+=2,indx++) {
 						col = cc + left;
 						temp = 	1.0f/((hvwt[(indx-v1)>>1])+(1.0f-hvwt[(indx+1)>>1])+(1.0f-hvwt[(indx-1)>>1])+(hvwt[(indx+v1)>>1]));
 						red[row][col]=65535.0f*(rgbgreen[indx]-	((hvwt[(indx-v1)>>1])*Dgrb[0][(indx-v1)>>1]+(1.0f-hvwt[(indx+1)>>1])*Dgrb[0][(indx+1)>>1]+(1.0f-hvwt[(indx-1)>>1])*Dgrb[0][(indx-1)>>1]+(hvwt[(indx+v1)>>1])*Dgrb[0][(indx+v1)>>1])*
 							temp);
 						blue[row][col]=65535.0f*(rgbgreen[indx]- ((hvwt[(indx-v1)>>1])*Dgrb[1][(indx-v1)>>1]+(1.0f-hvwt[(indx+1)>>1])*Dgrb[1][(indx+1)>>1]+(1.0f-hvwt[(indx-1)>>1])*Dgrb[1][(indx-1)>>1]+(hvwt[(indx+v1)>>1])*Dgrb[1][(indx+v1)>>1])*
 							temp);
-						
+
 						indx++;
 						col++;
 						red[row][col]=65535.0f*(rgbgreen[indx]-Dgrb[0][indx>>1]);
 						blue[row][col]=65535.0f*(rgbgreen[indx]-Dgrb[1][indx>>1]);
 					}
-				else
-					for (cc=16,indx=rr*TS+cc,row=rr+top; cc<cc1-16; cc+=2,indx++) {
+					if(cc1&1) { // width of tile is odd
+						col = cc + left;
+						temp = 	1.0f/((hvwt[(indx-v1)>>1])+(1.0f-hvwt[(indx+1)>>1])+(1.0f-hvwt[(indx-1)>>1])+(hvwt[(indx+v1)>>1]));
+						red[row][col]=65535.0f*(rgbgreen[indx]-	((hvwt[(indx-v1)>>1])*Dgrb[0][(indx-v1)>>1]+(1.0f-hvwt[(indx+1)>>1])*Dgrb[0][(indx+1)>>1]+(1.0f-hvwt[(indx-1)>>1])*Dgrb[0][(indx-1)>>1]+(hvwt[(indx+v1)>>1])*Dgrb[0][(indx+v1)>>1])*
+							temp);
+						blue[row][col]=65535.0f*(rgbgreen[indx]- ((hvwt[(indx-v1)>>1])*Dgrb[1][(indx-v1)>>1]+(1.0f-hvwt[(indx+1)>>1])*Dgrb[1][(indx+1)>>1]+(1.0f-hvwt[(indx-1)>>1])*Dgrb[1][(indx-1)>>1]+(hvwt[(indx+v1)>>1])*Dgrb[1][(indx+v1)>>1])*
+							temp);
+					}
+				}
+				else {
+					for (cc=16,indx=rr*TS+cc,row=rr+top; cc<cc1-16-(cc1&1); cc+=2,indx++) {
 						col = cc + left;
 						red[row][col]=65535.0f*(rgbgreen[indx]-Dgrb[0][indx>>1]);
 						blue[row][col]=65535.0f*(rgbgreen[indx]-Dgrb[1][indx>>1]);
+
 						indx++;
 						col++;
 						temp = 	1.0f/((hvwt[(indx-v1)>>1])+(1.0f-hvwt[(indx+1)>>1])+(1.0f-hvwt[(indx-1)>>1])+(hvwt[(indx+v1)>>1]));
@@ -1410,21 +1436,23 @@ struct s_hv {
 							temp);
 						blue[row][col]=65535.0f*(rgbgreen[indx]- ((hvwt[(indx-v1)>>1])*Dgrb[1][(indx-v1)>>1]+(1.0f-hvwt[(indx+1)>>1])*Dgrb[1][(indx+1)>>1]+(1.0f-hvwt[(indx-1)>>1])*Dgrb[1][(indx-1)>>1]+(hvwt[(indx+v1)>>1])*Dgrb[1][(indx+v1)>>1])*
 							temp);
-						
 					}
+					if(cc1&1) { // width of tile is odd
+						col = cc + left;
+						red[row][col]=65535.0f*(rgbgreen[indx]-Dgrb[0][indx>>1]);
+						blue[row][col]=65535.0f*(rgbgreen[indx]-Dgrb[1][indx>>1]);
+					}
+				}
 			}
 
-			//t2_chroma += clock() - t1_chroma;
 
 			// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-			// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 
 			// copy smoothed results back to image matrix
 			for (rr=16; rr < rr1-16; rr++){
 #ifdef __SSE2__
 				for (row=rr+top, cc=16; cc < cc1-19; cc+=4) {
-					_mm_storeu_ps(&green[row][cc + left], LVF(rgbgreen[rr*TS+cc]) * d65535v);
+					_mm_storeu_ps(&green[row][cc + left], LVF(rgbgreen[rr*TS+cc]) * c65535v);
 				}
 #else
 				for (row=rr+top, cc=16; cc < cc1-16; cc++) {
@@ -1440,46 +1468,21 @@ struct s_hv {
 #endif
 			}
 			//end of main loop
-
-			// clean up
-			//free(buffer);
-			/*progress+=(double)((TS-32)*(TS-32))/(height*width);
-			if (progress>1.0)
-			{
-				progress=1.0;
-			}
-			if(plistener) plistener->setProgress(progress);*/
 		}
 
 	// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-#pragma omp for schedule(dynamic) collapse(2) 
-    for (top=winy; top < winy+winh; top += 1) 
-        for (left=winx; left < winx+winw; left += 1) {
-            float r = red[top][left]/64.0f;
-            if (r<1.0f) r = 1.0f;
-            r = exp2(r)-15.0f;
-            if (r<0.0f) r = 0.0f;
-            red[top][left] = r;
-            float g = green[top][left]/64.0f;
-            if (g<1.0f) g = 1.0f;
-            g = exp2(g)-15.0f;
-            if (g<0.0f) g = 0.0f;
-            green[top][left] = g;
-            float b = blue[top][left]/64.0f;
-            if (b<1.0f) b = 1.0f;
-            b = exp2(b)-15.0f;
-            if (b<0.0f) b = 0.0f;
-            blue[top][left] = b;
-    } 
+
 
 	// clean up
 	free(buffer);
 }
+
 	// done
 
 #undef TS
-//t2 = clock() - t1;
+
+t2 = clock() - t1;
 //printf("Amaze took %.2f s\n", (double)t2 / CLOCKS_PER_SEC);
 
 }
