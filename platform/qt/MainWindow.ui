@@ -461,8 +461,11 @@
              </property>
              <item row="0" column="1">
               <widget class="QToolButton" name="toolButtonWb">
+               <property name="toolTip">
+                <string>White Balance Picker   B</string>
+               </property>
                <property name="text">
-                <string>...</string>
+                <string>White Balance Picker</string>
                </property>
                <property name="icon">
                 <iconset resource="ressources.qrc">
@@ -2472,7 +2475,7 @@
   <action name="actionExportActualFrame">
    <property name="icon">
     <iconset resource="ressources.qrc">
-     <normaloff>:/RetinaIMG/RetinaIMG/Image-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Image-icon.png</iconset>
+     <normaloff>:/RetinaIMG/RetinaIMG/Export-Image-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Export-Image-icon.png</iconset>
    </property>
    <property name="text">
     <string>Export actual frame</string>
