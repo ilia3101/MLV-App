@@ -2,11 +2,12 @@
  * \file GraphicsZoomView.cpp
  * \author masc4ii
  * \copyright 2017
- * \brief A QGraphicsView wihtout scrolling but with zoom on mousewheel or y-axis on trackpad
+ * \brief A QGraphicsView without scrolling but with zoom on mousewheel or y-axis on trackpad
  */
 
 #include "GraphicsZoomView.h"
 #include <QCursor>
+#include <QPixmap>
 
 //Constructor
 GraphicsZoomView::GraphicsZoomView(QWidget *parent) :
@@ -15,11 +16,6 @@ GraphicsZoomView::GraphicsZoomView(QWidget *parent) :
     setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
     m_isZoomEnabled = false;
     m_isWbPickerActive = false;
-    m_cursorPixmap = QPixmap( ":/RetinaIMG/RetinaIMG/Actions-color-picker-icon.png" )
-                                   .scaled( 32 * devicePixelRatio(),
-                                            32 * devicePixelRatio(),
-                                            Qt::KeepAspectRatio, Qt::SmoothTransformation);
-    m_cursorPixmap.setDevicePixelRatio( devicePixelRatio() );
 }
 
 //En-/disable zoom on mouse wheel
@@ -43,7 +39,13 @@ void GraphicsZoomView::resetZoom()
 void GraphicsZoomView::setWbPickerActive(bool on)
 {
     m_isWbPickerActive = on;
-    if( on ) viewport()->setCursor(QCursor(m_cursorPixmap,0,31));
+    //Calc cursor here,to make it work when monitor changed on runtime to retina
+    QPixmap cursorPixmap = QPixmap( ":/RetinaIMG/RetinaIMG/Actions-color-picker-icon.png" )
+                                   .scaled( 32 * devicePixelRatio(),
+                                            32 * devicePixelRatio(),
+                                            Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    cursorPixmap.setDevicePixelRatio( devicePixelRatio() );
+    if( on ) viewport()->setCursor(QCursor(cursorPixmap,4,27));
     else viewport()->setCursor( Qt::OpenHandCursor );
 }
 
@@ -54,6 +56,7 @@ void GraphicsZoomView::enterEvent(QEvent *event)
     //viewport()->setCursor(QCursor(m_cursorPixmap,0,31));
 }
 
+//Mouse was pressed
 void GraphicsZoomView::mousePressEvent(QMouseEvent *event)
 {
     QGraphicsView::mousePressEvent(event);
@@ -65,6 +68,7 @@ void GraphicsZoomView::mousePressEvent(QMouseEvent *event)
     }
 }
 
+//Mouse was released
 void GraphicsZoomView::mouseReleaseEvent(QMouseEvent *event)
 {
     QGraphicsView::mouseReleaseEvent(event);

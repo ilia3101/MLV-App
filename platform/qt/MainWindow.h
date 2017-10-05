@@ -26,6 +26,7 @@
 #include "AudioWave.h"
 #include "ReceiptSettings.h"
 #include "AudioPlayback.h"
+#include "GraphicsPickerScene.h"
 
 namespace Ui {
 class MainWindow;
@@ -63,6 +64,7 @@ private slots:
     void on_horizontalSliderSharpen_valueChanged(int position);
     void on_actionGoto_First_Frame_triggered();
     void on_actionExport_triggered();
+    void on_actionExportActualFrame_triggered();
     void on_checkBoxHighLightReconstruction_toggled(bool checked);
     void on_comboBoxProfile_currentIndexChanged(int index);
     void on_actionZoomFit_triggered(bool on);
@@ -121,8 +123,9 @@ private slots:
     void on_actionNextFrame_triggered();
     void on_actionPreviousFrame_triggered();
     void on_checkBoxRawFixEnable_clicked(bool checked);
-    void on_actionWhiteBalancePicker_triggered(bool checked);
+    void on_actionWhiteBalancePicker_toggled(bool checked);
     void whiteBalancePicked( int x, int y );
+
 
 private:
     Ui::MainWindow *ui;
@@ -135,7 +138,7 @@ private:
     mlvObject_t *m_pMlvObject;
     processingObject_t *m_pProcessingObject;
     QGraphicsPixmapItem *m_pGraphicsItem;
-    QGraphicsScene* m_pScene;
+    GraphicsPickerScene* m_pScene;
     QLabel *m_pCachingStatus;
     QLabel *m_pFpsStatus;
     QLabel *m_pFrameNumber;

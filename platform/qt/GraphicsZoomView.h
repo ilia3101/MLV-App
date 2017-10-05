@@ -2,7 +2,7 @@
  * \file GraphicsZoomView.h
  * \author masc4ii
  * \copyright 2017
- * \brief A QGraphicsView wihtout scrolling but with zoom on mousewheel or y-axis on trackpad
+ * \brief A QGraphicsView without scrolling but with zoom on mousewheel or y-axis on trackpad
  */
 
 #ifndef GRAPHICSZOOMVIEW_H
@@ -13,7 +13,6 @@
 #include <QWidget>
 #include <Qt>
 #include <QDebug>
-#include <QPixmap>
 
 class GraphicsZoomView : public QGraphicsView
 {
@@ -34,7 +33,6 @@ protected:
     void wheelEvent(QWheelEvent *event);
     bool m_isZoomEnabled;
     bool m_isWbPickerActive;
-    QPixmap m_cursorPixmap;
 };
 
 #endif // GRAPHICSZOOMVIEW_H

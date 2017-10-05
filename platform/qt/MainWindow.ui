@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1200</width>
-    <height>766</height>
+    <height>769</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -129,6 +129,7 @@
     <addaction name="actionOpen"/>
     <addaction name="actionClip_Information"/>
     <addaction name="actionExport"/>
+    <addaction name="actionExportActualFrame"/>
     <addaction name="separator"/>
     <addaction name="actionExportSettings"/>
     <addaction name="separator"/>
@@ -221,7 +222,6 @@
    <addaction name="actionCopyRecept"/>
    <addaction name="actionPasteReceipt"/>
    <addaction name="actionClip_Information"/>
-   <addaction name="actionWhiteBalancePicker"/>
    <addaction name="actionGoto_First_Frame"/>
    <addaction name="actionPreviousFrame"/>
    <addaction name="actionPlay"/>
@@ -453,56 +453,27 @@
            </item>
            <item>
             <layout class="QGridLayout" name="gridLayout_4">
-             <property name="spacing">
+             <property name="horizontalSpacing">
+              <number>5</number>
+             </property>
+             <property name="verticalSpacing">
               <number>0</number>
              </property>
-             <item row="0" column="0">
-              <widget class="QLabel" name="label_2">
-               <property name="font">
-                <font>
-                 <pointsize>10</pointsize>
-                </font>
-               </property>
-               <property name="text">
-                <string>Temperature</string>
-               </property>
-              </widget>
-             </item>
              <item row="0" column="1">
-              <spacer name="horizontalSpacer_2">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeType">
-                <enum>QSizePolicy::Maximum</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item row="0" column="2">
-              <widget class="DoubleClickLabel" name="label_TemperatureVal">
-               <property name="font">
-                <font>
-                 <pointsize>10</pointsize>
-                </font>
-               </property>
-               <property name="layoutDirection">
-                <enum>Qt::RightToLeft</enum>
-               </property>
+              <widget class="QToolButton" name="toolButtonWb">
                <property name="text">
-                <string>6250 K</string>
+                <string>...</string>
                </property>
-               <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               <property name="icon">
+                <iconset resource="ressources.qrc">
+                 <normaloff>:/RetinaIMG/RetinaIMG/Actions-color-picker-grey-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Actions-color-picker-grey-icon.png</iconset>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
                </property>
               </widget>
              </item>
-             <item row="1" column="0" colspan="3">
+             <item row="1" column="0" colspan="4">
               <widget class="QSlider" name="horizontalSliderTemperature">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -533,6 +504,52 @@
                </property>
                <property name="orientation">
                 <enum>Qt::Horizontal</enum>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_2">
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
+               <property name="text">
+                <string>Temperature</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="2">
+              <spacer name="horizontalSpacer_2">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeType">
+                <enum>QSizePolicy::Maximum</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item row="0" column="3">
+              <widget class="DoubleClickLabel" name="label_TemperatureVal">
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
+               <property name="layoutDirection">
+                <enum>Qt::RightToLeft</enum>
+               </property>
+               <property name="text">
+                <string>6250 K</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                </property>
               </widget>
              </item>
@@ -2452,6 +2469,21 @@
     <string>B</string>
    </property>
   </action>
+  <action name="actionExportActualFrame">
+   <property name="icon">
+    <iconset resource="ressources.qrc">
+     <normaloff>:/RetinaIMG/RetinaIMG/Image-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Image-icon.png</iconset>
+   </property>
+   <property name="text">
+    <string>Export actual frame</string>
+   </property>
+   <property name="toolTip">
+    <string>Export actual frame as 16 bit PNG</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+E</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
@@ -2562,6 +2594,38 @@
     <hint type="destinationlabel">
      <x>598</x>
      <y>427</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionWhiteBalancePicker</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>toolButtonWb</receiver>
+   <slot>setChecked(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>1084</x>
+     <y>246</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>toolButtonWb</sender>
+   <signal>clicked(bool)</signal>
+   <receiver>actionWhiteBalancePicker</receiver>
+   <slot>setChecked(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>1084</x>
+     <y>246</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>-1</x>
+     <y>-1</y>
     </hint>
    </hints>
   </connection>

@@ -520,6 +520,7 @@ void MainWindow::openMlv( QString fileName )
 
     //Enable export now
     ui->actionExport->setEnabled( true );
+    ui->actionExportActualFrame->setEnabled( true );
 
     m_frameChanged = true;
 }
@@ -607,20 +608,22 @@ void MainWindow::initGui( void )
     ui->actionPasteReceipt->setEnabled( false );
     //Disable export until file opened!
     ui->actionExport->setEnabled( false );
+    ui->actionExportActualFrame->setEnabled( false );
     //Set fit to screen as default zoom
     ui->actionZoomFit->setChecked( true );
     //Make whiteBalance picker invisible, so nobody asks why it does not work :-)
     ui->actionWhiteBalancePicker->setVisible( false );
-    connect( ui->graphicsView, SIGNAL( wbPicked(int,int) ), this, SLOT( whiteBalancePicked(int,int) ) );
+    ui->toolButtonWb->setVisible( false );
 
     //Set up image in GUI
     QImage image(":/IMG/IMG/histogram.png");
     m_pGraphicsItem = new QGraphicsPixmapItem( QPixmap::fromImage(image) );
-    m_pScene = new QGraphicsScene( this );
+    m_pScene = new GraphicsPickerScene( this );
     m_pScene->addItem( m_pGraphicsItem );
     ui->graphicsView->setScene( m_pScene );
     ui->graphicsView->show();
     connect( ui->graphicsView, SIGNAL( customContextMenuRequested(QPoint) ), this, SLOT( pictureCustomContextMenuRequested(QPoint) ) );
+    connect( m_pScene, SIGNAL( wbPicked(int,int) ), this, SLOT( whiteBalancePicked(int,int) ) );
 
     //Set up caching status label
     m_pCachingStatus = new QLabel( statusBar() );
@@ -1169,6 +1172,7 @@ void MainWindow::deleteSession()
 
     //Export not possible without mlv file
     ui->actionExport->setEnabled( false );
+    ui->actionExportActualFrame->setEnabled( false );
 
     //Set Clip Info to Dialog
     m_pInfoDialog->ui->tableWidget->item( 0, 1 )->setText( "-" );
@@ -1734,6 +1738,41 @@ void MainWindow::on_actionExport_triggered()
 
     //startExport
     exportHandler();
+}
+
+//Export actual frame as 16bit png
+void MainWindow::on_actionExportActualFrame_triggered()
+{
+    //File name proposal
+    QString saveFileName = m_pSessionReceipts.at( m_lastActiveClipInSession )->fileName();
+    saveFileName = saveFileName.left( m_lastSaveFileName.lastIndexOf( "." ) );
+    saveFileName.append( QString( "_frame_%1.png" ).arg( ui->horizontalSliderPosition->value() + 1 ) );
+
+    //File Dialog
+    QString fileName = QFileDialog::getSaveFileName( this, tr("Export..."),
+                                                    saveFileName,
+                                                    "16bit PNG (*.png)" );
+
+    //Exit if not an PNG file or aborted
+    if( fileName == QString( "" )
+            || !fileName.endsWith( ".png", Qt::CaseInsensitive ) ) return;
+
+    png_image image;
+    memset( &image, 0, sizeof image );
+    image.version = PNG_IMAGE_VERSION;
+    image.format = PNG_FORMAT_LINEAR_RGB;
+    image.width = getMlvWidth( m_pMlvObject );
+    image.height = getMlvHeight( m_pMlvObject );
+    image.flags = PNG_IMAGE_FLAG_16BIT_sRGB;
+    png_bytep buffer;
+    buffer = (png_bytep)malloc( PNG_IMAGE_SIZE( image ) );
+
+    //Get frame from library
+    getMlvProcessedFrame16( m_pMlvObject, ui->horizontalSliderPosition->value(), (uint16_t*)buffer );
+
+    png_image_write_to_file( &image, fileName.toLatin1().data(), 0, buffer, 0, NULL );
+    free( buffer );
+    png_image_free( &image );
 }
 
 //Enable / Disable the highlight reconstruction
@@ -2518,14 +2557,30 @@ void MainWindow::on_checkBoxRawFixEnable_clicked(bool checked)
 }
 
 //Activate & Deactivate wbPicker
-void MainWindow::on_actionWhiteBalancePicker_triggered(bool checked)
+void MainWindow::on_actionWhiteBalancePicker_toggled(bool checked)
 {
     ui->graphicsView->setWbPickerActive( checked );
+    m_pScene->setWbPickerActive( checked );
 }
 
 //wb picking ready
 void MainWindow::whiteBalancePicked( int x, int y )
 {
     ui->actionWhiteBalancePicker->setChecked( false );
+
+    //Quit if no mlv loaded
+    if( !m_fileLoaded ) return;
+
+    //Some math if in stretch (fit) mode
+    if( ui->actionZoomFit->isChecked() )
+    {
+        x *= getMlvWidth( m_pMlvObject ) / m_pScene->width();
+        y *= getMlvHeight( m_pMlvObject ) / m_pScene->height();
+    }
+
+    //Quit if click not in picture
+    if( x < 0 || y < 0 || x > getMlvWidth( m_pMlvObject ) || y > getMlvHeight( m_pMlvObject ) ) return;
+
     //TODO: send to Ilias lib and get sliderpos
+    qDebug() << "Click in Scene:" << x << y;
 }
