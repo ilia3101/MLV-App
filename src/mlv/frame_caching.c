@@ -155,8 +155,8 @@ int find_mlv_frame_to_cache(mlvObject_t * video, uint64_t *index) /* Outputs to 
 /* Adds one thread, active total can be checked in mlvObject->cache_thread_count */
 void add_mlv_cache_thread(mlvObject_t * video)
 {
-    pthread_t * thread = malloc(sizeof(pthread_t));
-    pthread_create(thread, NULL, (void *)an_mlv_cache_thread, (void *)video);
+    pthread_t thread;
+    pthread_create(&thread, NULL, (void *)an_mlv_cache_thread, (void *)video);
 }
 
 /* Add as many of these as you want :) */
