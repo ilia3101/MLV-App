@@ -107,7 +107,7 @@ void setMlvRawCacheLimitFrames(mlvObject_t * video, uint64_t frameLimit)
         /* Resize cache block - to maximum allowed or enough to fit whole clip if it is smaller */
         video->cache_memory_block = realloc(video->cache_memory_block, MIN(bytes_limit, cache_whole));
         /* Array of frame pointers within the memory block */
-        video->rgb_raw_frames = realloc(video->rgb_raw_frames, frameLimit * sizeof(uint16_t *));
+        video->rgb_raw_frames = realloc(video->rgb_raw_frames, frame_limit * sizeof(uint16_t *));
         for (uint64_t i = 0; i < getMlvRawCacheLimitFrames(video); ++i) video->rgb_raw_frames[i] = video->cache_memory_block + (frame_pix * i);
 
         video->stop_caching = 0;
