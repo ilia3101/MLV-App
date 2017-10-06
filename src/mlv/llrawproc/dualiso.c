@@ -108,7 +108,13 @@ int diso_get_preview(uint16_t * image_data, uint16_t width, uint16_t height, int
         return 0;
     }
     
-    if(diso_check) return 1;
+    if(diso_check)
+    {
+#ifndef STDOUT_SILENT
+        err_printf("\nDetected dual ISO interlaced lines\n");
+#endif
+        return 1;
+    }
 
     /* compare the two histograms and plot the curve between the two exposures (dark as a function of bright) */
     const int min_pix = 100;                                /* extract a data point every N image pixels */
