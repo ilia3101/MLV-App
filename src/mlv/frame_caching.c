@@ -219,9 +219,7 @@ void an_mlv_cache_thread(mlvObject_t * video)
             pix[1] = (uint16_t)MIN(green1d[i], 65535);
             pix[2] = (uint16_t)MIN(blue1d[i], 65535);
         }
-        
-                printf("\n\n\n\n\nSTILL ALIVE\n\n\n\n\n");
-
+       
         video->cached_frames[cache_frame] = MLV_FRAME_IS_CACHED;
 
         DEBUG( printf("Debayered frame %llu/%llu has been cached.\n", cache_frame+1, video->cache_limit_frames); )
