@@ -296,11 +296,15 @@ malloc_error:
 static int load_pixel_map(pixel_map * map, uint32_t camera_id, int raw_width, int raw_height)
 {
     const char * file_ext = ".fpm";
+#ifndef STDOUT_SILENT
     const char * map_type = "focus";
+#endif
     if(map->type)
     {
         file_ext = ".bpm";
+#ifndef STDOUT_SILENT
         map_type = "bad";
+#endif
     }
 
     char file_name[1024];
@@ -657,7 +661,31 @@ static void fpm_crop_rec(pixel_map * map, int pattern, int32_t raw_width)
     }
     else if(pattern == PATTERN_B)
     {
-        fpm_mv720(map, pattern, raw_width); // crop_rec not yet available on the 100D
+        fpm_mv720(map, pattern, raw_width);
+
+        // second pass is like fpm_mv1080
+        int shift = 0;
+        int fp_start = 89;
+        int fp_end = 724;
+        int x_rep = 8;
+        int y_rep = 10;
+
+        for(int y = fp_start; y <= fp_end; y++)
+        {
+            if(((y + 0) % y_rep) == 0) shift=0;
+            else if(((y + 1) % y_rep) == 0) shift = 1;
+            else if(((y + 5) % y_rep) == 0) shift = 5;
+            else if(((y + 6) % y_rep) == 0) shift = 4;
+            else continue;
+
+            for(int x = 72; x <= raw_width; x++)
+            {
+                if(((x + shift) % x_rep) == 0)
+                {
+                    add_pixel_to_map(map, x, y);
+                }
+            }
+        }
     }
 }
 
