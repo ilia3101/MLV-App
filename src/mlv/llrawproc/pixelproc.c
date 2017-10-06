@@ -296,11 +296,15 @@ malloc_error:
 static int load_pixel_map(pixel_map * map, uint32_t camera_id, int raw_width, int raw_height)
 {
     const char * file_ext = ".fpm";
+#ifndef STDOUT_SILENT
     const char * map_type = "focus";
+#endif
     if(map->type)
     {
         file_ext = ".bpm";
+#ifndef STDOUT_SILENT
         map_type = "bad";
+#endif
     }
 
     char file_name[1024];
@@ -657,7 +661,31 @@ static void fpm_crop_rec(pixel_map * map, int pattern, int32_t raw_width)
     }
     else if(pattern == PATTERN_B)
     {
-        fpm_mv720(map, pattern, raw_width); // crop_rec not yet available on the 100D
+        fpm_mv720(map, pattern, raw_width);
+
+        // second pass is like fpm_mv1080
+        int shift = 0;
+        int fp_start = 89;
+        int fp_end = 724;
+        int x_rep = 8;
+        int y_rep = 10;
+
+        for(int y = fp_start; y <= fp_end; y++)
+        {
+            if(((y + 0) % y_rep) == 0) shift=0;
+            else if(((y + 1) % y_rep) == 0) shift = 1;
+            else if(((y + 5) % y_rep) == 0) shift = 5;
+            else if(((y + 6) % y_rep) == 0) shift = 4;
+            else continue;
+
+            for(int x = 72; x <= raw_width; x++)
+            {
+                if(((x + shift) % x_rep) == 0)
+                {
+                    add_pixel_to_map(map, x, y);
+                }
+            }
+        }
     }
 }
 
@@ -814,6 +842,20 @@ fpm_check:
         }
         case 2: // interpolate pixels
         {
+#ifndef STDOUT_SILENT
+            if(dual_iso)
+            {
+                printf("Using fpi method for dualiso: 'HORIZONTAL'\n");
+            }
+            else if(average_method)
+            {
+                printf("Using fpi method: 'RAW2DNG'\n");
+            }
+            else
+            {
+                printf("Using fpi method: 'MLVFS'\n");
+            }
+#endif
             for (size_t m = 0; m < focus_pixel_map->count; m++)
             {
                 int x = focus_pixel_map->pixels[m].x - cropX;
@@ -917,7 +959,16 @@ bpm_check:
         case 1: // search for bad pixels
         {
 #ifndef STDOUT_SILENT
-            printf("\nSearching for bad pixel types:\n");
+            const char * method = NULL;
+            if (aggressive)
+            {
+                method = "AGGRESSIVE";
+            }
+            else
+            {
+                method = "NORMAL";
+            }
+            printf("\nSearching for bad pixels using revealing method: '%s'\n", method);
 #endif
             //just guess the dark noise for speed reasons
             int dark_noise = 12;
@@ -982,19 +1033,7 @@ bpm_check:
             }
             
 #ifndef STDOUT_SILENT
-            const char * method = NULL;
-            if (aggressive)
-            {
-                method = "AGGRESSIVE";
-            }
-            else
-            {
-                method = "NORMAL";
-            }
-
-            printf("\nUsing bad pixel revealing method: '%s'\n", method);
-            if (dual_iso) printf("Dualiso iterpolation method 'HORIZONTAL'\n");
-            printf(""FMT_SIZE" bad pixels found (crop: %d, %d)\n", bad_pixel_map->count, cropX, cropY);
+            printf(""FMT_SIZE" bad pixels found\n", bad_pixel_map->count);
 #endif
 
             if (bad_pixel_map->count)
@@ -1009,6 +1048,20 @@ bpm_check:
         }
         case 2: // interpolate pixels
         {
+#ifndef STDOUT_SILENT
+            if(dual_iso)
+            {
+                printf("Using bpi method for dualiso: 'HORIZONTAL'\n");
+            }
+            else if(average_method)
+            {
+                printf("Using bpi method: 'RAW2DNG'\n");
+            }
+            else
+            {
+                printf("Using bpi method: 'MLVFS'\n");
+            }
+#endif
             for (size_t m = 0; m < bad_pixel_map->count; m++)
             {
                 int x = bad_pixel_map->pixels[m].x - cropX;

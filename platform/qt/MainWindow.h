@@ -18,9 +18,6 @@
 #include <QProcess>
 #include <QVector>
 #include <QGraphicsPixmapItem>
-#include <QByteArray>
-#include <QDataStream>
-#include <QAudioOutput>
 #include "../../src/mlv_include.h"
 #include "InfoDialog.h"
 #include "StatusDialog.h"
@@ -28,6 +25,8 @@
 #include "WaveFormMonitor.h"
 #include "AudioWave.h"
 #include "ReceiptSettings.h"
+#include "AudioPlayback.h"
+#include "GraphicsPickerScene.h"
 
 namespace Ui {
 class MainWindow;
@@ -65,6 +64,7 @@ private slots:
     void on_horizontalSliderSharpen_valueChanged(int position);
     void on_actionGoto_First_Frame_triggered();
     void on_actionExport_triggered();
+    void on_actionExportActualFrame_triggered();
     void on_checkBoxHighLightReconstruction_toggled(bool checked);
     void on_comboBoxProfile_currentIndexChanged(int index);
     void on_actionZoomFit_triggered(bool on);
@@ -117,8 +117,14 @@ private slots:
     void on_comboBoxVerticalStripesSwitch_currentIndexChanged(int index);
     void on_spinBoxDeflickerTarget_valueChanged(int arg1);
     void on_comboBoxDualISO_currentIndexChanged(int index);
+    void on_comboBoxDualISOInterpolation_currentIndexChanged(int index);
+    void on_comboBoxDualISOAliasMap_currentIndexChanged(int index);
+    void on_comboBoxDualISOFullresBlending_currentIndexChanged(int index);
     void on_actionNextFrame_triggered();
     void on_actionPreviousFrame_triggered();
+    void on_checkBoxRawFixEnable_clicked(bool checked);
+    void on_actionWhiteBalancePicker_toggled(bool checked);
+    void whiteBalancePicked( int x, int y );
 
 
 private:
@@ -128,10 +134,11 @@ private:
     Histogram *m_pHistogram;
     WaveFormMonitor *m_pWaveFormMonitor;
     AudioWave *m_pAudioWave;
+    AudioPlayback *m_pAudioPlayback;
     mlvObject_t *m_pMlvObject;
     processingObject_t *m_pProcessingObject;
     QGraphicsPixmapItem *m_pGraphicsItem;
-    QGraphicsScene* m_pScene;
+    GraphicsPickerScene* m_pScene;
     QLabel *m_pCachingStatus;
     QLabel *m_pFpsStatus;
     QLabel *m_pFrameNumber;
@@ -149,6 +156,7 @@ private:
     int m_timerId;
     int m_timerCacheId;
     bool m_fpsOverride;
+    bool m_tryToSyncAudio;
     bool m_audioExportEnabled;
     double m_frameRate;
     QString m_lastSaveFileName;
@@ -158,9 +166,6 @@ private:
     QVector<ReceiptSettings*> m_exportQueue;
     int m_lastActiveClipInSession;
     int m_styleSelection;
-    QByteArray *m_pByteArrayAudio;
-    QDataStream *m_pAudioStream;
-    QAudioOutput *m_pAudioOutput;
     void drawFrame( void );
     void openMlv( QString fileName );
     void playbackHandling( int timeDiff );
@@ -184,6 +189,7 @@ private:
     void paintAudioTrack( void );
     void drawZebras( void );
     void drawFrameNumberLabel( void );
+    void setDualIsoIfDetected( void );
 
 signals:
     void exportReady( void );

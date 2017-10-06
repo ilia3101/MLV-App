@@ -97,7 +97,9 @@ static void horizontal_edge_aware_blur_rggb(
     int16_t bg[NMAX];
     if (strength > NMAX)
     {
+#ifndef STDOUT_SILENT
         printf("FIXME: blur too strong\n");
+#endif
         return;
     }
     

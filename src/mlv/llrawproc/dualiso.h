@@ -25,7 +25,7 @@
 #include <sys/types.h>
 #include "../raw.h"
 
-int diso_get_preview(struct raw_info * raw_info, uint16_t width, uint16_t height, uint16_t * image_data, size_t max_size);
-int diso_get_full20bit(struct raw_info raw_info, uint16_t * image_data, int interp_method, int use_fullres, int use_alias_map, int chroma_smooth_method);
+int diso_get_preview(uint16_t * image_data, uint16_t width, uint16_t height, int32_t black, int32_t white, int diso_check);
+int diso_get_full20bit(struct raw_info raw_info, uint16_t * image_data, int interp_method, int use_alias_map, int use_fullres, int chroma_smooth_method);
 
 #endif

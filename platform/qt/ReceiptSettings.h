@@ -28,6 +28,7 @@ public:
     void setProfile( uint8_t num )  {m_profile = num;}
     void setFileName( QString fileName )      {m_fileName = fileName;}
     void setExportFileName( QString fileName ){m_exportFileName = fileName;}
+    void setRawFixesEnabled( bool on )        {m_rawFixesEnabled = on;}
     void setVerticalStripes( int mode )       {m_vertical_stripes = mode;}
     void setFocusPixels( int mode )           {m_focus_pixels = mode;}
     void setFpiMethod( int mode )             {m_fpi_method = mode;}
@@ -36,7 +37,10 @@ public:
     void setChromaSmooth( int mode )          {m_chroma_smooth = mode;}
     void setPatternNoise( int on )            {m_pattern_noise = on;}
     void setDeflickerTarget( int value )      {m_deflicker_target = value;}
-    void setDualIso( int mode )               {m_dualIso = mode;}
+    void setDualIso( int mode )               {m_dualIsoOn = mode;}
+    void setDualIsoInterpolation( int mode )  {m_dualIsoInt = mode;}
+    void setDualIsoAliasMap( int on )         {m_dualIsoAliasMap = on;}
+    void setDualIsoFrBlending( int on )       {m_dualIsoFrBlending = on;}
     int exposure( void )   {return m_exposure;}
     int temperature( void ){return m_temperature;}
     int tint( void )       {return m_tint;}
@@ -48,6 +52,7 @@ public:
     int lightening( void ) {return m_lightening;}
     int sharpen( void )    {return m_sharpen;}
     bool isHighlightReconstruction( void ){return m_highlightReconstruction;}
+    bool rawFixesEnabled( void ){return m_rawFixesEnabled;}
     int verticalStripes( void ){return m_vertical_stripes;}
     int focusPixels( void ){return m_focus_pixels;}
     int fpiMethod( void )  {return m_fpi_method;}
@@ -56,7 +61,10 @@ public:
     int chromaSmooth( void ){return m_chroma_smooth;}
     int patternNoise( void ){return m_pattern_noise;}
     int deflickerTarget( void ){return m_deflicker_target;}
-    int dualIso( void )    {return m_dualIso;}
+    int dualIso( void )    {return m_dualIsoOn;}
+    int dualIsoInterpolation( void ){return m_dualIsoInt;}
+    int dualIsoAliasMap( void ){return m_dualIsoAliasMap;}
+    int dualIsoFrBlending( void ){return m_dualIsoFrBlending;}
     uint8_t profile( void ){return m_profile;}
     QString fileName( void ){return m_fileName;}
     QString exportFileName( void ){return m_exportFileName;}
@@ -73,6 +81,7 @@ private:
     int m_lightening;
     int m_sharpen;
     bool m_highlightReconstruction;
+    bool m_rawFixesEnabled; // Enable/Disable all raw fixes
     int m_vertical_stripes; // fix vertical stripes, 0 - do not fix", 1 - fix, 2 - calculate for every frame
     int m_focus_pixels;     // fix focus pixels, false - do not fix, true - fix
     int m_fpi_method;       // focus pixel interpolation method: 0 - mlvfs, 1 - raw2dng
@@ -81,7 +90,10 @@ private:
     int m_chroma_smooth;    // chroma smooth, 2 - cs2x2, 3 cs3x3, 5 - cs5x5
     int m_pattern_noise;    // fix pattern noise (0, 1)
     int m_deflicker_target; // deflicker value
-    int m_dualIso;          // DualISO, 0 = off, 1 = on, 2 = preview
+    int m_dualIsoOn;        // DualISO, 0 = off, 1 = on, 2 = preview
+    int m_dualIsoInt;       // DualIsoInterpolation method, 0 - amaze-edge, 1 - mean23
+    int m_dualIsoAliasMap;  // flag for Alias Map switchin on/off
+    int m_dualIsoFrBlending;// flag for Fullres Blending switching on/off
     uint8_t m_profile;
     QString m_fileName;
     QString m_exportFileName;

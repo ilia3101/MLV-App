@@ -60,6 +60,9 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     //Init the lib
     initLib();
 
+    //Setup AudioPlayback
+    m_pAudioPlayback = new AudioPlayback( m_pMlvObject );
+
     //Set timers
     m_timerId = startTimer( 40 ); //25fps initially only, is set after import
     m_timerCacheId = startTimer( 1000 ); //1fps
@@ -119,6 +122,7 @@ MainWindow::~MainWindow()
 
     killTimer( m_timerId );
     killTimer( m_timerCacheId );
+    delete m_pAudioPlayback;
     delete m_pAudioWave;
     delete m_pHistogram;
     delete m_pStatusDialog;
@@ -290,8 +294,8 @@ void MainWindow::drawFrame( void )
 {
     m_frameStillDrawing = true;
 
-    //enable low level raw fixes
-    m_pMlvObject->llrawproc->fix_raw = 1;
+    //enable low level raw fixes (if wanted)
+    if( ui->checkBoxRawFixEnable->isChecked() ) m_pMlvObject->llrawproc->fix_raw = 1;
 
     //Get frame from library
     getMlvProcessedFrame8( m_pMlvObject, ui->horizontalSliderPosition->value(), m_pRawImage );
@@ -367,6 +371,15 @@ void MainWindow::drawFrame( void )
                                                                    Qt::IgnoreAspectRatio, Qt::SmoothTransformation) ) ); //alternative: Qt::FastTransformation
         ui->labelHistogram->setAlignment( Qt::AlignCenter ); //Always in the middle
     }
+    //Sync Audio
+    if( m_tryToSyncAudio && ui->actionAudioOutput->isChecked() && ui->actionPlay->isChecked() && ui->actionDropFrameMode->isChecked() )
+    {
+        m_tryToSyncAudio = false;
+        m_pAudioPlayback->stop();
+        m_pAudioPlayback->jumpToPos( ui->horizontalSliderPosition->value() );
+        m_pAudioPlayback->play();
+    }
+
     m_frameStillDrawing = false;
 }
 
@@ -491,6 +504,9 @@ void MainWindow::openMlv( QString fileName )
     if( ui->actionAlwaysUseAMaZE->isChecked() ) setMlvAlwaysUseAmaze( m_pMlvObject );
     else setMlvDontAlwaysUseAmaze( m_pMlvObject );
 
+    //Load audio
+    m_pAudioPlayback->loadAudio( m_pMlvObject );
+
     m_fileLoaded = true;
 
     //Audio Track
@@ -504,6 +520,7 @@ void MainWindow::openMlv( QString fileName )
 
     //Enable export now
     ui->actionExport->setEnabled( true );
+    ui->actionExportActualFrame->setEnabled( true );
 
     m_frameChanged = true;
 }
@@ -520,6 +537,12 @@ void MainWindow::playbackHandling(int timeDiff)
             {
                 //Loop, goto first frame
                 ui->horizontalSliderPosition->setValue( 0 );
+                //Sync audio
+                if( ui->actionAudioOutput->isChecked()
+                 && ui->actionDropFrameMode->isChecked() )
+                {
+                    m_tryToSyncAudio = true;
+                }
             }
             else
             {
@@ -539,9 +562,15 @@ void MainWindow::playbackHandling(int timeDiff)
             else
             {
                 m_newPosDropMode += (getFramerate() * (double)timeDiff / 1000.0);
+                //Loop!
                 if( ui->actionLoop->isChecked() && ( m_newPosDropMode > getMlvFrames( m_pMlvObject ) ) )
                 {
                     m_newPosDropMode -= getMlvFrames( m_pMlvObject );
+                    //Sync audio
+                    if( ui->actionAudioOutput->isChecked() )
+                    {
+                        m_tryToSyncAudio = true;
+                    }
                 }
                 ui->horizontalSliderPosition->setValue( m_newPosDropMode );
             }
@@ -565,6 +594,7 @@ void MainWindow::initGui( void )
     m_pHistogram = new Histogram();
     ui->actionShowHistogram->setChecked( true );
     m_pWaveFormMonitor = new WaveFormMonitor( 200 );
+
     //AudioTrackWave
     m_pAudioWave = new AudioWave();
     QPixmap pic = QPixmap::fromImage( m_pAudioWave->getMonoWave( NULL, 0, 100, devicePixelRatio() ) );
@@ -578,17 +608,22 @@ void MainWindow::initGui( void )
     ui->actionPasteReceipt->setEnabled( false );
     //Disable export until file opened!
     ui->actionExport->setEnabled( false );
+    ui->actionExportActualFrame->setEnabled( false );
     //Set fit to screen as default zoom
     ui->actionZoomFit->setChecked( true );
+    //Make whiteBalance picker invisible, so nobody asks why it does not work :-)
+    ui->actionWhiteBalancePicker->setVisible( false );
+    ui->toolButtonWb->setVisible( false );
 
     //Set up image in GUI
     QImage image(":/IMG/IMG/histogram.png");
     m_pGraphicsItem = new QGraphicsPixmapItem( QPixmap::fromImage(image) );
-    m_pScene = new QGraphicsScene( this );
+    m_pScene = new GraphicsPickerScene( this );
     m_pScene->addItem( m_pGraphicsItem );
     ui->graphicsView->setScene( m_pScene );
     ui->graphicsView->show();
     connect( ui->graphicsView, SIGNAL( customContextMenuRequested(QPoint) ), this, SLOT( pictureCustomContextMenuRequested(QPoint) ) );
+    connect( m_pScene, SIGNAL( wbPicked(int,int) ), this, SLOT( whiteBalancePicked(int,int) ) );
 
     //Set up caching status label
     m_pCachingStatus = new QLabel( statusBar() );
@@ -716,8 +751,8 @@ void MainWindow::startExport(QString fileName)
 
     // we always get amaze frames for exporting
     setMlvAlwaysUseAmaze( m_pMlvObject );
-    //enable low level raw fixes
-    m_pMlvObject->llrawproc->fix_raw = 1;
+    //enable low level raw fixes (if wanted)
+    if( ui->checkBoxRawFixEnable->isChecked() ) m_pMlvObject->llrawproc->fix_raw = 1;
 
     //StatusDialog
     m_pStatusDialog->ui->progressBar->setMaximum( getMlvFrames( m_pMlvObject ) * 2 );
@@ -944,6 +979,11 @@ void MainWindow::openSession(QString fileName)
                                 m_pSessionReceipts.last()->setProfile( (uint8_t)Rxml.readElementText().toUInt() );
                                 Rxml.readNext();
                             }
+                            else if( Rxml.isStartElement() && Rxml.name() == "rawFixesEnabled" )
+                            {
+                                m_pSessionReceipts.last()->setRawFixesEnabled( (bool)Rxml.readElementText().toInt() );
+                                Rxml.readNext();
+                            }
                             else if( Rxml.isStartElement() && Rxml.name() == "verticalStripes" )
                             {
                                 m_pSessionReceipts.last()->setVerticalStripes( Rxml.readElementText().toInt() );
@@ -987,6 +1027,21 @@ void MainWindow::openSession(QString fileName)
                             else if( Rxml.isStartElement() && Rxml.name() == "dualIso" )
                             {
                                 m_pSessionReceipts.last()->setDualIso( Rxml.readElementText().toInt() );
+                                Rxml.readNext();
+                            }
+                            else if( Rxml.isStartElement() && Rxml.name() == "dualIsoInterpolation" )
+                            {
+                                m_pSessionReceipts.last()->setDualIsoInterpolation( Rxml.readElementText().toInt() );
+                                Rxml.readNext();
+                            }
+                            else if( Rxml.isStartElement() && Rxml.name() == "dualIsoAliasMap" )
+                            {
+                                m_pSessionReceipts.last()->setDualIsoAliasMap( Rxml.readElementText().toInt() );
+                                Rxml.readNext();
+                            }
+                            else if( Rxml.isStartElement() && Rxml.name() == "dualIsoFrBlending" )
+                            {
+                                m_pSessionReceipts.last()->setDualIsoFrBlending( Rxml.readElementText().toInt() );
                                 Rxml.readNext();
                             }
                             else if( Rxml.isStartElement() ) //future features
@@ -1068,6 +1123,7 @@ void MainWindow::saveSession(QString fileName)
         xmlWriter.writeTextElement( "sharpen",                 QString( "%1" ).arg( m_pSessionReceipts.at(i)->sharpen() ) );
         xmlWriter.writeTextElement( "highlightReconstruction", QString( "%1" ).arg( m_pSessionReceipts.at(i)->isHighlightReconstruction() ) );
         xmlWriter.writeTextElement( "profile",                 QString( "%1" ).arg( m_pSessionReceipts.at(i)->profile() ) );
+        xmlWriter.writeTextElement( "rawFixesEnabled",         QString( "%1" ).arg( m_pSessionReceipts.at(i)->rawFixesEnabled() ) );
         xmlWriter.writeTextElement( "verticalStripes",         QString( "%1" ).arg( m_pSessionReceipts.at(i)->verticalStripes() ) );
         xmlWriter.writeTextElement( "focusPixels",             QString( "%1" ).arg( m_pSessionReceipts.at(i)->focusPixels() ) );
         xmlWriter.writeTextElement( "fpiMethod",               QString( "%1" ).arg( m_pSessionReceipts.at(i)->fpiMethod() ) );
@@ -1077,6 +1133,9 @@ void MainWindow::saveSession(QString fileName)
         xmlWriter.writeTextElement( "patternNoise",            QString( "%1" ).arg( m_pSessionReceipts.at(i)->patternNoise() ) );
         xmlWriter.writeTextElement( "deflickerTarget",         QString( "%1" ).arg( m_pSessionReceipts.at(i)->deflickerTarget() ) );
         xmlWriter.writeTextElement( "dualIso",                 QString( "%1" ).arg( m_pSessionReceipts.at(i)->dualIso() ) );
+        xmlWriter.writeTextElement( "dualIsoInterpolation",    QString( "%1" ).arg( m_pSessionReceipts.at(i)->dualIsoInterpolation() ) );
+        xmlWriter.writeTextElement( "dualIsoAliasMap",         QString( "%1" ).arg( m_pSessionReceipts.at(i)->dualIsoAliasMap() ) );
+        xmlWriter.writeTextElement( "dualIsoFrBlending",       QString( "%1" ).arg( m_pSessionReceipts.at(i)->dualIsoFrBlending() ) );
         xmlWriter.writeEndElement();
     }
     xmlWriter.writeEndElement();
@@ -1113,6 +1172,7 @@ void MainWindow::deleteSession()
 
     //Export not possible without mlv file
     ui->actionExport->setEnabled( false );
+    ui->actionExportActualFrame->setEnabled( false );
 
     //Set Clip Info to Dialog
     m_pInfoDialog->ui->tableWidget->item( 0, 1 )->setText( "-" );
@@ -1165,9 +1225,12 @@ void MainWindow::setSliders(ReceiptSettings *receipt)
     ui->horizontalSliderSharpen->setValue( receipt->sharpen() );
 
     ui->checkBoxHighLightReconstruction->setChecked( receipt->isHighlightReconstruction() );
+    on_checkBoxHighLightReconstruction_toggled( receipt->isHighlightReconstruction() );
     ui->comboBoxProfile->setCurrentIndex( receipt->profile() );
     on_comboBoxProfile_currentIndexChanged( receipt->profile() );
 
+    ui->checkBoxRawFixEnable->setChecked( receipt->rawFixesEnabled() );
+    on_checkBoxRawFixEnable_clicked( receipt->rawFixesEnabled() );
     ui->comboBoxVerticalStripesSwitch->setCurrentIndex( receipt->verticalStripes() );
     on_comboBoxVerticalStripesSwitch_currentIndexChanged( receipt->verticalStripes() );
     ui->comboBoxFocusPixelSwitch->setCurrentIndex( receipt->focusPixels() );
@@ -1186,6 +1249,12 @@ void MainWindow::setSliders(ReceiptSettings *receipt)
     on_spinBoxDeflickerTarget_valueChanged( receipt->deflickerTarget() );
     ui->comboBoxDualISO->setCurrentIndex( receipt->dualIso() );
     on_comboBoxDualISO_currentIndexChanged( receipt->dualIso() );
+    ui->comboBoxDualISOInterpolation->setCurrentIndex( receipt->dualIsoInterpolation() );
+    on_comboBoxDualISOInterpolation_currentIndexChanged( receipt->dualIsoInterpolation() );
+    ui->comboBoxDualISOAliasMap->setCurrentIndex( receipt->dualIsoAliasMap() );
+    on_comboBoxDualISOAliasMap_currentIndexChanged( receipt->dualIsoAliasMap() );
+    ui->comboBoxDualISOFullresBlending->setCurrentIndex( receipt->dualIsoFrBlending() );
+    on_comboBoxDualISOFullresBlending_currentIndexChanged( receipt->dualIsoFrBlending() );
     m_pMlvObject->current_cached_frame_active = 0;
 }
 
@@ -1205,6 +1274,7 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     receipt->setHighlightReconstruction( ui->checkBoxHighLightReconstruction->isChecked() );
     receipt->setProfile( ui->comboBoxProfile->currentIndex() );
 
+    receipt->setRawFixesEnabled( ui->checkBoxRawFixEnable->isChecked() );
     receipt->setVerticalStripes( ui->comboBoxVerticalStripesSwitch->currentIndex() );
     receipt->setFocusPixels( ui->comboBoxFocusPixelSwitch->currentIndex() );
     receipt->setFpiMethod( ui->comboBoxFocusPixelsInterpolationMethod->currentIndex() );
@@ -1214,11 +1284,16 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     receipt->setPatternNoise( ui->comboBoxPatternNoiseSwitch->currentIndex() );
     receipt->setDeflickerTarget( ui->spinBoxDeflickerTarget->value() );
     receipt->setDualIso( ui->comboBoxDualISO->currentIndex() );
+    receipt->setDualIsoInterpolation( ui->comboBoxDualISOInterpolation->currentIndex() );
+    receipt->setDualIsoAliasMap( ui->comboBoxDualISOAliasMap->currentIndex() );
+    receipt->setDualIsoFrBlending( ui->comboBoxDualISOFullresBlending->currentIndex() );
 }
 
 //Show the file in
 void MainWindow::showFileInEditor( int row )
 {
+    //Stop Playback
+    ui->actionPlay->setChecked( false );
     //Save slider receipt
     setReceipt( m_pSessionReceipts.at( m_lastActiveClipInSession ) );
     //Open new MLV
@@ -1246,6 +1321,7 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     receipt->setHighlightReconstruction( m_pSessionReceipts.at( row )->isHighlightReconstruction() );
     receipt->setProfile( m_pSessionReceipts.at( row )->profile() );
 
+    receipt->setRawFixesEnabled( m_pSessionReceipts.at( row )->rawFixesEnabled() );
     receipt->setVerticalStripes( m_pSessionReceipts.at( row )->verticalStripes() );
     receipt->setFocusPixels( m_pSessionReceipts.at( row )->focusPixels() );
     receipt->setFpiMethod( m_pSessionReceipts.at( row )->fpiMethod() );
@@ -1255,6 +1331,9 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     receipt->setPatternNoise( m_pSessionReceipts.at( row )->patternNoise() );
     receipt->setDeflickerTarget( m_pSessionReceipts.at( row )->deflickerTarget() );
     receipt->setDualIso( m_pSessionReceipts.at( row )->dualIso() );
+    receipt->setDualIsoInterpolation( m_pSessionReceipts.at( row )->dualIsoInterpolation() );
+    receipt->setDualIsoAliasMap( m_pSessionReceipts.at( row )->dualIsoAliasMap() );
+    receipt->setDualIsoFrBlending( m_pSessionReceipts.at( row )->dualIsoFrBlending() );
 
     receipt->setFileName( m_pSessionReceipts.at( row )->fileName() );
     receipt->setExportFileName( fileName );
@@ -1398,6 +1477,17 @@ void MainWindow::drawFrameNumberLabel( void )
     else
     {
         m_pFrameNumber->setText( tr( "Frame 0/0" ) );
+    }
+}
+
+//If the actual file is detected as dualIso, we set the combobox dualIso = preview
+void MainWindow::setDualIsoIfDetected( void )
+{
+    //qDebug() << "DualIsoCheck:" << m_pMlvObject->llrawproc->is_dual_iso;
+    if( m_pMlvObject->llrawproc->is_dual_iso )
+    {
+        ui->comboBoxDualISO->setCurrentIndex( 2 ); //2 = Preview
+        on_comboBoxDualISO_currentIndexChanged( 2 );
     }
 }
 
@@ -1565,6 +1655,14 @@ void MainWindow::on_actionGoto_First_Frame_triggered()
 {
     ui->horizontalSliderPosition->setValue( 0 );
     m_newPosDropMode = 0;
+
+    //Sync audio if playback and audio active
+    if( ui->actionAudioOutput->isChecked()
+     && ui->actionDropFrameMode->isChecked()
+     && ui->actionPlay->isChecked() )
+    {
+        m_tryToSyncAudio = true;
+    }
 }
 
 //Export clip
@@ -1640,6 +1738,41 @@ void MainWindow::on_actionExport_triggered()
 
     //startExport
     exportHandler();
+}
+
+//Export actual frame as 16bit png
+void MainWindow::on_actionExportActualFrame_triggered()
+{
+    //File name proposal
+    QString saveFileName = m_pSessionReceipts.at( m_lastActiveClipInSession )->fileName();
+    saveFileName = saveFileName.left( m_lastSaveFileName.lastIndexOf( "." ) );
+    saveFileName.append( QString( "_frame_%1.png" ).arg( ui->horizontalSliderPosition->value() + 1 ) );
+
+    //File Dialog
+    QString fileName = QFileDialog::getSaveFileName( this, tr("Export..."),
+                                                    saveFileName,
+                                                    "16bit PNG (*.png)" );
+
+    //Exit if not an PNG file or aborted
+    if( fileName == QString( "" )
+            || !fileName.endsWith( ".png", Qt::CaseInsensitive ) ) return;
+
+    png_image image;
+    memset( &image, 0, sizeof image );
+    image.version = PNG_IMAGE_VERSION;
+    image.format = PNG_FORMAT_LINEAR_RGB;
+    image.width = getMlvWidth( m_pMlvObject );
+    image.height = getMlvHeight( m_pMlvObject );
+    image.flags = PNG_IMAGE_FLAG_16BIT_sRGB;
+    png_bytep buffer;
+    buffer = (png_bytep)malloc( PNG_IMAGE_SIZE( image ) );
+
+    //Get frame from library
+    getMlvProcessedFrame16( m_pMlvObject, ui->horizontalSliderPosition->value(), (uint16_t*)buffer );
+
+    png_image_write_to_file( &image, fileName.toLatin1().data(), 0, buffer, 0, NULL );
+    free( buffer );
+    png_image_free( &image );
 }
 
 //Enable / Disable the highlight reconstruction
@@ -2215,46 +2348,23 @@ void RenderPngTask::run()
 //Play button pressed or toggled
 void MainWindow::on_actionPlay_triggered(bool checked)
 {
+    //If no audio, we have nothing to do here
+    if( !doesMlvHaveAudio( m_pMlvObject ) ) return;
+
     if( !checked )
     {
         //Stop Audio
-        m_pAudioOutput->stop();
-        delete m_pAudioOutput;
-        delete m_pAudioStream;
-        delete m_pByteArrayAudio;
+        m_pAudioPlayback->stop();
+        qApp->processEvents();
     }
     else
     {
         //Start Audio
-        //Set up the format, eg.
-        QAudioFormat format;
-        format.setSampleRate( getMlvSampleRate( m_pMlvObject ) );
-        format.setChannelCount( getMlvAudioChannels( m_pMlvObject ) );
-        format.setSampleSize( 16 );
-        format.setCodec( "audio/pcm" );
-        format.setByteOrder( QAudioFormat::LittleEndian );
-        format.setSampleType( QAudioFormat::SignedInt );
-        m_pAudioOutput = new QAudioOutput( format, this );
-
-        m_pByteArrayAudio = new QByteArray();
-        m_pAudioStream = new QDataStream(m_pByteArrayAudio, QIODevice::ReadWrite);
-
-        uint64_t audio_size = getMlvAudioSize( m_pMlvObject );
-        uint8_t * audio_data = ( uint8_t * ) malloc( audio_size );
-        getMlvAudioData( m_pMlvObject, ( int16_t* )audio_data );
-
-        for( uint64_t x = 0; x < audio_size; x++ )
-        {
-            (*m_pAudioStream) << (uint8_t)audio_data[x];
-        }
-
-        qint64 position = 4 * (qint64)( ui->horizontalSliderPosition->value() * getMlvSampleRate( m_pMlvObject ) / getMlvFramerate( m_pMlvObject ) );
-        m_pAudioStream->device()->seek( position );
-        m_pAudioOutput->setBufferSize( 32768000 );
-        m_pAudioOutput->setVolume( 1.0 );
         if( ui->actionAudioOutput->isChecked()
-         && ui->actionDropFrameMode->isChecked() ) m_pAudioOutput->start( m_pAudioStream->device() );
-        free( audio_data );
+         && ui->actionDropFrameMode->isChecked() )
+        {
+            m_tryToSyncAudio = true;
+        }
     }
 }
 
@@ -2354,7 +2464,46 @@ void MainWindow::on_spinBoxDeflickerTarget_valueChanged(int arg1)
 //Combobox DualISO changed
 void MainWindow::on_comboBoxDualISO_currentIndexChanged(int index)
 {
+    //In preview mode, the other dualIso options are grayed out
+    if( ( index == 1 ) && ui->checkBoxRawFixEnable->isChecked() )
+    {
+        ui->comboBoxDualISOInterpolation->setEnabled( true );
+        ui->comboBoxDualISOAliasMap->setEnabled( true );
+        ui->comboBoxDualISOFullresBlending->setEnabled( true );
+    }
+    else
+    {
+        ui->comboBoxDualISOInterpolation->setEnabled( false );
+        ui->comboBoxDualISOAliasMap->setEnabled( false );
+        ui->comboBoxDualISOFullresBlending->setEnabled( false );
+    }
+    //Set dualIso mode
     m_pMlvObject->llrawproc->dual_iso = index;
+    m_pMlvObject->current_cached_frame_active = 0;
+    m_frameChanged = true;
+}
+
+//Combobox DualISO Interpolation changed
+void MainWindow::on_comboBoxDualISOInterpolation_currentIndexChanged(int index)
+{
+    m_pMlvObject->llrawproc->diso_averaging = index;
+    m_pMlvObject->current_cached_frame_active = 0;
+    m_frameChanged = true;
+}
+
+//Combobox DualISO Alias Map changed
+void MainWindow::on_comboBoxDualISOAliasMap_currentIndexChanged(int index)
+{
+    m_pMlvObject->llrawproc->diso_alias_map = index;
+    m_pMlvObject->current_cached_frame_active = 0;
+    m_frameChanged = true;
+}
+
+//Combobox DualISO Fullres Blending changed
+void MainWindow::on_comboBoxDualISOFullresBlending_currentIndexChanged(int index)
+{
+    m_pMlvObject->llrawproc->diso_frblending = index;
+    m_pMlvObject->current_cached_frame_active = 0;
     m_frameChanged = true;
 }
 
@@ -2368,4 +2517,70 @@ void MainWindow::on_actionNextFrame_triggered()
 void MainWindow::on_actionPreviousFrame_triggered()
 {
     ui->horizontalSliderPosition->setValue( ui->horizontalSliderPosition->value() - 1 );
+}
+
+//En-/disable all raw corrections
+void MainWindow::on_checkBoxRawFixEnable_clicked(bool checked)
+{
+    //Set llrawproc en-/disable here
+    if( checked ) m_pMlvObject->llrawproc->fix_raw = 1;
+    else m_pMlvObject->llrawproc->fix_raw = 0;
+    m_pMlvObject->current_cached_frame_active = 0;
+    m_frameChanged = true;
+
+    //Set GUI elements
+    ui->FocusPixelsLabel->setEnabled( checked );
+    ui->FocusPixelsInterpolationMethodLabel->setEnabled( checked );
+    ui->BadPixelsLabel->setEnabled( checked );
+    ui->BadPixelsInterpolationMethodLabel->setEnabled( checked );
+    ui->ChromaSmoothLabel->setEnabled( checked );
+    ui->PatternNoiseLabel->setEnabled( checked );
+    ui->VerticalStripesLabel->setEnabled( checked );
+    ui->DeflickerTargetLabel->setEnabled( checked );
+    ui->DualISOLabel->setEnabled( checked );
+    ui->DualISOInterpolationLabel->setEnabled( checked );
+    ui->DualISOAliasMapLabel->setEnabled( checked );
+    ui->DualISOFullresBlendingLabel->setEnabled( checked );
+
+    ui->comboBoxFocusPixelSwitch->setEnabled( checked );
+    ui->comboBoxFocusPixelsInterpolationMethod->setEnabled( checked );
+    ui->comboBoxBadPixelsSwitch->setEnabled( checked );
+    ui->comboBoxBadPixelsInterpolationMethod->setEnabled( checked );
+    ui->comboBoxChromaSmoothSwitch->setEnabled( checked );
+    ui->comboBoxPatternNoiseSwitch->setEnabled( checked );
+    ui->comboBoxVerticalStripesSwitch->setEnabled( checked );
+    ui->spinBoxDeflickerTarget->setEnabled( checked );
+    ui->comboBoxDualISO->setEnabled( checked );
+    ui->comboBoxDualISOInterpolation->setEnabled( checked && ( ui->comboBoxDualISO->currentIndex() == 1 ) );
+    ui->comboBoxDualISOAliasMap->setEnabled( checked && ( ui->comboBoxDualISO->currentIndex() == 1 ) );
+    ui->comboBoxDualISOFullresBlending->setEnabled( checked && ( ui->comboBoxDualISO->currentIndex() == 1 ) );
+}
+
+//Activate & Deactivate wbPicker
+void MainWindow::on_actionWhiteBalancePicker_toggled(bool checked)
+{
+    ui->graphicsView->setWbPickerActive( checked );
+    m_pScene->setWbPickerActive( checked );
+}
+
+//wb picking ready
+void MainWindow::whiteBalancePicked( int x, int y )
+{
+    ui->actionWhiteBalancePicker->setChecked( false );
+
+    //Quit if no mlv loaded
+    if( !m_fileLoaded ) return;
+
+    //Some math if in stretch (fit) mode
+    if( ui->actionZoomFit->isChecked() )
+    {
+        x *= getMlvWidth( m_pMlvObject ) / m_pScene->width();
+        y *= getMlvHeight( m_pMlvObject ) / m_pScene->height();
+    }
+
+    //Quit if click not in picture
+    if( x < 0 || y < 0 || x > getMlvWidth( m_pMlvObject ) || y > getMlvHeight( m_pMlvObject ) ) return;
+
+    //TODO: send to Ilias lib and get sliderpos
+    qDebug() << "Click in Scene:" << x << y;
 }

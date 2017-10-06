@@ -87,7 +87,9 @@ SOURCES += \
     AudioWave.cpp \
     ResizeLabel.cpp \
     GraphicsZoomView.cpp \
-    JumpSlider.cpp
+    JumpSlider.cpp \
+    AudioPlayback.cpp \
+    GraphicsPickerScene.cpp
 
 HEADERS += \
         MainWindow.h \
@@ -125,7 +127,9 @@ HEADERS += \
     ResizeLabel.h \
     GraphicsZoomView.h \
     DarkStyle.h \
-    JumpSlider.h
+    JumpSlider.h \
+    AudioPlayback.h \
+    GraphicsPickerScene.h
 
 FORMS += \
         MainWindow.ui \
