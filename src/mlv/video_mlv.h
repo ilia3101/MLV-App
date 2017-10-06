@@ -122,6 +122,23 @@ void getMlvAudioData(mlvObject_t * video, int16_t * outputAudio);
  ********* PRIVATE AREA *********
  ********************************/
 
+
+/* Add as many of these as you want :) */
+void an_mlv_cache_thread(mlvObject_t * video);
+
+/* Marks all frames as not cached */
+void mark_mlv_uncached(mlvObject_t * video);
+
+/* Clears cache by freeing then reallocating (RAM usage down until frames written) */
+void clear_mlv_cache(mlvObject_t * video);
+
+/* Returns 1 on success, or 0 if all are cached */
+int find_mlv_frame_to_cache(mlvObject_t * video, uint64_t *index); /* Outputs to *index */
+
+/* Adds one thread, active total can be checked in mlvObject->cache_thread_count */
+void add_mlv_cache_thread(mlvObject_t * video);
+
+/* OLD DEPRACTEDFSDJKHJKLAJSKDLJ KLSDJKL AJSD LKSAJDLKSAJDLK DKJS */
 void cache_mlv_frames(mlvObject_t * video);
 
 /* Gets a debayered frame; how is it different from getMlvRawFrameDebayered?... it doesn't get it from cache ever

@@ -69,7 +69,6 @@ void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outpu
     /* Move to start of frame in file and read the RAW data */
     file_set_pos(video->file, video->frame_offsets[frameIndex], SEEK_SET);
 
-    /* If size is smaller than it should be, it must be compressed */
     if (video->MLVI.videoClass & MLV_VIDEO_CLASS_FLAG_LJ92)
     {
         int raw_data_size = video->frame_sizes[frameIndex];
@@ -149,35 +148,39 @@ void getMlvRawFrameDebayered(mlvObject_t * video, uint64_t frameIndex, uint16_t 
     int height = getMlvHeight(video);
     int frame_size = width * height * sizeof(uint16_t) * 3;
 
-    /* If frame is cached just giv it */
-    if (video->cached_frames[frameIndex])
-    {
-        pthread_mutex_lock(&video->cache_mutex);
-        memcpy(outputFrame, video->rgb_raw_frames[frameIndex], frame_size);
-        pthread_mutex_unlock(&video->cache_mutex);
-    }
-    /* Else if this frame was requested last time and is sitting in the single frame cache */
-    else if (video->current_cached_frame_active && video->current_cached_frame == frameIndex)
+    /* If frame was requested last time and is sitting in the "current" frame cache */
+    if (video->current_cached_frame_active && video->current_cached_frame == frameIndex)
     {
         memcpy(outputFrame, video->rgb_raw_current_frame, frame_size);
     }
-    /* Maybe this frame is currently being cached... */
-    else if (video->is_caching && (video->currently_caching == frameIndex))
+    /* Is this next bit even readable? */
+    else switch (video->cached_frames[frameIndex])
     {
-        /* Wait until frame/caching is done... TODO: use mutex - DONE! :) */
-        pthread_mutex_lock(&video->cache_mutex);
-        memcpy(outputFrame, video->rgb_raw_frames[frameIndex], frame_size);
-        pthread_mutex_unlock(&video->cache_mutex);
-    }
-    /* Else do debayering etc -  and store in the 'current frame' cache */
-    else
-    {
-        float * raw_frame = malloc(width * height * sizeof(float));
-        get_mlv_raw_frame_debayered(video, frameIndex, raw_frame, video->rgb_raw_current_frame, doesMlvAlwaysUseAmaze(video));
-        free(raw_frame);
-        memcpy(outputFrame, video->rgb_raw_current_frame, frame_size);
-        video->current_cached_frame_active = 1;
-        video->current_cached_frame = frameIndex;
+        case MLV_FRAME_IS_CACHED:
+        {
+            memcpy(outputFrame, video->rgb_raw_frames[frameIndex], frame_size);
+            break;
+        }
+
+        /* Else do debayering etc -  and store in the 'current frame' cache */
+        case MLV_FRAME_NOT_CACHED:
+        {
+            float * raw_frame = malloc(width * height * sizeof(float));
+            get_mlv_raw_frame_debayered(video, frameIndex, raw_frame, video->rgb_raw_current_frame, doesMlvAlwaysUseAmaze(video));
+            free(raw_frame);
+            memcpy(outputFrame, video->rgb_raw_current_frame, frame_size);
+            video->current_cached_frame_active = 1;
+            video->current_cached_frame = frameIndex;
+            break;
+        }
+
+        /* Maybe this frame is currently being cached... (this is the least likely case) */
+        case MLV_FRAME_BEING_CACHED:
+        {
+            while (video->cached_frames[frameIndex] != MLV_FRAME_IS_CACHED) usleep(100);
+            memcpy(outputFrame, video->rgb_raw_frames[frameIndex], frame_size);
+            break;
+        }
     }
 }
 
@@ -260,9 +263,6 @@ mlvObject_t * initMlvObject()
     /* Seems about right */
     setMlvCpuCores(video, 4);
 
-    /* Will avoid memory conflicts with cache thread etc */
-    pthread_mutex_init(&video->cache_mutex, NULL);
-
     /* init low level raw processing object */
     video->llrawproc = initLLRawProcObject();
 
@@ -282,7 +282,7 @@ void freeMlvObject(mlvObject_t * video)
 
     /* Stop caching and make sure using silly sleep trick */
     video->stop_caching = 1;
-    while (video->is_caching) usleep(100);
+    while (video->cache_thread_count) usleep(100);
 
     /* Now free these */
     free(video->cached_frames);
@@ -535,10 +535,12 @@ void mapMlvFrames(mlvObject_t * video, uint64_t limit)
     isMlvActive(video) = 1;
 
     /* Start caching */
-    if (!video->is_caching)
+    video->stop_caching = 1;
+    while (video->cache_thread_count) usleep(100);
+    video->stop_caching = 0;
+    for (int i = 0; i < video->cpu_cores; ++i)
     {
-        /* cache on bg thread */
-        pthread_create(&video->cache_thread, NULL, (void *)cache_mlv_frames, (void *)video);
+        add_mlv_cache_thread(video);
     }
 }
 
