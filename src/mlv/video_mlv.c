@@ -50,7 +50,7 @@ static uint32_t file_get_pos(FILE *stream)
 /* Unpacks the bits of a frame to get a bayer B&W image (without black level correction)
  * Needs memory to return to, sized: sizeof(float) * getMlvHeight(urvid) * getMlvWidth(urvid)
  * Output image's pixels will be in range 0-65535 as if it is 16 bit integers */
-void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outputFrame)
+void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outputFrame, FILE * useFile) /* file can be NULL */
 {
     int bitdepth = video->RAWI.raw_info.bits_per_pixel;
     int width = video->RAWI.xRes;
@@ -66,13 +66,16 @@ void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outpu
     /* Memory for decompressed or bit unpacked RAW data */
     uint16_t * unpacked_frame = (uint16_t *)malloc( unpacked_frame_size );
 
+    /* If a custom instance of file was given, use it */
+    FILE * file = (useFile) ? useFile : video->file;
+
     /* Move to start of frame in file and read the RAW data */
-    file_set_pos(video->file, video->frame_offsets[frameIndex], SEEK_SET);
+    file_set_pos(file, video->frame_offsets[frameIndex], SEEK_SET);
 
     if (video->MLVI.videoClass & MLV_VIDEO_CLASS_FLAG_LJ92)
     {
         int raw_data_size = video->frame_sizes[frameIndex];
-        fread(raw_frame, sizeof(uint8_t), raw_data_size, video->file);
+        fread(raw_frame, sizeof(uint8_t), raw_data_size, file);
 
         int components = 1;
         lj92 decoder_object;
@@ -82,7 +85,7 @@ void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outpu
     }
     else /* If not compressed just unpack to 16bit */
     {
-        fread(raw_frame, sizeof(uint8_t), raw_frame_size, video->file);
+        fread(raw_frame, sizeof(uint8_t), raw_frame_size, file);
 
         uint32_t mask = (1 << bitdepth) - 1;
         for (int i = 0; i < pixels_count; ++i)
@@ -102,7 +105,7 @@ void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outpu
 
     /* convert uint16_t raw data -> float raw_data for processing with amaze or bilinear debayer, both need data input as float */
     int shift_val = 16 - bitdepth;
-    if(video->llrawproc->fix_raw && video->llrawproc->dual_iso == 1 && video->llrawproc->is_dual_iso) shift_val = 0; // high quality dualiso buffer is 16 bit
+    if(video->llrawproc->fix_raw && video->llrawproc->dual_iso == 1 && video->llrawproc->is_dual_iso) shift_val = 0; /* high quality dualiso buffer is 16 bit */
     for (int i = 0; i < pixels_count; ++i)
     {
         outputFrame[i] = (float)(unpacked_frame[i] << shift_val);
@@ -256,6 +259,8 @@ mlvObject_t * initMlvObject()
     video->cached_frames = (uint8_t *)malloc( sizeof(uint8_t) );
     /* All frames in one block of memory for least mallocing during usage */
     video->cache_memory_block = (uint16_t *)malloc( sizeof(uint16_t) );
+    /* Path (so separate cache threads can have their own FILE*s) */
+    video->path = (char *)malloc( sizeof(char) );
 
     /* Set cache limit to allow ~1 second of 1080p and be safe for low ram PCs */
     setMlvRawCacheLimitMegaBytes(video, 290);
@@ -292,6 +297,7 @@ void freeMlvObject(mlvObject_t * video)
     free(video->cache_memory_block);
     free(video->frame_sizes);
     free(video->llrawproc);
+    free(video->path);
 
     /* Main 1 */
     free(video);
@@ -304,6 +310,9 @@ void freeMlvObject(mlvObject_t * video)
  * no debayering or bit unpacking */
 void openMlvClip(mlvObject_t * video, char * mlvPath)
 {
+    free(video->path);
+    video->path = malloc( strlen(mlvPath) );
+    memcpy(video->path, mlvPath, strlen(mlvPath));
     video->file = (FILE *)fopen(mlvPath, "rb");
 
     /* Getting size of file in bytes */

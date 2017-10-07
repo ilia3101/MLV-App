@@ -51,8 +51,8 @@ void setMlvRawCacheLimitMegaBytes(mlvObject_t * video, uint64_t megaByteLimit)
      * ...LOL there's not even a floating point in sight */
     if (isMlvActive(video) && frame_size != 0)
     {
-        uint64_t frame_limit = (uint64_t)bytes_limit / (uint64_t)frame_size;
         uint64_t cache_whole = frame_size * getMlvFrames(video);
+        uint64_t frame_limit = MIN(bytes_limit, cache_whole) / frame_size;
 
         video->cache_limit_frames = frame_limit;
 
@@ -163,6 +163,9 @@ void add_mlv_cache_thread(mlvObject_t * video)
 void an_mlv_cache_thread(mlvObject_t * video)
 {
     video->cache_thread_count++;
+
+    /* Every cache thread gets own copy of file */
+    FILE * file = fopen(video->path, "rb");
     
     uint32_t height = getMlvHeight(video);
     uint32_t width = getMlvWidth(video);
@@ -205,7 +208,7 @@ void an_mlv_cache_thread(mlvObject_t * video)
 
         video->cached_frames[cache_frame] = MLV_FRAME_BEING_CACHED;
 
-        getMlvRawFrameFloat(video, cache_frame, imagefloat1d);
+        getMlvRawFrameFloat(video, cache_frame, imagefloat1d, file);
 
         /* Single thread AMaZE */
         demosaic(&amaze_params);
@@ -234,6 +237,8 @@ void an_mlv_cache_thread(mlvObject_t * video)
     free(imagefloat2d);
     free(imagefloat1d);
 
+    fclose(file);
+
     video->cache_thread_count--;
 }
 
@@ -250,7 +255,7 @@ void get_mlv_raw_frame_debayered( mlvObject_t * video,
     int height = getMlvHeight(video);
 
     /* Get the raw data in B&W */
-    getMlvRawFrameFloat(video, frame_index, temp_memory);
+    getMlvRawFrameFloat(video, frame_index, temp_memory, NULL);
 
     if (debayer_type)
     {

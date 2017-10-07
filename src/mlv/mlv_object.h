@@ -30,6 +30,7 @@ typedef struct {
 
     /* MLV/Lite file(s) */
     FILE * file;
+    char * path;
 
     /* For access to MLV headers */
     mlv_file_hdr_t    MLVI;
