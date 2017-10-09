@@ -174,6 +174,7 @@ private:
     void readSettings( void );
     void writeSettings( void );
     void startExport( QString fileName );
+    void startExportPipe( QString fileName );
     void addFileToSession( QString fileName );
     void openSession( QString fileName );
     void saveSession( QString fileName );

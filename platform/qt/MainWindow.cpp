@@ -458,7 +458,7 @@ void MainWindow::openMlv( QString fileName )
     /* This needs to be joined (or segmentation fault 11 :D) */
     setMlvProcessing( m_pMlvObject, m_pProcessingObject );
     /* Limit frame cache to defined size of RAM */
-    setMlvRawCacheLimitMegaBytes( m_pMlvObject, m_cacheSizeMB );
+    //setMlvRawCacheLimitMegaBytes( m_pMlvObject, m_cacheSizeMB );
     /* Tell it how many cores we have so it can be optimal */
     setMlvCpuCores( m_pMlvObject, QThread::idealThreadCount() );
 
@@ -603,7 +603,7 @@ void MainWindow::initGui( void )
     //Fullscreen does not work well, so disable
     ui->actionFullscreen->setVisible( false );
     //Disable caching by default to avoid crashes
-    ui->actionCaching->setVisible( false );
+    //ui->actionCaching->setVisible( false );
     //Disable unused (for now) actions
     ui->actionPasteReceipt->setEnabled( false );
     //Disable export until file opened!
@@ -849,6 +849,114 @@ void MainWindow::startExport(QString fileName)
 
     //Start FFmpeg
     m_pFFmpeg->start( program );
+}
+
+//Start Export via Pipe
+void MainWindow::startExportPipe(QString fileName)
+{
+    //Disable GUI drawing
+    m_dontDraw = true;
+
+    // we always get amaze frames for exporting
+    setMlvAlwaysUseAmaze( m_pMlvObject );
+    //enable low level raw fixes (if wanted)
+    if( ui->checkBoxRawFixEnable->isChecked() ) m_pMlvObject->llrawproc->fix_raw = 1;
+
+    //StatusDialog
+    m_pStatusDialog->ui->progressBar->setMaximum( getMlvFrames( m_pMlvObject ) );
+    m_pStatusDialog->ui->progressBar->setValue( 0 );
+    m_pStatusDialog->show();
+
+    //Audio Export
+    QString wavFileName = QString( "%1.wav" ).arg( fileName.left( fileName.lastIndexOf( "." ) ) );
+    QString ffmpegAudioCommand;
+    ffmpegAudioCommand.clear();
+    if( m_audioExportEnabled && doesMlvHaveAudio( m_pMlvObject ) )
+    {
+        writeMlvAudioToWave(m_pMlvObject, wavFileName.toLatin1().data());
+        ffmpegAudioCommand = QString( "-i \"%1\" -c:a copy " ).arg( wavFileName );
+    }
+
+    //FFMpeg export
+#ifdef __linux__
+    QString program = QString( "ffmpeg" );
+#else
+    QString program = QCoreApplication::applicationDirPath();
+    program.append( QString( "/ffmpeg\"" ) );
+    program.prepend( QString( "\"" ) );
+#endif
+    //Solving the . and , problem at fps in the command
+    QLocale locale = QLocale(QLocale::English, QLocale::UnitedKingdom);
+    locale.setNumberOptions(QLocale::OmitGroupSeparator);
+    QString fps = locale.toString( getFramerate() );
+
+    QString output = fileName.left( fileName.lastIndexOf( "." ) );
+    if( m_codecProfile == CODEC_AVIRAW )
+    {
+        output.append( QString( ".avi" ) );
+        program.append( QString( " -r %1 -y -f rawvideo -s 1856x1044 -pix_fmt rgb48 -i - -c:v rawvideo -pix_fmt %2 \"%3\"" )
+                    .arg( fps )
+                    .arg( "yuv420p" )
+                    .arg( output ) );
+    }
+    else
+    {
+        output.append( QString( ".mov" ) );
+        program.append( QString( " -r %1 -y -f rawvideo -s 1856x1044 -pix_fmt rgb48 -i - -c:v prores_ks -profile:v %2 \"%3\"" )
+                    .arg( fps )
+                    .arg( m_codecProfile )
+                    .arg( output ) );
+    }
+    //There is a %5 in the string, so another arg is not possible - so do that:
+    program.insert( program.indexOf( "-c:v" ), ffmpegAudioCommand );
+
+    //Try to open pipe
+    FILE *pPipe;
+    //qDebug() << program;
+    if( !( pPipe = popen(program.toLatin1().data(), "w" ) ) )
+    {
+        QMessageBox::critical( this, tr( "File export failed" ), tr( "Could not export with ffmpeg." ) );
+    }
+    else
+    {
+        //Buffer
+        long frameSize = getMlvWidth( m_pMlvObject ) * getMlvHeight( m_pMlvObject ) * 3 * sizeof( uint16_t );
+        uint16_t * imgBuffer;
+        imgBuffer = (uint16_t*)malloc( frameSize );
+
+        //Get all pictures and send to pipe
+        for( uint32_t i = 0; i < getMlvFrames( m_pMlvObject ); i++ )
+        {
+            //Get picture
+            getMlvProcessedFrame16( m_pMlvObject, i, imgBuffer );
+
+            //Write to pipe
+            fwrite(imgBuffer, 1, frameSize, pPipe);
+            fflush(pPipe);
+
+            //Set Status
+            m_pStatusDialog->ui->progressBar->setValue( i );
+            m_pStatusDialog->ui->progressBar->repaint();
+            qApp->processEvents();
+        }
+        //Close pipe
+        fclose( pPipe );
+        free( imgBuffer );
+    }
+
+    //Delete wav file
+    QFile *file = new QFile( wavFileName );
+    if( file->exists() ) file->remove();
+    delete file;
+
+    //If we don't like amaze we switch it off again
+    if( !ui->actionAlwaysUseAMaZE->isChecked() ) setMlvDontAlwaysUseAmaze( m_pMlvObject );
+
+    //Enable GUI drawing
+    m_dontDraw = false;
+
+    //Emit Ready-Signal
+    emit exportReady();
 }
 
 //Adds the fileName to the Session List
@@ -2298,7 +2406,8 @@ void MainWindow::exportHandler( void )
                                              .arg( QFileInfo( m_exportQueue.first()->fileName() ).fileName() ) );
 
         //Start it
-        startExport( m_exportQueue.first()->exportFileName() );
+        //startExport( m_exportQueue.first()->exportFileName() );
+        startExportPipe( m_exportQueue.first()->exportFileName() );
         return;
     }
     //Else if all planned exports are ready
