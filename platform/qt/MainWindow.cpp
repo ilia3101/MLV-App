@@ -940,7 +940,7 @@ void MainWindow::startExportPipe(QString fileName)
             fflush(pPipe);
 
             //Set Status
-            m_pStatusDialog->ui->progressBar->setValue( i );
+            m_pStatusDialog->ui->progressBar->setValue( i + 1 );
             m_pStatusDialog->ui->progressBar->repaint();
             qApp->processEvents();
         }
