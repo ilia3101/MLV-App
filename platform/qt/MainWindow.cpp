@@ -2411,8 +2411,11 @@ void MainWindow::exportHandler( void )
                                              .arg( QFileInfo( m_exportQueue.first()->fileName() ).fileName() ) );
 
         //Start it
-        //startExport( m_exportQueue.first()->exportFileName() );
+#ifdef Q_OS_UNIX
         startExportPipe( m_exportQueue.first()->exportFileName() );
+#else
+        startExport( m_exportQueue.first()->exportFileName() );
+#endif
         return;
     }
     //Else if all planned exports are ready
