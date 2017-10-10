@@ -458,7 +458,7 @@ void MainWindow::openMlv( QString fileName )
     /* This needs to be joined (or segmentation fault 11 :D) */
     setMlvProcessing( m_pMlvObject, m_pProcessingObject );
     /* Limit frame cache to defined size of RAM */
-    //setMlvRawCacheLimitMegaBytes( m_pMlvObject, m_cacheSizeMB );
+    setMlvRawCacheLimitMegaBytes( m_pMlvObject, m_cacheSizeMB );
     /* Tell it how many cores we have so it can be optimal */
     setMlvCpuCores( m_pMlvObject, QThread::idealThreadCount() );
 
@@ -603,7 +603,7 @@ void MainWindow::initGui( void )
     //Fullscreen does not work well, so disable
     ui->actionFullscreen->setVisible( false );
     //Disable caching by default to avoid crashes
-    //ui->actionCaching->setVisible( false );
+    ui->actionCaching->setVisible( false );
     //Disable unused (for now) actions
     ui->actionPasteReceipt->setEnabled( false );
     //Disable export until file opened!
@@ -880,6 +880,8 @@ void MainWindow::startExportPipe(QString fileName)
     //FFMpeg export
 #ifdef __linux__
     QString program = QString( "ffmpeg" );
+#elif __WIN32__
+    QString program = QString( "ffmpeg" );
 #else
     QString program = QCoreApplication::applicationDirPath();
     program.append( QString( "/ffmpeg\"" ) );
@@ -891,19 +893,22 @@ void MainWindow::startExportPipe(QString fileName)
     QString fps = locale.toString( getFramerate() );
 
     QString output = fileName.left( fileName.lastIndexOf( "." ) );
+    QString resolution = QString( "%1x%2" ).arg( getMlvWidth( m_pMlvObject ) ).arg( getMlvHeight( m_pMlvObject ) );
     if( m_codecProfile == CODEC_AVIRAW )
     {
         output.append( QString( ".avi" ) );
-        program.append( QString( " -r %1 -y -f rawvideo -s 1856x1044 -pix_fmt rgb48 -i - -c:v rawvideo -pix_fmt %2 \"%3\"" )
+        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v rawvideo -pix_fmt %3 \"%4\"" )
                     .arg( fps )
+                    .arg( resolution )
                     .arg( "yuv420p" )
                     .arg( output ) );
     }
     else
     {
         output.append( QString( ".mov" ) );
-        program.append( QString( " -r %1 -y -f rawvideo -s 1856x1044 -pix_fmt rgb48 -i - -c:v prores_ks -profile:v %2 \"%3\"" )
+        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v prores_ks -profile:v %3 \"%4\"" )
                     .arg( fps )
+                    .arg( resolution )
                     .arg( m_codecProfile )
                     .arg( output ) );
     }
@@ -913,16 +918,16 @@ void MainWindow::startExportPipe(QString fileName)
     //Try to open pipe
     FILE *pPipe;
     //qDebug() << program;
-    if( !( pPipe = popen(program.toLatin1().data(), "w" ) ) )
+    if( !( pPipe = popen( program.toLatin1().data(), "w" ) ) )
     {
         QMessageBox::critical( this, tr( "File export failed" ), tr( "Could not export with ffmpeg." ) );
     }
     else
     {
         //Buffer
-        long frameSize = getMlvWidth( m_pMlvObject ) * getMlvHeight( m_pMlvObject ) * 3 * sizeof( uint16_t );
+        uint32_t frameSize = getMlvWidth( m_pMlvObject ) * getMlvHeight( m_pMlvObject ) * 3;
         uint16_t * imgBuffer;
-        imgBuffer = (uint16_t*)malloc( frameSize );
+        imgBuffer = ( uint16_t* )malloc( frameSize * sizeof( uint16_t ) );
 
         //Get all pictures and send to pipe
         for( uint32_t i = 0; i < getMlvFrames( m_pMlvObject ); i++ )
@@ -931,7 +936,7 @@ void MainWindow::startExportPipe(QString fileName)
             getMlvProcessedFrame16( m_pMlvObject, i, imgBuffer );
 
             //Write to pipe
-            fwrite(imgBuffer, 1, frameSize, pPipe);
+            fwrite(imgBuffer, sizeof( uint16_t ), frameSize, pPipe);
             fflush(pPipe);
 
             //Set Status
@@ -940,7 +945,7 @@ void MainWindow::startExportPipe(QString fileName)
             qApp->processEvents();
         }
         //Close pipe
-        fclose( pPipe );
+        pclose( pPipe );
         free( imgBuffer );
     }
 
