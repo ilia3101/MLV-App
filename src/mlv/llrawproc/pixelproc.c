@@ -262,7 +262,13 @@ static inline void interpolate_around(uint16_t * image_data, int i, int w, int *
 }
 
 /* following code is for bad/focus pixel processing **********************************************/
-enum pattern { PATTERN_NONE, PATTERN_A, PATTERN_B };
+enum pattern { PATTERN_NONE = 0,
+               PATTERN_EOSM = 331,
+               PATTERN_650D = 301,
+               PATTERN_700D = 326,
+               PATTERN_100D = 346
+             };
+
 enum video_mode { MV_NONE, MV_720, MV_1080, MV_1080CROP, MV_ZOOM, MV_CROPREC };
 
 static int add_pixel_to_map(pixel_map * map, int x, int y)
@@ -339,14 +345,12 @@ static int load_pixel_map(pixel_map * map, uint32_t camera_id, int raw_width, in
 static void fpm_mv720(pixel_map * map, int pattern, int32_t raw_width)
 {
     int shift = 0;
-
-    // PATTERN_A
     int fp_start = 290;
     int fp_end = 465;
     int x_rep = 8;
     int y_rep = 12;
 
-    if(pattern == PATTERN_B)
+    if(pattern == PATTERN_100D)
     {
         fp_start = 86;
         fp_end = 669;
@@ -375,14 +379,12 @@ static void fpm_mv720(pixel_map * map, int pattern, int32_t raw_width)
 static void fpm_mv1080(pixel_map * map, int pattern, int32_t raw_width)
 {
     int shift = 0;
-
-    // PATTERN_A
     int fp_start = 459;
     int fp_end = 755;
     int x_rep = 8;
     int y_rep = 10;
 
-    if(pattern == PATTERN_B)
+    if(pattern == PATTERN_100D)
     {
         fp_start = 119;
         fp_end = 1095;
@@ -410,14 +412,12 @@ static void fpm_mv1080(pixel_map * map, int pattern, int32_t raw_width)
 static void fpm_mv1080crop(pixel_map * map, int pattern, int32_t raw_width)
 {
     int shift = 0;
-
-    // PATTERN_A
     int fp_start = 121;
     int fp_end = 1013;
     int x_rep = 24;
     int y_rep = 60;
 
-    if(pattern == PATTERN_B)
+    if(pattern == PATTERN_100D)
     {
         fp_start = 29;
         fp_end = 1057;
@@ -427,29 +427,33 @@ static void fpm_mv1080crop(pixel_map * map, int pattern, int32_t raw_width)
 
     for(int y = fp_start; y <= fp_end; y++)
     {
-        if(pattern == PATTERN_A)
+        switch(pattern)
         {
-            if(((y + 7) % y_rep) == 0 ) shift = 19;
-            else if(((y + 11) % y_rep) == 0 ) shift = 13;
-            else if(((y + 12) % y_rep) == 0 ) shift = 18;
-            else if(((y + 14) % y_rep) == 0 ) shift = 12;
-            else if(((y + 26) % y_rep) == 0 ) shift = 0;
-            else if(((y + 29) % y_rep) == 0 ) shift = 1;
-            else if(((y + 37) % y_rep) == 0 ) shift = 7;
-            else if(((y + 41) % y_rep) == 0 ) shift = 13;
-            else if(((y + 42) % y_rep) == 0 ) shift = 6;
-            else if(((y + 44) % y_rep) == 0 ) shift = 12;
-            else if(((y + 56) % y_rep) == 0 ) shift = 0;
-            else if(((y + 59) % y_rep) == 0 ) shift = 1;
-            else continue;
-        }
-        else if(pattern == PATTERN_B)
-        {
-            if(((y + 2) % y_rep) == 0 ) shift = 0;
-            else if(((y + 5) % y_rep) == 0 ) shift = 1;
-            else if(((y + 6) % y_rep) == 0 ) shift = 6;
-            else if(((y + 7) % y_rep) == 0 ) shift = 7;
-            else continue;
+            case PATTERN_EOSM:
+            case PATTERN_650D:
+            case PATTERN_700D:
+                if(((y + 7) % y_rep) == 0 ) shift = 19;
+                else if(((y + 11) % y_rep) == 0 ) shift = 13;
+                else if(((y + 12) % y_rep) == 0 ) shift = 18;
+                else if(((y + 14) % y_rep) == 0 ) shift = 12;
+                else if(((y + 26) % y_rep) == 0 ) shift = 0;
+                else if(((y + 29) % y_rep) == 0 ) shift = 1;
+                else if(((y + 37) % y_rep) == 0 ) shift = 7;
+                else if(((y + 41) % y_rep) == 0 ) shift = 13;
+                else if(((y + 42) % y_rep) == 0 ) shift = 6;
+                else if(((y + 44) % y_rep) == 0 ) shift = 12;
+                else if(((y + 56) % y_rep) == 0 ) shift = 0;
+                else if(((y + 59) % y_rep) == 0 ) shift = 1;
+                else continue;
+                break;
+
+            case PATTERN_100D:
+                if(((y + 2) % y_rep) == 0 ) shift = 0;
+                else if(((y + 5) % y_rep) == 0 ) shift = 1;
+                else if(((y + 6) % y_rep) == 0 ) shift = 6;
+                else if(((y + 7) % y_rep) == 0 ) shift = 7;
+                else continue;
+                break;
         }
 
         for(int x = 72; x <= raw_width; x++)
@@ -466,14 +470,12 @@ static void fpm_mv1080crop(pixel_map * map, int pattern, int32_t raw_width)
 static void fpm_zoom(pixel_map * map, int pattern, int32_t raw_width)
 {
     int shift = 0;
-
-    // PATTERN_A
     int fp_start = 31;
     int fp_end = 1103;
     int x_rep = 24;
     int y_rep = 60;
 
-    if(pattern == PATTERN_B)
+    if(pattern == PATTERN_100D)
     {
         fp_start = 28;
         fp_end = 1105;
@@ -483,29 +485,33 @@ static void fpm_zoom(pixel_map * map, int pattern, int32_t raw_width)
 
     for(int y = fp_start; y <= fp_end; y++)
     {
-        if(pattern == PATTERN_A)
+        switch(pattern)
         {
-            if(((y + 7) % y_rep) == 0) shift = 19;
-            else if(((y + 11) % y_rep) == 0) shift = 13;
-            else if(((y + 12) % y_rep) == 0) shift = 18;
-            else if(((y + 14) % y_rep) == 0) shift = 12;
-            else if(((y + 26) % y_rep) == 0) shift = 0;
-            else if(((y + 29) % y_rep) == 0) shift = 1;
-            else if(((y + 37) % y_rep) == 0) shift = 7;
-            else if(((y + 41) % y_rep) == 0) shift = 13;
-            else if(((y + 42) % y_rep) == 0) shift = 6;
-            else if(((y + 44) % y_rep) == 0) shift = 12;
-            else if(((y + 56) % y_rep) == 0) shift = 0;
-            else if(((y + 59) % y_rep) == 0) shift = 1;
-            else continue;
-        }
-        else if(pattern == PATTERN_B)
-        {
-            if(((y + 2) % y_rep) == 0) shift = 0;
-            else if(((y + 5) % y_rep) == 0) shift = 1;
-            else if(((y + 6) % y_rep) == 0) shift = 6;
-            else if(((y + 7) % y_rep) == 0) shift = 7;
-            else continue;
+            case PATTERN_EOSM:
+            case PATTERN_650D:
+            case PATTERN_700D:
+                if(((y + 7) % y_rep) == 0) shift = 19;
+                else if(((y + 11) % y_rep) == 0) shift = 13;
+                else if(((y + 12) % y_rep) == 0) shift = 18;
+                else if(((y + 14) % y_rep) == 0) shift = 12;
+                else if(((y + 26) % y_rep) == 0) shift = 0;
+                else if(((y + 29) % y_rep) == 0) shift = 1;
+                else if(((y + 37) % y_rep) == 0) shift = 7;
+                else if(((y + 41) % y_rep) == 0) shift = 13;
+                else if(((y + 42) % y_rep) == 0) shift = 6;
+                else if(((y + 44) % y_rep) == 0) shift = 12;
+                else if(((y + 56) % y_rep) == 0) shift = 0;
+                else if(((y + 59) % y_rep) == 0) shift = 1;
+                else continue;
+                break;
+
+            case PATTERN_100D:
+                if(((y + 2) % y_rep) == 0) shift = 0;
+                else if(((y + 5) % y_rep) == 0) shift = 1;
+                else if(((y + 6) % y_rep) == 0) shift = 6;
+                else if(((y + 7) % y_rep) == 0) shift = 7;
+                else continue;
+                break;
         }
 
         for(int x = 72; x <= raw_width; x++)
@@ -521,169 +527,58 @@ static void fpm_zoom(pixel_map * map, int pattern, int32_t raw_width)
 /* generate the focus pixel pattern for crop_rec video mode (crop_rec module) */
 static void fpm_crop_rec(pixel_map * map, int pattern, int32_t raw_width)
 {
-    int shift = 0;
-    int shift2 = 0;
+    int shift, fp_start, fp_end, x_rep, y_rep;
 
-    if(pattern == PATTERN_A)
+    switch(pattern)
     {
-        // top part has same pattern as mv1080
-        int fp_start = 219;
-        int fp_end = 289;
-        int x_rep = 8;
-        int y_rep = 10;
-
-        for(int y = fp_start; y <= fp_end; y++)
+        case PATTERN_EOSM: // first pass is like fpm_mv720
+        case PATTERN_650D:
         {
-            if(((y + 0) % y_rep) == 0) shift = 0;
-            else if(((y + 1) % y_rep) == 0) shift = 1;
-            else if(((y + 5) % y_rep) == 0) shift = 5;
-            else if(((y + 6) % y_rep) == 0) shift = 4;
-            else continue;
-
-            for(int x = 72; x <= raw_width; x++)
-            {
-                if(((x + shift) % x_rep) == 0)
-                {
-                    add_pixel_to_map(map, x, y);
-                }
-            }
+            fpm_mv720(map, pattern, raw_width);
+            fp_start = 219;
+            fp_end = 515;
+            x_rep = 8;
+            y_rep = 10;
+            break;
         }
 
-        // middle part combines the mv1080 and mv720 patterns
-        fp_start = 290;
-        fp_end = 468;
-        x_rep = 8;
-        y_rep = 60;
-
-        for(int y = fp_start; y <= fp_end; y++)
+        case PATTERN_700D: // no first pass needed
         {
-            if(((y + 0) % y_rep) == 0) shift = shift2 = 0;
-            else if(((y + 1) % y_rep) == 0) shift = shift2 = 1;
-            else if(((y + 3) % y_rep) == 0) shift = shift2 = 7;
-            else if(((y + 4) % y_rep) == 0) shift = shift2 = 6;
-            else if(((y + 5) % y_rep) == 0) shift = shift2 = 5;
-            else if(((y + 6) % y_rep) == 0) shift = shift2 = 4;
-            else if(((y + 9) % y_rep) == 0) shift = shift2 = 3;
-            else if(((y + 10) % y_rep) == 0)
-            {
-                shift = 0;
-                shift2 = 2;
-            }
-            else if(((y + 11) % y_rep) == 0) shift = shift2 = 1;
-            else if(((y + 15) % y_rep) == 0)
-            {
-                shift = 7;
-                shift2 = 5;
-            }
-            else if(((y + 16) % y_rep) == 0)
-            {
-                shift = 6;
-                shift2 = 4;
-            }
-            else if(((y + 20) % y_rep) == 0) shift = shift2 = 0;
-            else if(((y + 21) % y_rep) == 0)
-            {
-                shift = 3;
-                shift2 = 1;
-            }
-            else if(((y + 22) % y_rep) == 0) shift = shift2 = 2;
-            else if(((y + 25) % y_rep) == 0) shift = shift2 = 5;
-            else if(((y + 26) % y_rep) == 0) shift = shift2 = 4;
-            else if(((y + 27) % y_rep) == 0) shift = shift2 = 7;
-            else if(((y + 28) % y_rep) == 0) shift = shift2 = 6;
-            else if(((y + 30) % y_rep) == 0) shift = shift2 = 0;
-            else if(((y + 31) % y_rep) == 0) shift = shift2 = 1;
-            else if(((y + 33) % y_rep) == 0) shift = shift2 = 3;
-            else if(((y + 34) % y_rep) == 0) shift = shift2 = 2;
-            else if(((y + 35) % y_rep) == 0) shift = shift2 = 5;
-            else if(((y + 36) % y_rep) == 0) shift = shift2 = 4;
-            else if(((y + 39) % y_rep) == 0) shift = shift2 = 7;
-            else if(((y + 40) % y_rep) == 0)
-            {
-                shift = 0;
-                shift2 = 6;
-            }
-            else if(((y + 41) % y_rep) == 0) shift = shift2 = 1;
-            else if(((y + 45) % y_rep) == 0)
-            {
-                shift = 5;
-                shift2 = 3;
-            }
-            else if(((y + 46) % y_rep) == 0)
-            {
-                shift = 4;
-                shift2 = 2;
-            }
-            else if(((y + 50) % y_rep) == 0) shift = shift2 = 0;
-            else if(((y + 51) % y_rep) == 0)
-            {
-                shift = 7;
-                shift2 = 1;
-            }
-            else if(((y + 52) % y_rep) == 0) shift = shift2 = 6;
-            else if(((y + 55) % y_rep) == 0) shift = shift2 = 5;
-            else if(((y + 56) % y_rep) == 0) shift = shift2 = 4;
-            else if(((y + 57) % y_rep) == 0) shift = shift2 = 3;
-            else if(((y + 58) % y_rep) == 0) shift = shift2 = 2;
-            else continue;
-
-            for(int x = 72; x <= raw_width; x++)
-            {
-                if(((x + shift) % x_rep) == 0 || ((x + shift2) % x_rep) == 0)
-                {
-                    add_pixel_to_map(map, x, y);
-                }
-            }
+            fp_start = 219;
+            fp_end = 515;
+            x_rep = 8;
+            y_rep = 10;
+            break;
         }
 
-        // bottom part has same pattern as mv1080
-        fp_start = 469;
-        fp_end = 515;
-        x_rep = 8;
-        y_rep = 10;
-
-        for(int y = fp_start; y <= fp_end; y++)
+        case PATTERN_100D: // first pass is like fpm_mv720
         {
-            if(((y + 0) % y_rep) == 0) shift = 0;
-            else if(((y + 1) % y_rep) == 0) shift = 1;
-            else if(((y + 5) % y_rep) == 0) shift = 5;
-            else if(((y + 6) % y_rep) == 0) shift = 4;
-            else continue;
-
-            for(int x = 72; x <= raw_width; x++)
-            {
-                if(((x + shift) % x_rep) == 0)
-                {
-                    add_pixel_to_map(map, x, y);
-                }
-            }
+            fpm_mv720(map, pattern, raw_width);
+            fp_start = 89;
+            fp_end = 724;
+            x_rep = 8;
+            y_rep = 10;
+            break;
         }
+
+    default: // unsupported camera
+            return;
     }
-    else if(pattern == PATTERN_B)
+
+    // second pass is like fpm_mv1080 with corrected fp_start/end
+    for(int y = fp_start; y <= fp_end; y++)
     {
-        fpm_mv720(map, pattern, raw_width);
+        if(((y + 0) % y_rep) == 0) shift=0;
+        else if(((y + 1) % y_rep) == 0) shift = 1;
+        else if(((y + 5) % y_rep) == 0) shift = 5;
+        else if(((y + 6) % y_rep) == 0) shift = 4;
+        else continue;
 
-        // second pass is like fpm_mv1080
-        int shift = 0;
-        int fp_start = 89;
-        int fp_end = 724;
-        int x_rep = 8;
-        int y_rep = 10;
-
-        for(int y = fp_start; y <= fp_end; y++)
+        for(int x = 72; x <= raw_width; x++)
         {
-            if(((y + 0) % y_rep) == 0) shift=0;
-            else if(((y + 1) % y_rep) == 0) shift = 1;
-            else if(((y + 5) % y_rep) == 0) shift = 5;
-            else if(((y + 6) % y_rep) == 0) shift = 4;
-            else continue;
-
-            for(int x = 72; x <= raw_width; x++)
+            if(((x + shift) % x_rep) == 0)
             {
-                if(((x + shift) % x_rep) == 0)
-                {
-                    add_pixel_to_map(map, x, y);
-                }
+                add_pixel_to_map(map, x, y);
             }
         }
     }
@@ -694,13 +589,17 @@ static int fpm_get_pattern(uint32_t camera_model)
 {
     switch(camera_model)
     {
-        case 0x80000331: // EOSM
-        case 0x80000301: // 650D
-        case 0x80000326: // 700D
-            return PATTERN_A;
+        case 0x80000331:
+            return PATTERN_EOSM;
 
-        case 0x80000346: // 100D
-            return PATTERN_B;
+        case 0x80000346:
+            return PATTERN_100D;
+
+        case 0x80000301:
+            return PATTERN_650D;
+
+        case 0x80000326:
+            return PATTERN_700D;
 
         default: // unsupported camera
             return PATTERN_NONE;
