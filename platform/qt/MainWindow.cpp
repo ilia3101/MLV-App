@@ -884,9 +884,14 @@ void MainWindow::startExportPipe(QString fileName)
     QString program = QString( "ffmpeg" );
 #else
     QString program = QCoreApplication::applicationDirPath();
-    program.append( QString( "/ffmpeg\"" ) );
+    program.append( QString( "/ffmpeg\" -loglevel 0" ) );
     program.prepend( QString( "\"" ) );
 #endif
+
+#ifdef STDOUT_SILENT
+    program.append( QString( " -loglevel 0" ) );
+#endif
+
     //Solving the . and , problem at fps in the command
     QLocale locale = QLocale(QLocale::English, QLocale::UnitedKingdom);
     locale.setNumberOptions(QLocale::OmitGroupSeparator);
