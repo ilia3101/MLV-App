@@ -658,7 +658,7 @@ void MainWindow::initGui( void )
     //Init session settings
     m_pSessionReceipts.clear();
 
-    //Init  Queue
+    //Init Export Queue
     m_exportQueue.clear();
 }
 
@@ -2420,11 +2420,8 @@ void MainWindow::exportHandler( void )
                                              .arg( QFileInfo( m_exportQueue.first()->fileName() ).fileName() ) );
 
         //Start it
-//#ifdef Q_OS_UNIX
-        startExportPipe( m_exportQueue.first()->exportFileName() );
-//#else
-        //startExport( m_exportQueue.first()->exportFileName() );
-//#endif
+        startExportPipe( m_exportQueue.first()->exportFileName() ); //Pipe export
+        //startExport( m_exportQueue.first()->exportFileName() ); //Intermediate PNG export
         return;
     }
     //Else if all planned exports are ready
