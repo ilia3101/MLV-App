@@ -884,7 +884,7 @@ void MainWindow::startExportPipe(QString fileName)
     QString program = QString( "ffmpeg" );
 #else
     QString program = QCoreApplication::applicationDirPath();
-    program.append( QString( "/ffmpeg\" -loglevel 0" ) );
+    program.append( QString( "/ffmpeg\"" ) );
     program.prepend( QString( "\"" ) );
 #endif
 
