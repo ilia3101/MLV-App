@@ -658,7 +658,7 @@ void MainWindow::initGui( void )
     //Init session settings
     m_pSessionReceipts.clear();
 
-    //Init export Queue
+    //Init  Queue
     m_exportQueue.clear();
 }
 
@@ -923,7 +923,11 @@ void MainWindow::startExportPipe(QString fileName)
     //Try to open pipe
     FILE *pPipe;
     //qDebug() << program;
+#ifdef Q_OS_UNIX
     if( !( pPipe = popen( program.toLatin1().data(), "w" ) ) )
+#else
+    if( !( pPipe = popen( program.toLatin1().data(), "wb" ) ) )
+#endif
     {
         QMessageBox::critical( this, tr( "File export failed" ), tr( "Could not export with ffmpeg." ) );
     }
@@ -2416,11 +2420,11 @@ void MainWindow::exportHandler( void )
                                              .arg( QFileInfo( m_exportQueue.first()->fileName() ).fileName() ) );
 
         //Start it
-#ifdef Q_OS_UNIX
+//#ifdef Q_OS_UNIX
         startExportPipe( m_exportQueue.first()->exportFileName() );
-#else
-        startExport( m_exportQueue.first()->exportFileName() );
-#endif
+//#else
+        //startExport( m_exportQueue.first()->exportFileName() );
+//#endif
         return;
     }
     //Else if all planned exports are ready
