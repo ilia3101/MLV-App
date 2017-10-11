@@ -527,33 +527,33 @@ static void fpm_zoom(pixel_map * map, int pattern, int32_t raw_width)
 /* generate the focus pixel pattern for crop_rec video mode (crop_rec module) */
 static void fpm_crop_rec(pixel_map * map, int pattern, int32_t raw_width)
 {
-    int shift, fp_start, fp_end, x_rep, y_rep;
+    int shift = 0;
+    int fp_start = 219;
+    int fp_end = 515;
+    int x_rep = 8;
+    int y_rep = 10;
 
     switch(pattern)
     {
-        case PATTERN_EOSM: // first pass is like fpm_mv720
+        case PATTERN_EOSM:
         case PATTERN_650D:
         {
+             // first pass is like fpm_mv720
             fpm_mv720(map, pattern, raw_width);
-            fp_start = 219;
-            fp_end = 515;
-            x_rep = 8;
-            y_rep = 10;
             break;
         }
 
-        case PATTERN_700D: // no first pass needed
+        case PATTERN_700D:
         {
-            fp_start = 219;
-            fp_end = 515;
-            x_rep = 8;
-            y_rep = 10;
+            // no first pass needed
             break;
         }
 
-        case PATTERN_100D: // first pass is like fpm_mv720
+        case PATTERN_100D:
         {
+            // first pass is like fpm_mv720
             fpm_mv720(map, pattern, raw_width);
+            // second pass is like fpm_mv1080 with corrected fp_start/fp_end
             fp_start = 89;
             fp_end = 724;
             x_rep = 8;
@@ -561,11 +561,10 @@ static void fpm_crop_rec(pixel_map * map, int pattern, int32_t raw_width)
             break;
         }
 
-    default: // unsupported camera
+        default: // unsupported camera
             return;
     }
 
-    // second pass is like fpm_mv1080 with corrected fp_start/end
     for(int y = fp_start; y <= fp_end; y++)
     {
         if(((y + 0) % y_rep) == 0) shift=0;
