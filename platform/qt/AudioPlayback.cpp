@@ -14,6 +14,7 @@ AudioPlayback::AudioPlayback( mlvObject_t *pMlvObject )
     m_pMlvObject = pMlvObject;
     m_audio_size = 0;
     m_audioLoaded = false;
+    m_audioRunning = false;
 }
 
 //Destructor
@@ -92,12 +93,14 @@ void AudioPlayback::play()
 
     m_pAudioOutput->reset();
     m_pAudioOutput->start( m_pAudioStream->device() );
+    m_audioRunning = true;
 }
 
 //Stop audio
 void AudioPlayback::stop()
 {
     if( !doesMlvHaveAudio( m_pMlvObject ) ) return;
-
+    if( !m_audioRunning ) return;
     m_pAudioOutput->suspend();
+    m_audioRunning = false;
 }

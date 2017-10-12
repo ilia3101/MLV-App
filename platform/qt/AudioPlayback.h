@@ -33,6 +33,7 @@ private:
     uint8_t *m_pAudioData;
     uint64_t m_audio_size;
     bool m_audioLoaded;
+    bool m_audioRunning;
 };
 
 #endif // AUDIOPLAYBACK_H
