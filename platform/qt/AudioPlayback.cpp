@@ -93,6 +93,7 @@ void AudioPlayback::play()
 
     m_pAudioOutput->reset();
     m_pAudioOutput->start( m_pAudioStream->device() );
+    m_pAudioOutput->resume();
     m_audioRunning = true;
 }
 
@@ -100,7 +101,9 @@ void AudioPlayback::play()
 void AudioPlayback::stop()
 {
     if( !doesMlvHaveAudio( m_pMlvObject ) ) return;
+
     if( !m_audioRunning ) return;
     m_pAudioOutput->suspend();
+    m_pAudioOutput->stop();
     m_audioRunning = false;
 }
