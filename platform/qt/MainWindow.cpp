@@ -537,6 +537,8 @@ void MainWindow::playbackHandling(int timeDiff)
             {
                 //Loop, goto first frame
                 ui->horizontalSliderPosition->setValue( 0 );
+                if( ui->actionAudioOutput->isChecked() )m_newPosDropMode = 0;
+
                 //Sync audio
                 if( ui->actionAudioOutput->isChecked()
                  && ui->actionDropFrameMode->isChecked() )
