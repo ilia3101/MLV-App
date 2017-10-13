@@ -1661,23 +1661,39 @@ void MainWindow::endExport( void )
 //About Window
 void MainWindow::on_actionAbout_triggered()
 {
-    QMessageBox::about( this, QString( "About %1" ).arg( APPNAME ),
-                            QString(
-                              "<html><img src=':/IMG/IMG/Magic_Lantern_logo_b.png' align='right'/>"
-                              "<body><h3>%1</h3>"
-                              " <p>%1 v%2</p>"
-                              " <p>%6</p>"
-                              " <p>See <a href='%7'>this site</a> for more information.</p>"
-                              " <p>Darkstyle Copyright (c) 2017, <a href='%8'>Juergen Skrotzky</a></p>"
-                              " <p>Some icons by <a href='%9'>Double-J Design</a> under <a href='%10'>CC4.0</a></p>"
-                              " </body></html>" )
-                             .arg( APPNAME )
-                             .arg( VERSION )
-                             .arg( "by Ilia3101, bouncyball & masc." )
-                             .arg( "https://github.com/ilia3101/MLV-App" )
-                             .arg( "https://github.com/Jorgen-VikingGod" )
-                             .arg( "http://www.doublejdesign.co.uk/" )
-                             .arg( "https://creativecommons.org/licenses/by/4.0/" ) );
+    QPixmap pixmap = QPixmap( ":/IMG/IMG/Magic_Lantern_logo.png" )
+                .scaled( 128 * devicePixelRatio(), 112 * devicePixelRatio(),
+                         Qt::KeepAspectRatio, Qt::SmoothTransformation );
+        pixmap.setDevicePixelRatio( devicePixelRatio() );
+        QByteArray byteArray;
+        QBuffer buffer(&byteArray);
+        pixmap.save(&buffer, "PNG");
+        QString pic = QString("<img width='128' height='112' align='right' src=\"data:image/png;base64,") + byteArray.toBase64() + "\"/>";
+
+        QMessageBox::about( this, QString( "About %1" ).arg( APPNAME ),
+                                QString(
+                                  "<html>%1"
+                                  "<body><h3>%2</h3>"
+                                  " <p>%2 v%3</p>"
+                                  " <p>%7</p>"
+                                  " <p>See <a href='%8'>this site</a> for more information.</p>"
+                                  " <p>Darkstyle Copyright (c) 2017, <a href='%9'>Juergen Skrotzky</a></p>"
+                                  " <p>Some icons by <a href='%10'>Double-J Design</a> under <a href='%11'>CC4.0</a></p>"
+                                  " </body></html>" )
+                                 .arg( pic )
+                                 .arg( APPNAME )
+                                 .arg( VERSION )
+                                 .arg( "by Ilia3101, bouncyball & masc." )
+                                 .arg( "https://github.com/ilia3101/MLV-App" )
+                                 .arg( "https://github.com/Jorgen-VikingGod" )
+                                 .arg( "http://www.doublejdesign.co.uk/" )
+                            .arg( "https://creativecommons.org/licenses/by/4.0/" ) );
+}
+
+//Qt Infobox
+void MainWindow::on_actionAboutQt_triggered()
+{
+    QMessageBox::aboutQt( this );
 }
 
 //Position Slider
