@@ -645,8 +645,8 @@ void MainWindow::initGui( void )
 
     //Set up frame number label
     m_pFrameNumber = new QLabel( statusBar() );
-    m_pFrameNumber->setMaximumWidth( 110 );
-    m_pFrameNumber->setMinimumWidth( 110 );
+    m_pFrameNumber->setMaximumWidth( 120 );
+    m_pFrameNumber->setMinimumWidth( 120 );
     drawFrameNumberLabel();
     //m_pFpsStatus->setFrameStyle(QFrame::Panel | QFrame::Sunken);
     statusBar()->addWidget( m_pFrameNumber );

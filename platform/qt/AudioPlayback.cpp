@@ -58,7 +58,7 @@ void AudioPlayback::loadAudio( mlvObject_t *pMlvObject )
         (*m_pAudioStream) << (uint8_t)m_pAudioData[x];
     }
     m_pAudioStream->device()->seek( 0 );
-    m_pAudioOutput->setBufferSize( 32768000 );
+    m_pAudioOutput->setBufferSize( 131072 );
     m_pAudioOutput->setVolume( 1.0 );
 
     m_audioLoaded = true;
