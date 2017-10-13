@@ -9,7 +9,8 @@
 #include <QDebug>
 
 //Constructor
-AudioPlayback::AudioPlayback( mlvObject_t *pMlvObject )
+AudioPlayback::AudioPlayback(mlvObject_t *pMlvObject , QObject *parent)
+    : QObject( parent )
 {
     m_pMlvObject = pMlvObject;
     m_audio_size = 0;
@@ -43,7 +44,7 @@ void AudioPlayback::loadAudio( mlvObject_t *pMlvObject )
     format.setCodec( "audio/pcm" );
     format.setByteOrder( QAudioFormat::LittleEndian );
     format.setSampleType( QAudioFormat::SignedInt );
-    m_pAudioOutput = new QAudioOutput( format );
+    m_pAudioOutput = new QAudioOutput( format, this );
 
     m_pByteArrayAudio = new QByteArray();
     m_pAudioStream = new QDataStream(m_pByteArrayAudio, QIODevice::ReadWrite);

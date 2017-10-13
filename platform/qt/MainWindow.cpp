@@ -61,7 +61,7 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     initLib();
 
     //Setup AudioPlayback
-    m_pAudioPlayback = new AudioPlayback( m_pMlvObject );
+    m_pAudioPlayback = new AudioPlayback( m_pMlvObject, this );
 
     //Set timers
     m_timerId = startTimer( 40 ); //25fps initially only, is set after import
