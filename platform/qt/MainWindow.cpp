@@ -183,7 +183,7 @@ void MainWindow::timerEvent(QTimerEvent *t)
     else if( t->timerId() == m_timerCacheId )
     {
         //Caching Status Label
-        if( m_fileLoaded && m_pMlvObject->is_caching )
+        if( m_fileLoaded && isMlvObjectCaching( m_pMlvObject ) > 0 )
         {
             m_pCachingStatus->setText( tr( "Caching: active" ) );
         }
@@ -605,7 +605,7 @@ void MainWindow::initGui( void )
     //Fullscreen does not work well, so disable
     ui->actionFullscreen->setVisible( false );
     //Disable caching by default to avoid crashes
-    ui->actionCaching->setVisible( false );
+    //ui->actionCaching->setVisible( false );
     //Disable unused (for now) actions
     ui->actionPasteReceipt->setEnabled( false );
     //Disable export until file opened!
