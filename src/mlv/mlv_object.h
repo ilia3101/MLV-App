@@ -71,6 +71,7 @@ typedef struct {
     /* 0 = no, 1 = (yes... cache threads are alive right now) */
     int is_caching;
     int cache_thread_count; /* Total active cache threads */
+    uint64_t cache_next; /* Like a cache request (any non-zero frame) */
     pthread_mutex_t cache_mutex;
     /* Will be set to 1 for cache threads to stop (probably only by freeMlvObject) */
     int stop_caching;
