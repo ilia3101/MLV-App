@@ -153,7 +153,9 @@ void getMlvRawFrameDebayered(mlvObject_t * video, uint64_t frameIndex, uint16_t 
     int frame_size = width * height * sizeof(uint16_t) * 3;
 
     /* If frame was requested last time and is sitting in the "current" frame cache */
-    if (video->current_cached_frame_active && video->current_cached_frame == frameIndex)
+    if ( video->cached_frames[frameIndex] == MLV_FRAME_NOT_CACHED
+         && video->current_cached_frame_active 
+         && video->current_cached_frame == frameIndex )
     {
         memcpy(outputFrame, video->rgb_raw_current_frame, frame_size);
     }
