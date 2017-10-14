@@ -150,6 +150,7 @@
      <string>Help</string>
     </property>
     <addaction name="actionAbout"/>
+    <addaction name="actionAboutQt"/>
    </widget>
    <widget class="QMenu" name="menuPlayback">
     <property name="title">
@@ -2485,6 +2486,11 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Shift+E</string>
+   </property>
+  </action>
+  <action name="actionAboutQt">
+   <property name="text">
+    <string>About Qt</string>
    </property>
   </action>
  </widget>

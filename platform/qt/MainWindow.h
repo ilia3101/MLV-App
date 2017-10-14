@@ -50,6 +50,7 @@ protected:
 private slots:
     void on_actionOpen_triggered();
     void on_actionAbout_triggered();
+    void on_actionAboutQt_triggered();
     void on_horizontalSliderPosition_valueChanged(void);
     void on_actionClip_Information_triggered();
     void on_horizontalSliderExposure_valueChanged(int position);
@@ -174,6 +175,7 @@ private:
     void readSettings( void );
     void writeSettings( void );
     void startExport( QString fileName );
+    void startExportPipe( QString fileName );
     void addFileToSession( QString fileName );
     void openSession( QString fileName );
     void saveSession( QString fileName );

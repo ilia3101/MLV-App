@@ -25,68 +25,31 @@ static const double ciecam02[] = {
 
 /* Tonemapping info from http://filmicworlds.com/blog/filmic-tonemapping-operators/ */
 
-/* Values for uncharted tonemapping... they can be adjusted */
-double u_A = 0.15;
-double u_B = 0.50;
-double u_C = 0.10;
-double u_D = 0.20;
-double u_E = 0.02;
-double u_F = 0.30;
-double u_W = 11.2; /* White point */
-double u_bias = 2.0;
+/* Reinhard - most basic but just werks */
+double ReinhardTonemap(double x) { return x / (1.5 + x); }
+float ReinhardTonemap_f(float x) { return x / (1.0f + x); }
 
-/* Uncharted tonemapping base funtion */
-double uncharted_tonemap(double value)
-{
-    return (((value*(u_A*value+u_C*u_B)+u_D*u_E) / (value*(u_A*value+u_B)+u_D*u_F)) - (u_E/u_F));
-}
-
-/* Wrapper with white scaling */
-double UnchartedTonemap(double value)
-{
-    value = uncharted_tonemap(u_bias * value);
-    /* White scale */
-    value *= (1.0 / uncharted_tonemap(u_W));
-    return value;
-}
-
-double ReinhardTonemap(double value)
-{
-    return value / (1.0 + value);
-}
-
-/* Canon C-Log: http://learn.usa.canon.com/app/pdfs/white_papers/White_Paper_Clog_optoelectronic.pdf */
-double CanonCLogTonemap(double value) /* Might not be working right */
-{
-    /* Works in percentage(I think, so 10.1596 multiplier changed to 1015.96) */
-    return (0.529136 * log10(value*1015.96 + 1.0) + 0.0730597);
-}
+/* Canon C-Log: http://learn.usa.canon.com/app/pdfs/white_papers/White_Paper_Clog_optoelectronic.pdf (not working right) */
+double CanonCLogTonemap(double x) { return (0.529136 * log10(x * 1015.96 + 1.0) + 0.0730597); }
+float CanonCLogTonemap_f(float x) { return (0.529136f * log10f(x * 1015.96f + 1.0f) + 0.0730597f); }
 
 /* Calculate Alexa Log curve (iso 800 version), from here: http://www.vocas.nl/webfm_send/964 */
-double AlexaLogCTonemap(double value)
-{
-    return (value > 0.010591) ? (0.247190 * log10(5.555556 * value + 0.052272) + 0.385537) : (5.367655 * value + 0.092809);
-}
+double AlexaLogCTonemap(double x) { return (x > 0.010591) ? (0.247190 * log10(5.555556 * x + 0.052272) + 0.385537) : (5.367655 * x + 0.092809); }
+float AlexaLogCTonemap_f(float x) { return (x > 0.010591f) ? (0.247190f * log10f(5.555556f * x + 0.052272f) + 0.385537f) : (5.367655f * x + 0.092809f); }
 
 /* Cineon Log, formula from here: http://www.magiclantern.fm/forum/index.php?topic=15801.msg158145#msg158145 */
-double CineonLogTonemap(double value)
-{
-    return ((log10(value * (1.0 - 0.0108) + 0.0108)) * 300 + 685) / 1023;
-}
+double CineonLogTonemap(double x) { return ((log10(x * (1.0 - 0.0108) + 0.0108)) * 300.0 + 685.0) / 1023.0; }
+float CineonLogTonemap_f(float x) { return ((log10f(x * (1.0f - 0.0108f) + 0.0108f)) * 300.0f + 685.0f) / 1023.0f; }
 
 /* Sony S-Log3, from here: https://www.sony.de/pro/support/attachment/1237494271390/1237494271406/technical-summary-for-s-gamut3-cine-s-log3-and-s-gamut3-s-log3.pdf */
-double SonySLogTonemap(double value)
-{
-    if (value >= 0.01125000) 
-        return (420.0 + log10((value + 0.01) / (0.18 + 0.01)) * 261.5) / 1023.0;
-    else
-        return (value * (171.2102946929 - 95.0)/0.01125000 + 95.0) / 1023.0;
-}
+double SonySLogTonemap(double x) { return (x >= 0.01125000) ? (420.0 + log10((x + 0.01) / (0.18 + 0.01)) * 261.5) / 1023.0 : (x * (171.2102946929 - 95.0) / 0.01125000 + 95.0) / 1023.0; }
+float SonySLogTonemap_f(float x) { return (x >= 0.01125000f) ? (420.0f + log10f((x + 0.01f) / (0.18f + 0.01f)) * 261.5f) / 1023.0f : (x * (171.2102946929f - 95.0f) / 0.01125000f + 95.0f) / 1023.0f; }
 
 /* Returns multipliers for white balance by (linearly) interpolating measured 
  * Canon values... stupidly simple, also range limited to 2500-10000 (pls obey) */
 void get_kelvin_multipliers_rgb(double kelvin, double * multiplier_output)
 {
+    kelvin = MIN(MAX(kelvin, 2500.0), 10000.0);
     int k = 0;
 
     while (1 < 2)

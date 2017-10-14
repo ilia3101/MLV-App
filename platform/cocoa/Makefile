@@ -8,11 +8,12 @@ objects = main.o video_mlv.o debayer.o amaze_demosaic.o raw_processing.o \
 		  delegate.o mlv_view.o llrawproc.o pixelproc.o stripes.o \
 		  patternnoise.o hist.o dualiso.o
 
-# Compiler
-CC = clang
+# Compilers
+CC = clang # C
+OCC = clang # Objective C
 
 # Flags for link and objects
-mainflags = -mmacosx-version-min=10.10 -O3 -Ofast -m64
+mainflags = -mmacosx-version-min=10.10 -O3 -Ofast -m64 -DNDEBUG
 linkflags = $(mainflags) -lm -pthread -lobjc
 cflags := $(mainflags) -c
 objcflags := $(cflags) -x objective-c
@@ -20,7 +21,7 @@ objcflags := $(cflags) -x objective-c
 # Run some cheeky compiletime code to generate window title with hostname
 # Then call the build rule to actually build it
 main :
-	$(CC) $(mainflags) compile_time_code.m -o compile_time_code -framework Cocoa; \
+	$(OCC) $(mainflags) compile_time_code.m -o compile_time_code -framework Cocoa; \
 	./compile_time_code; \
 	rm main.o; \
 	make build; \
@@ -47,61 +48,47 @@ app :
 	rm -rf $(appname).app/Contents/Resources/__MACOSX; \
 	cp ../../src/icon/icon.icns $(appname).app/Contents/Resources/MLV\ App.icns; \
 	rm generate_info_plist; \
-	rm info.plist; \
+	rm info.plist;
 
 # Actual linking and compiling happens here
 build : $(objects)
 	$(CC) $(mainflags) $(objects) -o $(appname) -framework Cocoa;
 
-# Making all objects...
+# Cocoa app part (Objective C)
 main.o : main.m
-	$(CC) $(objcflags) main.m
-
+	$(OCC) $(objcflags) main.m
 mlv_view.o : mlv_view.m
-	$(CC) $(objcflags) mlv_view.m
-
+	$(OCC) $(objcflags) mlv_view.m
 main_methods.o : main_methods.m
-	$(CC) $(objcflags) main_methods.m
-
+	$(OCC) $(objcflags) main_methods.m
 delegate.o : delegate.m
-	$(CC) $(objcflags) delegate.m
-
+	$(OCC) $(objcflags) delegate.m
 session_methods.o : session_methods.m
-	$(CC) $(objcflags) session_methods.m
-
+	$(OCC) $(objcflags) session_methods.m
 background_thread.o : background_thread.m
-	$(CC) $(objcflags) background_thread.m
-
+	$(OCC) $(objcflags) background_thread.m
 useful_methods.o : gui_stuff/useful_methods.m
-	$(CC) $(objcflags) gui_stuff/useful_methods.m
-
+	$(OCC) $(objcflags) gui_stuff/useful_methods.m
 preferences_window : preferences_window.m
-	$(CC) $(objcflags) preferences_window.m
+	$(OCC) $(objcflags) preferences_window.m
 
+# MLV and processing
 video_mlv.o : ../../src/mlv/video_mlv.c
 	$(CC) $(cflags) ../../src/mlv/video_mlv.c
-
 lj92.o : ../../src/mlv/liblj92/lj92.c
 	$(CC) $(cflags) ../../src/mlv/liblj92/lj92.c
-
 frame_caching.o : ../../src/mlv/frame_caching.c
 	$(CC) $(cflags) ../../src/mlv/frame_caching.c
-
 camera_matrices.o : ../../src/mlv/camera_matrices.c
 	$(CC) $(cflags) ../../src/mlv/camera_matrices.c
-
 debayer.o : ../../src/debayer/debayer.c
 	$(CC) $(cflags) -pthread ../../src/debayer/debayer.c
-
 amaze_demosaic.o : ../../src/debayer/amaze_demosaic.c
 	$(CC) $(cflags) ../../src/debayer/amaze_demosaic.c
-
 raw_processing.o : ../../src/processing/raw_processing.c
 	$(CC) $(cflags) ../../src/processing/raw_processing.c
-
 matrix.o : ../../src/matrix/matrix.c
 	$(CC) $(cflags) ../../src/matrix/matrix.c
-
 llrawproc.o : ../../src/mlv/llrawproc/llrawproc.c
 	$(CC) $(cflags) ../../src/mlv/llrawproc/llrawproc.c
 pixelproc.o : ../../src/mlv/llrawproc/pixelproc.c

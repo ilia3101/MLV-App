@@ -61,7 +61,7 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     initLib();
 
     //Setup AudioPlayback
-    m_pAudioPlayback = new AudioPlayback( m_pMlvObject );
+    m_pAudioPlayback = new AudioPlayback( m_pMlvObject, this );
 
     //Set timers
     m_timerId = startTimer( 40 ); //25fps initially only, is set after import
@@ -537,6 +537,8 @@ void MainWindow::playbackHandling(int timeDiff)
             {
                 //Loop, goto first frame
                 ui->horizontalSliderPosition->setValue( 0 );
+                if( ui->actionAudioOutput->isChecked() )m_newPosDropMode = 0;
+
                 //Sync audio
                 if( ui->actionAudioOutput->isChecked()
                  && ui->actionDropFrameMode->isChecked() )
@@ -643,8 +645,8 @@ void MainWindow::initGui( void )
 
     //Set up frame number label
     m_pFrameNumber = new QLabel( statusBar() );
-    m_pFrameNumber->setMaximumWidth( 110 );
-    m_pFrameNumber->setMinimumWidth( 110 );
+    m_pFrameNumber->setMaximumWidth( 120 );
+    m_pFrameNumber->setMinimumWidth( 120 );
     drawFrameNumberLabel();
     //m_pFpsStatus->setFrameStyle(QFrame::Panel | QFrame::Sunken);
     statusBar()->addWidget( m_pFrameNumber );
@@ -658,7 +660,7 @@ void MainWindow::initGui( void )
     //Init session settings
     m_pSessionReceipts.clear();
 
-    //Init export Queue
+    //Init Export Queue
     m_exportQueue.clear();
 }
 
@@ -849,6 +851,128 @@ void MainWindow::startExport(QString fileName)
 
     //Start FFmpeg
     m_pFFmpeg->start( program );
+}
+
+//Start Export via Pipe
+void MainWindow::startExportPipe(QString fileName)
+{
+    //Disable GUI drawing
+    m_dontDraw = true;
+
+    // we always get amaze frames for exporting
+    setMlvAlwaysUseAmaze( m_pMlvObject );
+    //enable low level raw fixes (if wanted)
+    if( ui->checkBoxRawFixEnable->isChecked() ) m_pMlvObject->llrawproc->fix_raw = 1;
+
+    //StatusDialog
+    m_pStatusDialog->ui->progressBar->setMaximum( getMlvFrames( m_pMlvObject ) );
+    m_pStatusDialog->ui->progressBar->setValue( 0 );
+    m_pStatusDialog->show();
+
+    //Audio Export
+    QString wavFileName = QString( "%1.wav" ).arg( fileName.left( fileName.lastIndexOf( "." ) ) );
+    QString ffmpegAudioCommand;
+    ffmpegAudioCommand.clear();
+    if( m_audioExportEnabled && doesMlvHaveAudio( m_pMlvObject ) )
+    {
+        writeMlvAudioToWave(m_pMlvObject, wavFileName.toLatin1().data());
+        ffmpegAudioCommand = QString( "-i \"%1\" -c:a copy " ).arg( wavFileName );
+    }
+
+    //FFMpeg export
+#ifdef __linux__
+    QString program = QString( "ffmpeg" );
+#elif __WIN32__
+    QString program = QString( "ffmpeg" );
+#else
+    QString program = QCoreApplication::applicationDirPath();
+    program.append( QString( "/ffmpeg\"" ) );
+    program.prepend( QString( "\"" ) );
+#endif
+
+#ifdef STDOUT_SILENT
+    program.append( QString( " -loglevel 0" ) );
+#endif
+
+    //Solving the . and , problem at fps in the command
+    QLocale locale = QLocale(QLocale::English, QLocale::UnitedKingdom);
+    locale.setNumberOptions(QLocale::OmitGroupSeparator);
+    QString fps = locale.toString( getFramerate() );
+
+    QString output = fileName.left( fileName.lastIndexOf( "." ) );
+    QString resolution = QString( "%1x%2" ).arg( getMlvWidth( m_pMlvObject ) ).arg( getMlvHeight( m_pMlvObject ) );
+    if( m_codecProfile == CODEC_AVIRAW )
+    {
+        output.append( QString( ".avi" ) );
+        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v rawvideo -pix_fmt %3 \"%4\"" )
+                    .arg( fps )
+                    .arg( resolution )
+                    .arg( "yuv420p" )
+                    .arg( output ) );
+    }
+    else
+    {
+        output.append( QString( ".mov" ) );
+        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v prores_ks -profile:v %3 \"%4\"" )
+                    .arg( fps )
+                    .arg( resolution )
+                    .arg( m_codecProfile )
+                    .arg( output ) );
+    }
+    //There is a %5 in the string, so another arg is not possible - so do that:
+    program.insert( program.indexOf( "-c:v" ), ffmpegAudioCommand );
+
+    //Try to open pipe
+    FILE *pPipe;
+    //qDebug() << program;
+#ifdef Q_OS_UNIX
+    if( !( pPipe = popen( program.toLatin1().data(), "w" ) ) )
+#else
+    if( !( pPipe = popen( program.toLatin1().data(), "wb" ) ) )
+#endif
+    {
+        QMessageBox::critical( this, tr( "File export failed" ), tr( "Could not export with ffmpeg." ) );
+    }
+    else
+    {
+        //Buffer
+        uint32_t frameSize = getMlvWidth( m_pMlvObject ) * getMlvHeight( m_pMlvObject ) * 3;
+        uint16_t * imgBuffer;
+        imgBuffer = ( uint16_t* )malloc( frameSize * sizeof( uint16_t ) );
+
+        //Get all pictures and send to pipe
+        for( uint32_t i = 0; i < getMlvFrames( m_pMlvObject ); i++ )
+        {
+            //Get picture
+            getMlvProcessedFrame16( m_pMlvObject, i, imgBuffer );
+
+            //Write to pipe
+            fwrite(imgBuffer, sizeof( uint16_t ), frameSize, pPipe);
+            fflush(pPipe);
+
+            //Set Status
+            m_pStatusDialog->ui->progressBar->setValue( i + 1 );
+            m_pStatusDialog->ui->progressBar->repaint();
+            qApp->processEvents();
+        }
+        //Close pipe
+        pclose( pPipe );
+        free( imgBuffer );
+    }
+
+    //Delete wav file
+    QFile *file = new QFile( wavFileName );
+    if( file->exists() ) file->remove();
+    delete file;
+
+    //If we don't like amaze we switch it off again
+    if( !ui->actionAlwaysUseAMaZE->isChecked() ) setMlvDontAlwaysUseAmaze( m_pMlvObject );
+
+    //Enable GUI drawing
+    m_dontDraw = false;
+
+    //Emit Ready-Signal
+    emit exportReady();
 }
 
 //Adds the fileName to the Session List
@@ -1537,23 +1661,39 @@ void MainWindow::endExport( void )
 //About Window
 void MainWindow::on_actionAbout_triggered()
 {
-    QMessageBox::about( this, QString( "About %1" ).arg( APPNAME ),
-                            QString(
-                              "<html><img src=':/IMG/IMG/Magic_Lantern_logo_b.png' align='right'/>"
-                              "<body><h3>%1</h3>"
-                              " <p>%1 v%2</p>"
-                              " <p>%6</p>"
-                              " <p>See <a href='%7'>this site</a> for more information.</p>"
-                              " <p>Darkstyle Copyright (c) 2017, <a href='%8'>Juergen Skrotzky</a></p>"
-                              " <p>Some icons by <a href='%9'>Double-J Design</a> under <a href='%10'>CC4.0</a></p>"
-                              " </body></html>" )
-                             .arg( APPNAME )
-                             .arg( VERSION )
-                             .arg( "by Ilia3101, bouncyball & masc." )
-                             .arg( "https://github.com/ilia3101/MLV-App" )
-                             .arg( "https://github.com/Jorgen-VikingGod" )
-                             .arg( "http://www.doublejdesign.co.uk/" )
-                             .arg( "https://creativecommons.org/licenses/by/4.0/" ) );
+    QPixmap pixmap = QPixmap( ":/IMG/IMG/Magic_Lantern_logo.png" )
+                .scaled( 128 * devicePixelRatio(), 112 * devicePixelRatio(),
+                         Qt::KeepAspectRatio, Qt::SmoothTransformation );
+        pixmap.setDevicePixelRatio( devicePixelRatio() );
+        QByteArray byteArray;
+        QBuffer buffer(&byteArray);
+        pixmap.save(&buffer, "PNG");
+        QString pic = QString("<img width='128' height='112' align='right' src=\"data:image/png;base64,") + byteArray.toBase64() + "\"/>";
+
+        QMessageBox::about( this, QString( "About %1" ).arg( APPNAME ),
+                                QString(
+                                  "<html>%1"
+                                  "<body><h3>%2</h3>"
+                                  " <p>%2 v%3</p>"
+                                  " <p>%7</p>"
+                                  " <p>See <a href='%8'>this site</a> for more information.</p>"
+                                  " <p>Darkstyle Copyright (c) 2017, <a href='%9'>Juergen Skrotzky</a></p>"
+                                  " <p>Some icons by <a href='%10'>Double-J Design</a> under <a href='%11'>CC4.0</a></p>"
+                                  " </body></html>" )
+                                 .arg( pic )
+                                 .arg( APPNAME )
+                                 .arg( VERSION )
+                                 .arg( "by Ilia3101, bouncyball & masc." )
+                                 .arg( "https://github.com/ilia3101/MLV-App" )
+                                 .arg( "https://github.com/Jorgen-VikingGod" )
+                                 .arg( "http://www.doublejdesign.co.uk/" )
+                            .arg( "https://creativecommons.org/licenses/by/4.0/" ) );
+}
+
+//Qt Infobox
+void MainWindow::on_actionAboutQt_triggered()
+{
+    QMessageBox::aboutQt( this );
 }
 
 //Position Slider
@@ -2298,7 +2438,8 @@ void MainWindow::exportHandler( void )
                                              .arg( QFileInfo( m_exportQueue.first()->fileName() ).fileName() ) );
 
         //Start it
-        startExport( m_exportQueue.first()->exportFileName() );
+        startExportPipe( m_exportQueue.first()->exportFileName() ); //Pipe export
+        //startExport( m_exportQueue.first()->exportFileName() ); //Intermediate PNG export
         return;
     }
     //Else if all planned exports are ready

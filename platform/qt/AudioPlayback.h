@@ -14,10 +14,11 @@
 #include <Qt>
 #include "../../src/mlv_include.h"
 
-class AudioPlayback
+class AudioPlayback : public QObject
 {
+    Q_OBJECT
 public:
-    explicit AudioPlayback( mlvObject_t *pMlvObject );
+    explicit AudioPlayback( mlvObject_t *pMlvObject, QObject *parent = Q_NULLPTR );
     ~AudioPlayback();
     void loadAudio( mlvObject_t *pMlvObject );
     void unloadAudio( void );
@@ -33,6 +34,7 @@ private:
     uint8_t *m_pAudioData;
     uint64_t m_audio_size;
     bool m_audioLoaded;
+    bool m_audioRunning;
 };
 
 #endif // AUDIOPLAYBACK_H

@@ -9,11 +9,13 @@
 #include <QDebug>
 
 //Constructor
-AudioPlayback::AudioPlayback( mlvObject_t *pMlvObject )
+AudioPlayback::AudioPlayback(mlvObject_t *pMlvObject , QObject *parent)
+    : QObject( parent )
 {
     m_pMlvObject = pMlvObject;
     m_audio_size = 0;
     m_audioLoaded = false;
+    m_audioRunning = false;
 }
 
 //Destructor
@@ -42,7 +44,7 @@ void AudioPlayback::loadAudio( mlvObject_t *pMlvObject )
     format.setCodec( "audio/pcm" );
     format.setByteOrder( QAudioFormat::LittleEndian );
     format.setSampleType( QAudioFormat::SignedInt );
-    m_pAudioOutput = new QAudioOutput( format );
+    m_pAudioOutput = new QAudioOutput( format, this );
 
     m_pByteArrayAudio = new QByteArray();
     m_pAudioStream = new QDataStream(m_pByteArrayAudio, QIODevice::ReadWrite);
@@ -56,7 +58,7 @@ void AudioPlayback::loadAudio( mlvObject_t *pMlvObject )
         (*m_pAudioStream) << (uint8_t)m_pAudioData[x];
     }
     m_pAudioStream->device()->seek( 0 );
-    m_pAudioOutput->setBufferSize( 32768000 );
+    m_pAudioOutput->setBufferSize( 131072 );
     m_pAudioOutput->setVolume( 1.0 );
 
     m_audioLoaded = true;
@@ -92,6 +94,8 @@ void AudioPlayback::play()
 
     m_pAudioOutput->reset();
     m_pAudioOutput->start( m_pAudioStream->device() );
+    m_pAudioOutput->resume();
+    m_audioRunning = true;
 }
 
 //Stop audio
@@ -99,5 +103,8 @@ void AudioPlayback::stop()
 {
     if( !doesMlvHaveAudio( m_pMlvObject ) ) return;
 
+    if( !m_audioRunning ) return;
     m_pAudioOutput->suspend();
+    m_pAudioOutput->stop();
+    m_audioRunning = false;
 }
