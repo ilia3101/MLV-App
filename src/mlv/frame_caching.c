@@ -140,7 +140,14 @@ void clear_mlv_cache(mlvObject_t * video)
 /* Returns 1 on success, or 0 if all are cached */
 int find_mlv_frame_to_cache(mlvObject_t * video, uint64_t *index) /* Outputs to *index */
 {
-    for (uint64_t frame = 0; frame < getMlvRawCacheLimitFrames(video); ++frame)
+    /* If a specific frame was requested */
+    if (video->cache_next) 
+    {
+        *index = video->cache_next;
+        video->cache_next = 0;
+        return 1;
+    }
+    else for (uint64_t frame = 0; frame < getMlvRawCacheLimitFrames(video); ++frame)
     {
         /* Return index if it is not cached */
         if (video->cached_frames[frame] == MLV_FRAME_NOT_CACHED)

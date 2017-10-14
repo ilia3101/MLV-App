@@ -166,19 +166,26 @@ void getMlvRawFrameDebayered(mlvObject_t * video, uint64_t frameIndex, uint16_t 
             break;
         }
 
-        /* Else do debayering etc -  and store in the 'current frame' cache */
+        /* Else cache it or store in the 'current frame' */
         case MLV_FRAME_NOT_CACHED:
         {
-            float * raw_frame = malloc(width * height * sizeof(float));
-            get_mlv_raw_frame_debayered(video, frameIndex, raw_frame, video->rgb_raw_current_frame, doesMlvAlwaysUseAmaze(video));
-            free(raw_frame);
-            memcpy(outputFrame, video->rgb_raw_current_frame, frame_size);
-            video->current_cached_frame_active = 1;
-            video->current_cached_frame = frameIndex;
-            break;
+            /* If it is within the cache range, request for it to be cached */
+            if (isMlvObjectCaching(video) && frameIndex < getMlvRawCacheLimitFrames(video))
+            {
+                video->cache_next = frameIndex;
+            }
+            else
+            {
+                float * raw_frame = malloc(width * height * sizeof(float));
+                get_mlv_raw_frame_debayered(video, frameIndex, raw_frame, video->rgb_raw_current_frame, doesMlvAlwaysUseAmaze(video));
+                free(raw_frame);
+                memcpy(outputFrame, video->rgb_raw_current_frame, frame_size);
+                video->current_cached_frame_active = 1;
+                video->current_cached_frame = frameIndex;
+                break;
+            }
         }
 
-        /* Maybe this frame is currently being cached... (this is the least likely case) */
         case MLV_FRAME_BEING_CACHED:
         {
             while (video->cached_frames[frameIndex] != MLV_FRAME_IS_CACHED) usleep(100);
