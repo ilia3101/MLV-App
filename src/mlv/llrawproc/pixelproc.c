@@ -371,7 +371,6 @@ static void fpm_mv720(pixel_map * map, int pattern, int32_t raw_width)
                 add_pixel_to_map(map, x, y);
             }
         }
-
     }
 }
 
@@ -538,7 +537,7 @@ static void fpm_crop_rec(pixel_map * map, int pattern, int32_t raw_width)
         case PATTERN_EOSM:
         case PATTERN_650D:
         {
-             // first pass is like fpm_mv720
+            // first pass is like fpm_mv720
             fpm_mv720(map, pattern, raw_width);
             break;
         }
@@ -554,7 +553,7 @@ static void fpm_crop_rec(pixel_map * map, int pattern, int32_t raw_width)
             // first pass is like fpm_mv720
             fpm_mv720(map, pattern, raw_width);
             // second pass is like fpm_mv1080 with corrected fp_start/fp_end
-            fp_start = 89;
+            fp_start = 28;
             fp_end = 724;
             x_rep = 8;
             y_rep = 10;
