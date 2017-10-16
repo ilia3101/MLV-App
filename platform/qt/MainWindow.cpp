@@ -298,7 +298,16 @@ void MainWindow::drawFrame( void )
     if( ui->checkBoxRawFixEnable->isChecked() ) m_pMlvObject->llrawproc->fix_raw = 1;
 
     //Get frame from library
-    getMlvProcessedFrame8( m_pMlvObject, ui->horizontalSliderPosition->value(), m_pRawImage );
+    if( ui->actionPlay->isChecked() && ui->actionDropFrameMode->isChecked() )
+    {
+        //If we are in playback, dropmode, we calculated the exact frame to sync the timeline
+        getMlvProcessedFrame8( m_pMlvObject, (uint64_t)m_newPosDropMode, m_pRawImage );
+    }
+    else
+    {
+        //Else we render the frame which is selected by the slider
+        getMlvProcessedFrame8( m_pMlvObject, ui->horizontalSliderPosition->value(), m_pRawImage );
+    }
 
     if( ui->actionZoomFit->isChecked() )
     {
@@ -379,6 +388,9 @@ void MainWindow::drawFrame( void )
         m_pAudioPlayback->jumpToPos( ui->horizontalSliderPosition->value() );
         m_pAudioPlayback->play();
     }
+
+    //And show the user which frame we show
+    drawFrameNumberLabel();
 
     m_frameStillDrawing = false;
 }
@@ -563,6 +575,7 @@ void MainWindow::playbackHandling(int timeDiff)
             //Drop Frame Mode: calc picture for actual time
             else
             {
+                //This is the exact frame we need on the time line NOW!
                 m_newPosDropMode += (getFramerate() * (double)timeDiff / 1000.0);
                 //Loop!
                 if( ui->actionLoop->isChecked() && ( m_newPosDropMode > getMlvFrames( m_pMlvObject ) ) )
@@ -574,7 +587,11 @@ void MainWindow::playbackHandling(int timeDiff)
                         m_tryToSyncAudio = true;
                     }
                 }
+                //Because we need it NOW, block slider signals and draw after this function in this timerEvent
+                ui->horizontalSliderPosition->blockSignals( true );
                 ui->horizontalSliderPosition->setValue( m_newPosDropMode );
+                ui->horizontalSliderPosition->blockSignals( false );
+                m_frameChanged = true;
             }
         }
     }
@@ -1700,8 +1717,6 @@ void MainWindow::on_actionAboutQt_triggered()
 void MainWindow::on_horizontalSliderPosition_valueChanged(void)
 {
     m_frameChanged = true;
-
-    drawFrameNumberLabel();
 }
 
 //Show Info Dialog
