@@ -20,7 +20,7 @@
 
 #define ROR32(v,a) ((v) >> (a) | (v) << (32-(a)))
 
-static uint32_t file_set_pos(FILE *stream, uint64_t offset, int whence)
+static uint64_t file_set_pos(FILE *stream, uint64_t offset, int whence)
 {
 #if defined(__WIN32)
     return fseeko64(stream, offset, whence);
@@ -29,7 +29,7 @@ static uint32_t file_set_pos(FILE *stream, uint64_t offset, int whence)
 #endif
 }
 
-static uint32_t file_get_pos(FILE *stream)
+static uint64_t file_get_pos(FILE *stream)
 {
 #if defined(__WIN32)
     return ftello64(stream);
