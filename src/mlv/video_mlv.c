@@ -291,7 +291,7 @@ void freeMlvObject(mlvObject_t * video)
     free(video->rgb_raw_current_frame);
     free(video->cache_memory_block);
     free(video->frame_sizes);
-    free(video->llrawproc);
+    freeLLRawProcObject(video->llrawproc);
 
     /* Main 1 */
     free(video);

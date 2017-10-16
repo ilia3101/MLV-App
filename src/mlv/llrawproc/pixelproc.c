@@ -87,8 +87,17 @@ int * get_ev2raw(int black)
 
 void free_luts(int * raw2ev, int * ev2raw)
 {
-    if(raw2ev) free(raw2ev);
-    if(ev2raw) free(ev2raw);
+    if(raw2ev)
+    {
+        free(raw2ev);
+        raw2ev = NULL;
+    }
+
+    if(ev2raw)
+    {
+        free(ev2raw - 10*EV_RESOLUTION);
+        ev2raw = NULL;
+    }
 }
 
 void chroma_smooth(int method, uint16_t * image_data, int width, int height, int black, int white, int * raw2ev, int * ev2raw)
@@ -1037,6 +1046,15 @@ void reset_bpm_status(pixel_map * bad_pixel_map, int * bpm_status)
 
 void free_pixel_maps(pixel_map * focus_pixel_map, pixel_map * bad_pixel_map)
 {
-    if(focus_pixel_map->pixels) free(focus_pixel_map->pixels);
-    if(bad_pixel_map->pixels) free(bad_pixel_map->pixels);
+    if(focus_pixel_map->pixels)
+    {
+        free(focus_pixel_map->pixels);
+        focus_pixel_map->pixels = NULL;
+    }
+
+    if(bad_pixel_map->pixels)
+    {
+        free(bad_pixel_map->pixels);
+        bad_pixel_map->pixels = NULL;
+    }
 }
