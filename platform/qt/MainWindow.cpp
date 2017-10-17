@@ -1720,8 +1720,17 @@ void MainWindow::on_actionAboutQt_triggered()
 }
 
 //Position Slider
-void MainWindow::on_horizontalSliderPosition_valueChanged(void)
+void MainWindow::on_horizontalSliderPosition_valueChanged(int position)
 {
+    //Enable jumping while drop frame mode playback is active
+    if( ui->actionPlay->isChecked() && ui->actionDropFrameMode->isChecked() )
+    {
+        m_newPosDropMode = position;
+        if( ui->actionAudioOutput->isChecked() )
+        {
+            m_tryToSyncAudio = true;
+        }
+    }
     m_frameChanged = true;
 }
 

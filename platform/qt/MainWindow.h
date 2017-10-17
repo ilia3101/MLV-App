@@ -51,7 +51,7 @@ private slots:
     void on_actionOpen_triggered();
     void on_actionAbout_triggered();
     void on_actionAboutQt_triggered();
-    void on_horizontalSliderPosition_valueChanged(void);
+    void on_horizontalSliderPosition_valueChanged(int position);
     void on_actionClip_Information_triggered();
     void on_horizontalSliderExposure_valueChanged(int position);
     void on_horizontalSliderTemperature_valueChanged(int position);
