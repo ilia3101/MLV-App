@@ -385,7 +385,7 @@ void MainWindow::drawFrame( void )
     {
         m_tryToSyncAudio = false;
         m_pAudioPlayback->stop();
-        m_pAudioPlayback->jumpToPos( ui->horizontalSliderPosition->value() );
+        m_pAudioPlayback->jumpToPos( m_newPosDropMode );
         m_pAudioPlayback->play();
     }
 
@@ -578,7 +578,7 @@ void MainWindow::playbackHandling(int timeDiff)
                 //This is the exact frame we need on the time line NOW!
                 m_newPosDropMode += (getFramerate() * (double)timeDiff / 1000.0);
                 //Loop!
-                if( ui->actionLoop->isChecked() && ( m_newPosDropMode > getMlvFrames( m_pMlvObject ) ) )
+                if( ui->actionLoop->isChecked() && ( m_newPosDropMode >= getMlvFrames( m_pMlvObject ) ) )
                 {
                     m_newPosDropMode -= getMlvFrames( m_pMlvObject );
                     //Sync audio
@@ -586,6 +586,12 @@ void MainWindow::playbackHandling(int timeDiff)
                     {
                         m_tryToSyncAudio = true;
                     }
+                }
+                //Limit to last frame if not in loop
+                else if( m_newPosDropMode >= getMlvFrames( m_pMlvObject ) )
+                {
+                    // -1 because 0 <= frame < getMlvFrames( m_pMlvObject )
+                    m_newPosDropMode = getMlvFrames( m_pMlvObject ) - 1;
                 }
                 //Because we need it NOW, block slider signals and draw after this function in this timerEvent
                 ui->horizontalSliderPosition->blockSignals( true );
