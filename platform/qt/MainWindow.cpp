@@ -1848,7 +1848,7 @@ void MainWindow::on_actionExport_triggered()
     QString saveFileName = m_pSessionReceipts.at( m_lastActiveClipInSession )->fileName();
     QString fileType;
     QString fileEnding;
-    saveFileName = saveFileName.left( m_lastSaveFileName.lastIndexOf( "." ) );
+    saveFileName = saveFileName.left( saveFileName.lastIndexOf( "." ) );
     if( m_codecProfile == CODEC_AVIRAW )
     {
         saveFileName.append( ".avi" );
