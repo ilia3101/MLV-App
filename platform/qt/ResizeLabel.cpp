@@ -7,14 +7,14 @@
 
 #include "ResizeLabel.h"
 
-ResizeLabel::ResizeLabel(QWidget* parent, Qt::WindowFlags f)
+ResizeLabel::ResizeLabel(QWidget* parent)
     : QLabel(parent) {
 
 }
 
 ResizeLabel::~ResizeLabel() {}
 
-void ResizeLabel::resizeEvent(QResizeEvent* event) {
+void ResizeLabel::resizeEvent(QResizeEvent *) {
     emit sizeChanged();
 }
 

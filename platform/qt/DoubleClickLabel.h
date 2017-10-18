@@ -16,14 +16,14 @@ class DoubleClickLabel : public QLabel
 {
     Q_OBJECT
 public:
-    explicit DoubleClickLabel(QWidget* parent = Q_NULLPTR, Qt::WindowFlags f = Qt::WindowFlags());
+    explicit DoubleClickLabel(QWidget* parent = Q_NULLPTR);
     ~DoubleClickLabel();
 
 signals:
     void doubleClicked();
 
 protected:
-    void mouseDoubleClickEvent(QMouseEvent* event);
+    void mouseDoubleClickEvent(QMouseEvent*);
 };
 
 #endif // DOUBLECLICKLABEL_H

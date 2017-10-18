@@ -16,14 +16,14 @@ class ResizeLabel : public QLabel
 {
     Q_OBJECT
 public:
-    explicit ResizeLabel(QWidget* parent = Q_NULLPTR, Qt::WindowFlags f = Qt::WindowFlags());
+    explicit ResizeLabel(QWidget* parent = Q_NULLPTR);
     ~ResizeLabel();
 
 signals:
     void sizeChanged();
 
 protected:
-    void resizeEvent(QResizeEvent *event);
+    void resizeEvent(QResizeEvent *);
 };
 
 #endif // RESIZELABEL_H
