@@ -25,7 +25,7 @@ static uint64_t file_set_pos(FILE *stream, uint64_t offset, int whence)
 #if defined(__WIN32)
     return fseeko64(stream, offset, whence);
 #else
-    return fseeko(stream, offset, whence);
+    return fseek(stream, offset, whence);
 #endif
 }
 
@@ -34,7 +34,7 @@ static uint64_t file_get_pos(FILE *stream)
 #if defined(__WIN32)
     return ftello64(stream);
 #else
-    return ftello(stream);
+    return ftell(stream);
 #endif
 }
 
