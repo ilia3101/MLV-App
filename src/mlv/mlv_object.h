@@ -11,6 +11,12 @@
 #include "pthread.h"
 
 
+/* cache states */
+#define MLV_FRAME_NOT_CACHED 0
+#define MLV_FRAME_IS_CACHED 1
+#define MLV_FRAME_BEING_CACHED 2
+
+
 /* An awkward structure for handling an MLV
  * TODO: adapt for .M00 .M01 stuff */
 typedef struct {
@@ -24,6 +30,8 @@ typedef struct {
 
     /* MLV/Lite file(s) */
     FILE * file;
+    char * path;
+    pthread_mutex_t main_file_mutex;
 
     /* For access to MLV headers */
     mlv_file_hdr_t    MLVI;
@@ -61,19 +69,17 @@ typedef struct {
      *** CACHE AREA - used by getMlvProcessedFrame and things ***
      ************************************************************/
 
-    /* 0 = no, 1 = (yes... cache thread is alive right now) */
+    /* 0 = no, 1 = (yes... cache threads are alive right now) */
     int is_caching;
-    pthread_t cache_thread;
+    int cache_thread_count; /* Total active cache threads */
+    uint64_t cache_next; /* Like a cache request (any non-zero frame) */
     pthread_mutex_t cache_mutex;
-
-    /* Will be set to 1 for cache thread to stop (probably only by freeMlvObject) */
+    /* Will be set to 1 for cache threads to stop (probably only by freeMlvObject) */
     int stop_caching;
+
 
     /* Decides whether or not AMaZE *has* to be used or not, normally disabled for smooth playback */
     int use_amaze;
-
-    /* If a frame is currently being cached in the background this will indicate which frame index, so frame request can wait for it to finish */
-    uint32_t currently_caching;
 
     /* Basically how much we can cache(can be set by MB or frames or bytes) */
     uint64_t cache_limit_bytes;
@@ -84,9 +90,8 @@ typedef struct {
     /* Not used, cache always starts at frame zero... for now */
     uint64_t cache_start_frame;
 
-    uint8_t * cached_frames; /* Basically an array with as many elements as frames, 
-     * for each frame: 0(false) = frame is cached, 1 or more(true) = frame is cached */
-    uint16_t ** rgb_raw_frames; /* Pointers to 16/48bpp debayered RGB frames */
+    uint8_t * cached_frames; /* Basically an array with as many elements as frames, cache states are defined above */
+    uint16_t ** rgb_raw_frames; /* Pointers to 16bit cached RGB frames */
 
     /* A single cached frame, speeds up when asking for the same (non-cached) frame over and over again */
     int current_cached_frame_active;
