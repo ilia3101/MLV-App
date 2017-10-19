@@ -27,7 +27,7 @@
 /* Width of the left sidebar('s elements) */
 #define LEFT_SIDEBAR_ELEMENT_WIDTH 164
 
-/* Horizontal side gaps for sidebars */
+/* Horizontal (X) side gaps for sidebars */
 #define SIDE_GAP_X_L 9 /* Left */
 #define SIDE_GAP_X_R 15 /* Right */
 
