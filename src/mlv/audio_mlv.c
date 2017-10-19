@@ -82,9 +82,7 @@ void getMlvAudioData(mlvObject_t * video, int16_t * outputAudio)
         file_set_pos(video->file, video->audio_offsets[i], SEEK_SET);
 
         /* Read to location of audio */
-        pthread_mutex_lock(&video->main_file_mutex);
         fread(output_audio + audio_size, video->audio_sizes[i], 1, video->file);
-        pthread_mutex_unlock(&video->main_file_mutex);
 
         /* New audio position */
         audio_size += video->audio_sizes[i];
