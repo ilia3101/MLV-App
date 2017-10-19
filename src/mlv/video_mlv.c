@@ -180,16 +180,6 @@ void getMlvRawFrameDebayered(mlvObject_t * video, uint64_t frameIndex, uint16_t 
             {
                 video->cache_next = frameIndex;
             }
-            else
-            {
-                float * raw_frame = malloc(width * height * sizeof(float));
-                get_mlv_raw_frame_debayered(video, frameIndex, raw_frame, video->rgb_raw_current_frame, doesMlvAlwaysUseAmaze(video));
-                free(raw_frame);
-                memcpy(outputFrame, video->rgb_raw_current_frame, frame_size);
-                video->current_cached_frame_active = 1;
-                video->current_cached_frame = frameIndex;
-                break;
-            }
         }
 
         case MLV_FRAME_BEING_CACHED:
