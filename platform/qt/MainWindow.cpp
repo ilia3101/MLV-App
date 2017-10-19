@@ -99,6 +99,9 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
             openMlv( fileName );
             on_actionResetReceipt_triggered();
             previewPicture( ui->listWidgetSession->count() - 1 );
+
+            //Caching is in which state? Set it!
+            on_actionCaching_triggered( ui->actionCaching->isChecked() );
         }
         else if( QFile(fileName).exists() && fileName.endsWith( ".masxml", Qt::CaseInsensitive ) )
         {
@@ -234,6 +237,9 @@ bool MainWindow::event(QEvent *event)
                 on_actionResetReceipt_triggered();
                 previewPicture( ui->listWidgetSession->count() - 1 );
             }
+
+            //Caching is in which state? Set it!
+            on_actionCaching_triggered( ui->actionCaching->isChecked() );
         }
         else if( QFile(fileName).exists() && fileName.endsWith( ".masxml", Qt::CaseInsensitive ) )
         {
@@ -285,6 +291,10 @@ void MainWindow::dropEvent(QDropEvent *event)
         on_actionResetReceipt_triggered();
         previewPicture( ui->listWidgetSession->count() - 1 );
     }
+
+    //Caching is in which state? Set it!
+    on_actionCaching_triggered( ui->actionCaching->isChecked() );
+
     m_inOpeningProcess = false;
     event->acceptProposedAction();
 }
@@ -424,6 +434,9 @@ void MainWindow::on_actionOpen_triggered()
         previewPicture( ui->listWidgetSession->count() - 1 );
     }
 
+    //Caching is in which state? Set it!
+    on_actionCaching_triggered( ui->actionCaching->isChecked() );
+
     m_inOpeningProcess = false;
 }
 
@@ -442,15 +455,6 @@ void MainWindow::openMlv( QString fileName )
     freeMlvObject( m_pMlvObject );
     /* Create a NEW object with a NEW MLV clip! */
     m_pMlvObject = initMlvObjectWithClip( fileName.toLatin1().data() );
-    /* Caching */
-    if( ui->actionCaching->isChecked() )
-    {
-        enableMlvCaching( m_pMlvObject );
-    }
-    else
-    {
-        disableMlvCaching( m_pMlvObject );
-    }
     /* If use has terminal this is useful */
 #ifndef STDOUT_SILENT
     printMlvInfo( m_pMlvObject );
@@ -461,6 +465,8 @@ void MainWindow::openMlv( QString fileName )
     setMlvRawCacheLimitMegaBytes( m_pMlvObject, m_cacheSizeMB );
     /* Tell it how many cores we have so it can be optimal */
     setMlvCpuCores( m_pMlvObject, QThread::idealThreadCount() );
+    /* Disable Caching for the opening process */
+    disableMlvCaching( m_pMlvObject );
 
     //Adapt the RawImage to actual size
     int imageSize = getMlvWidth( m_pMlvObject ) * getMlvHeight( m_pMlvObject ) * 3;
@@ -1204,6 +1210,9 @@ void MainWindow::openSession(QString fileName)
 
     file.close();
 
+    //Caching is in which state? Set it!
+    on_actionCaching_triggered( ui->actionCaching->isChecked() );
+
     if (Rxml.hasError())
     {
         QMessageBox::critical( this, tr( "Open Session" ), tr( "Error: Failed to parse file! %1" )
@@ -1215,6 +1224,8 @@ void MainWindow::openSession(QString fileName)
         QMessageBox::critical( this, tr( "Open Session" ), tr( "Error: Cannot read file! %1" ).arg( file.errorString() ) );
         return;
     }
+
+
 }
 
 //Save Session
@@ -1426,6 +1437,9 @@ void MainWindow::showFileInEditor( int row )
     setSliders( m_pSessionReceipts.at( row ) );
     //Save new position in session
     m_lastActiveClipInSession = row;
+
+    //Caching is in which state? Set it!
+    on_actionCaching_triggered( ui->actionCaching->isChecked() );
 }
 
 //Add the clip in SessionList position "row" at last position in ExportQueue
@@ -2212,6 +2226,9 @@ void MainWindow::deleteFileFromSession( void )
         setSliders( m_pSessionReceipts.at( 0 ) );
         openMlv( ui->listWidgetSession->item( 0 )->toolTip() );
         m_lastActiveClipInSession = 0;
+
+        //Caching is in which state? Set it!
+        on_actionCaching_triggered( ui->actionCaching->isChecked() );
     }
     else
     {
@@ -2456,6 +2473,9 @@ void MainWindow::exportHandler( void )
         exportRunning = false;
 
         QMessageBox::information( this, tr( "Export" ), tr( "Export is ready." ) );
+
+        //Caching is in which state? Set it!
+        on_actionCaching_triggered( ui->actionCaching->isChecked() );
     }
 }
 
