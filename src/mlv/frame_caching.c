@@ -25,6 +25,7 @@ void disableMlvCaching(mlvObject_t * video)
     video->stop_caching = 1;
     while (isMlvObjectCaching(video)) usleep(100);
     /* Remove the memory (it's a tradition in MLV App libraries to leave a couple of bytes) */
+    mark_mlv_uncached(video);
     free(video->cache_memory_block);
     video->cache_memory_block = malloc(2);
 }
