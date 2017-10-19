@@ -23,7 +23,7 @@ void disableMlvCaching(mlvObject_t * video)
 {
     /* Stop caching and make sure by waiting */
     video->stop_caching = 1;
-    while (video->is_caching) usleep(100);
+    while (isMlvObjectCaching(video)) usleep(100);
     /* Remove the memory (it's a tradition in MLV App libraries to leave a couple of bytes) */
     free(video->cache_memory_block);
     video->cache_memory_block = malloc(2);
@@ -31,8 +31,6 @@ void disableMlvCaching(mlvObject_t * video)
 
 void enableMlvCaching(mlvObject_t * video)
 {
-    /* Allow the thread */
-    video->stop_caching = 0;
     /* This will reset the memory and start cache thread */
     setMlvRawCacheLimitMegaBytes(video, video->cache_limit_mb);
 }
@@ -63,7 +61,7 @@ void setMlvRawCacheLimitMegaBytes(mlvObject_t * video, uint64_t megaByteLimit)
 
         /* Stop all cache for a bit */
         video->stop_caching = 1;
-        while (video->cache_thread_count) usleep(100);
+        while (isMlvObjectCaching(video)) usleep(100);
 
         /* Resize cache block - to maximum allowed or enough to fit whole clip if it is smaller */
         video->cache_memory_block = realloc(video->cache_memory_block, MIN(bytes_limit, cache_whole));
