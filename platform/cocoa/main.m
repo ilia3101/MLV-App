@@ -125,9 +125,9 @@ int NSApplicationMain(int argc, const char * argv[])
 
     /* Processing style selector */
     App->imageProfile = [ [NSPopUpButton alloc]
-                          initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(0,24,19) ) ];
-    [App->imageProfile anchorRight: YES];
-    [App->imageProfile anchorTop: YES];
+                          initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(13,24,-15) ) ];
+    AnchorRight(App->imageProfile, YES);
+    AnchorTop(App->imageProfile, YES);
     [App->imageProfile insertItemWithTitle: @"Standard" atIndex: PROFILE_STANDARD];
     [App->imageProfile insertItemWithTitle: @"Tonemapped" atIndex: PROFILE_TONEMAPPED];
     // [App->imageProfile insertItemWithTitle: @"Canon C-Log" atIndex: PROFILE_CANON_LOG];
@@ -161,8 +161,8 @@ int NSApplicationMain(int argc, const char * argv[])
                                              initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(12, ELEMENT_HEIGHT, 16 + BLOCK_OFFSET*0.6) )];
     [App->highlightReconstructionSelector setButtonType: NSSwitchButton];
     [App->highlightReconstructionSelector setTitle: @"Highlight Reconstruction"];
-    [App->highlightReconstructionSelector anchorRight: YES];
-    [App->highlightReconstructionSelector anchorTop: YES];
+    AnchorRight(App->highlightReconstructionSelector, YES);
+    AnchorTop(App->highlightReconstructionSelector, YES);
     [App->highlightReconstructionSelector setTarget: App->highlightReconstructionSelector];
     [App->highlightReconstructionSelector setAction: @selector(toggleHighlightReconstruction)];
     [[App->window contentView] addSubview: App->highlightReconstructionSelector];
@@ -172,8 +172,8 @@ int NSApplicationMain(int argc, const char * argv[])
                                     initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(13, ELEMENT_HEIGHT, 30 + BLOCK_OFFSET*0.6) )];
     [App->alwaysUseAmazeSelector setButtonType: NSSwitchButton];
     [App->alwaysUseAmazeSelector setTitle: @"Always use AMaZE"];
-    [App->alwaysUseAmazeSelector anchorRight: YES];
-    [App->alwaysUseAmazeSelector anchorTop: YES];
+    AnchorRight(App->alwaysUseAmazeSelector, YES);
+    AnchorTop(App->alwaysUseAmazeSelector, YES);
     [App->alwaysUseAmazeSelector setTarget: App->alwaysUseAmazeSelector];
     [App->alwaysUseAmazeSelector setAction: @selector(toggleAlwaysAmaze)];
     [[App->window contentView] addSubview: App->alwaysUseAmazeSelector];
@@ -289,8 +289,8 @@ int NSApplicationMain(int argc, const char * argv[])
     [timelineSlider setTarget: timelineSlider];
     [timelineSlider setAction: @selector(timelineSliderMethod)];
     [timelineSlider setDoubleValue: 0.0];
-    [timelineSlider anchorRight: YES];
-    [timelineSlider anchorLeft: YES];
+    AnchorRight(timelineSlider, YES);
+    AnchorLeft(timelineSlider, YES);
     [timelineSlider setAutoresizingMask: NSViewWidthSizable];
     [[App->window contentView] addSubview: timelineSlider];
 
@@ -299,13 +299,13 @@ int NSApplicationMain(int argc, const char * argv[])
     /* Session tableview */
     // create a table view and a scroll view
     NSScrollView * tableContainer = [[NSScrollView alloc] initWithFrame:NSMakeRect(SIDE_GAP_X_L, 64, LEFT_SIDEBAR_ELEMENT_WIDTH, WINDOW_HEIGHT-128)];
-    App->session.clipTable = [[NSTableView alloc] initWithFrame:NSMakeRect(0, 0, 364, 200)];
+    App->session.clipTable = [[NSTableView alloc] init];
     App->session.clipTable.backgroundColor = [NSColor colorWithRed:0.235 green:0.235 blue:0.235 alpha:0.8];
     [App->session.clipTable setFocusRingType: NSFocusRingTypeNone]; /* Hide ugly 'active' border */
     // create columns for our table
     NSTableColumn * clipColumn = [[NSTableColumn alloc] initWithIdentifier:@"Col1"];
     [clipColumn.headerCell setStringValue:@"Clip Name"];
-    [clipColumn setWidth:100];
+    [clipColumn setWidth: LEFT_SIDEBAR_ELEMENT_WIDTH];
     // generally you want to add at least one column to the table view.
     [App->session.clipTable addTableColumn:clipColumn];
     // [App->session.clipTable setDelegate: [clipTableDelegate new]];
@@ -314,9 +314,21 @@ int NSApplicationMain(int argc, const char * argv[])
     // embed the table view in the scroll view, and add the scroll view
     // to our window.
     [tableContainer setDocumentView:App->session.clipTable];
-    [tableContainer setHasVerticalScroller:YES];
+    [tableContainer setHasVerticalScroller:NO];
     [tableContainer setAutoresizingMask: NSViewHeightSizable];
     [[App->window contentView] addSubview:tableContainer];
+
+
+    /* Control for swapping between processing view and LLRawProc control 'tabs'
+     * https://developer.apple.com/library/content/documentation/Cocoa/Conceptual/SegmentedControl/Articles/SegmentedControlCode.html */
+
+    App->processingTabSwitch = [[NSSegmentedControl alloc] initWithFrame: NSMakeRect(RIGHT_SIDEBAR_SLIDER(0, ELEMENT_HEIGHT, 17))];
+    [App->processingTabSwitch setSegmentCount:2];
+    [App->processingTabSwitch setLabel:@"RAW Fix" forSegment:0];
+    [App->processingTabSwitch setLabel:@"Process" forSegment:1];
+    AnchorRight(App->processingTabSwitch, YES);
+    AnchorTop(App->processingTabSwitch, YES);
+    [[App->window contentView] addSubview: App->processingTabSwitch];
 
 
 

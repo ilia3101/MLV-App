@@ -9,8 +9,8 @@ labelName = [ \
 ]; \
 [labelName setLabelStyle]; /* From useful_methods.h */ \
 /*[labelName setFont:[NSFont fontWithName:@"Helvetica" size:12.7]];*/ \
-[labelName anchorTop: YES]; \
-[labelName anchorRight: YES]; \
+AnchorTop(labelName, YES); \
+AnchorRight(labelName, YES); \
 [labelName setStringValue: labelString]; \
 [[App->window contentView] addSubview: labelName]; \
  \
@@ -20,8 +20,8 @@ valueLabelName = [ \
 ]; \
 [valueLabelName setFont:[NSFont fontWithName:@"Courier" size:12.7]]; \
 [valueLabelName setLabelStyle]; /* From useful_methods.h */ \
-[valueLabelName anchorTop: YES]; \
-[valueLabelName anchorRight: YES]; \
+AnchorTop(valueLabelName, YES); \
+AnchorRight(valueLabelName, YES); \
 [valueLabelName setStringValue: @"1.0"]; \
 [[App->window contentView] addSubview: valueLabelName]; \
  \
@@ -32,8 +32,8 @@ sliderName = [ \
 [sliderName setTarget: sliderName]; \
 [sliderName setAction: @selector(methodName)]; \
 [sliderName setDoubleValue: defaultValueDouble]; \
-[sliderName anchorRight: YES]; \
-[sliderName anchorTop: YES]; \
+AnchorTop(sliderName, YES); \
+AnchorRight(sliderName, YES); \
 [[App->window contentView] addSubview: sliderName];
 
 /* Adding more than 1 button causes segmentation fault 11. Something is broken. */
@@ -48,8 +48,8 @@ buttonName = [ \
 [buttonName setAction: @selector(methodName)]; \
 [buttonName setBezelStyle: NSRoundedBezelStyle]; \
 [buttonName setTitle: buttonText]; \
-[buttonName anchorLeft: YES]; \
-[buttonName anchorTop: YES]; \
+AnchorTop(buttonName, YES); \
+AnchorLeft(buttonName, YES); \
 [[App->window contentView] addSubview: buttonName];
 
 
@@ -63,8 +63,8 @@ buttonName = [ \
 [buttonName setAction: @selector(methodName)]; \
 [buttonName setBezelStyle: NSRoundedBezelStyle]; \
 [buttonName setTitle: buttonText]; \
-[buttonName anchorLeft: YES]; \
-[buttonName anchorBottom: YES]; \
+AnchorBottom(buttonName, YES); \
+AnchorLeft(buttonName, YES); \
 [[App->window contentView] addSubview: buttonName];
 
 

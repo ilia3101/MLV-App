@@ -78,6 +78,9 @@ typedef struct {
     /* Select video export format */
     NSPopUpButton * videoFormat;
 
+    /* Select between LLRawProc and Processing tab */
+    NSSegmentedControl * processingTabSwitch;
+
     /****************************************
      **           SESSION STUFF            **
      ****************************************/

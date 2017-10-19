@@ -36,6 +36,7 @@ void initAppWithGod()
     [App->lightRangeSlider lightRangeMethod];
     [App->lightenSlider lightenMethod];
     [App->sharpnessSlider sharpnessMethod];
+    App->processingTabSwitch.selectedSegment = 1; /* Processing is default tab */
     App->frameChanged = 0;
 }
 

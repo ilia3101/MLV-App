@@ -13,11 +13,11 @@
 
 /* Size of window when app loads */
 #define WINDOW_WIDTH 1280
-#define WINDOW_HEIGHT 650
+#define WINDOW_HEIGHT 700
 
 /* How small window can go */
 #define WINDOW_WIDTH_MINIMUM 1024
-#define WINDOW_HEIGHT_MINIMUM 650 /* Just about fits all of the sliders */
+#define WINDOW_HEIGHT_MINIMUM 670 /* Just about fits all of the sliders */
 
 /* Looks nice */
 #define TRANSPARENT_TITLEBAR true
