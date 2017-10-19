@@ -31,6 +31,7 @@ typedef struct {
     /* MLV/Lite file(s) */
     FILE * file;
     char * path;
+    pthread_mutex_t main_file_mutex;
 
     /* For access to MLV headers */
     mlv_file_hdr_t    MLVI;

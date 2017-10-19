@@ -75,7 +75,9 @@ void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outpu
     if (video->MLVI.videoClass & MLV_VIDEO_CLASS_FLAG_LJ92)
     {
         int raw_data_size = video->frame_sizes[frameIndex];
+        if (!useFile) pthread_mutex_lock(&video->main_file_mutex); /* TODO: make the mutex code less ugly */
         fread(raw_frame, sizeof(uint8_t), raw_data_size, file);
+        if (!useFile) pthread_mutex_unlock(&video->main_file_mutex);
 
         int components = 1;
         lj92 decoder_object;
@@ -85,7 +87,9 @@ void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outpu
     }
     else /* If not compressed just unpack to 16bit */
     {
+        if (!useFile) pthread_mutex_lock(&video->main_file_mutex);
         fread(raw_frame, sizeof(uint8_t), raw_frame_size, file);
+        if (!useFile) pthread_mutex_unlock(&video->main_file_mutex);
 
         uint32_t mask = (1 << bitdepth) - 1;
         for (int i = 0; i < pixels_count; ++i)
@@ -271,6 +275,9 @@ mlvObject_t * initMlvObject()
     /* Path (so separate cache threads can have their own FILE*s) */
     video->path = (char *)malloc( sizeof(char) );
 
+    /* Will avoid main file conflicts with audio and stuff */
+    pthread_mutex_init(&video->main_file_mutex, NULL);
+
     /* Set cache limit to allow ~1 second of 1080p and be safe for low ram PCs */
     setMlvRawCacheLimitMegaBytes(video, 290);
     setMlvCacheStartFrame(video, 0); /* Just in case */
@@ -307,6 +314,9 @@ void freeMlvObject(mlvObject_t * video)
     free(video->frame_sizes);
     free(video->llrawproc);
     free(video->path);
+
+    /* Mutex things here... */
+    pthread_mutex_destroy(&video->main_file_mutex);
 
     /* Main 1 */
     free(video);
