@@ -201,6 +201,9 @@ void MainWindow::timerEvent(QTimerEvent *t)
 //Window resized -> scale picture
 void MainWindow::resizeEvent(QResizeEvent *event)
 {
+    //Stop playback if active
+    ui->actionPlay->setChecked( false );
+
     if( m_fileLoaded )
     {
         drawFrame();
