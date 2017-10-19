@@ -19,14 +19,14 @@ Mac:
 - `cd platform/qt/libpng16/` `./configure`    `make check`     `sudo make install`
 - unpack ffmpegOSX.zip in `platform/qt/FFmpeg`
 - open `platform/qt/MLVApp.pro` in QtCreator
-- go to tab project, add command line argument -j4 (for quad core) under build steps, uncheck ...DYLD_LIBRARY_PATH... under Run
+- go to tab project, add command line argument -j4 (for quad core) under build steps, uncheck Add build library search path to DYLD_LIBRARY_PATH and DYLD_FRAMEWORK_PATH checkbox in my project Run section
 - Build and Start
 
 Windows:
 - install Qt5 (minimum 5.6)
 - unpack ffmpegWin.zip in `platform/qt/FFmpeg` (and copy it later into build directory)
 - open `platform/qt/MLVApp.pro` in QtCreator
-- go to tab project, add command line argument -j4 (for quad core) under build steps, uncheck ...DYLD_LIBRARY_PATH... under Run
+- go to tab project, add command line argument -j4 (for quad core) under build steps, uncheck Add build library search path to DYLD_LIBRARY_PATH and DYLD_FRAMEWORK_PATH checkbox in my project Run section
 - Build and Start
 
 In general it could be like that for Linux:
