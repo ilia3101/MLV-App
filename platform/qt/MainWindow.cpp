@@ -739,6 +739,7 @@ void MainWindow::readSettings()
     if( set.value( "zebras", false ).toBool() ) ui->actionShowZebras->setChecked( true );
     m_lastSaveFileName = set.value( "lastFileName", QString( "/Users/" ) ).toString();
     m_codecProfile = set.value( "codecProfile", 4 ).toUInt();
+    m_codecOption = set.value( "codecOption", 0 ).toUInt();
     m_previewMode = set.value( "previewMode", 1 ).toUInt();
     //if( set.value( "caching", false ).toBool() ) ui->actionCaching->setChecked( true );
     ui->actionCaching->setChecked( false );
@@ -759,6 +760,7 @@ void MainWindow::writeSettings()
     set.setValue( "zebras", ui->actionShowZebras->isChecked() );
     set.setValue( "lastFileName", m_lastSaveFileName );
     set.setValue( "codecProfile", m_codecProfile );
+    set.setValue( "codecOption", m_codecOption );
     set.setValue( "previewMode", m_previewMode );
     set.setValue( "caching", ui->actionCaching->isChecked() );
     set.setValue( "frameRate", m_frameRate );
@@ -887,6 +889,10 @@ void MainWindow::startExportPipe(QString fileName)
 
     // we always get amaze frames for exporting
     setMlvAlwaysUseAmaze( m_pMlvObject );
+    reset_fpm_status(&m_pMlvObject->llrawproc->focus_pixel_map, &m_pMlvObject->llrawproc->fpm_status);
+    reset_bpm_status(&m_pMlvObject->llrawproc->bad_pixel_map, &m_pMlvObject->llrawproc->bpm_status);
+    m_pMlvObject->llrawproc->compute_stripes = 1;
+    m_pMlvObject->current_cached_frame_active = 0;
     //enable low level raw fixes (if wanted)
     if( ui->checkBoxRawFixEnable->isChecked() ) m_pMlvObject->llrawproc->fix_raw = 1;
 
@@ -938,10 +944,15 @@ void MainWindow::startExportPipe(QString fileName)
     }
     else
     {
+        QString option;
+        if( m_codecProfile <= CODEC_PRORES422HQ && m_codecOption == CODEC_PRORES_OPTION_AW ) option = QString( "prores_aw" );
+        else option = QString( "prores_ks" );
+
         output.append( QString( ".mov" ) );
-        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v prores_ks -profile:v %3 \"%4\"" )
+        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v %3 -profile:v %4 \"%5\"" )
                     .arg( fps )
                     .arg( resolution )
+                    .arg( option )
                     .arg( m_codecProfile )
                     .arg( output ) );
     }
@@ -2050,9 +2061,10 @@ void MainWindow::on_actionExportSettings_triggered()
     //Stop playback if active
     ui->actionPlay->setChecked( false );
 
-    ExportSettingsDialog *pExportSettings = new ExportSettingsDialog( this, m_codecProfile, m_previewMode, m_fpsOverride, m_frameRate, m_audioExportEnabled, m_styleSelection );
+    ExportSettingsDialog *pExportSettings = new ExportSettingsDialog( this, m_codecProfile, m_codecOption, m_previewMode, m_fpsOverride, m_frameRate, m_audioExportEnabled, m_styleSelection );
     pExportSettings->exec();
     m_codecProfile = pExportSettings->encoderSetting();
+    m_codecOption = pExportSettings->encoderOption();
     m_previewMode = pExportSettings->previewMode();
     m_fpsOverride = pExportSettings->isFpsOverride();
     m_frameRate = pExportSettings->getFps();

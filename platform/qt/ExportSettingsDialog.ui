@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>328</width>
-    <height>354</height>
+    <height>398</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,19 +19,10 @@
      <property name="title">
       <string>File Export</string>
      </property>
-     <layout class="QGridLayout" name="gridLayout_2">
-      <property name="horizontalSpacing">
-       <number>-1</number>
-      </property>
-      <property name="verticalSpacing">
-       <number>3</number>
-      </property>
-      <item row="0" column="0">
-       <layout class="QHBoxLayout" name="horizontalLayout">
-        <property name="spacing">
-         <number>10</number>
-        </property>
-        <item>
+     <layout class="QVBoxLayout" name="verticalLayout_2">
+      <item>
+       <layout class="QGridLayout" name="gridLayout_2">
+        <item row="0" column="0">
          <widget class="QLabel" name="label">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
@@ -44,7 +35,7 @@
           </property>
          </widget>
         </item>
-        <item>
+        <item row="0" column="1">
          <widget class="QComboBox" name="comboBoxCodec">
           <item>
            <property name="text">
@@ -78,9 +69,12 @@
           </item>
          </widget>
         </item>
+        <item row="1" column="1">
+         <widget class="QComboBox" name="comboBoxOption"/>
+        </item>
        </layout>
       </item>
-      <item row="1" column="0">
+      <item>
        <layout class="QHBoxLayout" name="horizontalLayout_3">
         <property name="spacing">
          <number>10</number>
@@ -119,7 +113,7 @@
         </item>
        </layout>
       </item>
-      <item row="2" column="0">
+      <item>
        <layout class="QHBoxLayout" name="horizontalLayout_4">
         <item>
          <widget class="QCheckBox" name="checkBoxExportAudio">
