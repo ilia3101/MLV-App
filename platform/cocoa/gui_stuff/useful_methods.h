@@ -3,8 +3,6 @@
 #ifndef _useful_methods_
 #define _useful_methods_
 
-#include "anchor_methods.h"
-
 /* NSTextField methods */
 @interface NSTextField (usefulMethods)
 
