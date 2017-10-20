@@ -184,7 +184,7 @@ void getMlvRawFrameDebayered(mlvObject_t * video, uint64_t frameIndex, uint16_t 
 
         case MLV_FRAME_BEING_CACHED:
         {
-            if (doesMlvAlwaysUseAmaze(video))
+            if (doesMlvAlwaysUseAmaze(video) && isMlvObjectCaching(video))
             {
                 while (video->cached_frames[frameIndex] != MLV_FRAME_IS_CACHED) usleep(100);
                 memcpy(outputFrame, video->rgb_raw_frames[frameIndex], frame_size);
