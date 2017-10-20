@@ -46,8 +46,13 @@ typedef struct {
     /* Yes, displayed image will be 8 bit, as most monitors are */
     uint8_t * rawImage;
 
+
+    /****************************************
+     **          PROCESSING STUFF          **
+     ****************************************/
+
     /* Sliders */
-    NSSlider * exposureSlider,
+    NSSlider * exposureSlider, /* All adjustment sliders for processing */
     * saturationSlider, * kelvinSlider,
     * tintSlider, * darkStrengthSlider,
     * darkRangeSlider, * lightStrengthSlider,
@@ -63,17 +68,41 @@ typedef struct {
     * lightRangeLabel, * lightRangeValueLabel,
     * lightenLabel, * lightenValueLabel,
     * sharpnessLabel, * sharpnessValueLabel;
+    /* Buttons (Checkboxes) */
+    NSButton * highlightReconstructionSelector;
+    NSButton * alwaysUseAmazeSelector;
+    /* Select image profile */
+    NSPopUpButton * imageProfile;
+
+    /****************************************
+     **           LLRawProc STUFF          **
+     ****************************************/
+
+    NSButton * fixRawSelector; /* Checkbox */
+
+    NSTextField * focusPixelLabel;
+    NSSegmentedControl * focusPixelOption;
+
+    NSTextField * stripeFixLabel;
+    NSSegmentedControl * stripeFixOption;
+
+    NSTextField * chromaSmoothLabel;
+    NSSegmentedControl * chromaSmoothOption;
+
+    NSTextField * patternNoiseLabel;
+    NSSegmentedControl * patternNoiseOption;
+
+    NSTextField * badPixelLabel;
+    NSSegmentedControl * badPixelOption;
+
+
+
+
+    NSSlider * timelineSlider; /* Timeline slider */
 
     /* Buttons */
     NSButton * openMLVButton;
     NSButton * exportProRes4444Button;
-    /* Buttons (Checkboxes) */
-    NSButton * highlightReconstructionSelector;
-    NSButton * alwaysUseAmazeSelector;
-    NSButton * tonemappingSelector;
-
-    /* Select image profile */
-    NSPopUpButton * imageProfile;
 
     /* Select video export format */
     NSPopUpButton * videoFormat;

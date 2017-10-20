@@ -203,14 +203,6 @@ int NSApplicationMain(int argc, const char * argv[])
     // [App->imageProfile selectItemAtIndex: DEFAULT_IMAGE_PROFILE_APP];
     // [[App->window contentView] addSubview: App->imageProfile];
 
-    /* NSTableView - List of all clips currently open (session) */
-    // NSScrollView * tableContainer = [[NSScrollView alloc] initWithFrame:NSMakeRect(10, 10, 380, 200)];
-
-    // NSTableColumn * column = [[NSTableColumn alloc] initWithIdentifier:@"id"];
-    // App->clipTable = [ [NSTableView alloc] 
-    //                    initWithFrame: NSMakeRect(10,200,100,100)];
-    // [App->clipTable addTableColumn:column];
-    // [[App->window contentView] addSubview: App->tonemappingSelector];
 
     /*
      *******************************************************************************
@@ -282,17 +274,17 @@ int NSApplicationMain(int argc, const char * argv[])
     [[App->window contentView] addSubview: App->previewWindow];
 
     /* Slider for moving thourhg the clip */
-    NSSlider * timelineSlider = [
+    App->timelineSlider = [
         [NSSlider alloc]
         initWithFrame: NSMakeRect( TIMELINE_SLIDER_LOCATION )
     ];
-    [timelineSlider setTarget: timelineSlider];
-    [timelineSlider setAction: @selector(timelineSliderMethod)];
-    [timelineSlider setDoubleValue: 0.0];
-    AnchorRight(timelineSlider, YES);
-    AnchorLeft(timelineSlider, YES);
-    [timelineSlider setAutoresizingMask: NSViewWidthSizable];
-    [[App->window contentView] addSubview: timelineSlider];
+    [App->timelineSlider setTarget: App->timelineSlider];
+    [App->timelineSlider setAction: @selector(timelineSliderMethod)];
+    [App->timelineSlider setDoubleValue: 0.0];
+    AnchorRight(App->timelineSlider, YES);
+    AnchorLeft(App->timelineSlider, YES);
+    [App->timelineSlider setAutoresizingMask: NSViewWidthSizable];
+    [[App->window contentView] addSubview: App->timelineSlider];
 
 
 
@@ -324,11 +316,136 @@ int NSApplicationMain(int argc, const char * argv[])
 
     App->processingTabSwitch = [[NSSegmentedControl alloc] initWithFrame: NSMakeRect(RIGHT_SIDEBAR_SLIDER(0, ELEMENT_HEIGHT, 17))];
     [App->processingTabSwitch setSegmentCount:2];
-    [App->processingTabSwitch setLabel:@"RAW Fix" forSegment:0];
+    [App->processingTabSwitch setLabel:@"Correct" forSegment:0];
     [App->processingTabSwitch setLabel:@"Process" forSegment:1];
     AnchorRight(App->processingTabSwitch, YES);
     AnchorTop(App->processingTabSwitch, YES);
+    [App->processingTabSwitch setTarget: App->processingTabSwitch];
+    [App->processingTabSwitch setAction: @selector(toggleTab)];
+    App->processingTabSwitch.selectedSegment = 1; /* Processing is default tab */
     [[App->window contentView] addSubview: App->processingTabSwitch];
+
+    /*
+     *******************************************************************************
+     * Create LLRawProc tab
+     *******************************************************************************
+     */
+
+
+    App->fixRawSelector = [[NSButton alloc] initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(1, ELEMENT_HEIGHT, 21) )];
+    [App->fixRawSelector setButtonType: NSSwitchButton];
+    [App->fixRawSelector setTitle: @"Apply RAW Corrections"];
+    AnchorRight(App->fixRawSelector, YES);
+    AnchorTop(App->fixRawSelector, YES);
+    [App->fixRawSelector setTarget: App->fixRawSelector];
+    [App->fixRawSelector setAction: @selector(toggleHighlightReconstruction)];
+    [[App->window contentView] addSubview: App->fixRawSelector];
+
+
+    App->focusPixelLabel = [ [NSTextField alloc]
+                             initWithFrame: NSMakeRect( RIGHT_SIDEBAR_LABEL(2,ELEMENT_HEIGHT,5) )];
+    [App->focusPixelLabel setLabelStyle];
+    AnchorTop(App->focusPixelLabel, YES);
+    AnchorRight(App->focusPixelLabel, YES);
+    [App->focusPixelLabel setStringValue: @"Fix Focus Pixels"];
+    [[App->window contentView] addSubview: App->focusPixelLabel];
+    App->focusPixelOption = [ [NSSegmentedControl alloc]
+                              initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(2,ELEMENT_HEIGHT,5) ) ];
+    AnchorRight(App->focusPixelOption, YES);
+    AnchorTop(App->focusPixelOption, YES);
+    [App->focusPixelOption setSegmentCount:3];
+    [App->focusPixelOption setLabel:@"Off" forSegment:0];
+    [App->focusPixelOption setLabel:@"Method 1" forSegment:1];
+    [App->focusPixelOption setLabel:@"Method 2" forSegment:2];
+    [App->focusPixelOption setTarget: App->focusPixelOption];
+    [App->focusPixelOption setAction: @selector(toggleImageProfile)];
+    App->focusPixelOption.selectedSegment = 0;
+    [[App->window contentView] addSubview: App->focusPixelOption];
+
+
+    App->badPixelLabel = [ [NSTextField alloc]
+                           initWithFrame: NSMakeRect( RIGHT_SIDEBAR_LABEL(3,ELEMENT_HEIGHT,-5) )];
+    [App->badPixelLabel setLabelStyle];
+    AnchorTop(App->badPixelLabel, YES);
+    AnchorRight(App->badPixelLabel, YES);
+    [App->badPixelLabel setStringValue: @"Fix Bad Pixels"];
+    [[App->window contentView] addSubview: App->badPixelLabel];
+    App->badPixelOption = [ [NSSegmentedControl alloc]
+                            initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(3,ELEMENT_HEIGHT,-5) ) ];
+    AnchorRight(App->badPixelOption, YES);
+    AnchorTop(App->badPixelOption, YES);
+    [App->badPixelOption setSegmentCount:3];
+    [App->badPixelOption setLabel:@"Off" forSegment:0];
+    [App->badPixelOption setLabel:@"Method 1" forSegment:1];
+    [App->badPixelOption setLabel:@"Method 2" forSegment:2];
+    [App->badPixelOption setTarget: App->badPixelOption];
+    [App->badPixelOption setAction: @selector(toggleImageProfile)];
+    App->badPixelOption.selectedSegment = 0;
+    [[App->window contentView] addSubview: App->badPixelOption];
+
+
+    App->chromaSmoothLabel = [ [NSTextField alloc]
+                               initWithFrame: NSMakeRect( RIGHT_SIDEBAR_LABEL(4,ELEMENT_HEIGHT,-15) )];
+    [App->chromaSmoothLabel setLabelStyle];
+    AnchorTop(App->chromaSmoothLabel, YES);
+    AnchorRight(App->chromaSmoothLabel, YES);
+    [App->chromaSmoothLabel setStringValue: @"Chroma Smooth"];
+    [[App->window contentView] addSubview: App->chromaSmoothLabel];
+    App->chromaSmoothOption = [ [NSSegmentedControl alloc]
+                                initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(4,ELEMENT_HEIGHT,-15) ) ];
+    AnchorRight(App->chromaSmoothOption, YES);
+    AnchorTop(App->chromaSmoothOption, YES);
+    [App->chromaSmoothOption setSegmentCount:4];
+    [App->chromaSmoothOption setLabel:@"Off" forSegment:0];
+    [App->chromaSmoothOption setLabel:@"2x2" forSegment:1];
+    [App->chromaSmoothOption setLabel:@"3x3" forSegment:2];
+    [App->chromaSmoothOption setLabel:@"5x5" forSegment:3];
+    [App->chromaSmoothOption setTarget: App->chromaSmoothOption];
+    [App->chromaSmoothOption setAction: @selector(toggleImageProfile)];
+    App->chromaSmoothOption.selectedSegment = 0;
+    [[App->window contentView] addSubview: App->chromaSmoothOption];
+
+
+    App->stripeFixLabel = [ [NSTextField alloc]
+                            initWithFrame: NSMakeRect( RIGHT_SIDEBAR_LABEL(5,ELEMENT_HEIGHT, -25) )];
+    [App->stripeFixLabel setLabelStyle];
+    AnchorTop(App->stripeFixLabel, YES);
+    AnchorRight(App->stripeFixLabel, YES);
+    [App->stripeFixLabel setStringValue: @"Vertical Stripe Fix"];
+    [[App->window contentView] addSubview: App->stripeFixLabel];
+    App->stripeFixOption = [ [NSSegmentedControl alloc]
+                             initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(5,ELEMENT_HEIGHT,-25) ) ];
+    AnchorRight(App->stripeFixOption, YES);
+    AnchorTop(App->stripeFixOption, YES);
+    [App->stripeFixOption setSegmentCount:3];
+    [App->stripeFixOption setLabel:@"Off" forSegment:0];
+    [App->stripeFixOption setLabel:@"Normal" forSegment:1];
+    [App->stripeFixOption setLabel:@"Force" forSegment:2];
+    [App->stripeFixOption setTarget: App->stripeFixOption];
+    [App->stripeFixOption setAction: @selector(toggleImageProfile)];
+    App->stripeFixOption.selectedSegment = 0;
+    [[App->window contentView] addSubview: App->stripeFixOption];
+
+
+    App->patternNoiseLabel = [ [NSTextField alloc]
+                               initWithFrame: NSMakeRect( RIGHT_SIDEBAR_LABEL(6,ELEMENT_HEIGHT,-35) )];
+    [App->patternNoiseLabel setLabelStyle];
+    AnchorTop(App->patternNoiseLabel, YES);
+    AnchorRight(App->patternNoiseLabel, YES);
+    [App->patternNoiseLabel setStringValue: @"Pattern Noise Fix"];
+    [[App->window contentView] addSubview: App->patternNoiseLabel];
+    App->patternNoiseOption = [ [NSSegmentedControl alloc]
+                                initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(6,ELEMENT_HEIGHT,-35) ) ];
+    AnchorRight(App->patternNoiseOption, YES);
+    AnchorTop(App->patternNoiseOption, YES);
+    [App->patternNoiseOption setSegmentCount:2];
+    [App->patternNoiseOption setLabel:@"Off" forSegment:0];
+    [App->patternNoiseOption setLabel:@"On" forSegment:1];
+    [App->patternNoiseOption setTarget: App->patternNoiseOption];
+    [App->patternNoiseOption setAction: @selector(toggleImageProfile)];
+    App->patternNoiseOption.selectedSegment = 0;
+    [[App->window contentView] addSubview: App->patternNoiseOption];
+
 
 
 

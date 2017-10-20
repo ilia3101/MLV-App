@@ -55,5 +55,12 @@ int setAppNewMlvClip(char * mlvPath); /* 0=fail 1=ok */
 
 @end
 
+/* NSSegmentedControl methods */
+@interface NSSegmentedControl (mainMethods)
+
+/* Select tab (Processing, LLRawProc... etc + more in the future) */
+-(void)toggleTab;
+
+@end
 
 #endif

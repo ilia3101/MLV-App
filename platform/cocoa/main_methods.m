@@ -36,7 +36,7 @@ void initAppWithGod()
     [App->lightRangeSlider lightRangeMethod];
     [App->lightenSlider lightenMethod];
     [App->sharpnessSlider sharpnessMethod];
-    App->processingTabSwitch.selectedSegment = 1; /* Processing is default tab */
+    [App->processingTabSwitch toggleTab];
     App->frameChanged = 0;
 }
 
@@ -433,6 +433,78 @@ int setAppNewMlvClip(char * mlvPath)
     processingSetSharpening(App->processingSettings, sharpnessValue);
     [App->sharpnessValueLabel setStringValue: [NSString stringWithFormat:@"%6.3f", sharpnessValue]];
     App->frameChanged++;
+}
+
+@end
+
+/* NSSegmentedControl methods */
+@implementation NSSegmentedControl (mainMethods)
+
+/* Select tab (Processing, LLRawProc... etc + more in the future) */
+-(void)toggleTab
+{
+    BOOL showLLRawProc;
+    BOOL showProcessing;
+
+    switch ([self selectedSegment])
+    {
+        case 0: /* LLRawProc Tab */
+            showLLRawProc = NO;
+            showProcessing = YES;
+            break;
+        case 1: /* Processing Tab */
+            showLLRawProc = YES;
+            showProcessing = NO;
+            break;
+    }
+
+    /* 
+     * Processing Tab
+     */
+
+    /* Now show/hide things, yes this is ugly. Cocoa GUI code has become a mess */
+    [App->exposureSlider setHidden: showProcessing];
+    [App->saturationSlider setHidden: showProcessing]; [App->kelvinSlider setHidden: showProcessing];
+    [App->tintSlider setHidden: showProcessing]; [App->darkStrengthSlider setHidden: showProcessing];
+    [App->darkRangeSlider setHidden: showProcessing]; [App->lightStrengthSlider setHidden: showProcessing];
+    [App->lightRangeSlider setHidden: showProcessing]; [App->lightenSlider setHidden: showProcessing];
+    [App->sharpnessSlider setHidden: showProcessing];
+    /* Slider labels */
+    [App->exposureLabel setHidden: showProcessing]; [App->exposureValueLabel setHidden: showProcessing];
+    [App->saturationLabel setHidden: showProcessing]; [App->saturationValueLabel setHidden: showProcessing]; [App->kelvinLabel setHidden: showProcessing];
+    [App->kelvinValueLabel setHidden: showProcessing]; [App->tintLabel setHidden: showProcessing]; [App->tintValueLabel setHidden: showProcessing];
+    [App->darkStrengthLabel setHidden: showProcessing]; [App->darkStrengthValueLabel setHidden: showProcessing];
+    [App->darkRangeLabel setHidden: showProcessing]; [App->darkRangeValueLabel setHidden: showProcessing];
+    [App->lightStrengthLabel setHidden: showProcessing]; [App->lightStrengthValueLabel setHidden: showProcessing];
+    [App->lightRangeLabel setHidden: showProcessing]; [App->lightRangeValueLabel setHidden: showProcessing];
+    [App->lightenLabel setHidden: showProcessing]; [App->lightenValueLabel setHidden: showProcessing];
+    [App->sharpnessLabel setHidden: showProcessing]; [App->sharpnessValueLabel setHidden: showProcessing];
+    /* Checkboxes and processing profile selector */
+    [App->highlightReconstructionSelector setHidden: showProcessing];
+    [App->alwaysUseAmazeSelector setHidden: showProcessing];
+    /* Select image profile */
+    [App->imageProfile setHidden: showProcessing];
+
+    /* 
+     * LLRawProc Tab
+     */
+
+    [App->fixRawSelector setHidden: showLLRawProc];
+
+    [App->focusPixelLabel setHidden: showLLRawProc];
+    [App->focusPixelOption setHidden: showLLRawProc];
+
+    [App->stripeFixLabel setHidden: showLLRawProc];
+    [App->stripeFixOption setHidden: showLLRawProc];
+
+    [App->chromaSmoothLabel setHidden: showLLRawProc];
+    [App->chromaSmoothOption setHidden: showLLRawProc];
+
+    [App->patternNoiseLabel setHidden: showLLRawProc];
+    [App->patternNoiseOption setHidden: showLLRawProc];
+
+    [App->badPixelLabel setHidden: showLLRawProc];
+    [App->badPixelOption setHidden: showLLRawProc];
 }
 
 @end
