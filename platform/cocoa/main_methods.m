@@ -223,6 +223,7 @@ int setAppNewMlvClip(char * mlvPath)
     {
         App->videoMLV->llrawproc->fix_raw = 0;
     }
+    disableMlvCaching(App->videoMLV); enableMlvCaching(App->videoMLV); // TEMPORARY
     App->frameChanged++;
 }
 
@@ -502,6 +503,8 @@ int setAppNewMlvClip(char * mlvPath)
     /* Full res blending option */
     App->videoMLV->llrawproc->diso_frblending = ![App->fullResBlendingOption selectedSegment];
 
+    disableMlvCaching(App->videoMLV); enableMlvCaching(App->videoMLV); // TEMPORARY
+
     App->frameChanged++;
 }
 
@@ -509,6 +512,7 @@ int setAppNewMlvClip(char * mlvPath)
 {
     if (!App->videoMLV) return;
     App->videoMLV->llrawproc->pattern_noise = [App->patternNoiseOption selectedSegment];
+    disableMlvCaching(App->videoMLV); enableMlvCaching(App->videoMLV); // TEMPORARY
     App->frameChanged++;
 }
 
@@ -517,6 +521,7 @@ int setAppNewMlvClip(char * mlvPath)
     if (!App->videoMLV) return;
     App->videoMLV->llrawproc->vertical_stripes = [App->stripeFixOption selectedSegment];
     App->videoMLV->llrawproc->compute_stripes = [App->stripeFixOption selectedSegment] ? 1 : 0;
+    disableMlvCaching(App->videoMLV); enableMlvCaching(App->videoMLV); // TEMPORARY
     App->frameChanged++;
 }
 
@@ -525,6 +530,7 @@ int setAppNewMlvClip(char * mlvPath)
     if (!App->videoMLV) return;
     App->videoMLV->llrawproc->focus_pixels = [App->focusPixelOption selectedSegment];
     App->videoMLV->llrawproc->fpi_method = [App->focusPixelMethodOption selectedSegment];
+    disableMlvCaching(App->videoMLV); enableMlvCaching(App->videoMLV); // TEMPORARY
     App->frameChanged++;
 }
 
@@ -533,6 +539,7 @@ int setAppNewMlvClip(char * mlvPath)
     if (!App->videoMLV) return;
     App->videoMLV->llrawproc->bad_pixels = [App->badPixelOption selectedSegment];
     App->videoMLV->llrawproc->bpi_method = [App->badPixelMethodOption selectedSegment];
+    disableMlvCaching(App->videoMLV); enableMlvCaching(App->videoMLV); // TEMPORARY
     App->frameChanged++;
 }
 
@@ -554,6 +561,7 @@ int setAppNewMlvClip(char * mlvPath)
             App->videoMLV->llrawproc->chroma_smooth = 5;
             break;
     }
+    disableMlvCaching(App->videoMLV); enableMlvCaching(App->videoMLV); // TEMPORARY
     App->frameChanged++;
 }
 
