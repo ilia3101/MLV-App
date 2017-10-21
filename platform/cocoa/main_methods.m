@@ -25,6 +25,12 @@ extern godObject_t * App;
 /* Initialises value labels with correct slider values */
 void initAppWithGod()
 {
+    syncGUI();
+}
+
+/* Also will be called when switching between clips in session */
+void syncGUI()
+{
     /* I really need a slider struct/object ugh :[ */
     [App->exposureSlider exposureSliderMethod];
     [App->saturationSlider saturationSliderMethod];
@@ -37,6 +43,12 @@ void initAppWithGod()
     [App->lightenSlider lightenMethod];
     [App->sharpnessSlider sharpnessMethod];
     [App->processingTabSwitch toggleTab];
+    [App->dualISOOption dualISOMethod];
+    [App->focusPixelOption focusPixelMethod];
+    [App->badPixelOption badPixelMethod];
+    [App->stripeFixOption verticalStripeMethod];
+    [App->chromaSmoothOption chromaSmoothMethod];
+    [App->patternNoiseOption patternNoiseMethod];
     App->frameChanged = 0;
 }
 
@@ -90,8 +102,8 @@ int setAppNewMlvClip(char * mlvPath)
     /* Tell it slightly less cores than we have, so background caching does not slow down UI interaction */
     setMlvCpuCores(App->videoMLV, (MAC_CORES / 2 + 1));
 
-    /* Enable llrawproc to fix focus pixels etc */
-    App->videoMLV->llrawproc->fix_raw = 1;
+    /* Default: don't enable llrawproc */
+    App->videoMLV->llrawproc->fix_raw = 0;
 
     /* Adjust image size(probably) */
     [App->previewWindow setImage: nil];
@@ -184,6 +196,21 @@ int setAppNewMlvClip(char * mlvPath)
     else 
     {
         processingDisableTonemapping(App->processingSettings);
+        App->frameChanged++;
+    }
+}
+
+/* Enable/disable tonemapping */
+-(void)toggleLLRawProc
+{
+    if ([self state] == NSOnState) 
+    {
+        App->videoMLV->llrawproc->fix_raw = 1;
+        App->frameChanged++;
+    }
+    else 
+    {
+        App->videoMLV->llrawproc->fix_raw = 0;
         App->frameChanged++;
     }
 }
@@ -440,6 +467,85 @@ int setAppNewMlvClip(char * mlvPath)
 /* NSSegmentedControl methods */
 @implementation NSSegmentedControl (mainMethods)
 
+/* This method is called by *all* dual ISO selectors */
+-(void)dualISOMethod
+{
+    if (!App->videoMLV) return;
+    switch ([App->dualISOOption selectedSegment])
+    {
+        case 0: /* Is off */
+            App->videoMLV->llrawproc->dual_iso = 0;
+            break;
+        case 1: /* Is Set to high quality 20 bit */
+            App->videoMLV->llrawproc->dual_iso = 2;
+            break;
+        case 2: /* Is set to quick low quality mode */
+            App->videoMLV->llrawproc->dual_iso = 1;
+            break;
+    }
+
+    /* AMaZE averaging or mean23 */
+    App->videoMLV->llrawproc->diso_averaging = [App->dualISOMethodOption selectedSegment];
+    /* Alias map */
+    App->videoMLV->llrawproc->diso_alias_map = ![App->aliasMapOption selectedSegment];
+    /* Full res blending option */
+    App->videoMLV->llrawproc->diso_frblending = ![App->fullResBlendingOption selectedSegment];
+
+    App->frameChanged++;
+}
+
+-(void)patternNoiseMethod
+{
+    if (!App->videoMLV) return;
+    App->videoMLV->llrawproc->pattern_noise = [App->patternNoiseOption selectedSegment];
+    App->frameChanged++;
+}
+
+-(void)verticalStripeMethod
+{
+    if (!App->videoMLV) return;
+    App->videoMLV->llrawproc->vertical_stripes = [App->stripeFixOption selectedSegment];
+    App->videoMLV->llrawproc->compute_stripes = [App->stripeFixOption selectedSegment] ? 1 : 0;
+    App->frameChanged++;
+}
+
+-(void)focusPixelMethod
+{
+    if (!App->videoMLV) return;
+    App->videoMLV->llrawproc->focus_pixels = [App->focusPixelOption selectedSegment];
+    App->videoMLV->llrawproc->fpi_method = [App->focusPixelMethodOption selectedSegment];
+    App->frameChanged++;
+}
+
+-(void)badPixelMethod
+{
+    if (!App->videoMLV) return;
+    App->videoMLV->llrawproc->bad_pixels = [App->badPixelOption selectedSegment];
+    App->videoMLV->llrawproc->bpi_method = [App->badPixelMethodOption selectedSegment];
+    App->frameChanged++;
+}
+
+-(void)chromaSmoothMethod
+{
+    if (!App->videoMLV) return;
+    switch ([App->chromaSmoothOption selectedSegment])
+    {
+        case 0: /* Is off */
+            App->videoMLV->llrawproc->chroma_smooth = 0;
+            break;
+        case 1: /* 2x2 */
+            App->videoMLV->llrawproc->chroma_smooth = 2;
+            break;
+        case 2: /* 3x3 */
+            App->videoMLV->llrawproc->chroma_smooth = 3;
+            break;
+        case 3: /* 5x5 */
+            App->videoMLV->llrawproc->chroma_smooth = 5;
+            break;
+    }
+    App->frameChanged++;
+}
+
 /* Select tab (Processing, LLRawProc... etc + more in the future) */
 -(void)toggleTab
 {
@@ -490,21 +596,28 @@ int setAppNewMlvClip(char * mlvPath)
      */
 
     [App->fixRawSelector setHidden: showLLRawProc];
-
     [App->focusPixelLabel setHidden: showLLRawProc];
     [App->focusPixelOption setHidden: showLLRawProc];
-
+    [App->focusPixelMethodLabel setHidden: showLLRawProc];
+    [App->focusPixelMethodOption setHidden: showLLRawProc];
     [App->stripeFixLabel setHidden: showLLRawProc];
     [App->stripeFixOption setHidden: showLLRawProc];
-
     [App->chromaSmoothLabel setHidden: showLLRawProc];
     [App->chromaSmoothOption setHidden: showLLRawProc];
-
     [App->patternNoiseLabel setHidden: showLLRawProc];
     [App->patternNoiseOption setHidden: showLLRawProc];
-
     [App->badPixelLabel setHidden: showLLRawProc];
     [App->badPixelOption setHidden: showLLRawProc];
+    [App->badPixelMethodLabel setHidden: showLLRawProc];
+    [App->badPixelMethodOption setHidden: showLLRawProc];
+    [App->dualISOLabel setHidden: showLLRawProc];
+    [App->dualISOOption setHidden: showLLRawProc];
+    [App->dualISOMethodLabel setHidden: showLLRawProc];
+    [App->dualISOMethodOption setHidden: showLLRawProc];
+    [App->fullResBlendingLabel setHidden: showLLRawProc];
+    [App->fullResBlendingOption setHidden: showLLRawProc];
+    [App->aliasMapLabel setHidden: showLLRawProc];
+    [App->aliasMapOption setHidden: showLLRawProc];
 }
 
 @end

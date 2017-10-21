@@ -338,7 +338,7 @@ int NSApplicationMain(int argc, const char * argv[])
     AnchorRight(App->fixRawSelector, YES);
     AnchorTop(App->fixRawSelector, YES);
     [App->fixRawSelector setTarget: App->fixRawSelector];
-    [App->fixRawSelector setAction: @selector(toggleHighlightReconstruction)];
+    [App->fixRawSelector setAction: @selector(toggleLLRawProc)];
     [[App->window contentView] addSubview: App->fixRawSelector];
 
 
@@ -355,44 +355,84 @@ int NSApplicationMain(int argc, const char * argv[])
     AnchorTop(App->focusPixelOption, YES);
     [App->focusPixelOption setSegmentCount:3];
     [App->focusPixelOption setLabel:@"Off" forSegment:0];
-    [App->focusPixelOption setLabel:@"Method 1" forSegment:1];
-    [App->focusPixelOption setLabel:@"Method 2" forSegment:2];
+    [App->focusPixelOption setLabel:@"On" forSegment:1];
+    [App->focusPixelOption setLabel:@"CropRec" forSegment:2];
     [App->focusPixelOption setTarget: App->focusPixelOption];
-    [App->focusPixelOption setAction: @selector(toggleImageProfile)];
+    [App->focusPixelOption setAction: @selector(focusPixelMethod)];
     App->focusPixelOption.selectedSegment = 0;
     [[App->window contentView] addSubview: App->focusPixelOption];
 
 
+    App->focusPixelMethodLabel = [ [NSTextField alloc]
+                                   initWithFrame: NSMakeRect( RIGHT_SIDEBAR_LABEL(3,ELEMENT_HEIGHT,-5) )];
+    [App->focusPixelMethodLabel setLabelStyle];
+    AnchorTop(App->focusPixelMethodLabel, YES);
+    AnchorRight(App->focusPixelMethodLabel, YES);
+    [App->focusPixelMethodLabel setStringValue: @"Focus Pixel Interpolation"];
+    [[App->window contentView] addSubview: App->focusPixelMethodLabel];
+    App->focusPixelMethodOption = [ [NSSegmentedControl alloc]
+                                    initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(3,ELEMENT_HEIGHT,-5) ) ];
+    AnchorRight(App->focusPixelMethodOption, YES);
+    AnchorTop(App->focusPixelMethodOption, YES);
+    [App->focusPixelMethodOption setSegmentCount:2];
+    [App->focusPixelMethodOption setLabel:@"mlvfs" forSegment:0];
+    [App->focusPixelMethodOption setLabel:@"raw2dng" forSegment:1];
+    [App->focusPixelMethodOption setTarget: App->focusPixelMethodOption];
+    [App->focusPixelMethodOption setAction: @selector(focusPixelMethod)];
+    App->focusPixelMethodOption.selectedSegment = 0;
+    [[App->window contentView] addSubview: App->focusPixelMethodOption];
+
+
     App->badPixelLabel = [ [NSTextField alloc]
-                           initWithFrame: NSMakeRect( RIGHT_SIDEBAR_LABEL(3,ELEMENT_HEIGHT,-5) )];
+                           initWithFrame: NSMakeRect( RIGHT_SIDEBAR_LABEL(4,ELEMENT_HEIGHT,-15) )];
     [App->badPixelLabel setLabelStyle];
     AnchorTop(App->badPixelLabel, YES);
     AnchorRight(App->badPixelLabel, YES);
     [App->badPixelLabel setStringValue: @"Fix Bad Pixels"];
     [[App->window contentView] addSubview: App->badPixelLabel];
     App->badPixelOption = [ [NSSegmentedControl alloc]
-                            initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(3,ELEMENT_HEIGHT,-5) ) ];
+                            initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(4,ELEMENT_HEIGHT,-15) ) ];
     AnchorRight(App->badPixelOption, YES);
     AnchorTop(App->badPixelOption, YES);
     [App->badPixelOption setSegmentCount:3];
     [App->badPixelOption setLabel:@"Off" forSegment:0];
-    [App->badPixelOption setLabel:@"Method 1" forSegment:1];
-    [App->badPixelOption setLabel:@"Method 2" forSegment:2];
+    [App->badPixelOption setLabel:@"On" forSegment:1];
+    [App->badPixelOption setLabel:@"Aggressive" forSegment:2];
     [App->badPixelOption setTarget: App->badPixelOption];
-    [App->badPixelOption setAction: @selector(toggleImageProfile)];
+    [App->badPixelOption setAction: @selector(badPixelMethod)];
     App->badPixelOption.selectedSegment = 0;
     [[App->window contentView] addSubview: App->badPixelOption];
 
 
+    App->badPixelMethodLabel = [ [NSTextField alloc]
+                                 initWithFrame: NSMakeRect( RIGHT_SIDEBAR_LABEL(5,ELEMENT_HEIGHT,-25) )];
+    [App->badPixelMethodLabel setLabelStyle];
+    AnchorTop(App->badPixelMethodLabel, YES);
+    AnchorRight(App->badPixelMethodLabel, YES);
+    [App->badPixelMethodLabel setStringValue: @"Bad Pixel Interpolation"];
+    [[App->window contentView] addSubview: App->badPixelMethodLabel];
+    App->badPixelMethodOption = [ [NSSegmentedControl alloc]
+                                  initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(5,ELEMENT_HEIGHT,-25) ) ];
+    AnchorRight(App->badPixelMethodOption, YES);
+    AnchorTop(App->badPixelMethodOption, YES);
+    [App->badPixelMethodOption setSegmentCount:2];
+    [App->badPixelMethodOption setLabel:@"mlvfs" forSegment:0];
+    [App->badPixelMethodOption setLabel:@"raw2dng" forSegment:1];
+    [App->badPixelMethodOption setTarget: App->badPixelMethodOption];
+    [App->badPixelMethodOption setAction: @selector(badPixelMethod)];
+    App->badPixelMethodOption.selectedSegment = 0;
+    [[App->window contentView] addSubview: App->badPixelMethodOption];
+
+
     App->chromaSmoothLabel = [ [NSTextField alloc]
-                               initWithFrame: NSMakeRect( RIGHT_SIDEBAR_LABEL(4,ELEMENT_HEIGHT,-15) )];
+                               initWithFrame: NSMakeRect( RIGHT_SIDEBAR_LABEL(6,ELEMENT_HEIGHT,-35) )];
     [App->chromaSmoothLabel setLabelStyle];
     AnchorTop(App->chromaSmoothLabel, YES);
     AnchorRight(App->chromaSmoothLabel, YES);
     [App->chromaSmoothLabel setStringValue: @"Chroma Smooth"];
     [[App->window contentView] addSubview: App->chromaSmoothLabel];
     App->chromaSmoothOption = [ [NSSegmentedControl alloc]
-                                initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(4,ELEMENT_HEIGHT,-15) ) ];
+                                initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(6,ELEMENT_HEIGHT,-35) ) ];
     AnchorRight(App->chromaSmoothOption, YES);
     AnchorTop(App->chromaSmoothOption, YES);
     [App->chromaSmoothOption setSegmentCount:4];
@@ -401,20 +441,20 @@ int NSApplicationMain(int argc, const char * argv[])
     [App->chromaSmoothOption setLabel:@"3x3" forSegment:2];
     [App->chromaSmoothOption setLabel:@"5x5" forSegment:3];
     [App->chromaSmoothOption setTarget: App->chromaSmoothOption];
-    [App->chromaSmoothOption setAction: @selector(toggleImageProfile)];
+    [App->chromaSmoothOption setAction: @selector(chromaSmoothMethod)];
     App->chromaSmoothOption.selectedSegment = 0;
     [[App->window contentView] addSubview: App->chromaSmoothOption];
 
 
     App->stripeFixLabel = [ [NSTextField alloc]
-                            initWithFrame: NSMakeRect( RIGHT_SIDEBAR_LABEL(5,ELEMENT_HEIGHT, -25) )];
+                            initWithFrame: NSMakeRect( RIGHT_SIDEBAR_LABEL(7,ELEMENT_HEIGHT, -45) )];
     [App->stripeFixLabel setLabelStyle];
     AnchorTop(App->stripeFixLabel, YES);
     AnchorRight(App->stripeFixLabel, YES);
     [App->stripeFixLabel setStringValue: @"Vertical Stripe Fix"];
     [[App->window contentView] addSubview: App->stripeFixLabel];
     App->stripeFixOption = [ [NSSegmentedControl alloc]
-                             initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(5,ELEMENT_HEIGHT,-25) ) ];
+                             initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(7,ELEMENT_HEIGHT,-45) ) ];
     AnchorRight(App->stripeFixOption, YES);
     AnchorTop(App->stripeFixOption, YES);
     [App->stripeFixOption setSegmentCount:3];
@@ -422,29 +462,108 @@ int NSApplicationMain(int argc, const char * argv[])
     [App->stripeFixOption setLabel:@"Normal" forSegment:1];
     [App->stripeFixOption setLabel:@"Force" forSegment:2];
     [App->stripeFixOption setTarget: App->stripeFixOption];
-    [App->stripeFixOption setAction: @selector(toggleImageProfile)];
+    [App->stripeFixOption setAction: @selector(verticalStripeMethod)];
     App->stripeFixOption.selectedSegment = 0;
     [[App->window contentView] addSubview: App->stripeFixOption];
 
 
     App->patternNoiseLabel = [ [NSTextField alloc]
-                               initWithFrame: NSMakeRect( RIGHT_SIDEBAR_LABEL(6,ELEMENT_HEIGHT,-35) )];
+                               initWithFrame: NSMakeRect( RIGHT_SIDEBAR_LABEL(8,ELEMENT_HEIGHT,-55) )];
     [App->patternNoiseLabel setLabelStyle];
     AnchorTop(App->patternNoiseLabel, YES);
     AnchorRight(App->patternNoiseLabel, YES);
     [App->patternNoiseLabel setStringValue: @"Pattern Noise Fix"];
     [[App->window contentView] addSubview: App->patternNoiseLabel];
     App->patternNoiseOption = [ [NSSegmentedControl alloc]
-                                initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(6,ELEMENT_HEIGHT,-35) ) ];
+                                initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(8,ELEMENT_HEIGHT,-55) ) ];
     AnchorRight(App->patternNoiseOption, YES);
     AnchorTop(App->patternNoiseOption, YES);
     [App->patternNoiseOption setSegmentCount:2];
     [App->patternNoiseOption setLabel:@"Off" forSegment:0];
     [App->patternNoiseOption setLabel:@"On" forSegment:1];
     [App->patternNoiseOption setTarget: App->patternNoiseOption];
-    [App->patternNoiseOption setAction: @selector(toggleImageProfile)];
+    [App->patternNoiseOption setAction: @selector(patternNoiseMethod)];
     App->patternNoiseOption.selectedSegment = 0;
     [[App->window contentView] addSubview: App->patternNoiseOption];
+
+
+    App->dualISOLabel = [ [NSTextField alloc]
+                          initWithFrame: NSMakeRect( RIGHT_SIDEBAR_LABEL(9,ELEMENT_HEIGHT,-65) )];
+    [App->dualISOLabel setLabelStyle];
+    AnchorTop(App->dualISOLabel, YES);
+    AnchorRight(App->dualISOLabel, YES);
+    [App->dualISOLabel setStringValue: @"Dual ISO"];
+    [[App->window contentView] addSubview: App->dualISOLabel];
+    App->dualISOOption = [ [NSSegmentedControl alloc]
+                           initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(9,ELEMENT_HEIGHT,-65) ) ];
+    AnchorRight(App->dualISOOption, YES);
+    AnchorTop(App->dualISOOption, YES);
+    [App->dualISOOption setSegmentCount:3];
+    [App->dualISOOption setLabel:@"Off" forSegment:0];
+    [App->dualISOOption setLabel:@"Full 20bit" forSegment:1];
+    [App->dualISOOption setLabel:@"Fast" forSegment:2];
+    
+    [App->dualISOOption setTarget: App->dualISOOption];
+    [App->dualISOOption setAction: @selector(dualISOMethod)];
+    App->dualISOOption.selectedSegment = 0;
+    [[App->window contentView] addSubview: App->dualISOOption];
+
+    App->dualISOMethodLabel = [ [NSTextField alloc]
+                                initWithFrame: NSMakeRect( RIGHT_SIDEBAR_LABEL(10,ELEMENT_HEIGHT,-75) )];
+    [App->dualISOMethodLabel setLabelStyle];
+    AnchorTop(App->dualISOMethodLabel, YES);
+    AnchorRight(App->dualISOMethodLabel, YES);
+    [App->dualISOMethodLabel setStringValue: @"Interpolation Method"];
+    [[App->window contentView] addSubview: App->dualISOMethodLabel];
+    App->dualISOMethodOption = [ [NSSegmentedControl alloc]
+                                 initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(10,ELEMENT_HEIGHT,-75) ) ];
+    AnchorRight(App->dualISOMethodOption, YES);
+    AnchorTop(App->dualISOMethodOption, YES);
+    [App->dualISOMethodOption setSegmentCount:2];
+    [App->dualISOMethodOption setLabel:@"AMaZE" forSegment:0];
+    [App->dualISOMethodOption setLabel:@"mean23" forSegment:1];
+    [App->dualISOMethodOption setTarget: App->dualISOMethodOption];
+    [App->dualISOMethodOption setAction: @selector(dualISOMethod)];
+    App->dualISOMethodOption.selectedSegment = 0;
+    [[App->window contentView] addSubview: App->dualISOMethodOption];
+
+    App->fullResBlendingLabel = [ [NSTextField alloc]
+                                  initWithFrame: NSMakeRect( RIGHT_SIDEBAR_LABEL(11,ELEMENT_HEIGHT,-85) )];
+    [App->fullResBlendingLabel setLabelStyle];
+    AnchorTop(App->fullResBlendingLabel, YES);
+    AnchorRight(App->fullResBlendingLabel, YES);
+    [App->fullResBlendingLabel setStringValue: @"Full-Res Blending"];
+    [[App->window contentView] addSubview: App->fullResBlendingLabel];
+    App->fullResBlendingOption = [ [NSSegmentedControl alloc]
+                                   initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(11,ELEMENT_HEIGHT,-85) ) ];
+    AnchorRight(App->fullResBlendingOption, YES);
+    AnchorTop(App->fullResBlendingOption, YES);
+    [App->fullResBlendingOption setSegmentCount:2];
+    [App->fullResBlendingOption setLabel:@"On" forSegment:0];
+    [App->fullResBlendingOption setLabel:@"Off" forSegment:1];
+    [App->fullResBlendingOption setTarget: App->fullResBlendingOption];
+    [App->fullResBlendingOption setAction: @selector(dualISOMethod)];
+    App->fullResBlendingOption.selectedSegment = 0;
+    [[App->window contentView] addSubview: App->fullResBlendingOption];
+
+    App->aliasMapLabel = [ [NSTextField alloc]
+                           initWithFrame: NSMakeRect( RIGHT_SIDEBAR_LABEL(12,ELEMENT_HEIGHT,-95) )];
+    [App->aliasMapLabel setLabelStyle];
+    AnchorTop(App->aliasMapLabel, YES);
+    AnchorRight(App->aliasMapLabel, YES);
+    [App->aliasMapLabel setStringValue: @"Alias Map"];
+    [[App->window contentView] addSubview: App->aliasMapLabel];
+    App->aliasMapOption = [ [NSSegmentedControl alloc]
+                            initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(12,ELEMENT_HEIGHT,-95) ) ];
+    AnchorRight(App->aliasMapOption, YES);
+    AnchorTop(App->aliasMapOption, YES);
+    [App->aliasMapOption setSegmentCount:2];
+    [App->aliasMapOption setLabel:@"On" forSegment:0];
+    [App->aliasMapOption setLabel:@"Off" forSegment:1];
+    [App->aliasMapOption setTarget: App->aliasMapOption];
+    [App->aliasMapOption setAction: @selector(dualISOMethod)];
+    App->aliasMapOption.selectedSegment = 0;
+    [[App->window contentView] addSubview: App->aliasMapOption];
 
 
 

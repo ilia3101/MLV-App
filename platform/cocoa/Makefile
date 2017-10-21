@@ -52,7 +52,7 @@ app :
 
 # Actual linking and compiling happens here
 build : $(objects)
-	$(CC) $(mainflags) $(objects) -o $(appname) -framework Cocoa;
+	$(CC) $(mainflags) $(objects) -o $(appname) -framework Cocoa -framework AppKit -framework Foundation -framework CoreFoundation;
 
 # Cocoa app part (Objective C)
 main.o : main.m

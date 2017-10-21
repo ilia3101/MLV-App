@@ -5,6 +5,7 @@
 
 /* Initialises app UI */
 void initAppWithGod();
+void syncGUI(); /* Refreshes all controls, connects all to clip */
 
 /* This is a function as it may be used in more than one place */
 int setAppNewMlvClip(char * mlvPath); /* 0=fail 1=ok */
@@ -16,6 +17,8 @@ int setAppNewMlvClip(char * mlvPath); /* 0=fail 1=ok */
 -(void)toggleHighlightReconstruction;
 /* Enables/disables always AMaZE requirement */
 -(void)toggleAlwaysAmaze;
+/* Enables/disables "raw corrections" */
+-(void)toggleLLRawProc;
 /* Enables/disables processing tonemapping */
 -(void)toggleTonemapping;
 /* Opens a dialog to select MLV file + sets MLV file to that */
@@ -57,6 +60,13 @@ int setAppNewMlvClip(char * mlvPath); /* 0=fail 1=ok */
 
 /* NSSegmentedControl methods */
 @interface NSSegmentedControl (mainMethods)
+
+-(void)dualISOMethod; /* All 4 dual iso controls call this */
+-(void)focusPixelMethod;
+-(void)badPixelMethod;
+-(void)patternNoiseMethod;
+-(void)verticalStripeMethod;
+-(void)chromaSmoothMethod;
 
 /* Select tab (Processing, LLRawProc... etc + more in the future) */
 -(void)toggleTab;

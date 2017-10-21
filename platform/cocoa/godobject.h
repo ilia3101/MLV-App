@@ -82,18 +82,28 @@ typedef struct {
 
     NSTextField * focusPixelLabel;
     NSSegmentedControl * focusPixelOption;
-
-    NSTextField * stripeFixLabel;
-    NSSegmentedControl * stripeFixOption;
-
-    NSTextField * chromaSmoothLabel;
-    NSSegmentedControl * chromaSmoothOption;
-
-    NSTextField * patternNoiseLabel;
-    NSSegmentedControl * patternNoiseOption;
+    NSTextField * focusPixelMethodLabel;
+    NSSegmentedControl * focusPixelMethodOption;
 
     NSTextField * badPixelLabel;
     NSSegmentedControl * badPixelOption;
+    NSTextField * badPixelMethodLabel;
+    NSSegmentedControl * badPixelMethodOption;
+
+    NSTextField * stripeFixLabel;
+    NSSegmentedControl * stripeFixOption;
+    NSTextField * chromaSmoothLabel;
+    NSSegmentedControl * chromaSmoothOption;
+    NSTextField * patternNoiseLabel;
+    NSSegmentedControl * patternNoiseOption;
+    NSTextField * dualISOLabel;
+    NSSegmentedControl * dualISOOption;
+    NSTextField * dualISOMethodLabel;
+    NSSegmentedControl * dualISOMethodOption;
+    NSTextField * fullResBlendingLabel;
+    NSSegmentedControl * fullResBlendingOption;
+    NSTextField * aliasMapLabel;
+    NSSegmentedControl * aliasMapOption;
 
 
 
