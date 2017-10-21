@@ -49,6 +49,7 @@ void syncGUI()
     [App->stripeFixOption verticalStripeMethod];
     [App->chromaSmoothOption chromaSmoothMethod];
     [App->patternNoiseOption patternNoiseMethod];
+    [App->chromaSeparationSelector toggleChromaSeparation];
     App->frameChanged = 0;
 }
 
@@ -161,13 +162,26 @@ int setAppNewMlvClip(char * mlvPath)
     if ([self state] == NSOnState) 
     {
         setMlvAlwaysUseAmaze(App->videoMLV);
-        App->frameChanged++;
     }
     else 
     {
         setMlvDontAlwaysUseAmaze(App->videoMLV);
-        App->frameChanged++;
     }
+    App->frameChanged++;
+}
+
+/* Enables/disables chroma separation */
+-(void)toggleChromaSeparation
+{
+    if ([self state] == NSOnState) 
+    {
+        processingEnableChromaSeparation(App->processingSettings);
+    }
+    else 
+    {
+        processingDisableChromaSeparation(App->processingSettings);
+    }
+    App->frameChanged++;
 }
 
 /* Enables/disables highlight reconstruction */
@@ -176,13 +190,12 @@ int setAppNewMlvClip(char * mlvPath)
     if ([self state] == NSOnState) 
     {
         processingEnableHighlightReconstruction(App->processingSettings);
-        App->frameChanged++;
     }
     else 
     {
         processingDisableHighlightReconstruction(App->processingSettings);
-        App->frameChanged++;
     }
+    App->frameChanged++;
 }
 
 /* Enable/disable tonemapping */
@@ -191,13 +204,12 @@ int setAppNewMlvClip(char * mlvPath)
     if ([self state] == NSOnState) 
     {
         processingEnableTonemapping(App->processingSettings);
-        App->frameChanged++;
     }
     else 
     {
         processingDisableTonemapping(App->processingSettings);
-        App->frameChanged++;
     }
+    App->frameChanged++;
 }
 
 /* Enable/disable tonemapping */
@@ -206,13 +218,12 @@ int setAppNewMlvClip(char * mlvPath)
     if ([self state] == NSOnState) 
     {
         App->videoMLV->llrawproc->fix_raw = 1;
-        App->frameChanged++;
     }
     else 
     {
         App->videoMLV->llrawproc->fix_raw = 0;
-        App->frameChanged++;
     }
+    App->frameChanged++;
 }
 
 /* Open file dialog + set new MLV clip */
@@ -588,6 +599,7 @@ int setAppNewMlvClip(char * mlvPath)
     /* Checkboxes and processing profile selector */
     [App->highlightReconstructionSelector setHidden: showProcessing];
     [App->alwaysUseAmazeSelector setHidden: showProcessing];
+    [App->chromaSeparationSelector setHidden: showProcessing];
     /* Select image profile */
     [App->imageProfile setHidden: showProcessing];
 

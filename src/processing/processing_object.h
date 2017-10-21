@@ -38,6 +38,14 @@ typedef struct {
     /* Precalculated all matrix values 0-65535 */
     int32_t * pre_calc_matrix[9];
 
+    struct {
+        /* These are generic xyz to rgb matrices, just for getting 
+         * in to xyY space temporarily for blur and sharpen stuff */
+        int32_t * pre_calc_rgb_to_xyz[9]; /* directly to xyY is not possible */
+        int32_t * pre_calc_xyz_to_rgb[9];
+        int use_xyY;
+    } xyY_zone;
+
     /* White balance */
     double     kelvin; /* from 2500 to 10000 */
     double     wb_tint; /* from -10 to +10 PLEAZ */

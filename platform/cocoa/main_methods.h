@@ -15,6 +15,8 @@ int setAppNewMlvClip(char * mlvPath); /* 0=fail 1=ok */
 
 /* Enable/disable highlight reconstruction */
 -(void)toggleHighlightReconstruction;
+/* Enables/disable chroma separation in processing (for better sharpening) */
+-(void)toggleChromaSeparation;
 /* Enables/disables always AMaZE requirement */
 -(void)toggleAlwaysAmaze;
 /* Enables/disables "raw corrections" */

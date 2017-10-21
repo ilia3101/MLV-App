@@ -71,6 +71,7 @@ typedef struct {
     /* Buttons (Checkboxes) */
     NSButton * highlightReconstructionSelector;
     NSButton * alwaysUseAmazeSelector;
+    NSButton * chromaSeparationSelector;
     /* Select image profile */
     NSPopUpButton * imageProfile;
 

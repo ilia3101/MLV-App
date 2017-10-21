@@ -49,6 +49,26 @@ processingObject_t * initProcessingObject()
     processing->xyz_to_rgb_matrix[4] = 1.0;
     processing->xyz_to_rgb_matrix[8] = 1.0;
 
+    /* The generic RGB to XYZ (then xyY) matrices precalculated */
+    double mat_rgb_to_xyz[9] = { 0.4124564,  0.3575761,  0.1804375,
+                                 0.2126729,  0.7151522,  0.0721750,
+                                 0.0193339,  0.1191920,  0.9503041  };
+    double mat_xyz_to_rgb[9] = { 3.2404542, -1.5371385, -0.4985314,
+                                -0.9692660,  1.8760108,  0.0415560,
+                                 0.0556434, -0.2040259,  1.0572252  };
+    for (int i = 0; i < 9; ++i)
+    {
+        processing->xyY_zone.pre_calc_xyz_to_rgb[i] = malloc( 65536 * sizeof(int32_t) );
+        processing->xyY_zone.pre_calc_rgb_to_xyz[i] = malloc( 65536 * sizeof(int32_t) );
+
+        for (int j = 0; j < 65536; ++j)
+        {
+            /* Precalculate */
+            processing->xyY_zone.pre_calc_xyz_to_rgb[i][j] = (double)j * mat_xyz_to_rgb[i];
+            processing->xyY_zone.pre_calc_rgb_to_xyz[i][j] = (double)j * mat_rgb_to_xyz[i];
+        }
+    }
+
     /* Default settings */
     processingSetWhiteBalance(processing, 6250.0, 0.0);
     processingSetBlackAndWhiteLevel(processing, 8192.0, 64000.0); /* 16 bit! */
@@ -185,10 +205,42 @@ void applyProcessingObject( processingObject_t * processing,
         }
     }
 
+    uint32_t sharp_skip = 1; /* Skip how many pixels when applying sharpening */
+    uint32_t sharp_start = 0; /* How many pixels offset to start at */
+
+    /* enter xyY world */
+    if (processingUsesChromaSeparation(processing))
+    {
+        int32_t ** rx = processing->xyY_zone.pre_calc_rgb_to_xyz;
+        for (uint16_t * pix = img; pix < img_end; pix += 3)
+        {
+            /* RGB to XYZ */
+            register double pix0 = rx[0][pix[0]] + rx[1][pix[1]] + rx[2][pix[2]];
+            register double pix1 = rx[3][pix[0]] + rx[4][pix[1]] + rx[5][pix[2]];
+            register double pix2 = rx[6][pix[0]] + rx[7][pix[1]] + rx[8][pix[2]];
+
+            /* XYZ to xyY now */    
+            register int32_t pix_x = (int32_t)(pix0 / (pix0+pix1+pix2) * 65535.0); /* xyY x from XYZ */
+            register int32_t pix_y = (int32_t)(pix1 / (pix0+pix1+pix2) * 65535.0); /* xyY y from XYZ */
+            register int32_t pix_Y = (int32_t)(pix1); /* xyY Y from XYZ */
+
+            pix[0] = LIMIT16(pix_x);
+            pix[1] = LIMIT16(pix_y);
+            pix[2] = LIMIT16(pix_Y); /* xyY Y */
+        }
+
+        sharp_start = 2; /* Start at +2, aka Luma/Y channel */
+        sharp_skip = 3; /* Only sharpen every third (Y/luma) pixel */
+    }
+
+
     if (processingGetSharpening(processing) > 0.005)
     {
-        int y_max = imageY - 1;
-        int x_max = (imageX - 1) * 3; /* X in multiples of 3 for RGB */
+        /* Avoid gaps in pixels if skipping pixels during sharpen */
+        if (sharp_skip != 1) memcpy(outputImage, inputImage, img_s * sizeof(uint16_t));
+    
+        uint32_t y_max = imageY - 1;
+        uint32_t x_max = (imageX - 1) * 3; /* X in multiples of 3 for RGB */
 
         /* Center and outter lut */
         uint32_t * ka = processing->pre_calc_sharp_a;
@@ -198,14 +250,14 @@ void applyProcessingObject( processingObject_t * processing,
         /* Row length elements */
         uint32_t rl = imageX * 3;
 
-        for (int y = 1; y < y_max; ++y)
+        for (uint32_t y = 1; y < y_max; ++y)
         {
             uint16_t * out_row = out_img + (y * rl); /* current row ouptut */
             uint16_t * row = img + (y * rl); /* current row */
             uint16_t * p_row = img + ((y-1) * rl); /* previous */
             uint16_t * n_row = img + ((y+1) * rl); /* next */
 
-            for (int x = 3; x < x_max; ++x)
+            for (uint32_t x = 3+sharp_start; x < x_max; x+=sharp_skip)
             {
                 int32_t sharp = ka[row[x]] 
                               - ky[p_row[x]]
@@ -216,10 +268,15 @@ void applyProcessingObject( processingObject_t * processing,
                 out_row[x] = LIMIT16(sharp);
             }
 
-            /* Edge pixels */
-            out_row[0] = row[0]; out_row[1] = row[1]; out_row[2] = row[2];
-            out_row += rl; row += rl;
-            out_row[-3] = row[-3]; out_row[-2] = row[-2]; out_row[-1] = row[-1];
+            /* Edge pixels (basically don't do any changes to them) */
+            out_row[0] = row[0];
+            out_row[1] = row[1];
+            out_row[2] = row[2];
+            out_row += rl;
+            row += rl;
+            out_row[-3] = row[-3];
+            out_row[-2] = row[-2];
+            out_row[-1] = row[-1];
         }
 
         /* Copy top and bottom row */
@@ -229,6 +286,31 @@ void applyProcessingObject( processingObject_t * processing,
     else
     {
         memcpy(outputImage, inputImage, img_s * sizeof(uint16_t));
+    }
+
+    /* Leave xyY world */
+    if (processingUsesChromaSeparation(processing))
+    {
+        img_end = outputImage + img_s;
+        int32_t ** xr = processing->xyY_zone.pre_calc_xyz_to_rgb;
+        for (uint16_t * pix = outputImage; pix < img_end; pix += 3)
+        {
+            /* XYZ to xyY now (SOOOOOOOOO confusing in 16bit) */
+            register double pix_x = ((double)pix[0] / 65535.0);
+            register double pix_1_minus_x_minus_y = 1.0 - pix_x - ((double)pix[1] / 65535.0);
+
+            register int32_t pix_X = (pix_x * pix[2]) / pix[1] * 65535.0;
+            register int32_t pix_Y = pix[2];
+            register int32_t pix_Z = (pix_1_minus_x_minus_y * pix[2]) / pix[1] * 65535.0;
+
+            register int32_t pix_R = xr[0][LIMIT16(pix_X)] + xr[1][LIMIT16(pix_Y)] + xr[2][LIMIT16(pix_Z)];
+            register int32_t pix_G = xr[3][LIMIT16(pix_X)] + xr[4][LIMIT16(pix_Y)] + xr[5][LIMIT16(pix_Z)];
+            register int32_t pix_B = xr[6][LIMIT16(pix_X)] + xr[7][LIMIT16(pix_Y)] + xr[8][LIMIT16(pix_Z)];
+
+            pix[0] = LIMIT16(pix_R);
+            pix[1] = LIMIT16(pix_G);
+            pix[2] = LIMIT16(pix_B); /* xyY Y */
+        }
     }
 }
 

@@ -123,23 +123,6 @@ int NSApplicationMain(int argc, const char * argv[])
      *******************************************************************************
      */
 
-    /* Processing style selector */
-    App->imageProfile = [ [NSPopUpButton alloc]
-                          initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(13,24,-15) ) ];
-    AnchorRight(App->imageProfile, YES);
-    AnchorTop(App->imageProfile, YES);
-    [App->imageProfile insertItemWithTitle: @"Standard" atIndex: PROFILE_STANDARD];
-    [App->imageProfile insertItemWithTitle: @"Tonemapped" atIndex: PROFILE_TONEMAPPED];
-    // [App->imageProfile insertItemWithTitle: @"Canon C-Log" atIndex: PROFILE_CANON_LOG];
-    [App->imageProfile insertItemWithTitle: @"Alexa Log-C" atIndex: PROFILE_ALEXA_LOG];
-    [App->imageProfile insertItemWithTitle: @"Cineon Log" atIndex: PROFILE_CINEON_LOG];
-    [App->imageProfile insertItemWithTitle: @"Sony S-Log3" atIndex: PROFILE_SONY_LOG_3];
-    [App->imageProfile insertItemWithTitle: @"Linear" atIndex: PROFILE_LINEAR];
-    [App->imageProfile setTarget: App->imageProfile];
-    [App->imageProfile setAction: @selector(toggleImageProfile)];
-    [App->imageProfile selectItemAtIndex: DEFAULT_IMAGE_PROFILE_APP];
-    [[App->window contentView] addSubview: App->imageProfile];
-
     /* First block of sliders */
     CREATE_SLIDER_RIGHT( App->exposureSlider, App->exposureLabel, App->exposureValueLabel, @"Exposure", 1, exposureSliderMethod, 0, 0.5 );
     CREATE_SLIDER_RIGHT( App->saturationSlider, App->saturationLabel, App->saturationValueLabel, @"Saturation", 2, saturationSliderMethod, 0, 0.5 );
@@ -177,6 +160,36 @@ int NSApplicationMain(int argc, const char * argv[])
     [App->alwaysUseAmazeSelector setTarget: App->alwaysUseAmazeSelector];
     [App->alwaysUseAmazeSelector setAction: @selector(toggleAlwaysAmaze)];
     [[App->window contentView] addSubview: App->alwaysUseAmazeSelector];
+
+    /* To enable/disable chroma separation */
+    App->chromaSeparationSelector = [ [NSButton alloc]
+                                      initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(14, ELEMENT_HEIGHT, 44 + BLOCK_OFFSET*0.6) )];
+    [App->chromaSeparationSelector setButtonType: NSSwitchButton];
+    [App->chromaSeparationSelector setTitle: @"Chroma Separation (xyY)"];
+    AnchorRight(App->chromaSeparationSelector, YES);
+    AnchorTop(App->chromaSeparationSelector, YES);
+    [App->chromaSeparationSelector setTarget: App->chromaSeparationSelector];
+    [App->chromaSeparationSelector setAction: @selector(toggleChromaSeparation)];
+    [[App->window contentView] addSubview: App->chromaSeparationSelector];
+
+
+    /* Processing style selector */
+    App->imageProfile = [ [NSPopUpButton alloc]
+                          initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(14,24,-1) ) ];
+    AnchorRight(App->imageProfile, YES);
+    AnchorTop(App->imageProfile, YES);
+    [App->imageProfile insertItemWithTitle: @"Standard" atIndex: PROFILE_STANDARD];
+    [App->imageProfile insertItemWithTitle: @"Tonemapped" atIndex: PROFILE_TONEMAPPED];
+    // [App->imageProfile insertItemWithTitle: @"Canon C-Log" atIndex: PROFILE_CANON_LOG];
+    [App->imageProfile insertItemWithTitle: @"Alexa Log-C" atIndex: PROFILE_ALEXA_LOG];
+    [App->imageProfile insertItemWithTitle: @"Cineon Log" atIndex: PROFILE_CINEON_LOG];
+    [App->imageProfile insertItemWithTitle: @"Sony S-Log3" atIndex: PROFILE_SONY_LOG_3];
+    [App->imageProfile insertItemWithTitle: @"Linear" atIndex: PROFILE_LINEAR];
+    [App->imageProfile setTarget: App->imageProfile];
+    [App->imageProfile setAction: @selector(toggleImageProfile)];
+    [App->imageProfile selectItemAtIndex: DEFAULT_IMAGE_PROFILE_APP];
+    [[App->window contentView] addSubview: App->imageProfile];
+
 
     /*
      *******************************************************************************

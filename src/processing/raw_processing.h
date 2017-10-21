@@ -76,6 +76,11 @@ void processingSet3WayCorrection( processingObject_t * processing,
                                   double shadowHue, double shadowSaturation );
 
 
+/* Enable/disable highlight reconstruction */
+#define processingEnableChromaSeparation(processing) (processing)->xyY_zone.use_xyY = 1
+#define processingDisableChromaSeparation(processing) (processing)->xyY_zone.use_xyY = 0
+#define processingUsesChromaSeparation(processing) (processing)->xyY_zone.use_xyY /* A checking function */
+
 
 /* Just don't touch this or keep at ~2.2 (or more for a lighter image) */
 void processingSetGamma(processingObject_t * processing, double gammaValue);
