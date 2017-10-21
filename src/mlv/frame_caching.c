@@ -16,20 +16,22 @@
 #define DEBUG(CODE)
 #endif
 
+pthread_mutex_t g_mutexFind = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t g_mutexCount = PTHREAD_MUTEX_INITIALIZER;
+
 void disableMlvCaching(mlvObject_t * video)
 {
     /* Stop caching and make sure by waiting */
     video->stop_caching = 1;
-    while (video->is_caching) usleep(100);
+    while (isMlvObjectCaching(video)) usleep(100);
     /* Remove the memory (it's a tradition in MLV App libraries to leave a couple of bytes) */
+    mark_mlv_uncached(video);
     free(video->cache_memory_block);
     video->cache_memory_block = malloc(2);
 }
 
 void enableMlvCaching(mlvObject_t * video)
 {
-    /* Allow the thread */
-    video->stop_caching = 0;
     /* This will reset the memory and start cache thread */
     setMlvRawCacheLimitMegaBytes(video, video->cache_limit_mb);
 }
@@ -39,7 +41,8 @@ void enableMlvCaching(mlvObject_t * video)
 /* What I call MegaBytes is actually MebiBytes! I'm so upset to find that out :( */
 void setMlvRawCacheLimitMegaBytes(mlvObject_t * video, uint64_t megaByteLimit)
 {
-    uint64_t frame_size  = getMlvWidth(video) * getMlvHeight(video) * sizeof(uint16_t) * 3;
+    uint64_t frame_pix   = getMlvWidth(video) * getMlvHeight(video) * 3;
+    uint64_t frame_size  = frame_pix * sizeof(uint16_t);
     uint64_t bytes_limit = megaByteLimit * (1 << 20);
 
     video->cache_limit_mb = megaByteLimit;
@@ -50,20 +53,32 @@ void setMlvRawCacheLimitMegaBytes(mlvObject_t * video, uint64_t megaByteLimit)
      * ...LOL there's not even a floating point in sight */
     if (isMlvActive(video) && frame_size != 0)
     {
-        uint64_t frame_limit = (uint64_t)bytes_limit / (uint64_t)frame_size;
         uint64_t cache_whole = frame_size * getMlvFrames(video);
+        uint64_t frame_limit = MIN(bytes_limit, cache_whole) / frame_size;
 
         video->cache_limit_frames = frame_limit;
 
         DEBUG( printf("\nEnough memory allowed to cache %i frames (%i MiB)\n\n", (int)frame_limit, (int)megaByteLimit); )
 
+        /* Stop all cache for a bit */
+        video->stop_caching = 1;
+        while (isMlvObjectCaching(video)) usleep(100);
+
         /* Resize cache block - to maximum allowed or enough to fit whole clip if it is smaller */
         video->cache_memory_block = realloc(video->cache_memory_block, MIN(bytes_limit, cache_whole));
+        /* Array of frame pointers within the memory block */
+        video->rgb_raw_frames = realloc(video->rgb_raw_frames, frame_limit * sizeof(uint16_t *));
+        for (uint64_t i = 0; i < getMlvRawCacheLimitFrames(video); ++i) video->rgb_raw_frames[i] = video->cache_memory_block + (frame_pix * i);
+        
+        video->stop_caching = 0;
 
         /* Begin updating cached frames */
-        if (!video->is_caching)
+        if (video->cache_thread_count < video->cpu_cores)
         {
-            pthread_create(&video->cache_thread, NULL, (void *)cache_mlv_frames, (void *)video);
+            for (int i = 0; i < video->cpu_cores; ++i)
+            {
+                add_mlv_cache_thread(video);
+            }
         }
     }
 
@@ -73,7 +88,8 @@ void setMlvRawCacheLimitMegaBytes(mlvObject_t * video, uint64_t megaByteLimit)
 /* Not recommended */
 void setMlvRawCacheLimitFrames(mlvObject_t * video, uint64_t frameLimit)
 {
-    uint64_t frame_size = getMlvWidth(video) * getMlvHeight(video) * sizeof(uint16_t) * 3;
+    uint64_t frame_pix   = getMlvWidth(video) * getMlvHeight(video) * 3;
+    uint64_t frame_size  = frame_pix * sizeof(uint16_t);
 
     /* Do only if clip is loaded */
     if (isMlvActive(video) && frame_size != 0)
@@ -86,65 +102,174 @@ void setMlvRawCacheLimitFrames(mlvObject_t * video, uint64_t frameLimit)
         video->cache_limit_mb = mbyte_limit;
         video->cache_limit_frames = frameLimit;
 
+        /* Stop all cache for a bit */
+        video->stop_caching = 1;
+        while (video->cache_thread_count) usleep(100);
+
         /* Resize cache block - to maximum allowed or enough to fit whole clip if it is smaller */
         video->cache_memory_block = realloc(video->cache_memory_block, MIN(bytes_limit, cache_whole));
+        /* Array of frame pointers within the memory block */
+        video->rgb_raw_frames = realloc(video->rgb_raw_frames, frameLimit * sizeof(uint16_t *));
+        for (uint64_t i = 0; i < getMlvRawCacheLimitFrames(video); ++i) video->rgb_raw_frames[i] = video->cache_memory_block + (frame_pix * i);
+
+        video->stop_caching = 0;
 
         /* Begin updating cached frames */
-        if (!video->is_caching)
+        for (int i = 0; i < video->cpu_cores; ++i)
         {
-            /* cache on bg thread */
-            pthread_create(&video->cache_thread, NULL, (void *)cache_mlv_frames, (void *)video);
+            add_mlv_cache_thread(video);
         }
     }
 }
 
-/* Will run in background, caching all frames until it is done,
- * and will be called again on a change */
-/* TODO: add removing old/un-needed frames ability */
-void cache_mlv_frames(mlvObject_t * video)
+/* Marks all frames as not cached */
+void mark_mlv_uncached(mlvObject_t * video)
 {
-    if (video->stop_caching) return;
-
-    video->is_caching = 1;
-
-    uint32_t width = getMlvWidth(video);
-    uint32_t height = getMlvHeight(video);
-    uint32_t cache_frames = MIN((int)video->cache_limit_frames, (int)video->frames);
-    uint32_t frame_size_rgb = width * height * 3;
-
-    float * raw_frame = malloc( getMlvWidth(video) * getMlvHeight(video) * sizeof(float) );
-
-    DEBUG( printf("\nTotal frames %i, Cache limit frames: %i\n\n", (int)video->frames, (int)video->cache_limit_frames); )
-
-    /* Cache until done */
-    for (uint32_t frame_index = 0; frame_index < cache_frames; ++frame_index)
+    for (uint64_t i = 0; i < getMlvFrames(video); ++i)
     {
-        /* Only debayer if frame is not already cached and has not been requested to stop */
-        if (!video->cached_frames[frame_index] && !video->stop_caching)
+        video->cached_frames[i] = MLV_FRAME_NOT_CACHED;
+    }
+}
+
+/* Clears cache by freeing then reallocating (RAM usage down until frames written) */
+void clear_mlv_cache(mlvObject_t * video)
+{
+    mark_mlv_uncached(video);
+    free(video->cache_memory_block);
+    video->cache_memory_block = malloc(video->cache_limit_bytes);
+}
+
+/* Returns 1 on success, or 0 if all are cached */
+int find_mlv_frame_to_cache(mlvObject_t * video, uint64_t *index) /* Outputs to *index */
+{
+    pthread_mutex_lock( &g_mutexFind );
+    /* If a specific frame was requested */
+    if (video->cache_next) 
+    {
+        *index = video->cache_next;
+        video->cache_next = 0;
+        pthread_mutex_unlock( &g_mutexFind );
+        return 1;
+    }
+    else
+    {
+        for (uint64_t frame = 0; frame < getMlvRawCacheLimitFrames(video); ++frame)
         {
-            video->currently_caching = frame_index;
-
-            /* Avoid accessing cache memory at the same time as other functions */
-            pthread_mutex_lock(&video->cache_mutex);
-
-            /* Use memory within our block */
-            video->rgb_raw_frames[frame_index] = video->cache_memory_block + (frame_size_rgb * frame_index);
-
-            /* debayer_type 1, we want to cache AMaZE frames */
-            get_mlv_raw_frame_debayered(video, frame_index, raw_frame, video->rgb_raw_frames[frame_index], 1);
-
-            pthread_mutex_unlock(&video->cache_mutex);
-
-            video->cached_frames[frame_index] = 1;
-
-            DEBUG( printf("Debayered frame %i/%i has been cached.\n", frame_index, cache_frames); )
+            /* Return index if it is not cached */
+            if (video->cached_frames[frame] == MLV_FRAME_NOT_CACHED)
+            {
+                *index = frame;
+                pthread_mutex_unlock( &g_mutexFind );
+                return 1;
+            }
         }
     }
-
-    free(raw_frame);
-
-    video->is_caching = 0;
+    pthread_mutex_unlock( &g_mutexFind );
+    return 0;
 }
+
+/* Adds one thread, active total can be checked in mlvObject->cache_thread_count */
+void add_mlv_cache_thread(mlvObject_t * video)
+{
+    pthread_t thread;
+    pthread_create(&thread, NULL, (void *)an_mlv_cache_thread, (void *)video);
+}
+
+/* Add as many of these as you want :) */
+void an_mlv_cache_thread(mlvObject_t * video)
+{
+    pthread_mutex_lock( &g_mutexCount );
+    video->cache_thread_count++;
+    pthread_mutex_unlock( &g_mutexCount );
+
+    if (video->file)
+    {
+        /* Every cache thread gets own copy of file */
+        FILE * file = fopen(video->path, "rb");
+        
+        uint32_t height = getMlvHeight(video);
+        uint32_t width = getMlvWidth(video);
+        uint32_t pixelsize = width * height;
+
+        /* 2d array uglyness */
+        float  * __restrict imagefloat1d = (float *)malloc(pixelsize * sizeof(float));
+        float ** __restrict imagefloat2d = (float **)malloc(height * sizeof(float *));
+        for (int y = 0; y < height; ++y) imagefloat2d[y] = (float *)(imagefloat1d+(y*width));
+        float  * __restrict red1d = (float *)malloc(pixelsize * sizeof(float));
+        float ** __restrict red2d = (float **)malloc(height * sizeof(float *));
+        for (int y = 0; y < height; ++y) red2d[y] = (float *)(red1d+(y*width));
+        float  * __restrict green1d = (float *)malloc(pixelsize * sizeof(float));
+        float ** __restrict green2d = (float **)malloc(height * sizeof(float *));
+        for (int y = 0; y < height; ++y) green2d[y] = (float *)(green1d+(y*width));
+        float  * __restrict blue1d = (float *)malloc(pixelsize * sizeof(float));
+        float ** __restrict blue2d = (float **)malloc(height * sizeof(float *));
+        for (int y = 0; y < height; ++y) blue2d[y] = (float *)(blue1d+(y*width));
+
+        amazeinfo_t amaze_params = {
+            .rawData =  imagefloat2d,
+            .red     =  red2d,
+            .green   =  green2d,
+            .blue    =  blue2d,
+            .winx    =  0,
+            .winy    =  0,
+            .winw    =  getMlvWidth(video),
+            .winh    =  getMlvHeight(video),
+            .cfa     =  0
+        };
+
+        while (1 < 2)
+        {
+            if (video->stop_caching) break;
+
+            uint64_t cache_frame;
+
+            /* If cache finder reurns false, it's time t stop caching */
+            if (!find_mlv_frame_to_cache(video, &cache_frame)) break;
+
+            pthread_mutex_lock( &g_mutexFind );
+            video->cached_frames[cache_frame] = MLV_FRAME_BEING_CACHED;
+            pthread_mutex_unlock( &g_mutexFind );
+
+            getMlvRawFrameFloat(video, cache_frame, imagefloat1d, file);
+
+            /* Single thread AMaZE */
+            demosaic(&amaze_params);
+
+            /* To 16-bit */
+            uint16_t * out = video->rgb_raw_frames[cache_frame];
+            for (uint32_t i = 0; i < pixelsize-10; i++)
+            {
+                uint16_t * pix = out + (i*3);
+                pix[0] = (uint16_t)MIN(red1d[i], 65535);
+                pix[1] = (uint16_t)MIN(green1d[i], 65535);
+                pix[2] = (uint16_t)MIN(blue1d[i], 65535);
+            }
+        
+            pthread_mutex_lock( &g_mutexFind );
+            video->cached_frames[cache_frame] = MLV_FRAME_IS_CACHED;
+            pthread_mutex_unlock( &g_mutexFind );
+
+            DEBUG( printf("Debayered frame %llu/%llu has been cached.\n", cache_frame+1, video->cache_limit_frames); )
+        }
+
+        free(red1d);
+        free(red2d);
+        free(green1d);
+        free(green2d);
+        free(blue1d);
+        free(blue2d);
+        free(imagefloat2d);
+        free(imagefloat1d);
+
+        fclose(file);
+    }
+
+    pthread_mutex_lock( &g_mutexCount );
+    video->cache_thread_count--;
+    pthread_mutex_unlock( &g_mutexCount );
+}
+
+
 
 /* Gets a freshly debayered frame every time ( temp memory should be Width * Height * sizeof(float) ) */
 void get_mlv_raw_frame_debayered( mlvObject_t * video, 
@@ -157,7 +282,7 @@ void get_mlv_raw_frame_debayered( mlvObject_t * video,
     int height = getMlvHeight(video);
 
     /* Get the raw data in B&W */
-    getMlvRawFrameFloat(video, frame_index, temp_memory);
+    getMlvRawFrameFloat(video, frame_index, temp_memory, NULL);
 
     if (debayer_type)
     {

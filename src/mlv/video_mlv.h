@@ -41,7 +41,7 @@ void setMlvRawCacheLimitFrames(mlvObject_t * video, uint64_t frameLimit);
 /* Useful maybe */
 #define getMlvRawCacheLimitMegaBytes(video) (video)->cache_limit_mb
 #define getMlvRawCacheLimitFrames(video) (video)->cache_limit_frames
-#define isMlvObjectCaching(video) (video)->is_caching
+#define isMlvObjectCaching(video) (video)->cache_thread_count
 /* And here's an UNUSED (at this moment) macrofuntion - ignored */
 #define setMlvCacheStartFrame(video, startFrame) (video)->cache_start_frame = (startFrame)
 
@@ -56,7 +56,7 @@ void getMlvProcessedFrame16(mlvObject_t * video, uint64_t frameIndex, uint16_t *
 /* Unpacks the bits of a frame to get a bayer B&W image (without black level correction)
  * Needs memory to return to, sized: sizeof(float) * getMlvHeight(urvid) * getMlvWidth(urvid)
  * Output values will be in range 0-65535 (16 bit), float is only because AMAzE uses it */
-void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outputFrame);
+void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outputFrame, FILE * useFile); /* file can be NULL */
 
 /* Gets a debayered 16 bit frame - used in getMlvProcessedFrame8 and 16 (when that begins to exist) */
 void getMlvRawFrameDebayered(mlvObject_t * video, uint64_t frameIndex, uint16_t * outputFrame);
@@ -122,6 +122,23 @@ void getMlvAudioData(mlvObject_t * video, int16_t * outputAudio);
  ********* PRIVATE AREA *********
  ********************************/
 
+
+/* Add as many of these as you want :) */
+void an_mlv_cache_thread(mlvObject_t * video);
+
+/* Marks all frames as not cached */
+void mark_mlv_uncached(mlvObject_t * video);
+
+/* Clears cache by freeing then reallocating (RAM usage down until frames written) */
+void clear_mlv_cache(mlvObject_t * video);
+
+/* Returns 1 on success, or 0 if all are cached */
+int find_mlv_frame_to_cache(mlvObject_t * video, uint64_t *index); /* Outputs to *index */
+
+/* Adds one thread, active total can be checked in mlvObject->cache_thread_count */
+void add_mlv_cache_thread(mlvObject_t * video);
+
+/* OLD DEPRACTEDFSDJKHJKLAJSKDLJ KLSDJKL AJSD LKSAJDLKSAJDLK DKJS */
 void cache_mlv_frames(mlvObject_t * video);
 
 /* Gets a debayered frame; how is it different from getMlvRawFrameDebayered?... it doesn't get it from cache ever
