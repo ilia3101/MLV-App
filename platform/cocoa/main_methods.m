@@ -43,6 +43,7 @@ void syncGUI()
     [App->lightenSlider lightenMethod];
     [App->sharpnessSlider sharpnessMethod];
     [App->processingTabSwitch toggleTab];
+    [App->fixRawSelector toggleLLRawProc];
     [App->dualISOOption dualISOMethod];
     [App->focusPixelOption focusPixelMethod];
     [App->badPixelOption badPixelMethod];
@@ -148,6 +149,8 @@ int setAppNewMlvClip(char * mlvPath)
 
     /* Audio test - seems to crash when in an app bundle :[ */
     //writeMlvAudioToWave(App->videoMLV, "test.wav");
+
+    syncGUI();
 
     return 0;
 }
