@@ -23,6 +23,8 @@ typedef struct {
 /* Writes the MLV's audio in WAVE format to a given file path */
 void writeMlvAudioToWave(mlvObject_t * video, char * path)
 {
+    if (!doesMlvHaveAudio(video)) return;
+
     uint64_t audio_size = getMlvAudioSize(video);
     uint64_t file_size = audio_size + sizeof(wave_header_t);
 
@@ -70,6 +72,8 @@ uint64_t getMlvAudioSize(mlvObject_t * video)
 
 void getMlvAudioData(mlvObject_t * video, int16_t * outputAudio)
 {
+    if (!doesMlvHaveAudio(video)) return;
+
     /* Keep track of bytes of audio */
     uint64_t audio_size = 0;
 
