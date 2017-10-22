@@ -15,7 +15,7 @@ OCC = clang # Objective C
 # Flags for link and objects
 mainflags = -mmacosx-version-min=10.10 -O3 -Ofast -m64 -DNDEBUG
 linkflags = $(mainflags) -lm -pthread -lobjc
-cflags := $(mainflags) -c
+cflags := $(mainflags) -c -std=c99
 objcflags := $(cflags) -x objective-c
 
 # Run some cheeky compiletime code to generate window title with hostname
