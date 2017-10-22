@@ -29,7 +29,7 @@
 #include "DarkStyle.h"
 
 #define APPNAME "MLV App"
-#define VERSION "0.8 alpha"
+#define VERSION "0.9 alpha"
 
 QMutex gMutex;
 QMutex gMutexPng16;
