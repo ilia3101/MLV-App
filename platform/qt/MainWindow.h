@@ -67,6 +67,7 @@ private slots:
     void on_actionExport_triggered();
     void on_actionExportActualFrame_triggered();
     void on_checkBoxHighLightReconstruction_toggled(bool checked);
+    void on_checkBoxChromaSeparation_toggled(bool checked);
     void on_comboBoxProfile_currentIndexChanged(int index);
     void on_actionZoomFit_triggered(bool on);
     void on_actionZoom100_triggered();

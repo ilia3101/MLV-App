@@ -1166,7 +1166,7 @@
               </font>
              </property>
              <property name="text">
-              <string>Highlight reconstruction</string>
+              <string>Highlight Reconstruction</string>
              </property>
             </widget>
            </item>
@@ -1298,6 +1298,18 @@
             </layout>
            </item>
            <item>
+            <widget class="QCheckBox" name="checkBoxChromaSeparation">
+             <property name="font">
+              <font>
+               <pointsize>10</pointsize>
+              </font>
+             </property>
+             <property name="text">
+              <string>Chroma Separation (xyY)</string>
+             </property>
+            </widget>
+           </item>
+           <item>
             <spacer name="verticalSpacer">
              <property name="orientation">
               <enum>Qt::Vertical</enum>
@@ -1348,7 +1360,7 @@
                 </font>
                </property>
                <property name="text">
-                <string>Enable raw correction</string>
+                <string>Enable RAW Correction</string>
                </property>
                <property name="checked">
                 <bool>true</bool>
@@ -1380,7 +1392,7 @@
                 </font>
                </property>
                <property name="text">
-                <string>Fix focus dots</string>
+                <string>Fix Focus Dots</string>
                </property>
               </widget>
              </item>
@@ -1480,7 +1492,7 @@
                 </font>
                </property>
                <property name="text">
-                <string>Fix bad pixels </string>
+                <string>Fix Bad Pixels </string>
                </property>
               </widget>
              </item>
@@ -1577,7 +1589,7 @@
                 </font>
                </property>
                <property name="text">
-                <string>Chroma smooth</string>
+                <string>Chroma Smooth</string>
                </property>
               </widget>
              </item>
@@ -1689,7 +1701,7 @@
                 </font>
                </property>
                <property name="text">
-                <string>Vertical stripes</string>
+                <string>Vertical Stripes</string>
                </property>
               </widget>
              </item>
@@ -1837,7 +1849,7 @@
                 </font>
                </property>
                <property name="text">
-                <string>Alias map</string>
+                <string>Alias Map</string>
                </property>
               </widget>
              </item>
@@ -1882,7 +1894,7 @@
                 </font>
                </property>
                <property name="text">
-                <string>Fullres blending</string>
+                <string>Fullres Blending</string>
                </property>
               </widget>
              </item>
@@ -1934,7 +1946,7 @@
                 </font>
                </property>
                <property name="text">
-                <string>Deflicker target</string>
+                <string>Deflicker Target</string>
                </property>
               </widget>
              </item>

@@ -1141,6 +1141,11 @@ void MainWindow::openSession(QString fileName)
                                 m_pSessionReceipts.last()->setHighlightReconstruction( (bool)Rxml.readElementText().toInt() );
                                 Rxml.readNext();
                             }
+                            else if( Rxml.isStartElement() && Rxml.name() == "chromaSeparation" )
+                            {
+                                m_pSessionReceipts.last()->setChromaSeparation( (bool)Rxml.readElementText().toInt() );
+                                Rxml.readNext();
+                            }
                             else if( Rxml.isStartElement() && Rxml.name() == "profile" )
                             {
                                 m_pSessionReceipts.last()->setProfile( (uint8_t)Rxml.readElementText().toUInt() );
@@ -1294,6 +1299,7 @@ void MainWindow::saveSession(QString fileName)
         xmlWriter.writeTextElement( "lightening",              QString( "%1" ).arg( m_pSessionReceipts.at(i)->lightening() ) );
         xmlWriter.writeTextElement( "sharpen",                 QString( "%1" ).arg( m_pSessionReceipts.at(i)->sharpen() ) );
         xmlWriter.writeTextElement( "highlightReconstruction", QString( "%1" ).arg( m_pSessionReceipts.at(i)->isHighlightReconstruction() ) );
+        xmlWriter.writeTextElement( "chromaSeparation",        QString( "%1" ).arg( m_pSessionReceipts.at(i)->isChromaSeparation() ) );
         xmlWriter.writeTextElement( "profile",                 QString( "%1" ).arg( m_pSessionReceipts.at(i)->profile() ) );
         xmlWriter.writeTextElement( "rawFixesEnabled",         QString( "%1" ).arg( m_pSessionReceipts.at(i)->rawFixesEnabled() ) );
         xmlWriter.writeTextElement( "verticalStripes",         QString( "%1" ).arg( m_pSessionReceipts.at(i)->verticalStripes() ) );
@@ -1398,6 +1404,10 @@ void MainWindow::setSliders(ReceiptSettings *receipt)
 
     ui->checkBoxHighLightReconstruction->setChecked( receipt->isHighlightReconstruction() );
     on_checkBoxHighLightReconstruction_toggled( receipt->isHighlightReconstruction() );
+
+    ui->checkBoxChromaSeparation->setChecked( receipt->isChromaSeparation() );
+    on_checkBoxChromaSeparation_toggled( receipt->isChromaSeparation() );
+
     ui->comboBoxProfile->setCurrentIndex( receipt->profile() );
     on_comboBoxProfile_currentIndexChanged( receipt->profile() );
 
@@ -1444,6 +1454,7 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     receipt->setLightening( ui->horizontalSliderLighten->value() );
     receipt->setSharpen( ui->horizontalSliderSharpen->value() );
     receipt->setHighlightReconstruction( ui->checkBoxHighLightReconstruction->isChecked() );
+    receipt->setChromaSeparation( ui->checkBoxChromaSeparation->isChecked() );
     receipt->setProfile( ui->comboBoxProfile->currentIndex() );
 
     receipt->setRawFixesEnabled( ui->checkBoxRawFixEnable->isChecked() );
@@ -1494,6 +1505,7 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     receipt->setLightening( m_pSessionReceipts.at( row )->lightening() );
     receipt->setSharpen( m_pSessionReceipts.at( row )->sharpen() );
     receipt->setHighlightReconstruction( m_pSessionReceipts.at( row )->isHighlightReconstruction() );
+    receipt->setChromaSeparation( m_pSessionReceipts.at( row )->isChromaSeparation() );
     receipt->setProfile( m_pSessionReceipts.at( row )->profile() );
 
     receipt->setRawFixesEnabled( m_pSessionReceipts.at( row )->rawFixesEnabled() );
@@ -1978,6 +1990,14 @@ void MainWindow::on_checkBoxHighLightReconstruction_toggled(bool checked)
 {
     if( checked ) processingEnableHighlightReconstruction( m_pProcessingObject );
     else processingDisableHighlightReconstruction( m_pProcessingObject );
+    m_frameChanged = true;
+}
+
+//Enable / Disable chroma separation
+void MainWindow::on_checkBoxChromaSeparation_toggled(bool checked)
+{
+    if( checked ) processingEnableChromaSeparation( m_pProcessingObject );
+    else processingDisableChromaSeparation( m_pProcessingObject );
     m_frameChanged = true;
 }
 
