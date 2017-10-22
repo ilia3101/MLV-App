@@ -215,18 +215,17 @@ void applyProcessingObject( processingObject_t * processing,
         for (uint16_t * pix = img; pix < img_end; pix += 3)
         {
             /* RGB to XYZ */
-            register double pix0 = rx[0][pix[0]] + rx[1][pix[1]] + rx[2][pix[2]];
-            register double pix1 = rx[3][pix[0]] + rx[4][pix[1]] + rx[5][pix[2]];
-            register double pix2 = rx[6][pix[0]] + rx[7][pix[1]] + rx[8][pix[2]];
+            int32_t pix0 = rx[0][pix[0]] + rx[1][pix[1]] + rx[2][pix[2]];
+            int32_t pix1 = rx[3][pix[0]] + rx[4][pix[1]] + rx[5][pix[2]];
+            int32_t pix2 = rx[6][pix[0]] + rx[7][pix[1]] + rx[8][pix[2]];
 
             /* XYZ to xyY now */    
-            register int32_t pix_x = (int32_t)(pix0 / (pix0+pix1+pix2) * 65535.0); /* xyY x from XYZ */
-            register int32_t pix_y = (int32_t)(pix1 / (pix0+pix1+pix2) * 65535.0); /* xyY y from XYZ */
-            register int32_t pix_Y = (int32_t)(pix1); /* xyY Y from XYZ */
+            int32_t pix_x = (int32_t)((double)pix0 / (pix0+pix1+pix2) * 65535.0); /* xyY x from XYZ */
+            int32_t pix_y = (int32_t)((double)pix1 / (pix0+pix1+pix2) * 65535.0); /* xyY y from XYZ */
 
             pix[0] = LIMIT16(pix_x);
             pix[1] = LIMIT16(pix_y);
-            pix[2] = LIMIT16(pix_Y); /* xyY Y */
+            pix[2] = LIMIT16(pix1); /* xyY Y */
         }
 
         sharp_start = 2; /* Start at +2, aka Luma/Y channel */
@@ -295,17 +294,13 @@ void applyProcessingObject( processingObject_t * processing,
         int32_t ** xr = processing->xyY_zone.pre_calc_xyz_to_rgb;
         for (uint16_t * pix = outputImage; pix < img_end; pix += 3)
         {
-            /* XYZ to xyY now (SOOOOOOOOO confusing in 16bit) */
-            register double pix_x = ((double)pix[0] / 65535.0);
-            register double pix_1_minus_x_minus_y = 1.0 - pix_x - ((double)pix[1] / 65535.0);
+            /* XYZ values */
+            int32_t pix_X = (double)(pix[0] * pix[2]) / pix[1];
+            int32_t pix_Z = (double)((65535 - pix[0] - pix[1]) * pix[2]) / pix[1];
 
-            register int32_t pix_X = (pix_x * pix[2]) / pix[1] * 65535.0;
-            register int32_t pix_Y = pix[2];
-            register int32_t pix_Z = (pix_1_minus_x_minus_y * pix[2]) / pix[1] * 65535.0;
-
-            register int32_t pix_R = xr[0][LIMIT16(pix_X)] + xr[1][LIMIT16(pix_Y)] + xr[2][LIMIT16(pix_Z)];
-            register int32_t pix_G = xr[3][LIMIT16(pix_X)] + xr[4][LIMIT16(pix_Y)] + xr[5][LIMIT16(pix_Z)];
-            register int32_t pix_B = xr[6][LIMIT16(pix_X)] + xr[7][LIMIT16(pix_Y)] + xr[8][LIMIT16(pix_Z)];
+            int32_t pix_R = xr[0][LIMIT16(pix_X)] + xr[1][pix[2]] + xr[2][LIMIT16(pix_Z)];
+            int32_t pix_G = xr[3][LIMIT16(pix_X)] + xr[4][pix[2]] + xr[5][LIMIT16(pix_Z)];
+            int32_t pix_B = xr[6][LIMIT16(pix_X)] + xr[7][pix[2]] + xr[8][LIMIT16(pix_Z)];
 
             pix[0] = LIMIT16(pix_R);
             pix[1] = LIMIT16(pix_G);
