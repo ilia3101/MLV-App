@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1200</width>
-    <height>769</height>
+    <height>785</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -1305,7 +1305,7 @@
               </font>
              </property>
              <property name="text">
-              <string>Chroma Separation (xyY)</string>
+              <string>Chroma Separation (YCbCr)</string>
              </property>
             </widget>
            </item>
