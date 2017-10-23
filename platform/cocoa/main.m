@@ -165,7 +165,7 @@ int NSApplicationMain(int argc, const char * argv[])
     App->chromaSeparationSelector = [ [NSButton alloc]
                                       initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(14, ELEMENT_HEIGHT, 44 + BLOCK_OFFSET*0.6) )];
     [App->chromaSeparationSelector setButtonType: NSSwitchButton];
-    [App->chromaSeparationSelector setTitle: @"Chroma Separation (xyY)"];
+    [App->chromaSeparationSelector setTitle: @"Chroma Separation (YCbCr)"];
     AnchorRight(App->chromaSeparationSelector, YES);
     AnchorTop(App->chromaSeparationSelector, YES);
     [App->chromaSeparationSelector setTarget: App->chromaSeparationSelector];

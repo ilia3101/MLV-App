@@ -49,23 +49,28 @@ processingObject_t * initProcessingObject()
     processing->xyz_to_rgb_matrix[4] = 1.0;
     processing->xyz_to_rgb_matrix[8] = 1.0;
 
-    /* The generic RGB to XYZ (then xyY) matrices precalculated */
-    double mat_rgb_to_xyz[9] = { 0.4124564,  0.3575761,  0.1804375,
-                                 0.2126729,  0.7151522,  0.0721750,
-                                 0.0193339,  0.1191920,  0.9503041  };
-    double mat_xyz_to_rgb[9] = { 3.2404542, -1.5371385, -0.4985314,
-                                -0.9692660,  1.8760108,  0.0415560,
-                                 0.0556434, -0.2040259,  1.0572252  };
-    for (int i = 0; i < 9; ++i)
-    {
-        processing->xyY_zone.pre_calc_xyz_to_rgb[i] = malloc( 65536 * sizeof(int32_t) );
-        processing->xyY_zone.pre_calc_rgb_to_xyz[i] = malloc( 65536 * sizeof(int32_t) );
 
+    double rgb_to_YCbCr[7] = {  0.299000,  0.587000,  0.114000,
+                               -0.168736, -0.331264, /* 0.5 */
+                               /* 0.5 */  -0.418688, -0.081312 };
+    double YCbCr_to_rgb[4] = {             1.402000,
+                               -0.344136, -0.714136,
+                                1.772000  };
+
+    for (int i = 0; i < 7; ++i)
+    {
+        processing->cs_zone.pre_calc_rgb_to_YCbCr[i] = malloc( 65536 * sizeof(int32_t) );
         for (int j = 0; j < 65536; ++j)
         {
-            /* Precalculate */
-            processing->xyY_zone.pre_calc_xyz_to_rgb[i][j] = (double)j * mat_xyz_to_rgb[i];
-            processing->xyY_zone.pre_calc_rgb_to_xyz[i][j] = (double)j * mat_rgb_to_xyz[i];
+            processing->cs_zone.pre_calc_rgb_to_YCbCr[i][j] = (double)j * rgb_to_YCbCr[i];
+        }
+    }
+    for (int i = 0; i < 4; ++i)
+    {
+        processing->cs_zone.pre_calc_YCbCr_to_rgb[i] = malloc( 65536 * sizeof(int32_t) );
+        for (int j = 0; j < 65536; ++j)
+        {
+            processing->cs_zone.pre_calc_YCbCr_to_rgb[i][j] = (double)(j-32768) * YCbCr_to_rgb[i];
         }
     }
 
@@ -208,30 +213,25 @@ void applyProcessingObject( processingObject_t * processing,
     uint32_t sharp_skip = 1; /* Skip how many pixels when applying sharpening */
     uint32_t sharp_start = 0; /* How many pixels offset to start at */
 
-    /* enter xyY world */
+    /* enter YCbCr world - https://en.wikipedia.org/wiki/YCbCr (I used the 'JPEG Transform') */
     if (processingUsesChromaSeparation(processing))
     {
-        int32_t ** rx = processing->xyY_zone.pre_calc_rgb_to_xyz;
+        int32_t ** ry = processing->cs_zone.pre_calc_rgb_to_YCbCr;
         for (uint16_t * pix = img; pix < img_end; pix += 3)
         {
-            /* RGB to XYZ */
-            int32_t pix0 = rx[0][pix[0]] + rx[1][pix[1]] + rx[2][pix[2]];
-            int32_t pix1 = rx[3][pix[0]] + rx[4][pix[1]] + rx[5][pix[2]];
-            int32_t pix2 = rx[6][pix[0]] + rx[7][pix[1]] + rx[8][pix[2]];
+            /* RGB to YCbCr */
+            int32_t pix_Y  =         ry[0][pix[0]] + ry[1][pix[1]] + ry[2][pix[2]];
+            int32_t pix_Cb = 32768 + ry[3][pix[0]] + ry[4][pix[1]] + (pix[2] >> 1);
+            int32_t pix_Cr = 32768 + (pix[0] >> 1) + ry[5][pix[1]] + ry[6][pix[2]];
 
-            /* XYZ to xyY now */    
-            int32_t pix_x = (int32_t)((double)pix0 / (pix0+pix1+pix2) * 65535.0); /* xyY x from XYZ */
-            int32_t pix_y = (int32_t)((double)pix1 / (pix0+pix1+pix2) * 65535.0); /* xyY y from XYZ */
-
-            pix[0] = LIMIT16(pix_x);
-            pix[1] = LIMIT16(pix_y);
-            pix[2] = LIMIT16(pix1); /* xyY Y */
+            pix[0] = LIMIT16(pix_Y);
+            pix[1] = LIMIT16(pix_Cb);
+            pix[2] = LIMIT16(pix_Cr);
         }
 
-        sharp_start = 2; /* Start at +2, aka Luma/Y channel */
+        sharp_start = 0; /* Start at 0, aka Luma/Y channel */
         sharp_skip = 3; /* Only sharpen every third (Y/luma) pixel */
     }
-
 
     if (processingGetSharpening(processing) > 0.005)
     {
@@ -287,24 +287,20 @@ void applyProcessingObject( processingObject_t * processing,
         memcpy(outputImage, inputImage, img_s * sizeof(uint16_t));
     }
 
-    /* Leave xyY world */
+    /* Leave Y-Cb-Cr world */
     if (processingUsesChromaSeparation(processing))
     {
         img_end = outputImage + img_s;
-        int32_t ** xr = processing->xyY_zone.pre_calc_xyz_to_rgb;
+        int32_t ** yr = processing->cs_zone.pre_calc_YCbCr_to_rgb;
         for (uint16_t * pix = outputImage; pix < img_end; pix += 3)
         {
-            /* XYZ values */
-            int32_t pix_X = (double)(pix[0] * pix[2]) / pix[1];
-            int32_t pix_Z = (double)((65535 - pix[0] - pix[1]) * pix[2]) / pix[1];
-
-            int32_t pix_R = xr[0][LIMIT16(pix_X)] + xr[1][pix[2]] + xr[2][LIMIT16(pix_Z)];
-            int32_t pix_G = xr[3][LIMIT16(pix_X)] + xr[4][pix[2]] + xr[5][LIMIT16(pix_Z)];
-            int32_t pix_B = xr[6][LIMIT16(pix_X)] + xr[7][pix[2]] + xr[8][LIMIT16(pix_Z)];
+            int32_t pix_R = pix[0]                 + yr[0][pix[2]];
+            int32_t pix_G = pix[0] + yr[1][pix[1]] + yr[2][pix[2]];
+            int32_t pix_B = pix[0] + yr[3][pix[1]];
 
             pix[0] = LIMIT16(pix_R);
             pix[1] = LIMIT16(pix_G);
-            pix[2] = LIMIT16(pix_B); /* xyY Y */
+            pix[2] = LIMIT16(pix_B);
         }
     }
 }
@@ -574,5 +570,7 @@ void freeProcessingObject(processingObject_t * processing)
     free(processing->pre_calc_sharp_x);
     free(processing->pre_calc_sharp_y);
     for (int i = 8; i >= 0; --i) free(processing->pre_calc_matrix[i]);
+    for (int i = 6; i >= 0; --i) free(processing->cs_zone.pre_calc_rgb_to_YCbCr[i]);
+    for (int i = 3; i >= 0; --i) free(processing->cs_zone.pre_calc_YCbCr_to_rgb[i]);
     free(processing);
 }

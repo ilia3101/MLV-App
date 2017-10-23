@@ -77,9 +77,9 @@ void processingSet3WayCorrection( processingObject_t * processing,
 
 
 /* Enable/disable highlight reconstruction */
-#define processingEnableChromaSeparation(processing) (processing)->xyY_zone.use_xyY = 1
-#define processingDisableChromaSeparation(processing) (processing)->xyY_zone.use_xyY = 0
-#define processingUsesChromaSeparation(processing) (processing)->xyY_zone.use_xyY /* A checking function */
+#define processingEnableChromaSeparation(processing) (processing)->cs_zone.use_cs = 1
+#define processingDisableChromaSeparation(processing) (processing)->cs_zone.use_cs = 0
+#define processingUsesChromaSeparation(processing) (processing)->cs_zone.use_cs /* A checking function */
 
 
 /* Just don't touch this or keep at ~2.2 (or more for a lighter image) */
