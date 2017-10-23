@@ -1860,6 +1860,12 @@ void MainWindow::on_horizontalSliderSharpen_valueChanged(int position)
     m_frameChanged = true;
 }
 
+void MainWindow::on_horizontalSliderChromaBlur_valueChanged(int position)
+{
+    processingSetChromaBlurRadius( m_pProcessingObject, position );
+    m_frameChanged = true;
+}
+
 //Jump to first frame
 void MainWindow::on_actionGoto_First_Frame_triggered()
 {

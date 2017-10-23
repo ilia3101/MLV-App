@@ -63,6 +63,7 @@ private slots:
     void on_horizontalSliderLR_valueChanged(int position);
     void on_horizontalSliderLighten_valueChanged(int position);
     void on_horizontalSliderSharpen_valueChanged(int position);
+    void on_horizontalSliderChromaBlur_valueChanged(int position);
     void on_actionGoto_First_Frame_triggered();
     void on_actionExport_triggered();
     void on_actionExportActualFrame_triggered();
