@@ -82,6 +82,12 @@ void processingSet3WayCorrection( processingObject_t * processing,
 #define processingUsesChromaSeparation(processing) (processing)->cs_zone.use_cs /* A checking function */
 
 
+/* Chroma blur - to enable it, you MUST enable chroma separation too. */
+#define processingSetChromaBlurRadius(processing, radius) (processing)->cs_zone.chroma_blur_radius = (radius)
+#define processingGetChromaBlurRadius(processing) (processing)->cs_zone.chroma_blur_radius
+
+
+
 /* Just don't touch this or keep at ~2.2 (or more for a lighter image) */
 void processingSetGamma(processingObject_t * processing, double gammaValue);
 #define processingGetGamma(processing) (processing)->gamma_power

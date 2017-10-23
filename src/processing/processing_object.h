@@ -45,8 +45,8 @@ typedef struct {
         int32_t * pre_calc_rgb_to_YCbCr[7];
         int32_t * pre_calc_YCbCr_to_rgb[5];
 
-        /* Moire filter (only avalible if use_xyY is true) */
-        int median_blur; /* 0=off, 1=3x3, 2=5x5, 3=7x7 */
+        /* Moire/noise filter (only avalible if use_cs is true) */
+        uint32_t chroma_blur_radius;
     } cs_zone;
 
     /* White balance */

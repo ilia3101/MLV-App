@@ -229,8 +229,52 @@ void applyProcessingObject( processingObject_t * processing,
             pix[2] = LIMIT16(pix_Cr);
         }
 
-        sharp_start = 0; /* Start at 0, aka Luma/Y channel */
+        sharp_start = 0; /* Start at 0 - Luma/Y channel */
         sharp_skip = 3; /* Only sharpen every third (Y/luma) pixel */
+    }
+
+    /* Pretty bad experiomantal and slow */
+    if (processingGetChromaBlurRadius(processing) > 0 && processingUsesChromaSeparation(processing))
+    {
+        memcpy(out_img, img, img_s * sizeof(uint16_t));
+
+        /* Row length */
+        uint32_t rl = imageX * 3;
+
+        uint32_t radius = processingGetChromaBlurRadius(processing);
+        uint32_t margin = radius;
+        uint32_t y_max = imageY - margin;
+        uint32_t x_max = (imageX - margin) * 3;
+
+        uint32_t blur_diameter = radius*2+1;
+        uint32_t blur_elements = blur_diameter * blur_diameter;
+
+        for (uint32_t offset = 1; offset <=2; ++offset) /* Offset - do twice on channel '1' and '2' (Cb and Cr) */
+        for (uint32_t y = margin; y < y_max; ++y)
+        {
+            uint16_t * out_row = out_img + (y * rl); /* current row ouptut */
+            uint16_t * row = img + (y * rl); /* current row */
+
+            for (uint32_t x = margin*3+offset; x < x_max; x+=3)
+            {
+                /* Get average */
+                uint32_t sum = 0;
+
+                for (uint32_t b_y = 0; b_y < blur_diameter; ++b_y) /* y coord in blur grid */
+                {
+                    uint16_t * pix_row = img + ((y-radius+b_y) * rl) + x - (radius*3);
+                    for (uint32_t b_x = 0; b_x < blur_diameter*3; b_x+=3)
+                    {
+                        sum += pix_row[b_x];
+                    }
+                }
+
+                out_row[x] = (double)sum/(double)blur_elements;
+            }
+        }
+
+        /* And back */
+        memcpy(img, out_img, img_s * sizeof(uint16_t));
     }
 
     if (processingGetSharpening(processing) > 0.005)
