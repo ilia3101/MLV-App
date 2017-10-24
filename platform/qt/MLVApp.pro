@@ -89,7 +89,9 @@ SOURCES += \
     GraphicsZoomView.cpp \
     JumpSlider.cpp \
     AudioPlayback.cpp \
-    GraphicsPickerScene.cpp
+    GraphicsPickerScene.cpp \
+    NoScrollSlider.cpp \
+    TestDialog.cpp
 
 HEADERS += \
         MainWindow.h \
@@ -129,14 +131,17 @@ HEADERS += \
     DarkStyle.h \
     JumpSlider.h \
     AudioPlayback.h \
-    GraphicsPickerScene.h
+    GraphicsPickerScene.h \
+    NoScrollSlider.h \
+    TestDialog.h
 
 FORMS += \
         MainWindow.ui \
     InfoDialog.ui \
     StatusDialog.ui \
     ExportSettingsDialog.ui \
-    EditSliderValueDialog.ui
+    EditSliderValueDialog.ui \
+    TestDialog.ui
 
 RESOURCES += \
     ressources.qrc \
