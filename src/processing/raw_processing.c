@@ -233,48 +233,59 @@ void applyProcessingObject( processingObject_t * processing,
         sharp_skip = 3; /* Only sharpen every third (Y/luma) pixel */
     }
 
-    /* Pretty bad experiomantal and slow */
+    /* Basic box blur */
     if (processingGetChromaBlurRadius(processing) > 0 && processingUsesChromaSeparation(processing))
     {
         memcpy(out_img, img, img_s * sizeof(uint16_t));
 
         /* Row length */
-        uint32_t rl = imageX * 3;
+        int32_t rl = imageX * 3;
 
-        uint32_t radius = processingGetChromaBlurRadius(processing);
-        uint32_t margin = radius;
-        uint32_t y_max = imageY - margin;
-        uint32_t x_max = (imageX - margin) * 3;
+        int32_t radius = processingGetChromaBlurRadius(processing);
+        int32_t radius_x = radius*3;
+        int32_t y_max = imageY + radius;
+        int32_t x_max = (imageX + radius);
+        int32_t x_lim = rl-3;
 
         uint32_t blur_diameter = radius*2+1;
-        uint32_t blur_elements = blur_diameter * blur_diameter;
 
-        for (uint32_t offset = 1; offset <=2; ++offset) /* Offset - do twice on channel '1' and '2' (Cb and Cr) */
-        for (uint32_t y = margin; y < y_max; ++y)
+        /* Offset - do twice on channel '1' and '2' (Cb and Cr) */
+        for (uint32_t offset = 1; offset <=2; ++offset)
         {
-            uint16_t * out_row = out_img + (y * rl); /* current row ouptut */
-            uint16_t * row = img + (y * rl); /* current row */
-
-            for (uint32_t x = margin*3+offset; x < x_max; x+=3)
+            /* Horizontal blur */
+            for (int32_t y = 0; y < imageY; ++y) /* rows */
             {
-                /* Get average */
-                uint32_t sum = 0;
+                uint16_t * out_row = out_img + (y * rl); /* current row ouptut */
+                uint16_t * row = img + (y * rl); /* current row */
 
-                for (uint32_t b_y = 0; b_y < blur_diameter; ++b_y) /* y coord in blur grid */
+                uint32_t sum = row[offset] * blur_diameter;
+
+                for (int32_t x = -radius; x < imageX; ++x)
                 {
-                    uint16_t * pix_row = img + ((y-radius+b_y) * rl) + x - (radius*3);
-                    for (uint32_t b_x = 0; b_x < blur_diameter*3; b_x+=3)
-                    {
-                        sum += pix_row[b_x];
-                    }
+                    sum -= row[MIN(MAX(x-radius, 0), imageX-1)*3+offset];
+                    sum += row[MIN(MAX(x+radius+1, 0), imageX-1)*3+offset];
+                    out_row[MAX(x, 0)*3+offset] = sum / blur_diameter;
                 }
+            }
 
-                out_row[x] = (double)sum/(double)blur_elements;
+            /* Vertical blur */
+            for (int32_t x = 0; x < imageX; ++x) /* columns */
+            {
+                uint16_t * out_col = img + (x*3);
+                uint16_t * col = out_img + (x*3);
+
+                uint32_t sum = out_img[x*3+offset] * blur_diameter;
+
+                for (int32_t y = -radius; y < imageY; ++y)
+                {
+                    sum -= col[MIN(MAX((y-radius), 0), imageY-1)*rl+offset];
+                    sum += col[MIN(MAX((y+radius+1), 0), imageY-1)*rl+offset];
+                    out_col[MAX(y, 0)*rl+offset] = sum / blur_diameter;
+                }
             }
         }
 
-        /* And back */
-        memcpy(img, out_img, img_s * sizeof(uint16_t));
+        // memcpy(inputImage, outputImage, img_s * sizeof(uint16_t));
     }
 
     if (processingGetSharpening(processing) > 0.005)

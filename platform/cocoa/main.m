@@ -138,10 +138,11 @@ int NSApplicationMain(int argc, const char * argv[])
 
     /* Third block */
     CREATE_SLIDER_RIGHT( App->sharpnessSlider, App->sharpnessLabel, App->sharpnessValueLabel, @"Sharpen", 10, sharpnessMethod, BLOCK_OFFSET * 1.62, 0.0 );
+    CREATE_SLIDER_RIGHT( App->chromaBlurSlider, App->chromaBlurLabel, App->chromaBlurValueLabel, @"Chroma Blur Radius", 11, chromaBlurMethod, BLOCK_OFFSET * 1.62, 0.0 );
 
     /* Enable/disable highlight reconstruction */
     App->highlightReconstructionSelector = [ [NSButton alloc]
-                                             initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(12, ELEMENT_HEIGHT, 16 + BLOCK_OFFSET*0.6) )];
+                                             initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(12, ELEMENT_HEIGHT, 16 + BLOCK_OFFSET*1.67) )];
     [App->highlightReconstructionSelector setButtonType: NSSwitchButton];
     [App->highlightReconstructionSelector setTitle: @"Highlight Reconstruction"];
     AnchorRight(App->highlightReconstructionSelector, YES);
@@ -152,7 +153,7 @@ int NSApplicationMain(int argc, const char * argv[])
 
     /* To set always use AMaZE on/off */
     App->alwaysUseAmazeSelector = [ [NSButton alloc]
-                                    initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(13, ELEMENT_HEIGHT, 30 + BLOCK_OFFSET*0.6) )];
+                                    initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(13, ELEMENT_HEIGHT, 30 + BLOCK_OFFSET*1.67) )];
     [App->alwaysUseAmazeSelector setButtonType: NSSwitchButton];
     [App->alwaysUseAmazeSelector setTitle: @"Always use AMaZE"];
     AnchorRight(App->alwaysUseAmazeSelector, YES);
@@ -163,7 +164,7 @@ int NSApplicationMain(int argc, const char * argv[])
 
     /* To enable/disable chroma separation */
     App->chromaSeparationSelector = [ [NSButton alloc]
-                                      initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(14, ELEMENT_HEIGHT, 44 + BLOCK_OFFSET*0.6) )];
+                                      initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(14, ELEMENT_HEIGHT, 44 + BLOCK_OFFSET*1.67) )];
     [App->chromaSeparationSelector setButtonType: NSSwitchButton];
     [App->chromaSeparationSelector setTitle: @"Chroma Separation (YCbCr)"];
     AnchorRight(App->chromaSeparationSelector, YES);
@@ -175,7 +176,7 @@ int NSApplicationMain(int argc, const char * argv[])
 
     /* Processing style selector */
     App->imageProfile = [ [NSPopUpButton alloc]
-                          initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(14,24,-1) ) ];
+                          initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(14,24,-28) ) ];
     AnchorRight(App->imageProfile, YES);
     AnchorTop(App->imageProfile, YES);
     [App->imageProfile insertItemWithTitle: @"Standard" atIndex: PROFILE_STANDARD];
@@ -232,7 +233,7 @@ int NSApplicationMain(int argc, const char * argv[])
     /* Set exposure to + 1.2 stops instead of correct 0.0, this is to give the impression 
      * (to those that believe) that highlights are recoverable (shhh don't tell) */
     processingSetExposureStops(App->processingSettings, 1.2);
-    /* TEST */
+    /* Default profiel */
     processingSetImageProfile(App->processingSettings, DEFAULT_IMAGE_PROFILE_APP);
     /* Link video with processing settings */
     setMlvProcessing(App->videoMLV, App->processingSettings);

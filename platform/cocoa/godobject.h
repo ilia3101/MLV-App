@@ -57,7 +57,7 @@ typedef struct {
     * tintSlider, * darkStrengthSlider,
     * darkRangeSlider, * lightStrengthSlider,
     * lightRangeSlider, * lightenSlider,
-    * sharpnessSlider;
+    * sharpnessSlider, * chromaBlurSlider;
     /* Slider labels */
     NSTextField * exposureLabel, * exposureValueLabel,
     * saturationLabel, * saturationValueLabel, * kelvinLabel, 
@@ -67,7 +67,8 @@ typedef struct {
     * lightStrengthLabel, * lightStrengthValueLabel,
     * lightRangeLabel, * lightRangeValueLabel,
     * lightenLabel, * lightenValueLabel,
-    * sharpnessLabel, * sharpnessValueLabel;
+    * sharpnessLabel, * sharpnessValueLabel,
+    * chromaBlurLabel, * chromaBlurValueLabel;
     /* Buttons (Checkboxes) */
     NSButton * highlightReconstructionSelector;
     NSButton * alwaysUseAmazeSelector;

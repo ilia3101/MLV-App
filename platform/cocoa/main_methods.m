@@ -42,6 +42,7 @@ void syncGUI()
     [App->lightRangeSlider lightRangeMethod];
     [App->lightenSlider lightenMethod];
     [App->sharpnessSlider sharpnessMethod];
+    [App->chromaBlurSlider chromaBlurMethod];
     [App->processingTabSwitch toggleTab];
     [App->fixRawSelector toggleLLRawProc];
     [App->dualISOOption dualISOMethod];
@@ -183,6 +184,9 @@ int setAppNewMlvClip(char * mlvPath)
     else 
     {
         processingDisableChromaSeparation(App->processingSettings);
+        /* Set chroma blur to zero */
+        [App->chromaBlurSlider setDoubleValue:0.0];
+        [App->chromaBlurSlider chromaBlurMethod]; /* to refresh the label */
     }
     App->frameChanged++;
 }
@@ -477,6 +481,25 @@ int setAppNewMlvClip(char * mlvPath)
     App->frameChanged++;
 }
 
+-(void)chromaBlurMethod
+{
+    /* This is the radius actually, I've limited it to 12 */
+    int chromaBlurValue = (int)([self doubleValue] * 12.0 + 0.5);
+    /* If chroma blur on, and chroma separation is off, enable chroma separation */
+    if (chromaBlurValue > 0)
+    {
+        App->chromaSeparationSelector.state = NSOnState;
+        processingEnableChromaSeparation(App->processingSettings);
+        processingSetChromaBlurRadius(App->processingSettings, chromaBlurValue);
+        [App->chromaBlurValueLabel setStringValue: [NSString stringWithFormat:@"%6.i", chromaBlurValue]];
+    }
+    else
+    {
+        [App->chromaBlurValueLabel setStringValue: [NSString stringWithFormat:@"   Off"]];
+    }
+    App->frameChanged++;
+}
+
 @end
 
 /* NSSegmentedControl methods */
@@ -596,7 +619,7 @@ int setAppNewMlvClip(char * mlvPath)
     [App->tintSlider setHidden: showProcessing]; [App->darkStrengthSlider setHidden: showProcessing];
     [App->darkRangeSlider setHidden: showProcessing]; [App->lightStrengthSlider setHidden: showProcessing];
     [App->lightRangeSlider setHidden: showProcessing]; [App->lightenSlider setHidden: showProcessing];
-    [App->sharpnessSlider setHidden: showProcessing];
+    [App->sharpnessSlider setHidden: showProcessing]; [chromaBlurSlider setHidden: showProcessing];
     /* Slider labels */
     [App->exposureLabel setHidden: showProcessing]; [App->exposureValueLabel setHidden: showProcessing];
     [App->saturationLabel setHidden: showProcessing]; [App->saturationValueLabel setHidden: showProcessing]; [App->kelvinLabel setHidden: showProcessing];
@@ -607,6 +630,7 @@ int setAppNewMlvClip(char * mlvPath)
     [App->lightRangeLabel setHidden: showProcessing]; [App->lightRangeValueLabel setHidden: showProcessing];
     [App->lightenLabel setHidden: showProcessing]; [App->lightenValueLabel setHidden: showProcessing];
     [App->sharpnessLabel setHidden: showProcessing]; [App->sharpnessValueLabel setHidden: showProcessing];
+    [App->chromaBlurLabel setHidden: showProcessing]; [App->chromaBlurValueLabel setHidden: showProcessing];
     /* Checkboxes and processing profile selector */
     [App->highlightReconstructionSelector setHidden: showProcessing];
     [App->alwaysUseAmazeSelector setHidden: showProcessing];
