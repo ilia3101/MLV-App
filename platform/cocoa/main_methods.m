@@ -485,12 +485,12 @@ int setAppNewMlvClip(char * mlvPath)
 {
     /* This is the radius actually, I've limited it to 12 */
     int chromaBlurValue = (int)([self doubleValue] * 12.0 + 0.5);
+    processingSetChromaBlurRadius(App->processingSettings, chromaBlurValue);
     /* If chroma blur on, and chroma separation is off, enable chroma separation */
     if (chromaBlurValue > 0)
     {
         App->chromaSeparationSelector.state = NSOnState;
         processingEnableChromaSeparation(App->processingSettings);
-        processingSetChromaBlurRadius(App->processingSettings, chromaBlurValue);
         [App->chromaBlurValueLabel setStringValue: [NSString stringWithFormat:@"%6.i", chromaBlurValue]];
     }
     else
