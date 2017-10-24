@@ -106,6 +106,7 @@ private slots:
     void on_label_LsVal_doubleClicked( void );
     void on_label_LightenVal_doubleClicked( void );
     void on_label_Sharpen_doubleClicked( void );
+    void on_label_ChromaBlur_doubleClicked( void );
     void on_labelAudioTrack_sizeChanged( void );
     void on_actionFullscreen_triggered(bool checked);
     void exportHandler( void );

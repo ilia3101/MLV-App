@@ -24,6 +24,7 @@ public:
     void setLs( int value )         {m_ls = value;}
     void setLightening( int value ) {m_lightening = value;}
     void setSharpen( int value )    {m_sharpen = value;}
+    void setChromaBlur( int value ) {m_chromaBlur = value;}
     void setHighlightReconstruction( bool on ){m_highlightReconstruction = on;}
     void setChromaSeparation( bool on ){m_chromaSeparation = on;}
     void setProfile( uint8_t num )  {m_profile = num;}
@@ -52,6 +53,7 @@ public:
     int ls( void )         {return m_ls;}
     int lightening( void ) {return m_lightening;}
     int sharpen( void )    {return m_sharpen;}
+    int chromaBlur( void ) {return m_chromaBlur;}
     bool isHighlightReconstruction( void ){return m_highlightReconstruction;}
     bool isChromaSeparation( void ){return m_chromaSeparation;}
     bool rawFixesEnabled( void ){return m_rawFixesEnabled;}
@@ -82,6 +84,7 @@ private:
     int m_ls;
     int m_lightening;
     int m_sharpen;
+    int m_chromaBlur;
     bool m_highlightReconstruction;
     bool m_chromaSeparation;
     bool m_rawFixesEnabled; // Enable/Disable all raw fixes

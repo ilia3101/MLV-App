@@ -1136,6 +1136,11 @@ void MainWindow::openSession(QString fileName)
                                 m_pSessionReceipts.last()->setSharpen( Rxml.readElementText().toInt() );
                                 Rxml.readNext();
                             }
+                            else if( Rxml.isStartElement() && Rxml.name() == "chromaBlur" )
+                            {
+                                m_pSessionReceipts.last()->setChromaBlur( Rxml.readElementText().toInt() );
+                                Rxml.readNext();
+                            }
                             else if( Rxml.isStartElement() && Rxml.name() == "highlightReconstruction" )
                             {
                                 m_pSessionReceipts.last()->setHighlightReconstruction( (bool)Rxml.readElementText().toInt() );
@@ -1298,6 +1303,7 @@ void MainWindow::saveSession(QString fileName)
         xmlWriter.writeTextElement( "lr",                      QString( "%1" ).arg( m_pSessionReceipts.at(i)->lr() ) );
         xmlWriter.writeTextElement( "lightening",              QString( "%1" ).arg( m_pSessionReceipts.at(i)->lightening() ) );
         xmlWriter.writeTextElement( "sharpen",                 QString( "%1" ).arg( m_pSessionReceipts.at(i)->sharpen() ) );
+        xmlWriter.writeTextElement( "chromaBlur",              QString( "%1" ).arg( m_pSessionReceipts.at(i)->chromaBlur() ) );
         xmlWriter.writeTextElement( "highlightReconstruction", QString( "%1" ).arg( m_pSessionReceipts.at(i)->isHighlightReconstruction() ) );
         xmlWriter.writeTextElement( "chromaSeparation",        QString( "%1" ).arg( m_pSessionReceipts.at(i)->isChromaSeparation() ) );
         xmlWriter.writeTextElement( "profile",                 QString( "%1" ).arg( m_pSessionReceipts.at(i)->profile() ) );
@@ -1401,6 +1407,7 @@ void MainWindow::setSliders(ReceiptSettings *receipt)
     ui->horizontalSliderLighten->setValue( receipt->lightening() );
 
     ui->horizontalSliderSharpen->setValue( receipt->sharpen() );
+    ui->horizontalSliderChromaBlur->setValue( receipt->chromaBlur() );
 
     ui->checkBoxHighLightReconstruction->setChecked( receipt->isHighlightReconstruction() );
     on_checkBoxHighLightReconstruction_toggled( receipt->isHighlightReconstruction() );
@@ -1453,6 +1460,7 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     receipt->setLr( ui->horizontalSliderLR->value() );
     receipt->setLightening( ui->horizontalSliderLighten->value() );
     receipt->setSharpen( ui->horizontalSliderSharpen->value() );
+    receipt->setChromaBlur( ui->horizontalSliderChromaBlur->value() );
     receipt->setHighlightReconstruction( ui->checkBoxHighLightReconstruction->isChecked() );
     receipt->setChromaSeparation( ui->checkBoxChromaSeparation->isChecked() );
     receipt->setProfile( ui->comboBoxProfile->currentIndex() );
@@ -1504,6 +1512,7 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     receipt->setLs( m_pSessionReceipts.at( row )->ls() );
     receipt->setLightening( m_pSessionReceipts.at( row )->lightening() );
     receipt->setSharpen( m_pSessionReceipts.at( row )->sharpen() );
+    receipt->setChromaBlur( m_pSessionReceipts.at( row )->chromaBlur() );
     receipt->setHighlightReconstruction( m_pSessionReceipts.at( row )->isHighlightReconstruction() );
     receipt->setChromaSeparation( m_pSessionReceipts.at( row )->isChromaSeparation() );
     receipt->setProfile( m_pSessionReceipts.at( row )->profile() );
@@ -1863,6 +1872,7 @@ void MainWindow::on_horizontalSliderSharpen_valueChanged(int position)
 void MainWindow::on_horizontalSliderChromaBlur_valueChanged(int position)
 {
     processingSetChromaBlurRadius( m_pProcessingObject, position );
+    ui->label_ChromaBlur->setText( QString("%1").arg( position ) );
     m_frameChanged = true;
 }
 
@@ -2002,6 +2012,11 @@ void MainWindow::on_checkBoxHighLightReconstruction_toggled(bool checked)
 //Enable / Disable chroma separation
 void MainWindow::on_checkBoxChromaSeparation_toggled(bool checked)
 {
+    //Enable / Disable chroma blur
+    ui->label_ChromaBlur->setEnabled( checked );
+    ui->label_ChromaBlurText->setEnabled( checked );
+    ui->horizontalSliderChromaBlur->setEnabled( checked );
+
     if( checked ) processingEnableChromaSeparation( m_pProcessingObject );
     else processingDisableChromaSeparation( m_pProcessingObject );
     m_frameChanged = true;
@@ -2459,6 +2474,15 @@ void MainWindow::on_label_Sharpen_doubleClicked()
     editSlider.autoSetup( ui->horizontalSliderSharpen, ui->label_Sharpen, 1, 0, 1.0 );
     editSlider.exec();
     ui->horizontalSliderSharpen->setValue( editSlider.getValue() );
+}
+
+//DoubleClick on ChromaBlur Label
+void MainWindow::on_label_ChromaBlur_doubleClicked()
+{
+    EditSliderValueDialog editSlider;
+    editSlider.autoSetup( ui->horizontalSliderChromaBlur, ui->label_ChromaBlur, 1, 0, 1.0 );
+    editSlider.exec();
+    ui->horizontalSliderChromaBlur->setValue( editSlider.getValue() );
 }
 
 //Repaint audio if its size changed
