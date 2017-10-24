@@ -619,7 +619,7 @@ int setAppNewMlvClip(char * mlvPath)
     [App->tintSlider setHidden: showProcessing]; [App->darkStrengthSlider setHidden: showProcessing];
     [App->darkRangeSlider setHidden: showProcessing]; [App->lightStrengthSlider setHidden: showProcessing];
     [App->lightRangeSlider setHidden: showProcessing]; [App->lightenSlider setHidden: showProcessing];
-    [App->sharpnessSlider setHidden: showProcessing]; [chromaBlurSlider setHidden: showProcessing];
+    [App->sharpnessSlider setHidden: showProcessing]; [App->chromaBlurSlider setHidden: showProcessing];
     /* Slider labels */
     [App->exposureLabel setHidden: showProcessing]; [App->exposureValueLabel setHidden: showProcessing];
     [App->saturationLabel setHidden: showProcessing]; [App->saturationValueLabel setHidden: showProcessing]; [App->kelvinLabel setHidden: showProcessing];
