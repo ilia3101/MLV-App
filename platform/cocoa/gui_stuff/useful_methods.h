@@ -3,8 +3,6 @@
 #ifndef _useful_methods_
 #define _useful_methods_
 
-#include "anchor_methods.h"
-
 /* NSTextField methods */
 @interface NSTextField (usefulMethods)
 
@@ -14,35 +12,24 @@
  * [textfield_name setLabelStyle]; */
 -(void)setLabelStyle;
 
-/* Anchor methods macro (yes, what an unhelpful 'interface', 
- * look in anchor_methods.h or how they are used, 
- * I'm sorry for the awful code ) */
-ANCHOR_METHODS_INTERFACE
-
 @end
 
-/* NSTextView methods */
-@interface NSTextView (usefulMethods)
--(void)setLabelStyle;
-ANCHOR_METHODS_INTERFACE
-@end
-
-/* NSButton methods */
-
-@interface NSButton (usefulMethods)
-ANCHOR_METHODS_INTERFACE
-@end
-
-/* NSSlider methods */
-
-@interface NSSlider (usefulMethods)
-ANCHOR_METHODS_INTERFACE
-@end
-
-/* Drop down menu methods */
-
-@interface NSPopUpButton (usefulMethods)
-ANCHOR_METHODS_INTERFACE
-@end
+/* Anchor """"methods"""" */
+#define AnchorBottom(OBJECT, CHOICE) { \
+    if (CHOICE) OBJECT.autoresizingMask |= NSViewMaxYMargin; \
+    else OBJECT.autoresizingMask &= ~NSViewMaxYMargin; \
+}
+#define AnchorTop(OBJECT, CHOICE) { \
+    if (CHOICE) OBJECT.autoresizingMask |= NSViewMinYMargin; \
+    else OBJECT.autoresizingMask &= ~NSViewMinYMargin; \
+}
+#define AnchorLeft(OBJECT, CHOICE) { \
+    if (CHOICE) OBJECT.autoresizingMask |= NSViewMaxXMargin; \
+    else OBJECT.autoresizingMask &= ~NSViewMaxXMargin; \
+}
+#define AnchorRight(OBJECT, CHOICE) { \
+    if (CHOICE) OBJECT.autoresizingMask |= NSViewMinXMargin; \
+    else OBJECT.autoresizingMask &= ~NSViewMinXMargin; \
+}
 
 #endif

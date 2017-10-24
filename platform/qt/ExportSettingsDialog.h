@@ -17,6 +17,9 @@
 #define CODEC_PRORES4444     4
 #define CODEC_AVIRAW         5
 
+#define CODEC_PRORES_OPTION_KS 0
+#define CODEC_PRORES_OPTION_AW 1
+
 namespace Ui {
 class ExportSettingsDialog;
 }
@@ -26,9 +29,10 @@ class ExportSettingsDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit ExportSettingsDialog(QWidget *parent = 0, uint8_t currentCodecProfile = 0, uint8_t previewMode = 0, bool fpsOverride = false, double fps = 25, bool exportAudio = true, int style = 0);
+    explicit ExportSettingsDialog(QWidget *parent = 0, uint8_t currentCodecProfile = 0, uint8_t currentCodecOption = 0, uint8_t previewMode = 0, bool fpsOverride = false, double fps = 25, bool exportAudio = true, int style = 0);
     ~ExportSettingsDialog();
     uint8_t encoderSetting(void);
+    uint8_t encoderOption(void);
     bool isExportAudioEnabled(void);
     uint8_t previewMode(void);
     bool isFpsOverride(void);
@@ -37,6 +41,7 @@ public:
 
 private slots:
     void on_pushButtonClose_clicked();
+    void on_comboBoxCodec_currentIndexChanged(int index);
 
 private:
     Ui::ExportSettingsDialog *ui;

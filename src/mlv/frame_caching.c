@@ -187,81 +187,84 @@ void an_mlv_cache_thread(mlvObject_t * video)
         /* Every cache thread gets own copy of file */
         FILE * file = fopen(video->path, "rb");
         
-        uint32_t height = getMlvHeight(video);
-        uint32_t width = getMlvWidth(video);
-        uint32_t pixelsize = width * height;
-
-        /* 2d array uglyness */
-        float  * __restrict imagefloat1d = (float *)malloc(pixelsize * sizeof(float));
-        float ** __restrict imagefloat2d = (float **)malloc(height * sizeof(float *));
-        for (int y = 0; y < height; ++y) imagefloat2d[y] = (float *)(imagefloat1d+(y*width));
-        float  * __restrict red1d = (float *)malloc(pixelsize * sizeof(float));
-        float ** __restrict red2d = (float **)malloc(height * sizeof(float *));
-        for (int y = 0; y < height; ++y) red2d[y] = (float *)(red1d+(y*width));
-        float  * __restrict green1d = (float *)malloc(pixelsize * sizeof(float));
-        float ** __restrict green2d = (float **)malloc(height * sizeof(float *));
-        for (int y = 0; y < height; ++y) green2d[y] = (float *)(green1d+(y*width));
-        float  * __restrict blue1d = (float *)malloc(pixelsize * sizeof(float));
-        float ** __restrict blue2d = (float **)malloc(height * sizeof(float *));
-        for (int y = 0; y < height; ++y) blue2d[y] = (float *)(blue1d+(y*width));
-
-        amazeinfo_t amaze_params = {
-            .rawData =  imagefloat2d,
-            .red     =  red2d,
-            .green   =  green2d,
-            .blue    =  blue2d,
-            .winx    =  0,
-            .winy    =  0,
-            .winw    =  getMlvWidth(video),
-            .winh    =  getMlvHeight(video),
-            .cfa     =  0
-        };
-
-        while (1 < 2)
+        if (file)
         {
-            if (video->stop_caching) break;
+            uint32_t height = getMlvHeight(video);
+            uint32_t width = getMlvWidth(video);
+            uint32_t pixelsize = width * height;
 
-            uint64_t cache_frame;
+            /* 2d array uglyness */
+            float  * __restrict imagefloat1d = (float *)malloc(pixelsize * sizeof(float));
+            float ** __restrict imagefloat2d = (float **)malloc(height * sizeof(float *));
+            for (int y = 0; y < height; ++y) imagefloat2d[y] = (float *)(imagefloat1d+(y*width));
+            float  * __restrict red1d = (float *)malloc(pixelsize * sizeof(float));
+            float ** __restrict red2d = (float **)malloc(height * sizeof(float *));
+            for (int y = 0; y < height; ++y) red2d[y] = (float *)(red1d+(y*width));
+            float  * __restrict green1d = (float *)malloc(pixelsize * sizeof(float));
+            float ** __restrict green2d = (float **)malloc(height * sizeof(float *));
+            for (int y = 0; y < height; ++y) green2d[y] = (float *)(green1d+(y*width));
+            float  * __restrict blue1d = (float *)malloc(pixelsize * sizeof(float));
+            float ** __restrict blue2d = (float **)malloc(height * sizeof(float *));
+            for (int y = 0; y < height; ++y) blue2d[y] = (float *)(blue1d+(y*width));
 
-            /* If cache finder reurns false, it's time t stop caching */
-            if (!find_mlv_frame_to_cache(video, &cache_frame)) break;
+            amazeinfo_t amaze_params = {
+                .rawData =  imagefloat2d,
+                .red     =  red2d,
+                .green   =  green2d,
+                .blue    =  blue2d,
+                .winx    =  0,
+                .winy    =  0,
+                .winw    =  getMlvWidth(video),
+                .winh    =  getMlvHeight(video),
+                .cfa     =  0
+            };
 
-            pthread_mutex_lock( &g_mutexFind );
-            video->cached_frames[cache_frame] = MLV_FRAME_BEING_CACHED;
-            pthread_mutex_unlock( &g_mutexFind );
-
-            getMlvRawFrameFloat(video, cache_frame, imagefloat1d, file);
-
-            /* Single thread AMaZE */
-            demosaic(&amaze_params);
-
-            /* To 16-bit */
-            uint16_t * out = video->rgb_raw_frames[cache_frame];
-            for (uint32_t i = 0; i < pixelsize-10; i++)
+            while (1 < 2)
             {
-                uint16_t * pix = out + (i*3);
-                pix[0] = (uint16_t)MIN(red1d[i], 65535);
-                pix[1] = (uint16_t)MIN(green1d[i], 65535);
-                pix[2] = (uint16_t)MIN(blue1d[i], 65535);
+                if (video->stop_caching) break;
+
+                uint64_t cache_frame;
+
+                /* If cache finder reurns false, it's time t stop caching */
+                if (!find_mlv_frame_to_cache(video, &cache_frame)) break;
+
+                pthread_mutex_lock( &g_mutexFind );
+                video->cached_frames[cache_frame] = MLV_FRAME_BEING_CACHED;
+                pthread_mutex_unlock( &g_mutexFind );
+
+                getMlvRawFrameFloat(video, cache_frame, imagefloat1d, file);
+
+                /* Single thread AMaZE */
+                demosaic(&amaze_params);
+
+                /* To 16-bit */
+                uint16_t * out = video->rgb_raw_frames[cache_frame];
+                for (uint32_t i = 0; i < pixelsize-10; i++)
+                {
+                    uint16_t * pix = out + (i*3);
+                    pix[0] = (uint16_t)MIN(red1d[i], 65535);
+                    pix[1] = (uint16_t)MIN(green1d[i], 65535);
+                    pix[2] = (uint16_t)MIN(blue1d[i], 65535);
+                }
+
+                pthread_mutex_lock( &g_mutexFind );
+                video->cached_frames[cache_frame] = MLV_FRAME_IS_CACHED;
+                pthread_mutex_unlock( &g_mutexFind );
+
+                DEBUG( printf("Debayered frame %llu/%llu has been cached.\n", cache_frame+1, video->cache_limit_frames); )
             }
-        
-            pthread_mutex_lock( &g_mutexFind );
-            video->cached_frames[cache_frame] = MLV_FRAME_IS_CACHED;
-            pthread_mutex_unlock( &g_mutexFind );
 
-            DEBUG( printf("Debayered frame %llu/%llu has been cached.\n", cache_frame+1, video->cache_limit_frames); )
+            free(red1d);
+            free(red2d);
+            free(green1d);
+            free(green2d);
+            free(blue1d);
+            free(blue2d);
+            free(imagefloat2d);
+            free(imagefloat1d);
+
+            fclose(file);
         }
-
-        free(red1d);
-        free(red2d);
-        free(green1d);
-        free(green2d);
-        free(blue1d);
-        free(blue2d);
-        free(imagefloat2d);
-        free(imagefloat1d);
-
-        fclose(file);
     }
 
     pthread_mutex_lock( &g_mutexCount );

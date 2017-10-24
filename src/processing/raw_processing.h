@@ -76,6 +76,17 @@ void processingSet3WayCorrection( processingObject_t * processing,
                                   double shadowHue, double shadowSaturation );
 
 
+/* Enable/disable highlight reconstruction */
+#define processingEnableChromaSeparation(processing) (processing)->cs_zone.use_cs = 1
+#define processingDisableChromaSeparation(processing) (processing)->cs_zone.use_cs = 0
+#define processingUsesChromaSeparation(processing) (processing)->cs_zone.use_cs /* A checking function */
+
+
+/* Chroma blur - to enable it, you MUST enable chroma separation too. */
+#define processingSetChromaBlurRadius(processing, radius) (processing)->cs_zone.chroma_blur_radius = (radius)
+#define processingGetChromaBlurRadius(processing) (processing)->cs_zone.chroma_blur_radius
+
+
 
 /* Just don't touch this or keep at ~2.2 (or more for a lighter image) */
 void processingSetGamma(processingObject_t * processing, double gammaValue);

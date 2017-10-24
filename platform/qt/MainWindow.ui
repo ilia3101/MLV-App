@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1200</width>
-    <height>769</height>
+    <height>834</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -1166,7 +1166,7 @@
               </font>
              </property>
              <property name="text">
-              <string>Highlight reconstruction</string>
+              <string>Highlight Reconstruction</string>
              </property>
             </widget>
            </item>
@@ -1222,6 +1222,18 @@
             <widget class="Line" name="line_5">
              <property name="orientation">
               <enum>Qt::Horizontal</enum>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="checkBoxChromaSeparation">
+             <property name="font">
+              <font>
+               <pointsize>10</pointsize>
+              </font>
+             </property>
+             <property name="text">
+              <string>Chroma Separation (YCbCr)</string>
              </property>
             </widget>
            </item>
@@ -1298,6 +1310,84 @@
             </layout>
            </item>
            <item>
+            <layout class="QGridLayout" name="gridLayout_13">
+             <property name="spacing">
+              <number>0</number>
+             </property>
+             <item row="0" column="2">
+              <widget class="DoubleClickLabel" name="label_ChromaBlur">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
+               <property name="text">
+                <string>0</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0" colspan="3">
+              <widget class="QSlider" name="horizontalSliderChromaBlur">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>200</width>
+                 <height>16777215</height>
+                </size>
+               </property>
+               <property name="maximum">
+                <number>10</number>
+               </property>
+               <property name="pageStep">
+                <number>1</number>
+               </property>
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <spacer name="horizontalSpacer_11">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeType">
+                <enum>QSizePolicy::Maximum</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_ChromaBlurText">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
+               <property name="text">
+                <string>Chroma Blur</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
             <spacer name="verticalSpacer">
              <property name="orientation">
               <enum>Qt::Vertical</enum>
@@ -1348,7 +1438,7 @@
                 </font>
                </property>
                <property name="text">
-                <string>Enable raw correction</string>
+                <string>Enable RAW Correction</string>
                </property>
                <property name="checked">
                 <bool>true</bool>
@@ -1380,7 +1470,7 @@
                 </font>
                </property>
                <property name="text">
-                <string>Fix focus dots</string>
+                <string>Fix Focus Dots</string>
                </property>
               </widget>
              </item>
@@ -1480,7 +1570,7 @@
                 </font>
                </property>
                <property name="text">
-                <string>Fix bad pixels </string>
+                <string>Fix Bad Pixels </string>
                </property>
               </widget>
              </item>
@@ -1577,7 +1667,7 @@
                 </font>
                </property>
                <property name="text">
-                <string>Chroma smooth</string>
+                <string>Chroma Smooth</string>
                </property>
               </widget>
              </item>
@@ -1689,7 +1779,7 @@
                 </font>
                </property>
                <property name="text">
-                <string>Vertical stripes</string>
+                <string>Vertical Stripes</string>
                </property>
               </widget>
              </item>
@@ -1837,7 +1927,7 @@
                 </font>
                </property>
                <property name="text">
-                <string>Alias map</string>
+                <string>Alias Map</string>
                </property>
               </widget>
              </item>
@@ -1882,7 +1972,7 @@
                 </font>
                </property>
                <property name="text">
-                <string>Fullres blending</string>
+                <string>Fullres Blending</string>
                </property>
               </widget>
              </item>
@@ -1934,7 +2024,7 @@
                 </font>
                </property>
                <property name="text">
-                <string>Deflicker target</string>
+                <string>Deflicker Target</string>
                </property>
               </widget>
              </item>
@@ -2407,6 +2497,9 @@
    <property name="checked">
     <bool>false</bool>
    </property>
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="icon">
     <iconset resource="ressources.qrc">
      <normaloff>:/RetinaIMG/RetinaIMG/speaker-icon.png</normaloff>:/RetinaIMG/RetinaIMG/speaker-icon.png</iconset>
@@ -2631,6 +2724,22 @@
     <hint type="sourcelabel">
      <x>1084</x>
      <y>246</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionDropFrameMode</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>actionAudioOutput</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
     </hint>
     <hint type="destinationlabel">
      <x>-1</x>

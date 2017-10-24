@@ -49,6 +49,31 @@ processingObject_t * initProcessingObject()
     processing->xyz_to_rgb_matrix[4] = 1.0;
     processing->xyz_to_rgb_matrix[8] = 1.0;
 
+
+    double rgb_to_YCbCr[7] = {  0.299000,  0.587000,  0.114000,
+                               -0.168736, -0.331264, /* 0.5 */
+                               /* 0.5 */  -0.418688, -0.081312 };
+    double YCbCr_to_rgb[4] = {             1.402000,
+                               -0.344136, -0.714136,
+                                1.772000  };
+
+    for (int i = 0; i < 7; ++i)
+    {
+        processing->cs_zone.pre_calc_rgb_to_YCbCr[i] = malloc( 65536 * sizeof(int32_t) );
+        for (int j = 0; j < 65536; ++j)
+        {
+            processing->cs_zone.pre_calc_rgb_to_YCbCr[i][j] = (double)j * rgb_to_YCbCr[i];
+        }
+    }
+    for (int i = 0; i < 4; ++i)
+    {
+        processing->cs_zone.pre_calc_YCbCr_to_rgb[i] = malloc( 65536 * sizeof(int32_t) );
+        for (int j = 0; j < 65536; ++j)
+        {
+            processing->cs_zone.pre_calc_YCbCr_to_rgb[i][j] = (double)(j-32768) * YCbCr_to_rgb[i];
+        }
+    }
+
     /* Default settings */
     processingSetWhiteBalance(processing, 6250.0, 0.0);
     processingSetBlackAndWhiteLevel(processing, 8192.0, 64000.0); /* 16 bit! */
@@ -185,10 +210,91 @@ void applyProcessingObject( processingObject_t * processing,
         }
     }
 
+    uint32_t sharp_skip = 1; /* Skip how many pixels when applying sharpening */
+    uint32_t sharp_start = 0; /* How many pixels offset to start at */
+
+    /* enter YCbCr world - https://en.wikipedia.org/wiki/YCbCr (I used the 'JPEG Transform') */
+    if (processingUsesChromaSeparation(processing))
+    {
+        int32_t ** ry = processing->cs_zone.pre_calc_rgb_to_YCbCr;
+        for (uint16_t * pix = img; pix < img_end; pix += 3)
+        {
+            /* RGB to YCbCr */
+            int32_t pix_Y  =         ry[0][pix[0]] + ry[1][pix[1]] + ry[2][pix[2]];
+            int32_t pix_Cb = 32768 + ry[3][pix[0]] + ry[4][pix[1]] + (pix[2] >> 1);
+            int32_t pix_Cr = 32768 + (pix[0] >> 1) + ry[5][pix[1]] + ry[6][pix[2]];
+
+            pix[0] = LIMIT16(pix_Y);
+            pix[1] = LIMIT16(pix_Cb);
+            pix[2] = LIMIT16(pix_Cr);
+        }
+
+        sharp_start = 0; /* Start at 0 - Luma/Y channel */
+        sharp_skip = 3; /* Only sharpen every third (Y/luma) pixel */
+    }
+
+    /* Basic box blur */
+    if (processingGetChromaBlurRadius(processing) > 0 && processingUsesChromaSeparation(processing))
+    {
+        memcpy(out_img, img, img_s * sizeof(uint16_t));
+
+        /* Row length */
+        int32_t rl = imageX * 3;
+
+        int32_t radius = processingGetChromaBlurRadius(processing);
+        int32_t radius_x = radius*3;
+        int32_t y_max = imageY + radius;
+        int32_t x_max = (imageX + radius);
+        int32_t x_lim = rl-3;
+
+        uint32_t blur_diameter = radius*2+1;
+
+        /* Offset - do twice on channel '1' and '2' (Cb and Cr) */
+        for (uint32_t offset = 1; offset <=2; ++offset)
+        {
+            /* Horizontal blur */
+            for (int32_t y = 0; y < imageY; ++y) /* rows */
+            {
+                uint16_t * out_row = out_img + (y * rl); /* current row ouptut */
+                uint16_t * row = img + (y * rl); /* current row */
+
+                uint32_t sum = row[offset] * blur_diameter;
+
+                for (int32_t x = -radius; x < imageX; ++x)
+                {
+                    sum -= row[MIN(MAX(x-radius, 0), imageX-1)*3+offset];
+                    sum += row[MIN(MAX(x+radius+1, 0), imageX-1)*3+offset];
+                    out_row[MAX(x, 0)*3+offset] = sum / blur_diameter;
+                }
+            }
+
+            /* Vertical blur */
+            for (int32_t x = 0; x < imageX; ++x) /* columns */
+            {
+                uint16_t * out_col = img + (x*3);
+                uint16_t * col = out_img + (x*3);
+
+                uint32_t sum = out_img[x*3+offset] * blur_diameter;
+
+                for (int32_t y = -radius; y < imageY; ++y)
+                {
+                    sum -= col[MIN(MAX((y-radius), 0), imageY-1)*rl+offset];
+                    sum += col[MIN(MAX((y+radius+1), 0), imageY-1)*rl+offset];
+                    out_col[MAX(y, 0)*rl+offset] = sum / blur_diameter;
+                }
+            }
+        }
+
+        // memcpy(inputImage, outputImage, img_s * sizeof(uint16_t));
+    }
+
     if (processingGetSharpening(processing) > 0.005)
     {
-        int y_max = imageY - 1;
-        int x_max = (imageX - 1) * 3; /* X in multiples of 3 for RGB */
+        /* Avoid gaps in pixels if skipping pixels during sharpen */
+        if (sharp_skip != 1) memcpy(outputImage, inputImage, img_s * sizeof(uint16_t));
+    
+        uint32_t y_max = imageY - 1;
+        uint32_t x_max = (imageX - 1) * 3; /* X in multiples of 3 for RGB */
 
         /* Center and outter lut */
         uint32_t * ka = processing->pre_calc_sharp_a;
@@ -198,14 +304,14 @@ void applyProcessingObject( processingObject_t * processing,
         /* Row length elements */
         uint32_t rl = imageX * 3;
 
-        for (int y = 1; y < y_max; ++y)
+        for (uint32_t y = 1; y < y_max; ++y)
         {
             uint16_t * out_row = out_img + (y * rl); /* current row ouptut */
             uint16_t * row = img + (y * rl); /* current row */
             uint16_t * p_row = img + ((y-1) * rl); /* previous */
             uint16_t * n_row = img + ((y+1) * rl); /* next */
 
-            for (int x = 3; x < x_max; ++x)
+            for (uint32_t x = 3+sharp_start; x < x_max; x+=sharp_skip)
             {
                 int32_t sharp = ka[row[x]] 
                               - ky[p_row[x]]
@@ -216,10 +322,15 @@ void applyProcessingObject( processingObject_t * processing,
                 out_row[x] = LIMIT16(sharp);
             }
 
-            /* Edge pixels */
-            out_row[0] = row[0]; out_row[1] = row[1]; out_row[2] = row[2];
-            out_row += rl; row += rl;
-            out_row[-3] = row[-3]; out_row[-2] = row[-2]; out_row[-1] = row[-1];
+            /* Edge pixels (basically don't do any changes to them) */
+            out_row[0] = row[0];
+            out_row[1] = row[1];
+            out_row[2] = row[2];
+            out_row += rl;
+            row += rl;
+            out_row[-3] = row[-3];
+            out_row[-2] = row[-2];
+            out_row[-1] = row[-1];
         }
 
         /* Copy top and bottom row */
@@ -229,6 +340,23 @@ void applyProcessingObject( processingObject_t * processing,
     else
     {
         memcpy(outputImage, inputImage, img_s * sizeof(uint16_t));
+    }
+
+    /* Leave Y-Cb-Cr world */
+    if (processingUsesChromaSeparation(processing))
+    {
+        img_end = outputImage + img_s;
+        int32_t ** yr = processing->cs_zone.pre_calc_YCbCr_to_rgb;
+        for (uint16_t * pix = outputImage; pix < img_end; pix += 3)
+        {
+            int32_t pix_R = pix[0]                 + yr[0][pix[2]];
+            int32_t pix_G = pix[0] + yr[1][pix[1]] + yr[2][pix[2]];
+            int32_t pix_B = pix[0] + yr[3][pix[1]];
+
+            pix[0] = LIMIT16(pix_R);
+            pix[1] = LIMIT16(pix_G);
+            pix[2] = LIMIT16(pix_B);
+        }
     }
 }
 
@@ -497,5 +625,7 @@ void freeProcessingObject(processingObject_t * processing)
     free(processing->pre_calc_sharp_x);
     free(processing->pre_calc_sharp_y);
     for (int i = 8; i >= 0; --i) free(processing->pre_calc_matrix[i]);
+    for (int i = 6; i >= 0; --i) free(processing->cs_zone.pre_calc_rgb_to_YCbCr[i]);
+    for (int i = 3; i >= 0; --i) free(processing->cs_zone.pre_calc_YCbCr_to_rgb[i]);
     free(processing);
 }

@@ -29,7 +29,7 @@
 #include "DarkStyle.h"
 
 #define APPNAME "MLV App"
-#define VERSION "0.8 alpha"
+#define VERSION "0.9 alpha"
 
 QMutex gMutex;
 QMutex gMutexPng16;
@@ -398,7 +398,7 @@ void MainWindow::drawFrame( void )
     {
         m_tryToSyncAudio = false;
         m_pAudioPlayback->stop();
-        m_pAudioPlayback->jumpToPos( ui->horizontalSliderPosition->value() );
+        m_pAudioPlayback->jumpToPos( m_newPosDropMode );
         m_pAudioPlayback->play();
     }
 
@@ -745,6 +745,7 @@ void MainWindow::readSettings()
     if( set.value( "zebras", false ).toBool() ) ui->actionShowZebras->setChecked( true );
     m_lastSaveFileName = set.value( "lastFileName", QString( "/Users/" ) ).toString();
     m_codecProfile = set.value( "codecProfile", 4 ).toUInt();
+    m_codecOption = set.value( "codecOption", 0 ).toUInt();
     m_previewMode = set.value( "previewMode", 1 ).toUInt();
     //if( set.value( "caching", false ).toBool() ) ui->actionCaching->setChecked( true );
     ui->actionCaching->setChecked( false );
@@ -765,6 +766,7 @@ void MainWindow::writeSettings()
     set.setValue( "zebras", ui->actionShowZebras->isChecked() );
     set.setValue( "lastFileName", m_lastSaveFileName );
     set.setValue( "codecProfile", m_codecProfile );
+    set.setValue( "codecOption", m_codecOption );
     set.setValue( "previewMode", m_previewMode );
     set.setValue( "caching", ui->actionCaching->isChecked() );
     set.setValue( "frameRate", m_frameRate );
@@ -893,6 +895,10 @@ void MainWindow::startExportPipe(QString fileName)
 
     // we always get amaze frames for exporting
     setMlvAlwaysUseAmaze( m_pMlvObject );
+    reset_fpm_status(&m_pMlvObject->llrawproc->focus_pixel_map, &m_pMlvObject->llrawproc->fpm_status);
+    reset_bpm_status(&m_pMlvObject->llrawproc->bad_pixel_map, &m_pMlvObject->llrawproc->bpm_status);
+    m_pMlvObject->llrawproc->compute_stripes = 1;
+    m_pMlvObject->current_cached_frame_active = 0;
     //enable low level raw fixes (if wanted)
     if( ui->checkBoxRawFixEnable->isChecked() ) m_pMlvObject->llrawproc->fix_raw = 1;
 
@@ -944,10 +950,15 @@ void MainWindow::startExportPipe(QString fileName)
     }
     else
     {
+        QString option;
+        if( m_codecProfile <= CODEC_PRORES422HQ && m_codecOption == CODEC_PRORES_OPTION_AW ) option = QString( "prores_aw" );
+        else option = QString( "prores_ks" );
+
         output.append( QString( ".mov" ) );
-        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v prores_ks -profile:v %3 \"%4\"" )
+        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v %3 -profile:v %4 \"%5\"" )
                     .arg( fps )
                     .arg( resolution )
+                    .arg( option )
                     .arg( m_codecProfile )
                     .arg( output ) );
     }
@@ -1125,9 +1136,19 @@ void MainWindow::openSession(QString fileName)
                                 m_pSessionReceipts.last()->setSharpen( Rxml.readElementText().toInt() );
                                 Rxml.readNext();
                             }
+                            else if( Rxml.isStartElement() && Rxml.name() == "chromaBlur" )
+                            {
+                                m_pSessionReceipts.last()->setChromaBlur( Rxml.readElementText().toInt() );
+                                Rxml.readNext();
+                            }
                             else if( Rxml.isStartElement() && Rxml.name() == "highlightReconstruction" )
                             {
                                 m_pSessionReceipts.last()->setHighlightReconstruction( (bool)Rxml.readElementText().toInt() );
+                                Rxml.readNext();
+                            }
+                            else if( Rxml.isStartElement() && Rxml.name() == "chromaSeparation" )
+                            {
+                                m_pSessionReceipts.last()->setChromaSeparation( (bool)Rxml.readElementText().toInt() );
                                 Rxml.readNext();
                             }
                             else if( Rxml.isStartElement() && Rxml.name() == "profile" )
@@ -1282,7 +1303,9 @@ void MainWindow::saveSession(QString fileName)
         xmlWriter.writeTextElement( "lr",                      QString( "%1" ).arg( m_pSessionReceipts.at(i)->lr() ) );
         xmlWriter.writeTextElement( "lightening",              QString( "%1" ).arg( m_pSessionReceipts.at(i)->lightening() ) );
         xmlWriter.writeTextElement( "sharpen",                 QString( "%1" ).arg( m_pSessionReceipts.at(i)->sharpen() ) );
+        xmlWriter.writeTextElement( "chromaBlur",              QString( "%1" ).arg( m_pSessionReceipts.at(i)->chromaBlur() ) );
         xmlWriter.writeTextElement( "highlightReconstruction", QString( "%1" ).arg( m_pSessionReceipts.at(i)->isHighlightReconstruction() ) );
+        xmlWriter.writeTextElement( "chromaSeparation",        QString( "%1" ).arg( m_pSessionReceipts.at(i)->isChromaSeparation() ) );
         xmlWriter.writeTextElement( "profile",                 QString( "%1" ).arg( m_pSessionReceipts.at(i)->profile() ) );
         xmlWriter.writeTextElement( "rawFixesEnabled",         QString( "%1" ).arg( m_pSessionReceipts.at(i)->rawFixesEnabled() ) );
         xmlWriter.writeTextElement( "verticalStripes",         QString( "%1" ).arg( m_pSessionReceipts.at(i)->verticalStripes() ) );
@@ -1384,9 +1407,14 @@ void MainWindow::setSliders(ReceiptSettings *receipt)
     ui->horizontalSliderLighten->setValue( receipt->lightening() );
 
     ui->horizontalSliderSharpen->setValue( receipt->sharpen() );
+    ui->horizontalSliderChromaBlur->setValue( receipt->chromaBlur() );
 
     ui->checkBoxHighLightReconstruction->setChecked( receipt->isHighlightReconstruction() );
     on_checkBoxHighLightReconstruction_toggled( receipt->isHighlightReconstruction() );
+
+    ui->checkBoxChromaSeparation->setChecked( receipt->isChromaSeparation() );
+    on_checkBoxChromaSeparation_toggled( receipt->isChromaSeparation() );
+
     ui->comboBoxProfile->setCurrentIndex( receipt->profile() );
     on_comboBoxProfile_currentIndexChanged( receipt->profile() );
 
@@ -1432,7 +1460,9 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     receipt->setLr( ui->horizontalSliderLR->value() );
     receipt->setLightening( ui->horizontalSliderLighten->value() );
     receipt->setSharpen( ui->horizontalSliderSharpen->value() );
+    receipt->setChromaBlur( ui->horizontalSliderChromaBlur->value() );
     receipt->setHighlightReconstruction( ui->checkBoxHighLightReconstruction->isChecked() );
+    receipt->setChromaSeparation( ui->checkBoxChromaSeparation->isChecked() );
     receipt->setProfile( ui->comboBoxProfile->currentIndex() );
 
     receipt->setRawFixesEnabled( ui->checkBoxRawFixEnable->isChecked() );
@@ -1482,7 +1512,9 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     receipt->setLs( m_pSessionReceipts.at( row )->ls() );
     receipt->setLightening( m_pSessionReceipts.at( row )->lightening() );
     receipt->setSharpen( m_pSessionReceipts.at( row )->sharpen() );
+    receipt->setChromaBlur( m_pSessionReceipts.at( row )->chromaBlur() );
     receipt->setHighlightReconstruction( m_pSessionReceipts.at( row )->isHighlightReconstruction() );
+    receipt->setChromaSeparation( m_pSessionReceipts.at( row )->isChromaSeparation() );
     receipt->setProfile( m_pSessionReceipts.at( row )->profile() );
 
     receipt->setRawFixesEnabled( m_pSessionReceipts.at( row )->rawFixesEnabled() );
@@ -1837,6 +1869,13 @@ void MainWindow::on_horizontalSliderSharpen_valueChanged(int position)
     m_frameChanged = true;
 }
 
+void MainWindow::on_horizontalSliderChromaBlur_valueChanged(int position)
+{
+    processingSetChromaBlurRadius( m_pProcessingObject, position );
+    ui->label_ChromaBlur->setText( QString("%1").arg( position ) );
+    m_frameChanged = true;
+}
+
 //Jump to first frame
 void MainWindow::on_actionGoto_First_Frame_triggered()
 {
@@ -1865,7 +1904,7 @@ void MainWindow::on_actionExport_triggered()
     QString saveFileName = m_pSessionReceipts.at( m_lastActiveClipInSession )->fileName();
     QString fileType;
     QString fileEnding;
-    saveFileName = saveFileName.left( m_lastSaveFileName.lastIndexOf( "." ) );
+    saveFileName = saveFileName.left( saveFileName.lastIndexOf( "." ) );
     if( m_codecProfile == CODEC_AVIRAW )
     {
         saveFileName.append( ".avi" );
@@ -1970,6 +2009,19 @@ void MainWindow::on_checkBoxHighLightReconstruction_toggled(bool checked)
     m_frameChanged = true;
 }
 
+//Enable / Disable chroma separation
+void MainWindow::on_checkBoxChromaSeparation_toggled(bool checked)
+{
+    //Enable / Disable chroma blur
+    ui->label_ChromaBlur->setEnabled( checked );
+    ui->label_ChromaBlurText->setEnabled( checked );
+    ui->horizontalSliderChromaBlur->setEnabled( checked );
+
+    if( checked ) processingEnableChromaSeparation( m_pProcessingObject );
+    else processingDisableChromaSeparation( m_pProcessingObject );
+    m_frameChanged = true;
+}
+
 //Chose profile
 void MainWindow::on_comboBoxProfile_currentIndexChanged(int index)
 {
@@ -2064,9 +2116,10 @@ void MainWindow::on_actionExportSettings_triggered()
     //Stop playback if active
     ui->actionPlay->setChecked( false );
 
-    ExportSettingsDialog *pExportSettings = new ExportSettingsDialog( this, m_codecProfile, m_previewMode, m_fpsOverride, m_frameRate, m_audioExportEnabled, m_styleSelection );
+    ExportSettingsDialog *pExportSettings = new ExportSettingsDialog( this, m_codecProfile, m_codecOption, m_previewMode, m_fpsOverride, m_frameRate, m_audioExportEnabled, m_styleSelection );
     pExportSettings->exec();
     m_codecProfile = pExportSettings->encoderSetting();
+    m_codecOption = pExportSettings->encoderOption();
     m_previewMode = pExportSettings->previewMode();
     m_fpsOverride = pExportSettings->isFpsOverride();
     m_frameRate = pExportSettings->getFps();
@@ -2421,6 +2474,15 @@ void MainWindow::on_label_Sharpen_doubleClicked()
     editSlider.autoSetup( ui->horizontalSliderSharpen, ui->label_Sharpen, 1, 0, 1.0 );
     editSlider.exec();
     ui->horizontalSliderSharpen->setValue( editSlider.getValue() );
+}
+
+//DoubleClick on ChromaBlur Label
+void MainWindow::on_label_ChromaBlur_doubleClicked()
+{
+    EditSliderValueDialog editSlider;
+    editSlider.autoSetup( ui->horizontalSliderChromaBlur, ui->label_ChromaBlur, 1, 0, 1.0 );
+    editSlider.exec();
+    ui->horizontalSliderChromaBlur->setValue( editSlider.getValue() );
 }
 
 //Repaint audio if its size changed

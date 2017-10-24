@@ -26,7 +26,7 @@ static const double ciecam02[] = {
 /* Tonemapping info from http://filmicworlds.com/blog/filmic-tonemapping-operators/ */
 
 /* Reinhard - most basic but just werks */
-double ReinhardTonemap(double x) { return x / (1.5 + x); }
+double ReinhardTonemap(double x) { return x / (1.0 + x); }
 float ReinhardTonemap_f(float x) { return x / (1.0f + x); }
 
 /* Canon C-Log: http://learn.usa.canon.com/app/pdfs/white_papers/White_Paper_Clog_optoelectronic.pdf (not working right) */

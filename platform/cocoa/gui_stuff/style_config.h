@@ -13,11 +13,11 @@
 
 /* Size of window when app loads */
 #define WINDOW_WIDTH 1280
-#define WINDOW_HEIGHT 650
+#define WINDOW_HEIGHT 740
 
 /* How small window can go */
 #define WINDOW_WIDTH_MINIMUM 1024
-#define WINDOW_HEIGHT_MINIMUM 650 /* Just about fits all of the sliders */
+#define WINDOW_HEIGHT_MINIMUM 710 /* Just about fits all of the sliders */
 
 /* Looks nice */
 #define TRANSPARENT_TITLEBAR true
@@ -27,7 +27,7 @@
 /* Width of the left sidebar('s elements) */
 #define LEFT_SIDEBAR_ELEMENT_WIDTH 164
 
-/* Horizontal side gaps for sidebars */
+/* Horizontal (X) side gaps for sidebars */
 #define SIDE_GAP_X_L 9 /* Left */
 #define SIDE_GAP_X_R 15 /* Right */
 

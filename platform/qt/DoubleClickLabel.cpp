@@ -7,13 +7,13 @@
 
 #include "DoubleClickLabel.h"
 
-DoubleClickLabel::DoubleClickLabel(QWidget* parent, Qt::WindowFlags f)
+DoubleClickLabel::DoubleClickLabel(QWidget* parent)
     : QLabel(parent) {
 
 }
 
 DoubleClickLabel::~DoubleClickLabel() {}
 
-void DoubleClickLabel::mouseDoubleClickEvent(QMouseEvent* event) {
+void DoubleClickLabel::mouseDoubleClickEvent(QMouseEvent*) {
     emit doubleClicked();
 }

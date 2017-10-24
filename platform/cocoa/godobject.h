@@ -46,13 +46,18 @@ typedef struct {
     /* Yes, displayed image will be 8 bit, as most monitors are */
     uint8_t * rawImage;
 
+
+    /****************************************
+     **          PROCESSING STUFF          **
+     ****************************************/
+
     /* Sliders */
-    NSSlider * exposureSlider,
+    NSSlider * exposureSlider, /* All adjustment sliders for processing */
     * saturationSlider, * kelvinSlider,
     * tintSlider, * darkStrengthSlider,
     * darkRangeSlider, * lightStrengthSlider,
     * lightRangeSlider, * lightenSlider,
-    * sharpnessSlider;
+    * sharpnessSlider, * chromaBlurSlider;
     /* Slider labels */
     NSTextField * exposureLabel, * exposureValueLabel,
     * saturationLabel, * saturationValueLabel, * kelvinLabel, 
@@ -62,21 +67,60 @@ typedef struct {
     * lightStrengthLabel, * lightStrengthValueLabel,
     * lightRangeLabel, * lightRangeValueLabel,
     * lightenLabel, * lightenValueLabel,
-    * sharpnessLabel, * sharpnessValueLabel;
+    * sharpnessLabel, * sharpnessValueLabel,
+    * chromaBlurLabel, * chromaBlurValueLabel;
+    /* Buttons (Checkboxes) */
+    NSButton * highlightReconstructionSelector;
+    NSButton * alwaysUseAmazeSelector;
+    NSButton * chromaSeparationSelector;
+    /* Select image profile */
+    NSPopUpButton * imageProfile;
+
+    /****************************************
+     **           LLRawProc STUFF          **
+     ****************************************/
+
+    NSButton * fixRawSelector; /* Checkbox */
+
+    NSTextField * focusPixelLabel;
+    NSSegmentedControl * focusPixelOption;
+    NSTextField * focusPixelMethodLabel;
+    NSSegmentedControl * focusPixelMethodOption;
+
+    NSTextField * badPixelLabel;
+    NSSegmentedControl * badPixelOption;
+    NSTextField * badPixelMethodLabel;
+    NSSegmentedControl * badPixelMethodOption;
+
+    NSTextField * stripeFixLabel;
+    NSSegmentedControl * stripeFixOption;
+    NSTextField * chromaSmoothLabel;
+    NSSegmentedControl * chromaSmoothOption;
+    NSTextField * patternNoiseLabel;
+    NSSegmentedControl * patternNoiseOption;
+    NSTextField * dualISOLabel;
+    NSSegmentedControl * dualISOOption;
+    NSTextField * dualISOMethodLabel;
+    NSSegmentedControl * dualISOMethodOption;
+    NSTextField * fullResBlendingLabel;
+    NSSegmentedControl * fullResBlendingOption;
+    NSTextField * aliasMapLabel;
+    NSSegmentedControl * aliasMapOption;
+
+
+
+
+    NSSlider * timelineSlider; /* Timeline slider */
 
     /* Buttons */
     NSButton * openMLVButton;
     NSButton * exportProRes4444Button;
-    /* Buttons (Checkboxes) */
-    NSButton * highlightReconstructionSelector;
-    NSButton * alwaysUseAmazeSelector;
-    NSButton * tonemappingSelector;
-
-    /* Select image profile */
-    NSPopUpButton * imageProfile;
 
     /* Select video export format */
     NSPopUpButton * videoFormat;
+
+    /* Select between LLRawProc and Processing tab */
+    NSSegmentedControl * processingTabSwitch;
 
     /****************************************
      **           SESSION STUFF            **

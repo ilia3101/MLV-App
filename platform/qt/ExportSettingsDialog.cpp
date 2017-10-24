@@ -10,13 +10,15 @@
 #include <QMessageBox>
 
 //Constructor
-ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, uint8_t currentCodecProfile, uint8_t previewMode, bool fpsOverride, double fps, bool exportAudio, int style) :
+ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, uint8_t currentCodecProfile, uint8_t currentCodecOption, uint8_t previewMode, bool fpsOverride, double fps, bool exportAudio, int style) :
     QDialog(parent),
     ui(new Ui::ExportSettingsDialog)
 {
     ui->setupUi(this);
     setWindowFlags( Qt::Dialog | Qt::WindowTitleHint | Qt::WindowCloseButtonHint );
     ui->comboBoxCodec->setCurrentIndex( currentCodecProfile );
+    on_comboBoxCodec_currentIndexChanged( currentCodecProfile );
+    ui->comboBoxOption->setCurrentIndex( currentCodecOption );
     if( previewMode == 1 ) ui->radioButtonPreviewList->setChecked( true );
     else if( previewMode == 2 ) ui->radioButtonPreviewIcon->setChecked( true );
     else ui->radioButtonPreviewDisabled->setChecked( true );
@@ -37,6 +39,12 @@ ExportSettingsDialog::~ExportSettingsDialog()
 uint8_t ExportSettingsDialog::encoderSetting(void)
 {
     return ui->comboBoxCodec->currentIndex();
+}
+
+//Get Codec Option
+uint8_t ExportSettingsDialog::encoderOption()
+{
+    return ui->comboBoxOption->currentIndex();
 }
 
 //Get Preview Mode
@@ -79,4 +87,22 @@ void ExportSettingsDialog::on_pushButtonClose_clicked()
         QMessageBox::information( this, tr( "Style change" ), tr( "Appearance will be changed on next application start." ) );
     }
     close();
+}
+
+//Change option when codec changed
+void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
+{
+    ui->comboBoxOption->clear();
+
+    if( index <= CODEC_PRORES422HQ )
+    {
+        ui->comboBoxOption->setEnabled( true );
+        ui->comboBoxOption->addItem( QString( "Kostya" ) );
+        ui->comboBoxOption->addItem( QString( "Anatolyi (faster)" ) );
+    }
+    else
+    {
+        ui->comboBoxOption->setEnabled( false );
+        if( index == CODEC_PRORES4444 ) ui->comboBoxOption->addItem( QString( "Kostya" ) );
+    }
 }

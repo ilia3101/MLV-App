@@ -63,10 +63,12 @@ private slots:
     void on_horizontalSliderLR_valueChanged(int position);
     void on_horizontalSliderLighten_valueChanged(int position);
     void on_horizontalSliderSharpen_valueChanged(int position);
+    void on_horizontalSliderChromaBlur_valueChanged(int position);
     void on_actionGoto_First_Frame_triggered();
     void on_actionExport_triggered();
     void on_actionExportActualFrame_triggered();
     void on_checkBoxHighLightReconstruction_toggled(bool checked);
+    void on_checkBoxChromaSeparation_toggled(bool checked);
     void on_comboBoxProfile_currentIndexChanged(int index);
     void on_actionZoomFit_triggered(bool on);
     void on_actionZoom100_triggered();
@@ -104,6 +106,7 @@ private slots:
     void on_label_LsVal_doubleClicked( void );
     void on_label_LightenVal_doubleClicked( void );
     void on_label_Sharpen_doubleClicked( void );
+    void on_label_ChromaBlur_doubleClicked( void );
     void on_labelAudioTrack_sizeChanged( void );
     void on_actionFullscreen_triggered(bool checked);
     void exportHandler( void );
@@ -146,6 +149,7 @@ private:
     uint8_t *m_pRawImage;
     uint32_t m_cacheSizeMB;
     uint8_t m_codecProfile;
+    uint8_t m_codecOption;
     uint8_t m_previewMode;
     bool m_frameChanged;
     int m_currentFrameIndex;

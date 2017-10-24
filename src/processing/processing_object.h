@@ -27,7 +27,6 @@ typedef struct {
     /* Pick any tonemapping function */
     double (* tone_mapping_function)(double);
 
-    /* Double is classy */
 
     /* Camera's matrix - will need to be set on opening clip, default set for 5D Mark II */
     double cam_to_sRGB_matrix[9];
@@ -37,6 +36,18 @@ typedef struct {
     double final_matrix[9];
     /* Precalculated all matrix values 0-65535 */
     int32_t * pre_calc_matrix[9];
+
+    struct {
+        /* "use chroma separation" */
+        int use_cs;
+
+        /* Look up tables for gettng in'n'out of YCbCr */
+        int32_t * pre_calc_rgb_to_YCbCr[7];
+        int32_t * pre_calc_YCbCr_to_rgb[5];
+
+        /* Moire/noise filter (only avalible if use_cs is true) */
+        uint32_t chroma_blur_radius;
+    } cs_zone;
 
     /* White balance */
     double     kelvin; /* from 2500 to 10000 */

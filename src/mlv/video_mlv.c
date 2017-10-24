@@ -20,21 +20,21 @@
 
 #define ROR32(v,a) ((v) >> (a) | (v) << (32-(a)))
 
-static uint32_t file_set_pos(FILE *stream, uint64_t offset, int whence)
+static uint64_t file_set_pos(FILE *stream, uint64_t offset, int whence)
 {
 #if defined(__WIN32)
     return fseeko64(stream, offset, whence);
 #else
-    return fseeko(stream, offset, whence);
+    return fseek(stream, offset, whence);
 #endif
 }
 
-static uint32_t file_get_pos(FILE *stream)
+static uint64_t file_get_pos(FILE *stream)
 {
 #if defined(__WIN32)
     return ftello64(stream);
 #else
-    return ftello(stream);
+    return ftell(stream);
 #endif
 }
 
@@ -314,8 +314,8 @@ void freeMlvObject(mlvObject_t * video)
     free(video->rgb_raw_current_frame);
     free(video->cache_memory_block);
     free(video->frame_sizes);
-    free(video->llrawproc);
     free(video->path);
+    freeLLRawProcObject(video->llrawproc);
 
     /* Mutex things here... */
     pthread_mutex_destroy(&video->main_file_mutex);
