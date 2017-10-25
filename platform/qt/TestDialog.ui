@@ -66,7 +66,7 @@ QGroupBox::indicator:checked {
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>224</width>
+        <width>209</width>
         <height>488</height>
        </rect>
       </property>
@@ -140,6 +140,11 @@ QGroupBox::indicator:checked {
              </property>
              <item>
               <widget class="QPushButton" name="pushButton">
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
                <property name="text">
                 <string>Just</string>
                </property>
@@ -170,6 +175,11 @@ QGroupBox::indicator:checked {
              </item>
              <item>
               <widget class="QPushButton" name="pushButton_2">
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
                <property name="text">
                 <string>Some</string>
                </property>
@@ -219,6 +229,11 @@ QGroupBox::indicator:checked {
              </property>
              <item>
               <widget class="QPushButton" name="pushButton_3">
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
                <property name="text">
                 <string>Demo</string>
                </property>
@@ -255,7 +270,7 @@ QGroupBox::indicator:checked {
                  <number>0</number>
                 </property>
                 <item>
-                 <widget class="QToolButton" name="toolButton_2">
+                 <widget class="ColorToolButton" name="toolButton_2">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                     <horstretch>0</horstretch>
@@ -277,7 +292,7 @@ QGroupBox::indicator:checked {
                  </widget>
                 </item>
                 <item>
-                 <widget class="QToolButton" name="toolButton">
+                 <widget class="ColorToolButton" name="toolButton">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                     <horstretch>0</horstretch>
@@ -299,7 +314,7 @@ QGroupBox::indicator:checked {
                  </widget>
                 </item>
                 <item>
-                 <widget class="QToolButton" name="toolButton_3">
+                 <widget class="ColorToolButton" name="toolButton_3">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                     <horstretch>0</horstretch>
@@ -318,7 +333,7 @@ QGroupBox::indicator:checked {
                  </widget>
                 </item>
                 <item>
-                 <widget class="QToolButton" name="toolButton_4">
+                 <widget class="ColorToolButton" name="toolButton_4">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                     <horstretch>0</horstretch>
@@ -370,7 +385,7 @@ QGroupBox::indicator:checked {
                  <number>0</number>
                 </property>
                 <item>
-                 <widget class="QToolButton" name="toolButton_5">
+                 <widget class="ColorToolButton" name="toolButton_5">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                     <horstretch>0</horstretch>
@@ -392,7 +407,7 @@ QGroupBox::indicator:checked {
                  </widget>
                 </item>
                 <item>
-                 <widget class="QToolButton" name="toolButton_6">
+                 <widget class="ColorToolButton" name="toolButton_6">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                     <horstretch>0</horstretch>
@@ -414,7 +429,7 @@ QGroupBox::indicator:checked {
                  </widget>
                 </item>
                 <item>
-                 <widget class="QToolButton" name="toolButton_7">
+                 <widget class="ColorToolButton" name="toolButton_7">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                     <horstretch>0</horstretch>
@@ -444,6 +459,11 @@ QGroupBox::indicator:checked {
              </item>
              <item>
               <widget class="QPushButton" name="pushButton_4">
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
                <property name="text">
                 <string>Elements</string>
                </property>
@@ -498,6 +518,11 @@ QGroupBox::indicator:checked {
    <class>NoScrollSlider</class>
    <extends>QSlider</extends>
    <header>NoScrollSlider.h</header>
+  </customwidget>
+  <customwidget>
+   <class>ColorToolButton</class>
+   <extends>QToolButton</extends>
+   <header>ColorToolButton.h</header>
   </customwidget>
  </customwidgets>
  <resources/>
