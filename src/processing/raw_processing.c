@@ -250,25 +250,40 @@ void applyProcessingObject( processingObject_t * processing,
         uint32_t blur_diameter = radius*2+1;
 
         /* Offset - do twice on channel '1' and '2' (Cb and Cr) */
+        int32_t limit_x = (imageX-radius)*3;
         for (uint32_t offset = 1; offset <=2; ++offset)
         {
             /* Horizontal blur */
             for (int32_t y = 0; y < imageY; ++y) /* rows */
             {
-                uint16_t * out_row = out_img + (y * rl); /* current row ouptut */
-                uint16_t * row = img + (y * rl); /* current row */
+                uint16_t * out_row = out_img + (y * rl)+offset; /* current row ouptut */
+                uint16_t * row = img + (y * rl)+offset; /* current row */
 
-                uint32_t sum = row[offset] * blur_diameter;
+                uint32_t sum = row[0] * blur_diameter;
 
-                for (int32_t x = -radius; x < imageX; ++x)
+                /* Split in to 3 parts to avoid MIN/MAX */
+                for (int32_t x = -radius_x; x < radius_x; x+=3)
                 {
-                    sum -= row[MIN(MAX(x-radius, 0), imageX-1)*3+offset];
-                    sum += row[MIN(MAX(x+radius+1, 0), imageX-1)*3+offset];
-                    out_row[MAX(x, 0)*3+offset] = sum / blur_diameter;
+                    sum -= row[MAX(x-radius_x, 0)];
+                    sum += row[x+radius_x+3];
+                    out_row[MAX(x, 0)] = sum / blur_diameter;
+                }
+                for (int32_t x = radius_x; x < limit_x; x+=3)
+                {
+                    sum -= row[x-radius_x];
+                    sum += row[x+radius_x+3];
+                    out_row[x] = sum / blur_diameter;
+                }
+                for (int32_t x = limit_x; x < rl; x+=3)
+                {
+                    sum -= row[x-radius_x];
+                    sum += row[MIN(x+radius_x+3, rl-3)];
+                    out_row[x] = sum / blur_diameter;
                 }
             }
 
             /* Vertical blur */
+            int32_t limit_y = imageY-radius-1;
             for (int32_t x = 0; x < imageX; ++x) /* columns */
             {
                 uint16_t * out_col = img + (x*3);
@@ -276,16 +291,34 @@ void applyProcessingObject( processingObject_t * processing,
 
                 uint32_t sum = out_img[x*3+offset] * blur_diameter;
 
-                for (int32_t y = -radius; y < imageY; ++y)
+                for (int32_t y = -radius; y < radius; ++y)
                 {
-                    sum -= col[MIN(MAX((y-radius), 0), imageY-1)*rl+offset];
-                    sum += col[MIN(MAX((y+radius+1), 0), imageY-1)*rl+offset];
+                    sum -= col[MAX((y-radius), 0)*rl+offset];
+                    sum += col[(y+radius+1)*rl+offset];
                     out_col[MAX(y, 0)*rl+offset] = sum / blur_diameter;
+                }
+                {
+                    uint16_t * minus = col + (offset);
+                    uint16_t * plus = col + ((radius*2+1)*rl + offset);
+                    uint16_t * out = out_col + (radius*rl + offset);
+                    uint16_t * end = out_col + (limit_y*rl + offset);
+                    do {
+                        sum -= *minus;
+                        sum += *plus;
+                        *out = sum / blur_diameter;
+                        minus += rl;
+                        plus += rl;
+                        out += rl;
+                    } while (out < end);
+                }
+                for (int32_t y = limit_y; y < imageY; ++y)
+                {
+                    sum -= col[(y-radius)*rl+offset];
+                    sum += col[MIN((y+radius+1), imageY-1)*rl+offset];
+                    out_col[y*rl+offset] = sum / blur_diameter;
                 }
             }
         }
-
-        // memcpy(inputImage, outputImage, img_s * sizeof(uint16_t));
     }
 
     if (processingGetSharpening(processing) > 0.005)
