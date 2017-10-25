@@ -23,9 +23,13 @@ TestDialog::~TestDialog()
 void TestDialog::on_groupBox_toggled(bool arg1)
 {
     ui->widget1->setVisible( arg1 );
+    if( !arg1 ) ui->groupBox->setMaximumHeight( 30 );
+    else ui->groupBox->setMaximumHeight( 16777215 );
 }
 
 void TestDialog::on_groupBox_2_toggled(bool arg1)
 {
     ui->widget2->setVisible( arg1 );
+    if( !arg1 ) ui->groupBox_2->setMaximumHeight( 30 );
+    else ui->groupBox_2->setMaximumHeight( 16777215 );
 }
