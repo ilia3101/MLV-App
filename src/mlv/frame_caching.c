@@ -207,6 +207,7 @@ void an_mlv_cache_thread(mlvObject_t * video)
             float ** __restrict blue2d = (float **)malloc(height * sizeof(float *));
             for (int y = 0; y < height; ++y) blue2d[y] = (float *)(blue1d+(y*width));
 
+            pthread_mutex_lock( &g_mutexCount );
             amazeinfo_t amaze_params = {
                 .rawData =  imagefloat2d,
                 .red     =  red2d,
@@ -218,6 +219,7 @@ void an_mlv_cache_thread(mlvObject_t * video)
                 .winh    =  getMlvHeight(video),
                 .cfa     =  0
             };
+            pthread_mutex_unlock( &g_mutexCount );
 
             while (1 < 2)
             {
