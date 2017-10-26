@@ -108,9 +108,6 @@ int setAppNewMlvClip(char * mlvPath)
     /* Default: don't enable llrawproc */
     App->videoMLV->llrawproc->fix_raw = 0;
 
-    /* Adjust image size(probably) */
-    [App->previewWindow setImage: nil];
-
     /* Size may need changing */
     free(App->rawImage);
     App->rawImage = malloc( sizeof(uint8_t) * 3 * getMlvWidth(App->videoMLV) * getMlvHeight(App->videoMLV) );

@@ -275,14 +275,8 @@ int NSApplicationMain(int argc, const char * argv[])
     App->previewWindow = [ [MLVView alloc]
                            initWithFrame: NSMakeRect(PREVIEW_WINDOW_LOCATION) ];
 
-    /* Bezel alternatives: NSImageFrameGrayBezel NSImageFrameNone */
-    [App->previewWindow setImageFrameStyle: NSImageFrameGrayBezel];
-    [App->previewWindow setImageAlignment: NSImageAlignCenter];
-    /* Scaling alternatives: NSScaleToFit - NSImageScaleProportionallyDown - NSScaleNone */
-    [App->previewWindow setImageScaling: NSImageScaleProportionallyDown];
     /* NSImageView doesn't need to be anchored for some reason, just works anyway */
     [App->previewWindow setAutoresizingMask: (NSViewHeightSizable | NSViewWidthSizable) ];
-    // [previewWindow setTarget:previewWindow];
     [App->previewWindow setSourceImage:App->rawImage width:1880 height:1056 bitDepth:8];
 
     [[App->window contentView] addSubview: App->previewWindow];

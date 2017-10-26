@@ -82,9 +82,6 @@ void draw_frame()
     /* Update/refresh the view on main thread */
     [App->previewWindow performSelectorOnMainThread: @selector(updateView) withObject: nil waitUntilDone: YES];
 
-    /* This is also very important */
-    [App->window performSelectorOnMainThread: @selector(update) withObject: nil waitUntilDone: YES];
-
     /* Reset, we don't want to stop */
     frame_still_drawing = 0;
 }

@@ -7,10 +7,8 @@
 -(id)initWithFrame:(NSRect)frame
 {
     self = [super initWithFrame:frame];
-    if (self) { 
-        self.colorSpace = nil;
-        self.provider = nil;
-        self.the_image = nil;
+    if (self)
+    {
         self.draw = 0;
     }
     return self;
@@ -29,65 +27,47 @@
     int bits_per_pixel = bitsPerComponent * 3;
     int bytes_per_pixel = bits_per_pixel / 8;
 
-    if (self.colorSpace) CGColorSpaceRelease(self.colorSpace);
-    self.colorSpace = CGColorSpaceCreateDeviceRGB();
+    // GLuint TextureID = self.TextureID;
+    // if (self.TextureID) glDeleteTextures(1, (const GLuint *)&TextureID);	
+	// glGenTextures(1, (GLuint *)&TextureID);
+	// glBindTexture(GL_TEXTURE_2D, self.TextureID);
+	// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	// glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, imageData);
+	// glBindTexture(GL_TEXTURE_2D, 0);
+	// glBindTexture(GL_TEXTURE_2D, self.TextureID);
 
-    if (self.provider) CGDataProviderRelease(self.provider);
-    self.provider = CGDataProviderCreateWithData(nil, imageData, size * bytes_per_pixel, nil);
+    // self.TextureID = TextureID;
 
     self.draw = 1;
 }
 
 
 -(void)drawRect:(NSRect)rect
-{
+{ 
     if (self.draw)
     {
-        /* This gives us the nice grey bordered rectangle */
-        [super drawRect:rect];
+        GLuint TextureID = 0;
 
-        CGContextRef context = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
+        glBindTexture(GL_TEXTURE_2D, TextureID);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, self.image_width, self.image_height, 0, GL_RGB, GL_UNSIGNED_BYTE, self.image_data);
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glBindTexture(GL_TEXTURE_2D, TextureID);
 
-        /* Set medium interpolation quality | https://developer.apple.com/documentation/coregraphics/cginterpolationquality?language=objc */
-        CGContextSetInterpolationQuality(context, kCGInterpolationHigh);
-
-        /* Custom drawing bounds to keep aspect ratio */
-
-        /* Cropped to margin */
-        NSRect draw_frame = NSMakeRect( NSMinX(self.bounds)+MARGIN, NSMinY(self.bounds)+MARGIN,
-                                        NSWidth(self.bounds)-2*MARGIN, NSHeight(self.bounds)-2*MARGIN );
-
-        double view_aspect = (double)NSWidth(draw_frame) / (double)NSHeight(draw_frame);
-        double image_aspect = (double)self.image_width / (double)self.image_height;
-
-        /* Make sure aspect ratio is correct and center the image rectangle */
-        if (image_aspect > view_aspect)
-        {
-            draw_frame = NSMakeRect( NSMinX(draw_frame), NSMinY(draw_frame) + (NSHeight(draw_frame) - NSWidth(draw_frame)/image_aspect)/2,
-                                     NSWidth(draw_frame), NSWidth(draw_frame) / image_aspect );
-        }
-        else
-        {
-            image_aspect = 1.0 / image_aspect;
-            draw_frame = NSMakeRect( NSMinX(draw_frame) + (NSWidth(draw_frame) - NSHeight(draw_frame)/image_aspect)/2, NSMinY(draw_frame), 
-                                     NSHeight(draw_frame) / image_aspect, NSHeight(draw_frame) );
-        }
-
-        /* CGImage to display */
-        CGImageRef image = CGImageCreate( self.image_width, self.image_height,
-                                          self.image_bpp, self.image_bpp * 3,
-                                          (self.image_bpp/8 * 3) * self.image_width, 
-                                          self.colorSpace,
-                                          kCGBitmapByteOrderDefault,
-                                          self.provider, nil, YES,
-                                          kCGRenderingIntentDefault );
-
-        /* Draw */
-        CGContextDrawImage(context, draw_frame, image);
-
-        CGImageRelease(image);
+        glClear(GL_COLOR_BUFFER_BIT);
+        glEnable(GL_TEXTURE_2D);
+        glBegin(GL_QUADS);
+        glTexCoord2i(0, 0); glVertex2f(-1.0,  1.0);
+        glTexCoord2i(0, 1); glVertex2f(-1.0, -1.0);
+        glTexCoord2i(1, 1); glVertex2f( 1.0, -1.0);
+        glTexCoord2i(1, 0); glVertex2f( 1.0,  1.0);
+        glEnd();
+        glDisable(GL_TEXTURE_2D);
+  
+        glFlush();
     }
-
 }
 
 -(void)updateView

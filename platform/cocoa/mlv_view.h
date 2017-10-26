@@ -2,8 +2,11 @@
 #define _mlv_view_h_
 
 #import <Cocoa/Cocoa.h>
+#include <OpenGL/gl.h>
 
-@interface MLVView : NSImageView
+@interface MLVView : NSOpenGLView
+
+-(id)initWithFrame:(NSRect)frame;
 
 /* Set source of image */
 -(void)setSourceImage:(void *)imageData width:(int)width height:(int)height bitDepth:(int)bitsPerComponent;
@@ -19,13 +22,10 @@
 @property int image_width;
 @property int image_height;
 @property int image_bpp;
-@property void * image_data;
-@property CGDataProviderRef provider;
-@property CGImageRef the_image; /* Because the superclass already had 'image' */
-@property CGColorSpaceRef colorSpace;
+
+@property void * image_data; /* Pointer to supplier of image data */
 
 @property int draw; /* Flag */
-
 
 @end
 
