@@ -265,7 +265,7 @@ void an_mlv_cache_thread(mlvObject_t * video)
             free(imagefloat2d);
             free(imagefloat1d);
 
-            if(file) fclose(file);
+            fclose(file);
         }
     }
 
