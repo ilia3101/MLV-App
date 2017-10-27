@@ -271,15 +271,20 @@ int NSApplicationMain(int argc, const char * argv[])
                        bitsPerPixel: 24 ];
 
 
-    /* Will display our video */
-    App->previewWindow = [ [MLVView alloc]
-                           initWithFrame: NSMakeRect(PREVIEW_WINDOW_LOCATION) ];
+    /* THis is just the border to look nice around the actual MLVView */
+    NSImageView * previewBorder = [[NSImageView alloc] initWithFrame: NSMakeRect(PREVIEW_WINDOW_BORDER_LOCATION)];
+    [previewBorder setImageFrameStyle: NSImageFrameGrayBezel];
+    [previewBorder setAutoresizingMask: (NSViewHeightSizable | NSViewWidthSizable) ];
+    [[App->window contentView] addSubview: previewBorder];
 
-    /* NSImageView doesn't need to be anchored for some reason, just works anyway */
+    /* Will display our video */
+    App->previewWindow = [[MLVView alloc] initWithFrame: NSMakeRect(PREVIEW_WINDOW_LOCATION)];
+    /* Doesn't need to be anchored for some reason, just works anyway */
     [App->previewWindow setAutoresizingMask: (NSViewHeightSizable | NSViewWidthSizable) ];
     [App->previewWindow setSourceImage:App->rawImage width:1880 height:1056 bitDepth:8];
-
     [[App->window contentView] addSubview: App->previewWindow];
+    
+
 
     /* Slider for moving thourhg the clip */
     App->timelineSlider = [

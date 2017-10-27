@@ -18,14 +18,22 @@
 /* The main drawing fucntion (no need to call) */
 -(void)drawRect: (NSRect)bounds;
 
+
+/* Double tap on magic mouse/two-finger double tap on trackpads */
+-(void)smartMagnifyWithEvent:(NSEvent *)event;
+-(BOOL)acceptsFirstResponder;
+
+
 /* Properties about the image */
 @property int image_width;
 @property int image_height;
 @property int image_bpp;
-
 @property void * image_data; /* Pointer to supplier of image data */
 
-@property int draw; /* Flag */
+@property float magnification;
+@property BOOL one_to_one_zoom;
+
+@property BOOL draw;
 
 @end
 
