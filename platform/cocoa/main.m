@@ -281,7 +281,6 @@ int NSApplicationMain(int argc, const char * argv[])
     App->previewWindow = [[MLVView alloc] initWithFrame: NSMakeRect(PREVIEW_WINDOW_LOCATION)];
     /* Doesn't need to be anchored for some reason, just works anyway */
     [App->previewWindow setAutoresizingMask: (NSViewHeightSizable | NSViewWidthSizable) ];
-    [App->previewWindow setSourceImage:App->rawImage width:1880 height:1056 bitDepth:8];
     [[App->window contentView] addSubview: App->previewWindow];
     
 

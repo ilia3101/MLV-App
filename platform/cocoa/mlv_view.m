@@ -27,7 +27,10 @@
 
 
 -(void)drawRect:(NSRect)rect
-{ 
+{
+    glClearColor(0.0353f, 0.0353f, 0.0353f, 0.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+
     if (self.draw)
     {
         /* Magnification */
@@ -61,8 +64,6 @@
         glBindTexture(GL_TEXTURE_2D, 0);
         glBindTexture(GL_TEXTURE_2D, TextureID);
 
-        glClear(GL_COLOR_BUFFER_BIT);
-
         glEnable(GL_TEXTURE_2D);
         glBegin(GL_QUADS);
         glTexCoord2f(0.0f, 0.0f); glVertex2f(pointTL[0], pointTL[1]); /* Top left */
@@ -73,9 +74,9 @@
         glDisable(GL_TEXTURE_2D);
 
         glDeleteTextures(1, &TextureID);
-
-        glFlush();
     }
+
+    glFlush();
 }
 
 -(void)updateView
