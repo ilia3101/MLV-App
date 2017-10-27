@@ -455,7 +455,7 @@ QGroupBox::indicator:checked {
                     <widget class="QComboBox" name="comboBoxFocusPixelSwitch">
                      <property name="maximumSize">
                       <size>
-                       <width>90</width>
+                       <width>83</width>
                        <height>16777215</height>
                       </size>
                      </property>
@@ -501,7 +501,7 @@ QGroupBox::indicator:checked {
                     <widget class="QComboBox" name="comboBoxFocusPixelsInterpolationMethod">
                      <property name="maximumSize">
                       <size>
-                       <width>90</width>
+                       <width>83</width>
                        <height>16777215</height>
                       </size>
                      </property>
@@ -555,7 +555,7 @@ QGroupBox::indicator:checked {
                     <widget class="QComboBox" name="comboBoxBadPixelsSwitch">
                      <property name="maximumSize">
                       <size>
-                       <width>90</width>
+                       <width>83</width>
                        <height>16777215</height>
                       </size>
                      </property>
@@ -601,7 +601,7 @@ QGroupBox::indicator:checked {
                     <widget class="QComboBox" name="comboBoxBadPixelsInterpolationMethod">
                      <property name="maximumSize">
                       <size>
-                       <width>90</width>
+                       <width>83</width>
                        <height>16777215</height>
                       </size>
                      </property>
@@ -652,7 +652,7 @@ QGroupBox::indicator:checked {
                     <widget class="QComboBox" name="comboBoxChromaSmoothSwitch">
                      <property name="maximumSize">
                       <size>
-                       <width>90</width>
+                       <width>83</width>
                        <height>16777215</height>
                       </size>
                      </property>
@@ -713,7 +713,7 @@ QGroupBox::indicator:checked {
                     <widget class="QComboBox" name="comboBoxPatternNoiseSwitch">
                      <property name="maximumSize">
                       <size>
-                       <width>90</width>
+                       <width>83</width>
                        <height>16777215</height>
                       </size>
                      </property>
@@ -764,7 +764,7 @@ QGroupBox::indicator:checked {
                     <widget class="QComboBox" name="comboBoxVerticalStripesSwitch">
                      <property name="maximumSize">
                       <size>
-                       <width>90</width>
+                       <width>83</width>
                        <height>16777215</height>
                       </size>
                      </property>
@@ -820,7 +820,7 @@ QGroupBox::indicator:checked {
                     <widget class="QComboBox" name="comboBoxDualISO">
                      <property name="maximumSize">
                       <size>
-                       <width>90</width>
+                       <width>83</width>
                        <height>16777215</height>
                       </size>
                      </property>
@@ -875,7 +875,7 @@ QGroupBox::indicator:checked {
                      </property>
                      <property name="maximumSize">
                       <size>
-                       <width>90</width>
+                       <width>83</width>
                        <height>16777215</height>
                       </size>
                      </property>
@@ -925,7 +925,7 @@ QGroupBox::indicator:checked {
                      </property>
                      <property name="maximumSize">
                       <size>
-                       <width>90</width>
+                       <width>83</width>
                        <height>16777215</height>
                       </size>
                      </property>
@@ -975,7 +975,7 @@ QGroupBox::indicator:checked {
                      </property>
                      <property name="maximumSize">
                       <size>
-                       <width>90</width>
+                       <width>83</width>
                        <height>16777215</height>
                       </size>
                      </property>
@@ -1950,7 +1950,6 @@ QGroupBox::indicator:checked {
                   </widget>
                  </item>
                 </layout>
-                <zorder></zorder>
                 <zorder></zorder>
                 <zorder></zorder>
                 <zorder></zorder>
