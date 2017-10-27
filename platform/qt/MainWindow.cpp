@@ -369,28 +369,34 @@ void MainWindow::drawFrame( void )
     //GetHistogram
     if( ui->actionShowHistogram->isChecked() )
     {
-        ui->labelHistogram->setPixmap( QPixmap::fromImage( m_pHistogram->getHistogramFromRaw( m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject) )
-                                                          .scaled( ui->labelHistogram->width(),
-                                                                   ui->labelHistogram->height(),
-                                                                   Qt::IgnoreAspectRatio, Qt::SmoothTransformation) ) ); //alternative: Qt::FastTransformation
+        QPixmap pic = QPixmap::fromImage( m_pHistogram->getHistogramFromRaw( m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject) )
+                                                          .scaled( ui->labelHistogram->width() * devicePixelRatio(),
+                                                                   ui->labelHistogram->height() * devicePixelRatio(),
+                                                                   Qt::IgnoreAspectRatio, Qt::SmoothTransformation) ); //alternative: Qt::FastTransformation
+        pic.setDevicePixelRatio( devicePixelRatio() );
+        ui->labelHistogram->setPixmap( pic );
         ui->labelHistogram->setAlignment( Qt::AlignCenter ); //Always in the middle
     }
     //Waveform
     else if( ui->actionShowWaveFormMonitor->isChecked() )
     {
-        ui->labelHistogram->setPixmap( QPixmap::fromImage( m_pWaveFormMonitor->getWaveFormMonitorFromRaw( m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject) )
-                                                          .scaled( ui->labelHistogram->width(),
-                                                                   ui->labelHistogram->height(),
-                                                                   Qt::IgnoreAspectRatio, Qt::SmoothTransformation) ) ); //alternative: Qt::FastTransformation
+        QPixmap pic = QPixmap::fromImage( m_pWaveFormMonitor->getWaveFormMonitorFromRaw( m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject) )
+                                                          .scaled( ui->labelHistogram->width() * devicePixelRatio(),
+                                                                   ui->labelHistogram->height() * devicePixelRatio(),
+                                                                   Qt::IgnoreAspectRatio, Qt::SmoothTransformation) ); //alternative: Qt::FastTransformation
+        pic.setDevicePixelRatio( devicePixelRatio() );
+        ui->labelHistogram->setPixmap( pic );
         ui->labelHistogram->setAlignment( Qt::AlignCenter ); //Always in the middle
     }
     //Parade
     else if( ui->actionShowParade->isChecked() )
     {
-        ui->labelHistogram->setPixmap( QPixmap::fromImage( m_pWaveFormMonitor->getParadeFromRaw( m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject) )
-                                                          .scaled( ui->labelHistogram->width(),
-                                                                   ui->labelHistogram->height(),
-                                                                   Qt::IgnoreAspectRatio, Qt::SmoothTransformation) ) ); //alternative: Qt::FastTransformation
+        QPixmap pic = QPixmap::fromImage( m_pWaveFormMonitor->getParadeFromRaw( m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject) )
+                                                          .scaled( ui->labelHistogram->width() * devicePixelRatio(),
+                                                                   ui->labelHistogram->height() * devicePixelRatio(),
+                                                                   Qt::IgnoreAspectRatio, Qt::SmoothTransformation) ); //alternative: Qt::FastTransformation
+        pic.setDevicePixelRatio( devicePixelRatio() );
+        ui->labelHistogram->setPixmap( pic );
         ui->labelHistogram->setAlignment( Qt::AlignCenter ); //Always in the middle
     }
     //Sync Audio

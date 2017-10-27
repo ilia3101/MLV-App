@@ -8,10 +8,12 @@
 #include "Histogram.h"
 #include "math.h"
 
+#define HEIGHT 200
+
 //Constructor
 Histogram::Histogram()
 {
-    m_pHistogram = new QImage( 256, 100, QImage::Format_RGB888 );
+    m_pHistogram = new QImage( 256, HEIGHT, QImage::Format_RGB888 );
 }
 
 //Destructor
@@ -55,16 +57,16 @@ QImage Histogram::getHistogramFromImg( QImage *img )
     m_pHistogram->fill( Qt::black );
     for( uint16_t x = 0; x <= 255; x++ )
     {
-        tableR[x] = tableR[x] * 100 / highestVal;
-        tableG[x] = tableG[x] * 100 / highestVal;
-        tableB[x] = tableB[x] * 100 / highestVal;
+        tableR[x] = tableR[x] * HEIGHT / highestVal;
+        tableG[x] = tableG[x] * HEIGHT / highestVal;
+        tableB[x] = tableB[x] * HEIGHT / highestVal;
 
-        for( uint8_t y = 0; y < 100; y++ )
+        for( uint8_t y = 0; y < HEIGHT; y++ )
         {
             QColor color = QColor( Qt::black );
-            if( tableR[x] >= 100 - y ) color.setRed( 255 );
-            if( tableG[x] >= 100 - y ) color.setGreen( 255 );
-            if( tableB[x] >= 100 - y ) color.setBlue( 255 );
+            if( tableR[x] >= HEIGHT - y ) color.setRed( 255 );
+            if( tableG[x] >= HEIGHT - y ) color.setGreen( 255 );
+            if( tableB[x] >= HEIGHT - y ) color.setBlue( 255 );
             m_pHistogram->setPixelColor( x, y, color );
         }
     }
@@ -106,16 +108,16 @@ QImage Histogram::getHistogramFromRaw(uint8_t *m_pRawImage, uint16_t width, uint
     m_pHistogram->fill( Qt::black );
     for( uint16_t x = 0; x <= 255; x++ )
     {
-        tableR[x] = tableR[x] * 100 / highestVal;
-        tableG[x] = tableG[x] * 100 / highestVal;
-        tableB[x] = tableB[x] * 100 / highestVal;
+        tableR[x] = tableR[x] * HEIGHT / highestVal;
+        tableG[x] = tableG[x] * HEIGHT / highestVal;
+        tableB[x] = tableB[x] * HEIGHT / highestVal;
 
-        for( uint8_t y = 0; y < 100; y++ )
+        for( uint8_t y = 0; y < HEIGHT; y++ )
         {
             QColor color = QColor( Qt::black );
-            if( tableR[x] >= 100 - y ) color.setRed( 255 );
-            if( tableG[x] >= 100 - y ) color.setGreen( 255 );
-            if( tableB[x] >= 100 - y ) color.setBlue( 255 );
+            if( tableR[x] >= HEIGHT - y ) color.setRed( 255 );
+            if( tableG[x] >= HEIGHT - y ) color.setGreen( 255 );
+            if( tableB[x] >= HEIGHT - y ) color.setBlue( 255 );
             m_pHistogram->setPixelColor( x, y, color );
         }
     }
