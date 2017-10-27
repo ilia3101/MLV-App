@@ -129,7 +129,9 @@ private slots:
     void on_checkBoxRawFixEnable_clicked(bool checked);
     void on_actionWhiteBalancePicker_toggled(bool checked);
     void whiteBalancePicked( int x, int y );
-
+    void on_groupBoxRawCorrection_toggled(bool arg1);
+    void on_groupBoxProcessing_toggled(bool arg1);
+    void on_groupBoxDetails_toggled(bool arg1);
 
 private:
     Ui::MainWindow *ui;

@@ -759,6 +759,12 @@ void MainWindow::readSettings()
     m_audioExportEnabled = set.value( "audioExportEnabled", true ).toBool();
     m_styleSelection = set.value( "darkStyle", 0 ).toInt();
     if( m_styleSelection == 1 ) CDarkStyle::assign();
+#ifdef Q_OS_MACX
+    else ui->scrollArea->setVerticalScrollBarPolicy( Qt::ScrollBarAsNeeded );
+#endif
+    ui->groupBoxRawCorrection->setChecked( set.value( "expandedRawCorrection", false ).toBool() );
+    ui->groupBoxProcessing->setChecked( set.value( "expandedProcessing", true ).toBool() );
+    ui->groupBoxDetails->setChecked( set.value( "expandedDetails", false ).toBool() );
 }
 
 //Save some settings to registry
@@ -778,6 +784,9 @@ void MainWindow::writeSettings()
     set.setValue( "frameRate", m_frameRate );
     set.setValue( "audioExportEnabled", m_audioExportEnabled );
     set.setValue( "darkStyle", m_styleSelection );
+    set.setValue( "expandedRawCorrection", ui->groupBoxRawCorrection->isChecked() );
+    set.setValue( "expandedProcessing", ui->groupBoxProcessing->isChecked() );
+    set.setValue( "expandedDetails", ui->groupBoxDetails->isChecked() );
 }
 
 //Start exporting a MOV via PNG48
@@ -2845,4 +2854,28 @@ void MainWindow::whiteBalancePicked( int x, int y )
 
     //TODO: send to Ilias lib and get sliderpos
     qDebug() << "Click in Scene:" << x << y;
+}
+
+//Collapse & Expand Raw Correction
+void MainWindow::on_groupBoxRawCorrection_toggled(bool arg1)
+{
+    ui->frameRawCorrection->setVisible( arg1 );
+    if( !arg1 ) ui->groupBoxRawCorrection->setMaximumHeight( 30 );
+    else ui->groupBoxRawCorrection->setMaximumHeight( 16777215 );
+}
+
+//Collapse & Expand Processing
+void MainWindow::on_groupBoxProcessing_toggled(bool arg1)
+{
+    ui->frameProcessing->setVisible( arg1 );
+    if( !arg1 ) ui->groupBoxProcessing->setMaximumHeight( 30 );
+    else ui->groupBoxProcessing->setMaximumHeight( 16777215 );
+}
+
+//Collapse & Expand Details
+void MainWindow::on_groupBoxDetails_toggled(bool arg1)
+{
+    ui->frameDetails->setVisible( arg1 );
+    if( !arg1 ) ui->groupBoxDetails->setMaximumHeight( 30 );
+    else ui->groupBoxDetails->setMaximumHeight( 16777215 );
 }
