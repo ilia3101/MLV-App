@@ -14,7 +14,6 @@
 #include <QTime>
 #include <QSettings>
 #include <QDesktopWidget>
-#include <QMutex>
 #include <QXmlStreamWriter>
 #include <QDesktopWidget>
 #include <QScrollBar>
@@ -30,10 +29,6 @@
 
 #define APPNAME "MLV App"
 #define VERSION "0.9 alpha"
-
-QMutex gMutex;
-QMutex gMutexPng16;
-uint32_t gPngThreadsTodo = 0;
 
 //Constructor
 MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
@@ -787,119 +782,6 @@ void MainWindow::writeSettings()
     set.setValue( "expandedRawCorrection", ui->groupBoxRawCorrection->isChecked() );
     set.setValue( "expandedProcessing", ui->groupBoxProcessing->isChecked() );
     set.setValue( "expandedDetails", ui->groupBoxDetails->isChecked() );
-}
-
-//Start exporting a MOV via PNG48
-void MainWindow::startExport(QString fileName)
-{
-    //Delete file if exists
-    QFile *file = new QFile( fileName );
-    if( file->exists() ) file->remove();
-    delete file;
-
-    //Disable GUI drawing
-    m_dontDraw = true;
-
-    // we always get amaze frames for exporting
-    setMlvAlwaysUseAmaze( m_pMlvObject );
-    //enable low level raw fixes (if wanted)
-    if( ui->checkBoxRawFixEnable->isChecked() ) m_pMlvObject->llrawproc->fix_raw = 1;
-
-    //StatusDialog
-    m_pStatusDialog->ui->progressBar->setMaximum( getMlvFrames( m_pMlvObject ) * 2 );
-    m_pStatusDialog->ui->progressBar->setValue( 0 );
-    m_pStatusDialog->show();
-
-    //Create temp pngs
-    gPngThreadsTodo = getMlvFrames( m_pMlvObject );
-    QThreadPool *threadPool = new QThreadPool( this );
-    //threadPool->setMaxThreadCount( 1 );
-    for( uint32_t i = 0; i < getMlvFrames( m_pMlvObject ); i++ )
-    {
-        //Append frame number
-        QString numberedFileName = fileName.left( fileName.lastIndexOf( "." ) );
-        numberedFileName.append( QString( "_%1" ).arg( (uint)i, 5, 10, QChar( '0' ) ) );
-        numberedFileName.append( QString( ".png" ) );
-
-        RenderPngTask *pngTask = new RenderPngTask( m_pMlvObject, numberedFileName, i );
-        threadPool->start( pngTask );
-    }
-
-    while( !threadPool->waitForDone(50) )
-    {
-        gMutex.lock();
-        m_pStatusDialog->ui->progressBar->setValue( getMlvFrames( m_pMlvObject ) - gPngThreadsTodo );
-        gMutex.unlock();
-        m_pStatusDialog->ui->progressBar->repaint();
-        qApp->processEvents();
-    }
-    threadPool->clear();
-    delete threadPool;
-
-    //Update Progressbar
-    m_pStatusDialog->ui->progressBar->setValue( getMlvFrames( m_pMlvObject ) );
-    m_pStatusDialog->ui->progressBar->repaint();
-    qApp->processEvents();
-
-    //If we don't like amaze we switch it off again
-    if( !ui->actionAlwaysUseAMaZE->isChecked() ) setMlvDontAlwaysUseAmaze( m_pMlvObject );
-
-    //Enable GUI drawing
-    m_dontDraw = false;
-
-    QString numberedFileName = fileName.left( fileName.lastIndexOf( "." ) );
-    QString output = numberedFileName;
-    numberedFileName.append( QString( "_\%05d" ) );
-    numberedFileName.append( QString( ".png" ) );
-    QString wavFileName = QString( "%1.wav" ).arg( output );
-
-    //Audio Export
-    QString ffmpegAudioCommand;
-    ffmpegAudioCommand.clear();
-    if( m_audioExportEnabled && doesMlvHaveAudio( m_pMlvObject ) )
-    {
-        writeMlvAudioToWave(m_pMlvObject, wavFileName.toLatin1().data());
-        ffmpegAudioCommand = QString( "-i \"%1\" -c:a copy " ).arg( wavFileName );
-    }
-
-    //FFMpeg export
-#ifdef __linux__
-    QString program = QString( "ffmpeg" );
-#else
-    QString program = QCoreApplication::applicationDirPath();
-    program.append( QString( "/ffmpeg\"" ) );
-    program.prepend( QString( "\"" ) );
-#endif
-    //Solving the . and , problem at fps in the command
-    QLocale locale = QLocale(QLocale::English, QLocale::UnitedKingdom);
-    locale.setNumberOptions(QLocale::OmitGroupSeparator);
-    QString fps = locale.toString( getFramerate() );
-
-    if( m_codecProfile == CODEC_AVIRAW )
-    {
-        output.append( QString( ".avi" ) );
-        program.append( QString( " -r %1 -i \"%2\" -c:v rawvideo -pix_fmt %3 \"%4\"" )
-                    .arg( fps )
-                    .arg( numberedFileName )
-                    .arg( "yuv420p" )
-                    .arg( output ) );
-    }
-    else
-    {
-        output.append( QString( ".mov" ) );
-        program.append( QString( " -r %1 -i \"%2\" -c:v prores_ks -profile:v %3 \"%4\"" )
-                    .arg( fps )
-                    .arg( numberedFileName )
-                    .arg( m_codecProfile )
-                    .arg( output ) );
-    }
-    //There is a %5 in the string, so another arg is not possible - so do that:
-    program.insert( program.indexOf( "-c:v" ), ffmpegAudioCommand );
-
-    //qDebug() << program;
-
-    //Start FFmpeg
-    m_pFFmpeg->start( program );
 }
 
 //Start Export via Pipe
@@ -1712,37 +1594,6 @@ void MainWindow::readFFmpegOutput( void )
     output = output.left( output.indexOf("fps=") - 1 ); //Kill everything after frame number
     output = output.right( output.length() - 6 ); //Kill "frame="
     m_pStatusDialog->ui->progressBar->setValue( getMlvFrames( m_pMlvObject ) + output.toUInt() );
-}
-
-//Clean up export pngs
-void MainWindow::endExport( void )
-{
-    //Update Status
-    m_pStatusDialog->ui->progressBar->setValue( m_pStatusDialog->ui->progressBar->maximum() );
-    m_pStatusDialog->ui->progressBar->repaint();
-    qApp->processEvents();
-
-    //Clean up
-    for( uint32_t i = 0; i < getMlvFrames( m_pMlvObject ); i++ )
-    {
-        //Append frame number
-        QString numberedFileName = m_exportQueue.first()->exportFileName().left( m_exportQueue.first()->exportFileName().lastIndexOf( "." ) );
-        numberedFileName.append( QString( "_%1" ).arg( (uint)i, 5, 10, QChar( '0' ) ) );
-        numberedFileName.append( QString( ".png" ) );
-
-        //Delete file
-        QFile *file = new QFile( numberedFileName );
-        if( file->exists() ) file->remove();
-        delete file;
-    }
-    //Delete wav file
-    QString wavFileName = QString( "%1.wav" ).arg( m_exportQueue.first()->exportFileName().left( m_exportQueue.first()->exportFileName().lastIndexOf( "." ) ) );
-    QFile *file = new QFile( wavFileName );
-    if( file->exists() ) file->remove();
-    delete file;
-
-    //Emit Ready-Signal
-    emit exportReady();
 }
 
 //About Window
@@ -2587,33 +2438,6 @@ void MainWindow::exportHandler( void )
         //Caching is in which state? Set it!
         on_actionCaching_triggered( ui->actionCaching->isChecked() );
     }
-}
-
-//Export a 16bit png frame in a task
-void RenderPngTask::run()
-{
-    png_image image;
-    memset( &image, 0, sizeof image );
-    image.version = PNG_IMAGE_VERSION;
-    image.format = PNG_FORMAT_LINEAR_RGB;
-    image.width = getMlvWidth( m_pMlvObject );
-    image.height = getMlvHeight( m_pMlvObject );
-    image.flags = PNG_IMAGE_FLAG_16BIT_sRGB;
-    png_bytep buffer;
-    buffer = (png_bytep)malloc( PNG_IMAGE_SIZE( image ) );
-
-    //Get frame from library
-    gMutexPng16.lock();
-    getMlvProcessedFrame16( m_pMlvObject, m_frame, (uint16_t*)buffer );
-    gMutexPng16.unlock();
-
-    png_image_write_to_file( &image, m_fileName.toLatin1().data(), 0, buffer, 0, NULL );
-    free( buffer );
-    png_image_free( &image );
-
-    gMutex.lock();
-    gPngThreadsTodo--;
-    gMutex.unlock();
 }
 
 //Play button pressed or toggled

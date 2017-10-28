@@ -85,7 +85,6 @@ private slots:
     void on_actionSaveSession_triggered();
     void on_actionCaching_triggered( bool checked );
     void readFFmpegOutput( void );
-    void endExport( void );
     void on_listWidgetSession_activated(const QModelIndex &index);
     void on_dockWidgetSession_visibilityChanged(bool visible);
     void on_dockWidgetEdit_visibilityChanged(bool visible);
@@ -180,7 +179,6 @@ private:
     void initLib( void );
     void readSettings( void );
     void writeSettings( void );
-    void startExport( QString fileName );
     void startExportPipe( QString fileName );
     void addFileToSession( QString fileName );
     void openSession( QString fileName );
@@ -201,23 +199,6 @@ private:
 
 signals:
     void exportReady( void );
-};
-
-class RenderPngTask : public QRunnable
-{
-public:
-    RenderPngTask( mlvObject_t *pMlvObject, QString fileName, uint32_t frame = 0 )
-    {
-        m_frame = frame;
-        m_pMlvObject = pMlvObject;
-        m_fileName = fileName;
-    }
-private:
-    void run();
-
-    uint32_t m_frame;
-    QString m_fileName;
-    mlvObject_t *m_pMlvObject;
 };
 
 #endif // MAINWINDOW_H
