@@ -62,10 +62,6 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     m_timerId = startTimer( 40 ); //25fps initially only, is set after import
     m_timerCacheId = startTimer( 1000 ); //1fps
 
-    //Prepare FFmpeg process
-    m_pFFmpeg = new QProcess( this );
-    connect( m_pFFmpeg, SIGNAL(finished(int)), this, SLOT(endExport()) );
-    connect( m_pFFmpeg, SIGNAL(readyReadStandardError()), this, SLOT(readFFmpegOutput()) );
     //Connect Export Handler
     connect( this, SIGNAL(exportReady()), this, SLOT(exportHandler()) );
 
@@ -113,10 +109,6 @@ MainWindow::~MainWindow()
     //Save settings
     writeSettings();
     delete m_pReceiptClipboard;
-
-    disconnect( m_pFFmpeg, SIGNAL(finished(int)), this, SLOT(endExport()) );
-    disconnect( m_pFFmpeg, SIGNAL(readyReadStandardError()), this, SLOT(readFFmpegOutput()) );
-    delete m_pFFmpeg;
 
     killTimer( m_timerId );
     killTimer( m_timerCacheId );
@@ -1584,18 +1576,6 @@ void MainWindow::setDualIsoIfDetected( void )
     }
 }
 
-//Edit progressbar from FFmpeg output
-void MainWindow::readFFmpegOutput( void )
-{
-    QString output = m_pFFmpeg->readAllStandardError();
-    if( !output.startsWith( "frame=" ) ) return;
-
-    //Filter the frame number out and edit progressbar
-    output = output.left( output.indexOf("fps=") - 1 ); //Kill everything after frame number
-    output = output.right( output.length() - 6 ); //Kill "frame="
-    m_pStatusDialog->ui->progressBar->setValue( getMlvFrames( m_pMlvObject ) + output.toUInt() );
-}
-
 //About Window
 void MainWindow::on_actionAbout_triggered()
 {
@@ -2417,7 +2397,6 @@ void MainWindow::exportHandler( void )
 
         //Start it
         startExportPipe( m_exportQueue.first()->exportFileName() ); //Pipe export
-        //startExport( m_exportQueue.first()->exportFileName() ); //Intermediate PNG export
         return;
     }
     //Else if all planned exports are ready

@@ -84,7 +84,6 @@ private slots:
     void on_actionOpenSession_triggered();
     void on_actionSaveSession_triggered();
     void on_actionCaching_triggered( bool checked );
-    void readFFmpegOutput( void );
     void on_listWidgetSession_activated(const QModelIndex &index);
     void on_dockWidgetSession_visibilityChanged(bool visible);
     void on_dockWidgetEdit_visibilityChanged(bool visible);
@@ -166,7 +165,6 @@ private:
     bool m_audioExportEnabled;
     double m_frameRate;
     QString m_lastSaveFileName;
-    QProcess *m_pFFmpeg;
     ReceiptSettings *m_pReceiptClipboard;
     QVector<ReceiptSettings*> m_pSessionReceipts;
     QVector<ReceiptSettings*> m_exportQueue;
