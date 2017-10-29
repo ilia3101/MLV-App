@@ -349,7 +349,7 @@ QGroupBox::indicator:checked {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>-706</y>
+            <y>0</y>
             <width>195</width>
             <height>1233</height>
            </rect>
@@ -439,7 +439,7 @@ QGroupBox::indicator:checked {
                     </font>
                    </property>
                    <property name="text">
-                    <string>Pattern noise</string>
+                    <string>Pattern Noise</string>
                    </property>
                   </widget>
                  </item>
@@ -2506,15 +2506,10 @@ QGroupBox::indicator:checked {
                   </widget>
                  </item>
                 </layout>
-                <zorder></zorder>
-                <zorder></zorder>
-                <zorder></zorder>
-                <zorder></zorder>
                 <zorder>checkBoxHighLightReconstruction</zorder>
                 <zorder>comboBoxProfile</zorder>
                 <zorder>line</zorder>
                 <zorder>line_2</zorder>
-                <zorder></zorder>
                </widget>
               </item>
              </layout>
