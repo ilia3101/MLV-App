@@ -20,7 +20,7 @@ void ColorToolButton::buttonChecked(bool on)
     if( on )
     {
         QPalette palette = m_palette;
-        palette.setColor(QPalette::Button,QColor(127,127,127));
+        palette.setColor(QPalette::Button,QColor(42,130,218));
         this->setPalette( palette );
     }
     else

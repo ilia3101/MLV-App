@@ -1309,30 +1309,19 @@ void MainWindow::setSliders(ReceiptSettings *receipt)
 
     ui->checkBoxRawFixEnable->setChecked( receipt->rawFixesEnabled() );
     on_checkBoxRawFixEnable_clicked( receipt->rawFixesEnabled() );
-    ui->comboBoxVerticalStripesSwitch->setCurrentIndex( receipt->verticalStripes() );
-    on_comboBoxVerticalStripesSwitch_currentIndexChanged( receipt->verticalStripes() );
-    ui->comboBoxFocusPixelSwitch->setCurrentIndex( receipt->focusPixels() );
-    on_comboBoxFocusPixelSwitch_currentIndexChanged( receipt->focusPixels() );
-    ui->comboBoxFocusPixelsInterpolationMethod->setCurrentIndex( receipt->fpiMethod() );
-    on_comboBoxFocusPixelsInterpolationMethod_currentIndexChanged( receipt->fpiMethod() );
-    ui->comboBoxBadPixelsSwitch->setCurrentIndex( receipt->badPixels() );
-    on_comboBoxBadPixelsSwitch_currentIndexChanged( receipt->badPixels() );
-    ui->comboBoxBadPixelsInterpolationMethod->setCurrentIndex( receipt->bpiMethod() );
-    on_comboBoxBadPixelsInterpolationMethod_currentIndexChanged( receipt->bpiMethod() );
-    ui->comboBoxChromaSmoothSwitch->setCurrentIndex( receipt->chromaSmooth() );
-    on_comboBoxChromaSmoothSwitch_currentIndexChanged( receipt->chromaSmooth() );
-    ui->comboBoxPatternNoiseSwitch->setCurrentIndex( receipt->patternNoise() );
-    on_comboBoxPatternNoiseSwitch_currentIndexChanged( receipt->patternNoise() );
+    setToolButtonFocusPixels( receipt->focusPixels() );
+    setToolButtonFocusPixelsIntMethod( receipt->fpiMethod() );
+    setToolButtonBadPixels( receipt->badPixels() );
+    setToolButtonBadPixelsIntMethod( receipt->bpiMethod() );
+    setToolButtonChromaSmooth( receipt->chromaSmooth() );
+    setToolButtonPatternNoise( receipt->patternNoise() );
+    setToolButtonVerticalStripes( receipt->verticalStripes() );
+    setToolButtonDualIso( receipt->dualIso() );
+    setToolButtonDualIsoInterpolation( receipt->dualIsoInterpolation() );
+    setToolButtonDualIsoAliasMap( receipt->dualIsoAliasMap() );
+    setToolButtonDualIsoFullresBlending( receipt->dualIsoFrBlending() );
     ui->spinBoxDeflickerTarget->setValue( receipt->deflickerTarget() );
     on_spinBoxDeflickerTarget_valueChanged( receipt->deflickerTarget() );
-    ui->comboBoxDualISO->setCurrentIndex( receipt->dualIso() );
-    on_comboBoxDualISO_currentIndexChanged( receipt->dualIso() );
-    ui->comboBoxDualISOInterpolation->setCurrentIndex( receipt->dualIsoInterpolation() );
-    on_comboBoxDualISOInterpolation_currentIndexChanged( receipt->dualIsoInterpolation() );
-    ui->comboBoxDualISOAliasMap->setCurrentIndex( receipt->dualIsoAliasMap() );
-    on_comboBoxDualISOAliasMap_currentIndexChanged( receipt->dualIsoAliasMap() );
-    ui->comboBoxDualISOFullresBlending->setCurrentIndex( receipt->dualIsoFrBlending() );
-    on_comboBoxDualISOFullresBlending_currentIndexChanged( receipt->dualIsoFrBlending() );
     m_pMlvObject->current_cached_frame_active = 0;
 }
 
@@ -1355,18 +1344,18 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     receipt->setProfile( ui->comboBoxProfile->currentIndex() );
 
     receipt->setRawFixesEnabled( ui->checkBoxRawFixEnable->isChecked() );
-    receipt->setVerticalStripes( ui->comboBoxVerticalStripesSwitch->currentIndex() );
-    receipt->setFocusPixels( ui->comboBoxFocusPixelSwitch->currentIndex() );
-    receipt->setFpiMethod( ui->comboBoxFocusPixelsInterpolationMethod->currentIndex() );
-    receipt->setBadPixels( ui->comboBoxBadPixelsSwitch->currentIndex() );
-    receipt->setBpiMethod( ui->comboBoxBadPixelsInterpolationMethod->currentIndex() );
-    receipt->setChromaSmooth( ui->comboBoxChromaSmoothSwitch->currentIndex() );
-    receipt->setPatternNoise( ui->comboBoxPatternNoiseSwitch->currentIndex() );
+    receipt->setVerticalStripes( toolButtonVerticalStripesCurrentIndex() );
+    receipt->setFocusPixels( toolButtonFocusPixelsCurrentIndex() );
+    receipt->setFpiMethod( toolButtonFocusPixelsIntMethodCurrentIndex() );
+    receipt->setBadPixels( toolButtonBadPixelsCurrentIndex() );
+    receipt->setBpiMethod( toolButtonBadPixelsIntMethodCurrentIndex() );
+    receipt->setChromaSmooth( toolButtonChromaSmoothCurrentIndex() );
+    receipt->setPatternNoise( toolButtonPatternNoiseCurrentIndex() );
     receipt->setDeflickerTarget( ui->spinBoxDeflickerTarget->value() );
-    receipt->setDualIso( ui->comboBoxDualISO->currentIndex() );
-    receipt->setDualIsoInterpolation( ui->comboBoxDualISOInterpolation->currentIndex() );
-    receipt->setDualIsoAliasMap( ui->comboBoxDualISOAliasMap->currentIndex() );
-    receipt->setDualIsoFrBlending( ui->comboBoxDualISOFullresBlending->currentIndex() );
+    receipt->setDualIso( toolButtonDualIsoCurrentIndex() );
+    receipt->setDualIsoInterpolation( toolButtonDualIsoInterpolationCurrentIndex() );
+    receipt->setDualIsoAliasMap( toolButtonDualIsoAliasMapCurrentIndex() );
+    receipt->setDualIsoFrBlending( toolButtonDualIsoFullresBlendingCurrentIndex() );
 }
 
 //Show the file in
@@ -1565,15 +1554,242 @@ void MainWindow::drawFrameNumberLabel( void )
     }
 }
 
-//If the actual file is detected as dualIso, we set the combobox dualIso = preview
-void MainWindow::setDualIsoIfDetected( void )
+//Set Toolbuttons Focus Pixels
+void MainWindow::setToolButtonFocusPixels(int index)
 {
-    //qDebug() << "DualIsoCheck:" << m_pMlvObject->llrawproc->is_dual_iso;
-    if( m_pMlvObject->llrawproc->is_dual_iso )
+    switch( index )
     {
-        ui->comboBoxDualISO->setCurrentIndex( 2 ); //2 = Preview
-        on_comboBoxDualISO_currentIndexChanged( 2 );
+    case 0: ui->toolButtonFocusDotsOff->setChecked( true );
+        break;
+    case 1: ui->toolButtonFocusDotsOn->setChecked( true );
+        break;
+    case 2: ui->toolButtonFocusDotsCropRec->setChecked( true );
+        break;
+    default: break;
     }
+}
+
+//Set Toolbuttons Focus Pixels Interpolation
+void MainWindow::setToolButtonFocusPixelsIntMethod(int index)
+{
+    switch( index )
+    {
+    case 0: ui->toolButtonFocusDotMethod1->setChecked( true );
+        break;
+    case 1: ui->toolButtonFocusDotMethod2->setChecked( true );
+        break;
+    default: break;
+    }
+}
+
+//Set Toolbuttons Bad Pixels
+void MainWindow::setToolButtonBadPixels(int index)
+{
+    switch( index )
+    {
+    case 0: ui->toolButtonBadPixelsOff->setChecked( true );
+        break;
+    case 1: ui->toolButtonBadPixelsNormal->setChecked( true );
+        break;
+    case 2: ui->toolButtonBadPixelsAggressive->setChecked( true );
+        break;
+    default: break;
+    }
+}
+
+//Set Toolbuttons Bad Pixels Interpolation
+void MainWindow::setToolButtonBadPixelsIntMethod(int index)
+{
+    switch( index )
+    {
+    case 0: ui->toolButtonBadPixelsMethod1->setChecked( true );
+        break;
+    case 1: ui->toolButtonBadPixelsMethod2->setChecked( true );
+        break;
+    default: break;
+    }
+}
+
+//Set Toolbuttons Chroma Smooth
+void MainWindow::setToolButtonChromaSmooth(int index)
+{
+    switch( index )
+    {
+    case 0: ui->toolButtonChromaOff->setChecked( true );
+        break;
+    case 1: ui->toolButtonChroma2x2->setChecked( true );
+        break;
+    case 2: ui->toolButtonChroma3x3->setChecked( true );
+        break;
+    case 3: ui->toolButtonChroma5x5->setChecked( true );
+        break;
+    default: break;
+    }
+}
+
+//Set Toolbuttons Pattern Noise
+void MainWindow::setToolButtonPatternNoise(int index)
+{
+    switch( index )
+    {
+    case 0: ui->toolButtonPatternNoiseOff->setChecked( true );
+        break;
+    case 1: ui->toolButtonPatternNoiseOn->setChecked( true );
+        break;
+    default: break;
+    }
+}
+
+//Set Toolbuttons Vertical Stripes
+void MainWindow::setToolButtonVerticalStripes(int index)
+{
+    switch( index )
+    {
+    case 0: ui->toolButtonVerticalStripesOff->setChecked( true );
+        break;
+    case 1: ui->toolButtonVerticalStripesNormal->setChecked( true );
+        break;
+    case 2: ui->toolButtonVerticalStripesForce->setChecked( true );
+        break;
+    default: break;
+    }
+}
+
+//Set Toolbuttons Dual Iso
+void MainWindow::setToolButtonDualIso(int index)
+{
+    switch( index )
+    {
+    case 0: ui->toolButtonDualIsoOff->setChecked( true );
+        break;
+    case 1: ui->toolButtonDualIsoOn->setChecked( true );
+        break;
+    case 2: ui->toolButtonDualIsoPreview->setChecked( true );
+        break;
+    default: break;
+    }
+}
+
+//Set Toolbuttons Dual Iso Interpolation
+void MainWindow::setToolButtonDualIsoInterpolation(int index)
+{
+    switch( index )
+    {
+    case 0: ui->toolButtonDualIsoInterpolationAmaze->setChecked( true );
+        break;
+    case 1: ui->toolButtonDualIsoInterpolationMean->setChecked( true );
+        break;
+    default: break;
+    }
+}
+
+//Set Toolbuttons Dual Iso Alias Map
+void MainWindow::setToolButtonDualIsoAliasMap(int index)
+{
+    switch( index )
+    {
+    case 0: ui->toolButtonDualIsoAliasMapOff->setChecked( true );
+        break;
+    case 1: ui->toolButtonDualIsoAliasMapOn->setChecked( true );
+        break;
+    default: break;
+    }
+}
+
+//Set Toolbuttons Dual Iso Fullres Blending
+void MainWindow::setToolButtonDualIsoFullresBlending(int index)
+{
+    switch( index )
+    {
+    case 0: ui->toolButtonDualIsoFullresBlendingOff->setChecked( true );
+        break;
+    case 1: ui->toolButtonDualIsoFullresBlendingOn->setChecked( true );
+        break;
+    default: break;
+    }
+}
+
+//Get toolbutton index of focus pixels
+int MainWindow::toolButtonFocusPixelsCurrentIndex()
+{
+    if( ui->toolButtonFocusDotsOff->isChecked() ) return 0;
+    else if( ui->toolButtonFocusDotsOn->isChecked() ) return 1;
+    else return 2;
+}
+
+//Get toolbutton index of focus pixels interpolation
+int MainWindow::toolButtonFocusPixelsIntMethodCurrentIndex()
+{
+    if( ui->toolButtonFocusDotMethod1->isChecked() ) return 0;
+    else return 1;
+}
+
+//Get toolbutton index of bad pixels
+int MainWindow::toolButtonBadPixelsCurrentIndex()
+{
+    if( ui->toolButtonBadPixelsOff->isChecked() ) return 0;
+    else if( ui->toolButtonBadPixelsNormal->isChecked() ) return 1;
+    else return 2;
+}
+
+//Get toolbutton index of bad pixels interpolation
+int MainWindow::toolButtonBadPixelsIntMethodCurrentIndex()
+{
+    if( ui->toolButtonBadPixelsMethod1->isChecked() ) return 0;
+    else return 1;
+}
+
+//Get toolbutton index of chroma smooth
+int MainWindow::toolButtonChromaSmoothCurrentIndex()
+{
+    if( ui->toolButtonChromaOff->isChecked() ) return 0;
+    else if( ui->toolButtonChroma2x2->isChecked() ) return 1;
+    else if( ui->toolButtonChroma3x3->isChecked() ) return 2;
+    else return 3;
+}
+
+//Get toolbutton index of pattern noise
+int MainWindow::toolButtonPatternNoiseCurrentIndex()
+{
+    if( ui->toolButtonPatternNoiseOff->isChecked() ) return 0;
+    else return 1;
+}
+
+//Get toolbutton index of vertical stripes
+int MainWindow::toolButtonVerticalStripesCurrentIndex()
+{
+    if( ui->toolButtonVerticalStripesOff->isChecked() ) return 0;
+    else if( ui->toolButtonVerticalStripesNormal->isChecked() ) return 1;
+    else return 2;
+}
+
+//Get toolbutton index of dual Iso
+int MainWindow::toolButtonDualIsoCurrentIndex()
+{
+    if( ui->toolButtonDualIsoOff->isChecked() ) return 0;
+    else if( ui->toolButtonDualIsoOn->isChecked() ) return 1;
+    else return 2;
+}
+
+//Get toolbutton index of dual iso interpolation
+int MainWindow::toolButtonDualIsoInterpolationCurrentIndex()
+{
+    if( ui->toolButtonDualIsoInterpolationAmaze->isChecked() ) return 0;
+    else return 1;
+}
+
+//Get toolbutton index of dual iso alias map
+int MainWindow::toolButtonDualIsoAliasMapCurrentIndex()
+{
+    if( ui->toolButtonDualIsoAliasMapOff->isChecked() ) return 0;
+    else return 1;
+}
+
+//Get toolbutton index of dual iso fullres blending
+int MainWindow::toolButtonDualIsoFullresBlendingCurrentIndex()
+{
+    if( ui->toolButtonDualIsoFullresBlendingOff->isChecked() ) return 0;
+    else return 1;
 }
 
 //About Window
@@ -2448,50 +2664,50 @@ void MainWindow::on_actionShowZebras_triggered()
     m_frameChanged = true;
 }
 
-//Combobox Focus Pixel changed
-void MainWindow::on_comboBoxFocusPixelSwitch_currentIndexChanged(int index)
+//Focus Pixel changed
+void MainWindow::toolButtonFocusPixelsChanged( void )
 {
     //TODO: do it different!!!
-    m_pMlvObject->llrawproc->focus_pixels = index;
+    m_pMlvObject->llrawproc->focus_pixels = toolButtonFocusPixelsCurrentIndex();
     reset_fpm_status(&m_pMlvObject->llrawproc->focus_pixel_map, &m_pMlvObject->llrawproc->fpm_status);
     reset_bpm_status(&m_pMlvObject->llrawproc->bad_pixel_map, &m_pMlvObject->llrawproc->bpm_status);
     m_pMlvObject->current_cached_frame_active = 0;
     m_frameChanged = true;
 }
 
-//Combobox Focus Pixel Method changed
-void MainWindow::on_comboBoxFocusPixelsInterpolationMethod_currentIndexChanged(int index)
+//Focus Pixel Method changed
+void MainWindow::toolButtonFocusPixelsIntMethodChanged( void )
 {
     //TODO: do it different!!!
-    m_pMlvObject->llrawproc->fpi_method = index;
+    m_pMlvObject->llrawproc->fpi_method = toolButtonFocusPixelsIntMethodCurrentIndex();
     m_pMlvObject->current_cached_frame_active = 0;
     m_frameChanged = true;
 }
 
-//Combobox Bad Pixel changed
-void MainWindow::on_comboBoxBadPixelsSwitch_currentIndexChanged(int index)
+//Bad Pixel changed
+void MainWindow::toolButtonBadPixelsChanged( void )
 {
     //TODO: do it different!!!
-    m_pMlvObject->llrawproc->bad_pixels = index;
+    m_pMlvObject->llrawproc->bad_pixels = toolButtonBadPixelsCurrentIndex();
     reset_bpm_status(&m_pMlvObject->llrawproc->bad_pixel_map, &m_pMlvObject->llrawproc->bpm_status);
     m_pMlvObject->current_cached_frame_active = 0;
     m_frameChanged = true;
 }
 
-//Combobox Bad Pixel Method changed
-void MainWindow::on_comboBoxBadPixelsInterpolationMethod_currentIndexChanged(int index)
+//Bad Pixel Method changed
+void MainWindow::toolButtonBadPixelsIntMethodChanged( void )
 {
     //TODO: do it different!!!
-    m_pMlvObject->llrawproc->bpi_method = index;
+    m_pMlvObject->llrawproc->bpi_method = toolButtonBadPixelsIntMethodCurrentIndex();
     m_pMlvObject->current_cached_frame_active = 0;
     m_frameChanged = true;
 }
 
-//Combobox Chroma Smooth changed
-void MainWindow::on_comboBoxChromaSmoothSwitch_currentIndexChanged(int index)
+//Chroma Smooth changed
+void MainWindow::toolButtonChromaSmoothChanged( void )
 {
     //TODO: do it different!!!
-    switch( index )
+    switch( toolButtonChromaSmoothCurrentIndex() )
     {
     case 0: m_pMlvObject->llrawproc->chroma_smooth = 0;
         break;
@@ -2507,20 +2723,20 @@ void MainWindow::on_comboBoxChromaSmoothSwitch_currentIndexChanged(int index)
     m_frameChanged = true;
 }
 
-//Combobox Pattern Noise changed
-void MainWindow::on_comboBoxPatternNoiseSwitch_currentIndexChanged(int index)
+//Pattern Noise changed
+void MainWindow::toolButtonPatternNoiseChanged( void )
 {
     //TODO: do it different!!!
-    m_pMlvObject->llrawproc->pattern_noise = index;
+    m_pMlvObject->llrawproc->pattern_noise = toolButtonPatternNoiseCurrentIndex();
     m_pMlvObject->current_cached_frame_active = 0;
     m_frameChanged = true;
 }
 
-//Combobox Vertical Stripes changed
-void MainWindow::on_comboBoxVerticalStripesSwitch_currentIndexChanged(int index)
+//Vertical Stripes changed
+void MainWindow::toolButtonVerticalStripesChanged( void )
 {
     //TODO: do it different!!!
-    m_pMlvObject->llrawproc->vertical_stripes = index;
+    m_pMlvObject->llrawproc->vertical_stripes = toolButtonVerticalStripesCurrentIndex();
     m_pMlvObject->llrawproc->compute_stripes = 1;
     m_pMlvObject->current_cached_frame_active = 0;
     m_frameChanged = true;
@@ -2535,48 +2751,48 @@ void MainWindow::on_spinBoxDeflickerTarget_valueChanged(int arg1)
     m_frameChanged = true;
 }
 
-//Combobox DualISO changed
-void MainWindow::on_comboBoxDualISO_currentIndexChanged(int index)
+//DualISO changed
+void MainWindow::toolButtonDualIsoChanged( void )
 {
     //In preview mode, the other dualIso options are grayed out
-    if( ( index == 1 ) && ui->checkBoxRawFixEnable->isChecked() )
+    if( ( toolButtonDualIsoCurrentIndex() == 1 ) && ui->checkBoxRawFixEnable->isChecked() )
     {
-        ui->comboBoxDualISOInterpolation->setEnabled( true );
-        ui->comboBoxDualISOAliasMap->setEnabled( true );
-        ui->comboBoxDualISOFullresBlending->setEnabled( true );
+        ui->toolButtonDualIsoInterpolation->setEnabled( true );
+        ui->toolButtonDualIsoAliasMap->setEnabled( true );
+        ui->toolButtonDualIsoFullresBlending->setEnabled( true );
     }
     else
     {
-        ui->comboBoxDualISOInterpolation->setEnabled( false );
-        ui->comboBoxDualISOAliasMap->setEnabled( false );
-        ui->comboBoxDualISOFullresBlending->setEnabled( false );
+        ui->toolButtonDualIsoInterpolation->setEnabled( false );
+        ui->toolButtonDualIsoAliasMap->setEnabled( false );
+        ui->toolButtonDualIsoFullresBlending->setEnabled( false );
     }
     //Set dualIso mode
-    m_pMlvObject->llrawproc->dual_iso = index;
+    m_pMlvObject->llrawproc->dual_iso = toolButtonDualIsoCurrentIndex();
     m_pMlvObject->current_cached_frame_active = 0;
     m_frameChanged = true;
 }
 
-//Combobox DualISO Interpolation changed
-void MainWindow::on_comboBoxDualISOInterpolation_currentIndexChanged(int index)
+//DualISO Interpolation changed
+void MainWindow::toolButtonDualIsoInterpolationChanged( void )
 {
-    m_pMlvObject->llrawproc->diso_averaging = index;
+    m_pMlvObject->llrawproc->diso_averaging = toolButtonDualIsoInterpolationCurrentIndex();
     m_pMlvObject->current_cached_frame_active = 0;
     m_frameChanged = true;
 }
 
-//Combobox DualISO Alias Map changed
-void MainWindow::on_comboBoxDualISOAliasMap_currentIndexChanged(int index)
+//DualISO Alias Map changed
+void MainWindow::toolButtonDualIsoAliasMapChanged( void )
 {
-    m_pMlvObject->llrawproc->diso_alias_map = index;
+    m_pMlvObject->llrawproc->diso_alias_map = toolButtonDualIsoAliasMapCurrentIndex();
     m_pMlvObject->current_cached_frame_active = 0;
     m_frameChanged = true;
 }
 
-//Combobox DualISO Fullres Blending changed
-void MainWindow::on_comboBoxDualISOFullresBlending_currentIndexChanged(int index)
+//DualISO Fullres Blending changed
+void MainWindow::toolButtonDualIsoFullresBlendingChanged( void )
 {
-    m_pMlvObject->llrawproc->diso_frblending = index;
+    m_pMlvObject->llrawproc->diso_frblending = toolButtonDualIsoFullresBlendingCurrentIndex();
     m_pMlvObject->current_cached_frame_active = 0;
     m_frameChanged = true;
 }
@@ -2616,18 +2832,18 @@ void MainWindow::on_checkBoxRawFixEnable_clicked(bool checked)
     ui->DualISOAliasMapLabel->setEnabled( checked );
     ui->DualISOFullresBlendingLabel->setEnabled( checked );
 
-    ui->comboBoxFocusPixelSwitch->setEnabled( checked );
-    ui->comboBoxFocusPixelsInterpolationMethod->setEnabled( checked );
-    ui->comboBoxBadPixelsSwitch->setEnabled( checked );
-    ui->comboBoxBadPixelsInterpolationMethod->setEnabled( checked );
-    ui->comboBoxChromaSmoothSwitch->setEnabled( checked );
-    ui->comboBoxPatternNoiseSwitch->setEnabled( checked );
-    ui->comboBoxVerticalStripesSwitch->setEnabled( checked );
+    ui->toolButtonFocusDots->setEnabled( checked );
+    ui->toolButtonFocusDotInterpolation->setEnabled( checked );
+    ui->toolButtonBadPixels->setEnabled( checked );
+    ui->toolButtonBadPixelsInterpolation->setEnabled( checked );
+    ui->toolButtonChroma->setEnabled( checked );
+    ui->toolButtonPatternNoise->setEnabled( checked );
+    ui->toolButtonVerticalStripes->setEnabled( checked );
+    ui->toolButtonDualIso->setEnabled( checked );
+    ui->toolButtonDualIsoInterpolation->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() == 1 ) );
+    ui->toolButtonDualIsoAliasMap->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() == 1 ) );
+    ui->toolButtonDualIsoFullresBlending->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() == 1 ) );
     ui->spinBoxDeflickerTarget->setEnabled( checked );
-    ui->comboBoxDualISO->setEnabled( checked );
-    ui->comboBoxDualISOInterpolation->setEnabled( checked && ( ui->comboBoxDualISO->currentIndex() == 1 ) );
-    ui->comboBoxDualISOAliasMap->setEnabled( checked && ( ui->comboBoxDualISO->currentIndex() == 1 ) );
-    ui->comboBoxDualISOFullresBlending->setEnabled( checked && ( ui->comboBoxDualISO->currentIndex() == 1 ) );
 }
 
 //Activate & Deactivate wbPicker
