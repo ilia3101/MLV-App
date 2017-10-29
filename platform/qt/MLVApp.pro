@@ -91,7 +91,6 @@ SOURCES += \
     AudioPlayback.cpp \
     GraphicsPickerScene.cpp \
     NoScrollSlider.cpp \
-    TestDialog.cpp \
     ColorToolButton.cpp
 
 HEADERS += \
@@ -134,7 +133,6 @@ HEADERS += \
     AudioPlayback.h \
     GraphicsPickerScene.h \
     NoScrollSlider.h \
-    TestDialog.h \
     ColorToolButton.h
 
 FORMS += \
