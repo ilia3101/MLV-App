@@ -2668,7 +2668,7 @@ void MainWindow::on_actionShowZebras_triggered()
 void MainWindow::toolButtonFocusPixelsChanged( void )
 {
     //TODO: do it different!!!
-    m_pMlvObject->llrawproc->focus_pixels = toolButtonFocusPixelsCurrentIndex();
+    llrpSetFocusPixelMode( m_pMlvObject, toolButtonFocusPixelsCurrentIndex() );
     reset_fpm_status(&m_pMlvObject->llrawproc->focus_pixel_map, &m_pMlvObject->llrawproc->fpm_status);
     reset_bpm_status(&m_pMlvObject->llrawproc->bad_pixel_map, &m_pMlvObject->llrawproc->bpm_status);
     m_pMlvObject->current_cached_frame_active = 0;
@@ -2679,7 +2679,7 @@ void MainWindow::toolButtonFocusPixelsChanged( void )
 void MainWindow::toolButtonFocusPixelsIntMethodChanged( void )
 {
     //TODO: do it different!!!
-    m_pMlvObject->llrawproc->fpi_method = toolButtonFocusPixelsIntMethodCurrentIndex();
+    llrpSetFocusPixelInterpolationMethod( m_pMlvObject, toolButtonFocusPixelsIntMethodCurrentIndex() );
     m_pMlvObject->current_cached_frame_active = 0;
     m_frameChanged = true;
 }
@@ -2688,7 +2688,7 @@ void MainWindow::toolButtonFocusPixelsIntMethodChanged( void )
 void MainWindow::toolButtonBadPixelsChanged( void )
 {
     //TODO: do it different!!!
-    m_pMlvObject->llrawproc->bad_pixels = toolButtonBadPixelsCurrentIndex();
+    llrpSetBadPixelMode( m_pMlvObject, toolButtonBadPixelsCurrentIndex() );
     reset_bpm_status(&m_pMlvObject->llrawproc->bad_pixel_map, &m_pMlvObject->llrawproc->bpm_status);
     m_pMlvObject->current_cached_frame_active = 0;
     m_frameChanged = true;
@@ -2698,7 +2698,7 @@ void MainWindow::toolButtonBadPixelsChanged( void )
 void MainWindow::toolButtonBadPixelsIntMethodChanged( void )
 {
     //TODO: do it different!!!
-    m_pMlvObject->llrawproc->bpi_method = toolButtonBadPixelsIntMethodCurrentIndex();
+    llrpSetBadPixelInterpolationMethod( m_pMlvObject, toolButtonBadPixelsIntMethodCurrentIndex() );
     m_pMlvObject->current_cached_frame_active = 0;
     m_frameChanged = true;
 }
@@ -2709,15 +2709,20 @@ void MainWindow::toolButtonChromaSmoothChanged( void )
     //TODO: do it different!!!
     switch( toolButtonChromaSmoothCurrentIndex() )
     {
-    case 0: m_pMlvObject->llrawproc->chroma_smooth = 0;
+    case 0:
+        llrpSetChromaSmoothMode(m_pMlvObject, CS_OFF);
         break;
-    case 1: m_pMlvObject->llrawproc->chroma_smooth = 2;
+    case 1:
+        llrpSetChromaSmoothMode(m_pMlvObject, CS_2x2);
         break;
-    case 2: m_pMlvObject->llrawproc->chroma_smooth = 3;
+    case 2:
+        llrpSetChromaSmoothMode(m_pMlvObject, CS_3x3);
         break;
-    case 3: m_pMlvObject->llrawproc->chroma_smooth = 5;
+    case 3:
+        llrpSetChromaSmoothMode(m_pMlvObject, CS_5x5);
         break;
-    default: m_pMlvObject->llrawproc->chroma_smooth = 0;
+    default:
+        llrpSetChromaSmoothMode(m_pMlvObject, CS_OFF);
     }
     m_pMlvObject->current_cached_frame_active = 0;
     m_frameChanged = true;
@@ -2727,7 +2732,7 @@ void MainWindow::toolButtonChromaSmoothChanged( void )
 void MainWindow::toolButtonPatternNoiseChanged( void )
 {
     //TODO: do it different!!!
-    m_pMlvObject->llrawproc->pattern_noise = toolButtonPatternNoiseCurrentIndex();
+    llrpSetPatternNoiseMode( m_pMlvObject, toolButtonPatternNoiseCurrentIndex() );
     m_pMlvObject->current_cached_frame_active = 0;
     m_frameChanged = true;
 }
@@ -2736,7 +2741,7 @@ void MainWindow::toolButtonPatternNoiseChanged( void )
 void MainWindow::toolButtonVerticalStripesChanged( void )
 {
     //TODO: do it different!!!
-    m_pMlvObject->llrawproc->vertical_stripes = toolButtonVerticalStripesCurrentIndex();
+    llrpSetVerticalStripeMode( m_pMlvObject, toolButtonVerticalStripesCurrentIndex() );
     m_pMlvObject->llrawproc->compute_stripes = 1;
     m_pMlvObject->current_cached_frame_active = 0;
     m_frameChanged = true;
@@ -2746,7 +2751,7 @@ void MainWindow::toolButtonVerticalStripesChanged( void )
 void MainWindow::on_spinBoxDeflickerTarget_valueChanged(int arg1)
 {
     //TODO: do it different!!!
-    m_pMlvObject->llrawproc->deflicker_target = arg1;
+    llrpSetDeflickerTarget(m_pMlvObject, arg1);
     m_pMlvObject->current_cached_frame_active = 0;
     m_frameChanged = true;
 }
@@ -2768,7 +2773,7 @@ void MainWindow::toolButtonDualIsoChanged( void )
         ui->toolButtonDualIsoFullresBlending->setEnabled( false );
     }
     //Set dualIso mode
-    m_pMlvObject->llrawproc->dual_iso = toolButtonDualIsoCurrentIndex();
+    llrpSetDualIsoMode( m_pMlvObject, toolButtonDualIsoCurrentIndex() );
     m_pMlvObject->current_cached_frame_active = 0;
     m_frameChanged = true;
 }
@@ -2776,7 +2781,7 @@ void MainWindow::toolButtonDualIsoChanged( void )
 //DualISO Interpolation changed
 void MainWindow::toolButtonDualIsoInterpolationChanged( void )
 {
-    m_pMlvObject->llrawproc->diso_averaging = toolButtonDualIsoInterpolationCurrentIndex();
+    llrpSetDualIsoInterpolationMethod( m_pMlvObject, toolButtonDualIsoInterpolationCurrentIndex() );
     m_pMlvObject->current_cached_frame_active = 0;
     m_frameChanged = true;
 }
@@ -2784,7 +2789,7 @@ void MainWindow::toolButtonDualIsoInterpolationChanged( void )
 //DualISO Alias Map changed
 void MainWindow::toolButtonDualIsoAliasMapChanged( void )
 {
-    m_pMlvObject->llrawproc->diso_alias_map = toolButtonDualIsoAliasMapCurrentIndex();
+    llrpSetDualIsoAliasMapMode( m_pMlvObject, toolButtonDualIsoAliasMapCurrentIndex() );
     m_pMlvObject->current_cached_frame_active = 0;
     m_frameChanged = true;
 }
@@ -2792,7 +2797,7 @@ void MainWindow::toolButtonDualIsoAliasMapChanged( void )
 //DualISO Fullres Blending changed
 void MainWindow::toolButtonDualIsoFullresBlendingChanged( void )
 {
-    m_pMlvObject->llrawproc->diso_frblending = toolButtonDualIsoFullresBlendingCurrentIndex();
+    llrpSetDualIsoFullResBlendingMode( m_pMlvObject, toolButtonDualIsoFullresBlendingCurrentIndex() );
     m_pMlvObject->current_cached_frame_active = 0;
     m_frameChanged = true;
 }
