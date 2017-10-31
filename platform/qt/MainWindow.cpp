@@ -784,9 +784,9 @@ void MainWindow::startExportPipe(QString fileName)
 
     // we always get amaze frames for exporting
     setMlvAlwaysUseAmaze( m_pMlvObject );
-    reset_fpm_status(&m_pMlvObject->llrawproc->focus_pixel_map, &m_pMlvObject->llrawproc->fpm_status);
-    reset_bpm_status(&m_pMlvObject->llrawproc->bad_pixel_map, &m_pMlvObject->llrawproc->bpm_status);
-    m_pMlvObject->llrawproc->compute_stripes = 1;
+    llrpResetFpmStatus(m_pMlvObject);
+    llrpResetBpmStatus(m_pMlvObject);
+    llrpComputeStripesOn(m_pMlvObject);
     m_pMlvObject->current_cached_frame_active = 0;
     //enable low level raw fixes (if wanted)
     if( ui->checkBoxRawFixEnable->isChecked() ) m_pMlvObject->llrawproc->fix_raw = 1;
@@ -2165,9 +2165,9 @@ void MainWindow::on_actionAlwaysUseAMaZE_triggered(bool checked)
         /* Don't use AMaZE */
         setMlvDontAlwaysUseAmaze( m_pMlvObject );
     }
-    reset_fpm_status(&m_pMlvObject->llrawproc->focus_pixel_map, &m_pMlvObject->llrawproc->fpm_status);
-    reset_bpm_status(&m_pMlvObject->llrawproc->bad_pixel_map, &m_pMlvObject->llrawproc->bpm_status);
-    m_pMlvObject->llrawproc->compute_stripes = 1;
+    llrpResetFpmStatus(m_pMlvObject);
+    llrpResetBpmStatus(m_pMlvObject);
+    llrpComputeStripesOn(m_pMlvObject);
     m_pMlvObject->current_cached_frame_active = 0;
     m_frameChanged = true;
 }
@@ -2669,8 +2669,8 @@ void MainWindow::toolButtonFocusPixelsChanged( void )
 {
     //TODO: do it different!!!
     llrpSetFocusPixelMode( m_pMlvObject, toolButtonFocusPixelsCurrentIndex() );
-    reset_fpm_status(&m_pMlvObject->llrawproc->focus_pixel_map, &m_pMlvObject->llrawproc->fpm_status);
-    reset_bpm_status(&m_pMlvObject->llrawproc->bad_pixel_map, &m_pMlvObject->llrawproc->bpm_status);
+    llrpResetFpmStatus(m_pMlvObject);
+    llrpResetBpmStatus(m_pMlvObject);
     m_pMlvObject->current_cached_frame_active = 0;
     m_frameChanged = true;
 }
@@ -2689,7 +2689,7 @@ void MainWindow::toolButtonBadPixelsChanged( void )
 {
     //TODO: do it different!!!
     llrpSetBadPixelMode( m_pMlvObject, toolButtonBadPixelsCurrentIndex() );
-    reset_bpm_status(&m_pMlvObject->llrawproc->bad_pixel_map, &m_pMlvObject->llrawproc->bpm_status);
+    llrpResetBpmStatus(m_pMlvObject);
     m_pMlvObject->current_cached_frame_active = 0;
     m_frameChanged = true;
 }
@@ -2742,7 +2742,7 @@ void MainWindow::toolButtonVerticalStripesChanged( void )
 {
     //TODO: do it different!!!
     llrpSetVerticalStripeMode( m_pMlvObject, toolButtonVerticalStripesCurrentIndex() );
-    m_pMlvObject->llrawproc->compute_stripes = 1;
+    llrpComputeStripesOn(m_pMlvObject);
     m_pMlvObject->current_cached_frame_active = 0;
     m_frameChanged = true;
 }

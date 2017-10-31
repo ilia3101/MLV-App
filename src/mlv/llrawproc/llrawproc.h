@@ -38,6 +38,7 @@ void llrpSetFixRawMode(mlvObject_t * video, int value);
 enum { VS_OFF, VS_ON, VS_FORCE };
 int llrpGetVerticalStripeMode(mlvObject_t * video);
 void llrpSetVerticalStripeMode(mlvObject_t * video, int value);
+void llrpComputeStripesOn(mlvObject_t * video);
 
 enum { FP_OFF, FP_ON, FP_CROPREC };
 int llrpGetFocusPixelMode(mlvObject_t * video);
@@ -79,5 +80,9 @@ void llrpSetDualIsoAliasMapMode(mlvObject_t * video, int value);
 
 int llrpGetDualIsoFullResBlendingMode(mlvObject_t * video);
 void llrpSetDualIsoFullResBlendingMode(mlvObject_t * video, int value);
+
+/* reset focus/bad pixel map status */
+void llrpResetFpmStatus(mlvObject_t * video);
+void llrpResetBpmStatus(mlvObject_t * video);
 
 #endif

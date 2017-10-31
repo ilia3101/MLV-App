@@ -267,6 +267,11 @@ void llrpSetVerticalStripeMode(mlvObject_t * video, int value)
     video->llrawproc->vertical_stripes = value;
 }
 
+void llrpComputeStripesOn(mlvObject_t * video)
+{
+    video->llrawproc->compute_stripes = 1;
+}
+
 int llrpGetFocusPixelMode(mlvObject_t * video)
 {
     return video->llrawproc->focus_pixels;
@@ -375,4 +380,14 @@ int llrpGetDualIsoFullResBlendingMode(mlvObject_t * video)
 void llrpSetDualIsoFullResBlendingMode(mlvObject_t * video, int value)
 {
     video->llrawproc->diso_frblending = value;
+}
+
+void llrpResetFpmStatus(mlvObject_t * video)
+{
+    reset_fpm_status(&video->llrawproc->focus_pixel_map, &video->llrawproc->fpm_status);
+}
+
+void llrpResetBpmStatus(mlvObject_t * video)
+{
+    reset_bpm_status(&video->llrawproc->bad_pixel_map, &video->llrawproc->bpm_status);
 }
