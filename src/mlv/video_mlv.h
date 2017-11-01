@@ -113,6 +113,9 @@ void getMlvAudioData(mlvObject_t * video, int16_t * outputAudio);
  * or bilinear if cached AMaZE frame is not avalible in cache */
 #define setMlvDontAlwaysUseAmaze(video) (video)->use_amaze = 0
 
+/* Reset the current cached frame. Needed if a raw correction parameter changed */
+#define resetMlvCachedFrame(video) (video)->current_cached_frame_active = 0;
+
 /* This is pretty much private */
 #define doesMlvAlwaysUseAmaze(video) (video)->use_amaze
 #define getMlvVideoClass(video) (video)->MLVI.videoClass

@@ -255,7 +255,6 @@ int llrpGetFixRawMode(mlvObject_t * video)
 void llrpSetFixRawMode(mlvObject_t * video, int value)
 {
     video->llrawproc->fix_raw = value;
-    video->current_cached_frame_active = 0;
 }
 
 int llrpGetVerticalStripeMode(mlvObject_t * video)
@@ -266,13 +265,11 @@ int llrpGetVerticalStripeMode(mlvObject_t * video)
 void llrpSetVerticalStripeMode(mlvObject_t * video, int value)
 {
     video->llrawproc->vertical_stripes = value;
-    video->current_cached_frame_active = 0;
 }
 
 void llrpComputeStripesOn(mlvObject_t * video)
 {
     video->llrawproc->compute_stripes = 1;
-    video->current_cached_frame_active = 0;
 }
 
 int llrpGetFocusPixelMode(mlvObject_t * video)
@@ -283,7 +280,6 @@ int llrpGetFocusPixelMode(mlvObject_t * video)
 void llrpSetFocusPixelMode(mlvObject_t * video, int value)
 {
     video->llrawproc->focus_pixels = value;
-    video->current_cached_frame_active = 0;
 }
 
 int llrpGetFocusPixelInterpolationMethod(mlvObject_t * video)
@@ -294,7 +290,6 @@ int llrpGetFocusPixelInterpolationMethod(mlvObject_t * video)
 void llrpSetFocusPixelInterpolationMethod(mlvObject_t * video, int value)
 {
     video->llrawproc->fpi_method = value;
-    video->current_cached_frame_active = 0;
 }
 
 int llrpGetBadPixelMode(mlvObject_t * video)
@@ -305,7 +300,6 @@ int llrpGetBadPixelMode(mlvObject_t * video)
 void llrpSetBadPixelMode(mlvObject_t * video, int value)
 {
     video->llrawproc->bad_pixels = value;
-    video->current_cached_frame_active = 0;
 }
 
 int llrpGetBadPixelInterpolationMethod(mlvObject_t * video)
@@ -316,7 +310,6 @@ int llrpGetBadPixelInterpolationMethod(mlvObject_t * video)
 void llrpSetBadPixelInterpolationMethod(mlvObject_t * video, int value)
 {
     video->llrawproc->bpi_method = value;
-    video->current_cached_frame_active = 0;
 }
 
 int llrpGetChromaSmoothMode(mlvObject_t * video)
@@ -327,7 +320,6 @@ int llrpGetChromaSmoothMode(mlvObject_t * video)
 void llrpSetChromaSmoothMode(mlvObject_t * video, int value)
 {
     video->llrawproc->chroma_smooth = value;
-    video->current_cached_frame_active = 0;
 }
 
 int llrpGetPatternNoiseMode(mlvObject_t * video)
@@ -338,7 +330,6 @@ int llrpGetPatternNoiseMode(mlvObject_t * video)
 void llrpSetPatternNoiseMode(mlvObject_t * video, int value)
 {
     video->llrawproc->pattern_noise = value;
-    video->current_cached_frame_active = 0;
 }
 
 int llrpGetDeflickerTarget(mlvObject_t * video)
@@ -349,7 +340,6 @@ int llrpGetDeflickerTarget(mlvObject_t * video)
 void llrpSetDeflickerTarget(mlvObject_t * video, int value)
 {
     video->llrawproc->deflicker_target = value;
-    video->current_cached_frame_active = 0;
 }
 
 int llrpGetDualIsoMode(mlvObject_t * video)
@@ -360,7 +350,6 @@ int llrpGetDualIsoMode(mlvObject_t * video)
 void llrpSetDualIsoMode(mlvObject_t * video, int value)
 {
     video->llrawproc->dual_iso = value;
-    video->current_cached_frame_active = 0;
 }
 
 int llrpGetDualIsoInterpolationMethod(mlvObject_t * video)
@@ -371,7 +360,6 @@ int llrpGetDualIsoInterpolationMethod(mlvObject_t * video)
 void llrpSetDualIsoInterpolationMethod(mlvObject_t * video, int value)
 {
     video->llrawproc->diso_averaging = value;
-    video->current_cached_frame_active = 0;
 }
 
 int llrpGetDualIsoAliasMapMode(mlvObject_t * video)
@@ -382,7 +370,6 @@ int llrpGetDualIsoAliasMapMode(mlvObject_t * video)
 void llrpSetDualIsoAliasMapMode(mlvObject_t * video, int value)
 {
     video->llrawproc->diso_alias_map = value;
-    video->current_cached_frame_active = 0;
 }
 
 int llrpGetDualIsoFullResBlendingMode(mlvObject_t * video)
@@ -393,7 +380,6 @@ int llrpGetDualIsoFullResBlendingMode(mlvObject_t * video)
 void llrpSetDualIsoFullResBlendingMode(mlvObject_t * video, int value)
 {
     video->llrawproc->diso_frblending = value;
-    video->current_cached_frame_active = 0;
 }
 
 void llrpResetFpmStatus(mlvObject_t * video)

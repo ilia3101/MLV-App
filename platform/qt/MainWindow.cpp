@@ -515,8 +515,14 @@ void MainWindow::openMlv( QString fileName )
     m_pWaveFormMonitor = new WaveFormMonitor( getMlvWidth( m_pMlvObject ) );
 
     //Always use amaze?
-    if( ui->actionAlwaysUseAMaZE->isChecked() ) setMlvAlwaysUseAmaze( m_pMlvObject );
-    else setMlvDontAlwaysUseAmaze( m_pMlvObject );
+    if( ui->actionAlwaysUseAMaZE->isChecked() )
+    {
+        setMlvAlwaysUseAmaze( m_pMlvObject );
+    }
+    else
+    {
+        setMlvDontAlwaysUseAmaze( m_pMlvObject );
+    }
 
     //Load audio
     m_pAudioPlayback->loadAudio( m_pMlvObject );
@@ -2168,7 +2174,6 @@ void MainWindow::on_actionAlwaysUseAMaZE_triggered(bool checked)
     llrpResetFpmStatus(m_pMlvObject);
     llrpResetBpmStatus(m_pMlvObject);
     llrpComputeStripesOn(m_pMlvObject);
-    m_pMlvObject->current_cached_frame_active = 0;
     m_frameChanged = true;
 }
 
@@ -2670,6 +2675,7 @@ void MainWindow::toolButtonFocusPixelsChanged( void )
     llrpSetFocusPixelMode( m_pMlvObject, toolButtonFocusPixelsCurrentIndex() );
     llrpResetFpmStatus(m_pMlvObject);
     llrpResetBpmStatus(m_pMlvObject);
+    resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
 }
 
@@ -2677,6 +2683,7 @@ void MainWindow::toolButtonFocusPixelsChanged( void )
 void MainWindow::toolButtonFocusPixelsIntMethodChanged( void )
 {
     llrpSetFocusPixelInterpolationMethod( m_pMlvObject, toolButtonFocusPixelsIntMethodCurrentIndex() );
+    resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
 }
 
@@ -2685,6 +2692,7 @@ void MainWindow::toolButtonBadPixelsChanged( void )
 {
     llrpSetBadPixelMode( m_pMlvObject, toolButtonBadPixelsCurrentIndex() );
     llrpResetBpmStatus(m_pMlvObject);
+    resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
 }
 
@@ -2692,6 +2700,7 @@ void MainWindow::toolButtonBadPixelsChanged( void )
 void MainWindow::toolButtonBadPixelsIntMethodChanged( void )
 {
     llrpSetBadPixelInterpolationMethod( m_pMlvObject, toolButtonBadPixelsIntMethodCurrentIndex() );
+    resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
 }
 
@@ -2715,6 +2724,7 @@ void MainWindow::toolButtonChromaSmoothChanged( void )
     default:
         llrpSetChromaSmoothMode(m_pMlvObject, CS_OFF);
     }
+    resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
 }
 
@@ -2722,6 +2732,7 @@ void MainWindow::toolButtonChromaSmoothChanged( void )
 void MainWindow::toolButtonPatternNoiseChanged( void )
 {
     llrpSetPatternNoiseMode( m_pMlvObject, toolButtonPatternNoiseCurrentIndex() );
+    resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
 }
 
@@ -2730,6 +2741,7 @@ void MainWindow::toolButtonVerticalStripesChanged( void )
 {
     llrpSetVerticalStripeMode( m_pMlvObject, toolButtonVerticalStripesCurrentIndex() );
     llrpComputeStripesOn(m_pMlvObject);
+    resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
 }
 
@@ -2737,6 +2749,7 @@ void MainWindow::toolButtonVerticalStripesChanged( void )
 void MainWindow::on_spinBoxDeflickerTarget_valueChanged(int arg1)
 {
     llrpSetDeflickerTarget(m_pMlvObject, arg1);
+    resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
 }
 
@@ -2758,6 +2771,7 @@ void MainWindow::toolButtonDualIsoChanged( void )
     }
     //Set dualIso mode
     llrpSetDualIsoMode( m_pMlvObject, toolButtonDualIsoCurrentIndex() );
+    resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
 }
 
@@ -2765,6 +2779,7 @@ void MainWindow::toolButtonDualIsoChanged( void )
 void MainWindow::toolButtonDualIsoInterpolationChanged( void )
 {
     llrpSetDualIsoInterpolationMethod( m_pMlvObject, toolButtonDualIsoInterpolationCurrentIndex() );
+    resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
 }
 
@@ -2772,6 +2787,7 @@ void MainWindow::toolButtonDualIsoInterpolationChanged( void )
 void MainWindow::toolButtonDualIsoAliasMapChanged( void )
 {
     llrpSetDualIsoAliasMapMode( m_pMlvObject, toolButtonDualIsoAliasMapCurrentIndex() );
+    resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
 }
 
@@ -2779,6 +2795,7 @@ void MainWindow::toolButtonDualIsoAliasMapChanged( void )
 void MainWindow::toolButtonDualIsoFullresBlendingChanged( void )
 {
     llrpSetDualIsoFullResBlendingMode( m_pMlvObject, toolButtonDualIsoFullresBlendingCurrentIndex() );
+    resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
 }
 
@@ -2799,6 +2816,7 @@ void MainWindow::on_checkBoxRawFixEnable_clicked(bool checked)
 {
     //Set llrawproc en-/disable here
     llrpSetFixRawMode( m_pMlvObject, (int)checked );
+    resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
 
     //Set GUI elements
