@@ -2667,46 +2667,37 @@ void MainWindow::on_actionShowZebras_triggered()
 //Focus Pixel changed
 void MainWindow::toolButtonFocusPixelsChanged( void )
 {
-    //TODO: do it different!!!
     llrpSetFocusPixelMode( m_pMlvObject, toolButtonFocusPixelsCurrentIndex() );
     llrpResetFpmStatus(m_pMlvObject);
     llrpResetBpmStatus(m_pMlvObject);
-    m_pMlvObject->current_cached_frame_active = 0;
     m_frameChanged = true;
 }
 
 //Focus Pixel Method changed
 void MainWindow::toolButtonFocusPixelsIntMethodChanged( void )
 {
-    //TODO: do it different!!!
     llrpSetFocusPixelInterpolationMethod( m_pMlvObject, toolButtonFocusPixelsIntMethodCurrentIndex() );
-    m_pMlvObject->current_cached_frame_active = 0;
     m_frameChanged = true;
 }
 
 //Bad Pixel changed
 void MainWindow::toolButtonBadPixelsChanged( void )
 {
-    //TODO: do it different!!!
     llrpSetBadPixelMode( m_pMlvObject, toolButtonBadPixelsCurrentIndex() );
     llrpResetBpmStatus(m_pMlvObject);
-    m_pMlvObject->current_cached_frame_active = 0;
     m_frameChanged = true;
 }
 
 //Bad Pixel Method changed
 void MainWindow::toolButtonBadPixelsIntMethodChanged( void )
 {
-    //TODO: do it different!!!
     llrpSetBadPixelInterpolationMethod( m_pMlvObject, toolButtonBadPixelsIntMethodCurrentIndex() );
-    m_pMlvObject->current_cached_frame_active = 0;
     m_frameChanged = true;
 }
 
 //Chroma Smooth changed
 void MainWindow::toolButtonChromaSmoothChanged( void )
 {
-    //TODO: do it different!!!
     switch( toolButtonChromaSmoothCurrentIndex() )
     {
     case 0:
@@ -2724,35 +2715,28 @@ void MainWindow::toolButtonChromaSmoothChanged( void )
     default:
         llrpSetChromaSmoothMode(m_pMlvObject, CS_OFF);
     }
-    m_pMlvObject->current_cached_frame_active = 0;
     m_frameChanged = true;
 }
 
 //Pattern Noise changed
 void MainWindow::toolButtonPatternNoiseChanged( void )
 {
-    //TODO: do it different!!!
     llrpSetPatternNoiseMode( m_pMlvObject, toolButtonPatternNoiseCurrentIndex() );
-    m_pMlvObject->current_cached_frame_active = 0;
     m_frameChanged = true;
 }
 
 //Vertical Stripes changed
 void MainWindow::toolButtonVerticalStripesChanged( void )
 {
-    //TODO: do it different!!!
     llrpSetVerticalStripeMode( m_pMlvObject, toolButtonVerticalStripesCurrentIndex() );
     llrpComputeStripesOn(m_pMlvObject);
-    m_pMlvObject->current_cached_frame_active = 0;
     m_frameChanged = true;
 }
 
 //Value Deflicker Target changed
 void MainWindow::on_spinBoxDeflickerTarget_valueChanged(int arg1)
 {
-    //TODO: do it different!!!
     llrpSetDeflickerTarget(m_pMlvObject, arg1);
-    m_pMlvObject->current_cached_frame_active = 0;
     m_frameChanged = true;
 }
 
@@ -2774,7 +2758,6 @@ void MainWindow::toolButtonDualIsoChanged( void )
     }
     //Set dualIso mode
     llrpSetDualIsoMode( m_pMlvObject, toolButtonDualIsoCurrentIndex() );
-    m_pMlvObject->current_cached_frame_active = 0;
     m_frameChanged = true;
 }
 
@@ -2782,7 +2765,6 @@ void MainWindow::toolButtonDualIsoChanged( void )
 void MainWindow::toolButtonDualIsoInterpolationChanged( void )
 {
     llrpSetDualIsoInterpolationMethod( m_pMlvObject, toolButtonDualIsoInterpolationCurrentIndex() );
-    m_pMlvObject->current_cached_frame_active = 0;
     m_frameChanged = true;
 }
 
@@ -2790,7 +2772,6 @@ void MainWindow::toolButtonDualIsoInterpolationChanged( void )
 void MainWindow::toolButtonDualIsoAliasMapChanged( void )
 {
     llrpSetDualIsoAliasMapMode( m_pMlvObject, toolButtonDualIsoAliasMapCurrentIndex() );
-    m_pMlvObject->current_cached_frame_active = 0;
     m_frameChanged = true;
 }
 
@@ -2798,7 +2779,6 @@ void MainWindow::toolButtonDualIsoAliasMapChanged( void )
 void MainWindow::toolButtonDualIsoFullresBlendingChanged( void )
 {
     llrpSetDualIsoFullResBlendingMode( m_pMlvObject, toolButtonDualIsoFullresBlendingCurrentIndex() );
-    m_pMlvObject->current_cached_frame_active = 0;
     m_frameChanged = true;
 }
 
@@ -2818,9 +2798,7 @@ void MainWindow::on_actionPreviousFrame_triggered()
 void MainWindow::on_checkBoxRawFixEnable_clicked(bool checked)
 {
     //Set llrawproc en-/disable here
-    if( checked ) m_pMlvObject->llrawproc->fix_raw = 1;
-    else m_pMlvObject->llrawproc->fix_raw = 0;
-    m_pMlvObject->current_cached_frame_active = 0;
+    llrpSetFixRawMode( m_pMlvObject, (int)checked );
     m_frameChanged = true;
 
     //Set GUI elements
