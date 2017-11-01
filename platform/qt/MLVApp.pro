@@ -140,8 +140,7 @@ FORMS += \
     InfoDialog.ui \
     StatusDialog.ui \
     ExportSettingsDialog.ui \
-    EditSliderValueDialog.ui \
-    TestDialog.ui
+    EditSliderValueDialog.ui
 
 RESOURCES += \
     ressources.qrc \
