@@ -108,7 +108,7 @@ void getMlvAudioData(mlvObject_t * video, int16_t * outputAudio);
 #define getMlvCpuCores(video) (video)->cpu_cores
 
 /* Use setMlvAlwaysUseAmaze() to always get AMaZE frames, for best quality always */
-#define setMlvAlwaysUseAmaze(video) (video)->use_amaze = 1
+#define setMlvAlwaysUseAmaze(video) (video)->use_amaze = 1; (video)->current_cached_frame_active = 0
 /* Or this one for speed/ultimate playback performance, will give AMaZE if it is in cache, 
  * or bilinear if cached AMaZE frame is not avalible in cache */
 #define setMlvDontAlwaysUseAmaze(video) (video)->use_amaze = 0
