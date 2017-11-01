@@ -349,7 +349,7 @@ QGroupBox::indicator:checked {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>0</y>
+            <y>-464</y>
             <width>195</width>
             <height>1233</height>
            </rect>
@@ -1939,7 +1939,7 @@ QGroupBox::indicator:checked {
                     <number>0</number>
                    </property>
                    <item row="0" column="0">
-                    <widget class="QLabel" name="label_4">
+                    <widget class="QLabel" name="label_saturation">
                      <property name="font">
                       <font>
                        <pointsize>10</pointsize>
@@ -2030,7 +2030,7 @@ QGroupBox::indicator:checked {
                     <number>0</number>
                    </property>
                    <item row="0" column="0">
-                    <widget class="QLabel" name="label_5">
+                    <widget class="QLabel" name="label_ds">
                      <property name="font">
                       <font>
                        <pointsize>10</pointsize>
@@ -2114,7 +2114,7 @@ QGroupBox::indicator:checked {
                     <number>0</number>
                    </property>
                    <item row="0" column="0">
-                    <widget class="QLabel" name="label_6">
+                    <widget class="QLabel" name="label_dr">
                      <property name="font">
                       <font>
                        <pointsize>10</pointsize>
@@ -2198,7 +2198,7 @@ QGroupBox::indicator:checked {
                     <number>0</number>
                    </property>
                    <item row="0" column="0">
-                    <widget class="QLabel" name="label_7">
+                    <widget class="QLabel" name="label_ls">
                      <property name="font">
                       <font>
                        <pointsize>10</pointsize>
@@ -2279,7 +2279,7 @@ QGroupBox::indicator:checked {
                     <number>0</number>
                    </property>
                    <item row="0" column="0">
-                    <widget class="QLabel" name="label_8">
+                    <widget class="QLabel" name="label_lr">
                      <property name="font">
                       <font>
                        <pointsize>10</pointsize>
@@ -2363,7 +2363,7 @@ QGroupBox::indicator:checked {
                     <number>0</number>
                    </property>
                    <item row="0" column="0">
-                    <widget class="QLabel" name="label_9">
+                    <widget class="QLabel" name="label_lighten">
                      <property name="font">
                       <font>
                        <pointsize>10</pointsize>

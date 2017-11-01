@@ -2095,6 +2095,30 @@ void MainWindow::on_comboBoxProfile_currentIndexChanged(int index)
 {
     processingSetImageProfile(m_pProcessingObject, index);
     m_frameChanged = true;
+    //Disable parameters if log
+    bool enable = true;
+    if( ( index == 2 ) || ( index == 3 ) || ( index == 4 ) )
+    {
+        enable = false;
+    }
+    ui->horizontalSliderLS->setEnabled( enable );
+    ui->horizontalSliderLR->setEnabled( enable );
+    ui->horizontalSliderDS->setEnabled( enable );
+    ui->horizontalSliderDR->setEnabled( enable );
+    ui->horizontalSliderLighten->setEnabled( enable );
+    ui->horizontalSliderSaturation->setEnabled( enable );
+    ui->label_LsVal->setEnabled( enable );
+    ui->label_LrVal->setEnabled( enable );
+    ui->label_DsVal->setEnabled( enable );
+    ui->label_DrVal->setEnabled( enable );
+    ui->label_LightenVal->setEnabled( enable );
+    ui->label_SaturationVal->setEnabled( enable );
+    ui->label_ls->setEnabled( enable );
+    ui->label_lr->setEnabled( enable );
+    ui->label_ds->setEnabled( enable );
+    ui->label_dr->setEnabled( enable );
+    ui->label_lighten->setEnabled( enable );
+    ui->label_saturation->setEnabled( enable );
 }
 
 //Click on Zoom: fit
