@@ -79,8 +79,8 @@ static image_profile_t default_image_profiles[] =
     },
     { /* PROFILE_LINEAR */
         .disable_settings = {
-            .saturation = 0,
-            .curves = 0,
+            .saturation = 1,
+            .curves = 1,
             .tonemapping = 0
         },
         .tone_mapping_function = NULL,
