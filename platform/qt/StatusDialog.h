@@ -24,6 +24,9 @@ public:
     ~StatusDialog();
     Ui::StatusDialog *ui;
 
+signals:
+    void abortPressed( void );
+
 public slots:
     void incrementProgressBar( void )
     {
@@ -31,6 +34,8 @@ public slots:
         ui->progressBar->repaint();
         qApp->processEvents();
     }
+private slots:
+    void on_pushButtonAbort_clicked();
 };
 
 #endif // STATUSDIALOG_H

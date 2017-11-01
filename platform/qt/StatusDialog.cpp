@@ -7,6 +7,7 @@
 
 #include "StatusDialog.h"
 
+//Constructor
 StatusDialog::StatusDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::StatusDialog)
@@ -15,7 +16,14 @@ StatusDialog::StatusDialog(QWidget *parent) :
     setWindowFlags( Qt::Window | Qt::WindowTitleHint | Qt::CustomizeWindowHint | Qt::WindowStaysOnTopHint );
 }
 
+//Destructor
 StatusDialog::~StatusDialog()
 {
     delete ui;
+}
+
+//Abort clicked
+void StatusDialog::on_pushButtonAbort_clicked()
+{
+    emit abortPressed();
 }

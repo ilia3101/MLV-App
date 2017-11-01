@@ -130,6 +130,7 @@ private slots:
     void on_groupBoxRawCorrection_toggled(bool arg1);
     void on_groupBoxProcessing_toggled(bool arg1);
     void on_groupBoxDetails_toggled(bool arg1);
+    void exportAbort( void );
 
 private:
     Ui::MainWindow *ui;
@@ -164,6 +165,7 @@ private:
     bool m_tryToSyncAudio;
     bool m_audioExportEnabled;
     double m_frameRate;
+    bool m_exportAbortPressed;
     QString m_lastSaveFileName;
     ReceiptSettings *m_pReceiptClipboard;
     QVector<ReceiptSettings*> m_pSessionReceipts;

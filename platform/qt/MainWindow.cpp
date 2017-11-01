@@ -628,6 +628,9 @@ void MainWindow::initGui( void )
     ui->actionShowHistogram->setChecked( true );
     m_pWaveFormMonitor = new WaveFormMonitor( 200 );
 
+    //Export abort connection
+    connect( m_pStatusDialog, SIGNAL(abortPressed()), this, SLOT(exportAbort()) );
+
     //AudioTrackWave
     m_pAudioWave = new AudioWave();
     QPixmap pic = QPixmap::fromImage( m_pAudioWave->getMonoWave( NULL, 0, 100, devicePixelRatio() ) );
@@ -892,6 +895,9 @@ void MainWindow::startExportPipe(QString fileName)
             m_pStatusDialog->ui->progressBar->setValue( i + 1 );
             m_pStatusDialog->ui->progressBar->repaint();
             qApp->processEvents();
+
+            //Abort pressed? -> End the loop
+            if( m_exportAbortPressed ) break;
         }
         //Close pipe
         pclose( pPipe );
@@ -902,6 +908,14 @@ void MainWindow::startExportPipe(QString fileName)
     QFile *file = new QFile( wavFileName );
     if( file->exists() ) file->remove();
     delete file;
+
+    //Delete file if aborted
+    if( m_exportAbortPressed )
+    {
+        file = new QFile( fileName );
+        if( file->exists() ) file->remove();
+        delete file;
+    }
 
     //If we don't like amaze we switch it off again
     if( !ui->actionAlwaysUseAMaZE->isChecked() ) setMlvDontAlwaysUseAmaze( m_pMlvObject );
@@ -2621,6 +2635,7 @@ void MainWindow::exportHandler( void )
     {
         //If not running save number of jobs
         numberOfJobs = m_exportQueue.count();
+        m_exportAbortPressed = false;
         jobNumber = 0;
     }
     //Are there jobs?
@@ -2657,7 +2672,8 @@ void MainWindow::exportHandler( void )
         //Export is ready
         exportRunning = false;
 
-        QMessageBox::information( this, tr( "Export" ), tr( "Export is ready." ) );
+        if( !m_exportAbortPressed ) QMessageBox::information( this, tr( "Export" ), tr( "Export is ready." ) );
+        else QMessageBox::information( this, tr( "Export" ), tr( "Export aborted." ) );
 
         //Caching is in which state? Set it!
         on_actionCaching_triggered( ui->actionCaching->isChecked() );
@@ -2922,4 +2938,11 @@ void MainWindow::on_groupBoxDetails_toggled(bool arg1)
     ui->frameDetails->setVisible( arg1 );
     if( !arg1 ) ui->groupBoxDetails->setMaximumHeight( 30 );
     else ui->groupBoxDetails->setMaximumHeight( 16777215 );
+}
+
+//Abort pressed while exporting
+void MainWindow::exportAbort( void )
+{
+    m_exportAbortPressed = true;
+    m_exportQueue.clear();
 }
