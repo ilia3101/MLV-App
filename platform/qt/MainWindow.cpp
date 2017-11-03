@@ -757,7 +757,7 @@ void MainWindow::readSettings()
     if( m_styleSelection == 1 ) CDarkStyle::assign();
 #ifdef Q_OS_MACX
     else ui->scrollArea->setVerticalScrollBarPolicy( Qt::ScrollBarAsNeeded );
-#elif Q_OS_LINUX
+#elif defined(Q_OS_LINUX)
     else
     {
         ui->dockWidgetEdit->setMinimumWidth( 240 );
