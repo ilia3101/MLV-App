@@ -27,6 +27,7 @@
 #include "ReceiptSettings.h"
 #include "AudioPlayback.h"
 #include "GraphicsPickerScene.h"
+#include "RenderFrameThread.h"
 
 namespace Ui {
 class MainWindow;
@@ -131,6 +132,7 @@ private slots:
     void on_groupBoxProcessing_toggled(bool arg1);
     void on_groupBoxDetails_toggled(bool arg1);
     void exportAbort( void );
+    void drawFrameReady( void );
 
 private:
     Ui::MainWindow *ui;
@@ -140,6 +142,7 @@ private:
     WaveFormMonitor *m_pWaveFormMonitor;
     AudioWave *m_pAudioWave;
     AudioPlayback *m_pAudioPlayback;
+    RenderFrameThread *m_pRenderThread;
     mlvObject_t *m_pMlvObject;
     processingObject_t *m_pProcessingObject;
     QGraphicsPixmapItem *m_pGraphicsItem;

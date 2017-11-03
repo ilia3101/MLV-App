@@ -91,7 +91,8 @@ SOURCES += \
     AudioPlayback.cpp \
     GraphicsPickerScene.cpp \
     NoScrollSlider.cpp \
-    ColorToolButton.cpp
+    ColorToolButton.cpp \
+    RenderFrameThread.cpp
 
 HEADERS += \
         MainWindow.h \
@@ -133,7 +134,8 @@ HEADERS += \
     AudioPlayback.h \
     GraphicsPickerScene.h \
     NoScrollSlider.h \
-    ColorToolButton.h
+    ColorToolButton.h \
+    RenderFrameThread.h
 
 FORMS += \
         MainWindow.ui \
