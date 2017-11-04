@@ -2561,8 +2561,11 @@ QGroupBox::indicator:checked {
                      <pointsize>10</pointsize>
                     </font>
                    </property>
+                   <property name="toolTip">
+                    <string>(YCbCR)</string>
+                   </property>
                    <property name="text">
-                    <string>Chroma Separation (YCbCr)</string>
+                    <string>Chroma Separation</string>
                    </property>
                   </widget>
                  </item>
