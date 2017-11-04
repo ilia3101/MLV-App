@@ -349,7 +349,7 @@ QGroupBox::indicator:checked {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>-464</y>
+            <y>0</y>
             <width>195</width>
             <height>1233</height>
            </rect>
@@ -2616,6 +2616,12 @@ QGroupBox::indicator:checked {
                    </item>
                    <item row="1" column="0" colspan="3">
                     <widget class="NoScrollSlider" name="horizontalSliderSharpen">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
                      <property name="maximumSize">
                       <size>
                        <width>200</width>
@@ -2665,6 +2671,12 @@ QGroupBox::indicator:checked {
                     <widget class="NoScrollSlider" name="horizontalSliderChromaBlur">
                      <property name="enabled">
                       <bool>false</bool>
+                     </property>
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
                      </property>
                      <property name="maximumSize">
                       <size>
