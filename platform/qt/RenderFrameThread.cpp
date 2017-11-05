@@ -6,6 +6,7 @@
  */
 
 #include "RenderFrameThread.h"
+#include <QDebug>
 
 //Constructor
 RenderFrameThread::RenderFrameThread()
@@ -35,9 +36,11 @@ void RenderFrameThread::init(mlvObject_t *pMlvObject, uint8_t *pRawImage)
 //Start rendering
 void RenderFrameThread::renderFrame(uint32_t frameNumber)
 {
+    m_mutexRender.lock();
     m_frameNumber = frameNumber;
     m_renderFrame = true;
     m_frameReady = false;
+    m_mutexRender.unlock();
 }
 
 //Is rendering finished?
@@ -63,12 +66,14 @@ void RenderFrameThread::run(void)
 {
     while( !m_stop )
     {
+        m_mutexRender.lock();
         if( m_renderFrame )
         {
             drawFrame();
             m_renderFrame = false;
             m_frameReady = true;
         }
+        m_mutexRender.unlock();
         msleep(1);
     }
     m_stop = false;
