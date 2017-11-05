@@ -11,7 +11,7 @@ ReceiptSettings::ReceiptSettings()
 {
     //default settings
     m_exposure = 0;
-    m_temperature = 6250;
+    m_temperature = 6000;
     m_tint = 0;
     m_saturation = 50;
     m_ds = 50;

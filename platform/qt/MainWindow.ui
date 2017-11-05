@@ -1785,13 +1785,13 @@ QGroupBox::indicator:checked {
                       </size>
                      </property>
                      <property name="minimum">
-                      <number>2500</number>
+                      <number>2000</number>
                      </property>
                      <property name="maximum">
                       <number>10000</number>
                      </property>
                      <property name="value">
-                      <number>6250</number>
+                      <number>6000</number>
                      </property>
                      <property name="orientation">
                       <enum>Qt::Horizontal</enum>
@@ -1837,7 +1837,7 @@ QGroupBox::indicator:checked {
                       <enum>Qt::RightToLeft</enum>
                      </property>
                      <property name="text">
-                      <string>6250 K</string>
+                      <string>6000 K</string>
                      </property>
                      <property name="alignment">
                       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
