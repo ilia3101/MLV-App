@@ -3,10 +3,10 @@
 
 
 /* Measurements taken from 5D Mark II RAW photos using EXIFtool, surely Canon can't be wrong about WB mutipliers? */
-static const int wb_kelvin[]   = {  2500,  3000,  3506,  4000,  4503,  5011,  5517,  6018,  6509,  7040,  7528,  8056,  8534,  9032,  9531, 10000 };
-static const double wb_red[]   = { 1.349, 1.596, 1.731, 1.806, 1.954, 2.081, 2.197, 2.291, 2.365, 2.444, 2.485, 2.528, 2.566, 2.612, 2.660, 2.702 };
-static const double wb_green[] = { 1.137, 1.112, 1.056, 1.000, 1.000, 1.000, 1.000, 1.000, 1.000, 1.000, 1.000, 1.000, 1.000, 1.000, 1.000, 1.000 };
-static const double wb_blue[]  = { 3.985, 3.184, 2.524, 2.103, 1.903, 1.760, 1.641, 1.542, 1.476, 1.414, 1.390, 1.363, 1.333, 1.296, 1.263, 1.229 };
+static const int wb_kelvin[]   = {  2000,  2500,  3000,  3506,  4000,  4503,  5011,  5517,  6018,  6509,  7040,  7528,  8056,  8534,  9032,  9531, 10000 };
+static const double wb_red[]   = { 1.134, 1.349, 1.596, 1.731, 1.806, 1.954, 2.081, 2.197, 2.291, 2.365, 2.444, 2.485, 2.528, 2.566, 2.612, 2.660, 2.702 };
+static const double wb_green[] = { 1.155, 1.137, 1.112, 1.056, 1.000, 1.000, 1.000, 1.000, 1.000, 1.000, 1.000, 1.000, 1.000, 1.000, 1.000, 1.000, 1.000 };
+static const double wb_blue[]  = { 4.587, 3.985, 3.184, 2.524, 2.103, 1.903, 1.760, 1.641, 1.542, 1.476, 1.414, 1.390, 1.363, 1.333, 1.296, 1.263, 1.229 };
 
 static const double id_matrix[] = {1,0,0,0,1,0,0,0,1};
 
@@ -49,7 +49,7 @@ float SonySLogTonemap_f(float x) { return (x >= 0.01125000f) ? (420.0f + log10f(
  * Canon values... stupidly simple, also range limited to 2500-10000 (pls obey) */
 void get_kelvin_multipliers_rgb(double kelvin, double * multiplier_output)
 {
-    kelvin = MIN(MAX(kelvin, 2500.0), 10000.0);
+    kelvin = MIN(MAX(kelvin, 2000.0), 10000.0);
     int k = 0;
 
     while (1 < 2)

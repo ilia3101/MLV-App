@@ -415,8 +415,12 @@ int setAppNewMlvClip(char * mlvPath)
 
 -(void)kelvinSliderMethod 
 {
-    /* Slider has to be in range 2500 - 10000, cos my function is limited to that */
-    double kelvinValue = [self doubleValue] * 7500.0 + 2500.0;
+    #define KELVIN_MAX 10000.0
+    #define KELVIN_MIN 2000.0
+    /* Slider has to be in range 2000 - 10000, cos my function is limited to that */
+    double kelvinValue = [self doubleValue] * (KELVIN_MAX - KELVIN_MIN) + KELVIN_MIN;
+    #undef KELVIN_MAX
+    #undef KELVIN_MIN
 
     /* Set processing object white balance */
     processingSetWhiteBalanceKelvin(App->processingSettings, kelvinValue);

@@ -75,7 +75,7 @@ processingObject_t * initProcessingObject()
     }
 
     /* Default settings */
-    processingSetWhiteBalance(processing, 6250.0, 0.0);
+    processingSetWhiteBalance(processing, 6000.0, 0.0);
     processingSetBlackAndWhiteLevel(processing, 8192.0, 64000.0); /* 16 bit! */
     processingSetExposureStops(processing, 0.0);
     processingSetGamma(processing, STANDARD_GAMMA);
