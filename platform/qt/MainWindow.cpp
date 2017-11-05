@@ -757,12 +757,10 @@ void MainWindow::readSettings()
     if( m_styleSelection == 1 ) CDarkStyle::assign();
 #ifdef Q_OS_MACX
     else ui->scrollArea->setVerticalScrollBarPolicy( Qt::ScrollBarAsNeeded );
-#elif defined(Q_OS_LINUX)
-    else
-    {
-        ui->dockWidgetEdit->setMinimumWidth( 240 );
-        ui->dockWidgetContents->setMinimumWidth( 240 );
-    }
+#endif
+#ifdef Q_OS_LINUX
+    ui->dockWidgetEdit->setMinimumWidth( 240 );
+    ui->dockWidgetContents->setMinimumWidth( 240 );
 #endif
     ui->groupBoxRawCorrection->setChecked( set.value( "expandedRawCorrection", false ).toBool() );
     ui->groupBoxProcessing->setChecked( set.value( "expandedProcessing", true ).toBool() );
