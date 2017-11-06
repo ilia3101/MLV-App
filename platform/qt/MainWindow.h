@@ -18,6 +18,7 @@
 #include <QProcess>
 #include <QVector>
 #include <QGraphicsPixmapItem>
+#include <QCloseEvent>
 #include "../../src/mlv_include.h"
 #include "InfoDialog.h"
 #include "StatusDialog.h"
@@ -45,8 +46,9 @@ protected:
     void timerEvent( QTimerEvent *t );
     void resizeEvent( QResizeEvent *event );
     bool event( QEvent *event );
-    void dragEnterEvent(QDragEnterEvent *event);
-    void dropEvent(QDropEvent *event);
+    void dragEnterEvent( QDragEnterEvent *event );
+    void dropEvent( QDropEvent *event );
+    void closeEvent( QCloseEvent *event );
 
 private slots:
     void on_actionOpen_triggered();

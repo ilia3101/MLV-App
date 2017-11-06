@@ -112,7 +112,11 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
 //Destructor
 MainWindow::~MainWindow()
 {
+    killTimer( m_timerId );
+    killTimer( m_timerCacheId );
+
     //End Render Thread
+    m_frameStillDrawing = false;
     disconnect( m_pRenderThread, SIGNAL(frameReady()), this, SLOT(drawFrameReady()) );
     m_pRenderThread->stop();
     while( !m_pRenderThread->isFinished() ) {}
@@ -121,9 +125,6 @@ MainWindow::~MainWindow()
     //Save settings
     writeSettings();
     delete m_pReceiptClipboard;
-
-    killTimer( m_timerId );
-    killTimer( m_timerCacheId );
     delete m_pAudioPlayback;
     delete m_pAudioWave;
     delete m_pHistogram;
@@ -196,9 +197,12 @@ void MainWindow::timerEvent(QTimerEvent *t)
             m_pCachingStatus->setText( tr( "Caching: idle" ) );
         }
 
-        //get all cores again
-        if( countTimeDown == 0 ) setMlvCpuCores( m_pMlvObject, QThread::idealThreadCount() );
-        if( countTimeDown >= 0 ) countTimeDown--;
+        if( m_fileLoaded )
+        {
+            //get all cores again
+            if( countTimeDown == 0 ) setMlvCpuCores( m_pMlvObject, QThread::idealThreadCount() );
+            if( countTimeDown >= 0 ) countTimeDown--;
+        }
     }
 }
 
@@ -303,6 +307,16 @@ void MainWindow::dropEvent(QDropEvent *event)
     event->acceptProposedAction();
 }
 
+//App shall close -> hammer method, we shot on the main class... for making the app close and killing everything in background
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    ui->actionPlay->setChecked( false );
+    on_actionPlay_triggered( false );
+
+    qApp->quit();
+    event->accept();
+}
+
 //Draw a raw picture to the gui -> start render thread
 void MainWindow::drawFrame( void )
 {
@@ -379,11 +393,17 @@ void MainWindow::openMlv( QString fileName )
 
     //disable drawing and kill old timer and old WaveFormMonitor
     killTimer( m_timerId );
+    m_fileLoaded = false;
     delete m_pWaveFormMonitor;
     m_dontDraw = true;
 
+    //Waiting for thread being idle for not freeing used memory
+    while( !m_pRenderThread->isIdle() ) {}
     //Waiting for frame ready because it works with m_pMlvObject
     while( m_frameStillDrawing ) {qApp->processEvents();}
+
+    //Unload audio
+    m_pAudioPlayback->unloadAudio();
 
     /* Destroy it just for simplicity... and make a new one */
     freeMlvObject( m_pMlvObject );
@@ -401,9 +421,6 @@ void MainWindow::openMlv( QString fileName )
     setMlvCpuCores( m_pMlvObject, QThread::idealThreadCount() );
     /* Disable Caching for the opening process */
     disableMlvCaching( m_pMlvObject );
-
-    //Waiting for thread being idle for not freeing used memory
-    while( !m_pRenderThread->isIdle() ) {}
 
     //Adapt the RawImage to actual size
     int imageSize = getMlvWidth( m_pMlvObject ) * getMlvHeight( m_pMlvObject ) * 3;
@@ -689,12 +706,11 @@ void MainWindow::readSettings()
     if( m_styleSelection == 1 ) CDarkStyle::assign();
 #ifdef Q_OS_MACX
     else ui->scrollArea->setVerticalScrollBarPolicy( Qt::ScrollBarAsNeeded );
-#elif defined(Q_OS_LINUX)
-    else
-    {
-        ui->dockWidgetEdit->setMinimumWidth( 240 );
-        ui->dockWidgetContents->setMinimumWidth( 240 );
-    }
+#endif
+#ifdef Q_OS_LINUX
+    //if not doing this, some elements are covered by the scrollbar on Linux only
+    ui->dockWidgetEdit->setMinimumWidth( 240 );
+    ui->dockWidgetContents->setMinimumWidth( 240 );
 #endif
     ui->groupBoxRawCorrection->setChecked( set.value( "expandedRawCorrection", false ).toBool() );
     ui->groupBoxProcessing->setChecked( set.value( "expandedProcessing", true ).toBool() );
