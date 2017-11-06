@@ -171,6 +171,7 @@ private:
     bool m_audioExportEnabled;
     double m_frameRate;
     bool m_exportAbortPressed;
+    bool m_zoomTo100;
     QString m_lastSaveFileName;
     ReceiptSettings *m_pReceiptClipboard;
     QVector<ReceiptSettings*> m_pSessionReceipts;

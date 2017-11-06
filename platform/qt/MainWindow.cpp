@@ -48,6 +48,7 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     m_fileLoaded = false;
     m_fpsOverride = false;
     m_inOpeningProcess = false;
+    m_zoomTo100 = false;
 
     //Set Render Thread
     m_pRenderThread = new RenderFrameThread();
@@ -2116,15 +2117,7 @@ void MainWindow::on_actionZoom100_triggered()
     }
     ui->graphicsView->resetZoom();
     ui->graphicsView->setZoomEnabled( true );
-    m_frameChanged = true;
-    drawFrame();
-    while( m_frameStillDrawing )
-    {
-        qApp->processEvents();
-    }
-    update();
-    ui->graphicsView->horizontalScrollBar()->setValue( ( getMlvWidth(m_pMlvObject) - ui->graphicsView->width() ) / 2 );
-    ui->graphicsView->verticalScrollBar()->setValue( ( getMlvHeight(m_pMlvObject) - ui->graphicsView->height() ) / 2 );
+    m_zoomTo100 = true;
 }
 
 //Show Histogram
@@ -2985,6 +2978,10 @@ void MainWindow::drawFrameReady()
         ui->labelHistogram->setPixmap( pic );
         ui->labelHistogram->setAlignment( Qt::AlignCenter ); //Always in the middle
     }
+
+    //Drawing ready, next frame can be rendered
+    m_frameStillDrawing = false;
+
     //Sync Audio
     if( m_tryToSyncAudio && ui->actionAudioOutput->isChecked() && ui->actionPlay->isChecked() && ui->actionDropFrameMode->isChecked() )
     {
@@ -2997,5 +2994,11 @@ void MainWindow::drawFrameReady()
     //And show the user which frame we show
     drawFrameNumberLabel();
 
-    m_frameStillDrawing = false;
+    //Set frame to the middle
+    if( m_zoomTo100 )
+    {
+        m_zoomTo100 = false;
+        ui->graphicsView->horizontalScrollBar()->setValue( ( getMlvWidth(m_pMlvObject) - ui->graphicsView->width() ) / 2 );
+        ui->graphicsView->verticalScrollBar()->setValue( ( getMlvHeight(m_pMlvObject) - ui->graphicsView->height() ) / 2 );
+    }
 }
