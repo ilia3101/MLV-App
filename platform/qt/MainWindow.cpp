@@ -382,6 +382,9 @@ void MainWindow::openMlv( QString fileName )
     delete m_pWaveFormMonitor;
     m_dontDraw = true;
 
+    //Waiting for frame ready because it works with m_pMlvObject
+    while( m_frameStillDrawing ) {qApp->processEvents();}
+
     /* Destroy it just for simplicity... and make a new one */
     freeMlvObject( m_pMlvObject );
     /* Create a NEW object with a NEW MLV clip! */
