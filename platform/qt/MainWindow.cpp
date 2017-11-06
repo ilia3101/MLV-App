@@ -2117,6 +2117,7 @@ void MainWindow::on_actionZoom100_triggered()
     }
     ui->graphicsView->resetZoom();
     ui->graphicsView->setZoomEnabled( true );
+    m_frameChanged = true;
     m_zoomTo100 = true;
 }
 
