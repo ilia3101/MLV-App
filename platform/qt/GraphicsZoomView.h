@@ -20,6 +20,7 @@ class GraphicsZoomView : public QGraphicsView
 public:
     explicit GraphicsZoomView(QWidget *parent = 0);
     void setZoomEnabled(bool on);
+    bool isZoomEnabled(void);
     void resetZoom(void);
     void setWbPickerActive(bool on);
 

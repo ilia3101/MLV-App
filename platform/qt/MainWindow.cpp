@@ -48,7 +48,7 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     m_fileLoaded = false;
     m_fpsOverride = false;
     m_inOpeningProcess = false;
-    m_zoomTo100 = false;
+    m_zoomTo100Center = false;
 
     //Set Render Thread
     m_pRenderThread = new RenderFrameThread();
@@ -2116,9 +2116,12 @@ void MainWindow::on_actionZoom100_triggered()
         return;
     }
     ui->graphicsView->resetZoom();
-    ui->graphicsView->setZoomEnabled( true );
+    if( !ui->graphicsView->isZoomEnabled() )
+    {
+        ui->graphicsView->setZoomEnabled( true );
+        m_zoomTo100Center = true;
+    }
     m_frameChanged = true;
-    m_zoomTo100 = true;
 }
 
 //Show Histogram
@@ -2996,9 +2999,9 @@ void MainWindow::drawFrameReady()
     drawFrameNumberLabel();
 
     //Set frame to the middle
-    if( m_zoomTo100 )
+    if( m_zoomTo100Center )
     {
-        m_zoomTo100 = false;
+        m_zoomTo100Center = false;
         ui->graphicsView->horizontalScrollBar()->setValue( ( getMlvWidth(m_pMlvObject) - ui->graphicsView->width() ) / 2 );
         ui->graphicsView->verticalScrollBar()->setValue( ( getMlvHeight(m_pMlvObject) - ui->graphicsView->height() ) / 2 );
     }

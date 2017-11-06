@@ -24,6 +24,12 @@ void GraphicsZoomView::setZoomEnabled(bool on)
     m_isZoomEnabled = on;
 }
 
+//return if zoom on mouse wheel is en-/disabled
+bool GraphicsZoomView::isZoomEnabled()
+{
+    return m_isZoomEnabled;
+}
+
 //Reset the zoom to exact 100%
 void GraphicsZoomView::resetZoom()
 {
