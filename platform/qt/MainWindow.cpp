@@ -1383,6 +1383,39 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     receipt->setDualIsoFrBlending( toolButtonDualIsoFullresBlendingCurrentIndex() );
 }
 
+//Replace receipt settings
+void MainWindow::replaceReceipt(int rowTarget, ReceiptSettings *receiptSource)
+{
+    m_pSessionReceipts.at(rowTarget)->setExposure( receiptSource->exposure() );
+    m_pSessionReceipts.at(rowTarget)->setTemperature( receiptSource->temperature() );
+    m_pSessionReceipts.at(rowTarget)->setTint( receiptSource->tint() );
+    m_pSessionReceipts.at(rowTarget)->setSaturation( receiptSource->saturation() );
+    m_pSessionReceipts.at(rowTarget)->setDs( receiptSource->ds() );
+    m_pSessionReceipts.at(rowTarget)->setDr( receiptSource->dr() );
+    m_pSessionReceipts.at(rowTarget)->setLs( receiptSource->ls() );
+    m_pSessionReceipts.at(rowTarget)->setLr( receiptSource->lr() );
+    m_pSessionReceipts.at(rowTarget)->setLightening( receiptSource->lightening() );
+    m_pSessionReceipts.at(rowTarget)->setSharpen( receiptSource->sharpen() );
+    m_pSessionReceipts.at(rowTarget)->setChromaBlur( receiptSource->chromaBlur() );
+    m_pSessionReceipts.at(rowTarget)->setHighlightReconstruction( receiptSource->isHighlightReconstruction() );
+    m_pSessionReceipts.at(rowTarget)->setChromaSeparation( receiptSource->isChromaSeparation() );
+    m_pSessionReceipts.at(rowTarget)->setProfile( receiptSource->profile() );
+
+    m_pSessionReceipts.at(rowTarget)->setRawFixesEnabled( receiptSource->rawFixesEnabled() );
+    m_pSessionReceipts.at(rowTarget)->setVerticalStripes( receiptSource->verticalStripes() );
+    m_pSessionReceipts.at(rowTarget)->setFocusPixels( receiptSource->focusPixels() );
+    m_pSessionReceipts.at(rowTarget)->setFpiMethod( receiptSource->fpiMethod() );
+    m_pSessionReceipts.at(rowTarget)->setBadPixels( receiptSource->badPixels() );
+    m_pSessionReceipts.at(rowTarget)->setBpiMethod( receiptSource->bpiMethod() );
+    m_pSessionReceipts.at(rowTarget)->setChromaSmooth( receiptSource->chromaSmooth() );
+    m_pSessionReceipts.at(rowTarget)->setPatternNoise( receiptSource->patternNoise() );
+    m_pSessionReceipts.at(rowTarget)->setDeflickerTarget( receiptSource->deflickerTarget() );
+    m_pSessionReceipts.at(rowTarget)->setDualIso( receiptSource->dualIso() );
+    m_pSessionReceipts.at(rowTarget)->setDualIsoInterpolation( receiptSource->dualIsoInterpolation() );
+    m_pSessionReceipts.at(rowTarget)->setDualIsoAliasMap( receiptSource->dualIsoAliasMap() );
+    m_pSessionReceipts.at(rowTarget)->setDualIsoFrBlending( receiptSource->dualIsoFrBlending() );
+}
+
 //Show the file in
 void MainWindow::showFileInEditor( int row )
 {
@@ -2282,9 +2315,7 @@ void MainWindow::on_actionPasteReceipt_triggered()
                 continue;
             }
             //Each other selected clip gets the receipt
-            QString fileName = m_pSessionReceipts.at(row)->fileName();
-            m_pSessionReceipts.replace( row, m_pReceiptClipboard );
-            m_pSessionReceipts.at(row)->setFileName( fileName );
+            replaceReceipt( row, m_pReceiptClipboard );
         }
     }
 }
