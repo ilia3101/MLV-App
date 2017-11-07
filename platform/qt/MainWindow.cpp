@@ -520,6 +520,7 @@ void MainWindow::playbackHandling(int timeDiff)
             {
                 //Stop
                 ui->actionPlay->setChecked( false );
+                m_pAudioPlayback->stop(); //Stop audio immediately, that is faster on Linux
             }
         }
         else
