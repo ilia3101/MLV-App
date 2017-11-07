@@ -187,7 +187,7 @@ private:
     bool isFileInSession( QString fileName );
     void setSliders( ReceiptSettings *sliders );
     void setReceipt( ReceiptSettings *sliders );
-    void replaceReceipt(int rowTarget, ReceiptSettings *receiptSource );
+    void replaceReceipt( ReceiptSettings *receiptTarget, ReceiptSettings *receiptSource );
     void showFileInEditor( int row );
     void addClipToExportQueue( int row, QString fileName );
     void previewPicture( int row );

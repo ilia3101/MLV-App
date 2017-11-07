@@ -1384,36 +1384,36 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
 }
 
 //Replace receipt settings
-void MainWindow::replaceReceipt(int rowTarget, ReceiptSettings *receiptSource)
+void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings *receiptSource)
 {
-    m_pSessionReceipts.at(rowTarget)->setExposure( receiptSource->exposure() );
-    m_pSessionReceipts.at(rowTarget)->setTemperature( receiptSource->temperature() );
-    m_pSessionReceipts.at(rowTarget)->setTint( receiptSource->tint() );
-    m_pSessionReceipts.at(rowTarget)->setSaturation( receiptSource->saturation() );
-    m_pSessionReceipts.at(rowTarget)->setDs( receiptSource->ds() );
-    m_pSessionReceipts.at(rowTarget)->setDr( receiptSource->dr() );
-    m_pSessionReceipts.at(rowTarget)->setLs( receiptSource->ls() );
-    m_pSessionReceipts.at(rowTarget)->setLr( receiptSource->lr() );
-    m_pSessionReceipts.at(rowTarget)->setLightening( receiptSource->lightening() );
-    m_pSessionReceipts.at(rowTarget)->setSharpen( receiptSource->sharpen() );
-    m_pSessionReceipts.at(rowTarget)->setChromaBlur( receiptSource->chromaBlur() );
-    m_pSessionReceipts.at(rowTarget)->setHighlightReconstruction( receiptSource->isHighlightReconstruction() );
-    m_pSessionReceipts.at(rowTarget)->setChromaSeparation( receiptSource->isChromaSeparation() );
-    m_pSessionReceipts.at(rowTarget)->setProfile( receiptSource->profile() );
+    receiptTarget->setExposure( receiptSource->exposure() );
+    receiptTarget->setTemperature( receiptSource->temperature() );
+    receiptTarget->setTint( receiptSource->tint() );
+    receiptTarget->setSaturation( receiptSource->saturation() );
+    receiptTarget->setDs( receiptSource->ds() );
+    receiptTarget->setDr( receiptSource->dr() );
+    receiptTarget->setLs( receiptSource->ls() );
+    receiptTarget->setLr( receiptSource->lr() );
+    receiptTarget->setLightening( receiptSource->lightening() );
+    receiptTarget->setSharpen( receiptSource->sharpen() );
+    receiptTarget->setChromaBlur( receiptSource->chromaBlur() );
+    receiptTarget->setHighlightReconstruction( receiptSource->isHighlightReconstruction() );
+    receiptTarget->setChromaSeparation( receiptSource->isChromaSeparation() );
+    receiptTarget->setProfile( receiptSource->profile() );
 
-    m_pSessionReceipts.at(rowTarget)->setRawFixesEnabled( receiptSource->rawFixesEnabled() );
-    m_pSessionReceipts.at(rowTarget)->setVerticalStripes( receiptSource->verticalStripes() );
-    m_pSessionReceipts.at(rowTarget)->setFocusPixels( receiptSource->focusPixels() );
-    m_pSessionReceipts.at(rowTarget)->setFpiMethod( receiptSource->fpiMethod() );
-    m_pSessionReceipts.at(rowTarget)->setBadPixels( receiptSource->badPixels() );
-    m_pSessionReceipts.at(rowTarget)->setBpiMethod( receiptSource->bpiMethod() );
-    m_pSessionReceipts.at(rowTarget)->setChromaSmooth( receiptSource->chromaSmooth() );
-    m_pSessionReceipts.at(rowTarget)->setPatternNoise( receiptSource->patternNoise() );
-    m_pSessionReceipts.at(rowTarget)->setDeflickerTarget( receiptSource->deflickerTarget() );
-    m_pSessionReceipts.at(rowTarget)->setDualIso( receiptSource->dualIso() );
-    m_pSessionReceipts.at(rowTarget)->setDualIsoInterpolation( receiptSource->dualIsoInterpolation() );
-    m_pSessionReceipts.at(rowTarget)->setDualIsoAliasMap( receiptSource->dualIsoAliasMap() );
-    m_pSessionReceipts.at(rowTarget)->setDualIsoFrBlending( receiptSource->dualIsoFrBlending() );
+    receiptTarget->setRawFixesEnabled( receiptSource->rawFixesEnabled() );
+    receiptTarget->setVerticalStripes( receiptSource->verticalStripes() );
+    receiptTarget->setFocusPixels( receiptSource->focusPixels() );
+    receiptTarget->setFpiMethod( receiptSource->fpiMethod() );
+    receiptTarget->setBadPixels( receiptSource->badPixels() );
+    receiptTarget->setBpiMethod( receiptSource->bpiMethod() );
+    receiptTarget->setChromaSmooth( receiptSource->chromaSmooth() );
+    receiptTarget->setPatternNoise( receiptSource->patternNoise() );
+    receiptTarget->setDeflickerTarget( receiptSource->deflickerTarget() );
+    receiptTarget->setDualIso( receiptSource->dualIso() );
+    receiptTarget->setDualIsoInterpolation( receiptSource->dualIsoInterpolation() );
+    receiptTarget->setDualIsoAliasMap( receiptSource->dualIsoAliasMap() );
+    receiptTarget->setDualIsoFrBlending( receiptSource->dualIsoFrBlending() );
 }
 
 //Show the file in
@@ -2315,7 +2315,7 @@ void MainWindow::on_actionPasteReceipt_triggered()
                 continue;
             }
             //Each other selected clip gets the receipt
-            replaceReceipt( row, m_pReceiptClipboard );
+            replaceReceipt( m_pSessionReceipts.at(row), m_pReceiptClipboard );
         }
     }
 }
