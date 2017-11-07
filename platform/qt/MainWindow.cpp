@@ -212,6 +212,7 @@ void MainWindow::resizeEvent(QResizeEvent *event)
 {
     //Stop playback if active
     ui->actionPlay->setChecked( false );
+    m_pAudioPlayback->stop(); //Stop audio explicitely
 
     if( m_fileLoaded )
     {
