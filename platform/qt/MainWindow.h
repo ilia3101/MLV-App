@@ -18,6 +18,7 @@
 #include <QProcess>
 #include <QVector>
 #include <QGraphicsPixmapItem>
+#include <QCloseEvent>
 #include "../../src/mlv_include.h"
 #include "InfoDialog.h"
 #include "StatusDialog.h"
@@ -27,6 +28,7 @@
 #include "ReceiptSettings.h"
 #include "AudioPlayback.h"
 #include "GraphicsPickerScene.h"
+#include "RenderFrameThread.h"
 
 namespace Ui {
 class MainWindow;
@@ -44,8 +46,9 @@ protected:
     void timerEvent( QTimerEvent *t );
     void resizeEvent( QResizeEvent *event );
     bool event( QEvent *event );
-    void dragEnterEvent(QDragEnterEvent *event);
-    void dropEvent(QDropEvent *event);
+    void dragEnterEvent( QDragEnterEvent *event );
+    void dropEvent( QDropEvent *event );
+    void closeEvent( QCloseEvent *event );
 
 private slots:
     void on_actionOpen_triggered();
@@ -131,6 +134,7 @@ private slots:
     void on_groupBoxProcessing_toggled(bool arg1);
     void on_groupBoxDetails_toggled(bool arg1);
     void exportAbort( void );
+    void drawFrameReady( void );
 
 private:
     Ui::MainWindow *ui;
@@ -140,6 +144,7 @@ private:
     WaveFormMonitor *m_pWaveFormMonitor;
     AudioWave *m_pAudioWave;
     AudioPlayback *m_pAudioPlayback;
+    RenderFrameThread *m_pRenderThread;
     mlvObject_t *m_pMlvObject;
     processingObject_t *m_pProcessingObject;
     QGraphicsPixmapItem *m_pGraphicsItem;
@@ -166,6 +171,7 @@ private:
     bool m_audioExportEnabled;
     double m_frameRate;
     bool m_exportAbortPressed;
+    bool m_zoomTo100Center;
     QString m_lastSaveFileName;
     ReceiptSettings *m_pReceiptClipboard;
     QVector<ReceiptSettings*> m_pSessionReceipts;

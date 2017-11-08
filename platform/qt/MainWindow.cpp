@@ -48,6 +48,13 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     m_fileLoaded = false;
     m_fpsOverride = false;
     m_inOpeningProcess = false;
+    m_zoomTo100Center = false;
+
+    //Set Render Thread
+    m_pRenderThread = new RenderFrameThread();
+    m_pRenderThread->start();
+    connect( m_pRenderThread, SIGNAL(frameReady()), this, SLOT(drawFrameReady()) );
+    while( !m_pRenderThread->isRunning() ) {}
 
     //Init the GUI
     initGui();
@@ -106,12 +113,19 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
 //Destructor
 MainWindow::~MainWindow()
 {
+    killTimer( m_timerId );
+    killTimer( m_timerCacheId );
+
+    //End Render Thread
+    m_frameStillDrawing = false;
+    disconnect( m_pRenderThread, SIGNAL(frameReady()), this, SLOT(drawFrameReady()) );
+    m_pRenderThread->stop();
+    while( !m_pRenderThread->isFinished() ) {}
+    delete m_pRenderThread;
+
     //Save settings
     writeSettings();
     delete m_pReceiptClipboard;
-
-    killTimer( m_timerId );
-    killTimer( m_timerCacheId );
     delete m_pAudioPlayback;
     delete m_pAudioWave;
     delete m_pHistogram;
@@ -130,6 +144,8 @@ void MainWindow::timerEvent(QTimerEvent *t)
     //Main timer
     if( t->timerId() == m_timerId )
     {
+        if( m_frameStillDrawing ) return;
+
         //Time measurement
         QTime nowTime = QTime::currentTime();
         timeDiff = lastTime.msecsTo( nowTime );
@@ -147,7 +163,7 @@ void MainWindow::timerEvent(QTimerEvent *t)
         }
 
         //Trigger Drawing
-        if( !m_frameStillDrawing && m_frameChanged && !m_dontDraw && !m_inOpeningProcess )
+        if( m_frameChanged && !m_dontDraw && !m_inOpeningProcess )
         {
             m_frameChanged = false; //first do this, if there are changes between rendering
             drawFrame();
@@ -182,9 +198,12 @@ void MainWindow::timerEvent(QTimerEvent *t)
             m_pCachingStatus->setText( tr( "Caching: idle" ) );
         }
 
-        //get all cores again
-        if( countTimeDown == 0 ) setMlvCpuCores( m_pMlvObject, QThread::idealThreadCount() );
-        if( countTimeDown >= 0 ) countTimeDown--;
+        if( m_fileLoaded )
+        {
+            //get all cores again
+            if( countTimeDown == 0 ) setMlvCpuCores( m_pMlvObject, QThread::idealThreadCount() );
+            if( countTimeDown >= 0 ) countTimeDown--;
+        }
     }
 }
 
@@ -193,6 +212,7 @@ void MainWindow::resizeEvent(QResizeEvent *event)
 {
     //Stop playback if active
     ui->actionPlay->setChecked( false );
+    m_pAudioPlayback->stop(); //Stop audio explicitely
 
     if( m_fileLoaded )
     {
@@ -289,7 +309,17 @@ void MainWindow::dropEvent(QDropEvent *event)
     event->acceptProposedAction();
 }
 
-//Draw a raw picture to the gui
+//App shall close -> hammer method, we shot on the main class... for making the app close and killing everything in background
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    ui->actionPlay->setChecked( false );
+    on_actionPlay_triggered( false );
+
+    qApp->quit();
+    event->accept();
+}
+
+//Draw a raw picture to the gui -> start render thread
 void MainWindow::drawFrame( void )
 {
     m_frameStillDrawing = true;
@@ -301,104 +331,13 @@ void MainWindow::drawFrame( void )
     if( ui->actionPlay->isChecked() && ui->actionDropFrameMode->isChecked() )
     {
         //If we are in playback, dropmode, we calculated the exact frame to sync the timeline
-        getMlvProcessedFrame8( m_pMlvObject, (uint64_t)m_newPosDropMode, m_pRawImage );
+        m_pRenderThread->renderFrame( m_newPosDropMode );
     }
     else
     {
         //Else we render the frame which is selected by the slider
-        getMlvProcessedFrame8( m_pMlvObject, ui->horizontalSliderPosition->value(), m_pRawImage );
+        m_pRenderThread->renderFrame( ui->horizontalSliderPosition->value() );
     }
-
-    if( ui->actionZoomFit->isChecked() )
-    {
-        //Some math to have the picture exactly in the frame
-        int actWidth;
-        int actHeight;
-        if( ui->actionFullscreen->isChecked() )
-        {
-            actWidth = QApplication::primaryScreen()->size().width();
-            actHeight = QApplication::primaryScreen()->size().height();
-        }
-        else
-        {
-            actWidth = ui->graphicsView->width();
-            actHeight = ui->graphicsView->height();
-        }
-        int desWidth = actWidth;
-        int desHeight = actWidth * getMlvHeight(m_pMlvObject) / getMlvWidth(m_pMlvObject);
-        if( desHeight > actHeight )
-        {
-            desHeight = actHeight;
-            desWidth = actHeight * getMlvWidth(m_pMlvObject) / getMlvHeight(m_pMlvObject);
-        }
-
-        //Get Picture
-        QPixmap pic = QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
-                                          .scaled( desWidth * devicePixelRatio(),
-                                                   desHeight * devicePixelRatio(),
-                                                   Qt::KeepAspectRatio, Qt::SmoothTransformation) );//alternative: Qt::FastTransformation
-        //Set Picture to Retina
-        pic.setDevicePixelRatio( devicePixelRatio() );
-        //Bring frame to GUI (fit to window)
-        m_pGraphicsItem->setPixmap( pic );
-        //Set Scene
-        m_pScene->setSceneRect( 0, 0, desWidth, desHeight );
-    }
-    else
-    {
-        //Bring frame to GUI (100%)
-        m_pGraphicsItem->setPixmap( QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 ) ) );
-        m_pScene->setSceneRect( 0, 0, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject) );
-    }
-    //Add zebras on the image
-    drawZebras();
-
-    //GetHistogram
-    if( ui->actionShowHistogram->isChecked() )
-    {
-        QPixmap pic = QPixmap::fromImage( m_pHistogram->getHistogramFromRaw( m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject) )
-                                                          .scaled( ui->labelHistogram->width() * devicePixelRatio(),
-                                                                   ui->labelHistogram->height() * devicePixelRatio(),
-                                                                   Qt::IgnoreAspectRatio, Qt::SmoothTransformation) ); //alternative: Qt::FastTransformation
-        pic.setDevicePixelRatio( devicePixelRatio() );
-        ui->labelHistogram->setPixmap( pic );
-        ui->labelHistogram->setAlignment( Qt::AlignCenter ); //Always in the middle
-    }
-    //Waveform
-    else if( ui->actionShowWaveFormMonitor->isChecked() )
-    {
-        QPixmap pic = QPixmap::fromImage( m_pWaveFormMonitor->getWaveFormMonitorFromRaw( m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject) )
-                                                          .scaled( ui->labelHistogram->width() * devicePixelRatio(),
-                                                                   ui->labelHistogram->height() * devicePixelRatio(),
-                                                                   Qt::IgnoreAspectRatio, Qt::SmoothTransformation) ); //alternative: Qt::FastTransformation
-        pic.setDevicePixelRatio( devicePixelRatio() );
-        ui->labelHistogram->setPixmap( pic );
-        ui->labelHistogram->setAlignment( Qt::AlignCenter ); //Always in the middle
-    }
-    //Parade
-    else if( ui->actionShowParade->isChecked() )
-    {
-        QPixmap pic = QPixmap::fromImage( m_pWaveFormMonitor->getParadeFromRaw( m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject) )
-                                                          .scaled( ui->labelHistogram->width() * devicePixelRatio(),
-                                                                   ui->labelHistogram->height() * devicePixelRatio(),
-                                                                   Qt::IgnoreAspectRatio, Qt::SmoothTransformation) ); //alternative: Qt::FastTransformation
-        pic.setDevicePixelRatio( devicePixelRatio() );
-        ui->labelHistogram->setPixmap( pic );
-        ui->labelHistogram->setAlignment( Qt::AlignCenter ); //Always in the middle
-    }
-    //Sync Audio
-    if( m_tryToSyncAudio && ui->actionAudioOutput->isChecked() && ui->actionPlay->isChecked() && ui->actionDropFrameMode->isChecked() )
-    {
-        m_tryToSyncAudio = false;
-        m_pAudioPlayback->stop();
-        m_pAudioPlayback->jumpToPos( m_newPosDropMode );
-        m_pAudioPlayback->play();
-    }
-
-    //And show the user which frame we show
-    drawFrameNumberLabel();
-
-    m_frameStillDrawing = false;
 }
 
 //Open MLV Dialog
@@ -456,8 +395,17 @@ void MainWindow::openMlv( QString fileName )
 
     //disable drawing and kill old timer and old WaveFormMonitor
     killTimer( m_timerId );
+    m_fileLoaded = false;
     delete m_pWaveFormMonitor;
     m_dontDraw = true;
+
+    //Waiting for thread being idle for not freeing used memory
+    while( !m_pRenderThread->isIdle() ) {}
+    //Waiting for frame ready because it works with m_pMlvObject
+    while( m_frameStillDrawing ) {qApp->processEvents();}
+
+    //Unload audio
+    m_pAudioPlayback->unloadAudio();
 
     /* Destroy it just for simplicity... and make a new one */
     freeMlvObject( m_pMlvObject );
@@ -480,6 +428,9 @@ void MainWindow::openMlv( QString fileName )
     int imageSize = getMlvWidth( m_pMlvObject ) * getMlvHeight( m_pMlvObject ) * 3;
     free( m_pRawImage );
     m_pRawImage = ( uint8_t* )malloc( imageSize );
+
+    //Init Render Thread
+    m_pRenderThread->init( m_pMlvObject, m_pRawImage );
 
     //Set Clip Info to Dialog
     m_pInfoDialog->ui->tableWidget->item( 0, 1 )->setText( QString( "%1" ).arg( (char*)getMlvCamera( m_pMlvObject ) ) );
@@ -570,6 +521,7 @@ void MainWindow::playbackHandling(int timeDiff)
             {
                 //Stop
                 ui->actionPlay->setChecked( false );
+                m_pAudioPlayback->stop(); //Stop audio immediately, that is faster on Linux
             }
         }
         else
@@ -2199,12 +2151,12 @@ void MainWindow::on_actionZoom100_triggered()
         return;
     }
     ui->graphicsView->resetZoom();
-    ui->graphicsView->setZoomEnabled( true );
+    if( !ui->graphicsView->isZoomEnabled() )
+    {
+        ui->graphicsView->setZoomEnabled( true );
+        m_zoomTo100Center = true;
+    }
     m_frameChanged = true;
-    drawFrame();
-    update();
-    ui->graphicsView->horizontalScrollBar()->setValue( ( getMlvWidth(m_pMlvObject) - ui->graphicsView->width() ) / 2 );
-    ui->graphicsView->verticalScrollBar()->setValue( ( getMlvHeight(m_pMlvObject) - ui->graphicsView->height() ) / 2 );
 }
 
 //Show Histogram
@@ -2981,4 +2933,109 @@ void MainWindow::exportAbort( void )
 {
     m_exportAbortPressed = true;
     m_exportQueue.clear();
+}
+
+//Draw the frame when render thread is ready
+void MainWindow::drawFrameReady()
+{
+    if( ui->actionZoomFit->isChecked() )
+    {
+        //Some math to have the picture exactly in the frame
+        int actWidth;
+        int actHeight;
+        if( ui->actionFullscreen->isChecked() )
+        {
+            actWidth = QApplication::primaryScreen()->size().width();
+            actHeight = QApplication::primaryScreen()->size().height();
+        }
+        else
+        {
+            actWidth = ui->graphicsView->width();
+            actHeight = ui->graphicsView->height();
+        }
+        int desWidth = actWidth;
+        int desHeight = actWidth * getMlvHeight(m_pMlvObject) / getMlvWidth(m_pMlvObject);
+        if( desHeight > actHeight )
+        {
+            desHeight = actHeight;
+            desWidth = actHeight * getMlvWidth(m_pMlvObject) / getMlvHeight(m_pMlvObject);
+        }
+
+        //Get Picture
+        QPixmap pic = QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
+                                          .scaled( desWidth * devicePixelRatio(),
+                                                   desHeight * devicePixelRatio(),
+                                                   Qt::KeepAspectRatio, Qt::SmoothTransformation) );//alternative: Qt::FastTransformation
+        //Set Picture to Retina
+        pic.setDevicePixelRatio( devicePixelRatio() );
+        //Bring frame to GUI (fit to window)
+        m_pGraphicsItem->setPixmap( pic );
+        //Set Scene
+        m_pScene->setSceneRect( 0, 0, desWidth, desHeight );
+    }
+    else
+    {
+        //Bring frame to GUI (100%)
+        m_pGraphicsItem->setPixmap( QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 ) ) );
+        m_pScene->setSceneRect( 0, 0, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject) );
+    }
+    //Add zebras on the image
+    drawZebras();
+
+    //GetHistogram
+    if( ui->actionShowHistogram->isChecked() )
+    {
+        QPixmap pic = QPixmap::fromImage( m_pHistogram->getHistogramFromRaw( m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject) )
+                                                          .scaled( ui->labelHistogram->width() * devicePixelRatio(),
+                                                                   ui->labelHistogram->height() * devicePixelRatio(),
+                                                                   Qt::IgnoreAspectRatio, Qt::SmoothTransformation) ); //alternative: Qt::FastTransformation
+        pic.setDevicePixelRatio( devicePixelRatio() );
+        ui->labelHistogram->setPixmap( pic );
+        ui->labelHistogram->setAlignment( Qt::AlignCenter ); //Always in the middle
+    }
+    //Waveform
+    else if( ui->actionShowWaveFormMonitor->isChecked() )
+    {
+        QPixmap pic = QPixmap::fromImage( m_pWaveFormMonitor->getWaveFormMonitorFromRaw( m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject) )
+                                                          .scaled( ui->labelHistogram->width() * devicePixelRatio(),
+                                                                   ui->labelHistogram->height() * devicePixelRatio(),
+                                                                   Qt::IgnoreAspectRatio, Qt::SmoothTransformation) ); //alternative: Qt::FastTransformation
+        pic.setDevicePixelRatio( devicePixelRatio() );
+        ui->labelHistogram->setPixmap( pic );
+        ui->labelHistogram->setAlignment( Qt::AlignCenter ); //Always in the middle
+    }
+    //Parade
+    else if( ui->actionShowParade->isChecked() )
+    {
+        QPixmap pic = QPixmap::fromImage( m_pWaveFormMonitor->getParadeFromRaw( m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject) )
+                                                          .scaled( ui->labelHistogram->width() * devicePixelRatio(),
+                                                                   ui->labelHistogram->height() * devicePixelRatio(),
+                                                                   Qt::IgnoreAspectRatio, Qt::SmoothTransformation) ); //alternative: Qt::FastTransformation
+        pic.setDevicePixelRatio( devicePixelRatio() );
+        ui->labelHistogram->setPixmap( pic );
+        ui->labelHistogram->setAlignment( Qt::AlignCenter ); //Always in the middle
+    }
+
+    //Drawing ready, next frame can be rendered
+    m_frameStillDrawing = false;
+
+    //Sync Audio
+    if( m_tryToSyncAudio && ui->actionAudioOutput->isChecked() && ui->actionPlay->isChecked() && ui->actionDropFrameMode->isChecked() )
+    {
+        m_tryToSyncAudio = false;
+        m_pAudioPlayback->stop();
+        m_pAudioPlayback->jumpToPos( m_newPosDropMode );
+        m_pAudioPlayback->play();
+    }
+
+    //And show the user which frame we show
+    drawFrameNumberLabel();
+
+    //Set frame to the middle
+    if( m_zoomTo100Center )
+    {
+        m_zoomTo100Center = false;
+        ui->graphicsView->horizontalScrollBar()->setValue( ( getMlvWidth(m_pMlvObject) - ui->graphicsView->width() ) / 2 );
+        ui->graphicsView->verticalScrollBar()->setValue( ( getMlvHeight(m_pMlvObject) - ui->graphicsView->height() ) / 2 );
+    }
 }
