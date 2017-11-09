@@ -5,15 +5,56 @@
 #include <pthread.h>
 
 #include "debayer.h"
+#include "ipol_demosaicking/libdemosaicking.h"
 
 #define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
 
-/* AmAZeMEmE debayer easier to use */
+/* Debayer method from http://www.ipol.im/pub/art/2015/145/, threads argument unused once again */
+void debayerIPOL(uint16_t * debayerto, float * bayerdata, int width, int height, int threads)
+{
+    int pixelsize = width * height;
+
+    float * red_out   = (float *)malloc(pixelsize * sizeof(float));
+    float * green_out = (float *)malloc(pixelsize * sizeof(float));
+    float * blue_out  = (float *)malloc(pixelsize * sizeof(float));
+
+    float epsilon = 0.00000001f;
+    float M = 13.0f;
+    float beta = 0.77f;
+    float h = (310.0f * beta - 214.0f) / 3.0f;
+    int halfL = 1;
+    int reswind = 10;
+    int compwind = 1;
+    int N = 10;
+    int redx = 0;
+    int redy = 0;
+
+    ipol_demosaic( bayerdata, bayerdata, bayerdata,
+                   red_out, green_out, blue_out, beta, 
+                   h, epsilon, M, halfL, reswind,
+                   compwind, N, 0, 0, width, height );
+
+    /* RGB convert */
+    for (int i = 0; i < pixelsize; i++)
+    {
+        int j = i * 3;
+        debayerto[ j ] = (uint16_t) MIN(red_out[i], 65535);
+        debayerto[j+1] = (uint16_t) MIN(green_out[i], 65535);
+        debayerto[j+2] = (uint16_t) MIN(blue_out[i]/* *65535.0 */, 65535);
+    }
+
+    free(red_out);
+    free(green_out);
+    free(blue_out);
+}
+
+
+/* AMaZE debayer easier to use */
 void debayerAmaze(uint16_t * __restrict debayerto, float * __restrict bayerdata, int width, int height, int threads)
 {
     int pixelsize = width * height;
 
-    /* AmAZeMEmE wants an image as floating points and 2d arrey as well */
+    /* AMaZE wants an image as floating points and 2d array as well */
     float ** __restrict imagefloat2d = (float **)malloc(height * sizeof(float *));
     for (int y = 0; y < height; ++y) imagefloat2d[y] = (float *)(bayerdata+(y*width));
 

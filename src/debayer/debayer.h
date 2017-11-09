@@ -5,8 +5,10 @@
 void debayerBasic(uint16_t * __restrict debayerto, float * __restrict bayerdata, int width, int height, int threads);
 /* More useable amaze, threads number should be the number of cores(or threads if >= i7) your cpu has */
 void debayerAmaze(uint16_t * __restrict debayerto, float * __restrict bayerdata, int width, int height, int threads);
+/* An interesting debayering method from http://www.ipol.im/pub/art/2015/145/ */
+void debayerIPOL(uint16_t * debayerto, float * bayerdata, int width, int height, int threads);
 
-/* AMaZe input as struct for posixz */
+/* AMaZe input as struct for posix threads */
 typedef struct {
     float ** __restrict rawData;    /* holds preprocessed pixel values, rawData[i][j] corresponds to the ith row and jth column */
     float ** __restrict red;        /* the interpolated red plane */

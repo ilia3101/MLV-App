@@ -6,7 +6,7 @@ objects = main.o video_mlv.o debayer.o amaze_demosaic.o raw_processing.o \
 	      main_methods.o useful_methods.o background_thread.o matrix.o \
 		  camera_matrices.o frame_caching.o lj92.o session_methods.o \
 		  delegate.o mlv_view.o llrawproc.o pixelproc.o stripes.o \
-		  patternnoise.o hist.o dualiso.o
+		  patternnoise.o hist.o dualiso.o libdemosaicking.o libauxiliar.o
 
 # Compilers
 CC = clang # C
@@ -85,6 +85,10 @@ debayer.o : ../../src/debayer/debayer.c
 	$(CC) $(cflags) -pthread ../../src/debayer/debayer.c
 amaze_demosaic.o : ../../src/debayer/amaze_demosaic.c
 	$(CC) $(cflags) ../../src/debayer/amaze_demosaic.c
+libdemosaicking.o : ../../src/debayer/ipol_demosaicking/libdemosaicking.c
+	$(CC) $(cflags) ../../src/debayer/ipol_demosaicking/libdemosaicking.c
+libauxiliar.o : ../../src/debayer/ipol_demosaicking/libauxiliar.c
+	$(CC) $(cflags) ../../src/debayer/ipol_demosaicking/libauxiliar.c
 raw_processing.o : ../../src/processing/raw_processing.c
 	$(CC) $(cflags) ../../src/processing/raw_processing.c
 matrix.o : ../../src/matrix/matrix.c
