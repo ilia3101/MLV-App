@@ -28,7 +28,7 @@
 #include "DarkStyle.h"
 
 #define APPNAME "MLV App"
-#define VERSION "0.9 alpha"
+#define VERSION "0.10 alpha"
 
 //Constructor
 MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
