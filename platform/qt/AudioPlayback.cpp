@@ -60,10 +60,13 @@ void AudioPlayback::loadAudio( mlvObject_t *pMlvObject )
     m_pAudioStream->device()->seek( 0 );
 #ifdef Q_OS_LINUX
     m_pAudioOutput->setBufferSize( 131072 );
-#else
+#elif defined(Q_OS_WIN)
+    m_pAudioOutput->setBufferSize( 32768 );
+#else //Q_OS_OSX
     m_pAudioOutput->setBufferSize( 524288 );
 #endif
     m_pAudioOutput->setVolume( 1.0 );
+    m_pAudioOutput->suspend();
 
     m_audioLoaded = true;
 }
@@ -96,7 +99,6 @@ void AudioPlayback::play()
 {
     if( !doesMlvHaveAudio( m_pMlvObject ) ) return;
 
-    m_pAudioOutput->reset();
     m_pAudioOutput->start( m_pAudioStream->device() );
     m_pAudioOutput->resume();
     m_audioRunning = true;
@@ -110,5 +112,6 @@ void AudioPlayback::stop()
     if( !m_audioRunning ) return;
     m_pAudioOutput->suspend();
     m_pAudioOutput->stop();
+    m_pAudioOutput->reset();
     m_audioRunning = false;
 }
