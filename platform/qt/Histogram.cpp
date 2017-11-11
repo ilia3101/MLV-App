@@ -40,7 +40,7 @@ QImage Histogram::getHistogramFromImg( QImage *img )
         }
     }
     //Highest Value
-    uint32_t highestVal = 0;
+    uint32_t highestVal = 1;
     for( uint16_t x = 0; x <= 255; x++ )
     {
         //We scale something in between linear and log
@@ -91,7 +91,7 @@ QImage Histogram::getHistogramFromRaw(uint8_t *m_pRawImage, uint16_t width, uint
         }
     }
     //Highest Value
-    uint32_t highestVal = 0;
+    uint32_t highestVal = 1;
     for( uint16_t x = 0; x <= 255; x++ )
     {
         //We scale something in between linear and log
