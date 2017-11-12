@@ -186,6 +186,7 @@ private:
     void readSettings( void );
     void writeSettings( void );
     void startExportPipe( QString fileName );
+    void startExportCdng( QString fileName );
     void addFileToSession( QString fileName );
     void openSession( QString fileName );
     void saveSession( QString fileName );

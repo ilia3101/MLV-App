@@ -16,6 +16,7 @@
 #define CODEC_PRORES422HQ    3
 #define CODEC_PRORES4444     4
 #define CODEC_AVIRAW         5
+#define CODEC_CDNG           6
 
 #define CODEC_PRORES_OPTION_KS 0
 #define CODEC_PRORES_OPTION_AW 1

@@ -884,6 +884,49 @@ void MainWindow::startExportPipe(QString fileName)
     emit exportReady();
 }
 
+//CDNG output
+void MainWindow::startExportCdng(QString fileName)
+{
+    //Disable GUI drawing
+    m_dontDraw = true;
+
+    // we always get amaze frames for exporting
+    setMlvAlwaysUseAmaze( m_pMlvObject );
+    llrpResetFpmStatus(m_pMlvObject);
+    llrpResetBpmStatus(m_pMlvObject);
+    llrpComputeStripesOn(m_pMlvObject);
+    m_pMlvObject->current_cached_frame_active = 0;
+    //enable low level raw fixes (if wanted)
+    if( ui->checkBoxRawFixEnable->isChecked() ) m_pMlvObject->llrawproc->fix_raw = 1;
+
+    //StatusDialog
+    m_pStatusDialog->ui->progressBar->setMaximum( getMlvFrames( m_pMlvObject ) );
+    m_pStatusDialog->ui->progressBar->setValue( 0 );
+    m_pStatusDialog->show();
+
+    //Output frames loop
+    for( uint32_t frame = 0; frame < getMlvFrames( m_pMlvObject ); frame++ )
+    {
+        //Output the frame
+        //Interpret "fileName" - ".cdng" as folder where the cdng should be written!
+        //WRITE_DNG( frame, fileName );
+
+        //Set Status
+        m_pStatusDialog->ui->progressBar->setValue( frame + 1 );
+        m_pStatusDialog->ui->progressBar->repaint();
+        qApp->processEvents();
+
+        //Abort pressed? -> End the loop
+        if( m_exportAbortPressed ) break;
+    }
+
+    //Enable GUI drawing
+    m_dontDraw = false;
+
+    //Emit Ready-Signal
+    emit exportReady();
+}
+
 //Adds the fileName to the Session List
 void MainWindow::addFileToSession(QString fileName)
 {
@@ -1983,6 +2026,12 @@ void MainWindow::on_actionExport_triggered()
         fileType = tr("Audio Video Interleave (*.avi)");
         fileEnding = ".avi";
     }
+    else if( m_codecProfile == CODEC_CDNG )
+    {
+        saveFileName.append( ".cdng" );
+        fileType = tr("Cinema DNG (*.cdng)");
+        fileEnding = ".cdng";
+    }
     else
     {
         saveFileName.append( ".mov" );
@@ -1990,8 +2039,8 @@ void MainWindow::on_actionExport_triggered()
         fileEnding = ".mov";
     }
 
-    //If one file is selected
-    if( ui->listWidgetSession->selectedItems().count() <= 1 )
+    //If one file is selected, but not CDNG
+    if( ( ui->listWidgetSession->selectedItems().count() <= 1 ) && ( m_codecProfile != CODEC_CDNG ) )
     {
         //File Dialog
         QString fileName = QFileDialog::getSaveFileName( this, tr("Export..."),
@@ -2643,8 +2692,17 @@ void MainWindow::exportHandler( void )
                                              .arg( numberOfJobs )
                                              .arg( QFileInfo( m_exportQueue.first()->fileName() ).fileName() ) );
 
-        //Start it
-        startExportPipe( m_exportQueue.first()->exportFileName() ); //Pipe export
+        //Start it, raw/rendered
+        if( m_codecProfile == CODEC_CDNG )
+        {
+            //raw output
+            startExportCdng( m_exportQueue.first()->exportFileName() );
+        }
+        else
+        {
+            //rendered output
+            startExportPipe( m_exportQueue.first()->exportFileName() ); //Pipe export
+        }
         return;
     }
     //Else if all planned exports are ready

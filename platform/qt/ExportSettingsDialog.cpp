@@ -17,7 +17,6 @@ ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, uint8_t currentCodec
     ui->setupUi(this);
     setWindowFlags( Qt::Dialog | Qt::WindowTitleHint | Qt::WindowCloseButtonHint );
     ui->comboBoxCodec->setCurrentIndex( currentCodecProfile );
-    on_comboBoxCodec_currentIndexChanged( currentCodecProfile );
     ui->comboBoxOption->setCurrentIndex( currentCodecOption );
     if( previewMode == 1 ) ui->radioButtonPreviewList->setChecked( true );
     else if( previewMode == 2 ) ui->radioButtonPreviewIcon->setChecked( true );
@@ -104,5 +103,6 @@ void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
     {
         ui->comboBoxOption->setEnabled( false );
         if( index == CODEC_PRORES4444 ) ui->comboBoxOption->addItem( QString( "Kostya" ) );
+        if( index == CODEC_CDNG ) QMessageBox::information( this, tr( "Export Setting Info" ), tr( "Note: CDNG export is not yet implemented. Use it for testing only..." ) );
     }
 }
