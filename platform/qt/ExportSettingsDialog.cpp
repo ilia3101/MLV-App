@@ -103,8 +103,8 @@ void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
     else if( index == CODEC_CDNG )
     {
         ui->comboBoxOption->setEnabled( true );
-        ui->comboBoxOption->addItem( QString( "Default Naming Sceme" ) );
-        ui->comboBoxOption->addItem( QString( "Davinci Resolve Naming Sceme" ) );
+        ui->comboBoxOption->addItem( QString( "Default Naming Scheme" ) );
+        ui->comboBoxOption->addItem( QString( "DaVinci Resolve Naming Scheme" ) );
         QMessageBox::information( this, tr( "Export Setting Info" ), tr( "Note: CDNG export is not yet implemented. Use it for testing only..." ) );
     }
     else
