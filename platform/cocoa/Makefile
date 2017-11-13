@@ -6,7 +6,12 @@ objects = main.o video_mlv.o debayer.o amaze_demosaic.o raw_processing.o \
 	      main_methods.o useful_methods.o background_thread.o matrix.o \
 		  camera_matrices.o frame_caching.o lj92.o session_methods.o \
 		  delegate.o mlv_view.o llrawproc.o pixelproc.o stripes.o \
-		  patternnoise.o hist.o dualiso.o
+		  patternnoise.o hist.o dualiso.o avf_lib.o
+
+# All macOS frameworks for the link
+frameworks = -framework Cocoa -framework AppKit -framework Foundation \
+	   		 -framework CoreFoundation -framework OpenGL -framework CoreMedia \
+			 -framework AVFoundation -framework CoreVideo
 
 # Compilers
 CC = clang # C
@@ -52,13 +57,15 @@ app :
 
 # Actual linking and compiling happens here
 build : $(objects)
-	$(CC) $(mainflags) $(objects) -o $(appname) -framework Cocoa -framework AppKit -framework Foundation -framework CoreFoundation -framework OpenGL;
+	$(CC) $(mainflags) $(objects) -o $(appname) $(frameworks);
 
 # Cocoa app part (Objective C)
 main.o : main.m
 	$(OCC) $(objcflags) main.m
 mlv_view.o : mlv_view.m
 	$(OCC) $(objcflags) mlv_view.m
+avf_lib.o : avf_lib/avf_lib.m
+	$(OCC) $(objcflags) avf_lib/avf_lib.m
 main_methods.o : main_methods.m
 	$(OCC) $(objcflags) main_methods.m
 delegate.o : delegate.m
