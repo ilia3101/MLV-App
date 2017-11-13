@@ -439,19 +439,20 @@ void MainWindow::openMlv( QString fileName )
     m_pInfoDialog->ui->tableWidget->item( 3, 1 )->setText( QString( "%1 pixel" ).arg( (int)getMlvHeight( m_pMlvObject ) ) );
     m_pInfoDialog->ui->tableWidget->item( 4, 1 )->setText( QString( "%1" ).arg( (int)getMlvFrames( m_pMlvObject ) ) );
     m_pInfoDialog->ui->tableWidget->item( 5, 1 )->setText( QString( "%1 fps" ).arg( getMlvFramerate( m_pMlvObject ) ) );
-    m_pInfoDialog->ui->tableWidget->item( 6, 1 )->setText( QString( "%1 µs" ).arg( getMlvShutter( m_pMlvObject ) ) );
-    m_pInfoDialog->ui->tableWidget->item( 7, 1 )->setText( QString( "f/%1" ).arg( getMlvAperture( m_pMlvObject ) / 100.0, 0, 'f', 1 ) );
-    m_pInfoDialog->ui->tableWidget->item( 8, 1 )->setText( QString( "%1" ).arg( (int)getMlvIso( m_pMlvObject ) ) );
-    m_pInfoDialog->ui->tableWidget->item( 9, 1 )->setText( QString( "%1 bits, %2" ).arg( getMlvBitdepth( m_pMlvObject ) ).arg( getMlvCompression( m_pMlvObject ) ) );
+    m_pInfoDialog->ui->tableWidget->item( 6, 1 )->setText( QString( "%1 mm" ).arg( getMlvFocalLength( m_pMlvObject ) ) );
+    m_pInfoDialog->ui->tableWidget->item( 7, 1 )->setText( QString( "%1 µs" ).arg( getMlvShutter( m_pMlvObject ) ) );
+    m_pInfoDialog->ui->tableWidget->item( 8, 1 )->setText( QString( "f/%1" ).arg( getMlvAperture( m_pMlvObject ) / 100.0, 0, 'f', 1 ) );
+    m_pInfoDialog->ui->tableWidget->item( 9, 1 )->setText( QString( "%1" ).arg( (int)getMlvIso( m_pMlvObject ) ) );
+    m_pInfoDialog->ui->tableWidget->item( 10, 1 )->setText( QString( "%1 bits, %2" ).arg( getMlvBitdepth( m_pMlvObject ) ).arg( getMlvCompression( m_pMlvObject ) ) );
     if( doesMlvHaveAudio( m_pMlvObject ) )
     {
-        m_pInfoDialog->ui->tableWidget->item( 10, 1 )->setText( QString( "%1 channel(s), %2 kHz" )
+        m_pInfoDialog->ui->tableWidget->item( 11, 1 )->setText( QString( "%1 channel(s), %2 kHz" )
                                                                 .arg( getMlvAudioChannels( m_pMlvObject ) )
                                                                 .arg( getMlvSampleRate( m_pMlvObject ) ) );
     }
     else
     {
-        m_pInfoDialog->ui->tableWidget->item( 10, 1 )->setText( QString( "-" ) );
+        m_pInfoDialog->ui->tableWidget->item( 11, 1 )->setText( QString( "-" ) );
     }
 
 
@@ -1279,6 +1280,7 @@ void MainWindow::deleteSession()
     m_pInfoDialog->ui->tableWidget->item( 8, 1 )->setText( "-" );
     m_pInfoDialog->ui->tableWidget->item( 9, 1 )->setText( "-" );
     m_pInfoDialog->ui->tableWidget->item( 10, 1 )->setText( "-" );
+    m_pInfoDialog->ui->tableWidget->item( 11, 1 )->setText( "-" );
 
     //Adapt slider to clip and move to position 0
     ui->horizontalSliderPosition->setValue( 0 );
