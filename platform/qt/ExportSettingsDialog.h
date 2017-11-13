@@ -21,6 +21,9 @@
 #define CODEC_PRORES_OPTION_KS 0
 #define CODEC_PRORES_OPTION_AW 1
 
+#define CODEC_CNDG_DEFAULT   0
+#define CODEC_CDNG_RESOLVE   1
+
 namespace Ui {
 class ExportSettingsDialog;
 }

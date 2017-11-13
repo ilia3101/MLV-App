@@ -100,10 +100,16 @@ void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
         ui->comboBoxOption->addItem( QString( "Kostya" ) );
         ui->comboBoxOption->addItem( QString( "Anatolyi (faster)" ) );
     }
+    else if( index == CODEC_CDNG )
+    {
+        ui->comboBoxOption->setEnabled( true );
+        ui->comboBoxOption->addItem( QString( "Default Naming Sceme" ) );
+        ui->comboBoxOption->addItem( QString( "Davinci Resolve Naming Sceme" ) );
+        QMessageBox::information( this, tr( "Export Setting Info" ), tr( "Note: CDNG export is not yet implemented. Use it for testing only..." ) );
+    }
     else
     {
         ui->comboBoxOption->setEnabled( false );
         if( index == CODEC_PRORES4444 ) ui->comboBoxOption->addItem( QString( "Kostya" ) );
-        if( index == CODEC_CDNG ) QMessageBox::information( this, tr( "Export Setting Info" ), tr( "Note: CDNG export is not yet implemented. Use it for testing only..." ) );
     }
 }
