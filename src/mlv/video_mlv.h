@@ -97,6 +97,12 @@ void getMlvAudioData(mlvObject_t * video, int16_t * outputAudio);
 #define doesMlvHaveAudio(video) (((video)->MLVI.audioClass) && ((video)->audios))
 #define getMlvSampleRate(video) (video)->WAVI.samplingRate
 #define getMlvAudioChannels(video) (video)->WAVI.channels
+#define getMlvTmYear(video)    ((video)->RTCI.tm_year+1900)
+#define getMlvTmMonth(video)   ((video)->RTCI.tm_mon+1)
+#define getMlvTmDay(video)     (video)->RTCI.tm_mday
+#define getMlvTmHour(video)    (video)->RTCI.tm_hour
+#define getMlvTmMin(video)     (video)->RTCI.tm_min
+#define getMlvTmSec(video)     (video)->RTCI.tm_sec
 
 /* Useful setting macros (functions) */
 
