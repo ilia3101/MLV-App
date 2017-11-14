@@ -250,7 +250,7 @@ void applyProcessingObject( processingObject_t * processing,
         uint32_t blur_diameter = radius*2+1;
 
         /* Offset - do twice on channel '1' and '2' (Cb and Cr) */
-        int32_t limit_x = (imageX-radius)*3;
+        int32_t limit_x = (imageX-radius-1)*3;
         for (uint32_t offset = 1; offset <=2; ++offset)
         {
             /* Horizontal blur */
