@@ -32,6 +32,8 @@ typedef struct {
     FILE * file;
     char * path;
     pthread_mutex_t main_file_mutex;
+    pthread_mutex_t g_mutexFind; /* 'g' mutexes should prevent pink frames */
+    pthread_mutex_t g_mutexCount;
 
     /* For access to MLV headers */
     mlv_file_hdr_t    MLVI;

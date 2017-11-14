@@ -279,6 +279,8 @@ mlvObject_t * initMlvObject()
 
     /* Will avoid main file conflicts with audio and stuff */
     pthread_mutex_init(&video->main_file_mutex, NULL);
+    pthread_mutex_init(&video->g_mutexFind, NULL);
+    pthread_mutex_init(&video->g_mutexCount, NULL);
 
     /* Set cache limit to allow ~1 second of 1080p and be safe for low ram PCs */
     setMlvRawCacheLimitMegaBytes(video, 290);
@@ -319,6 +321,8 @@ void freeMlvObject(mlvObject_t * video)
 
     /* Mutex things here... */
     pthread_mutex_destroy(&video->main_file_mutex);
+    pthread_mutex_destroy(&video->g_mutexFind);
+    pthread_mutex_destroy(&video->g_mutexCount);
 
     /* Main 1 */
     free(video);

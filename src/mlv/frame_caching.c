@@ -16,9 +16,6 @@
 #define DEBUG(CODE)
 #endif
 
-pthread_mutex_t g_mutexFind = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t g_mutexCount = PTHREAD_MUTEX_INITIALIZER;
-
 void disableMlvCaching(mlvObject_t * video)
 {
     /* Stop caching and make sure by waiting */
@@ -142,13 +139,13 @@ void clear_mlv_cache(mlvObject_t * video)
 /* Returns 1 on success, or 0 if all are cached */
 int find_mlv_frame_to_cache(mlvObject_t * video, uint64_t *index) /* Outputs to *index */
 {
-    pthread_mutex_lock( &g_mutexFind );
+    pthread_mutex_lock( &video->g_mutexFind );
     /* If a specific frame was requested */
     if (video->cache_next) 
     {
         *index = video->cache_next;
         video->cache_next = 0;
-        pthread_mutex_unlock( &g_mutexFind );
+        pthread_mutex_unlock( &video->g_mutexFind );
         return 1;
     }
     else
@@ -159,12 +156,12 @@ int find_mlv_frame_to_cache(mlvObject_t * video, uint64_t *index) /* Outputs to 
             if (video->cached_frames[frame] == MLV_FRAME_NOT_CACHED)
             {
                 *index = frame;
-                pthread_mutex_unlock( &g_mutexFind );
+                pthread_mutex_unlock( &video->g_mutexFind );
                 return 1;
             }
         }
     }
-    pthread_mutex_unlock( &g_mutexFind );
+    pthread_mutex_unlock( &video->g_mutexFind );
     return 0;
 }
 
@@ -178,9 +175,9 @@ void add_mlv_cache_thread(mlvObject_t * video)
 /* Add as many of these as you want :) */
 void an_mlv_cache_thread(mlvObject_t * video)
 {
-    pthread_mutex_lock( &g_mutexCount );
+    pthread_mutex_lock( &video->g_mutexCount );
     video->cache_thread_count++;
-    pthread_mutex_unlock( &g_mutexCount );
+    pthread_mutex_unlock( &video->g_mutexCount );
 
     if (video->file)
     {
@@ -207,7 +204,7 @@ void an_mlv_cache_thread(mlvObject_t * video)
             float ** __restrict blue2d = (float **)malloc(height * sizeof(float *));
             for (uint32_t y = 0; y < height; ++y) blue2d[y] = (float *)(blue1d+(y*width));
 
-            pthread_mutex_lock( &g_mutexCount );
+            pthread_mutex_lock( &video->g_mutexCount );
             amazeinfo_t amaze_params = {
                 .rawData =  imagefloat2d,
                 .red     =  red2d,
@@ -219,7 +216,7 @@ void an_mlv_cache_thread(mlvObject_t * video)
                 .winh    =  getMlvHeight(video),
                 .cfa     =  0
             };
-            pthread_mutex_unlock( &g_mutexCount );
+            pthread_mutex_unlock( &video->g_mutexCount );
 
             while (1 < 2)
             {
@@ -230,9 +227,9 @@ void an_mlv_cache_thread(mlvObject_t * video)
                 /* If cache finder reurns false, it's time t stop caching */
                 if (!find_mlv_frame_to_cache(video, &cache_frame)) break;
 
-                pthread_mutex_lock( &g_mutexFind );
+                pthread_mutex_lock( &video->g_mutexFind );
                 video->cached_frames[cache_frame] = MLV_FRAME_BEING_CACHED;
-                pthread_mutex_unlock( &g_mutexFind );
+                pthread_mutex_unlock( &video->g_mutexFind );
 
                 getMlvRawFrameFloat(video, cache_frame, imagefloat1d, file);
 
@@ -249,9 +246,9 @@ void an_mlv_cache_thread(mlvObject_t * video)
                     pix[2] = (uint16_t)MIN(blue1d[i], 65535);
                 }
 
-                pthread_mutex_lock( &g_mutexFind );
+                pthread_mutex_lock( &video->g_mutexFind );
                 video->cached_frames[cache_frame] = MLV_FRAME_IS_CACHED;
-                pthread_mutex_unlock( &g_mutexFind );
+                pthread_mutex_unlock( &video->g_mutexFind );
 
                 DEBUG( printf("Debayered frame %llu/%llu has been cached.\n", cache_frame+1, video->cache_limit_frames); )
             }
@@ -269,9 +266,9 @@ void an_mlv_cache_thread(mlvObject_t * video)
         }
     }
 
-    pthread_mutex_lock( &g_mutexCount );
+    pthread_mutex_lock( &video->g_mutexCount );
     video->cache_thread_count--;
-    pthread_mutex_unlock( &g_mutexCount );
+    pthread_mutex_unlock( &video->g_mutexCount );
 }
 
 
