@@ -348,6 +348,8 @@ void openMlvClip(mlvObject_t * video, char * mlvPath)
 
     file_set_pos(video->file, 0, SEEK_SET); /* Start of file */
 
+    int rtci_read = 0; /* Saves, if RTCI was read */
+
     while (file_get_pos(video->file) < file_size) /* Check if were at end of file yet */
     {
         /* Record position to go back to it later if block is read */
@@ -391,8 +393,11 @@ void openMlvClip(mlvObject_t * video, char * mlvPath)
             fread(&video->EXPO, sizeof(mlv_expo_hdr_t), 1, video->file);
         else if ( strncmp(block_name, "LENS", 4) == 0 )
             fread(&video->LENS, sizeof(mlv_lens_hdr_t), 1, video->file);
-        else if ( strncmp(block_name, "RTCI", 4) == 0 )
+        else if ( ( strncmp(block_name, "RTCI", 4) == 0 ) && ( !rtci_read ) )
+        {
             fread(&video->RTCI, sizeof(mlv_rtci_hdr_t), 1, video->file);
+            rtci_read = 1; //read only first one
+        }
         else if ( strncmp(block_name, "IDNT", 4) == 0 )
             fread(&video->IDNT, sizeof(mlv_idnt_hdr_t), 1, video->file);
         else if ( strncmp(block_name, "INFO", 4) == 0 )
