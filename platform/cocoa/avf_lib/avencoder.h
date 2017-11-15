@@ -12,12 +12,14 @@ typedef struct
     CGSize size;
     double fps;
 
+    CGColorSpaceRef colour_space;
+    CFDataRef colour_profile_data;
+    NSDictionary * colour_attachment; /* To attach to the CVPixelBuffer or whatever */
+
     uint16_t * data; /* Image data is put here b4 encoding (3x16bit RGB only) */
 
     double write_progress; /* Check to see progress in percent */
     BOOL keep_writing; /* Flag to stop writing if needed */
-
-    CGDataProviderRef provider; /* Some kind of stupid adapter to make CGImage */
     
     AVAssetWriter * assetWriter; /* Asset writer */
     AVAssetWriterInput * asset_writer_input; /* Whatever this does */

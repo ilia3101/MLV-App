@@ -13,7 +13,7 @@
 extern godObject_t * App;
 
 /* Encode a video using AVFoundation */
-AVEncoder_t * initAVEncoder(int width, int height, int codec, double fps)
+AVEncoder_t * initAVEncoder(int width, int height, int codec, int colourSpace, double fps)
 {
     AVEncoder_t * encoder = (AVEncoder_t *)calloc( sizeof(AVEncoder_t), 1 );
 
@@ -27,22 +27,50 @@ AVEncoder_t * initAVEncoder(int width, int height, int codec, double fps)
     {
         case AVF_CODEC_H264:
             encoder->codec = AVVideoCodecH264;
+            break;
         case AVF_CODEC_HEVC:
             encoder->codec = AVVideoCodecHEVC;
+            break;
         case AVF_CODEC_PRORES_422:
             encoder->codec = AVVideoCodecAppleProRes422;
+            break;
         case AVF_CODEC_PRORES_4444:
             encoder->codec = AVVideoCodecAppleProRes4444;
+            break;
     }
 
-    encoder->provider = CGDataProviderCreateWithData(nil, encoder->data, width * height * sizeof(uint16_t) * 3, nil);
+    CFStringRef colour_space_name;
+    switch (colourSpace)
+    {
+        case AVF_COLOURSPACE_SRGB:
+            colour_space_name = kCGColorSpaceSRGB;
+            break;
+        case AVF_COLOURSPACE_DCIP3:
+            colour_space_name = kCGColorSpaceDCIP3;
+            break;
+        case AVF_COLOURSPACE_ADOBE_RGB:
+            colour_space_name = kCGColorSpaceAdobeRGB1998;
+            break;
+        case AVF_COLOURSPACE_REC_709:
+            colour_space_name = kCGColorSpaceITUR_709;
+            break;
+        case AVF_COLOURSPACE_REC_2020:
+            colour_space_name = kCGColorSpaceITUR_2020;
+            break;
+        default:
+            colour_space_name = kCGColorSpaceSRGB;
+            break;
+    }
+    encoder->colour_space = CGColorSpaceCreateWithName(colour_space_name);
+    encoder->colour_profile_data = CGColorSpaceCopyICCProfile(encoder->colour_space);
 
     return encoder;
 }
 
 void freeAVEncoder(AVEncoder_t * encoder)
 {
-    CGDataProviderRelease(encoder->provider);
+    CGColorSpaceRelease(encoder->colour_space);
+    CFRelease(encoder->colour_profile_data);
     free(encoder->data);
     free(encoder);
 }
@@ -59,32 +87,28 @@ void beginWritingVideoFile(AVEncoder_t * encoder, char * path, double * progress
     NSLog(outURL.absoluteString);
 
     NSError * error = nil;
-    AVAssetWriter * videoWriter = [ [AVAssetWriter alloc] initWithURL: outURL 
-                                    fileType:AVFileTypeQuickTimeMovie
-                                    error:&error ];    
-    // NSParameterAssert(videoWriter);
+    AVAssetWriter * videoWriter = [[AVAssetWriter alloc] initWithURL: outURL
+                                  fileType:AVFileTypeQuickTimeMovie
+                                                              error:&error];
+    
+    NSDictionary * videoSettings = [NSDictionary dictionaryWithObjectsAndKeys:
+                                   encoder->codec, AVVideoCodecKey,
+                                   [NSNumber numberWithInt:encoder->width], AVVideoWidthKey,
+                                   [NSNumber numberWithInt:encoder->height], AVVideoHeightKey,
+                                   nil ];
+    
+    AVAssetWriterInput * videoWriterInput = [AVAssetWriterInput
+                                            assetWriterInputWithMediaType:AVMediaTypeVideo
+                                            outputSettings:videoSettings];
+    
+    
+    AVAssetWriterInputPixelBufferAdaptor * adaptor = [AVAssetWriterInputPixelBufferAdaptor
+                                                     assetWriterInputPixelBufferAdaptorWithAssetWriterInput:videoWriterInput
+                                                     sourcePixelBufferAttributes:nil];
 
-    NSDictionary * videoSettings = [ NSDictionary dictionaryWithObjectsAndKeys:
-                                     encoder->codec, AVVideoCodecKey,
-                                     [NSNumber numberWithInt:encoder->size.width], AVVideoWidthKey,
-                                     [NSNumber numberWithInt:encoder->size.height], AVVideoHeightKey,
-                                     nil ];
-
-    AVAssetWriterInput * videoWriterInput = [ [AVAssetWriterInput
-                                              assetWriterInputWithMediaType: AVMediaTypeVideo
-                                              outputSettings:videoSettings] retain];
-
-    /* Catchy naming, Apple */
-    AVAssetWriterInputPixelBufferAdaptor * adaptor = [ AVAssetWriterInputPixelBufferAdaptor
-                                                       assetWriterInputPixelBufferAdaptorWithAssetWriterInput:videoWriterInput
-                                                       sourcePixelBufferAttributes:nil];
-
-    // NSParameterAssert(videoWriterInput);
-    // NSParameterAssert([videoWriter canAddInput:videoWriterInput]);
-
-    videoWriterInput.expectsMediaDataInRealTime = NO;
+    videoWriterInput.expectsMediaDataInRealTime = YES;
     [videoWriter addInput:videoWriterInput];
-
+    
     //Start a session:
     [videoWriter startWriting];
     NSLog(@"Write Started");
@@ -95,56 +119,52 @@ void beginWritingVideoFile(AVEncoder_t * encoder, char * path, double * progress
 
     CVPixelBufferRef buffer = NULL;
 
-    //convert uiimage to CGImage.
-
-    int frameCount = 0;
-
     setMlvAlwaysUseAmaze(App->videoMLV);
 
-    for(int i = 0; i<getMlvFrames(App->videoMLV); i++)
+    for(uint64_t f = 0; f < getMlvFrames(App->videoMLV); ++f)
     {
         /* temp */
-        getMlvProcessedFrame16(App->videoMLV, i, encoder->data);
-
-        CVReturn success = CVPixelBufferCreate( kCFAllocatorDefault,
-                                                encoder->width,
-                                                encoder->height,
-                                                kCVPixelFormatType_48RGB,
-                                                NULL, 
-                                                &buffer );
-
-        if (success != kCVReturnSuccess) NSLog(@"Failed to create pixel buffer.");
-
+        getMlvProcessedFrame16(App->videoMLV, f, encoder->data);
+        CVReturn success = CVPixelBufferCreateWithBytes( kCFAllocatorDefault,
+                                                         encoder->width,
+                                                         encoder->height,
+                                                         kCVPixelFormatType_48RGB,
+                                                         encoder->data,
+                                                         sizeof(uint16_t) * encoder->width * 3,
+                                                         NULL,
+                                                         NULL,
+                                                         NULL,
+                                                         &buffer );
+        if (success != kCVReturnSuccess || buffer == NULL) NSLog(@"Failed to create pixel buffer.");
+        NSDictionary * colour_attachment = @{(id)kCVImageBufferICCProfileKey : (id)encoder->colour_profile_data};
+        CVBufferSetAttachments(buffer, (CFDictionaryRef)colour_attachment, kCVAttachmentMode_ShouldPropagate);
+        
         BOOL append_ok = NO;
         int j = 0;
-
-        while (append_ok == NO && j < 30) /* Try appending it 30 times? */
-        {
-            if (adaptor.assetWriterInput.readyForMoreMediaData) 
-            {
-                printf("appending %d attemp %d\n", frameCount, j);
-
-                CMTime frameTime = CMTimeMake(frameCount * 5000.0, (int32_t)(encoder->fps * 1000.0));
-
-                append_ok = [adaptor appendPixelBuffer:buffer withPresentationTime:frameTime];
-
+        while (!append_ok && j < 30) {
+            if (adaptor.assetWriterInput.readyForMoreMediaData)  {
+                //print out status:
+                NSLog(@"Processing video frame (%d, attempt %d)", (int)f, j);
                 
+                CMTime frameTime = CMTimeMake(f * 5000.0, (int32_t)(encoder->fps * 1000.0));
+                append_ok = [adaptor appendPixelBuffer:buffer withPresentationTime:frameTime];
+                if(!append_ok){
+                    NSError *error = videoWriter.error;
+                    if(error!=nil) {
+                        NSLog(@"Unresolved error %@,%@.", error, [error userInfo]);
+                    }
+                }
                 while(!adaptor.assetWriterInput.readyForMoreMediaData) [NSThread sleepForTimeInterval:0.0001];
-            } 
-            else 
-            {
-                printf("adaptor not ready %d, %d\n", frameCount, j);
-                [NSThread sleepForTimeInterval:0.1];
+            }
+            else {
+                printf("adaptor not ready %d, %d\n", (int)f, j);
+                while(!adaptor.assetWriterInput.readyForMoreMediaData) [NSThread sleepForTimeInterval:0.0001];
             }
             j++;
         }
-        if (append_ok == NO) 
-        {
-            printf("error appending image %d times %d\n", frameCount, j);
+        if (!append_ok) {
+            printf("error appending image %d times %d\n, with error.", (int)f, j);
         }
-        frameCount++;
-
-        CVBufferRelease(buffer);
     }
 
     [videoWriterInput markAsFinished];

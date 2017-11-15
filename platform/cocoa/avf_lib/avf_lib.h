@@ -25,8 +25,14 @@
 #define AVF_CODEC_PRORES_422 2
 #define AVF_CODEC_PRORES_4444 3
 
+#define AVF_COLOURSPACE_SRGB 10
+#define AVF_COLOURSPACE_DCIP3 11
+#define AVF_COLOURSPACE_ADOBE_RGB 12
+#define AVF_COLOURSPACE_REC_709 13
+#define AVF_COLOURSPACE_REC_2020 14
+
 /* New AVEncoder object */
-AVEncoder_t * initAVEncoder(int width, int height, int codec, double fps);
+AVEncoder_t * initAVEncoder(int width, int height, int codec, int colourSpace, double fps);
 
 /* Set bitrate of H.264 and HEVC encoding in Kbit/s, no effect if using ProRes */
 // void setBitRate(AVEncoder_t * encoder, int bitRate);
