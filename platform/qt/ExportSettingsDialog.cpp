@@ -23,6 +23,7 @@ ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, uint8_t currentCodec
     else if( previewMode == 2 ) ui->radioButtonPreviewIcon->setChecked( true );
     else ui->radioButtonPreviewDisabled->setChecked( true );
     ui->checkBoxFpsOverride->setChecked( fpsOverride );
+    on_checkBoxFpsOverride_clicked( fpsOverride );
     ui->doubleSpinBoxFps->setValue( fps );
     ui->checkBoxExportAudio->setChecked( exportAudio );
     ui->comboBoxStyle->setCurrentIndex( style );
@@ -112,4 +113,15 @@ void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
         ui->comboBoxOption->setEnabled( false );
         if( index == CODEC_PRORES4444 ) ui->comboBoxOption->addItem( QString( "Kostya" ) );
     }
+}
+
+//Change settings if FPS Override is clicked
+void ExportSettingsDialog::on_checkBoxFpsOverride_clicked(bool checked)
+{
+    //if override is checked, export audio is not possible, so disable and grey out
+    if( checked )
+    {
+        ui->checkBoxExportAudio->setChecked( false );
+    }
+    ui->checkBoxExportAudio->setEnabled( !checked );
 }

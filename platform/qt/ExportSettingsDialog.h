@@ -46,6 +46,7 @@ public:
 private slots:
     void on_pushButtonClose_clicked();
     void on_comboBoxCodec_currentIndexChanged(int index);
+    void on_checkBoxFpsOverride_clicked(bool checked);
 
 private:
     Ui::ExportSettingsDialog *ui;
