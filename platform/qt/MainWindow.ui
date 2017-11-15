@@ -219,6 +219,7 @@
    <addaction name="actionSaveSession"/>
    <addaction name="actionOpen"/>
    <addaction name="actionExport"/>
+   <addaction name="actionExportSettings"/>
    <addaction name="actionCopyRecept"/>
    <addaction name="actionPasteReceipt"/>
    <addaction name="actionClip_Information"/>
