@@ -777,7 +777,7 @@ void MainWindow::startExportPipe(QString fileName)
     if( m_audioExportEnabled && doesMlvHaveAudio( m_pMlvObject ) )
     {
         writeMlvAudioToWave(m_pMlvObject, wavFileName.toLatin1().data());
-        if( m_codecProfile == CODEC_H264 ) ffmpegAudioCommand = QString( "-i \"%1\" -c:a aac " ).arg( wavFileName );
+        if( m_codecProfile == CODEC_H264 || m_codecProfile == CODEC_H265 ) ffmpegAudioCommand = QString( "-i \"%1\" -c:a aac " ).arg( wavFileName );
         else ffmpegAudioCommand = QString( "-i \"%1\" -c:a copy " ).arg( wavFileName );
     }
 
@@ -819,6 +819,18 @@ void MainWindow::startExportPipe(QString fileName)
         else output.append( QString( ".mkv" ) );
 
         program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v libx264 -preset medium -crf 24 -pix_fmt %3 \"%4\"" )
+                    .arg( fps )
+                    .arg( resolution )
+                    .arg( "yuv420p" )
+                    .arg( output ) );
+    }
+    else if( m_codecProfile == CODEC_H265 )
+    {
+        if( m_codecOption == CODEC_H265_MOV ) output.append( QString( ".mov" ) );
+        else if( m_codecOption == CODEC_H265_MP4 ) output.append( QString( ".mp4" ) );
+        else output.append( QString( ".mkv" ) );
+
+        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v libx265 -preset medium -crf 24 -pix_fmt %3 \"%4\"" )
                     .arg( fps )
                     .arg( resolution )
                     .arg( "yuv420p" )

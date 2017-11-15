@@ -18,6 +18,7 @@
 #define CODEC_AVIRAW         5
 #define CODEC_CDNG           6
 #define CODEC_H264           7
+#define CODEC_H265           8
 
 #define CODEC_PRORES_OPTION_KS 0
 #define CODEC_PRORES_OPTION_AW 1
@@ -28,6 +29,10 @@
 #define CODEC_H264_MOV       0
 #define CODEC_H264_MP4       1
 #define CODEC_H264_MKV       2
+
+#define CODEC_H265_MOV       0
+#define CODEC_H265_MP4       1
+#define CODEC_H265_MKV       2
 
 namespace Ui {
 class ExportSettingsDialog;
