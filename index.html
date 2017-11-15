@@ -29,7 +29,7 @@
                             document.getElementById("QtAssets").appendChild(link);
                         }
                         document.getElementById("QtVer").innerHTML = document.getElementById("QtVer").innerHTML + Releases[i].tag_name;
-                        document.getElementById("QtTime").innerHTML = document.getElementById("QtTime").innerHTML + Releases[i].published_at;
+                        document.getElementById("QtTime").innerHTML = document.getElementById("QtTime").innerHTML + Releases[i].published_at.replace('T',', ').replace('Z','');;
                         document.getElementById("QtPic").src = Releases[i].body.match(findImg);
                         break;
                     }
@@ -51,7 +51,7 @@
                             document.getElementById("CocoaAssets").appendChild(link);
                         }
                         document.getElementById("CocoaVer").innerHTML = document.getElementById("CocoaVer").innerHTML + Releases[i].tag_name;
-                        document.getElementById("CocoaTime").innerHTML = document.getElementById("CocoaTime").innerHTML + Releases[i].published_at;
+                        document.getElementById("CocoaTime").innerHTML = document.getElementById("CocoaTime").innerHTML + Releases[i].published_at.replace('T',', ').replace('Z','');;
                         var imgURL = Releases[i].body.match(findImg);
                         document.getElementById("CocoaPic").src = imgURL;
                         document.getElementById("CocoaPic").src = document.getElementById("CocoaPic").src.substring(0, document.getElementById("CocoaPic").src.indexOf('.png')) + ".png";
