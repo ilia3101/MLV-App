@@ -17,8 +17,10 @@
 #define CODEC_PRORES4444     4
 #define CODEC_AVIRAW         5
 #define CODEC_CDNG           6
-#define CODEC_H264           7
-#define CODEC_H265           8
+#define CODEC_CDNG_LOSSLESS  7
+#define CODEC_CDNG_16BIT     8
+#define CODEC_H264           9
+#define CODEC_H265          10
 
 #define CODEC_PRORES_OPTION_KS 0
 #define CODEC_PRORES_OPTION_AW 1

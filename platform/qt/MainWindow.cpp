@@ -2061,7 +2061,9 @@ void MainWindow::on_actionExport_triggered()
         fileType = tr("Audio Video Interleave (*.avi)");
         fileEnding = ".avi";
     }
-    else if( m_codecProfile == CODEC_CDNG )
+    else if( m_codecProfile == CODEC_CDNG
+          || m_codecProfile == CODEC_CDNG_LOSSLESS
+          || m_codecProfile == CODEC_CDNG_16BIT )
     {
         saveFileName.append( ".cdng" );
         fileType = tr("Cinema DNG (*.cdng)");
@@ -2069,9 +2071,26 @@ void MainWindow::on_actionExport_triggered()
     }
     else
     {
-        saveFileName.append( ".mov" );
-        fileType = tr("Movie (*.mov)");
-        fileEnding = ".mov";
+        if( ( m_codecProfile == CODEC_H264 || m_codecProfile == CODEC_H265 )
+         && ( m_codecOption == CODEC_H264_MP4 || m_codecOption == CODEC_H265_MP4 ) )
+        {
+            saveFileName.append( ".mp4" );
+            fileType = tr("MPEG-4 (*.mp4)");
+            fileEnding = ".mp4";
+        }
+        else if( ( m_codecProfile == CODEC_H264 || m_codecProfile == CODEC_H265 )
+         && ( m_codecOption == CODEC_H264_MKV || m_codecOption == CODEC_H265_MKV ) )
+        {
+            saveFileName.append( ".mkv" );
+            fileType = tr("Matroska (*.mkv)");
+            fileEnding = ".mkv";
+        }
+        else
+        {
+            saveFileName.append( ".mov" );
+            fileType = tr("Movie (*.mov)");
+            fileEnding = ".mov";
+        }
     }
 
     //If one file is selected, but not CDNG
@@ -2728,7 +2747,9 @@ void MainWindow::exportHandler( void )
                                              .arg( QFileInfo( m_exportQueue.first()->fileName() ).fileName() ) );
 
         //Start it, raw/rendered
-        if( m_codecProfile == CODEC_CDNG )
+        if( m_codecProfile == CODEC_CDNG
+         || m_codecProfile == CODEC_CDNG_LOSSLESS
+         || m_codecProfile == CODEC_CDNG_16BIT )
         {
             //raw output
             startExportCdng( m_exportQueue.first()->exportFileName() );

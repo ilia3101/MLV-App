@@ -101,19 +101,22 @@ void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
         ui->comboBoxOption->addItem( QString( "Kostya" ) );
         ui->comboBoxOption->addItem( QString( "Anatolyi (faster)" ) );
     }
-    else if( index == CODEC_CDNG )
+    else if( index == CODEC_CDNG
+          || index == CODEC_CDNG_LOSSLESS
+          || index == CODEC_CDNG_16BIT )
     {
         ui->comboBoxOption->setEnabled( true );
         ui->comboBoxOption->addItem( QString( "Default Naming Scheme" ) );
         ui->comboBoxOption->addItem( QString( "DaVinci Resolve Naming Scheme" ) );
         QMessageBox::information( this, tr( "Export Setting Info" ), tr( "Note: CDNG export is not yet implemented. Use it for testing only..." ) );
     }
-    else if( index == CODEC_H264 || index == CODEC_H265 )
+    else if( index == CODEC_H264
+          || index == CODEC_H265 )
     {
         ui->comboBoxOption->setEnabled( true );
-        ui->comboBoxOption->addItem( QString( "MOV" ) );
-        ui->comboBoxOption->addItem( QString( "MP4" ) );
-        ui->comboBoxOption->addItem( QString( "MKV" ) );
+        ui->comboBoxOption->addItem( QString( "Movie (*.mov)" ) );
+        ui->comboBoxOption->addItem( QString( "MPEG-4 (*.mp4)" ) );
+        ui->comboBoxOption->addItem( QString( "Matroska (*.mkv)" ) );
     }
     else
     {

@@ -74,6 +74,16 @@
           </item>
           <item>
            <property name="text">
+            <string>CinemaDNG lossless</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>CinemaDNG 16bit</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
             <string>H.264</string>
            </property>
           </item>
