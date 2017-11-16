@@ -6,6 +6,10 @@
         <script>
             var LinkColour = "rgb(100,130,160)";
 
+            Date.prototype.getUnixTime = function() { return this.getTime()/1000|0 };
+            if(!Date.now) Date.now = function() { return new Date(); }
+            Date.time = function() { return Date.now().getUnixTime(); }
+
             function DealWithResponse()
             {
                 // console.log(this.responseText);
@@ -13,7 +17,7 @@
                 var findImg = /(https?:\/\/.*\.(?:png|jpg|gif))/i;
 
                 /* Find latest Qt Release */
-                for (var i = 0; i < Releases.length; i++)
+                for (var i = 0; i <= Releases.length; i++)
                 {
                     {
                         console.log(Releases[i].name);
@@ -27,6 +31,14 @@
                         let Ver = document.createElement("h3");
                         Ver.innerHTML = Releases[i].tag_name;
                         release.appendChild(Ver);
+                        
+                        let Time = document.createElement("h4");
+                        let PublishDate = new Date(Releases[i].published_at);
+                        let TimeNow = new Date();
+                        let TimePassed = (TimeNow.getTime() - PublishDate.getTime());
+                        Time.innerHTML = (TimePassed / (24*3600*1000)).toFixed(0).toString() + " days ago.";
+                        Time.style.lineHeight = "0";
+                        release.appendChild(Time);
 
                         let PicLink = document.createElement("a");
                         PicLink.href = Releases[i].body.match(findImg);
@@ -36,10 +48,6 @@
                         Pic.src = PicLink.href;
                         PicLink.appendChild(Pic);
                         release.appendChild(PicLink);
-
-                        let Time = document.createElement("h4");
-                        Time.innerHTML = "Published At: " + Releases[i].published_at.replace('T',', ').replace('Z','');
-                        release.appendChild(Time);
 
                         let Downloads = document.createElement("h4");
                         Downloads.innerHTML = "Downloads:";
@@ -122,9 +130,12 @@
                 max-width:92%;
                 max-height:400px;
             }
+            div.time {
+                position: fixed; left: 0px; top: 0px; right: 0px; width:100vw; height:30px;
+            }
         </style>
 
-        <div style="position: fixed; left: 0px; top: 0px; width:100vw; height:100px; background-color: #333; box-shadow: 7px 7px 33px #0004;">
+        <div style="position: fixed; left: 0px; top: 0px; right: 0px; width:100vw; height:100px; background-color: #333; box-shadow: 7px 7px 33px #0004;">
                 <div style="width:980px; margin: auto;">
                     <h2 style="color: #eee;">MLV App Downloads</h2>
                 </div>
