@@ -3278,16 +3278,30 @@ QGroupBox::indicator:checked {
    </property>
   </action>
   <action name="actionExportReceipt">
+   <property name="icon">
+    <iconset resource="ressources.qrc">
+     <normaloff>:/RetinaIMG/RetinaIMG/ExportReceipt-icon.png</normaloff>:/RetinaIMG/RetinaIMG/ExportReceipt-icon.png</iconset>
+   </property>
    <property name="text">
     <string>Export Receipt</string>
+   </property>
+   <property name="toolTip">
+    <string>Export Receipt to File</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+Alt+C</string>
    </property>
   </action>
   <action name="actionImportReceipt">
+   <property name="icon">
+    <iconset resource="ressources.qrc">
+     <normaloff>:/RetinaIMG/RetinaIMG/ImportReceipt-icon.png</normaloff>:/RetinaIMG/RetinaIMG/ImportReceipt-icon.png</iconset>
+   </property>
    <property name="text">
     <string>Import Receipt</string>
+   </property>
+   <property name="toolTip">
+    <string>Import Receipt from File</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+Alt+V</string>

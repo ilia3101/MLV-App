@@ -29,6 +29,8 @@
         <file>RetinaIMG/Actions-color-picker-grey-icon.png</file>
         <file>RetinaIMG/Actions-color-picker-icon.png</file>
         <file>RetinaIMG/Export-Image-icon.png</file>
+        <file>RetinaIMG/ExportReceipt-icon.png</file>
+        <file>RetinaIMG/ImportReceipt-icon.png</file>
     </qresource>
     <qresource prefix="/AudioVideoIcons">
         <file>AudioVideoIcons/FirstFrame.png</file>
