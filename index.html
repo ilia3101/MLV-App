@@ -10,14 +10,41 @@
             {
                 // console.log(this.responseText);
                 var Releases = JSON.parse(this.responseText);
-                var findImg = /(https?:\/\/.*\.(?:png|jpg))/i;
+                var findImg = /(https?:\/\/.*\.(?:png|jpg|gif))/i;
 
                 /* Find latest Qt Release */
                 for (var i = 0; i < Releases.length; i++)
                 {
-                    if (Releases[i].name.includes("[Qt]"))
                     {
                         console.log(Releases[i].name);
+
+                        let releaseFrame = document.createElement("div");
+                        releaseFrame.className = "frame";
+                        let release = document.createElement("div");
+                        release.className = "release";
+                        releaseFrame.appendChild(release);
+                        
+                        let Ver = document.createElement("h3");
+                        Ver.innerHTML = Releases[i].tag_name;
+                        release.appendChild(Ver);
+
+                        let PicLink = document.createElement("a");
+                        PicLink.href = Releases[i].body.match(findImg);
+                        PicLink.href = PicLink.href.substring(0, PicLink.href.indexOf('.png')) + ".png";
+                        let Pic = document.createElement("img");
+                        Pic.className = "picture";
+                        Pic.src = PicLink.href;
+                        PicLink.appendChild(Pic);
+                        release.appendChild(PicLink);
+
+                        let Time = document.createElement("h4");
+                        Time.innerHTML = "Published At: " + Releases[i].published_at.replace('T',', ').replace('Z','');
+                        release.appendChild(Time);
+
+                        let Downloads = document.createElement("h4");
+                        Downloads.innerHTML = "Downloads:";
+                        release.appendChild(Downloads);
+
                         for (var j = 0; j < Releases[i].assets.length; j++)
                         {
                             let link = document.createElement("a");
@@ -26,36 +53,21 @@
                             text.innerHTML = Releases[i].assets[j].name;
                             text.style.color = LinkColour;
                             link.appendChild(text);
-                            document.getElementById("QtAssets").appendChild(link);
+                            release.appendChild(link);
                         }
-                        document.getElementById("QtVer").innerHTML = document.getElementById("QtVer").innerHTML + Releases[i].tag_name;
-                        document.getElementById("QtTime").innerHTML = document.getElementById("QtTime").innerHTML + Releases[i].published_at.replace('T',', ').replace('Z','');;
-                        document.getElementById("QtPic").src = Releases[i].body.match(findImg);
-                        break;
-                    }
-                }
-                /* Find latest Cocoa Release */
-                for (var i = 0; i < Releases.length; i++)
-                {
-                    if (Releases[i].name.includes("[Cocoa]"))
-                    {
-                        console.log(Releases[i].name);
-                        for (var j = 0; j < Releases[i].assets.length; j++)
+
+                        if (Releases[i].name.includes("[Qt]"))
                         {
-                            let link = document.createElement("a");
-                            link.href = Releases[i].assets[j].browser_download_url;
-                            let text = document.createElement("h4");
-                            text.innerHTML = Releases[i].assets[j].name;
-                            text.style.color = LinkColour;
-                            link.appendChild(text);
-                            document.getElementById("CocoaAssets").appendChild(link);
+                            document.getElementById("QtRelases").appendChild(releaseFrame);
+                            document.getElementById("QtRelases").appendChild(document.createElement("br"));
+                            document.getElementById("QtRelases").appendChild(document.createElement("br"));
                         }
-                        document.getElementById("CocoaVer").innerHTML = document.getElementById("CocoaVer").innerHTML + Releases[i].tag_name;
-                        document.getElementById("CocoaTime").innerHTML = document.getElementById("CocoaTime").innerHTML + Releases[i].published_at.replace('T',', ').replace('Z','');;
-                        var imgURL = Releases[i].body.match(findImg);
-                        document.getElementById("CocoaPic").src = imgURL;
-                        document.getElementById("CocoaPic").src = document.getElementById("CocoaPic").src.substring(0, document.getElementById("CocoaPic").src.indexOf('.png')) + ".png";
-                        break;
+                        if (Releases[i].name.includes("[Cocoa]"))
+                        {
+                            document.getElementById("CocoaRelases").appendChild(releaseFrame);
+                            document.getElementById("CocoaRelases").appendChild(document.createElement("br"));
+                            document.getElementById("CocoaRelases").appendChild(document.createElement("br"));
+                        }
                     }
                 }
             }
@@ -90,9 +102,23 @@
                 text-decoration: none;
                 color: #acf;
             }
+            .release {
+                border-radius: 2px;
+                box-shadow: 4px 4px 27px #0004;
+                border: 2px solid #ddd;
+                background-color: #eee;
+                padding: 14px;
+            }
+            .frame {
+                padding: 14px;
+            }
+            .picture {
+                max-width:92%;
+                max-height:400px;
+            }
         </style>
 
-        <div style="position: fixed; left: 0px; top: 0px; width:100vw; height:100px; background-color: #333;">
+        <div style="position: fixed; left: 0px; top: 0px; width:100vw; height:100px; background-color: #333; box-shadow: 7px 7px 33px #0004;">
                 <div style="width:980px; margin: auto;">
                     <h2 style="color: #eee;">MLV App Downloads</h2>
                 </div>
@@ -104,19 +130,11 @@
             <table>
                 <td style="width: 490px; vertical-align: top;">
                     <h2>Qt App</h2>
-                    <img id="QtPic" style="max-width:80%; max-height:220px;"></img>
-                    <h4 id="QtVer">Latest Version: </h4>
-                    <h4 id="QtTime">Published At: </h4>
-                    <h4>Downloads:</h4>
-                    <div id="QtAssets"></div>
+                    <div id="QtRelases"></div>
                 </td>
                 <td style="width: 490px; vertical-align: top;">
                     <h2>Cocoa App</h2>
-                    <img id="CocoaPic" style="max-width:80%; max-height:220px;"></img>
-                    <h4 id="CocoaVer">Latest Version: </h4>
-                    <h4 id="CocoaTime">Published At: </h4>
-                    <h4>Downloads:</h4>
-                    <div id="CocoaAssets"></div>
+                    <div id="CocoaRelases"></div>
                 </td>
             </table>
         </div>
