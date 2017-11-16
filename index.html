@@ -104,10 +104,16 @@
             }
             .release {
                 border-radius: 2px;
-                box-shadow: 4px 4px 27px #0004;
+                transition: box-shadow 0.5s ease, background-color 0.5s ease, border-radius 0.74s ease;
+                box-shadow: 4px 4px 10px #0002;
                 border: 2px solid #ddd;
                 background-color: #eee;
                 padding: 14px;
+            }
+            .release:hover {
+                border-radius: 6px;
+                background-color: #f0f0f0;
+                box-shadow: 4px 4px 27px #0004;
             }
             .frame {
                 padding: 14px;
