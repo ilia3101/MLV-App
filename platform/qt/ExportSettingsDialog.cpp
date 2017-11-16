@@ -103,7 +103,7 @@ void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
     }
     else if( index == CODEC_CDNG
           || index == CODEC_CDNG_LOSSLESS
-          || index == CODEC_CDNG_16BIT )
+          || index == CODEC_CDNG_FAST )
     {
         ui->comboBoxOption->setEnabled( true );
         ui->comboBoxOption->addItem( QString( "Default Naming Scheme" ) );

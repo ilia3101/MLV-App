@@ -2063,7 +2063,7 @@ void MainWindow::on_actionExport_triggered()
     }
     else if( m_codecProfile == CODEC_CDNG
           || m_codecProfile == CODEC_CDNG_LOSSLESS
-          || m_codecProfile == CODEC_CDNG_16BIT )
+          || m_codecProfile == CODEC_CDNG_FAST )
     {
         saveFileName.append( ".cdng" );
         fileType = tr("Cinema DNG (*.cdng)");
@@ -2749,7 +2749,7 @@ void MainWindow::exportHandler( void )
         //Start it, raw/rendered
         if( m_codecProfile == CODEC_CDNG
          || m_codecProfile == CODEC_CDNG_LOSSLESS
-         || m_codecProfile == CODEC_CDNG_16BIT )
+         || m_codecProfile == CODEC_CDNG_FAST )
         {
             //raw output
             startExportCdng( m_exportQueue.first()->exportFileName() );

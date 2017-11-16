@@ -18,7 +18,7 @@
 #define CODEC_AVIRAW         5
 #define CODEC_CDNG           6
 #define CODEC_CDNG_LOSSLESS  7
-#define CODEC_CDNG_16BIT     8
+#define CODEC_CDNG_FAST      8
 #define CODEC_H264           9
 #define CODEC_H265          10
 
