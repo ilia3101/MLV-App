@@ -3,6 +3,8 @@ What is MLV App? A cross platform RAW conversion software that works **natively*
 
 ![MLVApp Qt](https://image.ibb.co/jp5BVm/Bildschirmfoto.png)
 
+Find the latest releases [here](https://ilia3101.github.io/MLV-App/).
+
 ## Features :collision:
 - Import MLV files
 - Support for lossless mlv
