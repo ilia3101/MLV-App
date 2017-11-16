@@ -140,6 +140,8 @@
     </property>
     <addaction name="actionCopyRecept"/>
     <addaction name="actionPasteReceipt"/>
+    <addaction name="actionExportReceipt"/>
+    <addaction name="actionImportReceipt"/>
     <addaction name="actionResetReceipt"/>
     <addaction name="separator"/>
     <addaction name="actionWhiteBalancePicker"/>
@@ -3273,6 +3275,22 @@ QGroupBox::indicator:checked {
   <action name="actionAboutQt">
    <property name="text">
     <string>About Qt</string>
+   </property>
+  </action>
+  <action name="actionExportReceipt">
+   <property name="text">
+    <string>Export Receipt</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+C</string>
+   </property>
+  </action>
+  <action name="actionImportReceipt">
+   <property name="text">
+    <string>Import Receipt</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+V</string>
    </property>
   </action>
  </widget>

@@ -14,7 +14,6 @@
 #include <QTime>
 #include <QSettings>
 #include <QDesktopWidget>
-#include <QXmlStreamWriter>
 #include <QDesktopWidget>
 #include <QScrollBar>
 #include <QScreen>
@@ -1025,150 +1024,8 @@ void MainWindow::openSession(QString fileName)
                         openMlv( fileName );
                         m_pSessionReceipts.last()->setFileName( fileName );
 
-                        while( !Rxml.atEnd() && !Rxml.isEndElement() )
-                        {
-                            Rxml.readNext();
-                            if( Rxml.isStartElement() && Rxml.name() == "exposure" )
-                            {
-                                m_pSessionReceipts.last()->setExposure( Rxml.readElementText().toInt() );
-                                Rxml.readNext();
-                            }
-                            else if( Rxml.isStartElement() && Rxml.name() == "temperature" )
-                            {
-                                m_pSessionReceipts.last()->setTemperature( Rxml.readElementText().toInt() );
-                                Rxml.readNext();
-                            }
-                            else if( Rxml.isStartElement() && Rxml.name() == "tint" )
-                            {
-                                m_pSessionReceipts.last()->setTint( Rxml.readElementText().toInt() );
-                                Rxml.readNext();
-                            }
-                            else if( Rxml.isStartElement() && Rxml.name() == "saturation" )
-                            {
-                                m_pSessionReceipts.last()->setSaturation( Rxml.readElementText().toInt() );
-                                Rxml.readNext();
-                            }
-                            else if( Rxml.isStartElement() && Rxml.name() == "ls" )
-                            {
-                                m_pSessionReceipts.last()->setLs( Rxml.readElementText().toInt() );
-                                Rxml.readNext();
-                            }
-                            else if( Rxml.isStartElement() && Rxml.name() == "lr" )
-                            {
-                                m_pSessionReceipts.last()->setLr( Rxml.readElementText().toInt() );
-                                Rxml.readNext();
-                            }
-                            else if( Rxml.isStartElement() && Rxml.name() == "ds" )
-                            {
-                                m_pSessionReceipts.last()->setDs( Rxml.readElementText().toInt() );
-                                Rxml.readNext();
-                            }
-                            else if( Rxml.isStartElement() && Rxml.name() == "dr" )
-                            {
-                                m_pSessionReceipts.last()->setDr( Rxml.readElementText().toInt() );
-                                Rxml.readNext();
-                            }
-                            else if( Rxml.isStartElement() && Rxml.name() == "lightening" )
-                            {
-                                m_pSessionReceipts.last()->setLightening( Rxml.readElementText().toInt() );
-                                Rxml.readNext();
-                            }
-                            else if( Rxml.isStartElement() && Rxml.name() == "sharpen" )
-                            {
-                                m_pSessionReceipts.last()->setSharpen( Rxml.readElementText().toInt() );
-                                Rxml.readNext();
-                            }
-                            else if( Rxml.isStartElement() && Rxml.name() == "chromaBlur" )
-                            {
-                                m_pSessionReceipts.last()->setChromaBlur( Rxml.readElementText().toInt() );
-                                Rxml.readNext();
-                            }
-                            else if( Rxml.isStartElement() && Rxml.name() == "highlightReconstruction" )
-                            {
-                                m_pSessionReceipts.last()->setHighlightReconstruction( (bool)Rxml.readElementText().toInt() );
-                                Rxml.readNext();
-                            }
-                            else if( Rxml.isStartElement() && Rxml.name() == "chromaSeparation" )
-                            {
-                                m_pSessionReceipts.last()->setChromaSeparation( (bool)Rxml.readElementText().toInt() );
-                                Rxml.readNext();
-                            }
-                            else if( Rxml.isStartElement() && Rxml.name() == "profile" )
-                            {
-                                m_pSessionReceipts.last()->setProfile( (uint8_t)Rxml.readElementText().toUInt() );
-                                Rxml.readNext();
-                            }
-                            else if( Rxml.isStartElement() && Rxml.name() == "rawFixesEnabled" )
-                            {
-                                m_pSessionReceipts.last()->setRawFixesEnabled( (bool)Rxml.readElementText().toInt() );
-                                Rxml.readNext();
-                            }
-                            else if( Rxml.isStartElement() && Rxml.name() == "verticalStripes" )
-                            {
-                                m_pSessionReceipts.last()->setVerticalStripes( Rxml.readElementText().toInt() );
-                                Rxml.readNext();
-                            }
-                            else if( Rxml.isStartElement() && Rxml.name() == "focusPixels" )
-                            {
-                                m_pSessionReceipts.last()->setFocusPixels( Rxml.readElementText().toInt() );
-                                Rxml.readNext();
-                            }
-                            else if( Rxml.isStartElement() && Rxml.name() == "fpiMethod" )
-                            {
-                                m_pSessionReceipts.last()->setFpiMethod( Rxml.readElementText().toInt() );
-                                Rxml.readNext();
-                            }
-                            else if( Rxml.isStartElement() && Rxml.name() == "badPixels" )
-                            {
-                                m_pSessionReceipts.last()->setBadPixels( Rxml.readElementText().toInt() );
-                                Rxml.readNext();
-                            }
-                            else if( Rxml.isStartElement() && Rxml.name() == "bpiMethod" )
-                            {
-                                m_pSessionReceipts.last()->setBpiMethod( Rxml.readElementText().toInt() );
-                                Rxml.readNext();
-                            }
-                            else if( Rxml.isStartElement() && Rxml.name() == "chromaSmooth" )
-                            {
-                                m_pSessionReceipts.last()->setChromaSmooth( Rxml.readElementText().toInt() );
-                                Rxml.readNext();
-                            }
-                            else if( Rxml.isStartElement() && Rxml.name() == "patternNoise" )
-                            {
-                                m_pSessionReceipts.last()->setPatternNoise( Rxml.readElementText().toInt() );
-                                Rxml.readNext();
-                            }
-                            else if( Rxml.isStartElement() && Rxml.name() == "deflickerTarget" )
-                            {
-                                m_pSessionReceipts.last()->setDeflickerTarget( Rxml.readElementText().toInt() );
-                                Rxml.readNext();
-                            }
-                            else if( Rxml.isStartElement() && Rxml.name() == "dualIso" )
-                            {
-                                m_pSessionReceipts.last()->setDualIso( Rxml.readElementText().toInt() );
-                                Rxml.readNext();
-                            }
-                            else if( Rxml.isStartElement() && Rxml.name() == "dualIsoInterpolation" )
-                            {
-                                m_pSessionReceipts.last()->setDualIsoInterpolation( Rxml.readElementText().toInt() );
-                                Rxml.readNext();
-                            }
-                            else if( Rxml.isStartElement() && Rxml.name() == "dualIsoAliasMap" )
-                            {
-                                m_pSessionReceipts.last()->setDualIsoAliasMap( Rxml.readElementText().toInt() );
-                                Rxml.readNext();
-                            }
-                            else if( Rxml.isStartElement() && Rxml.name() == "dualIsoFrBlending" )
-                            {
-                                m_pSessionReceipts.last()->setDualIsoFrBlending( Rxml.readElementText().toInt() );
-                                Rxml.readNext();
-                            }
-                            else if( Rxml.isStartElement() ) //future features
-                            {
-                                Rxml.readElementText();
-                                Rxml.readNext();
-                            }
-                        }
+                        readXmlElementsFromFile( &Rxml, m_pSessionReceipts.last() );
+
                         setSliders( m_pSessionReceipts.last() );
                         previewPicture( ui->listWidgetSession->count() - 1 );
                     }
@@ -1235,33 +1092,7 @@ void MainWindow::saveSession(QString fileName)
     {
         xmlWriter.writeStartElement( "clip" );
         xmlWriter.writeAttribute( "file", ui->listWidgetSession->item(i)->toolTip() );
-        xmlWriter.writeTextElement( "exposure",                QString( "%1" ).arg( m_pSessionReceipts.at(i)->exposure() ) );
-        xmlWriter.writeTextElement( "temperature",             QString( "%1" ).arg( m_pSessionReceipts.at(i)->temperature() ) );
-        xmlWriter.writeTextElement( "tint",                    QString( "%1" ).arg( m_pSessionReceipts.at(i)->tint() ) );
-        xmlWriter.writeTextElement( "saturation",              QString( "%1" ).arg( m_pSessionReceipts.at(i)->saturation() ) );
-        xmlWriter.writeTextElement( "ds",                      QString( "%1" ).arg( m_pSessionReceipts.at(i)->ds() ) );
-        xmlWriter.writeTextElement( "dr",                      QString( "%1" ).arg( m_pSessionReceipts.at(i)->dr() ) );
-        xmlWriter.writeTextElement( "ls",                      QString( "%1" ).arg( m_pSessionReceipts.at(i)->ls() ) );
-        xmlWriter.writeTextElement( "lr",                      QString( "%1" ).arg( m_pSessionReceipts.at(i)->lr() ) );
-        xmlWriter.writeTextElement( "lightening",              QString( "%1" ).arg( m_pSessionReceipts.at(i)->lightening() ) );
-        xmlWriter.writeTextElement( "sharpen",                 QString( "%1" ).arg( m_pSessionReceipts.at(i)->sharpen() ) );
-        xmlWriter.writeTextElement( "chromaBlur",              QString( "%1" ).arg( m_pSessionReceipts.at(i)->chromaBlur() ) );
-        xmlWriter.writeTextElement( "highlightReconstruction", QString( "%1" ).arg( m_pSessionReceipts.at(i)->isHighlightReconstruction() ) );
-        xmlWriter.writeTextElement( "chromaSeparation",        QString( "%1" ).arg( m_pSessionReceipts.at(i)->isChromaSeparation() ) );
-        xmlWriter.writeTextElement( "profile",                 QString( "%1" ).arg( m_pSessionReceipts.at(i)->profile() ) );
-        xmlWriter.writeTextElement( "rawFixesEnabled",         QString( "%1" ).arg( m_pSessionReceipts.at(i)->rawFixesEnabled() ) );
-        xmlWriter.writeTextElement( "verticalStripes",         QString( "%1" ).arg( m_pSessionReceipts.at(i)->verticalStripes() ) );
-        xmlWriter.writeTextElement( "focusPixels",             QString( "%1" ).arg( m_pSessionReceipts.at(i)->focusPixels() ) );
-        xmlWriter.writeTextElement( "fpiMethod",               QString( "%1" ).arg( m_pSessionReceipts.at(i)->fpiMethod() ) );
-        xmlWriter.writeTextElement( "badPixels",               QString( "%1" ).arg( m_pSessionReceipts.at(i)->badPixels() ) );
-        xmlWriter.writeTextElement( "bpiMethod",               QString( "%1" ).arg( m_pSessionReceipts.at(i)->bpiMethod() ) );
-        xmlWriter.writeTextElement( "chromaSmooth",            QString( "%1" ).arg( m_pSessionReceipts.at(i)->chromaSmooth() ) );
-        xmlWriter.writeTextElement( "patternNoise",            QString( "%1" ).arg( m_pSessionReceipts.at(i)->patternNoise() ) );
-        xmlWriter.writeTextElement( "deflickerTarget",         QString( "%1" ).arg( m_pSessionReceipts.at(i)->deflickerTarget() ) );
-        xmlWriter.writeTextElement( "dualIso",                 QString( "%1" ).arg( m_pSessionReceipts.at(i)->dualIso() ) );
-        xmlWriter.writeTextElement( "dualIsoInterpolation",    QString( "%1" ).arg( m_pSessionReceipts.at(i)->dualIsoInterpolation() ) );
-        xmlWriter.writeTextElement( "dualIsoAliasMap",         QString( "%1" ).arg( m_pSessionReceipts.at(i)->dualIsoAliasMap() ) );
-        xmlWriter.writeTextElement( "dualIsoFrBlending",       QString( "%1" ).arg( m_pSessionReceipts.at(i)->dualIsoFrBlending() ) );
+        writeXmlElementsToFile( &xmlWriter, m_pSessionReceipts.at(i) );
         xmlWriter.writeEndElement();
     }
     xmlWriter.writeEndElement();
@@ -1269,6 +1100,261 @@ void MainWindow::saveSession(QString fileName)
     xmlWriter.writeEndDocument();
 
     file.close();
+}
+
+
+//Imports and sets slider settings from a file to the sliders
+void MainWindow::on_actionImportReceipt_triggered()
+{
+    //Stop playback if active
+    ui->actionPlay->setChecked( false );
+
+    QString path = QFileInfo( m_lastSaveFileName ).absolutePath();
+    QString fileName = QFileDialog::getOpenFileName(this,
+                                           tr("Open MLV App Receipt Xml"), path,
+                                           tr("MLV App Receipt Xml files (*.marxml)"));
+
+    //Abort selected
+    if( fileName.count() == 0 ) return;
+
+    //Open a XML stream for the file
+    QXmlStreamReader Rxml;
+    QFile file(fileName);
+    if( !file.open(QIODevice::ReadOnly | QFile::Text) )
+    {
+        return;
+    }
+
+    //Parse
+    Rxml.setDevice(&file);
+    while( !Rxml.atEnd() )
+    {
+        Rxml.readNext();
+        if( Rxml.isStartElement() && Rxml.name() == "receipt" )
+        {
+            readXmlElementsFromFile( &Rxml, m_pSessionReceipts.at( m_lastActiveClipInSession ) );
+        }
+    }
+    file.close();
+
+    //Set the sliders
+    setSliders( m_pSessionReceipts.at( m_lastActiveClipInSession ) );
+}
+
+//Exports the actual slider settings to a file
+void MainWindow::on_actionExportReceipt_triggered()
+{
+    //Stop playback if active
+    ui->actionPlay->setChecked( false );
+
+    QString path = QFileInfo( m_lastSaveFileName ).absolutePath();
+    QString fileName = QFileDialog::getSaveFileName(this,
+                                           tr("Save MLV App Receipt Xml"), path,
+                                           tr("MLV App Receipt Xml files (*.marxml)"));
+
+    //Abort selected
+    if( fileName.count() == 0 ) return;
+
+    //Save slider receipt
+    setReceipt( m_pSessionReceipts.at( m_lastActiveClipInSession ) );
+
+    QFile file(fileName);
+    file.open(QIODevice::WriteOnly);
+
+    //Open a XML writer
+    QXmlStreamWriter xmlWriter(&file);
+    xmlWriter.setAutoFormatting(true);
+    xmlWriter.writeStartDocument();
+
+    xmlWriter.writeStartElement( "receipt" );
+
+    writeXmlElementsToFile( &xmlWriter, m_pSessionReceipts.at( m_lastActiveClipInSession ) );
+
+    xmlWriter.writeEndElement();
+    xmlWriter.writeEndDocument();
+
+    file.close();
+}
+
+//Read all receipt elements from xml
+void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings *receipt)
+{
+    while( !Rxml->atEnd() && !Rxml->isEndElement() )
+    {
+        Rxml->readNext();
+        if( Rxml->isStartElement() && Rxml->name() == "exposure" )
+        {
+            receipt->setExposure( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == "temperature" )
+        {
+            receipt->setTemperature( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == "tint" )
+        {
+            receipt->setTint( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == "saturation" )
+        {
+            receipt->setSaturation( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == "ls" )
+        {
+            receipt->setLs( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == "lr" )
+        {
+            receipt->setLr( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == "ds" )
+        {
+            receipt->setDs( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == "dr" )
+        {
+            receipt->setDr( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == "lightening" )
+        {
+            receipt->setLightening( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == "sharpen" )
+        {
+            receipt->setSharpen( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == "chromaBlur" )
+        {
+            receipt->setChromaBlur( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == "highlightReconstruction" )
+        {
+            receipt->setHighlightReconstruction( (bool)Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == "chromaSeparation" )
+        {
+            receipt->setChromaSeparation( (bool)Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == "profile" )
+        {
+            receipt->setProfile( (uint8_t)Rxml->readElementText().toUInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == "rawFixesEnabled" )
+        {
+            receipt->setRawFixesEnabled( (bool)Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == "verticalStripes" )
+        {
+            receipt->setVerticalStripes( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == "focusPixels" )
+        {
+            receipt->setFocusPixels( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == "fpiMethod" )
+        {
+            receipt->setFpiMethod( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == "badPixels" )
+        {
+            receipt->setBadPixels( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == "bpiMethod" )
+        {
+            receipt->setBpiMethod( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == "chromaSmooth" )
+        {
+            receipt->setChromaSmooth( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == "patternNoise" )
+        {
+            receipt->setPatternNoise( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == "deflickerTarget" )
+        {
+            receipt->setDeflickerTarget( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == "dualIso" )
+        {
+            receipt->setDualIso( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == "dualIsoInterpolation" )
+        {
+            receipt->setDualIsoInterpolation( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == "dualIsoAliasMap" )
+        {
+            receipt->setDualIsoAliasMap( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == "dualIsoFrBlending" )
+        {
+            receipt->setDualIsoFrBlending( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() ) //future features
+        {
+            Rxml->readElementText();
+            Rxml->readNext();
+        }
+    }
+}
+
+//Write all receipt elements to xml
+void MainWindow::writeXmlElementsToFile(QXmlStreamWriter *xmlWriter, ReceiptSettings *receipt)
+{
+    xmlWriter->writeTextElement( "exposure",                QString( "%1" ).arg( receipt->exposure() ) );
+    xmlWriter->writeTextElement( "temperature",             QString( "%1" ).arg( receipt->temperature() ) );
+    xmlWriter->writeTextElement( "tint",                    QString( "%1" ).arg( receipt->tint() ) );
+    xmlWriter->writeTextElement( "saturation",              QString( "%1" ).arg( receipt->saturation() ) );
+    xmlWriter->writeTextElement( "ds",                      QString( "%1" ).arg( receipt->ds() ) );
+    xmlWriter->writeTextElement( "dr",                      QString( "%1" ).arg( receipt->dr() ) );
+    xmlWriter->writeTextElement( "ls",                      QString( "%1" ).arg( receipt->ls() ) );
+    xmlWriter->writeTextElement( "lr",                      QString( "%1" ).arg( receipt->lr() ) );
+    xmlWriter->writeTextElement( "lightening",              QString( "%1" ).arg( receipt->lightening() ) );
+    xmlWriter->writeTextElement( "sharpen",                 QString( "%1" ).arg( receipt->sharpen() ) );
+    xmlWriter->writeTextElement( "chromaBlur",              QString( "%1" ).arg( receipt->chromaBlur() ) );
+    xmlWriter->writeTextElement( "highlightReconstruction", QString( "%1" ).arg( receipt->isHighlightReconstruction() ) );
+    xmlWriter->writeTextElement( "chromaSeparation",        QString( "%1" ).arg( receipt->isChromaSeparation() ) );
+    xmlWriter->writeTextElement( "profile",                 QString( "%1" ).arg( receipt->profile() ) );
+    xmlWriter->writeTextElement( "rawFixesEnabled",         QString( "%1" ).arg( receipt->rawFixesEnabled() ) );
+    xmlWriter->writeTextElement( "verticalStripes",         QString( "%1" ).arg( receipt->verticalStripes() ) );
+    xmlWriter->writeTextElement( "focusPixels",             QString( "%1" ).arg( receipt->focusPixels() ) );
+    xmlWriter->writeTextElement( "fpiMethod",               QString( "%1" ).arg( receipt->fpiMethod() ) );
+    xmlWriter->writeTextElement( "badPixels",               QString( "%1" ).arg( receipt->badPixels() ) );
+    xmlWriter->writeTextElement( "bpiMethod",               QString( "%1" ).arg( receipt->bpiMethod() ) );
+    xmlWriter->writeTextElement( "chromaSmooth",            QString( "%1" ).arg( receipt->chromaSmooth() ) );
+    xmlWriter->writeTextElement( "patternNoise",            QString( "%1" ).arg( receipt->patternNoise() ) );
+    xmlWriter->writeTextElement( "deflickerTarget",         QString( "%1" ).arg( receipt->deflickerTarget() ) );
+    xmlWriter->writeTextElement( "dualIso",                 QString( "%1" ).arg( receipt->dualIso() ) );
+    xmlWriter->writeTextElement( "dualIsoInterpolation",    QString( "%1" ).arg( receipt->dualIsoInterpolation() ) );
+    xmlWriter->writeTextElement( "dualIsoAliasMap",         QString( "%1" ).arg( receipt->dualIsoAliasMap() ) );
+    xmlWriter->writeTextElement( "dualIsoFrBlending",       QString( "%1" ).arg( receipt->dualIsoFrBlending() ) );
 }
 
 //Delete all clips from Session

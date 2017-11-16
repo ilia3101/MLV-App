@@ -19,6 +19,7 @@
 #include <QVector>
 #include <QGraphicsPixmapItem>
 #include <QCloseEvent>
+#include <QXmlStreamWriter>
 #include "../../src/mlv_include.h"
 #include "InfoDialog.h"
 #include "StatusDialog.h"
@@ -86,6 +87,8 @@ private slots:
     void on_actionNewSession_triggered();
     void on_actionOpenSession_triggered();
     void on_actionSaveSession_triggered();
+    void on_actionImportReceipt_triggered();
+    void on_actionExportReceipt_triggered();
     void on_actionCaching_triggered( bool checked );
     void on_listWidgetSession_activated(const QModelIndex &index);
     void on_dockWidgetSession_visibilityChanged(bool visible);
@@ -190,6 +193,8 @@ private:
     void addFileToSession( QString fileName );
     void openSession( QString fileName );
     void saveSession( QString fileName );
+    void readXmlElementsFromFile( QXmlStreamReader *Rxml, ReceiptSettings *receipt );
+    void writeXmlElementsToFile( QXmlStreamWriter *xmlWriter, ReceiptSettings *receipt );
     void deleteSession( void );
     bool isFileInSession( QString fileName );
     void setSliders( ReceiptSettings *sliders );
