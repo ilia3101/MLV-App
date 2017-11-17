@@ -6,9 +6,7 @@
         <script>
             var LinkColour = "rgb(100,130,160)";
 
-            Date.prototype.getUnixTime = function() { return this.getTime()/1000|0 };
-            if(!Date.now) Date.now = function() { return new Date(); }
-            Date.time = function() { return Date.now().getUnixTime(); }
+            var TotalDownloads = 0;
 
             function DealWithResponse()
             {
@@ -17,7 +15,7 @@
                 var findImg = /(https?:\/\/.*\.(?:png|jpg|gif))/i;
 
                 /* Find latest Qt Release */
-                for (var i = 0; i <= Releases.length; i++)
+                for (var i = 0; i < Releases.length; i++)
                 {
                     {
                         console.log(Releases[i].name);
@@ -62,6 +60,7 @@
                             text.style.color = LinkColour;
                             link.appendChild(text);
                             release.appendChild(link);
+                            TotalDownloads = TotalDownloads + Releases[i].assets[j].download_count;
                         }
 
                         if (Releases[i].name.includes("[Qt]"))
@@ -78,6 +77,9 @@
                         }
                     }
                 }
+                
+                console.log("Download count: " + TotalDownloads.toFixed(0).toString());
+                document.getElementById("TotalDownloadsLabel").innerHTML = TotalDownloads.toFixed(0).toString() + " total downloads";
             }
             function test()
             {
@@ -99,7 +101,7 @@
             h1 { font-size: 55px; }
             h2 { font-size: 32px; }
             h3 { font-size: 25px; }
-            h1, h2, h2, h3, h4, h5, h6 {
+            h1, h2, h2, h3, h4, h5, h6, p {
                 font-family: "SF Pro Display", "SF Pro Icons", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
                 color: #333;
             }
@@ -137,7 +139,8 @@
 
         <div style="position: fixed; left: 0px; top: 0px; right: 0px; width:100vw; height:100px; background-color: #333; box-shadow: 7px 7px 33px #0004;">
                 <div style="width:980px; margin: auto;">
-                    <h2 style="color: #eee;">MLV App Downloads</h2>
+                    <h2 style="position: absolute; top: 0px; color: #eee;">MLV App Downloads</h2>
+                    <h4 id="TotalDownloadsLabel" align="right" style="margin-top: 37px; color: #eee;"></h4>
                 </div>
         </div>
 
@@ -146,11 +149,11 @@
             
             <table>
                 <td style="width: 490px; vertical-align: top;">
-                    <h2>Qt App</h2>
+                    <h2 align="center">Qt App</h2>
                     <div id="QtRelases"></div>
                 </td>
                 <td style="width: 490px; vertical-align: top;">
-                    <h2>Cocoa App</h2>
+                    <h2 align="center">Cocoa App</h2>
                     <div id="CocoaRelases"></div>
                 </td>
             </table>
