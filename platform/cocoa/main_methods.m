@@ -291,7 +291,7 @@ int setAppNewMlvClip(char * mlvPath)
 
                     AVEncoder_t * encoder = initAVEncoder( getMlvWidth(App->videoMLV),
                                                            getMlvHeight(App->videoMLV),
-                                                           AVF_CODEC_H264,
+                                                           AVF_CODEC_PRORES_422,
                                                            AVF_COLOURSPACE_SRGB,
                                                            getMlvFramerate(App->videoMLV) );
 
