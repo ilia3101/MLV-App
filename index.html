@@ -25,9 +25,12 @@
                         let release = document.createElement("div");
                         release.className = "release";
                         releaseFrame.appendChild(release);
+
+                        release.appendChild(document.createElement("div"));
                         
                         let Ver = document.createElement("h3");
                         Ver.innerHTML = Releases[i].tag_name;
+                        Ver.style = "margin-top: 5px;";
                         release.appendChild(Ver);
                         
                         let Time = document.createElement("h4");
@@ -46,6 +49,7 @@
                         Pic.src = PicLink.href;
                         PicLink.appendChild(Pic);
                         release.appendChild(PicLink);
+                        // release.appendChild(document.createElement("hr"));
 
                         let Downloads = document.createElement("h4");
                         Downloads.innerHTML = "Downloads:";
@@ -67,12 +71,10 @@
                         {
                             document.getElementById("QtRelases").appendChild(releaseFrame);
                             document.getElementById("QtRelases").appendChild(document.createElement("br"));
-                            document.getElementById("QtRelases").appendChild(document.createElement("br"));
                         }
                         if (Releases[i].name.includes("[Cocoa]"))
                         {
                             document.getElementById("CocoaRelases").appendChild(releaseFrame);
-                            document.getElementById("CocoaRelases").appendChild(document.createElement("br"));
                             document.getElementById("CocoaRelases").appendChild(document.createElement("br"));
                         }
                     }
@@ -112,33 +114,43 @@
                 text-decoration: none;
                 color: #acf;
             }
+            hr {
+                border: 1px solid #eee;
+            }
             .release {
-                border-radius: 2px;
-                transition: box-shadow 0.5s ease, background-color 0.5s ease, border-radius 0.74s ease;
-                box-shadow: 4px 4px 10px #0002;
-                border: 3px solid #ddd1;
-                background-color: #ececec;
+                z-index: 1;
+                border-radius: 4px;
+                transition: box-shadow 0.16s ease, background-color 1.3s ease, border 0.23s ease/* , transform 0.15s ease */;
+                box-shadow: 4px 4px 10px #1111;
+                border: 2px solid #eee4;
+                background-color: #fefefe;
                 padding: 14px;
             }
             .release:hover {
                 border-radius: 6px;
-                background-color: #efefef;
-                box-shadow: 4px 4px 27px #0003;
+                background-color: #ffffff;
+                box-shadow: 6px 6px 27px #1111;
+                border: 2px solid #aaa1;
+                /* transform: scale(1.003,1.003); */
             }
             .frame {
                 padding: 14px;
             }
             .picture {
-                max-width:92%;
-                max-height:400px;
+                max-width:95%;
+                max-height:300px;
+                transition: transform 0.16s ease;
+            }
+            .picture:hover {
+                /* transform: scale(1.01,1.01); */
             }
             div.time {
                 position: fixed; left: 0px; top: 0px; right: 0px; width:100vw; height:30px;
             }
         </style>
 
-        <div style="position: fixed; left: 0px; top: 0px; right: 0px; width:100vw; height:100px; background-color: #333; box-shadow: 7px 7px 33px #0004;">
-                <div style="width:980px; margin: auto;">
+        <div style="z-index: 2; position: fixed; left: 0px; top: 0px; right: 0px; width:100vw; height:100px; background-color: #333; box-shadow: 7px 7px 33px #0004;">
+                <div style="width:957px; margin: auto;">
                     <h2 style="position: absolute; top: 0px; color: #eee;">MLV App Downloads</h2>
                     <h4 id="TotalDownloadsLabel" align="right" style="margin-top: 37px; color: #eee;"></h4>
                 </div>
