@@ -500,6 +500,9 @@ void MainWindow::openMlv( QString fileName )
     ui->actionExport->setEnabled( true );
     ui->actionExportActualFrame->setEnabled( true );
 
+    //If clip loaded, import receipt is enabled
+    ui->actionImportReceipt->setEnabled( true );
+
     m_frameChanged = true;
 }
 
@@ -609,6 +612,8 @@ void MainWindow::initGui( void )
     //Make whiteBalance picker invisible, so nobody asks why it does not work :-)
     ui->actionWhiteBalancePicker->setVisible( false );
     ui->toolButtonWb->setVisible( false );
+    //If no clip loaded, import receipt is disabled
+    ui->actionImportReceipt->setEnabled( false );
 
     //Set up image in GUI
     QImage image(":/IMG/IMG/histogram.png");
@@ -1109,6 +1114,9 @@ void MainWindow::on_actionImportReceipt_triggered()
     //Stop playback if active
     ui->actionPlay->setChecked( false );
 
+    //If no clip loaded, abort
+    if( m_pSessionReceipts.empty() ) return;
+
     QString path = QFileInfo( m_lastSaveFileName ).absolutePath();
     QString fileName = QFileDialog::getOpenFileName(this,
                                            tr("Open MLV App Receipt Xml"), path,
@@ -1406,6 +1414,9 @@ void MainWindow::deleteSession()
 
     //Set label
     drawFrameNumberLabel();
+
+    //If no clip loaded, import receipt is disabled
+    ui->actionImportReceipt->setEnabled( false );
 }
 
 //returns true if file is already in session
