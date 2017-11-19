@@ -1,0 +1,187 @@
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        <title>MLV App Downloads</title>
+    </head>
+    <body onload="test()">
+        <script>
+            function getRandomInt(min, max) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min)) + min;
+}
+            var LinkColour = "rgb(100,130,160)";
+            var TotalDownloads = 0;
+            function DealWithResponse()
+            {
+                // console.log(this.responseText);
+                var Releases = JSON.parse(this.responseText);
+                var findImg = /(https?:\/\/.*\.(?:png|jpg|gif))/i;
+                var anImage = "dsfklj.com";
+                /* Find latest Qt Release */
+                for (var i = 0; i < Releases.length; i++)
+                {
+                    {
+                        console.log(Releases[i].name);
+                        let releaseFrame = document.createElement("div");
+                        releaseFrame.className = "frame";
+                        let release = document.createElement("div");
+                        release.className = "release";
+                        releaseFrame.appendChild(release);
+                        release.appendChild(document.createElement("div"));
+                        
+                        let Ver = document.createElement("h3");
+                        Ver.innerHTML = Releases[i].tag_name;
+                        Ver.style = "margin-top: 5px;";
+                        release.appendChild(Ver);
+                        
+                        let Time = document.createElement("h4");
+                        let PublishDate = new Date(Releases[i].published_at);
+                        let TimeNow = new Date();
+                        let TimePassed = (TimeNow.getTime() - PublishDate.getTime());
+                        Time.innerHTML = (TimePassed / (24*3600*1000)).toFixed(0).toString() + " days ago.";
+                        Time.style.lineHeight = "0";
+                        release.appendChild(Time);
+                        let PicLink = document.createElement("a");
+                        if (!findImg.test(Releases[i].body)) PicLink.href = anImage;
+                        else {
+                            PicLink.href = Releases[i].body.match(findImg);
+                            if (PicLink.href.includes(".png")) {
+                                PicLink.href = PicLink.href.substring(0, PicLink.href.indexOf('.png')) + ".png";
+                            }
+                            if (i < 8 && getRandomInt(1,20)<7 && anImage == "dsfklj.com") {
+                                anImage = PicLink.href;
+                            }
+                            if (i > 8 && anImage == "dsfklj.com") {
+                                anImage = PicLink.href;
+                            }
+                        }
+                        let Pic = document.createElement("img");
+                        Pic.onerror = function() {
+                            Pic.src = anImage;
+                        };
+                        Pic.className = "picture";
+                        Pic.src = PicLink.href;
+                        PicLink.appendChild(Pic);
+                        release.appendChild(PicLink);
+                        // release.appendChild(document.createElement("hr"));
+                        let Downloads = document.createElement("h4");
+                        Downloads.innerHTML = "Downloads:";
+                        release.appendChild(Downloads);
+                        for (var j = 0; j < Releases[i].assets.length; j++)
+                        {
+                            let link = document.createElement("a");
+                            link.href = Releases[i].assets[j].browser_download_url;
+                            let text = document.createElement("h4");
+                            text.innerHTML = Releases[i].assets[j].name;
+                            text.style.color = LinkColour;
+                            link.appendChild(text);
+                            release.appendChild(link);
+                            TotalDownloads = TotalDownloads + Releases[i].assets[j].download_count;
+                        }
+                        if (Releases[i].name.includes("[Qt]"))
+                        {
+                            document.getElementById("QtRelases").appendChild(releaseFrame);
+                            document.getElementById("QtRelases").appendChild(document.createElement("br"));
+                        }
+                        if (Releases[i].name.includes("[Cocoa]"))
+                        {
+                            document.getElementById("CocoaRelases").appendChild(releaseFrame);
+                            document.getElementById("CocoaRelases").appendChild(document.createElement("br"));
+                        }
+                    }
+                }
+                
+                console.log("Download count: " + TotalDownloads.toFixed(0).toString());
+                document.getElementById("TotalDownloadsLabel").innerHTML = TotalDownloads.toFixed(0).toString() + " total downloads";
+            }
+            function test()
+            {
+                // Create a new request object
+                var request = new XMLHttpRequest();
+                request.onload = DealWithResponse;
+                // Initialize a request
+                request.open('get', 'https://api.github.com/repos/ilia3101/MLV-App/releases')
+                // Send it
+                request.send()
+            }
+        </script>
+
+        <style>
+            h1, h2, h3, h4 {
+                font-weight: 500;
+                letter-spacing: 0.011em;
+            }
+            h1 { font-size: 55px; }
+            h2 { font-size: 32px; }
+            h3 { font-size: 25px; }
+            h1, h2, h2, h3, h4, h5, h6, p {
+                font-family: "SF Pro Display", "SF Pro Icons", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+                color: #333;
+            }
+            body {
+                background-color: #ffffff;
+            }
+            a {
+                text-decoration: none;
+                color: #acf;
+            }
+            hr {
+                border: 1px solid #eee;
+            }
+            .release {
+                z-index: 1;
+                border-radius: 4px;
+                transition: box-shadow 0.16s ease, background-color 1.3s ease, border 0.23s ease/* , transform 0.15s ease */;
+                box-shadow: 4px 4px 10px #1111;
+                border: 2px solid #eee4;
+                background-color: #fefefe;
+                padding: 14px;
+            }
+            .release:hover {
+                border-radius: 6px;
+                background-color: #ffffff;
+                box-shadow: 6px 6px 27px #1111;
+                border: 2px solid #aaa1;
+                /* transform: scale(1.003,1.003); */
+            }
+            .frame {
+                padding: 14px;
+            }
+            .picture {
+                max-width:95%;
+                max-height:300px;
+                transition: transform 0.16s ease;
+            }
+            .picture:hover {
+                /* transform: scale(1.01,1.01); */
+            }
+            div.time {
+                position: fixed; left: 0px; top: 0px; right: 0px; width:100vw; height:30px;
+            }
+        </style>
+
+        <div style="z-index: 2; position: fixed; left: 0px; top: 0px; right: 0px; width:100vw; height:100px; background-color: #333; box-shadow: 7px 7px 33px #0004;">
+                <div style="width:957px; margin: auto;">
+                    <h2 style="position: absolute; top: 0px; color: #eee;">MLV App Downloads</h2>
+                    <h4 id="TotalDownloadsLabel" align="right" style="margin-top: 37px; color: #eee;"></h4>
+                </div>
+        </div>
+
+        <div style="width:980px; margin: auto;">
+            <br /><br /><br /><br /><br /><br /><br />
+            
+            <table>
+                <td style="width: 490px; vertical-align: top;">
+                    <h2 align="center">Qt App</h2>
+                    <div id="QtRelases"></div>
+                </td>
+                <td style="width: 490px; vertical-align: top;">
+                    <h2 align="center">Cocoa App</h2>
+                    <div id="CocoaRelases"></div>
+                </td>
+            </table>
+        </div>
+
+    </body>
+</html>
