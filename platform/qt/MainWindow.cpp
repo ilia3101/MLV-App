@@ -18,6 +18,7 @@
 #include <QScrollBar>
 #include <QScreen>
 #include <QMimeData>
+#include <QDir>
 #include <png.h>
 #include <unistd.h>
 
@@ -941,12 +942,54 @@ void MainWindow::startExportCdng(QString fileName)
     m_pStatusDialog->ui->progressBar->setValue( 0 );
     m_pStatusDialog->show();
 
+    //Create folders and build name schemes
+    QString pathName = QFileInfo( fileName ).path();
+    fileName = QFileInfo( fileName ).fileName();
+    fileName = fileName.left( fileName.indexOf( '.' ) );
+
+    if( m_codecOption == CODEC_CNDG_DEFAULT ) pathName = pathName.append( "/%1" ).arg( fileName );
+    else pathName = pathName.append( "/%1_1_%2-%3-%4_0001_C0000" )
+            .arg( fileName )
+            .arg( getMlvTmYear( m_pMlvObject ), 2, 10, QChar('0') )
+            .arg( getMlvTmMonth( m_pMlvObject ), 2, 10, QChar('0') )
+            .arg( getMlvTmDay( m_pMlvObject ), 2, 10, QChar('0') );
+
+    //qDebug() << pathName << fileName;
+    //Create folder
+    QDir dir;
+    dir.mkpath( pathName );
+
+    //Output WAVE
+    if( doesMlvHaveAudio( m_pMlvObject ) && m_audioExportEnabled )
+    {
+        QString wavFileName = pathName;
+        if( m_codecOption == CODEC_CNDG_DEFAULT ) wavFileName = wavFileName.append( "/%1.wav" ).arg( fileName );
+        else wavFileName = wavFileName.append( "/%1_1_%2-%3-%4_0001_C0000.wav" )
+            .arg( fileName )
+            .arg( getMlvTmYear( m_pMlvObject ), 2, 10, QChar('0') )
+            .arg( getMlvTmMonth( m_pMlvObject ), 2, 10, QChar('0') )
+            .arg( getMlvTmDay( m_pMlvObject ), 2, 10, QChar('0') );
+        //qDebug() << wavFileName;
+        writeMlvAudioToWave(m_pMlvObject, wavFileName.toLatin1().data());
+    }
+
     //Output frames loop
     for( uint32_t frame = 0; frame < getMlvFrames( m_pMlvObject ); frame++ )
     {
-        //Output the frame
-        //Interpret "fileName" - ".cdng" as folder where the cdng should be written!
-        //WRITE_DNG( frame, fileName );
+        QString fileNameNr = pathName;
+        if( m_codecOption == CODEC_CNDG_DEFAULT ) fileNameNr = fileNameNr.append( "/%1_%2.cdng" )
+                                                                                .arg( fileName )
+                                                                                .arg( frame, 6, 10, QChar('0') );
+        else fileNameNr = fileNameNr.append( "/%1_1_%2-%3-%4_0001_C0000_%5.cdng" )
+            .arg( fileName )
+            .arg( getMlvTmYear( m_pMlvObject ), 2, 10, QChar('0') )
+            .arg( getMlvTmMonth( m_pMlvObject ), 2, 10, QChar('0') )
+            .arg( getMlvTmDay( m_pMlvObject ), 2, 10, QChar('0') )
+            .arg( frame, 6, 10, QChar('0') );
+
+        qDebug() << "Bouncyball: please create:" << fileNameNr << ":-)";
+
+        //WRITE_DNG( frame, fileName, ... );
 
         //Set Status
         m_pStatusDialog->ui->progressBar->setValue( frame + 1 );
