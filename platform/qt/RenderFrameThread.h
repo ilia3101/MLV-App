@@ -25,13 +25,14 @@ public:
     bool isFrameReady( void );
     bool isIdle( void );
     void stop( void );
+    void lock( void ){ m_mutex.lock(); }
+    void unlock( void ){ m_mutex.unlock(); }
 
 signals:
     void frameReady( void );
 
 private:
     QMutex m_mutex;
-    QMutex m_mutexRender;
     mlvObject_t *m_pMlvObject;
     uint8_t *m_pRawImage;
     bool m_initialized;

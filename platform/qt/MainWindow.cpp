@@ -879,8 +879,10 @@ void MainWindow::startExportPipe(QString fileName)
         //Get all pictures and send to pipe
         for( uint32_t i = 0; i < getMlvFrames( m_pMlvObject ); i++ )
         {
-            //Get picture
+            //Get picture, and lock render thread... there can only be one!
+            m_pRenderThread->lock();
             getMlvProcessedFrame16( m_pMlvObject, i, imgBuffer );
+            m_pRenderThread->unlock();
 
             //Write to pipe
             fwrite(imgBuffer, sizeof( uint16_t ), frameSize, pPipe);
