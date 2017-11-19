@@ -1,31 +1,33 @@
 <html>
     <head>
         <meta charset="utf-8"/>
+        <title>MLV App Downloads</title>
     </head>
     <body onload="test()">
         <script>
+            function getRandomInt(min, max) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min)) + min;
+}
             var LinkColour = "rgb(100,130,160)";
-
             var TotalDownloads = 0;
-
             function DealWithResponse()
             {
                 // console.log(this.responseText);
                 var Releases = JSON.parse(this.responseText);
                 var findImg = /(https?:\/\/.*\.(?:png|jpg|gif))/i;
-
+                var anImage = "dsfklj.com";
                 /* Find latest Qt Release */
                 for (var i = 0; i < Releases.length; i++)
                 {
                     {
                         console.log(Releases[i].name);
-
                         let releaseFrame = document.createElement("div");
                         releaseFrame.className = "frame";
                         let release = document.createElement("div");
                         release.className = "release";
                         releaseFrame.appendChild(release);
-
                         release.appendChild(document.createElement("div"));
                         
                         let Ver = document.createElement("h3");
@@ -40,21 +42,32 @@
                         Time.innerHTML = (TimePassed / (24*3600*1000)).toFixed(0).toString() + " days ago.";
                         Time.style.lineHeight = "0";
                         release.appendChild(Time);
-
                         let PicLink = document.createElement("a");
-                        PicLink.href = Releases[i].body.match(findImg);
-                        PicLink.href = PicLink.href.substring(0, PicLink.href.indexOf('.png')) + ".png";
+                        if (!findImg.test(Releases[i].body)) PicLink.href = anImage;
+                        else {
+                            PicLink.href = Releases[i].body.match(findImg);
+                            if (PicLink.href.includes(".png")) {
+                                PicLink.href = PicLink.href.substring(0, PicLink.href.indexOf('.png')) + ".png";
+                            }
+                            if (i < 8 && getRandomInt(1,20)<7 && anImage == "dsfklj.com") {
+                                anImage = PicLink.href;
+                            }
+                            if (i > 8 && anImage == "dsfklj.com") {
+                                anImage = PicLink.href;
+                            }
+                        }
                         let Pic = document.createElement("img");
+                        Pic.onerror = function() {
+                            Pic.src = anImage;
+                        };
                         Pic.className = "picture";
                         Pic.src = PicLink.href;
                         PicLink.appendChild(Pic);
                         release.appendChild(PicLink);
                         // release.appendChild(document.createElement("hr"));
-
                         let Downloads = document.createElement("h4");
                         Downloads.innerHTML = "Downloads:";
                         release.appendChild(Downloads);
-
                         for (var j = 0; j < Releases[i].assets.length; j++)
                         {
                             let link = document.createElement("a");
@@ -66,7 +79,6 @@
                             release.appendChild(link);
                             TotalDownloads = TotalDownloads + Releases[i].assets[j].download_count;
                         }
-
                         if (Releases[i].name.includes("[Qt]"))
                         {
                             document.getElementById("QtRelases").appendChild(releaseFrame);
