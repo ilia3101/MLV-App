@@ -2234,7 +2234,8 @@ void MainWindow::on_actionExport_triggered()
     }
 
     //If one file is selected, but not CDNG
-    if( ( ui->listWidgetSession->selectedItems().count() <= 1 ) && ( m_codecProfile != CODEC_CDNG ) )
+    if( ( ui->listWidgetSession->selectedItems().count() <= 1 )
+     && ( ( m_codecProfile != CODEC_CDNG ) && ( m_codecProfile != CODEC_CDNG_LOSSLESS ) && ( m_codecProfile != CODEC_CDNG_FAST ) ) )
     {
         //File Dialog
         QString fileName = QFileDialog::getSaveFileName( this, tr("Export..."),
