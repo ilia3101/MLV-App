@@ -92,7 +92,8 @@ SOURCES += \
     GraphicsPickerScene.cpp \
     NoScrollSlider.cpp \
     ColorToolButton.cpp \
-    RenderFrameThread.cpp
+    RenderFrameThread.cpp \
+    ../../src/dng/dng.c
 
 HEADERS += \
         MainWindow.h \
@@ -135,7 +136,12 @@ HEADERS += \
     GraphicsPickerScene.h \
     NoScrollSlider.h \
     ColorToolButton.h \
-    RenderFrameThread.h
+    RenderFrameThread.h \
+    ../../src/dng/camera_id.h \
+    ../../src/dng/dng.h \
+    ../../src/dng/dng_tag_codes.h \
+    ../../src/dng/dng_tag_types.h \
+    ../../src/dng/dng_tag_values.h
 
 FORMS += \
         MainWindow.ui \
