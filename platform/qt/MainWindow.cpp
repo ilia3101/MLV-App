@@ -145,6 +145,7 @@ void MainWindow::timerEvent(QTimerEvent *t)
     if( t->timerId() == m_timerId )
     {
         if( m_frameStillDrawing ) return;
+        if( !m_exportQueue.empty() ) return;
 
         //Time measurement
         QTime nowTime = QTime::currentTime();
@@ -2887,7 +2888,6 @@ void MainWindow::exportHandler( void )
         openMlv( m_exportQueue.first()->fileName() );
         //Set sliders to receipt
         setSliders( m_exportQueue.first() );
-        qApp->processEvents();
         //Fill label in StatusDialog
         m_pStatusDialog->ui->label->setText( tr( "%1/%2 - %3" )
                                              .arg( jobNumber )
