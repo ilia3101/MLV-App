@@ -82,7 +82,7 @@ void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outpu
         int components = 1;
         lj92 decoder_object;
         lj92_open(&decoder_object, raw_frame, raw_data_size, &width, &height, &bitdepth, &components);
-        lj92_decode(decoder_object, unpacked_frame, 1, 0, NULL, 0);
+        lj92_decode(decoder_object, unpacked_frame, width * height * components, 0, NULL, 0);
         lj92_close(decoder_object);
     }
     else /* If not compressed just unpack to 16bit */
