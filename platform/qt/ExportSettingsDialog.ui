@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>328</width>
+    <width>329</width>
     <height>398</height>
    </rect>
   </property>
@@ -69,17 +69,17 @@
           </item>
           <item>
            <property name="text">
-            <string>CinemaDNG</string>
+            <string>CinemaDNG Uncompressed</string>
            </property>
           </item>
           <item>
            <property name="text">
-            <string>CinemaDNG lossless</string>
+            <string>CinemaDNG Lossless</string>
            </property>
           </item>
           <item>
            <property name="text">
-            <string>CinemaDNG fast pass through</string>
+            <string>CinemaDNG Fast pass</string>
            </property>
           </item>
           <item>
