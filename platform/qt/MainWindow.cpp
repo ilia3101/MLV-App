@@ -1809,6 +1809,7 @@ void MainWindow::setToolButtonFocusPixels(int index)
         break;
     default: break;
     }
+    toolButtonFocusPixelsChanged();
 }
 
 //Set Toolbuttons Focus Pixels Interpolation
@@ -1822,6 +1823,7 @@ void MainWindow::setToolButtonFocusPixelsIntMethod(int index)
         break;
     default: break;
     }
+    toolButtonFocusPixelsIntMethodChanged();
 }
 
 //Set Toolbuttons Bad Pixels
@@ -1837,6 +1839,7 @@ void MainWindow::setToolButtonBadPixels(int index)
         break;
     default: break;
     }
+    toolButtonBadPixelsChanged();
 }
 
 //Set Toolbuttons Bad Pixels Interpolation
@@ -1850,6 +1853,7 @@ void MainWindow::setToolButtonBadPixelsIntMethod(int index)
         break;
     default: break;
     }
+    toolButtonBadPixelsIntMethodChanged();
 }
 
 //Set Toolbuttons Chroma Smooth
@@ -1867,6 +1871,7 @@ void MainWindow::setToolButtonChromaSmooth(int index)
         break;
     default: break;
     }
+    toolButtonChromaSmoothChanged();
 }
 
 //Set Toolbuttons Pattern Noise
@@ -1880,6 +1885,7 @@ void MainWindow::setToolButtonPatternNoise(int index)
         break;
     default: break;
     }
+    toolButtonPatternNoiseChanged();
 }
 
 //Set Toolbuttons Vertical Stripes
@@ -1895,6 +1901,7 @@ void MainWindow::setToolButtonVerticalStripes(int index)
         break;
     default: break;
     }
+    toolButtonVerticalStripesChanged();
 }
 
 //Set Toolbuttons Dual Iso
@@ -1910,6 +1917,7 @@ void MainWindow::setToolButtonDualIso(int index)
         break;
     default: break;
     }
+    toolButtonDualIsoChanged();
 }
 
 //Set Toolbuttons Dual Iso Interpolation
@@ -1923,6 +1931,7 @@ void MainWindow::setToolButtonDualIsoInterpolation(int index)
         break;
     default: break;
     }
+    toolButtonDualIsoInterpolationChanged();
 }
 
 //Set Toolbuttons Dual Iso Alias Map
@@ -1936,6 +1945,7 @@ void MainWindow::setToolButtonDualIsoAliasMap(int index)
         break;
     default: break;
     }
+    toolButtonDualIsoAliasMapChanged();
 }
 
 //Set Toolbuttons Dual Iso Fullres Blending
@@ -1949,6 +1959,7 @@ void MainWindow::setToolButtonDualIsoFullresBlending(int index)
         break;
     default: break;
     }
+    toolButtonDualIsoFullresBlendingChanged();
 }
 
 //Get toolbutton index of focus pixels
