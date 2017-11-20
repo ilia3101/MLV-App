@@ -391,12 +391,16 @@ void openMlvClip(mlvObject_t * video, char * mlvPath)
             fread(&video->MLVI, sizeof(mlv_file_hdr_t), 1, video->file);
         else if ( strncmp(block_name, "RAWI", 4) == 0 )
             fread(&video->RAWI, sizeof(mlv_rawi_hdr_t), 1, video->file);
+        else if ( strncmp(block_name, "RAWC", 4) == 0 )
+            fread(&video->RAWC, sizeof(mlv_rawc_hdr_t), 1, video->file);
         else if ( strncmp(block_name, "WAVI", 4) == 0 )
             fread(&video->WAVI, sizeof(mlv_wavi_hdr_t), 1, video->file);
         else if ( strncmp(block_name, "EXPO", 4) == 0 )
             fread(&video->EXPO, sizeof(mlv_expo_hdr_t), 1, video->file);
         else if ( strncmp(block_name, "LENS", 4) == 0 )
             fread(&video->LENS, sizeof(mlv_lens_hdr_t), 1, video->file);
+        else if ( strncmp(block_name, "WBAL", 4) == 0 )
+            fread(&video->WBAL, sizeof(mlv_wbal_hdr_t), 1, video->file);
         else if ( ( strncmp(block_name, "RTCI", 4) == 0 ) && ( !rtci_read ) )
         {
             fread(&video->RTCI, sizeof(mlv_rtci_hdr_t), 1, video->file);
