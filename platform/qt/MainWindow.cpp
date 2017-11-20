@@ -1799,6 +1799,9 @@ void MainWindow::drawFrameNumberLabel( void )
 //Set Toolbuttons Focus Pixels
 void MainWindow::setToolButtonFocusPixels(int index)
 {
+    bool actualize = false;
+    if( index == toolButtonFocusPixelsCurrentIndex() ) actualize = true;
+
     switch( index )
     {
     case 0: ui->toolButtonFocusDotsOff->setChecked( true );
@@ -1809,12 +1812,15 @@ void MainWindow::setToolButtonFocusPixels(int index)
         break;
     default: break;
     }
-    toolButtonFocusPixelsChanged();
+    if( actualize ) toolButtonFocusPixelsChanged();
 }
 
 //Set Toolbuttons Focus Pixels Interpolation
 void MainWindow::setToolButtonFocusPixelsIntMethod(int index)
 {
+    bool actualize = false;
+    if( index == toolButtonFocusPixelsIntMethodCurrentIndex() ) actualize = true;
+
     switch( index )
     {
     case 0: ui->toolButtonFocusDotMethod1->setChecked( true );
@@ -1823,12 +1829,15 @@ void MainWindow::setToolButtonFocusPixelsIntMethod(int index)
         break;
     default: break;
     }
-    toolButtonFocusPixelsIntMethodChanged();
+    if( actualize ) toolButtonFocusPixelsIntMethodChanged();
 }
 
 //Set Toolbuttons Bad Pixels
 void MainWindow::setToolButtonBadPixels(int index)
 {
+    bool actualize = false;
+    if( index == toolButtonBadPixelsCurrentIndex() ) actualize = true;
+
     switch( index )
     {
     case 0: ui->toolButtonBadPixelsOff->setChecked( true );
@@ -1839,12 +1848,15 @@ void MainWindow::setToolButtonBadPixels(int index)
         break;
     default: break;
     }
-    toolButtonBadPixelsChanged();
+    if( actualize ) toolButtonBadPixelsChanged();
 }
 
 //Set Toolbuttons Bad Pixels Interpolation
 void MainWindow::setToolButtonBadPixelsIntMethod(int index)
 {
+    bool actualize = false;
+    if( index == toolButtonBadPixelsIntMethodCurrentIndex() ) actualize = true;
+
     switch( index )
     {
     case 0: ui->toolButtonBadPixelsMethod1->setChecked( true );
@@ -1853,12 +1865,15 @@ void MainWindow::setToolButtonBadPixelsIntMethod(int index)
         break;
     default: break;
     }
-    toolButtonBadPixelsIntMethodChanged();
+    if( actualize ) toolButtonBadPixelsIntMethodChanged();
 }
 
 //Set Toolbuttons Chroma Smooth
 void MainWindow::setToolButtonChromaSmooth(int index)
 {
+    bool actualize = false;
+    if( index == toolButtonChromaSmoothCurrentIndex() ) actualize = true;
+
     switch( index )
     {
     case 0: ui->toolButtonChromaOff->setChecked( true );
@@ -1871,12 +1886,15 @@ void MainWindow::setToolButtonChromaSmooth(int index)
         break;
     default: break;
     }
-    toolButtonChromaSmoothChanged();
+    if( actualize ) toolButtonChromaSmoothChanged();
 }
 
 //Set Toolbuttons Pattern Noise
 void MainWindow::setToolButtonPatternNoise(int index)
 {
+    bool actualize = false;
+    if( index == toolButtonPatternNoiseCurrentIndex() ) actualize = true;
+
     switch( index )
     {
     case 0: ui->toolButtonPatternNoiseOff->setChecked( true );
@@ -1885,12 +1903,15 @@ void MainWindow::setToolButtonPatternNoise(int index)
         break;
     default: break;
     }
-    toolButtonPatternNoiseChanged();
+    if( actualize ) toolButtonPatternNoiseChanged();
 }
 
 //Set Toolbuttons Vertical Stripes
 void MainWindow::setToolButtonVerticalStripes(int index)
 {
+    bool actualize = false;
+    if( index == toolButtonVerticalStripesCurrentIndex() ) actualize = true;
+
     switch( index )
     {
     case 0: ui->toolButtonVerticalStripesOff->setChecked( true );
@@ -1901,12 +1922,15 @@ void MainWindow::setToolButtonVerticalStripes(int index)
         break;
     default: break;
     }
-    toolButtonVerticalStripesChanged();
+    if( actualize ) toolButtonVerticalStripesChanged();
 }
 
 //Set Toolbuttons Dual Iso
 void MainWindow::setToolButtonDualIso(int index)
 {
+    bool actualize = false;
+    if( index == toolButtonDualIsoCurrentIndex() ) actualize = true;
+
     switch( index )
     {
     case 0: ui->toolButtonDualIsoOff->setChecked( true );
@@ -1917,12 +1941,15 @@ void MainWindow::setToolButtonDualIso(int index)
         break;
     default: break;
     }
-    toolButtonDualIsoChanged();
+    if( actualize ) toolButtonDualIsoChanged();
 }
 
 //Set Toolbuttons Dual Iso Interpolation
 void MainWindow::setToolButtonDualIsoInterpolation(int index)
 {
+    bool actualize = false;
+    if( index == toolButtonDualIsoInterpolationCurrentIndex() ) actualize = true;
+
     switch( index )
     {
     case 0: ui->toolButtonDualIsoInterpolationAmaze->setChecked( true );
@@ -1931,12 +1958,15 @@ void MainWindow::setToolButtonDualIsoInterpolation(int index)
         break;
     default: break;
     }
-    toolButtonDualIsoInterpolationChanged();
+    if( actualize ) toolButtonDualIsoInterpolationChanged();
 }
 
 //Set Toolbuttons Dual Iso Alias Map
 void MainWindow::setToolButtonDualIsoAliasMap(int index)
 {
+    bool actualize = false;
+    if( index == toolButtonDualIsoAliasMapCurrentIndex() ) actualize = true;
+
     switch( index )
     {
     case 0: ui->toolButtonDualIsoAliasMapOff->setChecked( true );
@@ -1945,12 +1975,15 @@ void MainWindow::setToolButtonDualIsoAliasMap(int index)
         break;
     default: break;
     }
-    toolButtonDualIsoAliasMapChanged();
+    if( actualize ) toolButtonDualIsoAliasMapChanged();
 }
 
 //Set Toolbuttons Dual Iso Fullres Blending
 void MainWindow::setToolButtonDualIsoFullresBlending(int index)
 {
+    bool actualize = false;
+    if( index == toolButtonDualIsoFullresBlendingCurrentIndex() ) actualize = true;
+
     switch( index )
     {
     case 0: ui->toolButtonDualIsoFullresBlendingOff->setChecked( true );
@@ -1959,7 +1992,7 @@ void MainWindow::setToolButtonDualIsoFullresBlending(int index)
         break;
     default: break;
     }
-    toolButtonDualIsoFullresBlendingChanged();
+    if( actualize ) toolButtonDualIsoFullresBlendingChanged();
 }
 
 //Get toolbutton index of focus pixels
