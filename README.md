@@ -3,7 +3,7 @@ What is MLV App? A cross platform RAW conversion software that works **natively*
 
 ![MLVApp Qt](https://image.ibb.co/jp5BVm/Bildschirmfoto.png)
 
-Find the latest releases [here](https://ilia3101.github.io/MLV-App/).
+Find the latest releases [here](https://ilia3101.github.io/MLV-App/). Download, unpack and start.
 
 ## Features :collision:
 - Import MLV files
@@ -16,13 +16,13 @@ Find the latest releases [here](https://ilia3101.github.io/MLV-App/).
 - Support for dual ISO
 - Show clip information
 - Analysis: histogram, waveform monitor, RGB parade
-- Session: open, import to, delete from, save, copy receipt, paste receipt (also batch paste), reset receipt, preview pictures for all clips
+- Session: open, import to, delete from, save, copy receipt, paste receipt (also batch paste), reset receipt, receipt file import & export, preview pictures for all clips
 - Video playback in 2 modes: show each frame or drop frame mode (a kind of realtime playback which shows as many frames your computer can render)
 - Audio playback in video drop frame mode
 - Loop playback
 - Show next frame, previous frame and scroll though timeline
 - Single frame (3x)16bit PNG export
-- Clip export via ffmpeg 10bit ProRes 422 (Proxy, LT, Standard, HQ), ProRes 4444, and RAW AVI; all with or without audio
+- Clip export via ffmpeg 10bit ProRes 422 (Proxy, LT, Standard, HQ), ProRes 4444, RAW AVI, 8bit H.264 and H.265; all with or without audio
 - Frame rate override for export and playback
 - Clip batch export
 - Zoom: fit to screen, 100% and free zoom, scroll through picture
