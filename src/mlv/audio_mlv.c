@@ -26,7 +26,7 @@ void writeMlvAudioToWave(mlvObject_t * video, char * path)
     if (!doesMlvHaveAudio(video)) return;
 
     uint64_t audio_size = getMlvAudioSize(video);
-    uint64_t theoreticSize = getMlvAudioChannels(video) * getMlvSampleRate(video) * sizeof( uint16_t ) * getMlvFrames(video) / getMlvFramerate(video);
+    uint64_t theoretic_size = getMlvAudioChannels(video) * getMlvSampleRate(video) * sizeof( uint16_t ) * getMlvFrames(video) / getMlvFramerate(video);
     uint64_t file_size = audio_size + sizeof(wave_header_t);
 
     /* Get audio */
@@ -53,8 +53,8 @@ void writeMlvAudioToWave(mlvObject_t * video, char * path)
 
     /* Write header */
     fwrite(&wave_header, sizeof(wave_header_t), 1, wave_file);
-    /* Shorten audio to video lenght */
-    if( theoreticSize < audio_size ) audio_size = theoreticSize;
+    /* Shorten audio to video length */
+    if (theoretic_size < audio_size) audio_size = theoretic_size;
     /* Write data */
     fwrite(audio_data, audio_size, 1, wave_file);
 
