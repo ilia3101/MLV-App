@@ -39,10 +39,12 @@ typedef struct {
     mlv_file_hdr_t    MLVI;
     mlv_audf_hdr_t    AUDF; /* Last AUDF header read */
     mlv_rawi_hdr_t    RAWI;
+    mlv_rawc_hdr_t    RAWC;
     mlv_vidf_hdr_t    VIDF; /* One of many VIDFs(don't know if they're different) */
     mlv_wavi_hdr_t    WAVI;
     mlv_expo_hdr_t    EXPO;
     mlv_lens_hdr_t    LENS;
+    mlv_wbal_hdr_t    WBAL;
     mlv_rtci_hdr_t    RTCI;
     mlv_idnt_hdr_t    IDNT;
     mlv_info_hdr_t    INFO;
