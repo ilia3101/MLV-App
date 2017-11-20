@@ -976,23 +976,26 @@ void MainWindow::startExportCdng(QString fileName)
         writeMlvAudioToWave(m_pMlvObject, wavFileName.toLatin1().data());
     }
 
+    //Init DNG data struct
+    dngObject_t * cinemaDng = initDngObject( m_pMlvObject, m_codecProfile - 6, getFramerate());
+
     //Output frames loop
     for( uint32_t frame = 0; frame < getMlvFrames( m_pMlvObject ); frame++ )
     {
         QString fileNameNr = pathName;
-        if( m_codecOption == CODEC_CNDG_DEFAULT ) fileNameNr = fileNameNr.append( "/%1_%2.cdng" )
+        if( m_codecOption == CODEC_CNDG_DEFAULT ) fileNameNr = fileNameNr.append( "/%1_%2.dng" )
                                                                                 .arg( fileName )
                                                                                 .arg( frame, 6, 10, QChar('0') );
-        else fileNameNr = fileNameNr.append( "/%1_1_%2-%3-%4_0001_C0000_%5.cdng" )
+        else fileNameNr = fileNameNr.append( "/%1_1_%2-%3-%4_0001_C0000_%5.dng" )
             .arg( fileName )
             .arg( getMlvTmYear( m_pMlvObject ), 2, 10, QChar('0') )
             .arg( getMlvTmMonth( m_pMlvObject ), 2, 10, QChar('0') )
             .arg( getMlvTmDay( m_pMlvObject ), 2, 10, QChar('0') )
             .arg( frame, 6, 10, QChar('0') );
+        QByteArray dngFileName = fileNameNr.toLatin1();
 
-        qDebug() << "Bouncyball: please create:" << fileNameNr << ":-)";
-
-        //WRITE_DNG( frame, fileName, ... );
+        //Save cDNG frame
+        saveDngFrame(m_pMlvObject, cinemaDng, frame, dngFileName.data());
 
         //Set Status
         m_pStatusDialog->ui->progressBar->setValue( frame + 1 );
@@ -1002,6 +1005,9 @@ void MainWindow::startExportCdng(QString fileName)
         //Abort pressed? -> End the loop
         if( m_exportAbortPressed ) break;
     }
+
+    //Free DNG data struct
+    freeDngObject(cinemaDng);
 
     //Enable GUI drawing
     m_dontDraw = false;
@@ -2213,9 +2219,9 @@ void MainWindow::on_actionExport_triggered()
           || m_codecProfile == CODEC_CDNG_LOSSLESS
           || m_codecProfile == CODEC_CDNG_FAST )
     {
-        saveFileName.append( ".cdng" );
-        fileType = tr("Cinema DNG (*.cdng)");
-        fileEnding = ".cdng";
+        saveFileName.append( ".dng" );
+        fileType = tr("Cinema DNG (*.dng)");
+        fileEnding = ".dng";
     }
     else
     {
