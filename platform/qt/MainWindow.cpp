@@ -1726,6 +1726,8 @@ void MainWindow::paintAudioTrack( void )
     else
     {
         uint64_t audio_size = getMlvAudioSize( m_pMlvObject );
+        uint64_t theoreticSize = getMlvAudioChannels( m_pMlvObject ) * getMlvSampleRate( m_pMlvObject ) * sizeof( uint16_t ) * getMlvFrames( m_pMlvObject ) / getMlvFramerate( m_pMlvObject );
+        if( theoreticSize < audio_size ) audio_size = theoreticSize;
         int16_t* audio_data = ( int16_t* ) malloc( audio_size );
         getMlvAudioData( m_pMlvObject, ( int16_t* )audio_data );
         pic = QPixmap::fromImage( m_pAudioWave->getMonoWave( audio_data, audio_size, ui->labelAudioTrack->width(), devicePixelRatio() ) );
