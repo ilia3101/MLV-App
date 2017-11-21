@@ -204,7 +204,7 @@ int NSApplicationMain(int argc, const char * argv[])
     // CREATE_BUTTON_LEFT_TOP( App->openMLVButton, 1, openMlvDialog, 6, @"Open Session" ); /* Commented out as not working yet */
     CREATE_BUTTON_LEFT_BOTTOM( App->exportProRes4444Button, 0, exportProRes4444, 1, @"Export ProRes 4444" );
     IMPORTANT_CODE("",5);
-    
+
     /* Export format selector */
     // App->videoFormat = [ [NSPopUpButton alloc]
     //                      initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(0,24,19) ) ];

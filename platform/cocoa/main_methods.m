@@ -21,6 +21,9 @@
 /* The godobject itsself */
 extern godObject_t * App;
 
+/* My custom AVFoundation lib innit */
+#include "avf_lib/avf_lib.h"
+
 
 /* Initialises value labels with correct slider values */
 void initAppWithGod()
@@ -285,50 +288,20 @@ int setAppNewMlvClip(char * mlvPath)
                 {
                     char * pathString = (char *)[pathURL.path UTF8String];
                     char * exportPath = malloc(2048);
-                    char * exportDir = malloc(2048);
-                    char * commandStr = malloc(2048);
 
-                    /* Hidden directory path */
-                    snprintf(exportDir, 2047, "%s/.temp_png", pathString);
+                    snprintf(exportPath, 2048, "%s/%.8s.mov", pathString, App->MLVClipName);
 
-                    /* Create hidden directory */
-                    snprintf(commandStr, 2047, "mkdir %s", exportDir);
-                    system(commandStr);
+                    AVEncoder_t * encoder = initAVEncoder( getMlvWidth(App->videoMLV),
+                                                           getMlvHeight(App->videoMLV),
+                                                           AVF_CODEC_PRORES_422,
+                                                           AVF_COLOURSPACE_SRGB,
+                                                           getMlvFramerate(App->videoMLV) );
 
-                    /* So we always get amaze frames for exporting */
-                    setMlvAlwaysUseAmaze(App->videoMLV);
+                    beginWritingVideoFile(encoder, exportPath, NULL);
 
-                    /* We will use the same NSBitmapImageRep as for exporting as for preview window */
-                    for (int f = 0; f < getMlvFrames(App->videoMLV); ++f)
-                    {
-                        /* Generate file name for frame */
-                        snprintf(exportPath, 2047, "%s/%.8s_frame_%.5i.png", exportDir, App->MLVClipName, f);
-
-                        /* Get processed frame */
-                        getMlvProcessedFrame8(App->videoMLV, f, App->rawImage);
-
-                        /* Export */
-                        NSData * imageFile = [[App->rawBitmap representationUsingType: NSPNGFileType properties: nil] autorelease];
-                        [imageFile writeToFile: [NSString stringWithUTF8String:exportPath] atomically: NO];
-
-                        NSLog(@"Exported frame %i to: %s", f, exportPath);
-                    }
-
-                    setMlvDontAlwaysUseAmaze(App->videoMLV);
-
-                    /* Run ffmpeg to create ProRes file */
-                    char * ffmpegPath = (char *)[[[NSBundle mainBundle] pathForResource:@"ffmpeg" ofType: nil] UTF8String];
-                    snprintf( commandStr, 2047, "\"%s\" -r %f -i %s/%.8s_frame_%s.png -c:v prores_ks -profile:v 4444 %s/%.8s.mov", 
-                              ffmpegPath, getMlvFramerate(App->videoMLV), exportDir, App->MLVClipName, "\%05d", pathString, App->MLVClipName);
-                    system(commandStr);
-
-                    /* Delete hidden directory */
-                    snprintf(commandStr, 2047, "rm -rf %s", exportDir);
-                    system(commandStr);
+                    freeAVEncoder(encoder);
 
                     free(exportPath);
-                    free(exportDir);
-                    free(commandStr);
 
                     /* Give notification to user */
                     NSUserNotification * notification = [[[NSUserNotification alloc] init] autorelease];

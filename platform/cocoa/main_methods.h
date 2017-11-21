@@ -76,12 +76,4 @@ int setAppNewMlvClip(char * mlvPath); /* 0=fail 1=ok */
 
 @end
 
-/* Data source for MLV View */
-// @interface MLVTableViewDataSource : NSTableViewDataSource
-
-// - (NSInteger)numberOfRowsInTableView:(NSTableView *)aTableView;
-// - (id)tableView:(NSTableView *)aTableView objectValueForTableColumn:(NSTableColumn *)aTableColumn row:(NSInteger)rowIndex;
-
-// @end
-
 #endif
