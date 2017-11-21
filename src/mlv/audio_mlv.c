@@ -113,7 +113,7 @@ void writeMlvAudioToWave(mlvObject_t * video, char * path)
     snprintf(temp, sizeof(temp), "%02d:%02d:%02d", getMlvTmHour(video), getMlvTmMin(video), getMlvTmSec(video));
     memcpy(wave_header.bext.origination_time, temp, 8);
 
-    char * project = "Magic Lantern";
+    char * project = "MLV App";
     char * notes = "";
     char * keywords = "";
     int tape = 1, scene = 1, shot = 1, take = 1;
