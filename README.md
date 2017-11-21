@@ -23,7 +23,7 @@ Find the latest releases [here](https://ilia3101.github.io/MLV-App/). Download, 
 - Show next frame, previous frame and scroll though timeline
 - Single frame (3x)16bit PNG export
 - Clip export via ffmpeg 10bit ProRes 422 (Proxy, LT, Standard, HQ), ProRes 4444, RAW AVI, 8bit H.264 and H.265; all with or without audio
-- Clip export as Cinema DNG uncompressed, lossless and fast pass (only RAW corrections are handled, no processing)
+- Clip export as Cinema DNG uncompressed, lossless and fast pass (no RAW correction, processing or decompressing/compressing is done, raw data copied as is from MLV to DNG uncompressed or losless)
 - Frame rate override for export and playback
 - Clip batch export
 - Zoom: fit to screen, 100% and free zoom, scroll through picture
