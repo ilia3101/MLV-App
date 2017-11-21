@@ -1,3 +1,24 @@
+static const char * iXML =
+"<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+"<BWFXML>"
+"<IXML_VERSION>1.5</IXML_VERSION>"
+"<PROJECT>%s</PROJECT>"
+"<NOTE>%s</NOTE>"
+"<CIRCLED>FALSE</CIRCLED>"
+"<BLACKMAGIC-KEYWORDS>%s</BLACKMAGIC-KEYWORDS>"
+"<TAPE>%d</TAPE>"
+"<SCENE>%d</SCENE>"
+"<BLACKMAGIC-SHOT>%d</BLACKMAGIC-SHOT>"
+"<TAKE>%d</TAKE>"
+"<BLACKMAGIC-ANGLE>ms</BLACKMAGIC-ANGLE>"
+"<SPEED>"
+"<MASTER_SPEED>%d/%d</MASTER_SPEED>"
+"<CURRENT_SPEED>%d/%d</CURRENT_SPEED>"
+"<TIMECODE_RATE>%d/%d</TIMECODE_RATE>"
+"<TIMECODE_FLAG>NDF</TIMECODE_FLAG>"
+"</SPEED>"
+"</BWFXML>";
+
 #pragma pack(push,1)
 
 typedef struct {
@@ -67,7 +88,7 @@ void writeMlvAudioToWave(mlvObject_t * video, char * path)
         .WAVE              = {'W','A','V','E'},
         .bext_id           = {'b','e','x','t'},
         .bext_size         = sizeof( wave_bext_t ),
-        .bext.time_reference = 0,
+        .bext.time_reference = 0,//(uint64_t)(getMlvTmHour(video) * 3600 + getMlvTmMin(video) * 60 + getMlvTmSec(video)) * (uint64_t)getMlvSampleRate(video),
         .iXML_id           = {'i','X','M','L'},
         .iXML_size         = 1024,
         .fmt               = {'f','m','t',' '},
@@ -91,6 +112,14 @@ void writeMlvAudioToWave(mlvObject_t * video, char * path)
     memcpy(wave_header.bext.origination_date, temp, 10);
     snprintf(temp, sizeof(temp), "%02d:%02d:%02d", getMlvTmHour(video), getMlvTmMin(video), getMlvTmSec(video));
     memcpy(wave_header.bext.origination_time, temp, 8);
+
+    char * project = "Magic Lantern";
+    char * notes = "";
+    char * keywords = "";
+    int tape = 1, scene = 1, shot = 1, take = 1;
+    int fps_denom = getMlvFramerate(video);//???main_header.sourceFpsDenom;
+    int fps_nom = getMlvFramerate(video);//???main_header.sourceFpsNom;
+    snprintf(wave_header.iXML, wave_header.iXML_size, iXML, project, notes, keywords, tape, scene, shot, take, fps_nom, fps_denom, fps_nom, fps_denom, fps_nom, fps_denom);
 
     FILE * wave_file = fopen(path, "wb");
 
