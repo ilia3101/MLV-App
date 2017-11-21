@@ -117,8 +117,8 @@ void writeMlvAudioToWave(mlvObject_t * video, char * path)
     char * notes = "";
     char * keywords = "";
     int tape = 1, scene = 1, shot = 1, take = 1;
-    int fps_denom = getMlvFramerate(video);//???main_header.sourceFpsDenom;
-    int fps_nom = getMlvFramerate(video);//???main_header.sourceFpsNom;
+    int fps_denom = video->MLVI.sourceFpsDenom;
+    int fps_nom = video->MLVI.sourceFpsNom;
     snprintf(wave_header.iXML, wave_header.iXML_size, iXML, project, notes, keywords, tape, scene, shot, take, fps_nom, fps_denom, fps_nom, fps_denom, fps_nom, fps_denom);
 
     FILE * wave_file = fopen(path, "wb");
