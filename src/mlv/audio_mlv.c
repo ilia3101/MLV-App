@@ -1,5 +1,3 @@
-
-
 #pragma pack(push,1)
 
 typedef struct {
@@ -89,7 +87,7 @@ void writeMlvAudioToWave(mlvObject_t * video, char * path)
     memcpy(wave_header.bext.originator, temp, 32);
     snprintf(temp, sizeof(temp), "JPCAN%04d%.8s%02d%02d%02d%09d", getMlvCameraModel(video), getMlvCameraSerial(video), getMlvTmHour(video), getMlvTmMin(video), getMlvTmSec(video), rand());
     memcpy(wave_header.bext.originator_reference, temp, 32);
-    snprintf(temp, sizeof(temp), "%04d:%02d:%02d", 1900 + getMlvTmYear(video), getMlvTmMonth(video), getMlvTmDay(video));
+    snprintf(temp, sizeof(temp), "%04d:%02d:%02d", getMlvTmYear(video), getMlvTmMonth(video), getMlvTmDay(video));
     memcpy(wave_header.bext.origination_date, temp, 10);
     snprintf(temp, sizeof(temp), "%02d:%02d:%02d", getMlvTmHour(video), getMlvTmMin(video), getMlvTmSec(video));
     memcpy(wave_header.bext.origination_time, temp, 8);
