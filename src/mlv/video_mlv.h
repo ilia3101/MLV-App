@@ -86,6 +86,8 @@ void getMlvAudioData(mlvObject_t * video, int16_t * outputAudio);
 #define getMlvFramerate(video) (video)->frame_rate
 #define getMlvLens(video) (video)->LENS.lensName
 #define getMlvCamera(video) (video)->IDNT.cameraName
+#define getMlvCameraModel(video) (video)->IDNT.cameraModel
+#define getMlvCameraSerial(video) (video)->IDNT.cameraSerial
 #define getMlvLensSerial(video) (video)->LENS.lensName
 #define getMlvCameraSerial(video) (video)->IDNT.cameraSerial
 #define getMlvVersion(video) (video)->MLVI.versionString
