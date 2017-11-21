@@ -37,13 +37,18 @@
 
 #define initialGain 1.0 /* IDK */
 
+#define WB_G 2.0
+#define WB_B 1.4
+
 /* assume RGGB */
 /* see RT rawimage.h */
 static inline int FC(int row, int col)
 {
-    if ((row%2) == 0 && (col%2) == 0)
+	register int row2 = row%2;
+	register int col2 = col%2;
+    if (row2 == 0 && col2 == 0)
         return 0;  /* red */
-    else if ((row%2) == 1 && (col%2) == 1)
+    else if (row2 == 1 && col2 == 1)
         return 2;  /* blue */
     else
         return 1;  /* green */
@@ -283,6 +288,24 @@ void demosaic(amazeinfo_t * inputdata) /* All arguments in 1 struct for posix */
 		if (FC(0,0)==0) {ey=0; ex=0;} else {ey=1; ex=1;}
 	}
 
+	/* "white balance" */
+	{
+		int endx = winx + winw;
+		int endy = winy + winh;
+		for (int y = winy; y < endy; ++y)
+			for (int x = winx; x < endx; ++x)
+				switch (FC(y,x))
+				{
+					case 1:
+						rawData[y][x] *= (1.0/WB_G); // hoping compiler will make these a constant
+						break;
+					case 2:
+						rawData[y][x] *= (1.0/WB_B);
+					default:
+						break;
+				}
+	}
+
 	// Main algorithm: Tile loop
 	//#pragma omp parallel for shared(rawData,height,width,red,green,blue) private(top,left) schedule(dynamic)
 	//code is openmp ready; just have to pull local tile variable declarations inside the tile loop
@@ -366,7 +389,7 @@ void demosaic(amazeinfo_t * inputdata) /* All arguments in 1 struct for posix */
 			// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 			// rgb from input CFA data
-			// rgb values should be floating point number between 0 and 1
+			// rgb values should be floating point number between 0 and 65535
 			// after white balance multipliers are applied
 			// a 16 pixel border is added to each side of the image
 
@@ -1476,9 +1499,21 @@ void demosaic(amazeinfo_t * inputdata) /* All arguments in 1 struct for posix */
 
 	// clean up
 	free(buffer);
+
+	/* "white balance" */
+	{
+		int endx = winx + winw;
+		int endy = winy + winh;
+		for (int y = winy; y < endy; ++y)
+			for (int x = winx; x < endx; ++x)
+				green[y][x] *= WB_G;
+		for (int y = winy; y < endy; ++y)
+			for (int x = winx; x < endx; ++x)
+				blue[y][x] *= WB_B;
+	}
 }
 
-	// done
+// done
 
 #undef TS
 

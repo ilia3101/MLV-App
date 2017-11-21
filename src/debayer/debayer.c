@@ -98,9 +98,9 @@ void debayerAmaze(uint16_t * __restrict debayerto, float * __restrict bayerdata,
     for (int i = 0; i < pixelsize; i++)
     {
         int j = i * 3;
-        debayerto[ j ] = (uint16_t) MIN(red1d[i], 65535);
-        debayerto[j+1] = (uint16_t) MIN(green1d[i], 65535);
-        debayerto[j+2] = (uint16_t) MIN(blue1d[i], 65535);
+        debayerto[ j ] = MIN((uint32_t)red1d[i], 65535);
+        debayerto[j+1] = MIN((uint32_t)green1d[i], 65535);
+        debayerto[j+2] = MIN((uint32_t)blue1d[i], 65535);
     }
 
     free(red1d);
@@ -236,7 +236,7 @@ void debayerBasic(uint16_t * __restrict debayerto, float * __restrict bayerdata,
     }
 
     /* Copy to top/bottom rows */
-    memcpy(debayerto, debayerto + (width * 3), width * 6); /* Unsure why width needs to be * 6, but * 3 didn't fill whole row */
-    memcpy(debayerto + (width * (height - 1) * 3), debayerto + (width * (height - 2) * 3), width * 6);
+    memcpy(debayerto, debayerto + (width * 3), width * 3 * sizeof(uint16_t));
+    memcpy(debayerto + (width * (height - 1) * 3), debayerto + (width * (height - 2) * 3), width * 3 * sizeof(uint16_t));
 
 }
