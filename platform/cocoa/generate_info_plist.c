@@ -53,7 +53,7 @@ int main(int argc, char * argv[])
     fprintf(info_plist, INFO_PLIST_PROPERTY("LSMinimumSystemVersion", "10.6.0"));
     fprintf(info_plist, INFO_PLIST_PROPERTY("CFBundleIconFile", "MLV App.icns"));
     fprintf(info_plist, TAB XML_TAG("key", "LSUIElement", "") NL TAB XML_TAG_C("false") NL);
-    fprintf(info_plist, INFO_PLIST_PROPERTY("NSHumanReadableCopyright", "© 2017 Ilia Sibiryakov (GPLv3)"));
+    fprintf(info_plist, INFO_PLIST_PROPERTY("NSHumanReadableCopyright", "© 2017 Creators Of MLV App"));
     fprintf(info_plist, INFO_PLIST_PROPERTY("CFBundleIconFile", "MLV App.icns"));
     /* MLV files r supported */
     fprintf(info_plist, TAB XML_TAG("key", "CFBundleDocumentTypes", "") NL);

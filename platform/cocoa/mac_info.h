@@ -13,4 +13,9 @@
 #define SCREEN_WIDTH ((NSRect)[[NSScreen mainScreen] frame]).size.width
 #define SCREEN_HEIGHT ((NSRect)[[NSScreen mainScreen] frame]).size.height
 
+/* To get the date */
+#define CURRENT_DAY ((int)[[[NSCalendar currentCalendar] components: NSCalendarUnitDay fromDate:[NSDate date]] day])
+#define CURRENT_MONTH ((int)[[[NSCalendar currentCalendar] components: NSCalendarUnitMonth fromDate:[NSDate date]] month])
+#define CURRENT_YEAR ((int)[[[NSCalendar currentCalendar] components: NSCalendarUnitYear fromDate:[NSDate date]] year])
+
 #endif
