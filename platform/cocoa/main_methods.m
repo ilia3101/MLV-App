@@ -297,7 +297,8 @@ int setAppNewMlvClip(char * mlvPath)
                                                            AVF_COLOURSPACE_SRGB,
                                                            getMlvFramerate(App->videoMLV) );
 
-                    beginWritingVideoFile(encoder, exportPath, NULL);
+                    beginWritingVideoFile(encoder, exportPath);
+                    endWritingVideoFile(encoder);
 
                     freeAVEncoder(encoder);
 

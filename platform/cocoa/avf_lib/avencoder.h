@@ -11,6 +11,7 @@ typedef struct
     int height;
     CGSize size;
     double fps;
+    int frames_encoded;
 
     CGColorSpaceRef colour_space;
     CFDataRef colour_profile_data;
@@ -21,18 +22,16 @@ typedef struct
     double write_progress; /* Check to see progress in percent */
     BOOL keep_writing; /* Flag to stop writing if needed */
     
-    AVAssetWriter * assetWriter; /* Asset writer */
-    AVAssetWriterInput * asset_writer_input; /* Whatever this does */
-    uint32_t bitrate; /* H.264 bitrate in Kb/s */
+    AVAssetWriter * video_writer; /* Asset writer */
+    AVAssetWriterInput * video_writer_input; /* Whatever this does */
+    AVAssetWriterInputPixelBufferAdaptor * adaptor;
+    uint32_t bitrate; /* H.264 bitrate in Kb/s (?) */
     NSString * codec;
     /* Some 'codec keys':
      * H.264: https://developer.apple.com/documentation/avfoundation/avvideocodech264?language=objc
      * H.265 / HEVC: https://developer.apple.com/documentation/avfoundation/avvideocodechevc?language=objc
      * ProRes 422: https://developer.apple.com/documentation/avfoundation/avvideocodecappleprores422?language=objc
      * ProRes 4444: https://developer.apple.com/documentation/avfoundation/avvideocodecappleprores4444?language=objc */
-
-    CMSampleBufferRef * image; /* Image for encoding */
-    CMSampleBufferRef * audio; /* Audio for encoding */
 
 } AVEncoder_t;
 

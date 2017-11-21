@@ -38,13 +38,13 @@ AVEncoder_t * initAVEncoder(int width, int height, int codec, int colourSpace, d
 // void setBitRate(AVEncoder_t * encoder, int bitRate);
 
 /* To begin/open a video file encoding session */
-void beginWritingVideoFile(AVEncoder_t * encoder, char * path, double * progress);
+void beginWritingVideoFile(AVEncoder_t * encoder, char * path);
 
 // /* Add a 16bit RGB frame to file (will be exported at bitdepth of set format) */
 // void addFrameToVideoFile(AVEncoder_t * encoder, uint16_t * frame);
 
 // /* Once all frames are added to video file, this will end encoding session */
-// void endWritingVideoFile(AVEncoder_t * encoder);
+void endWritingVideoFile(AVEncoder_t * encoder);
 
 /* Done */
 void freeAVEncoder(AVEncoder_t * encoder);
