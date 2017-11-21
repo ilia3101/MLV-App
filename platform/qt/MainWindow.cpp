@@ -14,7 +14,6 @@
 #include <QTime>
 #include <QSettings>
 #include <QDesktopWidget>
-#include <QDesktopWidget>
 #include <QScrollBar>
 #include <QScreen>
 #include <QMimeData>
