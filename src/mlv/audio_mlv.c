@@ -1,3 +1,5 @@
+#define MIN(a,b) (((a)<(b))?(a):(b))
+
 static const char * iXML =
 "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
 "<BWFXML>"
@@ -76,7 +78,8 @@ void writeMlvAudioToWave(mlvObject_t * video, char * path)
 
     uint64_t audio_size = getMlvAudioSize(video);
     uint64_t theoretic_size = getMlvAudioChannels(video) * getMlvSampleRate(video) * sizeof( uint16_t ) * getMlvFrames(video) / getMlvFramerate(video);
-    uint64_t file_size = theoretic_size + sizeof(wave_header_t);
+    uint64_t wave_data_size = MIN(theoretic_size, audio_size);
+    uint64_t file_size = wave_data_size + sizeof(wave_header_t);
 
     /* Get audio */
     int16_t * audio_data = malloc( audio_size );
@@ -100,7 +103,7 @@ void writeMlvAudioToWave(mlvObject_t * video, char * path)
         .block_align       = (getMlvAudioChannels(video) * 16) / 8,
         .bits_per_sample   = 16,
         .data              = {'d','a','t','a'},
-        .subchunk2_size    = theoretic_size
+        .subchunk2_size    = wave_data_size
     };
 
     char temp[33];
@@ -126,7 +129,7 @@ void writeMlvAudioToWave(mlvObject_t * video, char * path)
     /* Write header */
     fwrite(&wave_header, sizeof(wave_header_t), 1, wave_file);
     /* Write data */
-    fwrite(audio_data, theoretic_size, 1, wave_file);
+    fwrite(audio_data, wave_data_size, 1, wave_file);
 
     fclose(wave_file);
     free(audio_data);
