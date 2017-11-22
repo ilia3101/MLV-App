@@ -1002,6 +1002,12 @@ void MainWindow::startExportCdng(QString fileName)
             m_pStatusDialog->hide();
             qApp->processEvents();
             QMessageBox::critical( this, tr( "File error" ), tr( "Could not save:  " + dngName.toLatin1() ) );
+            QMessageBox question( this );
+            int ret = QMessageBox::question( this, tr("MLV App"),
+                                             tr("Do you like to abort the batch export?"),
+                                             QMessageBox::Yes | QMessageBox::No,
+                                             QMessageBox::No);
+            if( ret == QMessageBox::Yes ) exportAbort();
             break;
         }
 
