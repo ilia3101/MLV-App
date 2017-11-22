@@ -1,177 +1,177 @@
 <html><head>
-<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
         <meta charset="utf-8">
-        <title>MLV App Downloads</title>
-    </head>
-    <body onload="test()">
-        <script>
-            var LinkColour = "rgb(100,130,160)";
-            var TotalDownloads = 0;
-            var Releases;
-            function DealWithResponse()
+            <title>MLV App Downloads</title>
+            </head>
+<body onload="test()">
+    <script>
+        var LinkColour = "rgb(100,130,160)";
+        var TotalDownloads = 0;
+        var Releases;
+        function DealWithResponse()
+        {
+            // console.log(this.responseText);
+            Releases = JSON.parse(this.responseText);
+            var findImg = /(https?:\/\/.*\.(?:png|jpg|gif))/i;
+            var anImage = "dsfklj.com";
+            /* Find latest Qt Release */
+            for (var i = 0; i < Releases.length; i++)
             {
-                // console.log(this.responseText);
-                Releases = JSON.parse(this.responseText);
-                var findImg = /(https?:\/\/.*\.(?:png|jpg|gif))/i;
-                var anImage = "dsfklj.com";
-                /* Find latest Qt Release */
-                for (var i = 0; i < Releases.length; i++)
                 {
-                    {
-                        console.log(Releases[i].name);
-                        let releaseFrame = document.createElement("div");
-                        releaseFrame.className = "frame";
-                        let release = document.createElement("div");
-                        release.className = "release";
-                        releaseFrame.appendChild(release);
-                        release.appendChild(document.createElement("div"));
-                        
-                        let Ver = document.createElement("h3");
-                        Ver.innerHTML = Releases[i].tag_name;
-                        Ver.style = "margin-top: 5px;";
-                        release.appendChild(Ver);
-                        
-                        let Time = document.createElement("h4");
-                        let PublishDate = new Date(Releases[i].published_at);
-                        let TimeNow = new Date();
-                        let TimePassed = (TimeNow.getTime() - PublishDate.getTime());
-                        Time.innerHTML = (TimePassed / (24*3600*1000)).toFixed(0).toString() + " days ago.";
-                        Time.style.lineHeight = "0";
-                        release.appendChild(Time);
-                        let PicLink = document.createElement("a");
-                        if (!findImg.test(Releases[i].body)) PicLink.href = anImage;
-                        else {
-                            PicLink.href = Releases[i].body.match(findImg);
-                            if (PicLink.href.includes(".png")) {
-                                PicLink.href = PicLink.href.substring(0, PicLink.href.indexOf('.png')) + ".png";
-                            }
-                        }
-                        let Pic = document.createElement("img");
-                        Pic.onerror = function() {
-                            Pic.parentNode.removeChild(Pic);
-                        };
-                        Pic.className = "picture";
-                        Pic.src = PicLink.href;
-                        PicLink.appendChild(Pic);
-                        release.appendChild(PicLink);
-                        // release.appendChild(document.createElement("hr"));
-                        let Downloads = document.createElement("h4");
-                        Downloads.innerHTML = "Downloads:";
-                        release.appendChild(Downloads);
-                        for (var j = 0; j < Releases[i].assets.length; j++)
-                        {
-                            let link = document.createElement("a");
-                            link.href = Releases[i].assets[j].browser_download_url;
-                            let text = document.createElement("h4");
-                            text.innerHTML = Releases[i].assets[j].name;
-                            text.style.color = LinkColour;
-                            link.appendChild(text);
-                            release.appendChild(link);
-                            TotalDownloads = TotalDownloads + Releases[i].assets[j].download_count;
-                        }
-                        if (Releases[i].name.includes("[Qt]"))
-                        {
-                            document.getElementById("QtRelases").appendChild(releaseFrame);
-                            document.getElementById("QtRelases").appendChild(document.createElement("br"));
-                        }
-                        if (Releases[i].name.includes("[Cocoa]"))
-                        {
-                            document.getElementById("CocoaRelases").appendChild(releaseFrame);
-                            document.getElementById("CocoaRelases").appendChild(document.createElement("br"));
+                    console.log(Releases[i].name);
+                    let releaseFrame = document.createElement("div");
+                    releaseFrame.className = "frame";
+                    let release = document.createElement("div");
+                    release.className = "release";
+                    releaseFrame.appendChild(release);
+                    release.appendChild(document.createElement("div"));
+                    
+                    let Ver = document.createElement("h3");
+                    Ver.innerHTML = Releases[i].tag_name;
+                    Ver.style = "margin-top: 5px;";
+                    release.appendChild(Ver);
+                    
+                    let Time = document.createElement("h4");
+                    let PublishDate = new Date(Releases[i].published_at);
+                    let TimeNow = new Date();
+                    let TimePassed = (TimeNow.getTime() - PublishDate.getTime());
+                    Time.innerHTML = (TimePassed / (24*3600*1000)).toFixed(0).toString() + " days ago.";
+                    Time.style.lineHeight = "0";
+                    release.appendChild(Time);
+                    let PicLink = document.createElement("a");
+                    if (!findImg.test(Releases[i].body)) PicLink.href = anImage;
+                    else {
+                        PicLink.href = Releases[i].body.match(findImg);
+                        if (PicLink.href.includes(".png")) {
+                            PicLink.href = PicLink.href.substring(0, PicLink.href.indexOf('.png')) + ".png";
                         }
                     }
+                    let Pic = document.createElement("img");
+                    Pic.onerror = function() {
+                        Pic.parentNode.removeChild(Pic);
+                    };
+                    Pic.className = "picture";
+                    Pic.src = PicLink.href;
+                    PicLink.appendChild(Pic);
+                    release.appendChild(PicLink);
+                    // release.appendChild(document.createElement("hr"));
+                    let Downloads = document.createElement("h4");
+                    Downloads.innerHTML = "Downloads:";
+                    release.appendChild(Downloads);
+                    for (var j = 0; j < Releases[i].assets.length; j++)
+                    {
+                        let link = document.createElement("a");
+                        link.href = Releases[i].assets[j].browser_download_url;
+                        let text = document.createElement("h4");
+                        text.innerHTML = Releases[i].assets[j].name;
+                        text.style.color = LinkColour;
+                        link.appendChild(text);
+                        release.appendChild(link);
+                        TotalDownloads = TotalDownloads + Releases[i].assets[j].download_count;
+                    }
+                    if (Releases[i].name.includes("[Qt]"))
+                    {
+                        document.getElementById("QtRelases").appendChild(releaseFrame);
+                        document.getElementById("QtRelases").appendChild(document.createElement("br"));
+                    }
+                    if (Releases[i].name.includes("[Cocoa]"))
+                    {
+                        document.getElementById("CocoaRelases").appendChild(releaseFrame);
+                        document.getElementById("CocoaRelases").appendChild(document.createElement("br"));
+                    }
                 }
-                
-                console.log("Download count: " + TotalDownloads.toFixed(0).toString());
-                document.getElementById("TotalDownloadsLabel").innerHTML = TotalDownloads.toFixed(0).toString() + " total downloads";
             }
-            function test()
-            {
-                // Create a new request object
-                var request = new XMLHttpRequest();
-                request.onload = DealWithResponse;
-                // Initialize a request
-                request.open('get', 'https://api.github.com/repos/ilia3101/MLV-App/releases')
-                // Send it
-                request.send()
-            }
-        </script>
-
-        <style>
-            h1, h2, h3, h4 {
-                font-weight: 500;
-                letter-spacing: 0.011em;
-            }
-            h1 { font-size: 55px; }
-            h2 { font-size: 32px; }
-            h3 { font-size: 25px; }
-            h1, h2, h2, h3, h4, h5, h6, p {
-                font-family: "SF Pro Display", "SF Pro Icons", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
-                color: #333;
-            }
-            body {
-                background-color: #ffffff;
-            }
-            a {
-                text-decoration: none;
-                color: #acf;
-            }
-            hr {
-                border: 1px solid #eee;
-            }
-            .release {
-                z-index: 1;
-                border-radius: 4px;
-                transition: box-shadow 0.16s ease, background-color 1.3s ease, border 0.23s ease/* , transform 0.15s ease */;
-                box-shadow: 4px 4px 10px #1111;
-                border: 2px solid #eee4;
-                background-color: #fefefe;
-                padding: 14px;
-            }
-            .release:hover {
-                border-radius: 6px;
-                background-color: #ffffff;
-                box-shadow: 6px 6px 27px #1111;
-                border: 2px solid #aaa1;
-                /* transform: scale(1.003,1.003); */
-            }
-            .frame {
-                padding: 14px;
-            }
-            .picture {
-                max-width:95%;
-                max-height:300px;
-                transition: transform 0.16s ease;
-            }
-            .picture:hover {
-                /* transform: scale(1.01,1.01); */
-            }
-            div.time {
-                position: fixed; left: 0px; top: 0px; right: 0px; width:100vw; height:30px;
-            }
-        </style>
-
-        <div style="z-index: 2; position: fixed; left: 0px; top: 0px; right: 0px; width:100vw; height:100px; background-color: #333; box-shadow: 7px 7px 33px #0004;">
-                <div style="width:957px; margin: auto;">
-                    <h2 style="position: absolute; top: 0px; color: #eee;">MLV App Downloads</h2>
-                    <h4 id="TotalDownloadsLabel" style="margin-top: 37px; color: #eee;" align="right">1031 total downloads</h4>
-                </div>
-        </div>
-
-        <div style="width:980px; margin: auto;">
-            <br><br><br><br><br><br><br>
             
-            <table>
-                <td style="width: 490px; vertical-align: top;">
-                    <h2 align="center">Qt App</h2>
-                    <div id="QtRelases"><div class="frame"><div class="release"><div></div><h3 style="margin-top: 5px;">QTv0.11alpha</h3><h4 style="line-height: 0;">0 days ago.</h4><a href="https://image.ibb.co/hteCf6/Bildschirmfoto.png"><img class="picture" src="index_files/Bildschirmfoto_003.png"></a><h4>Downloads:</h4><a href="https://github.com/ilia3101/MLV-App/releases/download/QTv0.11alpha/MLV.App.v0.11.alpha.OSX.zip"><h4 style="color: rgb(100, 130, 160);">MLV.App.v0.11.alpha.OSX.zip</h4></a></div></div><br><div class="frame"><div class="release"><div></div><h3 style="margin-top: 5px;">QTv0.10alpha</h3><h4 style="line-height: 0;">12 days ago.</h4><a href="https://image.ibb.co/jp5BVm/Bildschirmfoto.png"><img class="picture" src="index_files/Bildschirmfoto.png"></a><h4>Downloads:</h4><a href="https://github.com/ilia3101/MLV-App/releases/download/QTv0.10alpha/MLV.App.v0.10.alpha.OSX.zip"><h4 style="color: rgb(100, 130, 160);">MLV.App.v0.10.alpha.OSX.zip</h4></a><a href="https://github.com/ilia3101/MLV-App/releases/download/QTv0.10alpha/MLV.App.v0.10.alpha.Win32.zip"><h4 style="color: rgb(100, 130, 160);">MLV.App.v0.10.alpha.Win32.zip</h4></a><a href="https://github.com/ilia3101/MLV-App/releases/download/QTv0.10alpha/MLV.App.v0.10.alpha.WINx64.static.zip"><h4 style="color: rgb(100, 130, 160);">MLV.App.v0.10.alpha.WINx64.static.zip</h4></a></div></div><br><div class="frame"><div class="release"><div></div><h3 style="margin-top: 5px;">QTv0.9alpha</h3><h4 style="line-height: 0;">31 days ago.</h4><a href="https://image.ibb.co/h5tJ0m/Bildschirmfoto.png"><img class="picture" src="index_files/Bildschirmfoto_002.png"></a><h4>Downloads:</h4><a href="https://github.com/ilia3101/MLV-App/releases/download/QTv0.9alpha/MLV.App.v0.9.alpha.OSX.zip"><h4 style="color: rgb(100, 130, 160);">MLV.App.v0.9.alpha.OSX.zip</h4></a><a href="https://github.com/ilia3101/MLV-App/releases/download/QTv0.9alpha/MLV.App.v0.9.alpha.WINx64.static.zip"><h4 style="color: rgb(100, 130, 160);">MLV.App.v0.9.alpha.WINx64.static.zip</h4></a><a href="https://github.com/ilia3101/MLV-App/releases/download/QTv0.9alpha/MLV.App.v0.9.alpha.WINx86.zip"><h4 style="color: rgb(100, 130, 160);">MLV.App.v0.9.alpha.WINx86.zip</h4></a></div></div><br><div class="frame"><div class="release"><div></div><h3 style="margin-top: 5px;">QTv0.8alpha</h3><h4 style="line-height: 0;">61 days ago.</h4><a href="https://image.ibb.co/c27Gtk/Bildschirmfoto_2017_09_22_um_20_50_21.png"><img class="picture" src="index_files/Bildschirmfoto_2017_09_22_um_20_50_21.png"></a><h4>Downloads:</h4><a href="https://github.com/ilia3101/MLV-App/releases/download/QTv0.8alpha/MLV.App.v0.8.alpha.OSX.zip.zip"><h4 style="color: rgb(100, 130, 160);">MLV.App.v0.8.alpha.OSX.zip.zip</h4></a><a href="https://github.com/ilia3101/MLV-App/releases/download/QTv0.8alpha/MLV.App.v0.8.alpha.x64.Linux.AppImage"><h4 style="color: rgb(100, 130, 160);">MLV.App.v0.8.alpha.x64.Linux.AppImage</h4></a><a href="https://github.com/ilia3101/MLV-App/releases/download/QTv0.8alpha/MLV.App.v0.8.alpha.x64.Win.static.zip"><h4 style="color: rgb(100, 130, 160);">MLV.App.v0.8.alpha.x64.Win.static.zip</h4></a><a href="https://github.com/ilia3101/MLV-App/releases/download/QTv0.8alpha/MLV.App.v0.8.alpha.x86.Win.zip"><h4 style="color: rgb(100, 130, 160);">MLV.App.v0.8.alpha.x86.Win.zip</h4></a></div></div><br><div class="frame"><div class="release"><div></div><h3 style="margin-top: 5px;">QTv0.7alpha</h3><h4 style="line-height: 0;">70 days ago.</h4><a href="https://image.ibb.co/do9aoa/Bildschirmfoto_2017_09_10_um_23_37_28.png"><img class="picture" src="index_files/Bildschirmfoto_2017_09_10_um_23_37_28.png"></a><h4>Downloads:</h4><a href="https://github.com/ilia3101/MLV-App/releases/download/QTv0.7alpha/MLV.App.v0.7.alpha.OSX.zip"><h4 style="color: rgb(100, 130, 160);">MLV.App.v0.7.alpha.OSX.zip</h4></a></div></div><br><div class="frame"><div class="release"><div></div><h3 style="margin-top: 5px;">QTv0.6alpha</h3><h4 style="line-height: 0;">92 days ago.</h4><a href="http://image.ibb.co/eY2Y1k/Bildschirmfoto_2017_08_22_um_20_55_04.png"><img class="picture" src="index_files/Bildschirmfoto_2017_08_22_um_20_55_04.png"></a><h4>Downloads:</h4><a href="https://github.com/ilia3101/MLV-App/releases/download/QTv0.6alpha/MLV.App.v0.6.alpha.OSX.zip"><h4 style="color: rgb(100, 130, 160);">MLV.App.v0.6.alpha.OSX.zip</h4></a><a href="https://github.com/ilia3101/MLV-App/releases/download/QTv0.6alpha/MLV.App.v0.6.alpha.x64.Win.zip"><h4 style="color: rgb(100, 130, 160);">MLV.App.v0.6.alpha.x64.Win.zip</h4></a><a href="https://github.com/ilia3101/MLV-App/releases/download/QTv0.6alpha/MLV.App.v0.6.alpha.x86.Win.zip"><h4 style="color: rgb(100, 130, 160);">MLV.App.v0.6.alpha.x86.Win.zip</h4></a></div></div><br><div class="frame"><div class="release"><div></div><h3 style="margin-top: 5px;">QTv0.5alpha</h3><h4 style="line-height: 0;">103 days ago.</h4><a href="http://image.ibb.co/h7tvma/Bildschirmfoto_2017_08_12_um_12_21_47.png"><img class="picture" src="index_files/Bildschirmfoto_2017_08_12_um_12_21_47.png"></a><h4>Downloads:</h4><a href="https://github.com/ilia3101/MLV-App/releases/download/QTv0.5alpha/MLV.App.v0.5.alpha.OSX.zip"><h4 style="color: rgb(100, 130, 160);">MLV.App.v0.5.alpha.OSX.zip</h4></a><a href="https://github.com/ilia3101/MLV-App/releases/download/QTv0.5alpha/MLV.App.v0.5.alpha.Win32.zip"><h4 style="color: rgb(100, 130, 160);">MLV.App.v0.5.alpha.Win32.zip</h4></a></div></div><br><div class="frame"><div class="release"><div></div><h3 style="margin-top: 5px;">QTv0.4alpha</h3><h4 style="line-height: 0;">109 days ago.</h4><a href="https://image.ibb.co/jp5BVm/Bildschirmfoto.png"><img class="picture" src="index_files/Bildschirmfoto.png"></a><h4>Downloads:</h4><a href="https://github.com/ilia3101/MLV-App/releases/download/QTv0.4alpha/MLV.App.v0.4.alpha.OSX.zip"><h4 style="color: rgb(100, 130, 160);">MLV.App.v0.4.alpha.OSX.zip</h4></a><a href="https://github.com/ilia3101/MLV-App/releases/download/QTv0.4alpha/MLV.App.v0.4.alpha.Win32.zip"><h4 style="color: rgb(100, 130, 160);">MLV.App.v0.4.alpha.Win32.zip</h4></a></div></div><br><div class="frame"><div class="release"><div></div><h3 style="margin-top: 5px;">QTv0.3alpha</h3><h4 style="line-height: 0;">116 days ago.</h4><a href="http://image.ibb.co/mp2Zx5/Bildschirmfoto_2017_07_30_um_19_57_57.png"><img class="picture" src="index_files/Bildschirmfoto_2017_07_30_um_19_57_57.png"></a><h4>Downloads:</h4><a href="https://github.com/ilia3101/MLV-App/releases/download/QTv0.3alpha/MLV.App.v0.3.alpha.OSX.zip"><h4 style="color: rgb(100, 130, 160);">MLV.App.v0.3.alpha.OSX.zip</h4></a><a href="https://github.com/ilia3101/MLV-App/releases/download/QTv0.3alpha/MLV.App.v0.3.alpha.Win32.zip"><h4 style="color: rgb(100, 130, 160);">MLV.App.v0.3.alpha.Win32.zip</h4></a></div></div><br><div class="frame"><div class="release"><div></div><h3 style="margin-top: 5px;">QTv0.2alpha</h3><h4 style="line-height: 0;">122 days ago.</h4><a href="https://image.ibb.co/jp5BVm/Bildschirmfoto.png"><img class="picture" src="index_files/Bildschirmfoto.png"></a><h4>Downloads:</h4><a href="https://github.com/ilia3101/MLV-App/releases/download/QTv0.2alpha/MLV.App.v0.2.alpha.OSX.zip"><h4 style="color: rgb(100, 130, 160);">MLV.App.v0.2.alpha.OSX.zip</h4></a><a href="https://github.com/ilia3101/MLV-App/releases/download/QTv0.2alpha/MLV.App.v0.2.alpha.Win32.zip"><h4 style="color: rgb(100, 130, 160);">MLV.App.v0.2.alpha.Win32.zip</h4></a></div></div><br><div class="frame"><div class="release"><div></div><h3 style="margin-top: 5px;">QTv0.1alpha</h3><h4 style="line-height: 0;">125 days ago.</h4><a href="https://image.ibb.co/jp5BVm/Bildschirmfoto.png"><img class="picture" src="index_files/Bildschirmfoto.png"></a><h4>Downloads:</h4><a href="https://github.com/ilia3101/MLV-App/releases/download/QTv0.1alpha/MLV.App.v0.1.alpha.OSX.zip"><h4 style="color: rgb(100, 130, 160);">MLV.App.v0.1.alpha.OSX.zip</h4></a><a href="https://github.com/ilia3101/MLV-App/releases/download/QTv0.1alpha/MLV.App.v0.1.alpha.Win32.zip"><h4 style="color: rgb(100, 130, 160);">MLV.App.v0.1.alpha.Win32.zip</h4></a></div></div><br></div>
-                </td>
-                <td style="width: 490px; vertical-align: top;">
-                    <h2 align="center">Cocoa App</h2>
-                    <div id="CocoaRelases"><div class="frame"><div class="release"><div></div><h3 style="margin-top: 5px;">v0.21-pre-alpha-xyY-edition</h3><h4 style="line-height: 0;">32 days ago.</h4><a href="https://user-images.githubusercontent.com/23642861/31855848-4d05911c-b6ab-11e7-8a87-5e0a546b9417.png"><img class="picture" src="index_files/31855848-4d05911c-b6ab-11e7-8a87-5e0a546b9417.png"></a><h4>Downloads:</h4><a href="https://github.com/ilia3101/MLV-App/releases/download/v0.21-pre-alpha-xyY-edition/MLV.App.zip"><h4 style="color: rgb(100, 130, 160);">MLV.App.zip</h4></a></div></div><br><div class="frame"><div class="release"><div></div><h3 style="margin-top: 5px;">v0.20-pre-alpha-fixed-edition</h3><h4 style="line-height: 0;">58 days ago.</h4><a href="https://user-images.githubusercontent.com/23642861/30429954-57e9ce26-9951-11e7-8e71-38f78d5b1f1c.png"><img class="picture" src="index_files/30429954-57e9ce26-9951-11e7-8e71-38f78d5b1f1c.png"></a><h4>Downloads:</h4><a href="https://github.com/ilia3101/MLV-App/releases/download/v0.20-pre-alpha-fixed-edition/MLV.App.zip"><h4 style="color: rgb(100, 130, 160);">MLV.App.zip</h4></a></div></div><br><div class="frame"><div class="release"><div></div><h3 style="margin-top: 5px;">v0.19-pre-alpha-no-clipping-edition</h3><h4 style="line-height: 0;">88 days ago.</h4><a href="http://image.ibb.co/ibqTp5/Screen_Shot_2017_08_27_at_00_37_13.png"><img class="picture" src="index_files/Screen_Shot_2017_08_27_at_00_37_13.png"></a><h4>Downloads:</h4><a href="https://github.com/ilia3101/MLV-App/releases/download/v0.19-pre-alpha-no-clipping-edition/MLV.App.zip"><h4 style="color: rgb(100, 130, 160);">MLV.App.zip</h4></a></div></div><br><div class="frame"><div class="release"><div></div><h3 style="margin-top: 5px;">v0.18-pre-alpha-log-edition</h3><h4 style="line-height: 0;">89 days ago.</h4><a href="https://image.ibb.co/fzqqHQ/Alexa_Log_Switching.gif,https://image.ibb.co/fzqqHQ/Alexa_Log_Switching.gif"><img class="picture" src="index_files/Alexa_Log_Switching.gif"></a><h4>Downloads:</h4><a href="https://github.com/ilia3101/MLV-App/releases/download/v0.18-pre-alpha-log-edition/MLV.App.zip"><h4 style="color: rgb(100, 130, 160);">MLV.App.zip</h4></a></div></div><br><div class="frame"><div class="release"><div></div><h3 style="margin-top: 5px;">v0.17-pre-alpha-print-value-edition</h3><h4 style="line-height: 0;">91 days ago.</h4><a href="http://image.ibb.co/gyvdHQ/MLVAPPCOCOA.png"><img class="picture" src="index_files/MLVAPPCOCOA.png"></a><h4>Downloads:</h4><a href="https://github.com/ilia3101/MLV-App/releases/download/v0.17-pre-alpha-print-value-edition/MLV.App.app.zip"><h4 style="color: rgb(100, 130, 160);">MLV.App.app.zip</h4></a></div></div><br><div class="frame"><div class="release"><div></div><h3 style="margin-top: 5px;">v0.16-pre-alpha-lossless-edition</h3><h4 style="line-height: 0;">109 days ago.</h4><a href="https://github.com/ilia3101/MLV-App/commit/1c95c043e145d4ecad83540cda7ef3beac029906)%20-%20[**much%20more%20film%20like%20highlight%20rolloff**](http://image.ibb.co/i4ns4k/Reinhard_Highlights.png"><img class="picture" src="index_files/Bildschirmfoto.png"></a><h4>Downloads:</h4><a href="https://github.com/ilia3101/MLV-App/releases/download/v0.16-pre-alpha-lossless-edition/MLV-App.zip"><h4 style="color: rgb(100, 130, 160);">MLV-App.zip</h4></a></div></div><br><div class="frame"><div class="release"><div></div><h3 style="margin-top: 5px;">v0.15-pre-alpha-highlight-rolloff-edition</h3><h4 style="line-height: 0;">113 days ago.</h4><a href="http://image.ibb.co/i4ns4k/Reinhard_Highlights.png"><img class="picture" src="index_files/Reinhard_Highlights.png"></a><h4>Downloads:</h4><a href="https://github.com/ilia3101/MLV-App/releases/download/v0.15-pre-alpha-highlight-rolloff-edition/MLV.App.zip"><h4 style="color: rgb(100, 130, 160);">MLV.App.zip</h4></a></div></div><br><div class="frame"><div class="release"><div></div><h3 style="margin-top: 5px;">v0.14-pre-alpha-prores-export-added-edition</h3><h4 style="line-height: 0;">114 days ago.</h4><a href="https://github.com/ilia3101/MLV-App/commit/0b6c1966004fc2a1a05ca384d50fe08e2a51454)%20-%20[**Comparison**](http://image.ibb.co/iZwpN5/reconstruction.gif,https://github.com/ilia3101/MLV-App/commit/0b6c1966004fc2a1a05ca384d50fe08e2a51454)%20-%20[**Comparison**](http://image.ibb.co/iZwpN5/reconstruction.gif"><img class="picture" src="index_files/Bildschirmfoto.png"></a><h4>Downloads:</h4><a href="https://github.com/ilia3101/MLV-App/releases/download/v0.14-pre-alpha-prores-export-added-edition/MLV.App.zip"><h4 style="color: rgb(100, 130, 160);">MLV.App.zip</h4></a></div></div><br><div class="frame"><div class="release"><div></div><h3 style="margin-top: 5px;">v0.13-pre-alpha-less-crashy-edition</h3><h4 style="line-height: 0;">120 days ago.</h4><a href="https://github.com/ilia3101/MLV-App/commit/0b6c1966004fc2a1a05ca384d50fe08e2a514654)%20-%20[**Comparison**](http://image.ibb.co/iZwpN5/reconstruction.gif,https://github.com/ilia3101/MLV-App/commit/0b6c1966004fc2a1a05ca384d50fe08e2a514654)%20-%20[**Comparison**](http://image.ibb.co/iZwpN5/reconstruction.gif"><img class="picture" src="index_files/Bildschirmfoto.png"></a><h4>Downloads:</h4><a href="https://github.com/ilia3101/MLV-App/releases/download/v0.13-pre-alpha-less-crashy-edition/MLV.App.zip"><h4 style="color: rgb(100, 130, 160);">MLV.App.zip</h4></a></div></div><br><div class="frame"><div class="release"><div></div><h3 style="margin-top: 5px;">v0.12-pre-alpha-highlight-reconstruction-edition</h3><h4 style="line-height: 0;">122 days ago.</h4><a href="http://image.ibb.co/iZwpN5/reconstruction.gif,http://image.ibb.co/iZwpN5/reconstruction.gif"><img class="picture" src="index_files/reconstruction.gif"></a><h4>Downloads:</h4><a href="https://github.com/ilia3101/MLV-App/releases/download/v0.12-pre-alpha-highlight-reconstruction-edition/MLV.App.zip"><h4 style="color: rgb(100, 130, 160);">MLV.App.zip</h4></a></div></div><br><div class="frame"><div class="release"><div></div><h3 style="margin-top: 5px;">v0.11-pre-alpha-white-level-repair</h3><h4 style="line-height: 0;">124 days ago.</h4><a href="https://image.ibb.co/jp5BVm/Bildschirmfoto.png"><img class="picture" src="index_files/Bildschirmfoto.png"></a><h4>Downloads:</h4><a href="https://github.com/ilia3101/MLV-App/releases/download/v0.11-pre-alpha-white-level-repair/MLV.App.zip"><h4 style="color: rgb(100, 130, 160);">MLV.App.zip</h4></a></div></div><br><div class="frame"><div class="release"><div></div><h3 style="margin-top: 5px;">v0.10-pre-alpha-jpeg-png-edition</h3><h4 style="line-height: 0;">126 days ago.</h4><a href="https://image.ibb.co/jp5BVm/Bildschirmfoto.png"><img class="picture" src="index_files/Bildschirmfoto.png"></a><h4>Downloads:</h4><a href="https://github.com/ilia3101/MLV-App/releases/download/v0.10-pre-alpha-jpeg-png-edition/MLV.App.zip"><h4 style="color: rgb(100, 130, 160);">MLV.App.zip</h4></a></div></div><br><div class="frame"><div class="release"><div></div><h3 style="margin-top: 5px;">v0.9-pre-alpha-fixed-fat-stripes-edition</h3><h4 style="line-height: 0;">127 days ago.</h4><a href="https://image.ibb.co/jp5BVm/Bildschirmfoto.png"><img class="picture" src="index_files/Bildschirmfoto.png"></a><h4>Downloads:</h4><a href="https://github.com/ilia3101/MLV-App/releases/download/v0.9-pre-alpha-fixed-fat-stripes-edition/MLV.App.zip"><h4 style="color: rgb(100, 130, 160);">MLV.App.zip</h4></a></div></div><br><div class="frame"><div class="release"><div></div><h3 style="margin-top: 5px;">v0.8-pre-alpha-build-info-edition</h3><h4 style="line-height: 0;">128 days ago.</h4><a href="https://image.ibb.co/jp5BVm/Bildschirmfoto.png"><img class="picture" src="index_files/Bildschirmfoto.png"></a><h4>Downloads:</h4><a href="https://github.com/ilia3101/MLV-App/releases/download/v0.8-pre-alpha-build-info-edition/MLV.App.zip"><h4 style="color: rgb(100, 130, 160);">MLV.App.zip</h4></a></div></div><br><div class="frame"><div class="release"><div></div><h3 style="margin-top: 5px;">v0.7-pre-alpha-bmp-edition</h3><h4 style="line-height: 0;">129 days ago.</h4><a href="https://image.ibb.co/jp5BVm/Bildschirmfoto.png"><img class="picture" src="index_files/Bildschirmfoto.png"></a><h4>Downloads:</h4><a href="https://github.com/ilia3101/MLV-App/releases/download/v0.7-pre-alpha-bmp-edition/MLV.App.zip"><h4 style="color: rgb(100, 130, 160);">MLV.App.zip</h4></a></div></div><br><div class="frame"><div class="release"><div></div><h3 style="margin-top: 5px;">v0.6-pre-alpha-yh</h3><h4 style="line-height: 0;">129 days ago.</h4><a href="https://image.ibb.co/jp5BVm/Bildschirmfoto.png"><img class="picture" src="index_files/Bildschirmfoto.png"></a><h4>Downloads:</h4><a href="https://github.com/ilia3101/MLV-App/releases/download/v0.6-pre-alpha-yh/MLV.App.zip"><h4 style="color: rgb(100, 130, 160);">MLV.App.zip</h4></a></div></div><br><div class="frame"><div class="release"><div></div><h3 style="margin-top: 5px;">v0.5-pre-alpha-pretty-good</h3><h4 style="line-height: 0;">130 days ago.</h4><a href="https://image.ibb.co/jp5BVm/Bildschirmfoto.png"><img class="picture" src="index_files/Bildschirmfoto.png"></a><h4>Downloads:</h4><a href="https://github.com/ilia3101/MLV-App/releases/download/v0.5-pre-alpha-pretty-good/MLV.App.zip"><h4 style="color: rgb(100, 130, 160);">MLV.App.zip</h4></a></div></div><br><div class="frame"><div class="release"><div></div><h3 style="margin-top: 5px;">v0.4-pre-alpha-696969</h3><h4 style="line-height: 0;">130 days ago.</h4><a href="https://image.ibb.co/jp5BVm/Bildschirmfoto.png"><img class="picture" src="index_files/Bildschirmfoto.png"></a><h4>Downloads:</h4><a href="https://github.com/ilia3101/MLV-App/releases/download/v0.4-pre-alpha-696969/MLV.App.zip"><h4 style="color: rgb(100, 130, 160);">MLV.App.zip</h4></a></div></div><br><div class="frame"><div class="release"><div></div><h3 style="margin-top: 5px;">v0.3-pre-alpha-78897874234234</h3><h4 style="line-height: 0;">130 days ago.</h4><a href="https://image.ibb.co/jp5BVm/Bildschirmfoto.png"><img class="picture" src="index_files/Bildschirmfoto.png"></a><h4>Downloads:</h4><a href="https://github.com/ilia3101/MLV-App/releases/download/v0.3-pre-alpha-78897874234234/MLV.App.zip"><h4 style="color: rgb(100, 130, 160);">MLV.App.zip</h4></a></div></div><br></div>
-                </td>
-            </table>
+            console.log("Download count: " + TotalDownloads.toFixed(0).toString());
+            document.getElementById("TotalDownloadsLabel").innerHTML = TotalDownloads.toFixed(0).toString() + " total downloads";
+        }
+    function test()
+    {
+        // Create a new request object
+        var request = new XMLHttpRequest();
+        request.onload = DealWithResponse;
+        // Initialize a request
+        request.open('get', 'https://api.github.com/repos/ilia3101/MLV-App/releases')
+        // Send it
+        request.send()
+    }
+    </script>
+    
+    <style>
+        h1, h2, h3, h4 {
+            font-weight: 500;
+            letter-spacing: 0.011em;
+        }
+    h1 { font-size: 55px; }
+    h2 { font-size: 32px; }
+    h3 { font-size: 25px; }
+    h1, h2, h2, h3, h4, h5, h6, p {
+        font-family: "SF Pro Display", "SF Pro Icons", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+        color: #333;
+    }
+    body {
+        background-color: #ffffff;
+    }
+    a {
+        text-decoration: none;
+        color: #acf;
+    }
+    hr {
+        border: 1px solid #eee;
+    }
+    .release {
+        z-index: 1;
+        border-radius: 4px;
+        transition: box-shadow 0.16s ease, background-color 1.3s ease, border 0.23s ease/* , transform 0.15s ease */;
+        box-shadow: 4px 4px 10px #1111;
+        border: 2px solid #eee4;
+        background-color: #fefefe;
+        padding: 14px;
+    }
+    .release:hover {
+        border-radius: 6px;
+        background-color: #ffffff;
+        box-shadow: 6px 6px 27px #1111;
+        border: 2px solid #aaa1;
+        /* transform: scale(1.003,1.003); */
+    }
+    .frame {
+        padding: 14px;
+    }
+    .picture {
+        max-width:95%;
+        max-height:300px;
+        transition: transform 0.16s ease;
+    }
+    .picture:hover {
+        /* transform: scale(1.01,1.01); */
+    }
+    div.time {
+        position: fixed; left: 0px; top: 0px; right: 0px; width:100vw; height:30px;
+    }
+    </style>
+    
+    <div style="z-index: 2; position: fixed; left: 0px; top: 0px; right: 0px; width:100vw; height:100px; background-color: #333; box-shadow: 7px 7px 33px #0004;">
+        <div style="width:957px; margin: auto;">
+            <h2 style="position: absolute; top: 0px; color: #eee;">MLV App Downloads</h2>
+            <h4 id="TotalDownloadsLabel" style="margin-top: 37px; color: #eee;" align="right">1031 total downloads</h4>
         </div>
-
+    </div>
+    
+    <div style="width:980px; margin: auto;">
+        <br><br><br><br><br><br><br>
+        
+        <table>
+            <td style="width: 490px; vertical-align: top;">
+                <h2 align="center">Qt App</h2>
+                <div id="QtRelases">
+            </td>
+            <td style="width: 490px; vertical-align: top;">
+                <h2 align="center">Cocoa App</h2>
+                <div id="CocoaRelases">
+            </td>
+        </table>
+    </div>
+    
     
 </body></html>
