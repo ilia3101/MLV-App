@@ -981,20 +981,27 @@ void MainWindow::startExportCdng(QString fileName)
     //Output frames loop
     for( uint32_t frame = 0; frame < getMlvFrames( m_pMlvObject ); frame++ )
     {
-        QString fileNameNr = pathName;
-        if( m_codecOption == CODEC_CNDG_DEFAULT ) fileNameNr = fileNameNr.append( "/%1_%2.dng" )
+        QString dngName;
+        if( m_codecOption == CODEC_CNDG_DEFAULT ) dngName = dngName.append( "%1_%2.dng" )
                                                                                 .arg( fileName )
                                                                                 .arg( frame, 6, 10, QChar('0') );
-        else fileNameNr = fileNameNr.append( "/%1_1_%2-%3-%4_0001_C0000_%5.dng" )
+        else dngName = dngName.append( "%1_1_%2-%3-%4_0001_C0000_%5.dng" )
             .arg( fileName )
             .arg( getMlvTmYear( m_pMlvObject ), 2, 10, QChar('0') )
             .arg( getMlvTmMonth( m_pMlvObject ), 2, 10, QChar('0') )
             .arg( getMlvTmDay( m_pMlvObject ), 2, 10, QChar('0') )
             .arg( frame, 6, 10, QChar('0') );
-        QByteArray dngFileName = fileNameNr.toLatin1();
+
+        QString filePathNr = pathName;
+        filePathNr = filePathNr.append( "/" + dngName );
+        QByteArray dngFileName = filePathNr.toLatin1();
 
         //Save cDNG frame
-        saveDngFrame(m_pMlvObject, cinemaDng, frame, dngFileName.data());
+        if(!(saveDngFrame(m_pMlvObject, cinemaDng, frame, dngFileName.data())))
+        {
+            QMessageBox::information( this, tr( "File error" ), tr( "Could not save:  " + dngName.toLatin1() ) );
+            break;
+        }
 
         //Set Status
         m_pStatusDialog->ui->progressBar->setValue( frame + 1 );

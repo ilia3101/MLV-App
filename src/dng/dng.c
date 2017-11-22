@@ -72,7 +72,7 @@ static uint64_t file_set_pos(FILE *stream, uint64_t offset, int whence)
 #endif
 }
 
-enum { IMG_SIZE_UNPACKED, IMG_SIZE_PACKED, IMG_SIZE_LOSLESS, IMG_SIZE_MAX };
+enum { IMG_SIZE_UNPACKED, IMG_SIZE_PACKED, IMG_SIZE_LOSLESS };
 
 //MLV WB modes
 enum
@@ -442,9 +442,6 @@ static size_t dng_get_image_size(mlvObject_t * mlv_data, int size_mode, uint64_t
         case IMG_SIZE_LOSLESS:
             return mlv_data->frame_sizes[frame_index];
             break;
-        case IMG_SIZE_MAX:
-            return (size_t)(mlv_data->RAWI.xRes * mlv_data->RAWI.yRes * 14 / 8);
-            break;
         case IMG_SIZE_UNPACKED:
         default:
             return mlv_data->RAWI.xRes * mlv_data->RAWI.yRes * 2;
@@ -570,7 +567,7 @@ static void dng_fill_header(mlvObject_t * mlv_data, dngObject_t * dng_data)
             {tcNewSubFileType,              ttLong,     1,      sfMainImage},
             {tcImageWidth,                  ttLong,     1,      mlv_data->RAWI.xRes},
             {tcImageLength,                 ttLong,     1,      mlv_data->RAWI.yRes},
-            {tcBitsPerSample,               ttShort,    1,      mlv_data->RAWI.raw_info.bits_per_pixel},
+            {tcBitsPerSample,               ttShort,    1,      (llrpHQDualIso(mlv_data)) ? 16 : mlv_data->RAWI.raw_info.bits_per_pixel},
             {tcCompression,                 ttShort,    1,      (!(dng_data->raw_output_state % 2)) ? ccUncompressed : ccJPEG},
             {tcPhotometricInterpretation,   ttShort,    1,      piCFA},
             {tcFillOrder,                   ttShort,    1,      1},
@@ -589,8 +586,8 @@ static void dng_fill_header(mlvObject_t * mlv_data, dngObject_t * dng_data)
             {tcExifIFD,                     ttLong,     1,      exif_ifd_offset},
             {tcDNGVersion,                  ttByte,     4,      0x00000401}, //1.4.0.0 in little endian
             {tcUniqueCameraModel,           ttAscii,    STRING_ENTRY(unique_model, header, &data_offset)},
-            {tcBlackLevel,                  ttLong,     1,      mlv_data->llrawproc->mlv_black_level},
-            {tcWhiteLevel,                  ttLong,     1,      mlv_data->llrawproc->mlv_white_level},
+            {tcBlackLevel,                  ttLong,     1,      (llrpHQDualIso(mlv_data)) ? mlv_data->llrawproc->mlv_black_level << (16 - mlv_data->RAWI.raw_info.bits_per_pixel) : mlv_data->llrawproc->mlv_black_level},
+            {tcWhiteLevel,                  ttLong,     1,      (llrpHQDualIso(mlv_data)) ? mlv_data->llrawproc->mlv_white_level << (16 - mlv_data->RAWI.raw_info.bits_per_pixel) : mlv_data->llrawproc->mlv_white_level},
             {tcDefaultScale,                ttRational, RATIONAL_ENTRY(par, header, &data_offset, 4)},
             {tcDefaultCropOrigin,           ttShort,    2,      PACK(mlv_data->RAWI.raw_info.crop.origin)},
             {tcDefaultCropSize,             ttShort,    2,      PACK2((mlv_data->RAWI.raw_info.active_area.x2 - mlv_data->RAWI.raw_info.active_area.x1), (mlv_data->RAWI.raw_info.active_area.y2 - mlv_data->RAWI.raw_info.active_area.y1))},
@@ -810,17 +807,24 @@ static void dng_get_frame(mlvObject_t * mlv_data, dngObject_t * dng_data, uint64
                                    &dng_data->image_size,
                                    mlv_data->RAWI.xRes,
                                    mlv_data->RAWI.yRes,
-                                   mlv_data->RAWI.raw_info.bits_per_pixel);
+                                   (llrpHQDualIso(mlv_data)) ? 16 : mlv_data->RAWI.raw_info.bits_per_pixel);
             }
             else
             {
-                dng_pack_image_bits(dng_data->image_buf,
-                                    dng_data->image_buf_unpacked,
-                                    mlv_data->RAWI.xRes,
-                                    mlv_data->RAWI.yRes,
-                                    mlv_data->RAWI.raw_info.bits_per_pixel);
-
-                dng_data->image_size = dng_get_image_size(mlv_data, IMG_SIZE_PACKED, frame_index);
+                if(!llrpHQDualIso(mlv_data))
+                {
+                    dng_data->image_size = dng_get_image_size(mlv_data, IMG_SIZE_PACKED, frame_index);
+                    dng_pack_image_bits(dng_data->image_buf,
+                                        dng_data->image_buf_unpacked,
+                                        mlv_data->RAWI.xRes,
+                                        mlv_data->RAWI.yRes,
+                                        mlv_data->RAWI.raw_info.bits_per_pixel);
+                }
+                else
+                {
+                    dng_data->image_size = dng_get_image_size(mlv_data, IMG_SIZE_UNPACKED, frame_index);
+                    memcpy(dng_data->image_buf, dng_data->image_buf_unpacked, dng_data->image_size);
+                }
             }
         }
     }
@@ -856,17 +860,25 @@ static void dng_get_frame(mlvObject_t * mlv_data, dngObject_t * dng_data, uint64
                                    &dng_data->image_size,
                                    mlv_data->RAWI.xRes,
                                    mlv_data->RAWI.yRes,
-                                   mlv_data->RAWI.raw_info.bits_per_pixel);
+                                   (llrpHQDualIso(mlv_data)) ? 16 : mlv_data->RAWI.raw_info.bits_per_pixel);
             }
             else
             {
-                dng_pack_image_bits(dng_data->image_buf,
-                                    dng_data->image_buf_unpacked,
-                                    mlv_data->RAWI.xRes,
-                                    mlv_data->RAWI.yRes,
-                                    mlv_data->RAWI.raw_info.bits_per_pixel);
+                if(!llrpHQDualIso(mlv_data))
+                {
+                    dng_data->image_size = dng_get_image_size(mlv_data, IMG_SIZE_PACKED, frame_index);
+                    dng_pack_image_bits(dng_data->image_buf,
+                                        dng_data->image_buf_unpacked,
+                                        mlv_data->RAWI.xRes,
+                                        mlv_data->RAWI.yRes,
+                                        mlv_data->RAWI.raw_info.bits_per_pixel);
+                }
+                else
+                {
+                    dng_data->image_size = dng_get_image_size(mlv_data, IMG_SIZE_UNPACKED, frame_index);
+                    memcpy(dng_data->image_buf, dng_data->image_buf_unpacked, dng_data->image_size);
+                }
 
-                dng_data->image_size = dng_get_image_size(mlv_data, IMG_SIZE_PACKED, frame_index);
             }
         }
     }
@@ -887,7 +899,7 @@ dngObject_t * initDngObject(mlvObject_t * mlv_data, int raw_state, double fps)
     dng_data->header_size = HEADER_SIZE;
     dng_data->header_buf = malloc(dng_data->header_size);
 
-    dng_data->image_size = dng_get_image_size(mlv_data, IMG_SIZE_MAX, 0);
+    dng_data->image_size = dng_get_image_size(mlv_data, IMG_SIZE_UNPACKED, 0);
     dng_data->image_buf = malloc(dng_data->image_size);
 
     dng_data->image_size_unpacked = dng_get_image_size(mlv_data, IMG_SIZE_UNPACKED, 0);

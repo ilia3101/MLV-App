@@ -81,6 +81,9 @@ void llrpSetDualIsoAliasMapMode(mlvObject_t * video, int value);
 int llrpGetDualIsoFullResBlendingMode(mlvObject_t * video);
 void llrpSetDualIsoFullResBlendingMode(mlvObject_t * video, int value);
 
+int llrpIsDualIso(mlvObject_t * video);
+int llrpHQDualIso(mlvObject_t * video);
+
 /* reset focus/bad pixel map status */
 void llrpResetFpmStatus(mlvObject_t * video);
 void llrpResetBpmStatus(mlvObject_t * video);

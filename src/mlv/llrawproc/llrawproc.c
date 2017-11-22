@@ -60,7 +60,6 @@ llrawprocObject_t * initLLRawProcObject()
     llrawproc->chroma_smooth = 0;
     llrawproc->pattern_noise = 0;
     llrawproc->deflicker_target = 0;
-    llrawproc->dual_iso = 0;
     llrawproc->fpm_status = 0;
     llrawproc->bpm_status = 0;
     llrawproc->compute_stripes = 1;
@@ -105,7 +104,6 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
                                                          video->llrawproc->mlv_black_level,
                                                          video->llrawproc->mlv_white_level,
                                                          1); // dual iso check mode is on
-
         /* initialise LUTs */
         video->llrawproc->raw2ev = get_raw2ev(video->llrawproc->mlv_black_level, video->RAWI.raw_info.bits_per_pixel);
         video->llrawproc->ev2raw = get_ev2raw(video->llrawproc->mlv_black_level);
@@ -380,6 +378,16 @@ int llrpGetDualIsoFullResBlendingMode(mlvObject_t * video)
 void llrpSetDualIsoFullResBlendingMode(mlvObject_t * video, int value)
 {
     video->llrawproc->diso_frblending = value;
+}
+
+int llrpIsDualIso(mlvObject_t * video)
+{
+    return video->llrawproc->is_dual_iso;
+}
+
+int llrpHQDualIso(mlvObject_t * video)
+{
+    return ((video->llrawproc->dual_iso == 1) && video->llrawproc->is_dual_iso);
 }
 
 void llrpResetFpmStatus(mlvObject_t * video)
