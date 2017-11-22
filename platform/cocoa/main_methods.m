@@ -105,9 +105,6 @@ int setAppNewMlvClip(char * mlvPath)
     /* Tell it slightly less cores than we have, so background caching does not slow down UI interaction */
     setMlvCpuCores(App->videoMLV, (MAC_CORES / 2 + 1));
 
-    /* Default: don't enable llrawproc */
-    App->videoMLV->llrawproc->fix_raw = 0;
-
     /* Size may need changing */
     free(App->rawImage);
     App->rawImage = malloc( sizeof(uint8_t) * 3 * getMlvWidth(App->videoMLV) * getMlvHeight(App->videoMLV) );
@@ -221,11 +218,11 @@ int setAppNewMlvClip(char * mlvPath)
 {
     if ([self state] == NSOnState) 
     {
-        App->videoMLV->llrawproc->fix_raw = 1;
+        llrpSetFixRawMode(App->videoMLV, FR_ON);
     }
     else 
     {
-        App->videoMLV->llrawproc->fix_raw = 0;
+        llrpSetFixRawMode(App->videoMLV, FR_OFF);
     }
     mark_mlv_uncached(App->videoMLV);  if (!isMlvObjectCaching(App->videoMLV)) enableMlvCaching(App->videoMLV);// TEMPORARY
     App->frameChanged++;
@@ -513,22 +510,22 @@ int setAppNewMlvClip(char * mlvPath)
     switch ([App->dualISOOption selectedSegment])
     {
         case 0: /* Is off */
-            App->videoMLV->llrawproc->dual_iso = 0;
+            llrpSetDualIsoMode(App->videoMLV, DISO_OFF);
             break;
         case 1: /* Is Set to high quality 20 bit */
-            App->videoMLV->llrawproc->dual_iso = 2;
+            llrpSetDualIsoMode(App->videoMLV, DISO_20BIT);
             break;
         case 2: /* Is set to quick low quality mode */
-            App->videoMLV->llrawproc->dual_iso = 1;
+            llrpSetDualIsoMode(App->videoMLV, DISO_FAST);
             break;
     }
 
     /* AMaZE averaging or mean23 */
-    App->videoMLV->llrawproc->diso_averaging = [App->dualISOMethodOption selectedSegment];
+    llrpSetDualIsoInterpolationMethod(App->videoMLV, [App->dualISOMethodOption selectedSegment] ? DISOI_AMAZE : DISOI_MEAN23);
     /* Alias map */
-    App->videoMLV->llrawproc->diso_alias_map = ![App->aliasMapOption selectedSegment];
+    llrpSetDualIsoAliasMapMode(App->videoMLV, ![App->aliasMapOption selectedSegment]);
     /* Full res blending option */
-    App->videoMLV->llrawproc->diso_frblending = ![App->fullResBlendingOption selectedSegment];
+    llrpSetDualIsoFullResBlendingMode(App->videoMLV, ![App->fullResBlendingOption selectedSegment]);
 
     mark_mlv_uncached(App->videoMLV);  if (!isMlvObjectCaching(App->videoMLV)) enableMlvCaching(App->videoMLV);// TEMPORARY
 
@@ -538,7 +535,15 @@ int setAppNewMlvClip(char * mlvPath)
 -(void)patternNoiseMethod
 {
     if (!App->videoMLV) return;
-    App->videoMLV->llrawproc->pattern_noise = [App->patternNoiseOption selectedSegment];
+    switch ([App->patternNoiseOption selectedSegment])
+    {
+        case 0:
+            llrpSetPatternNoiseMode(App->videoMLV, PN_OFF);
+            break;
+        case 1:
+            llrpSetPatternNoiseMode(App->videoMLV, PN_ON);
+            break;
+    }
     mark_mlv_uncached(App->videoMLV);  if (!isMlvObjectCaching(App->videoMLV)) enableMlvCaching(App->videoMLV);// TEMPORARY
     App->frameChanged++;
 }
@@ -546,8 +551,18 @@ int setAppNewMlvClip(char * mlvPath)
 -(void)verticalStripeMethod
 {
     if (!App->videoMLV) return;
-    App->videoMLV->llrawproc->vertical_stripes = [App->stripeFixOption selectedSegment];
-    App->videoMLV->llrawproc->compute_stripes = [App->stripeFixOption selectedSegment] ? 1 : 0;
+    switch ([App->stripeFixOption selectedSegment])
+    {
+        case 0:
+            llrpSetVerticalStripeMode(App->videoMLV, VS_OFF);
+            return;
+        case 1:
+            llrpSetVerticalStripeMode(App->videoMLV, VS_ON);
+            return;
+        case 2:
+            llrpSetVerticalStripeMode(App->videoMLV, VS_FORCE);
+            return;
+    }
     mark_mlv_uncached(App->videoMLV);  if (!isMlvObjectCaching(App->videoMLV)) enableMlvCaching(App->videoMLV);// TEMPORARY
     App->frameChanged++;
 }
@@ -555,8 +570,27 @@ int setAppNewMlvClip(char * mlvPath)
 -(void)focusPixelMethod
 {
     if (!App->videoMLV) return;
-    App->videoMLV->llrawproc->focus_pixels = [App->focusPixelOption selectedSegment];
-    App->videoMLV->llrawproc->fpi_method = [App->focusPixelMethodOption selectedSegment];
+    switch ([App->focusPixelOption selectedSegment])
+    {
+        case 0:
+            llrpSetFocusPixelMode(App->videoMLV, FP_OFF);
+            return;
+        case 1:
+            llrpSetFocusPixelMode(App->videoMLV, FP_ON);
+            return;
+        case 2:
+            llrpSetFocusPixelMode(App->videoMLV, FP_CROPREC);
+            return;
+    }
+    switch ([App->focusPixelMethodOption selectedSegment])
+    {
+        case 0:
+            llrpSetFocusPixelInterpolationMethod(App->videoMLV, FPI_MLVFS);
+            return;
+        case 1:
+            llrpSetFocusPixelInterpolationMethod(App->videoMLV, FPI_RAW2DNG);
+            return;
+    }
     mark_mlv_uncached(App->videoMLV);  if (!isMlvObjectCaching(App->videoMLV)) enableMlvCaching(App->videoMLV);// TEMPORARY
     App->frameChanged++;
 }
@@ -564,8 +598,27 @@ int setAppNewMlvClip(char * mlvPath)
 -(void)badPixelMethod
 {
     if (!App->videoMLV) return;
-    App->videoMLV->llrawproc->bad_pixels = [App->badPixelOption selectedSegment];
-    App->videoMLV->llrawproc->bpi_method = [App->badPixelMethodOption selectedSegment];
+    switch ([App->badPixelOption selectedSegment])
+    {
+        case 0:
+            llrpSetBadPixelMode(App->videoMLV, BP_OFF);
+            break;
+        case 1:
+            llrpSetBadPixelMode(App->videoMLV, BP_ON);
+            break;
+        case 2:
+            llrpSetBadPixelMode(App->videoMLV, FP_AGGRESSIVE);
+            break;
+    }
+    switch ([App->badPixelMethodOption selectedSegment])
+    {
+        case 0:
+            llrpSetBadPixelInterpolationMethod(App->videoMLV, BPI_MLVFS);
+            break;
+        case 1:
+            llrpSetBadPixelInterpolationMethod(App->videoMLV, BPI_RAW2DNG);
+            break;
+    }
     mark_mlv_uncached(App->videoMLV);  if (!isMlvObjectCaching(App->videoMLV)) enableMlvCaching(App->videoMLV);// TEMPORARY
     App->frameChanged++;
 }
@@ -576,16 +629,16 @@ int setAppNewMlvClip(char * mlvPath)
     switch ([App->chromaSmoothOption selectedSegment])
     {
         case 0: /* Is off */
-            App->videoMLV->llrawproc->chroma_smooth = 0;
+            llrpSetChromaSmoothMode(App->videoMLV, CS_OFF);
             break;
         case 1: /* 2x2 */
-            App->videoMLV->llrawproc->chroma_smooth = 2;
+            llrpSetChromaSmoothMode(App->videoMLV, CS_2x2);
             break;
         case 2: /* 3x3 */
-            App->videoMLV->llrawproc->chroma_smooth = 3;
+            llrpSetChromaSmoothMode(App->videoMLV, CS_3x3);
             break;
         case 3: /* 5x5 */
-            App->videoMLV->llrawproc->chroma_smooth = 5;
+            llrpSetChromaSmoothMode(App->videoMLV, CS_5x5);
             break;
     }
     mark_mlv_uncached(App->videoMLV);  if (!isMlvObjectCaching(App->videoMLV)) enableMlvCaching(App->videoMLV);// TEMPORARY
