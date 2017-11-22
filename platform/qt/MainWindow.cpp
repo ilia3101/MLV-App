@@ -999,6 +999,8 @@ void MainWindow::startExportCdng(QString fileName)
         //Save cDNG frame
         if(!(saveDngFrame(m_pMlvObject, cinemaDng, frame, dngFileName.data())))
         {
+            m_pStatusDialog->hide();
+            qApp->processEvents();
             QMessageBox::information( this, tr( "File error" ), tr( "Could not save:  " + dngName.toLatin1() ) );
             break;
         }
