@@ -26,6 +26,6 @@
 	<key>CFBundleTypeRole</key>
         <string>Viewer</string>
 	<key>CFBundleShortVersionString</key>
-        <string>0.10 alpha</string>
+        <string>0.11 alpha</string>
 </dict>
 </plist>
