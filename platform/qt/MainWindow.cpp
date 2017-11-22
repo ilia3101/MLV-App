@@ -1001,7 +1001,7 @@ void MainWindow::startExportCdng(QString fileName)
         {
             m_pStatusDialog->hide();
             qApp->processEvents();
-            QMessageBox::information( this, tr( "File error" ), tr( "Could not save:  " + dngName.toLatin1() ) );
+            QMessageBox::critical( this, tr( "File error" ), tr( "Could not save:  " + dngName.toLatin1() ) );
             break;
         }
 
