@@ -628,11 +628,13 @@ void MainWindow::initGui( void )
 
     //Prepare gradient elements
     QPolygon polygon;
-    polygon << QPoint(0, 0) << QPoint(-10, 10) << QPoint(10, 10) << QPoint(0, 0) << QPoint(0, 100) << QPoint(-10000, 100) << QPoint(10000, 100) << QPoint(0, 100);
+    polygon << QPoint(0, -100) << QPoint(-10000, -100) << QPoint(10000, -100) << QPoint(0, -100) << QPoint(-10, -90) << QPoint(10, -90) << QPoint(0, -100) << QPoint(0, 0) << QPoint(-10000, 0) << QPoint(10000, 0) << QPoint(0, 0);
     m_pGradientGraphicsItem = new QGraphicsPolygonItem( polygon );
     m_pGradientGraphicsItem->setPen( QPen( Qt::white ) );
     m_pGradientGraphicsItem->setFlag( QGraphicsItem::ItemIsMovable, true );
     //m_pScene->addItem( m_pGradientGraphicsItem );
+    //Turn the element with this line - move it to exposureSliderValueChanged for example...
+    //m_pGradientGraphicsItem->setRotation( position );
 
     //Set up caching status label
     m_pCachingStatus = new QLabel( statusBar() );
