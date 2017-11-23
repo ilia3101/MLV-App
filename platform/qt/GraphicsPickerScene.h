@@ -19,13 +19,18 @@ class GraphicsPickerScene : public QGraphicsScene
 public:
     explicit GraphicsPickerScene(QObject *parent = 0);
     void setWbPickerActive(bool on);
+    void setGradientAdjustment(bool on);
 
 signals:
     void wbPicked(int x, int y);
+    void gradientAnchor(int x, int y);
+    void gradientFinalPos(int x, int y);
 
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
     bool m_isWbPickerActive;
+    bool m_isGradientAdjustment;
 };
 
 #endif // GRAPHICSPICKERSCENE_H
