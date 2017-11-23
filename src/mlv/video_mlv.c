@@ -61,10 +61,10 @@ void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outpu
     int raw_frame_size = (width * height * bitdepth) / 8;
     int unpacked_frame_size = width * height * sizeof(uint16_t);
 
-    /* Memory for original RAW data */
+    /* Memory buffer for original RAW data */
     uint8_t * raw_frame = (uint8_t *)malloc( raw_frame_size );
-    /* Memory for decompressed or bit unpacked RAW data */
-    uint16_t * unpacked_frame = (uint16_t *)malloc( unpacked_frame_size );
+    /* Memory buffer for decompressed or bit unpacked RAW data */
+    uint16_t * unpacked_frame = NULL;
 
     /* If a custom instance of file was given, use it */
     FILE * file = (useFile) ? useFile : video->file;
@@ -81,8 +81,26 @@ void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outpu
 
         int components = 1;
         lj92 decoder_object;
-        lj92_open(&decoder_object, raw_frame, raw_data_size, &width, &height, &bitdepth, &components);
-        lj92_decode(decoder_object, unpacked_frame, width * height * components, 0, NULL, 0);
+        int ret = lj92_open(&decoder_object, raw_frame, raw_data_size, &width, &height, &bitdepth, &components);
+        if(ret != LJ92_ERROR_NONE)
+        {
+#ifndef STDOUT_SILENT
+            printf("LJ92 decoder: Failed with error code (%d)\n", ret);
+#endif
+            goto err_out;
+        }
+        else
+        {
+            unpacked_frame = (uint16_t *)malloc( unpacked_frame_size );
+            ret = lj92_decode(decoder_object, unpacked_frame, width * height * components, 0, NULL, 0);
+            if(ret != LJ92_ERROR_NONE)
+            {
+#ifndef STDOUT_SILENT
+                printf("LJ92 decoder: Failed with error code (%d)\n", ret);
+#endif
+                goto err_out;
+            }
+        }
         lj92_close(decoder_object);
     }
     else /* If not compressed just unpack to 16bit */
@@ -91,6 +109,7 @@ void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outpu
         fread(raw_frame, sizeof(uint8_t), raw_frame_size, file);
         if (!useFile) pthread_mutex_unlock(&video->main_file_mutex);
 
+        unpacked_frame = (uint16_t *)malloc( unpacked_frame_size );
         uint32_t mask = (1 << bitdepth) - 1;
         for (int i = 0; i < pixels_count; ++i)
         {
@@ -116,7 +135,8 @@ void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outpu
         outputFrame[i] = (float)(unpacked_frame[i] << shift_val);
     }
 
-    free(unpacked_frame);
+err_out:
+    if(unpacked_frame) free(unpacked_frame);
     free(raw_frame);
 }
 
