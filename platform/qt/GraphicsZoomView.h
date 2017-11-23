@@ -34,6 +34,7 @@ protected:
     void wheelEvent(QWheelEvent *event);
     bool m_isZoomEnabled;
     bool m_isWbPickerActive;
+    bool m_isMousePressed;
 };
 
 #endif // GRAPHICSZOOMVIEW_H

@@ -20,6 +20,7 @@
 #include <QDir>
 #include <png.h>
 #include <unistd.h>
+#include <math.h>
 
 #include "SystemMemory.h"
 #include "ExportSettingsDialog.h"
@@ -628,13 +629,14 @@ void MainWindow::initGui( void )
 
     //Prepare gradient elements
     QPolygon polygon;
-    polygon << QPoint(0, -100) << QPoint(-10000, -100) << QPoint(10000, -100) << QPoint(0, -100) << QPoint(-10, -90) << QPoint(10, -90) << QPoint(0, -100) << QPoint(0, 0) << QPoint(-10000, 0) << QPoint(10000, 0) << QPoint(0, 0);
     m_pGradientGraphicsItem = new QGraphicsPolygonItem( polygon );
     m_pGradientGraphicsItem->setPen( QPen( Qt::white ) );
     m_pGradientGraphicsItem->setFlag( QGraphicsItem::ItemIsMovable, true );
-    //m_pScene->addItem( m_pGradientGraphicsItem );
-    //Turn the element with this line - move it to exposureSliderValueChanged for example...
-    //m_pGradientGraphicsItem->setRotation( position );
+    m_pScene->addItem( m_pGradientGraphicsItem );
+    m_pGradientGraphicsItem->hide();
+    connect( m_pScene, SIGNAL( gradientAnchor(int,int) ), this, SLOT( gradientAnchorPicked(int,int) ) );
+    connect( m_pScene, SIGNAL( gradientFinalPos(int,int) ), this, SLOT( gradientFinalPosPicked(int,int) ) );
+    ui->actionGradientAdjustment->setVisible( false );
 
     //Set up caching status label
     m_pCachingStatus = new QLabel( statusBar() );
@@ -2109,6 +2111,17 @@ int MainWindow::toolButtonDualIsoFullresBlendingCurrentIndex()
     else return 1;
 }
 
+//Paint the gradient element
+void MainWindow::paintGradientElement(int length)
+{
+    QPolygon polygon;
+    polygon << QPoint(0, -length) << QPoint(-10000, -length) << QPoint(10000, -length) << QPoint(0, -length) << QPoint(-10, -length+10) << QPoint(10, -length+10) << QPoint(0, -length) << QPoint(0, 0) << QPoint(-10000, 0) << QPoint(10000, 0) << QPoint(0, 0);
+    //delete m_pGradientGraphicsItem;
+    //m_pGradientGraphicsItem = new QGraphicsPolygonItem( polygon );
+    //m_pScene->addPolygon( polygon );
+    m_pGradientGraphicsItem->setPolygon( polygon );
+}
+
 //About Window
 void MainWindow::on_actionAbout_triggered()
 {
@@ -3225,6 +3238,13 @@ void MainWindow::on_actionWhiteBalancePicker_toggled(bool checked)
     m_pScene->setWbPickerActive( checked );
 }
 
+//Activate & Deactivate Gradient Adjustment
+void MainWindow::on_actionGradientAdjustment_toggled(bool checked)
+{
+    if( !checked ) m_pGradientGraphicsItem->hide();
+    m_pScene->setGradientAdjustment( checked );
+}
+
 //wb picking ready
 void MainWindow::whiteBalancePicked( int x, int y )
 {
@@ -3245,6 +3265,32 @@ void MainWindow::whiteBalancePicked( int x, int y )
 
     //TODO: send to Ilias lib and get sliderpos
     qDebug() << "Click in Scene:" << x << y;
+}
+
+//Gradient anchor was selected by user
+void MainWindow::gradientAnchorPicked(int x, int y)
+{
+    m_pGradientGraphicsItem->show();
+    m_pGradientGraphicsItem->setRotation( 0.0 );
+    m_pGradientGraphicsItem->setPos( x, y );
+}
+
+//Gradient final position was selected by user
+void MainWindow::gradientFinalPosPicked(int x, int y)
+{
+    QPointF startPos = m_pGradientGraphicsItem->pos();
+    QPointF endPos = QPointF( x, y );
+    double m = ( endPos.y() - startPos.y() ) / ( endPos.x() - startPos.x() );
+    double alpha = 0;
+    double length = 0;
+    if( m != 0 )
+    {
+        length = sqrt( pow( endPos.x() - startPos.x(), 2 ) + pow( endPos.y() - startPos.y(), 2 ) );
+        alpha = ( atan( m ) * 180.0 / M_PI ) - 90.0;
+        if( ( endPos.x() - startPos.x() ) >= 0 ) alpha += 180;
+    }
+    paintGradientElement( length );
+    m_pGradientGraphicsItem->setRotation( alpha );
 }
 
 //Collapse & Expand Raw Correction

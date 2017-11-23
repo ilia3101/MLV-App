@@ -16,6 +16,7 @@ GraphicsZoomView::GraphicsZoomView(QWidget *parent) :
     setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
     m_isZoomEnabled = false;
     m_isWbPickerActive = false;
+    m_isMousePressed = false;
 }
 
 //En-/disable zoom on mouse wheel
@@ -66,6 +67,7 @@ void GraphicsZoomView::enterEvent(QEvent *event)
 void GraphicsZoomView::mousePressEvent(QMouseEvent *event)
 {
     QGraphicsView::mousePressEvent(event);
+    m_isMousePressed = true;
     //viewport()->setCursor(QCursor(m_cursorPixmap,0,31));
     if( m_isWbPickerActive )
     {
@@ -77,6 +79,7 @@ void GraphicsZoomView::mousePressEvent(QMouseEvent *event)
 //Mouse was released
 void GraphicsZoomView::mouseReleaseEvent(QMouseEvent *event)
 {
+    m_isMousePressed = false;
     QGraphicsView::mouseReleaseEvent(event);
     //viewport()->setCursor(QCursor(m_cursorPixmap,0,31));
 }

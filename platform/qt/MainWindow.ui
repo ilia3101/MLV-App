@@ -145,6 +145,7 @@
     <addaction name="actionResetReceipt"/>
     <addaction name="separator"/>
     <addaction name="actionWhiteBalancePicker"/>
+    <addaction name="actionGradientAdjustment"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -3305,6 +3306,17 @@ QGroupBox::indicator:checked {
    </property>
    <property name="shortcut">
     <string>Ctrl+Alt+V</string>
+   </property>
+  </action>
+  <action name="actionGradientAdjustment">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Gradient Adjustment</string>
+   </property>
+   <property name="shortcut">
+    <string>G</string>
    </property>
   </action>
  </widget>

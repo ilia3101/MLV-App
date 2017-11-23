@@ -6,6 +6,7 @@
  */
 
 #include "GraphicsPickerScene.h"
+#include <QDebug>
 
 //Constructor
 GraphicsPickerScene::GraphicsPickerScene(QObject *parent) :
@@ -32,6 +33,7 @@ void GraphicsPickerScene::setGradientAdjustment(bool on)
 void GraphicsPickerScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
     QGraphicsScene::mousePressEvent(event);
+    m_isMousePressed = true;
     if( m_isWbPickerActive )
     {
         m_isWbPickerActive = false;
@@ -39,7 +41,7 @@ void GraphicsPickerScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
     }
     if( m_isGradientAdjustment )
     {
-        m_isMousePressed = true;
+        qDebug() << "mousePressEvent";
         emit gradientAnchor( event->scenePos().x(), event->scenePos().y() );
     }
 }
@@ -48,9 +50,10 @@ void GraphicsPickerScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
 void GraphicsPickerScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
     QGraphicsScene::mouseReleaseEvent(event);
+    m_isMousePressed = false;
     if( m_isGradientAdjustment )
     {
-        m_isMousePressed = false;
+        qDebug() << "mouseReleaseEvent";
         emit gradientFinalPos( event->scenePos().x(), event->scenePos().y() );
     }
 }
@@ -61,6 +64,7 @@ void GraphicsPickerScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     QGraphicsScene::mouseMoveEvent(event);
     if( m_isGradientAdjustment && m_isMousePressed )
     {
+        qDebug() << "MOVE!";
         emit gradientFinalPos( event->scenePos().x(), event->scenePos().y() );
     }
 }

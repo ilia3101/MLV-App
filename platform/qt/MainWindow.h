@@ -132,7 +132,10 @@ private slots:
     void on_actionPreviousFrame_triggered();
     void on_checkBoxRawFixEnable_clicked(bool checked);
     void on_actionWhiteBalancePicker_toggled(bool checked);
+    void on_actionGradientAdjustment_toggled(bool checked);
     void whiteBalancePicked( int x, int y );
+    void gradientAnchorPicked( int x, int y );
+    void gradientFinalPosPicked( int x, int y );
     void on_groupBoxRawCorrection_toggled(bool arg1);
     void on_groupBoxProcessing_toggled(bool arg1);
     void on_groupBoxDetails_toggled(bool arg1);
@@ -231,6 +234,7 @@ private:
     int toolButtonDualIsoInterpolationCurrentIndex( void );
     int toolButtonDualIsoAliasMapCurrentIndex( void );
     int toolButtonDualIsoFullresBlendingCurrentIndex( void );
+    void paintGradientElement( int length );
 
 signals:
     void exportReady( void );
