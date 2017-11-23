@@ -3241,7 +3241,15 @@ void MainWindow::on_actionWhiteBalancePicker_toggled(bool checked)
 //Activate & Deactivate Gradient Adjustment
 void MainWindow::on_actionGradientAdjustment_toggled(bool checked)
 {
-    if( !checked ) m_pGradientGraphicsItem->hide();
+    if( !checked )
+    {
+        m_pGradientGraphicsItem->hide();
+        ui->graphicsView->setDragMode( QGraphicsView::ScrollHandDrag );
+    }
+    else
+    {
+        ui->graphicsView->setDragMode( QGraphicsView::NoDrag );
+    }
     m_pScene->setGradientAdjustment( checked );
 }
 
