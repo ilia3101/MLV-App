@@ -29,8 +29,10 @@ signals:
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
+    void mouseMoveEvent(QGraphicsSceneMouseEvent* event);
     bool m_isWbPickerActive;
     bool m_isGradientAdjustment;
+    bool m_isMousePressed;
 };
 
 #endif // GRAPHICSPICKERSCENE_H

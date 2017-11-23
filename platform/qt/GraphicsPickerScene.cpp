@@ -13,6 +13,7 @@ GraphicsPickerScene::GraphicsPickerScene(QObject *parent) :
 {
     m_isWbPickerActive = false;
     m_isGradientAdjustment = false;
+    m_isMousePressed = false;
 }
 
 //Set picker on/off
@@ -38,6 +39,7 @@ void GraphicsPickerScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
     }
     if( m_isGradientAdjustment )
     {
+        m_isMousePressed = true;
         emit gradientAnchor( event->scenePos().x(), event->scenePos().y() );
     }
 }
@@ -47,6 +49,17 @@ void GraphicsPickerScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
     QGraphicsScene::mouseReleaseEvent(event);
     if( m_isGradientAdjustment )
+    {
+        m_isMousePressed = false;
+        emit gradientFinalPos( event->scenePos().x(), event->scenePos().y() );
+    }
+}
+
+//Mouse move event
+void GraphicsPickerScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+{
+    QGraphicsScene::mouseMoveEvent(event);
+    if( m_isGradientAdjustment && m_isMousePressed )
     {
         emit gradientFinalPos( event->scenePos().x(), event->scenePos().y() );
     }
