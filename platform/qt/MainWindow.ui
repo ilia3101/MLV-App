@@ -3894,6 +3894,38 @@ QGroupBox::indicator:checked {
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionWhiteBalancePicker</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>toolButtonWb</receiver>
+   <slot>setChecked(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>1080</x>
+     <y>774</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>toolButtonWb</sender>
+   <signal>clicked(bool)</signal>
+   <receiver>actionWhiteBalancePicker</receiver>
+   <slot>setChecked(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>1080</x>
+     <y>774</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>toolButtonFocusPixelsChanged()</slot>
