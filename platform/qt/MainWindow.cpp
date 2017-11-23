@@ -1013,7 +1013,7 @@ void MainWindow::startExportCdng(QString fileName)
                                              tr( "File error" ),
                                              tr( "Could not save:  " + dngName.toLatin1() ),
                                              tr( "Skip frame" ),
-                                             tr( "Abort exort" ),
+                                             tr( "Abort export" ),
                                              0, 1 );
             if( ret )
             {
