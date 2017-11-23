@@ -557,9 +557,9 @@ static void dng_fill_header(mlvObject_t * mlv_data, dngObject_t * dng_data)
         #else
         char * reel_name = strrchr(mlv_data->path, '/');
         #endif
+        (!reel_name) ? (reel_name = mlv_data->path) : ++reel_name;
         char * ext_dot = strrchr(reel_name, '.');
         if(ext_dot) *ext_dot = '\000';
-        (!reel_name) ? (reel_name = mlv_data->path) : ++reel_name;
 
         /* Fill up IFD structs */
         struct directory_entry IFD0[IFD0_COUNT] =
