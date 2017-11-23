@@ -151,6 +151,7 @@ private:
     mlvObject_t *m_pMlvObject;
     processingObject_t *m_pProcessingObject;
     QGraphicsPixmapItem *m_pGraphicsItem;
+    QGraphicsPolygonItem *m_pGradientGraphicsItem;
     GraphicsPickerScene* m_pScene;
     QLabel *m_pCachingStatus;
     QLabel *m_pFpsStatus;

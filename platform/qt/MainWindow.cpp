@@ -626,6 +626,14 @@ void MainWindow::initGui( void )
     connect( ui->graphicsView, SIGNAL( customContextMenuRequested(QPoint) ), this, SLOT( pictureCustomContextMenuRequested(QPoint) ) );
     connect( m_pScene, SIGNAL( wbPicked(int,int) ), this, SLOT( whiteBalancePicked(int,int) ) );
 
+    //Prepare gradient elements
+    QPolygon polygon;
+    polygon << QPoint(0, 0) << QPoint(-10, 10) << QPoint(10, 10) << QPoint(0, 0) << QPoint(0, 100) << QPoint(-10000, 100) << QPoint(10000, 100) << QPoint(0, 100);
+    m_pGradientGraphicsItem = new QGraphicsPolygonItem( polygon );
+    m_pGradientGraphicsItem->setPen( QPen( Qt::white ) );
+    m_pGradientGraphicsItem->setFlag( QGraphicsItem::ItemIsMovable, true );
+    //m_pScene->addItem( m_pGradientGraphicsItem );
+
     //Set up caching status label
     m_pCachingStatus = new QLabel( statusBar() );
     m_pCachingStatus->setMaximumWidth( 100 );
@@ -1001,14 +1009,21 @@ void MainWindow::startExportCdng(QString fileName)
         {
             m_pStatusDialog->hide();
             qApp->processEvents();
-            QMessageBox::critical( this, tr( "File error" ), tr( "Could not save:  " + dngName.toLatin1() ) );
-            QMessageBox question( this );
-            int ret = QMessageBox::question( this, tr("MLV App"),
-                                             tr("Do you like to abort the batch export?"),
-                                             QMessageBox::Yes | QMessageBox::No,
-                                             QMessageBox::No);
-            if( ret == QMessageBox::Yes ) exportAbort();
-            break;
+            int ret = QMessageBox::critical( this,
+                                             tr( "File error" ),
+                                             tr( "Could not save:  " + dngName.toLatin1() ),
+                                             tr( "Skip frame" ),
+                                             tr( "Abort exort" ),
+                                             0, 1 );
+            if( ret )
+            {
+                ret = QMessageBox::question( this, tr("MLV App"),
+                                                 tr("Do you like to abort the batch export?"),
+                                                 QMessageBox::Yes | QMessageBox::No,
+                                                 QMessageBox::No);
+                if( ret == QMessageBox::Yes ) exportAbort();
+                break;
+            }
         }
 
         //Set Status
