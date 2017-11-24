@@ -517,6 +517,9 @@ void MainWindow::openMlv( QString fileName )
     ui->checkBoxGradientEnable->setEnabled( true );
     ui->toolButtonGradientPaint->setEnabled( true );
 
+    //Cut In & Out
+    initCutInOut( getMlvFrames( m_pMlvObject ) );
+
     m_frameChanged = true;
 }
 
@@ -526,13 +529,13 @@ void MainWindow::playbackHandling(int timeDiff)
     if( ui->actionPlay->isChecked() )
     {
         //when on last frame
-        if( ui->horizontalSliderPosition->value() >= ui->horizontalSliderPosition->maximum() )
+        if( ui->horizontalSliderPosition->value() >= ui->spinBoxCutOut->value() - 1 )
         {
             if( ui->actionLoop->isChecked() )
             {
-                //Loop, goto first frame
-                ui->horizontalSliderPosition->setValue( 0 );
-                if( ui->actionAudioOutput->isChecked() )m_newPosDropMode = 0;
+                //Loop, goto cut in
+                ui->horizontalSliderPosition->setValue( ui->spinBoxCutIn->value() - 1 );
+                if( ui->actionAudioOutput->isChecked() )m_newPosDropMode = ui->spinBoxCutIn->value() - 1;
 
                 //Sync audio
                 if( ui->actionAudioOutput->isChecked()
@@ -543,7 +546,7 @@ void MainWindow::playbackHandling(int timeDiff)
             }
             else
             {
-                //Stop
+                //Stop on last frame of clip
                 ui->actionPlay->setChecked( false );
                 m_pAudioPlayback->stop(); //Stop audio immediately, that is faster on Linux
             }
@@ -562,9 +565,9 @@ void MainWindow::playbackHandling(int timeDiff)
                 //This is the exact frame we need on the time line NOW!
                 m_newPosDropMode += (getFramerate() * (double)timeDiff / 1000.0);
                 //Loop!
-                if( ui->actionLoop->isChecked() && ( m_newPosDropMode >= getMlvFrames( m_pMlvObject ) ) )
+                if( ui->actionLoop->isChecked() && ( m_newPosDropMode >= ui->spinBoxCutOut->value() - 1 ) )
                 {
-                    m_newPosDropMode -= getMlvFrames( m_pMlvObject );
+                    m_newPosDropMode -= (ui->spinBoxCutOut->value() - ui->spinBoxCutIn->value() + 1);
                     //Sync audio
                     if( ui->actionAudioOutput->isChecked() )
                     {
@@ -572,10 +575,10 @@ void MainWindow::playbackHandling(int timeDiff)
                     }
                 }
                 //Limit to last frame if not in loop
-                else if( m_newPosDropMode >= getMlvFrames( m_pMlvObject ) )
+                else if( m_newPosDropMode >= ui->spinBoxCutOut->value() - 1 )
                 {
-                    // -1 because 0 <= frame < getMlvFrames( m_pMlvObject )
-                    m_newPosDropMode = getMlvFrames( m_pMlvObject ) - 1;
+                    // -1 because 0 <= frame < ui->spinBoxCutOut->value()
+                    m_newPosDropMode = ui->spinBoxCutOut->value() - 1;
                 }
                 //Because we need it NOW, block slider signals and draw after this function in this timerEvent
                 ui->horizontalSliderPosition->blockSignals( true );
@@ -658,6 +661,9 @@ void MainWindow::initGui( void )
     ui->checkBoxGradientEnable->setEnabled( false );
     ui->toolButtonGradientPaint->setEnabled( false );
     ui->groupBoxLinearGradient->setVisible( false );
+
+    //Cut In & Out
+    initCutInOut( -1 );
 
     //Set up caching status label
     m_pCachingStatus = new QLabel( statusBar() );
@@ -762,6 +768,7 @@ void MainWindow::readSettings()
     ui->dockWidgetContents->setMinimumWidth( 240 );
 #endif
     ui->groupBoxRawCorrection->setChecked( set.value( "expandedRawCorrection", false ).toBool() );
+    ui->groupBoxCutInOut->setChecked( set.value( "expandedCutInOut", false ).toBool() );
     ui->groupBoxProcessing->setChecked( set.value( "expandedProcessing", true ).toBool() );
     ui->groupBoxDetails->setChecked( set.value( "expandedDetails", false ).toBool() );
     ui->groupBoxLinearGradient->setChecked( set.value( "expandedLinGradient", false ).toBool() );
@@ -785,6 +792,7 @@ void MainWindow::writeSettings()
     set.setValue( "audioExportEnabled", m_audioExportEnabled );
     set.setValue( "darkStyle", m_styleSelection );
     set.setValue( "expandedRawCorrection", ui->groupBoxRawCorrection->isChecked() );
+    set.setValue( "expandedCutInOut", ui->groupBoxCutInOut->isChecked() );
     set.setValue( "expandedProcessing", ui->groupBoxProcessing->isChecked() );
     set.setValue( "expandedDetails", ui->groupBoxDetails->isChecked() );
     set.setValue( "expandedLinGradient", ui->groupBoxLinearGradient->isChecked() );
@@ -1110,6 +1118,7 @@ void MainWindow::addFileToSession(QString fileName)
 void MainWindow::addFileFramesToSession(void)
 {
     m_pSessionReceipts.at( m_lastActiveClipInSession )->setFrames( getMlvFrames( m_pMlvObject ) );
+    m_pSessionReceipts.at( m_lastActiveClipInSession )->setCutOut( getMlvFrames( m_pMlvObject ) );
 }
 
 //Open a session file
@@ -1449,6 +1458,16 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
             receipt->setDualIsoFrBlending( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
+        else if( Rxml->isStartElement() && Rxml->name() == "cutIn" )
+        {
+            receipt->setCutIn( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == "cutOut" )
+        {
+            receipt->setCutOut( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
         else if( Rxml->isStartElement() ) //future features
         {
             Rxml->readElementText();
@@ -1487,6 +1506,8 @@ void MainWindow::writeXmlElementsToFile(QXmlStreamWriter *xmlWriter, ReceiptSett
     xmlWriter->writeTextElement( "dualIsoInterpolation",    QString( "%1" ).arg( receipt->dualIsoInterpolation() ) );
     xmlWriter->writeTextElement( "dualIsoAliasMap",         QString( "%1" ).arg( receipt->dualIsoAliasMap() ) );
     xmlWriter->writeTextElement( "dualIsoFrBlending",       QString( "%1" ).arg( receipt->dualIsoFrBlending() ) );
+    xmlWriter->writeTextElement( "cutIn",                   QString( "%1" ).arg( receipt->cutIn() ) );
+    xmlWriter->writeTextElement( "cutOut",                  QString( "%1" ).arg( receipt->cutOut() ) );
 }
 
 //Delete all clips from Session
@@ -1546,6 +1567,9 @@ void MainWindow::deleteSession()
     ui->checkBoxGradientEnable->setChecked( false );
     ui->checkBoxGradientEnable->setEnabled( false );
     ui->toolButtonGradientPaint->setEnabled( false );
+
+    //Cut In & Out
+    initCutInOut( -1 );
 }
 
 //returns true if file is already in session
@@ -1603,6 +1627,12 @@ void MainWindow::setSliders(ReceiptSettings *receipt)
     setToolButtonDualIsoFullresBlending( receipt->dualIsoFrBlending() );
     ui->spinBoxDeflickerTarget->setValue( receipt->deflickerTarget() );
     on_spinBoxDeflickerTarget_valueChanged( receipt->deflickerTarget() );
+
+    ui->spinBoxCutIn->setValue( receipt->cutIn() );
+    on_spinBoxCutIn_valueChanged( receipt->cutIn() );
+    ui->spinBoxCutOut->setValue( receipt->cutOut() );
+    on_spinBoxCutOut_valueChanged( receipt->cutOut() );
+
     m_pMlvObject->current_cached_frame_active = 0;
 }
 
@@ -1637,6 +1667,9 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     receipt->setDualIsoInterpolation( toolButtonDualIsoInterpolationCurrentIndex() );
     receipt->setDualIsoAliasMap( toolButtonDualIsoAliasMapCurrentIndex() );
     receipt->setDualIsoFrBlending( toolButtonDualIsoFullresBlendingCurrentIndex() );
+
+    receipt->setCutIn( ui->spinBoxCutIn->value() );
+    receipt->setCutOut( ui->spinBoxCutOut->value() );
 }
 
 //Replace receipt settings
@@ -1670,6 +1703,9 @@ void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings 
     receiptTarget->setDualIsoInterpolation( receiptSource->dualIsoInterpolation() );
     receiptTarget->setDualIsoAliasMap( receiptSource->dualIsoAliasMap() );
     receiptTarget->setDualIsoFrBlending( receiptSource->dualIsoFrBlending() );
+
+    receiptTarget->setCutIn( receiptSource->cutIn() );
+    receiptTarget->setCutOut( receiptSource->cutOut() );
 }
 
 //Show the file in
@@ -1725,6 +1761,8 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
 
     receipt->setFileName( m_pSessionReceipts.at( row )->fileName() );
     receipt->setFrames( m_pSessionReceipts.at( row )->frames() );
+    receipt->setCutIn( m_pSessionReceipts.at( row )->cutIn() );
+    receipt->setCutOut( m_pSessionReceipts.at( row )->cutOut() );
     receipt->setExportFileName( fileName );
     m_exportQueue.append( receipt );
 }
@@ -2305,8 +2343,18 @@ void MainWindow::on_horizontalSliderChromaBlur_valueChanged(int position)
 //Jump to first frame
 void MainWindow::on_actionGoto_First_Frame_triggered()
 {
-    ui->horizontalSliderPosition->setValue( 0 );
-    m_newPosDropMode = 0;
+    //If actual position is cut in, we jump to 0
+    if( ui->horizontalSliderPosition->value() == ui->spinBoxCutIn->value() - 1 )
+    {
+        ui->horizontalSliderPosition->setValue( 0 );
+        m_newPosDropMode = 0;
+    }
+    //Else we jump to cut in
+    else
+    {
+        ui->horizontalSliderPosition->setValue( ui->spinBoxCutIn->value() - 1 );
+        m_newPosDropMode = ui->spinBoxCutIn->value() - 1;
+    }
 
     //Sync audio if playback and audio active
     if( ui->actionAudioOutput->isChecked()
@@ -3363,6 +3411,14 @@ void MainWindow::on_groupBoxRawCorrection_toggled(bool arg1)
     else ui->groupBoxRawCorrection->setMaximumHeight( 16777215 );
 }
 
+//Collapse & Expand Cut In Out
+void MainWindow::on_groupBoxCutInOut_toggled(bool arg1)
+{
+    ui->frameCutInOut->setVisible( arg1 );
+    if( !arg1 ) ui->groupBoxCutInOut->setMaximumHeight( 30 );
+    else ui->groupBoxCutInOut->setMaximumHeight( 16777215 );
+}
+
 //Collapse & Expand Processing
 void MainWindow::on_groupBoxProcessing_toggled(bool arg1)
 {
@@ -3628,4 +3684,83 @@ void MainWindow::redrawGradientElement(void)
                                      ui->spinBoxGradientY->value() * m_pScene->height() / getMlvHeight( m_pMlvObject ) );
     m_pGradientGraphicsItem->setRotation( ui->dialGradientAngle->value() / 10.0 );
     paintGradientElement( ui->spinBoxGradientLength->value() * m_pScene->width() / getMlvWidth( m_pMlvObject ) );
+}
+
+//Init the CutIn/Out elements with frames of clip
+void MainWindow::initCutInOut(int frames)
+{
+    if( frames == -1 )
+    {
+        ui->spinBoxCutIn->setMinimum( 0 );
+        ui->spinBoxCutIn->setMaximum( 0 );
+        ui->spinBoxCutIn->setValue( 0 );
+        ui->spinBoxCutOut->setMinimum( 0 );
+        ui->spinBoxCutOut->setMaximum( 0 );
+        ui->spinBoxCutOut->setValue( 0 );
+    }
+    else
+    {
+        ui->spinBoxCutIn->setMinimum( 1 );
+        ui->spinBoxCutIn->setMaximum( frames );
+        ui->spinBoxCutIn->setValue( 1 );
+        ui->spinBoxCutOut->setMinimum( 1 );
+        ui->spinBoxCutOut->setMaximum( frames );
+        ui->spinBoxCutOut->setValue( frames );
+    }
+}
+
+//Cut In button clicked
+void MainWindow::on_toolButtonCutIn_clicked(void)
+{
+    if( !m_fileLoaded ) return;
+    if( ui->horizontalSliderPosition->value() + 1 > ui->spinBoxCutOut->value() )
+    {
+        QMessageBox::warning( this, tr( "MLV App" ), tr( "Can't set cut in after cut out!" ) );
+    }
+    else
+    {
+        ui->spinBoxCutIn->setValue( ui->horizontalSliderPosition->value() + 1 );
+    }
+}
+
+//Cut Out button clicked
+void MainWindow::on_toolButtonCutOut_clicked(void)
+{
+    if( !m_fileLoaded ) return;
+    if( ui->horizontalSliderPosition->value() + 1 < ui->spinBoxCutIn->value() )
+    {
+        QMessageBox::warning( this, tr( "MLV App" ), tr( "Can't set cut out before cut in!" ) );
+    }
+    else
+    {
+        ui->spinBoxCutOut->setValue( ui->horizontalSliderPosition->value() + 1 );
+    }
+}
+
+//Cut In Delete button clicked
+void MainWindow::on_toolButtonCutInDelete_clicked(void)
+{
+    if( !m_fileLoaded ) return;
+    ui->spinBoxCutIn->setValue( 1 );
+    ui->spinBoxCutOut->setMinimum( 1 );
+}
+
+//Cut Out Delete button clicked
+void MainWindow::on_toolButtonCutOutDelete_clicked()
+{
+    if( !m_fileLoaded ) return;
+    ui->spinBoxCutOut->setValue( getMlvFrames( m_pMlvObject ) );
+    ui->spinBoxCutIn->setMaximum( getMlvFrames( m_pMlvObject ) );
+}
+
+//Cut In Value changed
+void MainWindow::on_spinBoxCutIn_valueChanged(int arg1)
+{
+    ui->spinBoxCutOut->setMinimum( arg1 );
+}
+
+//Cut Out Value changed
+void MainWindow::on_spinBoxCutOut_valueChanged(int arg1)
+{
+    ui->spinBoxCutIn->setMaximum( arg1 );
 }

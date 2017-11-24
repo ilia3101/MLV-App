@@ -37,4 +37,5 @@ ReceiptSettings::ReceiptSettings()
     m_dualIsoAliasMap = 1;
     m_dualIsoFrBlending = 1;
     m_profile = 1;
+    m_cutIn = 1;
 }

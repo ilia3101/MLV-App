@@ -137,6 +137,7 @@ private slots:
     void gradientAnchorPicked( int x, int y );
     void gradientFinalPosPicked(int x, int y , bool isFinished);
     void on_groupBoxRawCorrection_toggled(bool arg1);
+    void on_groupBoxCutInOut_toggled(bool arg1);
     void on_groupBoxProcessing_toggled(bool arg1);
     void on_groupBoxDetails_toggled(bool arg1);
     void on_groupBoxLinearGradient_toggled(bool arg1);
@@ -152,6 +153,13 @@ private slots:
     void on_dialGradientAngle_valueChanged(int value);
     void gradientGraphicElementMoved( int x, int y );
     void gradientGraphicElementHovered( bool isHovered );
+
+    void on_toolButtonCutIn_clicked(void);
+    void on_toolButtonCutOut_clicked(void);
+    void on_toolButtonCutInDelete_clicked(void);
+    void on_toolButtonCutOutDelete_clicked(void);
+    void on_spinBoxCutIn_valueChanged(int arg1);
+    void on_spinBoxCutOut_valueChanged(int arg1);
 
 private:
     Ui::MainWindow *ui;
@@ -249,6 +257,7 @@ private:
     int toolButtonDualIsoFullresBlendingCurrentIndex( void );
     void paintGradientElement( int length );
     void redrawGradientElement( void );
+    void initCutInOut( int frames );
 
 signals:
     void exportReady( void );
