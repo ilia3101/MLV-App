@@ -323,13 +323,15 @@ int NSApplicationMain(int argc, const char * argv[])
     // create columns for our table
     NSTableColumn * clipColumn = [[NSTableColumn alloc] initWithIdentifier:@"Col1"];
     [clipColumn.headerCell setStringValue:@"Clip Name"];
-    [clipColumn setWidth: LEFT_SIDEBAR_ELEMENT_WIDTH];
+    [clipColumn setWidth: LEFT_SIDEBAR_ELEMENT_WIDTH-3];
     [App->session.clipTable addTableColumn:clipColumn];
+    clipColumn.resizingMask = NSTableColumnNoResizing;
     [App->session.clipTable reloadData];
     // embed the table view in the scroll view, and add the scroll view
     // to our window.
     [tableContainer setDocumentView:App->session.clipTable];
     [tableContainer setHasVerticalScroller:NO];
+    [tableContainer setHasHorizontalScroller:NO];
     [tableContainer setAutoresizingMask: NSViewHeightSizable];
     [[App->window contentView] addSubview:tableContainer];
 

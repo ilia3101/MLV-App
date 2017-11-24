@@ -37,7 +37,6 @@ void sessionAddNewMlvClip(char * mlvPathString)
     setDefaultsClip(App->session.clipInfo + App->session.clipCount-1);
     strncpy(App->session.clipInfo[App->session.clipCount-1].path, mlvPathString, 4096);
     setAppGUIFromClip(App->session.clipInfo + App->session.clipCount-1);
-    [App->session.clipTable reloadData];
 }
 
 /* Copy current settings to a clipinfo_t struct */
@@ -120,6 +119,7 @@ void setAppGUIFromClip(clipInfo_t * clip)
     App->stripeFixOption.selectedSegment = clip->settings.stripeFixOption;
     App->chromaSmoothOption.selectedSegment = clip->settings.chromaSmoothOption;
     App->patternNoiseOption.selectedSegment = clip->settings.patternNoiseOption;
+    [App->session.clipTable reloadData];
     syncGUI();
 }
 
@@ -183,6 +183,12 @@ void appClearSession()
     while (mlvNameStart[-1] != '/') mlvNameStart--;
     memcpy(mlvFileName,mlvNameStart,strlen(mlvNameStart)-4);
     result.stringValue = [NSString stringWithFormat:@"%s", mlvFileName];
+    /* Highlight current clip in bold */
+    if (row == App->session.currentClip) {
+        [result setFont: [NSFont boldSystemFontOfSize:12.0f]];
+    } else {
+        [result setFont: [NSFont systemFontOfSize:12.0f]];
+    }
     return result;
 }
 
