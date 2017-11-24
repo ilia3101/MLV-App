@@ -1613,7 +1613,7 @@ QGroupBox::indicator:checked {
            <item>
             <widget class="QGroupBox" name="groupBoxCutInOut">
              <property name="title">
-              <string>Cut In - Cut Out</string>
+              <string>Cut In &amp;&amp; Cut Out</string>
              </property>
              <property name="checkable">
               <bool>true</bool>
