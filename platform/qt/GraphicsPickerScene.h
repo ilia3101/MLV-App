@@ -24,7 +24,7 @@ public:
 signals:
     void wbPicked(int x, int y);
     void gradientAnchor(int x, int y);
-    void gradientFinalPos(int x, int y);
+    void gradientFinalPos(int x, int y, bool finished);
 
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *event);

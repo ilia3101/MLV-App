@@ -52,7 +52,7 @@ void GraphicsPickerScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     m_isMousePressed = false;
     if( m_isGradientAdjustment )
     {
-        emit gradientFinalPos( event->scenePos().x(), event->scenePos().y() );
+        emit gradientFinalPos( event->scenePos().x(), event->scenePos().y(), true );
     }
 }
 
@@ -62,6 +62,6 @@ void GraphicsPickerScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     QGraphicsScene::mouseMoveEvent(event);
     if( m_isGradientAdjustment && m_isMousePressed )
     {
-        emit gradientFinalPos( event->scenePos().x(), event->scenePos().y() );
+        emit gradientFinalPos( event->scenePos().x(), event->scenePos().y(), false );
     }
 }

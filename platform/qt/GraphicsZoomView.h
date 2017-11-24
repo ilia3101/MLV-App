@@ -23,6 +23,7 @@ public:
     bool isZoomEnabled(void);
     void resetZoom(void);
     void setWbPickerActive(bool on);
+    void setCrossCursorActive(bool on);
 
 signals:
     void wbPicked( int x, int y );

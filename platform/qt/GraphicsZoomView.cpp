@@ -56,6 +56,13 @@ void GraphicsZoomView::setWbPickerActive(bool on)
     else viewport()->setCursor( Qt::OpenHandCursor );
 }
 
+//Set cross cursor active
+void GraphicsZoomView::setCrossCursorActive(bool on)
+{
+    if( on ) viewport()->setCursor( Qt::CrossCursor );
+    else viewport()->setCursor( Qt::OpenHandCursor );
+}
+
 //Methods for changing the cursor
 void GraphicsZoomView::enterEvent(QEvent *event)
 {

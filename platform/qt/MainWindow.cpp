@@ -49,6 +49,7 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     m_fpsOverride = false;
     m_inOpeningProcess = false;
     m_zoomTo100Center = false;
+    m_zoomModeChanged = false;
 
     //Set Render Thread
     m_pRenderThread = new RenderFrameThread();
@@ -218,6 +219,7 @@ void MainWindow::resizeEvent(QResizeEvent *event)
     if( m_fileLoaded )
     {
         drawFrame();
+        redrawGradientElement();
     }
     event->accept();
 }
@@ -505,6 +507,10 @@ void MainWindow::openMlv( QString fileName )
     //If clip loaded, import receipt is enabled
     ui->actionImportReceipt->setEnabled( true );
 
+    //Setup Gradient
+    ui->spinBoxGradientX->setMaximum( getMlvWidth( m_pMlvObject ) + 1000 );
+    ui->spinBoxGradientY->setMaximum( getMlvHeight( m_pMlvObject ) + 1000 );
+
     m_frameChanged = true;
 }
 
@@ -629,14 +635,16 @@ void MainWindow::initGui( void )
 
     //Prepare gradient elements
     QPolygon polygon;
-    m_pGradientGraphicsItem = new QGraphicsPolygonItem( polygon );
+    m_pGradientGraphicsItem = new GraphicsPolygonMoveItem( polygon );
     m_pGradientGraphicsItem->setPen( QPen( Qt::white ) );
     m_pGradientGraphicsItem->setFlag( QGraphicsItem::ItemIsMovable, true );
+    m_pGradientGraphicsItem->setFlag( QGraphicsItem::ItemSendsScenePositionChanges, true );
     m_pScene->addItem( m_pGradientGraphicsItem );
     m_pGradientGraphicsItem->hide();
     connect( m_pScene, SIGNAL( gradientAnchor(int,int) ), this, SLOT( gradientAnchorPicked(int,int) ) );
-    connect( m_pScene, SIGNAL( gradientFinalPos(int,int) ), this, SLOT( gradientFinalPosPicked(int,int) ) );
-    ui->actionGradientAdjustment->setVisible( false );
+    connect( m_pScene, SIGNAL( gradientFinalPos(int,int,bool) ), this, SLOT( gradientFinalPosPicked(int,int,bool) ) );
+    connect( m_pGradientGraphicsItem, SIGNAL( itemMoved(int,int) ), this, SLOT( gradientGraphicElementMoved(int,int) ) );
+    ui->groupBoxLinearGradient->setVisible( false );
 
     //Set up caching status label
     m_pCachingStatus = new QLabel( statusBar() );
@@ -743,6 +751,7 @@ void MainWindow::readSettings()
     ui->groupBoxRawCorrection->setChecked( set.value( "expandedRawCorrection", false ).toBool() );
     ui->groupBoxProcessing->setChecked( set.value( "expandedProcessing", true ).toBool() );
     ui->groupBoxDetails->setChecked( set.value( "expandedDetails", false ).toBool() );
+    ui->groupBoxLinearGradient->setChecked( set.value( "expandedLinGradient", false ).toBool() );
 }
 
 //Save some settings to registry
@@ -765,6 +774,7 @@ void MainWindow::writeSettings()
     set.setValue( "expandedRawCorrection", ui->groupBoxRawCorrection->isChecked() );
     set.setValue( "expandedProcessing", ui->groupBoxProcessing->isChecked() );
     set.setValue( "expandedDetails", ui->groupBoxDetails->isChecked() );
+    set.setValue( "expandedLinGradient", ui->groupBoxLinearGradient->isChecked() );
 }
 
 //Start Export via Pipe
@@ -2111,17 +2121,6 @@ int MainWindow::toolButtonDualIsoFullresBlendingCurrentIndex()
     else return 1;
 }
 
-//Paint the gradient element
-void MainWindow::paintGradientElement(int length)
-{
-    QPolygon polygon;
-    polygon << QPoint(0, -length) << QPoint(-10000, -length) << QPoint(10000, -length) << QPoint(0, -length) << QPoint(-10, -length+10) << QPoint(10, -length+10) << QPoint(0, -length) << QPoint(0, 0) << QPoint(-10000, 0) << QPoint(10000, 0) << QPoint(0, 0);
-    //delete m_pGradientGraphicsItem;
-    //m_pGradientGraphicsItem = new QGraphicsPolygonItem( polygon );
-    //m_pScene->addPolygon( polygon );
-    m_pGradientGraphicsItem->setPolygon( polygon );
-}
-
 //About Window
 void MainWindow::on_actionAbout_triggered()
 {
@@ -2486,6 +2485,7 @@ void MainWindow::on_actionZoomFit_triggered(bool on)
         ui->actionZoomFit->setChecked( true );
         m_frameChanged = true;
     }
+    m_zoomModeChanged = true;
 }
 
 //Click on Zoom: 100%
@@ -3238,21 +3238,6 @@ void MainWindow::on_actionWhiteBalancePicker_toggled(bool checked)
     m_pScene->setWbPickerActive( checked );
 }
 
-//Activate & Deactivate Gradient Adjustment
-void MainWindow::on_actionGradientAdjustment_toggled(bool checked)
-{
-    if( !checked )
-    {
-        m_pGradientGraphicsItem->hide();
-        ui->graphicsView->setDragMode( QGraphicsView::ScrollHandDrag );
-    }
-    else
-    {
-        ui->graphicsView->setDragMode( QGraphicsView::NoDrag );
-    }
-    m_pScene->setGradientAdjustment( checked );
-}
-
 //wb picking ready
 void MainWindow::whiteBalancePicked( int x, int y )
 {
@@ -3278,27 +3263,56 @@ void MainWindow::whiteBalancePicked( int x, int y )
 //Gradient anchor was selected by user
 void MainWindow::gradientAnchorPicked(int x, int y)
 {
-    m_pGradientGraphicsItem->show();
+    ui->checkBoxGradientEnable->setChecked( true );
     m_pGradientGraphicsItem->setRotation( 0.0 );
     m_pGradientGraphicsItem->setPos( x, y );
+    //Some math if in stretch (fit) mode
+    x *= getMlvWidth( m_pMlvObject ) / m_pScene->width();
+    y *= getMlvHeight( m_pMlvObject ) / m_pScene->height();
+
+    ui->spinBoxGradientX->blockSignals( true );
+    ui->spinBoxGradientY->blockSignals( true );
+    ui->spinBoxGradientX->setValue( x );
+    ui->spinBoxGradientY->setValue( y );
+    ui->spinBoxGradientX->blockSignals( false );
+    ui->spinBoxGradientY->blockSignals( false );
 }
 
 //Gradient final position was selected by user
-void MainWindow::gradientFinalPosPicked(int x, int y)
+void MainWindow::gradientFinalPosPicked(int x, int y, bool isFinished)
 {
-    QPointF startPos = m_pGradientGraphicsItem->pos();
-    QPointF endPos = QPointF( x, y );
+    //Get both positions
+    QPointF startPos = QPointF( ui->spinBoxGradientX->value(),
+                                ui->spinBoxGradientY->value() );
+    QPointF endPos = QPointF( x * getMlvWidth( m_pMlvObject ) / m_pScene->width(),
+                              y * getMlvHeight( m_pMlvObject ) / m_pScene->height() );
+    //Some math
     double m = ( endPos.y() - startPos.y() ) / ( endPos.x() - startPos.x() );
     double alpha = 0;
     double length = 0;
+    length = sqrt( pow( endPos.x() - startPos.x(), 2 ) + pow( endPos.y() - startPos.y(), 2 ) );
     if( m != 0 )
     {
-        length = sqrt( pow( endPos.x() - startPos.x(), 2 ) + pow( endPos.y() - startPos.y(), 2 ) );
         alpha = ( atan( m ) * 180.0 / M_PI ) - 90.0;
         if( ( endPos.x() - startPos.x() ) >= 0 ) alpha += 180;
     }
-    paintGradientElement( length );
-    m_pGradientGraphicsItem->setRotation( alpha );
+    else if( ( endPos.y() - startPos.y() ) == 0 )
+    {
+        if( ( endPos.x() - startPos.x() ) > 0 ) alpha = 90;
+        else alpha = -90;
+    }
+    //Paint the Gradient Element in the right size
+    paintGradientElement( length * m_pScene->width() / getMlvWidth( m_pMlvObject ) );
+
+    //Set the UI numbers and sliders
+    ui->dialGradientAngle->setValue( alpha * 10.0 );
+    ui->spinBoxGradientLength->setValue( length );
+
+    //If action finished, uncheck paint button
+    if( isFinished )
+    {
+        ui->toolButtonGradientPaint->setChecked( false );
+    }
 }
 
 //Collapse & Expand Raw Correction
@@ -3323,6 +3337,22 @@ void MainWindow::on_groupBoxDetails_toggled(bool arg1)
     ui->frameDetails->setVisible( arg1 );
     if( !arg1 ) ui->groupBoxDetails->setMaximumHeight( 30 );
     else ui->groupBoxDetails->setMaximumHeight( 16777215 );
+}
+
+//Collapse & Expand Linear Gradient
+void MainWindow::on_groupBoxLinearGradient_toggled(bool arg1)
+{
+    ui->frameGradient->setVisible( arg1 );
+    if( !arg1 )
+    {
+        ui->groupBoxLinearGradient->setMaximumHeight( 30 );
+        m_pGradientGraphicsItem->hide();
+    }
+    else
+    {
+        if( ui->checkBoxGradientEnable->isChecked() ) m_pGradientGraphicsItem->show();
+        ui->groupBoxLinearGradient->setMaximumHeight( 16777215 );
+    }
 }
 
 //Abort pressed while exporting
@@ -3435,4 +3465,117 @@ void MainWindow::drawFrameReady()
         ui->graphicsView->horizontalScrollBar()->setValue( ( getMlvWidth(m_pMlvObject) - ui->graphicsView->width() ) / 2 );
         ui->graphicsView->verticalScrollBar()->setValue( ( getMlvHeight(m_pMlvObject) - ui->graphicsView->height() ) / 2 );
     }
+
+    //If zoom mode changed, redraw gradient element to the new size
+    if( m_zoomModeChanged )
+    {
+        m_zoomModeChanged = false;
+        redrawGradientElement();
+    }
+}
+
+//Paintmode for gradient enabled/disabled
+void MainWindow::on_toolButtonGradientPaint_toggled(bool checked)
+{
+    if( !checked )
+    {
+        ui->graphicsView->setCrossCursorActive( false ); // has to be done first
+        ui->graphicsView->setDragMode( QGraphicsView::ScrollHandDrag );
+    }
+    else
+    {
+        ui->graphicsView->setDragMode( QGraphicsView::NoDrag );
+        ui->graphicsView->setCrossCursorActive( true ); // has to be done last
+    }
+    m_pScene->setGradientAdjustment( checked );
+}
+
+//Gradient Enable checked/unchecked
+void MainWindow::on_checkBoxGradientEnable_toggled(bool checked)
+{
+    if( checked ) m_pGradientGraphicsItem->show();
+    else m_pGradientGraphicsItem->hide();
+}
+
+//The gradient startPoint X has changed
+void MainWindow::on_spinBoxGradientX_valueChanged(int arg1)
+{
+    m_pGradientGraphicsItem->setPos( arg1 * m_pScene->width() / getMlvWidth( m_pMlvObject ),
+                                     ui->spinBoxGradientY->value() * m_pScene->height() / getMlvHeight( m_pMlvObject ) );
+}
+
+//The gradient startPoint Y has changed
+void MainWindow::on_spinBoxGradientY_valueChanged(int arg1)
+{
+    m_pGradientGraphicsItem->setPos( ui->spinBoxGradientX->value() * m_pScene->width() / getMlvWidth( m_pMlvObject ),
+                                     arg1 * m_pScene->height() / getMlvHeight( m_pMlvObject ) );
+}
+
+//The gradient length has changed
+void MainWindow::on_spinBoxGradientLength_valueChanged(int arg1)
+{
+    paintGradientElement( arg1 * m_pScene->width() / getMlvWidth( m_pMlvObject ) );
+}
+
+//The gradient angle label was doubleclicked
+void MainWindow::on_labelGradientAngle_doubleClicked()
+{
+    EditSliderValueDialog editSlider;
+    editSlider.ui->doubleSpinBox->setMinimum( -179.9 );
+    editSlider.ui->doubleSpinBox->setMaximum( 180.0 );
+    editSlider.ui->doubleSpinBox->setDecimals( 1 );
+    editSlider.ui->doubleSpinBox->setSingleStep( 0.1 );
+    QString valString = ui->labelGradientAngle->text();
+    valString.chop(1);
+    editSlider.ui->doubleSpinBox->setValue( valString.toDouble() );
+    editSlider.ui->doubleSpinBox->selectAll();
+    QPoint pos;
+    pos.setX(0);
+    pos.setY(0);
+    pos = ui->labelGradientAngle->mapToGlobal( pos );
+    editSlider.setGeometry( pos.x(), pos.y(), 80, 20 );
+    editSlider.exec();
+    ui->dialGradientAngle->setValue( editSlider.getValue() * 10.0 );
+}
+
+//The gradient angle dial was turned
+void MainWindow::on_dialGradientAngle_valueChanged(int value)
+{
+    m_pGradientGraphicsItem->setRotation( value / 10.0 );
+    ui->labelGradientAngle->setText( QString( "%1°" ).arg( value / 10.0, 0, 'f', 1 ) );
+}
+
+//Someone moved the gradient graphics element
+void MainWindow::gradientGraphicElementMoved(int x, int y)
+{
+    //Some math if in stretch (fit) mode
+    x *= getMlvWidth( m_pMlvObject ) / m_pScene->width();
+    y *= getMlvHeight( m_pMlvObject ) / m_pScene->height();
+
+    ui->spinBoxGradientX->blockSignals( true );
+    ui->spinBoxGradientY->blockSignals( true );
+    ui->spinBoxGradientX->setValue( x );
+    ui->spinBoxGradientY->setValue( y );
+    ui->spinBoxGradientX->blockSignals( false );
+    ui->spinBoxGradientY->blockSignals( false );
+}
+
+//Paint the gradient element
+void MainWindow::paintGradientElement(int length)
+{
+    QPolygon polygon;
+    polygon << QPoint(0, -length) << QPoint(-10000, -length) << QPoint(10000, -length) << QPoint(0, -length) << QPoint(-10, -length+10) << QPoint(10, -length+10) << QPoint(0, -length) << QPoint(0, 0) << QPoint(-10000, 0) << QPoint(10000, 0) << QPoint(0, 0);
+    //delete m_pGradientGraphicsItem;
+    //m_pGradientGraphicsItem = new QGraphicsPolygonItem( polygon );
+    //m_pScene->addPolygon( polygon );
+    m_pGradientGraphicsItem->setPolygon( polygon );
+}
+
+//Redraw the whole gradient element
+void MainWindow::redrawGradientElement(void)
+{
+    m_pGradientGraphicsItem->setPos( ui->spinBoxGradientX->value() * m_pScene->width() / getMlvWidth( m_pMlvObject ),
+                                     ui->spinBoxGradientY->value() * m_pScene->height() / getMlvHeight( m_pMlvObject ) );
+    m_pGradientGraphicsItem->setRotation( ui->dialGradientAngle->value() / 10.0 );
+    paintGradientElement( ui->spinBoxGradientLength->value() * m_pScene->width() / getMlvWidth( m_pMlvObject ) );
 }

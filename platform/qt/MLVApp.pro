@@ -93,7 +93,8 @@ SOURCES += \
     NoScrollSlider.cpp \
     ColorToolButton.cpp \
     RenderFrameThread.cpp \
-    ../../src/dng/dng.c
+    ../../src/dng/dng.c \
+    GraphicsPolygonMoveItem.cpp
 
 HEADERS += \
         MainWindow.h \
@@ -141,7 +142,8 @@ HEADERS += \
     ../../src/dng/dng.h \
     ../../src/dng/dng_tag_codes.h \
     ../../src/dng/dng_tag_types.h \
-    ../../src/dng/dng_tag_values.h
+    ../../src/dng/dng_tag_values.h \
+    GraphicsPolygonMoveItem.h
 
 FORMS += \
         MainWindow.ui \

@@ -30,6 +30,7 @@
 #include "AudioPlayback.h"
 #include "GraphicsPickerScene.h"
 #include "RenderFrameThread.h"
+#include "GraphicsPolygonMoveItem.h"
 
 namespace Ui {
 class MainWindow;
@@ -132,15 +133,24 @@ private slots:
     void on_actionPreviousFrame_triggered();
     void on_checkBoxRawFixEnable_clicked(bool checked);
     void on_actionWhiteBalancePicker_toggled(bool checked);
-    void on_actionGradientAdjustment_toggled(bool checked);
     void whiteBalancePicked( int x, int y );
     void gradientAnchorPicked( int x, int y );
-    void gradientFinalPosPicked( int x, int y );
+    void gradientFinalPosPicked(int x, int y , bool isFinished);
     void on_groupBoxRawCorrection_toggled(bool arg1);
     void on_groupBoxProcessing_toggled(bool arg1);
     void on_groupBoxDetails_toggled(bool arg1);
+    void on_groupBoxLinearGradient_toggled(bool arg1);
     void exportAbort( void );
     void drawFrameReady( void );
+
+    void on_toolButtonGradientPaint_toggled(bool checked);
+    void on_checkBoxGradientEnable_toggled(bool checked);
+    void on_spinBoxGradientX_valueChanged(int arg1);
+    void on_spinBoxGradientY_valueChanged(int arg1);
+    void on_spinBoxGradientLength_valueChanged(int arg1);
+    void on_labelGradientAngle_doubleClicked( void );
+    void on_dialGradientAngle_valueChanged(int value);
+    void gradientGraphicElementMoved( int x, int y );
 
 private:
     Ui::MainWindow *ui;
@@ -154,7 +164,7 @@ private:
     mlvObject_t *m_pMlvObject;
     processingObject_t *m_pProcessingObject;
     QGraphicsPixmapItem *m_pGraphicsItem;
-    QGraphicsPolygonItem *m_pGradientGraphicsItem;
+    GraphicsPolygonMoveItem *m_pGradientGraphicsItem;
     GraphicsPickerScene* m_pScene;
     QLabel *m_pCachingStatus;
     QLabel *m_pFpsStatus;
@@ -179,6 +189,7 @@ private:
     double m_frameRate;
     bool m_exportAbortPressed;
     bool m_zoomTo100Center;
+    bool m_zoomModeChanged;
     QString m_lastSaveFileName;
     ReceiptSettings *m_pReceiptClipboard;
     QVector<ReceiptSettings*> m_pSessionReceipts;
@@ -235,6 +246,7 @@ private:
     int toolButtonDualIsoAliasMapCurrentIndex( void );
     int toolButtonDualIsoFullresBlendingCurrentIndex( void );
     void paintGradientElement( int length );
+    void redrawGradientElement( void );
 
 signals:
     void exportReady( void );
