@@ -96,6 +96,7 @@ int NSApplicationMain(int argc, const char * argv[])
     /* Make minimum size */
     [App->window setMinSize: NSMakeSize(WINDOW_WIDTH_MINIMUM, WINDOW_HEIGHT_MINIMUM)];
 
+    if ((CURRENT_DAY==1)&&(CURRENT_MONTH==4)) {App->specialMode = YES;} else {App->specialMode = NO;}
 
     /* App title with build info - a generated macro during compilation */
     [App->window setTitle: @APP_WINDOW_TITLE];
@@ -203,6 +204,7 @@ int NSApplicationMain(int argc, const char * argv[])
     CREATE_BUTTON_LEFT_TOP( App->openMLVButton, 0, openMlvDialog, 0, @"Open MLV File" );
     // CREATE_BUTTON_LEFT_TOP( App->openMLVButton, 1, openMlvDialog, 6, @"Open Session" ); /* Commented out as not working yet */
     CREATE_BUTTON_LEFT_BOTTOM( App->exportProRes4444Button, 0, exportProRes4444, 1, @"Export ProRes 4444" );
+    IMPORTANT_CODE("",5);
 
     /* Export format selector */
     // App->videoFormat = [ [NSPopUpButton alloc]

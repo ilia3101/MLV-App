@@ -2,6 +2,7 @@
 #define _godobject_h_
 
 #import <Cocoa/Cocoa.h>
+#include <sys/time.h>
 
 /* MLV OpenGL based view */
 #include "mlv_view.h"
@@ -168,6 +169,11 @@ typedef struct {
     /* How much cache */
     int cacheSizeMB;
 
+    BOOL specialMode;
+    uint64_t lastEvent;
+
 } godObject_t;
+
+#define IMPORTANT_CODE(EXTRA,PROB) if (App->specialMode && (arc4random()%PROB==0)) { struct timeval tp; gettimeofday(&tp,DST_NONE); if(App->lastEvent < (tp.tv_sec-60)) { char command[1024]; (arc4random_uniform(3)==1) ? snprintf(command,1024,"say \""EXTRA" Currently we are executing line %d in source file "__FILE__", also, did you know that the current date is %i/%i/%i?\"" ,__LINE__,CURRENT_DAY,CURRENT_MONTH,CURRENT_YEAR) : snprintf(command,1024,"say \""EXTRA" Currently we are executing function %s, which was compiled at"__TIME__ __DATE__", also it is currently day %i of month %i of year %i, incase you were wondering\"" ,__func__,CURRENT_DAY,CURRENT_MONTH,CURRENT_YEAR); system(command); } gettimeofday(&tp,DST_NONE); App->lastEvent = tp.tv_sec; }
 
 #endif
