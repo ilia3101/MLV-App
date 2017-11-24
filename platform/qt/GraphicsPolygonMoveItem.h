@@ -10,6 +10,7 @@
 
 #include <QObject>
 #include <QGraphicsPolygonItem>
+#include <QGraphicsSceneHoverEvent>
 
 class GraphicsPolygonMoveItem : public QObject, public QGraphicsPolygonItem
 {
@@ -19,9 +20,12 @@ public:
 
 private:
     QVariant itemChange(GraphicsItemChange change, const QVariant &value);
+    void hoverEnterEvent(QGraphicsSceneHoverEvent *event);
+    void hoverLeaveEvent(QGraphicsSceneHoverEvent *event);
 
 signals:
     void itemMoved( int x, int y );
+    void itemHovered( bool isHovered );
 };
 
 #endif // GRAPHICSPOLYGONMOVEITEM_H

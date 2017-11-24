@@ -10,6 +10,7 @@
 
 GraphicsPolygonMoveItem::GraphicsPolygonMoveItem(QPolygon polygon, QGraphicsItem *parent) : QGraphicsPolygonItem(polygon,parent)
 {
+    setAcceptHoverEvents( true );
 }
 
 //Someone is dragging the polygon
@@ -22,4 +23,18 @@ QVariant GraphicsPolygonMoveItem::itemChange(QGraphicsItem::GraphicsItemChange c
         emit itemMoved( value.toPoint().x(), value.toPoint().y() );
     }
     return QGraphicsPolygonItem::itemChange(change, value); // i also tried to call this before the emiting
+}
+
+//Someone hovers the polygon with the cursor
+void GraphicsPolygonMoveItem::hoverEnterEvent(QGraphicsSceneHoverEvent *event)
+{
+    QGraphicsPolygonItem::hoverEnterEvent(event);
+    emit itemHovered( true );
+}
+
+//Someone left the polygon with the cursor
+void GraphicsPolygonMoveItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *event)
+{
+    QGraphicsPolygonItem::hoverLeaveEvent(event);
+    emit itemHovered( false );
 }

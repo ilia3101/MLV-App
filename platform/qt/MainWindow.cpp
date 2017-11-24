@@ -646,7 +646,8 @@ void MainWindow::initGui( void )
     connect( m_pScene, SIGNAL( gradientAnchor(int,int) ), this, SLOT( gradientAnchorPicked(int,int) ) );
     connect( m_pScene, SIGNAL( gradientFinalPos(int,int,bool) ), this, SLOT( gradientFinalPosPicked(int,int,bool) ) );
     connect( m_pGradientGraphicsItem, SIGNAL( itemMoved(int,int) ), this, SLOT( gradientGraphicElementMoved(int,int) ) );
-    ui->groupBoxLinearGradient->setVisible( false );
+    connect( m_pGradientGraphicsItem, SIGNAL( itemHovered(bool) ), this, SLOT( gradientGraphicElementHovered(bool) ) );
+    //ui->groupBoxLinearGradient->setVisible( false );
 
     //Set up caching status label
     m_pCachingStatus = new QLabel( statusBar() );
@@ -3268,6 +3269,7 @@ void MainWindow::gradientAnchorPicked(int x, int y)
     ui->checkBoxGradientEnable->setChecked( true );
     m_pGradientGraphicsItem->setRotation( 0.0 );
     m_pGradientGraphicsItem->setPos( x, y );
+    m_pGradientGraphicsItem->show();
     //Some math if in stretch (fit) mode
     x *= getMlvWidth( m_pMlvObject ) / m_pScene->width();
     y *= getMlvHeight( m_pMlvObject ) / m_pScene->height();
@@ -3483,9 +3485,11 @@ void MainWindow::on_toolButtonGradientPaint_toggled(bool checked)
     {
         ui->graphicsView->setCrossCursorActive( false ); // has to be done first
         ui->graphicsView->setDragMode( QGraphicsView::ScrollHandDrag );
+        m_pGradientGraphicsItem->show();
     }
     else
     {
+        m_pGradientGraphicsItem->hide();
         ui->graphicsView->setDragMode( QGraphicsView::NoDrag );
         ui->graphicsView->setCrossCursorActive( true ); // has to be done last
     }
@@ -3560,6 +3564,17 @@ void MainWindow::gradientGraphicElementMoved(int x, int y)
     ui->spinBoxGradientY->setValue( y );
     ui->spinBoxGradientX->blockSignals( false );
     ui->spinBoxGradientY->blockSignals( false );
+}
+
+//Someone starts/stops hovering the element
+void MainWindow::gradientGraphicElementHovered(bool isHovered)
+{
+    //Change color of grading elements to show the user it is hovered
+    QPen pen;
+    if( isHovered ) pen = QPen( Qt::yellow );
+    else pen = QPen( Qt::white );
+    pen.setWidth( 0 );
+    m_pGradientGraphicsItem->setPen( pen );
 }
 
 //Paint the gradient element

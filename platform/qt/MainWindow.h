@@ -151,6 +151,7 @@ private slots:
     void on_labelGradientAngle_doubleClicked( void );
     void on_dialGradientAngle_valueChanged(int value);
     void gradientGraphicElementMoved( int x, int y );
+    void gradientGraphicElementHovered( bool isHovered );
 
 private:
     Ui::MainWindow *ui;
