@@ -11,6 +11,7 @@
 #include <unistd.h>
 
 #include "main_methods.h"
+#include "session_methods.h"
 
 /* UI related crap */
 #include "gui_stuff/useful_methods.h"
@@ -298,22 +299,30 @@ int NSApplicationMain(int argc, const char * argv[])
     [App->timelineSlider setAutoresizingMask: NSViewWidthSizable];
     [[App->window contentView] addSubview: App->timelineSlider];
 
-
+    /*
+     *******************************************************************************
+     * Session things
+     *******************************************************************************
+     */
+    
+    App->session.clipInfo = (clipInfo_t *)malloc( sizeof(clipInfo_t) );
 
     /* Session tableview */
     // create a table view and a scroll view
     NSScrollView * tableContainer = [[NSScrollView alloc] initWithFrame:NSMakeRect(SIDE_GAP_X_L, 64, LEFT_SIDEBAR_ELEMENT_WIDTH, WINDOW_HEIGHT-128)];
     App->session.clipTable = [[NSTableView alloc] init];
+    [App->session.clipTable setDoubleAction:@selector(doubleClickSetClip)];
+    /* 'Delegate' - a data provider */
+    [App->session.clipTable setDelegate: [MLVListDelegate new]];
+    [App->session.clipTable setDataSource: [MLVListDataSource new]];
+    App->session.clipTable.rowHeight = 20;
     App->session.clipTable.backgroundColor = [NSColor colorWithRed:0.235 green:0.235 blue:0.235 alpha:0.8];
     [App->session.clipTable setFocusRingType: NSFocusRingTypeNone]; /* Hide ugly 'active' border */
     // create columns for our table
     NSTableColumn * clipColumn = [[NSTableColumn alloc] initWithIdentifier:@"Col1"];
     [clipColumn.headerCell setStringValue:@"Clip Name"];
     [clipColumn setWidth: LEFT_SIDEBAR_ELEMENT_WIDTH];
-    // generally you want to add at least one column to the table view.
     [App->session.clipTable addTableColumn:clipColumn];
-    // [App->session.clipTable setDelegate: [clipTableDelegate new]];
-    // [App->session.clipTable setDataSource: [clipTableDelegate new]];
     [App->session.clipTable reloadData];
     // embed the table view in the scroll view, and add the scroll view
     // to our window.

@@ -21,8 +21,6 @@ int setAppNewMlvClip(char * mlvPath); /* 0=fail 1=ok */
 -(void)toggleAlwaysAmaze;
 /* Enables/disables "raw corrections" */
 -(void)toggleLLRawProc;
-/* Enables/disables processing tonemapping */
--(void)toggleTonemapping;
 /* Opens a dialog to select MLV file + sets MLV file to that */
 -(void)openMlvDialog;
 /* Opens a dialog to select export location, then exports a mov clip with prores! */

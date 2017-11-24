@@ -12,10 +12,8 @@
 
 /* Info about a clip, for handling many in a session. All clips share same processing object */
 typedef struct {
-
-    /* MLV object */
-    mlvObject_t * video;
-
+    /* Path to MLV file */
+    char path[4096];
     /* Easier to set slider positions than using actual processing values */
     struct {
         double exposureSlider;
@@ -27,11 +25,20 @@ typedef struct {
         double lightStrengthSlider;
         double lightRangeSlider;
         double lightenSlider;
-        int highlightReconstructionSelector;
-        int alwaysUseAmazeSelector;
-        int tonemappingSelector;
+        double sharpnessSlider;
+        double chromaBlurSlider;
+        NSInteger highlightReconstructionSelector;
+        NSInteger alwaysUseAmazeSelector;
+        NSInteger chromaSeparationSelector;
+        NSInteger imageProfile;
+        NSInteger fixRawSelector;
+        NSInteger dualISOOption;
+        NSInteger focusPixelOption;
+        NSInteger badPixelOption;
+        NSInteger stripeFixOption;
+        NSInteger chromaSmoothOption;
+        NSInteger patternNoiseOption;
     } settings;
-
 } clipInfo_t;
 
 /* Just a god object for the Cocoa GUI, because I literally can't be asked to learn the proper way of doing this stuff */
@@ -108,9 +115,8 @@ typedef struct {
     NSSegmentedControl * aliasMapOption;
 
 
-
-
-    NSSlider * timelineSlider; /* Timeline slider */
+    /* Timeline slider */
+    NSSlider * timelineSlider;
 
     /* Buttons */
     NSButton * openMLVButton;
@@ -127,14 +133,14 @@ typedef struct {
      ****************************************/
 
     struct {
-
         /* Number of clips */
         int clipCount;
+        /* Current clip */
+        int currentClip;
         /* List of clips loaded (in session) */
         NSTableView * clipTable;
         /* Info about each one (array as long as clipcount) */
         clipInfo_t * clipInfo;
-
     } session;
 
     /****************************************

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include "delegate.h"
+#include "gui_stuff/useful_methods.h"
 #include "../../src/mlv_include.h"
 #include "main_methods.h"
 #include "godobject.h"
@@ -62,16 +63,16 @@ static uint64_t ISO8601toUnix(char * iso_date)
 
 - (void)applicationWillFinishLaunching: (NSNotification *)notification
 {
-    NSMenu *newMenu;
-    NSMenuItem *newItem;
+    // NSMenu *newMenu;
+    // NSMenuItem *newItem;
 
     // Add the submenu
-    newItem = [[NSMenuItem allocWithZone:[NSMenu menuZone]] initWithTitle:@"Flashy" action:NULL keyEquivalent:@""];
-    newMenu = [[NSMenu allocWithZone:[NSMenu menuZone]] initWithTitle:@"Flashy"];
-    [newItem setSubmenu:newMenu];
-    [newMenu release];
-    [[NSApp mainMenu] addItem:newItem];
-    [newItem release];
+    // newItem = [[NSMenuItem allocWithZone:[NSMenu menuZone]] initWithTitle:@"Flashy" action:NULL keyEquivalent:@""];
+    // newMenu = [[NSMenu allocWithZone:[NSMenu menuZone]] initWithTitle:@"Flashy"];
+    // [newItem setSubmenu:newMenu];
+    // [newMenu release];
+    // [[NSApp mainMenu] addItem:newItem];
+    // [newItem release];
 }
 
 - (void)applicationDidFinishLaunching: (NSNotification *)notification

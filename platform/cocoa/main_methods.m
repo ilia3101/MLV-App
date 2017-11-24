@@ -10,6 +10,7 @@
 #include "gui_stuff/app_design.h"
 
 #include "main_methods.h"
+#include "session_methods.h"
 #include "../../src/mlv_include.h"
 
 #include "mac_info.h"
@@ -26,6 +27,7 @@ extern godObject_t * App;
 void initAppWithGod()
 {
     syncGUI();
+    saveClipInfo(App->session.clipInfo);
 }
 
 /* Also will be called when switching between clips in session */
@@ -199,21 +201,7 @@ int setAppNewMlvClip(char * mlvPath)
     App->frameChanged++;
 }
 
-/* Enable/disable tonemapping */
--(void)toggleTonemapping
-{
-    if ([self state] == NSOnState) 
-    {
-        processingEnableTonemapping(App->processingSettings);
-    }
-    else 
-    {
-        processingDisableTonemapping(App->processingSettings);
-    }
-    App->frameChanged++;
-}
-
-/* Enable/disable tonemapping */
+/* Enable/disable LLRawProc */
 -(void)toggleLLRawProc
 {
     if ([self state] == NSOnState) 
@@ -249,7 +237,8 @@ int setAppNewMlvClip(char * mlvPath)
             for (NSURL * fileURL in [panel URLs])
             {
                 const char * mlvPathString = [fileURL.path UTF8String];
-                setAppNewMlvClip((char *)mlvPathString);
+                // setAppNewMlvClip((char *)mlvPathString);
+                sessionAddNewMlvClip((char *)mlvPathString);
             }
         }
         [panel release];
