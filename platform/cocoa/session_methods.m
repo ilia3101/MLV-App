@@ -30,7 +30,10 @@ extern godObject_t * App;
 /* This is a function as it may be used in more than one place */
 void sessionAddNewMlvClip(char * mlvPathString)
 {
-    App->session.clipInfo = realloc(App->session.clipInfo, sizeof(clipInfo_t) * ++App->session.clipCount);
+    /* Save current clip settings */
+    saveClipInfo(App->session.clipInfo + App->session.currentClip);
+    App->session.currentClip = App->session.clipCount++;
+    App->session.clipInfo = realloc(App->session.clipInfo, sizeof(clipInfo_t) * App->session.clipCount);
     setDefaultsClip(App->session.clipInfo + App->session.clipCount-1);
     strncpy(App->session.clipInfo[App->session.clipCount-1].path, mlvPathString, 4096);
     setAppGUIFromClip(App->session.clipInfo + App->session.clipCount-1);
@@ -152,7 +155,6 @@ void appLoadSession(char * sessionPath)
 /* Frees/deletes all mlv objects */
 void appClearSession()
 {
-    /* Not done as you can see */
     App->session.clipCount = 0;
     return;
 }
