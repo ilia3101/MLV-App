@@ -27,6 +27,7 @@ StatusDialog::~StatusDialog()
 void StatusDialog::setTotalFrames(uint32_t frames)
 {
     m_totalTodoFrames = frames;
+    ui->labelEstimatedTime->setText( "--:--:--" );
 }
 
 //Draw remaining time to UI, input is todoFrames
@@ -39,13 +40,24 @@ void StatusDialog::drawTimeFromToDoFrames(uint32_t frames)
 
     QDateTime estimatedFinalTime = currentTime.addSecs( secsTotalEstimated - secsGone );
 
-    //qDebug() << "Estimated secs:" << (secsTotalEstimated - secsGone);
+    quint64 duration = currentTime.secsTo(estimatedFinalTime);
+    int seconds = (int) (duration % 60);
+    duration /= 60;
+    int minutes = (int) (duration % 60);
+    duration /= 60;
+    int hours = (int) (duration);
+
+    ui->labelEstimatedTime->setText( QString( "%1:%2:%3" )
+            .arg( hours, 2, 10, QChar('0') )
+            .arg( minutes, 2, 10, QChar('0') )
+            .arg( seconds, 2, 10, QChar('0') ) );
 }
 
 //Start Time for remaining time calculation
 void StatusDialog::startExportTime()
 {
     m_startTime = QDateTime::currentDateTime();
+    ui->labelEstimatedTime->setText( "--:--:--" );
 }
 
 //Abort clicked
