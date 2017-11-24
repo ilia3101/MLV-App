@@ -16,6 +16,11 @@
 #define DEBUG(CODE)
 #endif
 
+void resetMlvCache(mlvObject_t * video)
+{
+    mark_mlv_uncached(video);
+}
+
 void disableMlvCaching(mlvObject_t * video)
 {
     /* Stop caching and make sure by waiting */
@@ -122,10 +127,12 @@ void setMlvRawCacheLimitFrames(mlvObject_t * video, uint64_t frameLimit)
 /* Marks all frames as not cached */
 void mark_mlv_uncached(mlvObject_t * video)
 {
+    pthread_mutex_lock( &video->g_mutexFind );
     for (uint64_t i = 0; i < getMlvFrames(video); ++i)
     {
         video->cached_frames[i] = MLV_FRAME_NOT_CACHED;
     }
+    pthread_mutex_unlock( &video->g_mutexFind );
 }
 
 /* Clears cache by freeing then reallocating (RAM usage down until frames written) */

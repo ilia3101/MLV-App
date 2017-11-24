@@ -35,6 +35,8 @@ void freeMlvObject(mlvObject_t * video);
 /* To enable and disable caching */
 void disableMlvCaching(mlvObject_t * video);
 void enableMlvCaching(mlvObject_t * video);
+/* Reset cache (recache all frames), only useful if caching is active */
+void resetMlvCache(mlvObject_t * video);
 /* For setting how much can be cached - "MegaBytes" == MebiBytes (thanks dmilligan) */
 void setMlvRawCacheLimitMegaBytes(mlvObject_t * video, uint64_t megaByteLimit);
 void setMlvRawCacheLimitFrames(mlvObject_t * video, uint64_t frameLimit);

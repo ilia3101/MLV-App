@@ -224,7 +224,7 @@ int setAppNewMlvClip(char * mlvPath)
     {
         llrpSetFixRawMode(App->videoMLV, FR_OFF);
     }
-    mark_mlv_uncached(App->videoMLV);  if (!isMlvObjectCaching(App->videoMLV)) enableMlvCaching(App->videoMLV);// TEMPORARY
+    resetMlvCache(App->videoMLV);
     App->frameChanged++;
 }
 
@@ -527,7 +527,7 @@ int setAppNewMlvClip(char * mlvPath)
     /* Full res blending option */
     llrpSetDualIsoFullResBlendingMode(App->videoMLV, ![App->fullResBlendingOption selectedSegment]);
 
-    mark_mlv_uncached(App->videoMLV);  if (!isMlvObjectCaching(App->videoMLV)) enableMlvCaching(App->videoMLV);// TEMPORARY
+    resetMlvCache(App->videoMLV);
 
     App->frameChanged++;
 }
@@ -544,7 +544,8 @@ int setAppNewMlvClip(char * mlvPath)
             llrpSetPatternNoiseMode(App->videoMLV, PN_ON);
             break;
     }
-    mark_mlv_uncached(App->videoMLV);  if (!isMlvObjectCaching(App->videoMLV)) enableMlvCaching(App->videoMLV);// TEMPORARY
+    resetMlvCachedFrame(App->videoMLV);
+    resetMlvCache(App->videoMLV);
     App->frameChanged++;
 }
 
@@ -563,7 +564,9 @@ int setAppNewMlvClip(char * mlvPath)
             llrpSetVerticalStripeMode(App->videoMLV, VS_FORCE);
             return;
     }
-    mark_mlv_uncached(App->videoMLV);  if (!isMlvObjectCaching(App->videoMLV)) enableMlvCaching(App->videoMLV);// TEMPORARY
+    llrpComputeStripesOn(App->videoMLV);
+    resetMlvCachedFrame(App->videoMLV);
+    resetMlvCache(App->videoMLV);
     App->frameChanged++;
 }
 
@@ -582,6 +585,8 @@ int setAppNewMlvClip(char * mlvPath)
             llrpSetFocusPixelMode(App->videoMLV, FP_CROPREC);
             return;
     }
+    llrpResetFpmStatus(App->videoMLV);
+    llrpResetBpmStatus(App->videoMLV);
     switch ([App->focusPixelMethodOption selectedSegment])
     {
         case 0:
@@ -591,7 +596,8 @@ int setAppNewMlvClip(char * mlvPath)
             llrpSetFocusPixelInterpolationMethod(App->videoMLV, FPI_RAW2DNG);
             return;
     }
-    mark_mlv_uncached(App->videoMLV);  if (!isMlvObjectCaching(App->videoMLV)) enableMlvCaching(App->videoMLV);// TEMPORARY
+    resetMlvCachedFrame(App->videoMLV);
+    resetMlvCache(App->videoMLV);
     App->frameChanged++;
 }
 
@@ -619,7 +625,9 @@ int setAppNewMlvClip(char * mlvPath)
             llrpSetBadPixelInterpolationMethod(App->videoMLV, BPI_RAW2DNG);
             break;
     }
-    mark_mlv_uncached(App->videoMLV);  if (!isMlvObjectCaching(App->videoMLV)) enableMlvCaching(App->videoMLV);// TEMPORARY
+    llrpResetBpmStatus(App->videoMLV);
+    resetMlvCachedFrame(App->videoMLV);
+    resetMlvCache(App->videoMLV);
     App->frameChanged++;
 }
 
@@ -641,7 +649,8 @@ int setAppNewMlvClip(char * mlvPath)
             llrpSetChromaSmoothMode(App->videoMLV, CS_5x5);
             break;
     }
-    mark_mlv_uncached(App->videoMLV);  if (!isMlvObjectCaching(App->videoMLV)) enableMlvCaching(App->videoMLV);// TEMPORARY
+    resetMlvCachedFrame(App->videoMLV);
+    resetMlvCache(App->videoMLV);
     App->frameChanged++;
 }
 
