@@ -30,7 +30,7 @@
 #include "dng_tag_codes.h"
 #include "dng_tag_types.h"
 #include "dng_tag_values.h"
-#include "camera_id.h"
+#include "../camid/camera_id.h"
 
 #include "../mlv/liblj92/lj92.h"
 #include "../mlv/llrawproc/llrawproc.h"
@@ -203,7 +203,7 @@ static inline void cam_xyz_coeff (double cam_xyz[4][3], float pre_mul[4], float 
 }
 
 
-static void kelvin_green_to_multipliers(double temperature, double green, double chanMulArray[3], camera_id_t * cam_id)
+static void kelvin_green_to_multipliers(double temperature, double green, double chanMulArray[3], uint32_t cam_id)
 {
     float pre_mul[4], rgb_cam[3][4];
     double cam_xyz[4][3];
@@ -211,10 +211,11 @@ static void kelvin_green_to_multipliers(double temperature, double green, double
     double cam_rgb[3][3];
     double rgb_cam_transpose[4][3];
     int c, cc, i, j;
-    
+
+    int32_t * color_matrix =  camidGetColorMatrix2(cam_id);
     for (i = 0; i < 9; i++)
     {
-        cam_xyz[i/3][i%3] = (double)cam_id->ColorMatrix2[i*2] / (double)cam_id->ColorMatrix2[i*2 + 1];
+        cam_xyz[i/3][i%3] = (double)color_matrix[i*2] / (double)color_matrix[i*2 + 1];
     }
     
     for (i = 9; i < 12; i++)
@@ -248,7 +249,7 @@ static void kelvin_green_to_multipliers(double temperature, double green, double
     chanMulArray[1] = 1;
 }
 
-static void get_white_balance(mlv_wbal_hdr_t wbal_hdr, int32_t *wbal, camera_id_t * cam_id)
+static void get_white_balance(mlv_wbal_hdr_t wbal_hdr, int32_t *wbal, uint32_t cam_id)
 {
     if(wbal_hdr.wb_mode == WB_CUSTOM)
     {
@@ -477,20 +478,22 @@ static void dng_fill_header(mlvObject_t * mlv_data, dngObject_t * dng_data)
         memcpy(serial, mlv_data->IDNT.cameraSerial, 32);
         serial[32] = 0x0; //make sure we are null terminated
         
-        /* Get camera_id[] array element number for current camera */
-        int current_cam = camera_id_get_current_cam(mlv_data->IDNT.cameraModel);
-
         /* 'Unique Camera Model' Tag */
         char unique_model[33];
-        if (camera_id[current_cam].cameraModel)
-            memcpy(unique_model, camera_id[current_cam].cameraName[UNIQ], 32);
+        const char * unique_name = camidGetCameraName(mlv_data->IDNT.cameraModel, UNIQ);
+        if (unique_name)
+        {
+            memcpy(unique_model, unique_name, strlen(unique_name));
+        }
         else
+        {
             memcpy(unique_model, mlv_data->IDNT.cameraName, 32);
-        unique_model[32] = 0x0;
+            unique_model[32] = 0x0;
+        }
 
         /* Focal resolution stuff */
-        int32_t focal_resolution_x[2] = {camera_id[current_cam].focal_resolution_x[0], camera_id[current_cam].focal_resolution_x[1]};
-        int32_t focal_resolution_y[2] = {camera_id[current_cam].focal_resolution_y[0], camera_id[current_cam].focal_resolution_y[1]};
+        int32_t * focal_resolution_x = camidGetHFocalResolution(mlv_data->IDNT.cameraModel);
+        int32_t * focal_resolution_y = camidGetVFocalResolution(mlv_data->IDNT.cameraModel);
         int32_t par[4] = {1,1,1,1};
         double rawW = mlv_data->RAWI.raw_info.active_area.x2 - mlv_data->RAWI.raw_info.active_area.x1;
         double rawH = mlv_data->RAWI.raw_info.active_area.y2 - mlv_data->RAWI.raw_info.active_area.y1;
@@ -549,7 +552,7 @@ static void dng_fill_header(mlvObject_t * mlv_data, dngObject_t * dng_data)
         
         /* White balance stuff */
         int32_t wbal[6];
-        get_white_balance(mlv_data->WBAL, wbal, &camera_id[current_cam]);
+        get_white_balance(mlv_data->WBAL, wbal, mlv_data->IDNT.cameraModel);
 
         /* tcReelName */
         #ifdef _WIN32
@@ -591,16 +594,16 @@ static void dng_fill_header(mlvObject_t * mlv_data, dngObject_t * dng_data)
             {tcDefaultScale,                ttRational, RATIONAL_ENTRY(par, header, &data_offset, 4)},
             {tcDefaultCropOrigin,           ttShort,    2,      PACK(mlv_data->RAWI.raw_info.crop.origin)},
             {tcDefaultCropSize,             ttShort,    2,      PACK2((mlv_data->RAWI.raw_info.active_area.x2 - mlv_data->RAWI.raw_info.active_area.x1), (mlv_data->RAWI.raw_info.active_area.y2 - mlv_data->RAWI.raw_info.active_area.y1))},
-            {tcColorMatrix1,                ttSRational,RATIONAL_ENTRY(camera_id[current_cam].ColorMatrix1, header, &data_offset, 18)},
-            {tcColorMatrix2,                ttSRational,RATIONAL_ENTRY(camera_id[current_cam].ColorMatrix2, header, &data_offset, 18)},
+            {tcColorMatrix1,                ttSRational,RATIONAL_ENTRY(camidGetColorMatrix1(mlv_data->IDNT.cameraModel), header, &data_offset, 18)},
+            {tcColorMatrix2,                ttSRational,RATIONAL_ENTRY(camidGetColorMatrix2(mlv_data->IDNT.cameraModel), header, &data_offset, 18)},
             {tcAsShotNeutral,               ttRational, RATIONAL_ENTRY(wbal, header, &data_offset, 6)},
             {tcBaselineExposure,            ttSRational,RATIONAL_ENTRY(basline_exposure, header, &data_offset, 2)},
             {tcCameraSerialNumber,          ttAscii,    STRING_ENTRY(serial, header, &data_offset)},
             {tcCalibrationIlluminant1,      ttShort,    1,      lsStandardLightA},
             {tcCalibrationIlluminant2,      ttShort,    1,      lsD65},
             {tcActiveArea,                  ttLong,     ARRAY_ENTRY(mlv_data->RAWI.raw_info.dng_active_area, header, &data_offset, 4)},
-            {tcForwardMatrix1,              ttSRational,RATIONAL_ENTRY(camera_id[current_cam].ForwardMatrix1, header, &data_offset, 18)},
-            {tcForwardMatrix2,              ttSRational,RATIONAL_ENTRY(camera_id[current_cam].ForwardMatrix2, header, &data_offset, 18)},
+            {tcForwardMatrix1,              ttSRational,RATIONAL_ENTRY(camidGetForwardMatrix1(mlv_data->IDNT.cameraModel), header, &data_offset, 18)},
+            {tcForwardMatrix2,              ttSRational,RATIONAL_ENTRY(camidGetForwardMatrix2(mlv_data->IDNT.cameraModel), header, &data_offset, 18)},
             {tcTimeCodes,                   ttByte,     8,      add_timecode(frame_rate_f, tc_frame, header, &data_offset)},
             {tcFrameRate,                   ttSRational,RATIONAL_ENTRY(frame_rate, header, &data_offset, 2)},
             {tcReelName,                    ttAscii,    STRING_ENTRY(reel_name, header, &data_offset)},
@@ -617,8 +620,8 @@ static void dng_fill_header(mlvObject_t * mlv_data, dngObject_t * dng_data)
             {tcSubjectDistance,             ttRational, RATIONAL_ENTRY2(mlv_data->LENS.focalDist, 1, header, &data_offset)},
             {tcFocalLength,                 ttRational, RATIONAL_ENTRY2(mlv_data->LENS.focalLength, 1, header, &data_offset)},
             {tcFocalPlaneXResolutionExif,   ttRational, RATIONAL_ENTRY(focal_resolution_x, header, &data_offset, 2)},
-            {tcFocalPlaneYResolutionExif,   ttRational, RATIONAL_ENTRY(focal_resolution_y, header, &data_offset, 2)},
-            {tcFocalPlaneResolutionUnitExif,ttShort,    1,      camera_id[current_cam].focal_unit}, //inches
+            {tcFocalPlaneYResolutionExif,   ttRational, RATIONAL_ENTRY(focal_resolution_x, header, &data_offset, 2)},
+            {tcFocalPlaneResolutionUnitExif,ttShort,    1,      camidGetFocalUnit(mlv_data->IDNT.cameraModel)}, //inches
             {tcLensModelExif,               ttAscii,    STRING_ENTRY((char*)mlv_data->LENS.lensName, header, &data_offset)},
         };
         

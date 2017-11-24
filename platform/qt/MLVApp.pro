@@ -94,7 +94,8 @@ SOURCES += \
     ColorToolButton.cpp \
     RenderFrameThread.cpp \
     ../../src/dng/dng.c \
-    GraphicsPolygonMoveItem.cpp
+    GraphicsPolygonMoveItem.cpp \
+    ../../src/camid/camera_id.c
 
 HEADERS += \
         MainWindow.h \
@@ -138,12 +139,12 @@ HEADERS += \
     NoScrollSlider.h \
     ColorToolButton.h \
     RenderFrameThread.h \
-    ../../src/dng/camera_id.h \
     ../../src/dng/dng.h \
     ../../src/dng/dng_tag_codes.h \
     ../../src/dng/dng_tag_types.h \
     ../../src/dng/dng_tag_values.h \
-    GraphicsPolygonMoveItem.h
+    GraphicsPolygonMoveItem.h \
+    ../../src/camid/camera_id.h
 
 FORMS += \
         MainWindow.ui \

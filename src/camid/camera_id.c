@@ -18,24 +18,8 @@
  * Boston", "MA  02110-1301", "USA.
  */
 
-#ifndef _camera_id_h_
-#define _camera_id_h_
-
-enum { UNIQ, LOC1, LOC2 }; /* Camera Name Type */
-
-typedef struct {
-	unsigned long cameraModel;   /* Camera Model ID */
-	const char *  cameraName[3]; /* 0 = Camera Unique Name, 1 = Camera US Localized Name, 2 = Camera Japan Localized Name */
-	
-	int32_t ColorMatrix1[18];
-    int32_t ColorMatrix2[18];
-    int32_t ForwardMatrix1[18];
-    int32_t ForwardMatrix2[18];
-    
-    int32_t focal_resolution_x[2];
-    int32_t focal_resolution_y[2];
-    int32_t focal_unit;
-} camera_id_t;
+#include <stddef.h>
+#include "camera_id.h"
 
 /* 
     NOTE: steps to obtain Matrix and FocalPlane numbers for new camera and add them to array:
@@ -345,7 +329,7 @@ static camera_id_t camera_id[] = {
 };
 
 /* Searches camera by Model ID, Returns appropriate element number of camera_id[] array */
-static int camera_id_get_current_cam(unsigned long model_id)
+static int camera_id_get_current_cam(uint32_t model_id)
 {
 	int i = 0;
 	while (camera_id[i].cameraModel)
@@ -359,4 +343,43 @@ static int camera_id_get_current_cam(unsigned long model_id)
 	return i;
 };
 
-#endif
+
+const char* camidGetCameraName(uint32_t cameraModel, int camname_type)
+{
+    return camera_id[camera_id_get_current_cam(cameraModel)].cameraName[camname_type];
+}
+
+int32_t* camidGetColorMatrix1(uint32_t cameraModel)
+{
+    return camera_id[camera_id_get_current_cam(cameraModel)].ColorMatrix1;
+}
+
+int32_t* camidGetColorMatrix2(uint32_t cameraModel)
+{
+    return camera_id[camera_id_get_current_cam(cameraModel)].ColorMatrix2;
+}
+
+int32_t* camidGetForwardMatrix1(uint32_t cameraModel)
+{
+    return camera_id[camera_id_get_current_cam(cameraModel)].ForwardMatrix1;
+}
+
+int32_t* camidGetForwardMatrix2(uint32_t cameraModel)
+{
+    return camera_id[camera_id_get_current_cam(cameraModel)].ForwardMatrix2;
+}
+
+int32_t* camidGetHFocalResolution(uint32_t cameraModel)
+{
+    return camera_id[camera_id_get_current_cam(cameraModel)].focal_resolution_x;
+}
+
+int32_t* camidGetVFocalResolution(uint32_t cameraModel)
+{
+    return camera_id[camera_id_get_current_cam(cameraModel)].focal_resolution_y;
+}
+
+int32_t camidGetFocalUnit(uint32_t cameraModel)
+{
+    return camera_id[camera_id_get_current_cam(cameraModel)].focal_unit;
+}
