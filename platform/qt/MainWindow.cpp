@@ -514,6 +514,8 @@ void MainWindow::openMlv( QString fileName )
     //Setup Gradient
     ui->spinBoxGradientX->setMaximum( getMlvWidth( m_pMlvObject ) + 1000 );
     ui->spinBoxGradientY->setMaximum( getMlvHeight( m_pMlvObject ) + 1000 );
+    ui->checkBoxGradientEnable->setEnabled( true );
+    ui->toolButtonGradientPaint->setEnabled( true );
 
     m_frameChanged = true;
 }
@@ -651,7 +653,11 @@ void MainWindow::initGui( void )
     connect( m_pScene, SIGNAL( gradientFinalPos(int,int,bool) ), this, SLOT( gradientFinalPosPicked(int,int,bool) ) );
     connect( m_pGradientGraphicsItem, SIGNAL( itemMoved(int,int) ), this, SLOT( gradientGraphicElementMoved(int,int) ) );
     connect( m_pGradientGraphicsItem, SIGNAL( itemHovered(bool) ), this, SLOT( gradientGraphicElementHovered(bool) ) );
-    ui->groupBoxLinearGradient->setVisible( false );
+    //Disable Gradient while no file loaded
+    ui->checkBoxGradientEnable->setChecked( false );
+    ui->checkBoxGradientEnable->setEnabled( false );
+    ui->toolButtonGradientPaint->setEnabled( false );
+    //ui->groupBoxLinearGradient->setVisible( false );
 
     //Set up caching status label
     m_pCachingStatus = new QLabel( statusBar() );
@@ -1535,6 +1541,11 @@ void MainWindow::deleteSession()
 
     //If no clip loaded, import receipt is disabled
     ui->actionImportReceipt->setEnabled( false );
+
+    //Disable Gradient
+    ui->checkBoxGradientEnable->setChecked( false );
+    ui->checkBoxGradientEnable->setEnabled( false );
+    ui->toolButtonGradientPaint->setEnabled( false );
 }
 
 //returns true if file is already in session
