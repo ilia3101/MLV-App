@@ -25,17 +25,17 @@ AVEncoder_t * initAVEncoder(int width, int height, int codec, int colourSpace, d
 
     switch (codec)
     {
-        case AVF_CODEC_H264:
-            encoder->codec = AVVideoCodecH264;
-            break;
-        case AVF_CODEC_HEVC:
-            encoder->codec = AVVideoCodecHEVC;
-            break;
         case AVF_CODEC_PRORES_422:
             encoder->codec = AVVideoCodecAppleProRes422;
             break;
         case AVF_CODEC_PRORES_4444:
             encoder->codec = AVVideoCodecAppleProRes4444;
+            break;
+        case AVF_CODEC_H264:
+            encoder->codec = AVVideoCodecH264;
+            break;
+        case AVF_CODEC_HEVC:
+            encoder->codec = AVVideoCodecHEVC;
             break;
     }
 

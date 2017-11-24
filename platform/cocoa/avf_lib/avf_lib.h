@@ -20,10 +20,10 @@
 //                                 int cancel /* Will alawys check this before continuing, true = cancel */ );
 
 /* codec options */
-#define AVF_CODEC_H264 0
-#define AVF_CODEC_HEVC 1 /* H.265 */
-#define AVF_CODEC_PRORES_422 2
-#define AVF_CODEC_PRORES_4444 3
+#define AVF_CODEC_PRORES_422 0
+#define AVF_CODEC_PRORES_4444 1
+#define AVF_CODEC_H264 2
+#define AVF_CODEC_HEVC 3 /* H.265 */
 
 #define AVF_COLOURSPACE_SRGB 10
 #define AVF_COLOURSPACE_DCIP3 11
