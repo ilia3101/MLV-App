@@ -544,7 +544,6 @@ int setAppNewMlvClip(char * mlvPath)
             llrpSetPatternNoiseMode(App->videoMLV, PN_ON);
             break;
     }
-    resetMlvCachedFrame(App->videoMLV);
     resetMlvCache(App->videoMLV);
     App->frameChanged++;
 }
@@ -565,7 +564,6 @@ int setAppNewMlvClip(char * mlvPath)
             return;
     }
     llrpComputeStripesOn(App->videoMLV);
-    resetMlvCachedFrame(App->videoMLV);
     resetMlvCache(App->videoMLV);
     App->frameChanged++;
 }
@@ -596,7 +594,6 @@ int setAppNewMlvClip(char * mlvPath)
             llrpSetFocusPixelInterpolationMethod(App->videoMLV, FPI_RAW2DNG);
             return;
     }
-    resetMlvCachedFrame(App->videoMLV);
     resetMlvCache(App->videoMLV);
     App->frameChanged++;
 }
@@ -626,7 +623,6 @@ int setAppNewMlvClip(char * mlvPath)
             break;
     }
     llrpResetBpmStatus(App->videoMLV);
-    resetMlvCachedFrame(App->videoMLV);
     resetMlvCache(App->videoMLV);
     App->frameChanged++;
 }
@@ -649,7 +645,6 @@ int setAppNewMlvClip(char * mlvPath)
             llrpSetChromaSmoothMode(App->videoMLV, CS_5x5);
             break;
     }
-    resetMlvCachedFrame(App->videoMLV);
     resetMlvCache(App->videoMLV);
     App->frameChanged++;
 }

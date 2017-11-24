@@ -18,6 +18,7 @@
 
 void resetMlvCache(mlvObject_t * video)
 {
+    resetMlvCachedFrame(video);
     mark_mlv_uncached(video);
 }
 
