@@ -657,7 +657,7 @@ void MainWindow::initGui( void )
     ui->checkBoxGradientEnable->setChecked( false );
     ui->checkBoxGradientEnable->setEnabled( false );
     ui->toolButtonGradientPaint->setEnabled( false );
-    //ui->groupBoxLinearGradient->setVisible( false );
+    ui->groupBoxLinearGradient->setVisible( false );
 
     //Set up caching status label
     m_pCachingStatus = new QLabel( statusBar() );
