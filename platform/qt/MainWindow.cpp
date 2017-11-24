@@ -96,6 +96,7 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
 
             //Open the file
             openMlv( fileName );
+            addFileFramesToSession();
             on_actionResetReceipt_triggered();
             previewPicture( ui->listWidgetSession->count() - 1 );
 
@@ -247,6 +248,7 @@ bool MainWindow::event(QEvent *event)
                 addFileToSession( fileName );
                 //Open MLV
                 openMlv( fileName );
+                addFileFramesToSession();
                 on_actionResetReceipt_triggered();
                 previewPicture( ui->listWidgetSession->count() - 1 );
             }
@@ -301,6 +303,7 @@ void MainWindow::dropEvent(QDropEvent *event)
 
         //Open the file
         openMlv( fileName );
+        addFileFramesToSession();
         on_actionResetReceipt_triggered();
         previewPicture( ui->listWidgetSession->count() - 1 );
     }
@@ -380,6 +383,7 @@ void MainWindow::on_actionOpen_triggered()
 
         //Open the file
         openMlv( fileName );
+        addFileFramesToSession();
         on_actionResetReceipt_triggered();
         previewPicture( ui->listWidgetSession->count() - 1 );
     }
@@ -647,7 +651,7 @@ void MainWindow::initGui( void )
     connect( m_pScene, SIGNAL( gradientFinalPos(int,int,bool) ), this, SLOT( gradientFinalPosPicked(int,int,bool) ) );
     connect( m_pGradientGraphicsItem, SIGNAL( itemMoved(int,int) ), this, SLOT( gradientGraphicElementMoved(int,int) ) );
     connect( m_pGradientGraphicsItem, SIGNAL( itemHovered(bool) ), this, SLOT( gradientGraphicElementHovered(bool) ) );
-    //ui->groupBoxLinearGradient->setVisible( false );
+    ui->groupBoxLinearGradient->setVisible( false );
 
     //Set up caching status label
     m_pCachingStatus = new QLabel( statusBar() );
@@ -901,6 +905,10 @@ void MainWindow::startExportPipe(QString fileName)
         uint16_t * imgBuffer;
         imgBuffer = ( uint16_t* )malloc( frameSize * sizeof( uint16_t ) );
 
+        //Frames in the export queue?!
+        int totalFrames = 0;
+        for( int i = 0; i < m_exportQueue.count(); i++ ) totalFrames += m_exportQueue.at(i)->frames();
+
         //Get all pictures and send to pipe
         for( uint32_t i = 0; i < getMlvFrames( m_pMlvObject ); i++ )
         {
@@ -916,6 +924,7 @@ void MainWindow::startExportPipe(QString fileName)
             //Set Status
             m_pStatusDialog->ui->progressBar->setValue( i + 1 );
             m_pStatusDialog->ui->progressBar->repaint();
+            m_pStatusDialog->drawTimeFromToDoFrames( totalFrames - i - 1 );
             qApp->processEvents();
 
             //Abort pressed? -> End the loop
@@ -968,6 +977,9 @@ void MainWindow::startExportCdng(QString fileName)
     m_pStatusDialog->ui->progressBar->setMaximum( getMlvFrames( m_pMlvObject ) );
     m_pStatusDialog->ui->progressBar->setValue( 0 );
     m_pStatusDialog->show();
+    //Frames in the export queue?!
+    int totalFrames = 0;
+    for( int i = 0; i < m_exportQueue.count(); i++ ) totalFrames += m_exportQueue.at(i)->frames();
 
     //Create folders and build name schemes
     QString pathName = QFileInfo( fileName ).path();
@@ -1046,6 +1058,7 @@ void MainWindow::startExportCdng(QString fileName)
         //Set Status
         m_pStatusDialog->ui->progressBar->setValue( frame + 1 );
         m_pStatusDialog->ui->progressBar->repaint();
+        m_pStatusDialog->drawTimeFromToDoFrames( totalFrames - frame - 1 );
         qApp->processEvents();
 
         //Abort pressed? -> End the loop
@@ -1087,6 +1100,12 @@ void MainWindow::addFileToSession(QString fileName)
     qApp->processEvents();
 }
 
+//Add the frame information to session table, needed for remaining time calculation
+void MainWindow::addFileFramesToSession(void)
+{
+    m_pSessionReceipts.at( m_lastActiveClipInSession )->setFrames( getMlvFrames( m_pMlvObject ) );
+}
+
 //Open a session file
 void MainWindow::openSession(QString fileName)
 {
@@ -1125,6 +1144,7 @@ void MainWindow::openSession(QString fileName)
                         addFileToSession( fileName );
                         //Open the file
                         openMlv( fileName );
+                        addFileFramesToSession();
                         m_pSessionReceipts.last()->setFileName( fileName );
 
                         readXmlElementsFromFile( &Rxml, m_pSessionReceipts.last() );
@@ -1693,6 +1713,7 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     receipt->setDualIsoFrBlending( m_pSessionReceipts.at( row )->dualIsoFrBlending() );
 
     receipt->setFileName( m_pSessionReceipts.at( row )->fileName() );
+    receipt->setFrames( m_pSessionReceipts.at( row )->frames() );
     receipt->setExportFileName( fileName );
     m_exportQueue.append( receipt );
 }
@@ -2974,6 +2995,10 @@ void MainWindow::exportHandler( void )
         numberOfJobs = m_exportQueue.count();
         m_exportAbortPressed = false;
         jobNumber = 0;
+        int totalFrames = 0;
+        for( int i = 0; i < numberOfJobs; i++ ) totalFrames += m_exportQueue.at(i)->frames();
+        m_pStatusDialog->setTotalFrames( totalFrames );
+        m_pStatusDialog->startExportTime();
     }
     //Are there jobs?
     if( !m_exportQueue.empty() )
@@ -3582,9 +3607,6 @@ void MainWindow::paintGradientElement(int length)
 {
     QPolygon polygon;
     polygon << QPoint(0, -length) << QPoint(-10000, -length) << QPoint(10000, -length) << QPoint(0, -length) << QPoint(-10, -length+10) << QPoint(10, -length+10) << QPoint(0, -length) << QPoint(0, 0) << QPoint(-10000, 0) << QPoint(10000, 0) << QPoint(0, 0);
-    //delete m_pGradientGraphicsItem;
-    //m_pGradientGraphicsItem = new QGraphicsPolygonItem( polygon );
-    //m_pScene->addPolygon( polygon );
     m_pGradientGraphicsItem->setPolygon( polygon );
 }
 

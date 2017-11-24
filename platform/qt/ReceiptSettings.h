@@ -43,6 +43,7 @@ public:
     void setDualIsoInterpolation( int mode )  {m_dualIsoInt = mode;}
     void setDualIsoAliasMap( int on )         {m_dualIsoAliasMap = on;}
     void setDualIsoFrBlending( int on )       {m_dualIsoFrBlending = on;}
+    void setFrames( uint32_t frames )         {m_frames = frames;}
     int exposure( void )   {return m_exposure;}
     int temperature( void ){return m_temperature;}
     int tint( void )       {return m_tint;}
@@ -69,6 +70,7 @@ public:
     int dualIsoInterpolation( void ){return m_dualIsoInt;}
     int dualIsoAliasMap( void ){return m_dualIsoAliasMap;}
     int dualIsoFrBlending( void ){return m_dualIsoFrBlending;}
+    uint32_t frames( void ){return m_frames;}
     uint8_t profile( void ){return m_profile;}
     QString fileName( void ){return m_fileName;}
     QString exportFileName( void ){return m_exportFileName;}
@@ -100,6 +102,7 @@ private:
     int m_dualIsoInt;       // DualIsoInterpolation method, 0 - amaze-edge, 1 - mean23
     int m_dualIsoAliasMap;  // flag for Alias Map switchin on/off
     int m_dualIsoFrBlending;// flag for Fullres Blending switching on/off
+    uint32_t m_frames;      // needed for remaining time calculation
     uint8_t m_profile;
     QString m_fileName;
     QString m_exportFileName;

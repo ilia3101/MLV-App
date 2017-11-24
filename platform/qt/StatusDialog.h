@@ -9,6 +9,7 @@
 #define STATUSDIALOG_H
 
 #include <QDialog>
+#include <QDateTime>
 #include "ui_StatusDialog.h"
 
 namespace Ui {
@@ -23,6 +24,13 @@ public:
     explicit StatusDialog(QWidget *parent = 0);
     ~StatusDialog();
     Ui::StatusDialog *ui;
+    void setTotalFrames( uint32_t frames );
+    void drawTimeFromToDoFrames( uint32_t frames );
+    void startExportTime( void );
+
+private:
+    uint32_t m_totalTodoFrames;
+    QDateTime m_startTime;
 
 signals:
     void abortPressed( void );
