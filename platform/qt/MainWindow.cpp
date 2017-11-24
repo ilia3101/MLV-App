@@ -636,7 +636,9 @@ void MainWindow::initGui( void )
     //Prepare gradient elements
     QPolygon polygon;
     m_pGradientGraphicsItem = new GraphicsPolygonMoveItem( polygon );
-    m_pGradientGraphicsItem->setPen( QPen( Qt::white ) );
+    QPen pen = QPen( Qt::white );
+    pen.setWidth( 0 );
+    m_pGradientGraphicsItem->setPen( pen );
     m_pGradientGraphicsItem->setFlag( QGraphicsItem::ItemIsMovable, true );
     m_pGradientGraphicsItem->setFlag( QGraphicsItem::ItemSendsScenePositionChanges, true );
     m_pScene->addItem( m_pGradientGraphicsItem );
