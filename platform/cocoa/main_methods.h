@@ -25,6 +25,8 @@ int setAppNewMlvClip(char * mlvPath); /* 0=fail 1=ok */
 -(void)openMlvDialog;
 /* Opens a dialog to select export location, then exports a mov clip with prores! */
 -(void)exportProRes4444;
+/* Save Session */
+-(void)saveSessionDialog;
 
 @end
 
@@ -44,6 +46,8 @@ int setAppNewMlvClip(char * mlvPath); /* 0=fail 1=ok */
 /* I think its clear what these do... */
 -(void)exposureSliderMethod;
 -(void)saturationSliderMethod;
+#define KELVIN_MAX 10000.0
+#define KELVIN_MIN 2000.0
 -(void)kelvinSliderMethod;
 -(void)tintSliderMethod;
 -(void)darkStrengthMethod;

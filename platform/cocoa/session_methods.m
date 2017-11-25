@@ -54,13 +54,14 @@ void saveClipInfo(clipInfo_t * clip)
     clip->settings.sharpnessSlider = [App->sharpnessSlider doubleValue];
     clip->settings.chromaBlurSlider = [App->chromaBlurSlider doubleValue];
     clip->settings.highlightReconstructionSelector = [App->highlightReconstructionSelector state];
-    clip->settings.alwaysUseAmazeSelector = [App->alwaysUseAmazeSelector state];
     clip->settings.chromaSeparationSelector = [App->chromaSeparationSelector state];
     clip->settings.imageProfile = [App->imageProfile indexOfSelectedItem];
     clip->settings.fixRawSelector = [App->fixRawSelector state];
     clip->settings.dualISOOption = [App->dualISOOption indexOfSelectedItem];
     clip->settings.focusPixelOption = [App->focusPixelOption indexOfSelectedItem];
+    clip->settings.focusPixelMethodOption = [App->focusPixelMethodOption indexOfSelectedItem];
     clip->settings.badPixelOption = [App->badPixelOption indexOfSelectedItem];
+    clip->settings.badPixelMethodOption = [App->badPixelMethodOption indexOfSelectedItem];
     clip->settings.stripeFixOption = [App->stripeFixOption indexOfSelectedItem];
     clip->settings.chromaSmoothOption = [App->chromaSmoothOption indexOfSelectedItem];
     clip->settings.patternNoiseOption = [App->patternNoiseOption indexOfSelectedItem];
@@ -81,13 +82,14 @@ void setDefaultsClip(clipInfo_t * clip)
     clip->settings.sharpnessSlider = 0.0;
     clip->settings.chromaBlurSlider = 0.0;
     clip->settings.highlightReconstructionSelector = NSOffState;
-    clip->settings.alwaysUseAmazeSelector = NSOffState;
     clip->settings.chromaSeparationSelector = NSOffState;
-    clip->settings.imageProfile = 0;
+    clip->settings.imageProfile = PROFILE_TONEMAPPED;
     clip->settings.fixRawSelector = NSOffState;
     clip->settings.dualISOOption = 0;
     clip->settings.focusPixelOption = 0;
+    clip->settings.focusPixelMethodOption = 0;
     clip->settings.badPixelOption = 0;
+    clip->settings.badPixelMethodOption = 0;
     clip->settings.stripeFixOption = 0;
     clip->settings.chromaSmoothOption = 0;
     clip->settings.patternNoiseOption = 0;
@@ -97,30 +99,87 @@ void setDefaultsClip(clipInfo_t * clip)
 void setAppGUIFromClip(clipInfo_t * clip)
 {
     setAppNewMlvClip(clip->path);
-    App->exposureSlider.doubleValue = clip->settings.exposureSlider;
-    App->saturationSlider.doubleValue = clip->settings.saturationSlider;
-    App->kelvinSlider.doubleValue = clip->settings.kelvinSlider;
-    App->tintSlider.doubleValue = clip->settings.tintSlider;
-    App->darkStrengthSlider.doubleValue = clip->settings.darkStrengthSlider;
-    App->darkRangeSlider.doubleValue = clip->settings.darkRangeSlider;
-    App->lightStrengthSlider.doubleValue = clip->settings.lightStrengthSlider;
-    App->lightRangeSlider.doubleValue = clip->settings.lightRangeSlider;
-    App->lightenSlider.doubleValue = clip->settings.lightenSlider;
-    App->sharpnessSlider.doubleValue = clip->settings.sharpnessSlider;
-    App->chromaBlurSlider.doubleValue = clip->settings.chromaBlurSlider;
+    [App->exposureSlider setDoubleValue: clip->settings.exposureSlider];
+    [App->saturationSlider setDoubleValue: clip->settings.saturationSlider];
+    [App->kelvinSlider setDoubleValue: clip->settings.kelvinSlider];
+    [App->tintSlider setDoubleValue: clip->settings.tintSlider];
+    [App->darkStrengthSlider setDoubleValue: clip->settings.darkStrengthSlider];
+    [App->darkRangeSlider setDoubleValue: clip->settings.darkRangeSlider];
+    [App->lightStrengthSlider setDoubleValue: clip->settings.lightStrengthSlider];
+    [App->lightRangeSlider setDoubleValue: clip->settings.lightRangeSlider];
+    [App->lightenSlider setDoubleValue: clip->settings.lightenSlider];
+    [App->sharpnessSlider setDoubleValue: clip->settings.sharpnessSlider];
+    [App->chromaBlurSlider setDoubleValue: clip->settings.chromaBlurSlider];
     App->highlightReconstructionSelector.state = clip->settings.highlightReconstructionSelector;
-    App->alwaysUseAmazeSelector.state = clip->settings.alwaysUseAmazeSelector;
     App->chromaSeparationSelector.state = clip->settings.chromaSeparationSelector;
     [App->imageProfile selectItemAtIndex: clip->settings.imageProfile];
     App->fixRawSelector.state = clip->settings.fixRawSelector;
     App->dualISOOption.selectedSegment = clip->settings.dualISOOption;
-    App->focusPixelOption.selectedSegment = clip->settings.focusPixelOption ;
+    App->focusPixelOption.selectedSegment = clip->settings.focusPixelOption;
+    App->focusPixelMethodOption.selectedSegment = clip->settings.focusPixelMethodOption;
     App->badPixelOption.selectedSegment = clip->settings.badPixelOption;
+    App->badPixelMethodOption.selectedSegment = clip->settings.badPixelMethodOption;
     App->stripeFixOption.selectedSegment = clip->settings.stripeFixOption;
     App->chromaSmoothOption.selectedSegment = clip->settings.chromaSmoothOption;
     App->patternNoiseOption.selectedSegment = clip->settings.patternNoiseOption;
     [App->session.clipTable reloadData];
     syncGUI();
+}
+
+/* Called from -(void)openSessionDialog - currently only loads first clip */
+void appWriteSession(char * sessionPath)
+{
+    /* Open the MASXML file 4 reading */
+    FILE * session_file = fopen(sessionPath, "wb");
+
+    #define TAB "    "
+    #define TAB2 TAB TAB
+    fprintf(session_file, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+    fprintf(session_file, "<mlv_files>\n");
+    for (int i = 0; i < App->session.clipCount; i++)
+    {
+        clipInfo_t * clip = App->session.clipInfo + i;
+        fprintf(session_file, TAB "<clip path=\"%s\">\n", clip->path);
+
+        #define MASXML_TYPE double
+        #define MASXML_TYPE_ESC "%.3f"
+        fprintf(session_file, TAB2 "<exposure>"MASXML_TYPE_ESC"</exposure>\n", (MASXML_TYPE)(clip->settings.exposureSlider * 100.0));
+        fprintf(session_file, TAB2 "<temperature>"MASXML_TYPE_ESC"</temperature>\n", (MASXML_TYPE)(clip->settings.kelvinSlider * (KELVIN_MAX - KELVIN_MIN) + KELVIN_MIN));
+        fprintf(session_file, TAB2 "<tint>"MASXML_TYPE_ESC"</tint>\n", (MASXML_TYPE)(clip->settings.tintSlider * 10.0));
+        fprintf(session_file, TAB2 "<saturation>"MASXML_TYPE_ESC"</saturation>\n", (MASXML_TYPE)(clip->settings.saturationSlider * 100.0));
+        fprintf(session_file, TAB2 "<ds>"MASXML_TYPE_ESC"</ds>\n", (MASXML_TYPE)(clip->settings.darkStrengthSlider * 100.0));
+        fprintf(session_file, TAB2 "<dr>"MASXML_TYPE_ESC"</dr>\n", (MASXML_TYPE)(clip->settings.darkRangeSlider * 100.0));
+        fprintf(session_file, TAB2 "<ls>"MASXML_TYPE_ESC"</ls>\n", (MASXML_TYPE)(clip->settings.lightStrengthSlider * 100.0));
+        fprintf(session_file, TAB2 "<lr>"MASXML_TYPE_ESC"</lr>\n", (MASXML_TYPE)(clip->settings.lightRangeSlider * 100.0));
+        fprintf(session_file, TAB2 "<lightening>"MASXML_TYPE_ESC"</lightening>\n", (MASXML_TYPE)(clip->settings.lightenSlider * 100.0));
+        fprintf(session_file, TAB2 "<sharpen>"MASXML_TYPE_ESC"</sharpen>\n", (MASXML_TYPE)(clip->settings.sharpnessSlider * 100.0));
+        fprintf(session_file, TAB2 "<chromaBlur>"MASXML_TYPE_ESC"</chromaBlur>\n", (MASXML_TYPE)(clip->settings.chromaBlurSlider * 100.0));
+        fprintf(session_file, TAB2 "<highlightReconstruction>%i</highlightReconstruction>\n", (int)clip->settings.highlightReconstructionSelector);
+        fprintf(session_file, TAB2 "<chromaSeparation>%i</chromaSeparation>\n", (int)clip->settings.chromaSeparationSelector);
+        fprintf(session_file, TAB2 "<profile>%i</profile>\n", (int)clip->settings.imageProfile);
+        fprintf(session_file, TAB2 "<rawFixesEnabled>%i</rawFixesEnabled>\n", (int)clip->settings.chromaSeparationSelector);
+        fprintf(session_file, TAB2 "<verticalStripes>%i</verticalStripes>\n", (int)clip->settings.stripeFixOption);
+        fprintf(session_file, TAB2 "<focusPixels>%i</focusPixels>\n", (int)clip->settings.focusPixelOption);
+        fprintf(session_file, TAB2 "<fpiMethod>%i</fpiMethod>\n", (int)clip->settings.focusPixelMethodOption);
+        fprintf(session_file, TAB2 "<badPixels>%i</badPixels>\n", (int)clip->settings.badPixelOption);
+        fprintf(session_file, TAB2 "<bpiMethod>%i</bpiMethod>\n", (int)clip->settings.badPixelMethodOption);
+        int CSOption; switch ((int)clip->settings.chromaSmoothOption) {
+            case 0: CSOption = 0; break;
+            case 1: CSOption = 2; break;
+            case 2: CSOption = 3; break;
+            case 3: CSOption = 5; break;
+        } fprintf(session_file, TAB2 "<chromaSmooth>%i</chromaSmooth>\n", (int)CSOption);
+        fprintf(session_file, TAB2 "<patternNoise>%i</patternNoise>\n", (int)clip->settings.patternNoiseOption);
+        // TODO : dual iso session saving 
+        // fprintf(session_file, TAB2 "<dualIso>%i</dualIso>\n", clip->settings.patternNoiseOption);
+
+        fprintf(session_file, TAB "</clip>\n");
+    }
+    fprintf(session_file, "</mlv_files>");
+    #undef TAB
+    #undef TAB2
+
+    free(session_file);
 }
 
 /* Called from -(void)openSessionDialog - currently only loads first clip */

@@ -52,7 +52,9 @@ void syncGUI()
     [App->fixRawSelector toggleLLRawProc];
     [App->dualISOOption dualISOMethod];
     [App->focusPixelOption focusPixelMethod];
+    [App->focusPixelMethodOption focusPixelMethod];
     [App->badPixelOption badPixelMethod];
+    [App->badPixelMethodOption badPixelMethod];
     [App->stripeFixOption verticalStripeMethod];
     [App->chromaSmoothOption chromaSmoothMethod];
     [App->patternNoiseOption patternNoiseMethod];
@@ -233,7 +235,7 @@ int setAppNewMlvClip(char * mlvPath)
     /* Can only choose MLV files */
     [panel setAllowedFileTypes: [NSArray arrayWithObject: @"mlv"]];
 
-    [panel beginWithCompletionHandler: ^ (NSInteger result)
+    [panel beginSheetModalForWindow:App->window completionHandler: ^(NSInteger result)
     {
         if (result == NSFileHandlingPanelOKButton)
         {
@@ -250,6 +252,26 @@ int setAppNewMlvClip(char * mlvPath)
     } ];
 }
 
+/* Save Session */
+-(void)saveSessionDialog
+{
+    /* Create save panel */
+    NSSavePanel * panel = [NSSavePanel savePanel];
+
+    [panel beginSheetModalForWindow:App->window completionHandler: ^(NSInteger result) {
+        if (result == NSFileHandlingPanelOKButton)
+        {
+            NSURL * fileURL = [panel URL];
+            const char * sessionPath = [fileURL.path UTF8String];
+            char name[4096];
+            strncpy(name,sessionPath,4096);
+            strncpy(name + strlen(name),".masxml",4096);
+            appWriteSession((char *)sessionPath);
+            IMPORTANT_CODE("Saved session.",2);
+        }
+    }];
+}
+
 
 /* Exports to Prores 4444 (currently with ffmpeg and intermediate PNG - no AVfoundation yet) */
 -(void)exportProRes4444
@@ -257,7 +279,7 @@ int setAppNewMlvClip(char * mlvPath)
     if (isMlvActive(App->videoMLV))
     {    
         /* Create open panel */
-        NSOpenPanel * panel = [[NSOpenPanel openPanel] retain];
+        NSOpenPanel * panel = [NSOpenPanel openPanel];
 
         [panel setPrompt:[NSString stringWithFormat:@"Export Here"]];
 
@@ -266,7 +288,7 @@ int setAppNewMlvClip(char * mlvPath)
         [panel setAllowsMultipleSelection: NO];
         [panel setCanCreateDirectories: YES];
 
-        [panel beginWithCompletionHandler: ^ (NSInteger result) 
+        [panel beginSheetModalForWindow:App->window completionHandler: ^(NSInteger result) 
         {
             if (result == NSFileHandlingPanelOKButton)
             {
@@ -298,7 +320,6 @@ int setAppNewMlvClip(char * mlvPath)
                     [[NSUserNotificationCenter defaultUserNotificationCenter] deliverNotification:notification];
                 }
             }
-            [panel release];
         } ];
     }
 }
@@ -377,12 +398,8 @@ int setAppNewMlvClip(char * mlvPath)
 
 -(void)kelvinSliderMethod 
 {
-    #define KELVIN_MAX 10000.0
-    #define KELVIN_MIN 2000.0
     /* Slider has to be in range 2000 - 10000, cos my function is limited to that */
     double kelvinValue = [self doubleValue] * (KELVIN_MAX - KELVIN_MIN) + KELVIN_MIN;
-    #undef KELVIN_MAX
-    #undef KELVIN_MIN
 
     /* Set processing object white balance */
     processingSetWhiteBalanceKelvin(App->processingSettings, kelvinValue);
@@ -395,15 +412,7 @@ int setAppNewMlvClip(char * mlvPath)
 -(void)tintSliderMethod
 {
     /* Slider has to be in range -10 to 10, as that sounds about right */
-    double tintSliderValue = ([self doubleValue] - 0.5) * 2.0;
-    /* Control should be more fine when its closer to zero... */
-    double tintValue = tintSliderValue;
-    /* Invert for power if negative */
-    if (tintValue < 0) tintValue = -tintValue;
-    /* Power */
-    tintValue = pow(tintValue, 1.7) * 10.0;
-    /* Invert back if needed */
-    if (tintSliderValue < 0) tintValue = -tintValue;
+    double tintValue = ([self doubleValue] - 0.5) * 20;
 
     /* Set processing object white balance */
     processingSetWhiteBalanceTint(App->processingSettings, tintValue);

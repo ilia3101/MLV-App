@@ -35,7 +35,9 @@ typedef struct {
         NSInteger fixRawSelector;
         NSInteger dualISOOption;
         NSInteger focusPixelOption;
+        NSInteger focusPixelMethodOption;
         NSInteger badPixelOption;
+        NSInteger badPixelMethodOption;
         NSInteger stripeFixOption;
         NSInteger chromaSmoothOption;
         NSInteger patternNoiseOption;
@@ -122,6 +124,8 @@ typedef struct {
     /* Buttons */
     NSButton * openMLVButton;
     NSButton * exportProRes4444Button;
+    NSButton * saveSessionButton;
+    NSButton * openSessionButton;
 
     /* Select video export format */
     NSPopUpButton * videoFormat;

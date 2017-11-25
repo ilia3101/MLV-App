@@ -201,9 +201,10 @@ int NSApplicationMain(int argc, const char * argv[])
      */
 
     /* Open MLV file button */
-    CREATE_BUTTON_LEFT_TOP( App->openMLVButton, 0, openMlvDialog, 0, @"Open MLV File" );
-    // CREATE_BUTTON_LEFT_TOP( App->openMLVButton, 1, openMlvDialog, 6, @"Open Session" ); /* Commented out as not working yet */
-    CREATE_BUTTON_LEFT_BOTTOM( App->exportProRes4444Button, 0, exportProRes4444, 1, @"Export ProRes 4444" );
+    CREATE_BUTTON_LEFT_TOP( App->openMLVButton, 1, openMlvDialog, 12, @"Add MLV File" );
+    CREATE_BUTTON_LEFT_TOP( App->openSessionButton, 0, openMlvDialog, 0, @"Open Session" );
+    CREATE_BUTTON_LEFT_BOTTOM( App->saveSessionButton, 0, exportProRes4444, 1, @"Export ProRes 4444" );
+    CREATE_BUTTON_LEFT_BOTTOM( App->exportProRes4444Button, 1, saveSessionDialog, -12, @"Save Session" );
     IMPORTANT_CODE("",5);
 
     /* Export format selector */
@@ -211,10 +212,10 @@ int NSApplicationMain(int argc, const char * argv[])
     //                      initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(0,24,19) ) ];
     // [App->imageProfile anchorRight: YES];
     // [App->imageProfile anchorTop: YES];
-    // [App->imageProfile insertItemWithTitle: @"ProRes 422 Proxy" atIndex: 0];
-    // [App->imageProfile insertItemWithTitle: @"ProRes 422 LT" atIndex: 1];
-    // [App->imageProfile insertItemWithTitle: @"ProRes 422 Normal" atIndex: 1];
-    // [App->imageProfile insertItemWithTitle: @"ProRes 422 HQ" atIndex: 1];
+    // [App->imageProfile insertItemWithTitle: @"ProRes 422" atIndex: 0];
+    // [App->imageProfile insertItemWithTitle: @"ProRes 4444" atIndex: 1];
+    // [App->imageProfile insertItemWithTitle: @"H.264" atIndex: 1];
+    // [App->imageProfile insertItemWithTitle: @"HEVC (H.265)" atIndex: 1];
     // [App->imageProfile setTarget: App->imageProfile];
     // [App->imageProfile setAction: @selector(toggleProResFormat)];
     // [App->imageProfile selectItemAtIndex: DEFAULT_IMAGE_PROFILE_APP];
@@ -311,7 +312,7 @@ int NSApplicationMain(int argc, const char * argv[])
 
     /* Session tableview */
     // create a table view and a scroll view
-    NSScrollView * tableContainer = [[NSScrollView alloc] initWithFrame:NSMakeRect(SIDE_GAP_X_L, 64, LEFT_SIDEBAR_ELEMENT_WIDTH, WINDOW_HEIGHT-128)];
+    NSScrollView * tableContainer = [[NSScrollView alloc] initWithFrame:NSMakeRect(SIDE_GAP_X_L, 96, LEFT_SIDEBAR_ELEMENT_WIDTH, WINDOW_HEIGHT-192)];
     App->session.clipTable = [[NSTableView alloc] init];
     [App->session.clipTable setDoubleAction:@selector(doubleClickSetClip)];
     /* 'Delegate' - a data provider */

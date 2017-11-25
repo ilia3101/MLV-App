@@ -9,6 +9,8 @@
 void sessionAddNewMlvClip(char * mlvPathString);
 /* Called from -(void)openSessionDialog - currently only loads first clip */
 void appLoadSession(char * sessionPath);
+/* Save current session */
+void appWriteSession(char * sessionPath);
 /* Frees/deletes all mlv objects */
 void appClearSession();
 /* Savve current GUI state to a clipinfo object */

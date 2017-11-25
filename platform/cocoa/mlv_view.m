@@ -33,12 +33,21 @@
 
     if (self.draw)
     {
-        /* Magnification */
-        float scaleFactor = (self.one_to_one_zoom) ? ((float)self.image_width / NSWidth(rect)) : self.magnification;
-
         /* Where to draw for correct aspect ratio */
         float viewAspect = (float)NSWidth(rect) / (float)NSHeight(rect);
         float imageAspect = (float)self.image_width / (float)self.image_height;
+
+        /* Magnification */
+        float scaleFactor;
+        
+        if (self.one_to_one_zoom) {
+            if (imageAspect > viewAspect)
+                scaleFactor = (float)self.image_width / NSWidth(rect);
+            else
+                scaleFactor = (float)self.image_height / NSHeight(rect);
+        } else {
+            scaleFactor = self.magnification;
+        }
 
         float pointTL[2] = {-scaleFactor,  scaleFactor};
         float pointBL[2] = {-scaleFactor, -scaleFactor};
@@ -56,7 +65,7 @@
 
         /* Create texture */
         GLuint TextureID = 0;
-        GLuint Scaling = (self.one_to_one_zoom) ? GL_NEAREST : GL_LINEAR;
+        GLuint Scaling = GL_LINEAR;
         glBindTexture(GL_TEXTURE_2D, TextureID);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, Scaling);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, Scaling);
