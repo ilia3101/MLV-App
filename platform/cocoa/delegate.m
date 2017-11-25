@@ -4,6 +4,7 @@
 #include "gui_stuff/useful_methods.h"
 #include "../../src/mlv_include.h"
 #include "main_methods.h"
+#include "session_methods.h"
 #include "godobject.h"
 extern godObject_t * App;
 
@@ -77,7 +78,20 @@ static uint64_t ISO8601toUnix(char * iso_date)
 
 - (void)applicationDidFinishLaunching: (NSNotification *)notification
 {
-
+    /* If commandline arguments were used load clip... */
+    if (App->argc > 1)
+    {
+        for (int a = 1; a < App->argc; a++)
+        {
+            if (tolower(App->argv[a][strlen(App->argv[a])-1]) == 'v')
+            {
+                sessionAddNewMlvClip((char *)App->argv[a]);
+            }
+        }
+        App->session.currentClip = 0;
+        setAppGUIFromClip(App->session.clipInfo);
+        [App->session.clipTable reloadData];
+    }
     /* Check for updates... */
     // NSURL * releaseURL = [NSURL URLWithString: [NSString stringWithFormat: @"https://api.github.com/repos/ilia3101/MLV-App/releases"] ]; 
     // NSString * releaseString = [NSString stringWithContentsOfURL:releaseURL encoding:NSASCIIStringEncoding error:nil];
@@ -99,14 +113,21 @@ static uint64_t ISO8601toUnix(char * iso_date)
 /* Open an MLV file on startup */
 - (BOOL)application: (NSApplication *)sender openFile: (NSString *)filename
 {
-    if (setAppNewMlvClip((char *)[filename UTF8String]))
-    {
-        return YES;
-    }
-    else
-    {
-        return NO;
-    }
+    sessionAddNewMlvClip((char *)[filename UTF8String]);
+    App->session.currentClip = 0;
+    setAppGUIFromClip(App->session.clipInfo);
+    [App->session.clipTable reloadData];
+    return YES;
+}
+
+/* Open MLV files on startup */
+- (void)application:(NSApplication *)sender openFiles:(NSArray<NSString *> *)filenames;
+{
+    for (int i = 0; i < [filenames count]; i++)
+        sessionAddNewMlvClip((char *)[filenames[i] UTF8String]);
+    App->session.currentClip = 0;
+    setAppGUIFromClip(App->session.clipInfo);
+    [App->session.clipTable reloadData];
 }
 
 - (BOOL)applicationShouldTerminateAfterLastWindowClosed: (NSApplication *)sender

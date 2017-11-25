@@ -566,15 +566,11 @@ int NSApplicationMain(int argc, const char * argv[])
     [App->aliasMapOption setAction: @selector(dualISOMethod)];
     App->aliasMapOption.selectedSegment = 0;
     [[App->window contentView] addSubview: App->aliasMapOption];
+    
 
-
-
-
-    /* If commandline arguments were used load clip... */
-    if (argc > 1)
-    {
-        setAppNewMlvClip((char *)argv[1]);
-    }
+    /* Pass commandline arguments */
+    App->argc = argc;
+    App->argv = (char **)argv;
 
 
     /* Init UI */

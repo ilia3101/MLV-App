@@ -30,7 +30,6 @@ extern godObject_t * App;
 void initAppWithGod()
 {
     syncGUI();
-    saveClipInfo(App->session.clipInfo);
 }
 
 /* Also will be called when switching between clips in session */
@@ -62,6 +61,15 @@ void syncGUI()
     App->frameChanged = 0;
 }
 
+/* Sets app to have no open clip currently */
+void setAppCurrentClipNoClip()
+{
+    free(App->MLVClipName);
+    [App->window setTitle: [NSString stringWithFormat: @APP_NAME]];
+    freeMlvObject(App->videoMLV);
+    App->videoMLV = initMlvObject();
+    setMlvProcessing(App->videoMLV, App->processingSettings);
+}
 
 /* This is now a function so that it can be accessedd from any part of the app, not just a button press */
 int setAppNewMlvClip(char * mlvPath)
@@ -228,6 +236,7 @@ int setAppNewMlvClip(char * mlvPath)
             {
                 const char * mlvPathString = [fileURL.path UTF8String];
                 sessionAddNewMlvClip((char *)mlvPathString);
+                setAppGUIFromClip(App->session.clipInfo + App->session.clipCount-1); /* set as current */
                 IMPORTANT_CODE("Well done, you opened an MLV file.",2);
             }
         }
@@ -251,7 +260,7 @@ int setAppNewMlvClip(char * mlvPath)
             const char * sessionPath = [fileURL.path UTF8String];
             char name[4096];
             strncpy(name,sessionPath,4096);
-            strncpy(name + strlen(name),".masxml",4096);
+            strncpy(name + strlen(name)-1, ".masxml", 4096);
             appWriteSession((char *)sessionPath);
             IMPORTANT_CODE("Saved session.",2);
         }

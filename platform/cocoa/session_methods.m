@@ -36,7 +36,6 @@ void sessionAddNewMlvClip(char * mlvPathString)
     App->session.clipInfo = realloc(App->session.clipInfo, sizeof(clipInfo_t) * App->session.clipCount);
     setDefaultsClip(App->session.clipInfo + App->session.clipCount-1);
     strncpy(App->session.clipInfo[App->session.clipCount-1].path, mlvPathString, 4096);
-    setAppGUIFromClip(App->session.clipInfo + App->session.clipCount-1);
 }
 
 /* Copy current settings to a clipinfo_t struct */
@@ -141,8 +140,8 @@ void appWriteSession(char * sessionPath)
         clipInfo_t * clip = App->session.clipInfo + i;
         fprintf(session_file, TAB "<clip path=\"%s\">\n", clip->path);
 
-        #define MASXML_TYPE double
-        #define MASXML_TYPE_ESC "%.3f"
+        #define MASXML_TYPE int
+        #define MASXML_TYPE_ESC "%i"
         fprintf(session_file, TAB2 "<exposure>"MASXML_TYPE_ESC"</exposure>\n", (MASXML_TYPE)(clip->settings.exposureSlider * 100.0));
         fprintf(session_file, TAB2 "<temperature>"MASXML_TYPE_ESC"</temperature>\n", (MASXML_TYPE)(clip->settings.kelvinSlider * (KELVIN_MAX - KELVIN_MIN) + KELVIN_MIN));
         fprintf(session_file, TAB2 "<tint>"MASXML_TYPE_ESC"</tint>\n", (MASXML_TYPE)(clip->settings.tintSlider * 10.0));
