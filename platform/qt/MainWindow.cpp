@@ -820,7 +820,7 @@ void MainWindow::startExportPipe(QString fileName)
     ffmpegAudioCommand.clear();
     if( m_audioExportEnabled && doesMlvHaveAudio( m_pMlvObject ) )
     {
-        writeMlvAudioToWave(m_pMlvObject, wavFileName.toLatin1().data());
+        writeMlvAudioToWaveCut( m_pMlvObject, wavFileName.toLatin1().data(), m_exportQueue.first()->cutIn(), m_exportQueue.first()->cutOut() );
         if( m_codecProfile == CODEC_H264 || m_codecProfile == CODEC_H265 ) ffmpegAudioCommand = QString( "-i \"%1\" -c:a aac " ).arg( wavFileName );
         else ffmpegAudioCommand = QString( "-i \"%1\" -c:a copy " ).arg( wavFileName );
     }
@@ -1025,7 +1025,7 @@ void MainWindow::startExportCdng(QString fileName)
             .arg( getMlvTmMonth( m_pMlvObject ), 2, 10, QChar('0') )
             .arg( getMlvTmDay( m_pMlvObject ), 2, 10, QChar('0') );
         //qDebug() << wavFileName;
-        writeMlvAudioToWave(m_pMlvObject, wavFileName.toLatin1().data());
+        writeMlvAudioToWaveCut( m_pMlvObject, wavFileName.toLatin1().data(), m_exportQueue.first()->cutIn(), m_exportQueue.first()->cutOut() );
     }
 
     //Init DNG data struct
