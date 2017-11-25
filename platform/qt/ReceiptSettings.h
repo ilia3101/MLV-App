@@ -43,7 +43,6 @@ public:
     void setDualIsoInterpolation( int mode )  {m_dualIsoInt = mode;}
     void setDualIsoAliasMap( int on )         {m_dualIsoAliasMap = on;}
     void setDualIsoFrBlending( int on )       {m_dualIsoFrBlending = on;}
-    void setFrames( uint32_t frames )         {m_frames = frames;}
     void setCutIn( uint32_t frame )           {m_cutIn = frame;}
     void setCutOut( uint32_t frame )          {m_cutOut = frame;}
     int exposure( void )   {return m_exposure;}
@@ -72,7 +71,6 @@ public:
     int dualIsoInterpolation( void ){return m_dualIsoInt;}
     int dualIsoAliasMap( void ){return m_dualIsoAliasMap;}
     int dualIsoFrBlending( void ){return m_dualIsoFrBlending;}
-    uint32_t frames( void ){return m_frames;}
     uint32_t cutIn( void ) {return m_cutIn;}
     uint32_t cutOut( void ){return m_cutOut;}
     uint8_t profile( void ){return m_profile;}
@@ -106,7 +104,6 @@ private:
     int m_dualIsoInt;       // DualIsoInterpolation method, 0 - amaze-edge, 1 - mean23
     int m_dualIsoAliasMap;  // flag for Alias Map switchin on/off
     int m_dualIsoFrBlending;// flag for Fullres Blending switching on/off
-    uint32_t m_frames;      // needed for remaining time calculation
     uint32_t m_cutIn;
     uint32_t m_cutOut;
     uint8_t m_profile;

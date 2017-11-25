@@ -96,7 +96,6 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
 
             //Open the file
             openMlv( fileName );
-            addFileFramesToSession();
             on_actionResetReceipt_triggered();
             previewPicture( ui->listWidgetSession->count() - 1 );
 
@@ -248,7 +247,6 @@ bool MainWindow::event(QEvent *event)
                 addFileToSession( fileName );
                 //Open MLV
                 openMlv( fileName );
-                addFileFramesToSession();
                 on_actionResetReceipt_triggered();
                 previewPicture( ui->listWidgetSession->count() - 1 );
             }
@@ -303,7 +301,6 @@ void MainWindow::dropEvent(QDropEvent *event)
 
         //Open the file
         openMlv( fileName );
-        addFileFramesToSession();
         on_actionResetReceipt_triggered();
         previewPicture( ui->listWidgetSession->count() - 1 );
     }
@@ -383,7 +380,6 @@ void MainWindow::on_actionOpen_triggered()
 
         //Open the file
         openMlv( fileName );
-        addFileFramesToSession();
         on_actionResetReceipt_triggered();
         previewPicture( ui->listWidgetSession->count() - 1 );
     }
@@ -814,7 +810,7 @@ void MainWindow::startExportPipe(QString fileName)
     if( ui->checkBoxRawFixEnable->isChecked() ) m_pMlvObject->llrawproc->fix_raw = 1;
 
     //StatusDialog
-    m_pStatusDialog->ui->progressBar->setMaximum( getMlvFrames( m_pMlvObject ) );
+    m_pStatusDialog->ui->progressBar->setMaximum( m_exportQueue.first()->cutOut() - m_exportQueue.first()->cutIn() + 1 );
     m_pStatusDialog->ui->progressBar->setValue( 0 );
     m_pStatusDialog->show();
 
@@ -921,10 +917,13 @@ void MainWindow::startExportPipe(QString fileName)
 
         //Frames in the export queue?!
         int totalFrames = 0;
-        for( int i = 0; i < m_exportQueue.count(); i++ ) totalFrames += m_exportQueue.at(i)->frames();
+        for( int i = 0; i < m_exportQueue.count(); i++ )
+        {
+            totalFrames += m_exportQueue.at(i)->cutOut() - m_exportQueue.at(i)->cutIn() + 1;
+        }
 
         //Get all pictures and send to pipe
-        for( uint32_t i = 0; i < getMlvFrames( m_pMlvObject ); i++ )
+        for( uint32_t i = (m_exportQueue.first()->cutIn() - 1); i < m_exportQueue.first()->cutOut(); i++ )
         {
             //Get picture, and lock render thread... there can only be one!
             m_pRenderThread->lock();
@@ -936,9 +935,9 @@ void MainWindow::startExportPipe(QString fileName)
             fflush(pPipe);
 
             //Set Status
-            m_pStatusDialog->ui->progressBar->setValue( i + 1 );
+            m_pStatusDialog->ui->progressBar->setValue( i - ( m_exportQueue.first()->cutIn() - 1 ) + 1 );
             m_pStatusDialog->ui->progressBar->repaint();
-            m_pStatusDialog->drawTimeFromToDoFrames( totalFrames - i - 1 );
+            m_pStatusDialog->drawTimeFromToDoFrames( totalFrames - i + ( m_exportQueue.first()->cutIn() - 1 ) - 1 );
             qApp->processEvents();
 
             //Abort pressed? -> End the loop
@@ -988,12 +987,15 @@ void MainWindow::startExportCdng(QString fileName)
     if( ui->checkBoxRawFixEnable->isChecked() ) m_pMlvObject->llrawproc->fix_raw = 1;
 
     //StatusDialog
-    m_pStatusDialog->ui->progressBar->setMaximum( getMlvFrames( m_pMlvObject ) );
+    m_pStatusDialog->ui->progressBar->setMaximum( m_exportQueue.first()->cutOut() - m_exportQueue.first()->cutIn() + 1 );
     m_pStatusDialog->ui->progressBar->setValue( 0 );
     m_pStatusDialog->show();
     //Frames in the export queue?!
     int totalFrames = 0;
-    for( int i = 0; i < m_exportQueue.count(); i++ ) totalFrames += m_exportQueue.at(i)->frames();
+    for( int i = 0; i < m_exportQueue.count(); i++ )
+    {
+        totalFrames += m_exportQueue.at(i)->cutOut() - m_exportQueue.at(i)->cutIn() + 1;
+    }
 
     //Create folders and build name schemes
     QString pathName = QFileInfo( fileName ).path();
@@ -1030,7 +1032,7 @@ void MainWindow::startExportCdng(QString fileName)
     dngObject_t * cinemaDng = initDngObject( m_pMlvObject, m_codecProfile - 6, getFramerate());
 
     //Output frames loop
-    for( uint32_t frame = 0; frame < getMlvFrames( m_pMlvObject ); frame++ )
+    for( uint32_t frame = m_exportQueue.first()->cutIn() - 1; frame < m_exportQueue.first()->cutOut(); frame++ )
     {
         QString dngName;
         if( m_codecOption == CODEC_CNDG_DEFAULT ) dngName = dngName.append( "%1_%2.dng" )
@@ -1070,9 +1072,9 @@ void MainWindow::startExportCdng(QString fileName)
         }
 
         //Set Status
-        m_pStatusDialog->ui->progressBar->setValue( frame + 1 );
+        m_pStatusDialog->ui->progressBar->setValue( frame - ( m_exportQueue.first()->cutIn() - 1 ) + 1 );
         m_pStatusDialog->ui->progressBar->repaint();
-        m_pStatusDialog->drawTimeFromToDoFrames( totalFrames - frame - 1 );
+        m_pStatusDialog->drawTimeFromToDoFrames( totalFrames - frame + ( m_exportQueue.first()->cutIn() - 1 ) - 1 );
         qApp->processEvents();
 
         //Abort pressed? -> End the loop
@@ -1114,13 +1116,6 @@ void MainWindow::addFileToSession(QString fileName)
     qApp->processEvents();
 }
 
-//Add the frame information to session table, needed for remaining time calculation
-void MainWindow::addFileFramesToSession(void)
-{
-    m_pSessionReceipts.at( m_lastActiveClipInSession )->setFrames( getMlvFrames( m_pMlvObject ) );
-    m_pSessionReceipts.at( m_lastActiveClipInSession )->setCutOut( getMlvFrames( m_pMlvObject ) );
-}
-
 //Open a session file
 void MainWindow::openSession(QString fileName)
 {
@@ -1159,8 +1154,8 @@ void MainWindow::openSession(QString fileName)
                         addFileToSession( fileName );
                         //Open the file
                         openMlv( fileName );
-                        addFileFramesToSession();
                         m_pSessionReceipts.last()->setFileName( fileName );
+                        m_pSessionReceipts.last()->setCutOut( getMlvFrames( m_pMlvObject ) ); //Set Cut Out to the end, in case there is no xml tag
 
                         readXmlElementsFromFile( &Rxml, m_pSessionReceipts.last() );
 
@@ -1760,7 +1755,6 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     receipt->setDualIsoFrBlending( m_pSessionReceipts.at( row )->dualIsoFrBlending() );
 
     receipt->setFileName( m_pSessionReceipts.at( row )->fileName() );
-    receipt->setFrames( m_pSessionReceipts.at( row )->frames() );
     receipt->setCutIn( m_pSessionReceipts.at( row )->cutIn() );
     receipt->setCutOut( m_pSessionReceipts.at( row )->cutOut() );
     receipt->setExportFileName( fileName );
@@ -2664,6 +2658,7 @@ void MainWindow::on_actionExportSettings_triggered()
 void MainWindow::on_actionResetReceipt_triggered()
 {
     ReceiptSettings *sliders = new ReceiptSettings(); //default
+    sliders->setCutOut( getMlvFrames( m_pMlvObject ) );
     setSliders( sliders );
     delete sliders;
 }
@@ -3055,7 +3050,10 @@ void MainWindow::exportHandler( void )
         m_exportAbortPressed = false;
         jobNumber = 0;
         int totalFrames = 0;
-        for( int i = 0; i < numberOfJobs; i++ ) totalFrames += m_exportQueue.at(i)->frames();
+        for( int i = 0; i < numberOfJobs; i++ )
+        {
+            totalFrames += m_exportQueue.at(i)->cutOut() - m_exportQueue.at(i)->cutIn() + 1;
+        }
         m_pStatusDialog->setTotalFrames( totalFrames );
         m_pStatusDialog->startExportTime();
     }
