@@ -30,7 +30,7 @@
 #include "dng_tag_codes.h"
 #include "dng_tag_types.h"
 #include "dng_tag_values.h"
-#include "../camid/camera_id.h"
+#include "../mlv/camid/camera_id.h"
 
 #include "../mlv/liblj92/lj92.h"
 #include "../mlv/llrawproc/llrawproc.h"
@@ -212,7 +212,7 @@ static void kelvin_green_to_multipliers(double temperature, double green, double
     double rgb_cam_transpose[4][3];
     int c, cc, i, j;
 
-    int32_t * color_matrix =  camidGetColorMatrix2(cam_id);
+    int32_t * color_matrix = camidGetColorMatrix2(cam_id);
     for (i = 0; i < 9; i++)
     {
         cam_xyz[i/3][i%3] = (double)color_matrix[i*2] / (double)color_matrix[i*2 + 1];

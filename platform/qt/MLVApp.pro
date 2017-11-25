@@ -95,7 +95,7 @@ SOURCES += \
     RenderFrameThread.cpp \
     ../../src/dng/dng.c \
     GraphicsPolygonMoveItem.cpp \
-    ../../src/camid/camera_id.c
+    ../../src/mlv/camid/camera_id.c
 
 HEADERS += \
         MainWindow.h \
@@ -144,7 +144,7 @@ HEADERS += \
     ../../src/dng/dng_tag_types.h \
     ../../src/dng/dng_tag_values.h \
     GraphicsPolygonMoveItem.h \
-    ../../src/camid/camera_id.h
+    ../../src/mlv/camid/camera_id.h
 
 FORMS += \
         MainWindow.ui \
