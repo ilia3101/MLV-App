@@ -58,17 +58,36 @@
                     let Downloads = document.createElement("h4");
                     Downloads.innerHTML = "Downloads:";
                     release.appendChild(Downloads);
+                    let Table = document.createElement("table");
                     for (var j = 0; j < Releases[i].assets.length; j++)
                     {
+                        let TableRow = document.createElement("tr");
+                        TableRow.style = "width: 100%;";
+                        let LinkCell = document.createElement("td");
                         let link = document.createElement("a");
                         link.href = Releases[i].assets[j].browser_download_url;
                         let text = document.createElement("h4");
+                        text.style.lineHeight = "3px";
                         text.innerHTML = Releases[i].assets[j].name;
                         text.style.color = LinkColour;
                         link.appendChild(text);
-                        release.appendChild(link);
+                        LinkCell.appendChild(link);
+                        TableRow.appendChild(LinkCell);
+                        let DownloadCountCell = document.createElement("td");
+                        DownloadCountCell.style.width = "100%";
+                        let DownloadCount = document.createElement("h4");
+                        DownloadCount.align = "right";
+                        DownloadCount.style.verticalAlign = "bottom";
+                        DownloadCount.style.color = "rgb(133,133,133)";
+                        DownloadCount.style.lineHeight = "3px";
+                        DownloadCount.style.paddingTop = "11px";
+                        DownloadCount.innerHTML = Releases[i].assets[j].download_count.toString() + "&darr;";
+                        DownloadCountCell.appendChild(DownloadCount);
+                        TableRow.appendChild(DownloadCountCell);
+                        Table.appendChild(TableRow);
                         TotalDownloads = TotalDownloads + Releases[i].assets[j].download_count;
                     }
+                    release.appendChild(Table);
                     if (Releases[i].name.includes("[Qt]"))
                     {
                         document.getElementById("QtRelases").appendChild(releaseFrame);
@@ -118,6 +137,9 @@
     }
     hr {
         border: 1px solid #eee;
+    }
+    tr {
+        padding: 0px;
     }
     .release {
         z-index: 1;
