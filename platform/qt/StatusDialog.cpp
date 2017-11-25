@@ -36,7 +36,7 @@ void StatusDialog::drawTimeFromToDoFrames(uint32_t frames)
     QDateTime currentTime = QDateTime::currentDateTime();
     quint64 secsGone = m_startTime.secsTo( currentTime );
     uint32_t framesGone = m_totalTodoFrames - frames;
-    if( framesGone == 0 ) return;
+    if( framesGone == 0 ) return; //we don't like to divide by 0
     quint64 secsTotalEstimated = m_totalTodoFrames * secsGone / framesGone;
 
     QDateTime estimatedFinalTime = currentTime.addSecs( secsTotalEstimated - secsGone );
