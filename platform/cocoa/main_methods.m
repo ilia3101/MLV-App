@@ -114,25 +114,9 @@ int setAppNewMlvClip(char * mlvPath)
 
     /* Size may need changing */
     free(App->rawImage);
-    App->rawImage = malloc( sizeof(uint8_t) * 3 * getMlvWidth(App->videoMLV) * getMlvHeight(App->videoMLV) );
+    App->rawImage = malloc( sizeof(uint16_t) * 3 * getMlvWidth(App->videoMLV) * getMlvHeight(App->videoMLV) );
 
-    /* The bitmap-rep thing is only used for exporting */
-    [App->rawBitmap release];
-    App->rawBitmap = [ [NSBitmapImageRep alloc]
-                       initWithBitmapDataPlanes: (unsigned char * _Nullable * _Nullable)&App->rawImage 
-                       /* initWithBitmapDataPlanes: NULL */
-                       pixelsWide: getMlvWidth(App->videoMLV)
-                       pixelsHigh: getMlvHeight(App->videoMLV)
-                       bitsPerSample: 8
-                       samplesPerPixel: 3
-                       hasAlpha: NO 
-                       isPlanar: NO
-                       colorSpaceName: @"NSDeviceRGBColorSpace"
-                       bitmapFormat: 0
-                       bytesPerRow: getMlvWidth(App->videoMLV) * 3
-                       bitsPerPixel: 24 ];
-
-    [App->previewWindow setSourceImage:App->rawImage width:getMlvWidth(App->videoMLV) height:getMlvHeight(App->videoMLV) bitDepth:8];
+    [App->previewWindow setSourceImage:App->rawImage width:getMlvWidth(App->videoMLV) height:getMlvHeight(App->videoMLV) bitDepth:16];
 
     /* If ALways AMaZE was set, set it again on new clip */
     if ([App->alwaysUseAmazeSelector state] == NSOnState)
@@ -243,7 +227,6 @@ int setAppNewMlvClip(char * mlvPath)
             for (NSURL * fileURL in [panel URLs])
             {
                 const char * mlvPathString = [fileURL.path UTF8String];
-                // setAppNewMlvClip((char *)mlvPathString);
                 sessionAddNewMlvClip((char *)mlvPathString);
                 IMPORTANT_CODE("Well done, you opened an MLV file.",2);
             }
@@ -255,6 +238,9 @@ int setAppNewMlvClip(char * mlvPath)
 /* Save Session */
 -(void)saveSessionDialog
 {
+    /* First update clip info for current clip to make sure it saves */
+    saveClipInfo(App->session.clipInfo + App->session.currentClip);
+
     /* Create save panel */
     NSSavePanel * panel = [NSSavePanel savePanel];
 

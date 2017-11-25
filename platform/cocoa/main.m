@@ -247,33 +247,9 @@ int NSApplicationMain(int argc, const char * argv[])
     NSLog(@"Cache size = %iMB, or %i percent of RAM", App->cacheSizeMB, (int)((double)App->cacheSizeMB / (double)MAC_RAM * 100));
     setMlvRawCacheLimitMegaBytes(App->videoMLV, App->cacheSizeMB);
 
-    /*
-     *******************************************************************************
-     * SETTING UP IMAGE VIEW AND STUFF (with many layers of cocoa)
-     *******************************************************************************
-     */
 
     /* ...lets start at 5D2 resolution because that's my camera */
-
-    App->rawImage = malloc( 1880 * 1056 * 3 * sizeof(uint8_t) ); 
-
-    /* NSBitmapImageRep lets you display bitmap data n stuff in CrApple things like NSImageView */
-    App->rawBitmap = [ [NSBitmapImageRep alloc] 
-                       initWithBitmapDataPlanes: (unsigned char * _Nullable * _Nullable)&App->rawImage 
-                       /* initWithBitmapDataPlanes: NULL */
-                       pixelsWide: 1880
-                       pixelsHigh: 1056
-                       bitsPerSample: 8
-                       samplesPerPixel: 3
-                       hasAlpha: NO 
-                       isPlanar: NO 
-                       /* Colour spaces: NSDeviceRGBColorSpace NSCalibratedRGBColorSpace */
-                       colorSpaceName: @"NSDeviceRGBColorSpace"
-                       bitmapFormat: 0
-                       /* every pixel = 1 byte * 3 channels */
-                       bytesPerRow: 1880 * 3
-                       bitsPerPixel: 24 ];
-
+    App->rawImage = malloc( 1880 * 1056 * 3 * sizeof(uint16_t) ); 
 
     /* THis is just the border to look nice around the actual MLVView */
     NSImageView * previewBorder = [[NSImageView alloc] initWithFrame: NSMakeRect(PREVIEW_WINDOW_BORDER_LOCATION)];

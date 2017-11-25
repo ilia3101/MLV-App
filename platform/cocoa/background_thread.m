@@ -76,8 +76,8 @@ void draw_frame()
 
     /* Draw frame and update view now */
 
-    /* Get dhe frame(8 bit cos most screens are) */
-    getMlvProcessedFrame8(App->videoMLV, App->currentFrameIndex, App->rawImage);
+    /* Get dhe frame*/
+    getMlvProcessedFrame16(App->videoMLV, App->currentFrameIndex, App->rawImage);
 
     /* Update/refresh the view on main thread */
     [App->previewWindow performSelectorOnMainThread: @selector(updateView) withObject: nil waitUntilDone: YES];

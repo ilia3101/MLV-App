@@ -179,7 +179,7 @@ void appWriteSession(char * sessionPath)
     #undef TAB
     #undef TAB2
 
-    free(session_file);
+    fclose(session_file);
 }
 
 /* Called from -(void)openSessionDialog - currently only loads first clip */

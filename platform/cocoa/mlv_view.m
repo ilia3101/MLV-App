@@ -25,7 +25,6 @@
     self.draw = YES;
 }
 
-
 -(void)drawRect:(NSRect)rect
 {
     glClearColor(0.0353f, 0.0353f, 0.0353f, 0.0f);
@@ -62,14 +61,16 @@
         pointTL[divideElement] /= divisor;
         pointTR[divideElement] /= divisor;
 
-
         /* Create texture */
         GLuint TextureID = 0;
         GLuint Scaling = GL_LINEAR;
         glBindTexture(GL_TEXTURE_2D, TextureID);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, Scaling);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, Scaling);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, self.image_width, self.image_height, 0, GL_RGB, GL_UNSIGNED_BYTE, self.image_data);
+        if (self.image_bpp == 8)
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, self.image_width, self.image_height, 0, GL_RGB, GL_UNSIGNED_BYTE, self.image_data);
+        else if (self.image_bpp == 16)
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16, self.image_width, self.image_height, 0, GL_RGB, GL_UNSIGNED_SHORT, self.image_data);
         glBindTexture(GL_TEXTURE_2D, 0);
         glBindTexture(GL_TEXTURE_2D, TextureID);
 
