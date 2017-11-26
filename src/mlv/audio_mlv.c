@@ -71,24 +71,10 @@ typedef struct {
 
 #pragma pack(pop)
 
-/* Writes the MLV's audio in WAVE format to a given file path, between the frames cut_in & cut_out (1<=..<=getMlvFrames) */
-void writeMlvAudioToWaveCut(mlvObject_t * video, char * path, uint32_t cut_in, uint32_t cut_out)
+/*generate the header for the audio wave file*/
+wave_header_t generateMlvAudioToWaveHeader(mlvObject_t * video, uint64_t wave_data_size)
 {
-    if (!doesMlvHaveAudio(video)) return;
-
-    if( cut_in < 1 ) return;
-    if( cut_out > getMlvFrames(video) ) return;
-    int32_t frames = cut_out - ( cut_in - 1 );
-    if( frames <= 0 ) return;
-    uint64_t audio_size = getMlvAudioSize(video);
-    uint64_t theoretic_size = getMlvAudioChannels(video) * getMlvSampleRate(video) * sizeof( uint16_t ) * frames / getMlvFramerate(video);
-    uint64_t in_offset = getMlvAudioChannels(video) * getMlvSampleRate(video) * sizeof( uint16_t ) * ( cut_in - 1 ) / getMlvFramerate(video);
-    uint64_t wave_data_size = MIN(theoretic_size, audio_size);
     uint64_t file_size = wave_data_size + sizeof(wave_header_t);
-
-    /* Get audio */
-    int16_t * audio_data = malloc( audio_size );
-    getMlvAudioData(video, audio_data);
 
     wave_header_t wave_header = {
         .RIFF              = {'R','I','F','F'},
@@ -128,6 +114,29 @@ void writeMlvAudioToWaveCut(mlvObject_t * video, char * path, uint32_t cut_in, u
     int fps_denom = video->MLVI.sourceFpsDenom;
     int fps_nom = video->MLVI.sourceFpsNom;
     snprintf(wave_header.iXML, wave_header.iXML_size, iXML, project, notes, keywords, tape, scene, shot, take, fps_nom, fps_denom, fps_nom, fps_denom, fps_nom, fps_denom);
+
+    return wave_header;
+}
+
+/* Writes the MLV's audio in WAVE format to a given file path, between the frames cut_in & cut_out (1<=..<=getMlvFrames) */
+void writeMlvAudioToWaveCut(mlvObject_t * video, char * path, uint32_t cut_in, uint32_t cut_out)
+{
+    if (!doesMlvHaveAudio(video)) return;
+
+    if( cut_in < 1 ) return;
+    if( cut_out > getMlvFrames(video) ) return;
+    int32_t frames = cut_out - ( cut_in - 1 );
+    if( frames <= 0 ) return;
+    uint64_t audio_size = getMlvAudioSize(video);
+    uint64_t theoretic_size = getMlvAudioChannels(video) * getMlvSampleRate(video) * sizeof( uint16_t ) * frames / getMlvFramerate(video);
+    uint64_t in_offset = getMlvAudioChannels(video) * getMlvSampleRate(video) * sizeof( uint16_t ) * ( cut_in - 1 ) / getMlvFramerate(video);
+    uint64_t wave_data_size = MIN(theoretic_size, audio_size);
+
+    /* Get audio */
+    int16_t * audio_data = malloc( audio_size );
+    getMlvAudioData(video, audio_data);
+
+    wave_header_t wave_header = generateMlvAudioToWaveHeader(video, wave_data_size);
 
     FILE * wave_file = fopen(path, "wb");
 
@@ -148,50 +157,12 @@ void writeMlvAudioToWave(mlvObject_t * video, char * path)
     uint64_t audio_size = getMlvAudioSize(video);
     uint64_t theoretic_size = getMlvAudioChannels(video) * getMlvSampleRate(video) * sizeof( uint16_t ) * getMlvFrames(video) / getMlvFramerate(video);
     uint64_t wave_data_size = MIN(theoretic_size, audio_size);
-    uint64_t file_size = wave_data_size + sizeof(wave_header_t);
 
     /* Get audio */
     int16_t * audio_data = malloc( audio_size );
     getMlvAudioData(video, audio_data);
 
-    wave_header_t wave_header = {
-        .RIFF              = {'R','I','F','F'},
-        .file_size         = file_size - 8,
-        .WAVE              = {'W','A','V','E'},
-        .bext_id           = {'b','e','x','t'},
-        .bext_size         = sizeof( wave_bext_t ),
-        .bext.time_reference = 0,//(uint64_t)(getMlvTmHour(video) * 3600 + getMlvTmMin(video) * 60 + getMlvTmSec(video)) * (uint64_t)getMlvSampleRate(video),
-        .iXML_id           = {'i','X','M','L'},
-        .iXML_size         = 1024,
-        .fmt               = {'f','m','t',' '},
-        .subchunk1_size    = 16,
-        .audio_format      = 1,
-        .num_channels      = getMlvAudioChannels(video),
-        .sample_rate       = getMlvSampleRate(video),
-        .byte_rate         = (getMlvSampleRate(video) * getMlvAudioChannels(video) * 16) / 8,
-        .block_align       = (getMlvAudioChannels(video) * 16) / 8,
-        .bits_per_sample   = 16,
-        .data              = {'d','a','t','a'},
-        .subchunk2_size    = wave_data_size
-    };
-
-    char temp[33];
-    snprintf(temp, sizeof(temp), "%s", getMlvCamera(video));
-    memcpy(wave_header.bext.originator, temp, 32);
-    snprintf(temp, sizeof(temp), "JPCAN%04d%.8s%02d%02d%02d%09d", getMlvCameraModel(video), getMlvCameraSerial(video), getMlvTmHour(video), getMlvTmMin(video), getMlvTmSec(video), rand());
-    memcpy(wave_header.bext.originator_reference, temp, 32);
-    snprintf(temp, sizeof(temp), "%04d:%02d:%02d", getMlvTmYear(video), getMlvTmMonth(video), getMlvTmDay(video));
-    memcpy(wave_header.bext.origination_date, temp, 10);
-    snprintf(temp, sizeof(temp), "%02d:%02d:%02d", getMlvTmHour(video), getMlvTmMin(video), getMlvTmSec(video));
-    memcpy(wave_header.bext.origination_time, temp, 8);
-
-    char * project = "MLV App";
-    char * notes = "";
-    char * keywords = "";
-    int tape = 1, scene = 1, shot = 1, take = 1;
-    int fps_denom = video->MLVI.sourceFpsDenom;
-    int fps_nom = video->MLVI.sourceFpsNom;
-    snprintf(wave_header.iXML, wave_header.iXML_size, iXML, project, notes, keywords, tape, scene, shot, take, fps_nom, fps_denom, fps_nom, fps_denom, fps_nom, fps_denom);
+    wave_header_t wave_header = generateMlvAudioToWaveHeader(video, wave_data_size);
 
     FILE * wave_file = fopen(path, "wb");
 
