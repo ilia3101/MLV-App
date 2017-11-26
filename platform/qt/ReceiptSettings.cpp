@@ -14,7 +14,7 @@ ReceiptSettings::ReceiptSettings()
     m_temperature = 6000;
     m_tint = 0;
     m_saturation = 50;
-    m_ds = 50;
+    m_ds = 22;
     m_dr = 73;
     m_ls = 0;
     m_lr = 50;

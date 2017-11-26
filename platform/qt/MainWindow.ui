@@ -349,7 +349,7 @@ QGroupBox::indicator:checked {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>-718</y>
+            <y>0</y>
             <width>195</width>
             <height>1526</height>
            </rect>
@@ -2209,7 +2209,7 @@ QGroupBox::indicator:checked {
                       <enum>Qt::RightToLeft</enum>
                      </property>
                      <property name="text">
-                      <string>0.50</string>
+                      <string>0.22</string>
                      </property>
                      <property name="alignment">
                       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -2240,7 +2240,7 @@ QGroupBox::indicator:checked {
                       <number>100</number>
                      </property>
                      <property name="value">
-                      <number>50</number>
+                      <number>22</number>
                      </property>
                      <property name="orientation">
                       <enum>Qt::Horizontal</enum>
