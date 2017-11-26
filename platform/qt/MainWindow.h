@@ -217,7 +217,7 @@ private:
     void addFileToSession( QString fileName );
     void openSession( QString fileName );
     void saveSession( QString fileName );
-    void readXmlElementsFromFile( QXmlStreamReader *Rxml, ReceiptSettings *receipt );
+    void readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings *receipt , int version);
     void writeXmlElementsToFile( QXmlStreamWriter *xmlWriter, ReceiptSettings *receipt );
     void deleteSession( void );
     bool isFileInSession( QString fileName );

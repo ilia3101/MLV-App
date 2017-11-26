@@ -30,6 +30,10 @@
 #define APPNAME "MLV App"
 #define VERSION "0.11 alpha"
 
+#define FACTOR_DS       22.5
+#define FACTOR_LS       11.2
+#define FACTOR_LIGHTEN  0.6
+
 //Constructor
 MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     QMainWindow(parent),
@@ -1126,6 +1130,9 @@ void MainWindow::openSession(QString fileName)
         return;
     }
 
+    //Version of settings (values may be interpreted differently)
+    int versionMasxml = 0;
+
     //Clear the last session
     deleteSession();
 
@@ -1137,6 +1144,12 @@ void MainWindow::openSession(QString fileName)
         //qDebug() << "InWhile";
         if( Rxml.isStartElement() && Rxml.name() == "mlv_files" )
         {
+            //Read version string, if there is one
+            if( Rxml.attributes().count() != 0 )
+            {
+                //qDebug() << "masxmlVersion" << Rxml.attributes().at(0).value().toInt();
+                versionMasxml = Rxml.attributes().at(0).value().toInt();
+            }
             //qDebug() << "StartElem";
             while( !Rxml.atEnd() && !Rxml.isEndElement() )
             {
@@ -1157,7 +1170,7 @@ void MainWindow::openSession(QString fileName)
                         m_pSessionReceipts.last()->setFileName( fileName );
                         m_pSessionReceipts.last()->setCutOut( getMlvFrames( m_pMlvObject ) ); //Set Cut Out to the end, in case there is no xml tag
 
-                        readXmlElementsFromFile( &Rxml, m_pSessionReceipts.last() );
+                        readXmlElementsFromFile( &Rxml, m_pSessionReceipts.last(), versionMasxml );
 
                         setSliders( m_pSessionReceipts.last() );
                         previewPicture( ui->listWidgetSession->count() - 1 );
@@ -1221,6 +1234,7 @@ void MainWindow::saveSession(QString fileName)
     xmlWriter.writeStartDocument();
 
     xmlWriter.writeStartElement( "mlv_files" );
+    xmlWriter.writeAttribute( "version", "2" );
     for( int i = 0; i < ui->listWidgetSession->count(); i++ )
     {
         xmlWriter.writeStartElement( "clip" );
@@ -1261,6 +1275,9 @@ void MainWindow::on_actionImportReceipt_triggered()
         return;
     }
 
+    //Version of settings (values may be interpreted differently)
+    int versionReceipt = 0;
+
     //Parse
     Rxml.setDevice(&file);
     while( !Rxml.atEnd() )
@@ -1268,7 +1285,13 @@ void MainWindow::on_actionImportReceipt_triggered()
         Rxml.readNext();
         if( Rxml.isStartElement() && Rxml.name() == "receipt" )
         {
-            readXmlElementsFromFile( &Rxml, m_pSessionReceipts.at( m_lastActiveClipInSession ) );
+            //Read version string, if there is one
+            if( Rxml.attributes().count() != 0 )
+            {
+                //qDebug() << "masxmlVersion" << Rxml.attributes().at(0).value().toInt();
+                versionReceipt = Rxml.attributes().at(0).value().toInt();
+            }
+            readXmlElementsFromFile( &Rxml, m_pSessionReceipts.at( m_lastActiveClipInSession ), versionReceipt );
         }
     }
     file.close();
@@ -1303,6 +1326,7 @@ void MainWindow::on_actionExportReceipt_triggered()
     xmlWriter.writeStartDocument();
 
     xmlWriter.writeStartElement( "receipt" );
+    xmlWriter.writeAttribute( "version", "2" );
 
     writeXmlElementsToFile( &xmlWriter, m_pSessionReceipts.at( m_lastActiveClipInSession ) );
 
@@ -1313,7 +1337,7 @@ void MainWindow::on_actionExportReceipt_triggered()
 }
 
 //Read all receipt elements from xml
-void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings *receipt)
+void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings *receipt, int version)
 {
     while( !Rxml->atEnd() && !Rxml->isEndElement() )
     {
@@ -1340,7 +1364,8 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
         }
         else if( Rxml->isStartElement() && Rxml->name() == "ls" )
         {
-            receipt->setLs( Rxml->readElementText().toInt() );
+            if( version < 2 ) receipt->setLs( Rxml->readElementText().toInt() * 10.0 / FACTOR_LS );
+            else receipt->setLs( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
         else if( Rxml->isStartElement() && Rxml->name() == "lr" )
@@ -1350,7 +1375,8 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
         }
         else if( Rxml->isStartElement() && Rxml->name() == "ds" )
         {
-            receipt->setDs( Rxml->readElementText().toInt() );
+            if( version < 2 ) receipt->setDs( Rxml->readElementText().toInt() * 10.0 / FACTOR_DS );
+            else receipt->setDs( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
         else if( Rxml->isStartElement() && Rxml->name() == "dr" )
@@ -1360,7 +1386,8 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
         }
         else if( Rxml->isStartElement() && Rxml->name() == "lightening" )
         {
-            receipt->setLightening( Rxml->readElementText().toInt() );
+            if( version < 2 ) receipt->setLightening( Rxml->readElementText().toInt() / FACTOR_LIGHTEN );
+            else receipt->setLightening( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
         else if( Rxml->isStartElement() && Rxml->name() == "sharpen" )
@@ -2281,9 +2308,9 @@ void MainWindow::on_horizontalSliderSaturation_valueChanged(int position)
 
 void MainWindow::on_horizontalSliderDS_valueChanged(int position)
 {
-    double value = position / 10.0;
-    processingSetDCFactor( m_pProcessingObject, value );
-    ui->label_DsVal->setText( QString("%1").arg( value, 0, 'f', 1 ) );
+    double value = position / 100.0;
+    processingSetDCFactor( m_pProcessingObject, value * FACTOR_DS );
+    ui->label_DsVal->setText( QString("%1").arg( value, 0, 'f', 2 ) );
     m_frameChanged = true;
 }
 
@@ -2297,9 +2324,9 @@ void MainWindow::on_horizontalSliderDR_valueChanged(int position)
 
 void MainWindow::on_horizontalSliderLS_valueChanged(int position)
 {
-    double value = position / 10.0;
-    processingSetLCFactor( m_pProcessingObject, value );
-    ui->label_LsVal->setText( QString("%1").arg( value, 0, 'f', 1 ) );
+    double value = position / 100.0;
+    processingSetLCFactor( m_pProcessingObject, value * FACTOR_LS );
+    ui->label_LsVal->setText( QString("%1").arg( value, 0, 'f', 2 ) );
     m_frameChanged = true;
 }
 
@@ -2314,7 +2341,7 @@ void MainWindow::on_horizontalSliderLR_valueChanged(int position)
 void MainWindow::on_horizontalSliderLighten_valueChanged(int position)
 {
     double value = position / 100.0;
-    processingSetLightening( m_pProcessingObject, value );
+    processingSetLightening( m_pProcessingObject, value * FACTOR_LIGHTEN );
     ui->label_LightenVal->setText( QString("%1").arg( value, 0, 'f', 2 ) );
     m_frameChanged = true;
 }
@@ -2952,7 +2979,7 @@ void MainWindow::on_label_DrVal_doubleClicked()
 void MainWindow::on_label_DsVal_doubleClicked()
 {
     EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderDS, ui->label_DsVal, 0.1, 1, 10.0 );
+    editSlider.autoSetup( ui->horizontalSliderDS, ui->label_DsVal, 0.01, 2, 100.0 );
     editSlider.exec();
     ui->horizontalSliderDS->setValue( editSlider.getValue() );
 }
@@ -2970,7 +2997,7 @@ void MainWindow::on_label_LrVal_doubleClicked()
 void MainWindow::on_label_LsVal_doubleClicked()
 {
     EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderLS, ui->label_LsVal, 0.1, 1, 10.0 );
+    editSlider.autoSetup( ui->horizontalSliderLS, ui->label_LsVal, 0.01, 2, 100.0 );
     editSlider.exec();
     ui->horizontalSliderLS->setValue( editSlider.getValue() );
 }
