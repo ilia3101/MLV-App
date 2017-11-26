@@ -201,8 +201,8 @@ int NSApplicationMain(int argc, const char * argv[])
      */
 
     /* Open MLV file button */
-    CREATE_BUTTON_LEFT_TOP( App->openMLVButton, 1, openMlvDialog, 12, @"Add MLV File" );
-    CREATE_BUTTON_LEFT_TOP( App->openSessionButton, 0, openMlvDialog, 0, @"Open Session" );
+    CREATE_BUTTON_LEFT_TOP( App->openMLVButton, 1, openMlvDialog, 12, @"Open MLV File(s)" );
+    CREATE_BUTTON_LEFT_TOP( App->openSessionButton, 0, openSessionDialog, 0, @"Open Session" );
     CREATE_BUTTON_LEFT_BOTTOM( App->saveSessionButton, 0, exportProRes4444, 1, @"Export ProRes 4444" );
     CREATE_BUTTON_LEFT_BOTTOM( App->exportProRes4444Button, 1, saveSessionDialog, -12, @"Save Session" );
     IMPORTANT_CODE("",5);

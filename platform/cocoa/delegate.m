@@ -6,6 +6,7 @@
 #include "main_methods.h"
 #include "session_methods.h"
 #include "godobject.h"
+#include "mac_info.h"
 extern godObject_t * App;
 
 /* Make sure string memory block is long enough :D */
@@ -113,6 +114,7 @@ static uint64_t ISO8601toUnix(char * iso_date)
 /* Open an MLV file on startup */
 - (BOOL)application: (NSApplication *)sender openFile: (NSString *)filename
 {
+    IMPORTANT_CODE("Opening an MLV file with MLV App.",1);
     sessionAddNewMlvClip((char *)[filename UTF8String]);
     App->session.currentClip = 0;
     setAppGUIFromClip(App->session.clipInfo);
@@ -123,6 +125,7 @@ static uint64_t ISO8601toUnix(char * iso_date)
 /* Open MLV files on startup */
 - (void)application:(NSApplication *)sender openFiles:(NSArray<NSString *> *)filenames;
 {
+    IMPORTANT_CODE("Opening multiple MLV files with MLV App.",1);
     for (int i = 0; i < [filenames count]; i++)
         sessionAddNewMlvClip((char *)[filenames[i] UTF8String]);
     App->session.currentClip = 0;

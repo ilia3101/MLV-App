@@ -9,6 +9,8 @@ void syncGUI(); /* Refreshes all controls, connects all to clip */
 
 /* This is a function as it may be used in more than one place */
 int setAppNewMlvClip(char * mlvPath); /* 0=fail 1=ok */
+/* Sets app to have no open clip */
+void setAppCurrentClipNoClip();
 
 /* Button methods */
 @interface NSButton (mainMethods)
@@ -27,6 +29,8 @@ int setAppNewMlvClip(char * mlvPath); /* 0=fail 1=ok */
 -(void)exportProRes4444;
 /* Save Session */
 -(void)saveSessionDialog;
+/* Open a MASXML and the clips from it */
+-(void)openSessionDialog;
 
 @end
 

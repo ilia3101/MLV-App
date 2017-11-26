@@ -17,6 +17,8 @@ void appClearSession();
 void saveClipInfo(clipInfo_t * clip);
 /* Set app GUI According to clipinfo struct */
 void setAppGUIFromClip(clipInfo_t * clip);
+/* Like previous, but doesn't set open the clip */
+void setAppSlidersFromClip(clipInfo_t * clip);
 /* Sets clip object to default GUI settings (processing parameters etc) */
 void setDefaultsClip(clipInfo_t * clip);
 

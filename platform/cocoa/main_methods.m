@@ -36,6 +36,8 @@ void initAppWithGod()
 void syncGUI()
 {
     /* I really need a slider struct/object ugh :[ */
+    int dd = App->dontDraw;
+    App->dontDraw = 0;
     [App->exposureSlider exposureSliderMethod];
     [App->saturationSlider saturationSliderMethod];
     [App->kelvinSlider kelvinSliderMethod];
@@ -58,13 +60,15 @@ void syncGUI()
     [App->chromaSmoothOption chromaSmoothMethod];
     [App->patternNoiseOption patternNoiseMethod];
     [App->chromaSeparationSelector toggleChromaSeparation];
-    App->frameChanged = 0;
+    App->dontDraw = dd;
 }
 
 /* Sets app to have no open clip currently */
 void setAppCurrentClipNoClip()
 {
-    free(App->MLVClipName);
+    App->dontDraw = 1;
+    memset(App->rawImage, 0, sizeof(uint16_t) * 3 * getMlvWidth(App->videoMLV) * getMlvHeight(App->videoMLV)); // Set dark image
+    [App->previewWindow updateView];
     [App->window setTitle: [NSString stringWithFormat: @APP_NAME]];
     freeMlvObject(App->videoMLV);
     App->videoMLV = initMlvObject();
@@ -210,7 +214,7 @@ int setAppNewMlvClip(char * mlvPath)
         llrpSetFixRawMode(App->videoMLV, FR_OFF);
     }
     resetMlvCache(App->videoMLV);
-    IMPORTANT_CODE("",33);
+    IMPORTANT_CODE("",5);
     App->frameChanged++;
 }
 
@@ -236,8 +240,39 @@ int setAppNewMlvClip(char * mlvPath)
             {
                 const char * mlvPathString = [fileURL.path UTF8String];
                 sessionAddNewMlvClip((char *)mlvPathString);
-                setAppGUIFromClip(App->session.clipInfo + App->session.clipCount-1); /* set as current */
                 IMPORTANT_CODE("Well done, you opened an MLV file.",2);
+            }
+        }
+        [panel release];
+        [App->session.clipTable reloadData];
+        setAppGUIFromClip(App->session.clipInfo + App->session.clipCount-1); /* set as current */
+    } ];
+}
+
+/* Open a MASXML and the clips from it */
+-(void)openSessionDialog
+{
+    /* Create open panel */
+    NSOpenPanel * panel = [[NSOpenPanel openPanel] retain];
+
+    [panel setCanChooseFiles: YES];
+    [panel setCanChooseDirectories: NO];
+    [panel setAllowsMultipleSelection: NO];
+
+    /* Can only choose MLV files */
+    [panel setAllowedFileTypes: [NSArray arrayWithObject: @"masxml"]];
+
+    [panel beginSheetModalForWindow:App->window completionHandler: ^(NSInteger result)
+    {
+        if (result == NSFileHandlingPanelOKButton)
+        {
+            /* What stackoverflow said */
+            for (NSURL * fileURL in [panel URLs])
+            {
+                const char * path = [fileURL.path UTF8String];
+                appClearSession();
+                appLoadSession(path);
+                IMPORTANT_CODE("A session has been opened.",2);
             }
         }
         [panel release];
@@ -260,8 +295,8 @@ int setAppNewMlvClip(char * mlvPath)
             const char * sessionPath = [fileURL.path UTF8String];
             char name[4096];
             strncpy(name,sessionPath,4096);
-            strncpy(name + strlen(name)-1, ".masxml", 4096);
-            appWriteSession((char *)sessionPath);
+            strcpy(name + strlen(name), ".masxml");
+            appWriteSession((char *)name);
             IMPORTANT_CODE("Saved session.",2);
         }
     }];
