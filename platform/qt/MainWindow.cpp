@@ -752,6 +752,7 @@ void MainWindow::readSettings()
     m_lastSaveFileName = set.value( "lastFileName", QString( "/Users/" ) ).toString();
     m_codecProfile = set.value( "codecProfile", 4 ).toUInt();
     m_codecOption = set.value( "codecOption", 0 ).toUInt();
+    m_exportDebayerMode = set.value( "exportDebayerMode", 1 ).toUInt();
     m_previewMode = set.value( "previewMode", 1 ).toUInt();
     //if( set.value( "caching", false ).toBool() ) ui->actionCaching->setChecked( true );
     ui->actionCaching->setChecked( false );
@@ -786,6 +787,7 @@ void MainWindow::writeSettings()
     set.setValue( "lastFileName", m_lastSaveFileName );
     set.setValue( "codecProfile", m_codecProfile );
     set.setValue( "codecOption", m_codecOption );
+    set.setValue( "exportDebayerMode", m_exportDebayerMode );
     set.setValue( "previewMode", m_previewMode );
     set.setValue( "caching", ui->actionCaching->isChecked() );
     set.setValue( "frameRate", m_frameRate );
@@ -804,8 +806,15 @@ void MainWindow::startExportPipe(QString fileName)
     //Disable GUI drawing
     m_dontDraw = true;
 
-    // we always get amaze frames for exporting
-    setMlvAlwaysUseAmaze( m_pMlvObject );
+    //chose if we want to get amaze frames for exporting, or bilinear
+    if( m_exportDebayerMode == 1 )
+    {
+        setMlvAlwaysUseAmaze( m_pMlvObject );
+    }
+    else
+    {
+        setMlvDontAlwaysUseAmaze( m_pMlvObject );
+    }
     llrpResetFpmStatus(m_pMlvObject);
     llrpResetBpmStatus(m_pMlvObject);
     llrpComputeStripesOn(m_pMlvObject);
@@ -2655,10 +2664,11 @@ void MainWindow::on_actionExportSettings_triggered()
     //Stop playback if active
     ui->actionPlay->setChecked( false );
 
-    ExportSettingsDialog *pExportSettings = new ExportSettingsDialog( this, m_codecProfile, m_codecOption, m_previewMode, m_fpsOverride, m_frameRate, m_audioExportEnabled, m_styleSelection );
+    ExportSettingsDialog *pExportSettings = new ExportSettingsDialog( this, m_codecProfile, m_codecOption, m_exportDebayerMode, m_previewMode, m_fpsOverride, m_frameRate, m_audioExportEnabled, m_styleSelection );
     pExportSettings->exec();
     m_codecProfile = pExportSettings->encoderSetting();
     m_codecOption = pExportSettings->encoderOption();
+    m_exportDebayerMode = pExportSettings->debayerMode();
     m_previewMode = pExportSettings->previewMode();
     m_fpsOverride = pExportSettings->isFpsOverride();
     m_frameRate = pExportSettings->getFps();

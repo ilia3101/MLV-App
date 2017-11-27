@@ -45,10 +45,11 @@ class ExportSettingsDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit ExportSettingsDialog(QWidget *parent = 0, uint8_t currentCodecProfile = 0, uint8_t currentCodecOption = 0, uint8_t previewMode = 0, bool fpsOverride = false, double fps = 25, bool exportAudio = true, int style = 0);
+    explicit ExportSettingsDialog(QWidget *parent = 0, uint8_t currentCodecProfile = 0, uint8_t currentCodecOption = 0, uint8_t debayerMode = 1, uint8_t previewMode = 0, bool fpsOverride = false, double fps = 25, bool exportAudio = true, int style = 0);
     ~ExportSettingsDialog();
     uint8_t encoderSetting(void);
     uint8_t encoderOption(void);
+    uint8_t debayerMode(void);
     bool isExportAudioEnabled(void);
     uint8_t previewMode(void);
     bool isFpsOverride(void);

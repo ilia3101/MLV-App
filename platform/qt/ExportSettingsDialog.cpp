@@ -10,7 +10,7 @@
 #include <QMessageBox>
 
 //Constructor
-ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, uint8_t currentCodecProfile, uint8_t currentCodecOption, uint8_t previewMode, bool fpsOverride, double fps, bool exportAudio, int style) :
+ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, uint8_t currentCodecProfile, uint8_t currentCodecOption, uint8_t debayerMode, uint8_t previewMode, bool fpsOverride, double fps, bool exportAudio, int style) :
     QDialog(parent),
     ui(new Ui::ExportSettingsDialog)
 {
@@ -19,6 +19,7 @@ ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, uint8_t currentCodec
     ui->comboBoxCodec->setCurrentIndex( currentCodecProfile );
     on_comboBoxCodec_currentIndexChanged( currentCodecProfile );
     ui->comboBoxOption->setCurrentIndex( currentCodecOption );
+    ui->comboBoxDebayer->setCurrentIndex( debayerMode );
     if( previewMode == 1 ) ui->radioButtonPreviewList->setChecked( true );
     else if( previewMode == 2 ) ui->radioButtonPreviewIcon->setChecked( true );
     else ui->radioButtonPreviewDisabled->setChecked( true );
@@ -46,6 +47,12 @@ uint8_t ExportSettingsDialog::encoderSetting(void)
 uint8_t ExportSettingsDialog::encoderOption()
 {
     return ui->comboBoxOption->currentIndex();
+}
+
+//Get Debayer Mode
+uint8_t ExportSettingsDialog::debayerMode()
+{
+    return ui->comboBoxDebayer->currentIndex();
 }
 
 //Get Preview Mode

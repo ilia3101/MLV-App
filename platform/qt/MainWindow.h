@@ -182,6 +182,7 @@ private:
     uint32_t m_cacheSizeMB;
     uint8_t m_codecProfile;
     uint8_t m_codecOption;
+    uint8_t m_exportDebayerMode;
     uint8_t m_previewMode;
     bool m_frameChanged;
     int m_currentFrameIndex;
