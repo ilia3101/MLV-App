@@ -11,6 +11,7 @@
  * then make it in to a label:
  * [textfield_name setLabelStyle]; */
 -(void)setLabelStyle;
+-(void)setLabelStyleHighlightedWithColour: (NSColor *)colour;
 
 @end
 

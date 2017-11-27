@@ -69,15 +69,23 @@ void saveClipInfo(clipInfo_t * clip)
     clip->settings.patternNoiseOption = [App->patternNoiseOption indexOfSelectedItem];
 }
 
+/* Marks current clip as touched */
+void setCurrentClipTouched()
+{
+    // if (!isClipDefault(App->session.clipInfo + App->session.currentClip))
+    App->session.clipInfo[App->session.currentClip].touched = YES;
+}
+
 /* Sets a clipinfo_t object to default settings */
 void setDefaultsClip(clipInfo_t * clip)
 {
+    clip->touched = NO;
     clip->settings.exposureSlider = 0.5;
     clip->settings.saturationSlider = 0.5;
     clip->settings.kelvinSlider = 0.5;
     clip->settings.tintSlider = 0.5;
-    clip->settings.darkStrengthSlider = 0.23;
-    clip->settings.darkRangeSlider = 0.73;
+    clip->settings.darkStrengthSlider = 0.25;
+    clip->settings.darkRangeSlider = 0.75;
     clip->settings.lightStrengthSlider = 0.0;
     clip->settings.lightRangeSlider = 0.5;
     clip->settings.lightenSlider = 0.0;
@@ -104,6 +112,7 @@ void setAppGUIFromClip(clipInfo_t * clip)
     setAppSlidersFromClip(clip);
     syncGUI();
     App->frameChanged = 1;
+    [App->session.clipTable reloadData];
 }
 
 void setAppSlidersFromClip(clipInfo_t * clip)
@@ -156,9 +165,9 @@ void appWriteSession(char * sessionPath)
         fprintf(session_file, TAB2 "<temperature>"MASXML_TYPE_ESC"</temperature>\n", (MASXML_TYPE)(clip->settings.kelvinSlider * (KELVIN_MAX - KELVIN_MIN) + KELVIN_MIN));
         fprintf(session_file, TAB2 "<tint>"MASXML_TYPE_ESC"</tint>\n", (MASXML_TYPE)(clip->settings.tintSlider * 100.0));
         fprintf(session_file, TAB2 "<saturation>"MASXML_TYPE_ESC"</saturation>\n", (MASXML_TYPE)(clip->settings.saturationSlider * 100.0));
-        fprintf(session_file, TAB2 "<ds>"MASXML_TYPE_ESC"</ds>\n", (MASXML_TYPE)(clip->settings.darkStrengthSlider * 200.0));
+        fprintf(session_file, TAB2 "<ds>"MASXML_TYPE_ESC"</ds>\n", (MASXML_TYPE)(clip->settings.darkStrengthSlider * 100.0));
         fprintf(session_file, TAB2 "<dr>"MASXML_TYPE_ESC"</dr>\n", (MASXML_TYPE)(clip->settings.darkRangeSlider * 100.0));
-        fprintf(session_file, TAB2 "<ls>"MASXML_TYPE_ESC"</ls>\n", (MASXML_TYPE)(clip->settings.lightStrengthSlider * 200.0));
+        fprintf(session_file, TAB2 "<ls>"MASXML_TYPE_ESC"</ls>\n", (MASXML_TYPE)(clip->settings.lightStrengthSlider * 100.0));
         fprintf(session_file, TAB2 "<lr>"MASXML_TYPE_ESC"</lr>\n", (MASXML_TYPE)(clip->settings.lightRangeSlider * 100.0));
         fprintf(session_file, TAB2 "<lightening>"MASXML_TYPE_ESC"</lightening>\n", (MASXML_TYPE)(clip->settings.lightenSlider * 100.0));
         fprintf(session_file, TAB2 "<sharpen>"MASXML_TYPE_ESC"</sharpen>\n", (MASXML_TYPE)(clip->settings.sharpnessSlider * 100.0));
@@ -281,11 +290,11 @@ void appLoadSession(char * sessionPath)
                     } else if (!GetTagValue("saturation", text+indx, &val)) {
                         clip->settings.saturationSlider = val / 100.0;
                     } else if (!GetTagValue("ds", text+indx, &val)) {
-                        clip->settings.darkStrengthSlider = val / 200.0;
+                        clip->settings.darkStrengthSlider = val / 100.0;
                     } else if (!GetTagValue("dr", text+indx, &val)) {
                         clip->settings.darkRangeSlider = val / 100.0;
                     } else if (!GetTagValue("ls", text+indx, &val)) {
-                        clip->settings.lightStrengthSlider = val / 200.0;
+                        clip->settings.lightStrengthSlider = val / 100.0;
                     } else if (!GetTagValue("lr", text+indx, &val)) {
                         clip->settings.lightRangeSlider = val / 100.0;
                     } else if (!GetTagValue("lightening", text+indx, &val)) {
@@ -357,8 +366,7 @@ void appClearSession()
     if (result == nil) {
         /* Create new cell */
         result = [[NSTextField alloc] initWithFrame:NSMakeRect(0,0,0,0)];
-        /* Look nice */
-        [result setLabelStyle];
+        [result setTextColor:[NSColor whiteColor]];
         /* This identifier allows the cell to be reused. */
         result.identifier = @"MLV";
     }
@@ -370,10 +378,19 @@ void appClearSession()
     result.stringValue = [NSString stringWithFormat:@"%s", mlvFileName];
     /* Highlight current clip in bold */
     if (row == App->session.currentClip) {
-        [result setFont: [NSFont boldSystemFontOfSize:12.0f]];
+        [result setFont: [NSFont boldSystemFontOfSize:12.5f]];
+        // [result setTextColor:[NSColor colorWithCalibratedRed:17.0/255.0 green:214.0/255.0 blue:108.0/255.0 alpha:0.5]];
+        // [result setLabelStyleHighlightedWithColour: [NSColor colorWithCalibratedRed:17.0/255.0 green:108.0/255.0 blue:214.0/255.0 alpha:1.0]];
     } else {
         [result setFont: [NSFont systemFontOfSize:12.0f]];
+        // [result setLabelStyle];
+        // [result setTextColor:[NSColor whiteColor]];
     }
+    // if (!App->session.clipInfo[row].touched) {
+    //     [result setLabelStyleHighlightedWithColour: [NSColor colorWithCalibratedRed:0.2 green:0.2 blue:0.9 alpha:0.5]];
+    // } else {
+        [result setLabelStyle];
+    // }
     return result;
 }
 

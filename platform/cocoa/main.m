@@ -65,10 +65,8 @@ int NSApplicationMain(int argc, const char * argv[])
     chdir((char *)[[[NSBundle mainBundle] pathForResource:@"pixelmaps" ofType: nil] UTF8String]);
 
     /* We make the god opbject */
-    App = calloc(1,sizeof(godObject_t));
-
-    /* Just for easyness */
-    App->MLVClipName = malloc(1);
+    App = alloca(sizeof(godObject_t));
+    memset(App, 0, sizeof(godObject_t));
 
     /* Don't draw as there's no clip loaded */
     App->dontDraw = 1;
@@ -132,8 +130,8 @@ int NSApplicationMain(int argc, const char * argv[])
     CREATE_SLIDER_RIGHT( App->tintSlider, App->tintLabel, App->tintValueLabel, @"Tint", 4, tintSliderMethod, 0, 0.5 );
 
     /* Second block of sliders */
-    CREATE_SLIDER_RIGHT( App->darkStrengthSlider, App->darkStrengthLabel, App->darkStrengthValueLabel, @"Dark Strength", 5, darkStrengthMethod, BLOCK_OFFSET, 0.23 );
-    CREATE_SLIDER_RIGHT( App->darkRangeSlider, App->darkRangeLabel, App->darkRangeValueLabel, @"Dark Range", 6, darkRangeMethod, BLOCK_OFFSET, 0.73 );
+    CREATE_SLIDER_RIGHT( App->darkStrengthSlider, App->darkStrengthLabel, App->darkStrengthValueLabel, @"Dark Strength", 5, darkStrengthMethod, BLOCK_OFFSET, 0.25 );
+    CREATE_SLIDER_RIGHT( App->darkRangeSlider, App->darkRangeLabel, App->darkRangeValueLabel, @"Dark Range", 6, darkRangeMethod, BLOCK_OFFSET, 0.75 );
     CREATE_SLIDER_RIGHT( App->lightStrengthSlider, App->lightStrengthLabel, App->lightStrengthValueLabel, @"Light Strength", 7, lightStrengthMethod, BLOCK_OFFSET, 0.0 );
     CREATE_SLIDER_RIGHT( App->lightRangeSlider, App->lightRangeLabel, App->lightRangeValueLabel, @"Light Range", 8, lightRangeMethod, BLOCK_OFFSET, 0.5 );
     CREATE_SLIDER_RIGHT( App->lightenSlider, App->lightenLabel, App->lightenValueLabel, @"Lighten", 9, lightenMethod, BLOCK_OFFSET, 0.0 );

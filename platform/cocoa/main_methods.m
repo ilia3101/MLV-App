@@ -97,9 +97,7 @@ int setAppNewMlvClip(char * mlvPath)
         return 1;
     }
 
-    free(App->MLVClipName);
-    App->MLVClipName = malloc( strlen(mlvFileName) );
-    memcpy(App->MLVClipName, mlvFileName, strlen(mlvFileName));
+    strcpy(App->MLVClipName, mlvFileName);
 
     /* Set app name to include MLV clip's name */
     [App->window setTitle: [NSString stringWithFormat: @ APP_NAME " | %s", mlvFileName]];
@@ -169,6 +167,7 @@ int setAppNewMlvClip(char * mlvPath)
         setMlvDontAlwaysUseAmaze(App->videoMLV);
     }
     App->frameChanged++;
+    setCurrentClipTouched();
 }
 
 /* Enables/disables chroma separation */
@@ -186,6 +185,7 @@ int setAppNewMlvClip(char * mlvPath)
         [App->chromaBlurSlider chromaBlurMethod]; /* to refresh the label */
     }
     App->frameChanged++;
+    setCurrentClipTouched();
 }
 
 /* Enables/disables highlight reconstruction */
@@ -200,6 +200,7 @@ int setAppNewMlvClip(char * mlvPath)
         processingDisableHighlightReconstruction(App->processingSettings);
     }
     App->frameChanged++;
+    setCurrentClipTouched();
 }
 
 /* Enable/disable LLRawProc */
@@ -216,6 +217,7 @@ int setAppNewMlvClip(char * mlvPath)
     resetMlvCache(App->videoMLV);
     IMPORTANT_CODE("",5);
     App->frameChanged++;
+    setCurrentClipTouched();
 }
 
 /* Open file dialog + set new MLV clip */
@@ -271,7 +273,7 @@ int setAppNewMlvClip(char * mlvPath)
             {
                 const char * path = [fileURL.path UTF8String];
                 appClearSession();
-                appLoadSession(path);
+                appLoadSession((char *)path);
                 IMPORTANT_CODE("A session has been opened.",2);
             }
         }
@@ -325,7 +327,7 @@ int setAppNewMlvClip(char * mlvPath)
                 for (NSURL * pathURL in [panel URLs])
                 {
                     char * pathString = (char *)[pathURL.path UTF8String];
-                    char * exportPath = malloc(2048);
+                    char exportPath[2048];
 
                     snprintf(exportPath, 2048, "%s/%.8s.mov", pathString, App->MLVClipName);
 
@@ -339,8 +341,6 @@ int setAppNewMlvClip(char * mlvPath)
                     endWritingVideoFile(encoder);
 
                     freeAVEncoder(encoder);
-
-                    free(exportPath);
 
                     /* Give notification to user */
                     NSUserNotification * notification = [[[NSUserNotification alloc] init] autorelease];
@@ -366,6 +366,7 @@ int setAppNewMlvClip(char * mlvPath)
     /* Indexes of menu items correspond to defines of processing profiles */
     processingSetImageProfile(App->processingSettings, (int)[self indexOfSelectedItem]);
     App->frameChanged++;
+    setCurrentClipTouched();
 }
 
 
@@ -406,9 +407,15 @@ int setAppNewMlvClip(char * mlvPath)
     /* Set processing object's exposure now */
     processingSetExposureStops(App->processingSettings, exposureValueStops);
 
-    [App->exposureValueLabel setStringValue: [NSString stringWithFormat:@"%6.3f", exposureValueStops - 1.2]];
+    exposureValueStops -= 1.2;
+
+    if (!(exposureValueStops < 0.015 && exposureValueStops > -0.015))
+        [App->exposureValueLabel setStringValue: [NSString stringWithFormat:@"%+6.2f", exposureValueStops]];
+    else
+        [App->exposureValueLabel setStringValue: [NSString stringWithFormat:@"%6.2f", 0.0]];
 
     App->frameChanged++;
+    setCurrentClipTouched();
 }
 
 -(void)saturationSliderMethod 
@@ -421,9 +428,13 @@ int setAppNewMlvClip(char * mlvPath)
     /* Yea whatever */
     processingSetSaturation(App->processingSettings, saturationValue);
 
-    [App->saturationValueLabel setStringValue: [NSString stringWithFormat:@"%6.3f", saturationValue]];
+    if (!(saturationSliderValue < 1.015 && saturationSliderValue > 0.985))
+        [App->saturationValueLabel setStringValue: [NSString stringWithFormat:@"%+6i", (int)((saturationSliderValue-1.0)*100.0)]];
+    else
+        [App->saturationValueLabel setStringValue: [NSString stringWithFormat:@"%6i", 0]];
 
     App->frameChanged++;
+    setCurrentClipTouched();
 }
 
 -(void)kelvinSliderMethod 
@@ -434,9 +445,10 @@ int setAppNewMlvClip(char * mlvPath)
     /* Set processing object white balance */
     processingSetWhiteBalanceKelvin(App->processingSettings, kelvinValue);
 
-    [App->kelvinValueLabel setStringValue: [NSString stringWithFormat:@"%5.dk", (int)kelvinValue]];
+    [App->kelvinValueLabel setStringValue: [NSString stringWithFormat:@"%5.ik", (int)kelvinValue]];
 
     App->frameChanged++;
+    setCurrentClipTouched();
 }
 
 -(void)tintSliderMethod
@@ -447,40 +459,50 @@ int setAppNewMlvClip(char * mlvPath)
     /* Set processing object white balance */
     processingSetWhiteBalanceTint(App->processingSettings, tintValue);
 
-    [App->tintValueLabel setStringValue: [NSString stringWithFormat:@"%6.3f", ([self doubleValue] - 0.5) * 2 ]];
+    if ((int)(([self doubleValue] - 0.5)*200.0) != 0)
+        [App->tintValueLabel setStringValue: [NSString stringWithFormat:@"%+6i", (int)(([self doubleValue]-0.5)*200.0) ]];
+    else
+        [App->tintValueLabel setStringValue: [NSString stringWithFormat:@"%6i", 0]];
 
     App->frameChanged++;
+    setCurrentClipTouched();
 }
 
 /* All contrast/curve settings */
 -(void)darkStrengthMethod {
     processingSetDCFactor(App->processingSettings, [self doubleValue] * 22.5);
-    [App->darkStrengthValueLabel setStringValue: [NSString stringWithFormat:@"%6.3f", [self doubleValue]]];
+    [App->darkStrengthValueLabel setStringValue: [NSString stringWithFormat:@"%6i", (int)([self doubleValue]*100.0)]];
     App->frameChanged++;
+    setCurrentClipTouched();
 } -(void)darkRangeMethod {
     processingSetDCRange(App->processingSettings, [self doubleValue]);
-    [App->darkRangeValueLabel setStringValue: [NSString stringWithFormat:@"%6.3f", [self doubleValue]]];
+    [App->darkRangeValueLabel setStringValue: [NSString stringWithFormat:@"%6.2f", [self doubleValue]]];
     App->frameChanged++;
+    setCurrentClipTouched();
 } -(void)lightStrengthMethod {
     processingSetLCFactor(App->processingSettings, [self doubleValue] * 11.2);
-    [App->lightStrengthValueLabel setStringValue: [NSString stringWithFormat:@"%6.3f", [self doubleValue]]];
+    [App->lightStrengthValueLabel setStringValue: [NSString stringWithFormat:@"%6i", (int)([self doubleValue]*100.0)]];
     App->frameChanged++;
+    setCurrentClipTouched();
 } -(void)lightRangeMethod {
     processingSetLCRange(App->processingSettings, [self doubleValue]);
-    [App->lightRangeValueLabel setStringValue: [NSString stringWithFormat:@"%6.3f", [self doubleValue]]];
+    [App->lightRangeValueLabel setStringValue: [NSString stringWithFormat:@"%6.2f", [self doubleValue]]];
     App->frameChanged++;
+    setCurrentClipTouched();
 } -(void)lightenMethod {
     processingSetLightening(App->processingSettings, [self doubleValue] * 0.6);
-    [App->lightenValueLabel setStringValue: [NSString stringWithFormat:@"%6.3f", [self doubleValue]]];
+    [App->lightenValueLabel setStringValue: [NSString stringWithFormat:@"%6i", (int)([self doubleValue]*100.0)]];
     App->frameChanged++;
+    setCurrentClipTouched();
 }
 
 -(void)sharpnessMethod
 {
     double sharpnessValue = [self doubleValue];
     processingSetSharpening(App->processingSettings, sharpnessValue);
-    [App->sharpnessValueLabel setStringValue: [NSString stringWithFormat:@"%6.3f", sharpnessValue]];
+    [App->sharpnessValueLabel setStringValue: [NSString stringWithFormat:@"%6i", (int)([self doubleValue]*100.0)]];
     App->frameChanged++;
+    setCurrentClipTouched();
 }
 
 -(void)chromaBlurMethod
@@ -500,6 +522,7 @@ int setAppNewMlvClip(char * mlvPath)
         [App->chromaBlurValueLabel setStringValue: [NSString stringWithFormat:@"   Off"]];
     }
     App->frameChanged++;
+    setCurrentClipTouched();
 }
 
 @end
@@ -534,6 +557,7 @@ int setAppNewMlvClip(char * mlvPath)
     resetMlvCache(App->videoMLV);
 
     App->frameChanged++;
+    setCurrentClipTouched();
 }
 
 -(void)patternNoiseMethod
@@ -550,6 +574,7 @@ int setAppNewMlvClip(char * mlvPath)
     }
     resetMlvCache(App->videoMLV);
     App->frameChanged++;
+    setCurrentClipTouched();
 }
 
 -(void)verticalStripeMethod
@@ -570,6 +595,7 @@ int setAppNewMlvClip(char * mlvPath)
     llrpComputeStripesOn(App->videoMLV);
     resetMlvCache(App->videoMLV);
     App->frameChanged++;
+    setCurrentClipTouched();
 }
 
 -(void)focusPixelMethod
@@ -600,6 +626,7 @@ int setAppNewMlvClip(char * mlvPath)
     }
     resetMlvCache(App->videoMLV);
     App->frameChanged++;
+    setCurrentClipTouched();
 }
 
 -(void)badPixelMethod
@@ -629,6 +656,7 @@ int setAppNewMlvClip(char * mlvPath)
     llrpResetBpmStatus(App->videoMLV);
     resetMlvCache(App->videoMLV);
     App->frameChanged++;
+    setCurrentClipTouched();
 }
 
 -(void)chromaSmoothMethod
@@ -651,6 +679,7 @@ int setAppNewMlvClip(char * mlvPath)
     }
     resetMlvCache(App->videoMLV);
     App->frameChanged++;
+    setCurrentClipTouched();
 }
 
 /* Select tab (Processing, LLRawProc... etc + more in the future) */

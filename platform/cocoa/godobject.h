@@ -42,6 +42,8 @@ typedef struct {
         NSInteger chromaSmoothOption;
         NSInteger patternNoiseOption;
     } settings;
+    /* Has it been adjusted? */
+    BOOL touched;
 } clipInfo_t;
 
 /* Just a god object for the Cocoa GUI, because I literally can't be asked to learn the proper way of doing this stuff */
@@ -157,7 +159,7 @@ typedef struct {
      * handling MLV videos and processing them */
     mlvObject_t * videoMLV;
     processingObject_t * processingSettings;
-    char * MLVClipName;
+    char MLVClipName[4096];
     
     double frameSliderPosition;
 

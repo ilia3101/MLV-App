@@ -16,5 +16,12 @@
     [self setEditable:NO];
     [self setSelectable:NO];
 }
+-(void)setLabelStyleHighlightedWithColour: (NSColor *)colour {
+    [self setBezeled:NO];
+    [self setDrawsBackground:YES];
+    [self setBackgroundColor: colour];
+    [self setEditable:NO];
+    [self setSelectable:NO];
+}
 
 @end

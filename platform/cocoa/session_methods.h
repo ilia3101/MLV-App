@@ -21,6 +21,10 @@ void setAppGUIFromClip(clipInfo_t * clip);
 void setAppSlidersFromClip(clipInfo_t * clip);
 /* Sets clip object to default GUI settings (processing parameters etc) */
 void setDefaultsClip(clipInfo_t * clip);
+/* Marks current clip as touched (edited) */
+void setCurrentClipTouched();
+/* If a clip has been changed */
+BOOL isClipDefault(clipInfo_t * clip);
 
 
 @interface MLVListDelegate : NSObject <NSTableViewDelegate>
