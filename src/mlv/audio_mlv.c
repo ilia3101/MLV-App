@@ -143,7 +143,7 @@ void writeMlvAudioToWaveCut(mlvObject_t * video, char * path, uint32_t cut_in, u
     /* Write header */
     fwrite(&wave_header, sizeof(wave_header_t), 1, wave_file);
     /* Write data */
-    fwrite(audio_data + in_offset, wave_data_size, 1, wave_file);
+    fwrite((uint8_t*)audio_data + in_offset, wave_data_size, 1, wave_file);
 
     fclose(wave_file);
     free(audio_data);
