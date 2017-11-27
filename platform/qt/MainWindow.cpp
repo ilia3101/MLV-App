@@ -1359,7 +1359,8 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
         }
         else if( Rxml->isStartElement() && Rxml->name() == "saturation" )
         {
-            receipt->setSaturation( Rxml->readElementText().toInt() );
+            if( version < 2 ) receipt->setSaturation( ( Rxml->readElementText().toInt() * 2.0 ) - 100.0 );
+            else receipt->setSaturation( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
         else if( Rxml->isStartElement() && Rxml->name() == "ls" )
@@ -2292,64 +2293,57 @@ void MainWindow::on_horizontalSliderTemperature_valueChanged(int position)
 
 void MainWindow::on_horizontalSliderTint_valueChanged(int position)
 {
-    double value = position / 10.0;
-    ui->label_TintVal->setText( QString("%1").arg( value, 0, 'f', 1 ) );
-    processingSetWhiteBalanceTint( m_pProcessingObject, value );
+    processingSetWhiteBalanceTint( m_pProcessingObject, position / 10.0 );
+    ui->label_TintVal->setText( QString("%1").arg( position ) );
     m_frameChanged = true;
 }
 
 void MainWindow::on_horizontalSliderSaturation_valueChanged(int position)
 {
-    double value = pow( position / 100.0 * 2.0, log( 3.6 )/log( 2.0 ) );
+    double value = pow( ( position + 100 ) / 200.0 * 2.0, log( 3.6 )/log( 2.0 ) );
     processingSetSaturation( m_pProcessingObject, value );
-    ui->label_SaturationVal->setText( QString("%1").arg( value, 0, 'f', 2 ) );
+    ui->label_SaturationVal->setText( QString("%1").arg( position ) );
     m_frameChanged = true;
 }
 
 void MainWindow::on_horizontalSliderDS_valueChanged(int position)
 {
-    double value = position / 100.0;
-    processingSetDCFactor( m_pProcessingObject, value * FACTOR_DS );
-    ui->label_DsVal->setText( QString("%1").arg( value, 0, 'f', 2 ) );
+    processingSetDCFactor( m_pProcessingObject, position * FACTOR_DS / 100.0 );
+    ui->label_DsVal->setText( QString("%1").arg( position ) );
     m_frameChanged = true;
 }
 
 void MainWindow::on_horizontalSliderDR_valueChanged(int position)
 {
-    double value = position / 100.0;
-    processingSetDCRange( m_pProcessingObject, value );
-    ui->label_DrVal->setText( QString("%1").arg( value, 0, 'f', 2 ) );
+    processingSetDCRange( m_pProcessingObject, position / 100.0 );
+    ui->label_DrVal->setText( QString("%1").arg( position ) );
     m_frameChanged = true;
 }
 
 void MainWindow::on_horizontalSliderLS_valueChanged(int position)
 {
-    double value = position / 100.0;
-    processingSetLCFactor( m_pProcessingObject, value * FACTOR_LS );
-    ui->label_LsVal->setText( QString("%1").arg( value, 0, 'f', 2 ) );
+    processingSetLCFactor( m_pProcessingObject, position * FACTOR_LS / 100.0 );
+    ui->label_LsVal->setText( QString("%1").arg( position ) );
     m_frameChanged = true;
 }
 
 void MainWindow::on_horizontalSliderLR_valueChanged(int position)
 {
-    double value = position / 100.0;
-    processingSetLCRange( m_pProcessingObject, value );
-    ui->label_LrVal->setText( QString("%1").arg( value, 0, 'f', 2 ) );
+    processingSetLCRange( m_pProcessingObject, position / 100.0 );
+    ui->label_LrVal->setText( QString("%1").arg( position ) );
     m_frameChanged = true;
 }
 
 void MainWindow::on_horizontalSliderLighten_valueChanged(int position)
 {
-    double value = position / 100.0;
-    processingSetLightening( m_pProcessingObject, value * FACTOR_LIGHTEN );
-    ui->label_LightenVal->setText( QString("%1").arg( value, 0, 'f', 2 ) );
+    processingSetLightening( m_pProcessingObject, position * FACTOR_LIGHTEN / 100.0 );
+    ui->label_LightenVal->setText( QString("%1").arg( position ) );
     m_frameChanged = true;
 }
 
 void MainWindow::on_horizontalSliderSharpen_valueChanged(int position)
 {
-    double value = position / 100.0;
-    processingSetSharpening( m_pProcessingObject, value );
+    processingSetSharpening( m_pProcessingObject, position / 100.0 );
     ui->label_Sharpen->setText( QString("%1").arg( position ) );
     m_frameChanged = true;
 }
@@ -2942,7 +2936,7 @@ void MainWindow::on_label_TemperatureVal_doubleClicked()
 void MainWindow::on_label_TintVal_doubleClicked()
 {
     EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderTint, ui->label_TintVal, 0.1, 1, 10.0 );
+    editSlider.autoSetup( ui->horizontalSliderTint, ui->label_TintVal, 1.0, 0, 1.0 );
     editSlider.exec();
     ui->horizontalSliderTint->setValue( editSlider.getValue() );
 }
@@ -2951,26 +2945,16 @@ void MainWindow::on_label_TintVal_doubleClicked()
 void MainWindow::on_label_SaturationVal_doubleClicked()
 {
     EditSliderValueDialog editSlider;
-    editSlider.ui->doubleSpinBox->setMinimum( 0.0 );
-    editSlider.ui->doubleSpinBox->setMaximum( 3.6 );
-    editSlider.ui->doubleSpinBox->setDecimals( 2 );
-    editSlider.ui->doubleSpinBox->setSingleStep( 0.01 );
-    editSlider.ui->doubleSpinBox->setValue( ui->label_SaturationVal->text().toDouble() );
-    editSlider.ui->doubleSpinBox->selectAll();
-    QPoint pos;
-    pos.setX(0);
-    pos.setY(0);
-    pos = ui->label_SaturationVal->mapToGlobal( pos );
-    editSlider.setGeometry( pos.x(), pos.y(), 80, 20 );
+    editSlider.autoSetup( ui->horizontalSliderSaturation, ui->label_SaturationVal, 1.0, 0, 1.0 );
     editSlider.exec();
-    ui->horizontalSliderSaturation->setValue( pow( editSlider.ui->doubleSpinBox->value(), log( 2.0 )/log( 3.6 ) ) * 100.0 / 2.0 );
+    ui->horizontalSliderSaturation->setValue( editSlider.getValue() );
 }
 
 //DoubleClick on Dr Label
 void MainWindow::on_label_DrVal_doubleClicked()
 {
     EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderDR, ui->label_DrVal, 0.01, 2, 100.0 );
+    editSlider.autoSetup( ui->horizontalSliderDR, ui->label_DrVal, 1.0, 0, 1.0 );
     editSlider.exec();
     ui->horizontalSliderDR->setValue( editSlider.getValue() );
 }
@@ -2979,7 +2963,7 @@ void MainWindow::on_label_DrVal_doubleClicked()
 void MainWindow::on_label_DsVal_doubleClicked()
 {
     EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderDS, ui->label_DsVal, 0.01, 2, 100.0 );
+    editSlider.autoSetup( ui->horizontalSliderDS, ui->label_DsVal, 1.0, 0, 1.0 );
     editSlider.exec();
     ui->horizontalSliderDS->setValue( editSlider.getValue() );
 }
@@ -2988,7 +2972,7 @@ void MainWindow::on_label_DsVal_doubleClicked()
 void MainWindow::on_label_LrVal_doubleClicked()
 {
     EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderLR, ui->label_LrVal, 0.01, 2, 100.0 );
+    editSlider.autoSetup( ui->horizontalSliderLR, ui->label_LrVal, 1.0, 0, 1.0 );
     editSlider.exec();
     ui->horizontalSliderLR->setValue( editSlider.getValue() );
 }
@@ -2997,7 +2981,7 @@ void MainWindow::on_label_LrVal_doubleClicked()
 void MainWindow::on_label_LsVal_doubleClicked()
 {
     EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderLS, ui->label_LsVal, 0.01, 2, 100.0 );
+    editSlider.autoSetup( ui->horizontalSliderLS, ui->label_LsVal, 1.0, 0, 1.0 );
     editSlider.exec();
     ui->horizontalSliderLS->setValue( editSlider.getValue() );
 }
@@ -3006,7 +2990,7 @@ void MainWindow::on_label_LsVal_doubleClicked()
 void MainWindow::on_label_LightenVal_doubleClicked()
 {
     EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderLighten, ui->label_LightenVal, 0.01, 2, 100.0 );
+    editSlider.autoSetup( ui->horizontalSliderLighten, ui->label_LightenVal, 1.0, 0, 1.0 );
     editSlider.exec();
     ui->horizontalSliderLighten->setValue( editSlider.getValue() );
 }
@@ -3015,7 +2999,7 @@ void MainWindow::on_label_LightenVal_doubleClicked()
 void MainWindow::on_label_Sharpen_doubleClicked()
 {
     EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderSharpen, ui->label_Sharpen, 1, 0, 1.0 );
+    editSlider.autoSetup( ui->horizontalSliderSharpen, ui->label_Sharpen, 1.0, 0, 1.0 );
     editSlider.exec();
     ui->horizontalSliderSharpen->setValue( editSlider.getValue() );
 }
@@ -3024,7 +3008,7 @@ void MainWindow::on_label_Sharpen_doubleClicked()
 void MainWindow::on_label_ChromaBlur_doubleClicked()
 {
     EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderChromaBlur, ui->label_ChromaBlur, 1, 0, 1.0 );
+    editSlider.autoSetup( ui->horizontalSliderChromaBlur, ui->label_ChromaBlur, 1.0, 0, 1.0 );
     editSlider.exec();
     ui->horizontalSliderChromaBlur->setValue( editSlider.getValue() );
 }
