@@ -161,6 +161,10 @@ private slots:
     void on_spinBoxCutIn_valueChanged(int arg1);
     void on_spinBoxCutOut_valueChanged(int arg1);
 
+    void on_actionPreviewDisabled_triggered();
+    void on_actionPreviewList_triggered();
+    void on_actionPreviewPicture_triggered();
+
 private:
     Ui::MainWindow *ui;
     InfoDialog *m_pInfoDialog;
@@ -205,7 +209,6 @@ private:
     QVector<ReceiptSettings*> m_pSessionReceipts;
     QVector<ReceiptSettings*> m_exportQueue;
     int m_lastActiveClipInSession;
-    int m_styleSelection;
     void drawFrame( void );
     void openMlv( QString fileName );
     void playbackHandling( int timeDiff );

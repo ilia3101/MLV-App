@@ -10,7 +10,7 @@
 #include <QMessageBox>
 
 //Constructor
-ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, uint8_t currentCodecProfile, uint8_t currentCodecOption, uint8_t debayerMode, uint8_t previewMode, bool fpsOverride, double fps, bool exportAudio, int style) :
+ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, uint8_t currentCodecProfile, uint8_t currentCodecOption, uint8_t debayerMode, bool fpsOverride, double fps, bool exportAudio) :
     QDialog(parent),
     ui(new Ui::ExportSettingsDialog)
 {
@@ -20,15 +20,12 @@ ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, uint8_t currentCodec
     on_comboBoxCodec_currentIndexChanged( currentCodecProfile );
     ui->comboBoxOption->setCurrentIndex( currentCodecOption );
     ui->comboBoxDebayer->setCurrentIndex( debayerMode );
-    if( previewMode == 1 ) ui->radioButtonPreviewList->setChecked( true );
-    else if( previewMode == 2 ) ui->radioButtonPreviewIcon->setChecked( true );
-    else ui->radioButtonPreviewDisabled->setChecked( true );
     ui->checkBoxFpsOverride->setChecked( fpsOverride );
     on_checkBoxFpsOverride_clicked( fpsOverride );
     ui->doubleSpinBoxFps->setValue( fps );
     ui->checkBoxExportAudio->setChecked( exportAudio );
-    ui->comboBoxStyle->setCurrentIndex( style );
-    m_styleAtStart = style;
+
+    adjustSize();
 }
 
 //Destructor
@@ -55,14 +52,6 @@ uint8_t ExportSettingsDialog::debayerMode()
     return ui->comboBoxDebayer->currentIndex();
 }
 
-//Get Preview Mode
-uint8_t ExportSettingsDialog::previewMode()
-{
-    if( ui->radioButtonPreviewList->isChecked() ) return 1;
-    if( ui->radioButtonPreviewIcon->isChecked() ) return 2;
-    else return 0;
-}
-
 //Get if fps override
 bool ExportSettingsDialog::isFpsOverride()
 {
@@ -75,12 +64,6 @@ double ExportSettingsDialog::getFps()
     return ui->doubleSpinBoxFps->value();
 }
 
-//Get Style Selection
-int ExportSettingsDialog::getStyleIndex()
-{
-    return ui->comboBoxStyle->currentIndex();
-}
-
 //Get export audio checkbox checked
 bool ExportSettingsDialog::isExportAudioEnabled()
 {
@@ -90,10 +73,6 @@ bool ExportSettingsDialog::isExportAudioEnabled()
 //Close clicked
 void ExportSettingsDialog::on_pushButtonClose_clicked()
 {
-    if( m_styleAtStart != ui->comboBoxStyle->currentIndex() )
-    {
-        QMessageBox::information( this, tr( "Style change" ), tr( "Appearance will be changed on next application start." ) );
-    }
     close();
 }
 

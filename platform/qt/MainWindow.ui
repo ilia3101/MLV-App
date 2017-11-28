@@ -174,9 +174,19 @@
     <property name="title">
      <string>View</string>
     </property>
+    <widget class="QMenu" name="menuSessionListPreview">
+     <property name="title">
+      <string>Session List Preview</string>
+     </property>
+     <addaction name="actionPreviewDisabled"/>
+     <addaction name="actionPreviewList"/>
+     <addaction name="actionPreviewPicture"/>
+    </widget>
     <addaction name="actionShowSessionArea"/>
     <addaction name="actionShowEditArea"/>
     <addaction name="actionShowAudioTrack"/>
+    <addaction name="separator"/>
+    <addaction name="menuSessionListPreview"/>
     <addaction name="separator"/>
     <addaction name="actionShowHistogram"/>
     <addaction name="actionShowWaveFormMonitor"/>
@@ -349,8 +359,8 @@ QGroupBox::indicator:checked {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>-481</y>
-            <width>195</width>
+            <y>0</y>
+            <width>210</width>
             <height>1526</height>
            </rect>
           </property>
@@ -3535,10 +3545,13 @@ QGroupBox::indicator:checked {
      <normaloff>:/RetinaIMG/RetinaIMG/Settings-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Settings-icon.png</iconset>
    </property>
    <property name="text">
-    <string>Preferences</string>
+    <string>Export Settings</string>
    </property>
    <property name="toolTip">
-    <string>Preferences</string>
+    <string>Export Settings</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+,</string>
    </property>
   </action>
   <action name="actionShowSessionArea">
@@ -3794,6 +3807,30 @@ QGroupBox::indicator:checked {
    </property>
    <property name="shortcut">
     <string>Ctrl+Alt+V</string>
+   </property>
+  </action>
+  <action name="actionPreviewDisabled">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Disabled</string>
+   </property>
+  </action>
+  <action name="actionPreviewList">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>List Mode</string>
+   </property>
+  </action>
+  <action name="actionPreviewPicture">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Picture Mode</string>
    </property>
   </action>
  </widget>

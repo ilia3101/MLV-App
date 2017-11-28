@@ -36,6 +36,12 @@
    </item>
    <item row="0" column="0" colspan="2">
     <widget class="QTableWidget" name="tableWidget">
+     <property name="focusPolicy">
+      <enum>Qt::NoFocus</enum>
+     </property>
+     <property name="contextMenuPolicy">
+      <enum>Qt::NoContextMenu</enum>
+     </property>
      <property name="verticalScrollBarPolicy">
       <enum>Qt::ScrollBarAsNeeded</enum>
      </property>

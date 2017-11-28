@@ -6,12 +6,18 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>329</width>
-    <height>428</height>
+    <width>336</width>
+    <height>272</height>
    </rect>
   </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
   <property name="windowTitle">
-   <string>Preferences</string>
+   <string>Export Settings</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
@@ -193,62 +199,6 @@
     </widget>
    </item>
    <item>
-    <widget class="QGroupBox" name="groupBox_2">
-     <property name="title">
-      <string>Preview Pictures</string>
-     </property>
-     <layout class="QGridLayout" name="gridLayout">
-      <item row="0" column="0">
-       <widget class="QRadioButton" name="radioButtonPreviewDisabled">
-        <property name="text">
-         <string>Disabled</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QRadioButton" name="radioButtonPreviewList">
-        <property name="text">
-         <string>List mode</string>
-        </property>
-        <property name="checked">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QRadioButton" name="radioButtonPreviewIcon">
-        <property name="text">
-         <string>Picture mode</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item>
-    <widget class="QGroupBox" name="groupBox_3">
-     <property name="title">
-      <string>Application Appearance</string>
-     </property>
-     <layout class="QGridLayout" name="gridLayout_3">
-      <item row="0" column="0">
-       <widget class="QComboBox" name="comboBoxStyle">
-        <item>
-         <property name="text">
-          <string>Standard</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>DarkStyle</string>
-         </property>
-        </item>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item>
     <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
       <spacer name="horizontalSpacer">
@@ -279,9 +229,6 @@
   <tabstop>checkBoxFpsOverride</tabstop>
   <tabstop>doubleSpinBoxFps</tabstop>
   <tabstop>checkBoxExportAudio</tabstop>
-  <tabstop>radioButtonPreviewDisabled</tabstop>
-  <tabstop>radioButtonPreviewList</tabstop>
-  <tabstop>radioButtonPreviewIcon</tabstop>
   <tabstop>pushButtonClose</tabstop>
  </tabstops>
  <resources/>

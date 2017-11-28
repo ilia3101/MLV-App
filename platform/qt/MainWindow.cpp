@@ -600,6 +600,14 @@ void MainWindow::initGui( void )
     //We dont want a context menu which could disable the menu bar
     setContextMenuPolicy(Qt::NoContextMenu);
 
+    //Apply DarkStyle
+    CDarkStyle::assign();
+#ifdef Q_OS_LINUX
+    //if not doing this, some elements are covered by the scrollbar on Linux only
+    ui->dockWidgetEdit->setMinimumWidth( 240 );
+    ui->dockWidgetContents->setMinimumWidth( 240 );
+#endif
+
     //Init the Dialogs
     m_pInfoDialog = new InfoDialog( this );
     m_pStatusDialog = new StatusDialog( this );
@@ -754,20 +762,21 @@ void MainWindow::readSettings()
     m_codecOption = set.value( "codecOption", 0 ).toUInt();
     m_exportDebayerMode = set.value( "exportDebayerMode", 1 ).toUInt();
     m_previewMode = set.value( "previewMode", 1 ).toUInt();
-    //if( set.value( "caching", false ).toBool() ) ui->actionCaching->setChecked( true );
+    switch( m_previewMode )
+    {
+    case 0:
+        on_actionPreviewDisabled_triggered();
+        break;
+    case 1:
+        on_actionPreviewList_triggered();
+        break;
+    default:
+        on_actionPreviewPicture_triggered();
+        break;
+    }
     ui->actionCaching->setChecked( false );
     m_frameRate = set.value( "frameRate", 25 ).toDouble();
     m_audioExportEnabled = set.value( "audioExportEnabled", true ).toBool();
-    m_styleSelection = set.value( "darkStyle", 0 ).toInt();
-    if( m_styleSelection == 1 ) CDarkStyle::assign();
-#ifdef Q_OS_MACX
-    else ui->scrollArea->setVerticalScrollBarPolicy( Qt::ScrollBarAsNeeded );
-#endif
-#ifdef Q_OS_LINUX
-    //if not doing this, some elements are covered by the scrollbar on Linux only
-    ui->dockWidgetEdit->setMinimumWidth( 240 );
-    ui->dockWidgetContents->setMinimumWidth( 240 );
-#endif
     ui->groupBoxRawCorrection->setChecked( set.value( "expandedRawCorrection", false ).toBool() );
     ui->groupBoxCutInOut->setChecked( set.value( "expandedCutInOut", false ).toBool() );
     ui->groupBoxProcessing->setChecked( set.value( "expandedProcessing", true ).toBool() );
@@ -792,7 +801,6 @@ void MainWindow::writeSettings()
     set.setValue( "caching", ui->actionCaching->isChecked() );
     set.setValue( "frameRate", m_frameRate );
     set.setValue( "audioExportEnabled", m_audioExportEnabled );
-    set.setValue( "darkStyle", m_styleSelection );
     set.setValue( "expandedRawCorrection", ui->groupBoxRawCorrection->isChecked() );
     set.setValue( "expandedCutInOut", ui->groupBoxCutInOut->isChecked() );
     set.setValue( "expandedProcessing", ui->groupBoxProcessing->isChecked() );
@@ -2664,16 +2672,14 @@ void MainWindow::on_actionExportSettings_triggered()
     //Stop playback if active
     ui->actionPlay->setChecked( false );
 
-    ExportSettingsDialog *pExportSettings = new ExportSettingsDialog( this, m_codecProfile, m_codecOption, m_exportDebayerMode, m_previewMode, m_fpsOverride, m_frameRate, m_audioExportEnabled, m_styleSelection );
+    ExportSettingsDialog *pExportSettings = new ExportSettingsDialog( this, m_codecProfile, m_codecOption, m_exportDebayerMode, m_fpsOverride, m_frameRate, m_audioExportEnabled );
     pExportSettings->exec();
     m_codecProfile = pExportSettings->encoderSetting();
     m_codecOption = pExportSettings->encoderOption();
     m_exportDebayerMode = pExportSettings->debayerMode();
-    m_previewMode = pExportSettings->previewMode();
     m_fpsOverride = pExportSettings->isFpsOverride();
     m_frameRate = pExportSettings->getFps();
     m_audioExportEnabled = pExportSettings->isExportAudioEnabled();
-    m_styleSelection = pExportSettings->getStyleIndex();
     delete pExportSettings;
 
     //Restart timer with chosen framerate
@@ -2682,7 +2688,6 @@ void MainWindow::on_actionExportSettings_triggered()
         killTimer( m_timerId );
         m_timerId = startTimer( (int)( 1000.0 / getFramerate() ) );
     }
-    setPreviewMode();
 }
 
 //Reset the edit sliders to default
@@ -2815,25 +2820,31 @@ void MainWindow::on_actionShowAudioTrack_triggered(bool checked)
 //Rightclick on SessionList
 void MainWindow::on_listWidgetSession_customContextMenuRequested(const QPoint &pos)
 {
-    if( ui->listWidgetSession->count() <= 0 ) return;
-    if( ui->listWidgetSession->selectedItems().size() <= 0 ) return;
+    //if( ui->listWidgetSession->count() <= 0 ) return;
+    //if( ui->listWidgetSession->selectedItems().size() <= 0 ) return;
 
     // Handle global position
     QPoint globalPos = ui->listWidgetSession->mapToGlobal( pos );
 
     // Create menu and insert some actions
     QMenu myMenu;
-    if( ui->listWidgetSession->selectedItems().size() == 1 )
+    if( ui->listWidgetSession->count() > 0 )
     {
-        myMenu.addAction( "Select all",  this, SLOT( selectAllFiles() ) );
-        myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Image-icon.png" ), "Show in editor",  this, SLOT( rightClickShowFile() ) );
-        myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Delete-icon.png" ), "Delete selected file from session",  this, SLOT( deleteFileFromSession() ) );
+        if( ui->listWidgetSession->selectedItems().size() == 1 )
+        {
+            myMenu.addAction( "Select all",  this, SLOT( selectAllFiles() ) );
+            myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Image-icon.png" ), "Show in editor",  this, SLOT( rightClickShowFile() ) );
+            myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Delete-icon.png" ), "Delete selected file from session",  this, SLOT( deleteFileFromSession() ) );
+            myMenu.addSeparator();
+        }
+        else if( ui->listWidgetSession->selectedItems().size() > 1 )
+        {
+            myMenu.addAction( ui->actionPasteReceipt );
+            myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Delete-icon.png" ), "Delete selected files from session",  this, SLOT( deleteFileFromSession() ) );
+            myMenu.addSeparator();
+        }
     }
-    else
-    {
-        myMenu.addAction( ui->actionPasteReceipt );
-        myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Delete-icon.png" ), "Delete selected files from session",  this, SLOT( deleteFileFromSession() ) );
-    }
+    myMenu.addMenu( ui->menuSessionListPreview );
     // Show context menu at handling position
     myMenu.exec( globalPos );
 }
@@ -3782,4 +3793,34 @@ void MainWindow::on_spinBoxCutIn_valueChanged(int arg1)
 void MainWindow::on_spinBoxCutOut_valueChanged(int arg1)
 {
     ui->spinBoxCutIn->setMaximum( arg1 );
+}
+
+//Session Preview Disabled
+void MainWindow::on_actionPreviewDisabled_triggered()
+{
+    ui->actionPreviewDisabled->setChecked( true );
+    ui->actionPreviewList->setChecked( false );
+    ui->actionPreviewPicture->setChecked( false );
+    m_previewMode = 0;
+    setPreviewMode();
+}
+
+//Session Preview  List
+void MainWindow::on_actionPreviewList_triggered()
+{
+    ui->actionPreviewDisabled->setChecked( false );
+    ui->actionPreviewList->setChecked( true );
+    ui->actionPreviewPicture->setChecked( false );
+    m_previewMode = 1;
+    setPreviewMode();
+}
+
+//Session Preview Picture
+void MainWindow::on_actionPreviewPicture_triggered()
+{
+    ui->actionPreviewDisabled->setChecked( false );
+    ui->actionPreviewList->setChecked( false );
+    ui->actionPreviewPicture->setChecked( true );
+    m_previewMode = 2;
+    setPreviewMode();
 }
