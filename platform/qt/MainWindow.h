@@ -197,10 +197,13 @@ private:
     bool m_inOpeningProcess;
     int m_timerId;
     int m_timerCacheId;
+    bool m_resizeFilterEnabled;
+    uint16_t m_resizeWidth;
+    uint16_t m_resizeHeight;
     bool m_fpsOverride;
+    double m_frameRate;
     bool m_tryToSyncAudio;
     bool m_audioExportEnabled;
-    double m_frameRate;
     bool m_exportAbortPressed;
     bool m_zoomTo100Center;
     bool m_zoomModeChanged;

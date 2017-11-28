@@ -10,7 +10,7 @@
 #include <QMessageBox>
 
 //Constructor
-ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, uint8_t currentCodecProfile, uint8_t currentCodecOption, uint8_t debayerMode, bool fpsOverride, double fps, bool exportAudio) :
+ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, uint8_t currentCodecProfile, uint8_t currentCodecOption, uint8_t debayerMode, bool resize, uint16_t resizeWidth, uint16_t resizeHeight, bool fpsOverride, double fps, bool exportAudio) :
     QDialog(parent),
     ui(new Ui::ExportSettingsDialog)
 {
@@ -20,6 +20,10 @@ ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, uint8_t currentCodec
     on_comboBoxCodec_currentIndexChanged( currentCodecProfile );
     ui->comboBoxOption->setCurrentIndex( currentCodecOption );
     ui->comboBoxDebayer->setCurrentIndex( debayerMode );
+    ui->checkBoxResize->setChecked( resize );
+    on_checkBoxResize_toggled( resize );
+    ui->spinBoxWidth->setValue( resizeWidth );
+    ui->spinBoxHeight->setValue( resizeHeight );
     ui->checkBoxFpsOverride->setChecked( fpsOverride );
     on_checkBoxFpsOverride_clicked( fpsOverride );
     ui->doubleSpinBoxFps->setValue( fps );
@@ -52,6 +56,24 @@ uint8_t ExportSettingsDialog::debayerMode()
     return ui->comboBoxDebayer->currentIndex();
 }
 
+//Get if resize is enabled
+bool ExportSettingsDialog::isResizeEnabled()
+{
+    return ui->checkBoxResize->isChecked();
+}
+
+//Get resize width
+uint16_t ExportSettingsDialog::resizeWidth()
+{
+    return ui->spinBoxWidth->value();
+}
+
+//Get resize height
+uint16_t ExportSettingsDialog::resizeHeight()
+{
+    return ui->spinBoxHeight->value();
+}
+
 //Get if fps override
 bool ExportSettingsDialog::isFpsOverride()
 {
@@ -79,6 +101,8 @@ void ExportSettingsDialog::on_pushButtonClose_clicked()
 //Change option when codec changed
 void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
 {
+    bool enableResize = true;
+
     ui->comboBoxOption->clear();
 
     if( index <= CODEC_PRORES422HQ )
@@ -94,6 +118,7 @@ void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
         ui->comboBoxOption->setEnabled( true );
         ui->comboBoxOption->addItem( QString( "Default Naming Scheme" ) );
         ui->comboBoxOption->addItem( QString( "DaVinci Resolve Naming Scheme" ) );
+        enableResize = false;
     }
     else if( index == CODEC_H264
           || index == CODEC_H265 )
@@ -108,6 +133,13 @@ void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
         ui->comboBoxOption->setEnabled( false );
         if( index == CODEC_PRORES4444 ) ui->comboBoxOption->addItem( QString( "Kostya" ) );
     }
+
+    //If CDNG, disable resize feature
+    if( !enableResize )
+    {
+        ui->checkBoxResize->setChecked( false );
+    }
+    ui->checkBoxResize->setEnabled( enableResize );
 }
 
 //Change settings if FPS Override is clicked
@@ -119,4 +151,11 @@ void ExportSettingsDialog::on_checkBoxFpsOverride_clicked(bool checked)
         ui->checkBoxExportAudio->setChecked( false );
     }
     ui->checkBoxExportAudio->setEnabled( !checked );
+}
+
+//Enable / Disable elements when resize is checked
+void ExportSettingsDialog::on_checkBoxResize_toggled(bool checked)
+{
+    ui->spinBoxWidth->setEnabled( checked );
+    ui->spinBoxHeight->setEnabled( checked );
 }

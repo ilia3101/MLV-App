@@ -45,19 +45,32 @@ class ExportSettingsDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit ExportSettingsDialog(QWidget *parent = 0, uint8_t currentCodecProfile = 0, uint8_t currentCodecOption = 0, uint8_t debayerMode = 1, bool fpsOverride = false, double fps = 25, bool exportAudio = true);
+    explicit ExportSettingsDialog(QWidget *parent = 0,
+                                  uint8_t currentCodecProfile = 0,
+                                  uint8_t currentCodecOption = 0,
+                                  uint8_t debayerMode = 1,
+                                  bool resize = false,
+                                  uint16_t resizeWidth = 1920,
+                                  uint16_t resizeHeight = 1080,
+                                  bool fpsOverride = false,
+                                  double fps = 25,
+                                  bool exportAudio = true);
     ~ExportSettingsDialog();
     uint8_t encoderSetting(void);
     uint8_t encoderOption(void);
     uint8_t debayerMode(void);
-    bool isExportAudioEnabled(void);
+    bool isResizeEnabled(void);
+    uint16_t resizeWidth(void);
+    uint16_t resizeHeight(void);
     bool isFpsOverride(void);
     double getFps(void);
+    bool isExportAudioEnabled(void);
 
 private slots:
     void on_pushButtonClose_clicked();
     void on_comboBoxCodec_currentIndexChanged(int index);
     void on_checkBoxFpsOverride_clicked(bool checked);
+    void on_checkBoxResize_toggled(bool checked);
 
 private:
     Ui::ExportSettingsDialog *ui;

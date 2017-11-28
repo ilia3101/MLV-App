@@ -775,6 +775,9 @@ void MainWindow::readSettings()
         break;
     }
     ui->actionCaching->setChecked( false );
+    m_resizeFilterEnabled = set.value( "resizeEnable", false ).toBool();
+    m_resizeWidth = set.value( "resizeWidth", 1920 ).toUInt();
+    m_resizeHeight = set.value( "resizeHeight", 1080 ).toUInt();
     m_frameRate = set.value( "frameRate", 25 ).toDouble();
     m_audioExportEnabled = set.value( "audioExportEnabled", true ).toBool();
     ui->groupBoxRawCorrection->setChecked( set.value( "expandedRawCorrection", false ).toBool() );
@@ -799,6 +802,9 @@ void MainWindow::writeSettings()
     set.setValue( "exportDebayerMode", m_exportDebayerMode );
     set.setValue( "previewMode", m_previewMode );
     set.setValue( "caching", ui->actionCaching->isChecked() );
+    set.setValue( "resizeEnable", m_resizeFilterEnabled );
+    set.setValue( "resizeWidth", m_resizeWidth );
+    set.setValue( "resizeHeight", m_resizeHeight );
     set.setValue( "frameRate", m_frameRate );
     set.setValue( "audioExportEnabled", m_audioExportEnabled );
     set.setValue( "expandedRawCorrection", ui->groupBoxRawCorrection->isChecked() );
@@ -846,6 +852,13 @@ void MainWindow::startExportPipe(QString fileName)
         else ffmpegAudioCommand = QString( "-i \"%1\" -c:a copy " ).arg( wavFileName );
     }
 
+    //Resize Filter
+    QString resizeFilter = QString( "" );
+    if( m_resizeFilterEnabled )
+    {
+        resizeFilter = QString( "-vf scale=%1:%2 " ).arg( m_resizeWidth ).arg( m_resizeHeight );
+    }
+
     //FFMpeg export
 #ifdef __linux__
     QString program = QString( "ffmpeg" );
@@ -871,10 +884,11 @@ void MainWindow::startExportPipe(QString fileName)
     if( m_codecProfile == CODEC_AVIRAW )
     {
         output.append( QString( ".avi" ) );
-        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v rawvideo -pix_fmt %3 \"%4\"" )
+        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v rawvideo -pix_fmt %3 %4\"%5\"" )
                     .arg( fps )
                     .arg( resolution )
                     .arg( "yuv420p" )
+                    .arg( resizeFilter )
                     .arg( output ) );
     }
     else if( m_codecProfile == CODEC_H264 )
@@ -883,10 +897,11 @@ void MainWindow::startExportPipe(QString fileName)
         else if( m_codecOption == CODEC_H264_MP4 ) output.append( QString( ".mp4" ) );
         else output.append( QString( ".mkv" ) );
 
-        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v libx264 -preset medium -crf 24 -pix_fmt %3 -color_primaries bt709 -color_trc bt709 -colorspace bt709 \"%4\"" )
+        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v libx264 -preset medium -crf 24 -pix_fmt %3 -color_primaries bt709 -color_trc bt709 -colorspace bt709 %4\"%5\"" )
                     .arg( fps )
                     .arg( resolution )
                     .arg( "yuv420p" )
+                    .arg( resizeFilter )
                     .arg( output ) );
     }
     else if( m_codecProfile == CODEC_H265 )
@@ -895,10 +910,11 @@ void MainWindow::startExportPipe(QString fileName)
         else if( m_codecOption == CODEC_H265_MP4 ) output.append( QString( ".mp4" ) );
         else output.append( QString( ".mkv" ) );
 
-        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v libx265 -preset medium -crf 24 -pix_fmt %3 -color_primaries bt709 -color_trc bt709 -colorspace bt709 \"%4\"" )
+        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v libx265 -preset medium -crf 24 -pix_fmt %3 -color_primaries bt709 -color_trc bt709 -colorspace bt709 %4\"%5\"" )
                     .arg( fps )
                     .arg( resolution )
                     .arg( "yuv420p" )
+                    .arg( resizeFilter )
                     .arg( output ) );
     }
     else
@@ -908,11 +924,12 @@ void MainWindow::startExportPipe(QString fileName)
         else option = QString( "prores_ks" );
 
         output.append( QString( ".mov" ) );
-        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v %3 -profile:v %4 -color_primaries bt709 -color_trc bt709 -colorspace bt709 \"%5\"" )
+        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v %3 -profile:v %4 -color_primaries bt709 -color_trc bt709 -colorspace bt709 %5\"%6\"" )
                     .arg( fps )
                     .arg( resolution )
                     .arg( option )
                     .arg( m_codecProfile )
+                    .arg( resizeFilter )
                     .arg( output ) );
     }
     //There is a %5 in the string, so another arg is not possible - so do that:
@@ -2672,11 +2689,23 @@ void MainWindow::on_actionExportSettings_triggered()
     //Stop playback if active
     ui->actionPlay->setChecked( false );
 
-    ExportSettingsDialog *pExportSettings = new ExportSettingsDialog( this, m_codecProfile, m_codecOption, m_exportDebayerMode, m_fpsOverride, m_frameRate, m_audioExportEnabled );
+    ExportSettingsDialog *pExportSettings = new ExportSettingsDialog( this,
+                                                                      m_codecProfile,
+                                                                      m_codecOption,
+                                                                      m_exportDebayerMode,
+                                                                      m_resizeFilterEnabled,
+                                                                      m_resizeWidth,
+                                                                      m_resizeHeight,
+                                                                      m_fpsOverride,
+                                                                      m_frameRate,
+                                                                      m_audioExportEnabled );
     pExportSettings->exec();
     m_codecProfile = pExportSettings->encoderSetting();
     m_codecOption = pExportSettings->encoderOption();
     m_exportDebayerMode = pExportSettings->debayerMode();
+    m_resizeFilterEnabled = pExportSettings->isResizeEnabled();
+    m_resizeWidth = pExportSettings->resizeWidth();
+    m_resizeHeight = pExportSettings->resizeHeight();
     m_fpsOverride = pExportSettings->isFpsOverride();
     m_frameRate = pExportSettings->getFps();
     m_audioExportEnabled = pExportSettings->isExportAudioEnabled();
