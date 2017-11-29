@@ -476,7 +476,7 @@ int setAppNewMlvClip(char * mlvPath)
     setCurrentClipTouched();
 } -(void)darkRangeMethod {
     processingSetDCRange(App->processingSettings, [self doubleValue]);
-    [App->darkRangeValueLabel setStringValue: [NSString stringWithFormat:@"%6.2f", [self doubleValue]]];
+    [App->darkRangeValueLabel setStringValue: [NSString stringWithFormat:@"%6i", (int)([self doubleValue]*100.0)]];
     App->frameChanged++;
     setCurrentClipTouched();
 } -(void)lightStrengthMethod {
@@ -486,7 +486,7 @@ int setAppNewMlvClip(char * mlvPath)
     setCurrentClipTouched();
 } -(void)lightRangeMethod {
     processingSetLCRange(App->processingSettings, [self doubleValue]);
-    [App->lightRangeValueLabel setStringValue: [NSString stringWithFormat:@"%6.2f", [self doubleValue]]];
+    [App->lightRangeValueLabel setStringValue: [NSString stringWithFormat:@"%6i", (int)([self doubleValue]*100.0)]];
     App->frameChanged++;
     setCurrentClipTouched();
 } -(void)lightenMethod {
