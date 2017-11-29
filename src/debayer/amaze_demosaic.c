@@ -37,9 +37,6 @@
 
 #define initialGain 1.0 /* IDK */
 
-#define WB_G 2.0
-#define WB_B 1.4
-
 /* assume RGGB */
 /* see RT rawimage.h */
 static inline int FC(int row, int col)
@@ -289,20 +286,64 @@ void demosaic(amazeinfo_t * inputdata) /* All arguments in 1 struct for posix */
 	}
 
 	/* "white balance" */
+	float wb_b, wb_g, wb_r; /* White balaance multipliers */
+	/* Generate mulipliers and apply to the image */
 	{
 		int endx = winx + winw;
 		int endy = winy + winh;
+
+		int t_r=0,t_g=0,t_b=0; /* Totals we have counted (R,G and B) */
+		float a_r=0,a_g=0,a_b=0; /* Average values (RGB) */
+		for (int y = winy; y < endy; y += 7) /* Skip amounts can be anything odd, lower = slower (and no point) */
+			for (int x = winx; x < endx; x += 13)
+				switch (FC(y,x))
+				{
+					case 0:
+						a_r += rawData[y][x];
+						t_r++;
+						break;
+					case 1:
+						a_g += rawData[y][x];
+						t_g++;
+						break;
+					case 2:
+						a_b += rawData[y][x];
+						t_b++;
+						break;
+				}
+
+		/* Divide by total to get average value (and make 0-1) */
+		a_r /= (float)t_r;
+		a_g /= (float)t_g;
+		a_b /= (float)t_b;
+		a_r -= 4000.0; /* subtract something approximate to black level */
+		a_g -= 4000.0;
+		a_b -= 4000.0;
+		a_r = 1.0f/a_r; /* inverty */
+		a_g = 1.0f/a_g;
+		a_b = 1.0f/a_b;
+
+		/* Create multipliers */
+		#define WB_POWER 2.5 /* Strengthen difference applied, seems to help */
+		wb_r = powf(a_r/MAX(MAX(a_r, a_g), a_b), WB_POWER);
+		wb_g = powf(a_g/MAX(MAX(a_r, a_g), a_b), WB_POWER);
+		wb_b = powf(a_b/MAX(MAX(a_r, a_g), a_b), WB_POWER);
+
+		printf("\nWB Multipliers AMaZE\nred %f\ngreen: %f\nblue: %f\n\n", wb_r, wb_g, wb_b);
+
+		/* Applying */
 		for (int y = winy; y < endy; ++y)
 			for (int x = winx; x < endx; ++x)
 				switch (FC(y,x))
 				{
+					case 0:
+						rawData[y][x] *= wb_r;
+						break;
 					case 1:
-						rawData[y][x] *= (1.0/WB_G); // hoping compiler will make these a constant
+						rawData[y][x] *= wb_g;
 						break;
 					case 2:
-						rawData[y][x] *= (1.0/WB_B);
-					default:
-						break;
+						rawData[y][x] *= wb_b;
 				}
 	}
 
@@ -1502,14 +1543,21 @@ void demosaic(amazeinfo_t * inputdata) /* All arguments in 1 struct for posix */
 
 	/* "white balance" */
 	{
+		/* Invert the multiplierds */
+		wb_r = 1.0 / wb_r;
+		wb_g = 1.0 / wb_g;
+		wb_b = 1.0 / wb_b;
 		int endx = winx + winw;
 		int endy = winy + winh;
 		for (int y = winy; y < endy; ++y)
 			for (int x = winx; x < endx; ++x)
-				green[y][x] *= WB_G;
+				red[y][x] *= wb_r;
 		for (int y = winy; y < endy; ++y)
 			for (int x = winx; x < endx; ++x)
-				blue[y][x] *= WB_B;
+				green[y][x] *= wb_g;
+		for (int y = winy; y < endy; ++y)
+			for (int x = winx; x < endx; ++x)
+				blue[y][x] *= wb_b;
 	}
 }
 
