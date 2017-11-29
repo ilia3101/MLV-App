@@ -329,7 +329,7 @@ void demosaic(amazeinfo_t * inputdata) /* All arguments in 1 struct for posix */
 		wb_g = powf(a_g/MAX(MAX(a_r, a_g), a_b), WB_POWER);
 		wb_b = powf(a_b/MAX(MAX(a_r, a_g), a_b), WB_POWER);
 
-		printf("\nWB Multipliers AMaZE\nred %f\ngreen: %f\nblue: %f\n\n", wb_r, wb_g, wb_b);
+		//printf("\nWB Multipliers AMaZE\nred %f\ngreen: %f\nblue: %f\n\n", wb_r, wb_g, wb_b);
 
 		/* Applying */
 		for (int y = winy; y < endy; ++y)
