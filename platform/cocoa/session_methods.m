@@ -161,17 +161,18 @@ void appWriteSession(char * sessionPath)
 
         #define MASXML_TYPE int
         #define MASXML_TYPE_ESC "%i"
-        fprintf(session_file, TAB2 "<exposure>"MASXML_TYPE_ESC"</exposure>\n", (MASXML_TYPE)(clip->settings.exposureSlider * 100.0));
+        #define MASXML_ROUND_ADD 0.5
+        fprintf(session_file, TAB2 "<exposure>"MASXML_TYPE_ESC"</exposure>\n", (MASXML_TYPE)(clip->settings.exposureSlider * 100.0 + MASXML_ROUND_ADD));
         fprintf(session_file, TAB2 "<temperature>"MASXML_TYPE_ESC"</temperature>\n", (MASXML_TYPE)(clip->settings.kelvinSlider * (KELVIN_MAX - KELVIN_MIN) + KELVIN_MIN));
-        fprintf(session_file, TAB2 "<tint>"MASXML_TYPE_ESC"</tint>\n", (MASXML_TYPE)(clip->settings.tintSlider * 100.0));
-        fprintf(session_file, TAB2 "<saturation>"MASXML_TYPE_ESC"</saturation>\n", (MASXML_TYPE)(clip->settings.saturationSlider * 100.0));
-        fprintf(session_file, TAB2 "<ds>"MASXML_TYPE_ESC"</ds>\n", (MASXML_TYPE)(clip->settings.darkStrengthSlider * 100.0));
-        fprintf(session_file, TAB2 "<dr>"MASXML_TYPE_ESC"</dr>\n", (MASXML_TYPE)(clip->settings.darkRangeSlider * 100.0));
-        fprintf(session_file, TAB2 "<ls>"MASXML_TYPE_ESC"</ls>\n", (MASXML_TYPE)(clip->settings.lightStrengthSlider * 100.0));
-        fprintf(session_file, TAB2 "<lr>"MASXML_TYPE_ESC"</lr>\n", (MASXML_TYPE)(clip->settings.lightRangeSlider * 100.0));
-        fprintf(session_file, TAB2 "<lightening>"MASXML_TYPE_ESC"</lightening>\n", (MASXML_TYPE)(clip->settings.lightenSlider * 100.0));
-        fprintf(session_file, TAB2 "<sharpen>"MASXML_TYPE_ESC"</sharpen>\n", (MASXML_TYPE)(clip->settings.sharpnessSlider * 100.0));
-        fprintf(session_file, TAB2 "<chromaBlur>"MASXML_TYPE_ESC"</chromaBlur>\n", (MASXML_TYPE)(clip->settings.chromaBlurSlider * 100.0));
+        fprintf(session_file, TAB2 "<tint>"MASXML_TYPE_ESC"</tint>\n", (MASXML_TYPE)(clip->settings.tintSlider * 100.0 + MASXML_ROUND_ADD));
+        fprintf(session_file, TAB2 "<saturation>"MASXML_TYPE_ESC"</saturation>\n", (MASXML_TYPE)(clip->settings.saturationSlider * 100.0 + MASXML_ROUND_ADD));
+        fprintf(session_file, TAB2 "<ds>"MASXML_TYPE_ESC"</ds>\n", (MASXML_TYPE)(clip->settings.darkStrengthSlider * 100.0 + MASXML_ROUND_ADD));
+        fprintf(session_file, TAB2 "<dr>"MASXML_TYPE_ESC"</dr>\n", (MASXML_TYPE)(clip->settings.darkRangeSlider * 100.0 + MASXML_ROUND_ADD));
+        fprintf(session_file, TAB2 "<ls>"MASXML_TYPE_ESC"</ls>\n", (MASXML_TYPE)(clip->settings.lightStrengthSlider * 100.0 + MASXML_ROUND_ADD));
+        fprintf(session_file, TAB2 "<lr>"MASXML_TYPE_ESC"</lr>\n", (MASXML_TYPE)(clip->settings.lightRangeSlider * 100.0 + MASXML_ROUND_ADD));
+        fprintf(session_file, TAB2 "<lightening>"MASXML_TYPE_ESC"</lightening>\n", (MASXML_TYPE)(clip->settings.lightenSlider * 100.0 + MASXML_ROUND_ADD));
+        fprintf(session_file, TAB2 "<sharpen>"MASXML_TYPE_ESC"</sharpen>\n", (MASXML_TYPE)(clip->settings.sharpnessSlider * 100.0 + MASXML_ROUND_ADD));
+        fprintf(session_file, TAB2 "<chromaBlur>"MASXML_TYPE_ESC"</chromaBlur>\n", (MASXML_TYPE)(clip->settings.chromaBlurSlider * 100.0 + MASXML_ROUND_ADD));
         fprintf(session_file, TAB2 "<highlightReconstruction>%i</highlightReconstruction>\n", (int)clip->settings.highlightReconstructionSelector);
         fprintf(session_file, TAB2 "<chromaSeparation>%i</chromaSeparation>\n", (int)clip->settings.chromaSeparationSelector);
         fprintf(session_file, TAB2 "<profile>%i</profile>\n", (int)clip->settings.imageProfile);
@@ -208,7 +209,7 @@ static int StrCmp(char * str, char * xml)
 
 static int GetTagValue(char * str, char * xml, double * valueReturn)
 {
-    int comp = strncmp(str, xml, strlen(str)-1);
+    int comp = strncmp(str, xml, strlen(str));
     if (!comp)
     {
         xml += strlen(str)-1;

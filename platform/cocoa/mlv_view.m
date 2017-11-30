@@ -38,12 +38,14 @@
 
         /* Magnification */
         float scaleFactor;
+        GLuint Scaling = GL_LINEAR;
         
         if (self.one_to_one_zoom) {
             if (imageAspect > viewAspect)
                 scaleFactor = (float)self.image_width / NSWidth(rect);
             else
                 scaleFactor = (float)self.image_height / NSHeight(rect);
+            Scaling = GL_NEAREST;
         } else {
             scaleFactor = self.magnification;
         }
@@ -63,7 +65,6 @@
 
         /* Create texture */
         GLuint TextureID = 0;
-        GLuint Scaling = GL_LINEAR;
         glBindTexture(GL_TEXTURE_2D, TextureID);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, Scaling);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, Scaling);
