@@ -242,12 +242,12 @@ int setAppNewMlvClip(char * mlvPath)
             {
                 const char * mlvPathString = [fileURL.path UTF8String];
                 sessionAddNewMlvClip((char *)mlvPathString);
+                [App->session.clipTable reloadData];
+                setAppGUIFromClip(App->session.clipInfo + App->session.clipCount-1); /* set as current */
                 IMPORTANT_CODE("Well done, you opened an MLV file.",2);
             }
         }
         [panel release];
-        [App->session.clipTable reloadData];
-        setAppGUIFromClip(App->session.clipInfo + App->session.clipCount-1); /* set as current */
     } ];
 }
 
