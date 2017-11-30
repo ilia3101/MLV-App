@@ -1015,8 +1015,6 @@ void MainWindow::startExportCdng(QString fileName)
     //Disable GUI drawing
     m_dontDraw = true;
 
-    // we always get amaze frames for exporting
-    setMlvAlwaysUseAmaze( m_pMlvObject );
     llrpResetFpmStatus(m_pMlvObject);
     llrpResetBpmStatus(m_pMlvObject);
     llrpComputeStripesOn(m_pMlvObject);
