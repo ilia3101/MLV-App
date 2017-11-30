@@ -293,43 +293,45 @@ void demosaic(amazeinfo_t * inputdata) /* All arguments in 1 struct for posix */
 		int endy = winy + winh;
 
 		int t_r=0,t_g=0,t_b=0; /* Totals we have counted (R,G and B) */
-		float a_r=0,a_g=0,a_b=0; /* Average values (RGB) */
+		float avg_r=0.0,avg_g=0.0,avg_b=0.0; /* Average values (RGB) */
 		for (int y = winy; y < endy; y += 7) /* Skip amounts can be anything odd, lower = slower (and no point) */
 			for (int x = winx; x < endx; x += 13)
 				switch (FC(y,x))
 				{
 					case 0:
-						a_r += rawData[y][x];
+						avg_r += rawData[y][x];
 						t_r++;
 						break;
 					case 1:
-						a_g += rawData[y][x];
+						avg_g += rawData[y][x];
 						t_g++;
 						break;
 					case 2:
-						a_b += rawData[y][x];
+						avg_b += rawData[y][x];
 						t_b++;
 						break;
 				}
 
 		/* Divide by total to get average value (and make 0-1) */
-		a_r /= (float)t_r;
-		a_g /= (float)t_g;
-		a_b /= (float)t_b;
-		a_r -= 4000.0; /* subtract something approximate to black level */
-		a_g -= 4000.0;
-		a_b -= 4000.0;
-		a_r = 1.0f/a_r; /* inverty */
-		a_g = 1.0f/a_g;
-		a_b = 1.0f/a_b;
+		avg_r /= (float)t_r;
+		avg_g /= (float)t_g;
+		avg_b /= (float)t_b;
+		/* subtract something approximate to black level */
+		avg_r -= 4000.0;
+		avg_g -= 4000.0;
+		avg_b -= 4000.0;
+		printf("\nAverages:\nred %i\ngreen: %i\nblue: %i\n\n", (int)avg_r, (int)avg_g, (int)avg_b);
+		avg_r = 1.0f/avg_r; /* inverty */
+		avg_g = 1.0f/avg_g;
+		avg_b = 1.0f/avg_b;
 
 		/* Create multipliers */
-		#define WB_POWER 2.5 /* Strengthen difference applied, seems to help */
-		wb_r = powf(a_r/MAX(MAX(a_r, a_g), a_b), WB_POWER);
-		wb_g = powf(a_g/MAX(MAX(a_r, a_g), a_b), WB_POWER);
-		wb_b = powf(a_b/MAX(MAX(a_r, a_g), a_b), WB_POWER);
+		#define WB_POWER 2.3 /* Strengthen difference applied, seems to help */
+		wb_r = powf(avg_r/MAX(MAX(avg_r, avg_g), avg_b), WB_POWER);
+		wb_g = powf(avg_g/MAX(MAX(avg_r, avg_g), avg_b), WB_POWER);
+		wb_b = powf(avg_b/MAX(MAX(avg_r, avg_g), avg_b), WB_POWER);
 
-		//printf("\nWB Multipliers AMaZE\nred %f\ngreen: %f\nblue: %f\n\n", wb_r, wb_g, wb_b);
+		// printf("\nWB Multipliers AMaZE\nred %f\ngreen: %f\nblue: %f\n\n", wb_r, wb_g, wb_b);
 
 		/* Applying */
 		for (int y = winy; y < endy; ++y)
