@@ -1,6 +1,34 @@
 #import "mlv_view.h"
+#include <pthread.h>
+
+void change_scale(MLVView * self)
+{
+    self.changing_scale = YES;
+
+    int steps = 100;
+
+    for (int i = 0; i < steps; ++i)
+    {
+        self.real_stretch = (self.stretch*i + self.real_stretch*(steps-i)) / (float)steps;
+        usleep(1000000/70);
+        [self performSelectorOnMainThread:@selector(updateView) withObject:nil waitUntilDone:NO];
+    }
+
+    self.real_stretch = self.stretch;
+
+    self.changing_scale = NO;
+}
 
 @implementation MLVView
+
+- (void)changeScale
+{
+    pthread_t thread;
+    if (!self.changing_scale)
+    {
+        pthread_create(&thread, NULL, (void * _Nullable)&change_scale, self);
+    }
+}
 
 - (void)rightMouseDown:(NSEvent *)theEvent
 {
@@ -18,33 +46,33 @@
     [NSMenu popUpContextMenu:theMenu withEvent:theEvent forView:self];
 }
 
+-(void)setStretch1_67x {
+    self.stretch = 1.0/1.666667;
+    [self changeScale];
+}
 -(void)setAnamorphic2x {
     self.stretch = 2.0f;
-    [self updateView];
+    [self changeScale];
 }
 -(void)setAnamorphic1_75x {
     self.stretch = 1.75f;
-    [self updateView];
-}
--(void)setStretch1_67x {
-    self.stretch = 1.0/1.666667;
-    [self updateView];
+    [self changeScale];
 }
 -(void)setAnamorphic1_5x {
     self.stretch = 1.5f;
-    [self updateView];
+    [self changeScale];
 }
 -(void)setAnamorphic1_33x {
     self.stretch = 1.33f;
-    [self updateView];
+    [self changeScale];
 }
 -(void)setAnamorphic1_25x {
     self.stretch = 1.25f;
-    [self updateView];
+    [self changeScale];
 }
 -(void)setAnamorphicNone {
     self.stretch = 1.0f;
-    [self updateView];
+    [self changeScale];
 }
 
 -(id)initWithFrame:(NSRect)frame
@@ -55,6 +83,8 @@
         self.draw = NO;
         self.magnification = 1.0;
         self.stretch = 1.0;
+        self.real_stretch = 1.0;
+        self.changing_scale = NO;
     }
     return self;
 }
@@ -80,7 +110,7 @@
     {
         /* Where to draw for correct aspect ratio */
         float viewAspect = (float)NSWidth(rect) / (float)NSHeight(rect);
-        float imageAspect = (float)self.image_width / (float)self.image_height * self.stretch;
+        float imageAspect = (float)self.image_width / (float)self.image_height * self.real_stretch;
 
         /* Magnification */
         float scaleFactor;
