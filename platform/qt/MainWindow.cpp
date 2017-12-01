@@ -223,7 +223,10 @@ void MainWindow::resizeEvent(QResizeEvent *event)
     if( m_fileLoaded )
     {
         drawFrame();
-        redrawGradientElement();
+        m_pGradientElement->redrawGradientElement( m_pScene->width(),
+                                                   m_pScene->height(),
+                                                   getMlvWidth( m_pMlvObject ),
+                                                   getMlvHeight( m_pMlvObject ) );
     }
     event->accept();
 }
@@ -652,18 +655,12 @@ void MainWindow::initGui( void )
 
     //Prepare gradient elements
     QPolygon polygon;
-    m_pGradientGraphicsItem = new GraphicsPolygonMoveItem( polygon );
-    QPen pen = QPen( Qt::white );
-    pen.setWidth( 0 );
-    m_pGradientGraphicsItem->setPen( pen );
-    m_pGradientGraphicsItem->setFlag( QGraphicsItem::ItemIsMovable, true );
-    m_pGradientGraphicsItem->setFlag( QGraphicsItem::ItemSendsScenePositionChanges, true );
-    m_pScene->addItem( m_pGradientGraphicsItem );
-    m_pGradientGraphicsItem->hide();
+    m_pGradientElement = new GradientElement( polygon );
+    m_pScene->addItem( m_pGradientElement->gradientGraphicsElement() );
     connect( m_pScene, SIGNAL( gradientAnchor(int,int) ), this, SLOT( gradientAnchorPicked(int,int) ) );
     connect( m_pScene, SIGNAL( gradientFinalPos(int,int,bool) ), this, SLOT( gradientFinalPosPicked(int,int,bool) ) );
-    connect( m_pGradientGraphicsItem, SIGNAL( itemMoved(int,int) ), this, SLOT( gradientGraphicElementMoved(int,int) ) );
-    connect( m_pGradientGraphicsItem, SIGNAL( itemHovered(bool) ), this, SLOT( gradientGraphicElementHovered(bool) ) );
+    connect( m_pGradientElement->gradientGraphicsElement(), SIGNAL( itemMoved(int,int) ), this, SLOT( gradientGraphicElementMoved(int,int) ) );
+    connect( m_pGradientElement->gradientGraphicsElement(), SIGNAL( itemHovered(bool) ), this, SLOT( gradientGraphicElementHovered(bool) ) );
     //Disable Gradient while no file loaded
     ui->checkBoxGradientEnable->setChecked( false );
     ui->checkBoxGradientEnable->setEnabled( false );
@@ -856,8 +853,29 @@ void MainWindow::startExportPipe(QString fileName)
     QString resizeFilter = QString( "" );
     if( m_resizeFilterEnabled )
     {
+        //H.264 & H.265 needs a size which can be divided by 2
+        if( m_codecProfile == CODEC_H264
+         || m_codecProfile == CODEC_H265 )
+        {
+            m_resizeWidth += m_resizeWidth % 2;
+            m_resizeHeight += m_resizeHeight % 2;
+        }
         resizeFilter = QString( "-vf scale=%1:%2 " ).arg( m_resizeWidth ).arg( m_resizeHeight );
     }
+    else if( m_exportQueue.first()->stretchFactorY() != 1.0 )
+    {
+        uint16_t height = getMlvHeight( m_pMlvObject ) * m_exportQueue.first()->stretchFactorY();
+        //H.264 & H.265 needs a size which can be divided by 2
+        if( m_codecProfile == CODEC_H264
+         || m_codecProfile == CODEC_H265 )
+        {
+            height += height % 2;
+        }
+        resizeFilter = QString( "-vf scale=%1:%2 " )
+                .arg( getMlvWidth( m_pMlvObject ) )
+                .arg( height );
+    }
+    qDebug() << resizeFilter;
 
     //FFMpeg export
 #ifdef __linux__
@@ -1015,6 +1033,8 @@ void MainWindow::startExportCdng(QString fileName)
     //Disable GUI drawing
     m_dontDraw = true;
 
+    // we always get amaze frames for exporting
+    setMlvAlwaysUseAmaze( m_pMlvObject );
     llrpResetFpmStatus(m_pMlvObject);
     llrpResetBpmStatus(m_pMlvObject);
     llrpComputeStripesOn(m_pMlvObject);
@@ -1513,6 +1533,11 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
             receipt->setDualIsoFrBlending( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
+        else if( Rxml->isStartElement() && Rxml->name() == "stretchFactorY" )
+        {
+            receipt->setStretchFactorY( Rxml->readElementText().toDouble() );
+            Rxml->readNext();
+        }
         else if( Rxml->isStartElement() && Rxml->name() == "cutIn" )
         {
             receipt->setCutIn( Rxml->readElementText().toInt() );
@@ -1561,6 +1586,7 @@ void MainWindow::writeXmlElementsToFile(QXmlStreamWriter *xmlWriter, ReceiptSett
     xmlWriter->writeTextElement( "dualIsoInterpolation",    QString( "%1" ).arg( receipt->dualIsoInterpolation() ) );
     xmlWriter->writeTextElement( "dualIsoAliasMap",         QString( "%1" ).arg( receipt->dualIsoAliasMap() ) );
     xmlWriter->writeTextElement( "dualIsoFrBlending",       QString( "%1" ).arg( receipt->dualIsoFrBlending() ) );
+    xmlWriter->writeTextElement( "stretchFactorY",          QString( "%1" ).arg( receipt->stretchFactorY() ) );
     xmlWriter->writeTextElement( "cutIn",                   QString( "%1" ).arg( receipt->cutIn() ) );
     xmlWriter->writeTextElement( "cutOut",                  QString( "%1" ).arg( receipt->cutOut() ) );
 }
@@ -1683,6 +1709,9 @@ void MainWindow::setSliders(ReceiptSettings *receipt)
     ui->spinBoxDeflickerTarget->setValue( receipt->deflickerTarget() );
     on_spinBoxDeflickerTarget_valueChanged( receipt->deflickerTarget() );
 
+    ui->doubleSpinBoxStretchHight->setValue( receipt->stretchFactorY() );
+    on_doubleSpinBoxStretchHight_valueChanged( receipt->stretchFactorY() );
+
     ui->spinBoxCutIn->setValue( receipt->cutIn() );
     on_spinBoxCutIn_valueChanged( receipt->cutIn() );
     ui->spinBoxCutOut->setValue( receipt->cutOut() );
@@ -1723,6 +1752,8 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     receipt->setDualIsoAliasMap( toolButtonDualIsoAliasMapCurrentIndex() );
     receipt->setDualIsoFrBlending( toolButtonDualIsoFullresBlendingCurrentIndex() );
 
+    receipt->setStretchFactorY( ui->doubleSpinBoxStretchHight->value() );
+
     receipt->setCutIn( ui->spinBoxCutIn->value() );
     receipt->setCutOut( ui->spinBoxCutOut->value() );
 }
@@ -1758,6 +1789,8 @@ void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings 
     receiptTarget->setDualIsoInterpolation( receiptSource->dualIsoInterpolation() );
     receiptTarget->setDualIsoAliasMap( receiptSource->dualIsoAliasMap() );
     receiptTarget->setDualIsoFrBlending( receiptSource->dualIsoFrBlending() );
+
+    receiptTarget->setStretchFactorY( receiptSource->stretchFactorY() );
 
     receiptTarget->setCutIn( receiptSource->cutIn() );
     receiptTarget->setCutOut( receiptSource->cutOut() );
@@ -1813,6 +1846,8 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     receipt->setDualIsoInterpolation( m_pSessionReceipts.at( row )->dualIsoInterpolation() );
     receipt->setDualIsoAliasMap( m_pSessionReceipts.at( row )->dualIsoAliasMap() );
     receipt->setDualIsoFrBlending( m_pSessionReceipts.at( row )->dualIsoFrBlending() );
+
+    receipt->setStretchFactorY( m_pSessionReceipts.at( row )->stretchFactorY() );
 
     receipt->setFileName( m_pSessionReceipts.at( row )->fileName() );
     receipt->setCutIn( m_pSessionReceipts.at( row )->cutIn() );
@@ -3408,12 +3443,12 @@ void MainWindow::whiteBalancePicked( int x, int y )
 void MainWindow::gradientAnchorPicked(int x, int y)
 {
     ui->checkBoxGradientEnable->setChecked( true );
-    m_pGradientGraphicsItem->setRotation( 0.0 );
-    m_pGradientGraphicsItem->setPos( x, y );
-    m_pGradientGraphicsItem->show();
     //Some math if in stretch (fit) mode
     x *= getMlvWidth( m_pMlvObject ) / m_pScene->width();
     y *= getMlvHeight( m_pMlvObject ) / m_pScene->height();
+
+    m_pGradientElement->reset();
+    m_pGradientElement->setStartPos( x, y );
 
     ui->spinBoxGradientX->blockSignals( true );
     ui->spinBoxGradientY->blockSignals( true );
@@ -3427,31 +3462,24 @@ void MainWindow::gradientAnchorPicked(int x, int y)
 void MainWindow::gradientFinalPosPicked(int x, int y, bool isFinished)
 {
     //Get both positions
-    QPointF startPos = QPointF( ui->spinBoxGradientX->value(),
-                                ui->spinBoxGradientY->value() );
     QPointF endPos = QPointF( x * getMlvWidth( m_pMlvObject ) / m_pScene->width(),
                               y * getMlvHeight( m_pMlvObject ) / m_pScene->height() );
     //Some math
-    double m = ( endPos.y() - startPos.y() ) / ( endPos.x() - startPos.x() );
-    double alpha = 0;
-    double length = 0;
-    length = sqrt( pow( endPos.x() - startPos.x(), 2 ) + pow( endPos.y() - startPos.y(), 2 ) );
-    if( m != 0 )
-    {
-        alpha = ( atan( m ) * 180.0 / M_PI ) - 90.0;
-        if( ( endPos.x() - startPos.x() ) >= 0 ) alpha += 180;
-    }
-    else if( ( endPos.y() - startPos.y() ) == 0 )
-    {
-        if( ( endPos.x() - startPos.x() ) > 0 ) alpha = 90;
-        else alpha = -90;
-    }
-    //Paint the Gradient Element in the right size
-    paintGradientElement( length * m_pScene->width() / getMlvWidth( m_pMlvObject ) );
+    m_pGradientElement->setFinalPos( endPos.x(), endPos.y() );
+    m_pGradientElement->redrawGradientElement( m_pScene->width(),
+                                               m_pScene->height(),
+                                               getMlvWidth( m_pMlvObject ),
+                                               getMlvHeight( m_pMlvObject ) );
+    m_pGradientElement->gradientGraphicsElement()->show();
 
     //Set the UI numbers and sliders
-    ui->dialGradientAngle->setValue( alpha * 10.0 );
-    ui->spinBoxGradientLength->setValue( length );
+    ui->labelGradientAngle->setText( QString( "%1°" ).arg( m_pGradientElement->uiAngle(), 0, 'f', 1 ) );
+    ui->dialGradientAngle->blockSignals( true );
+    ui->dialGradientAngle->setValue( m_pGradientElement->uiAngle() * 10.0 );
+    ui->dialGradientAngle->blockSignals( false );
+    ui->spinBoxGradientLength->blockSignals( true );
+    ui->spinBoxGradientLength->setValue( m_pGradientElement->uiLength() );
+    ui->spinBoxGradientLength->blockSignals( false );
 
     //If action finished, uncheck paint button
     if( isFinished )
@@ -3499,13 +3527,21 @@ void MainWindow::on_groupBoxLinearGradient_toggled(bool arg1)
     if( !arg1 )
     {
         ui->groupBoxLinearGradient->setMaximumHeight( 30 );
-        m_pGradientGraphicsItem->hide();
+        m_pGradientElement->gradientGraphicsElement()->hide();
     }
     else
     {
-        if( ui->checkBoxGradientEnable->isChecked() ) m_pGradientGraphicsItem->show();
+        if( ui->checkBoxGradientEnable->isChecked() ) m_pGradientElement->gradientGraphicsElement()->show();
         ui->groupBoxLinearGradient->setMaximumHeight( 16777215 );
     }
+}
+
+//Collapse & Expand Viewer
+void MainWindow::on_groupBoxAspectRatio_toggled(bool arg1)
+{
+    ui->frameAspectRatio->setVisible( arg1 );
+    if( !arg1 ) ui->groupBoxAspectRatio->setMaximumHeight( 30 );
+    else ui->groupBoxAspectRatio->setMaximumHeight( 16777215 );
 }
 
 //Abort pressed while exporting
@@ -3534,18 +3570,18 @@ void MainWindow::drawFrameReady()
             actHeight = ui->graphicsView->height();
         }
         int desWidth = actWidth;
-        int desHeight = actWidth * getMlvHeight(m_pMlvObject) / getMlvWidth(m_pMlvObject);
+        int desHeight = actWidth * getMlvHeight(m_pMlvObject) / getMlvWidth(m_pMlvObject) * ui->doubleSpinBoxStretchHight->value();
         if( desHeight > actHeight )
         {
             desHeight = actHeight;
-            desWidth = actHeight * getMlvWidth(m_pMlvObject) / getMlvHeight(m_pMlvObject);
+            desWidth = actHeight * getMlvWidth(m_pMlvObject) / getMlvHeight(m_pMlvObject) / ui->doubleSpinBoxStretchHight->value();
         }
 
         //Get Picture
         QPixmap pic = QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
                                           .scaled( desWidth * devicePixelRatio(),
                                                    desHeight * devicePixelRatio(),
-                                                   Qt::KeepAspectRatio, Qt::SmoothTransformation) );//alternative: Qt::FastTransformation
+                                                   Qt::IgnoreAspectRatio, Qt::SmoothTransformation) );//alternative: Qt::FastTransformation
         //Set Picture to Retina
         pic.setDevicePixelRatio( devicePixelRatio() );
         //Bring frame to GUI (fit to window)
@@ -3556,8 +3592,19 @@ void MainWindow::drawFrameReady()
     else
     {
         //Bring frame to GUI (100%)
-        m_pGraphicsItem->setPixmap( QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 ) ) );
-        m_pScene->setSceneRect( 0, 0, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject) );
+        if( ui->doubleSpinBoxStretchHight->value() == 1.0 ) //Fast mode for 1.0 stretch factor
+        {
+            m_pGraphicsItem->setPixmap( QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 ) ) );
+            m_pScene->setSceneRect( 0, 0, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject) );
+        }
+        else
+        {
+            m_pGraphicsItem->setPixmap( QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
+                                              .scaled( getMlvWidth(m_pMlvObject),
+                                                       getMlvHeight(m_pMlvObject) * ui->doubleSpinBoxStretchHight->value(),
+                                                       Qt::IgnoreAspectRatio, Qt::SmoothTransformation) ) );//alternative: Qt::FastTransformation
+            m_pScene->setSceneRect( 0, 0, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject) * ui->doubleSpinBoxStretchHight->value() );
+        }
     }
     //Add zebras on the image
     drawZebras();
@@ -3623,7 +3670,10 @@ void MainWindow::drawFrameReady()
     if( m_zoomModeChanged )
     {
         m_zoomModeChanged = false;
-        redrawGradientElement();
+        m_pGradientElement->redrawGradientElement( m_pScene->width(),
+                                                   m_pScene->height(),
+                                                   getMlvWidth( m_pMlvObject ),
+                                                   getMlvHeight( m_pMlvObject ) );
     }
 }
 
@@ -3634,11 +3684,11 @@ void MainWindow::on_toolButtonGradientPaint_toggled(bool checked)
     {
         ui->graphicsView->setCrossCursorActive( false ); // has to be done first
         ui->graphicsView->setDragMode( QGraphicsView::ScrollHandDrag );
-        m_pGradientGraphicsItem->show();
+        m_pGradientElement->gradientGraphicsElement()->show();
     }
     else
     {
-        m_pGradientGraphicsItem->hide();
+        m_pGradientElement->gradientGraphicsElement()->hide();
         ui->graphicsView->setDragMode( QGraphicsView::NoDrag );
         ui->graphicsView->setCrossCursorActive( true ); // has to be done last
     }
@@ -3648,28 +3698,44 @@ void MainWindow::on_toolButtonGradientPaint_toggled(bool checked)
 //Gradient Enable checked/unchecked
 void MainWindow::on_checkBoxGradientEnable_toggled(bool checked)
 {
-    if( checked ) m_pGradientGraphicsItem->show();
-    else m_pGradientGraphicsItem->hide();
+    if( checked ) m_pGradientElement->gradientGraphicsElement()->show();
+    else m_pGradientElement->gradientGraphicsElement()->hide();
 }
 
 //The gradient startPoint X has changed
 void MainWindow::on_spinBoxGradientX_valueChanged(int arg1)
 {
-    m_pGradientGraphicsItem->setPos( arg1 * m_pScene->width() / getMlvWidth( m_pMlvObject ),
-                                     ui->spinBoxGradientY->value() * m_pScene->height() / getMlvHeight( m_pMlvObject ) );
+    m_pGradientElement->gradientGraphicsElement()->blockSignals( true );
+    m_pGradientElement->setStartPos( arg1, ui->spinBoxGradientY->value() );
+    m_pGradientElement->redrawGradientElement( m_pScene->width(),
+                                               m_pScene->height(),
+                                               getMlvWidth( m_pMlvObject ),
+                                               getMlvHeight( m_pMlvObject ) );
+    m_pGradientElement->gradientGraphicsElement()->blockSignals( false );
 }
 
 //The gradient startPoint Y has changed
 void MainWindow::on_spinBoxGradientY_valueChanged(int arg1)
 {
-    m_pGradientGraphicsItem->setPos( ui->spinBoxGradientX->value() * m_pScene->width() / getMlvWidth( m_pMlvObject ),
-                                     arg1 * m_pScene->height() / getMlvHeight( m_pMlvObject ) );
+    m_pGradientElement->gradientGraphicsElement()->blockSignals( true );
+    m_pGradientElement->setStartPos( ui->spinBoxGradientX->value(), arg1 );
+    m_pGradientElement->redrawGradientElement( m_pScene->width(),
+                                               m_pScene->height(),
+                                               getMlvWidth( m_pMlvObject ),
+                                               getMlvHeight( m_pMlvObject ) );
+    m_pGradientElement->gradientGraphicsElement()->blockSignals( false );
 }
 
 //The gradient length has changed
 void MainWindow::on_spinBoxGradientLength_valueChanged(int arg1)
 {
-    paintGradientElement( arg1 * m_pScene->width() / getMlvWidth( m_pMlvObject ) );
+    m_pGradientElement->gradientGraphicsElement()->blockSignals( true );
+    m_pGradientElement->setUiLength( arg1 );
+    m_pGradientElement->redrawGradientElement( m_pScene->width(),
+                                               m_pScene->height(),
+                                               getMlvWidth( m_pMlvObject ),
+                                               getMlvHeight( m_pMlvObject ) );
+    m_pGradientElement->gradientGraphicsElement()->blockSignals( false );
 }
 
 //The gradient angle label was doubleclicked
@@ -3696,8 +3762,15 @@ void MainWindow::on_labelGradientAngle_doubleClicked()
 //The gradient angle dial was turned
 void MainWindow::on_dialGradientAngle_valueChanged(int value)
 {
-    m_pGradientGraphicsItem->setRotation( value / 10.0 );
     ui->labelGradientAngle->setText( QString( "%1°" ).arg( value / 10.0, 0, 'f', 1 ) );
+
+    m_pGradientElement->gradientGraphicsElement()->blockSignals( true );
+    m_pGradientElement->setUiAngle( value / 10.0 );
+    m_pGradientElement->redrawGradientElement( m_pScene->width(),
+                                               m_pScene->height(),
+                                               getMlvWidth( m_pMlvObject ),
+                                               getMlvHeight( m_pMlvObject ) );
+    m_pGradientElement->gradientGraphicsElement()->blockSignals( false );
 }
 
 //Someone moved the gradient graphics element
@@ -3706,6 +3779,8 @@ void MainWindow::gradientGraphicElementMoved(int x, int y)
     //Some math if in stretch (fit) mode
     x *= getMlvWidth( m_pMlvObject ) / m_pScene->width();
     y *= getMlvHeight( m_pMlvObject ) / m_pScene->height();
+
+    m_pGradientElement->setStartPos( x, y );
 
     ui->spinBoxGradientX->blockSignals( true );
     ui->spinBoxGradientY->blockSignals( true );
@@ -3723,24 +3798,7 @@ void MainWindow::gradientGraphicElementHovered(bool isHovered)
     if( isHovered ) pen = QPen( Qt::yellow );
     else pen = QPen( Qt::white );
     pen.setWidth( 0 );
-    m_pGradientGraphicsItem->setPen( pen );
-}
-
-//Paint the gradient element
-void MainWindow::paintGradientElement(int length)
-{
-    QPolygon polygon;
-    polygon << QPoint(0, -length) << QPoint(-10000, -length) << QPoint(10000, -length) << QPoint(0, -length) << QPoint(-10, -length+10) << QPoint(10, -length+10) << QPoint(0, -length) << QPoint(0, 0) << QPoint(-10000, 0) << QPoint(10000, 0) << QPoint(0, 0);
-    m_pGradientGraphicsItem->setPolygon( polygon );
-}
-
-//Redraw the whole gradient element
-void MainWindow::redrawGradientElement(void)
-{
-    m_pGradientGraphicsItem->setPos( ui->spinBoxGradientX->value() * m_pScene->width() / getMlvWidth( m_pMlvObject ),
-                                     ui->spinBoxGradientY->value() * m_pScene->height() / getMlvHeight( m_pMlvObject ) );
-    m_pGradientGraphicsItem->setRotation( ui->dialGradientAngle->value() / 10.0 );
-    paintGradientElement( ui->spinBoxGradientLength->value() * m_pScene->width() / getMlvWidth( m_pMlvObject ) );
+    m_pGradientElement->gradientGraphicsElement()->setPen( pen );
 }
 
 //Init the CutIn/Out elements with frames of clip
@@ -3850,4 +3908,12 @@ void MainWindow::on_actionPreviewPicture_triggered()
     ui->actionPreviewPicture->setChecked( true );
     m_previewMode = 2;
     setPreviewMode();
+}
+
+//Input of Stretch Hight Factor
+void MainWindow::on_doubleSpinBoxStretchHight_valueChanged(double arg1)
+{
+    m_pGradientElement->setStrechFactorY( arg1 );
+    m_zoomModeChanged = true;
+    m_frameChanged = true;
 }

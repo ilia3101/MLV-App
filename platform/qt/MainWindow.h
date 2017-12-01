@@ -30,7 +30,7 @@
 #include "AudioPlayback.h"
 #include "GraphicsPickerScene.h"
 #include "RenderFrameThread.h"
-#include "GraphicsPolygonMoveItem.h"
+#include "GradientElement.h"
 
 namespace Ui {
 class MainWindow;
@@ -141,6 +141,7 @@ private slots:
     void on_groupBoxProcessing_toggled(bool arg1);
     void on_groupBoxDetails_toggled(bool arg1);
     void on_groupBoxLinearGradient_toggled(bool arg1);
+    void on_groupBoxAspectRatio_toggled(bool arg1);
     void exportAbort( void );
     void drawFrameReady( void );
 
@@ -165,6 +166,8 @@ private slots:
     void on_actionPreviewList_triggered();
     void on_actionPreviewPicture_triggered();
 
+    void on_doubleSpinBoxStretchHight_valueChanged(double arg1);
+
 private:
     Ui::MainWindow *ui;
     InfoDialog *m_pInfoDialog;
@@ -177,7 +180,7 @@ private:
     mlvObject_t *m_pMlvObject;
     processingObject_t *m_pProcessingObject;
     QGraphicsPixmapItem *m_pGraphicsItem;
-    GraphicsPolygonMoveItem *m_pGradientGraphicsItem;
+    GradientElement *m_pGradientElement;
     GraphicsPickerScene* m_pScene;
     QLabel *m_pCachingStatus;
     QLabel *m_pFpsStatus;
@@ -261,8 +264,6 @@ private:
     int toolButtonDualIsoInterpolationCurrentIndex( void );
     int toolButtonDualIsoAliasMapCurrentIndex( void );
     int toolButtonDualIsoFullresBlendingCurrentIndex( void );
-    void paintGradientElement( int length );
-    void redrawGradientElement( void );
     void initCutInOut( int frames );
 
 signals:

@@ -95,7 +95,8 @@ SOURCES += \
     RenderFrameThread.cpp \
     ../../src/dng/dng.c \
     GraphicsPolygonMoveItem.cpp \
-    ../../src/mlv/camid/camera_id.c
+    ../../src/mlv/camid/camera_id.c \
+    GradientElement.cpp
 
 HEADERS += \
         MainWindow.h \
@@ -144,7 +145,8 @@ HEADERS += \
     ../../src/dng/dng_tag_types.h \
     ../../src/dng/dng_tag_values.h \
     GraphicsPolygonMoveItem.h \
-    ../../src/mlv/camid/camera_id.h
+    ../../src/mlv/camid/camera_id.h \
+    GradientElement.h
 
 FORMS += \
         MainWindow.ui \
