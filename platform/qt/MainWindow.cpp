@@ -3663,7 +3663,7 @@ void MainWindow::drawFrameReady()
     {
         m_zoomTo100Center = false;
         ui->graphicsView->horizontalScrollBar()->setValue( ( getMlvWidth(m_pMlvObject) - ui->graphicsView->width() ) / 2 );
-        ui->graphicsView->verticalScrollBar()->setValue( ( getMlvHeight(m_pMlvObject) - ui->graphicsView->height() ) / 2 );
+        ui->graphicsView->verticalScrollBar()->setValue( ( getMlvHeight(m_pMlvObject) * ui->doubleSpinBoxStretchHight->value() - ui->graphicsView->height() ) / 2 );
     }
 
     //If zoom mode changed, redraw gradient element to the new size
