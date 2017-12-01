@@ -84,9 +84,7 @@ void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outpu
         int ret = lj92_open(&decoder_object, raw_frame, raw_data_size, &width, &height, &bitdepth, &components);
         if(ret != LJ92_ERROR_NONE)
         {
-#ifndef STDOUT_SILENT
-            printf("LJ92 decoder: Failed with error code (%d)\n", ret);
-#endif
+            DEBUG( printf("LJ92 decoder: Failed with error code (%d)\n", ret); )
             goto err_out;
         }
         else
@@ -95,9 +93,7 @@ void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outpu
             ret = lj92_decode(decoder_object, unpacked_frame, width * height * components, 0, NULL, 0);
             if(ret != LJ92_ERROR_NONE)
             {
-#ifndef STDOUT_SILENT
-                printf("LJ92 decoder: Failed with error code (%d)\n", ret);
-#endif
+                DEBUG( printf("LJ92 decoder: Failed with error code (%d)\n", ret); )
                 goto err_out;
             }
         }
@@ -599,13 +595,13 @@ void mapMlvFrames(mlvObject_t * video, uint64_t limit)
 
     isMlvActive(video) = 1;
 
-    /* Start caching */
-    video->stop_caching = 1;
-    while (video->cache_thread_count) usleep(100);
-    video->stop_caching = 0;
-    for (int i = 0; i < video->cpu_cores; ++i)
+    /* Start caching unless it was disabled already */
+    if (!video->stop_caching)
     {
-        add_mlv_cache_thread(video);
+        for (int i = 0; i < video->cpu_cores; ++i)
+        {
+            add_mlv_cache_thread(video);
+        }
     }
 }
 
