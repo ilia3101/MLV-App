@@ -2,6 +2,51 @@
 
 @implementation MLVView
 
+- (void)rightMouseDown:(NSEvent *)theEvent
+{
+    NSMenu *theMenu = [[NSMenu alloc] initWithTitle:@"MLVView Settings"];
+    int index = 0;
+    [theMenu insertItemWithTitle:@"1.0x (source)" action:@selector(setAnamorphicNone) keyEquivalent:@"" atIndex:index++];
+    [theMenu addItem:[NSMenuItem separatorItem]]; index++;
+    [theMenu insertItemWithTitle:@"1.67x Vertical" action:@selector(setStretch1_67x) keyEquivalent:@"" atIndex:index++];
+    [theMenu addItem:[NSMenuItem separatorItem]]; index++;
+    [theMenu insertItemWithTitle:@"1.25x" action:@selector(setAnamorphic1_25x) keyEquivalent:@"" atIndex:index++];
+    [theMenu insertItemWithTitle:@"1.33x" action:@selector(setAnamorphic1_33x) keyEquivalent:@"" atIndex:index++];
+    [theMenu insertItemWithTitle:@"1.5x" action:@selector(setAnamorphic1_5x) keyEquivalent:@"" atIndex:index++];
+    [theMenu insertItemWithTitle:@"1.75x" action:@selector(setAnamorphic1_75x) keyEquivalent:@"" atIndex:index++];
+    [theMenu insertItemWithTitle:@"2.0x" action:@selector(setAnamorphic2x) keyEquivalent:@"" atIndex:index++];
+    [NSMenu popUpContextMenu:theMenu withEvent:theEvent forView:self];
+}
+
+-(void)setAnamorphic2x {
+    self.stretch = 2.0f;
+    [self updateView];
+}
+-(void)setAnamorphic1_75x {
+    self.stretch = 1.75f;
+    [self updateView];
+}
+-(void)setStretch1_67x {
+    self.stretch = 1.0/1.666667;
+    [self updateView];
+}
+-(void)setAnamorphic1_5x {
+    self.stretch = 1.5f;
+    [self updateView];
+}
+-(void)setAnamorphic1_33x {
+    self.stretch = 1.33f;
+    [self updateView];
+}
+-(void)setAnamorphic1_25x {
+    self.stretch = 1.25f;
+    [self updateView];
+}
+-(void)setAnamorphicNone {
+    self.stretch = 1.0f;
+    [self updateView];
+}
+
 -(id)initWithFrame:(NSRect)frame
 {
     self = [super initWithFrame:frame];
@@ -9,6 +54,7 @@
     {
         self.draw = NO;
         self.magnification = 1.0;
+        self.stretch = 1.0;
     }
     return self;
 }
@@ -34,7 +80,7 @@
     {
         /* Where to draw for correct aspect ratio */
         float viewAspect = (float)NSWidth(rect) / (float)NSHeight(rect);
-        float imageAspect = (float)self.image_width / (float)self.image_height;
+        float imageAspect = (float)self.image_width / (float)self.image_height * self.stretch;
 
         /* Magnification */
         float scaleFactor;

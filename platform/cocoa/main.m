@@ -198,11 +198,47 @@ int NSApplicationMain(int argc, const char * argv[])
      *******************************************************************************
      */
 
-    /* Open MLV file button */
-    CREATE_BUTTON_LEFT_TOP( App->openMLVButton, 1, openMlvDialog, 12, @"Open MLV File(s)" );
-    CREATE_BUTTON_LEFT_TOP( App->openSessionButton, 0, openSessionDialog, 0, @"Open Session" );
-    CREATE_BUTTON_LEFT_BOTTOM( App->saveSessionButton, 0, exportProRes4444, 1, @"Export ProRes 4444" );
-    CREATE_BUTTON_LEFT_BOTTOM( App->exportProRes4444Button, 1, saveSessionDialog, -12, @"Save Session" );
+    App->sessionTabSwitch = [[NSSegmentedControl alloc] initWithFrame: NSMakeRect(LEFT_SIDEBAR_ELEMENT_TOP(0, ELEMENT_HEIGHT, 0))];
+    [App->sessionTabSwitch setSegmentCount:2];
+    [App->sessionTabSwitch setLabel:@"Clips" forSegment:0];
+    [App->sessionTabSwitch setLabel:@"Export" forSegment:1];
+    AnchorLeft(App->sessionTabSwitch, YES);
+    AnchorTop(App->sessionTabSwitch, YES);
+    [App->sessionTabSwitch setTarget: App->sessionTabSwitch];
+    [App->sessionTabSwitch setAction: @selector(toggleTabLeft)];
+    App->sessionTabSwitch.selectedSegment = 0; /* Session view is default tab */
+    [[App->window contentView] addSubview: App->sessionTabSwitch];
+
+    /* Clip tab */
+    CREATE_BUTTON_LEFT_TOP( App->openMLVButton, 1, openMlvDialog, 8, @"Add MLV File(s)" );
+    CREATE_BUTTON_LEFT_BOTTOM( App->openSessionButton, 1, openSessionDialog, -12, @"Open Session" );
+    CREATE_BUTTON_LEFT_BOTTOM( App->saveSessionButton, 0, saveSessionDialog, 0, @"Save Session" );
+
+    /*
+     * Export tab
+     */
+    App->exportFormat = [ [NSPopUpButton alloc] initWithFrame: NSMakeRect( LEFT_SIDEBAR_ELEMENT_TOP(1,ELEMENT_HEIGHT,-10) ) ];
+    AnchorLeft(App->exportFormat, YES);
+    AnchorTop(App->exportFormat, YES);
+    [App->exportFormat insertItemWithTitle: @"ProRes 422" atIndex: 0];
+    [App->exportFormat insertItemWithTitle: @"ProRes 4444" atIndex: 1];
+    [App->exportFormat insertItemWithTitle: @"H.264" atIndex: 2];
+    [App->exportFormat insertItemWithTitle: @"H.265" atIndex: 3];
+    [App->exportFormat setTarget: App->exportFormat];
+    [App->exportFormat setAction: @selector(toggleImageProfile)];
+    [App->exportFormat selectItemAtIndex: 0];
+    [[App->window contentView] addSubview: App->exportFormat];
+
+    App->exportFormatLabel = [ [NSTextField alloc] initWithFrame: NSMakeRect( LEFT_SIDEBAR_LABEL(1,ELEMENT_HEIGHT,-7) )];
+    [App->exportFormatLabel setLabelStyle];
+    AnchorTop(App->exportFormatLabel, YES);
+    AnchorLeft(App->exportFormatLabel, YES);
+    [App->exportFormatLabel setStringValue: @"Export Format:"];
+    [[App->window contentView] addSubview: App->exportFormatLabel];
+
+    CREATE_BUTTON_LEFT_TOP( App->exportCurrentClipButton, 2, exportCurrentClip, -1, @"Export Current Clip" );
+    CREATE_BUTTON_LEFT_TOP( App->exportCurrentClipButton, 3, exportCurrentClip, 10, @"Export All Clips" );
+
     IMPORTANT_CODE("",5);
 
     /* Export format selector */
@@ -286,7 +322,7 @@ int NSApplicationMain(int argc, const char * argv[])
 
     /* Session tableview */
     // create a table view and a scroll view
-    NSScrollView * tableContainer = [[NSScrollView alloc] initWithFrame:NSMakeRect(SIDE_GAP_X_L, 96, LEFT_SIDEBAR_ELEMENT_WIDTH, WINDOW_HEIGHT-192)];
+    App->session.tableContainer = [[NSScrollView alloc] initWithFrame:NSMakeRect(SIDE_GAP_X_L, 88, LEFT_SIDEBAR_ELEMENT_WIDTH, WINDOW_HEIGHT-191)];
     App->session.clipTable = [[NSTableView alloc] init];
     [App->session.clipTable setDoubleAction:@selector(doubleClickSetClip)];
     /* 'Delegate' - a data provider */
@@ -296,7 +332,7 @@ int NSApplicationMain(int argc, const char * argv[])
     App->session.clipTable.backgroundColor = [NSColor colorWithRed:0.235 green:0.235 blue:0.235 alpha:0.8];
     [App->session.clipTable setFocusRingType: NSFocusRingTypeNone]; /* Hide ugly 'active' border */
     // create columns for our table
-    NSTableColumn * clipColumn = [[NSTableColumn alloc] initWithIdentifier:@"Col1"];
+    NSTableColumn * clipColumn = [[NSTableColumn alloc] initWithIdentifier:@"MLVs"];
     [clipColumn.headerCell setStringValue:@"Clip Name"];
     [clipColumn setWidth: LEFT_SIDEBAR_ELEMENT_WIDTH-3];
     [App->session.clipTable addTableColumn:clipColumn];
@@ -304,11 +340,11 @@ int NSApplicationMain(int argc, const char * argv[])
     [App->session.clipTable reloadData];
     // embed the table view in the scroll view, and add the scroll view
     // to our window.
-    [tableContainer setDocumentView:App->session.clipTable];
-    [tableContainer setHasVerticalScroller:NO];
-    [tableContainer setHasHorizontalScroller:NO];
-    [tableContainer setAutoresizingMask: NSViewHeightSizable];
-    [[App->window contentView] addSubview:tableContainer];
+    [App->session.tableContainer setDocumentView:App->session.clipTable];
+    [App->session.tableContainer setHasVerticalScroller:NO];
+    [App->session.tableContainer setHasHorizontalScroller:NO];
+    [App->session.tableContainer setAutoresizingMask: NSViewHeightSizable];
+    [[App->window contentView] addSubview:App->session.tableContainer];
 
 
     /* Control for swapping between processing view and LLRawProc control 'tabs'

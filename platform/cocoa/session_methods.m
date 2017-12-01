@@ -410,10 +410,13 @@ void appClearSession()
 /* When a clip is double clicked in the table view */
 -(void)doubleClickSetClip
 {
-    /* Save current clip's settings */
-    saveClipInfo(App->session.clipInfo + App->session.currentClip);
-    /* Open next clip */
-    App->session.currentClip = [self clickedRow];
-    setAppGUIFromClip(App->session.clipInfo + App->session.currentClip);
+    if ([self clickedRow] >= 0 && [self clickedRow] < App->session.clipCount && [self clickedRow] != App->session.currentClip)
+    {
+        /* Save current clip's settings */
+        saveClipInfo(App->session.clipInfo + App->session.currentClip);
+        /* Open next clip */
+        App->session.currentClip = [self clickedRow];
+        setAppGUIFromClip(App->session.clipInfo + App->session.currentClip);
+    }
 }
 @end

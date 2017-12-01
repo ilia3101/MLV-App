@@ -50,6 +50,7 @@ void syncGUI()
     [App->sharpnessSlider sharpnessMethod];
     [App->chromaBlurSlider chromaBlurMethod];
     [App->processingTabSwitch toggleTab];
+    [App->sessionTabSwitch toggleTabLeft];
     [App->fixRawSelector toggleLLRawProc];
     [App->dualISOOption dualISOMethod];
     [App->focusPixelOption focusPixelMethod];
@@ -224,7 +225,7 @@ int setAppNewMlvClip(char * mlvPath)
 -(void)openMlvDialog
 {
     /* Create open panel */
-    NSOpenPanel * panel = [[NSOpenPanel openPanel] retain];
+    NSOpenPanel * panel = [NSOpenPanel openPanel];
 
     [panel setCanChooseFiles: YES];
     [panel setCanChooseDirectories: NO];
@@ -242,12 +243,11 @@ int setAppNewMlvClip(char * mlvPath)
             {
                 const char * mlvPathString = [fileURL.path UTF8String];
                 sessionAddNewMlvClip((char *)mlvPathString);
-                [App->session.clipTable reloadData];
-                setAppGUIFromClip(App->session.clipInfo + App->session.clipCount-1); /* set as current */
                 IMPORTANT_CODE("Well done, you opened an MLV file.",2);
             }
+            [App->session.clipTable reloadData];
+            setAppGUIFromClip(App->session.clipInfo + App->session.clipCount-1);
         }
-        [panel release];
     } ];
 }
 
@@ -305,8 +305,8 @@ int setAppNewMlvClip(char * mlvPath)
 }
 
 
-/* Exports to Prores 4444 (currently with ffmpeg and intermediate PNG - no AVfoundation yet) */
--(void)exportProRes4444
+/* Exports current clip */
+-(void)exportCurrentClip
 {
     if (isMlvActive(App->videoMLV))
     {    
@@ -337,10 +337,13 @@ int setAppNewMlvClip(char * mlvPath)
                                                            AVF_COLOURSPACE_SRGB,
                                                            getMlvFramerate(App->videoMLV) );
 
+                    setMlvAlwaysUseAmaze(App->videoMLV);
                     beginWritingVideoFile(encoder, exportPath);
+                    setMlvDontAlwaysUseAmaze(App->videoMLV);
                     endWritingVideoFile(encoder);
-
                     freeAVEncoder(encoder);
+
+                    syncGUI();
 
                     /* Give notification to user */
                     NSUserNotification * notification = [[[NSUserNotification alloc] init] autorelease];
@@ -680,6 +683,33 @@ int setAppNewMlvClip(char * mlvPath)
     resetMlvCache(App->videoMLV);
     App->frameChanged++;
     setCurrentClipTouched();
+}
+
+-(void)toggleTabLeft
+{
+    BOOL showClips;
+    BOOL showExport;
+
+    switch ([self selectedSegment])
+    {
+        case 0: /* Clip Tab */
+            showClips = NO;
+            showExport = YES;
+            break;
+        case 1: /* Export Tab */
+            showClips = YES;
+            showExport = NO;
+            break;
+    }
+
+    [App->openMLVButton setHidden: showClips];
+    [App->openSessionButton setHidden: showClips];
+    [App->saveSessionButton setHidden: showClips];
+    [App->session.tableContainer setHidden: showClips];
+
+    [App->exportCurrentClipButton setHidden: showExport];
+    [App->exportFormatLabel setHidden: showExport];
+    [App->exportFormat setHidden: showExport];
 }
 
 /* Select tab (Processing, LLRawProc... etc + more in the future) */

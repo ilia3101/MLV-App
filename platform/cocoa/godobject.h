@@ -124,17 +124,23 @@ typedef struct {
     /* Timeline slider */
     NSSlider * timelineSlider;
 
-    /* Buttons */
+
+    /****************************************
+     **           Right Sidebar            **
+     ****************************************/
     NSButton * openMLVButton;
-    NSButton * exportProRes4444Button;
     NSButton * saveSessionButton;
     NSButton * openSessionButton;
 
-    /* Select video export format */
-    NSPopUpButton * videoFormat;
+    NSTextField * exportFormatLabel;
+    NSPopUpButton * exportFormat;
+    NSButton * exportCurrentClipButton;
 
     /* Select between LLRawProc and Processing tab */
     NSSegmentedControl * processingTabSwitch;
+
+    /* Select between session and export tab */
+    NSSegmentedControl * sessionTabSwitch;
 
     /****************************************
      **           SESSION STUFF            **
@@ -147,6 +153,7 @@ typedef struct {
         int currentClip;
         /* List of clips loaded (in session) */
         NSTableView * clipTable;
+        NSScrollView * tableContainer;
         /* Info about each one (array as long as clipcount) */
         clipInfo_t * clipInfo;
     } session;

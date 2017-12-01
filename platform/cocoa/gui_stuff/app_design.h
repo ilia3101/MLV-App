@@ -75,9 +75,10 @@
 
 /* For an element in the leftsidebar(slider or button or text or anything) */
 #define LEFT_SIDEBAR_ELEMENT_TOP(unitIndex, height, verticalOffset) LEFT_SIDEBAR_X, LEFT_SIDEBAR_SLIDER_Y(unitIndex) + verticalOffset, LEFT_SIDEBAR_ELEMENT_WIDTH, height
-
 /* For an element at the bottom of the leftsidebar(slider or button or text or anything) */
 #define LEFT_SIDEBAR_ELEMENT_BOTTOM(unitIndex, height, verticalOffset) LEFT_SIDEBAR_X, LEFT_SIDEBAR_SLIDER_Y_BOTTOM(unitIndex) + verticalOffset, LEFT_SIDEBAR_ELEMENT_WIDTH, height
+/* Name of control */
+#define LEFT_SIDEBAR_LABEL(unitIndex, height, verticalOffset) LEFT_SIDEBAR_X, LEFT_SIDEBAR_LABEL_Y(unitIndex) + verticalOffset, LEFT_SIDEBAR_ELEMENT_WIDTH, height
 
 /* Where the preview window border is */
 #define PREVIEW_WINDOW_BORDER_LOCATION PREVIEW_WINDOW_LEFT_MARGIN, PREVIEW_WINDOW_BOTTOM_MARGIN + TIMELINE_HEIGHT, PREVIEW_WINDOW_WIDTH, PREVIEW_WINDOW_HEIGHT - TIMELINE_HEIGHT
