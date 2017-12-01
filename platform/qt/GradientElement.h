@@ -2,7 +2,7 @@
  * \file GradientElement.h
  * \author masc4ii
  * \copyright 2017
- * \brief Functions to realize a gradient element, which works in a stretchable viewer
+ * \brief Functions to realize a gradient element, which works in a stretchable viewer. There are 2 coordinates: one for the ui and one for the viewer. The viewer becomes different if stretched.
  */
 
 #ifndef GRADIENTELEMENT_H

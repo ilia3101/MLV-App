@@ -2,7 +2,7 @@
  * \file GradientElement.cpp
  * \author masc4ii
  * \copyright 2017
- * \brief Functions to realize a gradient element, which works in a stretchable viewer
+ * \brief Functions to realize a gradient element, which works in a stretchable viewer. There are 2 coordinates: one for the ui and one for the viewer. The viewer becomes different if stretched.
  */
 
 #include "GradientElement.h"
@@ -22,6 +22,7 @@ GradientElement::GradientElement(QPolygon polygon, QGraphicsItem *parent)
     reset();
 }
 
+//Destructor
 GradientElement::~GradientElement()
 {
     delete m_pGradientGraphicsItem;
