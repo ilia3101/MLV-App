@@ -331,9 +331,20 @@ int setAppNewMlvClip(char * mlvPath)
 
                     snprintf(exportPath, 2048, "%s/%.8s.mov", pathString, App->MLVClipName);
 
+                    int codec;
+                    switch ([App->exportFormat indexOfSelectedItem]) {
+                        case 0:
+                            codec = AVF_CODEC_PRORES_422; break;
+                        case 1:
+                            codec = AVF_CODEC_PRORES_4444; break;
+                        case 2:
+                            codec = AVF_CODEC_H264; break;
+                        case 3:
+                            codec = AVF_CODEC_HEVC; break;
+                    }
                     AVEncoder_t * encoder = initAVEncoder( getMlvWidth(App->videoMLV),
                                                            getMlvHeight(App->videoMLV),
-                                                           AVF_CODEC_PRORES_422,
+                                                           codec,
                                                            AVF_COLOURSPACE_SRGB,
                                                            getMlvFramerate(App->videoMLV) );
 

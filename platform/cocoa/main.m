@@ -224,8 +224,6 @@ int NSApplicationMain(int argc, const char * argv[])
     [App->exportFormat insertItemWithTitle: @"ProRes 4444" atIndex: 1];
     [App->exportFormat insertItemWithTitle: @"H.264" atIndex: 2];
     [App->exportFormat insertItemWithTitle: @"H.265" atIndex: 3];
-    [App->exportFormat setTarget: App->exportFormat];
-    [App->exportFormat setAction: @selector(toggleImageProfile)];
     [App->exportFormat selectItemAtIndex: 0];
     [[App->window contentView] addSubview: App->exportFormat];
 
