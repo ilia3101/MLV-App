@@ -16,6 +16,12 @@
 #define MLV_FRAME_IS_CACHED 1
 #define MLV_FRAME_BEING_CACHED 2
 
+typedef struct
+{
+    int chunk_num;           /* Number of MLV chunk */
+    uint32_t frame_size;     /* Size of the raw video frame data */
+    uint64_t frame_offset;   /* Offset to the start of raw frame data */
+} frame_index_t;
 
 /* An awkward structure for handling an MLV
  * TODO: adapt for .M00 .M01 stuff */
@@ -29,7 +35,7 @@ typedef struct {
     int is_active;
 
     /* MLV/Lite file(s) */
-    FILE * file;
+    FILE ** file;
     char * path;
     pthread_mutex_t main_file_mutex;
     pthread_mutex_t g_mutexFind; /* 'g' mutexes should prevent pink frames */
@@ -54,15 +60,12 @@ typedef struct {
     double      real_frame_rate; /* ...Because framerate is not explicitly stored in the file */
     double      frame_rate;      /* User may want to override it */
     uint32_t    frames;          /* Number of frames */
-    uint64_t  * frame_offsets;   /* Offsets to the start of frames in the file, computed on opening file */
-    uint32_t  * frame_sizes;     /* Frame sizes - only exists if video is losslessly compressed */
     uint32_t    frame_size;      /* NOT counting compression factor */
+    frame_index_t * frame_index;
 
     /* Audio info */
-    uint32_t    audios;        /* Number of audio blocks */
-    uint64_t  * audio_offsets; /* Offsets to the starts of audios */
-    uint32_t  * audio_sizes;   /* Size of the audio sections */
-
+    uint32_t    audios;          /* Number of audio blocks */
+    frame_index_t * audio_index;
 
     /* Image processing object pointer (it is to be made separately) */
     processingObject_t * processing;
