@@ -180,9 +180,9 @@ void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outpu
     }
     else /* If not compressed just unpack to 16bit */
     {
-        printf("thread %i started reading chunk %i\n", pthread_self(), chunk);
+        DEBUG( printf("thread %i started reading chunk %i\n", pthread_self(), chunk); )
         fread(raw_frame, sizeof(uint8_t), raw_frame_size, file);
-        printf("thread %i stopped reading chunk %i\n", pthread_self(), chunk);
+        DEBUG( printf("thread %i stopped reading chunk %i\n", pthread_self(), chunk); )
         pthread_mutex_unlock(video->main_file_mutex + chunk);
 
         unpacked_frame = (uint16_t *)malloc( unpacked_frame_size );
