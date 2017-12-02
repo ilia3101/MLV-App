@@ -181,7 +181,7 @@ uint64_t getMlvAudioSize(mlvObject_t * video)
     uint64_t size = 0;
     for (uint32_t i = 0; i < video->audios; ++i)
     {
-        size += video->audio_sizes[i];
+        size += video->audio_index[i].frame_size;
     }
     return size;
 }
@@ -200,13 +200,13 @@ void getMlvAudioData(mlvObject_t * video, int16_t * outputAudio)
     {
         pthread_mutex_lock(&video->main_file_mutex);
         /* Go to audio block position */
-        file_set_pos(video->file, video->audio_offsets[i], SEEK_SET);
+        file_set_pos(video->file[video->audio_index[i].chunk_num], video->audio_index[i].frame_offset, SEEK_SET);
 
         /* Read to location of audio */
-        fread(output_audio + audio_size, video->audio_sizes[i], 1, video->file);
+        fread(output_audio + audio_size, video->audio_index[i].frame_size, 1, video->file[video->audio_index[i].chunk_num]);
         pthread_mutex_unlock(&video->main_file_mutex);
 
         /* New audio position */
-        audio_size += video->audio_sizes[i];
+        audio_size += video->audio_index[i].frame_size;
     }
 }
