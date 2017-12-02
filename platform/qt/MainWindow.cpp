@@ -782,6 +782,7 @@ void MainWindow::readSettings()
     ui->groupBoxProcessing->setChecked( set.value( "expandedProcessing", true ).toBool() );
     ui->groupBoxDetails->setChecked( set.value( "expandedDetails", false ).toBool() );
     ui->groupBoxLinearGradient->setChecked( set.value( "expandedLinGradient", false ).toBool() );
+    ui->groupBoxAspectRatio->setChecked( set.value( "expandAspectRatio", false ).toBool() );
 }
 
 //Save some settings to registry
@@ -809,6 +810,7 @@ void MainWindow::writeSettings()
     set.setValue( "expandedProcessing", ui->groupBoxProcessing->isChecked() );
     set.setValue( "expandedDetails", ui->groupBoxDetails->isChecked() );
     set.setValue( "expandedLinGradient", ui->groupBoxLinearGradient->isChecked() );
+    set.setValue( "expandAspectRatio", ui->groupBoxAspectRatio->isChecked() );
 }
 
 //Start Export via Pipe
