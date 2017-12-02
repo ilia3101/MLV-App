@@ -1176,10 +1176,10 @@ void MainWindow::addFileToSession(QString fileName)
 }
 
 //Open a session file
-void MainWindow::openSession(QString fileName)
+void MainWindow::openSession(QString fileNameSession)
 {
     QXmlStreamReader Rxml;
-    QFile file(fileName);
+    QFile file(fileNameSession);
     if( !file.open(QIODevice::ReadOnly | QFile::Text) )
     {
         return;
@@ -1213,6 +1213,15 @@ void MainWindow::openSession(QString fileName)
                 {
                     //qDebug() << "Clip!" << Rxml.attributes().at(0).name() << Rxml.attributes().at(0).value();
                     QString fileName = Rxml.attributes().at(0).value().toString();
+                    //If file is not there, search at alternative relative path for file
+                    if( !QFile( fileName ).exists() )
+                    {
+                        if( Rxml.attributes().count() > 1 )
+                        {
+                            QString relativeName = Rxml.attributes().at(1).value().toString();
+                            fileName = QDir( QFileInfo( fileNameSession ).path() ).filePath( relativeName );
+                        }
+                    }
 
                     if( QFile( fileName ).exists() )
                     {
@@ -1294,6 +1303,7 @@ void MainWindow::saveSession(QString fileName)
     {
         xmlWriter.writeStartElement( "clip" );
         xmlWriter.writeAttribute( "file", ui->listWidgetSession->item(i)->toolTip() );
+        xmlWriter.writeAttribute( "relative", QDir( QFileInfo( fileName ).path() ).relativeFilePath( ui->listWidgetSession->item(i)->toolTip() ) );
         writeXmlElementsToFile( &xmlWriter, m_pSessionReceipts.at(i) );
         xmlWriter.writeEndElement();
     }

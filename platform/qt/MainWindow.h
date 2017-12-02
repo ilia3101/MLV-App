@@ -225,7 +225,7 @@ private:
     void startExportPipe( QString fileName );
     void startExportCdng( QString fileName );
     void addFileToSession( QString fileName );
-    void openSession( QString fileName );
+    void openSession(QString fileNameSession );
     void saveSession( QString fileName );
     void readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings *receipt , int version);
     void writeXmlElementsToFile( QXmlStreamWriter *xmlWriter, ReceiptSettings *receipt );
