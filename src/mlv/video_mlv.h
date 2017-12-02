@@ -25,10 +25,6 @@ void printMlvInfo(mlvObject_t * video);
  * no debayering or processing */
 void openMlvClip(mlvObject_t * video, char * mlvPath);
 
-/* Goes through the files and records every frame's offset from
- * start of the file in the ->frame_offsets property (AUDFs also) */
-void mapMlvFrames(mlvObject_t * video, uint64_t limit);
-
 /* Frees all memory and closes file */
 void freeMlvObject(mlvObject_t * video);
 
