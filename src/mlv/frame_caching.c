@@ -158,7 +158,7 @@ void clear_mlv_cache(mlvObject_t * video)
 }
 
 /* Returns 1 on success, or 0 if all are cached */
-int find_mlv_frame_to_cache(mlvObject_t * video, uint64_t *index) /* Outputs to *index */
+int find_mlv_frame_to_cache(mlvObject_t * video, uint64_t * index) /* Outputs to *index */
 {
     pthread_mutex_lock( &video->g_mutexFind );
     /* If a specific frame was requested */
@@ -252,7 +252,7 @@ void an_mlv_cache_thread(mlvObject_t * video)
                 video->cached_frames[cache_frame] = MLV_FRAME_BEING_CACHED;
                 pthread_mutex_unlock( &video->g_mutexFind );
 
-                getMlvRawFrameFloat(video, cache_frame, imagefloat1d, file);
+                getMlvRawFrameFloat(video, cache_frame, imagefloat1d);
 
                 /* Single thread AMaZE */
                 demosaic(&amaze_params);
@@ -305,7 +305,7 @@ void get_mlv_raw_frame_debayered( mlvObject_t * video,
     int height = getMlvHeight(video);
 
     /* Get the raw data in B&W */
-    getMlvRawFrameFloat(video, frame_index, temp_memory, NULL);
+    getMlvRawFrameFloat(video, frame_index, temp_memory);
 
     if (debayer_type)
     {

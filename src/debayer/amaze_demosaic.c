@@ -320,7 +320,7 @@ void demosaic(amazeinfo_t * inputdata) /* All arguments in 1 struct for posix */
 		avg_r -= 4000.0;
 		avg_g -= 4000.0;
 		avg_b -= 4000.0;
-		printf("\nAverages:\nred %i\ngreen: %i\nblue: %i\n\n", (int)avg_r, (int)avg_g, (int)avg_b);
+		// printf("\nAverages:\nred %i\ngreen: %i\nblue: %i\n\n", (int)avg_r, (int)avg_g, (int)avg_b);
 		avg_r = 1.0f/avg_r; /* inverty */
 		avg_g = 1.0f/avg_g;
 		avg_b = 1.0f/avg_b;

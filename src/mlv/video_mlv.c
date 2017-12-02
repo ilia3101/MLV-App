@@ -53,7 +53,7 @@ static FILE **load_all_chunks(char *base_filename, int *entries)
 {
     int seq_number = 0;
     int max_name_len = strlen(base_filename) + 16;
-    char *filename = malloc(max_name_len);
+    char *filename = alloca(max_name_len);
 
     strncpy(filename, base_filename, max_name_len - 1);
     FILE **files = malloc(sizeof(FILE*));
@@ -115,7 +115,6 @@ static FILE **load_all_chunks(char *base_filename, int *entries)
         }
     }
 
-    free(filename);
     return files;
 }
 
@@ -129,7 +128,7 @@ static void close_all_chunks(FILE ** files, int entries)
 /* Unpacks the bits of a frame to get a bayer B&W image (without black level correction)
  * Needs memory to return to, sized: sizeof(float) * getMlvHeight(urvid) * getMlvWidth(urvid)
  * Output image's pixels will be in range 0-65535 as if it is 16 bit integers */
-void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outputFrame, FILE * useFile) /* file can be NULL */
+void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outputFrame)
 {
     int bitdepth = video->RAWI.raw_info.bits_per_pixel;
     int width = video->RAWI.xRes;
@@ -146,17 +145,18 @@ void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outpu
     uint16_t * unpacked_frame = NULL;
 
     /* If a custom instance of file was given, use it */
-    FILE * file = (useFile) ? useFile : video->file[video->frame_index[frameIndex].chunk_num];
+    int chunk = video->frame_index[frameIndex].chunk_num;
+    FILE * file = video->file[chunk];
 
     /* Move to start of frame in file and read the RAW data */
+    pthread_mutex_lock(video->main_file_mutex + chunk);
     file_set_pos(file, video->frame_index[frameIndex].frame_offset, SEEK_SET);
 
     if (video->MLVI.videoClass & MLV_VIDEO_CLASS_FLAG_LJ92)
     {
         int raw_data_size = video->frame_index[frameIndex].frame_size;
-        if (!useFile) pthread_mutex_lock(&video->main_file_mutex); /* TODO: make the mutex code less ugly */
         fread(raw_frame, sizeof(uint8_t), raw_data_size, file);
-        if (!useFile) pthread_mutex_unlock(&video->main_file_mutex);
+        pthread_mutex_unlock(video->main_file_mutex + chunk);
 
         int components = 1;
         lj92 decoder_object;
@@ -180,9 +180,10 @@ void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outpu
     }
     else /* If not compressed just unpack to 16bit */
     {
-        if (!useFile) pthread_mutex_lock(&video->main_file_mutex);
+        printf("thread %i started reading chunk %i\n", pthread_self(), chunk);
         fread(raw_frame, sizeof(uint8_t), raw_frame_size, file);
-        if (!useFile) pthread_mutex_unlock(&video->main_file_mutex);
+        printf("thread %i stopped reading chunk %i\n", pthread_self(), chunk);
+        pthread_mutex_unlock(video->main_file_mutex + chunk);
 
         unpacked_frame = (uint16_t *)malloc( unpacked_frame_size );
         uint32_t mask = (1 << bitdepth) - 1;
@@ -375,7 +376,6 @@ mlvObject_t * initMlvObject()
     video->path = (char *)malloc( sizeof(char) );
 
     /* Will avoid main file conflicts with audio and stuff */
-    pthread_mutex_init(&video->main_file_mutex, NULL);
     pthread_mutex_init(&video->g_mutexFind, NULL);
     pthread_mutex_init(&video->g_mutexCount, NULL);
 
@@ -417,7 +417,9 @@ void freeMlvObject(mlvObject_t * video)
     freeLLRawProcObject(video->llrawproc);
 
     /* Mutex things here... */
-    pthread_mutex_destroy(&video->main_file_mutex);
+    for (int i = 0; i < video->block_num; ++i)
+        pthread_mutex_destroy(video->main_file_mutex + i);
+    free(video->main_file_mutex);
     pthread_mutex_destroy(&video->g_mutexFind);
     pthread_mutex_destroy(&video->g_mutexCount);
 
@@ -437,11 +439,11 @@ void openMlvClip(mlvObject_t * video, char * mlvPath)
     video->file = load_all_chunks(mlvPath, &video->filenum);
 
     mlv_hdr_t block_header; /* Basic MLV block header */
-    uint32_t block_num = 0; /* Number of blocks in file */
-    uint32_t frame_total = 0; /* Number of frames in video */
-    uint32_t audio_frame_total = 0; /* Number of audio blocks in video */
-    uint32_t frame_index_max = 0; /* initial size of frame index */
-    uint32_t audio_index_max = 0; /* initial size of audio index */
+    uint64_t block_num = 0; /* Number of blocks in file */
+    uint64_t frame_total = 0; /* Number of frames in video */
+    uint64_t audio_frame_total = 0; /* Number of audio blocks in video */
+    uint64_t frame_index_max = 0; /* initial size of frame index */
+    uint64_t audio_index_max = 0; /* initial size of audio index */
     int rtci_read = 0; /* Flips to 1 if 1st RTCI block was read */
 
     /* Free index buffers before dynamically realocating */
@@ -618,6 +620,11 @@ void openMlvClip(mlvObject_t * video, char * mlvPath)
     getMlvWhiteLevel(video) = (double)getMlvWhiteLevel(video) * 0.993;
 
     video->block_num = block_num;
+
+    /* Mutexes for every file */
+    video->main_file_mutex = calloc(sizeof(pthread_mutex_t), block_num);
+    for (int i = 0; i < block_num; ++i)
+        pthread_mutex_init(video->main_file_mutex + i, NULL);
 
     /* NON compressed frame size */
     video->frame_size = (getMlvHeight(video) * getMlvWidth(video) * getMlvBitdepth(video)) / 8;
