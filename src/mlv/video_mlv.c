@@ -431,8 +431,9 @@ void freeMlvObject(mlvObject_t * video)
 void openMlvClip(mlvObject_t * video, char * mlvPath)
 {
     free(video->path);
-    video->path = malloc( strlen(mlvPath) );
+    video->path = malloc( strlen(mlvPath) + 1 );
     memcpy(video->path, mlvPath, strlen(mlvPath));
+    video->path[strlen(mlvPath)] = 0x0;
     video->file = load_all_chunks(mlvPath, &video->filenum);
 
     mlv_hdr_t block_header; /* Basic MLV block header */

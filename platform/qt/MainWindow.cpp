@@ -54,6 +54,7 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     m_inOpeningProcess = false;
     m_zoomTo100Center = false;
     m_zoomModeChanged = false;
+    m_tryToSyncAudio = false;
 
     //Set Render Thread
     m_pRenderThread = new RenderFrameThread();
