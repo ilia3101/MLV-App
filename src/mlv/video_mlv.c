@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <unistd.h>
 #include <pthread.h>
 
@@ -47,6 +48,84 @@ static uint64_t file_get_pos(FILE *stream)
 /* Just to be separate */
 #include "audio_mlv.c"
 
+/* Spanned multichunk MLV file handling */
+static FILE **load_all_chunks(char *base_filename, int *entries)
+{
+    int seq_number = 0;
+    int max_name_len = strlen(base_filename) + 16;
+    char *filename = malloc(max_name_len);
+
+    strncpy(filename, base_filename, max_name_len - 1);
+    FILE **files = malloc(sizeof(FILE*));
+
+    files[0] = fopen(filename, "rb");
+    if(!files[0])
+    {
+        free(filename);
+        free(files);
+        return NULL;
+    }
+
+    DEBUG( printf("File %s opened\n", filename); )
+
+    /* get extension and check if it is a .MLV */
+    char *dot = strrchr(filename, '.');
+    if(dot)
+    {
+        dot++;
+        if(strcasecmp(dot, "mlv"))
+        {
+            seq_number = 100;
+        }
+    }
+
+    (*entries)++;
+    while(seq_number < 99)
+    {
+        FILE **realloc_files = realloc(files, (*entries + 1) * sizeof(FILE*));
+
+        if(!realloc_files)
+        {
+            free(filename);
+            free(files);
+            return NULL;
+        }
+
+        files = realloc_files;
+
+        /* check for the next file M00, M01 etc */
+        char seq_name[8];
+
+        sprintf(seq_name, "%02d", seq_number);
+        seq_number++;
+
+        strcpy(&filename[strlen(filename) - 2], seq_name);
+
+        /* try to open */
+        files[*entries] = fopen(filename, "rb");
+        if(files[*entries])
+        {
+            DEBUG( printf("File %s opened\n", filename); )
+            (*entries)++;
+        }
+        else
+        {
+            DEBUG( printf("File %s not existing.\n", filename); )
+            break;
+        }
+    }
+
+    free(filename);
+    return files;
+}
+
+static void close_all_chunks(FILE ** files, int entries)
+{
+    for(int i = 0; i < entries; i++)
+        if(files[i]) fclose(files[i]);
+    if(files) free(files);
+}
+
 /* Unpacks the bits of a frame to get a bayer B&W image (without black level correction)
  * Needs memory to return to, sized: sizeof(float) * getMlvHeight(urvid) * getMlvWidth(urvid)
  * Output image's pixels will be in range 0-65535 as if it is 16 bit integers */
@@ -67,14 +146,14 @@ void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outpu
     uint16_t * unpacked_frame = NULL;
 
     /* If a custom instance of file was given, use it */
-    FILE * file = (useFile) ? useFile : video->file;
+    FILE * file = (useFile) ? useFile : video->file[video->frame_index[frameIndex].chunk_num];
 
     /* Move to start of frame in file and read the RAW data */
-    file_set_pos(file, video->frame_offsets[frameIndex], SEEK_SET);
+    file_set_pos(file, video->frame_index[frameIndex].frame_offset, SEEK_SET);
 
     if (video->MLVI.videoClass & MLV_VIDEO_CLASS_FLAG_LJ92)
     {
-        int raw_data_size = video->frame_sizes[frameIndex];
+        int raw_data_size = video->frame_index[frameIndex].frame_size;
         if (!useFile) pthread_mutex_lock(&video->main_file_mutex); /* TODO: make the mutex code less ugly */
         fread(raw_frame, sizeof(uint8_t), raw_data_size, file);
         if (!useFile) pthread_mutex_unlock(&video->main_file_mutex);
@@ -266,12 +345,11 @@ void getMlvProcessedFrame8(mlvObject_t * video, uint64_t frameIndex, uint8_t * o
 }
 
 /* To initialise mlv object with a clip 
- * Three functions in one */
+ * Two functions in one */
 mlvObject_t * initMlvObjectWithClip(char * mlvPath)
 {
     mlvObject_t * video = initMlvObject();
     openMlvClip(video, mlvPath);
-    mapMlvFrames(video, 0);
     return video;
 }
 
@@ -281,9 +359,10 @@ mlvObject_t * initMlvObjectWithClip(char * mlvPath)
 mlvObject_t * initMlvObject()
 {
     mlvObject_t * video = (mlvObject_t *)calloc( 1, sizeof(mlvObject_t) );
-    /* Just 1 element for now */
-    video->frame_offsets = (uint64_t *)malloc( sizeof(uint64_t) );
-    video->frame_sizes = (uint32_t *)malloc( sizeof(uint32_t) );
+
+    /* Allocate just 1 element for now */
+    video->frame_index = (frame_index_t *)malloc( sizeof(frame_index_t) );
+    video->audio_index = (frame_index_t *)malloc( sizeof(frame_index_t) );
 
     /* Cache things, only one element for now as it is empty */
     video->rgb_raw_frames = (uint16_t **)malloc( sizeof(uint16_t *) );
@@ -318,10 +397,11 @@ void freeMlvObject(mlvObject_t * video)
 {
     isMlvActive(video) = 0;
 
-    /* Close MLV file */
-    if(video->file) fclose(video->file);
+    /* Close all MLV file chunks */
+    close_all_chunks(video->file, video->filenum);
     /* Free all memory */
-    free(video->frame_offsets);
+    if(video->frame_index) free(video->frame_index);
+    if(video->audio_index) free(video->audio_index);
 
     /* Stop caching and make sure using silly sleep trick */
     video->stop_caching = 1;
@@ -332,7 +412,6 @@ void freeMlvObject(mlvObject_t * video)
     free(video->rgb_raw_frames);
     free(video->rgb_raw_current_frame);
     free(video->cache_memory_block);
-    free(video->frame_sizes);
     free(video->path);
     freeLLRawProcObject(video->llrawproc);
 
@@ -345,8 +424,6 @@ void freeMlvObject(mlvObject_t * video)
     free(video);
 }
 
-/* openMlvClip() and mapMlvFrames() should be combined */
-
 /* Reads an MLV file in to a mlv object(mlvObject_t struct) 
  * only puts metadata in to the mlvObject_t, 
  * no debayering or bit unpacking */
@@ -355,88 +432,150 @@ void openMlvClip(mlvObject_t * video, char * mlvPath)
     free(video->path);
     video->path = malloc( strlen(mlvPath) );
     memcpy(video->path, mlvPath, strlen(mlvPath));
-    video->file = (FILE *)fopen(mlvPath, "rb");
+    video->file = load_all_chunks(mlvPath, &video->filenum);
 
-    /* Getting size of file in bytes */
-    file_set_pos(video->file, 0, SEEK_END);
-    uint64_t file_size = file_get_pos(video->file);
-
-    char block_name[4]; /* Read header name to this */
-    uint32_t block_size; /* Size of block */
+    mlv_hdr_t block_header; /* Basic MLV block header */
     uint32_t block_num = 0; /* Number of blocks in file */
     uint32_t frame_total = 0; /* Number of frames in video */
     uint32_t audio_frame_total = 0; /* Number of audio blocks in video */
+    uint32_t frame_index_max = 0; /* initial size of frame index */
+    uint32_t audio_index_max = 0; /* initial size of audio index */
+    int rtci_read = 0; /* Flips to 1 if 1st RTCI block was read */
 
-    file_set_pos(video->file, 0, SEEK_SET); /* Start of file */
+    /* Free index buffers before dynamically realocating */
+    free(video->frame_index);
+    free(video->audio_index);
 
-    int rtci_read = 0; /* Saves, if RTCI was read */
-
-    while (file_get_pos(video->file) < file_size) /* Check if were at end of file yet */
+    for(int i = 0; i < video->filenum; i++)
     {
-        /* Record position to go back to it later if block is read */
-        uint64_t block_start = file_get_pos(video->file);
-        /* Read block name */
-        fread(&block_name, sizeof(char), 4, video->file);
-        /* Read size of block to block_size variable */
-        fread(&block_size, sizeof(uint32_t), 1, video->file);
-        /* Next block location */
-        uint64_t next_block =  (uint64_t)block_start +  (uint64_t)block_size;
+        /* Getting size of file in bytes */
+        file_set_pos(video->file[i], 0, SEEK_END);
+        uint64_t file_size = file_get_pos(video->file[i]);
 
-        /* Go back to start of block for next bit */
-        file_set_pos(video->file, block_start, SEEK_SET);
-
-        /* Now check what kind of block it is and read it in to the mlv object */
-
-        /* Is a frame block */
-        if ( strncmp(block_name, "VIDF", 4) == 0 )
-        {   
-            /* Read block info to VIDF part(only once) */
-            if (frame_total < 1) fread(&video->VIDF, sizeof(mlv_vidf_hdr_t), 1, video->file);
-            /* Keep track of number of frames */
-            frame_total++;
-        }
-        /* Or audio */
-        else if ( strncmp(block_name, "AUDF", 4) == 0 )
-        {   
-            /* Read block info to AUDF part(only once) */
-            if (audio_frame_total < 1) fread(&video->AUDF, sizeof(mlv_audf_hdr_t), 1, video->file);;
-            /* Keep track of number of 'audio frames' */
-            audio_frame_total++;
-        }
-        /* Nowhere did it say that the "MLVI" block == mlv_file_hdr_t / "FILE" */
-        else if ( strncmp(block_name, "MLVI", 4) == 0 || strncmp(block_name, "FILE", 4) == 0 )
-            fread(&video->MLVI, sizeof(mlv_file_hdr_t), 1, video->file);
-        else if ( strncmp(block_name, "RAWI", 4) == 0 )
-            fread(&video->RAWI, sizeof(mlv_rawi_hdr_t), 1, video->file);
-        else if ( strncmp(block_name, "RAWC", 4) == 0 )
-            fread(&video->RAWC, sizeof(mlv_rawc_hdr_t), 1, video->file);
-        else if ( strncmp(block_name, "WAVI", 4) == 0 )
-            fread(&video->WAVI, sizeof(mlv_wavi_hdr_t), 1, video->file);
-        else if ( strncmp(block_name, "EXPO", 4) == 0 )
-            fread(&video->EXPO, sizeof(mlv_expo_hdr_t), 1, video->file);
-        else if ( strncmp(block_name, "LENS", 4) == 0 )
-            fread(&video->LENS, sizeof(mlv_lens_hdr_t), 1, video->file);
-        else if ( strncmp(block_name, "WBAL", 4) == 0 )
-            fread(&video->WBAL, sizeof(mlv_wbal_hdr_t), 1, video->file);
-        else if ( ( strncmp(block_name, "RTCI", 4) == 0 ) && ( !rtci_read ) )
+        file_set_pos(video->file[i], 0, SEEK_SET); /* Start of file */
+        while (file_get_pos(video->file[i]) < file_size) /* Check if were at end of file yet */
         {
-            fread(&video->RTCI, sizeof(mlv_rtci_hdr_t), 1, video->file);
-            rtci_read = 1; //read only first one
+            /* Record position to go back to it later if block is read */
+            uint64_t block_start = file_get_pos(video->file[i]);
+            /* Read block header */
+            fread(&block_header, sizeof(mlv_hdr_t), 1, video->file[i]);
+            /* Next block location */
+            uint64_t next_block =  (uint64_t)block_start + (uint64_t)block_header.blockSize;
+
+            /* Go back to start of block for next bit */
+            file_set_pos(video->file[i], block_start, SEEK_SET);
+
+            /* Now check what kind of block it is and read it in to the mlv object */
+            if ( memcmp(block_header.blockType, "VIDF", 4) == 0 )
+            {
+                fread(&video->VIDF, sizeof(mlv_vidf_hdr_t), 1, video->file[i]);
+
+                DEBUG( printf("video frame %i/%i, %lluMB / %llu Bytes from start of file\n",
+                video->VIDF.frameNumber, video->frames, (block_start + video->VIDF.frameSpace) >> 20,
+                (block_start + video->VIDF.frameSpace)); )
+
+                /* Dynamically resize the frame index buffer */
+                if(!frame_index_max)
+                {
+                    frame_index_max = 128;
+                    video->frame_index = (frame_index_t *)malloc(sizeof(frame_index_t) * frame_index_max);
+                }
+                else if(video->VIDF.frameNumber >= frame_index_max - 1)
+                {
+                    frame_index_max *= 2;
+                    video->frame_index = (frame_index_t *)realloc(video->frame_index, sizeof(frame_index_t) * frame_index_max);
+                }
+
+                /* Fill frame index */
+                video->frame_index[video->VIDF.frameNumber].chunk_num = i;
+                video->frame_index[video->VIDF.frameNumber].frame_size = video->VIDF.blockSize - sizeof(mlv_vidf_hdr_t) - video->VIDF.frameSpace;
+                video->frame_index[video->VIDF.frameNumber].frame_offset = file_get_pos(video->file[i]) + video->VIDF.frameSpace;
+
+                /* Count actual video frames */
+                frame_total++;
+            }
+            else if ( memcmp(block_header.blockType, "AUDF", 4) == 0 )
+            {
+                fread(&video->AUDF, sizeof(mlv_audf_hdr_t), 1, video->file[i]);
+
+                DEBUG( printf("audio frame %i/%i,  %lluMB / %llu Bytes from start of file\n",
+                video->AUDF.frameNumber, video->audios, (block_start + video->AUDF.frameSpace) >> 20,
+                (block_start + video->AUDF.frameSpace)); )
+
+                /* Dynamically resize the audio index buffer */
+                if(!audio_index_max)
+                {
+                    audio_index_max = 32;
+                    video->audio_index = (frame_index_t *)malloc(sizeof(frame_index_t) * audio_index_max);
+                }
+                else if(video->AUDF.frameNumber >= audio_index_max - 1)
+                {
+                    audio_index_max *= 2;
+                    video->audio_index = (frame_index_t *)realloc(video->audio_index, sizeof(frame_index_t) * audio_index_max);
+                }
+
+                /* Fill audio index */
+                video->audio_index[video->AUDF.frameNumber].chunk_num = i;
+                video->audio_index[video->AUDF.frameNumber].frame_size = video->AUDF.blockSize - sizeof(mlv_audf_hdr_t) - video->AUDF.frameSpace;
+                video->audio_index[video->AUDF.frameNumber].frame_offset = file_get_pos(video->file[i]) + video->AUDF.frameSpace;
+
+                /* Count actual audio frames */
+                audio_frame_total++;
+            }
+            else if ( memcmp(block_header.blockType, "MLVI", 4) == 0 )
+            {
+                fread(&video->MLVI, sizeof(mlv_file_hdr_t), 1, video->file[i]);
+            }
+            else if ( memcmp(block_header.blockType, "RAWI", 4) == 0 )
+            {
+                fread(&video->RAWI, sizeof(mlv_rawi_hdr_t), 1, video->file[i]);
+            }
+            else if ( memcmp(block_header.blockType, "RAWC", 4) == 0 )
+            {
+                fread(&video->RAWC, sizeof(mlv_rawc_hdr_t), 1, video->file[i]);
+            }
+            else if ( memcmp(block_header.blockType, "WAVI", 4) == 0 )
+            {
+                fread(&video->WAVI, sizeof(mlv_wavi_hdr_t), 1, video->file[i]);
+            }
+            else if ( memcmp(block_header.blockType, "EXPO", 4) == 0 )
+            {
+                fread(&video->EXPO, sizeof(mlv_expo_hdr_t), 1, video->file[i]);
+            }
+            else if ( memcmp(block_header.blockType, "LENS", 4) == 0 )
+            {
+                fread(&video->LENS, sizeof(mlv_lens_hdr_t), 1, video->file[i]);
+            }
+            else if ( memcmp(block_header.blockType, "WBAL", 4) == 0 )
+            {
+                fread(&video->WBAL, sizeof(mlv_wbal_hdr_t), 1, video->file[i]);
+            }
+            else if ( ( memcmp(block_header.blockType, "RTCI", 4) == 0 ) && ( !rtci_read ) )
+            {
+                fread(&video->RTCI, sizeof(mlv_rtci_hdr_t), 1, video->file[i]);
+                rtci_read = 1; //read only first one
+            }
+            else if ( memcmp(block_header.blockType, "IDNT", 4) == 0 )
+            {
+                fread(&video->IDNT, sizeof(mlv_idnt_hdr_t), 1, video->file[i]);
+            }
+            else if ( memcmp(block_header.blockType, "INFO", 4) == 0 )
+            {
+                fread(&video->INFO, sizeof(mlv_info_hdr_t), 1, video->file[i]);
+            }
+            else if ( memcmp(block_header.blockType, "DISO", 4) == 0 )
+            {
+                fread(&video->DISO, sizeof(mlv_diso_hdr_t), 1, video->file[i]);
+            }
+
+            /* Printing stuff for fun */
+            DEBUG( printf("Block #%4i  |  %.4s  |%9i Bytes\n", block_num, block_header.blockType, block_header.blockSize); )
+
+            /* Move to next block */
+            file_set_pos(video->file[i], next_block, SEEK_SET);
+
+            block_num++;
         }
-        else if ( strncmp(block_name, "IDNT", 4) == 0 )
-            fread(&video->IDNT, sizeof(mlv_idnt_hdr_t), 1, video->file);
-        else if ( strncmp(block_name, "INFO", 4) == 0 )
-            fread(&video->INFO, sizeof(mlv_info_hdr_t), 1, video->file);
-        else if ( strncmp(block_name, "DISO", 4) == 0 )
-            fread(&video->DISO, sizeof(mlv_diso_hdr_t), 1, video->file);
-
-        /* Printing stuff for fun */
-        DEBUG( printf("Block #%4i  |  %.4s  |%9i Bytes\n", block_num, block_name, block_size); )
-
-        /* Move to next block */
-        file_set_pos(video->file, next_block, SEEK_SET);
-
-        block_num++;
     }
 
     /* back up black and white levels */
@@ -459,8 +598,6 @@ void openMlvClip(mlvObject_t * video, char * mlvPath)
     /* let's be kind and repair black level if it's broken (OMG IT WORKS!) */
     if ((getMlvBlackLevel(video) < 1700) || (getMlvBlackLevel(video) > 2200))
     {
-        int old_black_level = getMlvBlackLevel(video);
-
         /* Camera specific stuff */
         if ( (getMlvCamera(video)[11] == 'D' && getMlvCamera(video)[20] != 'I') ||
              (getMlvCamera(video)[10] == '5' && getMlvCamera(video)[12] == 'D') )
@@ -500,98 +637,6 @@ void openMlvClip(mlvObject_t * video, char * mlvPath)
     video->rgb_raw_frames = (uint16_t **)malloc( sizeof(uint16_t *) * frame_total );
     video->rgb_raw_current_frame = (uint16_t *)malloc( getMlvWidth(video) * getMlvHeight(video) * 3 * sizeof(uint16_t) );
     video->cached_frames = (uint8_t *)calloc( sizeof(uint8_t), frame_total );
-}
-
-
-/* mapMlvFrames function will get byte offsets of every frame (and audio block) in the file */
-void mapMlvFrames(mlvObject_t * video, uint64_t limit)
-{
-    /* Getting size of file in bytes */
-    file_set_pos(video->file, 0, SEEK_END); /* Go to end */
-    uint64_t file_size = file_get_pos(video->file); /* Get positions */
-
-    char block_name[4]; /* Read header name to this */
-    uint32_t block_size; /* Size of block */
-    uint32_t frame_offset; /* Offset to (a)frame from start of VIDF block */
-    uint32_t frame_num = 0; /* Current frame index */
-    uint32_t frame_total = 0; /* Total */
-
-    file_set_pos(video->file, 0, SEEK_SET); /* Start of file */
-
-    /* Memory 4 all frame & audio block offsets */
-    free(video->frame_offsets);
-    video->frame_offsets = (uint64_t *)malloc( (video->frames) * sizeof(uint64_t) );
-    free(video->frame_sizes);
-    video->frame_sizes = (uint32_t *)malloc( (video->frames) * sizeof(uint32_t) );
-    free(video->audio_offsets);
-    video->audio_offsets = (uint64_t *)malloc( (video->audios) * sizeof(uint64_t) );
-    free(video->audio_sizes);
-    video->audio_sizes = (uint32_t *)malloc( (video->audios) * sizeof(uint32_t) );
-
-    while (file_get_pos(video->file) < file_size) /* Check if end of file yet */
-    {
-        /* Record position to go back to it later when block is read */
-        uint64_t block_start = file_get_pos(video->file);
-        /* Read block name */
-        fread(&block_name, sizeof(char), 4, video->file);
-        /* Read size of block to block_size variable */
-        fread(&block_size, sizeof(uint32_t), 1, video->file);
-        /* Next block location */
-        uint64_t next_block = (uint64_t)block_start + (uint64_t)block_size;
-        
-        /* Is it frame block? */
-        if ( strncmp(block_name, "VIDF", 4) == 0 )
-        {
-            file_set_pos(video->file, 8, SEEK_CUR); /* skip 8 bytes */
-
-            /* I've heard MLV frames can be out of order... 
-             * So check its number... */
-            fread(&frame_num, sizeof(uint32_t), 1, video->file);
-
-            file_set_pos(video->file, 8, SEEK_CUR); /* skip 8 bytes */
-
-            /* Get frame offset from current location */
-            fread(&frame_offset, sizeof(uint32_t), 1, video->file);
-
-            DEBUG( printf("frame %i/%i, %lluMB / %llu Bytes from start of file\n",
-            frame_num, video->frames, (block_start + frame_offset) >> 20, 
-            (block_start + frame_offset)); )
-
-            /* Video frame start = current location + frame offset */
-            video->frame_offsets[frame_num] = file_get_pos(video->file) + frame_offset;
-
-            /* Measure frame size if lossless */
-            video->frame_sizes[frame_num] = block_size - (sizeof(mlv_vidf_hdr_t) + frame_offset);
-
-            frame_total++;
-        }
-        /* Or audio block */
-        else if ( strncmp(block_name, "AUDF", 4) == 0 )
-        {
-            file_set_pos(video->file, 8, SEEK_CUR); /* skip 8 bytes */
-
-            /* Get audio frame's index */
-            fread(&frame_num, sizeof(uint32_t), 1, video->file);
-
-            /* Get frame offset from current location */
-            fread(&frame_offset, sizeof(uint32_t), 1, video->file);
-
-            DEBUG( printf("AUDF/audio block %i/%i,  %lluMB / %llu Bytes from start of file\n", 
-            frame_num, video->audios, (block_start + frame_offset) >> 20, 
-            (block_start + frame_offset)); )
-
-            /* Audio frame data start = current location + frame offset */
-            video->audio_offsets[frame_num] = file_get_pos(video->file) + frame_offset;
-
-            /* Size of audio */
-            video->audio_sizes[frame_num] = block_size - (sizeof(mlv_audf_hdr_t) + frame_offset);
-        }
-
-        /* Move to next block */
-        file_set_pos(video->file, next_block, SEEK_SET);
-
-        if (limit != 0 && frame_total == limit) break;
-    }
 
     isMlvActive(video) = 1;
 
@@ -604,7 +649,6 @@ void mapMlvFrames(mlvObject_t * video, uint64_t limit)
         }
     }
 }
-
 
 void printMlvInfo(mlvObject_t * video)
 {
