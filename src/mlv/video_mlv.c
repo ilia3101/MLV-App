@@ -141,7 +141,7 @@ void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outpu
     int unpacked_frame_size = width * height * sizeof(uint16_t);
 
     /* Memory buffer for original RAW data */
-    uint8_t * raw_frame = (uint8_t *)malloc( raw_frame_size );
+    uint8_t * raw_frame = (uint8_t *)malloc(raw_frame_size + 4); // additional 4 bytes for safety
     /* Memory buffer for decompressed or bit unpacked RAW data */
     uint16_t * unpacked_frame = NULL;
 
@@ -360,9 +360,10 @@ mlvObject_t * initMlvObject()
 {
     mlvObject_t * video = (mlvObject_t *)calloc( 1, sizeof(mlvObject_t) );
 
-    /* Allocate just 1 element for now */
-    video->frame_index = (frame_index_t *)malloc( sizeof(frame_index_t) );
-    video->audio_index = (frame_index_t *)malloc( sizeof(frame_index_t) );
+    /* Initialize index buffers with NULL,
+     * will be allocated/reallocated later */
+    video->frame_index = NULL;
+    video->audio_index = NULL;
 
     /* Cache things, only one element for now as it is empty */
     video->rgb_raw_frames = (uint16_t **)malloc( sizeof(uint16_t *) );
