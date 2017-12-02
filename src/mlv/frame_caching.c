@@ -36,6 +36,7 @@ void disableMlvCaching(mlvObject_t * video)
 void enableMlvCaching(mlvObject_t * video)
 {
     /* This will reset the memory and start cache thread */
+    video->stop_caching = 0;
     setMlvRawCacheLimitMegaBytes(video, video->cache_limit_mb);
 }
 
