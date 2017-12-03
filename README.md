@@ -21,7 +21,7 @@ Find the latest releases [here](https://ilia3101.github.io/MLV-App/). Download, 
 - Audio playback in video drop frame mode
 - Loop playback
 - Show next frame, previous frame and scroll though timeline
-- Single frame (3x)16bit PNG export
+- Single frame (3x)8bit PNG export
 - Clip export via ffmpeg 10bit ProRes 422 (Proxy, LT, Standard, HQ), ProRes 4444, RAW AVI, 8bit H.264 and H.265; all with or without audio
 - Clip export to (10/12/14/16bit for Dual ISO) Cinema DNG files (with default or Davinci Resolve naming). Exporting modes: uncompressed, lossless and fast pass (in the last one no RAW correction, processing or decompressing/compressing is done, raw data copied as is from MLV to DNG uncompressed or lossless).
 - Frame rate override for export and playback
@@ -42,26 +42,21 @@ make app -j4
 #### Qt App macOS
 - install XCode depending on your OSX
 - install Qt5 (minimum 5.6)
-- unpack libpng-1.6.31.tar.gz (don't know how to do in terminal)
-- `cd platform/qt/libpng16/` `./configure`    `make check`     `sudo make install`
 - unpack ffmpegOSX.zip in `platform/qt/FFmpeg`
 - open `platform/qt/MLVApp.pro` in QtCreator
-- go to tab project, add command line argument -j4 (for quad core) under build steps, uncheck Add build library search path to DYLD_LIBRARY_PATH and DYLD_FRAMEWORK_PATH checkbox in my project Run section
+- go to tab project, add command line argument -j4 (for quad core) 
 - Build and Start
 
 #### Qt App Windows
 - install Qt5 (minimum 5.6)
 - unpack ffmpegWin.zip in `platform/qt/FFmpeg` (and copy it later into build directory)
 - open `platform/qt/MLVApp.pro` in QtCreator
-- go to tab project, add command line argument -j4 (for quad core) under build steps, uncheck Add build library search path to DYLD_LIBRARY_PATH and DYLD_FRAMEWORK_PATH checkbox in my project Run section
+- go to tab project, add command line argument -j4 (for quad core) 
 - Build and Start
 
 #### Qt App Linux (generally)
-- install Qt5 (minimum 5.6), ffmpeg (we use v3.3.2) and zlib (the steps to get these three items are different on all distros)
-- `cd platform/qt/libpng16/`
-- unpack libpng-1.6.31.tar.gz (don't know how to do in terminal)
-- `./configure`    `make check`     `sudo make install`
-- `cd..`
+- install Qt5 (minimum 5.6) and ffmpeg (we use v3.3.2) 
+- `cd platform/qt/`
 - `qmake MLVApp.pro` or equivalent (depending on distro and version and...)
 - `make -j4` (for quad core)
 - `./mlvapp` and have fun
