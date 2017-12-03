@@ -18,7 +18,6 @@
 #include <QScreen>
 #include <QMimeData>
 #include <QDir>
-#include <png.h>
 #include <unistd.h>
 #include <math.h>
 
@@ -1733,8 +1732,8 @@ void MainWindow::setSliders(ReceiptSettings *receipt)
     ui->spinBoxDeflickerTarget->setValue( receipt->deflickerTarget() );
     on_spinBoxDeflickerTarget_valueChanged( receipt->deflickerTarget() );
 
-    ui->doubleSpinBoxStretchHight->setValue( receipt->stretchFactorY() );
-    on_doubleSpinBoxStretchHight_valueChanged( receipt->stretchFactorY() );
+    ui->doubleSpinBoxStretchHeight->setValue( receipt->stretchFactorY() );
+    on_doubleSpinBoxStretchHeight_valueChanged( receipt->stretchFactorY() );
 
     ui->spinBoxCutIn->setValue( receipt->cutIn() );
     on_spinBoxCutIn_valueChanged( receipt->cutIn() );
@@ -1776,7 +1775,7 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     receipt->setDualIsoAliasMap( toolButtonDualIsoAliasMapCurrentIndex() );
     receipt->setDualIsoFrBlending( toolButtonDualIsoFullresBlendingCurrentIndex() );
 
-    receipt->setStretchFactorY( ui->doubleSpinBoxStretchHight->value() );
+    receipt->setStretchFactorY( ui->doubleSpinBoxStretchHeight->value() );
 
     receipt->setCutIn( ui->spinBoxCutIn->value() );
     receipt->setCutOut( ui->spinBoxCutOut->value() );
@@ -2583,28 +2582,18 @@ void MainWindow::on_actionExportActualFrame_triggered()
     //File Dialog
     QString fileName = QFileDialog::getSaveFileName( this, tr("Export..."),
                                                     saveFileName,
-                                                    "16bit PNG (*.png)" );
+                                                    "8bit PNG (*.png)" );
 
     //Exit if not an PNG file or aborted
     if( fileName == QString( "" )
             || !fileName.endsWith( ".png", Qt::CaseInsensitive ) ) return;
 
-    png_image image;
-    memset( &image, 0, sizeof image );
-    image.version = PNG_IMAGE_VERSION;
-    image.format = PNG_FORMAT_LINEAR_RGB;
-    image.width = getMlvWidth( m_pMlvObject );
-    image.height = getMlvHeight( m_pMlvObject );
-    image.flags = PNG_IMAGE_FLAG_16BIT_sRGB;
-    png_bytep buffer;
-    buffer = (png_bytep)malloc( PNG_IMAGE_SIZE( image ) );
 
     //Get frame from library
-    getMlvProcessedFrame16( m_pMlvObject, ui->horizontalSliderPosition->value(), (uint16_t*)buffer );
+    getMlvProcessedFrame8( m_pMlvObject, ui->horizontalSliderPosition->value(), m_pRawImage );
 
-    png_image_write_to_file( &image, fileName.toLatin1().data(), 0, buffer, 0, NULL );
-    free( buffer );
-    png_image_free( &image );
+    QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject) * ui->doubleSpinBoxStretchHeight->value(), QImage::Format_RGB888 )
+                        .save( fileName, "png", -1 );
 }
 
 //Enable / Disable the highlight reconstruction
@@ -3594,11 +3583,11 @@ void MainWindow::drawFrameReady()
             actHeight = ui->graphicsView->height();
         }
         int desWidth = actWidth;
-        int desHeight = actWidth * getMlvHeight(m_pMlvObject) / getMlvWidth(m_pMlvObject) * ui->doubleSpinBoxStretchHight->value();
+        int desHeight = actWidth * getMlvHeight(m_pMlvObject) / getMlvWidth(m_pMlvObject) * ui->doubleSpinBoxStretchHeight->value();
         if( desHeight > actHeight )
         {
             desHeight = actHeight;
-            desWidth = actHeight * getMlvWidth(m_pMlvObject) / getMlvHeight(m_pMlvObject) / ui->doubleSpinBoxStretchHight->value();
+            desWidth = actHeight * getMlvWidth(m_pMlvObject) / getMlvHeight(m_pMlvObject) / ui->doubleSpinBoxStretchHeight->value();
         }
 
         //Get Picture
@@ -3616,7 +3605,7 @@ void MainWindow::drawFrameReady()
     else
     {
         //Bring frame to GUI (100%)
-        if( ui->doubleSpinBoxStretchHight->value() == 1.0 ) //Fast mode for 1.0 stretch factor
+        if( ui->doubleSpinBoxStretchHeight->value() == 1.0 ) //Fast mode for 1.0 stretch factor
         {
             m_pGraphicsItem->setPixmap( QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 ) ) );
             m_pScene->setSceneRect( 0, 0, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject) );
@@ -3625,9 +3614,9 @@ void MainWindow::drawFrameReady()
         {
             m_pGraphicsItem->setPixmap( QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
                                               .scaled( getMlvWidth(m_pMlvObject),
-                                                       getMlvHeight(m_pMlvObject) * ui->doubleSpinBoxStretchHight->value(),
+                                                       getMlvHeight(m_pMlvObject) * ui->doubleSpinBoxStretchHeight->value(),
                                                        Qt::IgnoreAspectRatio, Qt::SmoothTransformation) ) );//alternative: Qt::FastTransformation
-            m_pScene->setSceneRect( 0, 0, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject) * ui->doubleSpinBoxStretchHight->value() );
+            m_pScene->setSceneRect( 0, 0, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject) * ui->doubleSpinBoxStretchHeight->value() );
         }
     }
     //Add zebras on the image
@@ -3687,7 +3676,7 @@ void MainWindow::drawFrameReady()
     {
         m_zoomTo100Center = false;
         ui->graphicsView->horizontalScrollBar()->setValue( ( getMlvWidth(m_pMlvObject) - ui->graphicsView->width() ) / 2 );
-        ui->graphicsView->verticalScrollBar()->setValue( ( getMlvHeight(m_pMlvObject) * ui->doubleSpinBoxStretchHight->value() - ui->graphicsView->height() ) / 2 );
+        ui->graphicsView->verticalScrollBar()->setValue( ( getMlvHeight(m_pMlvObject) * ui->doubleSpinBoxStretchHeight->value() - ui->graphicsView->height() ) / 2 );
     }
 
     //If zoom mode changed, redraw gradient element to the new size
@@ -3935,7 +3924,7 @@ void MainWindow::on_actionPreviewPicture_triggered()
 }
 
 //Input of Stretch Hight Factor
-void MainWindow::on_doubleSpinBoxStretchHight_valueChanged(double arg1)
+void MainWindow::on_doubleSpinBoxStretchHeight_valueChanged(double arg1)
 {
     m_pGradientElement->setStrechFactorY( arg1 );
     m_zoomModeChanged = true;

@@ -166,7 +166,7 @@ private slots:
     void on_actionPreviewList_triggered();
     void on_actionPreviewPicture_triggered();
 
-    void on_doubleSpinBoxStretchHight_valueChanged(double arg1);
+    void on_doubleSpinBoxStretchHeight_valueChanged(double arg1);
 
 private:
     Ui::MainWindow *ui;

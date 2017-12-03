@@ -359,7 +359,7 @@ QGroupBox::indicator:checked {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>-1065</y>
+            <y>0</y>
             <width>195</width>
             <height>1592</height>
            </rect>
@@ -3299,7 +3299,7 @@ QGroupBox::indicator:checked {
                     </widget>
                    </item>
                    <item>
-                    <widget class="QDoubleSpinBox" name="doubleSpinBoxStretchHight">
+                    <widget class="QDoubleSpinBox" name="doubleSpinBoxStretchHeight">
                      <property name="font">
                       <font>
                        <pointsize>10</pointsize>

@@ -41,21 +41,6 @@ linux-g++*: QMAKE_CFLAGS_DEBUG += -O3 -msse4.1 -mssse3 -msse3 -msse2 -msse -std=
 linux-g++*: QMAKE_CFLAGS_RELEASE += -O3 -msse4.1 -mssse3 -msse3 -msse2 -msse -std=c99
 
 ##############
-#libpng: unchecking Add build library search path to DYLD_LIBRARY_PATH and DYLD_FRAMEWORK_PATH checkbox in my project Run section!!!
-##############
-#OSX: unzip qt/libpng16/lpng1631.zip (libpng 1.6.31) before, ./configure, make check, make install
-macx: INCLUDEPATH += /usr/local/include/libpng16/
-macx: LIBS += -L/usr/local/lib/ -lz -lpng
-
-#Win: is precompiled with mingw32, so should work out of the box
-win32: INCLUDEPATH += libpng16/include/
-win32: LIBS += -L..\qt\libpng16\lib -llibpng \
-               -L..\qt\zlib -lzlib1
-
-#Linux
-linux-g++*: LIBS += -L/usr/local/lib/ -lz -lpng16
-##############
-
 SOURCES += \
         main.cpp \
         MainWindow.cpp \
