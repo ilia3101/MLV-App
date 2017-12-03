@@ -21,6 +21,7 @@
 #define CODEC_CDNG_FAST      8
 #define CODEC_H264           9
 #define CODEC_H265          10
+#define CODEC_TIFF          11
 
 #define CODEC_PRORES_OPTION_KS 0
 #define CODEC_PRORES_OPTION_AW 1

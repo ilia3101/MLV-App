@@ -878,7 +878,7 @@ void MainWindow::startExportPipe(QString fileName)
                 .arg( getMlvWidth( m_pMlvObject ) )
                 .arg( height );
     }
-    qDebug() << resizeFilter;
+    //qDebug() << resizeFilter;
 
     //FFMpeg export
 #ifdef __linux__
@@ -902,7 +902,18 @@ void MainWindow::startExportPipe(QString fileName)
 
     QString output = fileName.left( fileName.lastIndexOf( "." ) );
     QString resolution = QString( "%1x%2" ).arg( getMlvWidth( m_pMlvObject ) ).arg( getMlvHeight( m_pMlvObject ) );
-    if( m_codecProfile == CODEC_AVIRAW )
+    if( m_codecProfile == CODEC_TIFF )
+    {
+        output.append( QString( "_%06d.tif" ) );
+        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v tiff -pix_fmt %3 -start_number %4 -color_primaries bt709 -color_trc bt709 -colorspace bt709 %5\"%6\"" )
+                    .arg( fps )
+                    .arg( resolution )
+                    .arg( "rgb48" )
+                    .arg( m_exportQueue.first()->cutIn() - 1 )
+                    .arg( resizeFilter )
+                    .arg( output ) );
+    }
+    else if( m_codecProfile == CODEC_AVIRAW )
     {
         output.append( QString( ".avi" ) );
         program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v rawvideo -pix_fmt %3 %4\"%5\"" )
