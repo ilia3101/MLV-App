@@ -5,6 +5,7 @@
 #include <strings.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <alloca.h>
 
 #include "video_mlv.h"
 #include "raw.h"
