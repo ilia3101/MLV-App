@@ -903,7 +903,21 @@ void MainWindow::startExportPipe(QString fileName)
     QString resolution = QString( "%1x%2" ).arg( getMlvWidth( m_pMlvObject ) ).arg( getMlvHeight( m_pMlvObject ) );
     if( m_codecProfile == CODEC_TIFF )
     {
-        output.append( QString( "_%06d.tif" ) );
+        //Creating a folder with the initial filename
+        QString folderName = QFileInfo( fileName ).path();
+        QString shortFileName = QFileInfo( fileName ).fileName();
+        folderName.append( "/" )
+                .append( shortFileName.left( shortFileName.lastIndexOf( "." ) ) );
+
+        QDir dir;
+        dir.mkpath( folderName );
+
+        //Now add the numbered filename
+        output = folderName;
+        output.append( "/" )
+                .append( shortFileName.left( shortFileName.lastIndexOf( "." ) ) )
+                .append( QString( "_%06d.tif" ) );
+
         program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v tiff -pix_fmt %3 -start_number %4 -color_primaries bt709 -color_trc bt709 -colorspace bt709 %5\"%6\"" )
                     .arg( fps )
                     .arg( resolution )
@@ -911,6 +925,12 @@ void MainWindow::startExportPipe(QString fileName)
                     .arg( m_exportQueue.first()->cutIn() - 1 )
                     .arg( resizeFilter )
                     .arg( output ) );
+
+        //copy wav to the location, ffmpeg does not like to do it for us :-(
+        if( m_audioExportEnabled && doesMlvHaveAudio( m_pMlvObject ) )
+        {
+            QFile::copy( wavFileName, QString( "%1/%2.wav" ).arg( folderName ).arg( shortFileName.left( shortFileName.lastIndexOf( "." ) ) ) );
+        }
     }
     else if( m_codecProfile == CODEC_AVIRAW )
     {
@@ -2513,6 +2533,12 @@ void MainWindow::on_actionExport_triggered()
             saveFileName.append( ".mkv" );
             fileType = tr("Matroska (*.mkv)");
             fileEnding = ".mkv";
+        }
+        else if( m_codecProfile == CODEC_TIFF )
+        {
+            saveFileName.append( ".tif" );
+            fileType = tr("TIFF (*.tif)");
+            fileEnding = ".tif";
         }
         else
         {
