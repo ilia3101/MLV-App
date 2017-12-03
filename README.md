@@ -7,6 +7,7 @@ Find the latest releases [here](https://ilia3101.github.io/MLV-App/). Download, 
 
 ## Features :collision:
 - Import MLV files
+- Support for spanned mlv (.m00, .m01, ...)
 - Support for lossless mlv
 - Support for any bit depth (…, 10, 12, 14bit)
 - Demosaic bilinear or multithreaded AMaZE
