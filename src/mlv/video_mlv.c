@@ -148,7 +148,6 @@ void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outpu
     /* Memory buffer for decompressed or bit unpacked RAW data */
     uint16_t * unpacked_frame = NULL;
 
-    /* If a custom instance of file was given, use it */
     int chunk = video->frame_index[frameIndex].chunk_num;
     /* If this instance does not exist, return with a black frame */
     if( chunk < 0 || chunk >= video->filenum )
