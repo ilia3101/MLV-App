@@ -973,13 +973,17 @@ void MainWindow::startExportPipe(QString fileName)
         QString option;
         if( m_codecProfile <= CODEC_PRORES422HQ && m_codecOption == CODEC_PRORES_OPTION_AW ) option = QString( "prores_aw" );
         else option = QString( "prores_ks" );
+        QString pixFmt;
+        if( m_codecProfile <= CODEC_PRORES422HQ ) pixFmt = QString( "yuv422p10" );
+        else pixFmt = QString( "yuv444p10" );
 
         output.append( QString( ".mov" ) );
-        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v %3 -profile:v %4 -color_primaries bt709 -color_trc bt709 -colorspace bt709 %5\"%6\"" )
+        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v %3 -profile:v %4 -pix_fmt %5 -color_primaries bt709 -color_trc bt709 -colorspace bt709 %6\"%7\"" )
                     .arg( fps )
                     .arg( resolution )
                     .arg( option )
                     .arg( m_codecProfile )
+                    .arg( pixFmt )
                     .arg( resizeFilter )
                     .arg( output ) );
     }
