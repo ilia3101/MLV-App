@@ -150,6 +150,15 @@ void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outpu
 
     /* If a custom instance of file was given, use it */
     int chunk = video->frame_index[frameIndex].chunk_num;
+    /* If this instance does not exist, return with a black frame */
+    if( chunk < 0 || chunk >= video->filenum )
+    {
+        for( uint32_t i = 0; i < pixels_count; i++ )
+        {
+            outputFrame[i] = 0;
+        }
+        return;
+    }
     FILE * file = video->file[chunk];
 
     /* Move to start of frame in file and read the RAW data */
