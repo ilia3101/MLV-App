@@ -427,12 +427,12 @@ void MainWindow::openMlv( QString fileName )
 #endif
     /* This needs to be joined (or segmentation fault 11 :D) */
     setMlvProcessing( m_pMlvObject, m_pProcessingObject );
+    /* Disable Caching for the opening process */
+    disableMlvCaching( m_pMlvObject );
     /* Limit frame cache to defined size of RAM */
     setMlvRawCacheLimitMegaBytes( m_pMlvObject, m_cacheSizeMB );
     /* Tell it how many cores we have so it can be optimal */
     setMlvCpuCores( m_pMlvObject, QThread::idealThreadCount() );
-    /* Disable Caching for the opening process */
-    disableMlvCaching( m_pMlvObject );
 
     //Adapt the RawImage to actual size
     int imageSize = getMlvWidth( m_pMlvObject ) * getMlvHeight( m_pMlvObject ) * 3;
