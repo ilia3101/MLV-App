@@ -5,7 +5,10 @@
 #include <strings.h>
 #include <unistd.h>
 #include <pthread.h>
+
+#if defined(__linux)
 #include <alloca.h>
+#endif
 
 #include "video_mlv.h"
 #include "raw.h"
