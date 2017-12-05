@@ -139,6 +139,18 @@ void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outpu
     int height = video->RAWI.yRes;
     int pixels_count = width * height;
 
+    int chunk = video->frame_index[frameIndex].chunk_num;
+    uint32_t frame_size = video->frame_index[frameIndex].frame_size;
+    uint64_t frame_offset = video->frame_index[frameIndex].frame_offset;
+
+    /* If this frame does not exist, return with a black frame */
+    if(!frame_size && !frame_offset)
+    {
+        DEBUG( printf("MLV corrupted: Frame %d is absent, drawing black frame\n", frameIndex); )
+        memset(outputFrame, 0, pixels_count * sizeof(float));
+        return;
+    }
+
     /* How many bytes is RAW frame */
     int raw_frame_size = (width * height * bitdepth) / 8;
     int unpacked_frame_size = width * height * sizeof(uint16_t);
@@ -148,34 +160,24 @@ void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outpu
     /* Memory buffer for decompressed or bit unpacked RAW data */
     uint16_t * unpacked_frame = NULL;
 
-    int chunk = video->frame_index[frameIndex].chunk_num;
-    /* If this instance does not exist, return with a black frame */
-    if( chunk < 0 || chunk >= video->filenum )
-    {
-        for( int i = 0; i < pixels_count; i++ )
-        {
-            outputFrame[i] = 0;
-        }
-        return;
-    }
     FILE * file = video->file[chunk];
 
     /* Move to start of frame in file and read the RAW data */
     pthread_mutex_lock(video->main_file_mutex + chunk);
-    file_set_pos(file, video->frame_index[frameIndex].frame_offset, SEEK_SET);
+    file_set_pos(file, frame_offset, SEEK_SET);
 
     if (video->MLVI.videoClass & MLV_VIDEO_CLASS_FLAG_LJ92)
     {
-        int raw_data_size = video->frame_index[frameIndex].frame_size;
-        fread(raw_frame, sizeof(uint8_t), raw_data_size, file);
+        fread(raw_frame, sizeof(uint8_t), frame_size, file);
         pthread_mutex_unlock(video->main_file_mutex + chunk);
 
         int components = 1;
         lj92 decoder_object;
-        int ret = lj92_open(&decoder_object, raw_frame, raw_data_size, &width, &height, &bitdepth, &components);
+        int ret = lj92_open(&decoder_object, raw_frame, frame_size, &width, &height, &bitdepth, &components);
         if(ret != LJ92_ERROR_NONE)
         {
             DEBUG( printf("LJ92 decoder: Failed with error code (%d)\n", ret); )
+            memset(outputFrame, 0, pixels_count * sizeof(float));
             goto err_out;
         }
         else
@@ -185,6 +187,7 @@ void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outpu
             if(ret != LJ92_ERROR_NONE)
             {
                 DEBUG( printf("LJ92 decoder: Failed with error code (%d)\n", ret); )
+                memset(outputFrame, 0, pixels_count * sizeof(float));
                 goto err_out;
             }
         }
@@ -492,12 +495,17 @@ void openMlvClip(mlvObject_t * video, char * mlvPath)
                 if(!frame_index_max)
                 {
                     frame_index_max = 128;
-                    video->frame_index = (frame_index_t *)malloc(sizeof(frame_index_t) * frame_index_max);
+                    video->frame_index = (frame_index_t *)calloc(frame_index_max, sizeof(frame_index_t));
                 }
                 else if(video->VIDF.frameNumber >= frame_index_max - 1)
                 {
-                    frame_index_max *= 2;
-                    video->frame_index = (frame_index_t *)realloc(video->frame_index, sizeof(frame_index_t) * frame_index_max);
+                    uint64_t frame_index_new_size = frame_index_max * 2;
+                    frame_index_t * frame_index_new = (frame_index_t *)calloc(frame_index_new_size, sizeof(frame_index_t));
+                    memcpy(frame_index_new, video->frame_index, frame_index_max * sizeof(frame_index_t));
+                    free(video->frame_index);
+                    video->frame_index = frame_index_new;
+                    frame_index_max = frame_index_new_size;
+
                 }
 
                 /* Fill frame index */
@@ -524,8 +532,12 @@ void openMlvClip(mlvObject_t * video, char * mlvPath)
                 }
                 else if(video->AUDF.frameNumber >= audio_index_max - 1)
                 {
-                    audio_index_max *= 2;
-                    video->audio_index = (frame_index_t *)realloc(video->audio_index, sizeof(frame_index_t) * audio_index_max);
+                    uint64_t audio_index_new_size = audio_index_max * 2;
+                    frame_index_t * audio_index_new = (frame_index_t *)calloc(audio_index_new_size, sizeof(frame_index_t));
+                    memcpy(audio_index_new, video->audio_index, audio_index_max * sizeof(frame_index_t));
+                    free(video->audio_index);
+                    video->audio_index = audio_index_new;
+                    audio_index_max = audio_index_new_size;
                 }
 
                 /* Fill audio index */
