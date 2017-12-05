@@ -43,6 +43,10 @@ void change_scale(MLVView * self)
     [theMenu insertItemWithTitle:@"1.5x" action:@selector(setAnamorphic1_5x) keyEquivalent:@"" atIndex:index++];
     [theMenu insertItemWithTitle:@"1.75x" action:@selector(setAnamorphic1_75x) keyEquivalent:@"" atIndex:index++];
     [theMenu insertItemWithTitle:@"2.0x" action:@selector(setAnamorphic2x) keyEquivalent:@"" atIndex:index++];
+    [theMenu addItem:[NSMenuItem separatorItem]]; index++;
+    [theMenu insertItemWithTitle:@"2.35:1" action:@selector(setAspect2_35) keyEquivalent:@"" atIndex:index++];
+    [theMenu insertItemWithTitle:@"2.50:1" action:@selector(setAspect2_50) keyEquivalent:@"" atIndex:index++];
+    [theMenu insertItemWithTitle:@"2.67:1" action:@selector(setAspect2_67) keyEquivalent:@"" atIndex:index++];
     [NSMenu popUpContextMenu:theMenu withEvent:theEvent forView:self];
 }
 
@@ -74,6 +78,22 @@ void change_scale(MLVView * self)
     self.stretch = 1.0f;
     [self changeScale];
 }
+-(void)setAspect2_35 {
+    self.stretch = 2.35 / [self aspect];
+    [self changeScale];
+}
+-(void)setAspect2_50 {
+    self.stretch = 2.50 / [self aspect];
+    [self changeScale];
+}
+-(void)setAspect2_67 {
+    self.stretch = 2.666667 / [self aspect];
+    [self changeScale];
+}
+
+-(double)aspect {
+    return (double)self.image_width / (double)self.image_height;
+}
 
 -(id)initWithFrame:(NSRect)frame
 {
@@ -99,6 +119,8 @@ void change_scale(MLVView * self)
     self.image_data = imageData;
 
     self.draw = YES;
+
+    [self setAnamorphicNone];
 }
 
 -(void)drawRect:(NSRect)rect

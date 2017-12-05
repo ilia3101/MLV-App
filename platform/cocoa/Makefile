@@ -48,7 +48,6 @@ app :
 	cp -i $(appname) $(appname).app/Contents/MacOS/; \
 	cp -i info.plist $(appname).app/Contents/; \
 	mkdir $(appname).app/Contents/Resources/pixelmaps; \
-	cp -i ../../src/mlv/llrawproc/pixelmaps/*.fpm $(appname).app/Contents/Resources/pixelmaps; \
 	cp ../../src/icon/icon.icns $(appname).app/Contents/Resources/MLV\ App.icns; \
 	rm generate_info_plist; \
 	rm info.plist;

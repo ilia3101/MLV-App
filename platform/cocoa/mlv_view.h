@@ -29,8 +29,14 @@
 -(void)setAnamorphic1_5x;
 -(void)setAnamorphic1_33x;
 -(void)setAnamorphic1_25x;
+-(void)setAspect2_35;
+-(void)setAspect2_50;
+-(void)setAspect2_67;
 -(void)setAnamorphicNone;
 - (void)changeScale;
+
+/* Get current source image aspect */
+-(double)aspect;
 
 /* Properties about the image */
 @property int image_width;
