@@ -380,13 +380,13 @@ mlvObject_t * initMlvObject()
     video->audio_index = NULL;
 
     /* Cache things, only one element for now as it is empty */
-    video->rgb_raw_frames = (uint16_t **)malloc( sizeof(uint16_t *) );
-    video->rgb_raw_current_frame = (uint16_t *)malloc( sizeof(uint16_t) );
-    video->cached_frames = (uint8_t *)malloc( sizeof(uint8_t) );
+    video->rgb_raw_frames = NULL;//(uint16_t **)malloc( sizeof(uint16_t *) );
+    video->rgb_raw_current_frame = NULL;//(uint16_t *)malloc( sizeof(uint16_t) );
+    video->cached_frames = NULL;//(uint8_t *)malloc( sizeof(uint8_t) );
     /* All frames in one block of memory for least mallocing during usage */
-    video->cache_memory_block = (uint16_t *)malloc( sizeof(uint16_t) );
+    video->cache_memory_block = NULL;//(uint16_t *)malloc( sizeof(uint16_t) );
     /* Path (so separate cache threads can have their own FILE*s) */
-    video->path = (char *)malloc( sizeof(char) );
+    video->path = NULL;//(char *)malloc( sizeof(char) );
 
     /* Will avoid main file conflicts with audio and stuff */
     pthread_mutex_init(&video->g_mutexFind, NULL);
@@ -445,7 +445,7 @@ void freeMlvObject(mlvObject_t * video)
  * no debayering or bit unpacking */
 void openMlvClip(mlvObject_t * video, char * mlvPath)
 {
-    free(video->path);
+    //free(video->path);
     video->path = malloc( strlen(mlvPath) + 1 );
     memcpy(video->path, mlvPath, strlen(mlvPath));
     video->path[strlen(mlvPath)] = 0x0;
@@ -460,8 +460,8 @@ void openMlvClip(mlvObject_t * video, char * mlvPath)
     int rtci_read = 0; /* Flips to 1 if 1st RTCI block was read */
 
     /* Free index buffers before dynamically realocating */
-    free(video->frame_index);
-    free(video->audio_index);
+    //free(video->frame_index);
+    //free(video->audio_index);
 
     for(int i = 0; i < video->filenum; i++)
     {
@@ -662,9 +662,9 @@ void openMlvClip(mlvObject_t * video, char * mlvPath)
     setMlvRawCacheLimitMegaBytes(video, getMlvRawCacheLimitMegaBytes(video));
 
     /* For frame cache */
-    free(video->rgb_raw_frames);
-    free(video->rgb_raw_current_frame);
-    free(video->cached_frames);
+    //free(video->rgb_raw_frames);
+    //free(video->rgb_raw_current_frame);
+    //free(video->cached_frames);
     video->rgb_raw_frames = (uint16_t **)malloc( sizeof(uint16_t *) * frame_total );
     video->rgb_raw_current_frame = (uint16_t *)malloc( getMlvWidth(video) * getMlvHeight(video) * 3 * sizeof(uint16_t) );
     video->cached_frames = (uint8_t *)calloc( sizeof(uint8_t), frame_total );

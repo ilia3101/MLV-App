@@ -247,7 +247,9 @@ void an_mlv_cache_thread(mlvObject_t * video)
         video->cached_frames[cache_frame] = MLV_FRAME_BEING_CACHED;
         pthread_mutex_unlock( &video->g_mutexFind );
 
+        pthread_mutex_lock( &video->cache_mutex ); //cache mutex used first time ;)
         getMlvRawFrameFloat(video, cache_frame, imagefloat1d);
+        pthread_mutex_unlock( &video->cache_mutex );
 
         /* Single thread AMaZE */
         demosaic(&amaze_params);
