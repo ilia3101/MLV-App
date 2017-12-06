@@ -35,6 +35,7 @@
 #define STRETCH_H_100   1.0
 #define STRETCH_H_133   1.3333333333
 #define STRETCH_H_150   1.5
+#define STRETCH_H_175   1.75
 #define STRETCH_H_200   2.0
 #define STRETCH_V_100   1.0
 #define STRETCH_V_167   1.6666666667
@@ -1774,7 +1775,8 @@ void MainWindow::setSliders(ReceiptSettings *receipt)
     if( receipt->stretchFactorX() == STRETCH_H_100 ) ui->comboBoxHStretch->setCurrentIndex( 0 );
     else if( receipt->stretchFactorX() == STRETCH_H_133 ) ui->comboBoxHStretch->setCurrentIndex( 1 );
     else if( receipt->stretchFactorX() == STRETCH_H_150 ) ui->comboBoxHStretch->setCurrentIndex( 2 );
-    else ui->comboBoxHStretch->setCurrentIndex( 3 );
+    else if( receipt->stretchFactorX() == STRETCH_H_175 ) ui->comboBoxHStretch->setCurrentIndex( 3 );
+    else ui->comboBoxHStretch->setCurrentIndex( 4 );
     on_comboBoxHStretch_currentIndexChanged( ui->comboBoxHStretch->currentIndex() );
 
     if( receipt->stretchFactorY() == STRETCH_V_100 ) ui->comboBoxVStretch->setCurrentIndex( 0 );
@@ -3899,6 +3901,7 @@ double MainWindow::getHorizontalStretchFactor()
     if( ui->comboBoxHStretch->currentIndex() == 0 ) return STRETCH_H_100;
     else if( ui->comboBoxHStretch->currentIndex() == 1 ) return STRETCH_H_133;
     else if( ui->comboBoxHStretch->currentIndex() == 2 ) return STRETCH_H_150;
+    else if( ui->comboBoxHStretch->currentIndex() == 3 ) return STRETCH_H_175;
     else return STRETCH_H_200;
 }
 

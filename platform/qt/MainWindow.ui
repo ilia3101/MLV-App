@@ -359,7 +359,7 @@ QGroupBox::indicator:checked {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>-1097</y>
+            <y>0</y>
             <width>195</width>
             <height>1624</height>
            </rect>
@@ -3352,6 +3352,11 @@ QGroupBox::indicator:checked {
                      <item>
                       <property name="text">
                        <string>1.5x</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>1.75x</string>
                       </property>
                      </item>
                      <item>
