@@ -411,15 +411,15 @@ void freeMlvObject(mlvObject_t * video)
 {
     isMlvActive(video) = 0;
 
+    /* Stop caching and make sure using silly sleep trick */
+    video->stop_caching = 1;
+    while (video->cache_thread_count) usleep(100);
+
     /* Close all MLV file chunks */
     close_all_chunks(video->file, video->filenum);
     /* Free all memory */
     if(video->frame_index) free(video->frame_index);
     if(video->audio_index) free(video->audio_index);
-
-    /* Stop caching and make sure using silly sleep trick */
-    video->stop_caching = 1;
-    while (video->cache_thread_count) usleep(100);
 
     /* Now free these */
     free(video->cached_frames);
