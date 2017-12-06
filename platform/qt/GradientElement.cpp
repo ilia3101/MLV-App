@@ -18,6 +18,7 @@ GradientElement::GradientElement(QPolygon polygon, QGraphicsItem *parent)
     m_pGradientGraphicsItem->setPen( pen );
     m_pGradientGraphicsItem->setFlag( QGraphicsItem::ItemIsMovable, true );
     m_pGradientGraphicsItem->setFlag( QGraphicsItem::ItemSendsScenePositionChanges, true );
+    m_stretchFactorX = 1.0;
     m_stretchFactorY = 1.0;
     reset();
 }
@@ -68,6 +69,16 @@ void GradientElement::setUiAngle(double uiAngle)
     calcFromPoints();
 }
 
+//Get the stretch X factor to this class
+void GradientElement::setStrechFactorX(double factor)
+{
+    m_stretchFactorX = factor;
+
+    //calc
+    calcFromPoints();
+}
+
+//Get the stretch Y factor to this class
 void GradientElement::setStrechFactorY(double factor)
 {
     m_stretchFactorY = factor;
@@ -153,19 +164,21 @@ void GradientElement::calcFromPoints()
     }
 
     //Calc Viewer numbers
+    double startXstretched = m_startX * m_stretchFactorX;
+    double endXstretched = m_endX * m_stretchFactorX;
     double startYstretched = m_startY * m_stretchFactorY;
     double endYstretched = m_endY * m_stretchFactorY;
 
-    m = ( endYstretched - startYstretched ) / ( m_endX - m_startX );
-    m_lengthStretched = sqrt( pow( m_endX - m_startX, 2 ) + pow( endYstretched - startYstretched, 2 ) );
+    m = ( endYstretched - startYstretched ) / ( endXstretched - startXstretched );
+    m_lengthStretched = sqrt( pow( endXstretched - startXstretched, 2 ) + pow( endYstretched - startYstretched, 2 ) ) / m_stretchFactorX;
     if( m != 0 )
     {
         m_angleStretched = ( atan( m ) * 180.0 / M_PI ) - 90.0;
-        if( ( m_endX - m_startX ) >= 0 ) m_angleStretched += 180;
+        if( ( endXstretched - startXstretched ) >= 0 ) m_angleStretched += 180;
     }
     else if( ( endYstretched - startYstretched ) == 0 )
     {
-        if( ( m_endX - m_startX ) > 0 ) m_angleStretched = 90;
+        if( ( endXstretched - startXstretched ) > 0 ) m_angleStretched = 90;
         else m_angleStretched = -90;
     }
 }

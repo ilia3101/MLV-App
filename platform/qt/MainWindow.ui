@@ -359,9 +359,9 @@ QGroupBox::indicator:checked {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>0</y>
+            <y>-1097</y>
             <width>195</width>
-            <height>1592</height>
+            <height>1624</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayoutScrollArea">
@@ -3276,11 +3276,8 @@ QGroupBox::indicator:checked {
                   <number>0</number>
                  </property>
                  <item>
-                  <layout class="QHBoxLayout" name="horizontalLayout_21">
-                   <property name="spacing">
-                    <number>10</number>
-                   </property>
-                   <item>
+                  <layout class="QGridLayout" name="gridLayout_21">
+                   <item row="1" column="0">
                     <widget class="QLabel" name="label_7">
                      <property name="sizePolicy">
                       <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
@@ -3294,31 +3291,85 @@ QGroupBox::indicator:checked {
                       </font>
                      </property>
                      <property name="text">
-                      <string>Height Stretch Factor</string>
+                      <string>Height Stretch</string>
                      </property>
                     </widget>
                    </item>
-                   <item>
-                    <widget class="QDoubleSpinBox" name="doubleSpinBoxStretchHeight">
+                   <item row="1" column="1">
+                    <widget class="QComboBox" name="comboBoxVStretch">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
                      <property name="font">
                       <font>
                        <pointsize>10</pointsize>
                       </font>
                      </property>
-                     <property name="alignment">
-                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                     <property name="layoutDirection">
+                      <enum>Qt::LeftToRight</enum>
                      </property>
-                     <property name="minimum">
-                      <double>0.100000000000000</double>
+                     <property name="sizeAdjustPolicy">
+                      <enum>QComboBox::AdjustToContentsOnFirstShow</enum>
                      </property>
-                     <property name="maximum">
-                      <double>10.000000000000000</double>
+                     <item>
+                      <property name="text">
+                       <string>1.0x</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>1.67x</string>
+                      </property>
+                     </item>
+                    </widget>
+                   </item>
+                   <item row="0" column="1">
+                    <widget class="QComboBox" name="comboBoxHStretch">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
                      </property>
-                     <property name="singleStep">
-                      <double>0.010000000000000</double>
+                     <property name="font">
+                      <font>
+                       <pointsize>10</pointsize>
+                      </font>
                      </property>
-                     <property name="value">
-                      <double>1.000000000000000</double>
+                     <item>
+                      <property name="text">
+                       <string>1.0x</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>1.33x</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>1.5x</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>2.0x</string>
+                      </property>
+                     </item>
+                    </widget>
+                   </item>
+                   <item row="0" column="0">
+                    <widget class="QLabel" name="label_8">
+                     <property name="font">
+                      <font>
+                       <pointsize>10</pointsize>
+                      </font>
+                     </property>
+                     <property name="text">
+                      <string>Width Stretch</string>
                      </property>
                     </widget>
                    </item>

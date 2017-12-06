@@ -19,6 +19,7 @@ public:
     void setFinalPos( double x, double y );
     void setUiLength( int uiLength );
     void setUiAngle( double uiAngle );
+    void setStrechFactorX( double factor );
     void setStrechFactorY( double factor );
     void reset();
 
@@ -41,6 +42,7 @@ private:
     double m_lengthStretched;
     double m_angleUi;
     double m_angleStretched;
+    double m_stretchFactorX;
     double m_stretchFactorY;
     GraphicsPolygonMoveItem *m_pGradientGraphicsItem;
 };

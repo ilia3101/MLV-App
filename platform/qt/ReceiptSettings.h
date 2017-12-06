@@ -43,6 +43,7 @@ public:
     void setDualIsoInterpolation( int mode )  {m_dualIsoInt = mode;}
     void setDualIsoAliasMap( int on )         {m_dualIsoAliasMap = on;}
     void setDualIsoFrBlending( int on )       {m_dualIsoFrBlending = on;}
+    void setStretchFactorX( double factor )   {m_stretchFactorX = factor;}
     void setStretchFactorY( double factor )   {m_stretchFactorY = factor;}
     void setCutIn( uint32_t frame )           {m_cutIn = frame;}
     void setCutOut( uint32_t frame )          {m_cutOut = frame;}
@@ -72,6 +73,7 @@ public:
     int dualIsoInterpolation( void ){return m_dualIsoInt;}
     int dualIsoAliasMap( void ){return m_dualIsoAliasMap;}
     int dualIsoFrBlending( void ){return m_dualIsoFrBlending;}
+    double stretchFactorX( void ){return m_stretchFactorX;}
     double stretchFactorY( void ){return m_stretchFactorY;}
     uint32_t cutIn( void ) {return m_cutIn;}
     uint32_t cutOut( void ){return m_cutOut;}
@@ -106,6 +108,7 @@ private:
     int m_dualIsoInt;       // DualIsoInterpolation method, 0 - amaze-edge, 1 - mean23
     int m_dualIsoAliasMap;  // flag for Alias Map switchin on/off
     int m_dualIsoFrBlending;// flag for Fullres Blending switching on/off
+    double m_stretchFactorX;
     double m_stretchFactorY;
     uint32_t m_cutIn;
     uint32_t m_cutOut;

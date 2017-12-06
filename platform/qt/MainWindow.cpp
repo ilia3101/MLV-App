@@ -32,6 +32,12 @@
 #define FACTOR_DS       22.5
 #define FACTOR_LS       11.2
 #define FACTOR_LIGHTEN  0.6
+#define STRETCH_H_100   1.0
+#define STRETCH_H_133   1.3333333333
+#define STRETCH_H_150   1.5
+#define STRETCH_H_200   2.0
+#define STRETCH_V_100   1.0
+#define STRETCH_V_167   1.6666666667
 
 //Constructor
 MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
@@ -864,17 +870,20 @@ void MainWindow::startExportPipe(QString fileName)
         }
         resizeFilter = QString( "-vf scale=%1:%2 " ).arg( m_resizeWidth ).arg( m_resizeHeight );
     }
-    else if( m_exportQueue.first()->stretchFactorY() != 1.0 )
+    else if( m_exportQueue.first()->stretchFactorX() != 1.0
+          || m_exportQueue.first()->stretchFactorY() != 1.0 )
     {
+        uint16_t width = getMlvWidth( m_pMlvObject ) * m_exportQueue.first()->stretchFactorX();
         uint16_t height = getMlvHeight( m_pMlvObject ) * m_exportQueue.first()->stretchFactorY();
         //H.264 & H.265 needs a size which can be divided by 2
         if( m_codecProfile == CODEC_H264
          || m_codecProfile == CODEC_H265 )
         {
+            width += width % 2;
             height += height % 2;
         }
         resizeFilter = QString( "-vf scale=%1:%2 " )
-                .arg( getMlvWidth( m_pMlvObject ) )
+                .arg( width )
                 .arg( height );
     }
     //qDebug() << resizeFilter;
@@ -1580,6 +1589,11 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
             receipt->setDualIsoFrBlending( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
+        else if( Rxml->isStartElement() && Rxml->name() == "stretchFactorX" )
+        {
+            receipt->setStretchFactorX( Rxml->readElementText().toDouble() );
+            Rxml->readNext();
+        }
         else if( Rxml->isStartElement() && Rxml->name() == "stretchFactorY" )
         {
             receipt->setStretchFactorY( Rxml->readElementText().toDouble() );
@@ -1633,6 +1647,7 @@ void MainWindow::writeXmlElementsToFile(QXmlStreamWriter *xmlWriter, ReceiptSett
     xmlWriter->writeTextElement( "dualIsoInterpolation",    QString( "%1" ).arg( receipt->dualIsoInterpolation() ) );
     xmlWriter->writeTextElement( "dualIsoAliasMap",         QString( "%1" ).arg( receipt->dualIsoAliasMap() ) );
     xmlWriter->writeTextElement( "dualIsoFrBlending",       QString( "%1" ).arg( receipt->dualIsoFrBlending() ) );
+    xmlWriter->writeTextElement( "stretchFactorX",          QString( "%1" ).arg( receipt->stretchFactorX() ) );
     xmlWriter->writeTextElement( "stretchFactorY",          QString( "%1" ).arg( receipt->stretchFactorY() ) );
     xmlWriter->writeTextElement( "cutIn",                   QString( "%1" ).arg( receipt->cutIn() ) );
     xmlWriter->writeTextElement( "cutOut",                  QString( "%1" ).arg( receipt->cutOut() ) );
@@ -1756,8 +1771,15 @@ void MainWindow::setSliders(ReceiptSettings *receipt)
     ui->spinBoxDeflickerTarget->setValue( receipt->deflickerTarget() );
     on_spinBoxDeflickerTarget_valueChanged( receipt->deflickerTarget() );
 
-    ui->doubleSpinBoxStretchHeight->setValue( receipt->stretchFactorY() );
-    on_doubleSpinBoxStretchHeight_valueChanged( receipt->stretchFactorY() );
+    if( receipt->stretchFactorX() == STRETCH_H_100 ) ui->comboBoxHStretch->setCurrentIndex( 0 );
+    else if( receipt->stretchFactorX() == STRETCH_H_133 ) ui->comboBoxHStretch->setCurrentIndex( 1 );
+    else if( receipt->stretchFactorX() == STRETCH_H_150 ) ui->comboBoxHStretch->setCurrentIndex( 2 );
+    else ui->comboBoxHStretch->setCurrentIndex( 3 );
+    on_comboBoxHStretch_currentIndexChanged( ui->comboBoxHStretch->currentIndex() );
+
+    if( receipt->stretchFactorY() == STRETCH_V_100 ) ui->comboBoxVStretch->setCurrentIndex( 0 );
+    else ui->comboBoxVStretch->setCurrentIndex( 1 );
+    on_comboBoxVStretch_currentIndexChanged( ui->comboBoxVStretch->currentIndex() );
 
     ui->spinBoxCutIn->setValue( receipt->cutIn() );
     on_spinBoxCutIn_valueChanged( receipt->cutIn() );
@@ -1799,7 +1821,8 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     receipt->setDualIsoAliasMap( toolButtonDualIsoAliasMapCurrentIndex() );
     receipt->setDualIsoFrBlending( toolButtonDualIsoFullresBlendingCurrentIndex() );
 
-    receipt->setStretchFactorY( ui->doubleSpinBoxStretchHeight->value() );
+    receipt->setStretchFactorX( getHorizontalStretchFactor() );
+    receipt->setStretchFactorY( getVerticalStretchFactor() );
 
     receipt->setCutIn( ui->spinBoxCutIn->value() );
     receipt->setCutOut( ui->spinBoxCutOut->value() );
@@ -1837,6 +1860,7 @@ void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings 
     receiptTarget->setDualIsoAliasMap( receiptSource->dualIsoAliasMap() );
     receiptTarget->setDualIsoFrBlending( receiptSource->dualIsoFrBlending() );
 
+    receiptTarget->setStretchFactorX( receiptSource->stretchFactorX() );
     receiptTarget->setStretchFactorY( receiptSource->stretchFactorY() );
 
     receiptTarget->setCutIn( receiptSource->cutIn() );
@@ -1894,6 +1918,7 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     receipt->setDualIsoAliasMap( m_pSessionReceipts.at( row )->dualIsoAliasMap() );
     receipt->setDualIsoFrBlending( m_pSessionReceipts.at( row )->dualIsoFrBlending() );
 
+    receipt->setStretchFactorX( m_pSessionReceipts.at( row )->stretchFactorX() );
     receipt->setStretchFactorY( m_pSessionReceipts.at( row )->stretchFactorY() );
 
     receipt->setFileName( m_pSessionReceipts.at( row )->fileName() );
@@ -2622,7 +2647,7 @@ void MainWindow::on_actionExportActualFrame_triggered()
     //Get frame from library
     getMlvProcessedFrame8( m_pMlvObject, ui->horizontalSliderPosition->value(), m_pRawImage );
 
-    QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject) * ui->doubleSpinBoxStretchHeight->value(), QImage::Format_RGB888 )
+    QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject) * getHorizontalStretchFactor(), getMlvHeight(m_pMlvObject) * getVerticalStretchFactor(), QImage::Format_RGB888 )
                         .save( fileName, "png", -1 );
 }
 
@@ -3613,11 +3638,11 @@ void MainWindow::drawFrameReady()
             actHeight = ui->graphicsView->height();
         }
         int desWidth = actWidth;
-        int desHeight = actWidth * getMlvHeight(m_pMlvObject) / getMlvWidth(m_pMlvObject) * ui->doubleSpinBoxStretchHeight->value();
+        int desHeight = actWidth * getMlvHeight(m_pMlvObject) / getMlvWidth(m_pMlvObject) * getVerticalStretchFactor() / getHorizontalStretchFactor();
         if( desHeight > actHeight )
         {
             desHeight = actHeight;
-            desWidth = actHeight * getMlvWidth(m_pMlvObject) / getMlvHeight(m_pMlvObject) / ui->doubleSpinBoxStretchHeight->value();
+            desWidth = actHeight * getMlvWidth(m_pMlvObject) / getMlvHeight(m_pMlvObject) / getVerticalStretchFactor() * getHorizontalStretchFactor();
         }
 
         //Get Picture
@@ -3635,7 +3660,8 @@ void MainWindow::drawFrameReady()
     else
     {
         //Bring frame to GUI (100%)
-        if( ui->doubleSpinBoxStretchHeight->value() == 1.0 ) //Fast mode for 1.0 stretch factor
+        if( getVerticalStretchFactor() == 1.0
+         && getHorizontalStretchFactor() == 1.0 ) //Fast mode for 1.0 stretch factor
         {
             m_pGraphicsItem->setPixmap( QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 ) ) );
             m_pScene->setSceneRect( 0, 0, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject) );
@@ -3643,10 +3669,10 @@ void MainWindow::drawFrameReady()
         else
         {
             m_pGraphicsItem->setPixmap( QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
-                                              .scaled( getMlvWidth(m_pMlvObject),
-                                                       getMlvHeight(m_pMlvObject) * ui->doubleSpinBoxStretchHeight->value(),
+                                              .scaled( getMlvWidth(m_pMlvObject) * getHorizontalStretchFactor(),
+                                                       getMlvHeight(m_pMlvObject) * getVerticalStretchFactor(),
                                                        Qt::IgnoreAspectRatio, Qt::SmoothTransformation) ) );//alternative: Qt::FastTransformation
-            m_pScene->setSceneRect( 0, 0, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject) * ui->doubleSpinBoxStretchHeight->value() );
+            m_pScene->setSceneRect( 0, 0, getMlvWidth(m_pMlvObject) * getHorizontalStretchFactor(), getMlvHeight(m_pMlvObject) * getVerticalStretchFactor() );
         }
     }
     //Add zebras on the image
@@ -3705,8 +3731,8 @@ void MainWindow::drawFrameReady()
     if( m_zoomTo100Center )
     {
         m_zoomTo100Center = false;
-        ui->graphicsView->horizontalScrollBar()->setValue( ( getMlvWidth(m_pMlvObject) - ui->graphicsView->width() ) / 2 );
-        ui->graphicsView->verticalScrollBar()->setValue( ( getMlvHeight(m_pMlvObject) * ui->doubleSpinBoxStretchHeight->value() - ui->graphicsView->height() ) / 2 );
+        ui->graphicsView->horizontalScrollBar()->setValue( ( getMlvWidth(m_pMlvObject) * getHorizontalStretchFactor() - ui->graphicsView->width() ) / 2 );
+        ui->graphicsView->verticalScrollBar()->setValue( ( getMlvHeight(m_pMlvObject) * getVerticalStretchFactor() - ui->graphicsView->height() ) / 2 );
     }
 
     //If zoom mode changed, redraw gradient element to the new size
@@ -3867,6 +3893,22 @@ void MainWindow::initCutInOut(int frames)
     }
 }
 
+//Get the current horizontal stretch factor
+double MainWindow::getHorizontalStretchFactor()
+{
+    if( ui->comboBoxHStretch->currentIndex() == 0 ) return STRETCH_H_100;
+    else if( ui->comboBoxHStretch->currentIndex() == 1 ) return STRETCH_H_133;
+    else if( ui->comboBoxHStretch->currentIndex() == 2 ) return STRETCH_H_150;
+    else return STRETCH_H_200;
+}
+
+//Get the current vertical stretch factor
+double MainWindow::getVerticalStretchFactor( void )
+{
+    if( ui->comboBoxVStretch->currentIndex() == 0 ) return STRETCH_V_100;
+    else return STRETCH_V_167;
+}
+
 //Cut In button clicked
 void MainWindow::on_toolButtonCutIn_clicked(void)
 {
@@ -3953,10 +3995,18 @@ void MainWindow::on_actionPreviewPicture_triggered()
     setPreviewMode();
 }
 
-//Input of Stretch Hight Factor
-void MainWindow::on_doubleSpinBoxStretchHeight_valueChanged(double arg1)
+//Input of Stretch Width (horizontal) Factor
+void MainWindow::on_comboBoxHStretch_currentIndexChanged(int index)
 {
-    m_pGradientElement->setStrechFactorY( arg1 );
+    m_pGradientElement->setStrechFactorX( getHorizontalStretchFactor() );
+    m_zoomModeChanged = true;
+    m_frameChanged = true;
+}
+
+//Input of Stretch Height (vertical) Factor
+void MainWindow::on_comboBoxVStretch_currentIndexChanged(int index)
+{
+    m_pGradientElement->setStrechFactorY( getVerticalStretchFactor() );
     m_zoomModeChanged = true;
     m_frameChanged = true;
 }

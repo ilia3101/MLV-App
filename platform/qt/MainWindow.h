@@ -166,7 +166,8 @@ private slots:
     void on_actionPreviewList_triggered();
     void on_actionPreviewPicture_triggered();
 
-    void on_doubleSpinBoxStretchHeight_valueChanged(double arg1);
+    void on_comboBoxHStretch_currentIndexChanged(int index);
+    void on_comboBoxVStretch_currentIndexChanged(int index);
 
 private:
     Ui::MainWindow *ui;
@@ -265,6 +266,8 @@ private:
     int toolButtonDualIsoAliasMapCurrentIndex( void );
     int toolButtonDualIsoFullresBlendingCurrentIndex( void );
     void initCutInOut( int frames );
+    double getHorizontalStretchFactor();
+    double getVerticalStretchFactor();
 
 signals:
     void exportReady( void );
