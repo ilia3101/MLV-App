@@ -107,6 +107,11 @@ int diso_get_preview(uint16_t * image_data, uint16_t width, uint16_t height, int
 #ifndef STDOUT_SILENT
         err_printf("\nCould not detect dual ISO interlaced lines\n");
 #endif
+
+        for(int i = 0; i < 4; i++)
+        {
+            hist_destroy(hist[i]);
+        }
         return 0;
     }
     
@@ -115,6 +120,11 @@ int diso_get_preview(uint16_t * image_data, uint16_t width, uint16_t height, int
 #ifndef STDOUT_SILENT
         err_printf("\nDetected dual ISO interlaced lines\n");
 #endif
+
+        for(int i = 0; i < 4; i++)
+        {
+            hist_destroy(hist[i]);
+        }
         return 1;
     }
 
