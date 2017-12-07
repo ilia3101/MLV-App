@@ -33,12 +33,13 @@
 #define FACTOR_LS       11.2
 #define FACTOR_LIGHTEN  0.6
 #define STRETCH_H_100   1.0
-#define STRETCH_H_133   1.3333333333
+#define STRETCH_H_133   1.3333
 #define STRETCH_H_150   1.5
 #define STRETCH_H_175   1.75
+#define STRETCH_H_180   1.8
 #define STRETCH_H_200   2.0
 #define STRETCH_V_100   1.0
-#define STRETCH_V_167   1.6666666667
+#define STRETCH_V_167   1.6667
 
 //Constructor
 MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
@@ -1776,7 +1777,8 @@ void MainWindow::setSliders(ReceiptSettings *receipt)
     else if( receipt->stretchFactorX() == STRETCH_H_133 ) ui->comboBoxHStretch->setCurrentIndex( 1 );
     else if( receipt->stretchFactorX() == STRETCH_H_150 ) ui->comboBoxHStretch->setCurrentIndex( 2 );
     else if( receipt->stretchFactorX() == STRETCH_H_175 ) ui->comboBoxHStretch->setCurrentIndex( 3 );
-    else ui->comboBoxHStretch->setCurrentIndex( 4 );
+    else if( receipt->stretchFactorX() == STRETCH_H_180 ) ui->comboBoxHStretch->setCurrentIndex( 4 );
+    else ui->comboBoxHStretch->setCurrentIndex( 5 );
     on_comboBoxHStretch_currentIndexChanged( ui->comboBoxHStretch->currentIndex() );
 
     if( receipt->stretchFactorY() == STRETCH_V_100 ) ui->comboBoxVStretch->setCurrentIndex( 0 );
@@ -3902,6 +3904,7 @@ double MainWindow::getHorizontalStretchFactor()
     else if( ui->comboBoxHStretch->currentIndex() == 1 ) return STRETCH_H_133;
     else if( ui->comboBoxHStretch->currentIndex() == 2 ) return STRETCH_H_150;
     else if( ui->comboBoxHStretch->currentIndex() == 3 ) return STRETCH_H_175;
+    else if( ui->comboBoxHStretch->currentIndex() == 4 ) return STRETCH_H_180;
     else return STRETCH_H_200;
 }
 

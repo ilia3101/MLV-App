@@ -3361,6 +3361,11 @@ QGroupBox::indicator:checked {
                      </item>
                      <item>
                       <property name="text">
+                       <string>1.8x</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
                        <string>2.0x</string>
                       </property>
                      </item>
