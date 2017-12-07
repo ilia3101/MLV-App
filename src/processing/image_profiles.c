@@ -32,6 +32,21 @@ static image_profile_t default_image_profiles[] =
             .white = {0,0},
         }
     },
+    { /* PROFILE_FILM */
+        .disable_settings = {
+            .saturation = 1,
+            .curves = 1,
+            .tonemapping = 1
+        },
+        .tone_mapping_function = &TangentTonemap,
+        .gamma_power = STANDARD_GAMMA*1.1,
+        .xy_chromaticity = {
+            .red = {0,0},
+            .green = {0,0},
+            .blue = {0,0},
+            .white = {0,0},
+        }
+    },
     { /* PROFILE_ALEXA_LOG */
         .disable_settings = {
             .saturation = 0,

@@ -29,6 +29,10 @@ static const double ciecam02[] = {
 double ReinhardTonemap(double x) { return x / (1.0 + x); }
 float ReinhardTonemap_f(float x) { return x / (1.0f + x); }
 
+/* Interesting inverse tangent curve */
+double TangentTonemap(double x) { return atan(x) / atan(8.0); }
+float TangentTonemap_f(float x) { return atanf(x) / atanf(8.0f); }
+
 /* Canon C-Log: http://learn.usa.canon.com/app/pdfs/white_papers/White_Paper_Clog_optoelectronic.pdf (not working right) */
 double CanonCLogTonemap(double x) { return (0.529136 * log10(x * 1015.96 + 1.0) + 0.0730597); }
 float CanonCLogTonemap_f(float x) { return (0.529136f * log10f(x * 1015.96f + 1.0f) + 0.0730597f); }

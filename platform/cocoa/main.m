@@ -181,6 +181,7 @@ int NSApplicationMain(int argc, const char * argv[])
     AnchorTop(App->imageProfile, YES);
     [App->imageProfile insertItemWithTitle: @"Standard" atIndex: PROFILE_STANDARD];
     [App->imageProfile insertItemWithTitle: @"Tonemapped" atIndex: PROFILE_TONEMAPPED];
+    [App->imageProfile insertItemWithTitle: @"\"Film\"" atIndex: PROFILE_FILM];
     // [App->imageProfile insertItemWithTitle: @"Canon C-Log" atIndex: PROFILE_CANON_LOG];
     [App->imageProfile insertItemWithTitle: @"Alexa Log-C" atIndex: PROFILE_ALEXA_LOG];
     [App->imageProfile insertItemWithTitle: @"Cineon Log" atIndex: PROFILE_CINEON_LOG];

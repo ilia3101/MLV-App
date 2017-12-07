@@ -18,11 +18,12 @@ void processingSetImageProfile(processingObject_t * processing, int imageProfile
 /* imageProfile argument options: */
 #define PROFILE_STANDARD    0   /* Gamma Corrected */
 #define PROFILE_TONEMAPPED  1   /* Gamma Corrected + Tonemapped */
+#define PROFILE_FILM        2   /* Gamma Corrected + inverse tangent tonemap */
 // #define PROFILE_CANON_LOG   2   /* Canon C-Log (commented out - not working) */
-#define PROFILE_ALEXA_LOG   2   /* Alexa log (A form of Log-C) */
-#define PROFILE_CINEON_LOG  3   /* Cineon Log */
-#define PROFILE_SONY_LOG_3  4   /* Sony S-Log 3 */
-#define PROFILE_LINEAR      5   /* Linear, idk who would want this */
+#define PROFILE_ALEXA_LOG   3   /* Alexa log (A form of Log-C) */
+#define PROFILE_CINEON_LOG  4   /* Cineon Log */
+#define PROFILE_SONY_LOG_3  5   /* Sony S-Log 3 */
+#define PROFILE_LINEAR      6   /* Linear, idk who would want this */
 
 /* Set a custom image profile using the image_profile struct */
 void processingSetCustomImageProfile(processingObject_t * processing, image_profile_t * imageProfile);
@@ -194,16 +195,24 @@ void colour_correct_3_way( double * rgb,
 /* Tonemapping funtions */
 
 /* Uncharted and Reinhard: http://filmicworlds.com/blog/filmic-tonemapping-operators/ */
-double uncharted_tonemap(double value);
-double UnchartedTonemap(double value);
-double ReinhardTonemap(double value);
+double uncharted_tonemap(double x);
+double UnchartedTonemap(double x);
+double ReinhardTonemap(double x);
+float ReinhardTonemap_f(float x);
+/* Inverse tangent based tonemap - interesting... filmmic? */
+double TangentTonemap(double x);
+float TangentTonemap_f(float x);
 /* Canon C-Log: http://learn.usa.canon.com/app/pdfs/white_papers/White_Paper_Clog_optoelectronic.pdf */
-double CanonCLogTonemap(double value); /* Not working right */
+double CanonCLogTonemap(double x); /* Not working right */
+float CanonCLogTonemap_f(float x);
 /* Calculate Alexa Log curve (iso 800 version), from here: http://www.vocas.nl/webfm_send/964 */
-double AlexaLogCTonemap(double value);
+double AlexaLogCTonemap(double x);
+float AlexaLogCTonemap_f(float x);
 /* Cineon Log, formula from here: http://www.magiclantern.fm/forum/index.php?topic=15801.msg158145#msg158145 */
-double CineonLogTonemap(double value);
+double CineonLogTonemap(double x);
+float CineonLogTonemap_f(float x);
 /* Sony S-Log3, from here: https://www.sony.de/pro/support/attachment/1237494271390/1237494271406/technical-summary-for-s-gamut3-cine-s-log3-and-s-gamut3-s-log3.pdf */
-double SonySLogTonemap(double value);
+double SonySLogTonemap(double x);
+float SonySLogTonemap_f(float x);
 
 #endif
