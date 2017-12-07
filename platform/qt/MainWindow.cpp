@@ -2830,6 +2830,7 @@ void MainWindow::on_actionResetReceipt_triggered()
 {
     ReceiptSettings *sliders = new ReceiptSettings(); //default
     sliders->setCutOut( getMlvFrames( m_pMlvObject ) );
+    setWhiteBalanceFromMlv( sliders );
     setSliders( sliders );
     delete sliders;
 }
@@ -3914,6 +3915,40 @@ double MainWindow::getVerticalStretchFactor( void )
 {
     if( ui->comboBoxVStretch->currentIndex() == 0 ) return STRETCH_V_100;
     else return STRETCH_V_167;
+}
+
+//Read Whitebalance Info from MLV and setup slider
+void MainWindow::setWhiteBalanceFromMlv(ReceiptSettings *sliders)
+{
+    switch( getMlvWbMode( m_pMlvObject ) )
+    {
+    case 0: //Auto - use default
+    case 6: //Custom - use default
+        break;
+    case 1: //Sunny
+        sliders->setTemperature( 5200 );
+        break;
+    case 8: //Shade
+        sliders->setTemperature( 7000 );
+        break;
+    case 2: //Cloudy
+        sliders->setTemperature( 6000 );
+        break;
+    case 3: //Thungsten
+        sliders->setTemperature( 3200 );
+        break;
+    case 4: //Fluorescent
+        sliders->setTemperature( 4000 );
+        break;
+    case 5: //Flash
+        sliders->setTemperature( 6000 );
+        break;
+    case 9: //Kelvin
+        sliders->setTemperature( getMlvWbKelvin( m_pMlvObject ) );
+        break;
+    default:
+        break;
+    }
 }
 
 //Cut In button clicked

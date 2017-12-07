@@ -105,6 +105,8 @@ void getMlvAudioData(mlvObject_t * video, int16_t * outputAudio);
 #define getMlvTmHour(video)    (video)->RTCI.tm_hour
 #define getMlvTmMin(video)     (video)->RTCI.tm_min
 #define getMlvTmSec(video)     (video)->RTCI.tm_sec
+#define getMlvWbMode(video)    (video)->WBAL.wb_mode
+#define getMlvWbKelvin(video)  (video)->WBAL.kelvin
 
 /* Useful setting macros (functions) */
 

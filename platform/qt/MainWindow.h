@@ -268,6 +268,7 @@ private:
     void initCutInOut( int frames );
     double getHorizontalStretchFactor();
     double getVerticalStretchFactor();
+    void setWhiteBalanceFromMlv( ReceiptSettings *sliders );
 
 signals:
     void exportReady( void );
