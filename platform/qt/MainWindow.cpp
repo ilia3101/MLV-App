@@ -1524,7 +1524,9 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
         }
         else if( Rxml->isStartElement() && Rxml->name() == "profile" )
         {
-            receipt->setProfile( (uint8_t)Rxml->readElementText().toUInt() );
+            uint8_t profile = (uint8_t)Rxml->readElementText().toUInt();
+            if( version < 2 && profile > 1 ) receipt->setProfile( profile + 1 );
+            else receipt->setProfile( profile );
             Rxml->readNext();
         }
         else if( Rxml->isStartElement() && Rxml->name() == "rawFixesEnabled" )

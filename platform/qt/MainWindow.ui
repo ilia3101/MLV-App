@@ -2639,6 +2639,11 @@ QGroupBox::indicator:checked {
                    </item>
                    <item>
                     <property name="text">
+                     <string>Film</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
                      <string>Alexa Log-C</string>
                     </property>
                    </item>
