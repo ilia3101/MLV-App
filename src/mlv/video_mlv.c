@@ -422,17 +422,17 @@ void freeMlvObject(mlvObject_t * video)
     if(video->audio_index) free(video->audio_index);
 
     /* Now free these */
-    free(video->cached_frames);
-    free(video->rgb_raw_frames);
-    free(video->rgb_raw_current_frame);
-    free(video->cache_memory_block);
-    free(video->path);
+    if(video->cached_frames) free(video->cached_frames);
+    if(video->rgb_raw_frames) free(video->rgb_raw_frames);
+    if(video->rgb_raw_current_frame) free(video->rgb_raw_current_frame);
+    if(video->cache_memory_block) free(video->cache_memory_block);
+    if(video->path) free(video->path);
     freeLLRawProcObject(video->llrawproc);
 
     /* Mutex things here... */
     for (int i = 0; i < video->block_num; ++i)
         pthread_mutex_destroy(video->main_file_mutex + i);
-    free(video->main_file_mutex);
+    if(video->main_file_mutex) free(video->main_file_mutex);
     pthread_mutex_destroy(&video->g_mutexFind);
     pthread_mutex_destroy(&video->g_mutexCount);
 
