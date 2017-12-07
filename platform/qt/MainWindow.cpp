@@ -141,6 +141,7 @@ MainWindow::~MainWindow()
     delete m_pReceiptClipboard;
     delete m_pAudioPlayback;
     delete m_pAudioWave;
+    delete m_pWaveFormMonitor;
     delete m_pHistogram;
     delete m_pStatusDialog;
     delete m_pInfoDialog;

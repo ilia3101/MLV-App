@@ -194,6 +194,10 @@ int diso_get_preview(uint16_t * image_data, uint16_t width, uint16_t height, int
     double a = (mxy - mx*my) / (mx2 - mx*mx);
     double b = my - a * mx;
     
+    free(data_w);
+    free(data_y);
+    free(data_x);
+
     for(int i = 0; i < 4; i++)
     {
         hist_destroy(hist[i]);
@@ -1922,6 +1926,7 @@ int diso_get_full20bit(struct raw_info raw_info, uint16_t * image_data, int inte
     free(bright);
     free(fullres);
     free(halfres);
+    free(alias_map);
     free(overexposed);
     free(raw_buffer_32);
     if (fullres_smooth && fullres_smooth != fullres) free(fullres_smooth);
