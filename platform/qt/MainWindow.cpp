@@ -2686,7 +2686,7 @@ void MainWindow::on_comboBoxProfile_currentIndexChanged(int index)
     m_frameChanged = true;
     //Disable parameters if log
     bool enable = true;
-    if( ( index == 2 ) || ( index == 3 ) || ( index == 4 ) )
+    if( ( index == PROFILE_ALEXA_LOG ) || ( index == PROFILE_CINEON_LOG ) || ( index == PROFILE_SONY_LOG_3 ) )
     {
         enable = false;
     }
