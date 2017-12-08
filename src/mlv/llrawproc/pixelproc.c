@@ -284,15 +284,17 @@ static int add_pixel_to_map(pixel_map * map, int x, int y)
 {
     if(!map->capacity)
     {
-        map->capacity = 32;
+        map->capacity = 50;
+        if(!map->type) map->capacity = 25000;
         map->pixels = malloc(sizeof(pixel_xy) * map->capacity);
         if(!map->pixels) goto malloc_error;
     }
     else if(map->count >= map->capacity)
     {
         map->capacity *= 2;
-        map->pixels = realloc(map->pixels, sizeof(pixel_xy) * map->capacity);
-        if(!map->pixels) goto malloc_error;
+        pixel_xy * pixels = realloc(map->pixels, sizeof(pixel_xy) * map->capacity);
+        if(!pixels) goto malloc_error;
+        map->pixels = pixels;
     }
     
     map->pixels[map->count].x = x;
@@ -305,6 +307,9 @@ malloc_error:
     err_printf("malloc error\n");
 #endif
     map->count = 0;
+    map->capacity = 0;
+    if(map->pixels) free(map->pixels);
+    map->pixels = NULL;
     return 0;
 }
 
@@ -339,7 +344,11 @@ static int load_pixel_map(pixel_map * map, uint32_t camera_id, int raw_width, in
     int x, y;
     while (fscanf(f, "%d%*[ \t]%d%*[^\n]", &x, &y) != EOF)
     {
-        add_pixel_to_map(map, x, y);
+        if(!add_pixel_to_map(map, x, y))
+        {
+            fclose(f);
+            return 0; //malloc error
+        }
     }
 
 #ifndef STDOUT_SILENT
@@ -377,7 +386,7 @@ static void fpm_mv720(pixel_map * map, int pattern, int32_t raw_width)
         {
             if(((x + shift) % x_rep) == 0)
             {
-                add_pixel_to_map(map, x, y);
+                if(!add_pixel_to_map(map, x, y)) return; //malloc error
             }
         }
     }
@@ -410,7 +419,7 @@ static void fpm_mv1080(pixel_map * map, int pattern, int32_t raw_width)
         {
             if(((x + shift) % x_rep) == 0)
             {
-                add_pixel_to_map(map, x, y);
+                if(!add_pixel_to_map(map, x, y)) return; //malloc error
             }
         }
     }
@@ -468,7 +477,7 @@ static void fpm_mv1080crop(pixel_map * map, int pattern, int32_t raw_width)
         {
             if(((x + shift) % x_rep) == 0)
             {
-                add_pixel_to_map(map, x, y);
+                if(!add_pixel_to_map(map, x, y)) return; //malloc error
             }
         }
     }
@@ -526,7 +535,7 @@ static void fpm_zoom(pixel_map * map, int pattern, int32_t raw_width)
         {
             if(((x + shift) % x_rep) == 0)
             {
-                add_pixel_to_map(map, x, y);
+                if(!add_pixel_to_map(map, x, y)) return; //malloc error
             }
         }
     }
@@ -585,7 +594,7 @@ static void fpm_crop_rec(pixel_map * map, int pattern, int32_t raw_width)
         {
             if(((x + shift) % x_rep) == 0)
             {
-                add_pixel_to_map(map, x, y);
+                if(!add_pixel_to_map(map, x, y)) return; //malloc error
             }
         }
     }
@@ -742,7 +751,7 @@ fpm_check:
 #ifndef STDOUT_SILENT
                 printf(""FMT_SIZE" pixels generated\n", focus_pixel_map->count);
 #endif
-                *fpm_status = 2;
+                *fpm_status = (focus_pixel_map->count) ? 2 : 3;
             }
             goto fpm_check;
         }
@@ -915,14 +924,14 @@ bpm_check:
 #ifndef STDOUT_SILENT
                         printf("COLD - p = %d, dark_min = %d, dark_max = %d\n", p, dark_min, dark_max);
 #endif
-                        add_pixel_to_map(bad_pixel_map, x + cropX, y + cropY);
+                        if(!add_pixel_to_map(bad_pixel_map, x + cropX, y + cropY)) goto mem_err;
                     }
                     else if ((raw2ev[p] - raw2ev[-max2] > 2 * EV_RESOLUTION) && (p > dark_max)) //hot pixel
                     {
 #ifndef STDOUT_SILENT
                         printf("HOT  - p = %d, dark_min = %d, dark_max = %d\n", p, dark_min, dark_max);
 #endif
-                        add_pixel_to_map(bad_pixel_map, x + cropX, y + cropY);
+                        if(!add_pixel_to_map(bad_pixel_map, x + cropX, y + cropY)) goto mem_err;
                     }
                     else if (aggressive)
                     {
@@ -932,7 +941,7 @@ bpm_check:
                         int max3 = kth_smallest_int(neighbours, k, 2);
                         if(((raw2ev[p] - raw2ev[-max2] > EV_RESOLUTION) || (raw2ev[p] - raw2ev[-max3] > EV_RESOLUTION)) && (p > dark_max))
                         {
-                            add_pixel_to_map(bad_pixel_map, x + cropX, y + cropY);
+                            if(!add_pixel_to_map(bad_pixel_map, x + cropX, y + cropY)) goto mem_err;
                         }
                     }
                 }
@@ -942,14 +951,11 @@ bpm_check:
             printf(""FMT_SIZE" bad pixels found\n", bad_pixel_map->count);
 #endif
 
-            if (bad_pixel_map->count)
-            {
-                *bpm_status = 2; // bad pixels found, goto interpolation stage
-            }
-            else
-            {
-                *bpm_status = 3; // bad pixels not found, interpolation not needed
-            }
+mem_err:
+            /* 2 - bad pixels found, goto interpolation stage
+             * 3 - bad pixels not found, interpolation not needed */
+            *bpm_status = (bad_pixel_map->count) ? 2 : 3;
+
             goto bpm_check;
         }
         case 2: // interpolate pixels

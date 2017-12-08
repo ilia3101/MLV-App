@@ -84,7 +84,7 @@ llrawprocObject_t * initLLRawProcObject()
 void freeLLRawProcObject(llrawprocObject_t * llrawproc)
 {
     free_luts(llrawproc->raw2ev, llrawproc->ev2raw);
-    free_pixel_maps(&llrawproc->focus_pixel_map, &llrawproc->bad_pixel_map);
+    free_pixel_maps(&(llrawproc->focus_pixel_map), &(llrawproc->bad_pixel_map));
     free(llrawproc);
 }
 
@@ -392,10 +392,10 @@ int llrpHQDualIso(mlvObject_t * video)
 
 void llrpResetFpmStatus(mlvObject_t * video)
 {
-    reset_fpm_status(&video->llrawproc->focus_pixel_map, &video->llrawproc->fpm_status);
+    reset_fpm_status(&(video->llrawproc->focus_pixel_map), &(video->llrawproc->fpm_status));
 }
 
 void llrpResetBpmStatus(mlvObject_t * video)
 {
-    reset_bpm_status(&video->llrawproc->bad_pixel_map, &video->llrawproc->bpm_status);
+    reset_bpm_status(&(video->llrawproc->bad_pixel_map), &(video->llrawproc->bpm_status));
 }
