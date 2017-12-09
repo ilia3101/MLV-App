@@ -551,6 +551,8 @@ int MainWindow::openMlv( QString fileName )
 
     //If clip loaded, import receipt is enabled
     ui->actionImportReceipt->setEnabled( true );
+    //If clip loaded, enable session save
+    ui->actionSaveSession->setEnabled( true );
 
     //Setup Gradient
     ui->spinBoxGradientX->setMaximum( getMlvWidth( m_pMlvObject ) + 1000 );
@@ -682,6 +684,8 @@ void MainWindow::initGui( void )
     ui->toolButtonWb->setVisible( false );
     //If no clip loaded, import receipt is disabled
     ui->actionImportReceipt->setEnabled( false );
+    //If no clip loaded, disable session save
+    ui->actionSaveSession->setEnabled( false );
 
     //Set up image in GUI
     QImage image(":/IMG/IMG/histogram.png");
@@ -1741,6 +1745,8 @@ void MainWindow::deleteSession()
 
     //If no clip loaded, import receipt is disabled
     ui->actionImportReceipt->setEnabled( false );
+    //If no clip loaded, disable session save
+    ui->actionSaveSession->setEnabled( false );
 
     //Disable Gradient
     ui->checkBoxGradientEnable->setChecked( false );
