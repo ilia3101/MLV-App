@@ -217,7 +217,7 @@ private:
     QVector<ReceiptSettings*> m_exportQueue;
     int m_lastActiveClipInSession;
     void drawFrame( void );
-    void openMlv( QString fileName );
+    int openMlv( QString fileName );
     void playbackHandling( int timeDiff );
     void initGui( void );
     void initLib( void );

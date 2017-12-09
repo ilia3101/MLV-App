@@ -100,16 +100,17 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
                 return;
             }
 
-            //Save last file name
-            m_lastSaveFileName = fileName;
-
-            //Add to SessionList
-            addFileToSession( fileName );
-
             //Open the file
-            openMlv( fileName );
-            on_actionResetReceipt_triggered();
-            previewPicture( ui->listWidgetSession->count() - 1 );
+            if( !openMlv( fileName ) )
+            {
+                //Save last file name
+                m_lastSaveFileName = fileName;
+                //Add to SessionList
+                addFileToSession( fileName );
+
+                on_actionResetReceipt_triggered();
+                previewPicture( ui->listWidgetSession->count() - 1 );
+            }
 
             //Caching is in which state? Set it!
             on_actionCaching_triggered( ui->actionCaching->isChecked() );
@@ -257,14 +258,17 @@ bool MainWindow::event(QEvent *event)
             }
             else
             {
-                //Save last file name
-                m_lastSaveFileName = fileName;
-                //Add to SessionList
-                addFileToSession( fileName );
                 //Open MLV
-                openMlv( fileName );
-                on_actionResetReceipt_triggered();
-                previewPicture( ui->listWidgetSession->count() - 1 );
+                if( !openMlv( fileName ) )
+                {
+                    //Save last file name
+                    m_lastSaveFileName = fileName;
+                    //Add to SessionList
+                    addFileToSession( fileName );
+
+                    on_actionResetReceipt_triggered();
+                    previewPicture( ui->listWidgetSession->count() - 1 );
+                }
             }
 
             //Caching is in which state? Set it!
@@ -309,16 +313,17 @@ void MainWindow::dropEvent(QDropEvent *event)
             continue;
         }
 
-        //Save last file name
-        m_lastSaveFileName = fileName;
-
-        //Add file to Sessionlist
-        addFileToSession( fileName );
-
         //Open the file
-        openMlv( fileName );
-        on_actionResetReceipt_triggered();
-        previewPicture( ui->listWidgetSession->count() - 1 );
+        if( !openMlv( fileName ) )
+        {
+            //Save last file name
+            m_lastSaveFileName = fileName;
+            //Add file to Sessionlist
+            addFileToSession( fileName );
+
+            on_actionResetReceipt_triggered();
+            previewPicture( ui->listWidgetSession->count() - 1 );
+        }
     }
 
     //Caching is in which state? Set it!
@@ -388,16 +393,17 @@ void MainWindow::on_actionOpen_triggered()
             continue;
         }
 
-        //Save last file name
-        m_lastSaveFileName = fileName;
-
-        //Add file to Sessionlist
-        addFileToSession( fileName );
-
         //Open the file
-        openMlv( fileName );
-        on_actionResetReceipt_triggered();
-        previewPicture( ui->listWidgetSession->count() - 1 );
+        if( !openMlv( fileName ) )
+        {
+            //Save last file name
+            m_lastSaveFileName = fileName;
+            //Add file to Sessionlist
+            addFileToSession( fileName );
+
+            on_actionResetReceipt_triggered();
+            previewPicture( ui->listWidgetSession->count() - 1 );
+        }
     }
 
     //Caching is in which state? Set it!
@@ -407,8 +413,30 @@ void MainWindow::on_actionOpen_triggered()
 }
 
 //Open MLV procedure
-void MainWindow::openMlv( QString fileName )
+int MainWindow::openMlv( QString fileName )
 {
+    int mlv_err = MLV_ERR_NONE;
+    mlvObject_t * new_MlvObject = initMlvObjectWithClip( fileName.toLatin1().data(), &mlv_err );
+    if( mlv_err )
+    {
+        switch ( mlv_err )
+        {
+            case MLV_ERR_NONE:
+                break;
+            case MLV_ERR_OPEN:
+                QMessageBox::critical( this, tr( "MLV Error" ), tr( "Could not open file: %1\n" ).arg( fileName.toLatin1().data() ), tr("Cancel") );
+                break;
+            case MLV_ERR_INVALID:
+                QMessageBox::critical( this, tr( "MLV Error" ), tr( "Invalid MLV file: %1\n").arg( fileName.toLatin1().data() ), tr("Cancel") );
+                break;
+            case MLV_ERR_IO:
+                QMessageBox::critical( this, tr( "MLV Error" ), tr( "Could not read from file: %1\n").arg( fileName.toLatin1().data() ), tr("Cancel") );
+                break;
+        }
+        delete new_MlvObject;
+        return mlv_err;
+    }
+
     //Set window title to filename
     this->setWindowTitle( QString( "MLV App | %1" ).arg( fileName ) );
 
@@ -428,8 +456,9 @@ void MainWindow::openMlv( QString fileName )
 
     /* Destroy it just for simplicity... and make a new one */
     freeMlvObject( m_pMlvObject );
-    /* Create a NEW object with a NEW MLV clip! */
-    m_pMlvObject = initMlvObjectWithClip( fileName.toLatin1().data() );
+    /* Set to NEW object with a NEW MLV clip! */
+    m_pMlvObject = new_MlvObject;
+
     /* If use has terminal this is useful */
 #ifndef STDOUT_SILENT
     printMlvInfo( m_pMlvObject );
@@ -533,6 +562,8 @@ void MainWindow::openMlv( QString fileName )
     initCutInOut( getMlvFrames( m_pMlvObject ) );
 
     m_frameChanged = true;
+
+    return MLV_ERR_NONE;
 }
 
 //Handles the playback and must be triggered from timer

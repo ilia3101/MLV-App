@@ -12,7 +12,7 @@
  * and another created: initMlvObjectWithClip(), if you want to work with another MLV video */
 
 /* All functions in one */
-mlvObject_t * initMlvObjectWithClip(char * mlvPath);
+mlvObject_t * initMlvObjectWithClip(char * mlvPath, int * err);
 
 /* Initialises an MLV object. That's all you need to know */
 mlvObject_t * initMlvObject();
@@ -23,7 +23,9 @@ void printMlvInfo(mlvObject_t * video);
 /* Reads an MLV file in to a video object(mlvObject_t struct)
  * only puts frame indexes and metadata in to the mlvObject_t, 
  * no debayering or processing */
-void openMlvClip(mlvObject_t * video, char * mlvPath);
+int openMlvClip(mlvObject_t * video, char * mlvPath);
+/* return error codes of openMlvClip() */
+enum mlv_err { MLV_ERR_NONE, MLV_ERR_OPEN, MLV_ERR_INVALID, MLV_ERR_IO };
 
 /* Frees all memory and closes file */
 void freeMlvObject(mlvObject_t * video);

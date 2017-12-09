@@ -70,7 +70,7 @@ static FILE **load_all_chunks(char *base_filename, int *entries)
         return NULL;
     }
 
-    DEBUG( printf("File %s opened\n", filename); )
+    DEBUG( printf("\nFile %s opened\n", filename); )
 
     /* get extension and check if it is a .MLV */
     char *dot = strrchr(filename, '.');
@@ -146,7 +146,7 @@ void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outpu
     /* If this frame does not exist, return with a black frame */
     if(!frame_size && !frame_offset)
     {
-        DEBUG( printf("MLV corrupted: Frame %d is absent, drawing black frame\n", frameIndex); )
+        DEBUG( printf("MLV corrupted: Frame %lu is absent, drawing black frame\n", frameIndex); )
         memset(outputFrame, 0, pixels_count * sizeof(float));
         return;
     }
@@ -231,7 +231,7 @@ err_out:
 
 void setMlvProcessing(mlvObject_t * video, processingObject_t * processing)
 {
-    double camera_matrix[9];
+    //double camera_matrix[9]; commented for now, not used
 
     /* Easy bit */
     video->processing = processing;
@@ -358,12 +358,12 @@ void getMlvProcessedFrame8(mlvObject_t * video, uint64_t frameIndex, uint8_t * o
     free(processed_frame);
 }
 
-/* To initialise mlv object with a clip 
+/* To initialise mlv object with a clip
  * Two functions in one */
-mlvObject_t * initMlvObjectWithClip(char * mlvPath)
+mlvObject_t * initMlvObjectWithClip(char * mlvPath, int * err)
 {
     mlvObject_t * video = initMlvObject();
-    openMlvClip(video, mlvPath);
+    *err = openMlvClip(video, mlvPath);
     return video;
 }
 
@@ -416,7 +416,7 @@ void freeMlvObject(mlvObject_t * video)
     while (video->cache_thread_count) usleep(100);
 
     /* Close all MLV file chunks */
-    close_all_chunks(video->file, video->filenum);
+    if(video->file) close_all_chunks(video->file, video->filenum);
     /* Free all memory */
     if(video->frame_index) free(video->frame_index);
     if(video->audio_index) free(video->audio_index);
@@ -443,16 +443,21 @@ void freeMlvObject(mlvObject_t * video)
 /* Reads an MLV file in to a mlv object(mlvObject_t struct) 
  * only puts metadata in to the mlvObject_t, 
  * no debayering or bit unpacking */
-void openMlvClip(mlvObject_t * video, char * mlvPath)
+int openMlvClip(mlvObject_t * video, char * mlvPath)
 {
     //free(video->path);
     video->path = malloc( strlen(mlvPath) + 1 );
     memcpy(video->path, mlvPath, strlen(mlvPath));
     video->path[strlen(mlvPath)] = 0x0;
     video->file = load_all_chunks(mlvPath, &video->filenum);
+    if(!video->file)
+    {
+        DEBUG( printf("\nCould not open file: %s\n", video->path); )
+        return MLV_ERR_OPEN; // can not open file
+    }
 
     mlv_hdr_t block_header; /* Basic MLV block header */
-    uint64_t block_num = 0; /* Number of blocks in file */
+    int block_num = 0; /* Number of blocks in file */
     uint64_t frame_total = 0; /* Number of frames in video */
     uint64_t audio_frame_total = 0; /* Number of audio blocks in video */
     uint64_t frame_index_max = 0; /* initial size of frame index */
@@ -468,17 +473,42 @@ void openMlvClip(mlvObject_t * video, char * mlvPath)
         /* Getting size of file in bytes */
         file_set_pos(video->file[i], 0, SEEK_END);
         uint64_t file_size = file_get_pos(video->file[i]);
-
+        if ( !file_size )
+        {
+            DEBUG( printf("\nZero byte size file: %s\n", video->path); )
+            --video->filenum;
+            return MLV_ERR_INVALID;
+        }
         file_set_pos(video->file[i], 0, SEEK_SET); /* Start of file */
-        while (file_get_pos(video->file[i]) < file_size) /* Check if were at end of file yet */
+
+        /* Read file header */
+        if ( fread(&block_header, sizeof(mlv_hdr_t), 1, video->file[i]) != 1 )
+        {
+            DEBUG( printf("\nFile is too short to be a valid MLV: %s\n", video->path); )
+            --video->filenum;
+            return MLV_ERR_INVALID;
+        }
+        file_set_pos(video->file[i], 0, SEEK_SET); /* Start of file */
+
+        if ( memcmp(block_header.blockType, "MLVI", 4) == 0 )
+        {
+            fread(&video->MLVI, sizeof(mlv_file_hdr_t), 1, video->file[i]);
+        }
+        else
+        {
+            DEBUG( printf("\nFile header is missing, invalid MLV: %s\n", video->path); )
+            --video->filenum;
+            return MLV_ERR_INVALID;
+        }
+
+        while ( file_get_pos(video->file[i]) < file_size ) /* Check if were at end of file yet */
         {
             /* Record position to go back to it later if block is read */
             uint64_t block_start = file_get_pos(video->file[i]);
             /* Read block header */
             fread(&block_header, sizeof(mlv_hdr_t), 1, video->file[i]);
             /* Next block location */
-            uint64_t next_block =  (uint64_t)block_start + (uint64_t)block_header.blockSize;
-
+            uint64_t next_block = (uint64_t)block_start + (uint64_t)block_header.blockSize;
             /* Go back to start of block for next bit */
             file_set_pos(video->file[i], block_start, SEEK_SET);
 
@@ -487,7 +517,7 @@ void openMlvClip(mlvObject_t * video, char * mlvPath)
             {
                 fread(&video->VIDF, sizeof(mlv_vidf_hdr_t), 1, video->file[i]);
 
-                DEBUG( printf("video frame %i/%i, %lluMB / %llu Bytes from start of file\n",
+                DEBUG( printf("video frame %i/%i, %luMB / %lu Bytes from start of file\n",
                 video->VIDF.frameNumber, video->frames, (block_start + video->VIDF.frameSpace) >> 20,
                 (block_start + video->VIDF.frameSpace)); )
 
@@ -520,7 +550,7 @@ void openMlvClip(mlvObject_t * video, char * mlvPath)
             {
                 fread(&video->AUDF, sizeof(mlv_audf_hdr_t), 1, video->file[i]);
 
-                DEBUG( printf("audio frame %i/%i,  %lluMB / %llu Bytes from start of file\n",
+                DEBUG( printf("audio frame %i/%i,  %luMB / %lu Bytes from start of file\n",
                 video->AUDF.frameNumber, video->audios, (block_start + video->AUDF.frameSpace) >> 20,
                 (block_start + video->AUDF.frameSpace)); )
 
@@ -547,10 +577,6 @@ void openMlvClip(mlvObject_t * video, char * mlvPath)
 
                 /* Count actual audio frames */
                 audio_frame_total++;
-            }
-            else if ( memcmp(block_header.blockType, "MLVI", 4) == 0 )
-            {
-                fread(&video->MLVI, sizeof(mlv_file_hdr_t), 1, video->file[i]);
             }
             else if ( memcmp(block_header.blockType, "RAWI", 4) == 0 )
             {
@@ -679,6 +705,8 @@ void openMlvClip(mlvObject_t * video, char * mlvPath)
             add_mlv_cache_thread(video);
         }
     }
+
+    return MLV_ERR_NONE;
 }
 
 void printMlvInfo(mlvObject_t * video)
