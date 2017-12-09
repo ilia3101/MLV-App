@@ -100,16 +100,22 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
                 return;
             }
 
+            //Add to SessionList
+            addFileToSession( fileName );
+
             //Open the file
             if( !openMlv( fileName ) )
             {
                 //Save last file name
                 m_lastSaveFileName = fileName;
-                //Add to SessionList
-                addFileToSession( fileName );
 
                 on_actionResetReceipt_triggered();
                 previewPicture( ui->listWidgetSession->count() - 1 );
+            }
+            else
+            {
+                //if open error, delete MLV
+                deleteFileFromSession();
             }
 
             //Caching is in which state? Set it!
@@ -258,16 +264,22 @@ bool MainWindow::event(QEvent *event)
             }
             else
             {
+                //Add to SessionList
+                addFileToSession( fileName );
+
                 //Open MLV
                 if( !openMlv( fileName ) )
                 {
                     //Save last file name
                     m_lastSaveFileName = fileName;
-                    //Add to SessionList
-                    addFileToSession( fileName );
 
                     on_actionResetReceipt_triggered();
                     previewPicture( ui->listWidgetSession->count() - 1 );
+                }
+                else
+                {
+                    //if open error, delete MLV
+                    deleteFileFromSession();
                 }
             }
 
@@ -313,16 +325,22 @@ void MainWindow::dropEvent(QDropEvent *event)
             continue;
         }
 
+        //Add file to Sessionlist
+        addFileToSession( fileName );
+
         //Open the file
         if( !openMlv( fileName ) )
         {
             //Save last file name
             m_lastSaveFileName = fileName;
-            //Add file to Sessionlist
-            addFileToSession( fileName );
 
             on_actionResetReceipt_triggered();
             previewPicture( ui->listWidgetSession->count() - 1 );
+        }
+        else
+        {
+            //if open error, delete MLV
+            deleteFileFromSession();
         }
     }
 
@@ -393,16 +411,22 @@ void MainWindow::on_actionOpen_triggered()
             continue;
         }
 
+        //Add file to Sessionlist
+        addFileToSession( fileName );
+
         //Open the file
         if( !openMlv( fileName ) )
         {
             //Save last file name
             m_lastSaveFileName = fileName;
-            //Add file to Sessionlist
-            addFileToSession( fileName );
 
             on_actionResetReceipt_triggered();
             previewPicture( ui->listWidgetSession->count() - 1 );
+        }
+        else
+        {
+            //if open error, delete MLV
+            deleteFileFromSession();
         }
     }
 
