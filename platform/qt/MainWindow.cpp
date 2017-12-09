@@ -433,7 +433,7 @@ int MainWindow::openMlv( QString fileName )
                 QMessageBox::critical( this, tr( "MLV Error" ), tr( "Could not read from file: %1\n").arg( fileName.toLatin1().data() ), tr("Cancel") );
                 break;
         }
-        delete new_MlvObject;
+        freeMlvObject( new_MlvObject );
         return mlv_err;
     }
 

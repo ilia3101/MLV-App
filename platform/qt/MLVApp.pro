@@ -27,7 +27,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 ##############
 # Silent Mode, deactivate for more debug info
 ##############
-#DEFINES += STDOUT_SILENT
+DEFINES += STDOUT_SILENT
 
 ##############
 # Compiler flags
