@@ -22,6 +22,7 @@ Find the latest releases [here](https://ilia3101.github.io/MLV-App/). Download, 
 - Audio playback in video drop frame mode
 - Loop playback
 - Show next frame, previous frame and scroll though timeline
+- Auto load white balance, if MLV was filmed at sunny, shade, cloudy, thungsten, fluorescent, flash or kelvin
 - Single frame (3x)8bit PNG export
 - Clip export via ffmpeg 10bit ProRes 422 (Proxy, LT, Standard, HQ), ProRes 4444, RAW AVI, 8bit H.264 and H.265, 16bit TIFF sequence; all with or without audio
 - Clip export to (10/12/14/16bit for Dual ISO) Cinema DNG files (with default or Davinci Resolve naming). Exporting modes: uncompressed, lossless and fast pass (in the last one no RAW correction, processing or decompressing/compressing is done, raw data copied as is from MLV to DNG uncompressed or lossless).
