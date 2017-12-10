@@ -119,7 +119,7 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
             }
 
             //Caching is in which state? Set it!
-            on_actionCaching_triggered( ui->actionCaching->isChecked() );
+            if( ui->actionCaching->isChecked() ) on_actionCaching_triggered();
         }
         else if( QFile(fileName).exists() && fileName.endsWith( ".masxml", Qt::CaseInsensitive ) )
         {
@@ -284,7 +284,7 @@ bool MainWindow::event(QEvent *event)
             }
 
             //Caching is in which state? Set it!
-            on_actionCaching_triggered( ui->actionCaching->isChecked() );
+            if( ui->actionCaching->isChecked() ) on_actionCaching_triggered();
         }
         else if( QFile(fileName).exists() && fileName.endsWith( ".masxml", Qt::CaseInsensitive ) )
         {
@@ -345,7 +345,7 @@ void MainWindow::dropEvent(QDropEvent *event)
     }
 
     //Caching is in which state? Set it!
-    on_actionCaching_triggered( ui->actionCaching->isChecked() );
+    if( ui->actionCaching->isChecked() ) on_actionCaching_triggered();
 
     m_inOpeningProcess = false;
     event->acceptProposedAction();
@@ -431,7 +431,7 @@ void MainWindow::on_actionOpen_triggered()
     }
 
     //Caching is in which state? Set it!
-    on_actionCaching_triggered( ui->actionCaching->isChecked() );
+    if( ui->actionCaching->isChecked() ) on_actionCaching_triggered();
 
     m_inOpeningProcess = false;
 }
@@ -1372,7 +1372,7 @@ void MainWindow::openSession(QString fileNameSession)
     file.close();
 
     //Caching is in which state? Set it!
-    on_actionCaching_triggered( ui->actionCaching->isChecked() );
+    if( ui->actionCaching->isChecked() ) on_actionCaching_triggered();
 
     if (Rxml.hasError())
     {
@@ -1950,7 +1950,7 @@ void MainWindow::showFileInEditor( int row )
     m_lastActiveClipInSession = row;
 
     //Caching is in which state? Set it!
-    on_actionCaching_triggered( ui->actionCaching->isChecked() );
+    if( ui->actionCaching->isChecked() ) on_actionCaching_triggered();
 }
 
 //Add the clip in SessionList position "row" at last position in ExportQueue
@@ -2833,19 +2833,36 @@ void MainWindow::on_actionShowParade_triggered()
     m_frameChanged = true;
 }
 
-//Use AMaZE or not
-void MainWindow::on_actionAlwaysUseAMaZE_triggered(bool checked)
+//Don't use AMaZE -> bilinear
+void MainWindow::on_actionUseBilinear_triggered()
 {
-    if( checked )
-    {
-        /* Use AMaZE */
-        setMlvAlwaysUseAmaze( m_pMlvObject );
-    }
-    else
-    {
-        /* Don't use AMaZE */
-        setMlvDontAlwaysUseAmaze( m_pMlvObject );
-    }
+    ui->actionUseBilinear->setChecked( true );
+    ui->actionAlwaysUseAMaZE->setChecked( false );
+    ui->actionCaching->setChecked( false );
+
+    /* Don't use AMaZE */
+    setMlvDontAlwaysUseAmaze( m_pMlvObject );
+
+    disableMlvCaching( m_pMlvObject );
+
+    llrpResetFpmStatus(m_pMlvObject);
+    llrpResetBpmStatus(m_pMlvObject);
+    llrpComputeStripesOn(m_pMlvObject);
+    m_frameChanged = true;
+}
+
+//Use AMaZE or not
+void MainWindow::on_actionAlwaysUseAMaZE_triggered()
+{
+    ui->actionUseBilinear->setChecked( false );
+    ui->actionAlwaysUseAMaZE->setChecked( true );
+    ui->actionCaching->setChecked( false );
+
+    /* Use AMaZE */
+    setMlvAlwaysUseAmaze( m_pMlvObject );
+
+    disableMlvCaching( m_pMlvObject );
+
     llrpResetFpmStatus(m_pMlvObject);
     llrpResetBpmStatus(m_pMlvObject);
     llrpComputeStripesOn(m_pMlvObject);
@@ -2974,16 +2991,21 @@ void MainWindow::on_actionSaveSession_triggered()
 }
 
 //En-/Disable Caching
-void MainWindow::on_actionCaching_triggered(bool checked)
+void MainWindow::on_actionCaching_triggered()
 {
-    if( checked )
-    {
-        enableMlvCaching( m_pMlvObject );
-    }
-    else
-    {
-        disableMlvCaching( m_pMlvObject );
-    }
+    ui->actionUseBilinear->setChecked( false );
+    ui->actionAlwaysUseAMaZE->setChecked( false );
+    ui->actionCaching->setChecked( true );
+
+    /* Use AMaZE */
+    setMlvAlwaysUseAmaze( m_pMlvObject );
+
+    enableMlvCaching( m_pMlvObject );
+
+    llrpResetFpmStatus(m_pMlvObject);
+    llrpResetBpmStatus(m_pMlvObject);
+    llrpComputeStripesOn(m_pMlvObject);
+    m_frameChanged = true;
 }
 
 //FileName in SessionList doubleClicked
@@ -3072,7 +3094,7 @@ void MainWindow::deleteFileFromSession( void )
         m_lastActiveClipInSession = 0;
 
         //Caching is in which state? Set it!
-        on_actionCaching_triggered( ui->actionCaching->isChecked() );
+        if( ui->actionCaching->isChecked() ) on_actionCaching_triggered();
     }
     else
     {
@@ -3336,7 +3358,7 @@ void MainWindow::exportHandler( void )
         else QMessageBox::information( this, tr( "Export" ), tr( "Export aborted." ) );
 
         //Caching is in which state? Set it!
-        on_actionCaching_triggered( ui->actionCaching->isChecked() );
+        if( ui->actionCaching->isChecked() ) on_actionCaching_triggered();
     }
 }
 

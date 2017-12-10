@@ -154,6 +154,14 @@
     <property name="title">
      <string>Playback</string>
     </property>
+    <widget class="QMenu" name="menuDemosaic_for_Preview">
+     <property name="title">
+      <string>Demosaic for Preview</string>
+     </property>
+     <addaction name="actionUseBilinear"/>
+     <addaction name="actionAlwaysUseAMaZE"/>
+     <addaction name="actionCaching"/>
+    </widget>
     <addaction name="actionGoto_First_Frame"/>
     <addaction name="actionPreviousFrame"/>
     <addaction name="actionPlay"/>
@@ -163,8 +171,7 @@
     <addaction name="actionAudioOutput"/>
     <addaction name="separator"/>
     <addaction name="actionDropFrameMode"/>
-    <addaction name="actionAlwaysUseAMaZE"/>
-    <addaction name="actionCaching"/>
+    <addaction name="menuDemosaic_for_Preview"/>
     <addaction name="separator"/>
     <addaction name="actionZoomFit"/>
     <addaction name="actionZoom100"/>
@@ -2720,8 +2727,11 @@ QGroupBox::indicator:checked {
                      <pointsize>10</pointsize>
                     </font>
                    </property>
-                   <property name="text">
+                   <property name="toolTip">
                     <string>Chroma Separation (YCbCR)</string>
+                   </property>
+                   <property name="text">
+                    <string>Chroma Separation</string>
                    </property>
                   </widget>
                  </item>
@@ -3696,7 +3706,7 @@ QGroupBox::indicator:checked {
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Use AMaZE for preview</string>
+    <string>AMaZE</string>
    </property>
   </action>
   <action name="actionExportSettings">
@@ -3813,7 +3823,7 @@ QGroupBox::indicator:checked {
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Caching</string>
+    <string>AMaZE Cached</string>
    </property>
   </action>
   <action name="actionShowAudioTrack">
@@ -3991,6 +4001,17 @@ QGroupBox::indicator:checked {
    </property>
    <property name="text">
     <string>Picture Mode</string>
+   </property>
+  </action>
+  <action name="actionUseBilinear">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Bilinear</string>
    </property>
   </action>
  </widget>

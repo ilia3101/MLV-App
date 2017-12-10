@@ -80,7 +80,8 @@ private slots:
     void on_actionShowHistogram_triggered(void);
     void on_actionShowWaveFormMonitor_triggered(void);
     void on_actionShowParade_triggered(void);
-    void on_actionAlwaysUseAMaZE_triggered(bool checked);
+    void on_actionUseBilinear_triggered();
+    void on_actionAlwaysUseAMaZE_triggered();
     void on_actionExportSettings_triggered();
     void on_actionResetReceipt_triggered();
     void on_actionCopyRecept_triggered();
@@ -90,7 +91,7 @@ private slots:
     void on_actionSaveSession_triggered();
     void on_actionImportReceipt_triggered();
     void on_actionExportReceipt_triggered();
-    void on_actionCaching_triggered( bool checked );
+    void on_actionCaching_triggered();
     void on_listWidgetSession_activated(const QModelIndex &index);
     void on_dockWidgetSession_visibilityChanged(bool visible);
     void on_dockWidgetEdit_visibilityChanged(bool visible);
