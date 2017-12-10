@@ -707,7 +707,6 @@ typedef struct _lje {
     int width;
     int height;
     int bitdepth;
-    int components;
     int readLength;
     int skipLength;
     uint16_t* delinearize;
@@ -729,7 +728,7 @@ int frequencyScan(lje* self) {
     uint16_t* pixel = self->image;
     int pixcount = self->width*self->height;
     int scan = self->readLength;
-    uint16_t* rowcache = (uint16_t*)calloc(1, self->width * self->components * 4);
+    uint16_t* rowcache = (uint16_t*)calloc(1,self->width*4);
     uint16_t* rows[2];
     rows[0] = rowcache;
     rows[1] = &rowcache[self->width];
@@ -994,7 +993,7 @@ void writeBody(lje* self) {
     uint16_t* pixel = self->image;
     int pixcount = self->width*self->height;
     int scan = self->readLength;
-    uint16_t* rowcache = (uint16_t*)calloc(1, self->width * self->components * 4);
+    uint16_t* rowcache = (uint16_t*)calloc(1,self->width*4);
     uint16_t* rows[2];
     rows[0] = rowcache;
     rows[1] = &rowcache[self->width];
@@ -1106,7 +1105,7 @@ void writeBody(lje* self) {
  * Read tile from an image and encode in one shot
  * Return the encoded data
  */
-int lj92_encode(uint16_t* image, int width, int height, int bitdepth, int components,
+int lj92_encode(uint16_t* image, int width, int height, int bitdepth,
                 int readLength, int skipLength,
                 uint16_t* delinearize,int delinearizeLength,
                 uint8_t** encoded, int* encodedLength) {
@@ -1122,8 +1121,7 @@ int lj92_encode(uint16_t* image, int width, int height, int bitdepth, int compon
     self->skipLength = skipLength;
     self->delinearize = delinearize;
     self->delinearizeLength = delinearizeLength;
-    self->components = components;
-    self->encodedLength = width*height*components+200;
+    self->encodedLength = width*height*3+200;
     self->encoded = malloc(self->encodedLength);
     if (self->encoded==NULL) { free(self); return LJ92_ERROR_NO_MEMORY; }
     // Scan through data to gather frequencies of ssss prefixes
@@ -1133,7 +1131,7 @@ int lj92_encode(uint16_t* image, int width, int height, int bitdepth, int compon
         free(self);
         return ret;
     }
-
+    // Create encoded table based on frequencies
     createEncodeTable(self);
     // Write JPEG head and scan header
     writeHeader(self);

@@ -737,7 +737,7 @@ void dng_compress_image(uint16_t * output_buffer, uint16_t * input_buffer, size_
     int new_width = width * 2;
     int new_height = height / 2;
 
-    int ret = lj92_encode(input_buffer, new_width, new_height, (int)bpp, 2, new_width * new_height, 0, NULL, 0, &compressed, (int*)output_buffer_size);
+    int ret = lj92_encode(input_buffer, new_width, new_height, (int)bpp, new_width * new_height, 0, NULL, 0, &compressed, (int*)output_buffer_size);
     if(ret == LJ92_ERROR_NONE)
     {
         memcpy(output_buffer, compressed, *output_buffer_size);
