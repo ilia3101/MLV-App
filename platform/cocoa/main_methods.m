@@ -110,7 +110,7 @@ int setAppNewMlvClip(char * mlvPath)
     freeMlvObject(App->videoMLV);
 
     /* Create a NEW object with a NEW MLV clip! */
-    App->videoMLV = initMlvObjectWithClip( (char *)mlvPath );
+    App->videoMLV = initMlvObjectWithClip( (char *)mlvPath, 0 );
 
     /* If use has terminal this is useful */
     printMlvInfo(App->videoMLV);
