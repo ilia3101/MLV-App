@@ -156,7 +156,7 @@
     </property>
     <widget class="QMenu" name="menuDemosaic_for_Preview">
      <property name="title">
-      <string>Demosaic for Preview</string>
+      <string>Debayer for Preview</string>
      </property>
      <addaction name="actionUseBilinear"/>
      <addaction name="actionAlwaysUseAMaZE"/>
