@@ -360,10 +360,10 @@ void getMlvProcessedFrame8(mlvObject_t * video, uint64_t frameIndex, uint8_t * o
 
 /* To initialise mlv object with a clip
  * Two functions in one */
-mlvObject_t * initMlvObjectWithClip(char * mlvPath, int * err)
+mlvObject_t * initMlvObjectWithClip(char * mlvPath, int * err, int preview)
 {
     mlvObject_t * video = initMlvObject();
-    *err = openMlvClip(video, mlvPath);
+    *err = openMlvClip(video, mlvPath, preview);
     return video;
 }
 
@@ -443,7 +443,7 @@ void freeMlvObject(mlvObject_t * video)
 /* Reads an MLV file in to a mlv object(mlvObject_t struct) 
  * only puts metadata in to the mlvObject_t, 
  * no debayering or bit unpacking */
-int openMlvClip(mlvObject_t * video, char * mlvPath)
+int openMlvClip(mlvObject_t * video, char * mlvPath, int preview)
 {
     //free(video->path);
     video->path = malloc( strlen(mlvPath) + 1 );
@@ -545,6 +545,7 @@ int openMlvClip(mlvObject_t * video, char * mlvPath)
 
                 /* Count actual video frames */
                 frame_total++;
+                if(preview) goto preview_out;
             }
             else if ( memcmp(block_header.blockType, "AUDF", 4) == 0 )
             {
@@ -630,6 +631,8 @@ int openMlvClip(mlvObject_t * video, char * mlvPath)
         }
     }
 
+preview_out:
+
     /* back up black and white levels */
     video->llrawproc->mlv_black_level = getMlvBlackLevel(video);
     video->llrawproc->mlv_white_level = getMlvWhiteLevel(video);
@@ -698,7 +701,7 @@ int openMlvClip(mlvObject_t * video, char * mlvPath)
     isMlvActive(video) = 1;
 
     /* Start caching unless it was disabled already */
-    if (!video->stop_caching)
+    if (!video->stop_caching && !preview)
     {
         for (int i = 0; i < video->cpu_cores; ++i)
         {

@@ -104,7 +104,7 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
             addFileToSession( fileName );
 
             //Open the file
-            if( !openMlv( fileName ) )
+            if( !openMlv( fileName, false ) )
             {
                 //Save last file name
                 m_lastSaveFileName = fileName;
@@ -268,7 +268,7 @@ bool MainWindow::event(QEvent *event)
                 addFileToSession( fileName );
 
                 //Open MLV
-                if( !openMlv( fileName ) )
+                if( !openMlv( fileName, false ) )
                 {
                     //Save last file name
                     m_lastSaveFileName = fileName;
@@ -329,7 +329,7 @@ void MainWindow::dropEvent(QDropEvent *event)
         addFileToSession( fileName );
 
         //Open the file
-        if( !openMlv( fileName ) )
+        if( !openMlv( fileName, false ) )
         {
             //Save last file name
             m_lastSaveFileName = fileName;
@@ -415,7 +415,7 @@ void MainWindow::on_actionOpen_triggered()
         addFileToSession( fileName );
 
         //Open the file
-        if( !openMlv( fileName ) )
+        if( !openMlv( fileName, false ) )
         {
             //Save last file name
             m_lastSaveFileName = fileName;
@@ -437,10 +437,10 @@ void MainWindow::on_actionOpen_triggered()
 }
 
 //Open MLV procedure
-int MainWindow::openMlv( QString fileName )
+int MainWindow::openMlv( QString fileName, bool preview )
 {
     int mlv_err = MLV_ERR_NONE;
-    mlvObject_t * new_MlvObject = initMlvObjectWithClip( fileName.toLatin1().data(), &mlv_err );
+    mlvObject_t * new_MlvObject = initMlvObjectWithClip( fileName.toLatin1().data(), &mlv_err, preview );
     if( mlv_err )
     {
         switch ( mlv_err )
@@ -1335,7 +1335,7 @@ void MainWindow::openSession(QString fileNameSession)
                         //Add file to Sessionlist
                         addFileToSession( fileName );
                         //Open the file
-                        openMlv( fileName );
+                        openMlv( fileName, false );
                         m_pSessionReceipts.last()->setFileName( fileName );
                         m_pSessionReceipts.last()->setCutOut( getMlvFrames( m_pMlvObject ) ); //Set Cut Out to the end, in case there is no xml tag
 
@@ -1943,7 +1943,7 @@ void MainWindow::showFileInEditor( int row )
     //Save slider receipt
     setReceipt( m_pSessionReceipts.at( m_lastActiveClipInSession ) );
     //Open new MLV
-    openMlv( ui->listWidgetSession->item( row )->toolTip() );
+    openMlv( ui->listWidgetSession->item( row )->toolTip(), false );
     //Set sliders to receipt
     setSliders( m_pSessionReceipts.at( row ) );
     //Save new position in session
@@ -3068,7 +3068,7 @@ void MainWindow::deleteFileFromSession( void )
         //Open first!
         ui->listWidgetSession->setCurrentRow( 0 );
         setSliders( m_pSessionReceipts.at( 0 ) );
-        openMlv( ui->listWidgetSession->item( 0 )->toolTip() );
+        openMlv( ui->listWidgetSession->item( 0 )->toolTip(), false );
         m_lastActiveClipInSession = 0;
 
         //Caching is in which state? Set it!
@@ -3295,7 +3295,7 @@ void MainWindow::exportHandler( void )
         exportRunning = true;
         jobNumber++;
         //Open file and settings
-        openMlv( m_exportQueue.first()->fileName() );
+        openMlv( m_exportQueue.first()->fileName(), false );
         //Set sliders to receipt
         setSliders( m_exportQueue.first() );
         //Fill label in StatusDialog
@@ -3325,7 +3325,7 @@ void MainWindow::exportHandler( void )
         //Hide Status Dialog
         m_pStatusDialog->hide();
         //Open last file which was opened before export
-        openMlv( m_pSessionReceipts.at( m_lastActiveClipInSession )->fileName() );
+        openMlv( m_pSessionReceipts.at( m_lastActiveClipInSession )->fileName(), false );
         setSliders( m_pSessionReceipts.at( m_lastActiveClipInSession ) );
         //Unblock GUI
         setEnabled( true );
