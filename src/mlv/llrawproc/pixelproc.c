@@ -834,6 +834,7 @@ void fix_bad_pixels(pixel_map * bad_pixel_map,
                     int32_t raw_width,
                     int32_t raw_height,
                     int32_t black_level,
+                    int force,
                     int aggressive,
                     int average_method,
                     int dual_iso,
@@ -1018,6 +1019,15 @@ mem_err:
                         image_data[i] = image_data[i - 2];
                     }
                 }
+            }
+
+            if(force)
+            {
+                *bpm_status = 1;
+                bad_pixel_map->count = 0;
+#ifndef STDOUT_SILENT
+                printf("Searching bad pixels for every frame\n");
+#endif
             }
             break;
         }

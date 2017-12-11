@@ -56,6 +56,7 @@ llrawprocObject_t * initLLRawProcObject()
     llrawproc->focus_pixels = 1;
     llrawproc->fpi_method = 1;
     llrawproc->bad_pixels = 1;
+    llrawproc->bps_method = 0;
     llrawproc->bpi_method = 1;
     llrawproc->chroma_smooth = 0;
     llrawproc->pattern_noise = 0;
@@ -167,6 +168,7 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
                        video->RAWI.raw_info.height,
                        video->llrawproc->mlv_black_level,
                        (video->llrawproc->bad_pixels == 2),
+                       video->llrawproc->bps_method,
                        video->llrawproc->bpi_method,
                        video->llrawproc->is_dual_iso,
                        video->llrawproc->raw2ev,

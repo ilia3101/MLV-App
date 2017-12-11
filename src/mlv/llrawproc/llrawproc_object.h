@@ -36,7 +36,8 @@ typedef struct
     int focus_pixels;     // fix focus pixels, 0 - do not fix, 1 - fix, 2 - generates focus pixel map for crop_rec mode
     int fpi_method;       // focus pixel interpolation method: 0 - mlvfs, 1 - raw2dng
     int fpm_status;       // focus pixel map status: 0 = not loaded, 1 = loaded, 2 = not exist
-    int bad_pixels;       // fix bad pixels, 0 - do not fix, 1 - fix, 2 - makes algorithm aggresive to reveal more bad pixels
+    int bad_pixels;       // fix bad pixels, 0 - do not fix, 1 - fix, 2 - force searching for every frame
+    int bps_method;       // bad pixel search method: 0 - normal, 1 - aggresive
     int bpi_method;       // bad pixel interpolation method: 0 - mlvfs, 1 - raw2dng
     int bpm_status;       // bad pixel map status: 0 = not loaded, 1 = loaded, 2 = not exist, 3 = no bad pixels found
     int chroma_smooth;    // chroma smooth, 2 - cs2x2, 3 cs3x3, 5 - cs5x5
