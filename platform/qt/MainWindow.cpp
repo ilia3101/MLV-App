@@ -93,31 +93,7 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
         //Exit if not an MLV file or aborted
         if( QFile(fileName).exists() && fileName.endsWith( ".mlv", Qt::CaseInsensitive ) )
         {
-            //File is already opened? Error!
-            if( isFileInSession( fileName ) )
-            {
-                QMessageBox::information( this, tr( "Import MLV" ), tr( "File is already opened in session!" ) );
-                return;
-            }
-
-            //Add to SessionList
-            addFileToSession( fileName );
-
-            //Open the file
-            if( !openMlv( fileName, false ) )
-            {
-                //Save last file name
-                m_lastSaveFileName = fileName;
-
-                on_actionResetReceipt_triggered();
-                previewPicture( ui->listWidgetSession->count() - 1 );
-            }
-            else
-            {
-                //if open error, delete MLV
-                deleteFileFromSession();
-            }
-
+            importNewMlv( fileName );
             //Caching is in which state? Set it!
             if( ui->actionCaching->isChecked() ) on_actionCaching_triggered();
         }
@@ -257,32 +233,7 @@ bool MainWindow::event(QEvent *event)
         QString fileName = openEvent->file();
         if( QFile(fileName).exists() && fileName.endsWith( ".mlv", Qt::CaseInsensitive ) )
         {
-            //File is already opened? Error!
-            if( isFileInSession( fileName ) )
-            {
-                QMessageBox::information( this, tr( "Import MLV" ), tr( "File is already opened in session!" ) );
-            }
-            else
-            {
-                //Add to SessionList
-                addFileToSession( fileName );
-
-                //Open MLV
-                if( !openMlv( fileName, false ) )
-                {
-                    //Save last file name
-                    m_lastSaveFileName = fileName;
-
-                    on_actionResetReceipt_triggered();
-                    previewPicture( ui->listWidgetSession->count() - 1 );
-                }
-                else
-                {
-                    //if open error, delete MLV
-                    deleteFileFromSession();
-                }
-            }
-
+            importNewMlv( fileName );
             //Caching is in which state? Set it!
             if( ui->actionCaching->isChecked() ) on_actionCaching_triggered();
         }
@@ -318,30 +269,7 @@ void MainWindow::dropEvent(QDropEvent *event)
         if( fileName.startsWith( "/" ) ) fileName.remove( 0, 1 );
 #endif
 
-        //File is already opened? Error!
-        if( isFileInSession( fileName ) )
-        {
-            QMessageBox::information( this, tr( "Import MLV" ), tr( "File %1 is already opened in session!" ).arg( fileName ) );
-            continue;
-        }
-
-        //Add file to Sessionlist
-        addFileToSession( fileName );
-
-        //Open the file
-        if( !openMlv( fileName, false ) )
-        {
-            //Save last file name
-            m_lastSaveFileName = fileName;
-
-            on_actionResetReceipt_triggered();
-            previewPicture( ui->listWidgetSession->count() - 1 );
-        }
-        else
-        {
-            //if open error, delete MLV
-            deleteFileFromSession();
-        }
+        importNewMlv( fileName );
     }
 
     //Caching is in which state? Set it!
@@ -382,6 +310,36 @@ void MainWindow::drawFrame( void )
     }
 }
 
+//Import a MLV
+void MainWindow::importNewMlv(QString fileName)
+{
+    //File is already opened? Error!
+    if( isFileInSession( fileName ) )
+    {
+        QMessageBox::information( this, tr( "Import MLV" ), tr( "File %1 already opened in session!" ).arg( fileName ) );
+    }
+    else
+    {
+        //Add to SessionList
+        addFileToSession( fileName );
+
+        //Open MLV
+        if( !openMlv( fileName, false ) )
+        {
+            //Save last file name
+            m_lastSaveFileName = fileName;
+
+            on_actionResetReceipt_triggered();
+            previewPicture( ui->listWidgetSession->count() - 1 );
+        }
+        else
+        {
+            //if open error, delete MLV
+            deleteFileFromSession();
+        }
+    }
+}
+
 //Open MLV Dialog
 void MainWindow::on_actionOpen_triggered()
 {
@@ -404,30 +362,7 @@ void MainWindow::on_actionOpen_triggered()
         //Exit if not an MLV file or aborted
         if( fileName == QString( "" ) || !fileName.endsWith( ".mlv", Qt::CaseInsensitive ) ) continue;
 
-        //File is already opened? Error!
-        if( isFileInSession( fileName ) )
-        {
-            QMessageBox::information( this, tr( "Import MLV" ), tr( "File %1 is already opened in session!" ).arg( fileName ) );
-            continue;
-        }
-
-        //Add file to Sessionlist
-        addFileToSession( fileName );
-
-        //Open the file
-        if( !openMlv( fileName, false ) )
-        {
-            //Save last file name
-            m_lastSaveFileName = fileName;
-
-            on_actionResetReceipt_triggered();
-            previewPicture( ui->listWidgetSession->count() - 1 );
-        }
-        else
-        {
-            //if open error, delete MLV
-            deleteFileFromSession();
-        }
+        importNewMlv( fileName );
     }
 
     //Caching is in which state? Set it!
