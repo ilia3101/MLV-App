@@ -1341,7 +1341,7 @@ void MainWindow::openSession(QString fileNameSession)
 
                         readXmlElementsFromFile( &Rxml, m_pSessionReceipts.last(), versionMasxml );
 
-                        setSliders( m_pSessionReceipts.last() );
+                        setSliders( m_pSessionReceipts.last(), false );
                         previewPicture( ui->listWidgetSession->count() - 1 );
                     }
                     else
@@ -1467,7 +1467,7 @@ void MainWindow::on_actionImportReceipt_triggered()
     file.close();
 
     //Set the sliders
-    setSliders( m_pSessionReceipts.at( m_lastActiveClipInSession ) );
+    setSliders( m_pSessionReceipts.at( m_lastActiveClipInSession ), false );
 }
 
 //Exports the actual slider settings to a file
@@ -1801,7 +1801,7 @@ bool MainWindow::isFileInSession(QString fileName)
 }
 
 //Set the edit sliders to settings
-void MainWindow::setSliders(ReceiptSettings *receipt)
+void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
 {
     ui->horizontalSliderExposure->setValue( receipt->exposure() );
     ui->horizontalSliderTemperature->setValue( receipt->temperature() );
@@ -1856,10 +1856,13 @@ void MainWindow::setSliders(ReceiptSettings *receipt)
     else ui->comboBoxVStretch->setCurrentIndex( 1 );
     on_comboBoxVStretch_currentIndexChanged( ui->comboBoxVStretch->currentIndex() );
 
-    ui->spinBoxCutIn->setValue( receipt->cutIn() );
-    on_spinBoxCutIn_valueChanged( receipt->cutIn() );
-    ui->spinBoxCutOut->setValue( receipt->cutOut() );
-    on_spinBoxCutOut_valueChanged( receipt->cutOut() );
+    if( !paste )
+    {
+        ui->spinBoxCutIn->setValue( receipt->cutIn() );
+        on_spinBoxCutIn_valueChanged( receipt->cutIn() );
+        ui->spinBoxCutOut->setValue( receipt->cutOut() );
+        on_spinBoxCutOut_valueChanged( receipt->cutOut() );
+    }
 
     m_pMlvObject->current_cached_frame_active = 0;
 }
@@ -1954,7 +1957,7 @@ void MainWindow::showFileInEditor( int row )
     //Open new MLV
     openMlv( ui->listWidgetSession->item( row )->toolTip(), false );
     //Set sliders to receipt
-    setSliders( m_pSessionReceipts.at( row ) );
+    setSliders( m_pSessionReceipts.at( row ), false );
     //Save new position in session
     m_lastActiveClipInSession = row;
 
@@ -2945,7 +2948,7 @@ void MainWindow::on_actionResetReceipt_triggered()
     ReceiptSettings *sliders = new ReceiptSettings(); //default
     sliders->setCutOut( getMlvFrames( m_pMlvObject ) );
     setWhiteBalanceFromMlv( sliders );
-    setSliders( sliders );
+    setSliders( sliders, false );
     delete sliders;
 }
 
@@ -2963,7 +2966,7 @@ void MainWindow::on_actionPasteReceipt_triggered()
     if( ui->listWidgetSession->selectedItems().count() <= 1 )
     {
         //No matter which clip is selected, the actual clip gets the receipt
-        setSliders( m_pReceiptClipboard );
+        setSliders( m_pReceiptClipboard, true );
     }
     else
     {
@@ -2973,7 +2976,7 @@ void MainWindow::on_actionPasteReceipt_triggered()
             //If the actual is selected (may have changed since copy action), set sliders and get receipt
             if( row == m_lastActiveClipInSession )
             {
-                setSliders( m_pReceiptClipboard );
+                setSliders( m_pReceiptClipboard, true );
                 continue;
             }
             //Each other selected clip gets the receipt
@@ -3123,7 +3126,7 @@ void MainWindow::deleteFileFromSession( void )
     {
         //Open first!
         ui->listWidgetSession->setCurrentRow( 0 );
-        setSliders( m_pSessionReceipts.at( 0 ) );
+        setSliders( m_pSessionReceipts.at( 0 ), false );
         openMlv( ui->listWidgetSession->item( 0 )->toolTip(), false );
         m_lastActiveClipInSession = 0;
 
@@ -3353,7 +3356,7 @@ void MainWindow::exportHandler( void )
         //Open file and settings
         openMlv( m_exportQueue.first()->fileName(), false );
         //Set sliders to receipt
-        setSliders( m_exportQueue.first() );
+        setSliders( m_exportQueue.first(), false );
         //Fill label in StatusDialog
         m_pStatusDialog->ui->label->setText( tr( "%1/%2 - %3" )
                                              .arg( jobNumber )
@@ -3382,7 +3385,7 @@ void MainWindow::exportHandler( void )
         m_pStatusDialog->hide();
         //Open last file which was opened before export
         openMlv( m_pSessionReceipts.at( m_lastActiveClipInSession )->fileName(), false );
-        setSliders( m_pSessionReceipts.at( m_lastActiveClipInSession ) );
+        setSliders( m_pSessionReceipts.at( m_lastActiveClipInSession ), false );
         //Unblock GUI
         setEnabled( true );
         //Export is ready

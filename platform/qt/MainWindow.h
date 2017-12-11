@@ -234,7 +234,7 @@ private:
     void writeXmlElementsToFile( QXmlStreamWriter *xmlWriter, ReceiptSettings *receipt );
     void deleteSession( void );
     bool isFileInSession( QString fileName );
-    void setSliders( ReceiptSettings *sliders );
+    void setSliders(ReceiptSettings *sliders , bool paste);
     void setReceipt( ReceiptSettings *sliders );
     void replaceReceipt( ReceiptSettings *receiptTarget, ReceiptSettings *receiptSource );
     void showFileInEditor( int row );
