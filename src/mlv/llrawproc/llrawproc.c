@@ -302,9 +302,20 @@ void llrpSetBadPixelMode(mlvObject_t * video, int value)
     video->llrawproc->bad_pixels = value;
 }
 
+
+int llrpGetBadPixelSearchMethod(mlvObject_t *video)
+{
+    return video->llrawproc->bps_method;
+}
+
 int llrpGetBadPixelInterpolationMethod(mlvObject_t * video)
 {
     return video->llrawproc->bpi_method;
+}
+
+void llrpSetBadPixelSearchMethod(mlvObject_t * video, int value)
+{
+    video->llrawproc->bps_method = value;
 }
 
 void llrpSetBadPixelInterpolationMethod(mlvObject_t * video, int value)

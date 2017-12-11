@@ -1613,6 +1613,11 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
             receipt->setBadPixels( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
+        else if( Rxml->isStartElement() && Rxml->name() == "bpsMethod" )
+        {
+            receipt->setBpsMethod( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
         else if( Rxml->isStartElement() && Rxml->name() == "bpiMethod" )
         {
             receipt->setBpiMethod( Rxml->readElementText().toInt() );
@@ -1703,6 +1708,7 @@ void MainWindow::writeXmlElementsToFile(QXmlStreamWriter *xmlWriter, ReceiptSett
     xmlWriter->writeTextElement( "focusPixels",             QString( "%1" ).arg( receipt->focusPixels() ) );
     xmlWriter->writeTextElement( "fpiMethod",               QString( "%1" ).arg( receipt->fpiMethod() ) );
     xmlWriter->writeTextElement( "badPixels",               QString( "%1" ).arg( receipt->badPixels() ) );
+    xmlWriter->writeTextElement( "bpsMethod",               QString( "%1" ).arg( receipt->bpsMethod() ) );
     xmlWriter->writeTextElement( "bpiMethod",               QString( "%1" ).arg( receipt->bpiMethod() ) );
     xmlWriter->writeTextElement( "chromaSmooth",            QString( "%1" ).arg( receipt->chromaSmooth() ) );
     xmlWriter->writeTextElement( "patternNoise",            QString( "%1" ).arg( receipt->patternNoise() ) );
@@ -1826,6 +1832,7 @@ void MainWindow::setSliders(ReceiptSettings *receipt)
     setToolButtonFocusPixels( receipt->focusPixels() );
     setToolButtonFocusPixelsIntMethod( receipt->fpiMethod() );
     setToolButtonBadPixels( receipt->badPixels() );
+    setToolButtonBadPixelsSearchMethod( receipt->bpsMethod() );
     setToolButtonBadPixelsIntMethod( receipt->bpiMethod() );
     setToolButtonChromaSmooth( receipt->chromaSmooth() );
     setToolButtonPatternNoise( receipt->patternNoise() );
@@ -1880,6 +1887,7 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     receipt->setFocusPixels( toolButtonFocusPixelsCurrentIndex() );
     receipt->setFpiMethod( toolButtonFocusPixelsIntMethodCurrentIndex() );
     receipt->setBadPixels( toolButtonBadPixelsCurrentIndex() );
+    receipt->setBpsMethod( toolButtonBadPixelsSearchMethodCurrentIndex() );
     receipt->setBpiMethod( toolButtonBadPixelsIntMethodCurrentIndex() );
     receipt->setChromaSmooth( toolButtonChromaSmoothCurrentIndex() );
     receipt->setPatternNoise( toolButtonPatternNoiseCurrentIndex() );
@@ -1919,6 +1927,7 @@ void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings 
     receiptTarget->setFocusPixels( receiptSource->focusPixels() );
     receiptTarget->setFpiMethod( receiptSource->fpiMethod() );
     receiptTarget->setBadPixels( receiptSource->badPixels() );
+    receiptTarget->setBpsMethod( receiptSource->bpsMethod() );
     receiptTarget->setBpiMethod( receiptSource->bpiMethod() );
     receiptTarget->setChromaSmooth( receiptSource->chromaSmooth() );
     receiptTarget->setPatternNoise( receiptSource->patternNoise() );
@@ -1977,6 +1986,7 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     receipt->setFocusPixels( m_pSessionReceipts.at( row )->focusPixels() );
     receipt->setFpiMethod( m_pSessionReceipts.at( row )->fpiMethod() );
     receipt->setBadPixels( m_pSessionReceipts.at( row )->badPixels() );
+    receipt->setBpsMethod( m_pSessionReceipts.at( row )->bpsMethod() );
     receipt->setBpiMethod( m_pSessionReceipts.at( row )->bpiMethod() );
     receipt->setChromaSmooth( m_pSessionReceipts.at( row )->chromaSmooth() );
     receipt->setPatternNoise( m_pSessionReceipts.at( row )->patternNoise() );
@@ -2196,6 +2206,23 @@ void MainWindow::setToolButtonBadPixels(int index)
     if( actualize ) toolButtonBadPixelsChanged();
 }
 
+//Set Toolbuttons Bad Pixels Search Method
+void MainWindow::setToolButtonBadPixelsSearchMethod(int index)
+{
+    bool actualize = false;
+    if( index == toolButtonBadPixelsSearchMethodCurrentIndex() ) actualize = true;
+
+    switch( index )
+    {
+    case 0: ui->toolButtonBadPixelsSearchMethodNormal->setChecked( true );
+        break;
+    case 1: ui->toolButtonBadPixelsSearchMethodForce->setChecked( true );
+        break;
+    default: break;
+    }
+    if( actualize ) toolButtonBadPixelsSearchMethodChanged();
+}
+
 //Set Toolbuttons Bad Pixels Interpolation
 void MainWindow::setToolButtonBadPixelsIntMethod(int index)
 {
@@ -2361,6 +2388,13 @@ int MainWindow::toolButtonBadPixelsCurrentIndex()
     if( ui->toolButtonBadPixelsOff->isChecked() ) return 0;
     else if( ui->toolButtonBadPixelsNormal->isChecked() ) return 1;
     else return 2;
+}
+
+//Get toolbutton index of bad pixels search method
+int MainWindow::toolButtonBadPixelsSearchMethodCurrentIndex()
+{
+    if( ui->toolButtonBadPixelsSearchMethodNormal->isChecked() ) return 0;
+    else return 1;
 }
 
 //Get toolbutton index of bad pixels interpolation
@@ -3418,7 +3452,15 @@ void MainWindow::toolButtonBadPixelsChanged( void )
     m_frameChanged = true;
 }
 
-//Bad Pixel Method changed
+//Bad Pixel Search Method changed
+void MainWindow::toolButtonBadPixelsSearchMethodChanged()
+{
+    llrpSetBadPixelSearchMethod( m_pMlvObject, toolButtonBadPixelsSearchMethodCurrentIndex() );
+    resetMlvCachedFrame( m_pMlvObject );
+    m_frameChanged = true;
+}
+
+//Bad Pixel Interpolation Method changed
 void MainWindow::toolButtonBadPixelsIntMethodChanged( void )
 {
     llrpSetBadPixelInterpolationMethod( m_pMlvObject, toolButtonBadPixelsIntMethodCurrentIndex() );

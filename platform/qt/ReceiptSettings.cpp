@@ -28,6 +28,7 @@ ReceiptSettings::ReceiptSettings()
     m_focus_pixels = 1;
     m_fpi_method = 1;
     m_bad_pixels = 1;
+    m_bps_method = 0;
     m_bpi_method = 1;
     m_chroma_smooth = 0;
     m_pattern_noise = 0;

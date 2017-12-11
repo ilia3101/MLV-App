@@ -121,6 +121,7 @@ private slots:
     void toolButtonFocusPixelsChanged( void );
     void toolButtonFocusPixelsIntMethodChanged( void );
     void toolButtonBadPixelsChanged( void );
+    void toolButtonBadPixelsSearchMethodChanged( void );
     void toolButtonBadPixelsIntMethodChanged( void );
     void toolButtonChromaSmoothChanged( void );
     void toolButtonPatternNoiseChanged( void );
@@ -247,6 +248,7 @@ private:
     void setToolButtonFocusPixels( int index );
     void setToolButtonFocusPixelsIntMethod( int index );
     void setToolButtonBadPixels( int index );
+    void setToolButtonBadPixelsSearchMethod( int index );
     void setToolButtonBadPixelsIntMethod( int index );
     void setToolButtonChromaSmooth( int index );
     void setToolButtonPatternNoise( int index );
@@ -258,6 +260,7 @@ private:
     int toolButtonFocusPixelsCurrentIndex( void );
     int toolButtonFocusPixelsIntMethodCurrentIndex( void );
     int toolButtonBadPixelsCurrentIndex( void );
+    int toolButtonBadPixelsSearchMethodCurrentIndex( void );
     int toolButtonBadPixelsIntMethodCurrentIndex( void );
     int toolButtonChromaSmoothCurrentIndex( void );
     int toolButtonPatternNoiseCurrentIndex( void );
