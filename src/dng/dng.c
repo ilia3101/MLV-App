@@ -705,7 +705,7 @@ void dng_pack_image_bits(uint16_t * output_buffer, uint16_t * input_buffer, int 
 }
 
 /* decompress LJ92 image to output_buffer */
-void dng_decompress_image(uint16_t * output_buffer, uint16_t * input_buffer, size_t input_buffer_size, int width, int height, uint32_t bpp)
+int dng_decompress_image(uint16_t * output_buffer, uint16_t * input_buffer, size_t input_buffer_size, int width, int height, uint32_t bpp)
 {
     int components = 1;
     lj92 decoder_object;
@@ -716,7 +716,8 @@ void dng_decompress_image(uint16_t * output_buffer, uint16_t * input_buffer, siz
 #ifndef STDOUT_SILENT
         printf("LJ92 decoder: Failed with error code (%d)\n", ret);
 #endif
-        return;
+        memset(output_buffer, 0, width * height * sizeof(uint16_t));
+        return ret;
     }
 
     ret = lj92_decode(decoder_object, output_buffer, width * height * components, 0, NULL, 0);
@@ -725,13 +726,15 @@ void dng_decompress_image(uint16_t * output_buffer, uint16_t * input_buffer, siz
 #ifndef STDOUT_SILENT
         printf("LJ92 decoder: Failed with error code (%d)\n", ret);
 #endif
+        memset(output_buffer, 0, width * height * sizeof(uint16_t));
     }
 
     lj92_close(decoder_object);
+    return ret;
 }
 
 /* compress input_buffer to LJ92 image */
-void dng_compress_image(uint16_t * output_buffer, uint16_t * input_buffer, size_t * output_buffer_size, int width, int height, uint32_t bpp)
+int dng_compress_image(uint16_t * output_buffer, uint16_t * input_buffer, size_t * output_buffer_size, int width, int height, uint32_t bpp)
 {
     uint8_t * compressed = NULL;
     int new_width = width * 2;
@@ -748,12 +751,15 @@ void dng_compress_image(uint16_t * output_buffer, uint16_t * input_buffer, size_
     }
     else
     {
+        *output_buffer_size = width * height * sizeof(uint16_t);
+        memset(output_buffer, 0, *output_buffer_size);
 #ifndef STDOUT_SILENT
         printf("LJ92 encoder: failed with error code (%d)\n", ret);
 #endif
     }
 
     if(compressed) free(compressed);
+    return ret;
 }
 
 /* changes endianness of the 16 bit buffer values
@@ -772,8 +778,9 @@ static void dng_reverse_byte_order(uint16_t * input_buffer, size_t buf_size)
 }
 
 /* build whole DNG frame (header + image), process image if needed and put to the dng struct ready to save */
-static void dng_get_frame(mlvObject_t * mlv_data, dngObject_t * dng_data, uint64_t frame_index)
+static int dng_get_frame(mlvObject_t * mlv_data, dngObject_t * dng_data, uint64_t frame_index)
 {
+    int ret = 0;
     /* Move to start of frame in file and read the RAW data */
     file_set_pos(mlv_data->file[mlv_data->frame_index[frame_index].chunk_num], mlv_data->frame_index[frame_index].frame_offset, SEEK_SET);
 
@@ -793,24 +800,24 @@ static void dng_get_frame(mlvObject_t * mlv_data, dngObject_t * dng_data, uint64
         }
         else
         {
-            dng_decompress_image(dng_data->image_buf_unpacked,
-                                 dng_data->image_buf,
-                                 dng_data->image_size,
-                                 mlv_data->RAWI.xRes,
-                                 mlv_data->RAWI.yRes,
-                                 mlv_data->RAWI.raw_info.bits_per_pixel);
+            ret = dng_decompress_image(dng_data->image_buf_unpacked,
+                                       dng_data->image_buf,
+                                       dng_data->image_size,
+                                       mlv_data->RAWI.xRes,
+                                       mlv_data->RAWI.yRes,
+                                       mlv_data->RAWI.raw_info.bits_per_pixel);
 
             /* apply low level raw processing to the unpacked_frame */
             applyLLRawProcObject(mlv_data, dng_data->image_buf_unpacked, dng_data->image_size_unpacked);
 
             if(dng_data->raw_output_state == COMPRESSED_RAW)
             {
-                dng_compress_image(dng_data->image_buf,
-                                   dng_data->image_buf_unpacked,
-                                   &dng_data->image_size,
-                                   mlv_data->RAWI.xRes,
-                                   mlv_data->RAWI.yRes,
-                                   (llrpHQDualIso(mlv_data)) ? 16 : mlv_data->RAWI.raw_info.bits_per_pixel);
+                ret = dng_compress_image(dng_data->image_buf,
+                                         dng_data->image_buf_unpacked,
+                                         &dng_data->image_size,
+                                         mlv_data->RAWI.xRes,
+                                         mlv_data->RAWI.yRes,
+                                         (llrpHQDualIso(mlv_data)) ? 16 : mlv_data->RAWI.raw_info.bits_per_pixel);
             }
             else
             {
@@ -858,12 +865,12 @@ static void dng_get_frame(mlvObject_t * mlv_data, dngObject_t * dng_data, uint64
 
             if(dng_data->raw_output_state == COMPRESSED_RAW)
             {
-                dng_compress_image(dng_data->image_buf,
-                                   dng_data->image_buf_unpacked,
-                                   &dng_data->image_size,
-                                   mlv_data->RAWI.xRes,
-                                   mlv_data->RAWI.yRes,
-                                   (llrpHQDualIso(mlv_data)) ? 16 : mlv_data->RAWI.raw_info.bits_per_pixel);
+                ret = dng_compress_image(dng_data->image_buf,
+                                         dng_data->image_buf_unpacked,
+                                         &dng_data->image_size,
+                                         mlv_data->RAWI.xRes,
+                                         mlv_data->RAWI.yRes,
+                                         (llrpHQDualIso(mlv_data)) ? 16 : mlv_data->RAWI.raw_info.bits_per_pixel);
             }
             else
             {
@@ -887,6 +894,7 @@ static void dng_get_frame(mlvObject_t * mlv_data, dngObject_t * dng_data, uint64
     }
 
     dng_fill_header(mlv_data, dng_data);
+    return ret;
 }
 
 /* init DNG data struct */
@@ -921,7 +929,11 @@ int saveDngFrame(mlvObject_t * mlv_data, dngObject_t * dng_data, uint64_t frame_
     }
 
     /* get filled dng_data struct */
-    dng_get_frame(mlv_data, dng_data, frame_index);
+    if(dng_get_frame(mlv_data, dng_data, frame_index != 0))
+    {
+        fclose(dngf);
+        return 0;
+    }
 
     /* write DNG header */
     if (fwrite(dng_data->header_buf, dng_data->header_size, 1, dngf) != 1)

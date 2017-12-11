@@ -987,7 +987,7 @@ void writePost(lje* self) {
     self->encodedWritten = w;
 }
 
-void writeBody(lje* self) {
+int writeBody(lje* self) {
     // Scan through the tile using the standard type 6 prediction
     // Need to cache the previous 2 row in target coordinates because of tiling
     uint16_t* pixel = self->image;
@@ -1048,6 +1048,11 @@ void writeBody(lje* self) {
             huffbits -= usebits;
             huffenc &= (1<<huffbits)-1;
             if (nextbits==0) {
+                if(w >= self->encodedLength - 1)
+                {
+                    free(rowcache);
+                    return LJ92_ERROR_ENCODER;
+                }
                 out[w++] = next;
                 if (next==0xff) out[w++] = 0x0;
                 next = 0;
@@ -1100,6 +1105,7 @@ void writeBody(lje* self) {
 #endif
     free(rowcache);
     self->encodedWritten = w;
+    return LJ92_ERROR_NONE;
 }
 /* Encoder
  * Read tile from an image and encode in one shot
@@ -1136,7 +1142,12 @@ int lj92_encode(uint16_t* image, int width, int height, int bitdepth,
     // Write JPEG head and scan header
     writeHeader(self);
     // Scan through and do the compression
-    writeBody(self);
+    ret = writeBody(self);
+    if (ret != LJ92_ERROR_NONE) {
+        free(self->encoded);
+        free(self);
+        return ret;
+    }
     // Finish
     writePost(self);
 #ifdef DEBUG
