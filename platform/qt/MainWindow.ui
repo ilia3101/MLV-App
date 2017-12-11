@@ -367,8 +367,8 @@ QGroupBox::indicator:checked {
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>201</width>
-            <height>1653</height>
+            <width>205</width>
+            <height>1598</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayoutScrollArea">
@@ -803,7 +803,7 @@ QGroupBox::indicator:checked {
                      </widget>
                     </item>
                     <item>
-                     <widget class="ColorToolButton" name="toolButtonBadPixelsNormal">
+                     <widget class="ColorToolButton" name="toolButtonBadPixelsOn">
                       <property name="sizePolicy">
                        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                         <horstretch>0</horstretch>
@@ -816,7 +816,7 @@ QGroupBox::indicator:checked {
                        </font>
                       </property>
                       <property name="text">
-                       <string>Normal</string>
+                       <string>On</string>
                       </property>
                       <property name="checkable">
                        <bool>true</bool>
@@ -827,7 +827,7 @@ QGroupBox::indicator:checked {
                      </widget>
                     </item>
                     <item>
-                     <widget class="ColorToolButton" name="toolButtonBadPixelsAggressive">
+                     <widget class="ColorToolButton" name="toolButtonBadPixelsForce">
                       <property name="sizePolicy">
                        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                         <horstretch>0</horstretch>
@@ -840,7 +840,7 @@ QGroupBox::indicator:checked {
                        </font>
                       </property>
                       <property name="text">
-                       <string>Aggressive</string>
+                       <string>Force</string>
                       </property>
                       <property name="checkable">
                        <bool>true</bool>
@@ -908,7 +908,7 @@ QGroupBox::indicator:checked {
                          </font>
                         </property>
                         <property name="text">
-                         <string>Normal</string>
+                         <string>Norm</string>
                         </property>
                         <property name="checkable">
                          <bool>true</bool>
@@ -922,7 +922,7 @@ QGroupBox::indicator:checked {
                        </widget>
                       </item>
                       <item>
-                       <widget class="ColorToolButton" name="toolButtonBadPixelsSearchMethodForce">
+                       <widget class="ColorToolButton" name="toolButtonBadPixelsSearchMethodAggressive">
                         <property name="sizePolicy">
                          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                           <horstretch>0</horstretch>
@@ -935,7 +935,7 @@ QGroupBox::indicator:checked {
                          </font>
                         </property>
                         <property name="text">
-                         <string>Force</string>
+                         <string>Aggr</string>
                         </property>
                         <property name="checkable">
                          <bool>true</bool>
@@ -4263,8 +4263,8 @@ QGroupBox::indicator:checked {
    <slot>toolButtonFocusPixelsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1026</x>
-     <y>229</y>
+     <x>1059</x>
+     <y>309</y>
     </hint>
     <hint type="destinationlabel">
      <x>599</x>
@@ -4279,8 +4279,8 @@ QGroupBox::indicator:checked {
    <slot>toolButtonFocusPixelsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1082</x>
-     <y>229</y>
+     <x>1121</x>
+     <y>309</y>
     </hint>
     <hint type="destinationlabel">
      <x>599</x>
@@ -4295,8 +4295,8 @@ QGroupBox::indicator:checked {
    <slot>toolButtonFocusPixelsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1138</x>
-     <y>229</y>
+     <x>1185</x>
+     <y>309</y>
     </hint>
     <hint type="destinationlabel">
      <x>599</x>
@@ -4311,8 +4311,8 @@ QGroupBox::indicator:checked {
    <slot>toolButtonFocusPixelsIntMethodChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1123</x>
-     <y>257</y>
+     <x>1157</x>
+     <y>336</y>
     </hint>
     <hint type="destinationlabel">
      <x>599</x>
@@ -4327,8 +4327,8 @@ QGroupBox::indicator:checked {
    <slot>toolButtonFocusPixelsIntMethodChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1151</x>
-     <y>257</y>
+     <x>1184</x>
+     <y>336</y>
     </hint>
     <hint type="destinationlabel">
      <x>599</x>
@@ -4343,8 +4343,8 @@ QGroupBox::indicator:checked {
    <slot>toolButtonBadPixelsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1022</x>
-     <y>308</y>
+     <x>1059</x>
+     <y>390</y>
     </hint>
     <hint type="destinationlabel">
      <x>599</x>
@@ -4353,14 +4353,14 @@ QGroupBox::indicator:checked {
    </hints>
   </connection>
   <connection>
-   <sender>toolButtonBadPixelsNormal</sender>
+   <sender>toolButtonBadPixelsOn</sender>
    <signal>toggled(bool)</signal>
    <receiver>MainWindow</receiver>
    <slot>toolButtonBadPixelsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1072</x>
-     <y>308</y>
+     <x>1122</x>
+     <y>390</y>
     </hint>
     <hint type="destinationlabel">
      <x>599</x>
@@ -4369,14 +4369,14 @@ QGroupBox::indicator:checked {
    </hints>
   </connection>
   <connection>
-   <sender>toolButtonBadPixelsAggressive</sender>
+   <sender>toolButtonBadPixelsForce</sender>
    <signal>toggled(bool)</signal>
    <receiver>MainWindow</receiver>
    <slot>toolButtonBadPixelsChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1132</x>
-     <y>308</y>
+     <x>1185</x>
+     <y>390</y>
     </hint>
     <hint type="destinationlabel">
      <x>599</x>
@@ -4391,8 +4391,8 @@ QGroupBox::indicator:checked {
    <slot>toolButtonBadPixelsIntMethodChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1123</x>
-     <y>336</y>
+     <x>1157</x>
+     <y>445</y>
     </hint>
     <hint type="destinationlabel">
      <x>599</x>
@@ -4407,8 +4407,8 @@ QGroupBox::indicator:checked {
    <slot>toolButtonBadPixelsIntMethodChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1151</x>
-     <y>336</y>
+     <x>1184</x>
+     <y>445</y>
     </hint>
     <hint type="destinationlabel">
      <x>599</x>
@@ -4423,8 +4423,8 @@ QGroupBox::indicator:checked {
    <slot>toolButtonChromaSmoothChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1019</x>
-     <y>387</y>
+     <x>1043</x>
+     <y>499</y>
     </hint>
     <hint type="destinationlabel">
      <x>599</x>
@@ -4439,8 +4439,8 @@ QGroupBox::indicator:checked {
    <slot>toolButtonChromaSmoothChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1061</x>
-     <y>387</y>
+     <x>1091</x>
+     <y>499</y>
     </hint>
     <hint type="destinationlabel">
      <x>599</x>
@@ -4455,8 +4455,8 @@ QGroupBox::indicator:checked {
    <slot>toolButtonChromaSmoothChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1103</x>
-     <y>387</y>
+     <x>1138</x>
+     <y>499</y>
     </hint>
     <hint type="destinationlabel">
      <x>599</x>
@@ -4471,8 +4471,8 @@ QGroupBox::indicator:checked {
    <slot>toolButtonChromaSmoothChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1145</x>
-     <y>387</y>
+     <x>1185</x>
+     <y>499</y>
     </hint>
     <hint type="destinationlabel">
      <x>599</x>
@@ -4487,8 +4487,8 @@ QGroupBox::indicator:checked {
    <slot>toolButtonPatternNoiseChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1040</x>
-     <y>437</y>
+     <x>1091</x>
+     <y>256</y>
     </hint>
     <hint type="destinationlabel">
      <x>599</x>
@@ -4503,8 +4503,8 @@ QGroupBox::indicator:checked {
    <slot>toolButtonPatternNoiseChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1124</x>
-     <y>437</y>
+     <x>1185</x>
+     <y>256</y>
     </hint>
     <hint type="destinationlabel">
      <x>599</x>
@@ -4519,8 +4519,8 @@ QGroupBox::indicator:checked {
    <slot>toolButtonVerticalStripesChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1026</x>
-     <y>487</y>
+     <x>1059</x>
+     <y>552</y>
     </hint>
     <hint type="destinationlabel">
      <x>599</x>
@@ -4535,8 +4535,8 @@ QGroupBox::indicator:checked {
    <slot>toolButtonVerticalStripesChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1082</x>
-     <y>487</y>
+     <x>1122</x>
+     <y>552</y>
     </hint>
     <hint type="destinationlabel">
      <x>599</x>
@@ -4551,8 +4551,8 @@ QGroupBox::indicator:checked {
    <slot>toolButtonVerticalStripesChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1138</x>
-     <y>487</y>
+     <x>1185</x>
+     <y>552</y>
     </hint>
     <hint type="destinationlabel">
      <x>599</x>
@@ -4567,8 +4567,8 @@ QGroupBox::indicator:checked {
    <slot>toolButtonDualIsoChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1026</x>
-     <y>537</y>
+     <x>1059</x>
+     <y>605</y>
     </hint>
     <hint type="destinationlabel">
      <x>599</x>
@@ -4583,8 +4583,8 @@ QGroupBox::indicator:checked {
    <slot>toolButtonDualIsoChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1082</x>
-     <y>537</y>
+     <x>1122</x>
+     <y>605</y>
     </hint>
     <hint type="destinationlabel">
      <x>599</x>
@@ -4599,8 +4599,8 @@ QGroupBox::indicator:checked {
    <slot>toolButtonDualIsoChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1138</x>
-     <y>537</y>
+     <x>1185</x>
+     <y>605</y>
     </hint>
     <hint type="destinationlabel">
      <x>599</x>
@@ -4615,8 +4615,8 @@ QGroupBox::indicator:checked {
    <slot>toolButtonDualIsoInterpolationChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1099</x>
-     <y>565</y>
+     <x>1137</x>
+     <y>632</y>
     </hint>
     <hint type="destinationlabel">
      <x>599</x>
@@ -4631,8 +4631,8 @@ QGroupBox::indicator:checked {
    <slot>toolButtonDualIsoInterpolationChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1144</x>
-     <y>565</y>
+     <x>1184</x>
+     <y>632</y>
     </hint>
     <hint type="destinationlabel">
      <x>599</x>
@@ -4647,8 +4647,8 @@ QGroupBox::indicator:checked {
    <slot>toolButtonDualIsoAliasMapChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1106</x>
-     <y>594</y>
+     <x>1139</x>
+     <y>660</y>
     </hint>
     <hint type="destinationlabel">
      <x>599</x>
@@ -4663,8 +4663,8 @@ QGroupBox::indicator:checked {
    <slot>toolButtonDualIsoAliasMapChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1146</x>
-     <y>594</y>
+     <x>1184</x>
+     <y>660</y>
     </hint>
     <hint type="destinationlabel">
      <x>599</x>
@@ -4679,8 +4679,8 @@ QGroupBox::indicator:checked {
    <slot>toolButtonDualIsoFullresBlendingChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1106</x>
-     <y>623</y>
+     <x>1141</x>
+     <y>688</y>
     </hint>
     <hint type="destinationlabel">
      <x>599</x>
@@ -4695,8 +4695,8 @@ QGroupBox::indicator:checked {
    <slot>toolButtonDualIsoFullresBlendingChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1146</x>
-     <y>623</y>
+     <x>1184</x>
+     <y>688</y>
     </hint>
     <hint type="destinationlabel">
      <x>599</x>
@@ -4715,8 +4715,8 @@ QGroupBox::indicator:checked {
      <y>-1</y>
     </hint>
     <hint type="destinationlabel">
-     <x>1080</x>
-     <y>774</y>
+     <x>1103</x>
+     <y>928</y>
     </hint>
    </hints>
   </connection>
@@ -4727,12 +4727,44 @@ QGroupBox::indicator:checked {
    <slot>setChecked(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>1080</x>
-     <y>774</y>
+     <x>1103</x>
+     <y>928</y>
     </hint>
     <hint type="destinationlabel">
      <x>-1</x>
      <y>-1</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>toolButtonBadPixelsSearchMethodNormal</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>toolButtonBadPixelsSearchMethodChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>1109</x>
+     <y>406</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>619</x>
+     <y>-4</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>toolButtonBadPixelsSearchMethodAggressive</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>toolButtonBadPixelsSearchMethodChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>1149</x>
+     <y>412</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>652</x>
+     <y>-11</y>
     </hint>
    </hints>
   </connection>
@@ -4749,5 +4781,6 @@ QGroupBox::indicator:checked {
   <slot>toolButtonDualIsoInterpolationChanged()</slot>
   <slot>toolButtonDualIsoAliasMapChanged()</slot>
   <slot>toolButtonDualIsoFullresBlendingChanged()</slot>
+  <slot>toolButtonBadPixelsSearchMethodChanged()</slot>
  </slots>
 </ui>

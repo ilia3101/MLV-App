@@ -2200,9 +2200,9 @@ void MainWindow::setToolButtonBadPixels(int index)
     {
     case 0: ui->toolButtonBadPixelsOff->setChecked( true );
         break;
-    case 1: ui->toolButtonBadPixelsNormal->setChecked( true );
+    case 1: ui->toolButtonBadPixelsOn->setChecked( true );
         break;
-    case 2: ui->toolButtonBadPixelsAggressive->setChecked( true );
+    case 2: ui->toolButtonBadPixelsForce->setChecked( true );
         break;
     default: break;
     }
@@ -2219,7 +2219,7 @@ void MainWindow::setToolButtonBadPixelsSearchMethod(int index)
     {
     case 0: ui->toolButtonBadPixelsSearchMethodNormal->setChecked( true );
         break;
-    case 1: ui->toolButtonBadPixelsSearchMethodForce->setChecked( true );
+    case 1: ui->toolButtonBadPixelsSearchMethodAggressive->setChecked( true );
         break;
     default: break;
     }
@@ -2389,7 +2389,7 @@ int MainWindow::toolButtonFocusPixelsIntMethodCurrentIndex()
 int MainWindow::toolButtonBadPixelsCurrentIndex()
 {
     if( ui->toolButtonBadPixelsOff->isChecked() ) return 0;
-    else if( ui->toolButtonBadPixelsNormal->isChecked() ) return 1;
+    else if( ui->toolButtonBadPixelsOn->isChecked() ) return 1;
     else return 2;
 }
 
@@ -3459,6 +3459,7 @@ void MainWindow::toolButtonBadPixelsChanged( void )
 void MainWindow::toolButtonBadPixelsSearchMethodChanged()
 {
     llrpSetBadPixelSearchMethod( m_pMlvObject, toolButtonBadPixelsSearchMethodCurrentIndex() );
+    llrpResetBpmStatus(m_pMlvObject);
     resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
 }

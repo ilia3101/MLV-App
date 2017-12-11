@@ -52,7 +52,7 @@ enum { BP_OFF, BP_ON, FP_AGGRESSIVE };
 int llrpGetBadPixelMode(mlvObject_t * video);
 void llrpSetBadPixelMode(mlvObject_t * video, int value);
 
-enum { BPI_NORMAL, BPI_FORCE };
+enum { BPS_NORMAL, BPS_FORCE };
 int llrpGetBadPixelSearchMethod(mlvObject_t * video);
 void llrpSetBadPixelSearchMethod(mlvObject_t * video, int value);
 
