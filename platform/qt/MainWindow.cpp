@@ -3098,6 +3098,8 @@ void MainWindow::pictureCustomContextMenuRequested(const QPoint &pos)
     myMenu.addAction( ui->actionZoomFit );
     myMenu.addAction( ui->actionZoom100 );
     myMenu.addSeparator();
+    myMenu.addMenu( ui->menuDemosaicForPreview );
+    myMenu.addSeparator();
     myMenu.addAction( ui->actionShowZebras );
     if( ui->graphicsView->isFullScreen() )
     {

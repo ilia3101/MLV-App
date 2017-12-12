@@ -154,7 +154,7 @@
     <property name="title">
      <string>Playback</string>
     </property>
-    <widget class="QMenu" name="menuDemosaic_for_Preview">
+    <widget class="QMenu" name="menuDemosaicForPreview">
      <property name="title">
       <string>Debayer for Preview</string>
      </property>
@@ -171,7 +171,7 @@
     <addaction name="actionAudioOutput"/>
     <addaction name="separator"/>
     <addaction name="actionDropFrameMode"/>
-    <addaction name="menuDemosaic_for_Preview"/>
+    <addaction name="menuDemosaicForPreview"/>
     <addaction name="separator"/>
     <addaction name="actionZoomFit"/>
     <addaction name="actionZoom100"/>
@@ -367,8 +367,8 @@ QGroupBox::indicator:checked {
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>205</width>
-            <height>1598</height>
+            <width>195</width>
+            <height>1653</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayoutScrollArea">
