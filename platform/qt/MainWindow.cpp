@@ -1149,7 +1149,7 @@ void MainWindow::startExportCdng(QString fileName)
         QByteArray dngFileName = filePathNr.toLatin1();
 
         //Save cDNG frame
-        if(!(saveDngFrame(m_pMlvObject, cinemaDng, frame, dngFileName.data())))
+        if( saveDngFrame( m_pMlvObject, cinemaDng, frame, dngFileName.data() ) )
         {
             m_pStatusDialog->hide();
             qApp->processEvents();
@@ -1181,7 +1181,7 @@ void MainWindow::startExportCdng(QString fileName)
     }
 
     //Free DNG data struct
-    freeDngObject(cinemaDng);
+    freeDngObject( cinemaDng );
 
     //Enable GUI drawing
     m_dontDraw = false;

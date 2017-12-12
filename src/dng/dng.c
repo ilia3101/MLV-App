@@ -925,28 +925,28 @@ int saveDngFrame(mlvObject_t * mlv_data, dngObject_t * dng_data, uint64_t frame_
     FILE* dngf = fopen(dng_filename, "wb");
     if (!dngf)
     {
-        return 0;
+        return 1;
     }
 
     /* get filled dng_data struct */
-    if(dng_get_frame(mlv_data, dng_data, frame_index != 0))
+    if(dng_get_frame(mlv_data, dng_data, frame_index) != 0)
     {
         fclose(dngf);
-        return 0;
+        return 1;
     }
 
     /* write DNG header */
     if (fwrite(dng_data->header_buf, dng_data->header_size, 1, dngf) != 1)
     {
         fclose(dngf);
-        return 0;
+        return 1;
     }
     
     /* write DNG image data */
     if (fwrite(dng_data->image_buf, dng_data->image_size, 1, dngf) != 1)
     {
         fclose(dngf);
-        return 0;
+        return 1;
     }
 
     fclose(dngf);
@@ -971,7 +971,7 @@ int saveDngFrame(mlvObject_t * mlv_data, dngObject_t * dng_data, uint64_t frame_
     }
     printf("\rCurrent frame '%s' (frames saved: %lu)", dng_filename, frame_index + 1);
 #endif
-    return 1;
+    return 0;
 }
 
 /* free all buffers used for DNG creation */
