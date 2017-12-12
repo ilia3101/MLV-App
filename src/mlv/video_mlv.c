@@ -129,6 +129,28 @@ static void close_all_chunks(FILE ** files, int entries)
     if(files) free(files);
 }
 
+static void frame_index_sort(frame_index_t *frame_index, uint32_t entries)
+{
+    if (!entries) return;
+
+    uint32_t n = entries;
+    do
+    {
+        uint32_t new_n = 1;
+        for (uint32_t i = 0; i < n-1; ++i)
+        {
+            if (frame_index[i].frame_time > frame_index[i+1].frame_time)
+            {
+                frame_index_t tmp = frame_index[i+1];
+                frame_index[i+1] = frame_index[i];
+                frame_index[i] = tmp;
+                new_n = i + 1;
+            }
+        }
+        n = new_n;
+    } while (n > 1);
+}
+
 /* Unpacks the bits of a frame to get a bayer B&W image (without black level correction)
  * Needs memory to return to, sized: sizeof(float) * getMlvHeight(urvid) * getMlvWidth(urvid)
  * Output image's pixels will be in range 0-65535 as if it is 16 bit integers */
@@ -139,9 +161,9 @@ void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outpu
     int height = video->RAWI.yRes;
     int pixels_count = width * height;
 
-    int chunk = video->frame_index[frameIndex].chunk_num;
-    uint32_t frame_size = video->frame_index[frameIndex].frame_size;
-    uint64_t frame_offset = video->frame_index[frameIndex].frame_offset;
+    int chunk = video->video_index[frameIndex].chunk_num;
+    uint32_t frame_size = video->video_index[frameIndex].frame_size;
+    uint64_t frame_offset = video->video_index[frameIndex].frame_offset;
 
     /* If this frame does not exist, return with a black frame */
     if(!frame_size && !frame_offset)
@@ -376,7 +398,7 @@ mlvObject_t * initMlvObject()
 
     /* Initialize index buffers with NULL,
      * will be allocated/reallocated later */
-    video->frame_index = NULL;
+    video->video_index = NULL;
     video->audio_index = NULL;
 
     /* Cache things, only one element for now as it is empty */
@@ -418,7 +440,7 @@ void freeMlvObject(mlvObject_t * video)
     /* Close all MLV file chunks */
     if(video->file) close_all_chunks(video->file, video->filenum);
     /* Free all memory */
-    if(video->frame_index) free(video->frame_index);
+    if(video->video_index) free(video->video_index);
     if(video->audio_index) free(video->audio_index);
 
     /* Now free these */
@@ -458,9 +480,9 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int preview)
 
     mlv_hdr_t block_header; /* Basic MLV block header */
     int block_num = 0; /* Number of blocks in file */
-    uint64_t frame_total = 0; /* Number of frames in video */
+    uint64_t video_frame_total = 0; /* Number of frames in video */
     uint64_t audio_frame_total = 0; /* Number of audio blocks in video */
-    uint64_t frame_index_max = 0; /* initial size of frame index */
+    uint64_t video_index_max = 0; /* initial size of frame index */
     uint64_t audio_index_max = 0; /* initial size of audio index */
     int rtci_read = 0; /* Flips to 1 if 1st RTCI block was read */
 
@@ -522,29 +544,31 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int preview)
                 (block_start + video->VIDF.frameSpace)); )
 
                 /* Dynamically resize the frame index buffer */
-                if(!frame_index_max)
+                if(!video_index_max)
                 {
-                    frame_index_max = 128;
-                    video->frame_index = (frame_index_t *)calloc(frame_index_max, sizeof(frame_index_t));
+                    video_index_max = 128;
+                    video->video_index = (frame_index_t *)calloc(video_index_max, sizeof(frame_index_t));
                 }
-                else if(video->VIDF.frameNumber >= frame_index_max - 1)
+                else if(video_frame_total >= video_index_max - 1)
                 {
-                    uint64_t frame_index_new_size = frame_index_max * 2;
-                    frame_index_t * frame_index_new = (frame_index_t *)calloc(frame_index_new_size, sizeof(frame_index_t));
-                    memcpy(frame_index_new, video->frame_index, frame_index_max * sizeof(frame_index_t));
-                    free(video->frame_index);
-                    video->frame_index = frame_index_new;
-                    frame_index_max = frame_index_new_size;
+                    uint64_t video_index_new_size = video_index_max * 2;
+                    frame_index_t * video_index_new = (frame_index_t *)calloc(video_index_new_size, sizeof(frame_index_t));
+                    memcpy(video_index_new, video->video_index, video_index_max * sizeof(frame_index_t));
+                    free(video->video_index);
+                    video->video_index = video_index_new;
+                    video_index_max = video_index_new_size;
 
                 }
 
                 /* Fill frame index */
-                video->frame_index[video->VIDF.frameNumber].chunk_num = i;
-                video->frame_index[video->VIDF.frameNumber].frame_size = video->VIDF.blockSize - sizeof(mlv_vidf_hdr_t) - video->VIDF.frameSpace;
-                video->frame_index[video->VIDF.frameNumber].frame_offset = file_get_pos(video->file[i]) + video->VIDF.frameSpace;
+                video->video_index[video_frame_total].frame_type = 1;
+                video->video_index[video_frame_total].chunk_num = i;
+                video->video_index[video_frame_total].frame_size = video->VIDF.blockSize - sizeof(mlv_vidf_hdr_t) - video->VIDF.frameSpace;
+                video->video_index[video_frame_total].frame_offset = file_get_pos(video->file[i]) + video->VIDF.frameSpace;
+                video->video_index[video_frame_total].frame_time = video->VIDF.timestamp;
 
                 /* Count actual video frames */
-                frame_total++;
+                video_frame_total++;
                 if(preview) goto preview_out;
             }
             else if ( memcmp(block_header.blockType, "AUDF", 4) == 0 )
@@ -561,7 +585,7 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int preview)
                     audio_index_max = 32;
                     video->audio_index = (frame_index_t *)malloc(sizeof(frame_index_t) * audio_index_max);
                 }
-                else if(video->AUDF.frameNumber >= audio_index_max - 1)
+                else if(audio_frame_total >= audio_index_max - 1)
                 {
                     uint64_t audio_index_new_size = audio_index_max * 2;
                     frame_index_t * audio_index_new = (frame_index_t *)calloc(audio_index_new_size, sizeof(frame_index_t));
@@ -572,9 +596,11 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int preview)
                 }
 
                 /* Fill audio index */
-                video->audio_index[video->AUDF.frameNumber].chunk_num = i;
-                video->audio_index[video->AUDF.frameNumber].frame_size = video->AUDF.blockSize - sizeof(mlv_audf_hdr_t) - video->AUDF.frameSpace;
-                video->audio_index[video->AUDF.frameNumber].frame_offset = file_get_pos(video->file[i]) + video->AUDF.frameSpace;
+                video->audio_index[audio_frame_total].frame_type = 2;
+                video->audio_index[audio_frame_total].chunk_num = i;
+                video->audio_index[audio_frame_total].frame_size = video->AUDF.blockSize - sizeof(mlv_audf_hdr_t) - video->AUDF.frameSpace;
+                video->audio_index[audio_frame_total].frame_offset = file_get_pos(video->file[i]) + video->AUDF.frameSpace;
+                video->audio_index[audio_frame_total].frame_time = video->AUDF.timestamp;
 
                 /* Count actual audio frames */
                 audio_frame_total++;
@@ -631,6 +657,9 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int preview)
         }
     }
 
+    if(video_frame_total) frame_index_sort(video->video_index, video_frame_total);
+    if(audio_frame_total) frame_index_sort(video->audio_index, audio_frame_total);
+
 preview_out:
 
     /* back up black and white levels */
@@ -681,7 +710,7 @@ preview_out:
     video->frame_size = (getMlvHeight(video) * getMlvWidth(video) * getMlvBitdepth(video)) / 8;
 
     /* Set frame count in video object */
-    video->frames = frame_total;
+    video->frames = video_frame_total;
     /* Calculate framerate */
     video->frame_rate = (double)video->MLVI.sourceFpsNom / (double)video->MLVI.sourceFpsDenom;
     /* Set audio count in video object */
@@ -694,9 +723,9 @@ preview_out:
     //free(video->rgb_raw_frames);
     //free(video->rgb_raw_current_frame);
     //free(video->cached_frames);
-    video->rgb_raw_frames = (uint16_t **)malloc( sizeof(uint16_t *) * frame_total );
+    video->rgb_raw_frames = (uint16_t **)malloc( sizeof(uint16_t *) * video_frame_total );
     video->rgb_raw_current_frame = (uint16_t *)malloc( getMlvWidth(video) * getMlvHeight(video) * 3 * sizeof(uint16_t) );
-    video->cached_frames = (uint8_t *)calloc( sizeof(uint8_t), frame_total );
+    video->cached_frames = (uint8_t *)calloc( sizeof(uint8_t), video_frame_total );
 
     isMlvActive(video) = 1;
 

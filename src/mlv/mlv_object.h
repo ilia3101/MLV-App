@@ -16,18 +16,20 @@
 #define MLV_FRAME_IS_CACHED 1
 #define MLV_FRAME_BEING_CACHED 2
 
+/* Struct of index of video and audio frames for quick access */
 typedef struct
 {
-    int chunk_num;           /* Number of MLV chunk */
-    uint32_t frame_size;     /* Size of the raw video frame data */
-    uint64_t frame_offset;   /* Offset to the start of raw frame data */
+    uint16_t frame_type;     /* VIDF = 1, AUDF = 2 */
+    uint16_t chunk_num;      /* MLV chunk number */
+    uint32_t frame_size;     /* Size of frame data */
+    uint64_t frame_offset;   /* Offset to the start of frame data */
+    uint64_t frame_time;     /* Time of frame from the start of recording in microseconds */
 } frame_index_t;
 
-/* An awkward structure for handling an MLV
- * TODO: adapt for .M00 .M01 stuff */
+/* Struct for MLV handling */
 typedef struct {
 
-    /* Will get used when adapted to handle .M00 .M01 */
+    /* Amount of MLV chunks (.MLV, .M00, .M01, ...) */
     int filenum;
     int block_num; /* How many file blocks in MLV file */
 
@@ -61,7 +63,7 @@ typedef struct {
     double      frame_rate;      /* User may want to override it */
     uint32_t    frames;          /* Number of frames */
     uint32_t    frame_size;      /* NOT counting compression factor */
-    frame_index_t * frame_index;
+    frame_index_t * video_index;
 
     /* Audio info */
     uint32_t    audios;          /* Number of audio blocks */

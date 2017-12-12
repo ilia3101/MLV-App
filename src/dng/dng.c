@@ -441,7 +441,7 @@ static size_t dng_get_image_size(mlvObject_t * mlv_data, int size_mode, uint64_t
             return (size_t)(mlv_data->RAWI.xRes * mlv_data->RAWI.yRes * mlv_data->RAWI.raw_info.bits_per_pixel / 8);
             break;
         case IMG_SIZE_LOSLESS:
-            return mlv_data->frame_index[frame_index].frame_size;
+            return mlv_data->video_index[frame_index].frame_size;
             break;
         case IMG_SIZE_UNPACKED:
         default:
@@ -782,12 +782,12 @@ static int dng_get_frame(mlvObject_t * mlv_data, dngObject_t * dng_data, uint64_
 {
     int ret = 0;
     /* Move to start of frame in file and read the RAW data */
-    file_set_pos(mlv_data->file[mlv_data->frame_index[frame_index].chunk_num], mlv_data->frame_index[frame_index].frame_offset, SEEK_SET);
+    file_set_pos(mlv_data->file[mlv_data->video_index[frame_index].chunk_num], mlv_data->video_index[frame_index].frame_offset, SEEK_SET);
 
     if (dng_data->raw_input_state == COMPRESSED_RAW) /* If losless, decompress or pass trough */
     {
         dng_data->image_size = dng_get_image_size(mlv_data, IMG_SIZE_LOSLESS, frame_index);
-        if(fread(dng_data->image_buf, sizeof(uint8_t), dng_data->image_size, mlv_data->file[mlv_data->frame_index[frame_index].chunk_num]) != dng_data->image_size)
+        if(fread(dng_data->image_buf, sizeof(uint8_t), dng_data->image_size, mlv_data->file[mlv_data->video_index[frame_index].chunk_num]) != dng_data->image_size)
         {
 #ifndef STDOUT_SILENT
             printf("Can not read raw frame from %s\n", mlv_data->path);
@@ -841,7 +841,7 @@ static int dng_get_frame(mlvObject_t * mlv_data, dngObject_t * dng_data, uint64_
     else /* If uncompressed, unpack to 16bit or pass trough */
     {
         dng_data->image_size = dng_get_image_size(mlv_data, IMG_SIZE_PACKED, frame_index);
-        if(fread(dng_data->image_buf, sizeof(uint8_t), dng_data->image_size, mlv_data->file[mlv_data->frame_index[frame_index].chunk_num]) != dng_data->image_size)
+        if(fread(dng_data->image_buf, sizeof(uint8_t), dng_data->image_size, mlv_data->file[mlv_data->video_index[frame_index].chunk_num]) != dng_data->image_size)
         {
 #ifndef STDOUT_SILENT
             printf("Can not read raw frame from %s\n", mlv_data->path);
