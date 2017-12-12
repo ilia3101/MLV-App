@@ -14,6 +14,8 @@ class ReceiptSettings
 {
 public:
     ReceiptSettings();
+    void setLoaded( void )          {m_neverLoaded = false;}
+
     void setExposure( int value )   {m_exposure = value;}
     void setTemperature( int value ){m_temperature = value;}
     void setTint( int value )       {m_tint = value;}
@@ -48,6 +50,9 @@ public:
     void setStretchFactorY( double factor )   {m_stretchFactorY = factor;}
     void setCutIn( uint32_t frame )           {m_cutIn = frame;}
     void setCutOut( uint32_t frame )          {m_cutOut = frame;}
+
+    bool wasNeverLoaded( void ){return m_neverLoaded;}
+
     int exposure( void )   {return m_exposure;}
     int temperature( void ){return m_temperature;}
     int tint( void )       {return m_tint;}
@@ -84,6 +89,8 @@ public:
     QString exportFileName( void ){return m_exportFileName;}
 
 private:
+    bool m_neverLoaded;
+
     int m_exposure;
     int m_temperature;
     int m_tint;

@@ -218,9 +218,11 @@ private:
     QVector<ReceiptSettings*> m_pSessionReceipts;
     QVector<ReceiptSettings*> m_exportQueue;
     int m_lastActiveClipInSession;
+    int m_lastClipBeforeExport;
     void drawFrame( void );
-    void importNewMlv( QString fileName );
-    int openMlv( QString fileName, bool preview );
+    void importNewMlv(QString fileName);
+    int openMlvForPreview(QString fileName);
+    int openMlv(QString fileName);
     void playbackHandling( int timeDiff );
     void initGui( void );
     void initLib( void );
@@ -238,7 +240,7 @@ private:
     void setSliders(ReceiptSettings *sliders , bool paste);
     void setReceipt( ReceiptSettings *sliders );
     void replaceReceipt( ReceiptSettings *receiptTarget, ReceiptSettings *receiptSource );
-    void showFileInEditor( int row );
+    void showFileInEditor(int row);
     void addClipToExportQueue( int row, QString fileName );
     void previewPicture( int row );
     void setPreviewMode( void );

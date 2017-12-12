@@ -9,6 +9,8 @@
 
 ReceiptSettings::ReceiptSettings()
 {
+    m_neverLoaded = true;
+
     //default settings
     m_exposure = 0;
     m_temperature = 6000;
@@ -41,4 +43,5 @@ ReceiptSettings::ReceiptSettings()
     m_stretchFactorY = 1.0;
     m_profile = 1;
     m_cutIn = 1;
+    m_cutOut = INT32_MAX;
 }

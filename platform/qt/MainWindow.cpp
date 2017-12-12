@@ -94,13 +94,15 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
         if( QFile(fileName).exists() && fileName.endsWith( ".mlv", Qt::CaseInsensitive ) )
         {
             importNewMlv( fileName );
-            //Caching is in which state? Set it!
-            if( ui->actionCaching->isChecked() ) on_actionCaching_triggered();
+            //Show last imported file
+            showFileInEditor( m_pSessionReceipts.count() - 1 );
         }
         else if( QFile(fileName).exists() && fileName.endsWith( ".masxml", Qt::CaseInsensitive ) )
         {
             m_inOpeningProcess = true;
             openSession( fileName );
+            //Show last imported file
+            showFileInEditor( m_pSessionReceipts.count() - 1 );
             m_inOpeningProcess = false;
         }
     }
@@ -234,6 +236,8 @@ bool MainWindow::event(QEvent *event)
         if( QFile(fileName).exists() && fileName.endsWith( ".mlv", Qt::CaseInsensitive ) )
         {
             importNewMlv( fileName );
+            //Show last imported file
+            showFileInEditor( m_pSessionReceipts.count() - 1 );
             //Caching is in which state? Set it!
             if( ui->actionCaching->isChecked() ) on_actionCaching_triggered();
         }
@@ -241,6 +245,10 @@ bool MainWindow::event(QEvent *event)
         {
             m_inOpeningProcess = true;
             openSession( fileName );
+            //Show last imported file
+            showFileInEditor( m_pSessionReceipts.count() - 1 );
+            //Caching is in which state? Set it!
+            if( ui->actionCaching->isChecked() ) on_actionCaching_triggered();
             m_inOpeningProcess = false;
         }
         else return false;
@@ -268,8 +276,13 @@ void MainWindow::dropEvent(QDropEvent *event)
 #ifdef WIN32
         if( fileName.startsWith( "/" ) ) fileName.remove( 0, 1 );
 #endif
-
         importNewMlv( fileName );
+    }
+
+    if( m_pSessionReceipts.count() )
+    {
+        //Show last imported file
+        showFileInEditor( m_pSessionReceipts.count() - 1 );
     }
 
     //Caching is in which state? Set it!
@@ -310,7 +323,7 @@ void MainWindow::drawFrame( void )
     }
 }
 
-//Import a MLV
+//Import a MLV, complete procedure
 void MainWindow::importNewMlv(QString fileName)
 {
     //File is already opened? Error!
@@ -324,7 +337,7 @@ void MainWindow::importNewMlv(QString fileName)
         addFileToSession( fileName );
 
         //Open MLV
-        if( !openMlv( fileName, false ) )
+        if( !openMlvForPreview( fileName ) )
         {
             //Save last file name
             m_lastSaveFileName = fileName;
@@ -338,6 +351,69 @@ void MainWindow::importNewMlv(QString fileName)
             deleteFileFromSession();
         }
     }
+}
+
+//Short open MLV function, call only for making a preview!
+int MainWindow::openMlvForPreview(QString fileName)
+{
+    int mlv_err = MLV_ERR_NONE;
+    mlvObject_t * new_MlvObject = initMlvObjectWithClip( fileName.toLatin1().data(), &mlv_err, true );
+    if( mlv_err )
+    {
+        switch ( mlv_err )
+        {
+            case MLV_ERR_NONE:
+                break;
+            case MLV_ERR_OPEN:
+                QMessageBox::critical( this, tr( "MLV Error" ), tr( "Could not open file: %1\n" ).arg( fileName.toLatin1().data() ), tr("Cancel") );
+                break;
+            case MLV_ERR_INVALID:
+                QMessageBox::critical( this, tr( "MLV Error" ), tr( "Invalid MLV file: %1\n").arg( fileName.toLatin1().data() ), tr("Cancel") );
+                break;
+            case MLV_ERR_IO:
+                QMessageBox::critical( this, tr( "MLV Error" ), tr( "Could not read from file: %1\n").arg( fileName.toLatin1().data() ), tr("Cancel") );
+                break;
+        }
+        freeMlvObject( new_MlvObject );
+        return mlv_err;
+    }
+
+    //disable drawing and kill old timer and old WaveFormMonitor
+    m_fileLoaded = false;
+    m_dontDraw = true;
+
+    //Waiting for thread being idle for not freeing used memory
+    while( !m_pRenderThread->isIdle() ) {}
+    //Waiting for frame ready because it works with m_pMlvObject
+    while( m_frameStillDrawing ) {qApp->processEvents();}
+
+    //Unload audio
+    m_pAudioPlayback->unloadAudio();
+
+    /* Destroy it just for simplicity... and make a new one */
+    freeMlvObject( m_pMlvObject );
+    /* Set to NEW object with a NEW MLV clip! */
+    m_pMlvObject = new_MlvObject;
+
+    /* If use has terminal this is useful */
+#ifndef STDOUT_SILENT
+    printMlvInfo( m_pMlvObject );
+#endif
+    /* This needs to be joined (or segmentation fault 11 :D) */
+    setMlvProcessing( m_pMlvObject, m_pProcessingObject );
+    /* Disable Caching for the opening process */
+    disableMlvCaching( m_pMlvObject );
+    /* Limit frame cache to defined size of RAM */
+    setMlvRawCacheLimitMegaBytes( m_pMlvObject, m_cacheSizeMB );
+    /* Tell it how many cores we have so it can be optimal */
+    setMlvCpuCores( m_pMlvObject, QThread::idealThreadCount() );
+
+    //Load audio
+    m_pAudioPlayback->loadAudio( m_pMlvObject );
+
+    m_fileLoaded = true;
+
+    return MLV_ERR_NONE;
 }
 
 //Open MLV Dialog
@@ -365,6 +441,9 @@ void MainWindow::on_actionOpen_triggered()
         importNewMlv( fileName );
     }
 
+    //Show last imported file
+    showFileInEditor( m_pSessionReceipts.count() - 1 );
+
     //Caching is in which state? Set it!
     if( ui->actionCaching->isChecked() ) on_actionCaching_triggered();
 
@@ -372,10 +451,10 @@ void MainWindow::on_actionOpen_triggered()
 }
 
 //Open MLV procedure
-int MainWindow::openMlv( QString fileName, bool preview )
+int MainWindow::openMlv( QString fileName )
 {
     int mlv_err = MLV_ERR_NONE;
-    mlvObject_t * new_MlvObject = initMlvObjectWithClip( fileName.toLatin1().data(), &mlv_err, preview );
+    mlvObject_t * new_MlvObject = initMlvObjectWithClip( fileName.toLatin1().data(), &mlv_err, false );
     if( mlv_err )
     {
         switch ( mlv_err )
@@ -1196,7 +1275,10 @@ void MainWindow::addFileToSession(QString fileName)
     //Save settings of actual clip (if there is one)
     if( m_pSessionReceipts.count() > 0 )
     {
-        setReceipt( m_pSessionReceipts.at( m_lastActiveClipInSession ) );
+        if( !m_pSessionReceipts.at( m_lastActiveClipInSession )->wasNeverLoaded() )
+        {
+            setReceipt( m_pSessionReceipts.at( m_lastActiveClipInSession ) );
+        }
     }
     //Add to session list (empty Pixmap is just spacer)
     QListWidgetItem *item = new QListWidgetItem( QFileInfo(fileName).fileName() );
@@ -1270,14 +1352,14 @@ void MainWindow::openSession(QString fileNameSession)
                         //Add file to Sessionlist
                         addFileToSession( fileName );
                         //Open the file
-                        openMlv( fileName, false );
+                        openMlvForPreview( fileName );
                         m_pSessionReceipts.last()->setFileName( fileName );
-                        m_pSessionReceipts.last()->setCutOut( getMlvFrames( m_pMlvObject ) ); //Set Cut Out to the end, in case there is no xml tag
+                        //m_pSessionReceipts.last()->setCutOut( getMlvFrames( m_pMlvObject ) ); //Set Cut Out to the end, in case there is no xml tag
 
                         readXmlElementsFromFile( &Rxml, m_pSessionReceipts.last(), versionMasxml );
-
                         setSliders( m_pSessionReceipts.last(), false );
                         previewPicture( ui->listWidgetSession->count() - 1 );
+                        m_lastActiveClipInSession = ui->listWidgetSession->count() - 1;
                     }
                     else
                     {
@@ -1791,7 +1873,7 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     else ui->comboBoxVStretch->setCurrentIndex( 1 );
     on_comboBoxVStretch_currentIndexChanged( ui->comboBoxVStretch->currentIndex() );
 
-    if( !paste )
+    if( !paste && !receipt->wasNeverLoaded() )
     {
         ui->spinBoxCutIn->setValue( receipt->cutIn() );
         on_spinBoxCutIn_valueChanged( receipt->cutIn() );
@@ -1883,14 +1965,16 @@ void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings 
 }
 
 //Show the file in
-void MainWindow::showFileInEditor( int row )
+void MainWindow::showFileInEditor(int row)
 {
     //Stop Playback
     ui->actionPlay->setChecked( false );
     //Save slider receipt
-    setReceipt( m_pSessionReceipts.at( m_lastActiveClipInSession ) );
+    if( !m_pSessionReceipts.at( m_lastActiveClipInSession )->wasNeverLoaded() ) setReceipt( m_pSessionReceipts.at( m_lastActiveClipInSession ) );
     //Open new MLV
-    openMlv( ui->listWidgetSession->item( row )->toolTip(), false );
+    openMlv( ui->listWidgetSession->item( row )->toolTip() );
+    //Now set it was loaded once
+    m_pSessionReceipts.at( row )->setLoaded();
     //Set sliders to receipt
     setSliders( m_pSessionReceipts.at( row ), false );
     //Save new position in session
@@ -1903,6 +1987,18 @@ void MainWindow::showFileInEditor( int row )
 //Add the clip in SessionList position "row" at last position in ExportQueue
 void MainWindow::addClipToExportQueue(int row, QString fileName)
 {
+    //A file must be opened once before being able to be exported
+    if( m_pSessionReceipts.at( row )->wasNeverLoaded() )
+    {
+        m_pStatusDialog->ui->label->setText( "Preparing export..." );
+        m_pStatusDialog->ui->labelEstimatedTime->setText( "" );
+        m_pStatusDialog->ui->progressBar->setValue( 0 );
+        m_pStatusDialog->show();
+        showFileInEditor( row );
+        qApp->processEvents();
+        setReceipt( m_pSessionReceipts.at( row ) );
+    }
+
     ReceiptSettings *receipt = new ReceiptSettings();
     receipt->setExposure( m_pSessionReceipts.at( row )->exposure() );
     receipt->setTemperature( m_pSessionReceipts.at( row )->temperature() );
@@ -1951,7 +2047,7 @@ void MainWindow::previewPicture( int row )
     m_pMlvObject->llrawproc->fix_raw = 0;
 
     //Get frame from library
-    getMlvProcessedFrame8( m_pMlvObject, getMlvFrames( m_pMlvObject ) / 2, m_pRawImage );
+    getMlvProcessedFrame8( m_pMlvObject, 0, m_pRawImage );
 
     //Display in SessionList
     QPixmap pic = QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
@@ -2568,6 +2664,9 @@ void MainWindow::on_actionExport_triggered()
     //Save slider receipt
     setReceipt( m_pSessionReceipts.at( m_lastActiveClipInSession ) );
 
+    //Save last active clip before export
+    m_lastClipBeforeExport = m_lastActiveClipInSession;
+
     //Filename proposal in dependency to actual file
     QString saveFileName = m_pSessionReceipts.at( m_lastActiveClipInSession )->fileName();
     QString fileType;
@@ -2881,7 +2980,7 @@ void MainWindow::on_actionExportSettings_triggered()
 void MainWindow::on_actionResetReceipt_triggered()
 {
     ReceiptSettings *sliders = new ReceiptSettings(); //default
-    sliders->setCutOut( getMlvFrames( m_pMlvObject ) );
+    //sliders->setCutOut( getMlvFrames( m_pMlvObject ) );
     setWhiteBalanceFromMlv( sliders );
     setSliders( sliders, false );
     delete sliders;
@@ -2942,6 +3041,8 @@ void MainWindow::on_actionOpenSession_triggered()
 
     m_inOpeningProcess = true;
     openSession( fileName );
+    //Show last imported file
+    showFileInEditor( m_pSessionReceipts.count() - 1 );
     m_inOpeningProcess = false;
 }
 
@@ -3062,7 +3163,7 @@ void MainWindow::deleteFileFromSession( void )
         //Open first!
         ui->listWidgetSession->setCurrentRow( 0 );
         setSliders( m_pSessionReceipts.at( 0 ), false );
-        openMlv( ui->listWidgetSession->item( 0 )->toolTip(), false );
+        openMlv( ui->listWidgetSession->item( 0 )->toolTip() );
         m_lastActiveClipInSession = 0;
 
         //Caching is in which state? Set it!
@@ -3291,7 +3392,7 @@ void MainWindow::exportHandler( void )
         exportRunning = true;
         jobNumber++;
         //Open file and settings
-        openMlv( m_exportQueue.first()->fileName(), false );
+        openMlv( m_exportQueue.first()->fileName() );
         //Set sliders to receipt
         setSliders( m_exportQueue.first(), false );
         //Fill label in StatusDialog
@@ -3321,8 +3422,8 @@ void MainWindow::exportHandler( void )
         //Hide Status Dialog
         m_pStatusDialog->hide();
         //Open last file which was opened before export
-        openMlv( m_pSessionReceipts.at( m_lastActiveClipInSession )->fileName(), false );
-        setSliders( m_pSessionReceipts.at( m_lastActiveClipInSession ), false );
+        openMlv( m_pSessionReceipts.at( m_lastClipBeforeExport )->fileName() );
+        setSliders( m_pSessionReceipts.at( m_lastClipBeforeExport ), false );
         //Unblock GUI
         setEnabled( true );
         //Export is ready
@@ -3960,10 +4061,10 @@ void MainWindow::initCutInOut(int frames)
     {
         ui->spinBoxCutIn->setMinimum( 1 );
         ui->spinBoxCutIn->setMaximum( frames );
-        ui->spinBoxCutIn->setValue( 1 );
+        //ui->spinBoxCutIn->setValue( 1 );
         ui->spinBoxCutOut->setMinimum( 1 );
         ui->spinBoxCutOut->setMaximum( frames );
-        ui->spinBoxCutOut->setValue( frames );
+        //ui->spinBoxCutOut->setValue( frames );
     }
 }
 
