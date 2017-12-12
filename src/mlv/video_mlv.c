@@ -165,14 +165,6 @@ void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outpu
     uint32_t frame_size = video->video_index[frameIndex].frame_size;
     uint64_t frame_offset = video->video_index[frameIndex].frame_offset;
 
-    /* If this frame does not exist, return with a black frame */
-    if(!frame_size && !frame_offset)
-    {
-        DEBUG( printf("MLV corrupted: Frame %lu is absent, drawing black frame\n", frameIndex); )
-        memset(outputFrame, 0, pixels_count * sizeof(float));
-        return;
-    }
-
     /* How many bytes is RAW frame */
     int raw_frame_size = (width * height * bitdepth) / 8;
     int unpacked_frame_size = width * height * sizeof(uint16_t);
@@ -402,13 +394,13 @@ mlvObject_t * initMlvObject()
     video->audio_index = NULL;
 
     /* Cache things, only one element for now as it is empty */
-    video->rgb_raw_frames = NULL;//(uint16_t **)malloc( sizeof(uint16_t *) );
-    video->rgb_raw_current_frame = NULL;//(uint16_t *)malloc( sizeof(uint16_t) );
-    video->cached_frames = NULL;//(uint8_t *)malloc( sizeof(uint8_t) );
+    video->rgb_raw_frames = NULL;
+    video->rgb_raw_current_frame = NULL;
+    video->cached_frames = NULL;
     /* All frames in one block of memory for least mallocing during usage */
-    video->cache_memory_block = NULL;//(uint16_t *)malloc( sizeof(uint16_t) );
+    video->cache_memory_block = NULL;
     /* Path (so separate cache threads can have their own FILE*s) */
-    video->path = NULL;//(char *)malloc( sizeof(char) );
+    video->path = NULL;
 
     /* Will avoid main file conflicts with audio and stuff */
     pthread_mutex_init(&video->g_mutexFind, NULL);
@@ -467,7 +459,6 @@ void freeMlvObject(mlvObject_t * video)
  * no debayering or bit unpacking */
 int openMlvClip(mlvObject_t * video, char * mlvPath, int preview)
 {
-    //free(video->path);
     video->path = malloc( strlen(mlvPath) + 1 );
     memcpy(video->path, mlvPath, strlen(mlvPath));
     video->path[strlen(mlvPath)] = 0x0;
@@ -485,10 +476,6 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int preview)
     uint64_t video_index_max = 0; /* initial size of frame index */
     uint64_t audio_index_max = 0; /* initial size of audio index */
     int rtci_read = 0; /* Flips to 1 if 1st RTCI block was read */
-
-    /* Free index buffers before dynamically realocating */
-    //free(video->frame_index);
-    //free(video->audio_index);
 
     for(int i = 0; i < video->filenum; i++)
     {
@@ -720,9 +707,6 @@ preview_out:
     setMlvRawCacheLimitMegaBytes(video, getMlvRawCacheLimitMegaBytes(video));
 
     /* For frame cache */
-    //free(video->rgb_raw_frames);
-    //free(video->rgb_raw_current_frame);
-    //free(video->cached_frames);
     video->rgb_raw_frames = (uint16_t **)malloc( sizeof(uint16_t *) * video_frame_total );
     video->rgb_raw_current_frame = (uint16_t *)malloc( getMlvWidth(video) * getMlvHeight(video) * 3 * sizeof(uint16_t) );
     video->cached_frames = (uint8_t *)calloc( sizeof(uint8_t), video_frame_total );
