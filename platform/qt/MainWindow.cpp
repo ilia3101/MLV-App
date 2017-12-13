@@ -408,6 +408,10 @@ int MainWindow::openMlvForPreview(QString fileName)
     /* Tell it how many cores we have so it can be optimal */
     setMlvCpuCores( m_pMlvObject, QThread::idealThreadCount() );
 
+    int imageSize = getMlvWidth( m_pMlvObject ) * getMlvHeight( m_pMlvObject ) * 3;
+    if( m_pRawImage ) free( m_pRawImage );
+    m_pRawImage = ( uint8_t* )malloc( imageSize );
+
     //Load audio
     m_pAudioPlayback->loadAudio( m_pMlvObject );
 
@@ -512,7 +516,7 @@ int MainWindow::openMlv( QString fileName )
 
     //Adapt the RawImage to actual size
     int imageSize = getMlvWidth( m_pMlvObject ) * getMlvHeight( m_pMlvObject ) * 3;
-    free( m_pRawImage );
+    if( m_pRawImage ) free( m_pRawImage );
     m_pRawImage = ( uint8_t* )malloc( imageSize );
 
     //Init Render Thread
@@ -823,8 +827,7 @@ void MainWindow::initLib( void )
         disableMlvCaching( m_pMlvObject );
     }
 
-    int imageSize = 1856 * 1044 * 3;
-    m_pRawImage = ( uint8_t* )malloc( imageSize );
+    m_pRawImage = NULL;
 }
 
 //Read some settings from registry
