@@ -651,7 +651,7 @@ void MainWindow::playbackHandling(int timeDiff)
                 //Loop!
                 if( ui->actionLoop->isChecked() && ( m_newPosDropMode >= ui->spinBoxCutOut->value() - 1 ) )
                 {
-                    m_newPosDropMode -= (ui->spinBoxCutOut->value() - ui->spinBoxCutIn->value() + 1);
+                    m_newPosDropMode -= (ui->spinBoxCutOut->value() - ui->spinBoxCutIn->value());
                     //Sync audio
                     if( ui->actionAudioOutput->isChecked() )
                     {
