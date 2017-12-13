@@ -26,6 +26,14 @@ typedef struct
     uint64_t frame_time;     /* Time of frame from the start of recording in microseconds */
 } frame_index_t;
 
+/* MLV App map file header (.MAPP) */
+typedef struct {
+    uint8_t     block_type[4]; /* MAPP */
+    uint32_t    block_size;    /* header block size */
+    uint32_t    video_frames;  /* total video frames */
+    uint32_t    audio_frames;  /* total audio frames */
+} mapp_header_t;
+
 /* Struct for MLV handling */
 typedef struct {
 
@@ -45,18 +53,18 @@ typedef struct {
 
     /* For access to MLV headers */
     mlv_file_hdr_t    MLVI;
-    mlv_audf_hdr_t    AUDF; /* Last AUDF header read */
     mlv_rawi_hdr_t    RAWI;
     mlv_rawc_hdr_t    RAWC;
-    mlv_vidf_hdr_t    VIDF; /* One of many VIDFs(don't know if they're different) */
-    mlv_wavi_hdr_t    WAVI;
+    mlv_idnt_hdr_t    IDNT;
     mlv_expo_hdr_t    EXPO;
     mlv_lens_hdr_t    LENS;
-    mlv_wbal_hdr_t    WBAL;
     mlv_rtci_hdr_t    RTCI;
-    mlv_idnt_hdr_t    IDNT;
-    mlv_info_hdr_t    INFO;
+    mlv_wbal_hdr_t    WBAL;
+    mlv_wavi_hdr_t    WAVI;
     mlv_diso_hdr_t    DISO;
+    mlv_info_hdr_t    INFO;
+    mlv_vidf_hdr_t    VIDF; /* One of many VIDFs(don't know if they're different) */
+    mlv_audf_hdr_t    AUDF; /* Last AUDF header read */
 
     /* Video info */
     double      real_frame_rate; /* ...Because framerate is not explicitly stored in the file */

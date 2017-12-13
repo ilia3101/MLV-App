@@ -454,6 +454,68 @@ void freeMlvObject(mlvObject_t * video)
     free(video);
 }
 
+/* save MLV App map file (.MAPP) */
+static int save_mapp(mlvObject_t * video, uint32_t video_frame_total, uint32_t audio_frame_total)
+{
+    int mapp_name_len = strlen(video->path);
+    char * mapp_filename = alloca(mapp_name_len + 2);
+    memcpy(mapp_filename, video->path, mapp_name_len);
+    char * dot = strrchr(mapp_filename, '.');
+    memcpy(dot, ".MAPP\0", 6);
+
+    FILE* mappf = fopen(mapp_filename, "wb");
+    if (!mappf)
+    {
+        return 1;
+    }
+
+    /* Init mapp header */
+    mapp_header_t mapp_header = { "MAPP", 16, video_frame_total, audio_frame_total };
+    /* Write mapp header */
+    if (fwrite(&mapp_header, sizeof(mapp_header_t), 1, mappf) != 1)
+    {
+        fclose(mappf);
+        return 1;
+    }
+
+    /* All needed headers are 644 bytes long */
+    /* size_t mlv_block_headers_size = sizeof(mlv_file_hdr_t) +
+                                    sizeof(mlv_rawi_hdr_t) +
+                                    sizeof(mlv_rawc_hdr_t) +
+                                    sizeof(mlv_idnt_hdr_t) +
+                                    sizeof(mlv_expo_hdr_t) +
+                                    sizeof(mlv_lens_hdr_t) +
+                                    sizeof(mlv_rtci_hdr_t) +
+                                    sizeof(mlv_wbal_hdr_t) +
+                                    sizeof(mlv_wavi_hdr_t) +
+                                    sizeof(mlv_diso_hdr_t) +
+                                    sizeof(mlv_info_hdr_t); */
+
+    /* Write MLV block headers */
+    if (fwrite((uint8_t*)&(video->MLVI), 644, 1, mappf) != 1)
+    {
+        fclose(mappf);
+        return 1;
+    }
+
+    /* write video index */
+    if (fwrite(video->video_index, video_frame_total * sizeof(frame_index_t), 1, mappf) != 1)
+    {
+        fclose(mappf);
+        return 1;
+    }
+
+    /* write audio index */
+    if (fwrite(video->audio_index, audio_frame_total * sizeof(frame_index_t), 1, mappf) != 1)
+    {
+        fclose(mappf);
+        return 1;
+    }
+
+    fclose(mappf);
+    return 0;
+}
+
 /* Reads an MLV file in to a mlv object(mlvObject_t struct) 
  * only puts metadata in to the mlvObject_t, 
  * no debayering or bit unpacking */
@@ -646,6 +708,7 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int preview)
 
     if(video_frame_total) frame_index_sort(video->video_index, video_frame_total);
     if(audio_frame_total) frame_index_sort(video->audio_index, audio_frame_total);
+    //save_mapp(video, video_frame_total, audio_frame_total);
 
 preview_out:
 
