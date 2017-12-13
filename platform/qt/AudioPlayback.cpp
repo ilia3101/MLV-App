@@ -74,7 +74,7 @@ void AudioPlayback::loadAudio( mlvObject_t *pMlvObject )
 //Unload the audio of a mlv
 void AudioPlayback::unloadAudio()
 {
-    if( !doesMlvHaveAudio( m_pMlvObject ) ) return;
+    if( !doesMlvHaveAudio( m_pMlvObject ) || !m_audioLoaded ) return;
 
     stop();
     delete m_pAudioOutput;

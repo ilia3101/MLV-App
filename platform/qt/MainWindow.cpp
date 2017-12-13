@@ -412,9 +412,6 @@ int MainWindow::openMlvForPreview(QString fileName)
     if( m_pRawImage ) free( m_pRawImage );
     m_pRawImage = ( uint8_t* )malloc( imageSize );
 
-    //Load audio
-    m_pAudioPlayback->loadAudio( m_pMlvObject );
-
     m_fileLoaded = true;
 
     return MLV_ERR_NONE;
