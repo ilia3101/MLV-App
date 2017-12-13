@@ -32,6 +32,7 @@
         <file>RetinaIMG/ExportReceipt-icon.png</file>
         <file>RetinaIMG/ImportReceipt-icon.png</file>
         <file>RetinaIMG/Pencil-icon.png</file>
+        <file>RetinaIMG/map-icon.png</file>
     </qresource>
     <qresource prefix="/AudioVideoIcons">
         <file>AudioVideoIcons/FirstFrame.png</file>

@@ -124,6 +124,7 @@
     <addaction name="separator"/>
     <addaction name="actionOpen"/>
     <addaction name="actionClip_Information"/>
+    <addaction name="actionUseMappFiles"/>
     <addaction name="actionExport"/>
     <addaction name="actionExportActualFrame"/>
     <addaction name="separator"/>
@@ -4115,6 +4116,18 @@ QGroupBox::indicator:checked {
    </property>
    <property name="text">
     <string>Bilinear</string>
+   </property>
+  </action>
+  <action name="actionUseMappFiles">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="ressources.qrc">
+     <normaloff>:/RetinaIMG/RetinaIMG/map-icon.png</normaloff>:/RetinaIMG/RetinaIMG/map-icon.png</iconset>
+   </property>
+   <property name="text">
+    <string>Use MAPP Files</string>
    </property>
   </action>
  </widget>

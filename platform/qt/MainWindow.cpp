@@ -865,6 +865,7 @@ void MainWindow::readSettings()
     ui->groupBoxDetails->setChecked( set.value( "expandedDetails", false ).toBool() );
     ui->groupBoxLinearGradient->setChecked( set.value( "expandedLinGradient", false ).toBool() );
     ui->groupBoxAspectRatio->setChecked( set.value( "expandAspectRatio", false ).toBool() );
+    ui->actionUseMappFiles->setChecked( set.value( "useMappFiles", false ).toBool() );
 }
 
 //Save some settings to registry
@@ -893,6 +894,7 @@ void MainWindow::writeSettings()
     set.setValue( "expandedDetails", ui->groupBoxDetails->isChecked() );
     set.setValue( "expandedLinGradient", ui->groupBoxLinearGradient->isChecked() );
     set.setValue( "expandAspectRatio", ui->groupBoxAspectRatio->isChecked() );
+    set.setValue( "useMappFiles", ui->actionUseMappFiles->isChecked() );
 }
 
 //Start Export via Pipe
@@ -3079,6 +3081,12 @@ void MainWindow::on_actionCaching_triggered()
     llrpResetBpmStatus(m_pMlvObject);
     llrpComputeStripesOn(m_pMlvObject);
     m_frameChanged = true;
+}
+
+//Create and Load MAPP files
+void MainWindow::on_actionUseMappFiles_triggered(bool checked)
+{
+    //TODO: library call here
 }
 
 //FileName in SessionList doubleClicked

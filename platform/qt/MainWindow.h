@@ -92,6 +92,7 @@ private slots:
     void on_actionImportReceipt_triggered();
     void on_actionExportReceipt_triggered();
     void on_actionCaching_triggered();
+    void on_actionUseMappFiles_triggered(bool checked);
     void on_listWidgetSession_activated(const QModelIndex &index);
     void on_dockWidgetSession_visibilityChanged(bool visible);
     void on_dockWidgetEdit_visibilityChanged(bool visible);
