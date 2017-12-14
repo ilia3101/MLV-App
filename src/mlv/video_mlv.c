@@ -463,56 +463,61 @@ static int save_mapp(mlvObject_t * video, uint32_t video_frame_total, uint32_t a
     char * dot = strrchr(mapp_filename, '.');
     memcpy(dot, ".MAPP\0", 6);
 
+    size_t video_index_size = video_frame_total * sizeof(frame_index_t);
+    size_t audio_index_size = audio_frame_total * sizeof(frame_index_t);
+    size_t mapp_buf_size = 16 + video_index_size + audio_index_size + 596;
+
+    uint8_t * mapp_buf = malloc(mapp_buf_size);
+    if(!mapp_buf)
+    {
+        return 1;
+    }
+
+    /* init mapp header */
+    mapp_header_t mapp_header = { "MAPP", 16, video_frame_total, audio_frame_total };
+
+    /* fill mapp buffer */
+    uint8_t * ptr = mapp_buf;
+    memcpy(ptr, (uint8_t*)&mapp_header, 16);
+    ptr += 16;
+    if(video->video_index)
+    {
+        memcpy(ptr, (uint8_t*)video->video_index, video_index_size);
+        ptr += video_index_size;
+    }
+    if(video->audio_index)
+    {
+        memcpy(ptr, (uint8_t*)video->audio_index, audio_index_size);
+        ptr += audio_index_size;
+    }
+    memcpy(ptr, &(video->MLVI), sizeof(mlv_file_hdr_t));
+    memcpy(ptr += sizeof(mlv_file_hdr_t), (uint8_t*)&(video->RAWI), sizeof(mlv_rawi_hdr_t));
+    memcpy(ptr += sizeof(mlv_rawi_hdr_t), (uint8_t*)&(video->RAWC), sizeof(mlv_rawc_hdr_t));
+    memcpy(ptr += sizeof(mlv_rawc_hdr_t), (uint8_t*)&(video->IDNT), sizeof(mlv_idnt_hdr_t));
+    memcpy(ptr += sizeof(mlv_idnt_hdr_t), (uint8_t*)&(video->EXPO), sizeof(mlv_expo_hdr_t));
+    memcpy(ptr += sizeof(mlv_expo_hdr_t), (uint8_t*)&(video->LENS), sizeof(mlv_lens_hdr_t));
+    memcpy(ptr += sizeof(mlv_lens_hdr_t), (uint8_t*)&(video->RTCI), sizeof(mlv_rtci_hdr_t));
+    memcpy(ptr += sizeof(mlv_rtci_hdr_t), (uint8_t*)&(video->WBAL), sizeof(mlv_wbal_hdr_t));
+    memcpy(ptr += sizeof(mlv_wbal_hdr_t), (uint8_t*)&(video->DISO), sizeof(mlv_diso_hdr_t));
+
+    /* open .MAPP file */
     FILE* mappf = fopen(mapp_filename, "wb");
     if (!mappf)
     {
+        free(mapp_buf);
         return 1;
     }
 
-    /* Init mapp header */
-    mapp_header_t mapp_header = { "MAPP", 16, video_frame_total, audio_frame_total };
-    /* Write mapp header */
-    if (fwrite(&mapp_header, sizeof(mapp_header_t), 1, mappf) != 1)
+    /* write mapp buffer */
+    if(fwrite(mapp_buf, mapp_buf_size, 1, mappf) != 1)
     {
         fclose(mappf);
-        return 1;
-    }
-
-    /* All needed headers are 644 bytes long */
-    /* size_t mlv_block_headers_size = sizeof(mlv_file_hdr_t) +
-                                    sizeof(mlv_rawi_hdr_t) +
-                                    sizeof(mlv_rawc_hdr_t) +
-                                    sizeof(mlv_idnt_hdr_t) +
-                                    sizeof(mlv_expo_hdr_t) +
-                                    sizeof(mlv_lens_hdr_t) +
-                                    sizeof(mlv_rtci_hdr_t) +
-                                    sizeof(mlv_wbal_hdr_t) +
-                                    sizeof(mlv_wavi_hdr_t) +
-                                    sizeof(mlv_diso_hdr_t) +
-                                    sizeof(mlv_info_hdr_t); */
-
-    /* Write MLV block headers */
-    if (fwrite((uint8_t*)&(video->MLVI), 644, 1, mappf) != 1)
-    {
-        fclose(mappf);
-        return 1;
-    }
-
-    /* write video index */
-    if (fwrite(video->video_index, video_frame_total * sizeof(frame_index_t), 1, mappf) != 1)
-    {
-        fclose(mappf);
-        return 1;
-    }
-
-    /* write audio index */
-    if (fwrite(video->audio_index, audio_frame_total * sizeof(frame_index_t), 1, mappf) != 1)
-    {
-        fclose(mappf);
+        free(mapp_buf);
         return 1;
     }
 
     fclose(mappf);
+    free(mapp_buf);
     return 0;
 }
 
