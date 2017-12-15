@@ -357,7 +357,7 @@ void MainWindow::importNewMlv(QString fileName)
 int MainWindow::openMlvForPreview(QString fileName)
 {
     int mlv_err = MLV_ERR_NONE;
-    mlvObject_t * new_MlvObject = initMlvObjectWithClip( fileName.toLatin1().data(), &mlv_err, true );
+    mlvObject_t * new_MlvObject = initMlvObjectWithClip( fileName.toLatin1().data(), &mlv_err, MLV_OPEN_PREVIEW );
     if( mlv_err )
     {
         switch ( mlv_err )
@@ -455,7 +455,7 @@ void MainWindow::on_actionOpen_triggered()
 int MainWindow::openMlv( QString fileName )
 {
     int mlv_err = MLV_ERR_NONE;
-    mlvObject_t * new_MlvObject = initMlvObjectWithClip( fileName.toLatin1().data(), &mlv_err, false );
+    mlvObject_t * new_MlvObject = initMlvObjectWithClip( fileName.toLatin1().data(), &mlv_err, m_useMappFiles );
     if( mlv_err )
     {
         switch ( mlv_err )
@@ -3086,7 +3086,7 @@ void MainWindow::on_actionCaching_triggered()
 //Create and Load MAPP files
 void MainWindow::on_actionUseMappFiles_triggered(bool checked)
 {
-    //TODO: library call here
+    m_useMappFiles = checked;
 }
 
 //FileName in SessionList doubleClicked

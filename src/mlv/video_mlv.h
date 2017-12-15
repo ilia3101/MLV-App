@@ -23,9 +23,10 @@ void printMlvInfo(mlvObject_t * video);
 /* Reads an MLV file in to a video object(mlvObject_t struct)
  * only puts frame indexes and metadata in to the mlvObject_t, 
  * no debayering or processing */
-int openMlvClip(mlvObject_t * video, char * mlvPath, int preview);
-/* return error codes of openMlvClip() */
+int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode);
+/* return error codes of and open modes of openMlvClip() */
 enum mlv_err { MLV_ERR_NONE, MLV_ERR_OPEN, MLV_ERR_INVALID, MLV_ERR_IO };
+enum open_mode { MLV_OPEN_FULL, MLV_OPEN_MAPP, MLV_OPEN_PREVIEW };
 
 /* Frees all memory and closes file */
 void freeMlvObject(mlvObject_t * video);

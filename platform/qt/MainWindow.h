@@ -220,6 +220,7 @@ private:
     QVector<ReceiptSettings*> m_exportQueue;
     int m_lastActiveClipInSession;
     int m_lastClipBeforeExport;
+    int m_useMappFiles;
     void drawFrame( void );
     void importNewMlv(QString fileName);
     int openMlvForPreview(QString fileName);
