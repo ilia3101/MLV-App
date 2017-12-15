@@ -94,6 +94,8 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
         if( QFile(fileName).exists() && fileName.endsWith( ".mlv", Qt::CaseInsensitive ) )
         {
             importNewMlv( fileName );
+            //Show last imported file
+            if( m_pSessionReceipts.count() ) showFileInEditor( m_pSessionReceipts.count() - 1 );
         }
         else if( QFile(fileName).exists() && fileName.endsWith( ".masxml", Qt::CaseInsensitive ) )
         {
@@ -234,6 +236,8 @@ bool MainWindow::event(QEvent *event)
         if( QFile(fileName).exists() && fileName.endsWith( ".mlv", Qt::CaseInsensitive ) )
         {
             importNewMlv( fileName );
+            //Show last imported file
+            if( m_pSessionReceipts.count() ) showFileInEditor( m_pSessionReceipts.count() - 1 );
             //Caching is in which state? Set it!
             if( ui->actionCaching->isChecked() ) on_actionCaching_triggered();
         }
@@ -273,6 +277,12 @@ void MainWindow::dropEvent(QDropEvent *event)
         if( fileName.startsWith( "/" ) ) fileName.remove( 0, 1 );
 #endif
         importNewMlv( fileName );
+    }
+
+    if( m_pSessionReceipts.count() )
+    {
+        //Show last imported file
+        showFileInEditor( m_pSessionReceipts.count() - 1 );
     }
 
     //Caching is in which state? Set it!
@@ -334,9 +344,6 @@ void MainWindow::importNewMlv(QString fileName)
 
             on_actionResetReceipt_triggered();
             previewPicture( ui->listWidgetSession->count() - 1 );
-
-            //Show last imported file
-            showFileInEditor( m_pSessionReceipts.count() - 1 );
         }
         else
         {
@@ -434,6 +441,9 @@ void MainWindow::on_actionOpen_triggered()
 
         importNewMlv( fileName );
     }
+
+    //Show last imported file
+    if( m_pSessionReceipts.count() ) showFileInEditor( m_pSessionReceipts.count() - 1 );
 
     //Caching is in which state? Set it!
     if( ui->actionCaching->isChecked() ) on_actionCaching_triggered();
@@ -3034,7 +3044,7 @@ void MainWindow::on_actionOpenSession_triggered()
     m_inOpeningProcess = true;
     openSession( fileName );
     //Show last imported file
-    if( m_pSessionReceipts.count() ) showFileInEditor( m_pSessionReceipts.count() - 1 );
+    showFileInEditor( m_pSessionReceipts.count() - 1 );
     m_inOpeningProcess = false;
 }
 
