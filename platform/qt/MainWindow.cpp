@@ -454,8 +454,13 @@ void MainWindow::on_actionOpen_triggered()
 //Open MLV procedure
 int MainWindow::openMlv( QString fileName )
 {
+    //Select open mode
+    int mlvOpenMode;
+    if( ui->actionUseMappFiles->isChecked() ) mlvOpenMode = MLV_OPEN_MAPP;
+    else mlvOpenMode = MLV_OPEN_FULL;
+
     int mlv_err = MLV_ERR_NONE;
-    mlvObject_t * new_MlvObject = initMlvObjectWithClip( fileName.toLatin1().data(), &mlv_err, m_useMappFiles );
+    mlvObject_t * new_MlvObject = initMlvObjectWithClip( fileName.toLatin1().data(), &mlv_err, mlvOpenMode );
     if( mlv_err )
     {
         switch ( mlv_err )
@@ -3081,12 +3086,6 @@ void MainWindow::on_actionCaching_triggered()
     llrpResetBpmStatus(m_pMlvObject);
     llrpComputeStripesOn(m_pMlvObject);
     m_frameChanged = true;
-}
-
-//Create and Load MAPP files
-void MainWindow::on_actionUseMappFiles_triggered(bool checked)
-{
-    m_useMappFiles = checked;
 }
 
 //FileName in SessionList doubleClicked
