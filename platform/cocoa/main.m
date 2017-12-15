@@ -263,8 +263,8 @@ int NSApplicationMain(int argc, const char * argv[])
 
     /* Initialise the MLV object so it is actually useful */
     App->videoMLV = initMlvObject();
-    /* Intialise the processing settings object */
-    App->processingSettings = initProcessingObject();
+    /* Intialise the processing settings object, and tell it path of processing resources folder (for OpenCL kernels) */
+    App->processingSettings = initProcessingObject((char *)[[[NSBundle mainBundle] pathForResource:@"processing_resources" ofType: nil] UTF8String]);
     /* Allow highlight reconstruction */
     processingDisableHighlightReconstruction(App->processingSettings);
     /* Set exposure to + 1.2 stops instead of correct 0.0, this is to give the impression 

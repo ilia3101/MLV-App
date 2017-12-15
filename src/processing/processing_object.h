@@ -6,6 +6,9 @@
 /* Processing settings structure (a mess) */
 typedef struct {
 
+    /* Where supporting files are stored (currently used for OpenCL only) */
+    char * file_dir;
+
     /* Image profile, options:
      * PROFILE_STANDARD   : Gamma Corrected
      * PROFILE_TONEMAPPED : Gamma Corrected + Tonemapped
@@ -84,6 +87,22 @@ typedef struct {
 
     /* For whitebalance */
     double     wb_multipliers[3];
+
+    OPENCL_PROCESSING (
+        int just_a_variable;
+        struct {
+            /* Tonemapping function text (inserted inside kernel code) */
+            char * tonemapping_function;
+            /* Whatever makes it work */
+            cl_device_id device_id;
+            cl_context context;
+            cl_command_queue command_queue;
+            cl_mem memobj;
+            cl_program program;
+            cl_kernel kernel;
+            cl_platform_id platform_id;
+        } OpenCL;
+    )
     
     /* These are pre-calculated curves / values for contrast and stuff 
      * will be calculated on setting changes, values 0-65535 */

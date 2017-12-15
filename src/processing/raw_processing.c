@@ -22,9 +22,14 @@
 #include "image_profiles.c"
 
 /* Initialises processing thing with memory */
-processingObject_t * initProcessingObject()
+processingObject_t * initProcessingObject(char * fileDir)
 {
     processingObject_t * processing = calloc( 1, sizeof(processingObject_t) );
+
+    if (fileDir) {
+        processing->file_dir = malloc(sizeof(char) * (strlen(fileDir) + 4));
+        strcpy(processing->file_dir, fileDir);
+    }
 
     processing->pre_calc_curve_r = malloc( 65536 * sizeof(uint16_t) );
     processing->pre_calc_curve_g = malloc( 65536 * sizeof(uint16_t) );
@@ -86,6 +91,49 @@ processingObject_t * initProcessingObject()
 
     /* Just in case (should be done tho already) */
     processing_update_matrices(processing);
+
+    OPENCL_PROCESSING (
+        int ret, ret_num_platforms, ret_num_devices;
+        /* Get Platform and Device Info */
+        ret = clGetPlatformIDs(1, &processing->OpenCL.platform_id, &ret_num_platforms);
+        ret = clGetDeviceIDs(processing->OpenCL.platform_id, CL_DEVICE_TYPE_DEFAULT, 1, &processing->OpenCL.device_id, &ret_num_devices);
+        /* Create OpenCL context */
+        processing->OpenCL.context = clCreateContext(NULL, 1, &processing->OpenCL.device_id, NULL, NULL, &ret);
+        /* Create Command Queue */
+        processing->OpenCL.command_queue = clCreateCommandQueue(processing->OpenCL.context, processing->OpenCL.device_id, 0, &ret);
+
+        /*
+         * Read kernel code files....
+         */
+        FILE * OpenCL_source_file_a, * OpenCL_source_file_b;
+        {
+            char * OpenCL_source_path_a = alloca(strlen(processing->file_dir) + 100);
+            char * OpenCL_source_path_b = alloca(strlen(processing->file_dir) + 100);
+            strcpy(OpenCL_source_path_a, processing->file_dir);
+            strcpy(OpenCL_source_path_a + strlen(OpenCL_source_path_a), "raw_processing_a.cl");
+            strcpy(OpenCL_source_path_a + strlen(OpenCL_source_path_b), "raw_processing_a.cl");
+            OpenCL_source_file_a = fopen(OpenCL_source_path_a, "rb");
+            OpenCL_source_file_b = fopen(OpenCL_source_path_b, "rb");
+        }
+        /* Code shouldn't be big enough to case windows problems with normal fseeks */
+        uint32_t code_size;
+        fseek(OpenCL_source_file_a, 0, SEEK_END);
+        code_size = ftell(OpenCL_source_file_a);
+        fseek(OpenCL_source_file_b, 0, SEEK_END);
+        code_size += ftell(OpenCL_source_file_b);
+        code_size += strlen(processing->OpenCL.tonemapping_function);
+        char * OpenCL_code = alloca(code_size + 100);
+        code_size += 1;
+
+        /* Create Kernel Program from the source */
+        processing->OpenCL.program = clCreateProgramWithSource(processing->OpenCL.context, 1, (const char **)&OpenCL_code, (const size_t *)&code_size, &ret);
+        /* Build Kernel Program */
+        ret = clBuildProgram(processing->OpenCL.program, 1, &processing->OpenCL.device_id, NULL, NULL, NULL);
+        /* Create OpenCL Kernel */
+        processing->OpenCL.kernel = clCreateKernel(processing->OpenCL.program, "hello", &ret);
+        /* Set OpenCL Kernel Parameters */
+        ret = clSetKernelArg(processing->OpenCL.kernel, 0, sizeof(cl_mem), (void *)&processing->OpenCL.memobj);
+    )
     
     return processing;
 }
@@ -124,11 +172,22 @@ void processingCamTosRGBMatrix(processingObject_t * processing, double * camTosR
     processing_update_matrices(processing);
 }
 
+OPENCL_PROCESSING(
+    /* Same as applyProcessingObject, but faster and input/output as OpenCL buffers
+     * Also may not work if ur pc is older than 10 years... */
+    void applyProcessingObjectOpenCL( processingObject_t * processing, 
+                                    int imageX, int imageY,
+                                    cl_mem * inputImage, 
+                                    cl_mem * outputImage )
+    {
+        // clSetKernelArg(processing->ProcessingKernel);
+    }
+)
 
 /* Process a RAW frame with settings from a processing object
  * - image must be debayered and RGB plz + thx! */
 void applyProcessingObject( processingObject_t * processing, 
-                            int imageX, int imageY, 
+                            int imageX, int imageY,
                             uint16_t * __restrict inputImage, 
                             uint16_t * __restrict outputImage )
 {
@@ -648,6 +707,7 @@ void processingSetWhiteLevel(processingObject_t * processing, int whiteLevel)
 /* Decomissions a processing object completely(I hope) */
 void freeProcessingObject(processingObject_t * processing)
 {
+    if (processing->file_dir) free(processing->file_dir);
     free(processing->pre_calc_curve_r);
     free(processing->pre_calc_curve_g);
     free(processing->pre_calc_curve_b);

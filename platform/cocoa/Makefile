@@ -11,7 +11,7 @@ objects = main.o video_mlv.o debayer.o amaze_demosaic.o raw_processing.o \
 # All macOS frameworks for the link
 frameworks = -framework Cocoa -framework AppKit -framework Foundation \
 	   		 -framework CoreFoundation -framework OpenGL -framework CoreMedia \
-			 -framework AVFoundation -framework CoreVideo
+			 -framework AVFoundation -framework CoreVideo -framework OpenCL
 
 # Compilers
 CC = clang # C
@@ -48,7 +48,9 @@ app :
 	cp -i $(appname) $(appname).app/Contents/MacOS/; \
 	cp -i info.plist $(appname).app/Contents/; \
 	mkdir $(appname).app/Contents/Resources/pixelmaps; \
+	cp -i ../../src/mlv/llrawproc/pixelmaps/*.fpm $(appname).app/Contents/Resources/pixelmaps; \
 	cp ../../src/icon/icon.icns $(appname).app/Contents/Resources/MLV\ App.icns; \
+	cp -r ../../src/processing/processing_resources $(appname).app/Contents/Resources; \
 	rm generate_info_plist; \
 	rm info.plist;
 

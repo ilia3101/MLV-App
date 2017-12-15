@@ -1,13 +1,28 @@
 #ifndef _raw_processing_
 #define _raw_processing_
 
-/* NOTE: highlights and shadows must be done at the start */
+/* You can disable OpenCL processing if you don't have OpenCL headers */
+#define COMPILE_OPENCL_PROCESSING
+// #undef COMPILE_OPENCL_PROCESSING
+
+#ifdef COMPILE_OPENCL_PROCESSING
+    #ifdef __APPLE__
+        #include <OpenCL/opencl.h>
+    #else
+        #include <CL/cl.h>
+    #endif
+    #define OPENCL_PROCESSING(CODE ...) CODE
+#else
+    #define OPENCL_PROCESSING(CODE ...)
+#endif
 
 #include "processing_object.h"
 
 /* Intitialises a 'processing object' which is a structure 
- * that makes it easy to contol all the processing */
-processingObject_t * initProcessingObject();
+ * that makes it easy to contol all the processing,
+ * char * fileDir specifies directory where supporting files are stored...
+ * currently it is only needed for OpenCL kernel sources */
+processingObject_t * initProcessingObject(char * fileDir);
 /* Opposite of the first fucntion */
 void freeProcessingObject(processingObject_t * processing);
 
@@ -36,7 +51,14 @@ void applyProcessingObject( processingObject_t * processing,
                             int imageX, int imageY,
                             uint16_t * __restrict inputImage,
                             uint16_t * __restrict outputImage );
-
+OPENCL_PROCESSING (
+    /* Same as applyProcessingObject, but faster and input/output as OpenCL buffers
+    * Also may not work if ur pc is older than 10 years... */
+    void applyProcessingObjectOpenCL( processingObject_t * processing, 
+                                    int imageX, int imageY,
+                                    cl_mem * inputImage, /* Float obviously. 0-1 */
+                                    cl_mem * outputImage );
+)
 
 
 /* Set contrast(S-curve really) - important: precalculates values, 
