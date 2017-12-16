@@ -35,7 +35,6 @@ void initAppWithGod()
 /* Also will be called when switching between clips in session */
 void syncGUI()
 {
-    /* I really need a slider struct/object ugh :[ */
     int dd = App->dontDraw;
     App->dontDraw = 0;
     [App->exposureSlider exposureSliderMethod];
@@ -61,6 +60,7 @@ void syncGUI()
     [App->chromaSmoothOption chromaSmoothMethod];
     [App->patternNoiseOption patternNoiseMethod];
     [App->chromaSeparationSelector toggleChromaSeparation];
+    [App->imageProfile toggleImageProfile];
     App->dontDraw = dd;
 }
 

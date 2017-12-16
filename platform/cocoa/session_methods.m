@@ -141,6 +141,7 @@ void setAppSlidersFromClip(clipInfo_t * clip)
     App->chromaSmoothOption.selectedSegment = clip->settings.chromaSmoothOption;
     App->patternNoiseOption.selectedSegment = clip->settings.patternNoiseOption;
     [App->session.clipTable reloadData];
+    syncGUI();
 }
 
 /* Called from -(void)openSessionDialog - currently only loads first clip */
@@ -157,7 +158,26 @@ void appWriteSession(char * sessionPath)
     for (int i = 0; i < App->session.clipCount; i++)
     {
         clipInfo_t * clip = App->session.clipInfo + i;
-        fprintf(session_file, TAB "<clip path=\"%s\">\n", clip->path);
+
+        /* Generate realative path */
+        char * relativePath = alloca(4096);
+        relativePath[0] = 0;
+        int i = 0; /* Number of identical charachters */
+        while (clip->path[i] == sessionPath[i]) i++;
+        int slashesMASXML = 0, slashesMLV = 0; /* Count slashes after end of identical-ness on both paths */
+        for (int j = i; j < strlen(clip->path); j++) if (clip->path[j] == '/') slashesMLV++;
+        for (int j = i; j < strlen(sessionPath); j++) if (sessionPath[j] == '/') slashesMASXML++;
+        NSLog(@"Slashes MASXML: \"%d\"", slashesMASXML);
+        NSLog(@"MASXML Path: \"%s\"", sessionPath + i);
+        /* Go back number of required steps */
+        if (slashesMASXML)
+            for (int l = 0; l < slashesMASXML; l++)
+                sprintf(relativePath + strlen(relativePath), "../");
+        sprintf(relativePath + strlen(relativePath), "%s", clip->path + i);
+
+        NSLog(@"relative path: \"%s\"", relativePath);
+
+        fprintf(session_file, TAB "<clip path=\"%s\" relative=\"%s\">\n", clip->path, relativePath);
 
         #define MASXML_TYPE int
         #define MASXML_TYPE_ESC "%i"
