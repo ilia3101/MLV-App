@@ -471,7 +471,19 @@ static int save_mapp(mlvObject_t * video)
 
     size_t video_index_size = video->frames * sizeof(frame_index_t);
     size_t audio_index_size = video->audios * sizeof(frame_index_t);
-    size_t mapp_buf_size = sizeof(mapp_header_t) + video_index_size + audio_index_size + 596;
+    size_t mapp_buf_size = sizeof(mapp_header_t) +
+                           video_index_size +
+                           audio_index_size +
+                           sizeof(mlv_file_hdr_t) +
+                           sizeof(mlv_rawi_hdr_t) +
+                           sizeof(mlv_rawc_hdr_t) +
+                           sizeof(mlv_idnt_hdr_t) +
+                           sizeof(mlv_expo_hdr_t) +
+                           sizeof(mlv_lens_hdr_t) +
+                           sizeof(mlv_rtci_hdr_t) +
+                           sizeof(mlv_wbal_hdr_t) +
+                           sizeof(mlv_wavi_hdr_t) +
+                           sizeof(mlv_diso_hdr_t);
 
     uint8_t * mapp_buf = malloc(mapp_buf_size);
     if(!mapp_buf)
@@ -504,7 +516,8 @@ static int save_mapp(mlvObject_t * video)
     memcpy(ptr += sizeof(mlv_expo_hdr_t), (uint8_t*)&(video->LENS), sizeof(mlv_lens_hdr_t));
     memcpy(ptr += sizeof(mlv_lens_hdr_t), (uint8_t*)&(video->RTCI), sizeof(mlv_rtci_hdr_t));
     memcpy(ptr += sizeof(mlv_rtci_hdr_t), (uint8_t*)&(video->WBAL), sizeof(mlv_wbal_hdr_t));
-    memcpy(ptr += sizeof(mlv_wbal_hdr_t), (uint8_t*)&(video->DISO), sizeof(mlv_diso_hdr_t));
+    memcpy(ptr += sizeof(mlv_wbal_hdr_t), (uint8_t*)&(video->WAVI), sizeof(mlv_wavi_hdr_t));
+    memcpy(ptr += sizeof(mlv_wavi_hdr_t), (uint8_t*)&(video->DISO), sizeof(mlv_diso_hdr_t));
 
     /* open .MAPP file for writing */
     FILE* mappf = fopen(mapp_filename, "wb");
@@ -599,8 +612,9 @@ static int load_mapp(mlvObject_t * video)
     ret += fread(&(video->LENS), sizeof(mlv_lens_hdr_t), 1, mappf);
     ret += fread(&(video->RTCI), sizeof(mlv_rtci_hdr_t), 1, mappf);
     ret += fread(&(video->WBAL), sizeof(mlv_wbal_hdr_t), 1, mappf);
+    ret += fread(&(video->WAVI), sizeof(mlv_wavi_hdr_t), 1, mappf);
     ret += fread(&(video->DISO), sizeof(mlv_diso_hdr_t), 1, mappf);
-    if(ret != 9)
+    if(ret != 10)
     {
         DEBUG( printf("Could not read: %s\n", video->path); )
         goto mapp_error;
