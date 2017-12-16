@@ -32,6 +32,7 @@ Find the latest releases [here](https://ilia3101.github.io/MLV-App/). Download, 
 - Clip batch export
 - Zoom: fit to screen, 100% and free zoom, scroll through picture
 - Zebras
+- Create and load MAPP files (this files include MLV headers, for fast import after 1st load, especially on slower HDD)
 
 ## Compiling :collision:
 #### Cocoa App
