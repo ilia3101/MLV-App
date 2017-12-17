@@ -236,7 +236,7 @@ int NSApplicationMain(int argc, const char * argv[])
     [[App->window contentView] addSubview: App->exportFormatLabel];
 
     CREATE_BUTTON_LEFT_TOP( App->exportCurrentClipButton, 2, exportCurrentClip, -1, @"Export Current Clip" );
-    CREATE_BUTTON_LEFT_TOP( App->exportCurrentClipButton, 3, exportCurrentClip, 10, @"Export All Clips" );
+    CREATE_BUTTON_LEFT_TOP( App->exportCurrentClipButton, 3, exportAllClips, 10, @"Export All Clips" );
 
     IMPORTANT_CODE("",5);
 

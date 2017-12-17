@@ -25,8 +25,9 @@ void setAppCurrentClipNoClip();
 -(void)toggleLLRawProc;
 /* Opens a dialog to select MLV file + sets MLV file to that */
 -(void)openMlvDialog;
-/* Opens a dialog to select export location, then exports a mov clip with prores! */
+/* Opens a dialog to select export location, then exports a clip/clips! */
 -(void)exportCurrentClip;
+-(void)exportAllClips;
 /* Save Session */
 -(void)saveSessionDialog;
 /* Open a MASXML and the clips from it */

@@ -17,7 +17,7 @@ typedef struct
     CFDataRef colour_profile_data;
     NSDictionary * colour_attachment; /* To attach to the CVPixelBuffer or whatever */
 
-    uint16_t * data; /* Image data is put here b4 encoding (3x16bit RGB only) */
+    uint16_t * encode_buffer; /* copied from data in to a ARGB64 arrangement */
 
     double write_progress; /* Check to see progress in percent */
     BOOL keep_writing; /* Flag to stop writing if needed */

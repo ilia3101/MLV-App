@@ -32,6 +32,51 @@ void initAppWithGod()
     syncGUI();
 }
 
+/* Exports clip currently in GUI */
+void exportCurrentClip(char * folderPath)
+{
+    NSLog(@"Exporting %s...", App->MLVClipName);
+    char exportPath[2048];
+    snprintf(exportPath, 2048, "%s/%.8s.mov", folderPath, App->MLVClipName);
+
+    int useAMaZE = (doesMlvAlwaysUseAmaze(App->videoMLV));
+    setMlvAlwaysUseAmaze(App->videoMLV);
+
+    int codec;
+    switch ([App->exportFormat indexOfSelectedItem])
+    {
+        case 0:
+            codec = AVF_CODEC_PRORES_422; break;
+        case 1:
+            codec = AVF_CODEC_PRORES_4444; break;
+        case 2:
+            codec = AVF_CODEC_H264; break;
+        case 3:
+            codec = AVF_CODEC_HEVC; break;
+    }
+
+    AVEncoder_t * encoder = initAVEncoder( getMlvWidth(App->videoMLV),
+                                           getMlvHeight(App->videoMLV),
+                                           codec,
+                                           AVF_COLOURSPACE_SRGB,
+                                           getMlvFramerate(App->videoMLV) );
+
+    beginWritingVideoFile(encoder, exportPath);
+
+    for (uint64_t f = 0; f < getMlvFrames(App->videoMLV); ++f)
+    {
+        getMlvProcessedFrame16(App->videoMLV, f, App->rawImage);
+        addFrameToVideoFile(encoder, App->rawImage);
+    }
+
+    endWritingVideoFile(encoder);
+    freeAVEncoder(encoder);
+
+    NSLog(@"Exported %s...", App->MLVClipName);
+
+    if (!useAMaZE) setMlvDontAlwaysUseAmaze(App->videoMLV);
+}
+
 /* Also will be called when switching between clips in session */
 void syncGUI()
 {
@@ -327,33 +372,52 @@ int setAppNewMlvClip(char * mlvPath)
             {
                 for (NSURL * pathURL in [panel URLs])
                 {
-                    char * pathString = (char *)[pathURL.path UTF8String];
-                    char exportPath[2048];
+                    char * directoryPath = (char *)[pathURL.path UTF8String];
 
-                    snprintf(exportPath, 2048, "%s/%.8s.mov", pathString, App->MLVClipName);
+                    exportCurrentClip(directoryPath);
 
-                    int codec;
-                    switch ([App->exportFormat indexOfSelectedItem]) {
-                        case 0:
-                            codec = AVF_CODEC_PRORES_422; break;
-                        case 1:
-                            codec = AVF_CODEC_PRORES_4444; break;
-                        case 2:
-                            codec = AVF_CODEC_H264; break;
-                        case 3:
-                            codec = AVF_CODEC_HEVC; break;
+                    syncGUI();
+
+                    /* Give notification to user */
+                    NSUserNotification * notification = [[[NSUserNotification alloc] init] autorelease];
+                    notification.title = @APP_NAME;
+                    notification.informativeText = [NSString stringWithFormat:@"Finished exporting."];
+                    notification.soundName = NSUserNotificationDefaultSoundName;
+                    [[NSUserNotificationCenter defaultUserNotificationCenter] deliverNotification:notification];
+                }
+            }
+        } ];
+    }
+}
+
+/* Exports current clip */
+-(void)exportAllClips
+{
+    if (isMlvActive(App->videoMLV))
+    {    
+        /* Create open panel */
+        NSOpenPanel * panel = [NSOpenPanel openPanel];
+
+        [panel setPrompt:[NSString stringWithFormat:@"Export Here"]];
+
+        [panel setCanChooseFiles: NO];
+        [panel setCanChooseDirectories: YES];
+        [panel setAllowsMultipleSelection: NO];
+        [panel setCanCreateDirectories: YES];
+
+        [panel beginSheetModalForWindow:App->window completionHandler: ^(NSInteger result) 
+        {
+            if (result == NSFileHandlingPanelOKButton)
+            {
+                for (NSURL * pathURL in [panel URLs])
+                {
+                    char * directoryPath = (char *)[pathURL.path UTF8String];
+
+                    for (int c = 0; c < App->session.clipCount; ++c)
+                    {
+                        setAppGUIFromClip(App->session.clipInfo + c);
+                        exportCurrentClip(directoryPath);
                     }
-                    AVEncoder_t * encoder = initAVEncoder( getMlvWidth(App->videoMLV),
-                                                           getMlvHeight(App->videoMLV),
-                                                           codec,
-                                                           AVF_COLOURSPACE_SRGB,
-                                                           getMlvFramerate(App->videoMLV) );
-
-                    setMlvAlwaysUseAmaze(App->videoMLV);
-                    beginWritingVideoFile(encoder, exportPath);
-                    setMlvDontAlwaysUseAmaze(App->videoMLV);
-                    endWritingVideoFile(encoder);
-                    freeAVEncoder(encoder);
 
                     syncGUI();
 
@@ -468,7 +532,7 @@ int setAppNewMlvClip(char * mlvPath)
 
 -(void)tintSliderMethod
 {
-    /* Slider has to be in range -10 to 10, as that sounds about right */
+    /* Slider has to be in range -10 to 10 */
     double tintValue = ([self doubleValue] - 0.5) * 20;
 
     /* Set processing object white balance */
