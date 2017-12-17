@@ -494,6 +494,14 @@ void processingSetSharpening(processingObject_t * processing, double sharpen)
 void processingSetWhiteBalance(processingObject_t * processing, double WBKelvin, double WBTint)
 {
     processing->kelvin = WBKelvin;
+
+    /* Non-linear tint makes control finer in the middle */
+    int is_negative = (WBTint < 0.0);
+    if (is_negative) WBTint = -WBTint;
+    WBTint /= 10.0;
+    WBTint = pow(WBTint, 1.75) * 10.0;
+    if (is_negative) WBTint = -WBTint;
+    
     processing->wb_tint = WBTint;
     
     /* Kalkulate channel (yes in cone space... soon) multipliers */

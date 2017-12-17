@@ -113,7 +113,7 @@ void processingSetExposureStops(processingObject_t * processing, double exposure
 
 
 
-/* Set white balance by kelvin and/or tint value; Kelvin range: 2500-10000, tint -inf to +inf */
+/* Set white balance by kelvin and/or tint value; Kelvin range: 2500-10000, tint -10 to +10 */
 void processingSetWhiteBalance(processingObject_t * processing, double WBKelvin, double WBTint);
 void processingSetWhiteBalanceKelvin(processingObject_t * processing, double WBKelvin);
 void processingSetWhiteBalanceTint(processingObject_t * processing, double WBTint);
