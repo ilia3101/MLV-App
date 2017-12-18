@@ -554,7 +554,7 @@ int MainWindow::openMlv( QString fileName )
 
     if( doesMlvHaveAudio( m_pMlvObject ) )
     {
-        m_pInfoDialog->ui->tableWidget->item( 12, 1 )->setText( QString( "%1 channel(s), %2 kHz" )
+        m_pInfoDialog->ui->tableWidget->item( 12, 1 )->setText( QString( "%1 channel(s),  %2 kHz" )
                                                                 .arg( getMlvAudioChannels( m_pMlvObject ) )
                                                                 .arg( getMlvSampleRate( m_pMlvObject ) ) );
     }
