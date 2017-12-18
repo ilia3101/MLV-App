@@ -124,7 +124,7 @@
     <addaction name="separator"/>
     <addaction name="actionOpen"/>
     <addaction name="actionClip_Information"/>
-    <addaction name="actionUseMappFiles"/>
+    <addaction name="actionCreateMappFiles"/>
     <addaction name="actionExport"/>
     <addaction name="actionExportActualFrame"/>
     <addaction name="separator"/>
@@ -368,8 +368,8 @@ QGroupBox::indicator:checked {
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>195</width>
-            <height>1653</height>
+            <width>205</width>
+            <height>1598</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayoutScrollArea">
@@ -4118,7 +4118,7 @@ QGroupBox::indicator:checked {
     <string>Bilinear</string>
    </property>
   </action>
-  <action name="actionUseMappFiles">
+  <action name="actionCreateMappFiles">
    <property name="checkable">
     <bool>true</bool>
    </property>
@@ -4127,7 +4127,7 @@ QGroupBox::indicator:checked {
      <normaloff>:/RetinaIMG/RetinaIMG/map-icon.png</normaloff>:/RetinaIMG/RetinaIMG/map-icon.png</iconset>
    </property>
    <property name="text">
-    <string>Use MAPP Files</string>
+    <string>Create MAPP Files</string>
    </property>
   </action>
  </widget>

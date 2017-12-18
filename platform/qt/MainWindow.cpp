@@ -456,7 +456,7 @@ int MainWindow::openMlv( QString fileName )
 {
     //Select open mode
     int mlvOpenMode;
-    if( ui->actionUseMappFiles->isChecked() ) mlvOpenMode = MLV_OPEN_MAPP;
+    if( ui->actionCreateMappFiles->isChecked() ) mlvOpenMode = MLV_OPEN_MAPP;
     else mlvOpenMode = MLV_OPEN_FULL;
 
     int mlv_err = MLV_ERR_NONE;
@@ -870,7 +870,7 @@ void MainWindow::readSettings()
     ui->groupBoxDetails->setChecked( set.value( "expandedDetails", false ).toBool() );
     ui->groupBoxLinearGradient->setChecked( set.value( "expandedLinGradient", false ).toBool() );
     ui->groupBoxAspectRatio->setChecked( set.value( "expandAspectRatio", false ).toBool() );
-    ui->actionUseMappFiles->setChecked( set.value( "useMappFiles", false ).toBool() );
+    ui->actionCreateMappFiles->setChecked( set.value( "createMappFiles", false ).toBool() );
 }
 
 //Save some settings to registry
@@ -899,7 +899,7 @@ void MainWindow::writeSettings()
     set.setValue( "expandedDetails", ui->groupBoxDetails->isChecked() );
     set.setValue( "expandedLinGradient", ui->groupBoxLinearGradient->isChecked() );
     set.setValue( "expandAspectRatio", ui->groupBoxAspectRatio->isChecked() );
-    set.setValue( "useMappFiles", ui->actionUseMappFiles->isChecked() );
+    set.setValue( "createMappFiles", ui->actionCreateMappFiles->isChecked() );
 }
 
 //Start Export via Pipe
