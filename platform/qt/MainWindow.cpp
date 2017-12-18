@@ -1340,11 +1340,11 @@ void MainWindow::startExportAVFoundation(QString fileName)
     imgBuffer = ( uint16_t* )malloc( frameSize * sizeof( uint16_t ) );
 
     //Encoder frames
-    for (uint64_t frame = 0; frame < getMlvFrames( m_pMlvObject ); frame++)
+    for( uint64_t frame = ( m_exportQueue.first()->cutIn() - 1 ); frame < m_exportQueue.first()->cutOut(); frame++ )
     {
         //Get&Encode
         getMlvProcessedFrame16( m_pMlvObject, frame, imgBuffer);
-        addFrameToVideoFile(encoder, imgBuffer);
+        addFrameToVideoFile( encoder, imgBuffer );
 
         //Set Status
         m_pStatusDialog->ui->progressBar->setValue( frame - ( m_exportQueue.first()->cutIn() - 1 ) + 1 );
