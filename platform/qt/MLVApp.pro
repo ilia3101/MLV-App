@@ -92,8 +92,9 @@ SOURCES += \
     ../../src/dng/dng.c \
     GraphicsPolygonMoveItem.cpp \
     ../../src/mlv/camid/camera_id.c \
-    GradientElement.cpp \
-    ../cocoa/avf_lib/avf_lib.m
+    GradientElement.cpp
+
+macx: SOURCES += ../cocoa/avf_lib/avf_lib.m
 
 HEADERS += \
         MainWindow.h \
@@ -143,7 +144,9 @@ HEADERS += \
     ../../src/dng/dng_tag_values.h \
     GraphicsPolygonMoveItem.h \
     ../../src/mlv/camid/camera_id.h \
-    GradientElement.h \
+    GradientElement.h
+
+macx: HEADERS += \
     ../cocoa/avf_lib/avencoder.h \
     ../cocoa/avf_lib/avf_lib.h \
     AvfLibWrapper.h
