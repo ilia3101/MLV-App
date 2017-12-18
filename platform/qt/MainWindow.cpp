@@ -21,6 +21,10 @@
 #include <unistd.h>
 #include <math.h>
 
+#ifdef Q_OS_MACX
+#include "AvfLibWrapper.h"
+#endif
+
 #include "SystemMemory.h"
 #include "ExportSettingsDialog.h"
 #include "EditSliderValueDialog.h"
@@ -1275,6 +1279,98 @@ void MainWindow::startExportCdng(QString fileName)
     //Emit Ready-Signal
     emit exportReady();
 }
+
+//Export via AVFoundation
+#ifdef Q_OS_MACX
+void MainWindow::startExportAVFoundation(QString fileName)
+{
+    //Disable GUI drawing
+    m_dontDraw = true;
+
+    //chose if we want to get amaze frames for exporting, or bilinear
+    if( m_exportDebayerMode == 1 )
+    {
+        setMlvAlwaysUseAmaze( m_pMlvObject );
+    }
+    else
+    {
+        setMlvDontAlwaysUseAmaze( m_pMlvObject );
+    }
+    llrpResetFpmStatus(m_pMlvObject);
+    llrpResetBpmStatus(m_pMlvObject);
+    llrpComputeStripesOn(m_pMlvObject);
+    m_pMlvObject->current_cached_frame_active = 0;
+    //enable low level raw fixes (if wanted)
+    if( ui->checkBoxRawFixEnable->isChecked() ) m_pMlvObject->llrawproc->fix_raw = 1;
+
+    //StatusDialog
+    m_pStatusDialog->ui->progressBar->setMaximum( m_exportQueue.first()->cutOut() - m_exportQueue.first()->cutIn() + 1 );
+    m_pStatusDialog->ui->progressBar->setValue( 0 );
+    m_pStatusDialog->show();
+    //Frames in the export queue?!
+    int totalFrames = 0;
+    for( int i = 0; i < m_exportQueue.count(); i++ )
+    {
+        totalFrames += m_exportQueue.at(i)->cutOut() - m_exportQueue.at(i)->cutIn() + 1;
+    }
+
+    //If file exists, delete it!
+    QFile *file = new QFile( fileName );
+    if( file->exists() ) file->remove();
+    delete file;
+
+    //Codec?
+    int avfCodec;
+    if( m_codecProfile == CODEC_PRORES422ST ) avfCodec = AVF_CODEC_PRORES_422;
+    else if( m_codecProfile == CODEC_H264 ) avfCodec = AVF_CODEC_H264;
+    else avfCodec = AVF_CODEC_PRORES_4444;
+
+    //Init Encoder
+    AVEncoder_t * encoder = initAVEncoder( getMlvWidth( m_pMlvObject ),
+                                           getMlvHeight( m_pMlvObject ),
+                                           avfCodec,
+                                           AVF_COLOURSPACE_SRGB,
+                                           getFramerate() );
+
+    beginWritingVideoFile(encoder, fileName.toLatin1().data());
+
+    //Build buffer
+    uint32_t frameSize = getMlvWidth( m_pMlvObject ) * getMlvHeight( m_pMlvObject ) * 3;
+    uint16_t * imgBuffer;
+    imgBuffer = ( uint16_t* )malloc( frameSize * sizeof( uint16_t ) );
+
+    //Encoder frames
+    for (uint64_t frame = 0; frame < getMlvFrames( m_pMlvObject ); frame++)
+    {
+        //Get&Encode
+        getMlvProcessedFrame16( m_pMlvObject, frame, imgBuffer);
+        addFrameToVideoFile(encoder, imgBuffer);
+
+        //Set Status
+        m_pStatusDialog->ui->progressBar->setValue( frame - ( m_exportQueue.first()->cutIn() - 1 ) + 1 );
+        m_pStatusDialog->ui->progressBar->repaint();
+        m_pStatusDialog->drawTimeFromToDoFrames( totalFrames - frame + ( m_exportQueue.first()->cutIn() - 1 ) - 1 );
+        qApp->processEvents();
+
+        //Abort pressed? -> End the loop
+        if( m_exportAbortPressed ) break;
+    }
+
+    //Clean up
+    free( imgBuffer );
+    endWritingVideoFile(encoder);
+    freeAVEncoder(encoder);
+
+    //If we don't like amaze we switch it off again
+    if( !ui->actionAlwaysUseAMaZE->isChecked() ) setMlvDontAlwaysUseAmaze( m_pMlvObject );
+
+    //Enable GUI drawing
+    m_dontDraw = false;
+
+    //Emit Ready-Signal
+    emit exportReady();
+}
+#endif
 
 //Adds the fileName to the Session List
 void MainWindow::addFileToSession(QString fileName)
@@ -3416,6 +3512,15 @@ void MainWindow::exportHandler( void )
             //raw output
             startExportCdng( m_exportQueue.first()->exportFileName() );
         }
+#ifdef Q_OS_MACX
+        else if( ( m_codecProfile == CODEC_PRORES422ST && m_codecOption == CODEC_PRORES_AVFOUNDATION )
+              || ( m_codecProfile == CODEC_PRORES4444 && m_codecOption == CODEC_PRORES_AVFOUNDATION )
+              || ( m_codecProfile == CODEC_H264 && m_codecOption == CODEC_H264_AVFOUNDATION ) )
+        {
+            //AVFoundation
+            startExportAVFoundation( m_exportQueue.first()->exportFileName() );
+        }
+#endif
         else
         {
             //rendered output

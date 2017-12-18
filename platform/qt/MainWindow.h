@@ -230,6 +230,7 @@ private:
     void writeSettings( void );
     void startExportPipe( QString fileName );
     void startExportCdng( QString fileName );
+    void startExportAVFoundation( QString fileName );
     void addFileToSession( QString fileName );
     void openSession(QString fileNameSession );
     void saveSession( QString fileName );

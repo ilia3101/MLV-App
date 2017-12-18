@@ -8,6 +8,8 @@
 #include "ExportSettingsDialog.h"
 #include "ui_ExportSettingsDialog.h"
 #include <QMessageBox>
+#include <QStandardItemModel>
+#include <QStandardItem>
 
 //Constructor
 ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, uint8_t currentCodecProfile, uint8_t currentCodecOption, uint8_t debayerMode, bool resize, uint16_t resizeWidth, uint16_t resizeHeight, bool fpsOverride, double fps, bool exportAudio) :
@@ -28,6 +30,12 @@ ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, uint8_t currentCodec
     on_checkBoxFpsOverride_clicked( fpsOverride );
     ui->doubleSpinBoxFps->setValue( fps );
     ui->checkBoxExportAudio->setChecked( exportAudio );
+
+    //Disable audio & resize for AVFoundation
+    if( ui->comboBoxOption->currentText() == QString( "Apple AVFoundation" ) )
+    {
+        on_comboBoxOption_currentIndexChanged( QString( "Apple AVFoundation" ) );
+    }
 
     adjustSize();
 }
@@ -105,11 +113,23 @@ void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
 
     ui->comboBoxOption->clear();
 
-    if( index <= CODEC_PRORES422HQ )
+    if( index <= CODEC_PRORES4444 )
     {
         ui->comboBoxOption->setEnabled( true );
-        ui->comboBoxOption->addItem( QString( "Kostya" ) );
-        ui->comboBoxOption->addItem( QString( "Anatolyi (faster)" ) );
+        ui->comboBoxOption->addItem( QString( "ffmpeg Kostya" ) );
+        ui->comboBoxOption->addItem( QString( "ffmpeg Anatolyi" ) );
+#ifdef Q_OS_MACX
+        if( index == CODEC_PRORES422ST || index == CODEC_PRORES4444 )
+        {
+            ui->comboBoxOption->addItem( QString( "Apple AVFoundation" ) );
+        }
+#endif
+        if( index == CODEC_PRORES4444 )
+        {
+            QStandardItemModel* model = qobject_cast<QStandardItemModel*>(ui->comboBoxOption->model());
+            QStandardItem* item = model->item(1);
+            item->setFlags(item->flags() & ~Qt::ItemIsSelectable);
+        }
     }
     else if( index == CODEC_CDNG
           || index == CODEC_CDNG_LOSSLESS
@@ -124,14 +144,19 @@ void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
           || index == CODEC_H265 )
     {
         ui->comboBoxOption->setEnabled( true );
-        ui->comboBoxOption->addItem( QString( "Movie (*.mov)" ) );
-        ui->comboBoxOption->addItem( QString( "MPEG-4 (*.mp4)" ) );
-        ui->comboBoxOption->addItem( QString( "Matroska (*.mkv)" ) );
+        ui->comboBoxOption->addItem( QString( "ffmpeg Movie (*.mov)" ) );
+        ui->comboBoxOption->addItem( QString( "ffmpeg MPEG-4 (*.mp4)" ) );
+        ui->comboBoxOption->addItem( QString( "ffmpeg Matroska (*.mkv)" ) );
+#ifdef Q_OS_MACX
+        if( index == CODEC_H264 )
+        {
+            ui->comboBoxOption->addItem( QString( "Apple AVFoundation" ) );
+        }
+#endif
     }
     else
     {
         ui->comboBoxOption->setEnabled( false );
-        if( index == CODEC_PRORES4444 ) ui->comboBoxOption->addItem( QString( "Kostya" ) );
     }
 
     //If CDNG, disable resize feature
@@ -158,4 +183,22 @@ void ExportSettingsDialog::on_checkBoxResize_toggled(bool checked)
 {
     ui->spinBoxWidth->setEnabled( checked );
     ui->spinBoxHeight->setEnabled( checked );
+}
+
+//Disable audio & resize for AVFoundation
+void ExportSettingsDialog::on_comboBoxOption_currentIndexChanged(const QString &arg1)
+{
+    if( arg1 == QString( "Apple AVFoundation" ) )
+    {
+        ui->checkBoxExportAudio->setChecked( false );
+        ui->checkBoxExportAudio->setEnabled( false );
+
+        ui->checkBoxResize->setChecked( false );
+        ui->checkBoxResize->setEnabled( false );
+    }
+    else
+    {
+        ui->checkBoxExportAudio->setEnabled( true );
+        ui->checkBoxResize->setEnabled( true );
+    }
 }

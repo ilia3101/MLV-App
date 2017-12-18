@@ -32,6 +32,17 @@ DEFINES += STDOUT_SILENT
 ##############
 # Compiler flags
 ##############
+# OSX
+macx: QMAKE_CXXFLAGS_DEBUG += -ObjC++
+macx: QMAKE_CXXFLAGS_RELEASE += -ObjC++
+macx: LIBS += -framework CoreVideo \
+              -framework AVFoundation \
+              -framework Cocoa \
+              -framework Foundation \
+              -framework CoreFoundation \
+              -framework CoreMedia
+
+
 # Windows
 win32: QMAKE_CFLAGS_DEBUG += -O3 -msse4.1 -mssse3 -msse3 -msse2 -msse -D_FILE_OFFSET_BITS=64 -std=c99
 win32: QMAKE_CFLAGS_RELEASE += -O3 -msse4.1 -mssse3 -msse3 -msse2 -msse -D_FILE_OFFSET_BITS=64 -std=c99
@@ -81,7 +92,8 @@ SOURCES += \
     ../../src/dng/dng.c \
     GraphicsPolygonMoveItem.cpp \
     ../../src/mlv/camid/camera_id.c \
-    GradientElement.cpp
+    GradientElement.cpp \
+    ../cocoa/avf_lib/avf_lib.m
 
 HEADERS += \
         MainWindow.h \
@@ -131,7 +143,10 @@ HEADERS += \
     ../../src/dng/dng_tag_values.h \
     GraphicsPolygonMoveItem.h \
     ../../src/mlv/camid/camera_id.h \
-    GradientElement.h
+    GradientElement.h \
+    ../cocoa/avf_lib/avencoder.h \
+    ../cocoa/avf_lib/avf_lib.h \
+    AvfLibWrapper.h
 
 FORMS += \
         MainWindow.ui \
