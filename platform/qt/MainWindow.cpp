@@ -530,7 +530,7 @@ int MainWindow::openMlv( QString fileName )
 
     //Calculate shutter flavors :)
     float shutterSpeed = 1000000.0f / (float)(getMlvShutter( m_pMlvObject ));
-    float shutterAnge = getMlvFramerate( m_pMlvObject ) * 360.0f / shutterSpeed;
+    float shutterAngle = getMlvFramerate( m_pMlvObject ) * 360.0f / shutterSpeed;
 
     //Set Clip Info to Dialog
     m_pInfoDialog->ui->tableWidget->item( 0, 1 )->setText( QString( "%1" ).arg( (char*)getMlvCamera( m_pMlvObject ) ) );
@@ -540,7 +540,7 @@ int MainWindow::openMlv( QString fileName )
     m_pInfoDialog->ui->tableWidget->item( 4, 1 )->setText( QString( "%1" ).arg( (int)getMlvFrames( m_pMlvObject ) ) );
     m_pInfoDialog->ui->tableWidget->item( 5, 1 )->setText( QString( "%1 fps" ).arg( getMlvFramerate( m_pMlvObject ) ) );
     m_pInfoDialog->ui->tableWidget->item( 6, 1 )->setText( QString( "%1 mm" ).arg( getMlvFocalLength( m_pMlvObject ) ) );
-    m_pInfoDialog->ui->tableWidget->item( 7, 1 )->setText( QString( "1/%1,  %2 degree  (%3 µs)" ).arg( (uint16_t)(shutterSpeed + 0.5f) ).arg( (uint16_t)(shutterAnge + 0.5f) ).arg( getMlvShutter( m_pMlvObject )) );
+    m_pInfoDialog->ui->tableWidget->item( 7, 1 )->setText( QString( "1/%1,  %2 degree  (%3 µs)" ).arg( (uint16_t)(shutterSpeed + 0.5f) ).arg( (uint16_t)(shutterAngle + 0.5f) ).arg( getMlvShutter( m_pMlvObject )) );
     m_pInfoDialog->ui->tableWidget->item( 8, 1 )->setText( QString( "f/%1" ).arg( getMlvAperture( m_pMlvObject ) / 100.0, 0, 'f', 1 ) );
     m_pInfoDialog->ui->tableWidget->item( 9, 1 )->setText( QString( "%1" ).arg( (int)getMlvIso( m_pMlvObject ) ) );
     m_pInfoDialog->ui->tableWidget->item( 10, 1 )->setText( QString( "%1 bits,  %2" ).arg( getMlvBitdepth( m_pMlvObject ) ).arg( getMlvCompression( m_pMlvObject ) ) );
