@@ -122,9 +122,10 @@
     <addaction name="actionOpenSession"/>
     <addaction name="actionSaveSession"/>
     <addaction name="separator"/>
+    <addaction name="actionCreateMappFiles"/>
+    <addaction name="separator"/>
     <addaction name="actionOpen"/>
     <addaction name="actionClip_Information"/>
-    <addaction name="actionCreateMappFiles"/>
     <addaction name="actionExport"/>
     <addaction name="actionExportActualFrame"/>
     <addaction name="separator"/>
@@ -368,8 +369,8 @@ QGroupBox::indicator:checked {
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>205</width>
-            <height>1598</height>
+            <width>195</width>
+            <height>1653</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayoutScrollArea">
@@ -3676,7 +3677,7 @@ QGroupBox::indicator:checked {
      <normaloff>:/RetinaIMG/RetinaIMG/Export-To-File-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Export-To-File-icon.png</iconset>
    </property>
    <property name="text">
-    <string>Export selected clips</string>
+    <string>Export Selected Clips</string>
    </property>
    <property name="toolTip">
     <string>Export selected clips</string>
@@ -3697,7 +3698,7 @@ QGroupBox::indicator:checked {
     <string>Show clip information...</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+Shift+I</string>
+    <string>I</string>
    </property>
   </action>
   <action name="actionPlay">
@@ -4039,7 +4040,7 @@ QGroupBox::indicator:checked {
      <normaloff>:/RetinaIMG/RetinaIMG/Export-Image-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Export-Image-icon.png</iconset>
    </property>
    <property name="text">
-    <string>Export actual frame</string>
+    <string>Export Actual Frame</string>
    </property>
    <property name="toolTip">
     <string>Export actual frame as 16 bit PNG</string>
