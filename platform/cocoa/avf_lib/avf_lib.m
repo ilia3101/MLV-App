@@ -136,6 +136,9 @@ void addFrameToVideoFile(AVEncoder_t * encoder, uint16_t * frame)
         /* Blue */
         new[4] = original[5];
         new[5] = original[4];
+        /* Alpha */
+        new[6] = 255;
+        new[7] = 255;
     }
 
     /* Now arrange it as argb64 */
