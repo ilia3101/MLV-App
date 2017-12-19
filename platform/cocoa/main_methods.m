@@ -42,6 +42,35 @@ void exportCurrentClip(char * folderPath)
     int useAMaZE = (doesMlvAlwaysUseAmaze(App->videoMLV));
     setMlvAlwaysUseAmaze(App->videoMLV);
 
+    double frameRate;
+    switch ([App->exportFramerate indexOfSelectedItem])
+    {
+        case 0:
+            frameRate = getMlvFramerate(App->videoMLV);
+            if (frameRate < 26.0) goto fps23_976;
+            else if (frameRate < 40.0) goto fps29_70;
+            else if (frameRate < 55.0) goto fps50;
+            else goto fps60;
+        case 1:
+            fps23_976:
+            frameRate = 24000.0/1001.0; break;
+        case 2:
+            frameRate = 24.0; break;
+        case 3:
+            fps29_70:
+            frameRate = 30000.0/1001.0; break;
+        case 4:
+            frameRate = 30.0; break;
+        case 5:
+            fps50:
+            frameRate = 50.0; break;
+        case 6:
+            fps60:
+            frameRate = 60.0; break;
+        case 7:
+            frameRate = getMlvFramerate(App->videoMLV); break;
+    }
+
     int codec;
     switch ([App->exportFormat indexOfSelectedItem])
     {
@@ -59,7 +88,7 @@ void exportCurrentClip(char * folderPath)
                                            getMlvHeight(App->videoMLV),
                                            codec,
                                            AVF_COLOURSPACE_SRGB,
-                                           getMlvFramerate(App->videoMLV) );
+                                           frameRate );
 
     beginWritingVideoFile(encoder, exportPath);
 
@@ -786,6 +815,8 @@ int setAppNewMlvClip(char * mlvPath)
     [App->exportCurrentClipButton setHidden: showExport];
     [App->exportFormatLabel setHidden: showExport];
     [App->exportFormat setHidden: showExport];
+    [App->exportFramerateLabel setHidden: showExport];
+    [App->exportFramerate setHidden: showExport];
 }
 
 /* Select tab (Processing, LLRawProc... etc + more in the future) */

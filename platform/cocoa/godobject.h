@@ -134,6 +134,8 @@ typedef struct {
 
     NSTextField * exportFormatLabel;
     NSPopUpButton * exportFormat;
+    NSTextField * exportFramerateLabel;
+    NSPopUpButton * exportFramerate;
     NSButton * exportCurrentClipButton;
 
     /* Select between LLRawProc and Processing tab */

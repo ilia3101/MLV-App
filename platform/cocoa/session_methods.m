@@ -117,6 +117,8 @@ void setAppGUIFromClip(clipInfo_t * clip)
 
 void setAppSlidersFromClip(clipInfo_t * clip)
 {
+    int dd = App->dontDraw;
+    App->dontDraw = 0;
     [App->exposureSlider setDoubleValue: clip->settings.exposureSlider];
     [App->saturationSlider setDoubleValue: clip->settings.saturationSlider];
     [App->kelvinSlider setDoubleValue: clip->settings.kelvinSlider];
@@ -141,7 +143,7 @@ void setAppSlidersFromClip(clipInfo_t * clip)
     App->chromaSmoothOption.selectedSegment = clip->settings.chromaSmoothOption;
     App->patternNoiseOption.selectedSegment = clip->settings.patternNoiseOption;
     [App->session.clipTable reloadData];
-    syncGUI();
+    App->dontDraw = dd;
 }
 
 /* Called from -(void)openSessionDialog - currently only loads first clip */
@@ -354,7 +356,9 @@ void appLoadSession(char * sessionPath)
                         clip->settings.patternNoiseOption = (NSInteger)val;
                     }
                 }
+                NSLog(@"Hello1");
                 setAppSlidersFromClip(clip); /* To not forget clip settings */
+                NSLog(@"Hello2");
             }
         }
 

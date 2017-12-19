@@ -228,15 +228,36 @@ int NSApplicationMain(int argc, const char * argv[])
     [App->exportFormat selectItemAtIndex: 0];
     [[App->window contentView] addSubview: App->exportFormat];
 
-    App->exportFormatLabel = [ [NSTextField alloc] initWithFrame: NSMakeRect( LEFT_SIDEBAR_LABEL(1,ELEMENT_HEIGHT,-7) )];
+    App->exportFormatLabel = [ [NSTextField alloc] initWithFrame: NSMakeRect( LEFT_SIDEBAR_LABEL(1,ELEMENT_HEIGHT,-10) )];
     [App->exportFormatLabel setLabelStyle];
     AnchorTop(App->exportFormatLabel, YES);
     AnchorLeft(App->exportFormatLabel, YES);
     [App->exportFormatLabel setStringValue: @"Export Format:"];
     [[App->window contentView] addSubview: App->exportFormatLabel];
 
-    CREATE_BUTTON_LEFT_TOP( App->exportCurrentClipButton, 2, exportCurrentClip, -1, @"Export Current Clip" );
-    CREATE_BUTTON_LEFT_TOP( App->exportCurrentClipButton, 3, exportAllClips, 10, @"Export All Clips" );
+    App->exportFramerate = [ [NSPopUpButton alloc] initWithFrame: NSMakeRect( LEFT_SIDEBAR_ELEMENT_TOP(2,ELEMENT_HEIGHT,-15) ) ];
+    AnchorLeft(App->exportFramerate, YES);
+    AnchorTop(App->exportFramerate, YES);
+    [App->exportFramerate insertItemWithTitle: @"Nearst default" atIndex: 0];
+    [App->exportFramerate insertItemWithTitle: @"23.976" atIndex: 1];
+    [App->exportFramerate insertItemWithTitle: @"24" atIndex: 2];
+    [App->exportFramerate insertItemWithTitle: @"29.97" atIndex: 3];
+    [App->exportFramerate insertItemWithTitle: @"30" atIndex: 4];
+    [App->exportFramerate insertItemWithTitle: @"50" atIndex: 5];
+    [App->exportFramerate insertItemWithTitle: @"60" atIndex: 6];
+    [App->exportFramerate insertItemWithTitle: @"Keep from MLV" atIndex: 7];
+    [App->exportFramerate selectItemAtIndex: 0];
+    [[App->window contentView] addSubview: App->exportFramerate];
+
+    App->exportFramerateLabel = [ [NSTextField alloc] initWithFrame: NSMakeRect( LEFT_SIDEBAR_LABEL(2,ELEMENT_HEIGHT,-15) )];
+    [App->exportFramerateLabel setLabelStyle];
+    AnchorTop(App->exportFramerateLabel, YES);
+    AnchorLeft(App->exportFramerateLabel, YES);
+    [App->exportFramerateLabel setStringValue: @"Framerate:"];
+    [[App->window contentView] addSubview: App->exportFramerateLabel];
+
+    CREATE_BUTTON_LEFT_TOP( App->exportCurrentClipButton, 3, exportCurrentClip, -9, @"Export Current Clip" );
+    CREATE_BUTTON_LEFT_TOP( App->exportCurrentClipButton, 4, exportAllClips, 2, @"Export All Clips" );
 
     IMPORTANT_CODE("",5);
 
