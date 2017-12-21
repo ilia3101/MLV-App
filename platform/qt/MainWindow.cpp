@@ -1347,8 +1347,16 @@ void MainWindow::startExportAVFoundation(QString fileName)
     for( uint64_t frame = ( m_exportQueue.first()->cutIn() - 1 ); frame < m_exportQueue.first()->cutOut(); frame++ )
     {
         //Get&Encode
-        getMlvProcessedFrame16( m_pMlvObject, frame, imgBuffer);
-        addFrameToVideoFile( encoder, imgBuffer );
+        if( m_codecProfile == CODEC_H264 )
+        {
+            getMlvProcessedFrame8( m_pMlvObject, frame, m_pRawImage);
+            addFrameToVideoFile8bit( encoder, m_pRawImage );
+        }
+        else
+        {
+            getMlvProcessedFrame16( m_pMlvObject, frame, imgBuffer);
+            addFrameToVideoFile( encoder, imgBuffer );
+        }
 
         //Set Status
         m_pStatusDialog->ui->progressBar->setValue( frame - ( m_exportQueue.first()->cutIn() - 1 ) + 1 );

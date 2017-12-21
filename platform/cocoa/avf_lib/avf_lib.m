@@ -185,6 +185,52 @@ void addFrameToVideoFile(AVEncoder_t * encoder, uint16_t * frame)
     encoder->frames_encoded++;
 }
 
+/* Append a frame in 8 bit */
+void addFrameToVideoFile8bit(AVEncoder_t * encoder, uint8_t * frame)
+{
+    CVPixelBufferRef buffer = NULL;
+
+    CVReturn success = CVPixelBufferCreateWithBytes( kCFAllocatorDefault,
+                                                     encoder->width,
+                                                     encoder->height,
+                                                     kCVPixelFormatType_24RGB,
+                                                     frame,
+                                                     sizeof(uint8_t) * encoder->width * 3,
+                                                     NULL,
+                                                     NULL,
+                                                     NULL,
+                                                     &buffer );
+    if (success != kCVReturnSuccess || buffer == NULL) NSLog(@"Failed to create pixel buffer.");
+    NSDictionary * colour_attachment = @{(id)kCVImageBufferICCProfileKey : (id)encoder->colour_profile_data};
+    CVBufferSetAttachments(buffer, (CFDictionaryRef)colour_attachment, kCVAttachmentMode_ShouldPropagate);
+
+    BOOL append_ok = NO;
+    int j = 0;
+    while (!append_ok && j < 30) {
+        if (encoder->adaptor.assetWriterInput.readyForMoreMediaData)  {
+            NSLog(@"Processing video frame %d",encoder->frames_encoded);
+
+            CMTime frameTime = CMTimeMake(encoder->frames_encoded * 10000.0, (int32_t)(encoder->fps * 10000.0));
+            append_ok = [encoder->adaptor appendPixelBuffer:buffer withPresentationTime:frameTime];
+            if(!append_ok){
+                NSError * error = encoder->video_writer.error;
+                if(error!=nil) {
+                    NSLog(@"Unresolved error %@,%@.", error, [error userInfo]);
+                }
+            }
+        }
+        else {
+            printf("adaptor not ready %d, %d\n", encoder->frames_encoded, j);
+            [NSThread sleepForTimeInterval:0.1];
+        }
+        j++;
+    }
+    if (!append_ok) {
+        printf("error appending image %d times %d\n, with error.", encoder->frames_encoded, j);
+    }
+    encoder->frames_encoded++;
+}
+
 void endWritingVideoFile(AVEncoder_t * encoder)
 {
     [encoder->video_writer_input markAsFinished];

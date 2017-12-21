@@ -43,6 +43,9 @@ void beginWritingVideoFile(AVEncoder_t * encoder, char * path);
 // /* Add a 16bit RGB frame to file (will be exported at bitdepth of set format) */
 void addFrameToVideoFile(AVEncoder_t * encoder, uint16_t * frame);
 
+// /* Add a 8bit RGB frame to file (will be exported at bitdepth of set format)
+void addFrameToVideoFile8bit(AVEncoder_t * encoder, uint8_t * frame);
+
 // /* Once all frames are added to video file, this will end encoding session */
 void endWritingVideoFile(AVEncoder_t * encoder);
 
