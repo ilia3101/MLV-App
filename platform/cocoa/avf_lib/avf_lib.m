@@ -30,11 +30,11 @@ AVEncoder_t * initAVEncoder(int width, int height, int codec, int colourSpace, d
         case AVF_CODEC_H264:
             encoder->codec = AVVideoCodecH264;
             break;
-/* OSX >= 10.13, @Ilia, you know how to check that?!
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 101300
         case AVF_CODEC_HEVC:
             encoder->codec = AVVideoCodecHEVC;
             break;
-*/
+#endif
         default:
             encoder->codec = AVVideoCodecAppleProRes422;
             break;
@@ -49,7 +49,7 @@ AVEncoder_t * initAVEncoder(int width, int height, int codec, int colourSpace, d
         case AVF_COLOURSPACE_ADOBE_RGB:
             colour_space_name = kCGColorSpaceAdobeRGB1998;
             break;
-            /* OSX >= 10.11, @Ilia, you know how to check that?! (compiles on ElCapitan, but not on Mavericks)
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 101100
         case AVF_COLOURSPACE_DCIP3:
             colour_space_name = kCGColorSpaceDCIP3;
             break;
@@ -58,7 +58,8 @@ AVEncoder_t * initAVEncoder(int width, int height, int codec, int colourSpace, d
             break;
         case AVF_COLOURSPACE_REC_2020:
             colour_space_name = kCGColorSpaceITUR_2020;
-            break;*/
+            break;
+#endif
         default:
             colour_space_name = kCGColorSpaceSRGB;
             break;
