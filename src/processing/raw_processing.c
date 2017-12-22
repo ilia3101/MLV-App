@@ -92,7 +92,7 @@ processingObject_t * initProcessingObject()
 
 void processingSetImageProfile(processingObject_t * processing, int imageProfile)
 {
-    if (imageProfile >= 0 && imageProfile <= 5)
+    if (imageProfile >= 0 && imageProfile <= 6)
     {
         processingSetCustomImageProfile(processing, &default_image_profiles[imageProfile]);
     }
