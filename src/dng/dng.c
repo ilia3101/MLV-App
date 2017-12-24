@@ -465,30 +465,29 @@ static void dng_fill_header(mlvObject_t * mlv_data, dngObject_t * dng_data)
         uint32_t data_offset = exif_ifd_offset + sizeof(uint16_t) + EXIF_IFD_COUNT * sizeof(struct directory_entry) + sizeof(uint32_t);
 
         /* 'Make' Tag */
-        char make[32];
-        char * model = (char*)mlv_data->IDNT.cameraName;
-        if(!model) model = "???";
-        //make is usually the first word of cameraName
-        strncpy(make, model, 32);
+        char make[33] = { 0 };
+        memcpy(make, mlv_data->IDNT.cameraName, 32);
         char * space = strchr(make, ' ');
         if(space) *space = 0x0;
-        
+
+        /* 'Camera Model Name' Tag */
+        char model[33] = { 0 };
+        memcpy(model, mlv_data->IDNT.cameraName, 32);
+
         /* 'Camera Serial Number' Tag */
-        char serial[33];
+        char serial[33] = { 0 };
         memcpy(serial, mlv_data->IDNT.cameraSerial, 32);
-        serial[32] = 0x0; //make sure we are null terminated
         
         /* 'Unique Camera Model' Tag */
-        char unique_model[33];
+        const char * unique_model = NULL;
         const char * unique_name = camidGetCameraName(mlv_data->IDNT.cameraModel, UNIQ);
         if (unique_name)
         {
-            memcpy(unique_model, unique_name, strlen(unique_name));
+            unique_model = unique_name;
         }
         else
         {
-            memcpy(unique_model, mlv_data->IDNT.cameraName, 32);
-            unique_model[32] = 0x0;
+            unique_model = model;
         }
 
         /* Focal resolution stuff */
