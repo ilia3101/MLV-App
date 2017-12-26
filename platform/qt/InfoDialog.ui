@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>399</width>
-    <height>477</height>
+    <height>446</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -128,11 +128,6 @@
        <string>13</string>
       </property>
      </row>
-     <row>
-      <property name="text">
-       <string>14</string>
-      </property>
-     </row>
      <column>
       <property name="text">
        <string>Category</string>
@@ -165,7 +160,7 @@
      </item>
      <item row="2" column="0">
       <property name="text">
-       <string>Width</string>
+       <string>Resolution</string>
       </property>
      </item>
      <item row="2" column="1">
@@ -175,7 +170,7 @@
      </item>
      <item row="3" column="0">
       <property name="text">
-       <string>Height</string>
+       <string>Frames</string>
       </property>
      </item>
      <item row="3" column="1">
@@ -185,7 +180,7 @@
      </item>
      <item row="4" column="0">
       <property name="text">
-       <string>Frames</string>
+       <string>Frame Rate</string>
       </property>
      </item>
      <item row="4" column="1">
@@ -195,7 +190,7 @@
      </item>
      <item row="5" column="0">
       <property name="text">
-       <string>Frame Rate</string>
+       <string>Focal Length</string>
       </property>
      </item>
      <item row="5" column="1">
@@ -205,7 +200,7 @@
      </item>
      <item row="6" column="0">
       <property name="text">
-       <string>Focal Length</string>
+       <string>Shutter</string>
       </property>
      </item>
      <item row="6" column="1">
@@ -215,7 +210,7 @@
      </item>
      <item row="7" column="0">
       <property name="text">
-       <string>Shutter</string>
+       <string>Aperture</string>
       </property>
      </item>
      <item row="7" column="1">
@@ -225,7 +220,7 @@
      </item>
      <item row="8" column="0">
       <property name="text">
-       <string>Aperture</string>
+       <string>ISO</string>
       </property>
      </item>
      <item row="8" column="1">
@@ -235,7 +230,7 @@
      </item>
      <item row="9" column="0">
       <property name="text">
-       <string>ISO</string>
+       <string>Bit Depth</string>
       </property>
      </item>
      <item row="9" column="1">
@@ -245,7 +240,7 @@
      </item>
      <item row="10" column="0">
       <property name="text">
-       <string>Bit Depth</string>
+       <string>Levels</string>
       </property>
      </item>
      <item row="10" column="1">
@@ -255,7 +250,7 @@
      </item>
      <item row="11" column="0">
       <property name="text">
-       <string>Levels</string>
+       <string>Date / Time</string>
       </property>
      </item>
      <item row="11" column="1">
@@ -265,20 +260,10 @@
      </item>
      <item row="12" column="0">
       <property name="text">
-       <string>Date / Time</string>
-      </property>
-     </item>
-     <item row="12" column="1">
-      <property name="text">
-       <string>-</string>
-      </property>
-     </item>
-     <item row="13" column="0">
-      <property name="text">
        <string>Audio</string>
       </property>
      </item>
-     <item row="13" column="1">
+     <item row="12" column="1">
       <property name="text">
        <string>-</string>
       </property>
