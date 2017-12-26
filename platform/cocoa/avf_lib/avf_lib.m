@@ -17,7 +17,7 @@ AVEncoder_t * initAVEncoder(int width, int height, int codec, int colourSpace, d
     encoder->width = width;
     encoder->height = height;
     encoder->size = CGSizeMake(width, height);
-    encoder->encode_buffer = calloc(width * height * 4, sizeof(uint16_t)); /* RGBA64 */
+    encoder->encode_buffer = calloc(width * height * 4 + 1, sizeof(uint16_t)); /* RGBA64 */
 
     switch (codec)
     {
@@ -123,23 +123,23 @@ void addFrameToVideoFile(AVEncoder_t * encoder, uint16_t * frame)
 
     /* Copy it to 'encode' buffer in ARGB64 format */
     uint8_t * original = (uint8_t *)frame;
-    uint8_t * new = (uint8_t *)(encoder->encode_buffer + 1);
+    uint8_t * newframe = (uint8_t *)(encoder->encode_buffer+1);
     int pixels = encoder->width * encoder->height;
 
-    for (int i = 0; i < pixels; ++i, new+=8, original+=6)
+    for (int i = 0; i < pixels; ++i, newframe+=8, original+=6)
     { /* Byteswap needed too!!!! WTF */
         /* Red */
-        new[0] = original[1];
-        new[1] = original[0];
+        newframe[0] = original[1];
+        newframe[1] = original[0];
         /* Green */
-        new[2] = original[3];
-        new[3] = original[2];
+        newframe[2] = original[3];
+        newframe[3] = original[2];
         /* Blue */
-        new[4] = original[5];
-        new[5] = original[4];
+        newframe[4] = original[5];
+        newframe[5] = original[4];
         /* Alpha */
-        new[6] = 255;
-        new[7] = 255;
+        newframe[6] = (uint8_t)0xFF;
+        newframe[7] = (uint8_t)0xFF;
     }
 
     /* Now arrange it as argb64 */
