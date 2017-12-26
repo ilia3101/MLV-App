@@ -50,12 +50,6 @@ typedef struct
     int diso_alias_map;   // flag for Alias Map switchin on/off
     int diso_frblending;  // flag for Fullres Blending switching on/off
 
-    /* original black and white levels from MLV
-       backing them up needed because those values are
-       overwritten right after reading of RAWI header */
-    int mlv_black_level;
-    int mlv_white_level;
-
     /* LUTs */
     int * raw2ev;
     int * ev2raw;

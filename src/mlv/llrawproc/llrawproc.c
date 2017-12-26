@@ -35,7 +35,7 @@
 
 static void deflicker(mlvObject_t * video, uint16_t * raw_image_buff, size_t raw_image_size)
 {
-    uint16_t black = video->llrawproc->mlv_black_level;
+    uint16_t black = video->RAWI.raw_info.black_level;
     uint16_t white = (1 << video->RAWI.raw_info.bits_per_pixel) + 1;
 
     struct histogram * hist = hist_create(white);
@@ -102,12 +102,12 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
         video->llrawproc->is_dual_iso = diso_get_preview(raw_image_buff,
                                                          video->RAWI.xRes,
                                                          video->RAWI.yRes,
-                                                         video->llrawproc->mlv_black_level,
-                                                         video->llrawproc->mlv_white_level,
+                                                         video->RAWI.raw_info.black_level,
+                                                         video->RAWI.raw_info.white_level,
                                                          1); // dual iso check mode is on
         /* initialise LUTs */
-        video->llrawproc->raw2ev = get_raw2ev(video->llrawproc->mlv_black_level, video->RAWI.raw_info.bits_per_pixel);
-        video->llrawproc->ev2raw = get_ev2raw(video->llrawproc->mlv_black_level);
+        video->llrawproc->raw2ev = get_raw2ev(video->RAWI.raw_info.black_level, video->RAWI.raw_info.bits_per_pixel);
+        video->llrawproc->ev2raw = get_ev2raw(video->RAWI.raw_info.black_level);
 
         video->llrawproc->first_time = 0;
     }
@@ -127,7 +127,7 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
 #ifndef STDOUT_SILENT
         printf("Fixing pattern noise... ");
 #endif
-        fix_pattern_noise((int16_t *)raw_image_buff, video->RAWI.xRes, video->RAWI.yRes, video->llrawproc->mlv_white_level, 0);
+        fix_pattern_noise((int16_t *)raw_image_buff, video->RAWI.xRes, video->RAWI.yRes, video->RAWI.raw_info.white_level, 0);
 #ifndef STDOUT_SILENT
         printf("Done\n\n");
 #endif
@@ -166,7 +166,7 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
                        video->VIDF.panPosY,
                        video->RAWI.raw_info.width,
                        video->RAWI.raw_info.height,
-                       video->llrawproc->mlv_black_level,
+                       video->RAWI.raw_info.black_level,
                        (video->llrawproc->bad_pixels == 2),
                        video->llrawproc->bps_method,
                        video->llrawproc->bpi_method,
@@ -190,8 +190,8 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
                 raw_info.active_area.y1 = 0;
                 raw_info.active_area.x2 = raw_info.width;
                 raw_info.active_area.y2 = raw_info.height;
-                raw_info.black_level = video->llrawproc->mlv_black_level;
-                raw_info.white_level = video->llrawproc->mlv_white_level;
+                raw_info.black_level = video->RAWI.raw_info.black_level;
+                raw_info.white_level = video->RAWI.raw_info.white_level;
                 diso_get_full20bit(raw_info,
                                    raw_image_buff,
                                    video->llrawproc->diso_averaging,
@@ -205,8 +205,8 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
                 diso_get_preview(raw_image_buff,
                                  video->RAWI.xRes,
                                  video->RAWI.yRes,
-                                 video->llrawproc->mlv_black_level,
-                                 video->llrawproc->mlv_white_level,
+                                 video->RAWI.raw_info.black_level,
+                                 video->RAWI.raw_info.white_level,
                                  0); // dual iso check mode is off
                 break;
             }
@@ -224,8 +224,8 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
                       raw_image_buff,
                       video->RAWI.xRes,
                       video->RAWI.yRes,
-                      video->llrawproc->mlv_black_level,
-                      video->llrawproc->mlv_white_level,
+                      video->RAWI.raw_info.black_level,
+                      video->RAWI.raw_info.white_level,
                       video->llrawproc->raw2ev,
                       video->llrawproc->ev2raw);
     }
@@ -236,8 +236,8 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
         fix_vertical_stripes(&video->llrawproc->stripe_corrections,
                              raw_image_buff,
                              raw_image_size / 2,
-                             (video->llrawproc->dual_iso == 1 && video->llrawproc->is_dual_iso) ? video->llrawproc->mlv_black_level * 4 : video->llrawproc->mlv_black_level,
-                             (video->llrawproc->dual_iso == 1 && video->llrawproc->is_dual_iso) ? video->llrawproc->mlv_white_level * 4 : video->llrawproc->mlv_white_level,
+                             (video->llrawproc->dual_iso == 1 && video->llrawproc->is_dual_iso) ? video->RAWI.raw_info.black_level * 4 : video->RAWI.raw_info.black_level,
+                             (video->llrawproc->dual_iso == 1 && video->llrawproc->is_dual_iso) ? video->RAWI.raw_info.white_level * 4 : video->RAWI.raw_info.white_level,
                              video->RAWI.raw_info.frame_size,
                              video->RAWI.xRes,
                              video->RAWI.yRes,

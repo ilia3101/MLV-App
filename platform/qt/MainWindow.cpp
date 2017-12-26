@@ -540,11 +540,12 @@ int MainWindow::openMlv( QString fileName )
     m_pInfoDialog->ui->tableWidget->item( 4, 1 )->setText( QString( "%1" ).arg( (int)getMlvFrames( m_pMlvObject ) ) );
     m_pInfoDialog->ui->tableWidget->item( 5, 1 )->setText( QString( "%1 fps" ).arg( getMlvFramerate( m_pMlvObject ) ) );
     m_pInfoDialog->ui->tableWidget->item( 6, 1 )->setText( QString( "%1 mm" ).arg( getMlvFocalLength( m_pMlvObject ) ) );
-    m_pInfoDialog->ui->tableWidget->item( 7, 1 )->setText( QString( "1/%1 s,  %2 degree  (%3 µs)" ).arg( (uint16_t)(shutterSpeed + 0.5f) ).arg( (uint16_t)(shutterAngle + 0.5f) ).arg( getMlvShutter( m_pMlvObject )) );
+    m_pInfoDialog->ui->tableWidget->item( 7, 1 )->setText( QString( "1/%1 s,  %2 deg,  %3 µs" ).arg( (uint16_t)(shutterSpeed + 0.5f) ).arg( (uint16_t)(shutterAngle + 0.5f) ).arg( getMlvShutter( m_pMlvObject )) );
     m_pInfoDialog->ui->tableWidget->item( 8, 1 )->setText( QString( "f/%1" ).arg( getMlvAperture( m_pMlvObject ) / 100.0, 0, 'f', 1 ) );
     m_pInfoDialog->ui->tableWidget->item( 9, 1 )->setText( QString( "%1" ).arg( (int)getMlvIso( m_pMlvObject ) ) );
     m_pInfoDialog->ui->tableWidget->item( 10, 1 )->setText( QString( "%1 bits,  %2" ).arg( getMlvBitdepth( m_pMlvObject ) ).arg( getMlvCompression( m_pMlvObject ) ) );
-    m_pInfoDialog->ui->tableWidget->item( 11, 1 )->setText( QString( "%1-%2-%3 / %4:%5:%6" )
+    m_pInfoDialog->ui->tableWidget->item( 11, 1 )->setText( QString( "%1 black,  %2 white" ).arg( getMlvBlackLevel( m_pMlvObject ) ).arg( getMlvWhiteLevel( m_pMlvObject ) ) );
+    m_pInfoDialog->ui->tableWidget->item( 12, 1 )->setText( QString( "%1-%2-%3 / %4:%5:%6" )
                                                             .arg( getMlvTmYear(m_pMlvObject) )
                                                             .arg( getMlvTmMonth(m_pMlvObject), 2, 10, QChar('0') )
                                                             .arg( getMlvTmDay(m_pMlvObject), 2, 10, QChar('0') )
@@ -554,13 +555,13 @@ int MainWindow::openMlv( QString fileName )
 
     if( doesMlvHaveAudio( m_pMlvObject ) )
     {
-        m_pInfoDialog->ui->tableWidget->item( 12, 1 )->setText( QString( "%1 channel(s),  %2 kHz" )
+        m_pInfoDialog->ui->tableWidget->item( 13, 1 )->setText( QString( "%1 channel(s),  %2 kHz" )
                                                                 .arg( getMlvAudioChannels( m_pMlvObject ) )
                                                                 .arg( getMlvSampleRate( m_pMlvObject ) ) );
     }
     else
     {
-        m_pInfoDialog->ui->tableWidget->item( 12, 1 )->setText( QString( "-" ) );
+        m_pInfoDialog->ui->tableWidget->item( 13, 1 )->setText( QString( "-" ) );
     }
 
     //Adapt slider to clip and move to position 0
