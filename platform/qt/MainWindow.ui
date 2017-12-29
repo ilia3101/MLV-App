@@ -368,7 +368,7 @@ QGroupBox::indicator:checked {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>0</y>
+            <y>-381</y>
             <width>195</width>
             <height>1653</height>
            </rect>
@@ -1788,6 +1788,9 @@ QGroupBox::indicator:checked {
                    <property name="text">
                     <string>In</string>
                    </property>
+                   <property name="shortcut">
+                    <string>Shift+I</string>
+                   </property>
                   </widget>
                  </item>
                  <item row="0" column="1">
@@ -1835,6 +1838,9 @@ QGroupBox::indicator:checked {
                    </property>
                    <property name="text">
                     <string>Out</string>
+                   </property>
+                   <property name="shortcut">
+                    <string>Shift+O</string>
                    </property>
                   </widget>
                  </item>
@@ -3998,6 +4004,9 @@ QGroupBox::indicator:checked {
    <property name="text">
     <string>Next Frame</string>
    </property>
+   <property name="shortcut">
+    <string>.</string>
+   </property>
   </action>
   <action name="actionPreviousFrame">
    <property name="icon">
@@ -4006,6 +4015,9 @@ QGroupBox::indicator:checked {
    </property>
    <property name="text">
     <string>Previous Frame</string>
+   </property>
+   <property name="shortcut">
+    <string>,</string>
    </property>
   </action>
   <action name="actionShowParade">
