@@ -738,6 +738,9 @@ void MainWindow::initGui( void )
     ui->actionImportReceipt->setEnabled( false );
     //If no clip loaded, disable session save
     ui->actionSaveSession->setEnabled( false );
+    //Set tooltips
+    ui->toolButtonCutIn->setToolTip( tr( "Set Cut In    %1" ).arg( ui->toolButtonCutIn->shortcut().toString() ) );
+    ui->toolButtonCutOut->setToolTip( tr( "Set Cut Out    %1" ).arg( ui->toolButtonCutOut->shortcut().toString() ) );
 
     //Set up image in GUI
     QImage image(":/IMG/IMG/histogram.png");
