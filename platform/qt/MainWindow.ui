@@ -143,6 +143,9 @@
     <addaction name="actionImportReceipt"/>
     <addaction name="actionResetReceipt"/>
     <addaction name="separator"/>
+    <addaction name="actionSelectAllClips"/>
+    <addaction name="actionDeleteSelectedClips"/>
+    <addaction name="separator"/>
     <addaction name="actionWhiteBalancePicker"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
@@ -4160,6 +4163,22 @@ QGroupBox::indicator:checked {
    </property>
    <property name="shortcut">
     <string>J</string>
+   </property>
+  </action>
+  <action name="actionSelectAllClips">
+   <property name="text">
+    <string>Select All Clips</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+A</string>
+   </property>
+  </action>
+  <action name="actionDeleteSelectedClips">
+   <property name="text">
+    <string>Delete Selected Clip(s)</string>
+   </property>
+   <property name="shortcut">
+    <string>Del</string>
    </property>
   </action>
  </widget>

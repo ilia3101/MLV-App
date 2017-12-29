@@ -605,6 +605,8 @@ int MainWindow::openMlv( QString fileName )
     ui->actionImportReceipt->setEnabled( true );
     //If clip loaded, enable session save
     ui->actionSaveSession->setEnabled( true );
+    //Enable select all clips action
+    ui->actionSelectAllClips->setEnabled( true );
 
     //Setup Gradient
     ui->spinBoxGradientX->setMaximum( getMlvWidth( m_pMlvObject ) + 1000 );
@@ -741,6 +743,9 @@ void MainWindow::initGui( void )
     //Set tooltips
     ui->toolButtonCutIn->setToolTip( tr( "Set Cut In    %1" ).arg( ui->toolButtonCutIn->shortcut().toString() ) );
     ui->toolButtonCutOut->setToolTip( tr( "Set Cut Out    %1" ).arg( ui->toolButtonCutOut->shortcut().toString() ) );
+    //Set disabled select all and delete clip
+    ui->actionDeleteSelectedClips->setEnabled( false );
+    ui->actionSelectAllClips->setEnabled( false );
 
     //Set up image in GUI
     QImage image(":/IMG/IMG/histogram.png");
@@ -1912,6 +1917,9 @@ void MainWindow::deleteSession()
     ui->actionImportReceipt->setEnabled( false );
     //If no clip loaded, disable session save
     ui->actionSaveSession->setEnabled( false );
+    //Disable select all and delete clip actions
+    ui->actionSelectAllClips->setEnabled( false );
+    ui->actionDeleteSelectedClips->setEnabled( false );
 
     //Disable Gradient
     ui->checkBoxGradientEnable->setChecked( false );
@@ -3221,6 +3229,25 @@ void MainWindow::on_actionPrevious_Clip_triggered()
     }
 }
 
+//Select all clips via action
+void MainWindow::on_actionSelectAllClips_triggered()
+{
+    if( ui->listWidgetSession->count() > 0 )
+    {
+        selectAllFiles();
+    }
+}
+
+//Delete clip from session via action
+void MainWindow::on_actionDeleteSelectedClips_triggered()
+{
+    if( ui->listWidgetSession->count() > 0 )
+    {
+        deleteFileFromSession();
+        ui->actionDeleteSelectedClips->setEnabled( false );
+    }
+}
+
 //FileName in SessionList doubleClicked
 void MainWindow::on_listWidgetSession_activated(const QModelIndex &index)
 {
@@ -3303,7 +3330,7 @@ void MainWindow::deleteFileFromSession( void )
     //if there is at least one...
     if( ui->listWidgetSession->count() > 0 )
     {
-        //Open a clip!
+        //Open the nearest clip from last opened!
         if( m_lastActiveClipInSession >= ui->listWidgetSession->count() ) m_lastActiveClipInSession = ui->listWidgetSession->count() - 1;
         ui->listWidgetSession->setCurrentRow( m_lastActiveClipInSession );
         setSliders( m_pSessionReceipts.at( m_lastActiveClipInSession ), false );
@@ -4085,6 +4112,9 @@ void MainWindow::drawFrameReady()
                                                    getMlvWidth( m_pMlvObject ),
                                                    getMlvHeight( m_pMlvObject ) );
     }
+
+    //Reset delete clip action as enabled
+    ui->actionDeleteSelectedClips->setEnabled( true );
 }
 
 //Paintmode for gradient enabled/disabled
