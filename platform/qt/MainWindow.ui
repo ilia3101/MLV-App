@@ -170,6 +170,9 @@
     <addaction name="actionNextFrame"/>
     <addaction name="actionLoop"/>
     <addaction name="separator"/>
+    <addaction name="actionPrevious_Clip"/>
+    <addaction name="actionNext_Clip"/>
+    <addaction name="separator"/>
     <addaction name="actionAudioOutput"/>
     <addaction name="separator"/>
     <addaction name="actionDropFrameMode"/>
@@ -368,7 +371,7 @@ QGroupBox::indicator:checked {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>-381</y>
+            <y>0</y>
             <width>195</width>
             <height>1653</height>
            </rect>
@@ -4141,6 +4144,22 @@ QGroupBox::indicator:checked {
    </property>
    <property name="text">
     <string>Create MAPP Files</string>
+   </property>
+  </action>
+  <action name="actionNext_Clip">
+   <property name="text">
+    <string>Next Clip</string>
+   </property>
+   <property name="shortcut">
+    <string>K</string>
+   </property>
+  </action>
+  <action name="actionPrevious_Clip">
+   <property name="text">
+    <string>Previous Clip</string>
+   </property>
+   <property name="shortcut">
+    <string>J</string>
    </property>
   </action>
  </widget>

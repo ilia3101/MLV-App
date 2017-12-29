@@ -92,6 +92,8 @@ private slots:
     void on_actionImportReceipt_triggered();
     void on_actionExportReceipt_triggered();
     void on_actionCaching_triggered();
+    void on_actionNext_Clip_triggered();
+    void on_actionPrevious_Clip_triggered();
     void on_listWidgetSession_activated(const QModelIndex &index);
     void on_dockWidgetSession_visibilityChanged(bool visible);
     void on_dockWidgetEdit_visibilityChanged(bool visible);
@@ -170,6 +172,7 @@ private slots:
 
     void on_comboBoxHStretch_currentIndexChanged(int index);
     void on_comboBoxVStretch_currentIndexChanged(int index);
+
 
 private:
     Ui::MainWindow *ui;

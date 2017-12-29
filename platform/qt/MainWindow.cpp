@@ -3199,6 +3199,28 @@ void MainWindow::on_actionCaching_triggered()
     m_frameChanged = true;
 }
 
+//Jump to next clip
+void MainWindow::on_actionNext_Clip_triggered()
+{
+    if( ( m_lastActiveClipInSession + 1 ) < ui->listWidgetSession->count() )
+    {
+        m_lastActiveClipInSession++;
+        showFileInEditor( m_lastActiveClipInSession );
+        ui->listWidgetSession->setCurrentRow( m_lastActiveClipInSession );
+    }
+}
+
+//Jump to previous clip
+void MainWindow::on_actionPrevious_Clip_triggered()
+{
+    if( m_lastActiveClipInSession > 0 )
+    {
+        m_lastActiveClipInSession--;
+        showFileInEditor( m_lastActiveClipInSession );
+        ui->listWidgetSession->setCurrentRow( m_lastActiveClipInSession );
+    }
+}
+
 //FileName in SessionList doubleClicked
 void MainWindow::on_listWidgetSession_activated(const QModelIndex &index)
 {
