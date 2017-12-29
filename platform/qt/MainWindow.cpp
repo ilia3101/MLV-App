@@ -3296,15 +3296,18 @@ void MainWindow::deleteFileFromSession( void )
         delete ui->listWidgetSession->selectedItems().at( i - 1 );
         //Remove slider memory
         m_pSessionReceipts.removeAt( row );
+        //influences actual loaded clip?
+        if( m_lastActiveClipInSession > row ) m_lastActiveClipInSession--;
+        if( m_lastActiveClipInSession < 0 ) m_lastActiveClipInSession = 0;
     }
     //if there is at least one...
     if( ui->listWidgetSession->count() > 0 )
     {
-        //Open first!
-        ui->listWidgetSession->setCurrentRow( 0 );
-        setSliders( m_pSessionReceipts.at( 0 ), false );
-        openMlv( ui->listWidgetSession->item( 0 )->toolTip() );
-        m_lastActiveClipInSession = 0;
+        //Open a clip!
+        if( m_lastActiveClipInSession >= ui->listWidgetSession->count() ) m_lastActiveClipInSession = ui->listWidgetSession->count() - 1;
+        ui->listWidgetSession->setCurrentRow( m_lastActiveClipInSession );
+        setSliders( m_pSessionReceipts.at( m_lastActiveClipInSession ), false );
+        openMlv( ui->listWidgetSession->item( m_lastActiveClipInSession )->toolTip() );
 
         //Caching is in which state? Set it!
         if( ui->actionCaching->isChecked() ) on_actionCaching_triggered();
