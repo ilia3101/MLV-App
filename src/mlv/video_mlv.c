@@ -151,10 +151,8 @@ static void frame_index_sort(frame_index_t *frame_index, uint32_t entries)
     } while (n > 1);
 }
 
-/* Unpacks the bits of a frame to get a bayer B&W image (without black level correction)
- * Needs memory to return to, sized: sizeof(float) * getMlvHeight(urvid) * getMlvWidth(urvid)
- * Output image's pixels will be in range 0-65535 as if it is 16 bit integers */
-void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outputFrame)
+/* Unpack or decompress original raw data */
+int getMlvRawFrameUint16(mlvObject_t * video, uint64_t frameIndex, uint16_t * unpacked_frame)
 {
     int bitdepth = video->RAWI.raw_info.bits_per_pixel;
     int width = video->RAWI.xRes;
@@ -167,12 +165,9 @@ void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outpu
 
     /* How many bytes is RAW frame */
     int raw_frame_size = (width * height * bitdepth) / 8;
-    int unpacked_frame_size = width * height * sizeof(uint16_t);
 
     /* Memory buffer for original RAW data */
     uint8_t * raw_frame = (uint8_t *)malloc(raw_frame_size + 4); // additional 4 bytes for safety
-    /* Memory buffer for decompressed or bit unpacked RAW data */
-    uint16_t * unpacked_frame = NULL;
 
     FILE * file = video->file[chunk];
 
@@ -191,18 +186,18 @@ void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outpu
         if(ret != LJ92_ERROR_NONE)
         {
             DEBUG( printf("LJ92 decoder: Failed with error code (%d)\n", ret); )
-            memset(outputFrame, 0, pixels_count * sizeof(float));
-            goto err_out;
+            free(raw_frame);
+            return 1;
         }
         else
         {
-            unpacked_frame = (uint16_t *)malloc( unpacked_frame_size );
             ret = lj92_decode(decoder_object, unpacked_frame, width * height * components, 0, NULL, 0);
             if(ret != LJ92_ERROR_NONE)
             {
                 DEBUG( printf("LJ92 decoder: Failed with error code (%d)\n", ret); )
-                memset(outputFrame, 0, pixels_count * sizeof(float));
-                goto err_out;
+                free(raw_frame);
+                return 1;
+
             }
         }
         lj92_close(decoder_object);
@@ -212,7 +207,6 @@ void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outpu
         fread(raw_frame, sizeof(uint8_t), raw_frame_size, file);
         pthread_mutex_unlock(video->main_file_mutex + chunk);
 
-        unpacked_frame = (uint16_t *)malloc( unpacked_frame_size );
         uint32_t mask = (1 << bitdepth) - 1;
         for (int i = 0; i < pixels_count; ++i)
         {
@@ -226,11 +220,33 @@ void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outpu
         }
     }
 
+    free(raw_frame);
+    return 0;
+}
+
+/* Unpacks the bits of a frame to get a bayer B&W image (without black level correction)
+ * Needs memory to return to, sized: sizeof(float) * getMlvHeight(urvid) * getMlvWidth(urvid)
+ * Output image's pixels will be in range 0-65535 as if it is 16 bit integers */
+void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outputFrame)
+{
+    int pixels_count = video->RAWI.xRes * video->RAWI.yRes;
+
+    /* Memory buffer for decompressed or bit unpacked RAW data */
+    size_t unpacked_frame_size = pixels_count * 2;
+    uint16_t * unpacked_frame = (uint16_t *)malloc( unpacked_frame_size );
+
+    if(getMlvRawFrameUint16(video, frameIndex, unpacked_frame))
+    {
+        memset(outputFrame, 0, pixels_count * sizeof(float));
+        free(unpacked_frame);
+        return;
+    }
+
     /* apply low level raw processing to the unpacked_frame */
     applyLLRawProcObject(video, unpacked_frame, unpacked_frame_size);
 
     /* high quality dualiso buffer consists of real 16 bit values, no converting needed */
-    int shift_val = (llrpHQDualIso(video)) ? 0 : (16 - bitdepth);
+    int shift_val = (llrpHQDualIso(video)) ? 0 : (16 - video->RAWI.raw_info.bits_per_pixel);
 
     /* convert uint16_t raw data -> float raw_data for processing with amaze or bilinear debayer, both need data input as float */
     for (int i = 0; i < pixels_count; ++i)
@@ -238,9 +254,7 @@ void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outpu
         outputFrame[i] = (float)(unpacked_frame[i] << shift_val);
     }
 
-err_out:
-    if(unpacked_frame) free(unpacked_frame);
-    free(raw_frame);
+    free(unpacked_frame);
 }
 
 void setMlvProcessing(mlvObject_t * video, processingObject_t * processing)
