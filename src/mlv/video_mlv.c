@@ -152,7 +152,7 @@ static void frame_index_sort(frame_index_t *frame_index, uint32_t entries)
 }
 
 /* Unpack or decompress original raw data */
-int getMlvRawFrameUint16(mlvObject_t * video, uint64_t frameIndex, uint16_t * unpacked_frame)
+int getMlvRawFrameUint16(mlvObject_t * video, uint64_t frameIndex, uint16_t * unpackedFrame)
 {
     int bitdepth = video->RAWI.raw_info.bits_per_pixel;
     int width = video->RAWI.xRes;
@@ -191,7 +191,7 @@ int getMlvRawFrameUint16(mlvObject_t * video, uint64_t frameIndex, uint16_t * un
         }
         else
         {
-            ret = lj92_decode(decoder_object, unpacked_frame, width * height * components, 0, NULL, 0);
+            ret = lj92_decode(decoder_object, unpackedFrame, width * height * components, 0, NULL, 0);
             if(ret != LJ92_ERROR_NONE)
             {
                 DEBUG( printf("LJ92 decoder: Failed with error code (%d)\n", ret); )
@@ -216,7 +216,7 @@ int getMlvRawFrameUint16(mlvObject_t * video, uint64_t frameIndex, uint16_t * un
             uint32_t rotate_value = 16 + ((32 - bitdepth) - bits_shift);
             uint32_t uncorrected_data = *((uint32_t *)&((uint16_t *)raw_frame)[bits_address]);
             uint32_t data = ROR32(uncorrected_data, rotate_value);
-            unpacked_frame[i] = (uint16_t)(data & mask);
+            unpackedFrame[i] = (uint16_t)(data & mask);
         }
     }
 
