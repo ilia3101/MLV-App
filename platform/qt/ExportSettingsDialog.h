@@ -22,6 +22,7 @@
 #define CODEC_H264                  9
 #define CODEC_H265                  10
 #define CODEC_TIFF                  11
+#define CODEC_MLV                   12
 
 #define CODEC_PRORES_OPTION_KS      0
 #define CODEC_PRORES_OPTION_AW      1
@@ -38,6 +39,9 @@
 #define CODEC_H265_MOV              0
 #define CODEC_H265_MP4              1
 #define CODEC_H265_MKV              2
+
+#define CODEC_MLV_STANDARD          0
+#define CODEC_MLV_AVERAGED          1
 
 namespace Ui {
 class ExportSettingsDialog;

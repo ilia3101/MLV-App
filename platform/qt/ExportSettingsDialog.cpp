@@ -154,12 +154,19 @@ void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
         }
 #endif
     }
+    else if( index == CODEC_MLV )
+    {
+        ui->comboBoxOption->setEnabled( true );
+        ui->comboBoxOption->addItem( QString( "Standard" ) );
+        ui->comboBoxOption->addItem( QString( "Averaged Frame" ) );
+        enableResize = false;
+    }
     else
     {
         ui->comboBoxOption->setEnabled( false );
     }
 
-    //If CDNG, disable resize feature
+    //If CDNG / MLV, disable resize feature
     if( !enableResize )
     {
         ui->checkBoxResize->setChecked( false );
@@ -198,7 +205,13 @@ void ExportSettingsDialog::on_comboBoxOption_currentIndexChanged(const QString &
     }
     else
     {
-        ui->checkBoxExportAudio->setEnabled( true );
-        ui->checkBoxResize->setEnabled( true );
+        if( ( ui->comboBoxCodec->currentIndex() != CODEC_MLV )
+         && ( ui->comboBoxCodec->currentIndex() != CODEC_CDNG )
+         && ( ui->comboBoxCodec->currentIndex() != CODEC_CDNG_LOSSLESS )
+         && ( ui->comboBoxCodec->currentIndex() != CODEC_CDNG_FAST ) )
+        {
+            ui->checkBoxExportAudio->setEnabled( true );
+            ui->checkBoxResize->setEnabled( true );
+        }
     }
 }
