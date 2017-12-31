@@ -115,6 +115,8 @@ void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
 
     if( index <= CODEC_PRORES4444 )
     {
+        ui->labelDebayer->setEnabled( true );
+        ui->comboBoxDebayer->setEnabled( true );
         ui->comboBoxOption->setEnabled( true );
         ui->comboBoxOption->addItem( QString( "ffmpeg Kostya" ) );
         ui->comboBoxOption->addItem( QString( "ffmpeg Anatolyi" ) );
@@ -135,6 +137,8 @@ void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
           || index == CODEC_CDNG_LOSSLESS
           || index == CODEC_CDNG_FAST )
     {
+        ui->labelDebayer->setEnabled( false );
+        ui->comboBoxDebayer->setEnabled( false );
         ui->comboBoxOption->setEnabled( true );
         ui->comboBoxOption->addItem( QString( "Default Naming Scheme" ) );
         ui->comboBoxOption->addItem( QString( "DaVinci Resolve Naming Scheme" ) );
@@ -143,6 +147,8 @@ void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
     else if( index == CODEC_H264
           || index == CODEC_H265 )
     {
+        ui->labelDebayer->setEnabled( true );
+        ui->comboBoxDebayer->setEnabled( true );
         ui->comboBoxOption->setEnabled( true );
         ui->comboBoxOption->addItem( QString( "ffmpeg Movie (*.mov)" ) );
         ui->comboBoxOption->addItem( QString( "ffmpeg MPEG-4 (*.mp4)" ) );
@@ -156,6 +162,8 @@ void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
     }
     else if( index == CODEC_MLV )
     {
+        ui->labelDebayer->setEnabled( false );
+        ui->comboBoxDebayer->setEnabled( false );
         ui->comboBoxOption->setEnabled( true );
         ui->comboBoxOption->addItem( QString( "Standard" ) );
         ui->comboBoxOption->addItem( QString( "Averaged Frame" ) );
@@ -163,6 +171,8 @@ void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
     }
     else
     {
+        ui->labelDebayer->setEnabled( true );
+        ui->comboBoxDebayer->setEnabled( true );
         ui->comboBoxOption->setEnabled( false );
     }
 
