@@ -3263,9 +3263,8 @@ void MainWindow::on_actionNext_Clip_triggered()
 {
     if( ( m_lastActiveClipInSession + 1 ) < ui->listWidgetSession->count() )
     {
-        m_lastActiveClipInSession++;
-        showFileInEditor( m_lastActiveClipInSession );
-        ui->listWidgetSession->setCurrentRow( m_lastActiveClipInSession );
+        ui->listWidgetSession->setCurrentRow( m_lastActiveClipInSession + 1 );
+        showFileInEditor( m_lastActiveClipInSession + 1 );
     }
 }
 
@@ -3274,9 +3273,8 @@ void MainWindow::on_actionPrevious_Clip_triggered()
 {
     if( m_lastActiveClipInSession > 0 )
     {
-        m_lastActiveClipInSession--;
-        showFileInEditor( m_lastActiveClipInSession );
-        ui->listWidgetSession->setCurrentRow( m_lastActiveClipInSession );
+        ui->listWidgetSession->setCurrentRow( m_lastActiveClipInSession - 1 );
+        showFileInEditor( m_lastActiveClipInSession - 1 );
     }
 }
 
