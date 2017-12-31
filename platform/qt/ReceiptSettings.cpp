@@ -28,10 +28,10 @@ ReceiptSettings::ReceiptSettings()
     m_rawFixesEnabled = true;
     m_vertical_stripes = 1;
     m_focus_pixels = 1;
-    m_fpi_method = 1;
+    m_fpi_method = 0;
     m_bad_pixels = 1;
     m_bps_method = 0;
-    m_bpi_method = 1;
+    m_bpi_method = 0;
     m_chroma_smooth = 0;
     m_pattern_noise = 0;
     m_deflicker_target = 0;
