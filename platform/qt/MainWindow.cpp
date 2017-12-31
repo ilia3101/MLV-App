@@ -1292,6 +1292,51 @@ void MainWindow::startExportCdng(QString fileName)
     emit exportReady();
 }
 
+//MLV export
+void MainWindow::startExportMlv(QString fileName)
+{
+    //Disable GUI drawing
+    m_dontDraw = true;
+
+    //StatusDialog
+    m_pStatusDialog->ui->progressBar->setMaximum( m_exportQueue.first()->cutOut() - m_exportQueue.first()->cutIn() + 1 );
+    m_pStatusDialog->ui->progressBar->setValue( 0 );
+    m_pStatusDialog->show();
+    //Frames in the export queue?!
+    int totalFrames = 0;
+    for( int i = 0; i < m_exportQueue.count(); i++ )
+    {
+        totalFrames += m_exportQueue.at(i)->cutOut() - m_exportQueue.at(i)->cutIn() + 1;
+    }
+
+    //Create folders and build name schemes
+    QString pathName = QFileInfo( fileName ).path();
+    fileName = QFileInfo( fileName ).fileName();
+    fileName = fileName.left( fileName.indexOf( '.' ) );
+
+    //Output frames loop
+    for( uint32_t frame = m_exportQueue.first()->cutIn() - 1; frame < m_exportQueue.first()->cutOut(); frame++ )
+    {
+        //Export frame here
+        //...
+
+        //Set Status
+        m_pStatusDialog->ui->progressBar->setValue( frame - ( m_exportQueue.first()->cutIn() - 1 ) + 1 );
+        m_pStatusDialog->ui->progressBar->repaint();
+        m_pStatusDialog->drawTimeFromToDoFrames( totalFrames - frame + ( m_exportQueue.first()->cutIn() - 1 ) - 1 );
+        qApp->processEvents();
+
+        //Abort pressed? -> End the loop
+        if( m_exportAbortPressed ) break;
+    }
+
+    //Enable GUI drawing
+    m_dontDraw = false;
+
+    //Emit Ready-Signal
+    emit exportReady();
+}
+
 //Export via AVFoundation
 #ifdef Q_OS_MACX
 void MainWindow::startExportAVFoundation(QString fileName)
@@ -2812,6 +2857,18 @@ void MainWindow::on_actionExport_triggered()
         fileType = tr("Cinema DNG (*.dng)");
         fileEnding = ".dng";
     }
+    else if( m_codecProfile == CODEC_MLV )
+    {
+        saveFileName.append( ".MLV" );
+        fileType = tr("Magic Lantern Video (*.MLV)");
+        fileEnding = ".MLV";
+    }
+    else if( m_codecProfile == CODEC_TIFF )
+    {
+        saveFileName.append( ".tif" );
+        fileType = tr("TIFF (*.tif)");
+        fileEnding = ".tif";
+    }
     else
     {
         if( ( m_codecProfile == CODEC_H264 || m_codecProfile == CODEC_H265 )
@@ -2827,12 +2884,6 @@ void MainWindow::on_actionExport_triggered()
             saveFileName.append( ".mkv" );
             fileType = tr("Matroska (*.mkv)");
             fileEnding = ".mkv";
-        }
-        else if( m_codecProfile == CODEC_TIFF )
-        {
-            saveFileName.append( ".tif" );
-            fileType = tr("TIFF (*.tif)");
-            fileEnding = ".tif";
         }
         else
         {
@@ -3588,6 +3639,11 @@ void MainWindow::exportHandler( void )
             startExportAVFoundation( m_exportQueue.first()->exportFileName() );
         }
 #endif
+        else if( m_codecProfile == CODEC_MLV )
+        {
+            //MLV output
+            startExportMlv( m_exportQueue.first()->exportFileName() );
+        }
         else
         {
             //rendered output
