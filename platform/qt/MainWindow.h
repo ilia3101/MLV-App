@@ -25,6 +25,7 @@
 #include "StatusDialog.h"
 #include "Histogram.h"
 #include "WaveFormMonitor.h"
+#include "VectorScope.h"
 #include "AudioWave.h"
 #include "ReceiptSettings.h"
 #include "AudioPlayback.h"
@@ -80,6 +81,7 @@ private slots:
     void on_actionShowHistogram_triggered(void);
     void on_actionShowWaveFormMonitor_triggered(void);
     void on_actionShowParade_triggered(void);
+    void on_actionShowVectorScope_triggered(void);
     void on_actionUseBilinear_triggered();
     void on_actionAlwaysUseAMaZE_triggered();
     void on_actionExportSettings_triggered();
@@ -181,6 +183,7 @@ private:
     StatusDialog *m_pStatusDialog;
     Histogram *m_pHistogram;
     WaveFormMonitor *m_pWaveFormMonitor;
+    VectorScope *m_pVectorScope;
     AudioWave *m_pAudioWave;
     AudioPlayback *m_pAudioPlayback;
     RenderFrameThread *m_pRenderThread;

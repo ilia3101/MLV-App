@@ -206,6 +206,7 @@
     <addaction name="actionShowHistogram"/>
     <addaction name="actionShowWaveFormMonitor"/>
     <addaction name="actionShowParade"/>
+    <addaction name="actionShowVectorScope"/>
     <addaction name="actionShowZebras"/>
    </widget>
    <widget class="QMenu" name="menuWindow">
@@ -4179,6 +4180,17 @@ QGroupBox::indicator:checked {
    </property>
    <property name="shortcut">
     <string>Del</string>
+   </property>
+  </action>
+  <action name="actionShowVectorScope">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Vector Scope</string>
+   </property>
+   <property name="shortcut">
+    <string>V</string>
    </property>
   </action>
  </widget>

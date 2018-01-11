@@ -130,6 +130,7 @@ MainWindow::~MainWindow()
     delete m_pReceiptClipboard;
     delete m_pAudioPlayback;
     delete m_pAudioWave;
+    delete m_pVectorScope;
     delete m_pWaveFormMonitor;
     delete m_pHistogram;
     delete m_pStatusDialog;
@@ -711,6 +712,7 @@ void MainWindow::initGui( void )
     m_pInfoDialog = new InfoDialog( this );
     m_pStatusDialog = new StatusDialog( this );
     m_pHistogram = new Histogram();
+    m_pVectorScope = new VectorScope( 420, 140 );
     ui->actionShowHistogram->setChecked( true );
     m_pWaveFormMonitor = new WaveFormMonitor( 200 );
 
@@ -3057,6 +3059,7 @@ void MainWindow::on_actionZoom100_triggered()
 //Show Histogram
 void MainWindow::on_actionShowHistogram_triggered(void)
 {
+    ui->actionShowVectorScope->setChecked( false );
     ui->actionShowHistogram->setChecked( true );
     ui->actionShowWaveFormMonitor->setChecked( false );
     ui->actionShowParade->setChecked( false );
@@ -3066,6 +3069,7 @@ void MainWindow::on_actionShowHistogram_triggered(void)
 //Show Waveform
 void MainWindow::on_actionShowWaveFormMonitor_triggered(void)
 {
+    ui->actionShowVectorScope->setChecked( false );
     ui->actionShowWaveFormMonitor->setChecked( true );
     ui->actionShowHistogram->setChecked( false );
     ui->actionShowParade->setChecked( false );
@@ -3075,7 +3079,18 @@ void MainWindow::on_actionShowWaveFormMonitor_triggered(void)
 //Show Parade
 void MainWindow::on_actionShowParade_triggered()
 {
+    ui->actionShowVectorScope->setChecked( false );
     ui->actionShowParade->setChecked( true );
+    ui->actionShowWaveFormMonitor->setChecked( false );
+    ui->actionShowHistogram->setChecked( false );
+    m_frameChanged = true;
+}
+
+//Show VectorScope
+void MainWindow::on_actionShowVectorScope_triggered()
+{
+    ui->actionShowVectorScope->setChecked( true );
+    ui->actionShowParade->setChecked( false );
     ui->actionShowWaveFormMonitor->setChecked( false );
     ui->actionShowHistogram->setChecked( false );
     m_frameChanged = true;
@@ -3444,6 +3459,7 @@ void MainWindow::on_labelHistogram_customContextMenuRequested(const QPoint &pos)
     myMenu.addAction( ui->actionShowHistogram );
     myMenu.addAction( ui->actionShowWaveFormMonitor );
     myMenu.addAction( ui->actionShowParade );
+    myMenu.addAction( ui->actionShowVectorScope );
     // Show context menu at handling position
     myMenu.exec( globalPos );
 }
@@ -4129,6 +4145,17 @@ void MainWindow::drawFrameReady()
                                                           .scaled( ui->labelHistogram->width() * devicePixelRatio(),
                                                                    ui->labelHistogram->height() * devicePixelRatio(),
                                                                    Qt::IgnoreAspectRatio, Qt::SmoothTransformation) ); //alternative: Qt::FastTransformation
+        pic.setDevicePixelRatio( devicePixelRatio() );
+        ui->labelHistogram->setPixmap( pic );
+        ui->labelHistogram->setAlignment( Qt::AlignCenter ); //Always in the middle
+    }
+    //VectorScope
+    else if( ui->actionShowVectorScope->isChecked() )
+    {
+        QPixmap pic = QPixmap::fromImage( m_pVectorScope->getVectorScopeFromRaw( m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject) )
+                                                          .scaled( ui->labelHistogram->width() * devicePixelRatio(),
+                                                                   ui->labelHistogram->height() * devicePixelRatio(),
+                                                                   Qt::KeepAspectRatio, Qt::SmoothTransformation) ); //alternative: Qt::FastTransformation
         pic.setDevicePixelRatio( devicePixelRatio() );
         ui->labelHistogram->setPixmap( pic );
         ui->labelHistogram->setAlignment( Qt::AlignCenter ); //Always in the middle

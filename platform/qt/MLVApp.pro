@@ -92,7 +92,8 @@ SOURCES += \
     ../../src/dng/dng.c \
     GraphicsPolygonMoveItem.cpp \
     ../../src/mlv/camid/camera_id.c \
-    GradientElement.cpp
+    GradientElement.cpp \
+    VectorScope.cpp
 
 macx: SOURCES += ../cocoa/avf_lib/avf_lib.m
 
@@ -144,7 +145,8 @@ HEADERS += \
     ../../src/dng/dng_tag_values.h \
     GraphicsPolygonMoveItem.h \
     ../../src/mlv/camid/camera_id.h \
-    GradientElement.h
+    GradientElement.h \
+    VectorScope.h
 
 macx: HEADERS += \
     ../cocoa/avf_lib/avencoder.h \
