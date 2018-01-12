@@ -192,6 +192,16 @@ void colour_correct_3_way( double * rgb,
                            double m_hue, double m_sat,
                            double s_hue, double s_sat );
 
+/* Just a awful box blur right now */
+void blur_image( uint16_t * __restrict in,
+                 uint16_t * __restrict out,
+                 int width, int height, int radius,
+                 int do_r, int do_g, int do_b,
+                 int start_y, int end_y );
+/* JUst to be separate */
+void convert_rgb_to_YCbCr(uint16_t * __restrict img, int32_t size, int32_t ** lut);
+void convert_YCbCr_to_rgb(uint16_t * __restrict img, int32_t size, int32_t ** lut);
+
 /* Tonemapping funtions */
 
 /* Uncharted and Reinhard: http://filmicworlds.com/blog/filmic-tonemapping-operators/ */
@@ -214,5 +224,8 @@ float CineonLogTonemap_f(float x);
 /* Sony S-Log3, from here: https://www.sony.de/pro/support/attachment/1237494271390/1237494271406/technical-summary-for-s-gamut3-cine-s-log3-and-s-gamut3-s-log3.pdf */
 double SonySLogTonemap(double x);
 float SonySLogTonemap_f(float x);
+
+/* Little image buffer 'class' for storing stuff that takes long to compute,
+ * like blur (unused so far) */
 
 #endif

@@ -320,3 +320,132 @@ void processing_update_highest_green(processingObject_t * processing)
                                                                    + MAX(processing->pre_calc_matrix[4][65535],processing->pre_calc_matrix[4][0]) 
                                                                    + MAX(processing->pre_calc_matrix[5][65535],processing->pre_calc_matrix[5][0]) ) ];
 }
+
+/* Box blur */
+void blur_image( uint16_t * __restrict in,
+                 uint16_t * __restrict out,
+                 int width, int height, int radius,
+                 int do_r, int do_g, int do_b, /* Which channels to blur or not */
+                 int start_y, int end_y )
+{
+    /* Row length */
+    int rl = width * 3;
+
+    int radius_x = radius*3;
+    int y_max = height + radius;
+    int x_max = (width + radius);
+    int x_lim = rl-3;
+
+    int blur_diameter = radius*2+1;
+
+    int channels[3] = {do_r, do_g, do_b};
+
+    /* Offset - do twice on channel '1' and '2' (Cb and Cr) */
+    int limit_x = (width-radius-1)*3;
+    for (int offset =0; offset < 3; ++offset)
+    {
+        if (channels[offset]) /* if this channel was requested */
+        {
+            /* Horizontal blur */
+            for (int y = 0; y < height; ++y) /* rows */
+            {
+                uint16_t * out_row = out + (y * rl)+offset; /* current row ouptut */
+                uint16_t * row = in + (y * rl)+offset; /* current row */
+
+                int sum = row[0] * blur_diameter;
+
+                /* Split in to 3 parts to avoid MIN/MAX */
+                for (int x = -radius_x; x < radius_x; x+=3)
+                {
+                    sum -= row[MAX(x-radius_x, 0)];
+                    sum += row[x+radius_x+3];
+                    out_row[MAX(x, 0)] = sum / blur_diameter;
+                }
+                for (int x = radius_x; x < limit_x; x+=3)
+                {
+                    sum -= row[x-radius_x];
+                    sum += row[x+radius_x+3];
+                    out_row[x] = sum / blur_diameter;
+                }
+                for (int x = limit_x; x < rl; x+=3)
+                {
+                    sum -= row[x-radius_x];
+                    sum += row[MIN(x+radius_x+3, rl-3)];
+                    out_row[x] = sum / blur_diameter;
+                }
+            }
+
+            /* Vertical blur */
+            int limit_y = height-radius-1;
+            for (int x = 0; x < width; ++x) /* columns */
+            {
+                uint16_t * out_col = in + (x*3);
+                uint16_t * col = out + (x*3);
+
+                int sum = out[x*3+offset] * blur_diameter;
+
+                for (int y = -radius; y < radius; ++y)
+                {
+                    sum -= col[MAX((y-radius), 0)*rl+offset];
+                    sum += col[(y+radius+1)*rl+offset];
+                    out_col[MAX(y, 0)*rl+offset] = sum / blur_diameter;
+                }
+                {
+                    uint16_t * minus = col + (offset);
+                    uint16_t * plus = col + ((radius*2+1)*rl + offset);
+                    uint16_t * out = out_col + (radius*rl + offset);
+                    uint16_t * end = out_col + (limit_y*rl + offset);
+                    do {
+                        sum -= *minus;
+                        sum += *plus;
+                        *out = sum / blur_diameter;
+                        minus += rl;
+                        plus += rl;
+                        out += rl;
+                    } while (out < end);
+                }
+                for (int y = limit_y; y < height; ++y)
+                {
+                    sum -= col[(y-radius)*rl+offset];
+                    sum += col[MIN((y+radius+1), height-1)*rl+offset];
+                    out_col[y*rl+offset] = sum / blur_diameter;
+                }
+            }
+        }
+    }
+}
+
+void convert_rgb_to_YCbCr(uint16_t * __restrict img, int32_t size, int32_t ** lut)
+{
+    int32_t ** ry = lut;
+    uint16_t * end = img + size;
+
+    for (uint16_t * pix = img; pix < end; pix += 3)
+    {
+        /* RGB to YCbCr */
+        int32_t pix_Y  =         ry[0][pix[0]] + ry[1][pix[1]] + ry[2][pix[2]];
+        int32_t pix_Cb = 32768 + ry[3][pix[0]] + ry[4][pix[1]] + (pix[2] >> 1);
+        int32_t pix_Cr = 32768 + (pix[0] >> 1) + ry[5][pix[1]] + ry[6][pix[2]];
+
+        pix[0] = LIMIT16(pix_Y);
+        pix[1] = LIMIT16(pix_Cb);
+        pix[2] = LIMIT16(pix_Cr);
+    }
+}
+
+void convert_YCbCr_to_rgb(uint16_t * __restrict img, int32_t size, int32_t ** lut)
+{
+    int32_t ** yr = lut;
+    uint16_t * end = img + size;
+
+    for (uint16_t * pix = img; pix < end; pix += 3)
+    {
+        int32_t pix_R = pix[0]                 + yr[0][pix[2]];
+        int32_t pix_G = pix[0] + yr[1][pix[1]] + yr[2][pix[2]];
+        int32_t pix_B = pix[0] + yr[3][pix[1]];
+
+        pix[0] = LIMIT16(pix_R);
+        pix[1] = LIMIT16(pix_G);
+        pix[2] = LIMIT16(pix_B);
+    }
+}

@@ -21,6 +21,34 @@
 /* Default image profiles */
 #include "image_profiles.c"
 
+
+/* Easy way to deal with storing blurred images/stuff that takes ages to calculate */
+processing_buffer_t * new_image_buffer()
+{
+    return (processing_buffer_t *)calloc(sizeof(processing_buffer_t),1);
+}
+void buffer_set_size(processing_buffer_t * buffer, int width, int height)
+{
+    /* Only if it is needed */
+    if (buffer->width != width || buffer->height != height)
+    {
+        buffer->width = width;
+        buffer->height = height;
+        if (buffer->image != NULL) free(buffer->image);
+        buffer->image = malloc(sizeof(uint16_t) * 3 * width * height);
+    }
+}
+uint16_t * get_buffer(processing_buffer_t * buffer)
+{
+    return buffer->image;
+}
+void free_image_buffer(processing_buffer_t * buffer)
+{
+    if (buffer->image != NULL) free(buffer->image);
+    free(buffer);
+}
+
+
 /* Initialises processing thing with memory */
 processingObject_t * initProcessingObject()
 {
@@ -49,6 +77,8 @@ processingObject_t * initProcessingObject()
     processing->xyz_to_rgb_matrix[4] = 1.0;
     processing->xyz_to_rgb_matrix[8] = 1.0;
 
+    /* Blur buffer images (may change size) */
+    // processing->cs_zone.blur_image = new_image_buffer();
 
     double rgb_to_YCbCr[7] = {  0.299000,  0.587000,  0.114000,
                                -0.168736, -0.331264, /* 0.5 */
@@ -132,6 +162,8 @@ void applyProcessingObject( processingObject_t * processing,
                             uint16_t * __restrict inputImage, 
                             uint16_t * __restrict outputImage )
 {
+    // buffer_set_size(processing->cs_zone.blur_image, imageX, imageY);
+
     /* Number of elements */
     int img_s = imageX * imageY * 3;
 
@@ -216,18 +248,7 @@ void applyProcessingObject( processingObject_t * processing,
     /* enter YCbCr world - https://en.wikipedia.org/wiki/YCbCr (I used the 'JPEG Transform') */
     if (processingUsesChromaSeparation(processing))
     {
-        int32_t ** ry = processing->cs_zone.pre_calc_rgb_to_YCbCr;
-        for (uint16_t * pix = img; pix < img_end; pix += 3)
-        {
-            /* RGB to YCbCr */
-            int32_t pix_Y  =         ry[0][pix[0]] + ry[1][pix[1]] + ry[2][pix[2]];
-            int32_t pix_Cb = 32768 + ry[3][pix[0]] + ry[4][pix[1]] + (pix[2] >> 1);
-            int32_t pix_Cr = 32768 + (pix[0] >> 1) + ry[5][pix[1]] + ry[6][pix[2]];
-
-            pix[0] = LIMIT16(pix_Y);
-            pix[1] = LIMIT16(pix_Cb);
-            pix[2] = LIMIT16(pix_Cr);
-        }
+        convert_rgb_to_YCbCr(img, img_s, processing->cs_zone.pre_calc_rgb_to_YCbCr);
 
         sharp_start = 0; /* Start at 0 - Luma/Y channel */
         sharp_skip = 3; /* Only sharpen every third (Y/luma) pixel */
@@ -237,88 +258,10 @@ void applyProcessingObject( processingObject_t * processing,
     if (processingGetChromaBlurRadius(processing) > 0 && processingUsesChromaSeparation(processing))
     {
         memcpy(out_img, img, img_s * sizeof(uint16_t));
-
-        /* Row length */
-        int32_t rl = imageX * 3;
-
-        int32_t radius = processingGetChromaBlurRadius(processing);
-        int32_t radius_x = radius*3;
-        int32_t y_max = imageY + radius;
-        int32_t x_max = (imageX + radius);
-        int32_t x_lim = rl-3;
-
-        uint32_t blur_diameter = radius*2+1;
-
-        /* Offset - do twice on channel '1' and '2' (Cb and Cr) */
-        int32_t limit_x = (imageX-radius-1)*3;
-        for (uint32_t offset = 1; offset <=2; ++offset)
-        {
-            /* Horizontal blur */
-            for (int32_t y = 0; y < imageY; ++y) /* rows */
-            {
-                uint16_t * out_row = out_img + (y * rl)+offset; /* current row ouptut */
-                uint16_t * row = img + (y * rl)+offset; /* current row */
-
-                uint32_t sum = row[0] * blur_diameter;
-
-                /* Split in to 3 parts to avoid MIN/MAX */
-                for (int32_t x = -radius_x; x < radius_x; x+=3)
-                {
-                    sum -= row[MAX(x-radius_x, 0)];
-                    sum += row[x+radius_x+3];
-                    out_row[MAX(x, 0)] = sum / blur_diameter;
-                }
-                for (int32_t x = radius_x; x < limit_x; x+=3)
-                {
-                    sum -= row[x-radius_x];
-                    sum += row[x+radius_x+3];
-                    out_row[x] = sum / blur_diameter;
-                }
-                for (int32_t x = limit_x; x < rl; x+=3)
-                {
-                    sum -= row[x-radius_x];
-                    sum += row[MIN(x+radius_x+3, rl-3)];
-                    out_row[x] = sum / blur_diameter;
-                }
-            }
-
-            /* Vertical blur */
-            int32_t limit_y = imageY-radius-1;
-            for (int32_t x = 0; x < imageX; ++x) /* columns */
-            {
-                uint16_t * out_col = img + (x*3);
-                uint16_t * col = out_img + (x*3);
-
-                uint32_t sum = out_img[x*3+offset] * blur_diameter;
-
-                for (int32_t y = -radius; y < radius; ++y)
-                {
-                    sum -= col[MAX((y-radius), 0)*rl+offset];
-                    sum += col[(y+radius+1)*rl+offset];
-                    out_col[MAX(y, 0)*rl+offset] = sum / blur_diameter;
-                }
-                {
-                    uint16_t * minus = col + (offset);
-                    uint16_t * plus = col + ((radius*2+1)*rl + offset);
-                    uint16_t * out = out_col + (radius*rl + offset);
-                    uint16_t * end = out_col + (limit_y*rl + offset);
-                    do {
-                        sum -= *minus;
-                        sum += *plus;
-                        *out = sum / blur_diameter;
-                        minus += rl;
-                        plus += rl;
-                        out += rl;
-                    } while (out < end);
-                }
-                for (int32_t y = limit_y; y < imageY; ++y)
-                {
-                    sum -= col[(y-radius)*rl+offset];
-                    sum += col[MIN((y+radius+1), imageY-1)*rl+offset];
-                    out_col[y*rl+offset] = sum / blur_diameter;
-                }
-            }
-        }
+        blur_image( img, out_img,
+                    imageX, imageY, processingGetChromaBlurRadius(processing),
+                    0,1,1,
+                    0,0 );
     }
 
     if (processingGetSharpening(processing) > 0.005)
@@ -378,18 +321,7 @@ void applyProcessingObject( processingObject_t * processing,
     /* Leave Y-Cb-Cr world */
     if (processingUsesChromaSeparation(processing))
     {
-        img_end = outputImage + img_s;
-        int32_t ** yr = processing->cs_zone.pre_calc_YCbCr_to_rgb;
-        for (uint16_t * pix = outputImage; pix < img_end; pix += 3)
-        {
-            int32_t pix_R = pix[0]                 + yr[0][pix[2]];
-            int32_t pix_G = pix[0] + yr[1][pix[1]] + yr[2][pix[2]];
-            int32_t pix_B = pix[0] + yr[3][pix[1]];
-
-            pix[0] = LIMIT16(pix_R);
-            pix[1] = LIMIT16(pix_G);
-            pix[2] = LIMIT16(pix_B);
-        }
+        convert_YCbCr_to_rgb(outputImage, img_s, processing->cs_zone.pre_calc_YCbCr_to_rgb);
     }
 }
 
@@ -668,5 +600,6 @@ void freeProcessingObject(processingObject_t * processing)
     for (int i = 8; i >= 0; --i) free(processing->pre_calc_matrix[i]);
     for (int i = 6; i >= 0; --i) free(processing->cs_zone.pre_calc_rgb_to_YCbCr[i]);
     for (int i = 3; i >= 0; --i) free(processing->cs_zone.pre_calc_YCbCr_to_rgb[i]);
+    // free_image_buffer(processing->cs_zone.blur_image);
     free(processing);
 }

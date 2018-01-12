@@ -3,6 +3,11 @@
 
 #include "image_profile.h"
 
+typedef struct {
+    int width, height;
+    uint16_t * image;
+} processing_buffer_t;
+
 /* Processing settings structure (a mess) */
 typedef struct {
 
@@ -47,6 +52,9 @@ typedef struct {
 
         /* Moire/noise filter (only avalible if use_cs is true) */
         uint32_t chroma_blur_radius;
+
+        /* Cached blur image for faster single frame processing */
+        processing_buffer_t * blur_image;
     } cs_zone;
 
     /* White balance */
