@@ -493,6 +493,7 @@ int MainWindow::openMlv( QString fileName )
     killTimer( m_timerId );
     m_fileLoaded = false;
     delete m_pWaveFormMonitor;
+    delete m_pVectorScope;
     m_dontDraw = true;
 
     //Waiting for thread being idle for not freeing used memory
@@ -573,6 +574,8 @@ int MainWindow::openMlv( QString fileName )
 
     //Load WaveFormMonitor
     m_pWaveFormMonitor = new WaveFormMonitor( getMlvWidth( m_pMlvObject ) );
+    //Reinitialize VectorScope
+    m_pVectorScope = new VectorScope( ui->labelHistogram->width() * 2, ui->labelHistogram->height() * 2 );
 
     //Always use amaze?
     if( ui->actionAlwaysUseAMaZE->isChecked() )
