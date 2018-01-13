@@ -2143,6 +2143,8 @@ void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings 
 //Show the file in
 void MainWindow::showFileInEditor(int row)
 {
+    if( m_pSessionReceipts.count() <= 0 ) return;
+
     //Stop Playback
     ui->actionPlay->setChecked( false );
     //Save slider receipt
