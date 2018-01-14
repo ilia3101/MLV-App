@@ -351,6 +351,7 @@ void MainWindow::importNewMlv(QString fileName)
 
             //Set to "please load when info is there"
             m_pSessionReceipts.last()->setFocusPixels( -1 );
+            m_pSessionReceipts.last()->setStretchFactorY( -1 );
 
             previewPicture( ui->listWidgetSession->count() - 1 );
         }
@@ -2056,7 +2057,13 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     else ui->comboBoxHStretch->setCurrentIndex( 5 );
     on_comboBoxHStretch_currentIndexChanged( ui->comboBoxHStretch->currentIndex() );
 
-    if( receipt->stretchFactorY() == STRETCH_V_100 ) ui->comboBoxVStretch->setCurrentIndex( 0 );
+    if( receipt->stretchFactorY() == -1 )
+    {
+        //Init vertical stretching automatically when imported and loaded very first time completely
+        if( getMlvAspectRatio( m_pMlvObject ) <= 1.0 ) ui->comboBoxVStretch->setCurrentIndex( 0 );
+        else ui->comboBoxVStretch->setCurrentIndex( 1 );
+    }
+    else if( receipt->stretchFactorY() == STRETCH_V_100 ) ui->comboBoxVStretch->setCurrentIndex( 0 );
     else ui->comboBoxVStretch->setCurrentIndex( 1 );
     on_comboBoxVStretch_currentIndexChanged( ui->comboBoxVStretch->currentIndex() );
 
