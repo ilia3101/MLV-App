@@ -136,6 +136,7 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
     /* fix focus pixels */
     if (video->llrawproc->focus_pixels && video->llrawproc->fpm_status < 3)
     {
+        int crop_rec = (video->llrawproc->focus_pixels == 2) ? 1 : llrpGetCroprec(video);
         fix_focus_pixels(&video->llrawproc->focus_pixel_map,
                          &video->llrawproc->fpm_status,
                          raw_image_buff,
@@ -146,7 +147,8 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
                          video->VIDF.panPosY,
                          video->RAWI.raw_info.width,
                          video->RAWI.raw_info.height,
-                         (video->llrawproc->focus_pixels == 2),
+                         crop_rec,
+                         ((video->MLVI.videoClass & MLV_VIDEO_CLASS_FLAG_LJ92) ? 5 : 0),
                          video->llrawproc->fpi_method,
                          video->llrawproc->is_dual_iso,
                          video->llrawproc->raw2ev,
@@ -244,6 +246,23 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
                              video->llrawproc->vertical_stripes,
                              &video->llrawproc->compute_stripes);
     }
+}
+
+/* Detect crop rec mode according to RAWC block info (binning + skipping) */
+int llrpGetCroprec(mlvObject_t * video)
+{
+    if(video->RAWC.blockType)
+    {
+        int sampling_x = video->RAWC.binning_x + video->RAWC.skipping_x;
+        int sampling_y = video->RAWC.binning_y + video->RAWC.skipping_y;
+
+        if( !(sampling_y == 5 && sampling_x == 3) )
+        {
+            return 1;
+        }
+    }
+
+    return 0;
 }
 
 /* LLRawProcObject variable handling */

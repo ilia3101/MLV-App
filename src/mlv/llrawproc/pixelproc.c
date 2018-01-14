@@ -278,7 +278,8 @@ enum pattern { PATTERN_NONE = 0,
                PATTERN_100D = 346
              };
 
-enum video_mode { MV_NONE, MV_720, MV_1080, MV_1080CROP, MV_ZOOM, MV_CROPREC };
+enum video_mode { MV_NONE, MV_720,   MV_1080,   MV_1080CROP,   MV_ZOOM,   MV_CROPREC,
+                           MV_720_L, MV_1080_L, MV_1080CROP_L, MV_ZOOM_L, MV_CROPREC_L };
 
 static int add_pixel_to_map(pixel_map * map, int x, int y)
 {
@@ -359,6 +360,8 @@ static int load_pixel_map(pixel_map * map, uint32_t camera_id, int raw_width, in
     return 1;
 }
 
+/* normal mode pattern generators ****************************************************************/
+
 /* generate the focus pixel pattern for mv720 video mode */
 static void fpm_mv720(pixel_map * map, int pattern, int32_t raw_width)
 {
@@ -382,7 +385,7 @@ static void fpm_mv720(pixel_map * map, int pattern, int32_t raw_width)
         else if(((y + 10) % y_rep) == 0) shift = 2;
         else continue;
 
-        for(int x = 72; x <= raw_width; x++)
+        for(int x = 72; x < raw_width; x++)
         {
             if(((x + shift) % x_rep) == 0)
             {
@@ -415,7 +418,7 @@ static void fpm_mv1080(pixel_map * map, int pattern, int32_t raw_width)
         else if(((y + 6) % y_rep) == 0) shift = 4;
         else continue;
 
-        for(int x = 72; x <= raw_width; x++)
+        for(int x = 72; x < raw_width; x++)
         {
             if(((x + shift) % x_rep) == 0)
             {
@@ -473,7 +476,7 @@ static void fpm_mv1080crop(pixel_map * map, int pattern, int32_t raw_width)
                 break;
         }
 
-        for(int x = 72; x <= raw_width; x++)
+        for(int x = 72; x < raw_width; x++)
         {
             if(((x + shift) % x_rep) == 0)
             {
@@ -531,7 +534,7 @@ static void fpm_zoom(pixel_map * map, int pattern, int32_t raw_width)
                 break;
         }
 
-        for(int x = 72; x <= raw_width; x++)
+        for(int x = 72; x < raw_width; x++)
         {
             if(((x + shift) % x_rep) == 0)
             {
@@ -590,7 +593,7 @@ static void fpm_crop_rec(pixel_map * map, int pattern, int32_t raw_width)
         else if(((y + 6) % y_rep) == 0) shift = 4;
         else continue;
 
-        for(int x = 72; x <= raw_width; x++)
+        for(int x = 72; x < raw_width; x++)
         {
             if(((x + shift) % x_rep) == 0)
             {
@@ -599,6 +602,299 @@ static void fpm_crop_rec(pixel_map * map, int pattern, int32_t raw_width)
         }
     }
 }
+
+/* lossless mode pattern generators **************************************************************/
+
+/*
+  fpm_mv720_lj92() function
+  Draw the focus pixel pattern for lossless mv720 video mode.
+*/
+static void fpm_mv720_lj92(pixel_map * map, int pattern, int32_t raw_width)
+{
+    int shift = 0;
+    int fp_start = 28;
+    int fp_end = 726;
+    int x_rep = 8;
+    int y_rep = 12;
+
+    if(pattern == PATTERN_100D)
+    {
+        x_rep = 8;
+        y_rep = 12;
+    }
+
+    for(int y = fp_start; y <= fp_end; y++)
+    {
+        if(((y + 3) % y_rep) == 0) shift = 7;
+        else if(((y + 4) % y_rep) == 0) shift = 6;
+        else if(((y + 9) % y_rep) == 0) shift = 3;
+        else if(((y + 10) % y_rep) == 0) shift = 2;
+        else continue;
+
+        for(int x = 72; x < raw_width; x++)
+        {
+            if(((x + shift) % x_rep) == 0)
+            {
+                add_pixel_to_map(map, x, y);
+            }
+        }
+    }
+}
+
+/*
+  fpm_mv1080_lj92() function
+  Draw the focus pixel pattern for lossless mv1080 video mode.
+*/
+static void fpm_mv1080_lj92(pixel_map * map, int pattern, int32_t raw_width)
+{
+    int shift = 0;
+    int fp_start = 28;
+    int fp_end = 1189;
+    int x_rep = 8;
+    int y_rep = 10;
+
+    if(pattern == PATTERN_100D)
+    {
+        x_rep = 8;
+        y_rep = 10;
+    }
+
+    for(int y = fp_start; y <= fp_end; y++)
+    {
+        if(((y + 0) % y_rep) == 0) shift=0;
+        else if(((y + 1) % y_rep) == 0) shift = 1;
+        else if(((y + 5) % y_rep) == 0) shift = 5;
+        else if(((y + 6) % y_rep) == 0) shift = 4;
+        else continue;
+
+        for(int x = 72; x < raw_width; x++)
+        {
+            if(((x + shift) % x_rep) == 0)
+            {
+                add_pixel_to_map(map, x, y);
+            }
+        }
+    }
+}
+
+/*
+  fpm_mv1080crop_lj92() functions (shifted and normal)
+  Draw the focus pixel pattern for lossless mv1080crop video mode.
+*/
+/* shifted */
+static void fpm_mv1080crop_lj92_shifted(pixel_map * map, int pattern, int32_t raw_width)
+{
+    int shift = 0;
+    int fp_start = 28;
+    int fp_end = 1058;
+    int x_rep = 8;
+    int y_rep = 60;
+
+    if(pattern == PATTERN_100D)
+    {
+        x_rep = 12;
+        y_rep = 6;
+    }
+
+    for(int y = fp_start; y <= fp_end; y++)
+    {
+        switch(pattern)
+        {
+            case PATTERN_EOSM:
+            case PATTERN_650D:
+            case PATTERN_700D:
+                if(((y + 7) % y_rep) == 0 ) shift = 2;
+                else if(((y + 11) % y_rep) == 0 ) shift = 4;
+                else if(((y + 12) % y_rep) == 0 ) shift = 1;
+                else if(((y + 14) % y_rep) == 0 ) shift = 3;
+                else if(((y + 26) % y_rep) == 0 ) shift = 7;
+                else if(((y + 29) % y_rep) == 0 ) shift = 0;
+                else if(((y + 37) % y_rep) == 0 ) shift = 6;
+                else if(((y + 41) % y_rep) == 0 ) shift = 4;
+                else if(((y + 42) % y_rep) == 0 ) shift = 5;
+                else if(((y + 44) % y_rep) == 0 ) shift = 3;
+                else if(((y + 56) % y_rep) == 0 ) shift = 7;
+                else if(((y + 59) % y_rep) == 0 ) shift = 0;
+                else continue;
+                break;
+
+            case PATTERN_100D:
+                if(((y + 2) % y_rep) == 0 ) shift = 11;
+                else if(((y + 5) % y_rep) == 0 ) shift = 0;
+                else if(((y + 6) % y_rep) == 0 ) shift = 5;
+                else if(((y + 7) % y_rep) == 0 ) shift = 6;
+                else continue;
+                break;
+        }
+
+        for(int x = 72; x < raw_width; x++)
+        {
+            if(((x + shift) % x_rep) == 0)
+            {
+                add_pixel_to_map(map, x, y);
+            }
+        }
+    }
+}
+/* normal */
+static void fpm_mv1080crop_lj92(pixel_map * map, int pattern, int32_t raw_width)
+{
+    int shift = 0;
+    int fp_start = 28;
+    int fp_end = 1058;
+    int x_rep = 8;
+    int y_rep = 60;
+
+    if(pattern == PATTERN_100D)
+    {
+        x_rep = 12;
+        y_rep = 6;
+    }
+
+    for(int y = fp_start; y <= fp_end; y++)
+    {
+        switch(pattern)
+        {
+            case PATTERN_EOSM:
+            case PATTERN_650D:
+            case PATTERN_700D:
+                if(((y + 7) % y_rep) == 0 ) shift = 3;
+                else if(((y + 11) % y_rep) == 0 ) shift = 5;
+                else if(((y + 12) % y_rep) == 0 ) shift = 2;
+                else if(((y + 14) % y_rep) == 0 ) shift = 4;
+                else if(((y + 26) % y_rep) == 0 ) shift = 0;
+                else if(((y + 29) % y_rep) == 0 ) shift = 1;
+                else if(((y + 37) % y_rep) == 0 ) shift = 7;
+                else if(((y + 41) % y_rep) == 0 ) shift = 5;
+                else if(((y + 42) % y_rep) == 0 ) shift = 6;
+                else if(((y + 44) % y_rep) == 0 ) shift = 4;
+                else if(((y + 56) % y_rep) == 0 ) shift = 0;
+                else if(((y + 59) % y_rep) == 0 ) shift = 1;
+                else continue;
+                break;
+
+            case PATTERN_100D:
+                if(((y + 2) % y_rep) == 0 ) shift = 0;
+                else if(((y + 5) % y_rep) == 0 ) shift = 1;
+                else if(((y + 6) % y_rep) == 0 ) shift = 6;
+                else if(((y + 7) % y_rep) == 0 ) shift = 7;
+                else continue;
+                break;
+        }
+
+        for(int x = 72; x < raw_width; x++)
+        {
+            if(((x + shift) % x_rep) == 0)
+            {
+                add_pixel_to_map(map, x, y);
+            }
+        }
+    }
+
+    /* Second pass shifted */
+    fpm_mv1080crop_lj92_shifted(map, pattern, raw_width);
+}
+
+/*
+  zoom_lj92() function
+  Draw the focus pixel pattern for lossless zoom video mode.
+*/
+static void fpm_zoom_lj92(pixel_map * map, int pattern, int32_t raw_width)
+{
+    int shift = 0;
+    int fp_start = 28;
+    int fp_end = 1107;
+    int x_rep = 8;
+    int y_rep = 60;
+
+    if(pattern == PATTERN_100D)
+    {
+        x_rep = 12;
+        y_rep = 6;
+    }
+
+    for(int y = fp_start; y <= fp_end; y++)
+    {
+        switch(pattern)
+        {
+            case PATTERN_EOSM:
+            case PATTERN_650D:
+            case PATTERN_700D:
+                if(((y + 7) % y_rep) == 0) shift = 3;
+                else if(((y + 11) % y_rep) == 0) shift = 5;
+                else if(((y + 12) % y_rep) == 0) shift = 2;
+                else if(((y + 14) % y_rep) == 0) shift = 4;
+                else if(((y + 26) % y_rep) == 0) shift = 0;
+                else if(((y + 29) % y_rep) == 0) shift = 1;
+                else if(((y + 37) % y_rep) == 0) shift = 7;
+                else if(((y + 41) % y_rep) == 0) shift = 5;
+                else if(((y + 42) % y_rep) == 0) shift = 6;
+                else if(((y + 44) % y_rep) == 0) shift = 4;
+                else if(((y + 56) % y_rep) == 0) shift = 0;
+                else if(((y + 59) % y_rep) == 0) shift = 1;
+                else continue;
+                break;
+
+            case PATTERN_100D:
+                if(((y + 2) % y_rep) == 0) shift = 0;
+                else if(((y + 5) % y_rep) == 0) shift = 1;
+                else if(((y + 6) % y_rep) == 0) shift = 6;
+                else if(((y + 7) % y_rep) == 0) shift = 7;
+                else continue;
+                break;
+        }
+
+        for(int x = 72; x < raw_width; x++)
+        {
+            if(((x + shift) % x_rep) == 0)
+            {
+                add_pixel_to_map(map, x, y);
+            }
+        }
+    }
+}
+
+/*
+  fpm_crop_rec_lj92() function
+  Draw the focus pixel pattern for lossless crop_rec video mode.
+  Requires the crop_rec module.
+*/
+static void fpm_crop_rec_lj92(pixel_map * map, int pattern, int32_t raw_width)
+{
+    // first pass is like mv720
+    fpm_mv720_lj92(map, pattern, raw_width);
+
+    int shift = 0;
+    int fp_start = 28;
+    int fp_end = 726;
+    int x_rep = 8;
+    int y_rep = 10;
+
+    if(pattern == PATTERN_100D)
+    {
+        x_rep = 8;
+        y_rep = 10;
+    }
+
+    for(int y = fp_start; y <= fp_end; y++)
+    {
+        if(((y + 0) % y_rep) == 0) shift=0;
+        else if(((y + 1) % y_rep) == 0) shift = 1;
+        else if(((y + 5) % y_rep) == 0) shift = 5;
+        else if(((y + 6) % y_rep) == 0) shift = 4;
+        else continue;
+
+        for(int x = 72; x < raw_width; x++)
+        {
+            if(((x + shift) % x_rep) == 0)
+            {
+                add_pixel_to_map(map, x, y);
+            }
+        }
+    }
+}
+
+/* end of pattern generators *********************************************************************/
 
 /* returns focus pixel pattern A, B or NONE in case of unsupported camera */
 static int fpm_get_pattern(uint32_t camera_model)
@@ -623,7 +919,7 @@ static int fpm_get_pattern(uint32_t camera_model)
 }
 
 /* returns video mode name, special case when vid_mode == "crop_rec" */
-static int fpm_get_video_mode(int32_t raw_width, int32_t raw_height, int crop_rec)
+static int fpm_get_video_mode(int32_t raw_width, int32_t raw_height, int crop_rec, int lossless_mode)
 {
     switch(raw_width)
     {
@@ -632,23 +928,23 @@ static int fpm_get_video_mode(int32_t raw_width, int32_t raw_height, int crop_re
             {
                 if(crop_rec)
                 {
-                    return MV_CROPREC;
+                    return MV_CROPREC + lossless_mode;
                 }
                 else
                 {
-                    return MV_720;
+                    return MV_720 + lossless_mode;
                 }
             }
             else
             {
-                return MV_1080;
+                return MV_1080 + lossless_mode;
             }
 
         case 1872:
-            return MV_1080CROP;
+            return MV_1080CROP + lossless_mode;
 
         case 2592:
-            return MV_ZOOM;
+            return MV_ZOOM + lossless_mode;
 
         default:
             return MV_NONE;
@@ -666,6 +962,7 @@ void fix_focus_pixels(pixel_map * focus_pixel_map,
                       int32_t raw_width,
                       int32_t raw_height,
                       int crop_rec,
+                      int lossless_mode,
                       int average_method,
                       int dual_iso,
                       int * raw2ev,
@@ -709,42 +1006,82 @@ fpm_check:
             }
             else
             {
-                enum video_mode video_mode = fpm_get_video_mode(raw_width, raw_height, crop_rec);
+                enum video_mode video_mode = fpm_get_video_mode(raw_width, raw_height, crop_rec, lossless_mode);
 #ifndef STDOUT_SILENT
-                printf("\nGenerating focus pixel map for video mode ");
+                printf("\nGenerating focus pixel map for ");
 #endif
                 switch(video_mode)
                 {
                     case MV_720:
 #ifndef STDOUT_SILENT
-                        printf("'mv720'\n");
+                        printf("'mv720' mode\n");
 #endif
                         fpm_mv720(focus_pixel_map, pattern, raw_width);
                         break;
+
                     case MV_1080:
 #ifndef STDOUT_SILENT
-                        printf("'mv1080'\n");
+                        printf("'mv1080' mode\n");
 #endif
                         fpm_mv1080(focus_pixel_map, pattern, raw_width);
                         break;
+
                     case MV_1080CROP:
 #ifndef STDOUT_SILENT
-                        printf("'mv1080crop'\n");
+                        printf("'mv1080crop' mode\n");
 #endif
                         fpm_mv1080crop(focus_pixel_map, pattern, raw_width);
                         break;
+
                     case MV_ZOOM:
 #ifndef STDOUT_SILENT
-                        printf("'mvZoom'\n");
+                        printf("'mvZoom' mode\n");
 #endif
                         fpm_zoom(focus_pixel_map, pattern, raw_width);
                         break;
+
                     case MV_CROPREC:
 #ifndef STDOUT_SILENT
-                        printf("'mvCrop_rec'\n");
+                        printf("'mvCrop_rec' mode\n");
 #endif
                         fpm_crop_rec(focus_pixel_map, pattern, raw_width);
                         break;
+
+                    case MV_720_L:
+#ifndef STDOUT_SILENT
+                        printf("'mv720' lossless mode\n");
+#endif
+                        fpm_mv720_lj92(focus_pixel_map, pattern, raw_width);
+                        break;
+
+                    case MV_1080_L:
+#ifndef STDOUT_SILENT
+                        printf("'mv1080' lossless mode\n");
+#endif
+                        fpm_mv1080_lj92(focus_pixel_map, pattern, raw_width);
+                        break;
+
+                    case MV_1080CROP_L:
+#ifndef STDOUT_SILENT
+                        printf("'mv1080crop' lossless mode\n");
+#endif
+                        fpm_mv1080crop_lj92(focus_pixel_map, pattern, raw_width);
+                        break;
+
+                    case MV_ZOOM_L:
+#ifndef STDOUT_SILENT
+                        printf("'mvZoom' lossless mode\n");
+#endif
+                        fpm_zoom_lj92(focus_pixel_map, pattern, raw_width);
+                        break;
+
+                    case MV_CROPREC_L:
+#ifndef STDOUT_SILENT
+                        printf("'mvCrop_rec' lossless mode\n");
+#endif
+                        fpm_crop_rec_lj92(focus_pixel_map, pattern, raw_width);
+                        break;
+
                     default:
                         break;
                 }

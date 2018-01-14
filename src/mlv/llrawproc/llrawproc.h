@@ -30,6 +30,9 @@ void freeLLRawProcObject(llrawprocObject_t * llrawproc);
 /* all low level raw processing takes place here */
 void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t raw_image_size);
 
+/* Detect crop rec mode according to RAWC block info (binning + skipping) */
+int llrpGetCroprec(mlvObject_t * video);
+
 /* LLRawProcObject variable handling */
 enum { FR_OFF, FR_ON };
 int llrpGetFixRawMode(mlvObject_t * video);
