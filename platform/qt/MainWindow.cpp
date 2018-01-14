@@ -348,6 +348,10 @@ void MainWindow::importNewMlv(QString fileName)
             m_lastSaveFileName = fileName;
 
             on_actionResetReceipt_triggered();
+
+            //Set to "please load when info is there"
+            m_pSessionReceipts.last()->setFocusPixels( -1 );
+
             previewPicture( ui->listWidgetSession->count() - 1 );
         }
         else
@@ -2021,7 +2025,15 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
 
     ui->checkBoxRawFixEnable->setChecked( receipt->rawFixesEnabled() );
     on_checkBoxRawFixEnable_clicked( receipt->rawFixesEnabled() );
-    setToolButtonFocusPixels( receipt->focusPixels() );
+    if( receipt->focusPixels() == -1 )
+    {
+        //Init Focus Dot automatically when imported and loaded very first time completely
+        setToolButtonFocusPixels( llrpDetectFocusDotFixMode( m_pMlvObject ) );
+    }
+    else
+    {
+        setToolButtonFocusPixels( receipt->focusPixels() );
+    }
     setToolButtonFocusPixelsIntMethod( receipt->fpiMethod() );
     setToolButtonBadPixels( receipt->badPixels() );
     setToolButtonBadPixelsSearchMethod( receipt->bpsMethod() );
