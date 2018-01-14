@@ -73,6 +73,8 @@ void writeMlvAudioToWaveCut(mlvObject_t * video, char * path, uint32_t cut_in, u
 uint64_t getMlvAudioSize(mlvObject_t * video);
 /* Gets all audio data 4 u */
 void getMlvAudioData(mlvObject_t * video, int16_t * outputAudio);
+/* Gets image aspect ratio according to RAWC block info, calculating from binnin + skipping values */
+float getMlvAspectRatio(mlvObject_t * video);
 
 /* Do something like this before doing things: if (isMlvActive(your_mlvObject)) */
 #define isMlvActive(video) (video)->is_active

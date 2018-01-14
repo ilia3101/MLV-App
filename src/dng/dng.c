@@ -494,26 +494,38 @@ static void dng_fill_header(mlvObject_t * mlv_data, dngObject_t * dng_data)
         int32_t * focal_resolution_x = camidGetHFocalResolution(mlv_data->IDNT.cameraModel);
         int32_t * focal_resolution_y = camidGetVFocalResolution(mlv_data->IDNT.cameraModel);
         int32_t par[4] = {1,1,1,1};
-        double rawW = mlv_data->RAWI.raw_info.active_area.x2 - mlv_data->RAWI.raw_info.active_area.x1;
-        double rawH = mlv_data->RAWI.raw_info.active_area.y2 - mlv_data->RAWI.raw_info.active_area.y1;
-        double aspect_ratio = rawW / rawH;
-        //check the aspect ratio of the original raw buffer, if it's > 2 and we're not in crop mode, then this is probably squeezed footage
-        //TODO: can we be more precise about detecting this?
-        if(aspect_ratio > 2.0 && rawH <= 720)
+
+        /* If RAWC block present calculate aspect ratio from binning/skipping values */
+        if(mlv_data->RAWC.blockType)
         {
-            // 5x3 line skpping
-            par[2] = 5; par[3] = 3;
-            focal_resolution_x[1] = focal_resolution_x[1] * 3;
-            focal_resolution_y[1] = focal_resolution_y[1] * 5;
+            int sampling_x = mlv_data->RAWC.binning_x + mlv_data->RAWC.skipping_x;
+            int sampling_y = mlv_data->RAWC.binning_y + mlv_data->RAWC.skipping_y;
+
+            par[2] = sampling_y; par[3] = sampling_x;
+            focal_resolution_x[1] = focal_resolution_x[1] * sampling_x;
+            focal_resolution_y[1] = focal_resolution_y[1] * sampling_y;
         }
-        //if the width is larger than 2000, we're probably not in crop mode
-        //TODO: this may not be the safest assumption, esp. if adtg control of sensor resolution/crop is implemented, currently it is true for all ML cameras
-        else if(rawW < 2000)
+        else // use old method to calculate aspect ratio and detect crop_rec
         {
-            focal_resolution_x[1] = focal_resolution_x[1] * 3;
-            focal_resolution_y[1] = focal_resolution_y[1] * 3;
+            double rawW = mlv_data->RAWI.raw_info.active_area.x2 - mlv_data->RAWI.raw_info.active_area.x1;
+            double rawH = mlv_data->RAWI.raw_info.active_area.y2 - mlv_data->RAWI.raw_info.active_area.y1;
+            double aspect_ratio = rawW / rawH;
+            //check the aspect ratio of the original raw buffer, if it's > 2 and we're not in crop mode, then this is probably squeezed footage
+            if(aspect_ratio > 2.0 && rawH <= 720)
+            {
+                // 5x3 line skpping
+                par[2] = 5; par[3] = 3;
+                focal_resolution_x[1] = focal_resolution_x[1] * 3;
+                focal_resolution_y[1] = focal_resolution_y[1] * 5;
+            }
+            //if the width is larger than 2000, we're probably not in crop mode
+            else if(rawW < 2000)
+            {
+                focal_resolution_x[1] = focal_resolution_x[1] * 3;
+                focal_resolution_y[1] = focal_resolution_y[1] * 3;
+            }
         }
-        
+
         //we get the active area of the original raw source, not the recorded data, so overwrite the active area if the recorded data does
         //not contain the OB areas
         if(mlv_data->RAWI.xRes < mlv_data->RAWI.raw_info.active_area.x2 ||

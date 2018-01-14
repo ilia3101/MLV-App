@@ -945,6 +945,20 @@ short_cut:
     return MLV_ERR_NONE;
 }
 
+/* Get image aspect ratio according to RAWC block info, calculating from binnin + skipping values.
+   Returns aspect ratio or 0 in case if RAWC block is not present in MLV file */
+float getMlvAspectRatio(mlvObject_t * video)
+{
+    if(video->RAWC.blockType)
+    {
+        int sampling_x = video->RAWC.binning_x + video->RAWC.skipping_x;
+        int sampling_y = video->RAWC.binning_y + video->RAWC.skipping_y;
+
+        return (float)(sampling_y / sampling_x);
+    }
+    return 0;
+}
+
 void printMlvInfo(mlvObject_t * video)
 {
     printf("\nMLV Info\n\n");
