@@ -136,7 +136,7 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
     /* fix focus pixels */
     if (video->llrawproc->focus_pixels && video->llrawproc->fpm_status < 3)
     {
-        int crop_rec = (video->llrawproc->focus_pixels == 2) ? 1 : llrpGetCroprec(video);
+        int crop_rec = (llrpDetectFocusDotFixMode(video) == 2) ? 1 : (video->llrawproc->focus_pixels == 2);
         fix_focus_pixels(&video->llrawproc->focus_pixel_map,
                          &video->llrawproc->fpm_status,
                          raw_image_buff,
@@ -248,21 +248,30 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
     }
 }
 
-/* Detect crop rec mode according to RAWC block info (binning + skipping) */
-int llrpGetCroprec(mlvObject_t * video)
+/* Detect focus dot fix mode according to RAWC block info (binning + skipping) and camera ID
+   Return value 0 = off, 1 = On, 2 = CropRec */
+int llrpDetectFocusDotFixMode(mlvObject_t * video)
 {
-    if(video->RAWC.blockType)
+    switch(video->IDNT.cameraModel)
     {
-        int sampling_x = video->RAWC.binning_x + video->RAWC.skipping_x;
-        int sampling_y = video->RAWC.binning_y + video->RAWC.skipping_y;
-
-        if( !(sampling_y == 5 && sampling_x == 3) )
-        {
+        case 0x80000331: // EOSM
+        case 0x80000346: // 100D
+        case 0x80000301: // 650D
+        case 0x80000326: // 700D
+            if(video->RAWC.blockType)
+            {
+                int sampling_x = video->RAWC.binning_x + video->RAWC.skipping_x;
+                int sampling_y = video->RAWC.binning_y + video->RAWC.skipping_y;
+                if( (video->RAWI.raw_info.height < 900) && !(sampling_y == 5 && sampling_x == 3) )
+                {
+                    return 2;
+                }
+            }
             return 1;
-        }
-    }
 
-    return 0;
+        default: // All other cameras
+            return 0;
+    }
 }
 
 /* LLRawProcObject variable handling */
