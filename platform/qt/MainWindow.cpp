@@ -1527,7 +1527,6 @@ void MainWindow::openSession(QString fileNameSession)
                         //Open the file
                         openMlvForPreview( fileName );
                         m_pSessionReceipts.last()->setFileName( fileName );
-                        //m_pSessionReceipts.last()->setCutOut( getMlvFrames( m_pMlvObject ) ); //Set Cut Out to the end, in case there is no xml tag
 
                         readXmlElementsFromFile( &Rxml, m_pSessionReceipts.last(), versionMasxml );
                         setSliders( m_pSessionReceipts.last(), false );
@@ -3177,7 +3176,6 @@ void MainWindow::on_actionExportSettings_triggered()
 void MainWindow::on_actionResetReceipt_triggered()
 {
     ReceiptSettings *sliders = new ReceiptSettings(); //default
-    //sliders->setCutOut( getMlvFrames( m_pMlvObject ) );
     setWhiteBalanceFromMlv( sliders );
     setSliders( sliders, false );
     delete sliders;
