@@ -949,7 +949,7 @@ short_cut:
    Returns aspect ratio or 0 in case if RAWC block is not present in MLV file */
 float getMlvAspectRatio(mlvObject_t * video)
 {
-    if(video->RAWC.blockType)
+    if(video->RAWC.blockType[0])
     {
         int sampling_x = video->RAWC.binning_x + video->RAWC.skipping_x;
         int sampling_y = video->RAWC.binning_y + video->RAWC.skipping_y;

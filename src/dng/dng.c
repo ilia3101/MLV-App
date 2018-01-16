@@ -496,7 +496,7 @@ static void dng_fill_header(mlvObject_t * mlv_data, dngObject_t * dng_data)
         int32_t par[4] = {1,1,1,1};
 
         /* If RAWC block present calculate aspect ratio from binning/skipping values */
-        if(mlv_data->RAWC.blockType)
+        if(mlv_data->RAWC.blockType[0])
         {
             int sampling_x = mlv_data->RAWC.binning_x + mlv_data->RAWC.skipping_x;
             int sampling_y = mlv_data->RAWC.binning_y + mlv_data->RAWC.skipping_y;

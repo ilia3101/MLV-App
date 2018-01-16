@@ -258,7 +258,7 @@ int llrpDetectFocusDotFixMode(mlvObject_t * video)
         case 0x80000346: // 100D
         case 0x80000301: // 650D
         case 0x80000326: // 700D
-            if(video->RAWC.blockType)
+            if(video->RAWC.blockType[0])
             {
                 int sampling_x = video->RAWC.binning_x + video->RAWC.skipping_x;
                 int sampling_y = video->RAWC.binning_y + video->RAWC.skipping_y;
