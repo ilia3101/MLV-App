@@ -13,7 +13,7 @@
 //Constructor
 Histogram::Histogram()
 {
-    m_pHistogram = new QImage( 256, HEIGHT, QImage::Format_RGB888 );
+    m_pHistogram = new QImage( 511, HEIGHT, QImage::Format_RGB888 ); //511 = 8bit * 2 - 1
 }
 
 //Destructor
@@ -61,13 +61,27 @@ QImage Histogram::getHistogramFromImg( QImage *img )
         tableG[x] = tableG[x] * HEIGHT / highestVal;
         tableB[x] = tableB[x] * HEIGHT / highestVal;
 
+        //"Real" points
         for( uint8_t y = 0; y < HEIGHT; y++ )
         {
             QColor color = QColor( Qt::black );
             if( tableR[x] >= HEIGHT - y ) color.setRed( 255 );
             if( tableG[x] >= HEIGHT - y ) color.setGreen( 255 );
             if( tableB[x] >= HEIGHT - y ) color.setBlue( 255 );
-            m_pHistogram->setPixelColor( x, y, color );
+            m_pHistogram->setPixelColor( x * 2, y, color );
+        }
+
+        //Interpolation
+        if( x < 255 )
+        {
+            for( uint8_t y = 0; y < HEIGHT; y++ )
+            {
+                QColor color = QColor( Qt::black );
+                if( ( ( tableR[x] + tableR[x-1] ) >> 1 ) >= ( HEIGHT - y ) ) color.setRed( 255 );
+                if( ( ( tableG[x] + tableG[x-1] ) >> 1 ) >= ( HEIGHT - y ) ) color.setGreen( 255 );
+                if( ( ( tableB[x] + tableB[x-1] ) >> 1 ) >= ( HEIGHT - y ) ) color.setBlue( 255 );
+                m_pHistogram->setPixelColor( ( x * 2 ) - 1, y, color );
+            }
         }
     }
     return *m_pHistogram;
@@ -112,13 +126,27 @@ QImage Histogram::getHistogramFromRaw(uint8_t *m_pRawImage, uint16_t width, uint
         tableG[x] = tableG[x] * HEIGHT / highestVal;
         tableB[x] = tableB[x] * HEIGHT / highestVal;
 
+        //"Real" points
         for( uint8_t y = 0; y < HEIGHT; y++ )
         {
             QColor color = QColor( Qt::black );
             if( tableR[x] >= HEIGHT - y ) color.setRed( 255 );
             if( tableG[x] >= HEIGHT - y ) color.setGreen( 255 );
             if( tableB[x] >= HEIGHT - y ) color.setBlue( 255 );
-            m_pHistogram->setPixelColor( x, y, color );
+            m_pHistogram->setPixelColor( x * 2, y, color );
+        }
+
+        //Interpolation
+        if( x > 0 )
+        {
+            for( uint8_t y = 0; y < HEIGHT; y++ )
+            {
+                QColor color = QColor( Qt::black );
+                if( ( ( tableR[x] + tableR[x-1] ) >> 1 ) >= ( HEIGHT - y ) ) color.setRed( 255 );
+                if( ( ( tableG[x] + tableG[x-1] ) >> 1 ) >= ( HEIGHT - y ) ) color.setGreen( 255 );
+                if( ( ( tableB[x] + tableB[x-1] ) >> 1 ) >= ( HEIGHT - y ) ) color.setBlue( 255 );
+                m_pHistogram->setPixelColor( ( x * 2 ) - 1, y, color );
+            }
         }
     }
     return *m_pHistogram;
