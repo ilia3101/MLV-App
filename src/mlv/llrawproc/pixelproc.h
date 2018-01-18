@@ -39,7 +39,7 @@ typedef struct {
 } pixel_map;
 
 /* initialize LUTs */
-int * get_raw2ev(int black, int32_t bpp);
+int * get_raw2ev(int black);
 int * get_ev2raw(int black);
 /* free LUTs */
 void free_luts(int * raw2ev, int * ev2raw);

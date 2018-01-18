@@ -56,14 +56,13 @@
 #define FMT_SIZE "%zu"
 #endif
 
-int * get_raw2ev(int black, int32_t bpp)
+int * get_raw2ev(int black)
 {
-    int max_rawval = pow(2, bpp) - 1;
     int * raw2ev = (int *)malloc(EV_RESOLUTION*sizeof(int));
     
-    memset(raw2ev, 0, max_rawval * sizeof(int));
+    memset(raw2ev, 0, EV_RESOLUTION * sizeof(int));
     int i;
-    for (i = 0; i < max_rawval; i++)
+    for (i = 0; i < EV_RESOLUTION; i++)
     {
         raw2ev[i] = log2(MAX(1, i - black)) * EV_RESOLUTION;
     }
@@ -1256,27 +1255,27 @@ bpm_check:
                             }
                         }
                     }
-                    
+
                     if (p < dark_min) //cold pixel
                     {
 #ifndef STDOUT_SILENT
-                        printf("COLD - p = %d, dark_min = %d, dark_max = %d\n", p, dark_min, dark_max);
+                        printf("COLD - p = %d, dark_min = %d, dark_max = %d, raw2ev[p] = %6d, raw2ev[-max2] = %d\n", p, dark_min, dark_max, raw2ev[p], raw2ev[-max2]);
 #endif
                         if(!add_pixel_to_map(bad_pixel_map, x + cropX, y + cropY)) goto mem_err;
                     }
-                    else if ((raw2ev[p] - raw2ev[-max2] > 2 * EV_RESOLUTION) && (p > dark_max)) //hot pixel
+                    else if ((raw2ev[p] - raw2ev[-max2] > (2 * EV_RESOLUTION)) && (p > dark_max)) //hot pixel
                     {
 #ifndef STDOUT_SILENT
-                        printf("HOT  - p = %d, dark_min = %d, dark_max = %d\n", p, dark_min, dark_max);
+                        printf("HOT  - p = %d, dark_min = %d, dark_max = %d, raw2ev[p] = %d, raw2ev[-max2] = %d\n", p, dark_min, dark_max, raw2ev[p], raw2ev[-max2]);
 #endif
                         if(!add_pixel_to_map(bad_pixel_map, x + cropX, y + cropY)) goto mem_err;
                     }
                     else if (aggressive)
                     {
-#ifndef STDOUT_SILENT
-                        printf("AGRR - p = %d, dark_min = %d, dark_max = %d\n", p, dark_min, dark_max);
-#endif
                         int max3 = kth_smallest_int(neighbours, k, 2);
+#ifndef STDOUT_SILENT
+                        printf("AGRR - p = %d, dark_min = %d, dark_max = %d, raw2ev[p] = %d, raw2ev[-max2] = %d, raw2ev[-max3] = %d\n", p, dark_min, dark_max, raw2ev[p], raw2ev[-max2], raw2ev[-max3]);
+#endif
                         if(((raw2ev[p] - raw2ev[-max2] > EV_RESOLUTION) || (raw2ev[p] - raw2ev[-max3] > EV_RESOLUTION)) && (p > dark_max))
                         {
                             if(!add_pixel_to_map(bad_pixel_map, x + cropX, y + cropY)) goto mem_err;

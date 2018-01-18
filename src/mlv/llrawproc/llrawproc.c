@@ -106,7 +106,7 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
                                                          video->RAWI.raw_info.white_level,
                                                          1); // dual iso check mode is on
         /* initialise LUTs */
-        video->llrawproc->raw2ev = get_raw2ev(video->RAWI.raw_info.black_level, video->RAWI.raw_info.bits_per_pixel);
+        video->llrawproc->raw2ev = get_raw2ev(video->RAWI.raw_info.black_level);
         video->llrawproc->ev2raw = get_ev2raw(video->RAWI.raw_info.black_level);
 
         video->llrawproc->first_time = 0;
