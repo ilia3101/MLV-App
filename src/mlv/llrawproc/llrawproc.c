@@ -136,7 +136,10 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
     /* fix focus pixels */
     if (video->llrawproc->focus_pixels && video->llrawproc->fpm_status < 3)
     {
+        /* detect crop_rec mode */
         int crop_rec = (llrpDetectFocusDotFixMode(video) == 2) ? 1 : (video->llrawproc->focus_pixels == 2);
+        /* detect if raw data is restricted to 8-12bit lossless mode */
+        int restricted_lossless = ( (video->MLVI.videoClass & MLV_VIDEO_CLASS_FLAG_LJ92) && (video->RAWI.raw_info.white_level > 15000) );
         fix_focus_pixels(&video->llrawproc->focus_pixel_map,
                          &video->llrawproc->fpm_status,
                          raw_image_buff,
@@ -148,7 +151,7 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
                          video->RAWI.raw_info.width,
                          video->RAWI.raw_info.height,
                          crop_rec,
-                         ((video->MLVI.videoClass & MLV_VIDEO_CLASS_FLAG_LJ92) ? 5 : 0),
+                         (!restricted_lossless ? 0 : 5),
                          video->llrawproc->fpi_method,
                          video->llrawproc->is_dual_iso,
                          video->llrawproc->raw2ev,

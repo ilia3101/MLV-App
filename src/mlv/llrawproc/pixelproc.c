@@ -278,7 +278,7 @@ enum pattern { PATTERN_NONE = 0,
              };
 
 enum video_mode { MV_NONE, MV_720,   MV_1080,   MV_1080CROP,   MV_ZOOM,   MV_CROPREC,
-                           MV_720_L, MV_1080_L, MV_1080CROP_L, MV_ZOOM_L, MV_CROPREC_L };
+                           MV_720_U, MV_1080_U, MV_1080CROP_U, MV_ZOOM_U, MV_CROPREC_U };
 
 static int add_pixel_to_map(pixel_map * map, int x, int y)
 {
@@ -602,13 +602,13 @@ static void fpm_crop_rec(pixel_map * map, int pattern, int32_t raw_width)
     }
 }
 
-/* lossless mode pattern generators **************************************************************/
+/* unified mode pattern generators ***************************************************************/
 
 /*
-  fpm_mv720_lj92() function
-  Draw the focus pixel pattern for lossless mv720 video mode.
+  fpm_mv720_u() function
+  Draw unified focus pixel pattern for mv720 video mode.
 */
-static void fpm_mv720_lj92(pixel_map * map, int pattern, int32_t raw_width)
+static void fpm_mv720_u(pixel_map * map, int pattern, int32_t raw_width)
 {
     int shift = 0;
     int fp_start = 28;
@@ -641,10 +641,10 @@ static void fpm_mv720_lj92(pixel_map * map, int pattern, int32_t raw_width)
 }
 
 /*
-  fpm_mv1080_lj92() function
-  Draw the focus pixel pattern for lossless mv1080 video mode.
+  fpm_mv1080_u() function
+  Draw unified focus pixel pattern for mv1080 video mode.
 */
-static void fpm_mv1080_lj92(pixel_map * map, int pattern, int32_t raw_width)
+static void fpm_mv1080_u(pixel_map * map, int pattern, int32_t raw_width)
 {
     int shift = 0;
     int fp_start = 28;
@@ -677,11 +677,11 @@ static void fpm_mv1080_lj92(pixel_map * map, int pattern, int32_t raw_width)
 }
 
 /*
-  fpm_mv1080crop_lj92() functions (shifted and normal)
-  Draw the focus pixel pattern for lossless mv1080crop video mode.
+  fpm_mv1080crop_u() functions (shifted and normal)
+  Draw unified focus pixel pattern for mv1080crop video mode.
 */
 /* shifted */
-static void fpm_mv1080crop_lj92_shifted(pixel_map * map, int pattern, int32_t raw_width)
+static void fpm_mv1080crop_u_shifted(pixel_map * map, int pattern, int32_t raw_width)
 {
     int shift = 0;
     int fp_start = 28;
@@ -736,7 +736,7 @@ static void fpm_mv1080crop_lj92_shifted(pixel_map * map, int pattern, int32_t ra
     }
 }
 /* normal */
-static void fpm_mv1080crop_lj92(pixel_map * map, int pattern, int32_t raw_width)
+static void fpm_mv1080crop_u(pixel_map * map, int pattern, int32_t raw_width)
 {
     int shift = 0;
     int fp_start = 28;
@@ -791,14 +791,14 @@ static void fpm_mv1080crop_lj92(pixel_map * map, int pattern, int32_t raw_width)
     }
 
     /* Second pass shifted */
-    fpm_mv1080crop_lj92_shifted(map, pattern, raw_width);
+    fpm_mv1080crop_u_shifted(map, pattern, raw_width);
 }
 
 /*
-  zoom_lj92() function
-  Draw the focus pixel pattern for lossless zoom video mode.
+  zoom_u() function
+  Draw unified focus pixel pattern for Zoom video mode.
 */
-static void fpm_zoom_lj92(pixel_map * map, int pattern, int32_t raw_width)
+static void fpm_zoom_u(pixel_map * map, int pattern, int32_t raw_width)
 {
     int shift = 0;
     int fp_start = 28;
@@ -854,14 +854,14 @@ static void fpm_zoom_lj92(pixel_map * map, int pattern, int32_t raw_width)
 }
 
 /*
-  fpm_crop_rec_lj92() function
-  Draw the focus pixel pattern for lossless crop_rec video mode.
+  fpm_crop_rec_u() function
+  Draw unified focus pixel pattern for crop_rec video mode.
   Requires the crop_rec module.
 */
-static void fpm_crop_rec_lj92(pixel_map * map, int pattern, int32_t raw_width)
+static void fpm_crop_rec_u(pixel_map * map, int pattern, int32_t raw_width)
 {
     // first pass is like mv720
-    fpm_mv720_lj92(map, pattern, raw_width);
+    fpm_mv720_u(map, pattern, raw_width);
 
     int shift = 0;
     int fp_start = 28;
@@ -918,7 +918,7 @@ static int fpm_get_pattern(uint32_t camera_model)
 }
 
 /* returns video mode name, special case when vid_mode == "crop_rec" */
-static int fpm_get_video_mode(int32_t raw_width, int32_t raw_height, int crop_rec, int lossless_mode)
+static int fpm_get_video_mode(int32_t raw_width, int32_t raw_height, int crop_rec, int unified_mode)
 {
     switch(raw_width)
     {
@@ -927,23 +927,23 @@ static int fpm_get_video_mode(int32_t raw_width, int32_t raw_height, int crop_re
             {
                 if(crop_rec)
                 {
-                    return MV_CROPREC + lossless_mode;
+                    return MV_CROPREC + unified_mode;
                 }
                 else
                 {
-                    return MV_720 + lossless_mode;
+                    return MV_720 + unified_mode;
                 }
             }
             else
             {
-                return MV_1080 + lossless_mode;
+                return MV_1080 + unified_mode;
             }
 
         case 1872:
-            return MV_1080CROP + lossless_mode;
+            return MV_1080CROP + unified_mode;
 
         case 2592:
-            return MV_ZOOM + lossless_mode;
+            return MV_ZOOM + unified_mode;
 
         default:
             return MV_NONE;
@@ -961,7 +961,7 @@ void fix_focus_pixels(pixel_map * focus_pixel_map,
                       int32_t raw_width,
                       int32_t raw_height,
                       int crop_rec,
-                      int lossless_mode,
+                      int unified_mode,
                       int average_method,
                       int dual_iso,
                       int * raw2ev,
@@ -1005,7 +1005,7 @@ fpm_check:
             }
             else
             {
-                enum video_mode video_mode = fpm_get_video_mode(raw_width, raw_height, crop_rec, lossless_mode);
+                enum video_mode video_mode = fpm_get_video_mode(raw_width, raw_height, crop_rec, unified_mode);
 #ifndef STDOUT_SILENT
                 printf("\nGenerating focus pixel map for ");
 #endif
@@ -1046,39 +1046,39 @@ fpm_check:
                         fpm_crop_rec(focus_pixel_map, pattern, raw_width);
                         break;
 
-                    case MV_720_L:
+                    case MV_720_U:
 #ifndef STDOUT_SILENT
-                        printf("'mv720' lossless mode\n");
+                        printf("'mv720' unified mode\n");
 #endif
-                        fpm_mv720_lj92(focus_pixel_map, pattern, raw_width);
+                        fpm_mv720_u(focus_pixel_map, pattern, raw_width);
                         break;
 
-                    case MV_1080_L:
+                    case MV_1080_U:
 #ifndef STDOUT_SILENT
-                        printf("'mv1080' lossless mode\n");
+                        printf("'mv1080' unified mode\n");
 #endif
-                        fpm_mv1080_lj92(focus_pixel_map, pattern, raw_width);
+                        fpm_mv1080_u(focus_pixel_map, pattern, raw_width);
                         break;
 
-                    case MV_1080CROP_L:
+                    case MV_1080CROP_U:
 #ifndef STDOUT_SILENT
-                        printf("'mv1080crop' lossless mode\n");
+                        printf("'mv1080crop' unified mode\n");
 #endif
-                        fpm_mv1080crop_lj92(focus_pixel_map, pattern, raw_width);
+                        fpm_mv1080crop_u(focus_pixel_map, pattern, raw_width);
                         break;
 
-                    case MV_ZOOM_L:
+                    case MV_ZOOM_U:
 #ifndef STDOUT_SILENT
-                        printf("'mvZoom' lossless mode\n");
+                        printf("'mvZoom' unified mode\n");
 #endif
-                        fpm_zoom_lj92(focus_pixel_map, pattern, raw_width);
+                        fpm_zoom_u(focus_pixel_map, pattern, raw_width);
                         break;
 
-                    case MV_CROPREC_L:
+                    case MV_CROPREC_U:
 #ifndef STDOUT_SILENT
-                        printf("'mvCrop_rec' lossless mode\n");
+                        printf("'mvCrop_rec' unified mode\n");
 #endif
-                        fpm_crop_rec_lj92(focus_pixel_map, pattern, raw_width);
+                        fpm_crop_rec_u(focus_pixel_map, pattern, raw_width);
                         break;
 
                     default:
