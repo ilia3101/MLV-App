@@ -8,7 +8,7 @@
 #include "Histogram.h"
 #include "math.h"
 
-#define HEIGHT 200
+#define HEIGHT 140
 
 //Constructor
 Histogram::Histogram()

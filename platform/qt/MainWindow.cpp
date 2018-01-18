@@ -215,6 +215,13 @@ void MainWindow::timerEvent(QTimerEvent *t)
 //Window resized -> scale picture
 void MainWindow::resizeEvent(QResizeEvent *event)
 {
+    //If opening files just quit here
+    if( m_inOpeningProcess )
+    {
+        event->accept();
+        return;
+    }
+
     //Stop playback if active
     ui->actionPlay->setChecked( false );
     m_pAudioPlayback->stop(); //Stop audio explicitely
