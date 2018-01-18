@@ -1248,8 +1248,7 @@ void MainWindow::startExportCdng(QString fileName)
 
     //Get aspect ratio of the picture
     int32_t picAR[4] = { 0 };
-    if(m_aspectHStretchChanged || m_aspectVStretchChanged)
-    {
+
         switch (ui->comboBoxHStretch->currentIndex())
         {
             case 1:
@@ -1279,7 +1278,6 @@ void MainWindow::startExportCdng(QString fileName)
         {
             picAR[2] = 1; picAR[3] = 1;
         }
-    }
 
     //Init DNG data struct
     dngObject_t * cinemaDng = initDngObject( m_pMlvObject, m_codecProfile - 6, getFramerate(), picAR);
@@ -4539,8 +4537,7 @@ void MainWindow::on_actionPreviewList_triggered()
 
 //Session Preview Picture
 void MainWindow::on_actionPreviewPicture_triggered()
-{
-    ui->actionPreviewDisabled->setChecked( false );
+{    ui->actionPreviewDisabled->setChecked( false );
     ui->actionPreviewList->setChecked( false );
     ui->actionPreviewPicture->setChecked( true );
     m_previewMode = 2;
@@ -4551,8 +4548,6 @@ void MainWindow::on_actionPreviewPicture_triggered()
 void MainWindow::on_comboBoxHStretch_currentIndexChanged(int index)
 {
     m_pGradientElement->setStrechFactorX( getHorizontalStretchFactor() );
-    qDebug() << m_aspectHStretchChanged;
-    m_aspectHStretchChanged = true;
     m_zoomModeChanged = true;
     m_frameChanged = true;
 }
@@ -4561,7 +4556,6 @@ void MainWindow::on_comboBoxHStretch_currentIndexChanged(int index)
 void MainWindow::on_comboBoxVStretch_currentIndexChanged(int index)
 {
     m_pGradientElement->setStrechFactorY( getVerticalStretchFactor() );
-    m_aspectVStretchChanged = true;
     m_zoomModeChanged = true;
     m_frameChanged = true;
 }
