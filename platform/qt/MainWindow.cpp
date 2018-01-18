@@ -1246,38 +1246,42 @@ void MainWindow::startExportCdng(QString fileName)
         writeMlvAudioToWaveCut( m_pMlvObject, wavFileName.toLatin1().data(), m_exportQueue.first()->cutIn(), m_exportQueue.first()->cutOut() );
     }
 
-    //Get aspect ratio of the picture
+    //Set aspect ratio of the picture
     int32_t picAR[4] = { 0 };
-
-        switch (ui->comboBoxHStretch->currentIndex())
-        {
-            case 1:
-                picAR[0] = 4; picAR[1] = 3;
-                break;
-            case 2:
-                picAR[0] = 3; picAR[1] = 2;
-                break;
-            case 3:
-                picAR[0] = 7; picAR[1] = 4;
-                break;
-            case 4:
-                picAR[0] = 9; picAR[1] = 5;
-                break;
-            case 5:
-                picAR[0] = 2; picAR[1] = 1;
-                break;
-            default:
-                picAR[0] = 1; picAR[1] = 1;
-                break;
-        }
-        if(ui->comboBoxVStretch->currentIndex())
-        {
-            picAR[2] = 5; picAR[3] = 3;
-        }
-        else
-        {
-            picAR[2] = 1; picAR[3] = 1;
-        }
+    //Set horizontal stretch
+    if( m_exportQueue.first()->stretchFactorX() == STRETCH_H_133 )
+    {
+        picAR[0] = 4; picAR[1] = 3;
+    }
+    else if( m_exportQueue.first()->stretchFactorX() == STRETCH_H_150 )
+    {
+        picAR[0] = 3; picAR[1] = 2;
+    }
+    else if( m_exportQueue.first()->stretchFactorX() == STRETCH_H_175 )
+    {
+        picAR[0] = 7; picAR[1] = 4;
+    }
+    else if( m_exportQueue.first()->stretchFactorX() == STRETCH_H_180 )
+    {
+        picAR[0] = 9; picAR[1] = 5;
+    }
+    else if( m_exportQueue.first()->stretchFactorX() == STRETCH_H_200 )
+    {
+        picAR[0] = 2; picAR[1] = 1;
+    }
+    else
+    {
+        picAR[0] = 1; picAR[1] = 1;
+    }
+    //Set vertical stretch
+    if(m_exportQueue.first()->stretchFactorY() == STRETCH_V_167)
+    {
+        picAR[2] = 5; picAR[3] = 3;
+    }
+    else
+    {
+        picAR[2] = 1; picAR[3] = 1;
+    }
 
     //Init DNG data struct
     dngObject_t * cinemaDng = initDngObject( m_pMlvObject, m_codecProfile - 6, getFramerate(), picAR);
