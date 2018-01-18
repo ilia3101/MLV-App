@@ -479,11 +479,11 @@ static void dng_fill_header(mlvObject_t * mlv_data, dngObject_t * dng_data)
         memcpy(serial, mlv_data->IDNT.cameraSerial, 32);
         
         /* 'Unique Camera Model' Tag */
-        const char * unique_model = NULL;
+        char * unique_model = NULL;
         const char * unique_name = camidGetCameraName(mlv_data->IDNT.cameraModel, UNIQ);
         if (unique_name)
         {
-            unique_model = unique_name;
+            unique_model = (char *)unique_name;
         }
         else
         {
@@ -493,15 +493,34 @@ static void dng_fill_header(mlvObject_t * mlv_data, dngObject_t * dng_data)
         /* Focal resolution stuff */
         int32_t * focal_resolution_x = camidGetHFocalResolution(mlv_data->IDNT.cameraModel);
         int32_t * focal_resolution_y = camidGetVFocalResolution(mlv_data->IDNT.cameraModel);
-        int32_t par[4] = {1,1,1,1};
 
-        /* If RAWC block present calculate aspect ratio from binning/skipping values */
+        /* Picture aspect ratio */
+        int manual_ar = 0;
+        int32_t pic_ar[4] = {1,1,1,1};
+        int32_t * par = NULL;
+        if(dng_data->par[0])
+        {
+            printf("cDNG: manual aspect ratio used\n");
+            manual_ar = 1;
+            par = dng_data->par;
+        }
+        else
+        {
+            printf("cDNG: default aspect ratio used\n");
+            par = pic_ar;
+        }
+
+        /* If RAWC block present calculate AR and FR from binning/skipping values */
         if(mlv_data->RAWC.blockType[0])
         {
             int sampling_x = mlv_data->RAWC.binning_x + mlv_data->RAWC.skipping_x;
             int sampling_y = mlv_data->RAWC.binning_y + mlv_data->RAWC.skipping_y;
 
-            par[2] = sampling_y; par[3] = sampling_x;
+            if(!manual_ar)
+            {
+                par[2] = sampling_y; par[3] = sampling_x;
+            }
+
             focal_resolution_x[1] = focal_resolution_x[1] * sampling_x;
             focal_resolution_y[1] = focal_resolution_y[1] * sampling_y;
         }
@@ -511,10 +530,14 @@ static void dng_fill_header(mlvObject_t * mlv_data, dngObject_t * dng_data)
             double rawH = mlv_data->RAWI.raw_info.active_area.y2 - mlv_data->RAWI.raw_info.active_area.y1;
             double aspect_ratio = rawW / rawH;
             //check the aspect ratio of the original raw buffer, if it's > 2 and we're not in crop mode, then this is probably squeezed footage
-            if(aspect_ratio > 2.0 && rawH <= 720)
+            if(aspect_ratio > 2.0 && rawH <= 720 && llrpDetectFocusDotFixMode(mlv_data) != 2)
             {
-                // 5x3 line skpping
-                par[2] = 5; par[3] = 3;
+                if(!manual_ar)
+                {
+                    // 5x3 line skpping
+                    par[2] = 5; par[3] = 3;
+                }
+
                 focal_resolution_x[1] = focal_resolution_x[1] * 3;
                 focal_resolution_y[1] = focal_resolution_y[1] * 5;
             }
@@ -909,11 +932,12 @@ static int dng_get_frame(mlvObject_t * mlv_data, dngObject_t * dng_data, uint64_
 }
 
 /* init DNG data struct */
-dngObject_t * initDngObject(mlvObject_t * mlv_data, int raw_state, double fps)
+dngObject_t * initDngObject(mlvObject_t * mlv_data, int raw_state, double fps, int32_t par[4])
 {
     dngObject_t * dng_data = calloc(1, sizeof(dngObject_t));
 
     dng_data->fps_float = fps;
+    memcpy(dng_data->par, par, sizeof(int32_t) * 4);
 
     dng_data->raw_input_state = (mlv_data->MLVI.videoClass & MLV_VIDEO_CLASS_FLAG_LJ92) ? COMPRESSED_RAW : UNCOMPRESSED_RAW;
     dng_data->raw_output_state = (dng_data->raw_input_state && (raw_state == 2)) ? COMPRESSED_ORIG : raw_state;

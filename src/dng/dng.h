@@ -34,6 +34,8 @@
 typedef struct
 {
     double fps_float;               // User defined fps
+    int32_t par[4];                 // User defined verical and horizontal stretch (AR)
+
     int raw_input_state;            // 0 - uncompressed, 1 - losless
     int raw_output_state;           // 0 - uncompressed, 1 - losless, 2 - pass uncompressed, 3 - pass losless
 
@@ -54,7 +56,7 @@ int dng_compress_image(uint16_t * output_buffer, uint16_t * input_buffer, size_t
 int dng_decompress_image(uint16_t * output_buffer, uint16_t * input_buffer, size_t input_buffer_size, int width, int height, uint32_t bpp);
 
 /* routines to initialize, save and free DNG exporting struct */
-dngObject_t * initDngObject(mlvObject_t * mlv_data, int raw_state, double fps);
+dngObject_t * initDngObject(mlvObject_t * mlv_data, int raw_state, double fps, int32_t par[4]);
 int saveDngFrame(mlvObject_t * mlv_data, dngObject_t * dng_data, uint64_t frame_index, char * dng_filename);
 void freeDngObject(dngObject_t * dng_data);
 

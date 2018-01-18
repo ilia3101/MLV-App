@@ -220,6 +220,8 @@ private:
     bool m_exportAbortPressed;
     bool m_zoomTo100Center;
     bool m_zoomModeChanged;
+    bool m_aspectHStretchChanged;
+    bool m_aspectVStretchChanged;
     QString m_lastSaveFileName;
     ReceiptSettings *m_pReceiptClipboard;
     QVector<ReceiptSettings*> m_pSessionReceipts;
