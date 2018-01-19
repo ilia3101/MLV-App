@@ -955,7 +955,7 @@ float getMlvAspectRatio(mlvObject_t * video)
         int sampling_y = video->RAWC.binning_y + video->RAWC.skipping_y;
 
         if( sampling_x == 0 ) return 0;
-        return (float)(sampling_y / sampling_x);
+        return ( (float)sampling_y / (float)sampling_x );
     }
     return 0;
 }
