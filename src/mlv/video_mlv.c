@@ -380,8 +380,9 @@ void getMlvRawFrameDebayered(mlvObject_t * video, uint64_t frameIndex, uint16_t 
     }
 }
 
-/* Get a processed frame in 16 bit */
-void getMlvProcessedFrame16(mlvObject_t * video, uint64_t frameIndex, uint16_t * outputFrame)
+/* Get a processed frame in 16 bit, only use more than one thread for preview as
+ * it may have minor artifacts (though I haven't found them yet) */
+void getMlvProcessedFrame16(mlvObject_t * video, uint64_t frameIndex, uint16_t * outputFrame, int threads)
 {
     /* Useful */
     int width = getMlvWidth(video);
@@ -397,16 +398,27 @@ void getMlvProcessedFrame16(mlvObject_t * video, uint64_t frameIndex, uint16_t *
     getMlvRawFrameDebayered(video, frameIndex, unprocessed_frame);
 
     /* Do processing.......... */
-    applyProcessingObject( video->processing,
-                           width, height,
-                           unprocessed_frame,
-                           outputFrame );
+    if (threads != 1)
+    {
+        applyProcessingObjectMultiThreaded( video->processing,
+                                            width, height,
+                                            unprocessed_frame,
+                                            outputFrame,
+                                            threads );
+    }
+    else
+    {
+        applyProcessingObject( video->processing,
+                               width, height,
+                               unprocessed_frame,
+                               outputFrame );
+    }
 
     free(unprocessed_frame);
 }
 
 /* Get a processed frame in 8 bit */
-void getMlvProcessedFrame8(mlvObject_t * video, uint64_t frameIndex, uint8_t * outputFrame)
+void getMlvProcessedFrame8(mlvObject_t * video, uint64_t frameIndex, uint8_t * outputFrame, int threads)
 {
     /* Size of RAW frame */
     int rgb_frame_size = getMlvWidth(video) * getMlvHeight(video) * 3;
@@ -414,7 +426,7 @@ void getMlvProcessedFrame8(mlvObject_t * video, uint64_t frameIndex, uint8_t * o
     /* Processed frame (RGB) */
     uint16_t * processed_frame = malloc( rgb_frame_size * sizeof(uint16_t) );
 
-    getMlvProcessedFrame16(video, frameIndex, processed_frame);
+    getMlvProcessedFrame16(video, frameIndex, processed_frame, threads);
 
     /* Copy (and 8-bitize) */
     for (int i = 0; i < rgb_frame_size; ++i)

@@ -94,7 +94,7 @@ void exportCurrentClip(char * folderPath)
 
     for (uint64_t f = 0; f < getMlvFrames(App->videoMLV); ++f)
     {
-        getMlvProcessedFrame16(App->videoMLV, f, App->rawImage);
+        getMlvProcessedFrame16(App->videoMLV, f, App->rawImage, 1);
         addFrameToVideoFile(encoder, App->rawImage);
     }
 

@@ -7,6 +7,8 @@
 #include <stdint.h>
 #include <pthread.h>
 
+#include "mac_info.h"
+
 #include "main_methods.h"
 
 #include "background_thread.h"
@@ -76,8 +78,8 @@ void draw_frame()
 
     /* Draw frame and update view now */
 
-    /* Get dhe frame*/
-    getMlvProcessedFrame16(App->videoMLV, App->currentFrameIndex, App->rawImage);
+    /* Get dhe frame, multithreaded if not caching */
+    getMlvProcessedFrame16(App->videoMLV, App->currentFrameIndex, App->rawImage, (isMlvObjectCaching(App->videoMLV)) ? 1 : MAC_CORES);
 
     /* Update/refresh the view on main thread */
     [App->previewWindow performSelectorOnMainThread: @selector(updateView) withObject: nil waitUntilDone: YES];
