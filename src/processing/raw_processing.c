@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
+#include <pthread.h>
 
 #include "raw_processing.h"
 #include "../mlv/video_mlv.h"
@@ -152,6 +153,57 @@ void processingCamTosRGBMatrix(processingObject_t * processing, double * camTosR
     memcpy(processing->cam_to_sRGB_matrix, camTosRGBMatrix, sizeof(double) * 9);
     /* Calculates final main matrix */
     processing_update_matrices(processing);
+}
+
+
+/* applyProcessingObject but with one argument for pthreading  */
+void processing_object_thread(apply_processing_parameters_t * p)
+{
+    applyProcessingObject( p->processing, 
+                           p->imageX, p->imageY, 
+                           p->inputImage, 
+                           p->outputImage );
+}
+
+/* Apply it with multiple threads */
+void applyProcessingObjectMultiThreaded( processingObject_t * processing, 
+                                         int imageX, int imageY, 
+                                         uint16_t * __restrict inputImage, 
+                                         uint16_t * __restrict outputImage,
+                                         int threads )
+{
+    apply_processing_parameters_t * params = alloca(sizeof(apply_processing_parameters_t) * threads);
+
+    /* All chunks this size except possibly slightly longer last one */
+    int chunk_size = imageY/threads;
+    /* Size of a chunk */
+    int offset_chunk = imageX * chunk_size * 3;
+    
+    /* Split in to chunks for each thread */
+    for (int t = 0; t < threads; ++t)
+    {
+        params[t].processing = processing;
+        params[t].imageX = imageX;
+        params[t].imageY = chunk_size;
+        params[t].inputImage = inputImage + offset_chunk*t;
+        params[t].outputImage = outputImage + offset_chunk*t;
+    }
+
+    /* To make sure bottom is processed */
+    params[threads-1].imageY = imageY - chunk_size * (threads-1);
+
+    pthread_t * threadid = alloca(threads * sizeof(pthread_t));
+
+    /* Do threads */
+    for (int t = 0; t < threads; ++t)
+    {
+        pthread_create(&threadid[t], NULL, (void *)&processing_object_thread, (void *)(params + t));
+    }
+    /* let all threads finish */
+    for (int t = 0; t < threads; ++t)
+    {
+        pthread_join(threadid[t], NULL);
+    }
 }
 
 
@@ -336,7 +388,7 @@ void processingSetContrast( processingObject_t * processing,
     /* Basic things */
     processing->light_contrast_factor = LCFactor;
     processing->light_contrast_range = LCRange;
-    processing->dark_contrast_factor = DCFactor; 
+    processing->dark_contrast_factor = DCFactor;
     processing->dark_contrast_range = DCRange;
     processing->lighten = lighten;
 

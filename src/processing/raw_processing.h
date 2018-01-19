@@ -36,7 +36,12 @@ void applyProcessingObject( processingObject_t * processing,
                             int imageX, int imageY,
                             uint16_t * __restrict inputImage,
                             uint16_t * __restrict outputImage );
-
+/* May have seams in sharpening and blur (current implementation), so only for preview rn */
+void applyProcessingObjectMultiThreaded( processingObject_t * processing, 
+                                         int imageX, int imageY, 
+                                         uint16_t * __restrict inputImage, 
+                                         uint16_t * __restrict outputImage,
+                                         int threads );
 
 
 /* Set contrast(S-curve really) - important: precalculates values, 
@@ -156,6 +161,16 @@ void processingSetSaturation(processingObject_t * processing, double saturationF
 /* Useful info:
  * http://www.magiclantern.fm/forum/index.php?topic=19270
  * Thanks a1ex & g3gg0 */
+
+typedef struct {
+    processingObject_t * processing;
+    int imageX, imageY;
+    uint16_t * __restrict inputImage;
+    uint16_t * __restrict outputImage;
+} apply_processing_parameters_t;
+
+/* applyProcessingObject but with one argument for pthreading  */
+void processing_object_thread(apply_processing_parameters_t * p);
 
 /* Adds contrast to a single pixel in a S-curvey way, 
  * input pixel must be 0.0 - 1.0 and a double float */
