@@ -1145,7 +1145,7 @@ void MainWindow::startExportPipe(QString fileName)
         {
             //Get picture, and lock render thread... there can only be one!
             m_pRenderThread->lock();
-            getMlvProcessedFrame16( m_pMlvObject, i, imgBuffer, 1 );
+            getMlvProcessedFrame16( m_pMlvObject, i, imgBuffer, QThread::idealThreadCount() );
             m_pRenderThread->unlock();
 
             //Write to pipe
@@ -1456,12 +1456,12 @@ void MainWindow::startExportAVFoundation(QString fileName)
         //Get&Encode
         if( m_codecProfile == CODEC_H264 )
         {
-            getMlvProcessedFrame8( m_pMlvObject, frame, m_pRawImage, 1 );
+            getMlvProcessedFrame8( m_pMlvObject, frame, m_pRawImage, QThread::idealThreadCount() );
             addFrameToVideoFile8bit( encoder, m_pRawImage );
         }
         else
         {
-            getMlvProcessedFrame16( m_pMlvObject, frame, imgBuffer, 1 );
+            getMlvProcessedFrame16( m_pMlvObject, frame, imgBuffer, QThread::idealThreadCount() );
             addFrameToVideoFile( encoder, imgBuffer );
         }
 
@@ -2287,7 +2287,7 @@ void MainWindow::previewPicture( int row )
     m_pMlvObject->llrawproc->fix_raw = 0;
 
     //Get frame from library
-    getMlvProcessedFrame8( m_pMlvObject, 0, m_pRawImage, 1 );
+    getMlvProcessedFrame8( m_pMlvObject, 0, m_pRawImage, QThread::idealThreadCount() );
 
     //Display in SessionList
     QPixmap pic = QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
