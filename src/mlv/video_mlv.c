@@ -725,7 +725,7 @@ int mlvSaveHeaders(mlvObject_t * video, FILE * output_mlv, uint32_t total_frames
     size_t mlv_headers_size = video->MLVI.blockSize + video->RAWI.blockSize +
                               video->IDNT.blockSize + video->EXPO.blockSize +
                               video->LENS.blockSize + video->WBAL.blockSize +
-                              video->RTCI.blockSize + vers_block_size;
+                              video->STYL.blockSize + video->RTCI.blockSize + vers_block_size;
 
     if(video->RAWC.blockType[0]) mlv_headers_size += video->RAWC.blockSize;
     if(video->WAVI.blockType[0]) mlv_headers_size += video->WAVI.blockSize;;
@@ -767,6 +767,9 @@ int mlvSaveHeaders(mlvObject_t * video, FILE * output_mlv, uint32_t total_frames
 
     memcpy(ptr, (uint8_t*)&(video->WBAL), sizeof(mlv_wbal_hdr_t));
     ptr += video->WBAL.blockSize;
+
+    memcpy(ptr, (uint8_t*)&(video->STYL), sizeof(mlv_styl_hdr_t));
+    ptr += video->STYL.blockSize;
 
     memcpy(ptr, (uint8_t*)&(video->RTCI), sizeof(mlv_rtci_hdr_t));
     ptr += video->RTCI.blockSize;
@@ -863,6 +866,7 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode)
     int rtci_read = 0; /* Flips to 1 if 1st RTCI block was read */
     int lens_read = 0; /* Flips to 1 if 1st LENS block was read */
     int wbal_read = 0; /* Flips to 1 if 1st WBAL block was read */
+    int styl_read = 0; /* Flips to 1 if 1st STYL block was read */
 
     for(int i = 0; i < video->filenum; i++)
     {
@@ -1010,6 +1014,11 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode)
             {
                 fread(&video->WBAL, sizeof(mlv_wbal_hdr_t), 1, video->file[i]);
                 wbal_read = 1; //read only first one
+            }
+            else if ( ( memcmp(block_header.blockType, "STYL", 4) == 0 ) && ( !styl_read ) )
+            {
+                fread(&video->STYL, sizeof(mlv_styl_hdr_t), 1, video->file[i]);
+                styl_read = 1; //read only first one
             }
             else if ( ( memcmp(block_header.blockType, "RTCI", 4) == 0 ) && ( !rtci_read ) )
             {
