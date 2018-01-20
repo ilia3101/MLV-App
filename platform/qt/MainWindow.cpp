@@ -3366,7 +3366,7 @@ void MainWindow::on_actionNext_Clip_triggered()
 //Jump to previous clip
 void MainWindow::on_actionPrevious_Clip_triggered()
 {
-    if( ( m_lastActiveClipInSession ) > 0 && m_fileLoaded )
+    if( ( m_lastActiveClipInSession > 0 ) && m_fileLoaded )
     {
         ui->listWidgetSession->setCurrentRow( m_lastActiveClipInSession - 1 );
         showFileInEditor( m_lastActiveClipInSession - 1 );
