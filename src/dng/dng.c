@@ -500,13 +500,17 @@ static void dng_fill_header(mlvObject_t * mlv_data, dngObject_t * dng_data)
         int32_t * par = NULL;
         if(dng_data->par[0])
         {
+#ifndef STDOUT_SILENT
             printf("cDNG: manual aspect ratio used\n");
+#endif
             manual_ar = 1;
             par = dng_data->par;
         }
         else
         {
-            printf("cDNG: default aspect ratio used\n");
+#ifndef STDOUT_SILENT
+            printf("cDNG: auto detected aspect ratio used\n");
+#endif
             par = pic_ar;
         }
 
