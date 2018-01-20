@@ -24,6 +24,7 @@ typedef struct
     uint32_t frame_size;     /* Size of frame data */
     uint64_t frame_offset;   /* Offset to the start of frame data */
     uint64_t frame_time;     /* Time of frame from the start of recording in microseconds */
+    uint64_t block_offset;   /* Offset to the start of the block header */
 } frame_index_t;
 
 /* MLV App map file header (.MAPP) */

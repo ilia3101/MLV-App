@@ -547,6 +547,7 @@ static int save_mapp(mlvObject_t * video)
                            sizeof(mlv_lens_hdr_t) +
                            sizeof(mlv_rtci_hdr_t) +
                            sizeof(mlv_wbal_hdr_t) +
+                           sizeof(mlv_styl_hdr_t) +
                            sizeof(mlv_wavi_hdr_t) +
                            sizeof(mlv_diso_hdr_t);
 
@@ -581,7 +582,8 @@ static int save_mapp(mlvObject_t * video)
     memcpy(ptr += sizeof(mlv_expo_hdr_t), (uint8_t*)&(video->LENS), sizeof(mlv_lens_hdr_t));
     memcpy(ptr += sizeof(mlv_lens_hdr_t), (uint8_t*)&(video->RTCI), sizeof(mlv_rtci_hdr_t));
     memcpy(ptr += sizeof(mlv_rtci_hdr_t), (uint8_t*)&(video->WBAL), sizeof(mlv_wbal_hdr_t));
-    memcpy(ptr += sizeof(mlv_wbal_hdr_t), (uint8_t*)&(video->WAVI), sizeof(mlv_wavi_hdr_t));
+    memcpy(ptr += sizeof(mlv_wbal_hdr_t), (uint8_t*)&(video->STYL), sizeof(mlv_styl_hdr_t));
+    memcpy(ptr += sizeof(mlv_styl_hdr_t), (uint8_t*)&(video->WAVI), sizeof(mlv_wavi_hdr_t));
     memcpy(ptr += sizeof(mlv_wavi_hdr_t), (uint8_t*)&(video->DISO), sizeof(mlv_diso_hdr_t));
 
     /* open .MAPP file for writing */
@@ -677,6 +679,7 @@ static int load_mapp(mlvObject_t * video)
     ret += fread(&(video->LENS), sizeof(mlv_lens_hdr_t), 1, mappf);
     ret += fread(&(video->RTCI), sizeof(mlv_rtci_hdr_t), 1, mappf);
     ret += fread(&(video->WBAL), sizeof(mlv_wbal_hdr_t), 1, mappf);
+    ret += fread(&(video->STYL), sizeof(mlv_styl_hdr_t), 1, mappf);
     ret += fread(&(video->WAVI), sizeof(mlv_wavi_hdr_t), 1, mappf);
     ret += fread(&(video->DISO), sizeof(mlv_diso_hdr_t), 1, mappf);
     if(ret != 10)
@@ -743,7 +746,7 @@ int mlvSaveHeaders(mlvObject_t * video, FILE * output_mlv, uint32_t total_frames
     mlv_file_hdr_t output_mlvi = { 0 };
     memcpy(&output_mlvi, (uint8_t*)&(video->MLVI), sizeof(mlv_file_hdr_t));
     output_mlvi.videoFrameCount = total_frames;
-    output_mlvi.audioFrameCount = 1;
+    output_mlvi.audioFrameCount = 0;
     memcpy(ptr, &output_mlvi, sizeof(mlv_file_hdr_t));
     ptr += video->MLVI.blockSize;
 
@@ -812,31 +815,45 @@ int mlvSaveHeaders(mlvObject_t * video, FILE * output_mlv, uint32_t total_frames
     return 0;
 }
 
-/* Save MLV audio */
-int mlvSaveAudio(mlvObject_t * video, uint8_t * mlv_audio, FILE * output_mlv)
+/* Save video frame plus audio if available */
+int mlvSaveAVFrame(mlvObject_t * video, FILE * output_mlv, uint32_t first_frame, uint32_t frame_index)
 {
-    /* write mlvAudio */
-    //if(fwrite(mlvAudio, mlvAudioSize, 1, output_mlv) != 1)
+    mlv_vidf_hdr_t vidf_hdr = { 0 };
+
+    int chunk = video->video_index[frame_index].chunk_num;
+    uint32_t frame_size = video->video_index[frame_index].frame_size;
+    uint64_t frame_offset = video->video_index[frame_index].frame_offset;
+    uint64_t block_offset = video->video_index[frame_index].block_offset;
+
+    file_set_pos(video->file[chunk], block_offset, SEEK_SET);
+    if(fread(&vidf_hdr, sizeof(mlv_vidf_hdr_t), 1, video->file[chunk]) != 1)
     {
-        DEBUG( printf("\nCould not write MLV audio\n"); )
+        DEBUG( printf("\nCould not read from MLV file\n"); )
         return 1;
     }
 
-    DEBUG( printf("\nMLV audio saved\n"); )
-    return 0;
-}
+    vidf_hdr.blockSize -= vidf_hdr.frameSpace;
+    vidf_hdr.frameNumber = frame_index - first_frame;
+    vidf_hdr.frameSpace = 0;
 
-/* Save MLV frame */
-int mlvSaveFrame(mlvObject_t * video, uint8_t * mlv_frame, FILE * output_mlv)
-{
+    uint8_t * block_buf = calloc(vidf_hdr.blockSize, 1);
+    memcpy(block_buf, &vidf_hdr, sizeof(mlv_vidf_hdr_t));
+
+    file_set_pos(video->file[chunk], frame_offset, SEEK_SET);
+    if(fread((block_buf + sizeof(mlv_vidf_hdr_t)), frame_size, 1, video->file[chunk]) != 1)
+    {
+        DEBUG( printf("\nCould not read from MLV file\n"); )
+        return 1;
+    }
+
     /* write mlvFrame */
-    //if(fwrite(mlvFrame, mlvFrameSize, 1, output_mlv) != 1)
+    if(fwrite(block_buf, sizeof(mlv_vidf_hdr_t) + frame_size, 1, output_mlv) != 1)
     {
         DEBUG( printf("\nCould not write MLV frame\n"); )
         return 1;
     }
 
-    DEBUG( printf("\nMLV frame saved\n"); )
+    DEBUG( printf("\rMLV frame saved"); )
     return 0;
 }
 
@@ -943,6 +960,7 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode)
                 video->video_index[video_frames].frame_size = video->VIDF.blockSize - sizeof(mlv_vidf_hdr_t) - video->VIDF.frameSpace;
                 video->video_index[video_frames].frame_offset = file_get_pos(video->file[i]) + video->VIDF.frameSpace;
                 video->video_index[video_frames].frame_time = video->VIDF.timestamp;
+                video->video_index[video_frames].block_offset = block_start;
 
                 /* Count actual video frames */
                 video_frames++;
@@ -985,6 +1003,7 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode)
                 video->audio_index[audio_frames].frame_size = video->AUDF.blockSize - sizeof(mlv_audf_hdr_t) - video->AUDF.frameSpace;
                 video->audio_index[audio_frames].frame_offset = file_get_pos(video->file[i]) + video->AUDF.frameSpace;
                 video->audio_index[audio_frames].frame_time = video->AUDF.timestamp;
+                video->audio_index[audio_frames].block_offset = block_start;
 
                 /* Count actual audio frames */
                 audio_frames++;

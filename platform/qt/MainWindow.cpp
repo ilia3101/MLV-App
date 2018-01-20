@@ -1371,35 +1371,33 @@ void MainWindow::startExportMlv(QString fileName)
     QByteArray MlvFileName = pathName.toLatin1();
 
     /* open .MLV file for writing */
-    FILE* mlvf = fopen(MlvFileName.data(), "wb");
-    if (!mlvf)
+    FILE* mlvOut = fopen(MlvFileName.data(), "wb");
+    if (!mlvOut)
     {
         return;
     }
 
-    mlvSaveHeaders(m_pMlvObject, mlvf, totalFrames, VERSION);
-
-    fclose(mlvf);
-
+    //Save MLV block headers
+    mlvSaveHeaders(m_pMlvObject, mlvOut, totalFrames, VERSION);
     //Output frames loop
-    for( uint32_t frame = m_exportQueue.first()->cutIn() - 1; frame < m_exportQueue.first()->cutOut(); frame++ )
+    for( uint32_t frameIndex = m_exportQueue.first()->cutIn() - 1; frameIndex < m_exportQueue.first()->cutOut(); frameIndex++ )
     {
-        //Export frame here
-        //...
+        //Export audio and video frames
+        mlvSaveAVFrame(m_pMlvObject, mlvOut, m_exportQueue.first()->cutIn() - 1, frameIndex);
 
         //Set Status
-        m_pStatusDialog->ui->progressBar->setValue( frame - ( m_exportQueue.first()->cutIn() - 1 ) + 1 );
+        m_pStatusDialog->ui->progressBar->setValue( frameIndex - ( m_exportQueue.first()->cutIn() - 1 ) + 1 );
         m_pStatusDialog->ui->progressBar->repaint();
-        m_pStatusDialog->drawTimeFromToDoFrames( totalFrames - frame + ( m_exportQueue.first()->cutIn() - 1 ) - 1 );
+        m_pStatusDialog->drawTimeFromToDoFrames( totalFrames - frameIndex + ( m_exportQueue.first()->cutIn() - 1 ) - 1 );
         qApp->processEvents();
 
         //Abort pressed? -> End the loop
         if( m_exportAbortPressed ) break;
     }
 
+    fclose(mlvOut);
     //Enable GUI drawing
     m_dontDraw = false;
-
     //Emit Ready-Signal
     emit exportReady();
 }
