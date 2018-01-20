@@ -28,6 +28,11 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode);
 enum mlv_err { MLV_ERR_NONE, MLV_ERR_OPEN, MLV_ERR_INVALID, MLV_ERR_IO };
 enum open_mode { MLV_OPEN_FULL, MLV_OPEN_MAPP, MLV_OPEN_PREVIEW };
 
+/* Functions for saving cut or averaged MLV */
+int mlvSaveHeaders(mlvObject_t * video, FILE * output_mlv, uint32_t total_frames, const char * version);
+int mlvSaveAudio(mlvObject_t * video, uint8_t * mlv_audio, FILE * output_mlv);
+int mlvSaveFrame(mlvObject_t * video, uint8_t * mlv_frame, FILE * output_mlv);
+
 /* Frees all memory and closes file */
 void freeMlvObject(mlvObject_t * video);
 

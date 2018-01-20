@@ -573,7 +573,7 @@ static int save_mapp(mlvObject_t * video)
         memcpy(ptr, (uint8_t*)video->audio_index, audio_index_size);
         ptr += audio_index_size;
     }
-    memcpy(ptr, &(video->MLVI), sizeof(mlv_file_hdr_t));
+    memcpy(ptr, (uint8_t*)&(video->MLVI), sizeof(mlv_file_hdr_t));
     memcpy(ptr += sizeof(mlv_file_hdr_t), (uint8_t*)&(video->RAWI), sizeof(mlv_rawi_hdr_t));
     memcpy(ptr += sizeof(mlv_rawi_hdr_t), (uint8_t*)&(video->RAWC), sizeof(mlv_rawc_hdr_t));
     memcpy(ptr += sizeof(mlv_rawc_hdr_t), (uint8_t*)&(video->IDNT), sizeof(mlv_idnt_hdr_t));
@@ -711,6 +711,132 @@ mapp_error:
     return 1;
 }
 
+/* Save MLV headers */
+int mlvSaveHeaders(mlvObject_t * video, FILE * output_mlv, uint32_t total_frames, const char * version)
+{
+    /* construct version info */
+    char version_info[32] = { 0 };
+    memcpy(version_info, "MLV App version ", 16);
+    strcat(version_info, version);
+    size_t vers_info_size = strlen(version_info) + 1;
+    size_t vers_block_size = sizeof(mlv_vers_hdr_t) + vers_info_size;
+    mlv_vers_hdr_t VERS_HEADER = { "VERS", vers_block_size, 0xFFFFFFFFFFFFFFFF, vers_info_size };
+
+    size_t mlv_headers_size = video->MLVI.blockSize + video->RAWI.blockSize +
+                              video->IDNT.blockSize + video->EXPO.blockSize +
+                              video->LENS.blockSize + video->WBAL.blockSize +
+                              video->RTCI.blockSize + vers_block_size;
+
+    if(video->RAWC.blockType[0]) mlv_headers_size += video->RAWC.blockSize;
+    if(video->WAVI.blockType[0]) mlv_headers_size += video->WAVI.blockSize;;
+    if(video->DISO.blockType[0]) mlv_headers_size += video->DISO.blockSize;
+    if(video->INFO.blockType[0] && video->INFO_STRING[0]) mlv_headers_size += video->INFO.blockSize;
+
+    uint8_t * mlv_headers_buf = malloc(mlv_headers_size);
+    if(!mlv_headers_buf)
+    {
+        return 1;
+    }
+
+    /* fill mlv_headers_buf */
+    uint8_t * ptr = mlv_headers_buf;
+    mlv_file_hdr_t output_mlvi = { 0 };
+    memcpy(&output_mlvi, (uint8_t*)&(video->MLVI), sizeof(mlv_file_hdr_t));
+    output_mlvi.videoFrameCount = total_frames;
+    output_mlvi.audioFrameCount = 1;
+    memcpy(ptr, &output_mlvi, sizeof(mlv_file_hdr_t));
+    ptr += video->MLVI.blockSize;
+
+    memcpy(ptr, (uint8_t*)&(video->RAWI), sizeof(mlv_rawi_hdr_t));
+    ptr += video->RAWI.blockSize;
+
+    if(video->RAWC.blockType[0])
+    {
+        memcpy(ptr, (uint8_t*)&(video->RAWC), sizeof(mlv_rawc_hdr_t));
+        ptr += video->RAWC.blockSize;
+    }
+
+    memcpy(ptr, (uint8_t*)&(video->IDNT), sizeof(mlv_idnt_hdr_t));
+    ptr += video->IDNT.blockSize;
+
+    memcpy(ptr, (uint8_t*)&(video->EXPO), sizeof(mlv_expo_hdr_t));
+    ptr += video->EXPO.blockSize;
+
+    memcpy(ptr, (uint8_t*)&(video->LENS), sizeof(mlv_lens_hdr_t));
+    ptr += video->LENS.blockSize;
+
+    memcpy(ptr, (uint8_t*)&(video->WBAL), sizeof(mlv_wbal_hdr_t));
+    ptr += video->WBAL.blockSize;
+
+    memcpy(ptr, (uint8_t*)&(video->RTCI), sizeof(mlv_rtci_hdr_t));
+    ptr += video->RTCI.blockSize;
+
+    if(video->INFO.blockType[0] && video->INFO_STRING[0])
+    {
+        memcpy(ptr, (uint8_t*)&(video->INFO), sizeof(mlv_info_hdr_t));
+        ptr += sizeof(mlv_info_hdr_t);
+        memcpy(ptr, (uint8_t*)&(video->INFO_STRING), strlen(video->INFO_STRING) + 1);
+        ptr += (video->INFO.blockSize - sizeof(mlv_info_hdr_t) + strlen(video->INFO_STRING) + 1);
+    }
+
+    if(video->DISO.blockType[0])
+    {
+        memcpy(ptr, (uint8_t*)&(video->DISO), sizeof(mlv_diso_hdr_t));
+        ptr += video->DISO.blockSize;
+    }
+
+    memcpy(ptr, &VERS_HEADER, sizeof(mlv_vers_hdr_t));
+    ptr += sizeof(mlv_vers_hdr_t);
+    memcpy(ptr, version_info, vers_info_size);
+    ptr += vers_info_size;
+
+    if(video->WAVI.blockType[0] && doesMlvHaveAudio(video))
+    {
+        memcpy(ptr, (uint8_t*)&(video->WAVI), sizeof(mlv_wavi_hdr_t));
+        ptr += video->WAVI.blockSize;
+    }
+
+    /* write mlv_headers_buf */
+    if(fwrite(mlv_headers_buf, mlv_headers_size, 1, output_mlv) != 1)
+    {
+        DEBUG( printf("\nCould not write MLV headers\n"); )
+        free(mlv_headers_buf);
+        return 1;
+    }
+
+    DEBUG( printf("\nMLV headers saved\n"); )
+    free(mlv_headers_buf);
+    return 0;
+}
+
+/* Save MLV audio */
+int mlvSaveAudio(mlvObject_t * video, uint8_t * mlv_audio, FILE * output_mlv)
+{
+    /* write mlvAudio */
+    //if(fwrite(mlvAudio, mlvAudioSize, 1, output_mlv) != 1)
+    {
+        DEBUG( printf("\nCould not write MLV audio\n"); )
+        return 1;
+    }
+
+    DEBUG( printf("\nMLV audio saved\n"); )
+    return 0;
+}
+
+/* Save MLV frame */
+int mlvSaveFrame(mlvObject_t * video, uint8_t * mlv_frame, FILE * output_mlv)
+{
+    /* write mlvFrame */
+    //if(fwrite(mlvFrame, mlvFrameSize, 1, output_mlv) != 1)
+    {
+        DEBUG( printf("\nCould not write MLV frame\n"); )
+        return 1;
+    }
+
+    DEBUG( printf("\nMLV frame saved\n"); )
+    return 0;
+}
+
 /* Reads an MLV file in to a mlv object(mlvObject_t struct) 
  * only puts metadata in to the mlvObject_t, 
  * no debayering or bit unpacking */
@@ -735,6 +861,8 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode)
     uint64_t video_index_max = 0; /* initial size of frame index */
     uint64_t audio_index_max = 0; /* initial size of audio index */
     int rtci_read = 0; /* Flips to 1 if 1st RTCI block was read */
+    int lens_read = 0; /* Flips to 1 if 1st LENS block was read */
+    int wbal_read = 0; /* Flips to 1 if 1st WBAL block was read */
 
     for(int i = 0; i < video->filenum; i++)
     {
@@ -873,13 +1001,15 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode)
             {
                 fread(&video->EXPO, sizeof(mlv_expo_hdr_t), 1, video->file[i]);
             }
-            else if ( memcmp(block_header.blockType, "LENS", 4) == 0 )
+            else if ( ( memcmp(block_header.blockType, "LENS", 4) == 0 ) && ( !lens_read ) )
             {
                 fread(&video->LENS, sizeof(mlv_lens_hdr_t), 1, video->file[i]);
+                lens_read = 1; //read only first one
             }
-            else if ( memcmp(block_header.blockType, "WBAL", 4) == 0 )
+            else if ( ( memcmp(block_header.blockType, "WBAL", 4) == 0 ) && ( !wbal_read ) )
             {
                 fread(&video->WBAL, sizeof(mlv_wbal_hdr_t), 1, video->file[i]);
+                wbal_read = 1; //read only first one
             }
             else if ( ( memcmp(block_header.blockType, "RTCI", 4) == 0 ) && ( !rtci_read ) )
             {
@@ -893,6 +1023,10 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode)
             else if ( memcmp(block_header.blockType, "INFO", 4) == 0 )
             {
                 fread(&video->INFO, sizeof(mlv_info_hdr_t), 1, video->file[i]);
+                if(video->INFO.blockSize > sizeof(mlv_info_hdr_t))
+                {
+                    fread(&video->INFO_STRING, video->INFO.blockSize - sizeof(mlv_info_hdr_t), 1, video->file[i]);
+                }
             }
             else if ( memcmp(block_header.blockType, "DISO", 4) == 0 )
             {

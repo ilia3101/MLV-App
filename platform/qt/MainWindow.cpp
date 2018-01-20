@@ -1357,7 +1357,7 @@ void MainWindow::startExportMlv(QString fileName)
     m_pStatusDialog->ui->progressBar->setValue( 0 );
     m_pStatusDialog->show();
     //Frames in the export queue?!
-    int totalFrames = 0;
+    uint32_t totalFrames = 0;
     for( int i = 0; i < m_exportQueue.count(); i++ )
     {
         totalFrames += m_exportQueue.at(i)->cutOut() - m_exportQueue.at(i)->cutIn() + 1;
@@ -1366,7 +1366,20 @@ void MainWindow::startExportMlv(QString fileName)
     //Create folders and build name schemes
     QString pathName = QFileInfo( fileName ).path();
     fileName = QFileInfo( fileName ).fileName();
-    fileName = fileName.left( fileName.indexOf( '.' ) );
+    //fileName = fileName.left( fileName.indexOf( '.' ) );
+    pathName = pathName.append( "/%1" ).arg( fileName );
+    QByteArray MlvFileName = pathName.toLatin1();
+
+    /* open .MLV file for writing */
+    FILE* mlvf = fopen(MlvFileName.data(), "wb");
+    if (!mlvf)
+    {
+        return;
+    }
+
+    mlvSaveHeaders(m_pMlvObject, mlvf, totalFrames, VERSION);
+
+    fclose(mlvf);
 
     //Output frames loop
     for( uint32_t frame = m_exportQueue.first()->cutIn() - 1; frame < m_exportQueue.first()->cutOut(); frame++ )
