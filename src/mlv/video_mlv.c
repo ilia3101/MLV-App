@@ -728,10 +728,11 @@ int mlvSaveHeaders(mlvObject_t * video, FILE * output_mlv, uint32_t total_frames
     size_t mlv_headers_size = video->MLVI.blockSize + video->RAWI.blockSize +
                               video->IDNT.blockSize + video->EXPO.blockSize +
                               video->LENS.blockSize + video->WBAL.blockSize +
-                              video->STYL.blockSize + video->RTCI.blockSize + vers_block_size;
+                              video->RTCI.blockSize + vers_block_size;
 
     if(video->RAWC.blockType[0]) mlv_headers_size += video->RAWC.blockSize;
-    if(video->WAVI.blockType[0]) mlv_headers_size += video->WAVI.blockSize;;
+    if(video->STYL.blockType[0]) mlv_headers_size += video->STYL.blockSize;
+    if(video->WAVI.blockType[0]) mlv_headers_size += video->WAVI.blockSize;
     if(video->DISO.blockType[0]) mlv_headers_size += video->DISO.blockSize;
     if(video->INFO.blockType[0] && video->INFO_STRING[0]) mlv_headers_size += video->INFO.blockSize;
 
@@ -771,8 +772,11 @@ int mlvSaveHeaders(mlvObject_t * video, FILE * output_mlv, uint32_t total_frames
     memcpy(ptr, (uint8_t*)&(video->WBAL), sizeof(mlv_wbal_hdr_t));
     ptr += video->WBAL.blockSize;
 
-    memcpy(ptr, (uint8_t*)&(video->STYL), sizeof(mlv_styl_hdr_t));
-    ptr += video->STYL.blockSize;
+    if(video->STYL.blockType[0])
+    {
+        memcpy(ptr, (uint8_t*)&(video->STYL), sizeof(mlv_styl_hdr_t));
+        ptr += video->STYL.blockSize;
+    }
 
     memcpy(ptr, (uint8_t*)&(video->RTCI), sizeof(mlv_rtci_hdr_t));
     ptr += video->RTCI.blockSize;

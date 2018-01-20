@@ -1378,11 +1378,11 @@ void MainWindow::startExportMlv(QString fileName)
     }
 
     //Save MLV block headers
-    mlvSaveHeaders(m_pMlvObject, mlvOut, totalFrames, VERSION);
+    mlvSaveHeaders(m_pMlvObject, mlvOut, m_exportQueue.first()->cutOut() - m_exportQueue.first()->cutIn() + 1, VERSION);
     //Output frames loop
     for( uint32_t frameIndex = m_exportQueue.first()->cutIn() - 1; frameIndex < m_exportQueue.first()->cutOut(); frameIndex++ )
     {
-        //Export audio and video frames
+        //Save audio and video frames
         mlvSaveAVFrame(m_pMlvObject, mlvOut, m_exportQueue.first()->cutIn() - 1, frameIndex);
 
         //Set Status
