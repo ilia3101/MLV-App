@@ -22,6 +22,9 @@
 /* Default image profiles */
 #include "image_profiles.c"
 
+#if defined(__linux)
+#include <alloca.h>
+#endif
 
 /* Easy way to deal with storing blurred images/stuff that takes ages to calculate */
 processing_buffer_t * new_image_buffer()
