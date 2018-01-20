@@ -2163,7 +2163,7 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
 }
 
 //Replace receipt settings
-void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings *receiptSource)
+void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings *receiptSource, bool paste)
 {
     receiptTarget->setExposure( receiptSource->exposure() );
     receiptTarget->setTemperature( receiptSource->temperature() );
@@ -2198,8 +2198,11 @@ void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings 
     receiptTarget->setStretchFactorX( receiptSource->stretchFactorX() );
     receiptTarget->setStretchFactorY( receiptSource->stretchFactorY() );
 
-    receiptTarget->setCutIn( receiptSource->cutIn() );
-    receiptTarget->setCutOut( receiptSource->cutOut() );
+    if( !paste )
+    {
+        receiptTarget->setCutIn( receiptSource->cutIn() );
+        receiptTarget->setCutOut( receiptSource->cutOut() );
+    }
 }
 
 //Show the file in
@@ -3272,7 +3275,7 @@ void MainWindow::on_actionPasteReceipt_triggered()
                 continue;
             }
             //Each other selected clip gets the receipt
-            replaceReceipt( m_pSessionReceipts.at(row), m_pReceiptClipboard );
+            replaceReceipt( m_pSessionReceipts.at(row), m_pReceiptClipboard, true );
         }
     }
 }
