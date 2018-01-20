@@ -501,9 +501,10 @@ int MainWindow::openMlv( QString fileName )
     //Set window title to filename
     this->setWindowTitle( QString( "MLV App | %1" ).arg( fileName ) );
 
+    m_fileLoaded = false;
+
     //disable drawing and kill old timer and old WaveFormMonitor
     killTimer( m_timerId );
-    m_fileLoaded = false;
     delete m_pWaveFormMonitor;
     delete m_pVectorScope;
     m_dontDraw = true;
@@ -602,8 +603,6 @@ int MainWindow::openMlv( QString fileName )
     //Load audio
     m_pAudioPlayback->loadAudio( m_pMlvObject );
 
-    m_fileLoaded = true;
-
     //Audio Track
     paintAudioTrack();
 
@@ -634,6 +633,7 @@ int MainWindow::openMlv( QString fileName )
     initCutInOut( getMlvFrames( m_pMlvObject ) );
 
     m_frameChanged = true;
+    m_fileLoaded = true;
 
     return MLV_ERR_NONE;
 }
@@ -3345,7 +3345,7 @@ void MainWindow::on_actionCaching_triggered()
 //Jump to next clip
 void MainWindow::on_actionNext_Clip_triggered()
 {
-    if( ( m_lastActiveClipInSession + 1 ) < ui->listWidgetSession->count() )
+    if( ( ( m_lastActiveClipInSession + 1 ) < ui->listWidgetSession->count() ) && m_fileLoaded )
     {
         ui->listWidgetSession->setCurrentRow( m_lastActiveClipInSession + 1 );
         showFileInEditor( m_lastActiveClipInSession + 1 );
@@ -3355,7 +3355,7 @@ void MainWindow::on_actionNext_Clip_triggered()
 //Jump to previous clip
 void MainWindow::on_actionPrevious_Clip_triggered()
 {
-    if( m_lastActiveClipInSession > 0 )
+    if( ( m_lastActiveClipInSession ) > 0 && m_fileLoaded )
     {
         ui->listWidgetSession->setCurrentRow( m_lastActiveClipInSession - 1 );
         showFileInEditor( m_lastActiveClipInSession - 1 );
