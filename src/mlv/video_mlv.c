@@ -748,7 +748,7 @@ int mlvSaveHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, uin
     memcpy(&output_mlvi, (uint8_t*)&(video->MLVI), sizeof(mlv_file_hdr_t));
     output_mlvi.fileNum = 0;
     output_mlvi.fileCount = 1;
-    output_mlvi.videoFrameCount = frame_end - frame_start;
+    output_mlvi.videoFrameCount = frame_end - frame_start + 1;
     output_mlvi.audioFrameCount = (!export_audio) ? 0 : 1;
     output_mlvi.audioClass = (!export_audio) ? 0 : 1;
     memcpy(ptr, &output_mlvi, sizeof(mlv_file_hdr_t));
@@ -840,7 +840,7 @@ int mlvSaveAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, uin
     }
 
     vidf_hdr.blockSize -= vidf_hdr.frameSpace;
-    vidf_hdr.frameNumber = frame_index - frame_start;
+    vidf_hdr.frameNumber = (frame_index + 1) - frame_start;
     vidf_hdr.frameSpace = 0;
 
     uint8_t * block_buf = calloc(vidf_hdr.blockSize, 1);
@@ -859,12 +859,12 @@ int mlvSaveAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, uin
         return 1;
     }
 
-    if((frame_index == (frame_start - 1)) && export_audio)
+    if(!vidf_hdr.frameNumber && export_audio)
     {
         mlv_audf_hdr_t audf_hdr = { { 'A','U','D','F' }, 0, 0, 0, 0 };
         uint64_t mlv_audio_size = getMlvAudioSize(video);
         uint64_t audio_start_offset = getMlvAudioChannels(video) * getMlvSampleRate(video) * sizeof(int16_t) * (frame_start - 1) / getMlvFramerate(video);
-        uint64_t cut_audio_size = getMlvAudioChannels(video) * getMlvSampleRate(video) * sizeof(int16_t) * (frame_end - frame_start) / getMlvFramerate(video);
+        uint64_t cut_audio_size = getMlvAudioChannels(video) * getMlvSampleRate(video) * sizeof(int16_t) * (frame_end - frame_start + 1) / getMlvFramerate(video);
 
         /* allocate memory for whole audio */
         int16_t * mlv_audio_data = calloc(mlv_audio_size + 1024000, 1); // + 1Mb for safety
@@ -907,7 +907,7 @@ int mlvSaveAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, uin
     }
 
     free(block_buf);
-    DEBUG( printf("\rSaved video frame #%u", frame_index); )
+    DEBUG( printf("\nSaved video frame #%u", frame_index); )
     return 0;
 }
 
