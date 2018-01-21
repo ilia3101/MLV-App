@@ -53,6 +53,5 @@ QImage TimeCodeLabel::getTimeCodeLabel(uint32_t frameNumber, float clipFps)
                       .arg( seconds, 2, 10, QChar('0') )
                       .arg( frame, 2, 10, QChar('0') ) );
 
-    m_tcImage->fill( Qt::white );
     return *m_tcImage;
 }
