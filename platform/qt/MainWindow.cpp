@@ -1394,9 +1394,11 @@ void MainWindow::startExportMlv(QString fileName)
         if( ret == 2 )
         {
             exportAbort();
+            return;
         }
         if( ret > 0 )
         {
+            emit exportReady();
             return;
         }
     }
