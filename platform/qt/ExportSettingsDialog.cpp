@@ -27,7 +27,7 @@ ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, uint8_t currentCodec
     ui->spinBoxWidth->setValue( resizeWidth );
     ui->spinBoxHeight->setValue( resizeHeight );
     ui->checkBoxFpsOverride->setChecked( fpsOverride );
-    on_checkBoxFpsOverride_clicked( fpsOverride );
+    on_checkBoxFpsOverride_toggled( fpsOverride );
     ui->doubleSpinBoxFps->setValue( fps );
     ui->checkBoxExportAudio->setChecked( exportAudio );
 
@@ -182,10 +182,21 @@ void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
         ui->checkBoxResize->setChecked( false );
     }
     ui->checkBoxResize->setEnabled( enableResize );
+
+    //En-/disable fps override
+    if( ( index == CODEC_MLV ) || ( index == CODEC_CDNG ) )
+    {
+        ui->checkBoxFpsOverride->setEnabled( false );
+        ui->checkBoxFpsOverride->setChecked( false );
+    }
+    else
+    {
+        ui->checkBoxFpsOverride->setEnabled( true );
+    }
 }
 
 //Change settings if FPS Override is clicked
-void ExportSettingsDialog::on_checkBoxFpsOverride_clicked(bool checked)
+void ExportSettingsDialog::on_checkBoxFpsOverride_toggled(bool checked)
 {
     //if override is checked, export audio is not possible, so disable and grey out
     if( checked )

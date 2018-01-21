@@ -76,7 +76,7 @@ public:
 private slots:
     void on_pushButtonClose_clicked();
     void on_comboBoxCodec_currentIndexChanged(int index);
-    void on_checkBoxFpsOverride_clicked(bool checked);
+    void on_checkBoxFpsOverride_toggled(bool checked);
     void on_checkBoxResize_toggled(bool checked);
     void on_comboBoxOption_currentIndexChanged(const QString &arg1);
 
