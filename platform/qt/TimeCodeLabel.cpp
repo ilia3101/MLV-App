@@ -36,14 +36,22 @@ QImage TimeCodeLabel::getTimeCodeLabel(uint32_t frameNumber, float clipFps)
     gradient.setColorAt( 1, QColor( 30, 30, 30, 255 ) );
     painterTc.fillRect(rect, gradient);
 
+    int frame = (int) (frameNumber % (int)clipFps);
+    frameNumber /= (int)clipFps;
+    int seconds = (int) (frameNumber % 60);
+    frameNumber /= 60;
+    int minutes = (int) (frameNumber % 60);
+    frameNumber /= 60;
+    int hours = (int) (frameNumber);
+
     QFont font = QFont("DSEG7 Modern", 20, 1);
     painterTc.setPen( QPen( QColor( 220, 220, 220 ) ) );
     painterTc.setFont( font );
     painterTc.drawText( 20, 5, 190, 20, 0, QString( "%1 : %2 : %3 . %4" )
-                      .arg( 0, 2, 10, QChar('0') )
-                      .arg( 0, 2, 10, QChar('0') )
-                      .arg( 0, 2, 10, QChar('0') )
-                      .arg( frameNumber, 2, 10, QChar('0') ) );
+                      .arg( hours, 2, 10, QChar('0') )
+                      .arg( minutes, 2, 10, QChar('0') )
+                      .arg( seconds, 2, 10, QChar('0') )
+                      .arg( frame, 2, 10, QChar('0') ) );
 
     m_tcImage->fill( Qt::white );
     return *m_tcImage;
