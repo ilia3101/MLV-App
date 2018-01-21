@@ -1381,12 +1381,48 @@ void MainWindow::startExportMlv(QString fileName)
     //Check if MLV has audio and it is requested to be exported
     int exportAudio = (doesMlvHaveAudio( m_pMlvObject ) && m_audioExportEnabled);
     //Save MLV block headers
-    mlvSaveHeaders(m_pMlvObject, mlvOut, exportAudio, m_exportQueue.first()->cutIn(), m_exportQueue.first()->cutOut(), VERSION);
+    if( mlvSaveHeaders( m_pMlvObject, mlvOut, exportAudio, m_exportQueue.first()->cutIn(), m_exportQueue.first()->cutOut(), VERSION ) )
+    {
+        m_pStatusDialog->hide();
+        qApp->processEvents();
+        int ret = QMessageBox::critical( this,
+                                         tr( "MLV App - Export file error" ),
+                                         tr( "Could not save: %1\nHow do you like to proceed?" ).arg( MlvFileName.data() ),
+                                         tr( "Abort current export" ),
+                                         tr( "Abort batch export" ),
+                                         0, 2 );
+        if( ret == 2 )
+        {
+            exportAbort();
+        }
+        if( ret > 0 )
+        {
+            return;
+        }
+    }
     //Output frames loop
     for( uint32_t frame = m_exportQueue.first()->cutIn() - 1; frame < m_exportQueue.first()->cutOut(); frame++ )
     {
         //Save audio and video frames
-        mlvSaveAVFrame(m_pMlvObject, mlvOut, exportAudio, m_exportQueue.first()->cutIn(), m_exportQueue.first()->cutOut(), frame);
+        if( mlvSaveAVFrame( m_pMlvObject, mlvOut, exportAudio, m_exportQueue.first()->cutIn(), m_exportQueue.first()->cutOut(), frame ) )
+        {
+            m_pStatusDialog->hide();
+            qApp->processEvents();
+            int ret = QMessageBox::critical( this,
+                                             tr( "MLV App - Export file error" ),
+                                             tr( "Could not save: %1\nHow do you like to proceed?" ).arg( MlvFileName.data() ),
+                                             tr( "Abort current export" ),
+                                             tr( "Abort batch export" ),
+                                             0, 2 );
+            if( ret == 2 )
+            {
+                exportAbort();
+            }
+            if( ret > 0 )
+            {
+                break;
+            }
+        }
 
         //Set Status
         m_pStatusDialog->ui->progressBar->setValue( frame - ( m_exportQueue.first()->cutIn() - 1 ) + 1 );
