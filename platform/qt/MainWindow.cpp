@@ -1377,18 +1377,20 @@ void MainWindow::startExportMlv(QString fileName)
         return;
     }
 
+    //Check if MLV has audio and it is requested to be exported
+    int exportAudio = (doesMlvHaveAudio( m_pMlvObject ) && m_audioExportEnabled);
     //Save MLV block headers
-    mlvSaveHeaders(m_pMlvObject, mlvOut, m_exportQueue.first()->cutOut() - m_exportQueue.first()->cutIn() + 1, VERSION);
+    mlvSaveHeaders(m_pMlvObject, mlvOut, exportAudio, m_exportQueue.first()->cutIn(), m_exportQueue.first()->cutOut(), VERSION);
     //Output frames loop
-    for( uint32_t frameIndex = m_exportQueue.first()->cutIn() - 1; frameIndex < m_exportQueue.first()->cutOut(); frameIndex++ )
+    for( uint32_t frame = m_exportQueue.first()->cutIn() - 1; frame < m_exportQueue.first()->cutOut(); frame++ )
     {
         //Save audio and video frames
-        mlvSaveAVFrame(m_pMlvObject, mlvOut, m_exportQueue.first()->cutIn() - 1, frameIndex);
+        mlvSaveAVFrame(m_pMlvObject, mlvOut, exportAudio, m_exportQueue.first()->cutIn(), m_exportQueue.first()->cutOut(), frame);
 
         //Set Status
-        m_pStatusDialog->ui->progressBar->setValue( frameIndex - ( m_exportQueue.first()->cutIn() - 1 ) + 1 );
+        m_pStatusDialog->ui->progressBar->setValue( frame - ( m_exportQueue.first()->cutIn() - 1 ) + 1 );
         m_pStatusDialog->ui->progressBar->repaint();
-        m_pStatusDialog->drawTimeFromToDoFrames( totalFrames - frameIndex + ( m_exportQueue.first()->cutIn() - 1 ) - 1 );
+        m_pStatusDialog->drawTimeFromToDoFrames( totalFrames - frame + ( m_exportQueue.first()->cutIn() - 1 ) - 1 );
         qApp->processEvents();
 
         //Abort pressed? -> End the loop

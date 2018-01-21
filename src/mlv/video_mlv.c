@@ -715,7 +715,7 @@ mapp_error:
 }
 
 /* Save MLV headers */
-int mlvSaveHeaders(mlvObject_t * video, FILE * output_mlv, uint32_t total_frames, const char * version)
+int mlvSaveHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, uint32_t frame_start, uint32_t frame_end, const char * version)
 {
     /* construct version info */
     char version_info[32] = { 0 };
@@ -746,8 +746,11 @@ int mlvSaveHeaders(mlvObject_t * video, FILE * output_mlv, uint32_t total_frames
     uint8_t * ptr = mlv_headers_buf;
     mlv_file_hdr_t output_mlvi = { 0 };
     memcpy(&output_mlvi, (uint8_t*)&(video->MLVI), sizeof(mlv_file_hdr_t));
-    output_mlvi.videoFrameCount = total_frames;
-    output_mlvi.audioFrameCount = 0;
+    output_mlvi.fileNum = 0;
+    output_mlvi.fileCount = 1;
+    output_mlvi.videoFrameCount = frame_end - frame_start;
+    output_mlvi.audioFrameCount = (!export_audio) ? 0 : 1;
+    output_mlvi.audioClass = (!export_audio) ? 0 : 1;
     memcpy(ptr, &output_mlvi, sizeof(mlv_file_hdr_t));
     ptr += video->MLVI.blockSize;
 
@@ -800,7 +803,7 @@ int mlvSaveHeaders(mlvObject_t * video, FILE * output_mlv, uint32_t total_frames
     memcpy(ptr, version_info, vers_info_size);
     ptr += vers_info_size;
 
-    if(video->WAVI.blockType[0] && doesMlvHaveAudio(video))
+    if(video->WAVI.blockType[0] && export_audio)
     {
         memcpy(ptr, (uint8_t*)&(video->WAVI), sizeof(mlv_wavi_hdr_t));
         ptr += video->WAVI.blockSize;
@@ -820,7 +823,7 @@ int mlvSaveHeaders(mlvObject_t * video, FILE * output_mlv, uint32_t total_frames
 }
 
 /* Save video frame plus audio if available */
-int mlvSaveAVFrame(mlvObject_t * video, FILE * output_mlv, uint32_t first_frame, uint32_t frame_index)
+int mlvSaveAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, uint32_t frame_start, uint32_t frame_end, uint32_t frame_index)
 {
     mlv_vidf_hdr_t vidf_hdr = { 0 };
 
@@ -837,27 +840,74 @@ int mlvSaveAVFrame(mlvObject_t * video, FILE * output_mlv, uint32_t first_frame,
     }
 
     vidf_hdr.blockSize -= vidf_hdr.frameSpace;
-    vidf_hdr.frameNumber = frame_index - first_frame;
+    vidf_hdr.frameNumber = frame_index - frame_start;
     vidf_hdr.frameSpace = 0;
 
     uint8_t * block_buf = calloc(vidf_hdr.blockSize, 1);
+    if(!block_buf)
+    {
+        DEBUG( printf("\nCould not allocate memory for VIDF block\n"); )
+        return 1;
+    }
     memcpy(block_buf, &vidf_hdr, sizeof(mlv_vidf_hdr_t));
 
     file_set_pos(video->file[chunk], frame_offset, SEEK_SET);
     if(fread((block_buf + sizeof(mlv_vidf_hdr_t)), frame_size, 1, video->file[chunk]) != 1)
     {
         DEBUG( printf("\nCould not read from MLV file\n"); )
+        free(block_buf);
         return 1;
+    }
+
+    if((frame_index == (frame_start - 1)) && export_audio)
+    {
+        mlv_audf_hdr_t audf_hdr = { { 'A','U','D','F' }, 0, 0, 0, 0 };
+        uint64_t mlv_audio_size = getMlvAudioSize(video);
+        uint64_t audio_start_offset = getMlvAudioChannels(video) * getMlvSampleRate(video) * sizeof(int16_t) * (frame_start - 1) / getMlvFramerate(video);
+        uint64_t cut_audio_size = getMlvAudioChannels(video) * getMlvSampleRate(video) * sizeof(int16_t) * (frame_end - frame_start) / getMlvFramerate(video);
+
+        /* allocate memory for whole audio */
+        int16_t * mlv_audio_data = calloc(mlv_audio_size + 1024000, 1); // + 1Mb for safety
+        if(!mlv_audio_data)
+        {
+            DEBUG( printf("\nCould not allocate memory for audio data\n"); )
+            free(block_buf);
+            return 1;
+        }
+        /* get whole audio data */
+        getMlvAudioData(video, mlv_audio_data);
+
+        /* fill AUDF block header */
+        audf_hdr.blockSize = sizeof(mlv_audf_hdr_t) + cut_audio_size;
+        audf_hdr.timestamp = vidf_hdr.timestamp;
+        /* write AUDF block header */
+        if(fwrite(&audf_hdr, sizeof(mlv_audf_hdr_t), 1, output_mlv) != 1)
+        {
+            DEBUG( printf("\nCould not write AUDF header\n"); )
+            free(mlv_audio_data);
+            free(block_buf);
+            return 1;
+        }
+        /* write audio data */
+        if(fwrite((uint8_t *)mlv_audio_data + audio_start_offset, cut_audio_size, 1, output_mlv) != 1)
+        {
+            DEBUG( printf("\nCould not write audio data\n"); )
+            free(mlv_audio_data);
+            free(block_buf);
+            return 1;
+        }
     }
 
     /* write mlvFrame */
     if(fwrite(block_buf, sizeof(mlv_vidf_hdr_t) + frame_size, 1, output_mlv) != 1)
     {
-        DEBUG( printf("\nCould not write MLV frame\n"); )
+        DEBUG( printf("\nCould not write video frame #%u\n", frame_index); )
+        free(block_buf);
         return 1;
     }
 
-    DEBUG( printf("\rMLV frame saved"); )
+    free(block_buf);
+    DEBUG( printf("\rSaved video frame #%u", frame_index); )
     return 0;
 }
 
