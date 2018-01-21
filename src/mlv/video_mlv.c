@@ -896,6 +896,8 @@ int mlvSaveAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, uin
             free(block_buf);
             return 1;
         }
+
+        free(mlv_audio_data);
     }
 
     /* write mlvFrame */
