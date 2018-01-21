@@ -41,4 +41,7 @@
         <file>AudioVideoIcons/Loop.png</file>
         <file>AudioVideoIcons/Play.png</file>
     </qresource>
+    <qresource prefix="/Fonts">
+        <file>Fonts/DSEG7Modern-Regular.ttf</file>
+    </qresource>
 </RCC>

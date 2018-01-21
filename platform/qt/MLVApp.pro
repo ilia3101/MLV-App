@@ -93,7 +93,8 @@ SOURCES += \
     GraphicsPolygonMoveItem.cpp \
     ../../src/mlv/camid/camera_id.c \
     GradientElement.cpp \
-    VectorScope.cpp
+    VectorScope.cpp \
+    TimeCodeLabel.cpp
 
 macx: SOURCES += ../cocoa/avf_lib/avf_lib.m
 
@@ -146,7 +147,8 @@ HEADERS += \
     GraphicsPolygonMoveItem.h \
     ../../src/mlv/camid/camera_id.h \
     GradientElement.h \
-    VectorScope.h
+    VectorScope.h \
+    TimeCodeLabel.h
 
 macx: HEADERS += \
     ../cocoa/avf_lib/avencoder.h \

@@ -18,6 +18,7 @@
 #include <QScreen>
 #include <QMimeData>
 #include <QDir>
+#include <QSpacerItem>
 #include <unistd.h>
 #include <math.h>
 
@@ -327,11 +328,17 @@ void MainWindow::drawFrame( void )
     {
         //If we are in playback, dropmode, we calculated the exact frame to sync the timeline
         m_pRenderThread->renderFrame( m_newPosDropMode );
+
+        //Draw TimeCode
+        m_pTcLabel->setPixmap( QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( m_newPosDropMode, getMlvFramerate( m_pMlvObject ) ) ) );
     }
     else
     {
         //Else we render the frame which is selected by the slider
         m_pRenderThread->renderFrame( ui->horizontalSliderPosition->value() );
+
+        //Draw TimeCode
+        m_pTcLabel->setPixmap( QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( ui->horizontalSliderPosition->value(), getMlvFramerate( m_pMlvObject ) ) ) );
     }
 }
 
@@ -827,6 +834,18 @@ void MainWindow::initGui( void )
 
     //Init Export Queue
     m_exportQueue.clear();
+
+    //TimeCode Label
+    m_pTcLabel = new QLabel( this );
+    QWidget* spacer = new QWidget();
+    spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    ui->mainToolBar->addWidget( spacer );
+    ui->mainToolBar->addWidget( m_pTcLabel );
+    QWidget* spacer2 = new QWidget();
+    spacer2->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    ui->mainToolBar->addWidget( spacer2 );
+    m_pTimeCodeImage = new TimeCodeLabel();
+    m_pTcLabel->setPixmap( QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( 0, 25 ) ) );
 }
 
 //Initialize the library
@@ -2078,6 +2097,9 @@ void MainWindow::deleteSession()
 
     //Cut In & Out
     initCutInOut( -1 );
+
+    //Draw TimeCode
+    m_pTcLabel->setPixmap( QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( 0, 25 ) ) );
 }
 
 //returns true if file is already in session
@@ -2836,6 +2858,7 @@ void MainWindow::on_horizontalSliderPosition_valueChanged(int position)
             m_tryToSyncAudio = true;
         }
     }
+
     m_frameChanged = true;
 }
 

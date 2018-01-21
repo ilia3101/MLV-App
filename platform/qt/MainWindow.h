@@ -32,6 +32,7 @@
 #include "GraphicsPickerScene.h"
 #include "RenderFrameThread.h"
 #include "GradientElement.h"
+#include "TimeCodeLabel.h"
 
 namespace Ui {
 class MainWindow;
@@ -192,9 +193,11 @@ private:
     QGraphicsPixmapItem *m_pGraphicsItem;
     GradientElement *m_pGradientElement;
     GraphicsPickerScene* m_pScene;
+    TimeCodeLabel* m_pTimeCodeImage;
     QLabel *m_pCachingStatus;
     QLabel *m_pFpsStatus;
     QLabel *m_pFrameNumber;
+    QLabel *m_pTcLabel;
     uint8_t *m_pRawImage;
     uint32_t m_cacheSizeMB;
     uint8_t m_codecProfile;
