@@ -15,7 +15,7 @@
 //Constructor
 TimeCodeLabel::TimeCodeLabel()
 {
-    m_tcImage = new QImage( 200, 30, QImage::Format_RGB888 );
+    m_tcImage = new QImage( 400, 60, QImage::Format_RGB888 );
 
     QFontDatabase::addApplicationFont( ":/Fonts/Fonts/DSEG7Modern-Regular.ttf" );
 }
@@ -29,7 +29,7 @@ TimeCodeLabel::~TimeCodeLabel()
 //Get the image for frameNumber at clipFps
 QImage TimeCodeLabel::getTimeCodeLabel(uint32_t frameNumber, float clipFps)
 {
-    QRect rect( 0, 0, 200, 30 );
+    QRect rect( 0, 0, 400, 60 );
     QPainter painterTc( m_tcImage );
     QLinearGradient gradient( rect.topLeft(), (rect.topLeft() + rect.bottomLeft() ) / 2 ); // diagonal gradient from top-left to bottom-right
     gradient.setColorAt( 0, QColor( 100, 100, 100, 255 ) );
@@ -44,10 +44,10 @@ QImage TimeCodeLabel::getTimeCodeLabel(uint32_t frameNumber, float clipFps)
     frameNumber /= 60;
     int hours = (int) (frameNumber);
 
-    QFont font = QFont("DSEG7 Modern", 20, 1);
+    QFont font = QFont("DSEG7 Modern", 40, 1);
     painterTc.setPen( QPen( QColor( 220, 220, 220 ) ) );
     painterTc.setFont( font );
-    painterTc.drawText( 20, 5, 190, 20, 0, QString( "%1 : %2 : %3 . %4" )
+    painterTc.drawText( 40, 10, 380, 40, 0, QString( "%1 : %2 : %3 . %4" )
                       .arg( hours, 2, 10, QChar('0') )
                       .arg( minutes, 2, 10, QChar('0') )
                       .arg( seconds, 2, 10, QChar('0') )

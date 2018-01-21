@@ -330,7 +330,11 @@ void MainWindow::drawFrame( void )
         m_pRenderThread->renderFrame( m_newPosDropMode );
 
         //Draw TimeCode
-        m_pTcLabel->setPixmap( QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( m_newPosDropMode, getMlvFramerate( m_pMlvObject ) ) ) );
+        QPixmap pic = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( m_newPosDropMode, getMlvFramerate( m_pMlvObject ) ).scaled( 200 * devicePixelRatio(),
+                                                                                              30 * devicePixelRatio(),
+                                                                                              Qt::IgnoreAspectRatio, Qt::SmoothTransformation) );
+        pic.setDevicePixelRatio( devicePixelRatio() );
+        m_pTcLabel->setPixmap( pic );
     }
     else
     {
@@ -338,7 +342,11 @@ void MainWindow::drawFrame( void )
         m_pRenderThread->renderFrame( ui->horizontalSliderPosition->value() );
 
         //Draw TimeCode
-        m_pTcLabel->setPixmap( QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( ui->horizontalSliderPosition->value(), getMlvFramerate( m_pMlvObject ) ) ) );
+        QPixmap pic = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( ui->horizontalSliderPosition->value(), getMlvFramerate( m_pMlvObject ) ).scaled( 200 * devicePixelRatio(),
+                                                                                              30 * devicePixelRatio(),
+                                                                                              Qt::IgnoreAspectRatio, Qt::SmoothTransformation) );
+        pic.setDevicePixelRatio( devicePixelRatio() );
+        m_pTcLabel->setPixmap( pic );
     }
 }
 
@@ -845,7 +853,11 @@ void MainWindow::initGui( void )
     spacer2->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     ui->mainToolBar->addWidget( spacer2 );
     m_pTimeCodeImage = new TimeCodeLabel();
-    m_pTcLabel->setPixmap( QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( 0, 25 ) ) );
+    QPixmap picTc = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( 0, 25 ).scaled( 200 * devicePixelRatio(),
+                                                                                          30 * devicePixelRatio(),
+                                                                                          Qt::IgnoreAspectRatio, Qt::SmoothTransformation) );
+    picTc.setDevicePixelRatio( devicePixelRatio() );
+    m_pTcLabel->setPixmap( picTc );
 }
 
 //Initialize the library
@@ -2099,7 +2111,11 @@ void MainWindow::deleteSession()
     initCutInOut( -1 );
 
     //Draw TimeCode
-    m_pTcLabel->setPixmap( QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( 0, 25 ) ) );
+    QPixmap pic = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( 0, 25 ).scaled( 200 * devicePixelRatio(),
+                                                                                          30 * devicePixelRatio(),
+                                                                                          Qt::IgnoreAspectRatio, Qt::SmoothTransformation) );
+    pic.setDevicePixelRatio( devicePixelRatio() );
+    m_pTcLabel->setPixmap( pic );
 }
 
 //returns true if file is already in session
