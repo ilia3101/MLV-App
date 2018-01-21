@@ -603,6 +603,8 @@ int MainWindow::openMlv( QString fileName )
     //Load audio
     m_pAudioPlayback->loadAudio( m_pMlvObject );
 
+    m_fileLoaded = true;
+
     //Audio Track
     paintAudioTrack();
 
@@ -633,7 +635,6 @@ int MainWindow::openMlv( QString fileName )
     initCutInOut( getMlvFrames( m_pMlvObject ) );
 
     m_frameChanged = true;
-    m_fileLoaded = true;
 
     return MLV_ERR_NONE;
 }
