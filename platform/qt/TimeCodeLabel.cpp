@@ -44,7 +44,11 @@ QImage TimeCodeLabel::getTimeCodeLabel(uint32_t frameNumber, float clipFps)
     frameNumber /= 60;
     int hours = (int) (frameNumber);
 
+#ifdef Q_OS_MAC
     QFont font = QFont("DSEG7 Modern", 40, 1);
+#else
+    QFont font = QFont("DSEG7 Modern", 30, 1);
+#endif
     painterTc.setPen( QPen( QColor( 220, 220, 220 ) ) );
     painterTc.setFont( font );
     painterTc.drawText( 40, 10, 380, 40, 0, QString( "%1 : %2 : %3 . %4" )
