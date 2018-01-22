@@ -40,8 +40,9 @@
 #define CODEC_H265_MP4              1
 #define CODEC_H265_MKV              2
 
-#define CODEC_MLV_STANDARD          0
-#define CODEC_MLV_AVERAGED          1
+#define CODEC_MLV_FASTPASS          0
+#define CODEC_MLV_COMPRESSED        1
+#define CODEC_MLV_AVERAGED          2
 
 namespace Ui {
 class ExportSettingsDialog;

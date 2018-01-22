@@ -501,7 +501,7 @@ static void dng_fill_header(mlvObject_t * mlv_data, dngObject_t * dng_data)
         if(dng_data->par[0])
         {
 #ifndef STDOUT_SILENT
-            printf("cDNG: manual aspect ratio used\n");
+            //printf("cDNG: manual aspect ratio used\n");
 #endif
             manual_ar = 1;
             par = dng_data->par;
@@ -825,7 +825,7 @@ static int dng_get_frame(mlvObject_t * mlv_data, dngObject_t * dng_data, uint64_
     if (dng_data->raw_input_state == COMPRESSED_RAW) /* If losless, decompress or pass trough */
     {
         dng_data->image_size = dng_get_image_size(mlv_data, IMG_SIZE_LOSLESS, frame_index);
-        if(fread(dng_data->image_buf, sizeof(uint8_t), dng_data->image_size, mlv_data->file[mlv_data->video_index[frame_index].chunk_num]) != dng_data->image_size)
+        if(fread(dng_data->image_buf, dng_data->image_size, 1, mlv_data->file[mlv_data->video_index[frame_index].chunk_num]) != 1)
         {
 #ifndef STDOUT_SILENT
             printf("Can not read raw frame from %s\n", mlv_data->path);
@@ -879,7 +879,7 @@ static int dng_get_frame(mlvObject_t * mlv_data, dngObject_t * dng_data, uint64_
     else /* If uncompressed, unpack to 16bit or pass trough */
     {
         dng_data->image_size = dng_get_image_size(mlv_data, IMG_SIZE_PACKED, frame_index);
-        if(fread(dng_data->image_buf, sizeof(uint8_t), dng_data->image_size, mlv_data->file[mlv_data->video_index[frame_index].chunk_num]) != dng_data->image_size)
+        if(fread(dng_data->image_buf, dng_data->image_size, 1, mlv_data->file[mlv_data->video_index[frame_index].chunk_num]) != 1)
         {
 #ifndef STDOUT_SILENT
             printf("Can not read raw frame from %s\n", mlv_data->path);
@@ -1008,7 +1008,7 @@ int saveDngFrame(mlvObject_t * mlv_data, dngObject_t * dng_data, uint64_t frame_
                 break;
         }
     }
-    printf("\rCurrent frame '%s' (frames saved: %lu)", dng_filename, frame_index + 1);
+    printf("Current frame '%s' (frames saved: %lu)\n", dng_filename, frame_index + 1);
 #endif
     return 0;
 }

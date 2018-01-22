@@ -165,7 +165,8 @@ void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
         ui->labelDebayer->setEnabled( false );
         ui->comboBoxDebayer->setEnabled( false );
         ui->comboBoxOption->setEnabled( true );
-        ui->comboBoxOption->addItem( QString( "Standard" ) );
+        ui->comboBoxOption->addItem( QString( "Fast Pass" ) );
+        ui->comboBoxOption->addItem( QString( "Compressed" ) );
         ui->comboBoxOption->addItem( QString( "Averaged Frame" ) );
         enableResize = false;
     }

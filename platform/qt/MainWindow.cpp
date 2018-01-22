@@ -1412,7 +1412,7 @@ void MainWindow::startExportMlv(QString fileName)
     //Check if MLV has audio and it is requested to be exported
     int exportAudio = (doesMlvHaveAudio( m_pMlvObject ) && m_audioExportEnabled);
     //Save MLV block headers
-    if( mlvSaveHeaders( m_pMlvObject, mlvOut, exportAudio, m_exportQueue.first()->cutIn(), m_exportQueue.first()->cutOut(), VERSION ) )
+    if( mlvSaveHeaders( m_pMlvObject, mlvOut, exportAudio, (m_codecOption == 1), m_exportQueue.first()->cutIn(), m_exportQueue.first()->cutOut(), VERSION ) )
     {
         m_pStatusDialog->hide();
         qApp->processEvents();
@@ -1437,7 +1437,7 @@ void MainWindow::startExportMlv(QString fileName)
     for( uint32_t frame = m_exportQueue.first()->cutIn() - 1; frame < m_exportQueue.first()->cutOut(); frame++ )
     {
         //Save audio and video frames
-        if( mlvSaveAVFrame( m_pMlvObject, mlvOut, exportAudio, m_exportQueue.first()->cutIn(), m_exportQueue.first()->cutOut(), frame ) )
+        if( mlvSaveAVFrame( m_pMlvObject, mlvOut, exportAudio, (m_codecOption == 1), m_exportQueue.first()->cutIn(), m_exportQueue.first()->cutOut(), frame ) )
         {
             m_pStatusDialog->hide();
             qApp->processEvents();

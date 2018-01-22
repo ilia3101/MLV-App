@@ -23,6 +23,9 @@
 /* Lossless decompression */
 #include "liblj92/lj92.h"
 
+/* Bitunpack and lossless compression */
+#include "../dng/dng.h"
+
 #define ROR32(v,a) ((v) >> (a) | (v) << (32-(a)))
 
 static uint64_t file_set_pos(FILE *stream, uint64_t offset, int whence)
@@ -47,6 +50,12 @@ static uint64_t file_get_pos(FILE *stream)
 #define DEBUG(CODE) CODE
 #else
 #define DEBUG(CODE)
+#endif
+
+#ifdef __WIN32
+#define FMT_SIZE "%u"
+#else
+#define FMT_SIZE "%zu"
 #endif
 
 /* Just to be separate */
@@ -715,7 +724,7 @@ mapp_error:
 }
 
 /* Save MLV headers */
-int mlvSaveHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, uint32_t frame_start, uint32_t frame_end, const char * version)
+int mlvSaveHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int compress, uint32_t frame_start, uint32_t frame_end, const char * version)
 {
     /* construct version info */
     char version_info[32] = { 0 };
@@ -732,7 +741,7 @@ int mlvSaveHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, uin
 
     if(video->RAWC.blockType[0]) mlv_headers_size += video->RAWC.blockSize;
     if(video->STYL.blockType[0]) mlv_headers_size += video->STYL.blockSize;
-    if(video->WAVI.blockType[0]) mlv_headers_size += video->WAVI.blockSize;
+    if(video->WAVI.blockType[0] && export_audio) mlv_headers_size += video->WAVI.blockSize;
     if(video->DISO.blockType[0]) mlv_headers_size += video->DISO.blockSize;
     if(video->INFO.blockType[0] && video->INFO_STRING[0]) mlv_headers_size += video->INFO.blockSize;
 
@@ -750,6 +759,7 @@ int mlvSaveHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, uin
     output_mlvi.fileCount = 1;
     output_mlvi.videoFrameCount = frame_end - frame_start + 1;
     output_mlvi.audioFrameCount = (!export_audio) ? 0 : 1;
+    if(compress && (!isMlvCompressed(video))) output_mlvi.videoClass |= MLV_VIDEO_CLASS_FLAG_LJ92;
     output_mlvi.audioClass = (!export_audio) ? 0 : 1;
     memcpy(ptr, &output_mlvi, sizeof(mlv_file_hdr_t));
     ptr += video->MLVI.blockSize;
@@ -823,7 +833,7 @@ int mlvSaveHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, uin
 }
 
 /* Save video frame plus audio if available */
-int mlvSaveAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, uint32_t frame_start, uint32_t frame_end, uint32_t frame_index)
+int mlvSaveAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int compress, uint32_t frame_start, uint32_t frame_end, uint32_t frame_index)
 {
     mlv_vidf_hdr_t vidf_hdr = { 0 };
 
@@ -831,7 +841,9 @@ int mlvSaveAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, uin
     uint32_t frame_size = video->video_index[frame_index].frame_size;
     uint64_t frame_offset = video->video_index[frame_index].frame_offset;
     uint64_t block_offset = video->video_index[frame_index].block_offset;
+    uint32_t frame_size_unpacked = video->RAWI.xRes * video->RAWI.yRes * 2;
 
+    /* read VIDF block header */
     file_set_pos(video->file[chunk], block_offset, SEEK_SET);
     if(fread(&vidf_hdr, sizeof(mlv_vidf_hdr_t), 1, video->file[chunk]) != 1)
     {
@@ -843,21 +855,82 @@ int mlvSaveAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, uin
     vidf_hdr.frameNumber = (frame_index + 1) - frame_start;
     vidf_hdr.frameSpace = 0;
 
+    /* allocate VIDF block buffer */
     uint8_t * block_buf = calloc(vidf_hdr.blockSize, 1);
     if(!block_buf)
     {
         DEBUG( printf("\nCould not allocate memory for VIDF block\n"); )
         return 1;
     }
-    memcpy(block_buf, &vidf_hdr, sizeof(mlv_vidf_hdr_t));
-
-    file_set_pos(video->file[chunk], frame_offset, SEEK_SET);
-    if(fread((block_buf + sizeof(mlv_vidf_hdr_t)), frame_size, 1, video->file[chunk]) != 1)
+    /* allocate frame buffer */
+    uint8_t * frame_buf = calloc(frame_size, 1);
+    if(!frame_buf)
     {
-        DEBUG( printf("\nCould not read from MLV file\n"); )
+        DEBUG( printf("\nCould not allocate memory for VIDF frame data\n"); )
         free(block_buf);
         return 1;
     }
+
+    /* read frame buffer */
+    file_set_pos(video->file[chunk], frame_offset, SEEK_SET);
+    if(fread(frame_buf, frame_size, 1, video->file[chunk]) != 1)
+    {
+        DEBUG( printf("\nCould not read from MLV file\n"); )
+        free(frame_buf);
+        free(block_buf);
+        return 1;
+    }
+
+    /* compress MLV frame with LJ92 if specified */
+    if(compress && (!isMlvCompressed(video)))
+    {
+        int ret = 0;
+        size_t frame_size_compressed = 0;
+
+        uint16_t * frame_buf_unpacked = calloc(frame_size_unpacked, 1);
+        uint16_t * frame_buf_compressed = calloc(frame_size_unpacked, 1);
+        if(!frame_buf_unpacked || !frame_buf_compressed)
+        {
+            DEBUG( printf("\nCould not allocate memory for frame compressing\n"); )
+            ret = 1;
+        }
+
+        if(!ret)
+        {
+            dng_unpack_image_bits(frame_buf_unpacked, (uint16_t*)frame_buf, video->RAWI.xRes, video->RAWI.yRes, video->RAWI.raw_info.bits_per_pixel);
+            ret = dng_compress_image(frame_buf_compressed, frame_buf_unpacked, &frame_size_compressed, video->RAWI.xRes, video->RAWI.yRes, video->RAWI.raw_info.bits_per_pixel);
+            if(ret == LJ92_ERROR_NONE)
+            {
+                vidf_hdr.blockSize = sizeof(mlv_vidf_hdr_t) + frame_size_compressed;
+                memcpy(block_buf, &vidf_hdr, sizeof(mlv_vidf_hdr_t));
+                memcpy((block_buf + sizeof(mlv_vidf_hdr_t)), (uint8_t*)frame_buf_compressed, frame_size_compressed);
+            }
+            else
+            {
+                memcpy(block_buf, &vidf_hdr, sizeof(mlv_vidf_hdr_t));
+                memcpy((block_buf + sizeof(mlv_vidf_hdr_t)), frame_buf, frame_size);
+
+                uint64_t current_pos = file_get_pos(output_mlv);
+                file_set_pos(output_mlv, 32, SEEK_SET);
+                uint16_t videoClass = 0x1;
+                /* patch videoClass as uncompressed */
+                if(fwrite(&videoClass, sizeof(uint16_t), 1, output_mlv) != 1)
+                {
+                    DEBUG( printf("\nCould not patch videoClass in MLV header\n"); )
+                }
+                file_set_pos(output_mlv, current_pos, SEEK_SET);
+            }
+        }
+
+        if(frame_buf_unpacked) free(frame_buf_unpacked);
+        if(frame_buf_compressed) free(frame_buf_compressed);
+    }
+    else
+    {
+        memcpy(block_buf, &vidf_hdr, sizeof(mlv_vidf_hdr_t));
+        memcpy((block_buf + sizeof(mlv_vidf_hdr_t)), frame_buf, frame_size);
+    }
+
 
     if(!vidf_hdr.frameNumber && export_audio)
     {
@@ -871,6 +944,7 @@ int mlvSaveAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, uin
         if(!mlv_audio_data)
         {
             DEBUG( printf("\nCould not allocate memory for audio data\n"); )
+            free(frame_buf);
             free(block_buf);
             return 1;
         }
@@ -885,6 +959,7 @@ int mlvSaveAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, uin
         {
             DEBUG( printf("\nCould not write AUDF header\n"); )
             free(mlv_audio_data);
+            free(frame_buf);
             free(block_buf);
             return 1;
         }
@@ -893,6 +968,7 @@ int mlvSaveAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, uin
         {
             DEBUG( printf("\nCould not write audio data\n"); )
             free(mlv_audio_data);
+            free(frame_buf);
             free(block_buf);
             return 1;
         }
@@ -901,15 +977,17 @@ int mlvSaveAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, uin
     }
 
     /* write mlvFrame */
-    if(fwrite(block_buf, sizeof(mlv_vidf_hdr_t) + frame_size, 1, output_mlv) != 1)
+    if(fwrite(block_buf, vidf_hdr.blockSize, 1, output_mlv) != 1)
     {
         DEBUG( printf("\nCould not write video frame #%u\n", frame_index); )
+        free(frame_buf);
         free(block_buf);
         return 1;
     }
 
+    free(frame_buf);
     free(block_buf);
-    DEBUG( printf("\nSaved video frame #%u", frame_index); )
+    DEBUG( if(!(compress && (!isMlvCompressed(video)))) printf("Saved video frame #%u\n", frame_index); )
     return 0;
 }
 
