@@ -741,8 +741,8 @@ int mlvSaveHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int
 
     if(video->RAWC.blockType[0]) mlv_headers_size += video->RAWC.blockSize;
     if(video->STYL.blockType[0]) mlv_headers_size += video->STYL.blockSize;
-    if(video->WAVI.blockType[0] && export_audio) mlv_headers_size += video->WAVI.blockSize;
     if(video->DISO.blockType[0]) mlv_headers_size += video->DISO.blockSize;
+    if(video->WAVI.blockType[0] && export_audio) mlv_headers_size += video->WAVI.blockSize;
     if(video->INFO.blockType[0] && video->INFO_STRING[0]) mlv_headers_size += video->INFO.blockSize;
 
     uint8_t * mlv_headers_buf = malloc(mlv_headers_size);
@@ -931,7 +931,6 @@ int mlvSaveAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
         memcpy(block_buf, &vidf_hdr, sizeof(mlv_vidf_hdr_t));
         memcpy((block_buf + sizeof(mlv_vidf_hdr_t)), frame_buf, frame_size);
     }
-
 
     if(!vidf_hdr.frameNumber && export_audio)
     {
