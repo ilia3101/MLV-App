@@ -907,13 +907,14 @@ int mlvSaveAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
             }
             else
             {
+                /* if compression error then save uncompressed raw */
                 memcpy(block_buf, &vidf_hdr, sizeof(mlv_vidf_hdr_t));
                 memcpy((block_buf + sizeof(mlv_vidf_hdr_t)), frame_buf, frame_size);
 
+                /* patch MLVI header and set back videoClass to 1 (uncompressed) */
                 uint64_t current_pos = file_get_pos(output_mlv);
                 file_set_pos(output_mlv, 32, SEEK_SET);
                 uint16_t videoClass = 0x1;
-                /* patch videoClass as uncompressed */
                 if(fwrite(&videoClass, sizeof(uint16_t), 1, output_mlv) != 1)
                 {
                     DEBUG( printf("\nCould not patch videoClass in MLV header\n"); )
