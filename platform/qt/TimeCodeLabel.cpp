@@ -32,7 +32,9 @@ QImage TimeCodeLabel::getTimeCodeLabel(uint32_t frameNumber, float clipFps)
     QRect rect( 0, 0, 400, 60 );
     QPainter painterTc( m_tcImage );
     QLinearGradient gradient( rect.topLeft(), (rect.topLeft() + rect.bottomLeft() ) / 2 ); // diagonal gradient from top-left to bottom-right
-    gradient.setColorAt( 0, QColor( 100, 100, 100, 255 ) );
+    //gradient.setColorAt( 0, QColor( 48, 152, 255, 255 ) );
+    gradient.setColorAt( 0, QColor( 90, 90, 90, 255 ) );
+    //gradient.setColorAt( 1, QColor( 36, 114, 191, 255 ) );
     gradient.setColorAt( 1, QColor( 30, 30, 30, 255 ) );
     painterTc.fillRect(rect, gradient);
 
@@ -49,6 +51,11 @@ QImage TimeCodeLabel::getTimeCodeLabel(uint32_t frameNumber, float clipFps)
 #else
     QFont font = QFont("DSEG7 Modern", 30, 1);
 #endif
+    //painterTc.setPen( QPen( QColor( 31, 99, 166 ) ) );
+    painterTc.setPen( QPen( QColor( 70, 70, 70 ) ) );
+    painterTc.setFont( font );
+    painterTc.drawText( 40, 10, 380, 40, 0, QString( "88 : 88 : 88 . 88" ) );
+
     painterTc.setPen( QPen( QColor( 220, 220, 220 ) ) );
     painterTc.setFont( font );
     painterTc.drawText( 40, 10, 380, 40, 0, QString( "%1 : %2 : %3 . %4" )
