@@ -846,6 +846,7 @@ void MainWindow::initGui( void )
     //TimeCode Label
     m_pTcLabel = new QLabel( this );
     m_pTcLabel->setToolTip( tr( "Timecode hr:min:sec.fr" ) );
+    //TC between buttons
     QWidget* spacer = new QWidget();
     spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     spacer->setMaximumWidth( 5 );
@@ -858,6 +859,17 @@ void MainWindow::initGui( void )
     spacer2->setMaximumWidth( 5 );
     //ui->mainToolBar->addWidget( spacer2 );
     ui->mainToolBar->insertWidget( ui->actionGoto_First_Frame, spacer2 );
+
+    //TC total right
+    /*QWidget* spacer = new QWidget();
+    spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    ui->mainToolBar->addWidget( spacer );
+    ui->mainToolBar->addWidget( m_pTcLabel );
+    QWidget* spacer2 = new QWidget();
+    spacer2->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    spacer2->setMaximumWidth( 5 );
+    ui->mainToolBar->addWidget( spacer2 );*/
+
     m_pTimeCodeImage = new TimeCodeLabel();
     QPixmap picTc = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( 0, 25 ).scaled( 200 * devicePixelRatio(),
                                                                                           30 * devicePixelRatio(),
