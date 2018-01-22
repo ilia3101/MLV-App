@@ -330,7 +330,7 @@ void MainWindow::drawFrame( void )
         m_pRenderThread->renderFrame( m_newPosDropMode );
 
         //Draw TimeCode
-        QPixmap pic = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( m_newPosDropMode, getMlvFramerate( m_pMlvObject ) ).scaled( 200 * devicePixelRatio(),
+        QPixmap pic = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( m_newPosDropMode, getFramerate() ).scaled( 200 * devicePixelRatio(),
                                                                                               30 * devicePixelRatio(),
                                                                                               Qt::IgnoreAspectRatio, Qt::SmoothTransformation) );
         pic.setDevicePixelRatio( devicePixelRatio() );
@@ -342,7 +342,7 @@ void MainWindow::drawFrame( void )
         m_pRenderThread->renderFrame( ui->horizontalSliderPosition->value() );
 
         //Draw TimeCode
-        QPixmap pic = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( ui->horizontalSliderPosition->value(), getMlvFramerate( m_pMlvObject ) ).scaled( 200 * devicePixelRatio(),
+        QPixmap pic = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( ui->horizontalSliderPosition->value(), getFramerate() ).scaled( 200 * devicePixelRatio(),
                                                                                               30 * devicePixelRatio(),
                                                                                               Qt::IgnoreAspectRatio, Qt::SmoothTransformation) );
         pic.setDevicePixelRatio( devicePixelRatio() );
@@ -845,13 +845,19 @@ void MainWindow::initGui( void )
 
     //TimeCode Label
     m_pTcLabel = new QLabel( this );
+    m_pTcLabel->setToolTip( tr( "Timecode hr:min:sec.fr" ) );
     QWidget* spacer = new QWidget();
     spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    ui->mainToolBar->addWidget( spacer );
-    ui->mainToolBar->addWidget( m_pTcLabel );
+    spacer->setMaximumWidth( 5 );
+    //ui->mainToolBar->addWidget( spacer );
+    ui->mainToolBar->insertWidget( ui->actionGoto_First_Frame, spacer );
+    //ui->mainToolBar->addWidget( m_pTcLabel );
+    ui->mainToolBar->insertWidget( ui->actionGoto_First_Frame, m_pTcLabel );
     QWidget* spacer2 = new QWidget();
     spacer2->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    ui->mainToolBar->addWidget( spacer2 );
+    spacer2->setMaximumWidth( 5 );
+    //ui->mainToolBar->addWidget( spacer2 );
+    ui->mainToolBar->insertWidget( ui->actionGoto_First_Frame, spacer2 );
     m_pTimeCodeImage = new TimeCodeLabel();
     QPixmap picTc = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( 0, 25 ).scaled( 200 * devicePixelRatio(),
                                                                                           30 * devicePixelRatio(),
@@ -3321,12 +3327,20 @@ void MainWindow::on_actionExportSettings_triggered()
     m_audioExportEnabled = pExportSettings->isExportAudioEnabled();
     delete pExportSettings;
 
-    //Restart timer with chosen framerate
     if( m_fileLoaded )
     {
+        //Restart timer with chosen framerate
         killTimer( m_timerId );
         m_timerId = startTimer( (int)( 1000.0 / getFramerate() ) );
+
+        //Refresh Timecode Label
+        QPixmap pic = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( ui->horizontalSliderPosition->value(), getFramerate() ).scaled( 200 * devicePixelRatio(),
+                                                                                              30 * devicePixelRatio(),
+                                                                                              Qt::IgnoreAspectRatio, Qt::SmoothTransformation) );
+        pic.setDevicePixelRatio( devicePixelRatio() );
+        m_pTcLabel->setPixmap( pic );
     }
+
 }
 
 //Reset the edit sliders to default
