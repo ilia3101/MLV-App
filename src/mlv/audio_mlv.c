@@ -128,8 +128,13 @@ void writeMlvAudioToWaveCut(mlvObject_t * video, char * path, uint32_t cut_in, u
     int32_t frames = cut_out - ( cut_in - 1 );
     if( frames <= 0 ) return;
     uint64_t audio_size = getMlvAudioSize(video);
-    uint64_t theoretic_size = getMlvAudioChannels(video) * getMlvSampleRate(video) * sizeof( uint16_t ) * frames / getMlvFramerate(video);
-    uint64_t in_offset = getMlvAudioChannels(video) * getMlvSampleRate(video) * sizeof( uint16_t ) * ( cut_in - 1 ) / getMlvFramerate(video);
+    uint64_t in_offset = (uint64_t)( (double)(getMlvAudioChannels(video) * getMlvSampleRate(video) * sizeof( int16_t ) * ( cut_in - 1 )) / (double)getMlvFramerate(video) );
+    uint64_t theoretic_size_rough = (uint64_t)( (double)(getMlvAudioChannels(video) * getMlvSampleRate(video) * sizeof(int16_t) * frames) / (double)getMlvFramerate(video) );
+    /* check if audio_start_offset is even */
+    if(in_offset % 2) --in_offset;
+    /* check if cut_audio_size is multiple of 4096 bytes */
+    uint64_t theoretic_size = theoretic_size_rough - (theoretic_size_rough % 4096) + 4096;
+    /* wav audio data size */
     uint64_t wave_data_size = MIN(theoretic_size, audio_size);
 
     /* Get audio */

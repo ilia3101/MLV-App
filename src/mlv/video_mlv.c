@@ -937,7 +937,7 @@ int mlvSaveAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
         mlv_audf_hdr_t audf_hdr = { { 'A','U','D','F' }, 0, 0, 0, 0 };
         uint64_t mlv_audio_size = getMlvAudioSize(video);
         uint64_t audio_start_offset = (uint64_t)( (double)(getMlvAudioChannels(video) * getMlvSampleRate(video) * sizeof(int16_t) * (frame_start - 1)) / (double)getMlvFramerate(video) );
-        uint64_t cut_audio_size_rough = (uint64_t)( (double)(getMlvAudioChannels(video) * getMlvSampleRate(video) * sizeof(int16_t) * (frame_end - frame_start + 20)) / (double)getMlvFramerate(video) );
+        uint64_t cut_audio_size_rough = (uint64_t)( (double)(getMlvAudioChannels(video) * getMlvSampleRate(video) * sizeof(int16_t) * (frame_end - frame_start + 1)) / (double)getMlvFramerate(video) );
         /* check if audio_start_offset is even */
         if(audio_start_offset % 2) --audio_start_offset;
         /* check if cut_audio_size is multiple of 4096 bytes */
