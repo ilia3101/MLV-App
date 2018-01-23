@@ -457,9 +457,12 @@ void MainWindow::on_actionOpen_triggered()
     //Stop playback if active
     ui->actionPlay->setChecked( false );
 
+    QString path = QFileInfo( m_lastSaveFileName ).absolutePath();
+    if( !QDir( path ).exists() ) path = QDir::homePath();
+
     //Open File Dialog
     QStringList files = QFileDialog::getOpenFileNames( this, tr("Open one or more MLV..."),
-                                                    m_lastSaveFileName.left( m_lastSaveFileName.lastIndexOf( "/" ) ),
+                                                    path,
                                                     tr("Magic Lantern Video (*.mlv *.MLV)") );
 
     if( files.empty() ) return;
@@ -3434,6 +3437,8 @@ void MainWindow::on_actionOpenSession_triggered()
     ui->actionPlay->setChecked( false );
 
     QString path = QFileInfo( m_lastSaveFileName ).absolutePath();
+    if( !QDir( path ).exists() ) path = QDir::homePath();
+
     QString fileName = QFileDialog::getOpenFileName(this,
                                            tr("Open MLV App Session Xml"), path,
                                            tr("MLV App Session Xml files (*.masxml)"));
