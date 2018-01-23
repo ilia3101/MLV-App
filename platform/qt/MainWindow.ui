@@ -4203,7 +4203,7 @@ QGroupBox::indicator:checked {
   </action>
   <action name="actionTimecodePositionMiddle">
    <property name="text">
-    <string>Timecode Position and Playback Control Middle</string>
+    <string>Timecode and Playback Control Position Middle</string>
    </property>
    <property name="toolTip">
     <string>Move timecode label between icons.</string>
