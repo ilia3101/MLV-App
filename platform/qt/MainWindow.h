@@ -178,6 +178,10 @@ private slots:
     void on_comboBoxHStretch_currentIndexChanged(int index);
     void on_comboBoxVStretch_currentIndexChanged(int index);
 
+    void mpTcLabel_customContextMenuRequested(const QPoint &pos);
+    void on_actionTimecodePositionMiddle_triggered();
+    void on_actionTimecodePositionRight_triggered();
+
 private:
     Ui::MainWindow *ui;
     InfoDialog *m_pInfoDialog;
@@ -194,6 +198,7 @@ private:
     GradientElement *m_pGradientElement;
     GraphicsPickerScene* m_pScene;
     TimeCodeLabel* m_pTimeCodeImage;
+    uint8_t m_timeCodePosition;
     QLabel *m_pCachingStatus;
     QLabel *m_pFpsStatus;
     QLabel *m_pFrameNumber;

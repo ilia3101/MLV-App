@@ -29,8 +29,10 @@ TimeCodeLabel::~TimeCodeLabel()
 //Get the image for frameNumber at clipFps
 QImage TimeCodeLabel::getTimeCodeLabel(uint32_t frameNumber, float clipFps)
 {
-    m_tcImage->fill( Qt::black );
+    //Background
+    m_tcImage->fill( QColor( 20, 20, 20, 255 ) );
 
+    //Boarder
     QRect rect( 0, 0, 2, 60 );
     QPainter painterTc( m_tcImage );
     QLinearGradient gradient( rect.topLeft(), (rect.topLeft() + rect.bottomLeft() ) / 2 ); // diagonal gradient from top-left to bottom-right
@@ -53,6 +55,7 @@ QImage TimeCodeLabel::getTimeCodeLabel(uint32_t frameNumber, float clipFps)
     gradient4.setColorAt( 1, QColor( 60, 60, 60, 255 ) );
     painterTc.fillRect(rect4, gradient4);
 
+    //Text
     int frame = (int) (frameNumber % (int)clipFps);
     frameNumber /= (int)clipFps;
     int seconds = (int) (frameNumber % 60);
@@ -61,19 +64,22 @@ QImage TimeCodeLabel::getTimeCodeLabel(uint32_t frameNumber, float clipFps)
     frameNumber /= 60;
     int hours = (int) (frameNumber);
 
+    //Font selection
 #ifdef Q_OS_MAC
-    QFont font = QFont("DSEG7 Modern", 40, 1);
+    QFont font = QFont("DSEG7 Modern", 32, 1);
 #else
-    QFont font = QFont("DSEG7 Modern", 30, 1);
+    QFont font = QFont("DSEG7 Modern", 24, 1);
 #endif
-    //painterTc.setPen( QPen( QColor( 31, 99, 166 ) ) );
+
+    //Shadow
     painterTc.setPen( QPen( QColor( 70, 70, 70 ) ) );
     painterTc.setFont( font );
-    painterTc.drawText( 40, 10, 380, 40, 0, QString( "88 : 88 : 88 . 88" ) );
+    painterTc.drawText( 70, 14, 380, 40, 0, QString( "88 : 88 : 88 . 88" ) );
 
+    //Foreground
     painterTc.setPen( QPen( QColor( 220, 220, 220 ) ) );
     painterTc.setFont( font );
-    painterTc.drawText( 40, 10, 380, 40, 0, QString( "%1 : %2 : %3 . %4" )
+    painterTc.drawText( 70, 14, 380, 40, 0, QString( "%1 : %2 : %3 . %4" )
                       .arg( hours, 2, 10, QChar('0') )
                       .arg( minutes, 2, 10, QChar('0') )
                       .arg( seconds, 2, 10, QChar('0') )

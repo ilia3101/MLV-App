@@ -846,29 +846,37 @@ void MainWindow::initGui( void )
     //TimeCode Label
     m_pTcLabel = new QLabel( this );
     m_pTcLabel->setToolTip( tr( "Timecode hr:min:sec.fr" ) );
-    //TC between buttons
-    QWidget* spacer = new QWidget();
-    spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    spacer->setMaximumWidth( 5 );
-    //ui->mainToolBar->addWidget( spacer );
-    ui->mainToolBar->insertWidget( ui->actionGoto_First_Frame, spacer );
-    //ui->mainToolBar->addWidget( m_pTcLabel );
-    ui->mainToolBar->insertWidget( ui->actionGoto_First_Frame, m_pTcLabel );
-    QWidget* spacer2 = new QWidget();
-    spacer2->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    spacer2->setMaximumWidth( 5 );
-    //ui->mainToolBar->addWidget( spacer2 );
-    ui->mainToolBar->insertWidget( ui->actionGoto_First_Frame, spacer2 );
-
-    //TC total right
-    /*QWidget* spacer = new QWidget();
-    spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    ui->mainToolBar->addWidget( spacer );
-    ui->mainToolBar->addWidget( m_pTcLabel );
-    QWidget* spacer2 = new QWidget();
-    spacer2->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    spacer2->setMaximumWidth( 5 );
-    ui->mainToolBar->addWidget( spacer2 );*/
+    m_pTcLabel->setContextMenuPolicy( Qt::CustomContextMenu );
+    connect( m_pTcLabel, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(mpTcLabel_customContextMenuRequested(QPoint)) );
+    if( m_timeCodePosition == 1 )
+    {
+        //TC between buttons
+        QWidget* spacer1 = new QWidget();
+        spacer1->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+        spacer1->setMaximumWidth( 5 );
+        ui->mainToolBar->insertWidget( ui->actionGoto_First_Frame, spacer1 );
+        ui->mainToolBar->insertWidget( ui->actionGoto_First_Frame, m_pTcLabel );
+        QWidget* spacer2 = new QWidget();
+        spacer2->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+        spacer2->setMaximumWidth( 5 );
+        ui->mainToolBar->insertWidget( ui->actionGoto_First_Frame, spacer2 );
+    }
+    else
+    {
+        //TC total right
+        QWidget* spacer1 = new QWidget();
+        spacer1->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+        ui->mainToolBar->insertWidget( ui->actionGoto_First_Frame, spacer1 );
+        QWidget* spacer2 = new QWidget();
+        spacer2->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+        spacer2->setMaximumWidth( 5 );
+        ui->mainToolBar->addWidget( spacer2 );
+        ui->mainToolBar->addWidget( m_pTcLabel );
+        QWidget* spacer3 = new QWidget();
+        spacer3->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+        spacer3->setMaximumWidth( 5 );
+        ui->mainToolBar->addWidget( spacer3 );
+    }
 
     m_pTimeCodeImage = new TimeCodeLabel();
     QPixmap picTc = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( 0, 25 ).scaled( 200 * devicePixelRatio(),
@@ -954,6 +962,7 @@ void MainWindow::readSettings()
     ui->groupBoxLinearGradient->setChecked( set.value( "expandedLinGradient", false ).toBool() );
     ui->groupBoxAspectRatio->setChecked( set.value( "expandAspectRatio", false ).toBool() );
     ui->actionCreateMappFiles->setChecked( set.value( "createMappFiles", false ).toBool() );
+    m_timeCodePosition = set.value( "tcPos", 1 ).toUInt();
 }
 
 //Save some settings to registry
@@ -983,6 +992,7 @@ void MainWindow::writeSettings()
     set.setValue( "expandedLinGradient", ui->groupBoxLinearGradient->isChecked() );
     set.setValue( "expandAspectRatio", ui->groupBoxAspectRatio->isChecked() );
     set.setValue( "createMappFiles", ui->actionCreateMappFiles->isChecked() );
+    set.setValue( "tcPos", m_timeCodePosition );
 }
 
 //Start Export via Pipe
@@ -4682,4 +4692,32 @@ void MainWindow::on_comboBoxVStretch_currentIndexChanged(int index)
     m_pGradientElement->setStrechFactorY( getVerticalStretchFactor() );
     m_zoomModeChanged = true;
     m_frameChanged = true;
+}
+
+//Timecode label rightclick
+void MainWindow::mpTcLabel_customContextMenuRequested(const QPoint &pos)
+{
+    // Handle global position
+    QPoint globalPos = m_pTcLabel->mapToGlobal( pos );
+
+    // Create menu and insert some actions
+    QMenu myMenu;
+    myMenu.addAction( ui->actionTimecodePositionMiddle );
+    myMenu.addAction( ui->actionTimecodePositionRight );
+    // Show context menu at handling position
+    myMenu.exec( globalPos );
+}
+
+//Move Timecode label between icons
+void MainWindow::on_actionTimecodePositionMiddle_triggered()
+{
+    m_timeCodePosition = 1;
+    QMessageBox::information( this, QString( "MLV App" ), tr( "Please restart MLV App." ) );
+}
+
+//Move Timecode label right
+void MainWindow::on_actionTimecodePositionRight_triggered()
+{
+    m_timeCodePosition = 0;
+    QMessageBox::information( this, QString( "MLV App" ), tr( "Please restart MLV App." ) );
 }

@@ -4193,6 +4193,22 @@ QGroupBox::indicator:checked {
     <string>V</string>
    </property>
   </action>
+  <action name="actionTimecodePositionRight">
+   <property name="text">
+    <string>Timecode and Playback Control Position Right</string>
+   </property>
+   <property name="toolTip">
+    <string>Move the timecode label and playback control to the right.</string>
+   </property>
+  </action>
+  <action name="actionTimecodePositionMiddle">
+   <property name="text">
+    <string>Timecode Position and Playback Control Middle</string>
+   </property>
+   <property name="toolTip">
+    <string>Move timecode label between icons.</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
