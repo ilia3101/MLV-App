@@ -198,11 +198,19 @@
      <addaction name="actionPreviewList"/>
      <addaction name="actionPreviewPicture"/>
     </widget>
+    <widget class="QMenu" name="menuPlayback_Elements">
+     <property name="title">
+      <string>Playback Elements</string>
+     </property>
+     <addaction name="actionTimecodePositionMiddle"/>
+     <addaction name="actionTimecodePositionRight"/>
+    </widget>
     <addaction name="actionShowSessionArea"/>
     <addaction name="actionShowEditArea"/>
     <addaction name="actionShowAudioTrack"/>
     <addaction name="separator"/>
     <addaction name="menuSessionListPreview"/>
+    <addaction name="menuPlayback_Elements"/>
     <addaction name="separator"/>
     <addaction name="actionShowHistogram"/>
     <addaction name="actionShowWaveFormMonitor"/>
@@ -4195,16 +4203,22 @@ QGroupBox::indicator:checked {
    </property>
   </action>
   <action name="actionTimecodePositionRight">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="text">
-    <string>Timecode and Playback Control Position Right</string>
+    <string>Playback Elements Position Right</string>
    </property>
    <property name="toolTip">
     <string>Move the timecode label and playback control to the right.</string>
    </property>
   </action>
   <action name="actionTimecodePositionMiddle">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="text">
-    <string>Timecode and Playback Control Position Middle</string>
+    <string>Playback Elements Position Middle</string>
    </property>
    <property name="toolTip">
     <string>Move timecode label between icons.</string>

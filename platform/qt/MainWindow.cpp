@@ -871,6 +871,7 @@ void MainWindow::initGui( void )
         spacer2->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
         spacer2->setMaximumWidth( 5 );
         ui->mainToolBar->insertWidget( ui->actionGoto_First_Frame, spacer2 );
+        ui->actionTimecodePositionMiddle->setChecked( true );
     }
     else
     {
@@ -887,6 +888,7 @@ void MainWindow::initGui( void )
         spacer3->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
         spacer3->setMaximumWidth( 5 );
         ui->mainToolBar->addWidget( spacer3 );
+        ui->actionTimecodePositionRight->setChecked( true );
     }
 
     m_pTimeCodeImage = new TimeCodeLabel();
@@ -4745,6 +4747,7 @@ void MainWindow::on_actionTimecodePositionMiddle_triggered()
 {
     m_timeCodePosition = 1;
     QMessageBox::information( this, QString( "MLV App" ), tr( "Please restart MLV App." ) );
+    ui->actionTimecodePositionRight->setChecked( false );
 }
 
 //Move Timecode label right
@@ -4752,4 +4755,5 @@ void MainWindow::on_actionTimecodePositionRight_triggered()
 {
     m_timeCodePosition = 0;
     QMessageBox::information( this, QString( "MLV App" ), tr( "Please restart MLV App." ) );
+    ui->actionTimecodePositionMiddle->setChecked( false );
 }
