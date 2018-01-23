@@ -55,15 +55,6 @@ QImage TimeCodeLabel::getTimeCodeLabel(uint32_t frameNumber, float clipFps)
     gradient4.setColorAt( 1, QColor( 60, 60, 60, 255 ) );
     painterTc.fillRect(rect4, gradient4);
 
-    //Text
-    int frame = (int) (frameNumber % (int)clipFps);
-    frameNumber /= (int)clipFps;
-    int seconds = (int) (frameNumber % 60);
-    frameNumber /= 60;
-    int minutes = (int) (frameNumber % 60);
-    frameNumber /= 60;
-    int hours = (int) (frameNumber);
-
     //Font selection
 #ifdef Q_OS_MAC
     QFont font = QFont("DSEG7 Modern", 32, 1);
@@ -79,11 +70,35 @@ QImage TimeCodeLabel::getTimeCodeLabel(uint32_t frameNumber, float clipFps)
     //Foreground
     painterTc.setPen( QPen( QColor( 220, 220, 220 ) ) );
     painterTc.setFont( font );
-    painterTc.drawText( 70, 14, 380, 40, 0, QString( "%1 : %2 : %3 . %4" )
-                      .arg( hours, 2, 10, QChar('0') )
-                      .arg( minutes, 2, 10, QChar('0') )
-                      .arg( seconds, 2, 10, QChar('0') )
-                      .arg( frame, 2, 10, QChar('0') ) );
+    painterTc.drawText( 70, 14, 380, 40, 0, getTimeCodeFromFps( frameNumber, clipFps, true ) );
 
     return *m_tcImage;
+}
+
+//Generate Timecode String
+QString TimeCodeLabel::getTimeCodeFromFps(uint32_t frameNumber, float clipFps, bool space)
+{
+    int frame = (int) (frameNumber % (int)(clipFps+0.5));
+    frameNumber /= (int)(clipFps+0.5);
+    int seconds = (int) (frameNumber % 60);
+    frameNumber /= 60;
+    int minutes = (int) (frameNumber % 60);
+    frameNumber /= 60;
+    int hours = (int) (frameNumber);
+
+    if( space )
+    {
+        return QString( "%1 : %2 : %3 . %4" )
+                          .arg( hours, 2, 10, QChar('0') )
+                          .arg( minutes, 2, 10, QChar('0') )
+                          .arg( seconds, 2, 10, QChar('0') )
+                          .arg( frame, 2, 10, QChar('0') );
+    }
+    else
+    {
+        return QString( "%1:%2:%3" )
+                          .arg( hours, 2, 10, QChar('0') )
+                          .arg( minutes, 2, 10, QChar('0') )
+                          .arg( seconds, 2, 10, QChar('0') );
+    }
 }
