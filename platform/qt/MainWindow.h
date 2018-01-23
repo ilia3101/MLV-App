@@ -92,6 +92,7 @@ private slots:
     void on_actionNewSession_triggered();
     void on_actionOpenSession_triggered();
     void on_actionSaveSession_triggered();
+    void on_actionSaveAsSession_triggered();
     void on_actionImportReceipt_triggered();
     void on_actionExportReceipt_triggered();
     void on_actionCaching_triggered();
@@ -229,6 +230,7 @@ private:
     bool m_zoomTo100Center;
     bool m_zoomModeChanged;
     QString m_lastSaveFileName;
+    QString m_sessionFileName;
     ReceiptSettings *m_pReceiptClipboard;
     QVector<ReceiptSettings*> m_pSessionReceipts;
     QVector<ReceiptSettings*> m_exportQueue;

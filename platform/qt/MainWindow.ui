@@ -121,6 +121,7 @@
     <addaction name="actionNewSession"/>
     <addaction name="actionOpenSession"/>
     <addaction name="actionSaveSession"/>
+    <addaction name="actionSaveAsSession"/>
     <addaction name="separator"/>
     <addaction name="actionCreateMappFiles"/>
     <addaction name="separator"/>
@@ -4207,6 +4208,21 @@ QGroupBox::indicator:checked {
    </property>
    <property name="toolTip">
     <string>Move timecode label between icons.</string>
+   </property>
+  </action>
+  <action name="actionSaveAsSession">
+   <property name="icon">
+    <iconset resource="ressources.qrc">
+     <normaloff>:/RetinaIMG/RetinaIMG/Save-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Save-icon.png</iconset>
+   </property>
+   <property name="text">
+    <string>Save Session as...</string>
+   </property>
+   <property name="toolTip">
+    <string>Save Session as...</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+S</string>
    </property>
   </action>
  </widget>

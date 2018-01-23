@@ -109,6 +109,7 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
             //Show last imported file
             if( m_pSessionReceipts.count() ) showFileInEditor( m_pSessionReceipts.count() - 1 );
             m_inOpeningProcess = false;
+            m_sessionFileName = fileName;
         }
     }
 }
@@ -262,6 +263,7 @@ bool MainWindow::event(QEvent *event)
             if( m_pSessionReceipts.count() ) showFileInEditor( m_pSessionReceipts.count() - 1 );
             //Caching is in which state? Set it!
             if( ui->actionCaching->isChecked() ) on_actionCaching_triggered();
+            m_sessionFileName = fileName;
             m_inOpeningProcess = false;
         }
         else return false;
@@ -638,6 +640,7 @@ int MainWindow::openMlv( QString fileName )
     ui->actionImportReceipt->setEnabled( true );
     //If clip loaded, enable session save
     ui->actionSaveSession->setEnabled( true );
+    ui->actionSaveAsSession->setEnabled( true );
     //Enable select all clips action
     ui->actionSelectAllClips->setEnabled( true );
 
@@ -774,6 +777,7 @@ void MainWindow::initGui( void )
     ui->actionImportReceipt->setEnabled( false );
     //If no clip loaded, disable session save
     ui->actionSaveSession->setEnabled( false );
+    ui->actionSaveAsSession->setEnabled( false );
     //Set tooltips
     ui->toolButtonCutIn->setToolTip( tr( "Set Cut In    %1" ).arg( ui->toolButtonCutIn->shortcut().toString() ) );
     ui->toolButtonCutOut->setToolTip( tr( "Set Cut Out    %1" ).arg( ui->toolButtonCutOut->shortcut().toString() ) );
@@ -840,6 +844,9 @@ void MainWindow::initGui( void )
 
     //Init session settings
     m_pSessionReceipts.clear();
+
+    //Reset session name
+    m_sessionFileName.clear();
 
     //Init Export Queue
     m_exportQueue.clear();
@@ -2128,6 +2135,7 @@ void MainWindow::deleteSession()
     ui->actionImportReceipt->setEnabled( false );
     //If no clip loaded, disable session save
     ui->actionSaveSession->setEnabled( false );
+    ui->actionSaveAsSession->setEnabled( false );
     //Disable select all and delete clip actions
     ui->actionSelectAllClips->setEnabled( false );
     ui->actionDeleteSelectedClips->setEnabled( false );
@@ -2146,6 +2154,9 @@ void MainWindow::deleteSession()
                                                                                           Qt::IgnoreAspectRatio, Qt::SmoothTransformation) );
     pic.setDevicePixelRatio( devicePixelRatio() );
     m_pTcLabel->setPixmap( pic );
+
+    //Reset session name
+    m_sessionFileName.clear();
 }
 
 //returns true if file is already in session
@@ -3434,11 +3445,22 @@ void MainWindow::on_actionOpenSession_triggered()
     openSession( fileName );
     //Show last imported file
     showFileInEditor( m_pSessionReceipts.count() - 1 );
+    m_sessionFileName = fileName;
     m_inOpeningProcess = false;
 }
 
-//Save Session
+//Save Session (just save)
 void MainWindow::on_actionSaveSession_triggered()
+{
+    //Stop playback if active
+    ui->actionPlay->setChecked( false );
+
+    if( m_sessionFileName.count() == 0 ) on_actionSaveAsSession_triggered();
+    else saveSession( m_sessionFileName );
+}
+
+//Save Session with filename selection
+void MainWindow::on_actionSaveAsSession_triggered()
 {
     //Stop playback if active
     ui->actionPlay->setChecked( false );
@@ -3450,6 +3472,8 @@ void MainWindow::on_actionSaveSession_triggered()
 
     //Abort selected
     if( fileName.count() == 0 ) return;
+
+    m_sessionFileName = fileName;
 
     saveSession( fileName );
 }
