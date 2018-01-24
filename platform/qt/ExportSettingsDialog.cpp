@@ -177,7 +177,7 @@ void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
         ui->comboBoxOption->setEnabled( false );
     }
 
-    //If C / MLV, disable resize feature
+    //If CDNG / MLV, disable resize feature
     if( !enableResize )
     {
         ui->checkBoxResize->setChecked( false );
