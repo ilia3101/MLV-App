@@ -1453,57 +1453,36 @@ void MainWindow::startExportMlv(QString fileName)
     //Check if MLV has audio and it is requested to be exported
     int exportAudio = (doesMlvHaveAudio( m_pMlvObject ) && m_audioExportEnabled);
     //Save MLV block headers
-    if( mlvSaveHeaders( m_pMlvObject, mlvOut, exportAudio, (m_codecOption == 1), m_exportQueue.first()->cutIn(), m_exportQueue.first()->cutOut(), VERSION ) )
-    {
-        m_pStatusDialog->hide();
-        qApp->processEvents();
-        int ret = QMessageBox::critical( this,
-                                         tr( "MLV App - Export file error" ),
-                                         tr( "Could not save: %1\nHow do you like to proceed?" ).arg( MlvFileName.data() ),
-                                         tr( "Abort current export" ),
-                                         tr( "Abort batch export" ),
-                                         0, 2 );
-        if( ret == 2 )
-        {
-            exportAbort();
-            return;
-        }
-        if( ret > 0 )
-        {
-            emit exportReady();
-            return;
-        }
-    }
+    int ret = mlvSaveHeaders( m_pMlvObject, mlvOut, exportAudio, (m_codecOption == 1), m_exportQueue.first()->cutIn(), m_exportQueue.first()->cutOut(), VERSION );
     //Output frames loop
     for( uint32_t frame = m_exportQueue.first()->cutIn() - 1; frame < m_exportQueue.first()->cutOut(); frame++ )
     {
         //Save audio and video frames
-        if( mlvSaveAVFrame( m_pMlvObject, mlvOut, exportAudio, (m_codecOption == 1), m_exportQueue.first()->cutIn(), m_exportQueue.first()->cutOut(), frame ) )
+        if( ret || mlvSaveAVFrame( m_pMlvObject, mlvOut, exportAudio, (m_codecOption == 1), m_exportQueue.first()->cutIn(), m_exportQueue.first()->cutOut(), frame ) )
         {
-            m_pStatusDialog->hide();
-            qApp->processEvents();
-            int ret = QMessageBox::critical( this,
-                                             tr( "MLV App - Export file error" ),
-                                             tr( "Could not save: %1\nHow do you like to proceed?" ).arg( MlvFileName.data() ),
-                                             tr( "Abort current export" ),
-                                             tr( "Abort batch export" ),
-                                             0, 2 );
-            if( ret == 2 )
+            ret = QMessageBox::critical( this,
+                                         tr( "MLV App - Export file error" ),
+                                         tr( "Could not save: %1\nHow do you like to proceed?" ).arg( MlvFileName.data() ),
+                                         tr( "Abort current export" ),
+                                         tr( "Abort batch export" ),
+                                         0, 1 );
+            if( ret )
             {
                 exportAbort();
             }
-            if( ret > 0 )
+            else
             {
                 break;
             }
         }
-
-        //Set Status
-        m_pStatusDialog->ui->progressBar->setValue( frame - ( m_exportQueue.first()->cutIn() - 1 ) + 1 );
-        m_pStatusDialog->ui->progressBar->repaint();
-        m_pStatusDialog->drawTimeFromToDoFrames( totalFrames - frame + ( m_exportQueue.first()->cutIn() - 1 ) - 1 );
-        qApp->processEvents();
-
+        else
+        {
+            //Set Status
+            m_pStatusDialog->ui->progressBar->setValue( frame - ( m_exportQueue.first()->cutIn() - 1 ) + 1 );
+            m_pStatusDialog->ui->progressBar->repaint();
+            m_pStatusDialog->drawTimeFromToDoFrames( totalFrames - frame + ( m_exportQueue.first()->cutIn() - 1 ) - 1 );
+            qApp->processEvents();
+        }
         //Abort pressed? -> End the loop
         if( m_exportAbortPressed ) break;
     }
