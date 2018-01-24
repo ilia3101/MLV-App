@@ -332,11 +332,15 @@ void MainWindow::drawFrame( void )
         m_pRenderThread->renderFrame( m_newPosDropMode );
 
         //Draw TimeCode
-        QPixmap pic = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( m_newPosDropMode, getFramerate() ).scaled( 200 * devicePixelRatio(),
+        if( !m_tcModeDuration )
+        {
+            QPixmap pic = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( m_newPosDropMode, getFramerate() ).scaled( 200 * devicePixelRatio(),
                                                                                               30 * devicePixelRatio(),
                                                                                               Qt::IgnoreAspectRatio, Qt::SmoothTransformation) );
-        pic.setDevicePixelRatio( devicePixelRatio() );
-        m_pTcLabel->setPixmap( pic );
+
+            pic.setDevicePixelRatio( devicePixelRatio() );
+            m_pTcLabel->setPixmap( pic );
+        }
     }
     else
     {
@@ -344,11 +348,14 @@ void MainWindow::drawFrame( void )
         m_pRenderThread->renderFrame( ui->horizontalSliderPosition->value() );
 
         //Draw TimeCode
-        QPixmap pic = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( ui->horizontalSliderPosition->value(), getFramerate() ).scaled( 200 * devicePixelRatio(),
+        if( !m_tcModeDuration )
+        {
+            QPixmap pic = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( ui->horizontalSliderPosition->value(), getFramerate() ).scaled( 200 * devicePixelRatio(),
                                                                                               30 * devicePixelRatio(),
                                                                                               Qt::IgnoreAspectRatio, Qt::SmoothTransformation) );
-        pic.setDevicePixelRatio( devicePixelRatio() );
-        m_pTcLabel->setPixmap( pic );
+            pic.setDevicePixelRatio( devicePixelRatio() );
+            m_pTcLabel->setPixmap( pic );
+        }
     }
 }
 
@@ -855,10 +862,12 @@ void MainWindow::initGui( void )
     m_exportQueue.clear();
 
     //TimeCode Label
-    m_pTcLabel = new QLabel( this );
-    m_pTcLabel->setToolTip( tr( "Timecode h:m:s.frame" ) );
+    m_pTcLabel = new DoubleClickLabel( this );
+    m_pTcLabel->setToolTip( tr( "Timecode/Duration(edited) h:m:s.frame - change by doubleclicking" ) );
     m_pTcLabel->setContextMenuPolicy( Qt::CustomContextMenu );
     connect( m_pTcLabel, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(mpTcLabel_customContextMenuRequested(QPoint)) );
+    connect( m_pTcLabel, SIGNAL(doubleClicked()), this, SLOT(tcLabelDoubleClicked()) );
+    m_tcModeDuration = false;
     if( m_timeCodePosition == 1 )
     {
         //TC between buttons
@@ -1453,36 +1462,57 @@ void MainWindow::startExportMlv(QString fileName)
     //Check if MLV has audio and it is requested to be exported
     int exportAudio = (doesMlvHaveAudio( m_pMlvObject ) && m_audioExportEnabled);
     //Save MLV block headers
-    int ret = mlvSaveHeaders( m_pMlvObject, mlvOut, exportAudio, (m_codecOption == 1), m_exportQueue.first()->cutIn(), m_exportQueue.first()->cutOut(), VERSION );
-    //Output frames loop
-    for( uint32_t frame = m_exportQueue.first()->cutIn() - 1; frame < m_exportQueue.first()->cutOut(); frame++ )
+    if( mlvSaveHeaders( m_pMlvObject, mlvOut, exportAudio, (m_codecOption == 1), m_exportQueue.first()->cutIn(), m_exportQueue.first()->cutOut(), VERSION ) )
     {
-        //Save audio and video frames
-        if( ret || mlvSaveAVFrame( m_pMlvObject, mlvOut, exportAudio, (m_codecOption == 1), m_exportQueue.first()->cutIn(), m_exportQueue.first()->cutOut(), frame ) )
-        {
-            ret = QMessageBox::critical( this,
+        m_pStatusDialog->hide();
+        qApp->processEvents();
+        int ret = QMessageBox::critical( this,
                                          tr( "MLV App - Export file error" ),
                                          tr( "Could not save: %1\nHow do you like to proceed?" ).arg( MlvFileName.data() ),
                                          tr( "Abort current export" ),
                                          tr( "Abort batch export" ),
-                                         0, 1 );
-            if( ret )
+                                         0, 2 );
+        if( ret == 2 )
+        {
+            exportAbort();
+            return;
+        }
+        if( ret > 0 )
+        {
+            emit exportReady();
+            return;
+        }
+    }
+    //Output frames loop
+    for( uint32_t frame = m_exportQueue.first()->cutIn() - 1; frame < m_exportQueue.first()->cutOut(); frame++ )
+    {
+        //Save audio and video frames
+        if( mlvSaveAVFrame( m_pMlvObject, mlvOut, exportAudio, (m_codecOption == 1), m_exportQueue.first()->cutIn(), m_exportQueue.first()->cutOut(), frame ) )
+        {
+            m_pStatusDialog->hide();
+            qApp->processEvents();
+            int ret = QMessageBox::critical( this,
+                                             tr( "MLV App - Export file error" ),
+                                             tr( "Could not save: %1\nHow do you like to proceed?" ).arg( MlvFileName.data() ),
+                                             tr( "Abort current export" ),
+                                             tr( "Abort batch export" ),
+                                             0, 2 );
+            if( ret == 2 )
             {
                 exportAbort();
             }
-            else
+            if( ret > 0 )
             {
                 break;
             }
         }
-        else
-        {
-            //Set Status
-            m_pStatusDialog->ui->progressBar->setValue( frame - ( m_exportQueue.first()->cutIn() - 1 ) + 1 );
-            m_pStatusDialog->ui->progressBar->repaint();
-            m_pStatusDialog->drawTimeFromToDoFrames( totalFrames - frame + ( m_exportQueue.first()->cutIn() - 1 ) - 1 );
-            qApp->processEvents();
-        }
+
+        //Set Status
+        m_pStatusDialog->ui->progressBar->setValue( frame - ( m_exportQueue.first()->cutIn() - 1 ) + 1 );
+        m_pStatusDialog->ui->progressBar->repaint();
+        m_pStatusDialog->drawTimeFromToDoFrames( totalFrames - frame + ( m_exportQueue.first()->cutIn() - 1 ) - 1 );
+        qApp->processEvents();
+
         //Abort pressed? -> End the loop
         if( m_exportAbortPressed ) break;
     }
@@ -3353,12 +3383,23 @@ void MainWindow::on_actionExportSettings_triggered()
         m_timerId = startTimer( (int)( 1000.0 / getFramerate() ) );
 
         //Refresh Timecode Label
-        QPixmap pic = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( ui->horizontalSliderPosition->value(), getFramerate() ).scaled( 200 * devicePixelRatio(),
+        if( m_tcModeDuration )
+        {
+            QPixmap pic = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( ui->spinBoxCutOut->value() - ui->spinBoxCutIn->value() + 1, getFramerate() ).scaled( 200 * devicePixelRatio(),
                                                                                               30 * devicePixelRatio(),
                                                                                               Qt::IgnoreAspectRatio, Qt::SmoothTransformation) );
+            pic.setDevicePixelRatio( devicePixelRatio() );
+            m_pTcLabel->setPixmap( pic );
+        }
+        else
+        {
+            QPixmap pic = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( ui->horizontalSliderPosition->value(), getFramerate() ).scaled( 200 * devicePixelRatio(),
+                                                                                              30 * devicePixelRatio(),
+                                                                                              Qt::IgnoreAspectRatio, Qt::SmoothTransformation) );
+            pic.setDevicePixelRatio( devicePixelRatio() );
+            m_pTcLabel->setPixmap( pic );
+        }
 
-        pic.setDevicePixelRatio( devicePixelRatio() );
-        m_pTcLabel->setPixmap( pic );
     }
 
 }
@@ -4654,12 +4695,32 @@ void MainWindow::on_toolButtonCutOutDelete_clicked()
 void MainWindow::on_spinBoxCutIn_valueChanged(int arg1)
 {
     ui->spinBoxCutOut->setMinimum( arg1 );
+
+    //Refresh Timecode Label
+    if( m_fileLoaded && m_tcModeDuration )
+    {
+        QPixmap pic = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( ui->spinBoxCutOut->value() - ui->spinBoxCutIn->value() + 1, getFramerate() ).scaled( 200 * devicePixelRatio(),
+                                                                                          30 * devicePixelRatio(),
+                                                                                          Qt::IgnoreAspectRatio, Qt::SmoothTransformation) );
+        pic.setDevicePixelRatio( devicePixelRatio() );
+        m_pTcLabel->setPixmap( pic );
+    }
 }
 
 //Cut Out Value changed
 void MainWindow::on_spinBoxCutOut_valueChanged(int arg1)
 {
     ui->spinBoxCutIn->setMaximum( arg1 );
+
+    //Refresh Timecode Label
+    if( m_fileLoaded && m_tcModeDuration )
+    {
+        QPixmap pic = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( ui->spinBoxCutOut->value() - ui->spinBoxCutIn->value() + 1, getFramerate() ).scaled( 200 * devicePixelRatio(),
+                                                                                          30 * devicePixelRatio(),
+                                                                                          Qt::IgnoreAspectRatio, Qt::SmoothTransformation) );
+        pic.setDevicePixelRatio( devicePixelRatio() );
+        m_pTcLabel->setPixmap( pic );
+    }
 }
 
 //Session Preview Disabled
@@ -4735,4 +4796,39 @@ void MainWindow::on_actionTimecodePositionRight_triggered()
     m_timeCodePosition = 0;
     QMessageBox::information( this, QString( "MLV App" ), tr( "Please restart MLV App." ) );
     ui->actionTimecodePositionMiddle->setChecked( false );
+}
+
+//TimeCode label doubleclicked
+void MainWindow::tcLabelDoubleClicked()
+{
+    m_tcModeDuration = !m_tcModeDuration;
+    m_pTimeCodeImage->setTimeDurationMode( m_tcModeDuration );
+
+    if( !m_fileLoaded )
+    {
+        QPixmap pic = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( 0, 25 ).scaled( 200 * devicePixelRatio(),
+                                                                                          30 * devicePixelRatio(),
+                                                                                          Qt::IgnoreAspectRatio, Qt::SmoothTransformation) );
+        pic.setDevicePixelRatio( devicePixelRatio() );
+        m_pTcLabel->setPixmap( pic );
+        return;
+    }
+
+    //Refresh Timecode Label
+    if( m_tcModeDuration )
+    {
+        QPixmap pic = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( ui->spinBoxCutOut->value() - ui->spinBoxCutIn->value() + 1, getFramerate() ).scaled( 200 * devicePixelRatio(),
+                                                                                          30 * devicePixelRatio(),
+                                                                                          Qt::IgnoreAspectRatio, Qt::SmoothTransformation) );
+        pic.setDevicePixelRatio( devicePixelRatio() );
+        m_pTcLabel->setPixmap( pic );
+    }
+    else
+    {
+        QPixmap pic = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( ui->horizontalSliderPosition->value(), getFramerate() ).scaled( 200 * devicePixelRatio(),
+                                                                                          30 * devicePixelRatio(),
+                                                                                          Qt::IgnoreAspectRatio, Qt::SmoothTransformation) );
+        pic.setDevicePixelRatio( devicePixelRatio() );
+        m_pTcLabel->setPixmap( pic );
+    }
 }

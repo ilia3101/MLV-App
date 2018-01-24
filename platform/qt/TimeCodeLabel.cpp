@@ -16,6 +16,7 @@
 TimeCodeLabel::TimeCodeLabel()
 {
     m_tcImage = new QImage( 400, 60, QImage::Format_RGB888 );
+    m_mode = false;
 
     QFontDatabase::addApplicationFont( ":/Fonts/Fonts/DSEG7Modern-Regular.ttf" );
 }
@@ -55,11 +56,33 @@ QImage TimeCodeLabel::getTimeCodeLabel(uint32_t frameNumber, float clipFps)
     gradient4.setColorAt( 1, QColor( 60, 60, 60, 255 ) );
     painterTc.fillRect(rect4, gradient4);
 
+    //Mode
+#ifdef Q_OS_MAC
+    QFont font = QFont("Arial Bold", 16, 1);
+#else
+    QFont font = QFont("Arial Bold", 12, 1);
+#endif
+    painterTc.setFont( font );
+    if( !m_mode )
+    {
+        painterTc.setPen( QPen( QColor( 220, 220, 220 ) ) );
+        painterTc.drawText( 340, 11, 50, 50, 0, QString( "TC" ) );
+        painterTc.setPen( QPen( QColor( 70, 70, 70 ) ) );
+        painterTc.drawText( 340, 30, 50, 50, 0, QString( "[<–>]" ) );
+    }
+    else
+    {
+        painterTc.setPen( QPen( QColor( 70, 70, 70 ) ) );
+        painterTc.drawText( 340, 11, 50, 50, 0, QString( "TC" ) );
+        painterTc.setPen( QPen( QColor( 220, 220, 220 ) ) );
+        painterTc.drawText( 340, 30, 50, 50, 0, QString( "[<–>]" ) );
+    }
+
     //Font selection
 #ifdef Q_OS_MAC
-    QFont font = QFont("DSEG7 Modern", 32, 1);
+    font = QFont("DSEG7 Modern", 32, 1);
 #else
-    QFont font = QFont("DSEG7 Modern", 24, 1);
+    font = QFont("DSEG7 Modern", 24, 1);
 #endif
 
     //Shadow
@@ -101,4 +124,10 @@ QString TimeCodeLabel::getTimeCodeFromFps(uint32_t frameNumber, float clipFps, b
                           .arg( minutes, 2, 10, QChar('0') )
                           .arg( seconds, 2, 10, QChar('0') );
     }
+}
+
+//Switch mode
+void TimeCodeLabel::setTimeDurationMode(bool mode)
+{
+    m_mode = mode;
 }

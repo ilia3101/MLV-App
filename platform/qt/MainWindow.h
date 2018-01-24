@@ -33,6 +33,7 @@
 #include "RenderFrameThread.h"
 #include "GradientElement.h"
 #include "TimeCodeLabel.h"
+#include "DoubleClickLabel.h"
 
 namespace Ui {
 class MainWindow;
@@ -182,6 +183,7 @@ private slots:
     void mpTcLabel_customContextMenuRequested(const QPoint &pos);
     void on_actionTimecodePositionMiddle_triggered();
     void on_actionTimecodePositionRight_triggered();
+    void tcLabelDoubleClicked();
 
 private:
     Ui::MainWindow *ui;
@@ -203,7 +205,8 @@ private:
     QLabel *m_pCachingStatus;
     QLabel *m_pFpsStatus;
     QLabel *m_pFrameNumber;
-    QLabel *m_pTcLabel;
+    DoubleClickLabel *m_pTcLabel;
+    bool m_tcModeDuration;
     uint8_t *m_pRawImage;
     uint32_t m_cacheSizeMB;
     uint8_t m_codecProfile;
