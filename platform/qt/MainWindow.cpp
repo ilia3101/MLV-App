@@ -4757,6 +4757,8 @@ void MainWindow::mpTcLabel_customContextMenuRequested(const QPoint &pos)
     QMenu myMenu;
     myMenu.addAction( ui->actionTimecodePositionMiddle );
     myMenu.addAction( ui->actionTimecodePositionRight );
+    myMenu.addSeparator();
+    myMenu.addAction( ui->actionToggleTimecodeDisplay );
     // Show context menu at handling position
     myMenu.exec( globalPos );
 }
@@ -4810,4 +4812,10 @@ void MainWindow::tcLabelDoubleClicked()
         pic.setDevicePixelRatio( devicePixelRatio() );
         m_pTcLabel->setPixmap( pic );
     }
+}
+
+//TimeCode label, toggle display
+void MainWindow::on_actionToggleTimecodeDisplay_triggered()
+{
+    tcLabelDoubleClicked();
 }

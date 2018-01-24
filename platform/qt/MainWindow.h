@@ -184,6 +184,7 @@ private slots:
     void on_actionTimecodePositionMiddle_triggered();
     void on_actionTimecodePositionRight_triggered();
     void tcLabelDoubleClicked();
+    void on_actionToggleTimecodeDisplay_triggered();
 
 private:
     Ui::MainWindow *ui;

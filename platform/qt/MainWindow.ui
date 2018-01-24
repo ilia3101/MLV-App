@@ -204,6 +204,8 @@
      </property>
      <addaction name="actionTimecodePositionMiddle"/>
      <addaction name="actionTimecodePositionRight"/>
+     <addaction name="separator"/>
+     <addaction name="actionToggleTimecodeDisplay"/>
     </widget>
     <addaction name="actionShowSessionArea"/>
     <addaction name="actionShowEditArea"/>
@@ -4237,6 +4239,14 @@ QGroupBox::indicator:checked {
    </property>
    <property name="shortcut">
     <string>Ctrl+Shift+S</string>
+   </property>
+  </action>
+  <action name="actionToggleTimecodeDisplay">
+   <property name="text">
+    <string>Toggle Timecode Display</string>
+   </property>
+   <property name="shortcut">
+    <string>T</string>
    </property>
   </action>
  </widget>
