@@ -177,7 +177,7 @@ void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
         ui->comboBoxOption->setEnabled( false );
     }
 
-    //If CDNG / MLV, disable resize feature
+    //If C / MLV, disable resize feature
     if( !enableResize )
     {
         ui->checkBoxResize->setChecked( false );
@@ -185,7 +185,7 @@ void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
     ui->checkBoxResize->setEnabled( enableResize );
 
     //En-/disable fps override
-    if( ( index == CODEC_MLV ) || ( index == CODEC_CDNG ) )
+    if( ( index == CODEC_MLV ) || ( index == CODEC_TIFF ) )
     {
         ui->checkBoxFpsOverride->setEnabled( false );
         ui->checkBoxFpsOverride->setChecked( false );
