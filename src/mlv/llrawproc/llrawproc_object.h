@@ -50,6 +50,10 @@ typedef struct
     int diso_alias_map;   // flag for Alias Map switchin on/off
     int diso_frblending;  // flag for Fullres Blending switching on/off
 
+    /* dark frame buffer pointer and its size */
+    uint16_t * dark_frame;
+    uint32_t dark_frame_size;
+
     /* LUTs */
     int * raw2ev;
     int * ev2raw;

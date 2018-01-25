@@ -71,6 +71,9 @@ llrawprocObject_t * initLLRawProcObject()
     llrawproc->diso_alias_map = 1;
     llrawproc->diso_frblending = 1;
 
+    llrawproc->dark_frame = NULL;
+    llrawproc->dark_frame_size = 0;
+
     llrawproc->raw2ev = NULL;
     llrawproc->ev2raw = NULL;
 
@@ -84,6 +87,7 @@ llrawprocObject_t * initLLRawProcObject()
 
 void freeLLRawProcObject(llrawprocObject_t * llrawproc)
 {
+    if(llrawproc->dark_frame) free(llrawproc->dark_frame);
     free_luts(llrawproc->raw2ev, llrawproc->ev2raw);
     free_pixel_maps(&(llrawproc->focus_pixel_map), &(llrawproc->bad_pixel_map));
     free(llrawproc);

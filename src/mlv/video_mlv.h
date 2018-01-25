@@ -29,8 +29,9 @@ enum mlv_err { MLV_ERR_NONE, MLV_ERR_OPEN, MLV_ERR_INVALID, MLV_ERR_IO };
 enum open_mode { MLV_OPEN_FULL, MLV_OPEN_MAPP, MLV_OPEN_PREVIEW };
 
 /* Functions for saving cut or averaged MLV */
-int mlvSaveHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int compress, uint32_t frame_start, uint32_t frame_end, const char * version);
-int mlvSaveAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int compress, uint32_t frame_start, uint32_t frame_end, uint32_t frame_index);
+int mlvSaveHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int export_mode, uint32_t frame_start, uint32_t frame_end, const char * version);
+int mlvSaveAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int export_mode, uint32_t frame_start, uint32_t frame_end, uint32_t frame_index);
+enum export_mode { MLV_FAST_PASS, MLV_COMPRESSED, MLV_AVERAGED_FRAME };
 
 /* Frees all memory and closes file */
 void freeMlvObject(mlvObject_t * video);

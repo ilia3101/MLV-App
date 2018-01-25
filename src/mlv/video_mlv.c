@@ -725,7 +725,7 @@ mapp_error:
 }
 
 /* Save MLV headers */
-int mlvSaveHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int compress, uint32_t frame_start, uint32_t frame_end, const char * version)
+int mlvSaveHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int export_mode, uint32_t frame_start, uint32_t frame_end, const char * version)
 {
     /* construct version info */
     char version_info[32] = { 0 };
@@ -743,7 +743,7 @@ int mlvSaveHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int
     if(video->RAWC.blockType[0]) mlv_headers_size += video->RAWC.blockSize;
     if(video->STYL.blockType[0]) mlv_headers_size += video->STYL.blockSize;
     if(video->DISO.blockType[0]) mlv_headers_size += video->DISO.blockSize;
-    if(video->WAVI.blockType[0] && export_audio) mlv_headers_size += video->WAVI.blockSize;
+    if(video->WAVI.blockType[0] && export_audio && (export_mode != MLV_AVERAGED_FRAME)) mlv_headers_size += video->WAVI.blockSize;
     if(video->INFO.blockType[0] && video->INFO_STRING[0]) mlv_headers_size += video->INFO.blockSize;
 
     uint8_t * mlv_headers_buf = malloc(mlv_headers_size);
@@ -760,7 +760,7 @@ int mlvSaveHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int
     output_mlvi.fileCount = 1;
     output_mlvi.videoFrameCount = frame_end - frame_start + 1;
     output_mlvi.audioFrameCount = (!export_audio) ? 0 : 1;
-    if(compress && (!isMlvCompressed(video))) output_mlvi.videoClass |= MLV_VIDEO_CLASS_FLAG_LJ92;
+    if(export_mode == MLV_COMPRESSED && (!isMlvCompressed(video))) output_mlvi.videoClass |= MLV_VIDEO_CLASS_FLAG_LJ92;
     output_mlvi.audioClass = (!export_audio) ? 0 : 1;
     memcpy(ptr, &output_mlvi, sizeof(mlv_file_hdr_t));
     ptr += video->MLVI.blockSize;
@@ -814,7 +814,7 @@ int mlvSaveHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int
     memcpy(ptr, version_info, vers_info_size);
     ptr += vers_info_size;
 
-    if(video->WAVI.blockType[0] && export_audio)
+    if(video->WAVI.blockType[0] && export_audio && (export_mode != MLV_AVERAGED_FRAME))
     {
         memcpy(ptr, (uint8_t*)&(video->WAVI), sizeof(mlv_wavi_hdr_t));
         ptr += video->WAVI.blockSize;
@@ -834,7 +834,7 @@ int mlvSaveHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int
 }
 
 /* Save video frame plus audio if available */
-int mlvSaveAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int compress, uint32_t frame_start, uint32_t frame_end, uint32_t frame_index)
+int mlvSaveAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int export_mode, uint32_t frame_start, uint32_t frame_end, uint32_t frame_index)
 {
     mlv_vidf_hdr_t vidf_hdr = { 0 };
 
@@ -882,8 +882,15 @@ int mlvSaveAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
         return 1;
     }
 
-    /* compress MLV frame with LJ92 if specified */
-    if(compress && (!isMlvCompressed(video)))
+    if(export_mode == MLV_AVERAGED_FRAME) // average all frames to one dark frame
+    {
+        if(!vidf_hdr.frameNumber)
+        {
+            if(video->llrawproc->dark_frame) free(video->llrawproc->dark_frame);
+            video->llrawproc->dark_frame = calloc(frame_size_unpacked, 1);
+        }
+    }
+    else if((export_mode == MLV_COMPRESSED) && (!isMlvCompressed(video))) // compress MLV frame with LJ92 if specified
     {
         int ret = 0;
         size_t frame_size_compressed = 0;
@@ -933,7 +940,7 @@ int mlvSaveAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
         memcpy((block_buf + sizeof(mlv_vidf_hdr_t)), frame_buf, frame_size);
     }
 
-    if(!vidf_hdr.frameNumber && export_audio)
+    if(!vidf_hdr.frameNumber && export_audio && (export_mode != MLV_AVERAGED_FRAME))
     {
         mlv_audf_hdr_t audf_hdr = { { 'A','U','D','F' }, 0, 0, 0, 0 };
         uint64_t mlv_audio_size = getMlvAudioSize(video);
@@ -995,7 +1002,7 @@ int mlvSaveAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
 
     free(frame_buf);
     free(block_buf);
-    DEBUG( if(!(compress && (!isMlvCompressed(video)))) printf("Saved video frame #%u\n", frame_index); )
+    DEBUG( if(!((export_mode == MLV_COMPRESSED) && (!isMlvCompressed(video)))) printf("Saved video frame #%u\n", frame_index); )
     return 0;
 }
 
