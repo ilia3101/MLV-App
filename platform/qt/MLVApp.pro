@@ -68,9 +68,15 @@ SOURCES += \
     ../../src/mlv/llrawproc/patternnoise.c \
     ../../src/mlv/llrawproc/chroma_smooth.c \
     ../../src/mlv/llrawproc/hist.c \
+    ../../src/mlv/camid/camera_id.c \
+    ../../src/mlv/audio_mlv.c \
     ../../src/processing/processing.c \
     ../../src/processing/raw_processing.c \
+    ../../src/processing/filter/filter.c \
+    ../../src/processing/filter/genann/genann.c \
+    ../../src/processing/image_profiles.c \
     ../../src/mlv/llrawproc/dualiso.c \
+    ../../src/dng/dng.c \
     InfoDialog.cpp \
     StatusDialog.cpp \
     Histogram.cpp \
@@ -79,7 +85,6 @@ SOURCES += \
     ReceiptSettings.cpp \
     EditSliderValueDialog.cpp \
     DoubleClickLabel.cpp \
-    ../../src/mlv/audio_mlv.c \
     AudioWave.cpp \
     ResizeLabel.cpp \
     GraphicsZoomView.cpp \
@@ -89,9 +94,7 @@ SOURCES += \
     NoScrollSlider.cpp \
     ColorToolButton.cpp \
     RenderFrameThread.cpp \
-    ../../src/dng/dng.c \
     GraphicsPolygonMoveItem.cpp \
-    ../../src/mlv/camid/camera_id.c \
     GradientElement.cpp \
     VectorScope.cpp \
     TimeCodeLabel.cpp
@@ -116,10 +119,18 @@ HEADERS += \
     ../../src/mlv/llrawproc/hist.h \
     ../../src/mlv/llrawproc/opt_med.h \
     ../../src/mlv/llrawproc/wirth.h \
-    ../../src/processing/processing_object.h \
-    ../../src/processing/raw_processing.h \
     ../../src/mlv_include.h \
     ../../src/mlv/llrawproc/dualiso.h \
+    ../../src/mlv/camid/camera_id.h \
+    ../../src/dng/dng.h \
+    ../../src/dng/dng_tag_codes.h \
+    ../../src/dng/dng_tag_types.h \
+    ../../src/dng/dng_tag_values.h \
+    ../../src/processing/processing_object.h \
+    ../../src/processing/raw_processing.h \
+    ../../src/processing/filter/filter.h \
+    ../../src/processing/filter/genann/genann.h \
+    ../../src/processing/image_profile.h \
     InfoDialog.h \
     MyApplication.h \
     StatusDialog.h \
@@ -140,12 +151,7 @@ HEADERS += \
     NoScrollSlider.h \
     ColorToolButton.h \
     RenderFrameThread.h \
-    ../../src/dng/dng.h \
-    ../../src/dng/dng_tag_codes.h \
-    ../../src/dng/dng_tag_types.h \
-    ../../src/dng/dng_tag_values.h \
     GraphicsPolygonMoveItem.h \
-    ../../src/mlv/camid/camera_id.h \
     GradientElement.h \
     VectorScope.h \
     TimeCodeLabel.h

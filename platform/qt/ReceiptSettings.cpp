@@ -41,6 +41,9 @@ ReceiptSettings::ReceiptSettings()
     m_dualIsoFrBlending = 1;
     m_stretchFactorX = 1.0;
     m_stretchFactorY = 1.0;
+    m_filterEnabled = false;
+    m_filterIndex = 0;
+    m_filterStrength = 0;
     m_profile = 1;
     m_cutIn = 1;
     m_cutOut = INT32_MAX;

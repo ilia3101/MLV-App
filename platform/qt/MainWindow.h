@@ -72,12 +72,14 @@ private slots:
     void on_horizontalSliderLighten_valueChanged(int position);
     void on_horizontalSliderSharpen_valueChanged(int position);
     void on_horizontalSliderChromaBlur_valueChanged(int position);
+    void on_horizontalSliderFilterStrength_valueChanged(int position);
     void on_actionGoto_First_Frame_triggered();
     void on_actionExport_triggered();
     void on_actionExportActualFrame_triggered();
     void on_checkBoxHighLightReconstruction_toggled(bool checked);
     void on_checkBoxChromaSeparation_toggled(bool checked);
     void on_comboBoxProfile_currentIndexChanged(int index);
+    void on_comboBoxFilterName_currentIndexChanged(int index);
     void on_actionZoomFit_triggered(bool on);
     void on_actionZoom100_triggered();
     void on_actionShowHistogram_triggered(void);
@@ -123,6 +125,7 @@ private slots:
     void on_label_Sharpen_doubleClicked( void );
     void on_label_ChromaBlur_doubleClicked( void );
     void on_labelAudioTrack_sizeChanged( void );
+    void on_label_FilterStrengthVal_doubleClicked( void );
     void on_actionFullscreen_triggered(bool checked);
     void exportHandler( void );
     void on_actionPlay_triggered(bool checked);
@@ -143,6 +146,7 @@ private slots:
     void on_actionNextFrame_triggered();
     void on_actionPreviousFrame_triggered();
     void on_checkBoxRawFixEnable_clicked(bool checked);
+    void on_checkBoxFilterEnable_clicked(bool checked);
     void on_actionWhiteBalancePicker_toggled(bool checked);
     void whiteBalancePicked( int x, int y );
     void gradientAnchorPicked( int x, int y );
@@ -151,6 +155,7 @@ private slots:
     void on_groupBoxCutInOut_toggled(bool arg1);
     void on_groupBoxProcessing_toggled(bool arg1);
     void on_groupBoxDetails_toggled(bool arg1);
+    void on_groupBoxFilter_toggled(bool arg1);
     void on_groupBoxLinearGradient_toggled(bool arg1);
     void on_groupBoxAspectRatio_toggled(bool arg1);
     void exportAbort( void );

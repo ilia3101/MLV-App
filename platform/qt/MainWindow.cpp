@@ -981,6 +981,7 @@ void MainWindow::readSettings()
     ui->groupBoxCutInOut->setChecked( set.value( "expandedCutInOut", false ).toBool() );
     ui->groupBoxProcessing->setChecked( set.value( "expandedProcessing", true ).toBool() );
     ui->groupBoxDetails->setChecked( set.value( "expandedDetails", false ).toBool() );
+    ui->groupBoxFilter->setChecked( set.value( "expandedFilter", false ).toBool() );
     ui->groupBoxLinearGradient->setChecked( set.value( "expandedLinGradient", false ).toBool() );
     ui->groupBoxAspectRatio->setChecked( set.value( "expandAspectRatio", false ).toBool() );
     ui->actionCreateMappFiles->setChecked( set.value( "createMappFiles", false ).toBool() );
@@ -1011,6 +1012,7 @@ void MainWindow::writeSettings()
     set.setValue( "expandedCutInOut", ui->groupBoxCutInOut->isChecked() );
     set.setValue( "expandedProcessing", ui->groupBoxProcessing->isChecked() );
     set.setValue( "expandedDetails", ui->groupBoxDetails->isChecked() );
+    set.setValue( "expandedFilter", ui->groupBoxFilter->isChecked() );
     set.setValue( "expandedLinGradient", ui->groupBoxLinearGradient->isChecked() );
     set.setValue( "expandAspectRatio", ui->groupBoxAspectRatio->isChecked() );
     set.setValue( "createMappFiles", ui->actionCreateMappFiles->isChecked() );
@@ -2008,6 +2010,21 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
             receipt->setDualIsoFrBlending( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
+        else if( Rxml->isStartElement() && Rxml->name() == "filterEnabled" )
+        {
+            receipt->setFilterEnabled( (bool)Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == "filterIndex" )
+        {
+            receipt->setFilterIndex( Rxml->readElementText().toUInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == "filterStrength" )
+        {
+            receipt->setFilterStrength( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
         else if( Rxml->isStartElement() && Rxml->name() == "stretchFactorX" )
         {
             receipt->setStretchFactorX( Rxml->readElementText().toDouble() );
@@ -2067,6 +2084,9 @@ void MainWindow::writeXmlElementsToFile(QXmlStreamWriter *xmlWriter, ReceiptSett
     xmlWriter->writeTextElement( "dualIsoInterpolation",    QString( "%1" ).arg( receipt->dualIsoInterpolation() ) );
     xmlWriter->writeTextElement( "dualIsoAliasMap",         QString( "%1" ).arg( receipt->dualIsoAliasMap() ) );
     xmlWriter->writeTextElement( "dualIsoFrBlending",       QString( "%1" ).arg( receipt->dualIsoFrBlending() ) );
+    xmlWriter->writeTextElement( "filterEnabled",           QString( "%1" ).arg( receipt->filterEnabled() ) );
+    xmlWriter->writeTextElement( "filterIndex",             QString( "%1" ).arg( receipt->filterIndex() ) );
+    xmlWriter->writeTextElement( "filterStrength",          QString( "%1" ).arg( receipt->filterStrength() ) );
     xmlWriter->writeTextElement( "stretchFactorX",          QString( "%1" ).arg( receipt->stretchFactorX() ) );
     xmlWriter->writeTextElement( "stretchFactorY",          QString( "%1" ).arg( receipt->stretchFactorY() ) );
     xmlWriter->writeTextElement( "cutIn",                   QString( "%1" ).arg( receipt->cutIn() ) );
@@ -2217,6 +2237,12 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     ui->spinBoxDeflickerTarget->setValue( receipt->deflickerTarget() );
     on_spinBoxDeflickerTarget_valueChanged( receipt->deflickerTarget() );
 
+    ui->checkBoxFilterEnable->setChecked( receipt->filterEnabled() );
+    on_checkBoxFilterEnable_clicked( receipt->filterEnabled() );
+    ui->comboBoxFilterName->setCurrentIndex( receipt->filterIndex() );
+    on_comboBoxFilterName_currentIndexChanged( receipt->filterIndex() );
+    ui->horizontalSliderFilterStrength->setValue( receipt->filterStrength() );
+
     if( receipt->stretchFactorX() == STRETCH_H_100 ) ui->comboBoxHStretch->setCurrentIndex( 0 );
     else if( receipt->stretchFactorX() == STRETCH_H_133 ) ui->comboBoxHStretch->setCurrentIndex( 1 );
     else if( receipt->stretchFactorX() == STRETCH_H_150 ) ui->comboBoxHStretch->setCurrentIndex( 2 );
@@ -2279,6 +2305,10 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     receipt->setDualIsoAliasMap( toolButtonDualIsoAliasMapCurrentIndex() );
     receipt->setDualIsoFrBlending( toolButtonDualIsoFullresBlendingCurrentIndex() );
 
+    receipt->setFilterEnabled( ui->checkBoxFilterEnable->isChecked() );
+    receipt->setFilterIndex( ui->comboBoxFilterName->currentIndex() );
+    receipt->setFilterStrength( ui->horizontalSliderFilterStrength->value() );
+
     receipt->setStretchFactorX( getHorizontalStretchFactor() );
     receipt->setStretchFactorY( getVerticalStretchFactor() );
 
@@ -2318,6 +2348,10 @@ void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings 
     receiptTarget->setDualIsoInterpolation( receiptSource->dualIsoInterpolation() );
     receiptTarget->setDualIsoAliasMap( receiptSource->dualIsoAliasMap() );
     receiptTarget->setDualIsoFrBlending( receiptSource->dualIsoFrBlending() );
+
+    receiptTarget->setFilterEnabled( receiptSource->filterEnabled() );
+    receiptTarget->setFilterIndex( receiptSource->filterIndex() );
+    receiptTarget->setFilterStrength( receiptSource->filterStrength() );
 
     receiptTarget->setStretchFactorX( receiptSource->stretchFactorX() );
     receiptTarget->setStretchFactorY( receiptSource->stretchFactorY() );
@@ -2396,6 +2430,10 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     receipt->setDualIsoInterpolation( m_pSessionReceipts.at( row )->dualIsoInterpolation() );
     receipt->setDualIsoAliasMap( m_pSessionReceipts.at( row )->dualIsoAliasMap() );
     receipt->setDualIsoFrBlending( m_pSessionReceipts.at( row )->dualIsoFrBlending() );
+
+    receipt->setFilterEnabled( m_pSessionReceipts.at( row )->filterEnabled() );
+    receipt->setFilterIndex( m_pSessionReceipts.at( row )->filterIndex() );
+    receipt->setFilterStrength( m_pSessionReceipts.at( row )->filterStrength() );
 
     receipt->setStretchFactorX( m_pSessionReceipts.at( row )->stretchFactorX() );
     receipt->setStretchFactorY( m_pSessionReceipts.at( row )->stretchFactorY() );
@@ -2998,6 +3036,13 @@ void MainWindow::on_horizontalSliderChromaBlur_valueChanged(int position)
     m_frameChanged = true;
 }
 
+void MainWindow::on_horizontalSliderFilterStrength_valueChanged(int position)
+{
+    filterObjectSetFilterStrength( m_pProcessingObject->filter, position );
+    ui->label_FilterStrengthVal->setText( QString("%1").arg( position ) );
+    m_frameChanged = true;
+}
+
 //Jump to first frame
 void MainWindow::on_actionGoto_First_Frame_triggered()
 {
@@ -3214,6 +3259,13 @@ void MainWindow::on_comboBoxProfile_currentIndexChanged(int index)
     ui->label_dr->setEnabled( enable );
     ui->label_lighten->setEnabled( enable );
     ui->label_saturation->setEnabled( enable );
+}
+
+//Chose filter
+void MainWindow::on_comboBoxFilterName_currentIndexChanged(int index)
+{
+    filterObjectSetFilter( m_pProcessingObject->filter, index );
+    m_frameChanged = true;
 }
 
 //Click on Zoom: fit
@@ -3800,6 +3852,15 @@ void MainWindow::on_labelAudioTrack_sizeChanged()
     paintAudioTrack();
 }
 
+//DoubleClick on Filter Strength Label
+void MainWindow::on_label_FilterStrengthVal_doubleClicked()
+{
+    EditSliderValueDialog editSlider;
+    editSlider.autoSetup( ui->horizontalSliderFilterStrength, ui->label_FilterStrengthVal, 1.0, 0, 1.0 );
+    editSlider.exec();
+    ui->horizontalSliderFilterStrength->setValue( editSlider.getValue() );
+}
+
 //Fullscreen Mode
 void MainWindow::on_actionFullscreen_triggered( bool checked )
 {
@@ -4130,6 +4191,7 @@ void MainWindow::on_checkBoxRawFixEnable_clicked(bool checked)
     ui->DualISOInterpolationLabel->setEnabled( checked );
     ui->DualISOAliasMapLabel->setEnabled( checked );
     ui->DualISOFullresBlendingLabel->setEnabled( checked );
+    ui->FocusPixelsInterpolationMethodLabel_2->setEnabled( checked );
 
     ui->toolButtonFocusDots->setEnabled( checked );
     ui->toolButtonFocusDotInterpolation->setEnabled( checked );
@@ -4143,6 +4205,21 @@ void MainWindow::on_checkBoxRawFixEnable_clicked(bool checked)
     ui->toolButtonDualIsoAliasMap->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() == 1 ) );
     ui->toolButtonDualIsoFullresBlending->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() == 1 ) );
     ui->spinBoxDeflickerTarget->setEnabled( checked );
+    ui->toolButtonBadPixelsSearchMethodNormal->setEnabled( checked );
+    ui->toolButtonBadPixelsSearchMethodAggressive->setEnabled( checked );
+}
+
+//En-/disable all filter processing
+void MainWindow::on_checkBoxFilterEnable_clicked(bool checked)
+{
+    if( checked ) processingEnableFilters( m_pProcessingObject );
+    else processingDisableFilters( m_pProcessingObject );
+    m_frameChanged = true;
+
+    ui->comboBoxFilterName->setEnabled( checked );
+    ui->label_FilterStrengthVal->setEnabled( checked );
+    ui->label_FilterStrengthText->setEnabled( checked );
+    ui->horizontalSliderFilterStrength->setEnabled( checked );
 }
 
 //Activate & Deactivate wbPicker
@@ -4253,6 +4330,14 @@ void MainWindow::on_groupBoxDetails_toggled(bool arg1)
     ui->frameDetails->setVisible( arg1 );
     if( !arg1 ) ui->groupBoxDetails->setMaximumHeight( 30 );
     else ui->groupBoxDetails->setMaximumHeight( 16777215 );
+}
+
+//Collapse & Expand Filter
+void MainWindow::on_groupBoxFilter_toggled(bool arg1)
+{
+    ui->frameFilter->setVisible( arg1 );
+    if( !arg1 ) ui->groupBoxFilter->setMaximumHeight( 30 );
+    else ui->groupBoxFilter->setMaximumHeight( 16777215 );
 }
 
 //Collapse & Expand Linear Gradient

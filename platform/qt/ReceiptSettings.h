@@ -48,6 +48,9 @@ public:
     void setDualIsoFrBlending( int on )       {m_dualIsoFrBlending = on;}
     void setStretchFactorX( double factor )   {m_stretchFactorX = factor;}
     void setStretchFactorY( double factor )   {m_stretchFactorY = factor;}
+    void setFilterEnabled( bool on )          {m_filterEnabled = on;}
+    void setFilterIndex( uint8_t idx )        {m_filterIndex = idx;}
+    void setFilterStrength( int value )       {m_filterStrength = value;}
     void setCutIn( uint32_t frame )           {m_cutIn = frame;}
     void setCutOut( uint32_t frame )          {m_cutOut = frame;}
 
@@ -82,6 +85,9 @@ public:
     int dualIsoFrBlending( void ){return m_dualIsoFrBlending;}
     double stretchFactorX( void ){return m_stretchFactorX;}
     double stretchFactorY( void ){return m_stretchFactorY;}
+    bool filterEnabled( void ){return m_filterEnabled;}
+    uint8_t filterIndex( void ){return m_filterIndex;}
+    int filterStrength( void ){return m_filterStrength;}
     uint32_t cutIn( void ) {return m_cutIn;}
     uint32_t cutOut( void ){return m_cutOut;}
     uint8_t profile( void ){return m_profile;}
@@ -120,6 +126,9 @@ private:
     int m_dualIsoFrBlending;// flag for Fullres Blending switching on/off
     double m_stretchFactorX;
     double m_stretchFactorY;
+    bool m_filterEnabled;
+    uint8_t m_filterIndex;
+    int m_filterStrength;
     uint32_t m_cutIn;
     uint32_t m_cutOut;
     uint8_t m_profile;
