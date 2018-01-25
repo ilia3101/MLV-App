@@ -725,7 +725,7 @@ mapp_error:
 }
 
 /* Save MLV headers */
-int mlvSaveHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int export_mode, uint32_t frame_start, uint32_t frame_end, const char * version)
+int saveMlvHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int export_mode, uint32_t frame_start, uint32_t frame_end, const char * version)
 {
     /* construct version info */
     char version_info[32] = { 0 };
@@ -834,7 +834,7 @@ int mlvSaveHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int
 }
 
 /* Save video frame plus audio if available */
-int mlvSaveAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int export_mode, uint32_t frame_start, uint32_t frame_end, uint32_t frame_index)
+int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int export_mode, uint32_t frame_start, uint32_t frame_end, uint32_t frame_index)
 {
     mlv_vidf_hdr_t vidf_hdr = { 0 };
 
