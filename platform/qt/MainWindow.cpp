@@ -794,6 +794,11 @@ void MainWindow::initGui( void )
     //Set disabled select all and delete clip
     ui->actionDeleteSelectedClips->setEnabled( false );
     ui->actionSelectAllClips->setEnabled( false );
+    //disable filter as default
+    ui->comboBoxFilterName->setEnabled( false );
+    ui->label_FilterStrengthVal->setEnabled( false );
+    ui->label_FilterStrengthText->setEnabled( false );
+    ui->horizontalSliderFilterStrength->setEnabled( false );
 
     //Set up image in GUI
     QImage image(":/IMG/IMG/histogram.png");
