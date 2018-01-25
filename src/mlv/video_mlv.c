@@ -1083,13 +1083,24 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode)
             uint64_t block_start = file_get_pos(video->file[i]);
             /* Read block header */
             fread(&block_header, sizeof(mlv_hdr_t), 1, video->file[i]);
+            if(block_header.blockSize < sizeof(mlv_hdr_t))
+            {
+                DEBUG( printf("\nInvalid blockSize, file corrupted: %s\n", video->path); )
+                --video->filenum;
+                return MLV_ERR_INVALID;
+            }
+
             /* Next block location */
             uint64_t next_block = (uint64_t)block_start + (uint64_t)block_header.blockSize;
             /* Go back to start of block for next bit */
             file_set_pos(video->file[i], block_start, SEEK_SET);
 
             /* Now check what kind of block it is and read it in to the mlv object */
-            if ( memcmp(block_header.blockType, "VIDF", 4) == 0 )
+            if ( memcmp(block_header.blockType, "NULL", 4) == 0 || memcmp(block_header.blockType, "BKUP", 4) == 0)
+            {
+                /* do nothing, skip this block */
+            }
+            else if ( memcmp(block_header.blockType, "VIDF", 4) == 0 )
             {
                 fread(&video->VIDF, sizeof(mlv_vidf_hdr_t), 1, video->file[i]);
 
@@ -1183,25 +1194,37 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode)
             {
                 fread(&video->EXPO, sizeof(mlv_expo_hdr_t), 1, video->file[i]);
             }
-            else if ( ( memcmp(block_header.blockType, "LENS", 4) == 0 ) && ( !lens_read ) )
+            else if ( memcmp(block_header.blockType, "LENS", 4) == 0 )
             {
-                fread(&video->LENS, sizeof(mlv_lens_hdr_t), 1, video->file[i]);
-                lens_read = 1; //read only first one
+                if( !lens_read )
+                {
+                    fread(&video->LENS, sizeof(mlv_lens_hdr_t), 1, video->file[i]);
+                    lens_read = 1; //read only first one
+                }
             }
-            else if ( ( memcmp(block_header.blockType, "WBAL", 4) == 0 ) && ( !wbal_read ) )
+            else if ( memcmp(block_header.blockType, "WBAL", 4) == 0 )
             {
-                fread(&video->WBAL, sizeof(mlv_wbal_hdr_t), 1, video->file[i]);
-                wbal_read = 1; //read only first one
+                if( !wbal_read )
+                {
+                    fread(&video->WBAL, sizeof(mlv_wbal_hdr_t), 1, video->file[i]);
+                    wbal_read = 1; //read only first one
+                }
             }
-            else if ( ( memcmp(block_header.blockType, "STYL", 4) == 0 ) && ( !styl_read ) )
+            else if ( memcmp(block_header.blockType, "STYL", 4) == 0 )
             {
-                fread(&video->STYL, sizeof(mlv_styl_hdr_t), 1, video->file[i]);
-                styl_read = 1; //read only first one
+                if( !styl_read )
+                {
+                    fread(&video->STYL, sizeof(mlv_styl_hdr_t), 1, video->file[i]);
+                    styl_read = 1; //read only first one
+                }
             }
-            else if ( ( memcmp(block_header.blockType, "RTCI", 4) == 0 ) && ( !rtci_read ) )
+            else if ( memcmp(block_header.blockType, "RTCI", 4) == 0 )
             {
-                fread(&video->RTCI, sizeof(mlv_rtci_hdr_t), 1, video->file[i]);
-                rtci_read = 1; //read only first one
+                if( !rtci_read )
+                {
+                    fread(&video->RTCI, sizeof(mlv_rtci_hdr_t), 1, video->file[i]);
+                    rtci_read = 1; //read only first one
+                }
             }
             else if ( memcmp(block_header.blockType, "IDNT", 4) == 0 )
             {
@@ -1218,6 +1241,37 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode)
             else if ( memcmp(block_header.blockType, "DISO", 4) == 0 )
             {
                 fread(&video->DISO, sizeof(mlv_diso_hdr_t), 1, video->file[i]);
+            }
+            else if ( memcmp(block_header.blockType, "MARK", 4) == 0 )
+            {
+                /* do nothing atm */
+                //fread(&video->MARK, sizeof(mlv_mark_hdr_t), 1, video->file[i]);
+            }
+            else if ( memcmp(block_header.blockType, "ELVL", 4) == 0 )
+            {
+                /* do nothing atm */
+                //fread(&video->ELVL, sizeof(mlv_elvl_hdr_t), 1, video->file[i]);
+            }
+            else if ( memcmp(block_header.blockType, "DEBG", 4) == 0 )
+            {
+                /* do nothing atm */
+                //fread(&video->DEBG, sizeof(mlv_debg_hdr_t), 1, video->file[i]);
+            }
+            else if ( memcmp(block_header.blockType, "VERS", 4) == 0 )
+            {
+                /* do nothing atm */
+                //fread(&video->VERS, sizeof(mlv_vers_hdr_t), 1, video->file[i]);
+            }
+            else if ( memcmp(block_header.blockType, "DARK", 4) == 0 )
+            {
+                /* do nothing atm */
+                //fread(&video->DARK, sizeof(mlv_dark_hdr_t), 1, video->file[i]);
+            }
+            else
+            {
+                DEBUG( printf("\nInvalid blockType, file corrupted: %s, %s\n", video->path, block_header.blockType); )
+                --video->filenum;
+                return MLV_ERR_INVALID;
             }
 
             /* Printing stuff for fun */
