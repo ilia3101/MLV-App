@@ -3038,7 +3038,7 @@ void MainWindow::on_horizontalSliderChromaBlur_valueChanged(int position)
 
 void MainWindow::on_horizontalSliderFilterStrength_valueChanged(int position)
 {
-    filterObjectSetFilterStrength( m_pProcessingObject->filter, position );
+    filterObjectSetFilterStrength( m_pProcessingObject->filter, position / 100.0 );
     ui->label_FilterStrengthVal->setText( QString("%1").arg( position ) );
     m_frameChanged = true;
 }
