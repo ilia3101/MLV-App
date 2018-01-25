@@ -31,6 +31,28 @@ char * filmprofile_fj = "3 1 7 3 -8.32176290957420738970e-01 1.0835954635952433"
     "026572375179e-02 -8.64513642871019283298e-01 -6.58914154017710140820e-01 -"
     "1.78457442827277001918e+00 2.58094544332886099980e+00";
 
+/* Cuz there will be many */
+FILE * open_filter(char * text)
+{
+    FILE * file;
+
+#ifdef __linux__
+    file = fmemopen(text, strlen(text), "rb");
+#else
+    file = fopen("__filter_temp__", "wb");
+    fputs(text, file);
+    fclose(file);
+    file = fopen("__filter_temp__", "rb");
+#endif
+
+    return file;
+}
+
+#ifdef __linux__
+#define close_filter(filter) fclose(filter);
+#else
+#define close_filter(filter) { fclose(filter); system("rm __filter_temp__"); }
+#endif
 
 filterObject_t * initFilterObject()
 {
@@ -43,14 +65,9 @@ filterObject_t * initFilterObject()
      */
 
     /* FJ preset */
-    FILE * fj_preset = fopen("filmprofile_fj", "wb");
-    fputs(filmprofile_fj, fj_preset);
-    fseek(fj_preset, 0, SEEK_SET);
-    fclose(fj_preset);
-    fj_preset = fopen("filmprofile_fj", "rb");
+    FILE * fj_preset = open_filter(filmprofile_fj);
     filter->net_fj = genann_read(fj_preset);
-    fclose(fj_preset);
-    system("rm filmprofile_fj");
+    close_filter(fj_preset);
 
     filterObjectSetFilterStrength(filter, 1.0);
 
