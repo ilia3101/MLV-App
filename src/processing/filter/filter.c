@@ -4,6 +4,11 @@
 
 #include "filter.h"
 
+#define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
+#define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
+#define LIMIT16(X) MAX(MIN(X, 65535), 0)
+
+
 /* Nothing to see here */
 char * filmprofile_fj = "3 1 7 3 -8.32176290957420738970e-01 1.0835954635952433"
     "9110e+00 -1.53596291045552013621e+00 3.67384514989079313807e+00 -5.6287459"
@@ -38,10 +43,14 @@ filterObject_t * initFilterObject()
      */
 
     /* FJ preset */
-    FILE * fj_preset = fmemopen(filmprofile_fj, strlen(filmprofile_fj), "rb");
+    FILE * fj_preset = fopen("filmprofile_fj", "wb");
+    fputs(filmprofile_fj, fj_preset);
+    fseek(fj_preset, 0, SEEK_SET);
+    fclose(fj_preset);
+    fj_preset = fopen("filmprofile_fj", "rb");
     filter->net_fj = genann_read(fj_preset);
     fclose(fj_preset);
-
+    system("rm filmprofile_fj");
 
     filterObjectSetFilterStrength(filter, 1.0);
 
@@ -71,9 +80,9 @@ void applyFilterObject( filterObject_t * filter,
         pixel[1] = ((double)pix[1])/65535.0;
         pixel[2] = ((double)pix[2])/65535.0;
         const double * filtered = genann_run(net, pixel);
-        pix[0] = filter->processed[(size_t)(filtered[0]*65535.0)] + filter->original[pix[0]];
-        pix[1] = filter->processed[(size_t)(filtered[1]*65535.0)] + filter->original[pix[1]];
-        pix[2] = filter->processed[(size_t)(filtered[2]*65535.0)] + filter->original[pix[2]];
+        pix[0] = LIMIT16(filter->processed[(size_t)(filtered[0]*65535.0)] + filter->original[pix[0]]);
+        pix[1] = LIMIT16(filter->processed[(size_t)(filtered[1]*65535.0)] + filter->original[pix[1]]);
+        pix[2] = LIMIT16(filter->processed[(size_t)(filtered[2]*65535.0)] + filter->original[pix[2]]);
     }
 
     genann_free(net);
@@ -86,8 +95,8 @@ void filterObjectSetFilterStrength(filterObject_t * filter, double strength)
     double istrength = 1.0 - strength;
     for (int i = 0; i < 65536; ++i)
     {
-        filter->processed[i] = (uint16_t)(strength * (double)i);
-        filter->original[i] = (uint16_t)(istrength * (double)i);
+        filter->processed[i] = (int32_t)(strength * (double)i);
+        filter->original[i] = (int32_t)(istrength * (double)i);
     }
 }
 

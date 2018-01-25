@@ -10,8 +10,8 @@ typedef struct {
     genann * net_fj;
     genann * net_kd;
     /* Strength lut */
-    uint16_t processed[65536];
-    uint16_t original[65536];
+    int32_t processed[65536];
+    int32_t original[65536];
 } filterObject_t;
 
 filterObject_t * initFilterObject();
