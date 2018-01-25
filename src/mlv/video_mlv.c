@@ -26,6 +26,7 @@
 /* Bitunpack and lossless compression */
 #include "../dng/dng.h"
 
+#define MIN(a,b) (((a)<(b))?(a):(b))
 #define ROR32(v,a) ((v) >> (a) | (v) << (32-(a)))
 
 static uint64_t file_set_pos(FILE *stream, uint64_t offset, int whence)
@@ -940,8 +941,11 @@ int mlvSaveAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
         uint64_t cut_audio_size_rough = (uint64_t)( (double)(getMlvAudioChannels(video) * getMlvSampleRate(video) * sizeof(int16_t) * (frame_end - frame_start + 1)) / (double)getMlvFramerate(video) );
         /* check if audio_start_offset is even */
         if(audio_start_offset % 2) --audio_start_offset;
-        /* check if cut_audio_size is multiple of 4096 bytes */
-        uint64_t cut_audio_size = cut_audio_size_rough - (cut_audio_size_rough % 4096) + 4096;
+        /* check if cut_audio_size is multiple of 4096 bytes and not more than original audio data size */
+        uint64_t cut_audio_size = MIN( (cut_audio_size_rough - (cut_audio_size_rough % 4096) + 4096), mlv_audio_size );
+        /* check if cut_audio_size is not more than uit32_t max value to not overflow blockSize variable */
+        if(cut_audio_size > 0xFFFFFFFF) cut_audio_size = 0xFFFFFFFF; // Not likely that audio size exeeds the 4.3gb but anyway check this
+
 
         /* allocate memory for whole audio */
         int16_t * mlv_audio_data = calloc(mlv_audio_size + 1024000, 1); // + 1Mb for safety
