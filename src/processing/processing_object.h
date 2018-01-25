@@ -2,6 +2,7 @@
 #define _processing_struct_
 
 #include "image_profile.h"
+#include "filter/filter.h"
 
 typedef struct {
     int width, height;
@@ -10,6 +11,9 @@ typedef struct {
 
 /* Processing settings structure (a mess) */
 typedef struct {
+
+    filterObject_t * filter;
+    int filter_on;
 
     /* Image profile, options:
      * PROFILE_STANDARD   : Gamma Corrected
@@ -95,16 +99,16 @@ typedef struct {
     
     /* These are pre-calculated curves / values for contrast and stuff 
      * will be calculated on setting changes, values 0-65535 */
-    uint16_t * pre_calc_curve_r;
-    uint16_t * pre_calc_curve_g;
-    uint16_t * pre_calc_curve_b; int use_rgb_curves; /* The r, g and b curves can be disabled */
-    uint16_t * pre_calc_levels; /* For black level and white level */
-    uint16_t * pre_calc_gamma;
-    uint32_t * pre_calc_sharp_a;
-    uint16_t * pre_calc_sharp_x; /* In horizontal dimension */
-    uint16_t * pre_calc_sharp_y; /* In vertical dimension */
+    uint16_t   pre_calc_curve_r[65536];
+    uint16_t   pre_calc_curve_g[65536];
+    uint16_t   pre_calc_curve_b[65536]; int use_rgb_curves; /* The r, g and b curves can be disabled */
+    uint16_t   pre_calc_levels[65536]; /* For black level and white level */
+    uint16_t   pre_calc_gamma[65536];
+    uint32_t   pre_calc_sharp_a[65536];
+    uint16_t   pre_calc_sharp_x[65536]; /* In horizontal dimension */
+    uint16_t   pre_calc_sharp_y[65536]; /* In vertical dimension */
     /* Precalculated values for saturation */
-    int32_t  * pre_calc_sat; int use_saturation; /* Saturation is disable-able */
+    int32_t    pre_calc_sat[131072]; int use_saturation; /* Saturation is disable-able */
 
 } processingObject_t;
 

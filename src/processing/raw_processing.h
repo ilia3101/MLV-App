@@ -1,9 +1,9 @@
 #ifndef _raw_processing_
 #define _raw_processing_
 
-/* NOTE: highlights and shadows must be done at the start */
-
 #include "processing_object.h"
+#include "filter/filter.h"
+
 
 /* Intitialises a 'processing object' which is a structure 
  * that makes it easy to contol all the processing */
@@ -42,6 +42,13 @@ void applyProcessingObjectMultiThreaded( processingObject_t * processing,
                                          uint16_t * __restrict inputImage, 
                                          uint16_t * __restrict outputImage,
                                          int threads );
+
+
+
+/* Enable/disable the filter module (filter/filter.h) */
+#define processingEnableFilters(processing) processing->filter_on = 1
+#define processingDisableFilters(processing) processing->filter_on = 0
+
 
 
 /* Set contrast(S-curve really) - important: precalculates values, 

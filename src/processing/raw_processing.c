@@ -7,6 +7,7 @@
 
 #include "raw_processing.h"
 #include "../mlv/video_mlv.h"
+#include "filter/filter.h"
 
 /* Matrix functions which are useful */
 #include "../matrix/matrix.h"
@@ -53,20 +54,11 @@ void free_image_buffer(processing_buffer_t * buffer)
 }
 
 
-/* Initialises processing thing with memory */
 processingObject_t * initProcessingObject()
 {
     processingObject_t * processing = calloc( 1, sizeof(processingObject_t) );
 
-    processing->pre_calc_curve_r = malloc( 65536 * sizeof(uint16_t) );
-    processing->pre_calc_curve_g = malloc( 65536 * sizeof(uint16_t) );
-    processing->pre_calc_curve_b = malloc( 65536 * sizeof(uint16_t) );
-    processing->pre_calc_gamma   = malloc( 65536 * sizeof(uint16_t) );
-    processing->pre_calc_levels  = malloc( 65536 * sizeof(uint16_t) );
-    processing->pre_calc_sharp_a = malloc( 65536 * sizeof(uint32_t) );
-    processing->pre_calc_sharp_x = malloc( 65536 * sizeof(uint16_t) );
-    processing->pre_calc_sharp_y = malloc( 65536 * sizeof(uint16_t) );
-    processing->pre_calc_sat     = malloc( 131072 * sizeof(int32_t) );
+    processing->filter = initFilterObject();
 
     /* For precalculated matrix values */
     for (int i = 0; i < 9; ++i)
@@ -378,6 +370,11 @@ void applyProcessingObject( processingObject_t * processing,
     {
         convert_YCbCr_to_rgb(outputImage, img_s, processing->cs_zone.pre_calc_YCbCr_to_rgb);
     }
+
+    if (processing->filter_on)
+    {
+        applyFilterObject(processing->filter, imageX, imageY, outputImage);
+    }
 }
 
 /* Set contrast (S-curve really) */
@@ -643,15 +640,7 @@ void processingSetWhiteLevel(processingObject_t * processing, int whiteLevel)
 /* Decomissions a processing object completely(I hope) */
 void freeProcessingObject(processingObject_t * processing)
 {
-    free(processing->pre_calc_curve_r);
-    free(processing->pre_calc_curve_g);
-    free(processing->pre_calc_curve_b);
-    free(processing->pre_calc_gamma);
-    free(processing->pre_calc_levels);
-    free(processing->pre_calc_sat);
-    free(processing->pre_calc_sharp_a);
-    free(processing->pre_calc_sharp_x);
-    free(processing->pre_calc_sharp_y);
+    freeFilterObject(processing->filter);
     for (int i = 8; i >= 0; --i) free(processing->pre_calc_matrix[i]);
     for (int i = 6; i >= 0; --i) free(processing->cs_zone.pre_calc_rgb_to_YCbCr[i]);
     for (int i = 3; i >= 0; --i) free(processing->cs_zone.pre_calc_YCbCr_to_rgb[i]);
