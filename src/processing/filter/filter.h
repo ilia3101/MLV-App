@@ -1,6 +1,7 @@
 #ifndef __processing_filter__
 #define __processing_filter__
 
+#include "stdint.h"
 #include "genann/genann.h"
 
 typedef struct {
