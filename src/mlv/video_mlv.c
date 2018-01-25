@@ -943,12 +943,13 @@ int mlvSaveAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
         if(frame_buf_unpacked) free(frame_buf_unpacked);
         if(frame_buf_compressed) free(frame_buf_compressed);
     }
-    else
+    else // pass through the original raw frame
     {
         memcpy(block_buf, &vidf_hdr, sizeof(mlv_vidf_hdr_t));
         memcpy((block_buf + sizeof(mlv_vidf_hdr_t)), frame_buf, frame_size);
     }
 
+    /* if audio export is enabled */
     if(!vidf_hdr.frameNumber && export_audio && (export_mode != MLV_AVERAGED_FRAME))
     {
         mlv_audf_hdr_t audf_hdr = { { 'A','U','D','F' }, 0, 0, 0, 0 };
