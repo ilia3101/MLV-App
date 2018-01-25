@@ -121,12 +121,25 @@ typedef struct {
     NSSegmentedControl * aliasMapOption;
 
 
-    /* Timeline slider */
+    /****************************************
+     **            FILTER STUFF            **
+     ****************************************/
+
+    NSTextField * filterLabel;
+    NSPopUpButton * filterOptions;
+
+    NSSlider * filterStrengthSlider;
+    NSTextField * filterStrengthValueLabel;
+    NSTextField * filterStrengthLabel;
+
+
+
+    /** Timeline slider **/
     NSSlider * timelineSlider;
 
 
     /****************************************
-     **           Right Sidebar            **
+     **            Left Sidebar            **
      ****************************************/
     NSButton * openMLVButton;
     NSButton * saveSessionButton;

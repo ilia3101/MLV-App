@@ -486,11 +486,25 @@ int setAppNewMlvClip(char * mlvPath)
     App->frameChanged++;
 }
 
+/* Choose filter */
+-(void)toggleFilter
+{
+    filterObjectSetFilter(App->processingSettings->filter, (int)[self indexOfSelectedItem]);
+    App->frameChanged++;
+}
+
 @end
 
 
 /* Slider methods */
 @implementation NSSlider (mainMethods)
+
+-(void)filterStrengthMethod
+{
+    filterObjectSetFilterStrength(App->processingSettings->filter, [self doubleValue]);
+    // [App->filterStrengthLabel setStringValue: [NSString stringWithFormat:@"%+6i", (int)(([self doubleValue])*100.0)]];
+    App->frameChanged++;
+}
 
 /* Change frame based on time slider */
 -(void)timelineSliderMethod
@@ -822,18 +836,26 @@ int setAppNewMlvClip(char * mlvPath)
 /* Select tab (Processing, LLRawProc... etc + more in the future) */
 -(void)toggleTab
 {
-    BOOL showLLRawProc;
-    BOOL showProcessing;
+    BOOL hideLLRawProc;
+    BOOL hideProcessing;
+    BOOL hideFilter;
 
     switch ([self selectedSegment])
     {
         case 0: /* LLRawProc Tab */
-            showLLRawProc = NO;
-            showProcessing = YES;
+            hideLLRawProc = NO;
+            hideProcessing = YES;
+            hideFilter = YES;
             break;
         case 1: /* Processing Tab */
-            showLLRawProc = YES;
-            showProcessing = NO;
+            hideLLRawProc = YES;
+            hideProcessing = NO;
+            hideFilter = YES;
+            break;
+        case 2: /* Filter Tab */
+            hideLLRawProc = YES;
+            hideProcessing = YES;
+            hideFilter = NO;
             break;
     }
 
@@ -842,57 +864,66 @@ int setAppNewMlvClip(char * mlvPath)
      */
 
     /* Now show/hide things, yes this is ugly. Cocoa GUI code has become a mess */
-    [App->exposureSlider setHidden: showProcessing];
-    [App->saturationSlider setHidden: showProcessing]; [App->kelvinSlider setHidden: showProcessing];
-    [App->tintSlider setHidden: showProcessing]; [App->darkStrengthSlider setHidden: showProcessing];
-    [App->darkRangeSlider setHidden: showProcessing]; [App->lightStrengthSlider setHidden: showProcessing];
-    [App->lightRangeSlider setHidden: showProcessing]; [App->lightenSlider setHidden: showProcessing];
-    [App->sharpnessSlider setHidden: showProcessing]; [App->chromaBlurSlider setHidden: showProcessing];
+    [App->exposureSlider setHidden: hideProcessing];
+    [App->saturationSlider setHidden: hideProcessing]; [App->kelvinSlider setHidden: hideProcessing];
+    [App->tintSlider setHidden: hideProcessing]; [App->darkStrengthSlider setHidden: hideProcessing];
+    [App->darkRangeSlider setHidden: hideProcessing]; [App->lightStrengthSlider setHidden: hideProcessing];
+    [App->lightRangeSlider setHidden: hideProcessing]; [App->lightenSlider setHidden: hideProcessing];
+    [App->sharpnessSlider setHidden: hideProcessing]; [App->chromaBlurSlider setHidden: hideProcessing];
     /* Slider labels */
-    [App->exposureLabel setHidden: showProcessing]; [App->exposureValueLabel setHidden: showProcessing];
-    [App->saturationLabel setHidden: showProcessing]; [App->saturationValueLabel setHidden: showProcessing]; [App->kelvinLabel setHidden: showProcessing];
-    [App->kelvinValueLabel setHidden: showProcessing]; [App->tintLabel setHidden: showProcessing]; [App->tintValueLabel setHidden: showProcessing];
-    [App->darkStrengthLabel setHidden: showProcessing]; [App->darkStrengthValueLabel setHidden: showProcessing];
-    [App->darkRangeLabel setHidden: showProcessing]; [App->darkRangeValueLabel setHidden: showProcessing];
-    [App->lightStrengthLabel setHidden: showProcessing]; [App->lightStrengthValueLabel setHidden: showProcessing];
-    [App->lightRangeLabel setHidden: showProcessing]; [App->lightRangeValueLabel setHidden: showProcessing];
-    [App->lightenLabel setHidden: showProcessing]; [App->lightenValueLabel setHidden: showProcessing];
-    [App->sharpnessLabel setHidden: showProcessing]; [App->sharpnessValueLabel setHidden: showProcessing];
-    [App->chromaBlurLabel setHidden: showProcessing]; [App->chromaBlurValueLabel setHidden: showProcessing];
+    [App->exposureLabel setHidden: hideProcessing]; [App->exposureValueLabel setHidden: hideProcessing];
+    [App->saturationLabel setHidden: hideProcessing]; [App->saturationValueLabel setHidden: hideProcessing]; [App->kelvinLabel setHidden: hideProcessing];
+    [App->kelvinValueLabel setHidden: hideProcessing]; [App->tintLabel setHidden: hideProcessing]; [App->tintValueLabel setHidden: hideProcessing];
+    [App->darkStrengthLabel setHidden: hideProcessing]; [App->darkStrengthValueLabel setHidden: hideProcessing];
+    [App->darkRangeLabel setHidden: hideProcessing]; [App->darkRangeValueLabel setHidden: hideProcessing];
+    [App->lightStrengthLabel setHidden: hideProcessing]; [App->lightStrengthValueLabel setHidden: hideProcessing];
+    [App->lightRangeLabel setHidden: hideProcessing]; [App->lightRangeValueLabel setHidden: hideProcessing];
+    [App->lightenLabel setHidden: hideProcessing]; [App->lightenValueLabel setHidden: hideProcessing];
+    [App->sharpnessLabel setHidden: hideProcessing]; [App->sharpnessValueLabel setHidden: hideProcessing];
+    [App->chromaBlurLabel setHidden: hideProcessing]; [App->chromaBlurValueLabel setHidden: hideProcessing];
     /* Checkboxes and processing profile selector */
-    [App->highlightReconstructionSelector setHidden: showProcessing];
-    [App->alwaysUseAmazeSelector setHidden: showProcessing];
-    [App->chromaSeparationSelector setHidden: showProcessing];
+    [App->highlightReconstructionSelector setHidden: hideProcessing];
+    [App->alwaysUseAmazeSelector setHidden: hideProcessing];
+    [App->chromaSeparationSelector setHidden: hideProcessing];
     /* Select image profile */
-    [App->imageProfile setHidden: showProcessing];
+    [App->imageProfile setHidden: hideProcessing];
 
     /* 
      * LLRawProc Tab
      */
 
-    [App->fixRawSelector setHidden: showLLRawProc];
-    [App->focusPixelLabel setHidden: showLLRawProc];
-    [App->focusPixelOption setHidden: showLLRawProc];
-    [App->focusPixelMethodLabel setHidden: showLLRawProc];
-    [App->focusPixelMethodOption setHidden: showLLRawProc];
-    [App->stripeFixLabel setHidden: showLLRawProc];
-    [App->stripeFixOption setHidden: showLLRawProc];
-    [App->chromaSmoothLabel setHidden: showLLRawProc];
-    [App->chromaSmoothOption setHidden: showLLRawProc];
-    [App->patternNoiseLabel setHidden: showLLRawProc];
-    [App->patternNoiseOption setHidden: showLLRawProc];
-    [App->badPixelLabel setHidden: showLLRawProc];
-    [App->badPixelOption setHidden: showLLRawProc];
-    [App->badPixelMethodLabel setHidden: showLLRawProc];
-    [App->badPixelMethodOption setHidden: showLLRawProc];
-    [App->dualISOLabel setHidden: showLLRawProc];
-    [App->dualISOOption setHidden: showLLRawProc];
-    [App->dualISOMethodLabel setHidden: showLLRawProc];
-    [App->dualISOMethodOption setHidden: showLLRawProc];
-    [App->fullResBlendingLabel setHidden: showLLRawProc];
-    [App->fullResBlendingOption setHidden: showLLRawProc];
-    [App->aliasMapLabel setHidden: showLLRawProc];
-    [App->aliasMapOption setHidden: showLLRawProc];
+    [App->fixRawSelector setHidden: hideLLRawProc];
+    [App->focusPixelLabel setHidden: hideLLRawProc];
+    [App->focusPixelOption setHidden: hideLLRawProc];
+    [App->focusPixelMethodLabel setHidden: hideLLRawProc];
+    [App->focusPixelMethodOption setHidden: hideLLRawProc];
+    [App->stripeFixLabel setHidden: hideLLRawProc];
+    [App->stripeFixOption setHidden: hideLLRawProc];
+    [App->chromaSmoothLabel setHidden: hideLLRawProc];
+    [App->chromaSmoothOption setHidden: hideLLRawProc];
+    [App->patternNoiseLabel setHidden: hideLLRawProc];
+    [App->patternNoiseOption setHidden: hideLLRawProc];
+    [App->badPixelLabel setHidden: hideLLRawProc];
+    [App->badPixelOption setHidden: hideLLRawProc];
+    [App->badPixelMethodLabel setHidden: hideLLRawProc];
+    [App->badPixelMethodOption setHidden: hideLLRawProc];
+    [App->dualISOLabel setHidden: hideLLRawProc];
+    [App->dualISOOption setHidden: hideLLRawProc];
+    [App->dualISOMethodLabel setHidden: hideLLRawProc];
+    [App->dualISOMethodOption setHidden: hideLLRawProc];
+    [App->fullResBlendingLabel setHidden: hideLLRawProc];
+    [App->fullResBlendingOption setHidden: hideLLRawProc];
+    [App->aliasMapLabel setHidden: hideLLRawProc];
+    [App->aliasMapOption setHidden: hideLLRawProc];
+
+    /*
+     * Filter tab
+     */
+
+    [App->filterLabel setHidden: hideFilter];
+    [App->filterOptions setHidden: hideFilter];
+    [App->filterStrengthSlider setHidden: hideFilter];
+    [App->filterStrengthLabel setHidden: hideFilter];
 }
 
 @end

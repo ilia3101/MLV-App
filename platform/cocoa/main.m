@@ -288,6 +288,7 @@ int NSApplicationMain(int argc, const char * argv[])
     App->processingSettings = initProcessingObject();
     /* Allow highlight reconstruction */
     processingDisableHighlightReconstruction(App->processingSettings);
+    processingEnableFilters(App->processingSettings);
     /* Set exposure to + 1.2 stops instead of correct 0.0, this is to give the impression 
      * (to those that believe) that highlights are recoverable (shhh don't tell) */
     processingSetExposureStops(App->processingSettings, 1.2);
@@ -371,9 +372,10 @@ int NSApplicationMain(int argc, const char * argv[])
      * https://developer.apple.com/library/content/documentation/Cocoa/Conceptual/SegmentedControl/Articles/SegmentedControlCode.html */
 
     App->processingTabSwitch = [[NSSegmentedControl alloc] initWithFrame: NSMakeRect(RIGHT_SIDEBAR_SLIDER(0, ELEMENT_HEIGHT, 17))];
-    [App->processingTabSwitch setSegmentCount:2];
+    [App->processingTabSwitch setSegmentCount:3];
     [App->processingTabSwitch setLabel:@"Correct" forSegment:0];
     [App->processingTabSwitch setLabel:@"Process" forSegment:1];
+    [App->processingTabSwitch setLabel:@"Filters" forSegment:2];
     AnchorRight(App->processingTabSwitch, YES);
     AnchorTop(App->processingTabSwitch, YES);
     [App->processingTabSwitch setTarget: App->processingTabSwitch];
@@ -620,7 +622,52 @@ int NSApplicationMain(int argc, const char * argv[])
     [App->aliasMapOption setAction: @selector(dualISOMethod)];
     App->aliasMapOption.selectedSegment = 0;
     [[App->window contentView] addSubview: App->aliasMapOption];
-    
+
+
+
+    /*
+     *******************************************************************************
+     * Create Filter tab
+     *******************************************************************************
+     */
+
+    App->filterLabel = [ [NSTextField alloc]
+                           initWithFrame: NSMakeRect( RIGHT_SIDEBAR_LABEL(1,ELEMENT_HEIGHT,0) )];
+    [App->filterLabel setLabelStyle];
+    AnchorTop(App->filterLabel, YES);
+    AnchorRight(App->filterLabel, YES);
+    [App->filterLabel setStringValue: @"Filter"];
+    [[App->window contentView] addSubview: App->filterLabel];
+
+    App->filterOptions = [ [NSPopUpButton alloc]
+                          initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(1,24,0) ) ];
+    AnchorRight(App->filterOptions, YES);
+    AnchorTop(App->filterOptions, YES);
+    [App->filterOptions insertItemWithTitle: @"Film \"FJ\"" atIndex: 0];
+    // [App->imageProfile insertItemWithTitle: @"Film \"KD\"" atIndex: 1];
+    [App->filterOptions setTarget: App->filterOptions];
+    [App->filterOptions setAction: @selector(toggleFilter)];
+    [App->filterOptions selectItemAtIndex: 0];
+    [[App->window contentView] addSubview: App->filterOptions];
+
+    App->filterStrengthSlider = [[NSSlider alloc] initWithFrame: NSMakeRect(RIGHT_SIDEBAR_SLIDER(3, ELEMENT_HEIGHT, 21))];
+    [App->filterStrengthSlider setTarget: App->filterStrengthSlider];
+    [App->filterStrengthSlider setAction: @selector(filterStrengthMethod)];
+    [App->filterStrengthSlider setDoubleValue: 0.0];
+    AnchorTop(App->filterStrengthSlider, YES);
+    AnchorRight(App->filterStrengthSlider, YES);
+    [[App->window contentView] addSubview: App->filterStrengthSlider];
+
+    App->filterStrengthLabel = [ [NSTextField alloc]
+                           initWithFrame: NSMakeRect( RIGHT_SIDEBAR_LABEL(2,ELEMENT_HEIGHT,-22) )];
+    [App->filterStrengthLabel setLabelStyle];
+    AnchorTop(App->filterStrengthLabel, YES);
+    AnchorRight(App->filterStrengthLabel, YES);
+    [App->filterStrengthLabel setStringValue: @"Strength"];
+    [[App->window contentView] addSubview: App->filterStrengthLabel];
+
+
+
 
     /* Pass commandline arguments */
     App->argc = argc;
