@@ -3144,7 +3144,7 @@ QGroupBox::indicator:checked {
                       <enum>Qt::RightToLeft</enum>
                      </property>
                      <property name="text">
-                      <string>0</string>
+                      <string>100</string>
                      </property>
                      <property name="alignment">
                       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
