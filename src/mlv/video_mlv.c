@@ -886,8 +886,9 @@ int mlvSaveAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
     {
         if(!vidf_hdr.frameNumber)
         {
+            video->llrawproc->dark_frame_size = frame_size_unpacked;
             if(video->llrawproc->dark_frame) free(video->llrawproc->dark_frame);
-            video->llrawproc->dark_frame = calloc(frame_size_unpacked, 1);
+            video->llrawproc->dark_frame = calloc(video->llrawproc->dark_frame_size, 1);
         }
     }
     else if((export_mode == MLV_COMPRESSED) && (!isMlvCompressed(video))) // compress MLV frame with LJ92 if specified
