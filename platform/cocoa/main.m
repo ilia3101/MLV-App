@@ -644,7 +644,8 @@ int NSApplicationMain(int argc, const char * argv[])
     AnchorRight(App->filterOptions, YES);
     AnchorTop(App->filterOptions, YES);
     [App->filterOptions insertItemWithTitle: @"Film \"FJ\"" atIndex: 0];
-    // [App->imageProfile insertItemWithTitle: @"Film \"KD\"" atIndex: 1];
+    [App->filterOptions insertItemWithTitle: @"Film \"Vis3\"" atIndex: 1];
+    [App->filterOptions insertItemWithTitle: @"Film \"P400\"" atIndex: 2];
     [App->filterOptions setTarget: App->filterOptions];
     [App->filterOptions setAction: @selector(toggleFilter)];
     [App->filterOptions selectItemAtIndex: 0];
