@@ -386,7 +386,7 @@ QGroupBox::indicator:checked {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>-1052</y>
+            <y>0</y>
             <width>195</width>
             <height>1782</height>
            </rect>
@@ -3085,6 +3085,9 @@ QGroupBox::indicator:checked {
                  </item>
                  <item>
                   <widget class="QComboBox" name="comboBoxFilterName">
+                   <property name="enabled">
+                    <bool>true</bool>
+                   </property>
                    <property name="font">
                     <font>
                      <pointsize>10</pointsize>
@@ -3103,6 +3106,11 @@ QGroupBox::indicator:checked {
                    <item>
                     <property name="text">
                      <string>Film &quot;P400&quot;</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Cross Processing</string>
                     </property>
                    </item>
                   </widget>

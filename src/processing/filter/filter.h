@@ -10,6 +10,7 @@ typedef struct {
     genann * net_fj;
     genann * net_vis3;
     genann * net_p400;
+    genann * net_cross1;
     /* Strength lut */
     int32_t processed[65536];
     int32_t original[65536];

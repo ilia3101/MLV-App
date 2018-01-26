@@ -14,6 +14,7 @@
 char * filmprofile_fj = FILM_FJ;
 char * filmprofile_vis3 = FILM_VIS3;
 char * filmprofile_p400 = FILM_P400;
+char * filmprofile_cross1 = FILM_CROSS1;
 
 /* Cuz there will be many */
 FILE * open_filter(char * text)
@@ -63,6 +64,11 @@ filterObject_t * initFilterObject()
     filter->net_p400 = genann_read(p400_preset);
     close_filter(p400_preset);
 
+    /* Crossprocessing Paint.NET */
+    FILE * crossPaintNet = open_filter(filmprofile_cross1);
+    filter->net_cross1 = genann_read(crossPaintNet);
+    close_filter(crossPaintNet);
+
     filterObjectSetFilterStrength(filter, 1.0);
 
     return filter;
@@ -86,6 +92,8 @@ void applyFilterObject( filterObject_t * filter,
         net = genann_copy(filter->net_vis3);
     else if (filter->filter_option == 2)
         net = genann_copy(filter->net_p400);
+    else if (filter->filter_option == 3)
+        net = genann_copy(filter->net_cross1);
 
     for (uint16_t * pix = image; pix < end; pix += 3)
     {
