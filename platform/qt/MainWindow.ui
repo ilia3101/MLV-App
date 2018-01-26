@@ -3113,6 +3113,11 @@ QGroupBox::indicator:checked {
                      <string>Cross Processing</string>
                     </property>
                    </item>
+                   <item>
+                    <property name="text">
+                     <string>Toy Camera</string>
+                    </property>
+                   </item>
                   </widget>
                  </item>
                  <item>
