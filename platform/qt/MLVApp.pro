@@ -129,6 +129,7 @@ HEADERS += \
     ../../src/processing/processing_object.h \
     ../../src/processing/raw_processing.h \
     ../../src/processing/filter/filter.h \
+    ../../src/processing/filter/film.h \
     ../../src/processing/filter/genann/genann.h \
     ../../src/processing/image_profile.h \
     InfoDialog.h \

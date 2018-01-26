@@ -27,7 +27,7 @@ void filterObjectSetFilterStrength(filterObject_t * filter, double strength);
 /* Choose ur filter */
 #define FILTER_FILM_FJ 0 /* Film "FJ" */
 #define FILTER_FILM_VIS3 1 /* Film "Vis3" */
-#define FILTER_FILM_P400 1 /* Film "P400" */
+#define FILTER_FILM_P400 2 /* Film "P400" */
 void filterObjectSetFilter(filterObject_t * filter, int filterID);
 
 
