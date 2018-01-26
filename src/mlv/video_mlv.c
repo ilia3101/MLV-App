@@ -842,7 +842,10 @@ int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
     uint32_t frame_size = video->video_index[frame_index].frame_size;
     uint64_t frame_offset = video->video_index[frame_index].frame_offset;
     uint64_t block_offset = video->video_index[frame_index].block_offset;
-    uint32_t frame_size_unpacked = video->RAWI.xRes * video->RAWI.yRes * 2;
+    uint32_t pixel_count = video->RAWI.xRes * video->RAWI.yRes;
+    uint32_t frame_size_unpacked = pixel_count * 2;
+    uint32_t max_frame_number = frame_end - frame_start;
+    int write_ok = (export_mode == 2) ? 0 : 1;
 
     /* read VIDF block header */
     file_set_pos(video->file[chunk], block_offset, SEEK_SET);
@@ -864,7 +867,7 @@ int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
         return 1;
     }
     /* allocate frame buffer */
-    uint8_t * frame_buf = calloc(frame_size, 1);
+    uint8_t * frame_buf = calloc(frame_size + 4, 1);
     if(!frame_buf)
     {
         DEBUG( printf("\nCould not allocate memory for VIDF frame data\n"); )
@@ -889,14 +892,31 @@ int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
             video->llrawproc->dark_frame_size = frame_size_unpacked;
             if(video->llrawproc->dark_frame) free(video->llrawproc->dark_frame);
             video->llrawproc->dark_frame = calloc(video->llrawproc->dark_frame_size, 1);
-        }
-        else if(vidf_hdr.frameNumber == frame_end - frame_start + 1)
-        {
-
+            dng_unpack_image_bits(video->llrawproc->dark_frame, (uint16_t*)frame_buf, video->RAWI.xRes, video->RAWI.yRes, video->RAWI.raw_info.bits_per_pixel);
         }
         else
         {
+            uint16_t * frame_buf_unpacked = calloc(frame_size_unpacked, 1);
+            dng_unpack_image_bits(frame_buf_unpacked, (uint16_t*)frame_buf, video->RAWI.xRes, video->RAWI.yRes, video->RAWI.raw_info.bits_per_pixel);
+            for(uint32_t i = 0; i < pixel_count; i++)
+            {
+                video->llrawproc->dark_frame[i] += frame_buf_unpacked[i];
+            }
+            free(frame_buf_unpacked);
 
+            if(vidf_hdr.frameNumber == max_frame_number)
+            {
+                for(uint32_t i = 0; i < pixel_count; i++)
+                {
+                    video->llrawproc->dark_frame[i] = (video->llrawproc->dark_frame[i] + vidf_hdr.frameNumber / 2) / vidf_hdr.frameNumber;
+                }
+                dng_pack_image_bits((uint16_t *)frame_buf, video->llrawproc->dark_frame, video->RAWI.xRes, video->RAWI.yRes, video->RAWI.raw_info.bits_per_pixel, 0);
+
+                vidf_hdr.frameNumber = 0;
+                memcpy(block_buf, &vidf_hdr, sizeof(mlv_vidf_hdr_t));
+                memcpy((block_buf + sizeof(mlv_vidf_hdr_t)), frame_buf, frame_size);
+                write_ok = 1;
+            }
         }
     }
     else if((export_mode == MLV_COMPRESSED) && (!isMlvCompressed(video))) // compress MLV frame with LJ92 if specified
@@ -1002,17 +1022,20 @@ int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
     }
 
     /* write mlvFrame */
-    if(fwrite(block_buf, vidf_hdr.blockSize, 1, output_mlv) != 1)
+    if(write_ok)
     {
-        DEBUG( printf("\nCould not write video frame #%u\n", frame_index); )
-        free(frame_buf);
-        free(block_buf);
-        return 1;
+        if(fwrite(block_buf, vidf_hdr.blockSize, 1, output_mlv) != 1)
+        {
+            DEBUG( printf("\nCould not write video frame #%u\n", frame_index); )
+            free(frame_buf);
+            free(block_buf);
+            return 1;
+        }
     }
 
     free(frame_buf);
     free(block_buf);
-    DEBUG( if(!((export_mode == MLV_COMPRESSED) && (!isMlvCompressed(video)))) printf("Saved video frame #%u\n", frame_index); )
+    DEBUG( if( (export_mode == MLV_FAST_PASS) && (!isMlvCompressed(video)) ) printf("Saved video frame #%u\n", frame_index); )
     return 0;
 }
 

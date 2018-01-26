@@ -713,7 +713,7 @@ void dng_unpack_image_bits(uint16_t * output_buffer, uint16_t * input_buffer, in
    height - image height
    bpp - raw data bits per pixel 
 */
-void dng_pack_image_bits(uint16_t * output_buffer, uint16_t * input_buffer, int width, int height, uint32_t bpp)
+void dng_pack_image_bits(uint16_t * output_buffer, uint16_t * input_buffer, int width, int height, uint32_t bpp, int big_endian)
 {
     uint32_t pixel_count = width * height;
     uint32_t bits_free = 16 - bpp;
@@ -734,7 +734,7 @@ void dng_pack_image_bits(uint16_t * output_buffer, uint16_t * input_buffer, int 
         uint32_t data = ROL32((uint32_t)unpacked_bits[pixel_index], bits_to_rol);
         *(uint32_t *)packed_bits = (*(uint32_t *)packed_bits & 0x0000FFFF) | data;
 
-        if(bits_offset > 0 && bits_offset <= bpp)
+        if(bits_offset > 0 && bits_offset <= bpp && big_endian)
         {
             *(uint16_t *)packed_bits = ROL16(*(uint16_t *)packed_bits, 8);
             packed_bits++;
@@ -866,7 +866,8 @@ static int dng_get_frame(mlvObject_t * mlv_data, dngObject_t * dng_data, uint64_
                                         dng_data->image_buf_unpacked,
                                         mlv_data->RAWI.xRes,
                                         mlv_data->RAWI.yRes,
-                                        mlv_data->RAWI.raw_info.bits_per_pixel);
+                                        mlv_data->RAWI.raw_info.bits_per_pixel,
+                                        1);
                 }
                 else
                 {
@@ -919,7 +920,8 @@ static int dng_get_frame(mlvObject_t * mlv_data, dngObject_t * dng_data, uint64_
                                         dng_data->image_buf_unpacked,
                                         mlv_data->RAWI.xRes,
                                         mlv_data->RAWI.yRes,
-                                        mlv_data->RAWI.raw_info.bits_per_pixel);
+                                        mlv_data->RAWI.raw_info.bits_per_pixel,
+                                        1);
                 }
                 else
                 {

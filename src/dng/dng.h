@@ -51,7 +51,7 @@ typedef struct
 
 /* routines to unpack, pack, decompress or compress raw data */
 void dng_unpack_image_bits(uint16_t * input_buffer, uint16_t * output_buffer, int width, int height, uint32_t bpp);
-void dng_pack_image_bits(uint16_t * input_buffer, uint16_t * output_buffer, int width, int height, uint32_t bpp);
+void dng_pack_image_bits(uint16_t * input_buffer, uint16_t * output_buffer, int width, int height, uint32_t bpp, int big_endian);
 int dng_compress_image(uint16_t * output_buffer, uint16_t * input_buffer, size_t * output_buffer_size, int width, int height, uint32_t bpp);
 int dng_decompress_image(uint16_t * output_buffer, uint16_t * input_buffer, size_t input_buffer_size, int width, int height, uint32_t bpp);
 
