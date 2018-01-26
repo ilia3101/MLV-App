@@ -56,7 +56,7 @@ filterObject_t * initFilterObject()
     /* Kodak Vision 3 preset */
     FILE * vis3_preset = open_filter(filmprofile_vis3);
     filter->net_vis3 = genann_read(vis3_preset);
-    close_filter(fj_preset);
+    close_filter(vis3_preset);
 
     /* Kodak Portra 400 preset */
     FILE * p400_preset = open_filter(filmprofile_p400);
