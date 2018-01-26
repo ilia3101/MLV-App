@@ -2194,6 +2194,11 @@ bool MainWindow::isFileInSession(QString fileName)
 void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
 {
     ui->horizontalSliderExposure->setValue( receipt->exposure() );
+    if( receipt->temperature() == -1 )
+    {
+        //Init Temp read from the file when imported and loaded very first time completely
+        setWhiteBalanceFromMlv( receipt );
+    }
     ui->horizontalSliderTemperature->setValue( receipt->temperature() );
     ui->horizontalSliderTint->setValue( receipt->tint() );
     ui->horizontalSliderSaturation->setValue( receipt->saturation() );
@@ -3444,7 +3449,6 @@ void MainWindow::on_actionExportSettings_triggered()
 void MainWindow::on_actionResetReceipt_triggered()
 {
     ReceiptSettings *sliders = new ReceiptSettings(); //default
-    setWhiteBalanceFromMlv( sliders );
     setSliders( sliders, false );
     delete sliders;
 }
@@ -4689,6 +4693,7 @@ void MainWindow::setWhiteBalanceFromMlv(ReceiptSettings *sliders)
     {
     case 0: //Auto - use default
     case 6: //Custom - use default
+        sliders->setTemperature( 6000 );
         break;
     case 1: //Sunny
         sliders->setTemperature( 5200 );
@@ -4712,6 +4717,7 @@ void MainWindow::setWhiteBalanceFromMlv(ReceiptSettings *sliders)
         sliders->setTemperature( getMlvWbKelvin( m_pMlvObject ) );
         break;
     default:
+        sliders->setTemperature( 6000 );
         break;
     }
 }
