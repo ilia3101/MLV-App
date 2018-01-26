@@ -8,7 +8,8 @@ typedef struct {
     double strength;
     int filter_option;
     genann * net_fj;
-    genann * net_kd;
+    genann * net_vis3;
+    genann * net_p400;
     /* Strength lut */
     int32_t processed[65536];
     int32_t original[65536];
@@ -24,9 +25,9 @@ void applyFilterObject( filterObject_t * filter,
 void filterObjectSetFilterStrength(filterObject_t * filter, double strength);
 
 /* Choose ur filter */
-#define FILTER_FILM_FJ 0
-#define FILTER_FILM_KD 1
-// A couple other profiles will follow...
+#define FILTER_FILM_FJ 0 /* Film "FJ" */
+#define FILTER_FILM_VIS3 1 /* Film "Vis3" */
+#define FILTER_FILM_P400 1 /* Film "P400" */
 void filterObjectSetFilter(filterObject_t * filter, int filterID);
 
 

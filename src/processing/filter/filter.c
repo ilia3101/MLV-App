@@ -10,26 +10,10 @@
 
 
 /* Nothing to see here */
-char * filmprofile_fj = "3 1 7 3 -8.32176290957420738970e-01 1.0835954635952433"
-    "9110e+00 -1.53596291045552013621e+00 3.67384514989079313807e+00 -5.6287459"
-    "6479495181711e+00 3.33493552026486006490e-01 -7.12665460749794998918e+00 9"
-    ".52623022802043806223e-01 4.98567373146714931664e+00 -3.190878325195455555"
-    "98e+00 6.40049169520185312621e+00 1.48307139386843722662e+00 -2.2101335796"
-    "2759204867e+00 1.33574963765940140092e+01 -4.34871285918206063048e-01 -1.9"
-    "5293014567889300359e+00 2.09644613739775698136e+00 6.48035843659867882849e"
-    "+00 -2.39748195290617882591e+00 -3.16130675196507793245e+00 -1.11688161646"
-    "700034879e+00 4.23098912462331999684e-01 -8.20734848356459067986e+00 2.577"
-    "97338617953331052e+00 6.25356006420329535445e+00 3.45135112364741791779e+0"
-    "0 -1.80124851238127337005e+00 5.52922961362061293755e+00 1.145045799659712"
-    "31559e+01 3.02092623576809993224e+00 -5.82868432257680790798e+00 -4.767736"
-    "95678160169820e+00 1.43527519841506236986e+01 2.54331162851854086782e+00 -"
-    "2.70380976583335863594e+00 1.60820646684338841581e+00 -5.02616726969326244"
-    "046e+00 1.97955756024031015450e+00 -5.94141534554111672151e+00 -2.10259087"
-    "120419296824e+00 -4.79761248096838510691e-01 -2.15286380744306921065e-01 -"
-    "4.08106451251237789535e+00 -1.98932654029564948139e-01 5.81507384499231338"
-    "992e+00 8.98602754784793233966e+00 -1.57889637430522600248e+00 -9.82598541"
-    "026572375179e-02 -8.64513642871019283298e-01 -6.58914154017710140820e-01 -"
-    "1.78457442827277001918e+00 2.58094544332886099980e+00";
+#include "film.h"
+char * filmprofile_fj = FILM_FJ;
+char * filmprofile_vis3 = FILM_VIS3;
+char * filmprofile_p400 = FILM_P400;
 
 /* Cuz there will be many */
 FILE * open_filter(char * text)
@@ -68,6 +52,16 @@ filterObject_t * initFilterObject()
     FILE * fj_preset = open_filter(filmprofile_fj);
     filter->net_fj = genann_read(fj_preset);
     close_filter(fj_preset);
+    
+    /* Kodak Vision 3 preset */
+    FILE * vis3_preset = open_filter(filmprofile_vis3);
+    filter->net_vis3 = genann_read(vis3_preset);
+    close_filter(fj_preset);
+
+    /* Kodak Portra 400 preset */
+    FILE * p400_preset = open_filter(filmprofile_p400);
+    filter->net_p400 = genann_read(p400_preset);
+    close_filter(p400_preset);
 
     filterObjectSetFilterStrength(filter, 1.0);
 
@@ -88,8 +82,10 @@ void applyFilterObject( filterObject_t * filter,
     genann * net;
     if (filter->filter_option == 0)
         net = genann_copy(filter->net_fj);
-    else if (filter->filter_option == 1) /* Not avalible yet */
-        net = genann_copy(filter->net_kd);
+    else if (filter->filter_option == 1)
+        net = genann_copy(filter->net_vis3);
+    else if (filter->filter_option == 2)
+        net = genann_copy(filter->net_p400);
 
     for (uint16_t * pix = image; pix < end; pix += 3)
     {
