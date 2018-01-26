@@ -65,9 +65,9 @@ QImage Histogram::getHistogramFromImg( QImage *img )
         for( uint8_t y = 0; y < HEIGHT; y++ )
         {
             QColor color = QColor( Qt::black );
-            if( tableR[x] >= HEIGHT - y ) color.setRed( 255 );
-            if( tableG[x] >= HEIGHT - y ) color.setGreen( 255 );
-            if( tableB[x] >= HEIGHT - y ) color.setBlue( 255 );
+            if( tableR[x] >= ( uint32_t )( HEIGHT - y ) ) color.setRed( 255 );
+            if( tableG[x] >= ( uint32_t )( HEIGHT - y ) ) color.setGreen( 255 );
+            if( tableB[x] >= ( uint32_t )( HEIGHT - y ) ) color.setBlue( 255 );
             m_pHistogram->setPixelColor( x * 2, y, color );
         }
 
@@ -77,9 +77,9 @@ QImage Histogram::getHistogramFromImg( QImage *img )
             for( uint8_t y = 0; y < HEIGHT; y++ )
             {
                 QColor color = QColor( Qt::black );
-                if( ( ( tableR[x] + tableR[x-1] ) >> 1 ) >= ( HEIGHT - y ) ) color.setRed( 255 );
-                if( ( ( tableG[x] + tableG[x-1] ) >> 1 ) >= ( HEIGHT - y ) ) color.setGreen( 255 );
-                if( ( ( tableB[x] + tableB[x-1] ) >> 1 ) >= ( HEIGHT - y ) ) color.setBlue( 255 );
+                if( ( ( tableR[x] + tableR[x-1] ) >> 1 ) >= ( uint32_t )( HEIGHT - y ) ) color.setRed( 255 );
+                if( ( ( tableG[x] + tableG[x-1] ) >> 1 ) >= ( uint32_t )( HEIGHT - y ) ) color.setGreen( 255 );
+                if( ( ( tableB[x] + tableB[x-1] ) >> 1 ) >= ( uint32_t )( HEIGHT - y ) ) color.setBlue( 255 );
                 m_pHistogram->setPixelColor( ( x * 2 ) - 1, y, color );
             }
         }
@@ -130,9 +130,9 @@ QImage Histogram::getHistogramFromRaw(uint8_t *m_pRawImage, uint16_t width, uint
         for( uint8_t y = 0; y < HEIGHT; y++ )
         {
             QColor color = QColor( Qt::black );
-            if( tableR[x] >= HEIGHT - y ) color.setRed( 255 );
-            if( tableG[x] >= HEIGHT - y ) color.setGreen( 255 );
-            if( tableB[x] >= HEIGHT - y ) color.setBlue( 255 );
+            if( tableR[x] >= ( uint32_t )( HEIGHT - y ) ) color.setRed( 255 );
+            if( tableG[x] >= ( uint32_t )( HEIGHT - y ) ) color.setGreen( 255 );
+            if( tableB[x] >= ( uint32_t )( HEIGHT - y ) ) color.setBlue( 255 );
             m_pHistogram->setPixelColor( x * 2, y, color );
         }
 
@@ -142,9 +142,9 @@ QImage Histogram::getHistogramFromRaw(uint8_t *m_pRawImage, uint16_t width, uint
             for( uint8_t y = 0; y < HEIGHT; y++ )
             {
                 QColor color = QColor( Qt::black );
-                if( ( ( tableR[x] + tableR[x-1] ) >> 1 ) >= ( HEIGHT - y ) ) color.setRed( 255 );
-                if( ( ( tableG[x] + tableG[x-1] ) >> 1 ) >= ( HEIGHT - y ) ) color.setGreen( 255 );
-                if( ( ( tableB[x] + tableB[x-1] ) >> 1 ) >= ( HEIGHT - y ) ) color.setBlue( 255 );
+                if( ( ( tableR[x] + tableR[x-1] ) >> 1 ) >= ( uint32_t )( HEIGHT - y ) ) color.setRed( 255 );
+                if( ( ( tableG[x] + tableG[x-1] ) >> 1 ) >= ( uint32_t )( HEIGHT - y ) ) color.setGreen( 255 );
+                if( ( ( tableB[x] + tableB[x-1] ) >> 1 ) >= ( uint32_t )( HEIGHT - y ) ) color.setBlue( 255 );
                 m_pHistogram->setPixelColor( ( x * 2 ) - 1, y, color );
             }
         }
