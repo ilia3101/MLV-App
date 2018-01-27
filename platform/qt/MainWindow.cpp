@@ -2266,7 +2266,22 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     ui->lineEditDarkFrameFile->setText( receipt->darkFrameFileName() );
     //TODO: getMlvHasInternalDarkframe( m_pMlvObject ) needed!
     //ui->toolButtonDarkFrameSubstractionInt->setEnabled( getMlvHasInternalDarkframe( m_pMlvObject ) );
-    setToolButtonDarkFrameSubstraction( receipt->darkFrameEnabled() );
+    //Auto setup at first full import, else get from receipt
+    if( receipt->darkFrameEnabled() == -1 )
+    {
+        /*if( getMlvHasInternalDarkframe( m_pMlvObject ) )
+        {
+            setToolButtonDarkFrameSubstraction( 2 );
+        }
+        else
+        {*/
+            setToolButtonDarkFrameSubstraction( 0 );
+        //}
+    }
+    else
+    {
+        setToolButtonDarkFrameSubstraction( receipt->darkFrameEnabled() );
+    }
 
     ui->checkBoxFilterEnable->setChecked( receipt->filterEnabled() );
     on_checkBoxFilterEnable_clicked( receipt->filterEnabled() );
