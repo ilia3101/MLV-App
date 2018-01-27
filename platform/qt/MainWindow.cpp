@@ -4975,16 +4975,18 @@ void MainWindow::on_toolButtonDarkFrameSubstractionFile_clicked()
     }
 }
 
+//Darkframe Substraction Filename changed
 void MainWindow::on_lineEditDarkFrameFile_textChanged(const QString &arg1)
 {
     if( QFileInfo( arg1 ).exists() && arg1.endsWith( ".MLV", Qt::CaseInsensitive ) )
     {
         ui->toolButtonDarkFrameSubstractionOn->setEnabled( true );
-        //TODO: Call here to llrawproc
+        //TODO: Call here to llrawproc (FileName)
     }
     else
     {
         ui->toolButtonDarkFrameSubstractionOn->setEnabled( false );
         setToolButtonDarkFrameSubstraction( 0 );
+        //TODO: Call here to llrawproc (OFF)
     }
 }
