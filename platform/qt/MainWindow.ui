@@ -3293,12 +3293,12 @@ QGroupBox::indicator:checked {
                    </item>
                    <item>
                     <property name="text">
-                     <string>Sepia Tone</string>
+                     <string>Toy Camera</string>
                     </property>
                    </item>
                    <item>
                     <property name="text">
-                     <string>Toy Camera</string>
+                     <string>Sepia Tone</string>
                     </property>
                    </item>
                   </widget>

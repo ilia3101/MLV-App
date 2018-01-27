@@ -14,8 +14,8 @@
 char * filmprofile_fj = FILM_FJ;
 char * filmprofile_vis3 = FILM_VIS3;
 char * filmprofile_p400 = FILM_P400;
-char * filmprofile_sepia = FILM_SEPIA;
 char * filmprofile_toyc = FILM_TOYC;
+char * filmprofile_sepia = FILM_SEPIA;
 
 /* Cuz there will be many */
 FILE * open_filter(char * text)
@@ -65,15 +65,15 @@ filterObject_t * initFilterObject()
     filter->net_p400 = genann_read(p400_preset);
     close_filter(p400_preset);
 
-    /* Sepia Tone */
-    FILE * sepia = open_filter(filmprofile_sepia);
-    filter->net_sepia = genann_read(sepia);
-    close_filter(sepia);
-
     /* Toy Camera */
     FILE * toy_cam = open_filter(filmprofile_toyc);
     filter->net_toyc = genann_read(toy_cam);
     close_filter(toy_cam);
+
+    /* Sepia Tone */
+    FILE * sepia = open_filter(filmprofile_sepia);
+    filter->net_sepia = genann_read(sepia);
+    close_filter(sepia);
 
     filterObjectSetFilterStrength(filter, 1.0);
 
@@ -99,9 +99,9 @@ void applyFilterObject( filterObject_t * filter,
     else if (filter->filter_option == 2)
         net = genann_copy(filter->net_p400);
     else if (filter->filter_option == 3)
-        net = genann_copy(filter->net_sepia);
-    else if (filter->filter_option == 4)
         net = genann_copy(filter->net_toyc);
+    else if (filter->filter_option == 4)
+        net = genann_copy(filter->net_sepia);
 
     for (uint16_t * pix = image; pix < end; pix += 3)
     {
