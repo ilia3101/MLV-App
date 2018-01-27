@@ -626,7 +626,8 @@ static int load_mapp(mlvObject_t * video)
     char * mapp_filename = alloca(mapp_name_len + 2);
     memcpy(mapp_filename, video->path, mapp_name_len);
     char * dot = strrchr(mapp_filename, '.');
-    memcpy(dot, ".MAPP\0", 6);
+    const char mapp_ext[6] = { '.', 'M', 'A', 'P', 'P', '\0' };
+    memcpy(dot, mapp_ext, 6);
 
     /* open .MAPP file for reading */
     FILE* mappf = fopen(mapp_filename, "rb");
@@ -758,10 +759,10 @@ int saveMlvHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int
     memcpy(&output_mlvi, (uint8_t*)&(video->MLVI), sizeof(mlv_file_hdr_t));
     output_mlvi.fileNum = 0;
     output_mlvi.fileCount = 1;
-    output_mlvi.videoFrameCount = frame_end - frame_start + 1;
-    output_mlvi.audioFrameCount = (!export_audio) ? 0 : 1;
+    output_mlvi.videoFrameCount = (export_mode == MLV_AVERAGED_FRAME) ? 1 : frame_end - frame_start + 1;
+    output_mlvi.audioFrameCount = (!export_audio || (export_mode == MLV_AVERAGED_FRAME)) ? 0 : 1;
     if(export_mode == MLV_COMPRESSED && (!isMlvCompressed(video))) output_mlvi.videoClass |= MLV_VIDEO_CLASS_FLAG_LJ92;
-    output_mlvi.audioClass = (!export_audio) ? 0 : 1;
+    output_mlvi.audioClass = (!export_audio || (export_mode == MLV_AVERAGED_FRAME)) ? 0 : 1;
     memcpy(ptr, &output_mlvi, sizeof(mlv_file_hdr_t));
     ptr += video->MLVI.blockSize;
 
@@ -834,7 +835,7 @@ int saveMlvHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int
 }
 
 /* Save video frame plus audio if available */
-int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int export_mode, uint32_t frame_start, uint32_t frame_end, uint32_t frame_index)
+int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int export_mode, uint32_t frame_start, uint32_t frame_end, uint32_t frame_index, uint32_t * avg_buf)
 {
     mlv_vidf_hdr_t vidf_hdr = { 0 };
 
@@ -887,37 +888,28 @@ int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
 
     if(export_mode == MLV_AVERAGED_FRAME) // average all frames to one dark frame
     {
-        if(vidf_hdr.frameNumber == 0)
+        uint16_t * frame_buf_unpacked = calloc(frame_size_unpacked, 1);
+        dng_unpack_image_bits(frame_buf_unpacked, (uint16_t*)frame_buf, video->RAWI.xRes, video->RAWI.yRes, video->RAWI.raw_info.bits_per_pixel);
+        for(uint32_t i = 0; i < pixel_count; i++)
         {
-            video->llrawproc->dark_frame_size = frame_size_unpacked;
-            if(video->llrawproc->dark_frame) free(video->llrawproc->dark_frame);
-            video->llrawproc->dark_frame = calloc(video->llrawproc->dark_frame_size, 1);
-            dng_unpack_image_bits(video->llrawproc->dark_frame, (uint16_t*)frame_buf, video->RAWI.xRes, video->RAWI.yRes, video->RAWI.raw_info.bits_per_pixel);
+            avg_buf[i] += frame_buf_unpacked[i];
         }
-        else
+
+        if(vidf_hdr.frameNumber == max_frame_number)
         {
-            uint16_t * frame_buf_unpacked = calloc(frame_size_unpacked, 1);
-            dng_unpack_image_bits(frame_buf_unpacked, (uint16_t*)frame_buf, video->RAWI.xRes, video->RAWI.yRes, video->RAWI.raw_info.bits_per_pixel);
             for(uint32_t i = 0; i < pixel_count; i++)
             {
-                video->llrawproc->dark_frame[i] += frame_buf_unpacked[i];
+                frame_buf_unpacked[i] = (avg_buf[i] + vidf_hdr.frameNumber / 2) / vidf_hdr.frameNumber;
             }
-            free(frame_buf_unpacked);
+            dng_pack_image_bits((uint16_t *)frame_buf, frame_buf_unpacked, video->RAWI.xRes, video->RAWI.yRes, video->RAWI.raw_info.bits_per_pixel, 0);
 
-            if(vidf_hdr.frameNumber == max_frame_number)
-            {
-                for(uint32_t i = 0; i < pixel_count; i++)
-                {
-                    video->llrawproc->dark_frame[i] = (video->llrawproc->dark_frame[i] + vidf_hdr.frameNumber / 2) / vidf_hdr.frameNumber;
-                }
-                dng_pack_image_bits((uint16_t *)frame_buf, video->llrawproc->dark_frame, video->RAWI.xRes, video->RAWI.yRes, video->RAWI.raw_info.bits_per_pixel, 0);
-
-                vidf_hdr.frameNumber = 0;
-                memcpy(block_buf, &vidf_hdr, sizeof(mlv_vidf_hdr_t));
-                memcpy((block_buf + sizeof(mlv_vidf_hdr_t)), frame_buf, frame_size);
-                write_ok = 1;
-            }
+            vidf_hdr.frameNumber = 0;
+            memcpy(block_buf, &vidf_hdr, sizeof(mlv_vidf_hdr_t));
+            memcpy((block_buf + sizeof(mlv_vidf_hdr_t)), frame_buf, frame_size);
+            write_ok = 1;
         }
+
+        free(frame_buf_unpacked);
     }
     else if((export_mode == MLV_COMPRESSED) && (!isMlvCompressed(video))) // compress MLV frame with LJ92 if specified
     {

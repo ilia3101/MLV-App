@@ -1466,6 +1466,9 @@ void MainWindow::startExportMlv(QString fileName)
         return;
     }
 
+    //Allocate buffer for averaging
+    uint32_t * averagedImage = NULL;
+    if( m_codecOption == 2) averagedImage = (uint32_t *)calloc( m_pMlvObject->RAWI.xRes * m_pMlvObject->RAWI.yRes * sizeof( uint32_t ), 1 );
     //Check if MLV has audio and it is requested to be exported
     int exportAudio = (doesMlvHaveAudio( m_pMlvObject ) && m_audioExportEnabled);
     //Save MLV block headers
@@ -1474,13 +1477,13 @@ void MainWindow::startExportMlv(QString fileName)
     for( uint32_t frame = m_exportQueue.first()->cutIn() - 1; frame < m_exportQueue.first()->cutOut(); frame++ )
     {
         //Save audio and video frames
-        if( ret || saveMlvAVFrame( m_pMlvObject, mlvOut, exportAudio, m_codecOption, m_exportQueue.first()->cutIn(), m_exportQueue.first()->cutOut(), frame ) )
+        if( ret || saveMlvAVFrame( m_pMlvObject, mlvOut, exportAudio, m_codecOption, m_exportQueue.first()->cutIn(), m_exportQueue.first()->cutOut(), frame , averagedImage) )
         {
             ret = QMessageBox::critical( this,
                                          tr( "MLV App - Export file error" ),
                                          tr( "Could not save: %1\nHow do you like to proceed?" ).arg( MlvFileName.data() ),
                                          tr( "Abort current export" ),
-                                         tr( "Abort batch export" ),
+                                         tr( "Abort batch expoaveragedImagert" ),
                                          0, 1 );
             if( ret )
             {
@@ -1503,6 +1506,7 @@ void MainWindow::startExportMlv(QString fileName)
         if( m_exportAbortPressed ) break;
     }
 
+    if( averagedImage ) free( averagedImage );
     fclose(mlvOut);
     //Enable GUI drawing
     m_dontDraw = false;

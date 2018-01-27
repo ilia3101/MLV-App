@@ -734,9 +734,9 @@ void dng_pack_image_bits(uint16_t * output_buffer, uint16_t * input_buffer, int 
         uint32_t data = ROL32((uint32_t)unpacked_bits[pixel_index], bits_to_rol);
         *(uint32_t *)packed_bits = (*(uint32_t *)packed_bits & 0x0000FFFF) | data;
 
-        if(bits_offset > 0 && bits_offset <= bpp && big_endian)
+        if(bits_offset > 0 && bits_offset <= bpp)
         {
-            *(uint16_t *)packed_bits = ROL16(*(uint16_t *)packed_bits, 8);
+            if(big_endian) *(uint16_t *)packed_bits = ROL16(*(uint16_t *)packed_bits, 8);
             packed_bits++;
         }
     }
