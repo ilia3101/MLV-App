@@ -1483,7 +1483,7 @@ void MainWindow::startExportMlv(QString fileName)
                                          tr( "MLV App - Export file error" ),
                                          tr( "Could not save: %1\nHow do you like to proceed?" ).arg( MlvFileName.data() ),
                                          tr( "Abort current export" ),
-                                         tr( "Abort batch expoaveragedImagert" ),
+                                         tr( "Abort batch export" ),
                                          0, 1 );
             if( ret )
             {
