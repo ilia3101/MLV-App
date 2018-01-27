@@ -1773,6 +1773,12 @@ QGroupBox::indicator:checked {
                        <verstretch>0</verstretch>
                       </sizepolicy>
                      </property>
+                     <property name="maximumSize">
+                      <size>
+                       <width>50</width>
+                       <height>16777215</height>
+                      </size>
+                     </property>
                      <property name="font">
                       <font>
                        <pointsize>10</pointsize>
@@ -1780,6 +1786,16 @@ QGroupBox::indicator:checked {
                      </property>
                      <property name="text">
                       <string>Select File...</string>
+                     </property>
+                     <property name="icon">
+                      <iconset resource="ressources.qrc">
+                       <normaloff>:/RetinaIMG/RetinaIMG/Folder-Open-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Folder-Open-icon.png</iconset>
+                     </property>
+                     <property name="iconSize">
+                      <size>
+                       <width>12</width>
+                       <height>12</height>
+                      </size>
                      </property>
                      <property name="checkable">
                       <bool>false</bool>
@@ -1838,7 +1854,29 @@ QGroupBox::indicator:checked {
                        </widget>
                       </item>
                       <item>
-                       <widget class="ColorToolButton" name="toolButtonDarkFrameSubstractionOn">
+                       <widget class="ColorToolButton" name="toolButtonDarkFrameSubstractionExt">
+                        <property name="enabled">
+                         <bool>false</bool>
+                        </property>
+                        <property name="sizePolicy">
+                         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                          <horstretch>0</horstretch>
+                          <verstretch>0</verstretch>
+                         </sizepolicy>
+                        </property>
+                        <property name="text">
+                         <string>Ext</string>
+                        </property>
+                        <property name="checkable">
+                         <bool>true</bool>
+                        </property>
+                        <property name="autoExclusive">
+                         <bool>true</bool>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="ColorToolButton" name="toolButtonDarkFrameSubstractionInt">
                         <property name="enabled">
                          <bool>false</bool>
                         </property>
@@ -1854,13 +1892,10 @@ QGroupBox::indicator:checked {
                          </font>
                         </property>
                         <property name="text">
-                         <string>On</string>
+                         <string>Int</string>
                         </property>
                         <property name="checkable">
                          <bool>true</bool>
-                        </property>
-                        <property name="checked">
-                         <bool>false</bool>
                         </property>
                         <property name="autoExclusive">
                          <bool>true</bool>
@@ -5244,7 +5279,7 @@ QGroupBox::indicator:checked {
    </hints>
   </connection>
   <connection>
-   <sender>toolButtonDarkFrameSubstractionOn</sender>
+   <sender>toolButtonDarkFrameSubstractionInt</sender>
    <signal>toggled(bool)</signal>
    <receiver>MainWindow</receiver>
    <slot>toolButtonDarkFrameSubstractionChanged()</slot>

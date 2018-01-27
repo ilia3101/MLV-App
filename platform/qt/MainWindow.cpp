@@ -2264,6 +2264,8 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     ui->spinBoxDeflickerTarget->setValue( receipt->deflickerTarget() );
     on_spinBoxDeflickerTarget_valueChanged( receipt->deflickerTarget() );
     ui->lineEditDarkFrameFile->setText( receipt->darkFrameFileName() );
+    //TODO: getMlvHasInternalDarkframe( m_pMlvObject ) needed!
+    //ui->toolButtonDarkFrameSubstractionInt->setEnabled( getMlvHasInternalDarkframe( m_pMlvObject ) );
     setToolButtonDarkFrameSubstraction( receipt->darkFrameEnabled() );
 
     ui->checkBoxFilterEnable->setChecked( receipt->filterEnabled() );
@@ -2844,6 +2846,10 @@ void MainWindow::setToolButtonDualIsoFullresBlending(int index)
 //Set Toolbuttons Darkframe Substraction On/Off
 void MainWindow::setToolButtonDarkFrameSubstraction(int index)
 {
+    //Switch Darkframe Substraction to OFF if internal was selected and no internal data is available
+    //TODO: getMlvHasInternalDarkframe( m_pMlvObject ) needed
+    if( !getMlvHasInternalDarkframe( m_pMlvObject ) && index == 2 ) index = 0;
+
     bool actualize = false;
     if( index == toolButtonDarkFrameSubstractionCurrentIndex() ) actualize = true;
 
@@ -2851,7 +2857,9 @@ void MainWindow::setToolButtonDarkFrameSubstraction(int index)
     {
     case 0: ui->toolButtonDarkFrameSubstractionOff->setChecked( true );
         break;
-    case 1: ui->toolButtonDarkFrameSubstractionOn->setChecked( true );
+    case 1: ui->toolButtonDarkFrameSubstractionExt->setChecked( true );
+        break;
+    case 2: ui->toolButtonDarkFrameSubstractionInt->setChecked( true );
         break;
     default: break;
     }
@@ -5000,12 +5008,12 @@ void MainWindow::on_lineEditDarkFrameFile_textChanged(const QString &arg1)
 {
     if( QFileInfo( arg1 ).exists() && arg1.endsWith( ".MLV", Qt::CaseInsensitive ) )
     {
-        ui->toolButtonDarkFrameSubstractionOn->setEnabled( true );
+        ui->toolButtonDarkFrameSubstractionExt->setEnabled( true );
         //TODO: Call here to llrawproc (FileName)
     }
     else
     {
-        ui->toolButtonDarkFrameSubstractionOn->setEnabled( false );
+        ui->toolButtonDarkFrameSubstractionExt->setEnabled( false );
         setToolButtonDarkFrameSubstraction( 0 );
         //TODO: Call here to llrawproc (OFF)
     }
