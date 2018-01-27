@@ -14,7 +14,7 @@
 char * filmprofile_fj = FILM_FJ;
 char * filmprofile_vis3 = FILM_VIS3;
 char * filmprofile_p400 = FILM_P400;
-char * filmprofile_cross1 = FILM_CROSS1;
+char * filmprofile_sepia = FILM_SEPIA;
 char * filmprofile_toyc = FILM_TOYC;
 
 /* Cuz there will be many */
@@ -65,10 +65,10 @@ filterObject_t * initFilterObject()
     filter->net_p400 = genann_read(p400_preset);
     close_filter(p400_preset);
 
-    /* Crossprocessing Paint.NET */
-    FILE * cross_paint_net = open_filter(filmprofile_cross1);
-    filter->net_cross1 = genann_read(cross_paint_net);
-    close_filter(cross_paint_net);
+    /* Sepia Tone */
+    FILE * sepia = open_filter(filmprofile_sepia);
+    filter->net_sepia = genann_read(sepia);
+    close_filter(sepia);
 
     /* Toy Camera */
     FILE * toy_cam = open_filter(filmprofile_toyc);
@@ -99,7 +99,7 @@ void applyFilterObject( filterObject_t * filter,
     else if (filter->filter_option == 2)
         net = genann_copy(filter->net_p400);
     else if (filter->filter_option == 3)
-        net = genann_copy(filter->net_cross1);
+        net = genann_copy(filter->net_sepia);
     else if (filter->filter_option == 4)
         net = genann_copy(filter->net_toyc);
 

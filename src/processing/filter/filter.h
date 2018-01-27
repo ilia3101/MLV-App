@@ -10,7 +10,7 @@ typedef struct {
     genann * net_fj;
     genann * net_vis3;
     genann * net_p400;
-    genann * net_cross1;
+    genann * net_sepia;
     genann * net_toyc;
     /* Strength lut */
     int32_t processed[65536];
@@ -30,7 +30,7 @@ void filterObjectSetFilterStrength(filterObject_t * filter, double strength);
 #define FILTER_FILM_FJ 0 /* Film "FJ" */
 #define FILTER_FILM_VIS3 1 /* Film "Vis3" */
 #define FILTER_FILM_P400 2 /* Film "P400" */
-#define FILTER_CROSS1 3 /*Cross Processing Paint.NET*/
+#define FILTER_SEPIA 3 /*Sepia Tone*/
 #define FILTER_TOYC 4 /*Toy Camera*/
 void filterObjectSetFilter(filterObject_t * filter, int filterID);
 

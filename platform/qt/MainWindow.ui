@@ -3293,7 +3293,7 @@ QGroupBox::indicator:checked {
                    </item>
                    <item>
                     <property name="text">
-                     <string>Cross Processing</string>
+                     <string>Sepia Tone</string>
                     </property>
                    </item>
                    <item>
