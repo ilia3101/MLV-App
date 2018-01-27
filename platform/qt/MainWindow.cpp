@@ -2020,6 +2020,16 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
             receipt->setDualIsoFrBlending( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
+        else if( Rxml->isStartElement() && Rxml->name() == "darkFrameFileName" )
+        {
+            receipt->setDarkFrameFileName( Rxml->readElementText() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == "darkFrameEnabled" )
+        {
+            receipt->setDarkFrameEnabled( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
         else if( Rxml->isStartElement() && Rxml->name() == "filterEnabled" )
         {
             receipt->setFilterEnabled( (bool)Rxml->readElementText().toInt() );
@@ -2094,6 +2104,8 @@ void MainWindow::writeXmlElementsToFile(QXmlStreamWriter *xmlWriter, ReceiptSett
     xmlWriter->writeTextElement( "dualIsoInterpolation",    QString( "%1" ).arg( receipt->dualIsoInterpolation() ) );
     xmlWriter->writeTextElement( "dualIsoAliasMap",         QString( "%1" ).arg( receipt->dualIsoAliasMap() ) );
     xmlWriter->writeTextElement( "dualIsoFrBlending",       QString( "%1" ).arg( receipt->dualIsoFrBlending() ) );
+    xmlWriter->writeTextElement( "darkFrameFileName",       QString( "%1" ).arg( receipt->darkFrameFileName() ) );
+    xmlWriter->writeTextElement( "darkFrameEnabled",        QString( "%1" ).arg( receipt->darkFrameEnabled() ) );
     xmlWriter->writeTextElement( "filterEnabled",           QString( "%1" ).arg( receipt->filterEnabled() ) );
     xmlWriter->writeTextElement( "filterIndex",             QString( "%1" ).arg( receipt->filterIndex() ) );
     xmlWriter->writeTextElement( "filterStrength",          QString( "%1" ).arg( receipt->filterStrength() ) );
@@ -2251,6 +2263,8 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     setToolButtonDualIsoFullresBlending( receipt->dualIsoFrBlending() );
     ui->spinBoxDeflickerTarget->setValue( receipt->deflickerTarget() );
     on_spinBoxDeflickerTarget_valueChanged( receipt->deflickerTarget() );
+    ui->lineEditDarkFrameFile->setText( receipt->darkFrameFileName() );
+    setToolButtonDarkFrameSubstraction( receipt->darkFrameEnabled() );
 
     ui->checkBoxFilterEnable->setChecked( receipt->filterEnabled() );
     on_checkBoxFilterEnable_clicked( receipt->filterEnabled() );
@@ -2319,6 +2333,8 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     receipt->setDualIsoInterpolation( toolButtonDualIsoInterpolationCurrentIndex() );
     receipt->setDualIsoAliasMap( toolButtonDualIsoAliasMapCurrentIndex() );
     receipt->setDualIsoFrBlending( toolButtonDualIsoFullresBlendingCurrentIndex() );
+    receipt->setDarkFrameFileName( ui->lineEditDarkFrameFile->text() );
+    receipt->setDarkFrameEnabled( toolButtonDarkFrameSubstractionCurrentIndex() );
 
     receipt->setFilterEnabled( ui->checkBoxFilterEnable->isChecked() );
     receipt->setFilterIndex( ui->comboBoxFilterName->currentIndex() );
@@ -2363,6 +2379,8 @@ void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings 
     receiptTarget->setDualIsoInterpolation( receiptSource->dualIsoInterpolation() );
     receiptTarget->setDualIsoAliasMap( receiptSource->dualIsoAliasMap() );
     receiptTarget->setDualIsoFrBlending( receiptSource->dualIsoFrBlending() );
+    receiptTarget->setDarkFrameFileName( receiptSource->darkFrameFileName() );
+    receiptTarget->setDarkFrameEnabled( receiptSource->darkFrameEnabled() );
 
     receiptTarget->setFilterEnabled( receiptSource->filterEnabled() );
     receiptTarget->setFilterIndex( receiptSource->filterIndex() );
@@ -2445,6 +2463,8 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     receipt->setDualIsoInterpolation( m_pSessionReceipts.at( row )->dualIsoInterpolation() );
     receipt->setDualIsoAliasMap( m_pSessionReceipts.at( row )->dualIsoAliasMap() );
     receipt->setDualIsoFrBlending( m_pSessionReceipts.at( row )->dualIsoFrBlending() );
+    receipt->setDarkFrameFileName( m_pSessionReceipts.at( row )->darkFrameFileName() );
+    receipt->setDarkFrameEnabled( m_pSessionReceipts.at( row )->darkFrameEnabled() );
 
     receipt->setFilterEnabled( m_pSessionReceipts.at( row )->filterEnabled() );
     receipt->setFilterIndex( m_pSessionReceipts.at( row )->filterIndex() );
