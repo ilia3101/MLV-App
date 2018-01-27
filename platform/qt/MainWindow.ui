@@ -469,87 +469,179 @@ QGroupBox::indicator:checked {
                   </widget>
                  </item>
                  <item>
-                  <widget class="QLabel" name="PatternNoiseLabel">
+                  <widget class="QLabel" name="labelDarkFrameSubstraction">
                    <property name="font">
                     <font>
                      <pointsize>10</pointsize>
                     </font>
                    </property>
                    <property name="text">
-                    <string>Pattern Noise</string>
+                    <string>Darkframe Substraction</string>
                    </property>
                   </widget>
                  </item>
                  <item>
-                  <widget class="QFrame" name="toolButtonPatternNoise">
-                   <layout class="QHBoxLayout" name="horizontalLayout_10">
-                    <property name="spacing">
-                     <number>0</number>
-                    </property>
-                    <property name="leftMargin">
-                     <number>0</number>
-                    </property>
-                    <property name="topMargin">
-                     <number>0</number>
-                    </property>
-                    <property name="rightMargin">
-                     <number>0</number>
-                    </property>
-                    <property name="bottomMargin">
-                     <number>0</number>
-                    </property>
-                    <item>
-                     <widget class="ColorToolButton" name="toolButtonPatternNoiseOff">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                        <horstretch>0</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
+                  <layout class="QHBoxLayout" name="horizontalLayout_24">
+                   <item>
+                    <widget class="ColorToolButton" name="toolButtonDarkFrameSubstractionFile">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="maximumSize">
+                      <size>
+                       <width>50</width>
+                       <height>16777215</height>
+                      </size>
+                     </property>
+                     <property name="font">
+                      <font>
+                       <pointsize>10</pointsize>
+                      </font>
+                     </property>
+                     <property name="text">
+                      <string>Select File...</string>
+                     </property>
+                     <property name="icon">
+                      <iconset resource="ressources.qrc">
+                       <normaloff>:/RetinaIMG/RetinaIMG/Folder-Open-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Folder-Open-icon.png</iconset>
+                     </property>
+                     <property name="iconSize">
+                      <size>
+                       <width>12</width>
+                       <height>12</height>
+                      </size>
+                     </property>
+                     <property name="checkable">
+                      <bool>false</bool>
+                     </property>
+                     <property name="checked">
+                      <bool>false</bool>
+                     </property>
+                     <property name="autoExclusive">
+                      <bool>false</bool>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QFrame" name="toolButtonDarkFrameSubstraction">
+                     <layout class="QHBoxLayout" name="horizontalLayout_23">
+                      <property name="spacing">
+                       <number>0</number>
                       </property>
-                      <property name="font">
-                       <font>
-                        <pointsize>10</pointsize>
-                       </font>
+                      <property name="leftMargin">
+                       <number>0</number>
                       </property>
-                      <property name="text">
-                       <string>Off</string>
+                      <property name="topMargin">
+                       <number>0</number>
                       </property>
-                      <property name="checkable">
-                       <bool>true</bool>
+                      <property name="rightMargin">
+                       <number>0</number>
                       </property>
-                      <property name="checked">
-                       <bool>true</bool>
+                      <property name="bottomMargin">
+                       <number>0</number>
                       </property>
-                      <property name="autoExclusive">
-                       <bool>true</bool>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="ColorToolButton" name="toolButtonPatternNoiseOn">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                        <horstretch>0</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                      <property name="font">
-                       <font>
-                        <pointsize>10</pointsize>
-                       </font>
-                      </property>
-                      <property name="text">
-                       <string>On</string>
-                      </property>
-                      <property name="checkable">
-                       <bool>true</bool>
-                      </property>
-                      <property name="autoExclusive">
-                       <bool>true</bool>
-                      </property>
-                     </widget>
-                    </item>
-                   </layout>
+                      <item>
+                       <widget class="ColorToolButton" name="toolButtonDarkFrameSubstractionOff">
+                        <property name="sizePolicy">
+                         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                          <horstretch>0</horstretch>
+                          <verstretch>0</verstretch>
+                         </sizepolicy>
+                        </property>
+                        <property name="font">
+                         <font>
+                          <pointsize>10</pointsize>
+                         </font>
+                        </property>
+                        <property name="text">
+                         <string>Off</string>
+                        </property>
+                        <property name="checkable">
+                         <bool>true</bool>
+                        </property>
+                        <property name="checked">
+                         <bool>true</bool>
+                        </property>
+                        <property name="autoExclusive">
+                         <bool>true</bool>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="ColorToolButton" name="toolButtonDarkFrameSubstractionExt">
+                        <property name="enabled">
+                         <bool>false</bool>
+                        </property>
+                        <property name="sizePolicy">
+                         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                          <horstretch>0</horstretch>
+                          <verstretch>0</verstretch>
+                         </sizepolicy>
+                        </property>
+                        <property name="font">
+                         <font>
+                          <pointsize>10</pointsize>
+                         </font>
+                        </property>
+                        <property name="text">
+                         <string>Ext</string>
+                        </property>
+                        <property name="checkable">
+                         <bool>true</bool>
+                        </property>
+                        <property name="autoExclusive">
+                         <bool>true</bool>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="ColorToolButton" name="toolButtonDarkFrameSubstractionInt">
+                        <property name="enabled">
+                         <bool>false</bool>
+                        </property>
+                        <property name="sizePolicy">
+                         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                          <horstretch>0</horstretch>
+                          <verstretch>0</verstretch>
+                         </sizepolicy>
+                        </property>
+                        <property name="font">
+                         <font>
+                          <pointsize>10</pointsize>
+                         </font>
+                        </property>
+                        <property name="text">
+                         <string>Int</string>
+                        </property>
+                        <property name="checkable">
+                         <bool>true</bool>
+                        </property>
+                        <property name="autoExclusive">
+                         <bool>true</bool>
+                        </property>
+                       </widget>
+                      </item>
+                     </layout>
+                    </widget>
+                   </item>
+                  </layout>
+                 </item>
+                 <item>
+                  <widget class="QLineEdit" name="lineEditDarkFrameFile">
+                   <property name="font">
+                    <font>
+                     <pointsize>10</pointsize>
+                    </font>
+                   </property>
+                   <property name="text">
+                    <string>No file selected</string>
+                   </property>
+                   <property name="readOnly">
+                    <bool>false</bool>
+                   </property>
                   </widget>
                  </item>
                  <item>
@@ -1752,179 +1844,87 @@ QGroupBox::indicator:checked {
                   </widget>
                  </item>
                  <item>
-                  <widget class="QLabel" name="labelDarkFrameSubstraction">
+                  <widget class="QLabel" name="PatternNoiseLabel">
                    <property name="font">
                     <font>
                      <pointsize>10</pointsize>
                     </font>
                    </property>
                    <property name="text">
-                    <string>Darkframe Substraction</string>
+                    <string>Pattern Noise</string>
                    </property>
                   </widget>
                  </item>
                  <item>
-                  <layout class="QHBoxLayout" name="horizontalLayout_24">
-                   <item>
-                    <widget class="ColorToolButton" name="toolButtonDarkFrameSubstractionFile">
-                     <property name="sizePolicy">
-                      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                       <horstretch>0</horstretch>
-                       <verstretch>0</verstretch>
-                      </sizepolicy>
-                     </property>
-                     <property name="maximumSize">
-                      <size>
-                       <width>50</width>
-                       <height>16777215</height>
-                      </size>
-                     </property>
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
-                     <property name="text">
-                      <string>Select File...</string>
-                     </property>
-                     <property name="icon">
-                      <iconset resource="ressources.qrc">
-                       <normaloff>:/RetinaIMG/RetinaIMG/Folder-Open-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Folder-Open-icon.png</iconset>
-                     </property>
-                     <property name="iconSize">
-                      <size>
-                       <width>12</width>
-                       <height>12</height>
-                      </size>
-                     </property>
-                     <property name="checkable">
-                      <bool>false</bool>
-                     </property>
-                     <property name="checked">
-                      <bool>false</bool>
-                     </property>
-                     <property name="autoExclusive">
-                      <bool>false</bool>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <widget class="QFrame" name="toolButtonDarkFrameSubstraction">
-                     <layout class="QHBoxLayout" name="horizontalLayout_23">
-                      <property name="spacing">
-                       <number>0</number>
+                  <widget class="QFrame" name="toolButtonPatternNoise">
+                   <layout class="QHBoxLayout" name="horizontalLayout_10">
+                    <property name="spacing">
+                     <number>0</number>
+                    </property>
+                    <property name="leftMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="topMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="rightMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="bottomMargin">
+                     <number>0</number>
+                    </property>
+                    <item>
+                     <widget class="ColorToolButton" name="toolButtonPatternNoiseOff">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
                       </property>
-                      <property name="leftMargin">
-                       <number>0</number>
+                      <property name="font">
+                       <font>
+                        <pointsize>10</pointsize>
+                       </font>
                       </property>
-                      <property name="topMargin">
-                       <number>0</number>
+                      <property name="text">
+                       <string>Off</string>
                       </property>
-                      <property name="rightMargin">
-                       <number>0</number>
+                      <property name="checkable">
+                       <bool>true</bool>
                       </property>
-                      <property name="bottomMargin">
-                       <number>0</number>
+                      <property name="checked">
+                       <bool>true</bool>
                       </property>
-                      <item>
-                       <widget class="ColorToolButton" name="toolButtonDarkFrameSubstractionOff">
-                        <property name="sizePolicy">
-                         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                          <horstretch>0</horstretch>
-                          <verstretch>0</verstretch>
-                         </sizepolicy>
-                        </property>
-                        <property name="font">
-                         <font>
-                          <pointsize>10</pointsize>
-                         </font>
-                        </property>
-                        <property name="text">
-                         <string>Off</string>
-                        </property>
-                        <property name="checkable">
-                         <bool>true</bool>
-                        </property>
-                        <property name="checked">
-                         <bool>true</bool>
-                        </property>
-                        <property name="autoExclusive">
-                         <bool>true</bool>
-                        </property>
-                       </widget>
-                      </item>
-                      <item>
-                       <widget class="ColorToolButton" name="toolButtonDarkFrameSubstractionExt">
-                        <property name="enabled">
-                         <bool>false</bool>
-                        </property>
-                        <property name="sizePolicy">
-                         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                          <horstretch>0</horstretch>
-                          <verstretch>0</verstretch>
-                         </sizepolicy>
-                        </property>
-                        <property name="font">
-                         <font>
-                          <pointsize>10</pointsize>
-                         </font>
-                        </property>
-                        <property name="text">
-                         <string>Ext</string>
-                        </property>
-                        <property name="checkable">
-                         <bool>true</bool>
-                        </property>
-                        <property name="autoExclusive">
-                         <bool>true</bool>
-                        </property>
-                       </widget>
-                      </item>
-                      <item>
-                       <widget class="ColorToolButton" name="toolButtonDarkFrameSubstractionInt">
-                        <property name="enabled">
-                         <bool>false</bool>
-                        </property>
-                        <property name="sizePolicy">
-                         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                          <horstretch>0</horstretch>
-                          <verstretch>0</verstretch>
-                         </sizepolicy>
-                        </property>
-                        <property name="font">
-                         <font>
-                          <pointsize>10</pointsize>
-                         </font>
-                        </property>
-                        <property name="text">
-                         <string>Int</string>
-                        </property>
-                        <property name="checkable">
-                         <bool>true</bool>
-                        </property>
-                        <property name="autoExclusive">
-                         <bool>true</bool>
-                        </property>
-                       </widget>
-                      </item>
-                     </layout>
-                    </widget>
-                   </item>
-                  </layout>
-                 </item>
-                 <item>
-                  <widget class="QLineEdit" name="lineEditDarkFrameFile">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-                   <property name="text">
-                    <string>No file selected</string>
-                   </property>
-                   <property name="readOnly">
-                    <bool>false</bool>
-                   </property>
+                      <property name="autoExclusive">
+                       <bool>true</bool>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="ColorToolButton" name="toolButtonPatternNoiseOn">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="font">
+                       <font>
+                        <pointsize>10</pointsize>
+                       </font>
+                      </property>
+                      <property name="text">
+                       <string>On</string>
+                      </property>
+                      <property name="checkable">
+                       <bool>true</bool>
+                      </property>
+                      <property name="autoExclusive">
+                       <bool>true</bool>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
                   </widget>
                  </item>
                 </layout>
