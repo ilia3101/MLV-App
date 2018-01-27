@@ -1864,6 +1864,11 @@ QGroupBox::indicator:checked {
                           <verstretch>0</verstretch>
                          </sizepolicy>
                         </property>
+                        <property name="font">
+                         <font>
+                          <pointsize>10</pointsize>
+                         </font>
+                        </property>
                         <property name="text">
                          <string>Ext</string>
                         </property>
