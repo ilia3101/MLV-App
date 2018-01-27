@@ -135,6 +135,7 @@ MainWindow::~MainWindow()
     delete m_pVectorScope;
     delete m_pWaveFormMonitor;
     delete m_pHistogram;
+    delete m_pGradientElement;
     delete m_pStatusDialog;
     delete m_pInfoDialog;
     delete ui;
