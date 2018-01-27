@@ -143,6 +143,7 @@ private slots:
     void toolButtonDualIsoInterpolationChanged( void );
     void toolButtonDualIsoAliasMapChanged( void );
     void toolButtonDualIsoFullresBlendingChanged( void );
+    void toolButtonDarkFrameSubstractionChanged( void );
     void on_actionNextFrame_triggered();
     void on_actionPreviousFrame_triggered();
     void on_checkBoxRawFixEnable_clicked(bool checked);
@@ -190,6 +191,9 @@ private slots:
     void on_actionTimecodePositionRight_triggered();
     void tcLabelDoubleClicked();
     void on_actionToggleTimecodeDisplay_triggered();
+
+    void on_toolButtonDarkFrameSubstractionFile_clicked();
+    void on_lineEditDarkFrameFile_textChanged(const QString &arg1);
 
 private:
     Ui::MainWindow *ui;
@@ -288,6 +292,7 @@ private:
     void setToolButtonDualIsoInterpolation( int index );
     void setToolButtonDualIsoAliasMap( int index );
     void setToolButtonDualIsoFullresBlending( int index );
+    void setToolButtonDarkFrameSubstraction( int index );
     int toolButtonFocusPixelsCurrentIndex( void );
     int toolButtonFocusPixelsIntMethodCurrentIndex( void );
     int toolButtonBadPixelsCurrentIndex( void );
@@ -300,6 +305,7 @@ private:
     int toolButtonDualIsoInterpolationCurrentIndex( void );
     int toolButtonDualIsoAliasMapCurrentIndex( void );
     int toolButtonDualIsoFullresBlendingCurrentIndex( void );
+    int toolButtonDarkFrameSubstractionCurrentIndex( void );
     void initCutInOut( int frames );
     double getHorizontalStretchFactor();
     double getVerticalStretchFactor();

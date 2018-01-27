@@ -2821,6 +2821,23 @@ void MainWindow::setToolButtonDualIsoFullresBlending(int index)
     if( actualize ) toolButtonDualIsoFullresBlendingChanged();
 }
 
+//Set Toolbuttons Darkframe Substraction On/Off
+void MainWindow::setToolButtonDarkFrameSubstraction(int index)
+{
+    bool actualize = false;
+    if( index == toolButtonDarkFrameSubstractionCurrentIndex() ) actualize = true;
+
+    switch( index )
+    {
+    case 0: ui->toolButtonDarkFrameSubstractionOff->setChecked( true );
+        break;
+    case 1: ui->toolButtonDarkFrameSubstractionOn->setChecked( true );
+        break;
+    default: break;
+    }
+    if( actualize ) toolButtonDarkFrameSubstractionChanged();
+}
+
 //Get toolbutton index of focus pixels
 int MainWindow::toolButtonFocusPixelsCurrentIndex()
 {
@@ -2908,6 +2925,13 @@ int MainWindow::toolButtonDualIsoAliasMapCurrentIndex()
 int MainWindow::toolButtonDualIsoFullresBlendingCurrentIndex()
 {
     if( ui->toolButtonDualIsoFullresBlendingOff->isChecked() ) return 0;
+    else return 1;
+}
+
+//Get toolbutton index of Darkframe Substraction On/Off
+int MainWindow::toolButtonDarkFrameSubstractionCurrentIndex()
+{
+    if( ui->toolButtonDarkFrameSubstractionOff->isChecked() ) return 0;
     else return 1;
 }
 
@@ -4171,6 +4195,15 @@ void MainWindow::toolButtonDualIsoFullresBlendingChanged( void )
     m_frameChanged = true;
 }
 
+//Darkframe Substraction On/Off changed
+void MainWindow::toolButtonDarkFrameSubstractionChanged( void )
+{
+    //TODO: call to llrawproc here
+    resetMlvCache( m_pMlvObject );
+    resetMlvCachedFrame( m_pMlvObject );
+    m_frameChanged = true;
+}
+
 //Goto next frame
 void MainWindow::on_actionNextFrame_triggered()
 {
@@ -4221,6 +4254,10 @@ void MainWindow::on_checkBoxRawFixEnable_clicked(bool checked)
     ui->spinBoxDeflickerTarget->setEnabled( checked );
     ui->toolButtonBadPixelsSearchMethodNormal->setEnabled( checked );
     ui->toolButtonBadPixelsSearchMethodAggressive->setEnabled( checked );
+    ui->labelDarkFrameSubstraction->setEnabled( checked );
+    ui->toolButtonDarkFrameSubstraction->setEnabled( checked );
+    ui->toolButtonDarkFrameSubstractionFile->setEnabled( checked );
+    ui->lineEditDarkFrameFile->setEnabled( checked );
 }
 
 //En-/disable all filter processing
@@ -4919,4 +4956,35 @@ void MainWindow::tcLabelDoubleClicked()
 void MainWindow::on_actionToggleTimecodeDisplay_triggered()
 {
     tcLabelDoubleClicked();
+}
+
+//Select Darkframe Substraction File
+void MainWindow::on_toolButtonDarkFrameSubstractionFile_clicked()
+{
+    QString path = QFileInfo( m_lastSaveFileName ).absolutePath();
+    if( !QDir( path ).exists() ) path = QDir::homePath();
+
+    //Open File Dialog
+    QString fileName = QFileDialog::getOpenFileName( this, tr("Open one or more MLV..."),
+                                                    path,
+                                                    tr("Magic Lantern Video (*.mlv *.MLV)") );
+
+    if( QFileInfo( fileName ).exists() && fileName.endsWith( ".MLV", Qt::CaseInsensitive ) )
+    {
+        ui->lineEditDarkFrameFile->setText( fileName );
+    }
+}
+
+void MainWindow::on_lineEditDarkFrameFile_textChanged(const QString &arg1)
+{
+    if( QFileInfo( arg1 ).exists() && arg1.endsWith( ".MLV", Qt::CaseInsensitive ) )
+    {
+        ui->toolButtonDarkFrameSubstractionOn->setEnabled( true );
+        //TODO: Call here to llrawproc
+    }
+    else
+    {
+        ui->toolButtonDarkFrameSubstractionOn->setEnabled( false );
+        setToolButtonDarkFrameSubstraction( 0 );
+    }
 }
