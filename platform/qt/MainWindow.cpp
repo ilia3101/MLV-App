@@ -2848,7 +2848,7 @@ void MainWindow::setToolButtonDarkFrameSubstraction(int index)
 {
     //Switch Darkframe Substraction to OFF if internal was selected and no internal data is available
     //TODO: getMlvHasInternalDarkframe( m_pMlvObject ) needed
-    if( !getMlvHasInternalDarkframe( m_pMlvObject ) && index == 2 ) index = 0;
+    //if( !getMlvHasInternalDarkframe( m_pMlvObject ) && index == 2 ) index = 0;
 
     bool actualize = false;
     if( index == toolButtonDarkFrameSubstractionCurrentIndex() ) actualize = true;

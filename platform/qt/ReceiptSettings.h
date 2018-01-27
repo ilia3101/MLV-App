@@ -128,7 +128,7 @@ private:
     int m_dualIsoInt;       // DualIsoInterpolation method, 0 - amaze-edge, 1 - mean23
     int m_dualIsoAliasMap;  // flag for Alias Map switchin on/off
     int m_dualIsoFrBlending;// flag for Fullres Blending switching on/off
-    int m_darkFrameSubstractionEnable; // 0 = off, 1 = on
+    int m_darkFrameSubstractionEnable; // 0 = off, 1 = External, 2 = Internal
     QString m_darkFrameSubstractionName; // FileName
     double m_stretchFactorX;
     double m_stretchFactorY;
