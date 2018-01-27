@@ -1100,7 +1100,7 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode)
             fread(&block_header, sizeof(mlv_hdr_t), 1, video->file[i]);
             if(block_header.blockSize < sizeof(mlv_hdr_t))
             {
-                DEBUG( printf("\nInvalid blockSize, file corrupted: %s\n", video->path); )
+                DEBUG( printf("\nInvalid blockSize '%u', corrupted file '%s'\n", block_header.blockSize, video->path); )
                 --video->filenum;
                 return MLV_ERR_INVALID;
             }
@@ -1284,7 +1284,9 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode)
             }
             else
             {
-                DEBUG( printf("\nInvalid blockType, file corrupted: %s, %s\n", video->path, block_header.blockType); )
+                char block_type[5] = { 0 };
+                memcpy(block_type, block_header.blockType, 4);
+                DEBUG( printf("\nUnknown blockType '%s' or corrupted file '%s'\n", block_type, video->path); )
                 --video->filenum;
                 return MLV_ERR_INVALID;
             }
