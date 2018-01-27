@@ -5294,6 +5294,22 @@ QGroupBox::indicator:checked {
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>toolButtonDarkFrameSubstractionExt</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>toolButtonDarkFrameSubstractionChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>1112</x>
+     <y>739</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>599</x>
+     <y>349</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>toolButtonFocusPixelsChanged()</slot>
