@@ -46,8 +46,8 @@ public:
     void setDualIsoInterpolation( int mode )  {m_dualIsoInt = mode;}
     void setDualIsoAliasMap( int on )         {m_dualIsoAliasMap = on;}
     void setDualIsoFrBlending( int on )       {m_dualIsoFrBlending = on;}
-    void setDarkFrameEnabled( int on )        {m_darkFrameSubstractionMode = on;}
-    void setDarkFrameFileName( QString name ) {m_darkFrameSubstractionName = name;}
+    void setDarkFrameEnabled( int on )        {m_darkFrameSubtractionMode = on;}
+    void setDarkFrameFileName( QString name ) {m_darkFrameSubtractionName = name;}
     void setStretchFactorX( double factor )   {m_stretchFactorX = factor;}
     void setStretchFactorY( double factor )   {m_stretchFactorY = factor;}
     void setFilterEnabled( bool on )          {m_filterEnabled = on;}
@@ -85,8 +85,8 @@ public:
     int dualIsoInterpolation( void ){return m_dualIsoInt;}
     int dualIsoAliasMap( void ){return m_dualIsoAliasMap;}
     int dualIsoFrBlending( void ){return m_dualIsoFrBlending;}
-    int darkFrameEnabled( void ) {return m_darkFrameSubstractionMode;}
-    QString darkFrameFileName( void ){return m_darkFrameSubstractionName;}
+    int darkFrameEnabled( void ) {return m_darkFrameSubtractionMode;}
+    QString darkFrameFileName( void ){return m_darkFrameSubtractionName;}
     double stretchFactorX( void ){return m_stretchFactorX;}
     double stretchFactorY( void ){return m_stretchFactorY;}
     bool filterEnabled( void ){return m_filterEnabled;}
@@ -128,8 +128,8 @@ private:
     int m_dualIsoInt;       // DualIsoInterpolation method, 0 - amaze-edge, 1 - mean23
     int m_dualIsoAliasMap;  // flag for Alias Map switchin on/off
     int m_dualIsoFrBlending;// flag for Fullres Blending switching on/off
-    int m_darkFrameSubstractionMode; // 0 = off, 1 = External, 2 = Internal
-    QString m_darkFrameSubstractionName; // FileName
+    int m_darkFrameSubtractionMode; // 0 = off, 1 = External, 2 = Internal
+    QString m_darkFrameSubtractionName; // FileName
     double m_stretchFactorX;
     double m_stretchFactorY;
     bool m_filterEnabled;

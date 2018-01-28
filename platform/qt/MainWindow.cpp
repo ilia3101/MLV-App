@@ -2265,22 +2265,22 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     on_spinBoxDeflickerTarget_valueChanged( receipt->deflickerTarget() );
     ui->lineEditDarkFrameFile->setText( receipt->darkFrameFileName() );
     //TODO: getMlvHasInternalDarkframe( m_pMlvObject ) needed!
-    //ui->toolButtonDarkFrameSubstractionInt->setEnabled( getMlvHasInternalDarkframe( m_pMlvObject ) );
+    //ui->toolButtonDarkFrameSubtractionInt->setEnabled( getMlvHasInternalDarkframe( m_pMlvObject ) );
     //Auto setup at first full import, else get from receipt
     if( receipt->darkFrameEnabled() == -1 )
     {
         /*if( getMlvHasInternalDarkframe( m_pMlvObject ) )
         {
-            setToolButtonDarkFrameSubstraction( 2 );
+            setToolButtonDarkFrameSubtraction( 2 );
         }
         else
         {*/
-            setToolButtonDarkFrameSubstraction( 0 );
+            setToolButtonDarkFrameSubtraction( 0 );
         //}
     }
     else
     {
-        setToolButtonDarkFrameSubstraction( receipt->darkFrameEnabled() );
+        setToolButtonDarkFrameSubtraction( receipt->darkFrameEnabled() );
     }
 
     ui->checkBoxFilterEnable->setChecked( receipt->filterEnabled() );
@@ -2351,7 +2351,7 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     receipt->setDualIsoAliasMap( toolButtonDualIsoAliasMapCurrentIndex() );
     receipt->setDualIsoFrBlending( toolButtonDualIsoFullresBlendingCurrentIndex() );
     receipt->setDarkFrameFileName( ui->lineEditDarkFrameFile->text() );
-    receipt->setDarkFrameEnabled( toolButtonDarkFrameSubstractionCurrentIndex() );
+    receipt->setDarkFrameEnabled( toolButtonDarkFrameSubtractionCurrentIndex() );
 
     receipt->setFilterEnabled( ui->checkBoxFilterEnable->isChecked() );
     receipt->setFilterIndex( ui->comboBoxFilterName->currentIndex() );
@@ -2858,27 +2858,27 @@ void MainWindow::setToolButtonDualIsoFullresBlending(int index)
     if( actualize ) toolButtonDualIsoFullresBlendingChanged();
 }
 
-//Set Toolbuttons Darkframe Substraction On/Off
-void MainWindow::setToolButtonDarkFrameSubstraction(int index)
+//Set Toolbuttons Darkframe Subtraction On/Off
+void MainWindow::setToolButtonDarkFrameSubtraction(int index)
 {
-    //Switch Darkframe Substraction to OFF if internal was selected and no internal data is available
+    //Switch Darkframe Subtraction to OFF if internal was selected and no internal data is available
     //TODO: getMlvHasInternalDarkframe( m_pMlvObject ) needed
     //if( !getMlvHasInternalDarkframe( m_pMlvObject ) && index == 2 ) index = 0;
 
     bool actualize = false;
-    if( index == toolButtonDarkFrameSubstractionCurrentIndex() ) actualize = true;
+    if( index == toolButtonDarkFrameSubtractionCurrentIndex() ) actualize = true;
 
     switch( index )
     {
-    case 0: ui->toolButtonDarkFrameSubstractionOff->setChecked( true );
+    case 0: ui->toolButtonDarkFrameSubtractionOff->setChecked( true );
         break;
-    case 1: ui->toolButtonDarkFrameSubstractionExt->setChecked( true );
+    case 1: ui->toolButtonDarkFrameSubtractionExt->setChecked( true );
         break;
-    case 2: ui->toolButtonDarkFrameSubstractionInt->setChecked( true );
+    case 2: ui->toolButtonDarkFrameSubtractionInt->setChecked( true );
         break;
     default: break;
     }
-    if( actualize ) toolButtonDarkFrameSubstractionChanged();
+    if( actualize ) toolButtonDarkFrameSubtractionChanged();
 }
 
 //Get toolbutton index of focus pixels
@@ -2971,10 +2971,10 @@ int MainWindow::toolButtonDualIsoFullresBlendingCurrentIndex()
     else return 1;
 }
 
-//Get toolbutton index of Darkframe Substraction On/Off
-int MainWindow::toolButtonDarkFrameSubstractionCurrentIndex()
+//Get toolbutton index of Darkframe Subtraction On/Off
+int MainWindow::toolButtonDarkFrameSubtractionCurrentIndex()
 {
-    if( ui->toolButtonDarkFrameSubstractionOff->isChecked() ) return 0;
+    if( ui->toolButtonDarkFrameSubtractionOff->isChecked() ) return 0;
     else return 1;
 }
 
@@ -4238,8 +4238,8 @@ void MainWindow::toolButtonDualIsoFullresBlendingChanged( void )
     m_frameChanged = true;
 }
 
-//Darkframe Substraction On/Off changed
-void MainWindow::toolButtonDarkFrameSubstractionChanged( void )
+//Darkframe Subtraction On/Off changed
+void MainWindow::toolButtonDarkFrameSubtractionChanged( void )
 {
     //TODO: call to llrawproc here
     resetMlvCache( m_pMlvObject );
@@ -4297,9 +4297,9 @@ void MainWindow::on_checkBoxRawFixEnable_clicked(bool checked)
     ui->spinBoxDeflickerTarget->setEnabled( checked );
     ui->toolButtonBadPixelsSearchMethodNormal->setEnabled( checked );
     ui->toolButtonBadPixelsSearchMethodAggressive->setEnabled( checked );
-    ui->labelDarkFrameSubstraction->setEnabled( checked );
-    ui->toolButtonDarkFrameSubstraction->setEnabled( checked );
-    ui->toolButtonDarkFrameSubstractionFile->setEnabled( checked );
+    ui->labelDarkFrameSubtraction->setEnabled( checked );
+    ui->toolButtonDarkFrameSubtraction->setEnabled( checked );
+    ui->toolButtonDarkFrameSubtractionFile->setEnabled( checked );
     ui->lineEditDarkFrameFile->setEnabled( checked );
 }
 
@@ -5001,8 +5001,8 @@ void MainWindow::on_actionToggleTimecodeDisplay_triggered()
     tcLabelDoubleClicked();
 }
 
-//Select Darkframe Substraction File
-void MainWindow::on_toolButtonDarkFrameSubstractionFile_clicked()
+//Select Darkframe Subtraction File
+void MainWindow::on_toolButtonDarkFrameSubtractionFile_clicked()
 {
     QString path = QFileInfo( m_lastSaveFileName ).absolutePath();
     if( !QDir( path ).exists() ) path = QDir::homePath();
@@ -5018,18 +5018,18 @@ void MainWindow::on_toolButtonDarkFrameSubstractionFile_clicked()
     }
 }
 
-//Darkframe Substraction Filename changed
+//Darkframe Subtraction Filename changed
 void MainWindow::on_lineEditDarkFrameFile_textChanged(const QString &arg1)
 {
     if( QFileInfo( arg1 ).exists() && arg1.endsWith( ".MLV", Qt::CaseInsensitive ) )
     {
-        ui->toolButtonDarkFrameSubstractionExt->setEnabled( true );
+        ui->toolButtonDarkFrameSubtractionExt->setEnabled( true );
         //TODO: Call here to llrawproc (FileName)
     }
     else
     {
-        ui->toolButtonDarkFrameSubstractionExt->setEnabled( false );
-        setToolButtonDarkFrameSubstraction( 0 );
+        ui->toolButtonDarkFrameSubtractionExt->setEnabled( false );
+        setToolButtonDarkFrameSubtraction( 0 );
         //TODO: Call here to llrawproc (OFF)
     }
 }

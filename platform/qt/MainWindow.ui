@@ -469,21 +469,21 @@ QGroupBox::indicator:checked {
                   </widget>
                  </item>
                  <item>
-                  <widget class="QLabel" name="labelDarkFrameSubstraction">
+                  <widget class="QLabel" name="labelDarkFrameSubtraction">
                    <property name="font">
                     <font>
                      <pointsize>10</pointsize>
                     </font>
                    </property>
                    <property name="text">
-                    <string>Darkframe Substraction</string>
+                    <string>Darkframe Subtraction</string>
                    </property>
                   </widget>
                  </item>
                  <item>
                   <layout class="QHBoxLayout" name="horizontalLayout_24">
                    <item>
-                    <widget class="ColorToolButton" name="toolButtonDarkFrameSubstractionFile">
+                    <widget class="ColorToolButton" name="toolButtonDarkFrameSubtractionFile">
                      <property name="sizePolicy">
                       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                        <horstretch>0</horstretch>
@@ -526,7 +526,7 @@ QGroupBox::indicator:checked {
                     </widget>
                    </item>
                    <item>
-                    <widget class="QFrame" name="toolButtonDarkFrameSubstraction">
+                    <widget class="QFrame" name="toolButtonDarkFrameSubtraction">
                      <layout class="QHBoxLayout" name="horizontalLayout_23">
                       <property name="spacing">
                        <number>0</number>
@@ -544,7 +544,7 @@ QGroupBox::indicator:checked {
                        <number>0</number>
                       </property>
                       <item>
-                       <widget class="ColorToolButton" name="toolButtonDarkFrameSubstractionOff">
+                       <widget class="ColorToolButton" name="toolButtonDarkFrameSubtractionOff">
                         <property name="sizePolicy">
                          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                           <horstretch>0</horstretch>
@@ -571,7 +571,7 @@ QGroupBox::indicator:checked {
                        </widget>
                       </item>
                       <item>
-                       <widget class="ColorToolButton" name="toolButtonDarkFrameSubstractionExt">
+                       <widget class="ColorToolButton" name="toolButtonDarkFrameSubtractionExt">
                         <property name="enabled">
                          <bool>false</bool>
                         </property>
@@ -598,7 +598,7 @@ QGroupBox::indicator:checked {
                        </widget>
                       </item>
                       <item>
-                       <widget class="ColorToolButton" name="toolButtonDarkFrameSubstractionInt">
+                       <widget class="ColorToolButton" name="toolButtonDarkFrameSubtractionInt">
                         <property name="enabled">
                          <bool>false</bool>
                         </property>
@@ -5271,10 +5271,10 @@ QGroupBox::indicator:checked {
    </hints>
   </connection>
   <connection>
-   <sender>toolButtonDarkFrameSubstractionOff</sender>
+   <sender>toolButtonDarkFrameSubtractionOff</sender>
    <signal>toggled(bool)</signal>
    <receiver>MainWindow</receiver>
-   <slot>toolButtonDarkFrameSubstractionChanged()</slot>
+   <slot>toolButtonDarkFrameSubtractionChanged()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>1107</x>
@@ -5287,10 +5287,10 @@ QGroupBox::indicator:checked {
    </hints>
   </connection>
   <connection>
-   <sender>toolButtonDarkFrameSubstractionInt</sender>
+   <sender>toolButtonDarkFrameSubtractionInt</sender>
    <signal>toggled(bool)</signal>
    <receiver>MainWindow</receiver>
-   <slot>toolButtonDarkFrameSubstractionChanged()</slot>
+   <slot>toolButtonDarkFrameSubtractionChanged()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>1146</x>
@@ -5303,10 +5303,10 @@ QGroupBox::indicator:checked {
    </hints>
   </connection>
   <connection>
-   <sender>toolButtonDarkFrameSubstractionExt</sender>
+   <sender>toolButtonDarkFrameSubtractionExt</sender>
    <signal>toggled(bool)</signal>
    <receiver>MainWindow</receiver>
-   <slot>toolButtonDarkFrameSubstractionChanged()</slot>
+   <slot>toolButtonDarkFrameSubtractionChanged()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>1112</x>
@@ -5332,6 +5332,6 @@ QGroupBox::indicator:checked {
   <slot>toolButtonDualIsoAliasMapChanged()</slot>
   <slot>toolButtonDualIsoFullresBlendingChanged()</slot>
   <slot>toolButtonBadPixelsSearchMethodChanged()</slot>
-  <slot>toolButtonDarkFrameSubstractionChanged()</slot>
+  <slot>toolButtonDarkFrameSubtractionChanged()</slot>
  </slots>
 </ui>
