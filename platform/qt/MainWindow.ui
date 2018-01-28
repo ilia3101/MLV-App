@@ -4253,6 +4253,9 @@ QGroupBox::indicator:checked {
    <property name="toolTip">
     <string>Reset Receipt</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+Alt+R</string>
+   </property>
   </action>
   <action name="actionNewSession">
    <property name="enabled">
