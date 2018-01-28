@@ -3759,8 +3759,8 @@ void MainWindow::deleteFileFromSession( void )
         //Open the nearest clip from last opened!
         if( m_lastActiveClipInSession >= ui->listWidgetSession->count() ) m_lastActiveClipInSession = ui->listWidgetSession->count() - 1;
         ui->listWidgetSession->setCurrentRow( m_lastActiveClipInSession );
-        setSliders( m_pSessionReceipts.at( m_lastActiveClipInSession ), false );
         openMlv( ui->listWidgetSession->item( m_lastActiveClipInSession )->toolTip() );
+        setSliders( m_pSessionReceipts.at( m_lastActiveClipInSession ), false );
 
         //Caching is in which state? Set it!
         if( ui->actionCaching->isChecked() ) on_actionCaching_triggered();
