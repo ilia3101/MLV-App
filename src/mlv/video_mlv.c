@@ -847,7 +847,7 @@ int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
     uint32_t pixel_count = video->RAWI.xRes * video->RAWI.yRes;
     uint32_t frame_size_packed = (uint32_t)(pixel_count * video->RAWI.raw_info.bits_per_pixel / 8);
     uint32_t frame_size_unpacked = pixel_count * 2;
-    uint32_t max_frame_number = frame_end - frame_start;
+    uint32_t max_frame_number = frame_end - frame_start + 1;
     int write_ok = (export_mode == 2) ? 0 : 1;
 
     /* read VIDF block header */
@@ -919,11 +919,11 @@ int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
             avg_buf[i] += frame_buf_unpacked[i];
         }
 
-        if(vidf_hdr.frameNumber == max_frame_number)
+        if(vidf_hdr.frameNumber == max_frame_number - 1)
         {
             for(uint32_t i = 0; i < pixel_count; i++)
             {
-                frame_buf_unpacked[i] = (avg_buf[i] + vidf_hdr.frameNumber / 2) / vidf_hdr.frameNumber;
+                frame_buf_unpacked[i] = (avg_buf[i] + max_frame_number / 2) / max_frame_number;
             }
             dng_pack_image_bits((uint16_t *)frame_buf, frame_buf_unpacked, video->RAWI.xRes, video->RAWI.yRes, video->RAWI.raw_info.bits_per_pixel, 0);
 
