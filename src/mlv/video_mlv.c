@@ -27,6 +27,7 @@
 #include "../dng/dng.h"
 
 #define MIN(a,b) (((a)<(b))?(a):(b))
+#define MAX(a,b) (((a)>(b))?(a):(b))
 #define ROR32(v,a) ((v) >> (a) | (v) << (32-(a)))
 
 static uint64_t file_set_pos(FILE *stream, uint64_t offset, int whence)
@@ -840,21 +841,22 @@ int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
 {
     mlv_vidf_hdr_t vidf_hdr = { 0 };
 
-    int chunk = video->video_index[frame_index].chunk_num;
-    uint32_t frame_size = video->video_index[frame_index].frame_size;
-    uint64_t frame_offset = video->video_index[frame_index].frame_offset;
-    uint64_t block_offset = video->video_index[frame_index].block_offset;
+    int write_ok = (export_mode == 2) ? 0 : 1;
     uint32_t pixel_count = video->RAWI.xRes * video->RAWI.yRes;
     uint32_t frame_size_packed = (uint32_t)(pixel_count * video->RAWI.raw_info.bits_per_pixel / 8);
     uint32_t frame_size_unpacked = pixel_count * 2;
     uint32_t max_frame_number = frame_end - frame_start + 1;
-    int write_ok = (export_mode == 2) ? 0 : 1;
+
+    int chunk = video->video_index[frame_index].chunk_num;
+    uint32_t frame_size = video->video_index[frame_index].frame_size;
+    uint64_t frame_offset = video->video_index[frame_index].frame_offset;
+    uint64_t block_offset = video->video_index[frame_index].block_offset;
 
     /* read VIDF block header */
     file_set_pos(video->file[chunk], block_offset, SEEK_SET);
     if(fread(&vidf_hdr, sizeof(mlv_vidf_hdr_t), 1, video->file[chunk]) != 1)
     {
-        DEBUG( printf("\nCould not read from MLV file\n"); )
+        DEBUG( printf("\nCould not read VIDF block header from MLV file\n"); )
         return 1;
     }
 
@@ -862,15 +864,15 @@ int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
     vidf_hdr.frameNumber = (frame_index + 1) - frame_start;
     vidf_hdr.frameSpace = 0;
 
-    /* allocate memory for VIDF block buffer, max possible size for this bit depth */
-    uint8_t * block_buf = calloc(sizeof(mlv_vidf_hdr_t) + frame_size_packed, 1);
+    /* for safety allocate max possible size buffer for VIDF block, calculated for 16bits per pixel */
+    uint8_t * block_buf = calloc(sizeof(mlv_vidf_hdr_t) + frame_size_unpacked, 1);
     if(!block_buf)
     {
         DEBUG( printf("\nCould not allocate memory for VIDF block\n"); )
         return 1;
     }
-    /* allocate frame buffer, max possible size for this bit depth*/
-    uint8_t * frame_buf = calloc(frame_size_packed + 4, 1);
+    /* for safety allocate max possible size buffer for image data, calculated for 16bits per pixel */
+    uint8_t * frame_buf = calloc(frame_size_unpacked, 1);
     if(!frame_buf)
     {
         DEBUG( printf("\nCould not allocate memory for VIDF frame\n"); )
@@ -882,7 +884,7 @@ int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
     file_set_pos(video->file[chunk], frame_offset, SEEK_SET);
     if(fread(frame_buf, frame_size, 1, video->file[chunk]) != 1)
     {
-        DEBUG( printf("\nCould not read from MLV file\n"); )
+        DEBUG( printf("\nCould not read VIDF block image data from MLV file\n"); )
         free(frame_buf);
         free(block_buf);
         return 1;
@@ -1018,7 +1020,7 @@ int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
         /* write AUDF block header */
         if(fwrite(&audf_hdr, sizeof(mlv_audf_hdr_t), 1, output_mlv) != 1)
         {
-            DEBUG( printf("\nCould not write AUDF header\n"); )
+            DEBUG( printf("\nCould not write AUDF block header\n"); )
             free(mlv_audio_data);
             free(frame_buf);
             free(block_buf);
@@ -1027,7 +1029,7 @@ int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
         /* write audio data */
         if(fwrite((uint8_t *)mlv_audio_data + audio_start_offset, cut_audio_size, 1, output_mlv) != 1)
         {
-            DEBUG( printf("\nCould not write audio data\n"); )
+            DEBUG( printf("\nCould not write AUDF block audio data\n"); )
             free(mlv_audio_data);
             free(frame_buf);
             free(block_buf);
