@@ -1574,7 +1574,7 @@ QGroupBox::indicator:checked {
                          <bool>true</bool>
                         </property>
                         <property name="checked">
-                         <bool>false</bool>
+                         <bool>true</bool>
                         </property>
                         <property name="autoExclusive">
                          <bool>true</bool>
@@ -1598,9 +1598,6 @@ QGroupBox::indicator:checked {
                          <string>Mean</string>
                         </property>
                         <property name="checkable">
-                         <bool>true</bool>
-                        </property>
-                        <property name="checked">
                          <bool>true</bool>
                         </property>
                         <property name="autoExclusive">
