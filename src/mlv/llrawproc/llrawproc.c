@@ -33,10 +33,14 @@
 
 #include "../mlv_object.h"
 
+#define MIN(a,b) (((a)<(b))?(a):(b))
+#define MAX(a,b) (((a)>(b))?(a):(b))
+#define COERCE(x,lo,hi) MAX(MIN((x),(hi)),(lo))
+
 static void deflicker(mlvObject_t * video, uint16_t * raw_image_buff, size_t raw_image_size)
 {
     uint16_t black = video->RAWI.raw_info.black_level;
-    uint16_t white = (1 << video->RAWI.raw_info.bits_per_pixel) + 1;
+    uint16_t white = (1 << video->RAWI.raw_info.bits_per_pixel) - 1;
 
     struct histogram * hist = hist_create(white);
     hist_add(hist, raw_image_buff + 1, (uint32_t)((raw_image_size - 1) / 2), 1);
@@ -44,6 +48,32 @@ static void deflicker(mlvObject_t * video, uint16_t * raw_image_buff, size_t raw
     double correction = log2((double) (video->llrawproc->deflicker_target - black) / (median - black));
     video->RAWI.raw_info.exposure_bias[0] = correction * 10000;
     video->RAWI.raw_info.exposure_bias[1] = 10000;
+}
+
+static void subtract_darkframe(mlvObject_t * video, uint16_t * raw_image_buff, size_t raw_image_size)
+{
+    if( !video->llrawproc->dark_frame_data || (raw_image_size != video->llrawproc->dark_frame_size) )
+    {
+#ifndef STDOUT_SILENT
+        printf("Subtracting dark frame is impossible, invalid dark frame'\n\n");
+#endif
+        return;
+    }
+#ifndef STDOUT_SILENT
+    printf("Subtracting dark frame...'\n\n");
+#endif
+    uint16_t * dark_frame_data = video->llrawproc->dark_frame_data;
+    uint32_t black_level = video->RAWI.raw_info.black_level;
+    uint16_t white_level = (1 << video->RAWI.raw_info.bits_per_pixel) - 1;
+
+    uint32_t pixel_count = raw_image_size / 2;
+    for(uint32_t i = 0; i < pixel_count; i++)
+    {
+        int32_t orig_val = raw_image_buff[i];
+        int32_t dark_val = dark_frame_data[i];
+
+        raw_image_buff[i] = COERCE( orig_val - dark_val + black_level, 0, white_level );
+    }
 }
 
 /* initialise low level raw processing struct */
@@ -67,11 +97,12 @@ llrawprocObject_t * initLLRawProcObject()
     llrawproc->first_time = 1;
     llrawproc->dual_iso = 0;
     llrawproc->is_dual_iso = 0;
-    llrawproc->diso_averaging = 1;
+    llrawproc->diso_averaging = 0;
     llrawproc->diso_alias_map = 1;
     llrawproc->diso_frblending = 1;
+    llrawproc->dark_frame = 0;
 
-    llrawproc->dark_frame = NULL;
+    llrawproc->dark_frame_data = NULL;
     llrawproc->dark_frame_size = 0;
 
     llrawproc->raw2ev = NULL;
@@ -87,7 +118,7 @@ llrawprocObject_t * initLLRawProcObject()
 
 void freeLLRawProcObject(llrawprocObject_t * llrawproc)
 {
-    if(llrawproc->dark_frame) free(llrawproc->dark_frame);
+    if(llrawproc->dark_frame_data) free(llrawproc->dark_frame_data);
     free_luts(llrawproc->raw2ev, llrawproc->ev2raw);
     free_pixel_maps(&(llrawproc->focus_pixel_map), &(llrawproc->bad_pixel_map));
     free(llrawproc);
@@ -123,6 +154,12 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
         printf("Per-frame exposure compensation: 'ON'\nDeflicker target: '%d'\n\n", video->llrawproc->deflicker_target);
 #endif
         deflicker(video, raw_image_buff, raw_image_size);
+    }
+
+    /* subtruct dark frame */
+    if (video->llrawproc->dark_frame)
+    {
+        subtract_darkframe(video, raw_image_buff, raw_image_size);
     }
 
     /* fix pattern noise */
@@ -445,4 +482,14 @@ void llrpResetFpmStatus(mlvObject_t * video)
 void llrpResetBpmStatus(mlvObject_t * video)
 {
     reset_bpm_status(&(video->llrawproc->bad_pixel_map), &(video->llrawproc->bpm_status));
+}
+
+int llrpGetDarkFrameMode(mlvObject_t * video)
+{
+    return video->llrawproc->dark_frame;
+}
+
+void llrpSetDarkFrameMode(mlvObject_t * video, int value)
+{
+    video->llrawproc->dark_frame = value;
 }

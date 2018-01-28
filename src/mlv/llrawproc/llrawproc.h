@@ -34,7 +34,7 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
    Return value 0 = off, 1 = On, 2 = CropRec */
 int llrpDetectFocusDotFixMode(mlvObject_t * video);
 
-/* LLRawProcObject variable handling */
+/* LLRawProcObject all member variable handling functions */
 enum { FR_OFF, FR_ON };
 int llrpGetFixRawMode(mlvObject_t * video);
 void llrpSetFixRawMode(mlvObject_t * video, int value);
@@ -88,6 +88,10 @@ void llrpSetDualIsoAliasMapMode(mlvObject_t * video, int value);
 
 int llrpGetDualIsoFullResBlendingMode(mlvObject_t * video);
 void llrpSetDualIsoFullResBlendingMode(mlvObject_t * video, int value);
+
+enum { DARK_OFF, DARK_EXT, DARK_INT };
+int llrpGetDarkFrameMode(mlvObject_t * video);
+void llrpSetDarkFrameMode(mlvObject_t * video, int value);
 
 int llrpIsDualIso(mlvObject_t * video);
 int llrpHQDualIso(mlvObject_t * video);

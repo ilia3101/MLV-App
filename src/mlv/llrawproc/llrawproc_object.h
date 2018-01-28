@@ -49,9 +49,10 @@ typedef struct
     int diso_averaging;   // dual iso interpolation method, 0 - amaze-edge, 1 - mean23
     int diso_alias_map;   // flag for Alias Map switchin on/off
     int diso_frblending;  // flag for Fullres Blending switching on/off
+    int dark_frame;       // flag for Dark Frame subtraction off/ext/int
 
     /* dark frame buffer pointer and its size */
-    uint16_t * dark_frame;
+    uint16_t * dark_frame_data;
     uint32_t dark_frame_size;
 
     /* LUTs */
