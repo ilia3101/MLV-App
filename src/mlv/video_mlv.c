@@ -1324,6 +1324,13 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode)
             block_num++;
         }
     }
+    /* Return with error if no video frames found */
+    if(!video_frames)
+    {
+        DEBUG( printf("\nNo video frames found in '%s'\n", video->path); )
+        --video->filenum;
+        return MLV_ERR_INVALID;
+    }
 
     /* Sort video and audio frames by time stamp */
     if(video_frames) frame_index_sort(video->video_index, video_frames);
