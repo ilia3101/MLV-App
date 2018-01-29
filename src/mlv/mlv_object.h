@@ -65,10 +65,14 @@ typedef struct {
     mlv_diso_hdr_t    DISO;
     mlv_info_hdr_t    INFO;
     mlv_styl_hdr_t    STYL;
+    mlv_dark_hdr_t    DARK;
     mlv_vidf_hdr_t    VIDF; /* One of many VIDFs(don't know if they're different) */
     mlv_audf_hdr_t    AUDF; /* Last AUDF header read */
 
     char INFO_STRING[256]; /* String stored in INFO block */
+
+    /* Dark frame info */
+    uint64_t dark_frame_offset;
 
     /* Video info */
     double      real_frame_rate; /* ...Because framerate is not explicitly stored in the file */
