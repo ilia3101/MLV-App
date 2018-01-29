@@ -4242,6 +4242,17 @@ void MainWindow::toolButtonDualIsoFullresBlendingChanged( void )
 void MainWindow::toolButtonDarkFrameSubtractionChanged( void )
 {
     //TODO: call to llrawproc here
+    //Blocking filename while active
+    if( toolButtonDarkFrameSubtractionCurrentIndex() == 1 )
+    {
+        ui->lineEditDarkFrameFile->setEnabled( false );
+        ui->toolButtonDarkFrameSubtractionFile->setEnabled( false );
+    }
+    else
+    {
+        ui->lineEditDarkFrameFile->setEnabled( true );
+        ui->toolButtonDarkFrameSubtractionFile->setEnabled( true );
+    }
     resetMlvCache( m_pMlvObject );
     resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
