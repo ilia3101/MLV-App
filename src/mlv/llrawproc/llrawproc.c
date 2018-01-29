@@ -102,6 +102,7 @@ llrawprocObject_t * initLLRawProcObject()
     llrawproc->diso_frblending = 1;
     llrawproc->dark_frame = 0;
 
+    llrawproc->dark_frame_filename = NULL;
     llrawproc->dark_frame_data = NULL;
     llrawproc->dark_frame_size = 0;
 
@@ -118,6 +119,7 @@ llrawprocObject_t * initLLRawProcObject()
 
 void freeLLRawProcObject(llrawprocObject_t * llrawproc)
 {
+    if(llrawproc->dark_frame_filename) free(llrawproc->dark_frame_filename);
     if(llrawproc->dark_frame_data) free(llrawproc->dark_frame_data);
     free_luts(llrawproc->raw2ev, llrawproc->ev2raw);
     free_pixel_maps(&(llrawproc->focus_pixel_map), &(llrawproc->bad_pixel_map));
@@ -492,4 +494,60 @@ int llrpGetDarkFrameMode(mlvObject_t * video)
 void llrpSetDarkFrameMode(mlvObject_t * video, int value)
 {
     video->llrawproc->dark_frame = value;
+}
+
+int llrpGetDarkFrameExtStatus(mlvObject_t * video)
+{
+    if(video->llrawproc->dark_frame_filename) return 1;
+    return 0;
+}
+
+int llrpGetDarkFrameIntStatus(mlvObject_t * video)
+{
+    if(video->DARK.blockType[0]) return 1;
+    return 0;
+}
+
+void llrpInitDarkFrameExtFileName(mlvObject_t * video, char * df_filename)
+{
+    size_t df_filename_size = strlen(df_filename);
+    video->llrawproc->dark_frame_filename = calloc(df_filename_size + 1, 1);
+    memcpy(video->llrawproc->dark_frame_filename, df_filename, df_filename_size);
+}
+
+void llrpFreeDarkFrameExtFileName(mlvObject_t * video)
+{
+    if(video->llrawproc->dark_frame_filename) free(video->llrawproc->dark_frame_filename);
+    video->llrawproc->dark_frame_filename = NULL;
+}
+
+int llrpInitDarkFrame(mlvObject_t * video, int df_mode)
+{
+    switch(df_mode)
+    {
+        case DF_EXT:
+            if(video->llrawproc->dark_frame_filename)
+            {
+                return loadDarkFrame(video);
+            }
+            break;
+
+        case DF_INT:
+            break;
+
+        default:
+            break;
+    }
+
+    return 0;
+}
+
+void llrpFreeDarkFrame(mlvObject_t * video)
+{
+    if(video->llrawproc->dark_frame_data)
+    {
+        free(video->llrawproc->dark_frame_data);
+        video->llrawproc->dark_frame_data = NULL;
+        video->llrawproc->dark_frame_size = 0;
+    }
 }

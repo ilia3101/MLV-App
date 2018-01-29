@@ -654,12 +654,14 @@ static int load_mapp(mlvObject_t * video)
         if(!video->video_index)
         {
             DEBUG( printf("Malloc error: video index\n"); )
-            goto mapp_error;        }
+            goto mapp_error;
+        }
 
         if ( fread(video->video_index, video_index_size, 1, mappf) != 1 )
         {
             DEBUG( printf("Could not read: %s\n", video->path); )
-            goto mapp_error;        }
+            goto mapp_error;
+        }
     }
 
     /* Read audio index */
@@ -1377,6 +1379,28 @@ short_cut:
         {
             add_mlv_cache_thread(video);
         }
+    }
+
+    return MLV_ERR_NONE;
+}
+
+int loadDarkFrame(mlvObject_t * video)
+{
+    mlvObject_t df_mlv = { 0 };
+    int ret = openMlvClip(&df_mlv, video->llrawproc->dark_frame_filename, 2);
+    if(ret != MLV_ERR_NONE)
+    {
+        DEBUG( printf("Invalid file: %s\n", video->llrawproc->dark_frame_filename); )
+        return ret;
+    }
+    video->llrawproc->dark_frame_size = df_mlv.video_index->frame_size;
+    llrpFreeDarkFrame(video);
+    video->llrawproc->dark_frame_data = calloc(video->llrawproc->dark_frame_size, 1);
+    file_set_pos(df_mlv.file[0], df_mlv.video_index->frame_offset, SEEK_SET);
+    if ( fread(video->llrawproc->dark_frame_data, video->llrawproc->dark_frame_size, 1, df_mlv.file[0]) != 1 )
+    {
+        DEBUG( printf("Could not read frame: %s\n", video->llrawproc->dark_frame_filename); )
+        return 1;
     }
 
     return MLV_ERR_NONE;

@@ -5024,12 +5024,12 @@ void MainWindow::on_lineEditDarkFrameFile_textChanged(const QString &arg1)
     if( QFileInfo( arg1 ).exists() && arg1.endsWith( ".MLV", Qt::CaseInsensitive ) )
     {
         ui->toolButtonDarkFrameSubtractionExt->setEnabled( true );
-        //TODO: Call here to llrawproc (FileName)
+        //llrpInitDarkFrameExtFileName(m_pMlvObject, arg1....)
     }
     else
     {
         ui->toolButtonDarkFrameSubtractionExt->setEnabled( false );
         setToolButtonDarkFrameSubtraction( 0 );
-        //TODO: Call here to llrawproc (OFF)
+        //llrpFreeDarkFrameExtFileName(m_pMlvObject);
     }
 }

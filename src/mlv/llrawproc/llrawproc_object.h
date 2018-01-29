@@ -25,6 +25,7 @@
 #include <sys/types.h>
 #include "pixelproc.h"
 #include "stripes.h"
+#include "../mlv.h"
 
 /* Low level raw processing object */
 typedef struct
@@ -49,9 +50,13 @@ typedef struct
     int diso_averaging;   // dual iso interpolation method, 0 - amaze-edge, 1 - mean23
     int diso_alias_map;   // flag for Alias Map switchin on/off
     int diso_frblending;  // flag for Fullres Blending switching on/off
-    int dark_frame;       // flag for Dark Frame subtraction off/ext/int
+    int dark_frame;       // flag for Dark Frame subtraction mode 0 = off, 1 = ext, 2 = int
 
-    /* dark frame buffer pointer and its size */
+    /* external dark frame file name */
+    char * dark_frame_filename;
+    /* external dark frame block header */
+    mlv_dark_hdr_t dark_frame_hdr;
+    /* external dark frame buffer pointer and its size */
     uint16_t * dark_frame_data;
     uint32_t dark_frame_size;
 

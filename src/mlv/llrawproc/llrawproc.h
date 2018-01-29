@@ -75,6 +75,7 @@ void llrpSetPatternNoiseMode(mlvObject_t * video, int value);
 int llrpGetDeflickerTarget(mlvObject_t * video);
 void llrpSetDeflickerTarget(mlvObject_t * video, int value);
 
+/* dual iso stuff */
 enum { DISO_OFF, DISO_20BIT, DISO_FAST };
 int llrpGetDualIsoMode(mlvObject_t * video);
 void llrpSetDualIsoMode(mlvObject_t * video, int value);
@@ -89,15 +90,28 @@ void llrpSetDualIsoAliasMapMode(mlvObject_t * video, int value);
 int llrpGetDualIsoFullResBlendingMode(mlvObject_t * video);
 void llrpSetDualIsoFullResBlendingMode(mlvObject_t * video, int value);
 
-enum { DARK_OFF, DARK_EXT, DARK_INT };
-int llrpGetDarkFrameMode(mlvObject_t * video);
-void llrpSetDarkFrameMode(mlvObject_t * video, int value);
-
 int llrpIsDualIso(mlvObject_t * video);
 int llrpHQDualIso(mlvObject_t * video);
 
 /* reset focus/bad pixel map status */
 void llrpResetFpmStatus(mlvObject_t * video);
 void llrpResetBpmStatus(mlvObject_t * video);
+
+/* dark frame stuff */
+enum { DF_OFF, DF_EXT, DF_INT };
+int llrpGetDarkFrameMode(mlvObject_t * video);
+void llrpSetDarkFrameMode(mlvObject_t * video, int value);
+
+int llrpGetDarkFrameExtStatus(mlvObject_t * video);
+int llrpGetDarkFrameIntStatus(mlvObject_t * video);
+
+void llrpInitDarkFrameExtFileName(mlvObject_t * video, char * df_filename);
+void llrpFreeDarkFrameExtFileName(mlvObject_t * video);
+
+int llrpInitDarkFrame(mlvObject_t * video, int df_mode);
+void llrpFreeDarkFrame(mlvObject_t * video);
+
+/* extern function from video_mlv.c */
+int loadDarkFrame(mlvObject_t * video);
 
 #endif
