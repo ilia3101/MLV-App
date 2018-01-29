@@ -283,6 +283,31 @@ typedef struct {
 */
 }  mlv_vers_hdr_t;
 
+typedef struct {
+    uint8_t     blockType[4];       /* DARK - contains essential settings' been active while recording and actual averaged frame data */
+    uint32_t    blockSize;          /* total block size */
+    uint64_t    timestamp;          /* for this block it is always max value of uint64_t */
+    uint32_t    samplesAveraged;    /* amount of samples (frames) have been averaged */
+    uint32_t    cameraModel;        /* PROP (0x00000002), offset 32, length 4 */
+    uint16_t    xRes;               /* dark frame width */
+    uint16_t    yRes;               /* dark frame height */
+    uint32_t    bits_per_pixel;     /* bits per pixel */
+    uint32_t    black_level;        /* autodetected */
+    uint32_t    white_level;        /* somewhere around 13000 - 16000, varies with camera, settings etc */
+    uint32_t    sourceFpsNom;       /* configured fps in 1/s multiplied by sourceFpsDenom */
+    uint32_t    sourceFpsDenom;     /* denominator for fps. usually set to 1000, but may be 1001 for NTSC */
+    uint32_t    isoMode;            /* 0=manual, 1=auto */
+    uint32_t    isoValue;           /* camera delivered ISO value */
+    uint32_t    isoAnalog;          /* ISO obtained by hardware amplification (most full-stop ISOs, except extreme values) */
+    uint32_t    digitalGain;        /* digital ISO gain (1024 = 1 EV) - it's not baked in the raw data, so you may want to scale it or adjust the white level */
+    uint64_t    shutterValue;       /* exposure time in microseconds */
+    uint8_t     binning_x;          /* 3 (1080p and 720p); 1 (crop, zoom) */
+    uint8_t     skipping_x;         /* so far, 0 everywhere */
+    uint8_t     binning_y;          /* 1 (most cameras in 1080/720p; also all crop modes); 3 (5D3 1080p); 5 (5D3 720p) */
+    uint8_t     skipping_y;         /* 2 (most cameras in 1080p); 4 (most cameras in 720p); 0 (5D3) */
+    /* uint8_t     frameData[variable]; */
+}  mlv_dark_hdr_t;
+
 #pragma pack(pop)
 
 #endif
