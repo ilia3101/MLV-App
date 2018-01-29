@@ -291,6 +291,8 @@ typedef struct {
     uint32_t    cameraModel;        /* PROP (0x00000002), offset 32, length 4 */
     uint16_t    xRes;               /* dark frame width */
     uint16_t    yRes;               /* dark frame height */
+    uint32_t    rawWidth;           /* raw buffer width */
+    uint32_t    rawHeight;          /* raw buffer height */
     uint32_t    bits_per_pixel;     /* bits per pixel */
     uint32_t    black_level;        /* autodetected */
     uint32_t    white_level;        /* somewhere around 13000 - 16000, varies with camera, settings etc */
