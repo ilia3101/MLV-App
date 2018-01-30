@@ -111,7 +111,8 @@ void llrpFreeDarkFrameExtFileName(mlvObject_t * video);
 int llrpInitDarkFrame(mlvObject_t * video, int df_mode);
 void llrpFreeDarkFrame(mlvObject_t * video);
 
-/* extern function from video_mlv.c */
-int loadDarkFrame(mlvObject_t * video);
+/* extern functions from video_mlv.c */
+int loadDarkFrameExt(mlvObject_t * video);
+int loadDarkFrameInt(mlvObject_t * video);
 
 #endif

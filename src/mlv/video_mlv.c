@@ -1384,7 +1384,7 @@ short_cut:
     return MLV_ERR_NONE;
 }
 
-int loadDarkFrame(mlvObject_t * video)
+int loadDarkFrameExt(mlvObject_t * video)
 {
     mlvObject_t df_mlv = { 0 };
     int ret = openMlvClip(&df_mlv, video->llrawproc->dark_frame_filename, 2);

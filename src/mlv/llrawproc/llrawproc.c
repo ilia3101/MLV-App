@@ -527,20 +527,15 @@ int llrpInitDarkFrame(mlvObject_t * video, int df_mode)
     switch(df_mode)
     {
         case DF_EXT:
-            if(video->llrawproc->dark_frame_filename)
-            {
-                return loadDarkFrame(video);
-            }
+            if(llrpGetDarkFrameExtStatus(video)) return loadDarkFrameExt(video);
             break;
-
         case DF_INT:
+            //if(llrpGetDarkFrameIntStatus(video)) return loadDarkFrameInt(video);
             break;
-
         default:
             llrpFreeDarkFrame(video);
             break;
     }
-
     return 0;
 }
 
