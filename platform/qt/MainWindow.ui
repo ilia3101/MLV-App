@@ -5271,7 +5271,7 @@ QGroupBox::indicator:checked {
    <sender>toolButtonDarkFrameSubtractionOff</sender>
    <signal>toggled(bool)</signal>
    <receiver>MainWindow</receiver>
-   <slot>toolButtonDarkFrameSubtractionChanged()</slot>
+   <slot>toolButtonDarkFrameSubtractionChanged(bool)</slot>
    <hints>
     <hint type="sourcelabel">
      <x>1107</x>
@@ -5287,7 +5287,7 @@ QGroupBox::indicator:checked {
    <sender>toolButtonDarkFrameSubtractionInt</sender>
    <signal>toggled(bool)</signal>
    <receiver>MainWindow</receiver>
-   <slot>toolButtonDarkFrameSubtractionChanged()</slot>
+   <slot>toolButtonDarkFrameSubtractionChanged(bool)</slot>
    <hints>
     <hint type="sourcelabel">
      <x>1146</x>
@@ -5303,7 +5303,7 @@ QGroupBox::indicator:checked {
    <sender>toolButtonDarkFrameSubtractionExt</sender>
    <signal>toggled(bool)</signal>
    <receiver>MainWindow</receiver>
-   <slot>toolButtonDarkFrameSubtractionChanged()</slot>
+   <slot>toolButtonDarkFrameSubtractionChanged(bool)</slot>
    <hints>
     <hint type="sourcelabel">
      <x>1112</x>
@@ -5329,6 +5329,6 @@ QGroupBox::indicator:checked {
   <slot>toolButtonDualIsoAliasMapChanged()</slot>
   <slot>toolButtonDualIsoFullresBlendingChanged()</slot>
   <slot>toolButtonBadPixelsSearchMethodChanged()</slot>
-  <slot>toolButtonDarkFrameSubtractionChanged()</slot>
+  <slot>toolButtonDarkFrameSubtractionChanged(bool)</slot>
  </slots>
 </ui>

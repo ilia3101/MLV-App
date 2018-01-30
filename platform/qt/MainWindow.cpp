@@ -2876,7 +2876,7 @@ void MainWindow::setToolButtonDarkFrameSubtraction(int index)
         break;
     default: break;
     }
-    if( actualize ) toolButtonDarkFrameSubtractionChanged();
+    if( actualize ) toolButtonDarkFrameSubtractionChanged( true );
 }
 
 //Get toolbutton index of focus pixels
@@ -4237,8 +4237,10 @@ void MainWindow::toolButtonDualIsoFullresBlendingChanged( void )
 }
 
 //Darkframe Subtraction On/Off changed
-void MainWindow::toolButtonDarkFrameSubtractionChanged( void )
+void MainWindow::toolButtonDarkFrameSubtractionChanged( bool checked )
 {
+    if( !checked ) return;
+
     if( llrpInitDarkFrame( m_pMlvObject, toolButtonDarkFrameSubtractionCurrentIndex() ) ) return;
     llrpSetDarkFrameMode( m_pMlvObject, toolButtonDarkFrameSubtractionCurrentIndex() );
 qDebug() << "DF Mode:" << toolButtonDarkFrameSubtractionCurrentIndex();

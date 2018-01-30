@@ -143,7 +143,7 @@ private slots:
     void toolButtonDualIsoInterpolationChanged( void );
     void toolButtonDualIsoAliasMapChanged( void );
     void toolButtonDualIsoFullresBlendingChanged( void );
-    void toolButtonDarkFrameSubtractionChanged( void );
+    void toolButtonDarkFrameSubtractionChanged( bool checked );
     void on_actionNextFrame_triggered();
     void on_actionPreviousFrame_triggered();
     void on_checkBoxRawFixEnable_clicked(bool checked);
