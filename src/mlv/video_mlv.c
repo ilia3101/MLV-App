@@ -1402,6 +1402,7 @@ int loadDarkFrame(mlvObject_t * video)
     {
         printf("\n2\n");
         DEBUG( printf("Could not read frame: %s\n", video->llrawproc->dark_frame_filename); )
+        llrpFreeDarkFrame(video);
         return 1;
     }
     printf("\n3\n");
