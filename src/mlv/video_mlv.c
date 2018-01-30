@@ -1394,18 +1394,27 @@ int loadDarkFrame(mlvObject_t * video)
         return ret;
     }
     printf("\n1\n");
-    video->llrawproc->dark_frame_size = df_mlv.video_index->frame_size;
-    llrpFreeDarkFrame(video);
-    video->llrawproc->dark_frame_data = calloc(video->llrawproc->dark_frame_size, 1);
+    uint8_t * df_packed_buf = calloc(df_mlv.video_index->frame_size, 1);
+    if(!df_packed_buf)
+    {
+        DEBUG( printf("Packed DF buffer allocation error\n"); )
+        return 1;
+    }
+
     file_set_pos(df_mlv.file[0], df_mlv.video_index->frame_offset, SEEK_SET);
-    if ( fread(video->llrawproc->dark_frame_data, video->llrawproc->dark_frame_size, 1, df_mlv.file[0]) != 1 )
+    if ( fread(df_packed_buf, df_mlv.video_index->frame_size, 1, df_mlv.file[0]) != 1 )
     {
         printf("\n2\n");
         DEBUG( printf("Could not read frame: %s\n", video->llrawproc->dark_frame_filename); )
-        llrpFreeDarkFrame(video);
+        free(df_packed_buf);
         return 1;
     }
     printf("\n3\n");
+    llrpFreeDarkFrame(video);
+    video->llrawproc->dark_frame_size = df_mlv.RAWI.xRes * df_mlv.RAWI.yRes * 2;
+    video->llrawproc->dark_frame_data = calloc(video->llrawproc->dark_frame_size + 4, 1);
+    dng_unpack_image_bits(video->llrawproc->dark_frame_data, (uint16_t*)df_packed_buf, df_mlv.RAWI.xRes, df_mlv.RAWI.yRes, df_mlv.RAWI.raw_info.bits_per_pixel);
+
     return MLV_ERR_NONE;
 }
 

@@ -4239,10 +4239,13 @@ void MainWindow::toolButtonDualIsoFullresBlendingChanged( void )
 //Darkframe Subtraction On/Off changed
 void MainWindow::toolButtonDarkFrameSubtractionChanged( void )
 {
-    llrpInitDarkFrame( m_pMlvObject, toolButtonDarkFrameSubtractionCurrentIndex() );
+    if( llrpInitDarkFrame( m_pMlvObject, toolButtonDarkFrameSubtractionCurrentIndex() ) ) return;
+    llrpSetDarkFrameMode( m_pMlvObject, toolButtonDarkFrameSubtractionCurrentIndex() );
+qDebug() << "DF Mode:" << toolButtonDarkFrameSubtractionCurrentIndex();
     //Blocking filename while active
     if( toolButtonDarkFrameSubtractionCurrentIndex() == 1 )
     {
+
         ui->lineEditDarkFrameFile->setEnabled( false );
         ui->toolButtonDarkFrameSubtractionFile->setEnabled( false );
     }

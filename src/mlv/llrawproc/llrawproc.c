@@ -161,6 +161,7 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
     /* subtruct dark frame */
     if (video->llrawproc->dark_frame)
     {
+        printf("DF Processing...\n");
         subtract_darkframe(video, raw_image_buff, raw_image_size);
     }
 
