@@ -1415,6 +1415,7 @@ int loadDarkFrame(mlvObject_t * video)
     video->llrawproc->dark_frame_data = calloc(video->llrawproc->dark_frame_size + 4, 1);
     dng_unpack_image_bits(video->llrawproc->dark_frame_data, (uint16_t*)df_packed_buf, df_mlv.RAWI.xRes, df_mlv.RAWI.yRes, df_mlv.RAWI.raw_info.bits_per_pixel);
 
+    free(df_packed_buf);
     return MLV_ERR_NONE;
 }
 
