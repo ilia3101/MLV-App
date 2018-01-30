@@ -2264,19 +2264,18 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     ui->spinBoxDeflickerTarget->setValue( receipt->deflickerTarget() );
     on_spinBoxDeflickerTarget_valueChanged( receipt->deflickerTarget() );
     ui->lineEditDarkFrameFile->setText( receipt->darkFrameFileName() );
-    //TODO: getMlvHasInternalDarkframe( m_pMlvObject ) needed!
-    //ui->toolButtonDarkFrameSubtractionInt->setEnabled( getMlvHasInternalDarkframe( m_pMlvObject ) );
+    ui->toolButtonDarkFrameSubtractionInt->setEnabled( llrpGetDarkFrameIntStatus( m_pMlvObject ) );
     //Auto setup at first full import, else get from receipt
     if( receipt->darkFrameEnabled() == -1 )
     {
-        /*if( getMlvHasInternalDarkframe( m_pMlvObject ) )
+        if( llrpGetDarkFrameIntStatus( m_pMlvObject ) )
         {
             setToolButtonDarkFrameSubtraction( 2 );
         }
         else
-        {*/
+        {
             setToolButtonDarkFrameSubtraction( 0 );
-        //}
+        }
     }
     else
     {
@@ -2862,8 +2861,7 @@ void MainWindow::setToolButtonDualIsoFullresBlending(int index)
 void MainWindow::setToolButtonDarkFrameSubtraction(int index)
 {
     //Switch Darkframe Subtraction to OFF if internal was selected and no internal data is available
-    //TODO: getMlvHasInternalDarkframe( m_pMlvObject ) needed
-    //if( !getMlvHasInternalDarkframe( m_pMlvObject ) && index == 2 ) index = 0;
+    if( !llrpGetDarkFrameIntStatus( m_pMlvObject ) && index == 2 ) index = 0;
 
     bool actualize = false;
     if( index == toolButtonDarkFrameSubtractionCurrentIndex() ) actualize = true;
@@ -4241,7 +4239,7 @@ void MainWindow::toolButtonDualIsoFullresBlendingChanged( void )
 //Darkframe Subtraction On/Off changed
 void MainWindow::toolButtonDarkFrameSubtractionChanged( void )
 {
-    //TODO: call to llrawproc here
+    llrpInitDarkFrame( m_pMlvObject, toolButtonDarkFrameSubtractionCurrentIndex() );
     //Blocking filename while active
     if( toolButtonDarkFrameSubtractionCurrentIndex() == 1 )
     {

@@ -536,6 +536,7 @@ int llrpInitDarkFrame(mlvObject_t * video, int df_mode)
             break;
 
         default:
+            llrpFreeDarkFrame(video);
             break;
     }
 

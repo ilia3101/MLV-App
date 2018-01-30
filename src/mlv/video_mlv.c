@@ -1393,16 +1393,18 @@ int loadDarkFrame(mlvObject_t * video)
         DEBUG( printf("Invalid file: %s\n", video->llrawproc->dark_frame_filename); )
         return ret;
     }
+    printf("\n1\n");
     video->llrawproc->dark_frame_size = df_mlv.video_index->frame_size;
     llrpFreeDarkFrame(video);
     video->llrawproc->dark_frame_data = calloc(video->llrawproc->dark_frame_size, 1);
     file_set_pos(df_mlv.file[0], df_mlv.video_index->frame_offset, SEEK_SET);
     if ( fread(video->llrawproc->dark_frame_data, video->llrawproc->dark_frame_size, 1, df_mlv.file[0]) != 1 )
     {
+        printf("\n2\n");
         DEBUG( printf("Could not read frame: %s\n", video->llrawproc->dark_frame_filename); )
         return 1;
     }
-
+    printf("\n3\n");
     return MLV_ERR_NONE;
 }
 
