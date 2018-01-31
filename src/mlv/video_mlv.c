@@ -931,7 +931,7 @@ int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
             }
             dng_pack_image_bits((uint16_t *)frame_buf, frame_buf_unpacked, video->RAWI.xRes, video->RAWI.yRes, video->RAWI.raw_info.bits_per_pixel, 0);
 
-            vidf_hdr.frameNumber = 0;
+            vidf_hdr.frameNumber = max_frame_number;
             vidf_hdr.blockSize = sizeof(mlv_vidf_hdr_t) + frame_size_packed;
             memcpy(block_buf, &vidf_hdr, sizeof(mlv_vidf_hdr_t));
             memcpy((block_buf + sizeof(mlv_vidf_hdr_t)), frame_buf, frame_size_packed);
@@ -1386,6 +1386,7 @@ short_cut:
 
 int loadDarkFrameExt(mlvObject_t * video)
 {
+    /* Parse dark frame MLV */
     mlvObject_t df_mlv = { 0 };
     int ret = openMlvClip(&df_mlv, video->llrawproc->dark_frame_filename, 2);
     if(ret != MLV_ERR_NONE)
@@ -1393,23 +1394,46 @@ int loadDarkFrameExt(mlvObject_t * video)
         DEBUG( printf("Invalid file: %s\n", video->llrawproc->dark_frame_filename); )
         return ret;
     }
-    printf("\n1\n");
+    /* Allocate dark frame data buffer */
     uint8_t * df_packed_buf = calloc(df_mlv.video_index->frame_size, 1);
     if(!df_packed_buf)
     {
         DEBUG( printf("Packed DF buffer allocation error\n"); )
         return 1;
     }
-
+    /* Load dark frame data to the allocated buffer */
     file_set_pos(df_mlv.file[0], df_mlv.video_index->frame_offset, SEEK_SET);
     if ( fread(df_packed_buf, df_mlv.video_index->frame_size, 1, df_mlv.file[0]) != 1 )
     {
-        printf("\n2\n");
         DEBUG( printf("Could not read frame: %s\n", video->llrawproc->dark_frame_filename); )
         free(df_packed_buf);
         return 1;
     }
-    printf("\n3\n");
+    /* Fill DARK block header */
+    memcpy(&video->llrawproc->dark_frame_hdr.blockType, "DARK", 4);
+    video->llrawproc->dark_frame_hdr.blockSize = sizeof(mlv_dark_hdr_t) + df_mlv.video_index->frame_size;
+    video->llrawproc->dark_frame_hdr.timestamp = 0xFFFFFFFFFFFFFFFF;
+    video->llrawproc->dark_frame_hdr.samplesAveraged = MAX(df_mlv.VIDF.frameNumber, df_mlv.MLVI.videoFrameCount);
+    video->llrawproc->dark_frame_hdr.cameraModel = df_mlv.IDNT.cameraModel;
+    video->llrawproc->dark_frame_hdr.xRes = df_mlv.RAWI.xRes;
+    video->llrawproc->dark_frame_hdr.yRes = df_mlv.RAWI.yRes;
+    video->llrawproc->dark_frame_hdr.rawWidth = df_mlv.RAWI.raw_info.width;
+    video->llrawproc->dark_frame_hdr.rawHeight = df_mlv.RAWI.raw_info.height;
+    video->llrawproc->dark_frame_hdr.bits_per_pixel = df_mlv.RAWI.raw_info.bits_per_pixel;
+    video->llrawproc->dark_frame_hdr.black_level = df_mlv.RAWI.raw_info.black_level;
+    video->llrawproc->dark_frame_hdr.white_level = df_mlv.RAWI.raw_info.white_level;
+    video->llrawproc->dark_frame_hdr.sourceFpsNom = df_mlv.MLVI.sourceFpsNom;
+    video->llrawproc->dark_frame_hdr.sourceFpsDenom = df_mlv.MLVI.sourceFpsDenom;
+    video->llrawproc->dark_frame_hdr.isoMode = df_mlv.EXPO.isoMode;
+    video->llrawproc->dark_frame_hdr.isoValue = df_mlv.EXPO.isoValue;
+    video->llrawproc->dark_frame_hdr.isoAnalog = df_mlv.EXPO.isoAnalog;
+    video->llrawproc->dark_frame_hdr.digitalGain = df_mlv.EXPO.digitalGain;
+    video->llrawproc->dark_frame_hdr.shutterValue = df_mlv.EXPO.shutterValue;
+    video->llrawproc->dark_frame_hdr.binning_x = df_mlv.RAWC.binning_x;
+    video->llrawproc->dark_frame_hdr.skipping_x = df_mlv.RAWC.skipping_x;
+    video->llrawproc->dark_frame_hdr.binning_y = df_mlv.RAWC.binning_y;
+    video->llrawproc->dark_frame_hdr.skipping_y = df_mlv.RAWC.skipping_y;
+    /* Free (if allocated) and then allocate the dark frame 16bit buffer */
     llrpFreeDarkFrame(video);
     video->llrawproc->dark_frame_size = df_mlv.RAWI.xRes * df_mlv.RAWI.yRes * 2;
     video->llrawproc->dark_frame_data = calloc(video->llrawproc->dark_frame_size + 4, 1);
@@ -1417,6 +1441,11 @@ int loadDarkFrameExt(mlvObject_t * video)
 
     free(df_packed_buf);
     return MLV_ERR_NONE;
+}
+
+int loadDarkFrameInt(mlvObject_t * video)
+{
+    return 0;
 }
 
 /* Get image aspect ratio according to RAWC block info, calculating from binnin + skipping values.
