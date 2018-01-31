@@ -546,5 +546,6 @@ void llrpFreeDarkFrame(mlvObject_t * video)
         free(video->llrawproc->dark_frame_data);
         video->llrawproc->dark_frame_data = NULL;
         video->llrawproc->dark_frame_size = 0;
+        memset(&video->llrawproc->dark_frame_hdr, 0, sizeof(mlv_dark_hdr_t));
     }
 }

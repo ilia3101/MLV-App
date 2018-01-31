@@ -1409,6 +1409,8 @@ int loadDarkFrameExt(mlvObject_t * video)
         free(df_packed_buf);
         return 1;
     }
+    /* Free all data related to the dark frame if needed */
+    llrpFreeDarkFrame(video);
     /* Fill DARK block header */
     memcpy(&video->llrawproc->dark_frame_hdr.blockType, "DARK", 4);
     video->llrawproc->dark_frame_hdr.blockSize = sizeof(mlv_dark_hdr_t) + df_mlv.video_index->frame_size;
@@ -1433,8 +1435,7 @@ int loadDarkFrameExt(mlvObject_t * video)
     video->llrawproc->dark_frame_hdr.skipping_x = df_mlv.RAWC.skipping_x;
     video->llrawproc->dark_frame_hdr.binning_y = df_mlv.RAWC.binning_y;
     video->llrawproc->dark_frame_hdr.skipping_y = df_mlv.RAWC.skipping_y;
-    /* Free (if allocated) and then allocate the dark frame 16bit buffer */
-    llrpFreeDarkFrame(video);
+    /* Allocate the dark frame 16bit buffer */
     video->llrawproc->dark_frame_size = df_mlv.RAWI.xRes * df_mlv.RAWI.yRes * 2;
     video->llrawproc->dark_frame_data = calloc(video->llrawproc->dark_frame_size + 4, 1);
     dng_unpack_image_bits(video->llrawproc->dark_frame_data, (uint16_t*)df_packed_buf, df_mlv.RAWI.xRes, df_mlv.RAWI.yRes, df_mlv.RAWI.raw_info.bits_per_pixel);
