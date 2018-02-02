@@ -25,7 +25,7 @@
 #include "../mlv_object.h"
 
 llrawprocObject_t * initLLRawProcObject();
-void freeLLRawProcObject(llrawprocObject_t * llrawproc);
+void freeLLRawProcObject(mlvObject_t * video);
 
 /* all low level raw processing takes place here */
 void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t raw_image_size);

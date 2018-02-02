@@ -32,6 +32,8 @@ enum open_mode { MLV_OPEN_FULL, MLV_OPEN_MAPP, MLV_OPEN_PREVIEW };
 int saveMlvHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int export_mode, uint32_t frame_start, uint32_t frame_end, const char * version);
 int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int export_mode, uint32_t frame_start, uint32_t frame_end, uint32_t frame_index, uint32_t * avg_buf);
 enum export_mode { MLV_FAST_PASS, MLV_COMPRESSED, MLV_AVERAGED_FRAME };
+/* from darkframe.c */
+extern int df_init(mlvObject_t * video);
 
 /* Frees all memory and closes file */
 void freeMlvObject(mlvObject_t * video);

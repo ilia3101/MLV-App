@@ -2264,6 +2264,7 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     ui->spinBoxDeflickerTarget->setValue( receipt->deflickerTarget() );
     on_spinBoxDeflickerTarget_valueChanged( receipt->deflickerTarget() );
     ui->lineEditDarkFrameFile->setText( receipt->darkFrameFileName() );
+    on_lineEditDarkFrameFile_textChanged( receipt->darkFrameFileName() );
     ui->toolButtonDarkFrameSubtractionInt->setEnabled( llrpGetDarkFrameIntStatus( m_pMlvObject ) );
     //Auto setup at first full import, else get from receipt
     if( receipt->darkFrameEnabled() == -1 )
@@ -2973,7 +2974,8 @@ int MainWindow::toolButtonDualIsoFullresBlendingCurrentIndex()
 int MainWindow::toolButtonDarkFrameSubtractionCurrentIndex()
 {
     if( ui->toolButtonDarkFrameSubtractionOff->isChecked() ) return 0;
-    else return 1;
+    else if( ui->toolButtonDarkFrameSubtractionExt->isChecked() ) return 1;
+    else return 2;
 }
 
 //About Window
@@ -4242,10 +4244,9 @@ void MainWindow::toolButtonDarkFrameSubtractionChanged( bool checked )
     if( !checked ) return;
     //Set dark frame mode to llrawproc struct
     llrpSetDarkFrameMode( m_pMlvObject, toolButtonDarkFrameSubtractionCurrentIndex() );
-    //Blocking filename while active
-    if( toolButtonDarkFrameSubtractionCurrentIndex() == 1 )
+    //Blocking filename while t or Int is active
+    if( toolButtonDarkFrameSubtractionCurrentIndex() > 0 )
     {
-
         ui->lineEditDarkFrameFile->setEnabled( false );
         ui->toolButtonDarkFrameSubtractionFile->setEnabled( false );
     }

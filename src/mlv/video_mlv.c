@@ -522,7 +522,7 @@ void freeMlvObject(mlvObject_t * video)
     if(video->rgb_raw_current_frame) free(video->rgb_raw_current_frame);
     if(video->cache_memory_block) free(video->cache_memory_block);
     if(video->path) free(video->path);
-    freeLLRawProcObject(video->llrawproc);
+    freeLLRawProcObject(video);
 
     /* Mutex things here... */
     for (int i = 0; i < video->filenum; ++i)
@@ -749,7 +749,13 @@ int saveMlvHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int
     if(video->DISO.blockType[0]) mlv_headers_size += video->DISO.blockSize;
     if(video->WAVI.blockType[0] && export_audio && (export_mode != MLV_AVERAGED_FRAME)) mlv_headers_size += video->WAVI.blockSize;
     if(video->INFO.blockType[0] && video->INFO_STRING[0]) mlv_headers_size += video->INFO.blockSize;
-
+    if(video->llrawproc->dark_frame && export_mode != MLV_AVERAGED_FRAME) // if normal MLV export specified and dark frame exists
+    {
+        df_init(video);
+        printf("block type = %u, DF Size = %u, export mode = %u, file name = %s\n", video->llrawproc->dark_frame_hdr.blockType[0], video->llrawproc->dark_frame_size, export_mode, video->llrawproc->dark_frame_filename);
+        printf("header size += %u\n", video->llrawproc->dark_frame_hdr.blockSize);
+        mlv_headers_size += video->llrawproc->dark_frame_hdr.blockSize;
+    }
     uint8_t * mlv_headers_buf = malloc(mlv_headers_size);
     if(!mlv_headers_buf)
     {
@@ -823,6 +829,19 @@ int saveMlvHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int
     {
         memcpy(ptr, (uint8_t*)&(video->WAVI), sizeof(mlv_wavi_hdr_t));
         ptr += video->WAVI.blockSize;
+    }
+
+    if(video->llrawproc->dark_frame && export_mode != MLV_AVERAGED_FRAME) // if normal MLV export specified and dark frame exists
+    {
+        memcpy(ptr, (uint8_t*)&(video->llrawproc->dark_frame_hdr), sizeof(mlv_dark_hdr_t));
+        ptr += sizeof(mlv_dark_hdr_t);
+
+        size_t df_packed_size = video->llrawproc->dark_frame_hdr.blockSize - sizeof(mlv_dark_hdr_t);
+        uint8_t * df_packed = calloc(df_packed_size, 1);
+        dng_pack_image_bits((uint16_t *)df_packed, video->llrawproc->dark_frame_data, video->llrawproc->dark_frame_hdr.xRes, video->llrawproc->dark_frame_hdr.yRes, video->llrawproc->dark_frame_hdr.bits_per_pixel, 0);
+        memcpy(ptr, df_packed, df_packed_size);
+        ptr += df_packed_size;
+        printf("DARK block inserted\n");
     }
 
     /* write mlv_headers_buf */

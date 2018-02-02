@@ -22,7 +22,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
 
 #include "darkframe.h"
 
@@ -49,7 +48,7 @@ static int df_load_ext(mlvObject_t * video)
     if(ret != 0)
     {
 #ifndef STDOUT_SILENT
-        printf("Invalid file: %s\n", video->llrawproc->dark_frame_filename);
+        printf("DF: invalid file: %s\n", video->llrawproc->dark_frame_filename);
 #endif
         return ret;
     }
@@ -58,7 +57,7 @@ static int df_load_ext(mlvObject_t * video)
     if(!df_packed_buf)
     {
 #ifndef STDOUT_SILENT
-        printf("Packed DF buffer allocation error\n");
+        printf("DF: packed buffer allocation error\n");
 #endif
         return 1;
     }
@@ -67,7 +66,7 @@ static int df_load_ext(mlvObject_t * video)
     if ( fread(df_packed_buf, df_mlv.video_index->frame_size, 1, df_mlv.file[0]) != 1 )
     {
 #ifndef STDOUT_SILENT
-        printf("Could not read frame: %s\n", video->llrawproc->dark_frame_filename);
+        printf("DF: could not read frame: %s\n", video->llrawproc->dark_frame_filename);
 #endif
         free(df_packed_buf);
         return 1;
@@ -102,14 +101,21 @@ static int df_load_ext(mlvObject_t * video)
     video->llrawproc->dark_frame_size = df_mlv.RAWI.xRes * df_mlv.RAWI.yRes * 2;
     video->llrawproc->dark_frame_data = calloc(video->llrawproc->dark_frame_size + 4, 1);
     dng_unpack_image_bits(video->llrawproc->dark_frame_data, (uint16_t*)df_packed_buf, df_mlv.RAWI.xRes, df_mlv.RAWI.yRes, df_mlv.RAWI.raw_info.bits_per_pixel);
-
+//#ifndef STDOUT_SILENT
+    printf("DF: initialized Ext mode\n");
+//#endif
     free(df_packed_buf);
     return 0;
 }
 
 static int df_load_int(mlvObject_t * video)
 {
+    /* if DARK block is not found return error */
     if(video->DARK.blockType[0]) return 1;
+#ifndef STDOUT_SILENT
+    printf("DF: initialized Int mode\n");
+#endif
+
     return 0;
 }
 
@@ -120,7 +126,7 @@ void df_init_filename(mlvObject_t * video, char * df_filename)
     memcpy(video->llrawproc->dark_frame_filename, df_filename, df_filename_size);
 }
 
-void df_free_fileName(mlvObject_t * video)
+void df_free_filename(mlvObject_t * video)
 {
     if(video->llrawproc->dark_frame_filename) free(video->llrawproc->dark_frame_filename);
     video->llrawproc->dark_frame_filename = NULL;
@@ -131,7 +137,7 @@ void df_subtract(mlvObject_t * video, uint16_t * raw_image_buff, size_t raw_imag
     if( !video->llrawproc->dark_frame_data || (raw_image_size != video->llrawproc->dark_frame_size) )
     {
 #ifndef STDOUT_SILENT
-    printf("Subtracting dark frame is impossible, invalid dark frame'\n\n");
+    printf("DF: subtracting is impossible, invalid dark frame'\n\n");
 #endif
         return;
     }
@@ -158,21 +164,21 @@ int df_init(mlvObject_t * video)
     {
         case DF_EXT:
             return df_load_ext(video);
-            break;
         case DF_INT:
             return df_load_int(video);
-            break;
         default:
             df_free(video);
-            break;
+            return 1; // DF mode = Off
     }
-    return 0;
 }
 
 void df_free(mlvObject_t * video)
 {
     if(video->llrawproc->dark_frame_data)
     {
+//#ifndef STDOUT_SILENT
+        printf("DF: all data freed\n");
+//#endif
         free(video->llrawproc->dark_frame_data);
         video->llrawproc->dark_frame_data = NULL;
         video->llrawproc->dark_frame_size = 0;

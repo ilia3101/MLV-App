@@ -32,12 +32,6 @@
 #include "hist.h"
 #include "darkframe.h"
 
-#include "../mlv_object.h"
-
-#define MIN(a,b) (((a)<(b))?(a):(b))
-#define MAX(a,b) (((a)>(b))?(a):(b))
-#define COERCE(x,lo,hi) MAX(MIN((x),(hi)),(lo))
-
 static void deflicker(mlvObject_t * video, uint16_t * raw_image_buff, size_t raw_image_size)
 {
     uint16_t black = video->RAWI.raw_info.black_level;
@@ -92,13 +86,13 @@ llrawprocObject_t * initLLRawProcObject()
     return llrawproc;
 }
 
-void freeLLRawProcObject(llrawprocObject_t * llrawproc)
+void freeLLRawProcObject(mlvObject_t * video)
 {
-    if(llrawproc->dark_frame_filename) free(llrawproc->dark_frame_filename);
-    if(llrawproc->dark_frame_data) free(llrawproc->dark_frame_data);
-    free_luts(llrawproc->raw2ev, llrawproc->ev2raw);
-    free_pixel_maps(&(llrawproc->focus_pixel_map), &(llrawproc->bad_pixel_map));
-    free(llrawproc);
+    df_free_filename(video);
+    df_free(video);
+    free_luts(video->llrawproc->raw2ev, video->llrawproc->ev2raw);
+    free_pixel_maps(&(video->llrawproc->focus_pixel_map), &(video->llrawproc->bad_pixel_map));
+    free(video->llrawproc);
 }
 
 /* all low level raw processing takes place here */
@@ -133,14 +127,16 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
         deflicker(video, raw_image_buff, raw_image_size);
     }
 
-    /* subtruct dark frame */
-    if (video->llrawproc->dark_frame)
+    /* subtruct dark frame if Ext or Int mode specified and df_init is successful */
+    if (!df_init(video))
     {
 #ifndef STDOUT_SILENT
-        printf("DF Processing...\n");
+        printf("Subtracting Dark Frame... ");
 #endif
-        df_init(video);
         df_subtract(video, raw_image_buff, raw_image_size);
+#ifndef STDOUT_SILENT
+        printf("Done\n\n");
+#endif
     }
 
     /* fix pattern noise */
@@ -468,13 +464,13 @@ void llrpResetBpmStatus(mlvObject_t * video)
 /* dark frame stuff */
 void llrpInitDarkFrameExtFileName(mlvObject_t * video, char * df_filename)
 {
-    df_free_fileName(video);
+    df_free_filename(video);
     df_init_filename(video, df_filename);
 }
 
 void llrpFreeDarkFrameExtFileName(mlvObject_t * video)
 {
-    df_free_fileName(video);
+    df_free_filename(video);
 }
 
 int llrpGetDarkFrameMode(mlvObject_t * video)
