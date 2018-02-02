@@ -4244,7 +4244,7 @@ void MainWindow::toolButtonDarkFrameSubtractionChanged( bool checked )
     if( !checked ) return;
     //Set dark frame mode to llrawproc struct
     llrpSetDarkFrameMode( m_pMlvObject, toolButtonDarkFrameSubtractionCurrentIndex() );
-    //Blocking filename while t or Int is active
+    //Blocking filename while Ext or Int mode is active
     if( toolButtonDarkFrameSubtractionCurrentIndex() > 0 )
     {
         ui->lineEditDarkFrameFile->setEnabled( false );
