@@ -97,7 +97,8 @@ SOURCES += \
     GraphicsPolygonMoveItem.cpp \
     GradientElement.cpp \
     VectorScope.cpp \
-    TimeCodeLabel.cpp
+    TimeCodeLabel.cpp \
+    ../../src/mlv/llrawproc/darkframe.c
 
 macx: SOURCES += ../cocoa/avf_lib/avf_lib.m
 
@@ -155,7 +156,8 @@ HEADERS += \
     GraphicsPolygonMoveItem.h \
     GradientElement.h \
     VectorScope.h \
-    TimeCodeLabel.h
+    TimeCodeLabel.h \
+    ../../src/mlv/llrawproc/darkframe.h
 
 macx: HEADERS += \
     ../cocoa/avf_lib/avencoder.h \

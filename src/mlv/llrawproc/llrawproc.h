@@ -98,21 +98,13 @@ void llrpResetFpmStatus(mlvObject_t * video);
 void llrpResetBpmStatus(mlvObject_t * video);
 
 /* dark frame stuff */
-enum { DF_OFF, DF_EXT, DF_INT };
+void llrpInitDarkFrameExtFileName(mlvObject_t * video, char * df_filename);
+void llrpFreeDarkFrameExtFileName(mlvObject_t * video);
+
 int llrpGetDarkFrameMode(mlvObject_t * video);
 void llrpSetDarkFrameMode(mlvObject_t * video, int value);
 
 int llrpGetDarkFrameExtStatus(mlvObject_t * video);
 int llrpGetDarkFrameIntStatus(mlvObject_t * video);
-
-void llrpInitDarkFrameExtFileName(mlvObject_t * video, char * df_filename);
-void llrpFreeDarkFrameExtFileName(mlvObject_t * video);
-
-int llrpInitDarkFrame(mlvObject_t * video, int df_mode);
-void llrpFreeDarkFrame(mlvObject_t * video);
-
-/* extern functions from video_mlv.c */
-int loadDarkFrameExt(mlvObject_t * video);
-int loadDarkFrameInt(mlvObject_t * video);
 
 #endif

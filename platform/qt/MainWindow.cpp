@@ -4240,10 +4240,8 @@ void MainWindow::toolButtonDualIsoFullresBlendingChanged( void )
 void MainWindow::toolButtonDarkFrameSubtractionChanged( bool checked )
 {
     if( !checked ) return;
-
-    if( llrpInitDarkFrame( m_pMlvObject, toolButtonDarkFrameSubtractionCurrentIndex() ) ) return;
+    //Set dark frame mode to llrawproc struct
     llrpSetDarkFrameMode( m_pMlvObject, toolButtonDarkFrameSubtractionCurrentIndex() );
-qDebug() << "DF Mode:" << toolButtonDarkFrameSubtractionCurrentIndex();
     //Blocking filename while active
     if( toolButtonDarkFrameSubtractionCurrentIndex() == 1 )
     {
@@ -5039,7 +5037,6 @@ void MainWindow::on_lineEditDarkFrameFile_textChanged(const QString &arg1)
     {
         ui->toolButtonDarkFrameSubtractionExt->setEnabled( true );
         QByteArray darkFrameFileName = arg1.toLatin1();
-        llrpFreeDarkFrameExtFileName(m_pMlvObject);
         llrpInitDarkFrameExtFileName(m_pMlvObject, darkFrameFileName.data());
     }
     else
