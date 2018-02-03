@@ -43,6 +43,7 @@
 #define CODEC_MLV_FASTPASS          0
 #define CODEC_MLV_COMPRESSED        1
 #define CODEC_MLV_AVERAGED          2
+#define CODEC_MLV_EXTRACT_DF        3
 
 namespace Ui {
 class ExportSettingsDialog;

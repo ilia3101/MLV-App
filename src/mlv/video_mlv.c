@@ -747,13 +747,13 @@ int saveMlvHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int
     if(video->RAWC.blockType[0]) mlv_headers_size += video->RAWC.blockSize;
     if(video->STYL.blockType[0]) mlv_headers_size += video->STYL.blockSize;
     if(video->DISO.blockType[0]) mlv_headers_size += video->DISO.blockSize;
-    if(video->WAVI.blockType[0] && export_audio && (export_mode != MLV_AVERAGED_FRAME)) mlv_headers_size += video->WAVI.blockSize;
+    if(video->WAVI.blockType[0] && export_audio && export_mode < MLV_AVERAGED_FRAME) mlv_headers_size += video->WAVI.blockSize;
     if(video->INFO.blockType[0] && video->INFO_STRING[0]) mlv_headers_size += video->INFO.blockSize;
-    if(video->llrawproc->dark_frame && export_mode != MLV_AVERAGED_FRAME) // if normal MLV export specified and dark frame exists
+    if(video->llrawproc->dark_frame && export_mode < MLV_AVERAGED_FRAME) // if normal MLV export specified and dark frame exists
     {
         df_init(video);
-        printf("block type = %u, DF Size = %u, export mode = %u, file name = %s\n", video->llrawproc->dark_frame_hdr.blockType[0], video->llrawproc->dark_frame_size, export_mode, video->llrawproc->dark_frame_filename);
-        printf("header size += %u\n", video->llrawproc->dark_frame_hdr.blockSize);
+        DEBUG( printf("Block Size = %u, DF Size = %u, Export Mode = %u, Filename = %s\n", video->llrawproc->dark_frame_hdr.blockSize, video->llrawproc->dark_frame_size, export_mode, video->llrawproc->dark_frame_filename); )
+        DEBUG( printf("Headers Size += %u\n", video->llrawproc->dark_frame_hdr.blockSize); )
         mlv_headers_size += video->llrawproc->dark_frame_hdr.blockSize;
     }
     uint8_t * mlv_headers_buf = malloc(mlv_headers_size);
@@ -768,27 +768,85 @@ int saveMlvHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int
     memcpy(&output_mlvi, (uint8_t*)&(video->MLVI), sizeof(mlv_file_hdr_t));
     output_mlvi.fileNum = 0;
     output_mlvi.fileCount = 1;
-    output_mlvi.videoFrameCount = (export_mode == MLV_AVERAGED_FRAME) ? 1 : frame_end - frame_start + 1;
-    output_mlvi.audioFrameCount = (!export_audio || (export_mode == MLV_AVERAGED_FRAME)) ? 0 : 1;
+    output_mlvi.videoFrameCount = (export_mode >= MLV_AVERAGED_FRAME) ? 1 : frame_end - frame_start + 1;
+    output_mlvi.audioFrameCount = (!export_audio || export_mode >= MLV_AVERAGED_FRAME) ? 0 : 1;
     if(export_mode == MLV_COMPRESSED && (!isMlvCompressed(video))) output_mlvi.videoClass |= MLV_VIDEO_CLASS_FLAG_LJ92;
-    if(export_mode == MLV_AVERAGED_FRAME && isMlvCompressed(video)) output_mlvi.videoClass = 1;
-    output_mlvi.audioClass = (!export_audio || (export_mode == MLV_AVERAGED_FRAME)) ? 0 : 1;
+    if(export_mode >= MLV_AVERAGED_FRAME && isMlvCompressed(video)) output_mlvi.videoClass = 1;
+    output_mlvi.audioClass = (!export_audio || export_mode >= MLV_AVERAGED_FRAME) ? 0 : 1;
+    if(export_mode == MLV_DF_INT)
+    {
+        output_mlvi.sourceFpsNom = video->DARK.sourceFpsNom;
+        output_mlvi.sourceFpsDenom = video->DARK.sourceFpsDenom;
+    }
     memcpy(ptr, &output_mlvi, sizeof(mlv_file_hdr_t));
     ptr += video->MLVI.blockSize;
 
-    memcpy(ptr, (uint8_t*)&(video->RAWI), sizeof(mlv_rawi_hdr_t));
+    if(export_mode == MLV_DF_INT)
+    {
+        mlv_rawi_hdr_t output_rawi = { 0 };
+        memcpy(&output_rawi, (uint8_t*)&(video->RAWI), sizeof(mlv_rawi_hdr_t));
+        output_rawi.xRes = video->DARK.xRes;
+        output_rawi.yRes = video->DARK.yRes;
+        output_rawi.raw_info.width = video->DARK.rawWidth;
+        output_rawi.raw_info.height = video->DARK.rawHeight;
+        output_rawi.raw_info.bits_per_pixel = video->DARK.bits_per_pixel;
+        output_rawi.raw_info.black_level = video->DARK.black_level;
+        output_rawi.raw_info.white_level = video->DARK.white_level;
+        memcpy(ptr, &output_rawi, sizeof(mlv_rawi_hdr_t));
+    }
+    else
+    {
+        memcpy(ptr, (uint8_t*)&(video->RAWI), sizeof(mlv_rawi_hdr_t));
+    }
     ptr += video->RAWI.blockSize;
 
     if(video->RAWC.blockType[0])
     {
-        memcpy(ptr, (uint8_t*)&(video->RAWC), sizeof(mlv_rawc_hdr_t));
+        if(export_mode == MLV_DF_INT)
+        {
+            mlv_rawc_hdr_t output_rawc = { 0 };
+            memcpy(&output_rawc, (uint8_t*)&(video->RAWC), sizeof(mlv_rawc_hdr_t));
+            output_rawc.binning_x = video->DARK.binning_x;
+            output_rawc.skipping_x = video->DARK.skipping_x;
+            output_rawc.binning_y = video->DARK.binning_y;
+            output_rawc.skipping_y = video->DARK.skipping_y;
+            memcpy(ptr, &output_rawc, sizeof(mlv_rawc_hdr_t));
+        }
+        else
+        {
+            memcpy(ptr, (uint8_t*)&(video->RAWC), sizeof(mlv_rawc_hdr_t));
+        }
         ptr += video->RAWC.blockSize;
     }
 
-    memcpy(ptr, (uint8_t*)&(video->IDNT), sizeof(mlv_idnt_hdr_t));
+    if(export_mode == MLV_DF_INT)
+    {
+        mlv_idnt_hdr_t output_idnt = { 0 };
+        memcpy(&output_idnt, (uint8_t*)&(video->IDNT), sizeof(mlv_idnt_hdr_t));
+        output_idnt.cameraModel = video->DARK.cameraModel;
+        memcpy(ptr, &output_idnt, sizeof(mlv_idnt_hdr_t));
+    }
+    else
+    {
+        memcpy(ptr, (uint8_t*)&(video->IDNT), sizeof(mlv_idnt_hdr_t));
+    }
     ptr += video->IDNT.blockSize;
 
-    memcpy(ptr, (uint8_t*)&(video->EXPO), sizeof(mlv_expo_hdr_t));
+    if(export_mode == MLV_DF_INT)
+    {
+        mlv_expo_hdr_t output_expo = { 0 };
+        memcpy(&output_expo, (uint8_t*)&(video->EXPO), sizeof(mlv_expo_hdr_t));
+        output_expo.isoMode = video->DARK.isoMode;
+        output_expo.isoValue = video->DARK.isoValue;
+        output_expo.isoAnalog = video->DARK.isoAnalog;
+        output_expo.digitalGain = video->DARK.digitalGain;
+        output_expo.shutterValue = video->DARK.shutterValue;
+        memcpy(ptr, &output_expo, sizeof(mlv_expo_hdr_t));
+    }
+    else
+    {
+        memcpy(ptr, (uint8_t*)&(video->EXPO), sizeof(mlv_expo_hdr_t));
+    }
     ptr += video->EXPO.blockSize;
 
     memcpy(ptr, (uint8_t*)&(video->LENS), sizeof(mlv_lens_hdr_t));
@@ -825,13 +883,13 @@ int saveMlvHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int
     memcpy(ptr, version_info, vers_info_size);
     ptr += vers_info_size;
 
-    if(video->WAVI.blockType[0] && export_audio && (export_mode != MLV_AVERAGED_FRAME))
+    if(video->WAVI.blockType[0] && export_audio && (export_mode < MLV_AVERAGED_FRAME))
     {
         memcpy(ptr, (uint8_t*)&(video->WAVI), sizeof(mlv_wavi_hdr_t));
         ptr += video->WAVI.blockSize;
     }
 
-    if(video->llrawproc->dark_frame && export_mode != MLV_AVERAGED_FRAME) // if normal MLV export specified and dark frame exists
+    if(video->llrawproc->dark_frame && export_mode < MLV_AVERAGED_FRAME) // if normal MLV export specified and dark frame exists
     {
         memcpy(ptr, (uint8_t*)&(video->llrawproc->dark_frame_hdr), sizeof(mlv_dark_hdr_t));
         ptr += sizeof(mlv_dark_hdr_t);
@@ -841,7 +899,7 @@ int saveMlvHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int
         dng_pack_image_bits((uint16_t *)df_packed, video->llrawproc->dark_frame_data, video->llrawproc->dark_frame_hdr.xRes, video->llrawproc->dark_frame_hdr.yRes, video->llrawproc->dark_frame_hdr.bits_per_pixel, 0);
         memcpy(ptr, df_packed, df_packed_size);
         ptr += df_packed_size;
-        printf("DARK block inserted\n");
+        DEBUG( printf("\nDARK block inserted\n"); )
     }
 
     /* write mlv_headers_buf */
@@ -911,7 +969,34 @@ int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
         return 1;
     }
 
-    if(export_mode == MLV_AVERAGED_FRAME) // average all frames to one dark frame
+    if(export_mode == MLV_DF_INT) // export internal dark frame as separate MLV
+    {
+        if(!video->DARK.blockType[0])
+        {
+            //DEBUG(
+                        printf("\nThere is no DARK block for extracting in %s\n", video->path);// )
+            free(frame_buf);
+            free(block_buf);
+            return 1;
+        }
+
+        size_t df_packed_size = video->DARK.blockSize - sizeof(mlv_dark_hdr_t);
+        /* read dark frame */
+        file_set_pos(video->file[0], video->dark_frame_offset, SEEK_SET);
+        if(fread(frame_buf, df_packed_size, 1, video->file[0]) != 1)
+        {
+            DEBUG( printf("\nCould not read VIDF block image data from MLV file\n"); )
+            free(frame_buf);
+            free(block_buf);
+            return 1;
+        }
+        /* set blocksize and samplesAveraged to frameNumber */
+        vidf_hdr.blockSize = video->DARK.blockSize;
+        vidf_hdr.frameNumber = video->DARK.samplesAveraged;
+        memcpy(block_buf, &vidf_hdr, sizeof(mlv_vidf_hdr_t));
+        memcpy((block_buf + sizeof(mlv_vidf_hdr_t)), frame_buf, df_packed_size);
+    }
+    else if(export_mode == MLV_AVERAGED_FRAME) // average all frames to one dark frame
     {
         uint16_t * frame_buf_unpacked = calloc(frame_size_unpacked, 1);
         if(!frame_buf_unpacked)
@@ -1009,7 +1094,7 @@ int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
     }
 
     /* if audio export is enabled */
-    if(!vidf_hdr.frameNumber && export_audio && (export_mode != MLV_AVERAGED_FRAME))
+    if(!vidf_hdr.frameNumber && export_audio && export_mode < MLV_AVERAGED_FRAME )
     {
         mlv_audf_hdr_t audf_hdr = { { 'A','U','D','F' }, 0, 0, 0, 0 };
         uint64_t mlv_audio_size = getMlvAudioSize(video);
@@ -1326,7 +1411,6 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode)
             }
             else if ( memcmp(block_header.blockType, "DARK", 4) == 0 )
             {
-                /* do nothing atm */
                 fread(&video->DARK, sizeof(mlv_dark_hdr_t), 1, video->file[i]);
                 video->dark_frame_offset = file_get_pos(video->file[i]);
             }

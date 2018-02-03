@@ -1504,7 +1504,7 @@ void MainWindow::startExportMlv(QString fileName)
             qApp->processEvents();
         }
         //Abort pressed? -> End the loop
-        if( m_exportAbortPressed ) break;
+        if( m_exportAbortPressed || m_codecOption == CODEC_MLV_EXTRACT_DF) break;
     }
 
     if( averagedImage ) free( averagedImage );
