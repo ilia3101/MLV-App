@@ -1328,6 +1328,7 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode)
             {
                 /* do nothing atm */
                 fread(&video->DARK, sizeof(mlv_dark_hdr_t), 1, video->file[i]);
+                video->dark_frame_offset = file_get_pos(video->file[i]);
             }
             else
             {

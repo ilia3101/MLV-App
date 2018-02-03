@@ -2266,6 +2266,7 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     ui->lineEditDarkFrameFile->setText( receipt->darkFrameFileName() );
     on_lineEditDarkFrameFile_textChanged( receipt->darkFrameFileName() );
     ui->toolButtonDarkFrameSubtractionInt->setEnabled( llrpGetDarkFrameIntStatus( m_pMlvObject ) );
+
     //Auto setup at first full import, else get from receipt
     if( receipt->darkFrameEnabled() == -1 )
     {
@@ -4155,6 +4156,7 @@ void MainWindow::toolButtonChromaSmoothChanged( void )
     default:
         llrpSetChromaSmoothMode(m_pMlvObject, CS_OFF);
     }
+    llrpComputeStripesOn(m_pMlvObject);
     resetMlvCache( m_pMlvObject );
     resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
@@ -4255,6 +4257,9 @@ void MainWindow::toolButtonDarkFrameSubtractionChanged( bool checked )
         ui->lineEditDarkFrameFile->setEnabled( true );
         ui->toolButtonDarkFrameSubtractionFile->setEnabled( true );
     }
+    //Force bad pixels and stripes calculation b/c dark frame processing happens before
+    llrpResetBpmStatus(m_pMlvObject);
+    llrpComputeStripesOn(m_pMlvObject);
     resetMlvCache( m_pMlvObject );
     resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
@@ -5036,14 +5041,15 @@ void MainWindow::on_lineEditDarkFrameFile_textChanged(const QString &arg1)
 {
     if( QFileInfo( arg1 ).exists() && arg1.endsWith( ".MLV", Qt::CaseInsensitive ) )
     {
-        ui->toolButtonDarkFrameSubtractionExt->setEnabled( true );
         QByteArray darkFrameFileName = arg1.toLatin1();
         llrpInitDarkFrameExtFileName(m_pMlvObject, darkFrameFileName.data());
+        ui->toolButtonDarkFrameSubtractionExt->setEnabled( true );
+        setToolButtonDarkFrameSubtraction( 1 );
     }
     else
     {
+        llrpFreeDarkFrameExtFileName(m_pMlvObject);
         ui->toolButtonDarkFrameSubtractionExt->setEnabled( false );
         setToolButtonDarkFrameSubtraction( 0 );
-        llrpFreeDarkFrameExtFileName(m_pMlvObject);
     }
 }

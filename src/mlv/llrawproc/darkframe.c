@@ -53,7 +53,7 @@ static int df_load_ext(mlvObject_t * video)
         return ret;
     }
     /* Allocate dark frame data buffer */
-    uint8_t * df_packed_buf = calloc(df_mlv.video_index->frame_size, 1);
+    uint8_t * df_packed_buf = calloc(df_mlv.video_index[0].frame_size, 1);
     if(!df_packed_buf)
     {
 #ifndef STDOUT_SILENT
@@ -62,8 +62,8 @@ static int df_load_ext(mlvObject_t * video)
         return 1;
     }
     /* Load dark frame data to the allocated buffer */
-    file_set_pos(df_mlv.file[0], df_mlv.video_index->frame_offset, SEEK_SET);
-    if ( fread(df_packed_buf, df_mlv.video_index->frame_size, 1, df_mlv.file[0]) != 1 )
+    file_set_pos(df_mlv.file[0], df_mlv.video_index[0].frame_offset, SEEK_SET);
+    if ( fread(df_packed_buf, df_mlv.video_index[0].frame_size, 1, df_mlv.file[0]) != 1 )
     {
 #ifndef STDOUT_SILENT
         printf("DF: could not read frame: %s\n", video->llrawproc->dark_frame_filename);
@@ -75,7 +75,7 @@ static int df_load_ext(mlvObject_t * video)
     df_free(video);
     /* Fill DARK block header */
     memcpy(&video->llrawproc->dark_frame_hdr.blockType, "DARK", 4);
-    video->llrawproc->dark_frame_hdr.blockSize = sizeof(mlv_dark_hdr_t) + df_mlv.video_index->frame_size;
+    video->llrawproc->dark_frame_hdr.blockSize = sizeof(mlv_dark_hdr_t) + df_mlv.video_index[0].frame_size;
     video->llrawproc->dark_frame_hdr.timestamp = 0xFFFFFFFFFFFFFFFF;
     video->llrawproc->dark_frame_hdr.samplesAveraged = MAX(df_mlv.VIDF.frameNumber, df_mlv.MLVI.videoFrameCount);
     video->llrawproc->dark_frame_hdr.cameraModel = df_mlv.IDNT.cameraModel;
@@ -111,11 +111,39 @@ static int df_load_ext(mlvObject_t * video)
 static int df_load_int(mlvObject_t * video)
 {
     /* if DARK block is not found return error */
-    if(video->DARK.blockType[0]) return 1;
+    if(!video->DARK.blockType[0]) return 1;
+    /* Allocate dark frame data buffer */
+    size_t df_packed_size = video->DARK.blockSize - sizeof(mlv_dark_hdr_t);
+    uint8_t * df_packed_buf = calloc(df_packed_size, 1);
+    if(!df_packed_buf)
+    {
 #ifndef STDOUT_SILENT
-    printf("DF: initialized Int mode\n");
+        printf("DF: packed buffer allocation error\n");
 #endif
-
+        return 1;
+    }
+    /* Load dark frame data to the allocated buffer */
+    file_set_pos(video->file[0], video->dark_frame_offset, SEEK_SET);
+    if ( fread(df_packed_buf, df_packed_size, 1, video->file[0]) != 1 )
+    {
+#ifndef STDOUT_SILENT
+        printf("DF: could not read frame: %s\n", video->llrawproc->dark_frame_filename);
+#endif
+        free(df_packed_buf);
+        return 1;
+    }
+    /* Free all data related to the dark frame if needed */
+    df_free(video);
+    /* Copy DARK block header */
+    memcpy(&video->llrawproc->dark_frame_hdr, &video->DARK, sizeof(mlv_dark_hdr_t));
+    /* Allocate the dark frame 16bit buffer */
+    video->llrawproc->dark_frame_size = video->DARK.xRes * video->DARK.yRes * 2;
+    video->llrawproc->dark_frame_data = calloc(video->llrawproc->dark_frame_size + 4, 1);
+    dng_unpack_image_bits(video->llrawproc->dark_frame_data, (uint16_t*)df_packed_buf, video->DARK.xRes, video->DARK.yRes, video->DARK.bits_per_pixel);
+//#ifndef STDOUT_SILENT
+    printf("DF: initialized Int mode\n");
+//#endif
+    free(df_packed_buf);
     return 0;
 }
 
@@ -160,6 +188,7 @@ void df_subtract(mlvObject_t * video, uint16_t * raw_image_buff, size_t raw_imag
 
 int df_init(mlvObject_t * video)
 {
+    printf("DF Mode = %u\n", video->llrawproc->dark_frame);
     switch(video->llrawproc->dark_frame)
     {
         case DF_EXT:
