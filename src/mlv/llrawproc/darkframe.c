@@ -38,6 +38,7 @@ static uint64_t file_set_pos(FILE *stream, uint64_t offset, int whence)
 #endif
 }
 
+/* load dark frame from external averaged MLV file */
 static int df_load_ext(mlvObject_t * video)
 {
     /* If file name is not set return error */
@@ -108,6 +109,7 @@ static int df_load_ext(mlvObject_t * video)
     return 0;
 }
 
+/* load dark frame from current MLVs internal DARK block header */
 static int df_load_int(mlvObject_t * video)
 {
     /* if DARK block is not found return error */
@@ -147,6 +149,7 @@ static int df_load_int(mlvObject_t * video)
     return 0;
 }
 
+/* copy filename of external dark frame MLV to llrawproc structure */
 void df_init_filename(mlvObject_t * video, char * df_filename)
 {
     size_t df_filename_size = strlen(df_filename);
@@ -154,12 +157,14 @@ void df_init_filename(mlvObject_t * video, char * df_filename)
     memcpy(video->llrawproc->dark_frame_filename, df_filename, df_filename_size);
 }
 
+/* delete filename of external dark frame MLV from llrawproc structure */
 void df_free_filename(mlvObject_t * video)
 {
     if(video->llrawproc->dark_frame_filename) free(video->llrawproc->dark_frame_filename);
     video->llrawproc->dark_frame_filename = NULL;
 }
 
+/* subtract dark frame from the current frame */
 void df_subtract(mlvObject_t * video, uint16_t * raw_image_buff, size_t raw_image_size)
 {
     if( !video->llrawproc->dark_frame_data || (raw_image_size != video->llrawproc->dark_frame_size) )
@@ -186,6 +191,7 @@ void df_subtract(mlvObject_t * video, uint16_t * raw_image_buff, size_t raw_imag
     }
 }
 
+/* process DF modes: Off, Ext or Int, if Off just free all DF data */
 int df_init(mlvObject_t * video)
 {
     switch(video->llrawproc->dark_frame)
@@ -200,6 +206,7 @@ int df_init(mlvObject_t * video)
     }
 }
 
+/* free all DF data */
 void df_free(mlvObject_t * video)
 {
     if(video->llrawproc->dark_frame_data)
