@@ -101,9 +101,9 @@ static int df_load_ext(mlvObject_t * video)
     video->llrawproc->dark_frame_size = df_mlv.RAWI.xRes * df_mlv.RAWI.yRes * 2;
     video->llrawproc->dark_frame_data = calloc(video->llrawproc->dark_frame_size + 4, 1);
     dng_unpack_image_bits(video->llrawproc->dark_frame_data, (uint16_t*)df_packed_buf, df_mlv.RAWI.xRes, df_mlv.RAWI.yRes, df_mlv.RAWI.raw_info.bits_per_pixel);
-//#ifndef STDOUT_SILENT
+#ifndef STDOUT_SILENT
     printf("DF: initialized Ext mode\n");
-//#endif
+#endif
     free(df_packed_buf);
     return 0;
 }
@@ -140,9 +140,9 @@ static int df_load_int(mlvObject_t * video)
     video->llrawproc->dark_frame_size = video->DARK.xRes * video->DARK.yRes * 2;
     video->llrawproc->dark_frame_data = calloc(video->llrawproc->dark_frame_size + 4, 1);
     dng_unpack_image_bits(video->llrawproc->dark_frame_data, (uint16_t*)df_packed_buf, video->DARK.xRes, video->DARK.yRes, video->DARK.bits_per_pixel);
-//#ifndef STDOUT_SILENT
+#ifndef STDOUT_SILENT
     printf("DF: initialized Int mode\n");
-//#endif
+#endif
     free(df_packed_buf);
     return 0;
 }
@@ -188,7 +188,6 @@ void df_subtract(mlvObject_t * video, uint16_t * raw_image_buff, size_t raw_imag
 
 int df_init(mlvObject_t * video)
 {
-    printf("DF Mode = %u\n", video->llrawproc->dark_frame);
     switch(video->llrawproc->dark_frame)
     {
         case DF_EXT:
@@ -205,9 +204,9 @@ void df_free(mlvObject_t * video)
 {
     if(video->llrawproc->dark_frame_data)
     {
-//#ifndef STDOUT_SILENT
+#ifndef STDOUT_SILENT
         printf("DF: all data freed\n");
-//#endif
+#endif
         free(video->llrawproc->dark_frame_data);
         video->llrawproc->dark_frame_data = NULL;
         video->llrawproc->dark_frame_size = 0;
