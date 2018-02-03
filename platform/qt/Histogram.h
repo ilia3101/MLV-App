@@ -18,7 +18,7 @@ public:
     Histogram();
     ~Histogram();
     QImage getHistogramFromImg( QImage *img );
-    QImage getHistogramFromRaw( uint8_t *m_pRawImage, uint16_t width, uint16_t height );
+    QImage getHistogramFromRaw(uint8_t *m_pRawImage, uint16_t width, uint16_t height , bool under, bool over);
 
 private:
     QImage *m_pHistogram;

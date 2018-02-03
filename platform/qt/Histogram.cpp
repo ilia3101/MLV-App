@@ -7,13 +7,15 @@
 
 #include "Histogram.h"
 #include "math.h"
+#include <QDebug>
 
 #define HEIGHT 140
+#define WIDTH 511 //511 = 8bit * 2 - 1
 
 //Constructor
 Histogram::Histogram()
 {
-    m_pHistogram = new QImage( 511, HEIGHT, QImage::Format_RGB888 ); //511 = 8bit * 2 - 1
+    m_pHistogram = new QImage( WIDTH, HEIGHT, QImage::Format_RGB888 );
 }
 
 //Destructor
@@ -88,7 +90,7 @@ QImage Histogram::getHistogramFromImg( QImage *img )
 }
 
 //Make histogram from Raw Image (8bit R, 8bit G, 8bit B,...)
-QImage Histogram::getHistogramFromRaw(uint8_t *m_pRawImage, uint16_t width, uint16_t height)
+QImage Histogram::getHistogramFromRaw(uint8_t *m_pRawImage, uint16_t width, uint16_t height, bool under, bool over)
 {
     uint32_t tableR[256] = {0};
     uint32_t tableG[256] = {0};
@@ -149,5 +151,16 @@ QImage Histogram::getHistogramFromRaw(uint8_t *m_pRawImage, uint16_t width, uint
             }
         }
     }
+
+    //Paint over- / underexposed
+    for( uint8_t x = 0; x < 10; x++ )
+    {
+        for( uint8_t y = 0; y < 10; y++ )
+        {
+            if( over ) m_pHistogram->setPixelColor( WIDTH - x - 1, y, Qt::red );
+            if( under ) m_pHistogram->setPixelColor( x, y, Qt::blue );
+        }
+    }
+
     return *m_pHistogram;
 }

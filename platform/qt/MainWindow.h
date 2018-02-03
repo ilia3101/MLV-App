@@ -278,7 +278,7 @@ private:
     void setPreviewMode( void );
     double getFramerate( void );
     void paintAudioTrack( void );
-    void drawZebras( void );
+    uint8_t drawZebras( void );
     void drawFrameNumberLabel( void );
     void setToolButtonFocusPixels( int index );
     void setToolButtonFocusPixelsIntMethod( int index );

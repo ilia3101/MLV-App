@@ -2596,11 +2596,13 @@ void MainWindow::paintAudioTrack( void )
     ui->labelAudioTrack->setAlignment( Qt::AlignCenter ); //Always in the middle
 }
 
-//Draw Zebras
-void MainWindow::drawZebras()
+//Draw Zebras, return: 1=under, 2=over, 3=under+over, 0=okay
+uint8_t MainWindow::drawZebras()
 {
+    uint8_t underOver = 0;
+
     //If option not checked we do nothing
-    if( !ui->actionShowZebras->isChecked() ) return;
+    if( !ui->actionShowZebras->isChecked() ) return underOver;
 
     //Get image
     QImage image = m_pGraphicsItem->pixmap().toImage();
@@ -2615,17 +2617,21 @@ void MainWindow::drawZebras()
             {
                 //Set color red
                 image.setPixelColor( x, y, Qt::red );
+                underOver |= 0x02;
             }
             //Underexposed
             if( pixel.lightness() <= 3 )
             {
                 //Set color blue
                 image.setPixelColor( x, y, Qt::blue );
+                underOver |= 0x01;
             }
         }
     }
     //Set image with zebras to viewer
     m_pGraphicsItem->setPixmap( QPixmap::fromImage( image ) );
+
+    return underOver;
 }
 
 //Write the frame number into the label
@@ -4540,12 +4546,17 @@ void MainWindow::drawFrameReady()
         }
     }
     //Add zebras on the image
-    drawZebras();
+    uint8_t underOver = drawZebras();
+    //Bring over/under to histogram
+    bool under = false;
+    bool over = false;
+    if( ( underOver & 0x01 ) == 0x01 ) under = true;
+    if( ( underOver & 0x02 ) == 0x02 ) over = true;
 
     //GetHistogram
     if( ui->actionShowHistogram->isChecked() )
     {
-        QPixmap pic = QPixmap::fromImage( m_pHistogram->getHistogramFromRaw( m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject) )
+        QPixmap pic = QPixmap::fromImage( m_pHistogram->getHistogramFromRaw( m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), under, over )
                                                           .scaled( ui->labelHistogram->width() * devicePixelRatio(),
                                                                    ui->labelHistogram->height() * devicePixelRatio(),
                                                                    Qt::IgnoreAspectRatio, Qt::SmoothTransformation) ); //alternative: Qt::FastTransformation
