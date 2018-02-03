@@ -479,14 +479,18 @@ void processingSetWhiteBalance(processingObject_t * processing, double WBKelvin,
 {
     processing->kelvin = WBKelvin;
 
-    /* Non-linear tint makes control finer in the middle */
-    int is_negative = (WBTint < 0.0);
-    if (is_negative) WBTint = -WBTint;
-    WBTint /= 10.0;
-    WBTint = pow(WBTint, 1.75) * 10.0;
-    if (is_negative) WBTint = -WBTint;
-    
-    processing->wb_tint = WBTint;
+    /* Avoid changing tint if just changing kelvin */
+    if (WBTint != processing->wb_tint)
+    {
+        /* Non-linear tint makes control finer in the middle */
+        int is_negative = (WBTint < 0.0);
+        if (is_negative) WBTint = -WBTint;
+        WBTint /= 10.0;
+        WBTint = pow(WBTint, 1.75) * 10.0;
+        if (is_negative) WBTint = -WBTint;
+
+        processing->wb_tint = WBTint;
+    }
     
     /* Kalkulate channel (yes in cone space... soon) multipliers */
     get_kelvin_multipliers_rgb(WBKelvin, processing->wb_multipliers);
