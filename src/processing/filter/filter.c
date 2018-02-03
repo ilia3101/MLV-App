@@ -37,7 +37,7 @@ FILE * open_filter(char * text)
 #ifdef __linux__
 #define close_filter(filter) fclose(filter);
 #else
-#define close_filter(filter) { fclose(filter); system("rm __filter_temp__"); }
+#define close_filter(filter) { fclose(filter); remove("__filter_temp__"); }
 #endif
 
 filterObject_t * initFilterObject()
