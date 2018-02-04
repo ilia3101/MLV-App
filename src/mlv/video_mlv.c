@@ -729,8 +729,16 @@ mapp_error:
 }
 
 /* Save MLV headers */
-int saveMlvHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int export_mode, uint32_t frame_start, uint32_t frame_end, const char * version)
+int saveMlvHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int export_mode, uint32_t frame_start, uint32_t frame_end, const char * version, char** error_message)
 {
+    if(export_mode == MLV_DF_INT && !video->DARK.blockType[0])
+    {
+        DEBUG( printf("\nThere is no internal darkframe in %s\n", video->path); )
+        strcpy(*error_message, "There is no internal darkframe in: ");
+        strcat(*error_message, video->path);
+        return 1;
+    }
+
     /* construct version info */
     char version_info[32] = { 0 };
     memcpy(version_info, "MLV App version ", 16);
@@ -759,6 +767,7 @@ int saveMlvHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int
     uint8_t * mlv_headers_buf = malloc(mlv_headers_size);
     if(!mlv_headers_buf)
     {
+        DEBUG( printf("\nCould not allocate memory for block headers\n"); )
         return 1;
     }
 
@@ -916,7 +925,7 @@ int saveMlvHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int
 }
 
 /* Save video frame plus audio if available */
-int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int export_mode, uint32_t frame_start, uint32_t frame_end, uint32_t frame_index, uint32_t * avg_buf)
+int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int export_mode, uint32_t frame_start, uint32_t frame_end, uint32_t frame_index, uint32_t * avg_buf, char** error_message)
 {
     mlv_vidf_hdr_t vidf_hdr = { 0 };
 
@@ -971,21 +980,13 @@ int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
 
     if(export_mode == MLV_DF_INT) // export internal dark frame as separate MLV
     {
-        if(!video->DARK.blockType[0])
-        {
-            //DEBUG(
-                        printf("\nThere is no DARK block for extracting in %s\n", video->path);// )
-            free(frame_buf);
-            free(block_buf);
-            return 1;
-        }
-
         size_t df_packed_size = video->DARK.blockSize - sizeof(mlv_dark_hdr_t);
         /* read dark frame */
         file_set_pos(video->file[0], video->dark_frame_offset, SEEK_SET);
         if(fread(frame_buf, df_packed_size, 1, video->file[0]) != 1)
         {
             DEBUG( printf("\nCould not read VIDF block image data from MLV file\n"); )
+            strcpy(*error_message, "There is no internal darkframe in ");
             free(frame_buf);
             free(block_buf);
             return 1;

@@ -1473,16 +1473,21 @@ void MainWindow::startExportMlv(QString fileName)
     //Check if MLV has audio and it is requested to be exported
     int exportAudio = (doesMlvHaveAudio( m_pMlvObject ) && m_audioExportEnabled);
     //Save MLV block headers
-    int ret = saveMlvHeaders( m_pMlvObject, mlvOut, exportAudio, m_codecOption, m_exportQueue.first()->cutIn(), m_exportQueue.first()->cutOut(), VERSION );
+    char * errorMessage = (char*)calloc(256, 1);
+    int ret = saveMlvHeaders( m_pMlvObject, mlvOut, exportAudio, m_codecOption, m_exportQueue.first()->cutIn(), m_exportQueue.first()->cutOut(), VERSION, &errorMessage );
     //Output frames loop
     for( uint32_t frame = m_exportQueue.first()->cutIn() - 1; frame < m_exportQueue.first()->cutOut(); frame++ )
     {
         //Save audio and video frames
-        if( ret || saveMlvAVFrame( m_pMlvObject, mlvOut, exportAudio, m_codecOption, m_exportQueue.first()->cutIn(), m_exportQueue.first()->cutOut(), frame , averagedImage) )
+        if( ret || saveMlvAVFrame( m_pMlvObject, mlvOut, exportAudio, m_codecOption, m_exportQueue.first()->cutIn(), m_exportQueue.first()->cutOut(), frame , averagedImage, &errorMessage) )
         {
+
+            fclose(mlvOut); mlvOut = NULL;
+            QFile( pathName ).remove();
+
             ret = QMessageBox::critical( this,
                                          tr( "MLV App - Export file error" ),
-                                         tr( "Could not save: %1\nHow do you like to proceed?" ).arg( MlvFileName.data() ),
+                                         tr( "%1" ).arg( errorMessage ),
                                          tr( "Abort current export" ),
                                          tr( "Abort batch export" ),
                                          0, 1 );
@@ -1508,7 +1513,9 @@ void MainWindow::startExportMlv(QString fileName)
     }
 
     if( averagedImage ) free( averagedImage );
-    fclose(mlvOut);
+    if( errorMessage ) free( errorMessage );
+    if( mlvOut ) fclose(mlvOut);
+    QFile( pathName ).remove();
     //Enable GUI drawing
     m_dontDraw = false;
     //Emit Ready-Signal
