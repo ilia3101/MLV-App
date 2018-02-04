@@ -25,6 +25,8 @@ public:
     void setLr( int value )         {m_lr = value;}
     void setLs( int value )         {m_ls = value;}
     void setLightening( int value ) {m_lightening = value;}
+    void setShadows( int value )    {m_shadows = value;}
+    void setHighlights( int value ) {m_highlights = value;}
     void setSharpen( int value )    {m_sharpen = value;}
     void setChromaBlur( int value ) {m_chromaBlur = value;}
     void setHighlightReconstruction( bool on ){m_highlightReconstruction = on;}
@@ -67,6 +69,8 @@ public:
     int lr( void )         {return m_lr;}
     int ls( void )         {return m_ls;}
     int lightening( void ) {return m_lightening;}
+    int shadows( void )    {return m_shadows;}
+    int highlights( void ) {return m_highlights;}
     int sharpen( void )    {return m_sharpen;}
     int chromaBlur( void ) {return m_chromaBlur;}
     bool isHighlightReconstruction( void ){return m_highlightReconstruction;}
@@ -110,6 +114,8 @@ private:
     int m_lr;
     int m_ls;
     int m_lightening;
+    int m_shadows;
+    int m_highlights;
     int m_sharpen;
     int m_chromaBlur;
     bool m_highlightReconstruction;

@@ -70,6 +70,8 @@ private slots:
     void on_horizontalSliderLS_valueChanged(int position);
     void on_horizontalSliderLR_valueChanged(int position);
     void on_horizontalSliderLighten_valueChanged(int position);
+    void on_horizontalSliderShadows_valueChanged(int position);
+    void on_horizontalSliderHighlights_valueChanged(int position);
     void on_horizontalSliderSharpen_valueChanged(int position);
     void on_horizontalSliderChromaBlur_valueChanged(int position);
     void on_horizontalSliderFilterStrength_valueChanged(int position);
@@ -122,6 +124,8 @@ private slots:
     void on_label_LrVal_doubleClicked( void );
     void on_label_LsVal_doubleClicked( void );
     void on_label_LightenVal_doubleClicked( void );
+    void on_label_ShadowsVal_doubleClicked( void );
+    void on_label_HighlightsVal_doubleClicked( void );
     void on_label_Sharpen_doubleClicked( void );
     void on_label_ChromaBlur_doubleClicked( void );
     void on_labelAudioTrack_sizeChanged( void );

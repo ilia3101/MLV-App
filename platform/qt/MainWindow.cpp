@@ -1923,6 +1923,16 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
             else receipt->setLightening( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
+        else if( Rxml->isStartElement() && Rxml->name() == "shadows" )
+        {
+            receipt->setShadows( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == "highlights" )
+        {
+            receipt->setHighlights( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
         else if( Rxml->isStartElement() && Rxml->name() == "sharpen" )
         {
             receipt->setSharpen( Rxml->readElementText().toInt() );
@@ -2085,6 +2095,8 @@ void MainWindow::writeXmlElementsToFile(QXmlStreamWriter *xmlWriter, ReceiptSett
     xmlWriter->writeTextElement( "ls",                      QString( "%1" ).arg( receipt->ls() ) );
     xmlWriter->writeTextElement( "lr",                      QString( "%1" ).arg( receipt->lr() ) );
     xmlWriter->writeTextElement( "lightening",              QString( "%1" ).arg( receipt->lightening() ) );
+    xmlWriter->writeTextElement( "shadows",                 QString( "%1" ).arg( receipt->shadows() ) );
+    xmlWriter->writeTextElement( "highlights",              QString( "%1" ).arg( receipt->highlights() ) );
     xmlWriter->writeTextElement( "sharpen",                 QString( "%1" ).arg( receipt->sharpen() ) );
     xmlWriter->writeTextElement( "chromaBlur",              QString( "%1" ).arg( receipt->chromaBlur() ) );
     xmlWriter->writeTextElement( "highlightReconstruction", QString( "%1" ).arg( receipt->isHighlightReconstruction() ) );
@@ -2227,6 +2239,9 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
 
     ui->horizontalSliderLighten->setValue( receipt->lightening() );
 
+    ui->horizontalSliderShadows->setValue( receipt->shadows() );
+    ui->horizontalSliderHighlights->setValue( receipt->highlights() );
+
     ui->horizontalSliderSharpen->setValue( receipt->sharpen() );
     ui->horizontalSliderChromaBlur->setValue( receipt->chromaBlur() );
 
@@ -2331,6 +2346,8 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     receipt->setLs( ui->horizontalSliderLS->value() );
     receipt->setLr( ui->horizontalSliderLR->value() );
     receipt->setLightening( ui->horizontalSliderLighten->value() );
+    receipt->setShadows( ui->horizontalSliderShadows->value() );
+    receipt->setHighlights( ui->horizontalSliderHighlights->value() );
     receipt->setSharpen( ui->horizontalSliderSharpen->value() );
     receipt->setChromaBlur( ui->horizontalSliderChromaBlur->value() );
     receipt->setHighlightReconstruction( ui->checkBoxHighLightReconstruction->isChecked() );
@@ -2377,6 +2394,8 @@ void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings 
     receiptTarget->setLs( receiptSource->ls() );
     receiptTarget->setLr( receiptSource->lr() );
     receiptTarget->setLightening( receiptSource->lightening() );
+    receiptTarget->setShadows( receiptSource->shadows() );
+    receiptTarget->setHighlights( receiptSource->highlights() );
     receiptTarget->setSharpen( receiptSource->sharpen() );
     receiptTarget->setChromaBlur( receiptSource->chromaBlur() );
     receiptTarget->setHighlightReconstruction( receiptSource->isHighlightReconstruction() );
@@ -2461,6 +2480,8 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     receipt->setLr( m_pSessionReceipts.at( row )->lr() );
     receipt->setLs( m_pSessionReceipts.at( row )->ls() );
     receipt->setLightening( m_pSessionReceipts.at( row )->lightening() );
+    receipt->setShadows( m_pSessionReceipts.at( row )->shadows() );
+    receipt->setHighlights( m_pSessionReceipts.at( row )->highlights() );
     receipt->setSharpen( m_pSessionReceipts.at( row )->sharpen() );
     receipt->setChromaBlur( m_pSessionReceipts.at( row )->chromaBlur() );
     receipt->setHighlightReconstruction( m_pSessionReceipts.at( row )->isHighlightReconstruction() );
@@ -3108,6 +3129,20 @@ void MainWindow::on_horizontalSliderLighten_valueChanged(int position)
 {
     processingSetLightening( m_pProcessingObject, position * FACTOR_LIGHTEN / 100.0 );
     ui->label_LightenVal->setText( QString("%1").arg( position ) );
+    m_frameChanged = true;
+}
+
+void MainWindow::on_horizontalSliderShadows_valueChanged(int position)
+{
+    //TODO: processing call
+    ui->label_ShadowsVal->setText( QString("%1").arg( position ) );
+    m_frameChanged = true;
+}
+
+void MainWindow::on_horizontalSliderHighlights_valueChanged(int position)
+{
+    //TODO: processing call
+    ui->label_HighlightsVal->setText( QString("%1").arg( position ) );
     m_frameChanged = true;
 }
 
@@ -3914,6 +3949,24 @@ void MainWindow::on_label_LightenVal_doubleClicked()
     editSlider.autoSetup( ui->horizontalSliderLighten, ui->label_LightenVal, 1.0, 0, 1.0 );
     editSlider.exec();
     ui->horizontalSliderLighten->setValue( editSlider.getValue() );
+}
+
+//DoubleClick on Shadows Label
+void MainWindow::on_label_ShadowsVal_doubleClicked()
+{
+    EditSliderValueDialog editSlider;
+    editSlider.autoSetup( ui->horizontalSliderShadows, ui->label_ShadowsVal, 1.0, 0, 1.0 );
+    editSlider.exec();
+    ui->horizontalSliderShadows->setValue( editSlider.getValue() );
+}
+
+//DoubleClick on Highlights Label
+void MainWindow::on_label_HighlightsVal_doubleClicked()
+{
+    EditSliderValueDialog editSlider;
+    editSlider.autoSetup( ui->horizontalSliderHighlights, ui->label_HighlightsVal, 1.0, 0, 1.0 );
+    editSlider.exec();
+    ui->horizontalSliderHighlights->setValue( editSlider.getValue() );
 }
 
 //DoubleClick on Sharpen Label
