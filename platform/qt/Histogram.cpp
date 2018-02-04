@@ -7,7 +7,6 @@
 
 #include "Histogram.h"
 #include "math.h"
-#include <QDebug>
 
 #define HEIGHT 140
 #define WIDTH 511 //511 = 8bit * 2 - 1
@@ -159,6 +158,22 @@ QImage Histogram::getHistogramFromRaw(uint8_t *m_pRawImage, uint16_t width, uint
         {
             if( over ) m_pHistogram->setPixelColor( WIDTH - x - 1, y, Qt::red );
             if( under ) m_pHistogram->setPixelColor( x, y, Qt::blue );
+        }
+
+        //Paint a frame around the indicators to make it better visible
+        if( over )
+        {
+            m_pHistogram->setPixelColor( WIDTH - x - 1, 10, QColor( 30, 30, 30 ) );
+            m_pHistogram->setPixelColor( WIDTH - x - 1, 11, QColor( 30, 30, 30 ) );
+            m_pHistogram->setPixelColor( WIDTH - 11, x, QColor( 30, 30, 30 ) );
+            m_pHistogram->setPixelColor( WIDTH - 12, x, QColor( 30, 30, 30 ) );
+        }
+        if( under )
+        {
+            m_pHistogram->setPixelColor( x, 10, QColor( 30, 30, 30 ) );
+            m_pHistogram->setPixelColor( x, 11, QColor( 30, 30, 30 ) );
+            m_pHistogram->setPixelColor( 11, x, QColor( 30, 30, 30 ) );
+            m_pHistogram->setPixelColor( 12, x, QColor( 30, 30, 30 ) );
         }
     }
 
