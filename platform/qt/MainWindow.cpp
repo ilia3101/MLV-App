@@ -32,7 +32,7 @@
 #include "DarkStyle.h"
 
 #define APPNAME "MLV App"
-#define VERSION "0.13 alpha"
+#define VERSION "0.14 alpha"
 
 #define FACTOR_DS       22.5
 #define FACTOR_LS       11.2
