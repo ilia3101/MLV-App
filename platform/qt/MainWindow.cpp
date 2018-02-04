@@ -1469,11 +1469,12 @@ void MainWindow::startExportMlv(QString fileName)
 
     //Allocate buffer for averaging
     uint32_t * averagedImage = NULL;
-    if( m_codecOption == 2) averagedImage = (uint32_t *)calloc( m_pMlvObject->RAWI.xRes * m_pMlvObject->RAWI.yRes * sizeof( uint32_t ), 1 );
+    if( m_codecOption == CODEC_MLV_AVERAGED ) averagedImage = (uint32_t *)calloc( m_pMlvObject->RAWI.xRes * m_pMlvObject->RAWI.yRes * sizeof( uint32_t ), 1 );
     //Check if MLV has audio and it is requested to be exported
     int exportAudio = (doesMlvHaveAudio( m_pMlvObject ) && m_audioExportEnabled);
-    //Save MLV block headers
+    //Error message string passed from backend
     char * errorMessage = (char*)calloc(256, 1);
+    //Save MLV block headers
     int ret = saveMlvHeaders( m_pMlvObject, mlvOut, exportAudio, m_codecOption, m_exportQueue.first()->cutIn(), m_exportQueue.first()->cutOut(), VERSION, &errorMessage );
     //Output frames loop
     for( uint32_t frame = m_exportQueue.first()->cutIn() - 1; frame < m_exportQueue.first()->cutOut(); frame++ )
@@ -1481,7 +1482,6 @@ void MainWindow::startExportMlv(QString fileName)
         //Save audio and video frames
         if( ret || saveMlvAVFrame( m_pMlvObject, mlvOut, exportAudio, m_codecOption, m_exportQueue.first()->cutIn(), m_exportQueue.first()->cutOut(), frame , averagedImage, &errorMessage) )
         {
-
             fclose(mlvOut); mlvOut = NULL;
             QFile( pathName ).remove();
 
@@ -1491,14 +1491,8 @@ void MainWindow::startExportMlv(QString fileName)
                                          tr( "Abort current export" ),
                                          tr( "Abort batch export" ),
                                          0, 1 );
-            if( ret )
-            {
-                exportAbort();
-            }
-            else
-            {
-                break;
-            }
+            if( ret ) exportAbort();
+            else break;
         }
         else
         {
@@ -1511,11 +1505,10 @@ void MainWindow::startExportMlv(QString fileName)
         //Abort pressed? -> End the loop
         if( m_exportAbortPressed || m_codecOption == CODEC_MLV_EXTRACT_DF) break;
     }
-
-    if( averagedImage ) free( averagedImage );
+    //Clean up
     if( errorMessage ) free( errorMessage );
+    if( averagedImage ) free( averagedImage );
     if( mlvOut ) fclose(mlvOut);
-    QFile( pathName ).remove();
     //Enable GUI drawing
     m_dontDraw = false;
     //Emit Ready-Signal
