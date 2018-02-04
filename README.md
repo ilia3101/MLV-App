@@ -12,12 +12,12 @@ Find the latest releases [here](https://ilia3101.github.io/MLV-App/). Download, 
 - Support for any bit depth (…, 10, 12, 14bit)
 - Demosaic bilinear or multithreaded AMaZE
 - Processing with many parameters (exposure, white balance, saturation, dark & light adjustments, sharpen,…)
+- Processing filters for film emulation powered by neural networks :ghost:
 - Processing in sRGB or several LOG
 - RAW corrections (fix focus & bad pixels, chroma smoothing, pattern noise, vertical stripes, deflicker)
 - Autodetection for focus pixels and vertical stretching
 - MLV darkframe subtraction (with external / internal darkframe)
 - Support for dual ISO
-- 5 film and crossprocessing filters
 - Show clip information
 - Analysis: histogram (including markers for under-/overexposed), waveform monitor, RGB parade, vector scope
 - Session: open, import to, delete from, save, copy receipt, paste receipt (also batch paste), reset receipt, receipt file import & export, preview pictures for all clips
