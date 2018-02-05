@@ -398,26 +398,14 @@ void MainWindow::importNewMlv(QString fileName)
 //Short open MLV function, call only for making a preview!
 int MainWindow::openMlvForPreview(QString fileName)
 {
-    int mlv_err = MLV_ERR_NONE;
-    mlvObject_t * new_MlvObject = initMlvObjectWithClip( fileName.toLatin1().data(), &mlv_err, MLV_OPEN_PREVIEW );
-    if( mlv_err )
+    int mlvErr = MLV_ERR_NONE;
+    char mlvErrMsg[256] = { 0 };
+    mlvObject_t * new_MlvObject = initMlvObjectWithClip( fileName.toLatin1().data(), MLV_OPEN_PREVIEW, &mlvErr, mlvErrMsg );
+    if( mlvErr )
     {
-        switch ( mlv_err )
-        {
-            case MLV_ERR_NONE:
-                break;
-            case MLV_ERR_OPEN:
-                QMessageBox::critical( this, tr( "MLV Error" ), tr( "Could not open file: %1\n" ).arg( fileName.toLatin1().data() ), tr("Cancel") );
-                break;
-            case MLV_ERR_INVALID:
-                QMessageBox::critical( this, tr( "MLV Error" ), tr( "Invalid MLV file: %1\n").arg( fileName.toLatin1().data() ), tr("Cancel") );
-                break;
-            case MLV_ERR_IO:
-                QMessageBox::critical( this, tr( "MLV Error" ), tr( "Could not read from file: %1\n").arg( fileName.toLatin1().data() ), tr("Cancel") );
-                break;
-        }
+        QMessageBox::critical( this, tr( "MLV Error" ), tr( "%1" ).arg( mlvErrMsg ), tr("Cancel") );
         freeMlvObject( new_MlvObject );
-        return mlv_err;
+        return mlvErr;
     }
 
     //disable drawing and kill old timer and old WaveFormMonitor
@@ -504,26 +492,14 @@ int MainWindow::openMlv( QString fileName )
     if( ui->actionCreateMappFiles->isChecked() ) mlvOpenMode = MLV_OPEN_MAPP;
     else mlvOpenMode = MLV_OPEN_FULL;
 
-    int mlv_err = MLV_ERR_NONE;
-    mlvObject_t * new_MlvObject = initMlvObjectWithClip( fileName.toLatin1().data(), &mlv_err, mlvOpenMode );
-    if( mlv_err )
+    int mlvErr = MLV_ERR_NONE;
+    char mlvErrMsg[256] = { 0 };
+    mlvObject_t * new_MlvObject = initMlvObjectWithClip( fileName.toLatin1().data(), mlvOpenMode, &mlvErr, mlvErrMsg );
+    if( mlvErr )
     {
-        switch ( mlv_err )
-        {
-            case MLV_ERR_NONE:
-                break;
-            case MLV_ERR_OPEN:
-                QMessageBox::critical( this, tr( "MLV Error" ), tr( "Could not open file: %1\n" ).arg( fileName.toLatin1().data() ), tr("Cancel") );
-                break;
-            case MLV_ERR_INVALID:
-                QMessageBox::critical( this, tr( "MLV Error" ), tr( "Invalid MLV file: %1\n").arg( fileName.toLatin1().data() ), tr("Cancel") );
-                break;
-            case MLV_ERR_IO:
-                QMessageBox::critical( this, tr( "MLV Error" ), tr( "Could not read from file: %1\n").arg( fileName.toLatin1().data() ), tr("Cancel") );
-                break;
-        }
+        QMessageBox::critical( this, tr( "MLV Error" ), tr( "%1" ).arg( mlvErrMsg ), tr("Cancel") );
         freeMlvObject( new_MlvObject );
-        return mlv_err;
+        return mlvErr;
     }
 
     //Set window title to filename
@@ -1473,14 +1449,14 @@ void MainWindow::startExportMlv(QString fileName)
     //Check if MLV has audio and it is requested to be exported
     int exportAudio = (doesMlvHaveAudio( m_pMlvObject ) && m_audioExportEnabled);
     //Error message string passed from backend
-    char * errorMessage = (char*)calloc(256, 1);
+    char errorMessage[256] = { 0 };
     //Save MLV block headers
-    int ret = saveMlvHeaders( m_pMlvObject, mlvOut, exportAudio, m_codecOption, m_exportQueue.first()->cutIn(), m_exportQueue.first()->cutOut(), VERSION, &errorMessage );
+    int ret = saveMlvHeaders( m_pMlvObject, mlvOut, exportAudio, m_codecOption, m_exportQueue.first()->cutIn(), m_exportQueue.first()->cutOut(), VERSION, errorMessage );
     //Output frames loop
     for( uint32_t frame = m_exportQueue.first()->cutIn() - 1; frame < m_exportQueue.first()->cutOut(); frame++ )
     {
         //Save audio and video frames
-        if( ret || saveMlvAVFrame( m_pMlvObject, mlvOut, exportAudio, m_codecOption, m_exportQueue.first()->cutIn(), m_exportQueue.first()->cutOut(), frame , averagedImage, &errorMessage) )
+        if( ret || saveMlvAVFrame( m_pMlvObject, mlvOut, exportAudio, m_codecOption, m_exportQueue.first()->cutIn(), m_exportQueue.first()->cutOut(), frame , averagedImage, errorMessage) )
         {
             fclose(mlvOut); mlvOut = NULL;
             QFile( pathName ).remove();
@@ -1506,7 +1482,6 @@ void MainWindow::startExportMlv(QString fileName)
         if( m_exportAbortPressed || m_codecOption == CODEC_MLV_EXTRACT_DF) break;
     }
     //Clean up
-    if( errorMessage ) free( errorMessage );
     if( averagedImage ) free( averagedImage );
     if( mlvOut ) fclose(mlvOut);
     //Enable GUI drawing

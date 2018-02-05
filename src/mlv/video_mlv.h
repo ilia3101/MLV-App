@@ -12,7 +12,7 @@
  * and another created: initMlvObjectWithClip(), if you want to work with another MLV video */
 
 /* All functions in one */
-mlvObject_t * initMlvObjectWithClip(char * mlvPath, int * err, int preview);
+mlvObject_t * initMlvObjectWithClip(char * mlvPath, int preview, int * err, char * error_message);
 
 /* Initialises an MLV object. That's all you need to know */
 mlvObject_t * initMlvObject();
@@ -23,14 +23,14 @@ void printMlvInfo(mlvObject_t * video);
 /* Reads an MLV file in to a video object(mlvObject_t struct)
  * only puts frame indexes and metadata in to the mlvObject_t, 
  * no debayering or processing */
-int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode);
+int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode, char * error_message);
 /* return error codes of and open modes of openMlvClip() */
 enum mlv_err { MLV_ERR_NONE, MLV_ERR_OPEN, MLV_ERR_INVALID, MLV_ERR_IO };
 enum open_mode { MLV_OPEN_FULL, MLV_OPEN_MAPP, MLV_OPEN_PREVIEW };
 
 /* Functions for saving cut or averaged MLV */
-int saveMlvHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int export_mode, uint32_t frame_start, uint32_t frame_end, const char * version, char** error_message);
-int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int export_mode, uint32_t frame_start, uint32_t frame_end, uint32_t frame_index, uint32_t * avg_buf, char** error_message);
+int saveMlvHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int export_mode, uint32_t frame_start, uint32_t frame_end, const char * version, char * error_message);
+int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int export_mode, uint32_t frame_start, uint32_t frame_end, uint32_t frame_index, uint32_t * avg_buf, char * error_message);
 enum export_mode { MLV_FAST_PASS, MLV_COMPRESSED, MLV_AVERAGED_FRAME, MLV_DF_INT };
 /* from darkframe.c */
 extern int df_init(mlvObject_t * video);

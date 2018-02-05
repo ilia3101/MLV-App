@@ -450,10 +450,10 @@ void getMlvProcessedFrame8(mlvObject_t * video, uint64_t frameIndex, uint8_t * o
 
 /* To initialise mlv object with a clip
  * Two functions in one */
-mlvObject_t * initMlvObjectWithClip(char * mlvPath, int * err, int preview)
+mlvObject_t * initMlvObjectWithClip(char * mlvPath, int preview, int * err, char * error_message)
 {
     mlvObject_t * video = initMlvObject();
-    *err = openMlvClip(video, mlvPath, preview);
+    *err = openMlvClip(video, mlvPath, preview, error_message);
     return video;
 }
 
@@ -729,13 +729,12 @@ mapp_error:
 }
 
 /* Save MLV headers */
-int saveMlvHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int export_mode, uint32_t frame_start, uint32_t frame_end, const char * version, char** error_message)
+int saveMlvHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int export_mode, uint32_t frame_start, uint32_t frame_end, const char * version, char * error_message)
 {
     if(export_mode == MLV_DF_INT && !video->DARK.blockType[0])
     {
-        DEBUG( printf("\nThere is no internal darkframe in %s\n", video->path); )
-        strcpy(*error_message, "There is no internal darkframe in: ");
-        strcat(*error_message, video->path);
+        sprintf(error_message, "There is no internal darkframe in:  %s", video->path);
+        DEBUG( printf("\n%s\n", error_message); )
         return 1;
     }
 
@@ -767,8 +766,8 @@ int saveMlvHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int
     uint8_t * mlv_headers_buf = malloc(mlv_headers_size);
     if(!mlv_headers_buf)
     {
-        DEBUG( printf("\nCould not allocate memory for block headers\n"); )
-        strcpy(*error_message, "Could not allocate memory for block headers");
+        sprintf(error_message, "Could not allocate memory for block headers");
+        DEBUG( printf("\n%s\n", error_message); )
         return 1;
     }
 
@@ -915,8 +914,8 @@ int saveMlvHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int
     /* write mlv_headers_buf */
     if(fwrite(mlv_headers_buf, mlv_headers_size, 1, output_mlv) != 1)
     {
-        DEBUG( printf("\nCould not write MLV headers\n"); )
-        strcpy(*error_message, "Could not write MLV headers");
+        sprintf(error_message, "Could not write MLV headers");
+        DEBUG( printf("\n%s\n", error_message); )
         free(mlv_headers_buf);
         return 1;
     }
@@ -927,7 +926,7 @@ int saveMlvHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int
 }
 
 /* Save video frame plus audio if available */
-int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int export_mode, uint32_t frame_start, uint32_t frame_end, uint32_t frame_index, uint32_t * avg_buf, char** error_message)
+int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int export_mode, uint32_t frame_start, uint32_t frame_end, uint32_t frame_index, uint32_t * avg_buf, char * error_message)
 {
     mlv_vidf_hdr_t vidf_hdr = { 0 };
 
@@ -946,9 +945,8 @@ int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
     file_set_pos(video->file[chunk], block_offset, SEEK_SET);
     if(fread(&vidf_hdr, sizeof(mlv_vidf_hdr_t), 1, video->file[chunk]) != 1)
     {
-        DEBUG( printf("\nCould not read VIDF block header from '%s'\n", video->path); )
-        strcpy(*error_message, "Could not read VIDF block header from: ");
-        strcat(*error_message, video->path);
+        sprintf(error_message, "Could not read VIDF block header from:  %s", video->path);
+        DEBUG( printf("\n%s\n", error_message); )
         return 1;
     }
 
@@ -960,14 +958,16 @@ int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
     uint8_t * block_buf = calloc(sizeof(mlv_vidf_hdr_t) + frame_size_unpacked, 1);
     if(!block_buf)
     {
-        DEBUG( printf("\nCould not allocate memory for VIDF block\n"); )
+        sprintf(error_message, "Could not allocate memory for VIDF block");
+        DEBUG( printf("\n%s\n", error_message); )
         return 1;
     }
     /* for safety allocate max possible size buffer for image data, calculated for 16bits per pixel */
     uint8_t * frame_buf = calloc(frame_size_unpacked, 1);
     if(!frame_buf)
     {
-        DEBUG( printf("\nCould not allocate memory for VIDF frame\n"); )
+        sprintf(error_message, "Could not allocate memory for VIDF frame");
+        DEBUG( printf("\n%s\n", error_message); )
         free(block_buf);
         return 1;
     }
@@ -976,9 +976,8 @@ int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
     file_set_pos(video->file[chunk], frame_offset, SEEK_SET);
     if(fread(frame_buf, frame_size, 1, video->file[chunk]) != 1)
     {
-        DEBUG( printf("\nCould not read VIDF block image data from '%s'\n", video->path); )
-        strcpy(*error_message, "Could not read VIDF image data from: ");
-        strcat(*error_message, video->path);
+        sprintf(error_message, "Could not read VIDF image data from:  %s", video->path);
+        DEBUG( printf("\n%s\n", error_message); )
         free(frame_buf);
         free(block_buf);
         return 1;
@@ -991,9 +990,8 @@ int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
         file_set_pos(video->file[0], video->dark_frame_offset, SEEK_SET);
         if(fread(frame_buf, df_packed_size, 1, video->file[0]) != 1)
         {
-            DEBUG( printf("\nCould not read DARK block image data from '%s'\n", video->path); )
-            strcpy(*error_message, "Could not read DARK block image data from: ");
-            strcat(*error_message, video->path);
+            sprintf(error_message, "Could not read DARK block image data from:  %s", video->path);
+            DEBUG( printf("\n%s\n", error_message); )
             free(frame_buf);
             free(block_buf);
             return 1;
@@ -1009,8 +1007,8 @@ int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
         uint16_t * frame_buf_unpacked = calloc(frame_size_unpacked, 1);
         if(!frame_buf_unpacked)
         {
-            DEBUG( printf("\nAveraging: could not allocate memory for unpacked frame\n"); )
-            strcpy(*error_message, "Averaging: could not allocate memory for unpacked frame");
+            sprintf(error_message, "Averaging: could not allocate memory for unpacked frame");
+            DEBUG( printf("\n%s\n", error_message); )
             free(frame_buf);
             free(block_buf);
             return 1;
@@ -1020,8 +1018,8 @@ int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
             int ret = dng_decompress_image(frame_buf_unpacked, (uint16_t*)frame_buf, frame_size, video->RAWI.xRes, video->RAWI.yRes, video->RAWI.raw_info.bits_per_pixel);
             if(ret != LJ92_ERROR_NONE)
             {
-                DEBUG( printf("\nAveraging: could not decompress frame\n"); )
-                strcpy(*error_message, "Averaging: could not decompress frame");
+                sprintf(error_message, "Averaging: could not decompress frame:  LJ92_ERROR %u", ret);
+                DEBUG( printf("\n%s\n", error_message); )
                 free(frame_buf_unpacked);
                 free(frame_buf);
                 free(block_buf);
@@ -1122,8 +1120,8 @@ int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
         int16_t * mlv_audio_data = calloc(mlv_audio_size + 1024000, 1); // + 1Mb for safety
         if(!mlv_audio_data)
         {
-            DEBUG( printf("\nCould not allocate memory for audio data\n"); )
-            strcpy(*error_message, "Could not allocate memory for audio data");
+            sprintf(error_message, "Could not allocate memory for audio data");
+            DEBUG( printf("\n%s\n", error_message); )
             free(frame_buf);
             free(block_buf);
             return 1;
@@ -1137,8 +1135,8 @@ int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
         /* write AUDF block header */
         if(fwrite(&audf_hdr, sizeof(mlv_audf_hdr_t), 1, output_mlv) != 1)
         {
-            DEBUG( printf("\nCould not write AUDF block header\n"); )
-            strcpy(*error_message, "Could not write AUDF block header");
+            sprintf(error_message, "Could not write AUDF block header");
+            DEBUG( printf("\n%s\n", error_message); )
             free(mlv_audio_data);
             free(frame_buf);
             free(block_buf);
@@ -1147,8 +1145,8 @@ int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
         /* write audio data */
         if(fwrite((uint8_t *)mlv_audio_data + audio_start_offset, cut_audio_size, 1, output_mlv) != 1)
         {
-            DEBUG( printf("\nCould not write AUDF block audio data\n"); )
-            strcpy(*error_message, "Could not write AUDF block audio data");
+            sprintf(error_message, "Could not write AUDF block audio data");
+            DEBUG( printf("\n%s\n", error_message); )
             free(mlv_audio_data);
             free(frame_buf);
             free(block_buf);
@@ -1163,8 +1161,8 @@ int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
     {
         if(fwrite(block_buf, vidf_hdr.blockSize, 1, output_mlv) != 1)
         {
-            DEBUG( printf("\nCould not write video frame #%u\n", frame_index); )
-            strcpy(*error_message, "Could not write video frame");
+            sprintf(error_message, "Could not write video frame #%u", frame_index);
+            DEBUG( printf("\n%s\n", error_message); )
             free(frame_buf);
             free(block_buf);
             return 1;
@@ -1180,7 +1178,7 @@ int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
 /* Reads an MLV file in to a mlv object(mlvObject_t struct) 
  * only puts metadata in to the mlvObject_t, 
  * no debayering or bit unpacking */
-int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode)
+int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode, char * error_message)
 {
     video->path = malloc( strlen(mlvPath) + 1 );
     memcpy(video->path, mlvPath, strlen(mlvPath));
@@ -1188,7 +1186,8 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode)
     video->file = load_all_chunks(mlvPath, &video->filenum);
     if(!video->file)
     {
-        DEBUG( printf("\nCould not open file: %s\n", video->path); )
+        sprintf(error_message, "Could not open file:  %s", video->path);
+        DEBUG( printf("\n%s\n", error_message); )
         return MLV_ERR_OPEN; // can not open file
     }
 
@@ -1212,7 +1211,8 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode)
         uint64_t file_size = file_get_pos(video->file[i]);
         if ( !file_size )
         {
-            DEBUG( printf("\nZero byte size file: %s\n", video->path); )
+            sprintf(error_message, "Zero byte size file:  %s", video->path);
+            DEBUG( printf("\n%s\n", error_message); )
             --video->filenum;
             return MLV_ERR_INVALID;
         }
@@ -1221,7 +1221,8 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode)
         /* Read file header */
         if ( fread(&block_header, sizeof(mlv_hdr_t), 1, video->file[i]) != 1 )
         {
-            DEBUG( printf("\nFile is too short to be a valid MLV: %s\n", video->path); )
+            sprintf(error_message, "File is too short to be a valid MLV:  %s", video->path);
+            DEBUG( printf("\n%s\n", error_message); )
             --video->filenum;
             return MLV_ERR_INVALID;
         }
@@ -1233,7 +1234,8 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode)
         }
         else
         {
-            DEBUG( printf("\nFile header is missing, invalid MLV: %s\n", video->path); )
+            sprintf(error_message, "File header is missing, invalid MLV:  %s", video->path);
+            DEBUG( printf("\n%s\n", error_message); )
             --video->filenum;
             return MLV_ERR_INVALID;
         }
@@ -1246,7 +1248,8 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode)
             fread(&block_header, sizeof(mlv_hdr_t), 1, video->file[i]);
             if(block_header.blockSize < sizeof(mlv_hdr_t))
             {
-                DEBUG( printf("\nInvalid blockSize '%u', corrupted file '%s'\n", block_header.blockSize, video->path); )
+                sprintf(error_message, "Invalid blockSize '%u', corrupted file:  %s", block_header.blockSize, video->path);
+                DEBUG( printf("\n%s\n", error_message); )
                 --video->filenum;
                 return MLV_ERR_INVALID;
             }
@@ -1432,7 +1435,8 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode)
             {
                 char block_type[5] = { 0 };
                 memcpy(block_type, block_header.blockType, 4);
-                DEBUG( printf("\nUnknown blockType '%s' or corrupted file '%s'\n", block_type, video->path); )
+                sprintf(error_message, "Unknown blockType '%s' or corrupted file:  %s", block_type, video->path);
+                DEBUG( printf("\n%s\n", error_message); )
                 --video->filenum;
                 return MLV_ERR_INVALID;
             }
@@ -1449,7 +1453,8 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode)
     /* Return with error if no video frames found */
     if(!video_frames)
     {
-        DEBUG( printf("\nNo video frames found in '%s'\n", video->path); )
+        sprintf(error_message, "No video frames found in:  %s", video->path);
+        DEBUG( printf("\n%s\n", error_message); )
         --video->filenum;
         return MLV_ERR_INVALID;
     }
