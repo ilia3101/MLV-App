@@ -451,7 +451,7 @@ static size_t dng_get_image_size(mlvObject_t * mlv_data, int size_mode, uint64_t
 }
 
 /* generates the CDNG header. The result is written into dng_data struct */
-static void dng_fill_header(mlvObject_t * mlv_data, dngObject_t * dng_data)
+static void dng_fill_header(mlvObject_t * mlv_data, dngObject_t * dng_data, uint32_t frame_index)
 {
     uint8_t * header = dng_data->header_buf;
     size_t position = 0;
@@ -586,7 +586,7 @@ static void dng_fill_header(mlvObject_t * mlv_data, dngObject_t * dng_data)
 
         /* Time code stuff */
         //number of frames since midnight
-        int tc_frame = (int)mlv_data->VIDF.frameNumber;// + (uint64_t)((mlv_data->RTCI.tm_hour * 3600 + mlv_data->RTCI.tm_min * 60 + mlv_data->RTCI.tm_sec) * mlv_data->MLVI.sourceFpsNom) / (uint64_t)mlv_data->MLVI.sourceFpsDenom;
+        int tc_frame = (int)frame_index;// + (uint64_t)((mlv_data->RTCI.tm_hour * 3600 + mlv_data->RTCI.tm_min * 60 + mlv_data->RTCI.tm_sec) * mlv_data->MLVI.sourceFpsNom) / (uint64_t)mlv_data->MLVI.sourceFpsDenom;
         
         /* White balance stuff */
         int32_t wbal[6];
@@ -816,7 +816,7 @@ static void dng_reverse_byte_order(uint16_t * input_buffer, size_t buf_size)
 }
 
 /* build whole DNG frame (header + image), process image if needed and put to the dng struct ready to save */
-static int dng_get_frame(mlvObject_t * mlv_data, dngObject_t * dng_data, uint64_t frame_index)
+static int dng_get_frame(mlvObject_t * mlv_data, dngObject_t * dng_data, uint32_t frame_index)
 {
     int ret = 0;
     /* Move to start of frame in file and read the RAW data */
@@ -933,7 +933,7 @@ static int dng_get_frame(mlvObject_t * mlv_data, dngObject_t * dng_data, uint64_
         }
     }
 
-    dng_fill_header(mlv_data, dng_data);
+    dng_fill_header(mlv_data, dng_data, frame_index);
     return ret;
 }
 
@@ -961,7 +961,7 @@ dngObject_t * initDngObject(mlvObject_t * mlv_data, int raw_state, double fps, i
 }
 
 /* save DNG file */
-int saveDngFrame(mlvObject_t * mlv_data, dngObject_t * dng_data, uint64_t frame_index, char * dng_filename)
+int saveDngFrame(mlvObject_t * mlv_data, dngObject_t * dng_data, uint32_t frame_index, char * dng_filename)
 {
     FILE* dngf = fopen(dng_filename, "wb");
     if (!dngf)
