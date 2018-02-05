@@ -1,7 +1,7 @@
 # :fire::fire::fire: MLV App :fire::fire::fire:
 What is MLV App? A cross platform RAW conversion software that works **natively** with Magic Lantern MLV files.
 
-![MLVApp Qt](https://image.ibb.co/hteCf6/Bildschirmfoto.png)
+![MLVApp Qt](https://user-images.githubusercontent.com/30245296/35821380-24619114-0aa9-11e8-85ed-0a97e125ad96.png)
 
 Find the latest releases [here](https://ilia3101.github.io/MLV-App/). Download, unpack and start.
 
