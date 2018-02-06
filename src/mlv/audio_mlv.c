@@ -75,6 +75,7 @@ typedef struct {
 static wave_header_t generateMlvAudioToWaveHeader(mlvObject_t * video, uint64_t wave_data_size, uint64_t in_offset)
 {
     uint64_t file_size = wave_data_size + sizeof(wave_header_t);
+    uint64_t time_reference = (uint64_t)( (double)in_offset / (double)((getMlvAudioChannels(video) * getMlvAudioBitsPerSample(video))) );
 
     wave_header_t wave_header = {
         .RIFF                = {'R','I','F','F'},
@@ -82,7 +83,7 @@ static wave_header_t generateMlvAudioToWaveHeader(mlvObject_t * video, uint64_t 
         .WAVE                = {'W','A','V','E'},
         .bext_id             = {'b','e','x','t'},
         .bext_size           = sizeof( wave_bext_t ),
-        .bext.time_reference = in_offset / 2, //(uint64_t)(getMlvTmHour(video) * 3600 + getMlvTmMin(video) * 60 + getMlvTmSec(video)) * (uint64_t)getMlvSampleRate(video),
+        .bext.time_reference = time_reference, //(uint64_t)(getMlvTmHour(video) * 3600 + getMlvTmMin(video) * 60 + getMlvTmSec(video)) * (uint64_t)getMlvSampleRate(video),
         .bext.version        = 0x1,
         .bext.coding_history = {'P','C','M',' '},
         .iXML_id             = {'i','X','M','L'},
@@ -132,8 +133,8 @@ void writeMlvAudioToWaveCut(mlvObject_t * video, char * path, uint32_t cut_in, u
     int32_t frames = cut_out - ( cut_in - 1 );
     if( frames <= 0 ) return;
     uint64_t audio_size = getMlvAudioSize(video);
-    uint64_t in_offset = (uint64_t)( (double)(getMlvAudioChannels(video) * getMlvSampleRate(video) * sizeof( int16_t ) * ( cut_in - 1 )) / (double)getMlvFramerate(video) );
-    uint64_t theoretic_size = (uint64_t)( (double)(getMlvAudioChannels(video) * getMlvSampleRate(video) * sizeof(int16_t) * frames) / (double)getMlvFramerate(video) );
+    uint64_t in_offset = (uint64_t)( (double)(getMlvAudioChannels(video) * getMlvSampleRate(video) * getMlvAudioBitsPerSample(video) * ( cut_in - 1 )) / (double)getMlvFramerate(video) );
+    uint64_t theoretic_size = (uint64_t)( (double)(getMlvAudioChannels(video) * getMlvSampleRate(video) * getMlvAudioBitsPerSample(video) * frames) / (double)getMlvFramerate(video) );
     /* check if audio_start_offset is even */
     if(in_offset % 2) --in_offset;
     /* check if cut_audio_size is multiple of 4096 bytes */
@@ -164,7 +165,7 @@ void writeMlvAudioToWave(mlvObject_t * video, char * path)
     if (!doesMlvHaveAudio(video)) return;
 
     uint64_t audio_size = getMlvAudioSize(video);
-    uint64_t theoretic_size = getMlvAudioChannels(video) * getMlvSampleRate(video) * sizeof( uint16_t ) * getMlvFrames(video) / getMlvFramerate(video);
+    uint64_t theoretic_size = getMlvAudioChannels(video) * getMlvSampleRate(video) * getMlvAudioBitsPerSample(video) * getMlvFrames(video) / getMlvFramerate(video);
     uint64_t wave_data_size = MIN(theoretic_size, audio_size);
 
     /* Get audio */

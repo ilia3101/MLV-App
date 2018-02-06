@@ -115,6 +115,8 @@ float getMlvAspectRatio(mlvObject_t * video);
 #define doesMlvHaveAudio(video) (((video)->MLVI.audioClass) && ((video)->audios))
 #define getMlvSampleRate(video) (video)->WAVI.samplingRate
 #define getMlvAudioChannels(video) (video)->WAVI.channels
+#define getMlvAudioBytesPerSecond(video) (video)->WAVI.bytesPerSecond
+#define getMlvAudioBitsPerSample(video) (video)->WAVI.bitsPerSample
 #define getMlvTmYear(video)    ((video)->RTCI.tm_year+1900)
 #define getMlvTmMonth(video)   ((video)->RTCI.tm_mon+1)
 #define getMlvTmDay(video)     (video)->RTCI.tm_mday
