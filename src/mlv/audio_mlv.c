@@ -72,11 +72,11 @@ typedef struct {
 #pragma pack(pop)
 
 /*generate the header for the audio wave file*/
-static wave_header_t generateMlvAudioToWaveHeader(mlvObject_t * video, uint64_t wave_data_size, uint64_t in_offset)
+static wave_header_t generateMlvAudioToWaveHeader(mlvObject_t * video, uint64_t wave_data_size, uint32_t frame_offset)
 {
     uint64_t file_size = wave_data_size + sizeof(wave_header_t);
-    /* time reference is the sample count of audio offset */
-    uint64_t time_reference = (uint64_t)( (double)in_offset / (double)((getMlvAudioChannels(video) * getMlvAudioBitsPerSample(video))) );
+    /* time reference is the sample count from recording start */
+    uint64_t time_reference = (uint64_t)( (double)( (video->video_index[0].frame_number + frame_offset) * getMlvSampleRate(video) ) / (double)getMlvFramerate(video) );
 
     wave_header_t wave_header = {
         .RIFF                = {'R','I','F','F'},
@@ -134,8 +134,8 @@ void writeMlvAudioToWaveCut(mlvObject_t * video, char * path, uint32_t cut_in, u
     int32_t frames = cut_out - ( cut_in - 1 );
     if( frames <= 0 ) return;
     uint64_t audio_size = getMlvAudioSize(video);
-    uint64_t in_offset = (uint64_t)( (double)(getMlvAudioChannels(video) * getMlvSampleRate(video) * getMlvAudioBitsPerSample(video) * ( cut_in - 1 )) / (double)getMlvFramerate(video) );
-    uint64_t theoretic_size = (uint64_t)( (double)(getMlvAudioChannels(video) * getMlvSampleRate(video) * getMlvAudioBitsPerSample(video) * frames) / (double)getMlvFramerate(video) );
+    uint64_t in_offset = (uint64_t)( (double)(getMlvAudioChannels(video) * getMlvSampleRate(video) * sizeof(int16_t) * ( cut_in - 1 )) / (double)getMlvFramerate(video) );
+    uint64_t theoretic_size = (uint64_t)( (double)(getMlvAudioChannels(video) * getMlvSampleRate(video) * sizeof(int16_t) * frames) / (double)getMlvFramerate(video) );
     /* check if audio_start_offset is even */
     if(in_offset % 2) --in_offset;
     /* check if cut_audio_size is multiple of 4096 bytes */
@@ -147,7 +147,7 @@ void writeMlvAudioToWaveCut(mlvObject_t * video, char * path, uint32_t cut_in, u
     int16_t * audio_data = malloc( audio_size );
     getMlvAudioData(video, audio_data);
 
-    wave_header_t wave_header = generateMlvAudioToWaveHeader(video, wave_data_size, in_offset);
+    wave_header_t wave_header = generateMlvAudioToWaveHeader(video, wave_data_size, cut_in - 1);
 
     FILE * wave_file = fopen(path, "wb");
 
@@ -166,7 +166,7 @@ void writeMlvAudioToWave(mlvObject_t * video, char * path)
     if (!doesMlvHaveAudio(video)) return;
 
     uint64_t audio_size = getMlvAudioSize(video);
-    uint64_t theoretic_size = getMlvAudioChannels(video) * getMlvSampleRate(video) * getMlvAudioBitsPerSample(video) * getMlvFrames(video) / getMlvFramerate(video);
+    uint64_t theoretic_size = (uint64_t)( (double)( getMlvAudioChannels(video) * getMlvSampleRate(video) * sizeof(int16_t) * getMlvFrames(video) ) / (double)getMlvFramerate(video) );
     uint64_t wave_data_size = MIN(theoretic_size, audio_size);
 
     /* Get audio */
