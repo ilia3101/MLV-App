@@ -75,7 +75,7 @@ typedef struct {
 static wave_header_t generateMlvAudioToWaveHeader(mlvObject_t * video, uint64_t wave_data_size, uint32_t frame_offset)
 {
     uint64_t file_size = wave_data_size + sizeof(wave_header_t);
-    /* time reference is the sample count from recording start */
+    /* time reference is the audio sample count from recording start */
     uint64_t time_reference = (uint64_t)( (double)( (video->video_index[0].frame_number + frame_offset) * getMlvSampleRate(video) ) / (double)getMlvFramerate(video) );
 
     wave_header_t wave_header = {
@@ -84,7 +84,7 @@ static wave_header_t generateMlvAudioToWaveHeader(mlvObject_t * video, uint64_t 
         .WAVE                = {'W','A','V','E'},
         .bext_id             = {'b','e','x','t'},
         .bext_size           = sizeof( wave_bext_t ),
-        .bext.time_reference = time_reference, //(uint64_t)(getMlvTmHour(video) * 3600 + getMlvTmMin(video) * 60 + getMlvTmSec(video)) * (uint64_t)getMlvSampleRate(video),
+        .bext.time_reference = time_reference,
         .bext.version        = 0x1,
         .bext.coding_history = {'P','C','M',' '},
         .iXML_id             = {'i','X','M','L'},
