@@ -75,6 +75,7 @@ typedef struct {
 static wave_header_t generateMlvAudioToWaveHeader(mlvObject_t * video, uint64_t wave_data_size, uint64_t in_offset)
 {
     uint64_t file_size = wave_data_size + sizeof(wave_header_t);
+    /* time reference is the sample count of audio offset */
     uint64_t time_reference = (uint64_t)( (double)in_offset / (double)((getMlvAudioChannels(video) * getMlvAudioBitsPerSample(video))) );
 
     wave_header_t wave_header = {
