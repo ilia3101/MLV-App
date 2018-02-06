@@ -951,7 +951,6 @@ int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
     }
 
     vidf_hdr.blockSize -= vidf_hdr.frameSpace;
-    vidf_hdr.frameNumber = (frame_index + 1) - frame_start;
     vidf_hdr.frameSpace = 0;
 
     /* for safety allocate max possible size buffer for VIDF block, calculated for 16bits per pixel */
@@ -1035,7 +1034,7 @@ int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
             avg_buf[i] += frame_buf_unpacked[i];
         }
 
-        if(vidf_hdr.frameNumber == max_frame_number - 1)
+        if(frame_index == frame_end - 1)
         {
             for(uint32_t i = 0; i < pixel_count; i++)
             {
@@ -1102,7 +1101,7 @@ int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
     }
 
     /* if audio export is enabled */
-    if(!vidf_hdr.frameNumber && export_audio && export_mode < MLV_AVERAGED_FRAME )
+    if(!(frame_start - frame_index - 1) && export_audio && export_mode < MLV_AVERAGED_FRAME )
     {
         mlv_audf_hdr_t audf_hdr = { { 'A','U','D','F' }, 0, 0, 0, 0 };
         uint64_t mlv_audio_size = getMlvAudioSize(video);
@@ -1293,6 +1292,7 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode, char * error
                 video->video_index[video_frames].chunk_num = i;
                 video->video_index[video_frames].frame_size = video->VIDF.blockSize - sizeof(mlv_vidf_hdr_t) - video->VIDF.frameSpace;
                 video->video_index[video_frames].frame_offset = file_get_pos(video->file[i]) + video->VIDF.frameSpace;
+                video->video_index[video_frames].frame_number = video->VIDF.frameNumber;
                 video->video_index[video_frames].frame_time = video->VIDF.timestamp;
                 video->video_index[video_frames].block_offset = block_start;
 
@@ -1336,6 +1336,7 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode, char * error
                 video->audio_index[audio_frames].chunk_num = i;
                 video->audio_index[audio_frames].frame_size = video->AUDF.blockSize - sizeof(mlv_audf_hdr_t) - video->AUDF.frameSpace;
                 video->audio_index[audio_frames].frame_offset = file_get_pos(video->file[i]) + video->AUDF.frameSpace;
+                video->audio_index[audio_frames].frame_number = video->AUDF.frameNumber;
                 video->audio_index[audio_frames].frame_time = video->AUDF.timestamp;
                 video->audio_index[audio_frames].block_offset = block_start;
 

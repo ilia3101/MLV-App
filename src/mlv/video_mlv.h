@@ -98,6 +98,7 @@ float getMlvAspectRatio(mlvObject_t * video);
 #define getMlvCompression(video) !((video)->MLVI.videoClass & MLV_VIDEO_CLASS_FLAG_LJ92) ? "Uncompressed" : "Lossless"
 #define isMlvCompressed(video) ((video)->MLVI.videoClass & MLV_VIDEO_CLASS_FLAG_LJ92) ? 1 : 0
 #define getMlvFramerate(video) (video)->frame_rate
+#define getMlvFrameNumber(video, frame_index) (video)->video_index[(frame_index)].frame_number
 #define getMlvLens(video) (video)->LENS.lensName
 #define getMlvCamera(video) (video)->IDNT.cameraName
 #define getMlvCameraModel(video) (video)->IDNT.cameraModel

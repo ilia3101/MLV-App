@@ -21,6 +21,7 @@ typedef struct
 {
     uint16_t frame_type;     /* VIDF = 1, AUDF = 2 */
     uint16_t chunk_num;      /* MLV chunk number */
+    uint32_t frame_number;   /* Unique frame number */
     uint32_t frame_size;     /* Size of frame data */
     uint64_t frame_offset;   /* Offset to the start of frame data */
     uint64_t frame_time;     /* Time of frame from the start of recording in microseconds */

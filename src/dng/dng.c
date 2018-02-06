@@ -586,7 +586,7 @@ static void dng_fill_header(mlvObject_t * mlv_data, dngObject_t * dng_data, uint
 
         /* Time code stuff */
         //number of frames since midnight
-        int tc_frame = (int)frame_index;// + (uint64_t)((mlv_data->RTCI.tm_hour * 3600 + mlv_data->RTCI.tm_min * 60 + mlv_data->RTCI.tm_sec) * mlv_data->MLVI.sourceFpsNom) / (uint64_t)mlv_data->MLVI.sourceFpsDenom;
+        int tc_frame = (int)mlv_data->video_index[frame_index].frame_number;// + (uint64_t)((mlv_data->RTCI.tm_hour * 3600 + mlv_data->RTCI.tm_min * 60 + mlv_data->RTCI.tm_sec) * mlv_data->MLVI.sourceFpsNom) / (uint64_t)mlv_data->MLVI.sourceFpsDenom;
         
         /* White balance stuff */
         int32_t wbal[6];

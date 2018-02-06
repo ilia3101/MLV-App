@@ -1358,13 +1358,13 @@ void MainWindow::startExportCdng(QString fileName)
         QString dngName;
         if( m_codecOption == CODEC_CNDG_DEFAULT ) dngName = dngName.append( "%1_%2.dng" )
                                                                                 .arg( fileName )
-                                                                                .arg( frame, 6, 10, QChar('0') );
+                                                                                .arg( getMlvFrameNumber( m_pMlvObject, frame ), 6, 10, QChar('0') );
         else dngName = dngName.append( "%1_1_%2-%3-%4_0001_C0000_%5.dng" )
             .arg( fileName )
             .arg( getMlvTmYear( m_pMlvObject ), 2, 10, QChar('0') )
             .arg( getMlvTmMonth( m_pMlvObject ), 2, 10, QChar('0') )
             .arg( getMlvTmDay( m_pMlvObject ), 2, 10, QChar('0') )
-            .arg( frame, 6, 10, QChar('0') );
+            .arg( getMlvFrameNumber( m_pMlvObject, frame ), 6, 10, QChar('0') );
 
         QString filePathNr = pathName;
         filePathNr = filePathNr.append( "/" + dngName );
