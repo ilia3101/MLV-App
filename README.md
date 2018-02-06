@@ -32,6 +32,7 @@ Find the latest releases [here](https://ilia3101.github.io/MLV-App/). Download, 
 - macOS only: Clip export via Apple AVFoundation 12bit ProRes 422, ProRes 4444 and 8bit H.264, all without audio (for now)
 - Clip export to (10/12/14/16bit for Dual ISO) Cinema DNG files (with default or Davinci Resolve naming). Exporting modes: uncompressed, lossless and fast pass (in the last one no RAW correction, processing or decompressing/compressing is done, raw data copied as is from MLV to DNG uncompressed or lossless).
 - MLV export (fast pass, compressed, averaged frame (for darkframe creation), extract internal darkframe)
+- Clip trimming support (Cut In and Cut Out) for any export mode (ffmpeg, AVFoundation, cDNG, MLV) including audio syncing with correct timecode.
 - Frame rate override for export and playback
 - Aspect Ratio: stretch width (1.33x, 1.5x, 1.75x, 1.8x, 2.0x) and height (1.67x, auto detected for latest MLVs) for playback and (ffmpeg & DNG) export per clip in session. Manually changed AR is inserted to exported cDNG header.
 - Resize frame resolution for (batch) export
