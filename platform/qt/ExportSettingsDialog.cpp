@@ -112,6 +112,7 @@ void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
     bool enableResize = true;
 
     ui->comboBoxOption->clear();
+    ui->checkBoxExportAudio->setEnabled( true );
 
     if( index <= CODEC_PRORES4444 )
     {
@@ -171,6 +172,15 @@ void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
         ui->comboBoxOption->addItem( QString( "Extract Internal Darkframe" ) );
         enableResize = false;
     }
+    else if( index == CODEC_AUDIO_ONLY )
+    {
+        ui->labelDebayer->setEnabled( false );
+        ui->comboBoxDebayer->setEnabled( false );
+        ui->comboBoxOption->setEnabled( false );
+        ui->checkBoxExportAudio->setEnabled( false );
+        ui->checkBoxExportAudio->setChecked( true );
+        enableResize = false;
+    }
     else
     {
         ui->labelDebayer->setEnabled( true );
@@ -186,7 +196,7 @@ void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
     ui->checkBoxResize->setEnabled( enableResize );
 
     //En-/disable fps override
-    if( ( index == CODEC_MLV ) || ( index == CODEC_TIFF ) )
+    if( ( index == CODEC_MLV ) || ( index == CODEC_TIFF ) || ( index == CODEC_AUDIO_ONLY ) )
     {
         ui->checkBoxFpsOverride->setEnabled( false );
         ui->checkBoxFpsOverride->setChecked( false );
@@ -200,6 +210,9 @@ void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
 //Change settings if FPS Override is clicked
 void ExportSettingsDialog::on_checkBoxFpsOverride_toggled(bool checked)
 {
+    //Do nothing for WAV export
+    if( ui->comboBoxCodec->currentIndex() == CODEC_AUDIO_ONLY ) return;
+
     //if override is checked, export audio is not possible, so disable and grey out
     if( checked )
     {

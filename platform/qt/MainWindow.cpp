@@ -1039,6 +1039,28 @@ void MainWindow::startExportPipe(QString fileName)
         else ffmpegAudioCommand = QString( "-i \"%1\" -c:a copy " ).arg( wavFileName );
     }
 
+    //If audio only, exit here
+    if( m_codecProfile == CODEC_AUDIO_ONLY )
+    {
+        if( !doesMlvHaveAudio( m_pMlvObject ) )
+        {
+            int ret = QMessageBox::critical( this,
+                                             tr( "MLV App - Export file error" ),
+                                             tr( "No audio track available in MLV for export.\nHow do you like to proceed?" ),
+                                             tr( "Continue" ),
+                                             tr( "Abort batch export" ),
+                                             0, 0 );
+            if( ret == 1 )
+            {
+                exportAbort();
+            }
+        }
+
+        //Emit Ready-Signal
+        emit exportReady();
+        return;
+    }
+
     //Resize Filter
     QString resizeFilter = QString( "" );
     if( m_resizeFilterEnabled )
@@ -3209,6 +3231,12 @@ void MainWindow::on_actionExport_triggered()
         saveFileName.append( ".tif" );
         fileType = tr("TIFF (*.tif)");
         fileEnding = ".tif";
+    }
+    else if( m_codecProfile == CODEC_AUDIO_ONLY )
+    {
+        saveFileName.append( ".wav" );
+        fileType = tr("Audio Wave (*.wav)");
+        fileEnding = ".wav";
     }
     else
     {

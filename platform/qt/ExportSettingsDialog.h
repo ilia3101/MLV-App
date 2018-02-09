@@ -23,6 +23,7 @@
 #define CODEC_H265                  10
 #define CODEC_TIFF                  11
 #define CODEC_MLV                   12
+#define CODEC_AUDIO_ONLY            13
 
 #define CODEC_PRORES_OPTION_KS      0
 #define CODEC_PRORES_OPTION_AW      1
