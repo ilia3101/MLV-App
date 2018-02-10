@@ -4106,6 +4106,9 @@ QGroupBox::indicator:checked {
                      <property name="text">
                       <string>Y</string>
                      </property>
+                     <property name="alignment">
+                      <set>Qt::AlignCenter</set>
+                     </property>
                     </widget>
                    </item>
                    <item row="0" column="1">
@@ -4117,6 +4120,9 @@ QGroupBox::indicator:checked {
                      </property>
                      <property name="text">
                       <string>R</string>
+                     </property>
+                     <property name="alignment">
+                      <set>Qt::AlignCenter</set>
                      </property>
                     </widget>
                    </item>
@@ -4130,6 +4136,9 @@ QGroupBox::indicator:checked {
                      <property name="text">
                       <string>G</string>
                      </property>
+                     <property name="alignment">
+                      <set>Qt::AlignCenter</set>
+                     </property>
                     </widget>
                    </item>
                    <item row="0" column="3">
@@ -4141,6 +4150,9 @@ QGroupBox::indicator:checked {
                      </property>
                      <property name="text">
                       <string>B</string>
+                     </property>
+                     <property name="alignment">
+                      <set>Qt::AlignCenter</set>
                      </property>
                     </widget>
                    </item>
@@ -4154,6 +4166,9 @@ QGroupBox::indicator:checked {
                      <property name="text">
                       <string>0.00</string>
                      </property>
+                     <property name="alignment">
+                      <set>Qt::AlignCenter</set>
+                     </property>
                     </widget>
                    </item>
                    <item row="1" column="1">
@@ -4165,6 +4180,9 @@ QGroupBox::indicator:checked {
                      </property>
                      <property name="text">
                       <string>0.00</string>
+                     </property>
+                     <property name="alignment">
+                      <set>Qt::AlignCenter</set>
                      </property>
                     </widget>
                    </item>
@@ -4178,6 +4196,9 @@ QGroupBox::indicator:checked {
                      <property name="text">
                       <string>0.00</string>
                      </property>
+                     <property name="alignment">
+                      <set>Qt::AlignCenter</set>
+                     </property>
                     </widget>
                    </item>
                    <item row="1" column="3">
@@ -4189,6 +4210,9 @@ QGroupBox::indicator:checked {
                      </property>
                      <property name="text">
                       <string>0.00</string>
+                     </property>
+                     <property name="alignment">
+                      <set>Qt::AlignCenter</set>
                      </property>
                     </widget>
                    </item>
