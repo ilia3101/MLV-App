@@ -1046,6 +1046,7 @@ void MainWindow::startExportPipe(QString fileName)
         {
             //Hide Status Dialog
             m_pStatusDialog->hide();
+            qApp->processEvents();
             //Then show error
             int ret = QMessageBox::critical( this,
                                              tr( "MLV App - Export file error" ),
