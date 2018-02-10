@@ -970,6 +970,7 @@ void MainWindow::readSettings()
     ui->groupBoxCutInOut->setChecked( set.value( "expandedCutInOut", false ).toBool() );
     ui->groupBoxProcessing->setChecked( set.value( "expandedProcessing", true ).toBool() );
     ui->groupBoxDetails->setChecked( set.value( "expandedDetails", false ).toBool() );
+    ui->groupBoxColorWheels->setChecked( set.value( "expandedColorWheels", false ).toBool() );
     ui->groupBoxFilter->setChecked( set.value( "expandedFilter", false ).toBool() );
     ui->groupBoxLinearGradient->setChecked( set.value( "expandedLinGradient", false ).toBool() );
     ui->groupBoxAspectRatio->setChecked( set.value( "expandAspectRatio", false ).toBool() );
@@ -1001,6 +1002,7 @@ void MainWindow::writeSettings()
     set.setValue( "expandedCutInOut", ui->groupBoxCutInOut->isChecked() );
     set.setValue( "expandedProcessing", ui->groupBoxProcessing->isChecked() );
     set.setValue( "expandedDetails", ui->groupBoxDetails->isChecked() );
+    set.setValue( "expandedColorWheels", ui->groupBoxColorWheels->isChecked() );
     set.setValue( "expandedFilter", ui->groupBoxFilter->isChecked() );
     set.setValue( "expandedLinGradient", ui->groupBoxLinearGradient->isChecked() );
     set.setValue( "expandAspectRatio", ui->groupBoxAspectRatio->isChecked() );
