@@ -888,6 +888,13 @@ void MainWindow::initGui( void )
                                                                                           Qt::IgnoreAspectRatio, Qt::SmoothTransformation) );
     picTc.setDevicePixelRatio( devicePixelRatio() );
     m_pTcLabel->setPixmap( picTc );
+
+    //ColorWheels
+    ui->labelColorWheelMaster->paintElement();
+    ui->labelColorWheelShadows->paintElement();
+    ui->labelColorWheelMidtones->paintElement();
+    ui->labelColorWheelHighlights->paintElement();
+    ui->groupBoxColorWheels->setVisible( false );
 }
 
 //Initialize the library
@@ -4508,6 +4515,14 @@ void MainWindow::on_groupBoxDetails_toggled(bool arg1)
     ui->frameDetails->setVisible( arg1 );
     if( !arg1 ) ui->groupBoxDetails->setMaximumHeight( 30 );
     else ui->groupBoxDetails->setMaximumHeight( 16777215 );
+}
+
+//Collapse & Expand Color Wheels
+void MainWindow::on_groupBoxColorWheels_toggled(bool arg1)
+{
+    ui->frameColorWheels->setVisible( arg1 );
+    if( !arg1 ) ui->groupBoxColorWheels->setMaximumHeight( 30 );
+    else ui->groupBoxColorWheels->setMaximumHeight( 16777215 );
 }
 
 //Collapse & Expand Filter

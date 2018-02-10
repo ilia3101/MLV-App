@@ -160,6 +160,7 @@ private slots:
     void on_groupBoxCutInOut_toggled(bool arg1);
     void on_groupBoxProcessing_toggled(bool arg1);
     void on_groupBoxDetails_toggled(bool arg1);
+    void on_groupBoxColorWheels_toggled(bool arg1);
     void on_groupBoxFilter_toggled(bool arg1);
     void on_groupBoxLinearGradient_toggled(bool arg1);
     void on_groupBoxAspectRatio_toggled(bool arg1);

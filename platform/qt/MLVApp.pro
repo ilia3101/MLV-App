@@ -98,7 +98,8 @@ SOURCES += \
     GradientElement.cpp \
     VectorScope.cpp \
     TimeCodeLabel.cpp \
-    ../../src/mlv/llrawproc/darkframe.c
+    ../../src/mlv/llrawproc/darkframe.c \
+    ColorWheel.cpp
 
 macx: SOURCES += ../cocoa/avf_lib/avf_lib.m
 
@@ -157,7 +158,8 @@ HEADERS += \
     GradientElement.h \
     VectorScope.h \
     TimeCodeLabel.h \
-    ../../src/mlv/llrawproc/darkframe.h
+    ../../src/mlv/llrawproc/darkframe.h \
+    ColorWheel.h
 
 macx: HEADERS += \
     ../cocoa/avf_lib/avencoder.h \
