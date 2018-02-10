@@ -1044,6 +1044,9 @@ void MainWindow::startExportPipe(QString fileName)
     {
         if( !doesMlvHaveAudio( m_pMlvObject ) )
         {
+            //Hide Status Dialog
+            m_pStatusDialog->hide();
+            //Then show error
             int ret = QMessageBox::critical( this,
                                              tr( "MLV App - Export file error" ),
                                              tr( "No audio track available in MLV for export.\nHow do you like to proceed?" ),
@@ -1053,6 +1056,7 @@ void MainWindow::startExportPipe(QString fileName)
             if( ret == 1 )
             {
                 exportAbort();
+                return;
             }
         }
 
