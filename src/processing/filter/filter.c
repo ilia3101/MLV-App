@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 
 #include "filter.h"
@@ -22,14 +23,10 @@ FILE * open_filter(char * text)
 {
     FILE * file;
 
-#ifdef __linux__
-    file = fmemopen(text, strlen(text), "rb");
-#else
     file = fopen("__filter_temp__", "wb");
     fputs(text, file);
     fclose(file);
     file = fopen("__filter_temp__", "rb");
-#endif
 
     return file;
 }
