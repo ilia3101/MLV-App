@@ -185,7 +185,8 @@ int setAppNewMlvClip(char * mlvPath)
 
     /* Create a NEW object with a NEW MLV clip! */
     int err = 0;
-    App->videoMLV = initMlvObjectWithClip( (char *)mlvPath, &err, 0 );
+    char eRrOrR[6969];
+    App->videoMLV = initMlvObjectWithClip( (char *)mlvPath, 0, &err, eRrOrR );
 
     /* If use has terminal this is useful */
     printMlvInfo(App->videoMLV);
