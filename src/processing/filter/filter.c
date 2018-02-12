@@ -9,29 +9,8 @@
 #define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
 #define LIMIT16(X) MAX(MIN(X, 65535), 0)
 
-
 /* Nothing to see here */
 #include "film.h"
-char filmprofile_fj[] = FILM_FJ;
-char filmprofile_vis3[] = FILM_VIS3;
-char filmprofile_p400[] = FILM_P400;
-char filmprofile_toyc[] = FILM_TOYC;
-char filmprofile_sepia[] = FILM_SEPIA;
-
-/* Cuz there will be many */
-FILE * open_filter(char * text)
-{
-    FILE * file;
-
-    file = fopen("__filter_temp__", "wb");
-    fputs(text, file);
-    fclose(file);
-    file = fopen("__filter_temp__", "rb");
-
-    return file;
-}
-
-#define close_filter(filter) { fclose(filter); remove("__filter_temp__"); }
 
 filterObject_t * initFilterObject()
 {
@@ -44,29 +23,24 @@ filterObject_t * initFilterObject()
      */
 
     /* FJ preset */
-    //FILE * fj_preset = open_filter(filmprofile_fj);
+    char filmprofile_fj[] = FILM_FJ;
     filter->net_fj = genann_read(filmprofile_fj);
-    //close_filter(fj_preset);
 
     /* Kodak Vision 3 preset */
-    //FILE * vis3_preset = open_filter(filmprofile_vis3);
+    char filmprofile_vis3[] = FILM_VIS3;
     filter->net_vis3 = genann_read(filmprofile_vis3);
-    //close_filter(vis3_preset);
 
     /* Kodak Portra 400 preset */
-    //FILE * p400_preset = open_filter(filmprofile_p400);
+    char filmprofile_p400[] = FILM_P400;
     filter->net_p400 = genann_read(filmprofile_p400);
-    //close_filter(p400_preset);
 
     /* Toy Camera */
-    //FILE * toy_cam = open_filter(filmprofile_toyc);
+    char filmprofile_toyc[] = FILM_TOYC;
     filter->net_toyc = genann_read(filmprofile_toyc);
-    //close_filter(toy_cam);
 
     /* Sepia Tone */
-    //FILE * sepia = open_filter(filmprofile_sepia);
+    char filmprofile_sepia[] = FILM_SEPIA;
     filter->net_sepia = genann_read(filmprofile_sepia);
-    //close_filter(sepia);
 
     filterObjectSetFilterStrength(filter, 1.0);
 

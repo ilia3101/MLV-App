@@ -131,10 +131,8 @@ genann *genann_read(char *in) {
 
     genann *ann = genann_init(inputs, hidden_layers, hidden, outputs);
 
-    int i;
-    for (i = 0; i < ann->total_weights; ++i) {
-        *(ann->weight + i) = atof(strtok(NULL, " \t\n"));
-    }
+    for (int i = 0; i < ann->total_weights; ++i)
+        ann->weight[i] = strtod(strtok(NULL, " \t\n"), NULL);
 
     return ann;
 }
