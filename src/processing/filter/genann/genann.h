@@ -76,7 +76,7 @@ typedef struct genann {
 genann *genann_init(int inputs, int hidden_layers, int hidden, int outputs);
 
 /* Creates ANN from file saved with genann_write. */
-genann *genann_read(FILE *in);
+genann *genann_read(char *in);
 
 /* Sets weights randomly. Called by init. */
 void genann_randomize(genann *ann);

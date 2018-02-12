@@ -121,29 +121,19 @@ genann *genann_init(int inputs, int hidden_layers, int hidden, int outputs) {
 }
 
 
-genann *genann_read(FILE *in) {
+genann *genann_read(char *in) {
     int inputs, hidden_layers, hidden, outputs;
-    int rc;
 
-    errno = 0;
-    rc = fscanf(in, "%d %d %d %d", &inputs, &hidden_layers, &hidden, &outputs);
-    if (rc < 4 || errno != 0) {
-        perror("fscanf");
-        return NULL;
-    }
+    inputs = atoi(strtok(in, " \t\n"));
+    hidden_layers = atoi(strtok(NULL, " \t\n"));
+    hidden = atoi(strtok(NULL, " \t\n"));
+    outputs = atoi(strtok(NULL, " \t\n"));
 
     genann *ann = genann_init(inputs, hidden_layers, hidden, outputs);
 
     int i;
     for (i = 0; i < ann->total_weights; ++i) {
-        errno = 0;
-        rc = fscanf(in, " %le", ann->weight + i);
-        if (rc < 1 || errno != 0) {
-            perror("fscanf");
-            genann_free(ann);
-
-            return NULL;
-        }
+        *(ann->weight + i) = atof(strtok(NULL, " \t\n"));
     }
 
     return ann;
