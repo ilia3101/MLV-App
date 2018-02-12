@@ -895,6 +895,15 @@ void MainWindow::initGui( void )
     ui->labelColorWheelMidtones->paintElement();
     ui->labelColorWheelHighlights->paintElement();
     ui->groupBoxColorWheels->setVisible( false );
+
+    //Hide Shadows & Highlights
+    ui->line_ShadowsHighlights->setVisible( false);
+    ui->label_highlights->setVisible( false );
+    ui->label_HighlightsVal->setVisible( false );
+    ui->label_shadows->setVisible( false );
+    ui->label_ShadowsVal->setVisible( false );
+    ui->horizontalSliderHighlights->setVisible( false );
+    ui->horizontalSliderShadows->setVisible( false );
 }
 
 //Initialize the library

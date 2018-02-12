@@ -386,9 +386,9 @@ QGroupBox::indicator:checked {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>0</y>
+            <y>-1070</y>
             <width>195</width>
-            <height>3043</height>
+            <height>3027</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayoutScrollArea">
@@ -445,9 +445,6 @@ QGroupBox::indicator:checked {
                  </property>
                  <item>
                   <widget class="QCheckBox" name="checkBoxRawFixEnable">
-                   <property name="enabled">
-                    <bool>true</bool>
-                   </property>
                    <property name="font">
                     <font>
                      <pointsize>10</pointsize>
@@ -2912,14 +2909,14 @@ QGroupBox::indicator:checked {
                   </layout>
                  </item>
                  <item>
-                  <widget class="Line" name="line_12">
+                  <widget class="Line" name="line_ShadowsHighlights">
                    <property name="orientation">
                     <enum>Qt::Horizontal</enum>
                    </property>
                   </widget>
                  </item>
                  <item>
-                  <layout class="QGridLayout" name="gridLayout_25">
+                  <layout class="QGridLayout" name="gridLayout_Shadow">
                    <property name="spacing">
                     <number>0</number>
                    </property>
@@ -2936,22 +2933,6 @@ QGroupBox::indicator:checked {
                     </widget>
                    </item>
                    <item row="0" column="1">
-                    <spacer name="horizontalSpacer_17">
-                     <property name="orientation">
-                      <enum>Qt::Horizontal</enum>
-                     </property>
-                     <property name="sizeType">
-                      <enum>QSizePolicy::Maximum</enum>
-                     </property>
-                     <property name="sizeHint" stdset="0">
-                      <size>
-                       <width>40</width>
-                       <height>20</height>
-                      </size>
-                     </property>
-                    </spacer>
-                   </item>
-                   <item row="0" column="2">
                     <widget class="DoubleClickLabel" name="label_ShadowsVal">
                      <property name="font">
                       <font>
@@ -2969,7 +2950,7 @@ QGroupBox::indicator:checked {
                      </property>
                     </widget>
                    </item>
-                   <item row="1" column="0" colspan="3">
+                   <item row="1" column="0" colspan="2">
                     <widget class="NoScrollSlider" name="horizontalSliderShadows">
                      <property name="sizePolicy">
                       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -3000,7 +2981,7 @@ QGroupBox::indicator:checked {
                   </layout>
                  </item>
                  <item>
-                  <layout class="QGridLayout" name="gridLayout_24">
+                  <layout class="QGridLayout" name="gridLayout_Highlights">
                    <property name="spacing">
                     <number>0</number>
                    </property>
@@ -3017,22 +2998,6 @@ QGroupBox::indicator:checked {
                     </widget>
                    </item>
                    <item row="0" column="1">
-                    <spacer name="horizontalSpacer_16">
-                     <property name="orientation">
-                      <enum>Qt::Horizontal</enum>
-                     </property>
-                     <property name="sizeType">
-                      <enum>QSizePolicy::Maximum</enum>
-                     </property>
-                     <property name="sizeHint" stdset="0">
-                      <size>
-                       <width>40</width>
-                       <height>20</height>
-                      </size>
-                     </property>
-                    </spacer>
-                   </item>
-                   <item row="0" column="2">
                     <widget class="DoubleClickLabel" name="label_HighlightsVal">
                      <property name="font">
                       <font>
@@ -3050,7 +3015,7 @@ QGroupBox::indicator:checked {
                      </property>
                     </widget>
                    </item>
-                   <item row="1" column="0" colspan="3">
+                   <item row="1" column="0" colspan="2">
                     <widget class="NoScrollSlider" name="horizontalSliderHighlights">
                      <property name="sizePolicy">
                       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -3157,7 +3122,7 @@ QGroupBox::indicator:checked {
                 <zorder>comboBoxProfile</zorder>
                 <zorder>line</zorder>
                 <zorder>line_2</zorder>
-                <zorder>line_12</zorder>
+                <zorder>line_ShadowsHighlights</zorder>
                </widget>
               </item>
              </layout>
