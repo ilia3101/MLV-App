@@ -1051,6 +1051,11 @@ void MainWindow::startExportPipe(QString fileName)
     //If audio only, exit here
     if( m_codecProfile == CODEC_AUDIO_ONLY )
     {
+        //Set Status
+        m_pStatusDialog->ui->progressBar->setValue( (m_exportQueue.first()->cutOut() - 1) - ( m_exportQueue.first()->cutIn() - 1 ) + 1 );
+        m_pStatusDialog->ui->progressBar->repaint();
+        qApp->processEvents();
+
         if( !doesMlvHaveAudio( m_pMlvObject ) )
         {
             //Hide Status Dialog
@@ -1068,6 +1073,20 @@ void MainWindow::startExportPipe(QString fileName)
                 exportAbort();
             }
         }
+
+        //Delete wav file if aborted
+        if( m_exportAbortPressed )
+        {
+            QFile *file = new QFile( wavFileName );
+            if( file->exists() ) file->remove();
+            delete file;
+        }
+
+        //If we don't like amaze we switch it off again
+        if( !ui->actionAlwaysUseAMaZE->isChecked() ) setMlvDontAlwaysUseAmaze( m_pMlvObject );
+
+        //Enable GUI drawing
+        m_dontDraw = false;
 
         //Emit Ready-Signal
         emit exportReady();
