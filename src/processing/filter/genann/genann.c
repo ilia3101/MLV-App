@@ -31,6 +31,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <locale.h>
 
 #define LOOKUP_SIZE 4096
 
@@ -124,20 +125,20 @@ genann *genann_init(int inputs, int hidden_layers, int hidden, int outputs) {
 genann *genann_read(char *in) {
     int inputs, hidden_layers, hidden, outputs;
 
+    setlocale( LC_ALL, "C" );
+
     inputs = atoi(strtok(in, " \t\n"));
     hidden_layers = atoi(strtok(NULL, " \t\n"));
     hidden = atoi(strtok(NULL, " \t\n"));
     outputs = atoi(strtok(NULL, " \t\n"));
 
     genann *ann = genann_init(inputs, hidden_layers, hidden, outputs);
-    printf("***** Filter start *****\n");
+
     for (int i = 0; i < ann->total_weights; ++i)
     {
         ann->weight[i] = strtod(strtok(NULL, " \t\n"), NULL);
-        //sscanf(strtok(NULL, " \t\n"), "%le", &ann->weight[i]);
-        printf("%le\n", ann->weight[i]);
     }
-    printf("***** Filter end *****\n");
+
     return ann;
 }
 
