@@ -31,7 +31,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#if defined(__linux)
 #include <locale.h>
+#endif
 
 #define LOOKUP_SIZE 4096
 
@@ -125,8 +128,6 @@ genann *genann_init(int inputs, int hidden_layers, int hidden, int outputs) {
 genann *genann_read(char *in) {
     int inputs, hidden_layers, hidden, outputs;
 
-    setlocale( LC_ALL, "C" );
-
     inputs = atoi(strtok(in, " \t\n"));
     hidden_layers = atoi(strtok(NULL, " \t\n"));
     hidden = atoi(strtok(NULL, " \t\n"));
@@ -134,6 +135,9 @@ genann *genann_read(char *in) {
 
     genann *ann = genann_init(inputs, hidden_layers, hidden, outputs);
 
+#if defined(__linux)
+    setlocale( LC_NUMERIC, "C" );
+#endif
     for (int i = 0; i < ann->total_weights; ++i)
     {
         ann->weight[i] = strtod(strtok(NULL, " \t\n"), NULL);
