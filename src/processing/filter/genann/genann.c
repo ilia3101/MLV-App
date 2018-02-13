@@ -130,10 +130,14 @@ genann *genann_read(char *in) {
     outputs = atoi(strtok(NULL, " \t\n"));
 
     genann *ann = genann_init(inputs, hidden_layers, hidden, outputs);
-
+    printf("***** Filter start *****\n");
     for (int i = 0; i < ann->total_weights; ++i)
+    {
         ann->weight[i] = strtod(strtok(NULL, " \t\n"), NULL);
-
+        //sscanf(strtok(NULL, " \t\n"), "%le", &ann->weight[i]);
+        printf("%le\n", ann->weight[i]);
+    }
+    printf("***** Filter end *****\n");
     return ann;
 }
 
