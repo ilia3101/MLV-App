@@ -53,7 +53,7 @@
 
 
                     let PicLink = document.createElement("a");
-                    if (!findImg.test(Releases[i].body)) PicLink.href = anImage;
+                    if (!findImg.test(Releases[i].body)) PicLink.href = "https://raw.githubusercontent.com/ilia3101/MLV-App/master/src/icon/icon.png";
                     else {
                         PicLink.href = Releases[i].body.match(findImg);
                         if (PicLink.href.includes(".png")) {
