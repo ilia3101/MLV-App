@@ -3855,6 +3855,11 @@ void MainWindow::deleteFileFromSession( void )
     {
         //All black
         deleteSession();
+        //Set darkframe subtraction, fix focus pixels and fix bad pixels to off
+        ui->toolButtonDarkFrameSubtractionInt->setEnabled( false );
+        setToolButtonDarkFrameSubtraction( 0 );
+        setToolButtonFocusPixels( 0 );
+        setToolButtonBadPixels( 0 );
     }
 }
 

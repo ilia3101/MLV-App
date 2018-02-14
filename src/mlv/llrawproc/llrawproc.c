@@ -52,17 +52,17 @@ llrawprocObject_t * initLLRawProcObject()
 
     /* set defaults */
     llrawproc->vertical_stripes = 1;
-    llrawproc->focus_pixels = 1;
-    llrawproc->fpi_method = 1;
+    llrawproc->focus_pixels = 0;
+    llrawproc->fpi_method = 0;
     llrawproc->bad_pixels = 1;
     llrawproc->bps_method = 0;
-    llrawproc->bpi_method = 1;
+    llrawproc->bpi_method = 0;
     llrawproc->chroma_smooth = 0;
     llrawproc->pattern_noise = 0;
     llrawproc->deflicker_target = 0;
     llrawproc->fpm_status = 0;
     llrawproc->bpm_status = 0;
-    llrawproc->compute_stripes = 1;
+    llrawproc->compute_stripes = 0;
     llrawproc->first_time = 1;
     llrawproc->dual_iso = 0;
     llrawproc->is_dual_iso = 0;
