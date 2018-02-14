@@ -23,21 +23,35 @@
                     releaseFrame.className = "frame";
                     let release = document.createElement("div");
                     release.className = "release";
+                    release.style = "height: 390px;";
                     releaseFrame.appendChild(release);
                     release.appendChild(document.createElement("div"));
                     
+                    /* Version title with link */
+                    let ReleaseLink = document.createElement("a");
+                    ReleaseLink.href = Releases[i].html_url;
                     let Ver = document.createElement("h3");
                     Ver.innerHTML = Releases[i].tag_name;
                     Ver.style = "margin-top: 5px;";
-                    release.appendChild(Ver);
-                    
+                    ReleaseLink.appendChild(Ver);
+                    release.appendChild(ReleaseLink);
+
+
                     let Time = document.createElement("h4");
                     let PublishDate = new Date(Releases[i].published_at);
                     let TimeNow = new Date();
                     let TimePassed = (TimeNow.getTime() - PublishDate.getTime());
-                    Time.innerHTML = (TimePassed / (24*3600*1000)).toFixed(0).toString() + " days ago.";
+                    Time.innerHTML = (TimePassed / (24*3600*1000)).toFixed(0).toString() + " days ago";
+                    Time.style.color = "rgb(133,133,133)";
                     Time.style.lineHeight = "0";
                     release.appendChild(Time);
+
+                    let ImageBox = document.createElement("div");
+                    // ImageBox.style = "width: 50%;";
+                    ImageBox.style = "width: 47%; position: relative; top: 17px; left: 0%;";
+                    release.appendChild(ImageBox);
+
+
                     let PicLink = document.createElement("a");
                     if (!findImg.test(Releases[i].body)) PicLink.href = anImage;
                     else {
@@ -53,12 +67,20 @@
                     Pic.className = "picture";
                     Pic.src = PicLink.href;
                     PicLink.appendChild(Pic);
-                    release.appendChild(PicLink);
+                    ImageBox.appendChild(PicLink);
                     // release.appendChild(document.createElement("hr"));
+
+
+                    let DownloadsBox = document.createElement("div");
+                    DownloadsBox.align = "right";
+                    DownloadsBox.style = "width: 47%; position: relative; top: -254px; left: 51%;";
                     let Downloads = document.createElement("h4");
-                    Downloads.innerHTML = "Downloads:";
-                    release.appendChild(Downloads);
+                    Downloads.innerHTML = "Downloads";
+                    Downloads.style = "text-align: center;";
+                    DownloadsBox.appendChild(Downloads);
                     let Table = document.createElement("table");
+                    Table.align = "top";
+                    Table.style = "width: 100%;";
                     for (var j = 0; j < Releases[i].assets.length; j++)
                     {
                         let TableRow = document.createElement("tr");
@@ -87,7 +109,10 @@
                         Table.appendChild(TableRow);
                         TotalDownloads = TotalDownloads + Releases[i].assets[j].download_count;
                     }
-                    release.appendChild(Table);
+                    DownloadsBox.appendChild(Table);
+                    release.appendChild(DownloadsBox);
+
+                    /* Add it to approppriate column */
                     if (Releases[i].name.includes("[Qt]"))
                     {
                         document.getElementById("QtRelases").appendChild(releaseFrame);
@@ -95,8 +120,8 @@
                     }
                     if (Releases[i].name.includes("[Cocoa]"))
                     {
-                        document.getElementById("CocoaRelases").appendChild(releaseFrame);
-                        document.getElementById("CocoaRelases").appendChild(document.createElement("br"));
+                        // document.getElementById("CocoaRelases").appendChild(releaseFrame);
+                        // document.getElementById("CocoaRelases").appendChild(document.createElement("br"));
                     }
                 }
             }
@@ -182,14 +207,13 @@
     
     <div style="width:980px; margin: auto;">
         <br><br><br><br><br><br><br>
-        
         <table>
-            <td style="width: 490px; vertical-align: top;">
-                <h2 align="center">Qt App</h2>
+            <td style="width: 978px; vertical-align: top;">
+                <!-- <h2 align="center">Qt App</h2> -->
                 <div id="QtRelases">
             </td>
-            <td style="width: 490px; vertical-align: top;">
-                <h2 align="center">Cocoa App</h2>
+            <td style="width: 0px; vertical-align: top;">
+                <!-- <h2 align="center">Cocoa App</h2> -->
                 <div id="CocoaRelases">
             </td>
         </table>
