@@ -58,7 +58,7 @@ static int df_load_ext(mlvObject_t * video)
     if(df_mlv.MLVI.videoClass & MLV_VIDEO_CLASS_FLAG_LJ92)
     {
 #ifndef STDOUT_SILENT
-        printf("DF: can not use losless MLV as a dark frame\n");
+        printf("DF: can not use lossless MLV as a dark frame\n");
 #endif
         return 1;
     }
