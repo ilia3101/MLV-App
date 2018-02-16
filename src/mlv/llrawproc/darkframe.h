@@ -24,7 +24,7 @@
 #include "../mlv_object.h"
 
 /* from video_mlv.c */
-extern int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode);
+extern int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode, char * error_message);
 /* from dng.c */
 extern void dng_unpack_image_bits(uint16_t * input_buffer, uint16_t * output_buffer, int width, int height, uint32_t bpp);
 

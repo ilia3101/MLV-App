@@ -45,13 +45,30 @@ static int df_load_ext(mlvObject_t * video)
     if(!video->llrawproc->dark_frame_filename) return 1;
     /* Parse dark frame MLV */
     mlvObject_t df_mlv = { 0 };
-    int ret = openMlvClip(&df_mlv, video->llrawproc->dark_frame_filename, 2);
+    char err_msg[256] = { 0 };
+    int ret = openMlvClip(&df_mlv, video->llrawproc->dark_frame_filename, 2, err_msg);
     if(ret != 0)
     {
 #ifndef STDOUT_SILENT
-        printf("DF: invalid file: %s\n", video->llrawproc->dark_frame_filename);
+        printf("DF: %s\n", err_msg);
 #endif
         return ret;
+    }
+    /* if losless MLV return error */
+    if(df_mlv.MLVI.videoClass & MLV_VIDEO_CLASS_FLAG_LJ92)
+    {
+#ifndef STDOUT_SILENT
+        printf("DF: can not use losless MLV as a dark frame\n");
+#endif
+        return 1;
+    }
+    /* if resolution mismatch detected */
+    if( (df_mlv.RAWI.xRes != video->RAWI.xRes) || (df_mlv.RAWI.yRes != video->RAWI.yRes) )
+    {
+#ifndef STDOUT_SILENT
+        printf("DF: video clip and dark frame resolutions not matched\n");
+#endif
+        return 1;
     }
     /* Allocate dark frame data buffer */
     uint8_t * df_packed_buf = calloc(df_mlv.video_index[0].frame_size, 1);
