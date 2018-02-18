@@ -34,6 +34,10 @@ filterObject_t * initFilterObject()
     char filmprofile_p400[] = FILM_P400;
     filter->net_p400 = genann_read(filmprofile_p400);
 
+    /* Kodak Ektar 100 */
+    char filmprofile_kodak_ektar[] = FILM_KODAK_EKTAR;
+    filter->net_kodak_ektar = genann_read(filmprofile_kodak_ektar);
+
     /* Toy Camera */
     char filmprofile_toyc[] = FILM_TOYC;
     filter->net_toyc = genann_read(filmprofile_toyc);
@@ -59,15 +63,17 @@ void applyFilterObject( filterObject_t * filter,
 
     /* We need a copy or it gets messed up on many threads */
     genann * net;
-    if (filter->filter_option == 0)
+    if (filter->filter_option == FILTER_FILM_FJ)
         net = genann_copy(filter->net_fj);
-    else if (filter->filter_option == 1)
+    else if (filter->filter_option == FILTER_FILM_VIS3)
         net = genann_copy(filter->net_vis3);
-    else if (filter->filter_option == 2)
+    else if (filter->filter_option == FILTER_FILM_P400)
         net = genann_copy(filter->net_p400);
-    else if (filter->filter_option == 3)
+    else if (filter->filter_option == FILTER_FILM_E100)
+        net = genann_copy(filter->net_kodak_ektar);
+    else if (filter->filter_option == FILTER_TOYC)
         net = genann_copy(filter->net_toyc);
-    else if (filter->filter_option == 4)
+    else if (filter->filter_option == FILTER_SEPIA)
         net = genann_copy(filter->net_sepia);
 
     for (uint16_t * pix = image; pix < end; pix += 3)

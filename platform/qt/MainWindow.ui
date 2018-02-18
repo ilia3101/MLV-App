@@ -386,7 +386,7 @@ QGroupBox::indicator:checked {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>-1070</y>
+            <y>0</y>
             <width>195</width>
             <height>3027</height>
            </rect>
@@ -4263,6 +4263,11 @@ QGroupBox::indicator:checked {
                    <item>
                     <property name="text">
                      <string>Film &quot;P400&quot;</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Film &quot;E100&quot;</string>
                     </property>
                    </item>
                    <item>
