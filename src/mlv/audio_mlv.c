@@ -1,25 +1,38 @@
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <strings.h>
+#include <pthread.h>
+
+#include "audio_mlv.h"
+#include "video_mlv.h"
+
+/* Usefull macros */
+#include "macros.h"
+
 #define MIN(a,b) (((a)<(b))?(a):(b))
 
 static const char * iXML =
-"<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-"<BWFXML>"
-"<IXML_VERSION>1.5</IXML_VERSION>"
-"<PROJECT>%s</PROJECT>"
-"<NOTE>%s</NOTE>"
-"<CIRCLED>FALSE</CIRCLED>"
-"<BLACKMAGIC-KEYWORDS>%s</BLACKMAGIC-KEYWORDS>"
-"<TAPE>%d</TAPE>"
-"<SCENE>%d</SCENE>"
-"<BLACKMAGIC-SHOT>%d</BLACKMAGIC-SHOT>"
-"<TAKE>%d</TAKE>"
-"<BLACKMAGIC-ANGLE>ms</BLACKMAGIC-ANGLE>"
-"<SPEED>"
-"<MASTER_SPEED>%d/%d</MASTER_SPEED>"
-"<CURRENT_SPEED>%d/%d</CURRENT_SPEED>"
-"<TIMECODE_RATE>%d/%d</TIMECODE_RATE>"
-"<TIMECODE_FLAG>NDF</TIMECODE_FLAG>"
-"</SPEED>"
-"</BWFXML>";
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+    "<BWFXML>"
+    "<IXML_VERSION>1.5</IXML_VERSION>"
+    "<PROJECT>%s</PROJECT>"
+    "<NOTE>%s</NOTE>"
+    "<CIRCLED>FALSE</CIRCLED>"
+    "<BLACKMAGIC-KEYWORDS>%s</BLACKMAGIC-KEYWORDS>"
+    "<TAPE>%d</TAPE>"
+    "<SCENE>%d</SCENE>"
+    "<BLACKMAGIC-SHOT>%d</BLACKMAGIC-SHOT>"
+    "<TAKE>%d</TAKE>"
+    "<BLACKMAGIC-ANGLE>ms</BLACKMAGIC-ANGLE>"
+    "<SPEED>"
+    "<MASTER_SPEED>%d/%d</MASTER_SPEED>"
+    "<CURRENT_SPEED>%d/%d</CURRENT_SPEED>"
+    "<TIMECODE_RATE>%d/%d</TIMECODE_RATE>"
+    "<TIMECODE_FLAG>NDF</TIMECODE_FLAG>"
+    "</SPEED>"
+    "</BWFXML>";
 
 #pragma pack(push,1)
 
@@ -70,6 +83,15 @@ typedef struct {
 } wave_header_t;
 
 #pragma pack(pop)
+
+static uint64_t file_set_pos(FILE *stream, uint64_t offset, int whence)
+{
+#if defined(__WIN32)
+    return fseeko64(stream, offset, whence);
+#else
+    return fseek(stream, offset, whence);
+#endif
+}
 
 /*generate the header for the audio wave file*/
 static wave_header_t generateMlvAudioToWaveHeader(mlvObject_t * video, uint64_t wave_data_size, uint32_t frame_offset)
@@ -128,13 +150,14 @@ static wave_header_t generateMlvAudioToWaveHeader(mlvObject_t * video, uint64_t 
 void writeMlvAudioToWaveCut(mlvObject_t * video, char * path, uint32_t cut_in, uint32_t cut_out)
 {
     if (!doesMlvHaveAudio(video)) return;
+    if( cut_in < 1 || cut_out > getMlvFrames(video) ) return;
 
-    if( cut_in < 1 ) return;
-    if( cut_out > getMlvFrames(video) ) return;
     int32_t frames = cut_out - ( cut_in - 1 );
     if( frames <= 0 ) return;
+
     uint64_t audio_size = getMlvAudioSize(video);
-    uint64_t in_offset = (uint64_t)( (double)(getMlvAudioChannels(video) * getMlvSampleRate(video) * sizeof(int16_t) * ( cut_in - 1 )) / (double)getMlvFramerate(video) );
+    double start_sync_offset = 0;//(video->video_index[0].frame_time - video->audio_index[0].frame_time) * ( (double)( getMlvAudioChannels(video) * getMlvSampleRate(video) * sizeof(int16_t) ) / 1000000.0 );
+    uint64_t in_offset = (uint64_t)( start_sync_offset + ( (double)(getMlvAudioChannels(video) * getMlvSampleRate(video) * sizeof(int16_t) * ( cut_in - 1 )) / (double)getMlvFramerate(video) ) );
     uint64_t theoretic_size = (uint64_t)( (double)(getMlvAudioChannels(video) * getMlvSampleRate(video) * sizeof(int16_t) * frames) / (double)getMlvFramerate(video) );
     /* check if audio_start_offset is even */
     if(in_offset % 2) --in_offset;

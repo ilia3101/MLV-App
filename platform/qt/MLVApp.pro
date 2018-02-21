@@ -69,7 +69,6 @@ SOURCES += \
     ../../src/mlv/llrawproc/chroma_smooth.c \
     ../../src/mlv/llrawproc/hist.c \
     ../../src/mlv/camid/camera_id.c \
-    ../../src/mlv/audio_mlv.c \
     ../../src/processing/processing.c \
     ../../src/processing/raw_processing.c \
     ../../src/processing/filter/filter.c \
@@ -99,7 +98,8 @@ SOURCES += \
     VectorScope.cpp \
     TimeCodeLabel.cpp \
     ../../src/mlv/llrawproc/darkframe.c \
-    ColorWheel.cpp
+    ColorWheel.cpp \
+    ../../src/mlv/audio_mlv.c
 
 macx: SOURCES += ../cocoa/avf_lib/avf_lib.m
 
@@ -159,7 +159,9 @@ HEADERS += \
     VectorScope.h \
     TimeCodeLabel.h \
     ../../src/mlv/llrawproc/darkframe.h \
-    ColorWheel.h
+    ColorWheel.h \
+    ../../src/mlv/audio_mlv.h \
+    ../../src/mlv/macros.h
 
 macx: HEADERS += \
     ../cocoa/avf_lib/avencoder.h \

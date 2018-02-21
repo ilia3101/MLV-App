@@ -11,6 +11,8 @@
 #endif
 
 #include "video_mlv.h"
+#include "audio_mlv.h"
+
 #include "raw.h"
 #include "mlv.h"
 #include "llrawproc/llrawproc.h"
@@ -59,9 +61,6 @@ static uint64_t file_get_pos(FILE *stream)
 #else
 #define FMT_SIZE "%zu"
 #endif
-
-/* Just to be separate */
-#include "audio_mlv.c"
 
 /* Spanned multichunk MLV file handling */
 static FILE **load_all_chunks(char *base_filename, int *entries)

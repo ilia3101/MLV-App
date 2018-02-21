@@ -8,6 +8,7 @@ extern "C" {
 
 /* MLV reading part */
 #include "mlv/video_mlv.h"
+#include "mlv/audio_mlv.h"
 
 /* RAW processing part */
 #include "processing/raw_processing.h"
