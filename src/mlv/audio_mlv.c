@@ -237,7 +237,7 @@ void * getMlvAudioData(mlvObject_t * video, uint64_t * output_audio_size)
     }
 
     /* Get time difference of first video and audio frames and calculate the sync offset */
-    int64_t sync_offset = (int64_t)( ( (double)video->video_index[0].frame_time - (double)video->audio_index[0].frame_time ) * (double)( getMlvAudioChannels(video) * getMlvSampleRate(video) * sizeof(int16_t) / 1000000.0 ) ) & ~1;
+    int64_t sync_offset = (int64_t)( ( (double)video->video_index[0].frame_time - (double)video->audio_index[0].frame_time ) * (double)( getMlvAudioChannels(video) * getMlvSampleRate(video) * sizeof(int16_t) / 1000000.0 ) ) & ~1; // Make sure the value always even
     uint64_t negative_offset = 0;
     uint64_t positive_offset = 0;
     if(sync_offset >= 0) negative_offset = (uint64_t)sync_offset;
