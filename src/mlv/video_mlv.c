@@ -1104,7 +1104,7 @@ int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
     {
         /* Get MLV audio data into buffer */
         uint64_t mlv_audio_size = 0;
-        int16_t * mlv_audio_data = getMlvAudioData(video, &mlv_audio_size);
+        int16_t * mlv_audio_data = (int16_t*)getMlvAudioData(video, &mlv_audio_size);
         if(!mlv_audio_data)
         {
             sprintf(error_message, "Could not allocate memory for audio data");

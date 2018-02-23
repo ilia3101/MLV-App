@@ -173,7 +173,7 @@ void writeMlvAudioToWaveCut(mlvObject_t * video, char * path, uint32_t cut_in, u
 
     /* Get audio data and size */
     uint64_t audio_size = 0;
-    int16_t * audio_data = getMlvAudioData(video, &audio_size);
+    int16_t * audio_data = (int16_t*)getMlvAudioData(video, &audio_size);
     /* Wav audio data size */
     uint64_t wave_data_size = MIN(theoretic_size_aligned, audio_size);
     /* Get wav header */
@@ -196,7 +196,7 @@ void writeMlvAudioToWave(mlvObject_t * video, char * path)
 
     uint64_t theoretic_size = (uint64_t)( (double)( getMlvAudioChannels(video) * getMlvSampleRate(video) * sizeof(int16_t) * getMlvFrames(video) ) / (double)getMlvFramerate(video) );
     uint64_t audio_size = 0;
-    int16_t * audio_data = getMlvAudioData(video, &audio_size);
+    int16_t * audio_data = (int16_t*)getMlvAudioData(video, &audio_size);
     uint64_t wave_data_size = MIN(theoretic_size, audio_size);
 
     wave_header_t wave_header = generateMlvAudioToWaveHeader(video, wave_data_size, 0);
