@@ -7,12 +7,11 @@
 /* Usefull macros */
 #include "macros.h"
 
-/* Writes the MLV's audio in WAVE format to a given file path */
-void writeMlvAudioToWave(mlvObject_t * video, char * path);
+/* Writes cut MLV audio into Broacast Wave format */
 void writeMlvAudioToWaveCut(mlvObject_t * video, char * path, uint32_t cut_in, uint32_t cut_out);
-/* When allocating memory for audio use this */
-uint64_t getMlvAudioSize(mlvObject_t * video);
-/* Gets all audio data 4 u */
-void getMlvAudioData(mlvObject_t * video, int16_t * outputAudio);
+/* Writes MLV audio into Broacast Wave format */
+void writeMlvAudioToWave(mlvObject_t * video, char * path);
+/* Returnes pointer to the MLV audio buffer and audio size as parameter */
+void * getMlvAudioData(mlvObject_t * video, uint64_t * output_audio_size);
 
 #endif

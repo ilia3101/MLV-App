@@ -93,6 +93,17 @@ static uint64_t file_set_pos(FILE *stream, uint64_t offset, int whence)
 #endif
 }
 
+/* When allocating memory for audio use this */
+static uint64_t getMlvAudioSize(mlvObject_t * video)
+{
+    uint64_t size = 0;
+    for (uint32_t i = 0; i < video->audios; ++i)
+    {
+        size += video->audio_index[i].frame_size;
+    }
+    return size;
+}
+
 /*generate the header for the audio wave file*/
 static wave_header_t generateMlvAudioToWaveHeader(mlvObject_t * video, uint64_t wave_data_size, uint32_t frame_offset)
 {
@@ -155,29 +166,24 @@ void writeMlvAudioToWaveCut(mlvObject_t * video, char * path, uint32_t cut_in, u
     int32_t frames = cut_out - ( cut_in - 1 );
     if( frames <= 0 ) return;
 
-    uint64_t audio_size = getMlvAudioSize(video);
-    double start_sync_offset = 0;//(video->video_index[0].frame_time - video->audio_index[0].frame_time) * ( (double)( getMlvAudioChannels(video) * getMlvSampleRate(video) * sizeof(int16_t) ) / 1000000.0 );
-    uint64_t in_offset = (uint64_t)( start_sync_offset + ( (double)(getMlvAudioChannels(video) * getMlvSampleRate(video) * sizeof(int16_t) * ( cut_in - 1 )) / (double)getMlvFramerate(video) ) );
+    uint64_t in_offset = (uint64_t)( (double)(getMlvAudioChannels(video) * getMlvSampleRate(video) * sizeof(int16_t) * ( cut_in - 1 )) / (double)getMlvFramerate(video) ) & ~1; // Make sure the value always even
     uint64_t theoretic_size = (uint64_t)( (double)(getMlvAudioChannels(video) * getMlvSampleRate(video) * sizeof(int16_t) * frames) / (double)getMlvFramerate(video) );
-    /* check if audio_start_offset is even */
-    if(in_offset % 2) --in_offset;
-    /* check if cut_audio_size is multiple of 4096 bytes */
+    /* Check if cut_audio_size is multiple of 4096 bytes */
     uint64_t theoretic_size_aligned = theoretic_size - (theoretic_size % 4096) + 4096;
-    /* wav audio data size */
+
+    /* Get audio data and size */
+    uint64_t audio_size = 0;
+    int16_t * audio_data = getMlvAudioData(video, &audio_size);
+    /* Wav audio data size */
     uint64_t wave_data_size = MIN(theoretic_size_aligned, audio_size);
-
-    /* Get audio */
-    int16_t * audio_data = malloc( audio_size );
-    getMlvAudioData(video, audio_data);
-
+    /* Get wav header */
     wave_header_t wave_header = generateMlvAudioToWaveHeader(video, wave_data_size, cut_in - 1);
 
     FILE * wave_file = fopen(path, "wb");
-
     /* Write header */
     fwrite(&wave_header, sizeof(wave_header_t), 1, wave_file);
-    /* Write data */
-    fwrite((uint8_t *)audio_data + in_offset, wave_data_size, 1, wave_file);
+    /* Write data, shift buffer by in_offset */
+    fwrite((uint8_t*)audio_data + in_offset, wave_data_size, 1, wave_file);
 
     fclose(wave_file);
     free(audio_data);
@@ -188,13 +194,10 @@ void writeMlvAudioToWave(mlvObject_t * video, char * path)
 {
     if (!doesMlvHaveAudio(video)) return;
 
-    uint64_t audio_size = getMlvAudioSize(video);
     uint64_t theoretic_size = (uint64_t)( (double)( getMlvAudioChannels(video) * getMlvSampleRate(video) * sizeof(int16_t) * getMlvFrames(video) ) / (double)getMlvFramerate(video) );
+    uint64_t audio_size = 0;
+    int16_t * audio_data = getMlvAudioData(video, &audio_size);
     uint64_t wave_data_size = MIN(theoretic_size, audio_size);
-
-    /* Get audio */
-    int16_t * audio_data = malloc( audio_size );
-    getMlvAudioData(video, audio_data);
 
     wave_header_t wave_header = generateMlvAudioToWaveHeader(video, wave_data_size, 0);
 
@@ -209,42 +212,56 @@ void writeMlvAudioToWave(mlvObject_t * video, char * path)
     free(audio_data);
 }
 
-/* When allocating memory for audio use this */
-uint64_t getMlvAudioSize(mlvObject_t * video)
+void * getMlvAudioData(mlvObject_t * video, uint64_t * output_audio_size)
 {
-    uint64_t size = 0;
-    for (uint32_t i = 0; i < video->audios; ++i)
+    if (!doesMlvHaveAudio(video)) return NULL;
+
+    uint64_t audio_buffer_offset = 0;
+    uint64_t audio_size = getMlvAudioSize(video);
+    uint8_t * audio_buffer = malloc(audio_size);
+    if(!audio_buffer)
     {
-        size += video->audio_index[i].frame_size;
+        return NULL;
     }
-    return size;
-}
-
-void getMlvAudioData(mlvObject_t * video, int16_t * outputAudio)
-{
-    if (!doesMlvHaveAudio(video)) return;
-
-    /* Keep track of bytes of audio */
-    uint64_t audio_size = 0;
-
-    /* uint8_t pointer to audio data to work with bytes */
-    uint8_t * output_audio = (uint8_t *)outputAudio;
 
     for (uint32_t i = 0; i < video->audios; ++i)
     {
-        /* if audio frame exists */
-        if(video->audio_index[i].frame_size && video->audio_index[i].frame_offset)
-        {
-            pthread_mutex_lock(video->main_file_mutex + video->audio_index[i].chunk_num);
-            /* Go to audio block position */
-            file_set_pos(video->file[video->audio_index[i].chunk_num], video->audio_index[i].frame_offset, SEEK_SET);
-
-            /* Read to location of audio */
-            fread(output_audio + audio_size, video->audio_index[i].frame_size, 1, video->file[video->audio_index[i].chunk_num]);
-            pthread_mutex_unlock(video->main_file_mutex + video->audio_index[i].chunk_num);
-
-            /* New audio position */
-            audio_size += video->audio_index[i].frame_size;
-        }
+        pthread_mutex_lock(video->main_file_mutex + video->audio_index[i].chunk_num);
+        /* Go to audio block position */
+        file_set_pos(video->file[video->audio_index[i].chunk_num], video->audio_index[i].frame_offset, SEEK_SET);
+        /* Read to location of audio */
+        fread(audio_buffer + audio_buffer_offset, video->audio_index[i].frame_size, 1, video->file[video->audio_index[i].chunk_num]);
+        pthread_mutex_unlock(video->main_file_mutex + video->audio_index[i].chunk_num);
+        /* New audio position */
+        audio_buffer_offset += video->audio_index[i].frame_size;
     }
+
+    /* Get time difference of first video and audio frames and calculate the sync offset */
+    int64_t sync_offset = (int64_t)( ( (double)video->video_index[0].frame_time - (double)video->audio_index[0].frame_time ) * (double)( getMlvAudioChannels(video) * getMlvSampleRate(video) * sizeof(int16_t) / 1000000.0 ) ) & ~1;
+    uint64_t negative_offset = 0;
+    uint64_t positive_offset = 0;
+    if(sync_offset >= 0) negative_offset = (uint64_t)sync_offset;
+    else positive_offset = (uint64_t)(-sync_offset);
+
+    /* Calculate synced audio size */
+    uint64_t synced_audio_size = audio_size - negative_offset + positive_offset;
+    /* Check if output_audio_size is multiple of 4096 bytes */
+    uint64_t output_audio_size_alligned = synced_audio_size - (synced_audio_size % 4096) + 4096;
+    /* Allocate synced audio buffer */
+    void * output_audio = calloc( output_audio_size_alligned, 1 );
+    if(!output_audio)
+    {
+        free(audio_buffer);
+        return NULL;
+    }
+
+    /* Copy cut/shifted audio data to the synced audio buffer */
+    memcpy(output_audio + positive_offset, audio_buffer + negative_offset, synced_audio_size);
+    free(audio_buffer);
+#ifndef STDOUT_SILENT
+    printf("negative_offset = %lu, positive_offset = %lu, output_audio_size_aligned = %lu\n", negative_offset, positive_offset, output_audio_size_alligned);
+#endif
+
+    *output_audio_size = output_audio_size_alligned;
+    return output_audio;
 }

@@ -14,6 +14,7 @@ AudioPlayback::AudioPlayback(mlvObject_t *pMlvObject , QObject *parent)
 {
     m_pMlvObject = pMlvObject;
     m_audio_size = 0;
+    m_pAudioData = NULL;
     m_audioLoaded = false;
     m_audioRunning = false;
 }
@@ -48,14 +49,11 @@ void AudioPlayback::loadAudio( mlvObject_t *pMlvObject )
 
     m_pByteArrayAudio = new QByteArray();
     m_pAudioStream = new QDataStream(m_pByteArrayAudio, QIODevice::ReadWrite);
-
-    m_audio_size = getMlvAudioSize( m_pMlvObject );
-    m_pAudioData = ( uint8_t * ) malloc( m_audio_size );
-    getMlvAudioData( m_pMlvObject, ( int16_t* )m_pAudioData );
+    m_pAudioData = (uint8_t*)getMlvAudioData( m_pMlvObject, &m_audio_size );
 
     for( uint64_t x = 0; x < m_audio_size; x++ )
     {
-        (*m_pAudioStream) << (uint8_t)m_pAudioData[x];
+        (*m_pAudioStream) << m_pAudioData[x];
     }
     m_pAudioStream->device()->seek( 0 );
 #ifdef Q_OS_LINUX
@@ -77,10 +75,11 @@ void AudioPlayback::unloadAudio()
     if( !doesMlvHaveAudio( m_pMlvObject ) || !m_audioLoaded ) return;
 
     stop();
-    delete m_pAudioOutput;
+    if(m_pAudioData) free( m_pAudioData );
+    m_pAudioData = NULL;
     delete m_pAudioStream;
     delete m_pByteArrayAudio;
-    free( m_pAudioData );
+    delete m_pAudioOutput;
 
     m_audioLoaded = false;
 }
@@ -114,4 +113,14 @@ void AudioPlayback::stop()
     m_pAudioOutput->stop();
     m_pAudioOutput->reset();
     m_audioRunning = false;
+}
+
+uint8_t* AudioPlayback::getAudioData()
+{
+    return m_pAudioData;
+}
+
+uint64_t AudioPlayback::getAudioSize()
+{
+    return m_audio_size;
 }

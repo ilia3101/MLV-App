@@ -2645,9 +2645,8 @@ void MainWindow::paintAudioTrack( void )
     else
     {
         //Get audio data
-        uint64_t audio_size = getMlvAudioSize( m_pMlvObject );
-        int16_t* audio_data = ( int16_t* ) malloc( audio_size );
-        getMlvAudioData( m_pMlvObject, ( int16_t* )audio_data );
+        uint64_t audio_size = m_pAudioPlayback->getAudioSize();
+        int16_t* audio_data = (int16_t*)m_pAudioPlayback->getAudioData();
         //Correct audio length to video length
         uint64_t theoreticSize = getMlvAudioChannels( m_pMlvObject ) * getMlvSampleRate( m_pMlvObject ) * sizeof( uint16_t ) * getMlvFrames( m_pMlvObject ) / getMlvFramerate( m_pMlvObject );
         if( theoreticSize < audio_size ) audio_size = theoreticSize;
@@ -2655,7 +2654,6 @@ void MainWindow::paintAudioTrack( void )
         pic = QPixmap::fromImage( m_pAudioWave->getMonoWave( audio_data, audio_size, ui->labelAudioTrack->width(), devicePixelRatio() ) );
         pic.setDevicePixelRatio( devicePixelRatio() );
         ui->labelAudioTrack->setPixmap( pic );
-        free( audio_data );
     }
     ui->labelAudioTrack->setMinimumSize( 1, 1 ); //Otherwise window won't be smaller than picture
     ui->labelAudioTrack->setAlignment( Qt::AlignCenter ); //Always in the middle

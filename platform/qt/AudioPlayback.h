@@ -25,6 +25,8 @@ public:
     void jumpToPos( int frame );
     void play( void );
     void stop( void );
+    uint8_t* getAudioData( void );
+    uint64_t getAudioSize( void );
 
 private:
     mlvObject_t *m_pMlvObject;

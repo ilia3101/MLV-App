@@ -1102,20 +1102,9 @@ int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
     /* if audio export is enabled */
     if(!(frame_start - frame_index - 1) && export_audio && export_mode < MLV_AVERAGED_FRAME )
     {
-        mlv_audf_hdr_t audf_hdr = { { 'A','U','D','F' }, 0, 0, 0, 0 };
-        uint64_t mlv_audio_size = getMlvAudioSize(video);
-        uint64_t audio_start_offset = (uint64_t)( (double)(getMlvAudioChannels(video) * getMlvSampleRate(video) * sizeof(int16_t) * (frame_start - 1)) / (double)getMlvFramerate(video) );
-        uint64_t cut_audio_size_rough = (uint64_t)( (double)(getMlvAudioChannels(video) * getMlvSampleRate(video) * sizeof(int16_t) * (frame_end - frame_start + 1)) / (double)getMlvFramerate(video) );
-        /* check if audio_start_offset is even */
-        if(audio_start_offset % 2) --audio_start_offset;
-        /* check if cut_audio_size is multiple of 4096 bytes and not more than original audio data size */
-        uint64_t cut_audio_size = MIN( (cut_audio_size_rough - (cut_audio_size_rough % 4096) + 4096), mlv_audio_size );
-        /* check if cut_audio_size is not more than uit32_t max value to not overflow blockSize variable */
-        if(cut_audio_size > 0xFFFFFFFF) cut_audio_size = 0xFFFFFFFF; // Not likely that audio size exeeds the 4.3gb but anyway check this
-
-
-        /* allocate memory for whole audio */
-        int16_t * mlv_audio_data = calloc(mlv_audio_size + 1024000, 1); // + 1Mb for safety
+        /* Get MLV audio data into buffer */
+        uint64_t mlv_audio_size = 0;
+        int16_t * mlv_audio_data = getMlvAudioData(video, &mlv_audio_size);
         if(!mlv_audio_data)
         {
             sprintf(error_message, "Could not allocate memory for audio data");
@@ -1124,11 +1113,17 @@ int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
             free(block_buf);
             return 1;
         }
-        /* get whole audio data */
-        getMlvAudioData(video, mlv_audio_data);
+
+        mlv_audf_hdr_t audf_hdr = { { 'A','U','D','F' }, 0, 0, 0, 0 };
+        uint64_t audio_start_offset = ( (uint64_t)( (double)(getMlvAudioChannels(video) * getMlvSampleRate(video) * sizeof(int16_t) * (frame_start - 1)) / (double)getMlvFramerate(video) ) ) & ~1; // Make shure the value always even
+        uint64_t cut_audio_size = (uint64_t)( (double)(getMlvAudioChannels(video) * getMlvSampleRate(video) * sizeof(int16_t) * (frame_end - frame_start + 1)) / (double)getMlvFramerate(video) );
+        /* check if cut_audio_size is multiple of 4096 bytes and not more than original audio data size */
+        uint64_t cut_audio_size_aligned = MIN( (cut_audio_size - (cut_audio_size % 4096) + 4096), mlv_audio_size );
+        /* check if cut_audio_size is not more than uit32_t max value to not overflow blockSize variable */
+        if(cut_audio_size_aligned > 0xFFFFF000) cut_audio_size_aligned = 0xFFFFF000; // Not likely that audio size exeeds the 4.3gb but anyway check this
 
         /* fill AUDF block header */
-        audf_hdr.blockSize = sizeof(mlv_audf_hdr_t) + cut_audio_size;
+        audf_hdr.blockSize = sizeof(mlv_audf_hdr_t) + cut_audio_size_aligned;
         audf_hdr.timestamp = vidf_hdr.timestamp;
         /* write AUDF block header */
         if(fwrite(&audf_hdr, sizeof(mlv_audf_hdr_t), 1, output_mlv) != 1)
@@ -1141,7 +1136,7 @@ int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
             return 1;
         }
         /* write audio data */
-        if(fwrite((uint8_t *)mlv_audio_data + audio_start_offset, cut_audio_size, 1, output_mlv) != 1)
+        if(fwrite((uint8_t *)mlv_audio_data + audio_start_offset, cut_audio_size_aligned, 1, output_mlv) != 1)
         {
             sprintf(error_message, "Could not write AUDF block audio data");
             DEBUG( printf("\n%s\n", error_message); )
