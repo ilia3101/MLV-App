@@ -216,11 +216,15 @@ void * getMlvAudioData(mlvObject_t * video, uint64_t * output_audio_size)
 {
     if (!doesMlvHaveAudio(video)) return NULL;
 
+    int fread_err = 1;
     uint64_t audio_buffer_offset = 0;
     uint64_t audio_size = getMlvAudioSize(video);
     uint8_t * audio_buffer = malloc(audio_size);
     if(!audio_buffer)
     {
+#ifndef STDOUT_SILENT
+    printf("Audio frame buffer allocation error");
+#endif
         return NULL;
     }
 
@@ -230,10 +234,19 @@ void * getMlvAudioData(mlvObject_t * video, uint64_t * output_audio_size)
         /* Go to audio block position */
         file_set_pos(video->file[video->audio_index[i].chunk_num], video->audio_index[i].frame_offset, SEEK_SET);
         /* Read to location of audio */
-        fread(audio_buffer + audio_buffer_offset, video->audio_index[i].frame_size, 1, video->file[video->audio_index[i].chunk_num]);
+        fread_err &= fread(audio_buffer + audio_buffer_offset, video->audio_index[i].frame_size, 1, video->file[video->audio_index[i].chunk_num]);
         pthread_mutex_unlock(video->main_file_mutex + video->audio_index[i].chunk_num);
         /* New audio position */
         audio_buffer_offset += video->audio_index[i].frame_size;
+    }
+
+    if(!fread_err)
+    {
+#ifndef STDOUT_SILENT
+        printf("Audio frame data read error");
+#endif
+        free(audio_buffer);
+        return NULL;
     }
 
     /* Get time difference of first video and audio frames and calculate the sync offset */
@@ -251,6 +264,9 @@ void * getMlvAudioData(mlvObject_t * video, uint64_t * output_audio_size)
     void * output_audio = calloc( output_audio_size_alligned, 1 );
     if(!output_audio)
     {
+#ifndef STDOUT_SILENT
+        printf("Synced and aligned audio buffer allocation error");
+#endif
         free(audio_buffer);
         return NULL;
     }
