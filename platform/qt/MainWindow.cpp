@@ -952,7 +952,7 @@ void MainWindow::readSettings()
     if( set.value( "dragFrameMode", true ).toBool() ) ui->actionDropFrameMode->setChecked( true );
     if( set.value( "audioOutput", true ).toBool() ) ui->actionAudioOutput->setChecked( true );
     if( set.value( "zebras", false ).toBool() ) ui->actionShowZebras->setChecked( true );
-    m_lastSaveFileName = set.value( "lastFileName", QString( "/Users/" ) ).toString();
+    m_lastSaveFileName = set.value( "lastFileName", QDir::homePath() ).toString();
     m_codecProfile = set.value( "codecProfile", 4 ).toUInt();
     m_codecOption = set.value( "codecOption", 0 ).toUInt();
     m_exportDebayerMode = set.value( "exportDebayerMode", 1 ).toUInt();
