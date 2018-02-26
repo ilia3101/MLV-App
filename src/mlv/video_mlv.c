@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
-#include <unistd.h>
 #include <pthread.h>
 
 #if defined(__linux)
@@ -31,6 +30,8 @@
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
 #define ROR32(v,a) ((v) >> (a) | (v) << (32-(a)))
+
+extern int usleep (__useconds_t __useconds);
 
 static uint64_t file_set_pos(FILE *stream, uint64_t offset, int whence)
 {
@@ -1127,8 +1128,15 @@ int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
         }
 
         mlv_audf_hdr_t audf_hdr = { { 'A','U','D','F' }, 0, 0, 0, 0 };
-        uint64_t audio_start_offset = ( (uint64_t)( (double)(getMlvAudioChannels(video) * getMlvSampleRate(video) * sizeof(int16_t) * (frame_start - 1)) / (double)getMlvFramerate(video) ) ) & ~1; // Make shure the value always even
-        uint64_t cut_audio_size = (uint64_t)( (double)(getMlvAudioChannels(video) * getMlvSampleRate(video) * sizeof(int16_t) * (frame_end - frame_start + 1)) / (double)getMlvFramerate(video) );
+
+        /* Calculate the sum of audio sample sizes for all audio channels */
+        uint64_t audio_sample_size = getMlvAudioChannels(video) * (getMlvAudioBitsPerSample(video) / 8);
+
+        uint64_t audio_start_offset = ( (uint64_t)( (double)(getMlvSampleRate(video) * audio_sample_size * (frame_start - 1)) / (double)getMlvFramerate(video) ) );
+        /* Make sure in offset value is multiple of sum of all channel sample sizes */
+        uint64_t audio_start_offset_aligned = audio_start_offset - (audio_start_offset % audio_sample_size);
+
+        uint64_t cut_audio_size = (uint64_t)( (double)(getMlvSampleRate(video) * audio_sample_size * (frame_end - frame_start + 1)) / (double)getMlvFramerate(video) );
         /* check if cut_audio_size is multiple of 4096 bytes and not more than original audio data size */
         uint64_t cut_audio_size_aligned = MIN( (cut_audio_size - (cut_audio_size % 4096) + 4096), mlv_audio_size );
         /* check if cut_audio_size is not more than uit32_t max value to not overflow blockSize variable */
@@ -1137,6 +1145,7 @@ int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
         /* fill AUDF block header */
         audf_hdr.blockSize = sizeof(mlv_audf_hdr_t) + cut_audio_size_aligned;
         audf_hdr.timestamp = vidf_hdr.timestamp;
+
         /* write AUDF block header */
         if(fwrite(&audf_hdr, sizeof(mlv_audf_hdr_t), 1, output_mlv) != 1)
         {
@@ -1147,8 +1156,9 @@ int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
             free(block_buf);
             return 1;
         }
+
         /* write audio data */
-        if(fwrite((uint8_t *)mlv_audio_data + audio_start_offset, cut_audio_size_aligned, 1, output_mlv) != 1)
+        if(fwrite((uint8_t *)mlv_audio_data + audio_start_offset_aligned, cut_audio_size_aligned, 1, output_mlv) != 1)
         {
             sprintf(error_message, "Could not write AUDF block audio data");
             DEBUG( printf("\n%s\n", error_message); )
@@ -1196,10 +1206,11 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode, char * error
         return MLV_ERR_OPEN; // can not open file
     }
 
+    int block_num = 0; /* Number of blocks in file */
+
     if(!load_mapp(video)) goto short_cut;
 
     mlv_hdr_t block_header; /* Basic MLV block header */
-    int block_num = 0; /* Number of blocks in file */
     uint64_t video_frames = 0; /* Number of frames in video */
     uint64_t audio_frames = 0; /* Number of audio blocks in video */
     uint64_t video_index_max = 0; /* initial size of frame index */

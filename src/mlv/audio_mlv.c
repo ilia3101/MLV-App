@@ -166,9 +166,15 @@ void writeMlvAudioToWaveCut(mlvObject_t * video, char * path, uint32_t cut_in, u
     int32_t frames = cut_out - ( cut_in - 1 );
     if( frames <= 0 ) return;
 
-    uint64_t in_offset = (uint64_t)( (double)(getMlvAudioChannels(video) * getMlvSampleRate(video) * sizeof(int16_t) * ( cut_in - 1 )) / (double)getMlvFramerate(video) ) & ~1; // Make sure the value always even
-    uint64_t theoretic_size = (uint64_t)( (double)(getMlvAudioChannels(video) * getMlvSampleRate(video) * sizeof(int16_t) * frames) / (double)getMlvFramerate(video) );
-    /* Check if cut_audio_size is multiple of 4096 bytes */
+    /* Calculate the sum of audio sample sizes for all audio channels */
+    uint64_t audio_sample_size = getMlvAudioChannels(video) * (getMlvAudioBitsPerSample(video) / 8);
+
+    uint64_t in_offset = (uint64_t)( (double)(getMlvSampleRate(video) * audio_sample_size * ( cut_in - 1 )) / (double)getMlvFramerate(video) );
+    /* Make sure in offset value is multiple of sum of all channel sample sizes */
+    uint64_t in_offset_aligned = in_offset - (in_offset % audio_sample_size);
+
+    uint64_t theoretic_size = (uint64_t)( (double)(getMlvSampleRate(video) * audio_sample_size * frames) / (double)getMlvFramerate(video) );
+    /* Check if output_audio_size is multiple of 4096 bytes and add one more block */
     uint64_t theoretic_size_aligned = theoretic_size - (theoretic_size % 4096) + 4096;
 
     /* Get audio data and size */
@@ -182,8 +188,8 @@ void writeMlvAudioToWaveCut(mlvObject_t * video, char * path, uint32_t cut_in, u
     FILE * wave_file = fopen(path, "wb");
     /* Write header */
     fwrite(&wave_header, sizeof(wave_header_t), 1, wave_file);
-    /* Write data, shift buffer by in_offset */
-    fwrite((uint8_t*)audio_data + in_offset, wave_data_size, 1, wave_file);
+    /* Write data, shift buffer by in_offset_aligned */
+    fwrite((uint8_t*)audio_data + in_offset_aligned, wave_data_size, 1, wave_file);
 
     fclose(wave_file);
     free(audio_data);
@@ -194,10 +200,15 @@ void writeMlvAudioToWave(mlvObject_t * video, char * path)
 {
     if (!doesMlvHaveAudio(video)) return;
 
-    uint64_t theoretic_size = (uint64_t)( (double)( getMlvAudioChannels(video) * getMlvSampleRate(video) * sizeof(int16_t) * getMlvFrames(video) ) / (double)getMlvFramerate(video) );
+    /* Calculate the sum of audio sample sizes for all audio channels */
+    uint64_t audio_sample_size = getMlvAudioChannels(video) * (getMlvAudioBitsPerSample(video) / 8);
+    uint64_t theoretic_size = (uint64_t)( (double)( getMlvSampleRate(video) * audio_sample_size * getMlvFrames(video) ) / (double)getMlvFramerate(video) );
+    /* Check if output_audio_size is multiple of 4096 bytes and add one more block */
+    uint64_t theoretic_size_aligned = theoretic_size - (theoretic_size % 4096) + 4096;
+
     uint64_t audio_size = 0;
     int16_t * audio_data = (int16_t*)getMlvAudioData(video, &audio_size);
-    uint64_t wave_data_size = MIN(theoretic_size, audio_size);
+    uint64_t wave_data_size = MIN(theoretic_size_aligned, audio_size);
 
     wave_header_t wave_header = generateMlvAudioToWaveHeader(video, wave_data_size, 0);
 
@@ -249,16 +260,19 @@ void * getMlvAudioData(mlvObject_t * video, uint64_t * output_audio_size)
         return NULL;
     }
 
+    /* Calculate the sum of audio sample sizes for all audio channels */
+    uint64_t audio_sample_size = getMlvAudioChannels(video) * (getMlvAudioBitsPerSample(video) / 8);
     /* Get time difference of first video and audio frames and calculate the sync offset */
-    int64_t sync_offset = (int64_t)( ( (double)video->video_index[0].frame_time - (double)video->audio_index[0].frame_time ) * (double)( getMlvAudioChannels(video) * getMlvSampleRate(video) * sizeof(int16_t) / 1000000.0 ) ) & ~1; // Make sure the value always even
+    int64_t sync_offset = (int64_t)( ( (double)video->video_index[0].frame_time - (double)video->audio_index[0].frame_time ) * (double)( getMlvSampleRate(video) * audio_sample_size / 1000000.0 ) );
     uint64_t negative_offset = 0;
     uint64_t positive_offset = 0;
-    if(sync_offset >= 0) negative_offset = (uint64_t)sync_offset;
-    else positive_offset = (uint64_t)(-sync_offset);
+
+    if(sync_offset >= 0) negative_offset = (uint64_t)sync_offset - ((uint64_t)sync_offset % audio_sample_size); // Make sure value is multiple of sum of all channel sample sizes
+    else positive_offset = (uint64_t)(-sync_offset) - ((uint64_t)(-sync_offset) % audio_sample_size);
 
     /* Calculate synced audio size */
     uint64_t synced_audio_size = audio_size - negative_offset + positive_offset;
-    /* Check if output_audio_size is multiple of 4096 bytes */
+    /* Check if output_audio_size is multiple of 4096 bytes and add one more block */
     uint64_t output_audio_size_alligned = synced_audio_size - (synced_audio_size % 4096) + 4096;
     /* Allocate synced audio buffer */
     void * output_audio = calloc( output_audio_size_alligned, 1 );
