@@ -185,8 +185,7 @@ int setAppNewMlvClip(char * mlvPath)
 
     /* Create a NEW object with a NEW MLV clip! */
     int err = 0;
-    char eRrOrR[6969];
-    App->videoMLV = initMlvObjectWithClip( (char *)mlvPath, 0, &err, eRrOrR );
+    App->videoMLV = initMlvObjectWithClip( (char *)mlvPath, &err, 0 );
 
     /* If use has terminal this is useful */
     printMlvInfo(App->videoMLV);
@@ -499,6 +498,31 @@ int setAppNewMlvClip(char * mlvPath)
 
 /* Slider methods */
 @implementation NSSlider (mainMethods)
+
+-(void)highlightsSliderMethod
+{
+    /* ±1.0 */
+    processingSetHighlights(App->processingSettings, [self doubleValue]*2.0 - 1.0);
+
+    if ((int)(([self doubleValue] - 0.5)*200.0) != 0)
+        [App->highlightsValueLabel setStringValue: [NSString stringWithFormat:@"%+6i", (int)(([self doubleValue]-0.5)*200.0) ]];
+    else
+        [App->highlightsValueLabel setStringValue: [NSString stringWithFormat:@"%6i", 0]];
+
+    App->frameChanged++;
+}
+
+-(void)shadowsSliderMethod
+{
+    processingSetShadows(App->processingSettings, [self doubleValue]*2.0 - 1.0);
+
+    if ((int)(([self doubleValue] - 0.5)*200.0) != 0)
+        [App->shadowsValueLabel setStringValue: [NSString stringWithFormat:@"%+6i", (int)(([self doubleValue]-0.5)*200.0) ]];
+    else
+        [App->shadowsValueLabel setStringValue: [NSString stringWithFormat:@"%6i", 0]];
+
+    App->frameChanged++;
+}
 
 -(void)filterStrengthMethod
 {

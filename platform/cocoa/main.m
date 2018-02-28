@@ -125,24 +125,26 @@ int NSApplicationMain(int argc, const char * argv[])
 
     /* First block of sliders */
     CREATE_SLIDER_RIGHT( App->exposureSlider, App->exposureLabel, App->exposureValueLabel, @"Exposure", 1, exposureSliderMethod, 0, 0.5 );
-    CREATE_SLIDER_RIGHT( App->saturationSlider, App->saturationLabel, App->saturationValueLabel, @"Saturation", 2, saturationSliderMethod, 0, 0.5 );
-    CREATE_SLIDER_RIGHT( App->kelvinSlider, App->kelvinLabel, App->kelvinValueLabel, @"Temperature", 3, kelvinSliderMethod, 0, 0.5 );
-    CREATE_SLIDER_RIGHT( App->tintSlider, App->tintLabel, App->tintValueLabel, @"Tint", 4, tintSliderMethod, 0, 0.5 );
+    CREATE_SLIDER_RIGHT( App->highlightsSlider, App->highlightsLabel, App->highlightsValueLabel, @"Highlights", 2, highlightsSliderMethod, 0, 0.5 );
+    CREATE_SLIDER_RIGHT( App->shadowsSlider, App->shadowsLabel, App->shadowsValueLabel, @"Shadows", 3, shadowsSliderMethod, 0, 0.5 );
+    CREATE_SLIDER_RIGHT( App->saturationSlider, App->saturationLabel, App->saturationValueLabel, @"Saturation", 4, saturationSliderMethod, 0, 0.5 );
+    CREATE_SLIDER_RIGHT( App->kelvinSlider, App->kelvinLabel, App->kelvinValueLabel, @"Temperature", 5, kelvinSliderMethod, 0, 0.5 );
+    CREATE_SLIDER_RIGHT( App->tintSlider, App->tintLabel, App->tintValueLabel, @"Tint", 6, tintSliderMethod, 0, 0.5 );
 
     /* Second block of sliders */
-    CREATE_SLIDER_RIGHT( App->darkStrengthSlider, App->darkStrengthLabel, App->darkStrengthValueLabel, @"Dark Strength", 5, darkStrengthMethod, BLOCK_OFFSET, 0.25 );
-    CREATE_SLIDER_RIGHT( App->darkRangeSlider, App->darkRangeLabel, App->darkRangeValueLabel, @"Dark Range", 6, darkRangeMethod, BLOCK_OFFSET, 0.75 );
-    CREATE_SLIDER_RIGHT( App->lightStrengthSlider, App->lightStrengthLabel, App->lightStrengthValueLabel, @"Light Strength", 7, lightStrengthMethod, BLOCK_OFFSET, 0.0 );
-    CREATE_SLIDER_RIGHT( App->lightRangeSlider, App->lightRangeLabel, App->lightRangeValueLabel, @"Light Range", 8, lightRangeMethod, BLOCK_OFFSET, 0.5 );
-    CREATE_SLIDER_RIGHT( App->lightenSlider, App->lightenLabel, App->lightenValueLabel, @"Lighten", 9, lightenMethod, BLOCK_OFFSET, 0.0 );
+    CREATE_SLIDER_RIGHT( App->darkStrengthSlider, App->darkStrengthLabel, App->darkStrengthValueLabel, @"Dark Strength", 7, darkStrengthMethod, BLOCK_OFFSET, 0.25 );
+    CREATE_SLIDER_RIGHT( App->darkRangeSlider, App->darkRangeLabel, App->darkRangeValueLabel, @"Dark Range", 8, darkRangeMethod, BLOCK_OFFSET, 0.75 );
+    CREATE_SLIDER_RIGHT( App->lightStrengthSlider, App->lightStrengthLabel, App->lightStrengthValueLabel, @"Light Strength", 9, lightStrengthMethod, BLOCK_OFFSET, 0.0 );
+    CREATE_SLIDER_RIGHT( App->lightRangeSlider, App->lightRangeLabel, App->lightRangeValueLabel, @"Light Range", 10, lightRangeMethod, BLOCK_OFFSET, 0.5 );
+    CREATE_SLIDER_RIGHT( App->lightenSlider, App->lightenLabel, App->lightenValueLabel, @"Lighten", 11, lightenMethod, BLOCK_OFFSET, 0.0 );
 
     /* Third block */
-    CREATE_SLIDER_RIGHT( App->sharpnessSlider, App->sharpnessLabel, App->sharpnessValueLabel, @"Sharpen", 10, sharpnessMethod, BLOCK_OFFSET * 1.62, 0.0 );
-    CREATE_SLIDER_RIGHT( App->chromaBlurSlider, App->chromaBlurLabel, App->chromaBlurValueLabel, @"Chroma Blur Radius", 11, chromaBlurMethod, BLOCK_OFFSET * 1.62, 0.0 );
+    CREATE_SLIDER_RIGHT( App->sharpnessSlider, App->sharpnessLabel, App->sharpnessValueLabel, @"Sharpen", 12, sharpnessMethod, BLOCK_OFFSET * 1.62, 0.0 );
+    CREATE_SLIDER_RIGHT( App->chromaBlurSlider, App->chromaBlurLabel, App->chromaBlurValueLabel, @"Chroma Blur Radius", 13, chromaBlurMethod, BLOCK_OFFSET * 1.62, 0.0 );
 
     /* Enable/disable highlight reconstruction */
     App->highlightReconstructionSelector = [ [NSButton alloc]
-                                             initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(12, ELEMENT_HEIGHT, 16 + BLOCK_OFFSET*1.67) )];
+                                             initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(14, ELEMENT_HEIGHT, 16 + BLOCK_OFFSET*1.67) )];
     [App->highlightReconstructionSelector setButtonType: NSSwitchButton];
     [App->highlightReconstructionSelector setTitle: @"Highlight Reconstruction"];
     AnchorRight(App->highlightReconstructionSelector, YES);
@@ -153,7 +155,7 @@ int NSApplicationMain(int argc, const char * argv[])
 
     /* To set always use AMaZE on/off */
     App->alwaysUseAmazeSelector = [ [NSButton alloc]
-                                    initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(13, ELEMENT_HEIGHT, 30 + BLOCK_OFFSET*1.67) )];
+                                    initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(15, ELEMENT_HEIGHT, 30 + BLOCK_OFFSET*1.67) )];
     [App->alwaysUseAmazeSelector setButtonType: NSSwitchButton];
     [App->alwaysUseAmazeSelector setTitle: @"Always use AMaZE"];
     AnchorRight(App->alwaysUseAmazeSelector, YES);
@@ -164,7 +166,7 @@ int NSApplicationMain(int argc, const char * argv[])
 
     /* To enable/disable chroma separation */
     App->chromaSeparationSelector = [ [NSButton alloc]
-                                      initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(14, ELEMENT_HEIGHT, 44 + BLOCK_OFFSET*1.67) )];
+                                      initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(16, ELEMENT_HEIGHT, 44 + BLOCK_OFFSET*1.67) )];
     [App->chromaSeparationSelector setButtonType: NSSwitchButton];
     [App->chromaSeparationSelector setTitle: @"Chroma Separation (YCbCr)"];
     AnchorRight(App->chromaSeparationSelector, YES);
@@ -176,7 +178,7 @@ int NSApplicationMain(int argc, const char * argv[])
 
     /* Processing style selector */
     App->imageProfile = [ [NSPopUpButton alloc]
-                          initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(14,24,-28) ) ];
+                          initWithFrame: NSMakeRect( RIGHT_SIDEBAR_SLIDER(17,24,-28) ) ];
     AnchorRight(App->imageProfile, YES);
     AnchorTop(App->imageProfile, YES);
     [App->imageProfile insertItemWithTitle: @"Standard" atIndex: PROFILE_STANDARD];
@@ -257,7 +259,7 @@ int NSApplicationMain(int argc, const char * argv[])
     [[App->window contentView] addSubview: App->exportFramerateLabel];
 
     CREATE_BUTTON_LEFT_TOP( App->exportCurrentClipButton, 3, exportCurrentClip, -9, @"Export Current Clip" );
-    CREATE_BUTTON_LEFT_TOP( App->exportCurrentClipButton, 4, exportAllClips, 2, @"Export All Clips" );
+    CREATE_BUTTON_LEFT_TOP( App->exportAllClipsButton, 4, exportAllClips, 2, @"Export All Clips" );
 
     IMPORTANT_CODE("",5);
 
@@ -651,14 +653,6 @@ int NSApplicationMain(int argc, const char * argv[])
     [App->filterOptions selectItemAtIndex: 0];
     [[App->window contentView] addSubview: App->filterOptions];
 
-    App->filterStrengthSlider = [[NSSlider alloc] initWithFrame: NSMakeRect(RIGHT_SIDEBAR_SLIDER(3, ELEMENT_HEIGHT, 21))];
-    [App->filterStrengthSlider setTarget: App->filterStrengthSlider];
-    [App->filterStrengthSlider setAction: @selector(filterStrengthMethod)];
-    [App->filterStrengthSlider setDoubleValue: 0.0];
-    AnchorTop(App->filterStrengthSlider, YES);
-    AnchorRight(App->filterStrengthSlider, YES);
-    [[App->window contentView] addSubview: App->filterStrengthSlider];
-
     App->filterStrengthLabel = [ [NSTextField alloc]
                            initWithFrame: NSMakeRect( RIGHT_SIDEBAR_LABEL(2,ELEMENT_HEIGHT,-22) )];
     [App->filterStrengthLabel setLabelStyle];
@@ -666,6 +660,15 @@ int NSApplicationMain(int argc, const char * argv[])
     AnchorRight(App->filterStrengthLabel, YES);
     [App->filterStrengthLabel setStringValue: @"Strength"];
     [[App->window contentView] addSubview: App->filterStrengthLabel];
+
+    App->filterStrengthSlider = [[NSSlider alloc] initWithFrame: NSMakeRect(RIGHT_SIDEBAR_SLIDER(3, ELEMENT_HEIGHT, 14))];
+    [App->filterStrengthSlider setTarget: App->filterStrengthSlider];
+    [App->filterStrengthSlider setAction: @selector(filterStrengthMethod)];
+    [App->filterStrengthSlider setDoubleValue: 0.0];
+    AnchorTop(App->filterStrengthSlider, YES);
+    AnchorRight(App->filterStrengthSlider, YES);
+    [[App->window contentView] addSubview: App->filterStrengthSlider];
+
 
 
 

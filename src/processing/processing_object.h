@@ -5,7 +5,7 @@
 #include "filter/filter.h"
 
 typedef struct {
-    int width, height;
+    uint16_t width, height;
     uint16_t * image;
 } processing_buffer_t;
 
@@ -58,8 +58,21 @@ typedef struct {
         uint32_t chroma_blur_radius;
 
         /* Cached blur image for faster single frame processing */
-        processing_buffer_t * blur_image;
+        // processing_buffer_t * blur_image;
     } cs_zone;
+
+    /* All shadow/highlight stuff goes here */
+    struct {
+        /* Shadow-highlight values, -1.0 to 1.0 */
+        double highlights;
+        double shadows;
+
+        /* Highlights/shadows precalculated exposure factors (not end result, that would take 8gb) */
+        double shadow_highlight_curve[65536];
+
+        /* Blurred image for highlights/shadows */
+        processing_buffer_t * blur_image;
+    } shadows_highlights;
 
     /* White balance */
     double     kelvin; /* from 2500 to 10000 */

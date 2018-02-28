@@ -30,7 +30,9 @@
 /* Easy way to deal with storing blurred images/stuff that takes ages to calculate */
 processing_buffer_t * new_image_buffer()
 {
-    return (processing_buffer_t *)calloc(sizeof(processing_buffer_t),1);
+    processing_buffer_t * buffer = (processing_buffer_t *)calloc(sizeof(processing_buffer_t),1);
+    buffer->image = NULL;
+    return buffer;
 }
 void buffer_set_size(processing_buffer_t * buffer, int width, int height)
 {
@@ -41,6 +43,7 @@ void buffer_set_size(processing_buffer_t * buffer, int width, int height)
         buffer->height = height;
         if (buffer->image != NULL) free(buffer->image);
         buffer->image = malloc(sizeof(uint16_t) * 3 * width * height);
+        puts("\n\n\n\n\n\n\n\nhello\n\n\n\n\n");
     }
 }
 uint16_t * get_buffer(processing_buffer_t * buffer)
@@ -74,7 +77,8 @@ processingObject_t * initProcessingObject()
     processing->xyz_to_rgb_matrix[8] = 1.0;
 
     /* Blur buffer images (may change size) */
-    // processing->cs_zone.blur_image = new_image_buffer();
+    processing->shadows_highlights.blur_image = new_image_buffer();
+    buffer_set_size(processing->shadows_highlights.blur_image, 2, 2); /* Fix craxh */
 
     double rgb_to_YCbCr[7] = {  0.299000,  0.587000,  0.114000,
                                -0.168736, -0.331264, /* 0.5 */
@@ -109,9 +113,12 @@ processingObject_t * initProcessingObject()
     processingSetContrast(processing, 0.73, 5.175, 0.5, 0.0, 0.0);
     processingSetImageProfile(processing, PROFILE_TONEMAPPED);
     processingSetSharpening(processing, 0.0);
+    processingSetHighlights(processing, 0.0);
+    processingSetShadows(processing, 0.0);
 
     /* Just in case (should be done tho already) */
     processing_update_matrices(processing);
+    processing_update_shadow_highlight_curve(processing);
     
     return processing;
 }
@@ -150,29 +157,94 @@ void processingCamTosRGBMatrix(processingObject_t * processing, double * camTosR
     processing_update_matrices(processing);
 }
 
+void processingSetHighlights(processingObject_t * processing, double value)
+{
+    processing->shadows_highlights.highlights = value;
+    processing_update_shadow_highlight_curve(processing);
+}
+void processingSetShadows(processingObject_t * processing, double value)
+{
+    processing->shadows_highlights.shadows = value;
+    processing_update_shadow_highlight_curve(processing);
+}
+
+void processing_update_shadow_highlight_curve(processingObject_t * processing)
+{
+    double shadows_expo = processing->shadows_highlights.shadows;
+    double highlight_expo = pow(2.0, processing->shadows_highlights.highlights*(-1.5));
+    for (int i = 0; i < 65536; ++i)
+    {
+        double expo_factor;
+        double value = pow(((double)i)/65536.0, 0.75);
+
+        double newvalue = add_contrast(value, 0.7, shadows_expo*0.5, 0.0, 0.0);
+
+        if (newvalue > 0.2) {
+            double fac = (newvalue - 0.2)*(1/0.8);
+            newvalue = newvalue*(1.0-fac) + newvalue*highlight_expo*fac;
+        }
+
+        expo_factor = value/newvalue;
+
+        processing->shadows_highlights.shadow_highlight_curve[i] = expo_factor;
+    }
+}
 
 /* applyProcessingObject but with one argument for pthreading  */
 void processing_object_thread(apply_processing_parameters_t * p)
 {
-    applyProcessingObject( p->processing, 
-                           p->imageX, p->imageY, 
-                           p->inputImage, 
-                           p->outputImage );
+    apply_processing_object( p->processing, 
+                             p->imageX, p->imageY, 
+                             p->inputImage, 
+                             p->outputImage,
+                             p->blurImage );
 }
 
 /* Apply it with multiple threads */
-void applyProcessingObjectMultiThreaded( processingObject_t * processing, 
-                                         int imageX, int imageY, 
-                                         uint16_t * __restrict inputImage, 
-                                         uint16_t * __restrict outputImage,
-                                         int threads )
+void applyProcessingObject( processingObject_t * processing, 
+                            int imageX, int imageY, 
+                            uint16_t * __restrict inputImage, 
+                            uint16_t * __restrict outputImage,
+                            int threads, int imageChanged )
 {
+    /* Resize image buffer to make sure its right size */
+    if (imageChanged) buffer_set_size(processing->shadows_highlights.blur_image, imageX, imageY);
+
+    /* If shadows/highlights off don't do anything. Maybe this blurring bit could b multithreaded I need to think */
+    if (!( processing->shadows_highlights.highlights <  0.01
+        && processing->shadows_highlights.highlights > -0.01
+        && processing->shadows_highlights.shadows    <  0.01
+        && processing->shadows_highlights.shadows    > -0.01))
+    {
+
+        /* Blur diameter depends on image diagonal */
+        int blur_radius = (int)(((sqrt(pow(imageX,2.0)+pow(imageY,2.0)) / 440.0 - 1.0)/2 + 0.5)*4.0);
+
+        /* Reblur if image changed */
+        if (imageChanged)
+        {
+            memcpy(get_buffer(processing->shadows_highlights.blur_image), inputImage, imageX * imageY * sizeof(uint16_t) * 3);
+            blur_image(get_buffer(processing->shadows_highlights.blur_image), outputImage, imageX, imageY, blur_radius, 1, 1, 1, 0, imageY-1);
+            /* Apply basic levels */
+            int img_s = imageX * imageY * 3;
+            uint16_t * img = get_buffer(processing->shadows_highlights.blur_image);
+            for (int i = 0; i < img_s; ++i) img[i] = processing->pre_calc_levels[ img[i] ];
+        }
+    }
+
+    /* If threads is 1, no threads are needed */
+    if (threads == 1)
+    {
+        apply_processing_object(processing, imageX, imageY, inputImage, outputImage, get_buffer(processing->shadows_highlights.blur_image));
+        return;
+    }
+
     apply_processing_parameters_t * params = alloca(sizeof(apply_processing_parameters_t) * threads);
 
-    /* All chunks this size except possibly slightly longer last one */
+    /* All chunks this height except possibly slightly longer last one */
     int chunk_size = imageY/threads;
     /* Size of a chunk */
-    int offset_chunk = imageX * chunk_size * 3;
+    uint32_t offset_chunk = imageX * chunk_size * 3;
     
     /* Split in to chunks for each thread */
     for (int t = 0; t < threads; ++t)
@@ -182,6 +254,7 @@ void applyProcessingObjectMultiThreaded( processingObject_t * processing,
         params[t].imageY = chunk_size;
         params[t].inputImage = inputImage + offset_chunk*t;
         params[t].outputImage = outputImage + offset_chunk*t;
+        params[t].blurImage = get_buffer(processing->shadows_highlights.blur_image) + offset_chunk*t;
     }
 
     /* To make sure bottom is processed */
@@ -202,15 +275,13 @@ void applyProcessingObjectMultiThreaded( processingObject_t * processing,
 }
 
 
-/* Process a RAW frame with settings from a processing object
- * - image must be debayered and RGB plz + thx! */
-void applyProcessingObject( processingObject_t * processing, 
-                            int imageX, int imageY, 
-                            uint16_t * __restrict inputImage, 
-                            uint16_t * __restrict outputImage )
+/* A private part of the processing machine */
+void apply_processing_object( processingObject_t * processing, 
+                              int imageX, int imageY, 
+                              uint16_t * __restrict inputImage, 
+                              uint16_t * __restrict outputImage,
+                              uint16_t * __restrict blurImage )
 {
-    // buffer_set_size(processing->cs_zone.blur_image, imageX, imageY);
-
     /* Number of elements */
     int img_s = imageX * imageY * 3;
 
@@ -227,12 +298,20 @@ void applyProcessingObject( processingObject_t * processing,
         img[i] = processing->pre_calc_levels[ img[i] ];
     }
 
-    /* NOW MATRIX! (white balance & exposure) */
-    for (uint16_t * pix = img; pix < img_end; pix += 3)
+    /* white balance & exposure & highlights */
+    for (uint16_t * pix = img, * bpix = blurImage; pix < img_end; pix += 3, bpix += 3)
     {
-        int32_t pix0 = pm[0][pix[0]] + pm[1][pix[1]] + pm[2][pix[2]];
-        int32_t pix1 = pm[3][pix[0]] + pm[4][pix[1]] + pm[5][pix[2]];
-        int32_t pix2 = pm[6][pix[0]] + pm[7][pix[1]] + pm[8][pix[2]];
+        /* Blur pixLZ */
+        int32_t bval = ( ((pm[0][bpix[0]] + pm[1][bpix[1]] + pm[2][bpix[2]]) << 2)
+                       + ((pm[3][bpix[0]] + pm[4][bpix[1]] + pm[5][bpix[2]]) * 11)
+                       +  (pm[6][bpix[0]] + pm[7][bpix[1]] + pm[8][bpix[2]]) ) >> 4;
+
+        /* highlight exposure factor */
+        double expo_highlights = processing->shadows_highlights.shadow_highlight_curve[LIMIT16(bval)];
+
+        int32_t pix0 = (pm[0][pix[0]] + pm[1][pix[1]] + pm[2][pix[2]])*expo_highlights;
+        int32_t pix1 = (pm[3][pix[0]] + pm[4][pix[1]] + pm[5][pix[2]])*expo_highlights;
+        int32_t pix2 = (pm[6][pix[0]] + pm[7][pix[1]] + pm[8][pix[2]])*expo_highlights;
 
         pix[0] = LIMIT16(pix0);
         pix[1] = LIMIT16(pix1);
@@ -538,7 +617,6 @@ void processingSetGamma(processingObject_t * processing, double gammaValue)
         /* Precalculate the exposure curve */
         for (int i = 0; i < 65536; ++i)
         {
-            /* Tone mapping also (reinhard) */
             double pixel = (double)i/65535.0;
             if (processing->tone_mapping) pixel = processing->tone_mapping_function(pixel);
             processing->pre_calc_gamma[i] = (uint16_t)(65535.0 * pow(pixel, gamma));
@@ -648,6 +726,6 @@ void freeProcessingObject(processingObject_t * processing)
     for (int i = 8; i >= 0; --i) free(processing->pre_calc_matrix[i]);
     for (int i = 6; i >= 0; --i) free(processing->cs_zone.pre_calc_rgb_to_YCbCr[i]);
     for (int i = 3; i >= 0; --i) free(processing->cs_zone.pre_calc_YCbCr_to_rgb[i]);
-    // free_image_buffer(processing->cs_zone.blur_image);
+    free_image_buffer(processing->shadows_highlights.blur_image);
     free(processing);
 }

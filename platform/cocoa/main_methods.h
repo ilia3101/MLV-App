@@ -50,6 +50,8 @@ void setAppCurrentClipNoClip();
 
 /* I think its clear what these do... */
 -(void)exposureSliderMethod;
+-(void)highlightsSliderMethod;
+-(void)shadowsSliderMethod;
 -(void)saturationSliderMethod;
 #define KELVIN_MAX 10000.0
 #define KELVIN_MIN 2000.0

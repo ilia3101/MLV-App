@@ -68,6 +68,7 @@ typedef struct {
     NSSlider * exposureSlider, /* All adjustment sliders for processing */
     * saturationSlider, * kelvinSlider,
     * tintSlider, * darkStrengthSlider,
+    * shadowsSlider, * highlightsSlider,
     * darkRangeSlider, * lightStrengthSlider,
     * lightRangeSlider, * lightenSlider,
     * sharpnessSlider, * chromaBlurSlider;
@@ -75,6 +76,8 @@ typedef struct {
     NSTextField * exposureLabel, * exposureValueLabel,
     * saturationLabel, * saturationValueLabel, * kelvinLabel, 
     * kelvinValueLabel, * tintLabel, * tintValueLabel,
+    * highlightsLabel, * highlightsValueLabel,
+    * shadowsLabel, * shadowsValueLabel,
     * darkStrengthLabel, * darkStrengthValueLabel,
     * darkRangeLabel, * darkRangeValueLabel,
     * lightStrengthLabel, * lightStrengthValueLabel,
@@ -150,6 +153,7 @@ typedef struct {
     NSTextField * exportFramerateLabel;
     NSPopUpButton * exportFramerate;
     NSButton * exportCurrentClipButton;
+    NSButton * exportAllClipsButton;
 
     /* Select between LLRawProc and Processing tab */
     NSSegmentedControl * processingTabSwitch;

@@ -32,22 +32,23 @@ void processingSetCustomImageProfile(processingObject_t * processing, image_prof
 
 /* Process a RAW frame with settings from a processing object
  * - image must be debayered and RGB plz + thx! */
-void applyProcessingObject( processingObject_t * processing,
-                            int imageX, int imageY,
-                            uint16_t * __restrict inputImage,
-                            uint16_t * __restrict outputImage );
-/* May have seams in sharpening and blur (current implementation), so only for preview rn */
-void applyProcessingObjectMultiThreaded( processingObject_t * processing, 
-                                         int imageX, int imageY, 
-                                         uint16_t * __restrict inputImage, 
-                                         uint16_t * __restrict outputImage,
-                                         int threads );
+void applyProcessingObject( processingObject_t * processing, 
+                            int imageX, int imageY, 
+                            uint16_t * __restrict inputImage, 
+                            uint16_t * __restrict outputImage,
+                            int threads, int imageChanged );
 
 
 
 /* Enable/disable the filter module (filter/filter.h) */
 #define processingEnableFilters(processing) processing->filter_on = 1
 #define processingDisableFilters(processing) processing->filter_on = 0
+
+
+
+/* Highlights/shadows, input: -1.0 to +1.0 (show as -100 to +100) */
+void processingSetHighlights(processingObject_t * processing, double value);
+void processingSetShadows(processingObject_t * processing, double value);
 
 
 
@@ -164,6 +165,12 @@ void processingSetSaturation(processingObject_t * processing, double saturationF
  ******************************************************************************
  */
 
+/* Private function */
+void apply_processing_object( processingObject_t * processing, 
+                              int imageX, int imageY, 
+                              uint16_t * __restrict inputImage, 
+                              uint16_t * __restrict outputImage,
+                              uint16_t * __restrict blurImage );
 
 /* Useful info:
  * http://www.magiclantern.fm/forum/index.php?topic=19270
@@ -172,12 +179,16 @@ void processingSetSaturation(processingObject_t * processing, double saturationF
 typedef struct {
     processingObject_t * processing;
     int imageX, imageY;
-    uint16_t * __restrict inputImage;
-    uint16_t * __restrict outputImage;
+    uint16_t * inputImage;
+    uint16_t * outputImage;
+    uint16_t * blurImage;
 } apply_processing_parameters_t;
 
 /* applyProcessingObject but with one argument for pthreading  */
 void processing_object_thread(apply_processing_parameters_t * p);
+
+/* Calculate shadow/hiughlight exposure LUT */
+void processing_update_shadow_highlight_curve(processingObject_t * processing);
 
 /* Adds contrast to a single pixel in a S-curvey way, 
  * input pixel must be 0.0 - 1.0 and a double float */

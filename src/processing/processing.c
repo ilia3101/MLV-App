@@ -1,6 +1,11 @@
 /* Some functions that are used within raw_processing.c
  * This file is directly #included in raw_processing.c */
 
+/* included so idiotic visual studio code shuts up */
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+#include "processing_object.h"
 
 /* Measurements taken from 5D Mark II RAW photos using EXIFtool, surely Canon can't be wrong about WB mutipliers? */
 static const int wb_kelvin[]   = {  2000,  2500,  3000,  3506,  4000,  4503,  5011,  5517,  6018,  6509,  7040,  7528,  8056,  8534,  9032,  9531, 10000 };
@@ -323,7 +328,7 @@ void processing_update_highest_green(processingObject_t * processing)
 
 /* Box blur */
 void blur_image( uint16_t * __restrict in,
-                 uint16_t * __restrict out,
+                 uint16_t * __restrict temp,
                  int width, int height, int radius,
                  int do_r, int do_g, int do_b, /* Which channels to blur or not */
                  int start_y, int end_y )
@@ -349,7 +354,7 @@ void blur_image( uint16_t * __restrict in,
             /* Horizontal blur */
             for (int y = 0; y < height; ++y) /* rows */
             {
-                uint16_t * out_row = out + (y * rl)+offset; /* current row ouptut */
+                uint16_t * temp_row = temp + (y * rl)+offset; /* current row ouptut */
                 uint16_t * row = in + (y * rl)+offset; /* current row */
 
                 int sum = row[0] * blur_diameter;
@@ -359,19 +364,19 @@ void blur_image( uint16_t * __restrict in,
                 {
                     sum -= row[MAX(x-radius_x, 0)];
                     sum += row[x+radius_x+3];
-                    out_row[MAX(x, 0)] = sum / blur_diameter;
+                    temp_row[MAX(x, 0)] = sum / blur_diameter;
                 }
                 for (int x = radius_x; x < limit_x; x+=3)
                 {
                     sum -= row[x-radius_x];
                     sum += row[x+radius_x+3];
-                    out_row[x] = sum / blur_diameter;
+                    temp_row[x] = sum / blur_diameter;
                 }
                 for (int x = limit_x; x < rl; x+=3)
                 {
                     sum -= row[x-radius_x];
                     sum += row[MIN(x+radius_x+3, rl-3)];
-                    out_row[x] = sum / blur_diameter;
+                    temp_row[x] = sum / blur_diameter;
                 }
             }
 
@@ -379,36 +384,36 @@ void blur_image( uint16_t * __restrict in,
             int limit_y = height-radius-1;
             for (int x = 0; x < width; ++x) /* columns */
             {
-                uint16_t * out_col = in + (x*3);
-                uint16_t * col = out + (x*3);
+                uint16_t * temp_col = in + (x*3);
+                uint16_t * col = temp + (x*3);
 
-                int sum = out[x*3+offset] * blur_diameter;
+                int sum = temp[x*3+offset] * blur_diameter;
 
                 for (int y = -radius; y < radius; ++y)
                 {
                     sum -= col[MAX((y-radius), 0)*rl+offset];
                     sum += col[(y+radius+1)*rl+offset];
-                    out_col[MAX(y, 0)*rl+offset] = sum / blur_diameter;
+                    temp_col[MAX(y, 0)*rl+offset] = sum / blur_diameter;
                 }
                 {
                     uint16_t * minus = col + (offset);
                     uint16_t * plus = col + ((radius*2+1)*rl + offset);
-                    uint16_t * out = out_col + (radius*rl + offset);
-                    uint16_t * end = out_col + (limit_y*rl + offset);
+                    uint16_t * temp = temp_col + (radius*rl + offset);
+                    uint16_t * end = temp_col + (limit_y*rl + offset);
                     do {
                         sum -= *minus;
                         sum += *plus;
-                        *out = sum / blur_diameter;
+                        *temp = sum / blur_diameter;
                         minus += rl;
                         plus += rl;
-                        out += rl;
-                    } while (out < end);
+                        temp += rl;
+                    } while (temp < end);
                 }
                 for (int y = limit_y; y < height; ++y)
                 {
                     sum -= col[(y-radius)*rl+offset];
                     sum += col[MIN((y+radius+1), height-1)*rl+offset];
-                    out_col[y*rl+offset] = sum / blur_diameter;
+                    temp_col[y*rl+offset] = sum / blur_diameter;
                 }
             }
         }
