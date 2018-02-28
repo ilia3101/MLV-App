@@ -7,7 +7,7 @@ objects = main.o video_mlv.o debayer.o amaze_demosaic.o raw_processing.o \
 		  camera_matrices.o frame_caching.o lj92.o session_methods.o \
 		  delegate.o mlv_view.o llrawproc.o pixelproc.o stripes.o \
 		  patternnoise.o hist.o dualiso.o avf_lib.o filter.o genann.o \
-		  dng.o darkframe.o camera_id.o
+		  dng.o darkframe.o camera_id.o audio_mlv.o
 
 # All macOS frameworks for the link
 frameworks = -framework Cocoa -framework AppKit -framework Foundation \
@@ -80,6 +80,8 @@ preferences_window : preferences_window.m
 # MLV and processing
 video_mlv.o : ../../src/mlv/video_mlv.c
 	$(CC) $(cflags) ../../src/mlv/video_mlv.c
+audio_mlv.o : ../../src/mlv/audio_mlv.c
+	$(CC) $(cflags) ../../src/mlv/audio_mlv.c
 dng.o : ../../src/dng/dng.c
 	$(CC) $(cflags) ../../src/dng/dng.c
 lj92.o : ../../src/mlv/liblj92/lj92.c
