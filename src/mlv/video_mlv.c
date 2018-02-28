@@ -422,21 +422,11 @@ void getMlvProcessedFrame16(mlvObject_t * video, uint64_t frameIndex, uint16_t *
     getMlvRawFrameDebayered(video, frameIndex, unprocessed_frame);
 
     /* Do processing.......... */
-    if (threads != 1)
-    {
-        applyProcessingObjectMultiThreaded( video->processing,
-                                            width, height,
-                                            unprocessed_frame,
-                                            outputFrame,
-                                            threads );
-    }
-    else
-    {
-        applyProcessingObject( video->processing,
-                               width, height,
-                               unprocessed_frame,
-                               outputFrame );
-    }
+    applyProcessingObject( video->processing,
+                           width, height,
+                           unprocessed_frame,
+                           outputFrame,
+                           threads, 1 );
 
     free(unprocessed_frame);
 }
