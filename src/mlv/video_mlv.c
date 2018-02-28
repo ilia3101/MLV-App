@@ -7,6 +7,9 @@
 
 #if defined(__linux)
 #include <alloca.h>
+extern int usleep (__useconds_t __useconds);
+#else
+#include <unistd.h>
 #endif
 
 #include "video_mlv.h"
@@ -30,8 +33,6 @@
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
 #define ROR32(v,a) ((v) >> (a) | (v) << (32-(a)))
-
-extern int usleep (__useconds_t __useconds);
 
 static uint64_t file_set_pos(FILE *stream, uint64_t offset, int whence)
 {
