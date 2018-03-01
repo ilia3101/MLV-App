@@ -895,15 +895,6 @@ void MainWindow::initGui( void )
     ui->labelColorWheelMidtones->paintElement();
     ui->labelColorWheelHighlights->paintElement();
     ui->groupBoxColorWheels->setVisible( false );
-
-    //Hide Shadows & Highlights
-    ui->line_ShadowsHighlights->setVisible( false);
-    ui->label_highlights->setVisible( false );
-    ui->label_HighlightsVal->setVisible( false );
-    ui->label_shadows->setVisible( false );
-    ui->label_ShadowsVal->setVisible( false );
-    ui->horizontalSliderHighlights->setVisible( false );
-    ui->horizontalSliderShadows->setVisible( false );
 }
 
 //Initialize the library
@@ -3176,14 +3167,16 @@ void MainWindow::on_horizontalSliderLighten_valueChanged(int position)
 
 void MainWindow::on_horizontalSliderShadows_valueChanged(int position)
 {
-    //TODO: processing call
+    qDebug() << "!s";
+    processingSetShadows( m_pProcessingObject, position * 1.5 / 100.0 );
     ui->label_ShadowsVal->setText( QString("%1").arg( position ) );
     m_frameChanged = true;
 }
 
 void MainWindow::on_horizontalSliderHighlights_valueChanged(int position)
 {
-    //TODO: processing call
+    qDebug() << "!h";
+    processingSetHighlights( m_pProcessingObject, position * 1.5 / 100.0 );
     ui->label_HighlightsVal->setText( QString("%1").arg( position ) );
     m_frameChanged = true;
 }
