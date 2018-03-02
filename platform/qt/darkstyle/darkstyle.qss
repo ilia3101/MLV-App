@@ -1,3 +1,27 @@
+QFrame{
+  font: 8pt;
+}
+
+QToolButton{
+  font: 8pt;
+}
+
+QSpinBox{
+  font: 8pt;
+}
+
+QLineEdit{
+  font: 8pt;
+}
+
+QComboBox{
+  font: 8pt;
+}
+
+QCheckBox{
+  font: 8pt;
+}
+
 QToolTip{
   color:#ffffff;
   background-color:palette(base);
