@@ -43,7 +43,7 @@ void buffer_set_size(processing_buffer_t * buffer, int width, int height)
         buffer->height = height;
         if (buffer->image != NULL) free(buffer->image);
         buffer->image = malloc(sizeof(uint16_t) * 3 * width * height);
-        puts("\n\n\n\n\n\n\n\nhello\n\n\n\n\n");
+        //puts("\n\n\n\n\n\n\n\nhello\n\n\n\n\n");
     }
 }
 uint16_t * get_buffer(processing_buffer_t * buffer)
@@ -210,6 +210,8 @@ void applyProcessingObject( processingObject_t * processing,
     /* Resize image buffer to make sure its right size */
     if (imageChanged) buffer_set_size(processing->shadows_highlights.blur_image, imageX, imageY);
 
+    if (imageChanged) memcpy(get_buffer(processing->shadows_highlights.blur_image), inputImage, imageX * imageY * sizeof(uint16_t) * 3);
+
     /* If shadows/highlights off don't do anything. Maybe this blurring bit could b multithreaded I need to think */
     if (!( processing->shadows_highlights.highlights <  0.01
         && processing->shadows_highlights.highlights > -0.01
@@ -223,7 +225,7 @@ void applyProcessingObject( processingObject_t * processing,
         /* Reblur if image changed */
         if (imageChanged)
         {
-            memcpy(get_buffer(processing->shadows_highlights.blur_image), inputImage, imageX * imageY * sizeof(uint16_t) * 3);
+            //memcpy(get_buffer(processing->shadows_highlights.blur_image), inputImage, imageX * imageY * sizeof(uint16_t) * 3);
             blur_image(get_buffer(processing->shadows_highlights.blur_image), outputImage, imageX, imageY, blur_radius, 1, 1, 1, 0, imageY-1);
             /* Apply basic levels */
             int img_s = imageX * imageY * 3;
