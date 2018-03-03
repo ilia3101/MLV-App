@@ -64,7 +64,8 @@ public:
                                   uint16_t resizeHeight = 1080,
                                   bool fpsOverride = false,
                                   double fps = 25,
-                                  bool exportAudio = true);
+                                  bool exportAudio = true,
+                                  bool heightLocked = false);
     ~ExportSettingsDialog();
     uint8_t encoderSetting(void);
     uint8_t encoderOption(void);
@@ -75,6 +76,7 @@ public:
     bool isFpsOverride(void);
     double getFps(void);
     bool isExportAudioEnabled(void);
+    bool isHeightLocked(void);
 
 private slots:
     void on_pushButtonClose_clicked();
@@ -82,6 +84,7 @@ private slots:
     void on_checkBoxFpsOverride_toggled(bool checked);
     void on_checkBoxResize_toggled(bool checked);
     void on_comboBoxOption_currentIndexChanged(const QString &arg1);
+    void on_toolButtonLockHeight_toggled(bool checked);
 
 private:
     Ui::ExportSettingsDialog *ui;

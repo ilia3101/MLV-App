@@ -195,6 +195,20 @@
           </property>
          </widget>
         </item>
+        <item>
+         <widget class="QToolButton" name="toolButtonLockHeight">
+          <property name="text">
+           <string>...</string>
+          </property>
+          <property name="icon">
+           <iconset resource="ressources.qrc">
+            <normaloff>:/RetinaIMG/RetinaIMG/Actions-document-decrypt-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Actions-document-decrypt-icon.png</iconset>
+          </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
        </layout>
       </item>
       <item row="2" column="0">
@@ -302,7 +316,9 @@
   <tabstop>checkBoxExportAudio</tabstop>
   <tabstop>pushButtonClose</tabstop>
  </tabstops>
- <resources/>
+ <resources>
+  <include location="ressources.qrc"/>
+ </resources>
  <connections>
   <connection>
    <sender>checkBoxFpsOverride</sender>

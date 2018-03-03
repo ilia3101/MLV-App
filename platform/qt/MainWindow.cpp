@@ -964,6 +964,7 @@ void MainWindow::readSettings()
     m_resizeFilterEnabled = set.value( "resizeEnable", false ).toBool();
     m_resizeWidth = set.value( "resizeWidth", 1920 ).toUInt();
     m_resizeHeight = set.value( "resizeHeight", 1080 ).toUInt();
+    m_resizeFilterHeightLocked = set.value( "resizeLockHeight", false ).toBool();
     m_frameRate = set.value( "frameRate", 25 ).toDouble();
     m_audioExportEnabled = set.value( "audioExportEnabled", true ).toBool();
     ui->groupBoxRawCorrection->setChecked( set.value( "expandedRawCorrection", false ).toBool() );
@@ -996,6 +997,7 @@ void MainWindow::writeSettings()
     set.setValue( "resizeEnable", m_resizeFilterEnabled );
     set.setValue( "resizeWidth", m_resizeWidth );
     set.setValue( "resizeHeight", m_resizeHeight );
+    set.setValue( "resizeLockHeight", m_resizeFilterHeightLocked );
     set.setValue( "frameRate", m_frameRate );
     set.setValue( "audioExportEnabled", m_audioExportEnabled );
     set.setValue( "expandedRawCorrection", ui->groupBoxRawCorrection->isChecked() );
@@ -1097,14 +1099,29 @@ void MainWindow::startExportPipe(QString fileName)
     QString resizeFilter = QString( "" );
     if( m_resizeFilterEnabled )
     {
+        uint16_t height;
+
+        //Autocalc height
+        if( m_resizeFilterHeightLocked )
+        {
+            height = (double)m_resizeWidth / (double)getMlvWidth( m_pMlvObject )
+                    / m_exportQueue.first()->stretchFactorX()
+                    * m_exportQueue.first()->stretchFactorY()
+                    * (double)getMlvHeight( m_pMlvObject );
+        }
+        else
+        {
+            height = m_resizeHeight;
+        }
+
         //H.264 & H.265 needs a size which can be divided by 2
         if( m_codecProfile == CODEC_H264
          || m_codecProfile == CODEC_H265 )
         {
             m_resizeWidth += m_resizeWidth % 2;
-            m_resizeHeight += m_resizeHeight % 2;
+            height += height % 2;
         }
-        resizeFilter = QString( "-vf scale=%1:%2 " ).arg( m_resizeWidth ).arg( m_resizeHeight );
+        resizeFilter = QString( "-vf scale=%1:%2 " ).arg( m_resizeWidth ).arg( height );
     }
     else if( m_exportQueue.first()->stretchFactorX() != 1.0
           || m_exportQueue.first()->stretchFactorY() != 1.0 )
@@ -3557,7 +3574,8 @@ void MainWindow::on_actionExportSettings_triggered()
                                                                       m_resizeHeight,
                                                                       m_fpsOverride,
                                                                       m_frameRate,
-                                                                      m_audioExportEnabled );
+                                                                      m_audioExportEnabled,
+                                                                      m_resizeFilterHeightLocked );
     pExportSettings->exec();
     m_codecProfile = pExportSettings->encoderSetting();
     m_codecOption = pExportSettings->encoderOption();
@@ -3568,6 +3586,7 @@ void MainWindow::on_actionExportSettings_triggered()
     m_fpsOverride = pExportSettings->isFpsOverride();
     m_frameRate = pExportSettings->getFps();
     m_audioExportEnabled = pExportSettings->isExportAudioEnabled();
+    m_resizeFilterHeightLocked = pExportSettings->isHeightLocked();
     delete pExportSettings;
 
     if( m_fileLoaded )

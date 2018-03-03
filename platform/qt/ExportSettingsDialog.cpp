@@ -12,7 +12,7 @@
 #include <QStandardItem>
 
 //Constructor
-ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, uint8_t currentCodecProfile, uint8_t currentCodecOption, uint8_t debayerMode, bool resize, uint16_t resizeWidth, uint16_t resizeHeight, bool fpsOverride, double fps, bool exportAudio) :
+ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, uint8_t currentCodecProfile, uint8_t currentCodecOption, uint8_t debayerMode, bool resize, uint16_t resizeWidth, uint16_t resizeHeight, bool fpsOverride, double fps, bool exportAudio, bool heightLocked) :
     QDialog(parent),
     ui(new Ui::ExportSettingsDialog)
 {
@@ -30,6 +30,7 @@ ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, uint8_t currentCodec
     on_checkBoxFpsOverride_toggled( fpsOverride );
     ui->doubleSpinBoxFps->setValue( fps );
     ui->checkBoxExportAudio->setChecked( exportAudio );
+    ui->toolButtonLockHeight->setChecked( heightLocked );
 
     //Disable audio & resize for AVFoundation
     if( ui->comboBoxOption->currentText() == QString( "Apple AVFoundation" ) )
@@ -98,6 +99,12 @@ double ExportSettingsDialog::getFps()
 bool ExportSettingsDialog::isExportAudioEnabled()
 {
     return ui->checkBoxExportAudio->isChecked();
+}
+
+//Get if height locked
+bool ExportSettingsDialog::isHeightLocked()
+{
+    return ui->toolButtonLockHeight->isChecked();
 }
 
 //Close clicked
@@ -224,8 +231,11 @@ void ExportSettingsDialog::on_checkBoxFpsOverride_toggled(bool checked)
 //Enable / Disable elements when resize is checked
 void ExportSettingsDialog::on_checkBoxResize_toggled(bool checked)
 {
+    ui->toolButtonLockHeight->setEnabled( checked );
     ui->spinBoxWidth->setEnabled( checked );
-    ui->spinBoxHeight->setEnabled( checked );
+
+    if( checked && !ui->toolButtonLockHeight->isChecked() ) ui->spinBoxHeight->setEnabled( true );
+    else ui->spinBoxHeight->setEnabled( false );
 }
 
 //Disable audio & resize for AVFoundation
@@ -250,4 +260,15 @@ void ExportSettingsDialog::on_comboBoxOption_currentIndexChanged(const QString &
             ui->checkBoxResize->setEnabled( true );
         }
     }
+}
+
+//Toggle height lock
+void ExportSettingsDialog::on_toolButtonLockHeight_toggled(bool checked)
+{
+    if( checked ) ui->toolButtonLockHeight->setIcon( QIcon( ":/RetinaIMG/RetinaIMG/Actions-document-encrypt-icon.png" ) );
+    else ui->toolButtonLockHeight->setIcon( QIcon( ":/RetinaIMG/RetinaIMG/Actions-document-decrypt-icon.png" ) );
+
+    if( !checked && ui->checkBoxResize->isChecked() ) ui->spinBoxHeight->setEnabled( true );
+    else ui->spinBoxHeight->setEnabled( false );
+
 }

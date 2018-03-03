@@ -34,6 +34,8 @@
         <file>RetinaIMG/Pencil-icon.png</file>
         <file>RetinaIMG/map-icon.png</file>
         <file>RetinaIMG/Reload-icon.png</file>
+        <file>RetinaIMG/Actions-document-decrypt-icon.png</file>
+        <file>RetinaIMG/Actions-document-encrypt-icon.png</file>
     </qresource>
     <qresource prefix="/AudioVideoIcons">
         <file>AudioVideoIcons/FirstFrame.png</file>
