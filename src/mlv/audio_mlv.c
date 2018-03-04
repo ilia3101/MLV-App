@@ -286,7 +286,7 @@ void * getMlvAudioData(mlvObject_t * video, uint64_t * output_audio_size)
     }
 
     /* Copy cut/shifted audio data to the synced audio buffer */
-    memcpy(output_audio + positive_offset, audio_buffer + negative_offset, synced_audio_size);
+    memcpy(output_audio + positive_offset, audio_buffer + negative_offset, audio_size - negative_offset);
     free(audio_buffer);
 #ifndef STDOUT_SILENT
     printf("negative_offset = %lu, positive_offset = %lu, output_audio_size_aligned = %lu\n", negative_offset, positive_offset, output_audio_size_alligned);
