@@ -1118,20 +1118,25 @@ int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
             return 1;
         }
 
+        /* initialize AUDF header */
         mlv_audf_hdr_t audf_hdr = { { 'A','U','D','F' }, 0, 0, 0, 0 };
 
         /* Calculate the sum of audio sample sizes for all audio channels */
         uint64_t audio_sample_size = getMlvAudioChannels(video) * (getMlvAudioBitsPerSample(video) / 8);
-
+        /* Calculate audio starting offset */
         uint64_t audio_start_offset = ( (uint64_t)( (double)(getMlvSampleRate(video) * audio_sample_size * (frame_start - 1)) / (double)getMlvFramerate(video) ) );
-        /* Make sure in offset value is multiple of sum of all channel sample sizes */
+        /* Make sure start offset value is multiple of sum of all channel sample sizes */
         uint64_t audio_start_offset_aligned = audio_start_offset - (audio_start_offset % audio_sample_size);
-
+        /* Calculate cut audio size */
         uint64_t cut_audio_size = (uint64_t)( (double)(getMlvSampleRate(video) * audio_sample_size * (frame_end - frame_start + 1)) / (double)getMlvFramerate(video) );
-        /* check if cut_audio_size is multiple of 4096 bytes and not more than original audio data size */
-        uint64_t cut_audio_size_aligned = MIN( (cut_audio_size - (cut_audio_size % 4096) + 4096), mlv_audio_size );
-        /* check if cut_audio_size is not more than uit32_t max value to not overflow blockSize variable */
-        if(cut_audio_size_aligned > 0xFFFFF000) cut_audio_size_aligned = 0xFFFFF000; // Not likely that audio size exeeds the 4.3gb but anyway check this
+        /* Calculate the audio alignement block size in bytes */
+        uint16_t block_align = getMlvAudioChannels(video) * getMlvAudioBitsPerSample(video) * 1024 / 8;
+        /* check if cut_audio_size is multiple of 'block_align' bytes and not more than original audio data size */
+        uint64_t cut_audio_size_aligned = MIN( (cut_audio_size - (cut_audio_size % block_align) + block_align), mlv_audio_size );
+        /* make max audio size (uint32_t max value - 1) multiple of 'block_align' bytes */
+        uint32_t max_audio_size = 0xFFFFFFFF - (0xFFFFFFFF % block_align);
+        /* Not likely that audio size exeeds the 4.3gb but anyway check if cut_audio_size is more than uit32_t max value to not overflow blockSize (uint32_t) variable */
+        if(cut_audio_size_aligned > max_audio_size) cut_audio_size_aligned = max_audio_size;
 
         /* fill AUDF block header */
         audf_hdr.blockSize = sizeof(mlv_audf_hdr_t) + cut_audio_size_aligned;

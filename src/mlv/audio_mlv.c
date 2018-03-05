@@ -127,8 +127,8 @@ static wave_header_t generateMlvAudioToWaveHeader(mlvObject_t * video, uint64_t 
         .audio_format        = 1,
         .num_channels        = getMlvAudioChannels(video),
         .sample_rate         = getMlvSampleRate(video),
-        .byte_rate           = (getMlvSampleRate(video) * getMlvAudioChannels(video) * 16) / 8,
-        .block_align         = (getMlvAudioChannels(video) * 16) / 8,
+        .byte_rate           = (getMlvSampleRate(video) * getMlvAudioChannels(video) * getMlvAudioBitsPerSample(video)) / 8,
+        .block_align         = (getMlvAudioChannels(video) * getMlvAudioBitsPerSample(video)) / 8,
         .bits_per_sample     = 16,
         .data                = {'d','a','t','a'},
         .subchunk2_size      = wave_data_size
@@ -203,8 +203,10 @@ void writeMlvAudioToWave(mlvObject_t * video, char * path)
     /* Calculate the sum of audio sample sizes for all audio channels */
     uint64_t audio_sample_size = getMlvAudioChannels(video) * (getMlvAudioBitsPerSample(video) / 8);
     uint64_t theoretic_size = (uint64_t)( (double)( getMlvSampleRate(video) * audio_sample_size * getMlvFrames(video) ) / (double)getMlvFramerate(video) );
-    /* Check if output_audio_size is multiple of 4096 bytes and add one more block */
-    uint64_t theoretic_size_aligned = theoretic_size - (theoretic_size % 4096) + 4096;
+    /* Calculate the audio alignement block size in bytes */
+    uint16_t block_align = getMlvAudioChannels(video) * getMlvAudioBitsPerSample(video) * 1024 / 8;
+    /* Check if output_audio_size is multiple of 'block_align' bytes and add one more block */
+    uint64_t theoretic_size_aligned = theoretic_size - (theoretic_size % block_align) + block_align;
 
     uint64_t audio_size = 0;
     int16_t * audio_data = (int16_t*)getMlvAudioData(video, &audio_size);
@@ -272,8 +274,10 @@ void * getMlvAudioData(mlvObject_t * video, uint64_t * output_audio_size)
 
     /* Calculate synced audio size */
     uint64_t synced_audio_size = audio_size - negative_offset + positive_offset;
-    /* Check if output_audio_size is multiple of 4096 bytes and add one more block */
-    uint64_t output_audio_size_alligned = synced_audio_size - (synced_audio_size % 4096) + 4096;
+    /* Calculate the audio alignement block size in bytes */
+    uint16_t block_align = getMlvAudioChannels(video) * getMlvAudioBitsPerSample(video) * 1024 / 8;
+    /* Check if output_audio_size is multiple of 'block_align' bytes and add one more block */
+    uint64_t output_audio_size_alligned = synced_audio_size - (synced_audio_size % block_align) + block_align;
     /* Allocate synced audio buffer */
     void * output_audio = calloc( output_audio_size_alligned, 1 );
     if(!output_audio)
