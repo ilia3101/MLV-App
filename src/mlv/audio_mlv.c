@@ -277,9 +277,9 @@ void * getMlvAudioData(mlvObject_t * video, uint64_t * output_audio_size)
     /* Calculate the audio alignement block size in bytes */
     uint16_t block_align = getMlvAudioChannels(video) * getMlvAudioBitsPerSample(video) * 1024 / 8;
     /* Check if output_audio_size is multiple of 'block_align' bytes and add one more block */
-    uint64_t output_audio_size_alligned = synced_audio_size - (synced_audio_size % block_align) + block_align;
+    uint64_t output_audio_size_aligned = synced_audio_size - (synced_audio_size % block_align) + block_align;
     /* Allocate synced audio buffer */
-    void * output_audio = calloc( output_audio_size_alligned, 1 );
+    void * output_audio = calloc( output_audio_size_aligned, 1 );
     if(!output_audio)
     {
 #ifndef STDOUT_SILENT
@@ -296,6 +296,6 @@ void * getMlvAudioData(mlvObject_t * video, uint64_t * output_audio_size)
     printf("negative_offset = %lu, positive_offset = %lu, output_audio_size_aligned = %lu\n", negative_offset, positive_offset, output_audio_size_alligned);
 #endif
 
-    *output_audio_size = output_audio_size_alligned;
+    *output_audio_size = output_audio_size_aligned;
     return output_audio;
 }
