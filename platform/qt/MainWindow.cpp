@@ -3136,7 +3136,7 @@ void MainWindow::on_horizontalSliderTemperature_valueChanged(int position)
         QString( "QSlider::add-page:horizontal{background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(%1, 100, %2, 255), stop:1 rgba(200, 100, 0, 255));} QSlider::sub-page:horizontal{background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(0, 100, 200, 255), stop:1 rgba(%1, 100, %2, 255));}" ).arg( value ).arg( 200-value )
     );
 
-    if( !m_pProcessingObject ) return;
+    if( !m_pProcessingObject || !m_fileLoaded ) return;
 
     processingSetWhiteBalanceKelvin( m_pProcessingObject, position );
     ui->label_TemperatureVal->setText( QString("%1 K").arg( position ) );
@@ -3150,7 +3150,7 @@ void MainWindow::on_horizontalSliderTint_valueChanged(int position)
         QString( "QSlider::add-page:horizontal{background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(%1, %2, %1, 255), stop:1 rgba(200, 0, 200, 255));} QSlider::sub-page:horizontal{background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(0, 200, 0, 255), stop:1 rgba(%1, %2, %1, 255));}" ).arg( value ).arg( 200-value )
     );
 
-    if( !m_pProcessingObject ) return;
+    if( !m_pProcessingObject || !m_fileLoaded ) return;
 
     processingSetWhiteBalanceTint( m_pProcessingObject, position / 10.0 );
     ui->label_TintVal->setText( QString("%1").arg( position ) );
