@@ -1135,7 +1135,7 @@ int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
         uint64_t cut_audio_size_aligned = MIN( (cut_audio_size - (cut_audio_size % block_align) + block_align), mlv_audio_size );
         /* make max audio size (uint32_t max value - 1) multiple of 'block_align' bytes */
         uint32_t max_audio_size = 0xFFFFFFFF - (0xFFFFFFFF % block_align);
-        /* Not likely that audio size exeeds the 4.3gb but anyway check if cut_audio_size is more than uit32_t max value to not overflow blockSize (uint32_t) variable */
+        /* Not likely that audio size exeeds the 4.3gb but anyway check if cut_audio_size is more than uint32_t max value to not overflow blockSize variable */
         if(cut_audio_size_aligned > max_audio_size) cut_audio_size_aligned = max_audio_size;
 
         /* fill AUDF block header */
