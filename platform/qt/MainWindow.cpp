@@ -895,6 +895,10 @@ void MainWindow::initGui( void )
     ui->labelColorWheelMidtones->paintElement();
     ui->labelColorWheelHighlights->paintElement();
     ui->groupBoxColorWheels->setVisible( false );
+
+    //Call temp sliders once for stylesheet
+    on_horizontalSliderTemperature_valueChanged( ui->horizontalSliderTemperature->value() );
+    on_horizontalSliderTint_valueChanged( ui->horizontalSliderTint->value() );
 }
 
 //Initialize the library
@@ -3127,6 +3131,13 @@ void MainWindow::on_horizontalSliderExposure_valueChanged(int position)
 
 void MainWindow::on_horizontalSliderTemperature_valueChanged(int position)
 {
+    int value = 200  * ( ui->horizontalSliderTemperature->value() - ui->horizontalSliderTemperature->minimum() ) / ( ui->horizontalSliderTemperature->maximum() - ui->horizontalSliderTemperature->minimum() );
+    ui->horizontalSliderTemperature->setStyleSheet(
+        QString( "QSlider::add-page:horizontal{background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(%1, 100, %2, 255), stop:1 rgba(200, 100, 0, 255));} QSlider::sub-page:horizontal{background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(0, 100, 200, 255), stop:1 rgba(%1, 100, %2, 255));}" ).arg( value ).arg( 200-value )
+    );
+
+    if( !m_pProcessingObject ) return;
+
     processingSetWhiteBalanceKelvin( m_pProcessingObject, position );
     ui->label_TemperatureVal->setText( QString("%1 K").arg( position ) );
     m_frameChanged = true;
@@ -3134,6 +3145,13 @@ void MainWindow::on_horizontalSliderTemperature_valueChanged(int position)
 
 void MainWindow::on_horizontalSliderTint_valueChanged(int position)
 {
+    int value = 200  * ( ui->horizontalSliderTint->value() - ui->horizontalSliderTint->minimum() ) / ( ui->horizontalSliderTint->maximum() - ui->horizontalSliderTint->minimum() );
+    ui->horizontalSliderTint->setStyleSheet(
+        QString( "QSlider::add-page:horizontal{background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(%1, %2, %1, 255), stop:1 rgba(200, 0, 200, 255));} QSlider::sub-page:horizontal{background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(0, 200, 0, 255), stop:1 rgba(%1, %2, %1, 255));}" ).arg( value ).arg( 200-value )
+    );
+
+    if( !m_pProcessingObject ) return;
+
     processingSetWhiteBalanceTint( m_pProcessingObject, position / 10.0 );
     ui->label_TintVal->setText( QString("%1").arg( position ) );
     m_frameChanged = true;

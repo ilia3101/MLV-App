@@ -334,10 +334,19 @@ QSlider::handle:horizontal:hover{
 }
 QSlider::add-page:horizontal{
   background:palette(base);
+  height: 4px;
+  border-radius: 2px;
+  border: 1px solid rgba(35,35,35,255);
 }
 QSlider::sub-page:horizontal{
   background:palette(highlight);
+  height: 4px;
+  border-radius: 2px;
+  border: 1px solid rgba(35,35,35,255);
 }
 QSlider::sub-page:horizontal:disabled{
   background:rgb(80,80,80);
+  height: 4px;
+  border-radius: 2px;
+  border: 1px solid rgba(35,35,35,255);
 }
