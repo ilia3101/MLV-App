@@ -560,7 +560,7 @@ int MainWindow::openMlv( QString fileName )
     m_pInfoDialog->ui->tableWidget->item( 5, 1 )->setText( QString( "%1 fps" ).arg( getMlvFramerate( m_pMlvObject ) ) );
     m_pInfoDialog->ui->tableWidget->item( 6, 1 )->setText( QString( "%1 mm" ).arg( getMlvFocalLength( m_pMlvObject ) ) );
     m_pInfoDialog->ui->tableWidget->item( 7, 1 )->setText( QString( "1/%1 s,  %2 deg,  %3 µs" ).arg( (uint16_t)(shutterSpeed + 0.5f) ).arg( (uint16_t)(shutterAngle + 0.5f) ).arg( getMlvShutter( m_pMlvObject )) );
-    m_pInfoDialog->ui->tableWidget->item( 8, 1 )->setText( QString( "f/%1" ).arg( getMlvAperture( m_pMlvObject ) / 100.0, 0, 'f', 1 ) );
+    m_pInfoDialog->ui->tableWidget->item( 8, 1 )->setText( QString( "ƒ/%1" ).arg( getMlvAperture( m_pMlvObject ) / 100.0, 0, 'f', 1 ) );
     m_pInfoDialog->ui->tableWidget->item( 9, 1 )->setText( QString( "%1" ).arg( (int)getMlvIso( m_pMlvObject ) ) );
     m_pInfoDialog->ui->tableWidget->item( 10, 1 )->setText( QString( "%1 bits,  %2" ).arg( getMlvBitdepth( m_pMlvObject ) ).arg( getMlvCompression( m_pMlvObject ) ) );
     m_pInfoDialog->ui->tableWidget->item( 11, 1 )->setText( QString( "%1 black,  %2 white" ).arg( getMlvBlackLevel( m_pMlvObject ) ).arg( getMlvWhiteLevel( m_pMlvObject ) ) );
@@ -3136,10 +3136,10 @@ void MainWindow::on_horizontalSliderTemperature_valueChanged(int position)
         QString( "QSlider::add-page:horizontal{background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(%1, 130, %2, 255), stop:1 rgba(218, 130, 42, 255));} QSlider::sub-page:horizontal{background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(42, 130, 218, 255), stop:1 rgba(%1, 130, %2, 255));}" ).arg( value+42 ).arg( 218-value )
     );
 
-    if( !m_fileLoaded ) return;
-
-    processingSetWhiteBalanceKelvin( m_pProcessingObject, position );
     ui->label_TemperatureVal->setText( QString("%1 K").arg( position ) );
+
+    if( !m_fileLoaded ) return;
+    processingSetWhiteBalanceKelvin( m_pProcessingObject, position );
     m_frameChanged = true;
 }
 
@@ -3150,10 +3150,10 @@ void MainWindow::on_horizontalSliderTint_valueChanged(int position)
         QString( "QSlider::add-page:horizontal{background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(%1, %2, %1, 255), stop:1 rgba(218, 42, 218, 255));} QSlider::sub-page:horizontal{background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(42, 218, 42, 255), stop:1 rgba(%1, %2, %1, 255));}" ).arg( value+42 ).arg( 218-value )
     );
 
-    if( !m_fileLoaded ) return;
-
-    processingSetWhiteBalanceTint( m_pProcessingObject, position / 10.0 );
     ui->label_TintVal->setText( QString("%1").arg( position ) );
+
+    if( !m_fileLoaded ) return;
+    processingSetWhiteBalanceTint( m_pProcessingObject, position / 10.0 );
     m_frameChanged = true;
 }
 
