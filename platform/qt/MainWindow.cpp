@@ -2522,7 +2522,7 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
         m_pStatusDialog->ui->progressBar->setValue( 0 );
         m_pStatusDialog->show();
         showFileInEditor( row );
-        qApp->processEvents();
+        while( m_frameStillDrawing ) qApp->processEvents();
         setReceipt( m_pSessionReceipts.at( row ) );
     }
 
