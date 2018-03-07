@@ -509,14 +509,14 @@ int MainWindow::openMlv( QString fileName )
 
     //disable drawing and kill old timer and old WaveFormMonitor
     killTimer( m_timerId );
-    delete m_pWaveFormMonitor;
-    delete m_pVectorScope;
     m_dontDraw = true;
 
     //Waiting for thread being idle for not freeing used memory
     while( !m_pRenderThread->isIdle() ) {}
     //Waiting for frame ready because it works with m_pMlvObject
     while( m_frameStillDrawing ) {qApp->processEvents();}
+    delete m_pWaveFormMonitor;
+    delete m_pVectorScope;
 
     //Unload audio
     m_pAudioPlayback->unloadAudio();
@@ -2522,7 +2522,7 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
         m_pStatusDialog->ui->progressBar->setValue( 0 );
         m_pStatusDialog->show();
         showFileInEditor( row );
-        while( m_frameStillDrawing ) qApp->processEvents();
+        qApp->processEvents();
         setReceipt( m_pSessionReceipts.at( row ) );
     }
 
