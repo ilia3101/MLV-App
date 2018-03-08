@@ -36,6 +36,7 @@
         <file>RetinaIMG/Reload-icon.png</file>
         <file>RetinaIMG/Actions-document-decrypt-icon.png</file>
         <file>RetinaIMG/Actions-document-encrypt-icon.png</file>
+        <file>RetinaIMG/Status-dialog-warning-icon.png</file>
     </qresource>
     <qresource prefix="/AudioVideoIcons">
         <file>AudioVideoIcons/FirstFrame.png</file>

@@ -23,7 +23,8 @@
 #define CODEC_H265                  10
 #define CODEC_TIFF                  11
 #define CODEC_MLV                   12
-#define CODEC_AUDIO_ONLY            13
+#define CODEC_DNXHD                 13
+#define CODEC_AUDIO_ONLY            14
 
 #define CODEC_PRORES_OPTION_KS      0
 #define CODEC_PRORES_OPTION_AW      1
@@ -45,6 +46,11 @@
 #define CODEC_MLV_COMPRESSED        1
 #define CODEC_MLV_AVERAGED          2
 #define CODEC_MLV_EXTRACT_DF        3
+
+#define CODEC_DNXHD_1080p_10bit     0
+#define CODEC_DNXHD_1080p_8bit      1
+#define CODEC_DNXHD_720p_10bit      2
+#define CODEC_DNXHD_720p_8bit       3
 
 namespace Ui {
 class ExportSettingsDialog;
