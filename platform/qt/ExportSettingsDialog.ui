@@ -102,6 +102,11 @@
           </item>
           <item>
            <property name="text">
+            <string>DNxHR 444</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
             <string>WAV (Audio Only)</string>
            </property>
           </item>

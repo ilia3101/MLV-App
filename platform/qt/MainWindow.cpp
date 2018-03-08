@@ -1239,21 +1239,39 @@ void MainWindow::startExportPipe(QString fileName)
                     .arg( resizeFilter )
                     .arg( output ) );
     }
-    else if( m_codecProfile == CODEC_DNXHD )
+    else if( m_codecProfile == CODEC_DNXHD
+          || m_codecProfile == CODEC_DNXHR444 )
     {
         output.append( QString( ".mov" ) );
+
         QString option;
-        bool error = false;
-        if( m_codecOption == CODEC_DNXHD_1080p_10bit )
+        QString option2;
+        QString format;
+
+        if( m_codecProfile == CODEC_DNXHD )
         {
-            if( getFramerate() == 25.0 )                option = "-vf scale=w=1920:h=1080:in_color_matrix=bt601:out_color_matrix=bt709,fps=25,format=yuv422p10 -b:v 185M";
-            else if( getFramerate() == 50.0 )           option = "-vf scale=w=1920:h=1080:in_color_matrix=bt601:out_color_matrix=bt709,fps=50,format=yuv422p10 -b:v 365M";
+            format = "format=yuv422p10";
+            option2 = "";
+        }
+        else
+        {
+            format = "format=yuv444p10";
+            option2 = "-profile:v dnxhr_444 ";
+        }
+
+        bool error = false;
+
+        if( m_codecOption == CODEC_DNXHD_1080p_10bit
+         || m_codecOption == CODEC_DNXHR444_1080p_10bit )
+        {
+            if( getFramerate() == 25.0 )                option = QString( "-vf scale=w=1920:h=1080:in_color_matrix=bt601:out_color_matrix=bt709,fps=25,%1 -b:v 185M" ).arg( format );
+            else if( getFramerate() == 50.0 )           option = QString( "-vf scale=w=1920:h=1080:in_color_matrix=bt601:out_color_matrix=bt709,fps=50,%1 -b:v 365M" ).arg( format );
             else if( fps == QString( "23.976" ) || fps == QString( "23,976" )
-                     || getFramerate() == 24000.0/1001.0 ) option = "-vf scale=w=1920:h=1080:in_color_matrix=bt601:out_color_matrix=bt709,fps=24000/1001,format=yuv422p10 -b:v 175M";
+                     || getFramerate() == 24000.0/1001.0 ) option = QString( "-vf scale=w=1920:h=1080:in_color_matrix=bt601:out_color_matrix=bt709,fps=24000/1001,%1 -b:v 175M" ).arg( format );
             else if( fps == QString( "29.97" ) || fps == QString( "29,97" )
-                     || getFramerate() == 30000.0/1001.0 ) option = "-vf scale=w=1920:h=1080:in_color_matrix=bt601:out_color_matrix=bt709,fps=30000/1001,format=yuv422p10 -b:v 220M";
+                     || getFramerate() == 30000.0/1001.0 ) option = QString( "-vf scale=w=1920:h=1080:in_color_matrix=bt601:out_color_matrix=bt709,fps=30000/1001,%1 -b:v 220M" ).arg( format );
             else if( fps == QString( "59.94" ) || fps == QString( "59,94" )
-                     || getFramerate() == 60000.0/1001.0 ) option = "-vf scale=w=1920:h=1080:in_color_matrix=bt601:out_color_matrix=bt709,fps=60000/1001,format=yuv422p10 -b:v 440M";
+                     || getFramerate() == 60000.0/1001.0 ) option = QString( "-vf scale=w=1920:h=1080:in_color_matrix=bt601:out_color_matrix=bt709,fps=60000/1001,%1 -b:v 440M" ).arg( format );
             else error = true;
         }
         else if( m_codecOption == CODEC_DNXHD_1080p_8bit )
@@ -1301,9 +1319,10 @@ void MainWindow::startExportPipe(QString fileName)
             return;
         }
 
-        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v dnxhd %3 -color_primaries bt709 -color_trc bt709 -colorspace bt709 \"%4\"" )
+        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v dnxhd %3%4 -color_primaries bt709 -color_trc bt709 -colorspace bt709 \"%5\"" )
                     .arg( fps )
                     .arg( resolution )
+                    .arg( option2 )
                     .arg( option )
                     .arg( output ) );
     }

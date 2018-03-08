@@ -181,15 +181,19 @@ void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
         ui->comboBoxOption->addItem( QString( "Extract Internal Darkframe" ) );
         enableResize = false;
     }
-    else if( index == CODEC_DNXHD )
+    else if( index == CODEC_DNXHD
+          || index == CODEC_DNXHR444 )
     {
         ui->labelDebayer->setEnabled( true );
         ui->comboBoxDebayer->setEnabled( true );
         ui->comboBoxOption->setEnabled( true );
         ui->comboBoxOption->addItem( QString( "1080p 10bit" ) );
-        ui->comboBoxOption->addItem( QString( "1080p 8bit" ) );
-        ui->comboBoxOption->addItem( QString( "720p 10bit" ) );
-        ui->comboBoxOption->addItem( QString( "720p 8bit" ) );
+        if( index == CODEC_DNXHD )
+        {
+            ui->comboBoxOption->addItem( QString( "1080p 8bit" ) );
+            ui->comboBoxOption->addItem( QString( "720p 10bit" ) );
+            ui->comboBoxOption->addItem( QString( "720p 8bit" ) );
+        }
         enableResize = false;
         QPixmap pic = QPixmap( ":/RetinaIMG/RetinaIMG/Status-dialog-warning-icon.png" ).scaled( 24 * devicePixelRatio(), 24 * devicePixelRatio() );
         pic.setDevicePixelRatio( devicePixelRatio() );
