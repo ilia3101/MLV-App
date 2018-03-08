@@ -3156,12 +3156,6 @@ QGroupBox::indicator:checked {
                   </widget>
                  </item>
                 </layout>
-                <zorder>checkBoxHighLightReconstruction</zorder>
-                <zorder>comboBoxProfile</zorder>
-                <zorder>line</zorder>
-                <zorder>line_2</zorder>
-                <zorder>line_ShadowsHighlights</zorder>
-                <zorder></zorder>
                </widget>
               </item>
              </layout>
