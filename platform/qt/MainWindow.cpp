@@ -1099,7 +1099,7 @@ void MainWindow::startExportPipe(QString fileName)
         return;
     }
 
-    //Resize Filter
+    //Resize Filter + colorspace conversion (for getting right colors)
     QString resizeFilter = QString( "" );
     if( m_resizeFilterEnabled )
     {
@@ -1125,7 +1125,7 @@ void MainWindow::startExportPipe(QString fileName)
             m_resizeWidth += m_resizeWidth % 2;
             height += height % 2;
         }
-        resizeFilter = QString( "-vf scale=%1:%2 " ).arg( m_resizeWidth ).arg( height );
+        resizeFilter = QString( "-vf scale=w=%1:h=%2:in_color_matrix=bt601:out_color_matrix=bt709 " ).arg( m_resizeWidth ).arg( height );
     }
     else if( m_exportQueue.first()->stretchFactorX() != 1.0
           || m_exportQueue.first()->stretchFactorY() != 1.0 )
@@ -1139,9 +1139,14 @@ void MainWindow::startExportPipe(QString fileName)
             width += width % 2;
             height += height % 2;
         }
-        resizeFilter = QString( "-vf scale=%1:%2 " )
+        resizeFilter = QString( "-vf scale=w=%1:h=%2:in_color_matrix=bt601:out_color_matrix=bt709 " )
                 .arg( width )
                 .arg( height );
+    }
+    else
+    {
+        //a colorspace conversion is always needed to get right colors
+        resizeFilter = QString( "-vf scale=in_color_matrix=bt601:out_color_matrix=bt709 " );
     }
     //qDebug() << resizeFilter;
 
