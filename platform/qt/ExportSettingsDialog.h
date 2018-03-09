@@ -24,7 +24,7 @@
 #define CODEC_TIFF                  11
 #define CODEC_MLV                   12
 #define CODEC_DNXHD                 13
-#define CODEC_DNXHR444              14
+#define CODEC_DNXHR                 14
 #define CODEC_AUDIO_ONLY            15
 
 #define CODEC_PRORES_OPTION_KS      0
@@ -53,7 +53,11 @@
 #define CODEC_DNXHD_720p_10bit      2
 #define CODEC_DNXHD_720p_8bit       3
 
-#define CODEC_DNXHR444_1080p_10bit  0
+#define CODEC_DNXHR_444_1080p_10bit 0
+#define CODEC_DNXHR_HQX_1080p_10bit 1
+#define CODEC_DNXHR_HQ_1080p_8bit   2
+#define CODEC_DNXHR_SQ_1080p_8bit   3
+#define CODEC_DNXHR_LB_1080p_8bit   4
 
 namespace Ui {
 class ExportSettingsDialog;

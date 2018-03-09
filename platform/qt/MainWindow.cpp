@@ -1162,7 +1162,7 @@ void MainWindow::startExportPipe(QString fileName)
 #endif
 
 #ifdef STDOUT_SILENT
-    program.append( QString( " -loglevel 0" ) );
+    //program.append( QString( " -loglevel 0" ) );
 #endif
 
     //Solving the . and , problem at fps in the command
@@ -1240,7 +1240,7 @@ void MainWindow::startExportPipe(QString fileName)
                     .arg( output ) );
     }
     else if( m_codecProfile == CODEC_DNXHD
-          || m_codecProfile == CODEC_DNXHR444 )
+          || m_codecProfile == CODEC_DNXHR )
     {
         output.append( QString( ".mov" ) );
 
@@ -1255,14 +1255,36 @@ void MainWindow::startExportPipe(QString fileName)
         }
         else
         {
-            format = "format=yuv444p10";
-            option2 = "-profile:v dnxhr_444 ";
+            switch( m_codecOption )
+            {
+            case CODEC_DNXHR_444_1080p_10bit:
+                format = "format=yuv444p10";
+                option2 = "-profile:v dnxhr_444 ";
+                break;
+            case CODEC_DNXHR_HQX_1080p_10bit:
+                format = "format=yuv422p10";
+                option2 = "-profile:v dnxhr_hqx ";
+                break;
+            case CODEC_DNXHR_HQ_1080p_8bit:
+                format = "format=yuv422p";
+                option2 = "-profile:v dnxhr_hq ";
+                break;
+            case CODEC_DNXHR_SQ_1080p_8bit:
+                format = "format=yuv422p";
+                option2 = "-profile:v dnxhr_sq ";
+                break;
+            case CODEC_DNXHR_LB_1080p_8bit:
+            default:
+                format = "format=yuv422p";
+                option2 = "-profile:v dnxhr_lb ";
+                break;
+            }
         }
 
         bool error = false;
 
-        if( m_codecOption == CODEC_DNXHD_1080p_10bit
-         || m_codecOption == CODEC_DNXHR444_1080p_10bit )
+        if( ( ( m_codecProfile == CODEC_DNXHD ) && ( m_codecOption == CODEC_DNXHD_1080p_10bit ) )
+         || m_codecProfile == CODEC_DNXHR )
         {
             if( getFramerate() == 25.0 )                option = QString( "-vf scale=w=1920:h=1080:in_color_matrix=bt601:out_color_matrix=bt709,fps=25,%1 -b:v 185M" ).arg( format );
             else if( getFramerate() == 50.0 )           option = QString( "-vf scale=w=1920:h=1080:in_color_matrix=bt601:out_color_matrix=bt709,fps=50,%1 -b:v 365M" ).arg( format );
