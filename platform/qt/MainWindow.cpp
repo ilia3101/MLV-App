@@ -1162,7 +1162,7 @@ void MainWindow::startExportPipe(QString fileName)
 #endif
 
 #ifdef STDOUT_SILENT
-    //program.append( QString( " -loglevel 0" ) );
+    program.append( QString( " -loglevel 0" ) );
 #endif
 
     //Solving the . and , problem at fps in the command
