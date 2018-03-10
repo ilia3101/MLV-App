@@ -1574,5 +1574,4 @@ void mlv_raw_basic_process(mlvObject_t * video, uint16_t * frame)
         pix[1] = LIMIT16((mat[3][p1] + mat[4][p2] + mat[5][p3]) >> 1);
         pix[2] = LIMIT16((mat[6][p1] + mat[7][p2] + mat[8][p3]) >> 1);
     }
-
 }

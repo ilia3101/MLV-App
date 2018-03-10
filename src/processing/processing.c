@@ -7,6 +7,10 @@
 #include <string.h>
 #include "processing_object.h"
 
+#ifndef M_E
+# define M_E 2.7182818284590452354
+#endif
+
 /* Measurements taken from 5D Mark II RAW photos using EXIFtool, surely Canon can't be wrong about WB mutipliers? */
 static const int wb_kelvin[]   = {  2000,  2500,  3000,  3506,  4000,  4503,  5011,  5517,  6018,  6509,  7040,  7528,  8056,  8534,  9032,  9531, 10000 };
 static const double wb_red[]   = { 1.134, 1.349, 1.596, 1.731, 1.806, 1.954, 2.081, 2.197, 2.291, 2.365, 2.444, 2.485, 2.528, 2.566, 2.612, 2.660, 2.702 };
