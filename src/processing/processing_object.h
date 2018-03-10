@@ -24,9 +24,6 @@ typedef struct {
      * PROFILE_LINEAR     : Linear, idk who would want this */
     image_profile_t * image_profile; /* Affects following two parameters */
 
-    /* (RAW) white and black levels */
-    int black_level, white_level;
-
     /* Do highlight reconstrucion? It's slow */
     int highlight_reconstruction;
     uint16_t highest_green; /* Used for reconstruction */
@@ -38,13 +35,13 @@ typedef struct {
 
 
     /* Camera's matrix - will need to be set on opening clip, default set for 5D Mark II */
-    double cam_to_sRGB_matrix[9];
+    double cam_to_sRGB_matrix[9];//remove
     /* What is used to turn XYZ produced form previious matrix into RGB image */
-    double xyz_to_rgb_matrix[9];
+    double xyz_to_rgb_matrix[9];//remove
     /* Main matrix: combined white balance + exposure + whatever the cmaera matrix does */
     double final_matrix[9];
     /* Precalculated all matrix values 0-65535 */
-    int32_t * pre_calc_matrix[9];
+    int32_t pre_calc_matrix[9][65536];
 
     struct {
         /* "use chroma separation" */
@@ -115,7 +112,6 @@ typedef struct {
     uint16_t   pre_calc_curve_r[65536];
     uint16_t   pre_calc_curve_g[65536];
     uint16_t   pre_calc_curve_b[65536]; int use_rgb_curves; /* The r, g and b curves can be disabled */
-    uint16_t   pre_calc_levels[65536]; /* For black level and white level */
     uint16_t   pre_calc_gamma[65536];
     uint32_t   pre_calc_sharp_a[65536];
     uint16_t   pre_calc_sharp_x[65536]; /* In horizontal dimension */

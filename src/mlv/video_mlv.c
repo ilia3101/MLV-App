@@ -24,14 +24,20 @@ extern int usleep (__useconds_t __useconds);
 /* Processing module */
 #include "../processing/raw_processing.h"
 
+/* camid, for matrix here */
+#include "camid/camera_id.h"
+
 /* Lossless decompression */
 #include "liblj92/lj92.h"
 
 /* Bitunpack and lossless compression */
 #include "../dng/dng.h"
 
+#include "../matrix/matrix.h"
+
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
+#define LIMIT16(a) MAX(0, MIN(a, 65535))
 #define ROR32(v,a) ((v) >> (a) | (v) << (32-(a)))
 
 static uint64_t file_set_pos(FILE *stream, uint64_t offset, int whence)
@@ -283,62 +289,8 @@ void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outpu
 
 void setMlvProcessing(mlvObject_t * video, processingObject_t * processing)
 {
-    //double camera_matrix[9]; commented for now, not used
-
     /* Easy bit */
     video->processing = processing;
-
-    /* MATRIX stuff (not working, so commented out - 
-     * processing object defaults to 1,0,0,0,1,0,0,0,1) */
-
-    /* Get camera matrix for MLV clip and set it in the processing object */
-    //getMlvCameraTosRGBMatrix(video, camera_matrix);
-    /* Set Camera to RGB */
-    //processingCamTosRGBMatrix(processing, camera_matrix); /* Still not used in processing cos not working right */
-
-    /* Corrected RAW black/white levels */
-    int CorrectedBlackLevel = getMlvBlackLevel(video);
-    int CorrectedWhiteLevel = getMlvWhiteLevel(video);
-
-    if(CorrectedBlackLevel && CorrectedWhiteLevel)
-    {
-        /* We work in an imaginary 14 bit world, so if its 10/12 bit, blackwhite levels shall be multiplied */
-        switch(getMlvBitdepth(video))
-        {
-            case 10:
-                CorrectedBlackLevel *= 16;
-                CorrectedWhiteLevel *= 16;
-                break;
-            case 12:
-                CorrectedBlackLevel *= 4;
-                CorrectedWhiteLevel *= 4;
-                break;
-        }
-
-        /* let's be kind and repair black level if it's broken (OMG IT WORKS!) */
-        if ((CorrectedBlackLevel < 1700) || (CorrectedBlackLevel > 2200))
-        {
-            /* Camera specific stuff */
-            switch(getMlvCameraModel(video))
-            {
-                case 0x80000218: // 5D2
-                case 0x80000261: // 50D
-                    CorrectedBlackLevel = 1792;
-                    break;
-                default: // all other cameras
-                    CorrectedBlackLevel = 2048;
-                    break;
-            }
-        }
-
-        /* Lowering white level a bit avoids pink grain in highlihgt reconstruction */
-        CorrectedWhiteLevel = (int)((double)CorrectedWhiteLevel * 0.993);
-    }
-
-    /* BLACK / WHITE level */
-    processingSetBlackAndWhiteLevel( processing, 
-                                     CorrectedBlackLevel * 4,
-                                     CorrectedWhiteLevel * 4 );
 
     /* If 5D3 or cropmode */
     if (strlen((char *)getMlvCamera(video)) > 20 || getMlvMaxWidth(video) > 1920)
@@ -1517,6 +1469,34 @@ short_cut:
     video->rgb_raw_current_frame = (uint16_t *)malloc( getMlvWidth(video) * getMlvHeight(video) * 3 * sizeof(uint16_t) );
     video->cached_frames = (uint8_t *)calloc( sizeof(uint8_t), video->frames );
 
+    /* Precalculate luts for basic processing (levels and to XYZ) */
+    int white_level = (int)(getMlvWhiteLevel(video) * 0.993) * 4;
+    double black_level;
+    switch (getMlvCameraModel(video))
+    {
+        case 0x80000218: /* 5D2 */
+        case 0x80000261: /* 50D */
+            black_level = 1791.5;
+            break;
+        default: /* All other cameras */
+            black_level = 2048;
+            break;
+    }
+    black_level *= 4;
+    for (int i = 0; i < 65536; i++)
+        video->levels[i] = (uint16_t)LIMIT16((((double)i-black_level)) * (65535.0/(white_level-black_level)));
+    int32_t * matrixi = camidGetColorMatrix2(video->IDNT.cameraModel);
+    double matrix1[9] = {
+        ((double)matrixi[0])/matrixi[1], ((double)matrixi[2])/matrixi[3], ((double)matrixi[4])/matrixi[5],
+        ((double)matrixi[6])/matrixi[7], ((double)matrixi[8])/matrixi[9], ((double)matrixi[10])/matrixi[11],
+        ((double)matrixi[12])/matrixi[13], ((double)matrixi[14])/matrixi[15], ((double)matrixi[16])/matrixi[17]
+    };
+    double matrix[9];
+    invertMatrix(matrix1, matrix);
+    for (int i = 0; i < 9; i++)
+        for (int j = 0; j < 65536; j++)
+            video->xyzmatrix[i][j] = ((double)j) * matrix[i];
+
     isMlvActive(video) = 1;
 
     /* Start caching unless it was disabled already */
@@ -1570,4 +1550,29 @@ void printMlvInfo(mlvObject_t * video)
     printf("      Black Level: %i\n", video->RAWI.raw_info.black_level);
     printf("      White Level: %i\n", video->RAWI.raw_info.white_level);
     printf("     Bits / Pixel: %i\n\n", video->RAWI.raw_info.bits_per_pixel);
+}
+
+void mlv_raw_basic_process(mlvObject_t * video, uint16_t * frame)
+{
+    int32_t*mat[9];for(int i=0;i<9;i++)mat[i]=video->xyzmatrix[i];
+
+    printf("\n\n\n%p\n\n\n", frame);
+
+    uint16_t * end = frame + (getMlvHeight(video) * getMlvWidth(video) * 3);
+
+    /* B/W levels */
+    for (uint16_t * pix = frame; pix < end; ++pix)
+        *pix = video->levels[*pix];
+
+    /* Highlight reconstrcution here... */
+
+    /* Matrix */
+    for (uint16_t * pix = frame; pix < end; pix += 3)
+    {
+        size_t p1 = pix[0], p2 = pix[1], p3 = pix[2];
+        pix[0] = LIMIT16((mat[0][p1] + mat[1][p2] + mat[2][p3]) >> 1);
+        pix[1] = LIMIT16((mat[3][p1] + mat[4][p2] + mat[5][p3]) >> 1);
+        pix[2] = LIMIT16((mat[6][p1] + mat[7][p2] + mat[8][p3]) >> 1);
+    }
+
 }

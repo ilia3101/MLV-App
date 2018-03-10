@@ -63,10 +63,6 @@ processingObject_t * initProcessingObject()
 
     processing->filter = initFilterObject();
 
-    /* For precalculated matrix values */
-    for (int i = 0; i < 9; ++i)
-        processing->pre_calc_matrix[i] = malloc( 65536 * sizeof(int32_t) );
-
     /* A nothing matrix */
     processing->cam_to_sRGB_matrix[0] = 1.0;
     processing->cam_to_sRGB_matrix[4] = 1.0;
@@ -106,7 +102,6 @@ processingObject_t * initProcessingObject()
 
     /* Default settings */
     processingSetWhiteBalance(processing, 6000.0, 0.0);
-    processingSetBlackAndWhiteLevel(processing, 8192.0, 64000.0); /* 16 bit! */
     processingSetExposureStops(processing, 0.0);
     processingSetGamma(processing, STANDARD_GAMMA);
     processingSetSaturation(processing, 1.0);
@@ -230,7 +225,6 @@ void applyProcessingObject( processingObject_t * processing,
             /* Apply basic levels */
             int img_s = imageX * imageY * 3;
             uint16_t * img = get_buffer(processing->shadows_highlights.blur_image);
-            for (int i = 0; i < img_s; ++i) img[i] = processing->pre_calc_levels[ img[i] ];
         }
     }
 
@@ -288,17 +282,10 @@ void apply_processing_object( processingObject_t * processing,
     int img_s = imageX * imageY * 3;
 
     /* (for shorter code) */
-    int32_t ** pm = processing->pre_calc_matrix;
+    int32_t*pm[9];for(int i=0;i<9;i++)pm[i]=processing->pre_calc_matrix[i];
     uint16_t * out_img = outputImage;
     uint16_t * img = inputImage;
     uint16_t * img_end = img + img_s;
-
-    /* Apply some precalcuolated settings */
-    for (int i = 0; i < img_s; ++i)
-    {
-        /* Black + white level */
-        img[i] = processing->pre_calc_levels[ img[i] ];
-    }
 
     /* white balance & exposure & highlights */
     for (uint16_t * pix = img, * bpix = blurImage; pix < img_end; pix += 3, bpix += 3)
@@ -677,55 +664,11 @@ void processing_disable_tonemapping(processingObject_t * processing)
     processing_update_matrices(processing);
 }
 
-/* Set black and white level */
-void processingSetBlackAndWhiteLevel( processingObject_t * processing, 
-                                      int blackLevel, int whiteLevel )
-{
-    processing->black_level = blackLevel;
-    processing->white_level = whiteLevel;
-
-    /* How much it needs to be stretched */
-    double stretch = 65535.0 / (whiteLevel - blackLevel);
-
-    for (int i = 0; i < 65536; ++i)
-    {
-        /* Stretch to the black-white level range */
-        int new_value = (int)((double)(i - blackLevel) * stretch);
-
-        if (new_value < 65536 && new_value > 0)
-        {
-            processing->pre_calc_levels[i] = new_value;
-        }
-        else if (new_value < 0)
-        {
-            processing->pre_calc_levels[i] = 0;
-        }
-        else if (new_value > 65535)
-        {
-            processing->pre_calc_levels[i] = 65535;
-        }
-    }
-}
-
-/* Cheat functions */
-void processingSetBlackLevel(processingObject_t * processing, int blackLevel)
-{
-    processingSetBlackAndWhiteLevel( processing,
-                                     blackLevel,
-                                     processingGetWhiteLevel(processing) );
-}
-void processingSetWhiteLevel(processingObject_t * processing, int whiteLevel)
-{
-    processingSetBlackAndWhiteLevel( processing,
-                                     processingGetBlackLevel(processing),
-                                     whiteLevel );
-}
 
 /* Decomissions a processing object completely(I hope) */
 void freeProcessingObject(processingObject_t * processing)
 {
     freeFilterObject(processing->filter);
-    for (int i = 8; i >= 0; --i) free(processing->pre_calc_matrix[i]);
     for (int i = 6; i >= 0; --i) free(processing->cs_zone.pre_calc_rgb_to_YCbCr[i]);
     for (int i = 3; i >= 0; --i) free(processing->cs_zone.pre_calc_YCbCr_to_rgb[i]);
     free_image_buffer(processing->shadows_highlights.blur_image);

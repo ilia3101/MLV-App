@@ -105,5 +105,7 @@ void get_mlv_raw_frame_debayered( mlvObject_t * video,
                                   uint16_t * output_frame, 
                                   int debayer_type ); /* Debayer type: 0=bilinear 1=amaze */
 
+/* Basic after debayer processing done in raw part (black level, highlight reconstruction, conversion to XYZ) */
+void mlv_raw_basic_process(mlvObject_t * video, uint16_t * frame);
 
 #endif

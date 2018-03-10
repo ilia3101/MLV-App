@@ -92,14 +92,85 @@ void get_kelvin_multipliers_rgb(double kelvin, double * multiplier_output)
     multiplier_output[2] = (  wb_blue[k] * weight1) + (  wb_blue[k+1] * weight2);
 }
 
-void get_kelvin_multipliers_xyz(double kelvin, double * multiplier_output)
+/* CIE 1931: Wavelengths and their corresponding XYZ values */
+long double wavelengths[] = { 360, 365, 370, 375, 380, 385, 390, 395, 400, 405, 410, 415,
+    420, 425, 430, 435, 440, 445, 450, 455, 460, 465, 470, 475, 480, 485, 490,
+    495, 500, 505, 510, 515, 520, 525, 530, 535, 540, 545, 550, 555, 560, 565,
+    570, 575, 580, 585, 590, 595, 600, 605, 610, 615, 620, 625, 630, 635, 640,
+    645, 650, 655, 660, 665, 670, 675, 680, 685, 690, 695, 700, 705, 710, 715,
+    720, 725, 730, 735, 740, 745, 750, 755, 760, 765, 770, 775, 780, 785, 790,
+    795, 800, 805, 810, 815, 820, 825, 830 };
+long double value_X[] = { 0.0001299, 0.0002321, 0.0004149, 0.0007416, 0.001368, 0.002236,
+    0.004243, 0.00765, 0.01431, 0.02319, 0.04351, 0.07763, 0.13438, 0.21477,
+    0.2839, 0.3285, 0.34828, 0.34806, 0.3362, 0.3187, 0.2908, 0.2511, 0.19536,
+    0.1421, 0.09564, 0.05795001, 0.03201, 0.0147, 0.0049, 0.0024, 0.0093,
+    0.0291, 0.06327, 0.1096, 0.1655, 0.2257499, 0.2904, 0.3597, 0.4334499,
+    0.5120501, 0.5945, 0.6784, 0.7621, 0.8425, 0.9163, 0.9786, 1.0263, 1.0567,
+    1.0622, 1.0456, 1.0026, 0.9384, 0.8544499, 0.7514, 0.6424, 0.5419, 0.4479,
+    0.3608, 0.2835, 0.2187, 0.1649, 0.1212, 0.0874, 0.0636, 0.04677, 0.0329,
+    0.0227, 0.01584, 0.01135916, 0.008110916, 0.005790346, 0.004106457,
+    0.002899327, 0.00204919, 0.001439971, 0.0009999493, 0.0006900786,
+    0.0004760213, 0.0003323011, 0.0002348261, 0.0001661505, 0.000117413,
+    8.307527E-05, 5.870652E-05, 4.150994E-05, 2.935326E-05, 2.067383E-05,
+    1.455977E-05, 1.025398E-05, 7.221456E-06, 5.085868E-06, 3.581652E-06,
+    2.522525E-06, 1.776509E-06, 1.251141E-06 };
+long double value_Y[] = { 3.917E-06, 6.965E-06, 1.239E-05, 2.202E-05, 3.9E-05, 6.4E-05,
+    0.00012, 0.000217, 0.000396, 0.00064, 0.00121, 0.00218, 0.004, 0.0073,
+    0.0116, 0.01684, 0.023, 0.0298, 0.038, 0.048, 0.06, 0.0739, 0.09098, 0.1126,
+    0.13902, 0.1693, 0.20802, 0.2586, 0.323, 0.4073, 0.503, 0.6082, 0.71,
+    0.7932, 0.862, 0.9148501, 0.954, 0.9803, 0.9949501, 1, 0.995, 0.9786, 0.952,
+    0.9154, 0.87, 0.8163, 0.757, 0.6949, 0.631, 0.5668, 0.503, 0.4412, 0.381,
+    0.321, 0.265, 0.217, 0.175, 0.1382, 0.107, 0.0816, 0.061, 0.04458, 0.032,
+    0.0232, 0.017, 0.01192, 0.00821, 0.005723, 0.004102, 0.002929, 0.002091,
+    0.001484, 0.001047, 0.00074, 0.00052, 0.0003611, 0.0002492, 0.0001719,
+    0.00012, 8.48E-05, 6E-05, 4.24E-05, 3E-05, 2.12E-05, 1.499E-05, 1.06E-05,
+    7.4657E-06, 5.2578E-06, 3.7029E-06, 2.6078E-06, 1.8366E-06, 1.2934E-06,
+    9.1093E-07, 6.4153E-07, 4.5181E-07 };
+long double value_Z[] = { 0.0006061, 0.001086, 0.001946, 0.003486, 0.006450001, 0.01054999,
+    0.02005001, 0.03621, 0.06785001, 0.1102, 0.2074, 0.3713, 0.6456, 1.0390501,
+    1.3856, 1.62296, 1.74706, 1.7826, 1.77211, 1.7441, 1.6692, 1.5281, 1.28764,
+    1.0419, 0.8129501, 0.6162, 0.46518, 0.3533, 0.272, 0.2123, 0.1582, 0.1117,
+    0.07824999, 0.05725001, 0.04216, 0.02984, 0.0203, 0.0134, 0.008749999,
+    0.005749999, 0.0039, 0.002749999, 0.0021, 0.0018, 0.001650001, 0.0014,
+    0.0011, 0.001, 0.0008, 0.0006, 0.00034, 0.00024, 0.00019, 0.0001,
+    4.999999E-05, 3E-05, 2E-05, 1E-05, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+
+/* Get blackbody radiation (in arbitraty units) at a wavelength...
+ * http://astronomy.swin.edu.au/cosmos/B/Blackbody+Radiation
+ * https://en.wikipedia.org/wiki/Black-body_radiation#Equations
+ * https://en.wikipedia.org/wiki/Planck%27s_law
+ * (Planck's law but with some constants removed) */
+long double get_blackbody_radiation(long double kelvin, long double wavelength)
 {
-    double xyz_wb[3];
-    double target[3];
-    get_kelvin_multipliers_rgb(8000.0, xyz_wb);
-    get_kelvin_multipliers_rgb(kelvin, target);
-    for (int i = 0; i < 3; ++i) multiplier_output[i] = target[i] / xyz_wb[i];
-    multiplier_output[1] *= 0.75;
+    /* This may be inaccurate (extremely small values don't work well) */
+    long double h = 6.62607004e-34l; /* Planck constant */
+    long double k = 1.38064852e-23l; /* Boltzman constant */
+    long double c = 299792458l; /* Speed of light */
+    long double T = kelvin;
+    wavelength /= 1000000000l; /* To metres instead of nm */
+    long double lambda5 = powl(wavelength, 5.0l); /* Wavelength ^ 5 */
+    return 1.0l / (lambda5 * (powl(M_E, (h*c)/(wavelength*k*T) - 1.0l)));
+}
+
+/* Kelvin to XYZ. Method: calculate spectral distrbution and match it to XYZ */
+void kelvin_to_XYZ(double temperature, double * Xout, double * Yout, double * Zout)
+{
+    long double X = 0l, Y = 0l, Z = 0l;
+
+    /* Calculate at 5nm intervals (as the colour match data is) */
+    for (int w = 0; w < (sizeof(wavelengths)/sizeof(wavelengths[0])); ++w)
+    {
+        long double wavelength = wavelengths[w];
+        long double radiation = get_blackbody_radiation(temperature, wavelength);
+        X += radiation * value_X[w];
+        Y += radiation * value_Y[w];
+        Z += radiation * value_Z[w];
+    }
+
+    *Xout = (double)(X/Y);
+    *Yout = (double)(Y/Y);
+    *Zout = (double)(Z/Y);
 }
 
 /* Adds contrast(S-curve) to a value in a unique(or not) way */
@@ -263,7 +334,7 @@ void processing_update_matrices(processingObject_t * processing)
     double temp_matrix_c[9];
 
     /* (for shorter code) */
-    int32_t ** pm = processing->pre_calc_matrix;
+    int32_t*pm[9];for(int i=0;i<9;i++)pm[i]=processing->pre_calc_matrix[i];
 
     /* Create a camera to sRGB matrix in temp_matrix_a */
     // memcpy(temp_matrix_a, processing->cam_to_sRGB_matrix, 9 * sizeof(double));
@@ -275,19 +346,27 @@ void processing_update_matrices(processingObject_t * processing)
     multiplyMatrices(temp_matrix_a, (double *)id_matrix, temp_matrix_b); /* (nothing) */
     memcpy(temp_matrix_a, temp_matrix_b, 9 * sizeof(double));
 
-    /* Multiply channels */
-    for (int i = 0; i < 3; ++i) temp_matrix_b[i] *= processing->wb_multipliers[0];
-    for (int i = 3; i < 6; ++i) temp_matrix_b[i] *= processing->wb_multipliers[1];
-    for (int i = 6; i < 9; ++i) temp_matrix_b[i] *= processing->wb_multipliers[2];
+    /* Multiply channels, while in XYZ */
+    double X1, X2, Y1, Y2, Z1, Z2;
+    kelvin_to_XYZ(6500, &X1, &Y1, &Z1);
+    kelvin_to_XYZ(processing->kelvin, &X2, &Y2, &Z2);
+    for (int i = 0; i < 3; ++i) temp_matrix_b[i] *= (X1/X2);
+    for (int i = 3; i < 6; ++i) temp_matrix_b[i] *= (Y1/Y2);
+    for (int i = 6; i < 9; ++i) temp_matrix_b[i] *= (Z1/Z2);
 
     /* Convert back to XYZ space from cone space -> to temp_matrix_a */
     // invertMatrix((double *)ciecam02, temp_matrix_c);
     // multiplyMatrices(temp_matrix_b, temp_matrix_c, temp_matrix_a); /* No ciecam for now */
     multiplyMatrices(temp_matrix_b, (double *)id_matrix, temp_matrix_a); /* aka do nothing */
 
+    double rgbmat[] = {
+         3.2404542, -1.5371385, -0.4985314,
+        -0.9692660,  1.8760108,  0.0415560,
+         0.0556434, -0.2040259,  1.0572252
+    };
     /* Multiply the currently XYZ matrix back to RGB in to final_matrix */
     multiplyMatrices( temp_matrix_a,
-                      processing->xyz_to_rgb_matrix,
+                      rgbmat,
                       processing->final_matrix );
 
     /* Exposure, done here if smaller than 0, or no tonemapping - else done at gamma function */
@@ -297,7 +376,6 @@ void processing_update_matrices(processingObject_t * processing)
         for (int i = 0; i < 9; ++i) processing->final_matrix[i] *= exposure_factor;
     }
 
-    /* Matrix stuff done I guess */
 
     /* Precalculate 0-65535 */
     for (int i = 0; i < 9; ++i)

@@ -264,6 +264,8 @@ void an_mlv_cache_thread(mlvObject_t * video)
             pix[2] = (uint16_t)MIN(blue1d[i], 65535);
         }
 
+        mlv_raw_basic_process(video, video->rgb_raw_frames[cache_frame]);
+
         pthread_mutex_lock( &video->g_mutexFind );
         video->cached_frames[cache_frame] = MLV_FRAME_IS_CACHED;
         pthread_mutex_unlock( &video->g_mutexFind );
@@ -309,4 +311,6 @@ void get_mlv_raw_frame_debayered( mlvObject_t * video,
         /* Debayer quickly (bilinearly) */
         debayerBasic(output_frame, temp_memory, width, height, 1);
     }
+
+    mlv_raw_basic_process(video, output_frame);
 }

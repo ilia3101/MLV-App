@@ -91,6 +91,11 @@ typedef struct {
     llrawprocObject_t * llrawproc;
 
 
+    /* Black/white level look up table (for internal processing) */
+    uint16_t levels[65536];
+    int32_t xyzmatrix[9][65536];
+
+
     /************************************************************
      *** CACHE AREA - used by getMlvProcessedFrame and things ***
      ************************************************************/
