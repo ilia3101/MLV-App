@@ -279,7 +279,7 @@ void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outpu
     int shift_val = (llrpHQDualIso(video)) ? 0 : (16 - video->RAWI.raw_info.bits_per_pixel);
 
     /* convert uint16_t raw data -> float raw_data for processing with amaze or bilinear debayer, both need data input as float */
-    for (int i = 0; i < pixels_count; ++i)
+    for (volatile int i = 0; i < pixels_count; ++i)
     {
         outputFrame[i] = (float)(unpacked_frame[i] << shift_val);
     }
@@ -1570,9 +1570,9 @@ void mlv_raw_basic_process(mlvObject_t * video, uint16_t * frame)
     for (uint16_t * pix = frame; pix < end; pix += 3)
     {
         size_t p1 = pix[0], p2 = pix[1], p3 = pix[2];
-        pix[0] = LIMIT16((mat[0][p1] + mat[1][p2] + mat[2][p3])/* >> 1*/);
-        pix[1] = LIMIT16((mat[3][p1] + mat[4][p2] + mat[5][p3])/* >> 1*/);
-        pix[2] = LIMIT16((mat[6][p1] + mat[7][p2] + mat[8][p3])/* >> 1*/);
+        pix[0] = LIMIT16((mat[0][p1] + mat[1][p2] + mat[2][p3])>> 1);
+        pix[1] = LIMIT16((mat[3][p1] + mat[4][p2] + mat[5][p3])>> 1);
+        pix[2] = LIMIT16((mat[6][p1] + mat[7][p2] + mat[8][p3])>> 1);
         // pix[0] = pix[0]* 2.365;
         // pix[2] = pix[2] * 1.476;
     }
