@@ -72,7 +72,8 @@ void printMatrix(double * matrix)
 /* SLOW, V is vector, M is matrix */
 void applyMatrix(double * V, double * M)
 {
-    V[0] = M[0] * V[0] + M[1] * V[1] + M[2] * V[2];
-    V[1] = M[3] * V[0] + M[4] * V[1] + M[5] * V[2];
-    V[2] = M[6] * V[0] + M[7] * V[1] + M[8] * V[2];
+    double V0 = V[0], V1 = V[1], V2 = V[2];
+    V[0] = M[0] * V0 + M[1] * V1 + M[2] * V2;
+    V[1] = M[3] * V0 + M[4] * V1 + M[5] * V2;
+    V[2] = M[6] * V0 + M[7] * V1 + M[8] * V2;
 }

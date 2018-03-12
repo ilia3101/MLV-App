@@ -140,11 +140,6 @@ long double value_Z[] = { 0.0006061, 0.001086, 0.001946, 0.003486, 0.006450001, 
     4.999999E-05, 3E-05, 2E-05, 1E-05, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
-/* Get blackbody radiation (in arbitraty units) at a wavelength...
- * http://astronomy.swin.edu.au/cosmos/B/Blackbody+Radiation
- * https://en.wikipedia.org/wiki/Black-body_radiation#Equations
- * https://en.wikipedia.org/wiki/Planck%27s_law
- * (Planck's law but with some constants removed) */
 long double get_blackbody_radiation(long double kelvin, long double wavelength)
 {
     /* This may be inaccurate (extremely small values don't work well) */
@@ -351,16 +346,22 @@ void processing_update_matrices(processingObject_t * processing)
                              0.0193339 , 0.1191920  ,0.9503041};
 
     // multiplyMatrices(temp_matrix_a, (double *)ciecam02, temp_matrix_b); /* No ciecam for now */
-    multiplyMatrices(temp_matrix_a, (double *)rgb_to_xyz, temp_matrix_b); /* (nothing) */
+    multiplyMatrices(temp_matrix_a, (double *)id_matrix, temp_matrix_b); /* (nothing) */
     memcpy(temp_matrix_a, temp_matrix_b, 9 * sizeof(double));
 
     /* Multiply channels, while in XYZ */
-    double X1, X2, Y1, Y2, Z1, Z2;
-    kelvin_to_XYZ(6500, &X1, &Y1, &Z1);
-    kelvin_to_XYZ(processing->kelvin, &X2, &Y2, &Z2);
-    for (int i = 0; i < 3; ++i) temp_matrix_b[i] *= (X1/X2);
-    for (int i = 3; i < 6; ++i) temp_matrix_b[i] *= (Y1/Y2);
-    for (int i = 6; i < 9; ++i) temp_matrix_b[i] *= (Z1/Z2);
+    double k1[3] = {1,1,1};
+    double k2[3] = {1,1,1};
+    // kelvin_to_XYZ(6500, k1, k1+1, k1+2);
+    // kelvin_to_XYZ(processing->kelvin, k2, k2+1, k2+2);
+    get_kelvin_multipliers_rgb(6500, k2);
+    get_kelvin_multipliers_rgb(processing->kelvin, k1);
+    // applyMatrix(k1, rgb_to_xyz);
+    // applyMatrix(k2, rgb_to_xyz);
+
+    for (int i = 0; i < 3; ++i) temp_matrix_b[i] *= (k1[0]/k2[0]);
+    for (int i = 3; i < 6; ++i) temp_matrix_b[i] *= (k1[1]/k2[1]);
+    for (int i = 6; i < 9; ++i) temp_matrix_b[i] *= (k1[2]/k2[2]);
 
     /* Convert back to XYZ space from cone space -> to temp_matrix_a */
     // invertMatrix((double *)ciecam02, temp_matrix_c);
