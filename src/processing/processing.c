@@ -346,8 +346,12 @@ void processing_update_matrices(processingObject_t * processing)
 
     /* whitebalance */
 
+    double rgb_to_xyz[9] = { 0.4124564  ,0.3575761 , 0.1804375,
+                             0.2126729  ,0.7151522 , 0.0721750,
+                             0.0193339 , 0.1191920  ,0.9503041};
+
     // multiplyMatrices(temp_matrix_a, (double *)ciecam02, temp_matrix_b); /* No ciecam for now */
-    multiplyMatrices(temp_matrix_a, (double *)id_matrix, temp_matrix_b); /* (nothing) */
+    multiplyMatrices(temp_matrix_a, (double *)rgb_to_xyz, temp_matrix_b); /* (nothing) */
     memcpy(temp_matrix_a, temp_matrix_b, 9 * sizeof(double));
 
     /* Multiply channels, while in XYZ */

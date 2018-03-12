@@ -1569,9 +1569,11 @@ void mlv_raw_basic_process(mlvObject_t * video, uint16_t * frame)
     /* Matrix */
     for (uint16_t * pix = frame; pix < end; pix += 3)
     {
-        size_t p1 = pix[0], p2 = pix[1], p3 = pix[2];
-        pix[0] = LIMIT16((mat[0][p1] + mat[1][p2] + mat[2][p3])/* >> 1*/);
-        pix[1] = LIMIT16((mat[3][p1] + mat[4][p2] + mat[5][p3])/* >> 1*/);
-        pix[2] = LIMIT16((mat[6][p1] + mat[7][p2] + mat[8][p3])/* >> 1*/);
+        // size_t p1 = pix[0], p2 = pix[1], p3 = pix[2];
+        // pix[0] = LIMIT16((mat[0][p1] + mat[1][p2] + mat[2][p3])/* >> 1*/);
+        // pix[1] = LIMIT16((mat[3][p1] + mat[4][p2] + mat[5][p3])/* >> 1*/);
+        // pix[2] = LIMIT16((mat[6][p1] + mat[7][p2] + mat[8][p3])/* >> 1*/);
+        pix[0] = pix[0]* 2.365;
+        pix[2] = pix[2] * 1.476;
     }
 }
