@@ -1476,7 +1476,7 @@ short_cut:
     {
         case 0x80000218: /* 5D2 */
         case 0x80000261: /* 50D */
-            black_level = 1791.5;
+            black_level = 1791;
             break;
         default: /* All other cameras */
             black_level = 2048;

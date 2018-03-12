@@ -554,7 +554,7 @@ void processingSetWhiteBalance(processingObject_t * processing, double WBKelvin,
         int is_negative = (WBTint < 0.0);
         if (is_negative) WBTint = -WBTint;
         WBTint /= 10.0;
-        WBTint = pow(WBTint, 1.75) * 10.0;
+        WBTint = pow(WBTint, 3) * 10.0;
         if (is_negative) WBTint = -WBTint;
 
         processing->wb_tint = WBTint;

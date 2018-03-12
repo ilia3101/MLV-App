@@ -343,29 +343,37 @@ void processing_update_matrices(processingObject_t * processing)
 
     double rgb_to_xyz[9] = { 0.4124564  ,0.3575761 , 0.1804375,
                              0.2126729  ,0.7151522 , 0.0721750,
-                             0.0193339 , 0.1191920  ,0.9503041};
+                             0.0193339 , 0.1191920  ,0.9503041 };
 
-    // multiplyMatrices(temp_matrix_a, (double *)ciecam02, temp_matrix_b); /* No ciecam for now */
+
+    double alexafilm_matrix[9] = { 0.806165 ,0.168534  ,0.025301,
+                                   0.091228 , 0.765221 , 0.14355,
+                                   0.092241, 0.251418,  0.656341 };
+
+    /* Transfer to cone space with bradford/ciecam whatever its called matrix */
+//    multiplyMatrices(temp_matrix_a, (double *)ciecam02, temp_matrix_b);
     multiplyMatrices(temp_matrix_a, (double *)id_matrix, temp_matrix_b); /* (nothing) */
-    memcpy(temp_matrix_a, temp_matrix_b, 9 * sizeof(double));
+//    memcpy(temp_matrix_a, temp_matrix_b, 9 * sizeof(double));
 
-    /* Multiply channels, while in XYZ */
+
     double k1[3] = {1,1,1};
     double k2[3] = {1,1,1};
+    double wb[3] = {1,1,1}; /* WB Multipliers */
     // kelvin_to_XYZ(6500, k1, k1+1, k1+2);
     // kelvin_to_XYZ(processing->kelvin, k2, k2+1, k2+2);
     get_kelvin_multipliers_rgb(6500, k2);
     get_kelvin_multipliers_rgb(processing->kelvin, k1);
-    // applyMatrix(k1, rgb_to_xyz);
-    // applyMatrix(k2, rgb_to_xyz);
+    for (int i = 0; i < 3; ++i) wb[i] = (k1[i]/k2[i]);
+//    applyMatrix(wb, (double *)ciecam02);
 
-    for (int i = 0; i < 3; ++i) temp_matrix_b[i] *= (k1[0]/k2[0]);
-    for (int i = 3; i < 6; ++i) temp_matrix_b[i] *= (k1[1]/k2[1]);
-    for (int i = 6; i < 9; ++i) temp_matrix_b[i] *= (k1[2]/k2[2]);
+    /* The tint application method is not at all scientific */
+    for (int i = 0; i < 3; ++i) temp_matrix_b[i] *= (wb[0]) + (processing->wb_tint / 19.0);
+    for (int i = 3; i < 6; ++i) temp_matrix_b[i] *= (wb[1]) + (processing->wb_tint / (-17));
+    for (int i = 6; i < 9; ++i) temp_matrix_b[i] *= (wb[2]) + (processing->wb_tint / 11.0);
 
     /* Convert back to XYZ space from cone space -> to temp_matrix_a */
-    // invertMatrix((double *)ciecam02, temp_matrix_c);
-    // multiplyMatrices(temp_matrix_b, temp_matrix_c, temp_matrix_a); /* No ciecam for now */
+//    invertMatrix((double *)ciecam02, temp_matrix_c);
+//    multiplyMatrices(temp_matrix_b, temp_matrix_c, temp_matrix_a);
     multiplyMatrices(temp_matrix_b, (double *)id_matrix, temp_matrix_a); /* aka do nothing */
 
     double rgbmat[] = {
@@ -384,7 +392,6 @@ void processing_update_matrices(processingObject_t * processing)
         double exposure_factor = pow(2.0, processing->exposure_stops);
         for (int i = 0; i < 9; ++i) processing->final_matrix[i] *= exposure_factor;
     }
-
 
     /* Precalculate 0-65535 */
     for (int i = 0; i < 9; ++i)
