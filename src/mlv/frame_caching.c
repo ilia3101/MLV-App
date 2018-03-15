@@ -209,16 +209,16 @@ void an_mlv_cache_thread(mlvObject_t * video)
     /* 2d array uglyness */
     float  * __restrict imagefloat1d = (float *)malloc(pixelsize * sizeof(float));
     float ** __restrict imagefloat2d = (float **)malloc(height * sizeof(float *));
-    for (uint32_t y = 0; y < height; ++y) imagefloat2d[y] = (float *)(imagefloat1d+(y*width));
+    for (volatile uint32_t y = 0; y < height; ++y) imagefloat2d[y] = (float *)(imagefloat1d+(y*width));
     float  * __restrict red1d = (float *)malloc(pixelsize * sizeof(float));
     float ** __restrict red2d = (float **)malloc(height * sizeof(float *));
-    for (uint32_t y = 0; y < height; ++y) red2d[y] = (float *)(red1d+(y*width));
+    for (volatile uint32_t y = 0; y < height; ++y) red2d[y] = (float *)(red1d+(y*width));
     float  * __restrict green1d = (float *)malloc(pixelsize * sizeof(float));
     float ** __restrict green2d = (float **)malloc(height * sizeof(float *));
-    for (uint32_t y = 0; y < height; ++y) green2d[y] = (float *)(green1d+(y*width));
+    for (volatile uint32_t y = 0; y < height; ++y) green2d[y] = (float *)(green1d+(y*width));
     float  * __restrict blue1d = (float *)malloc(pixelsize * sizeof(float));
     float ** __restrict blue2d = (float **)malloc(height * sizeof(float *));
-    for (uint32_t y = 0; y < height; ++y) blue2d[y] = (float *)(blue1d+(y*width));
+    for (volatile uint32_t y = 0; y < height; ++y) blue2d[y] = (float *)(blue1d+(y*width));
 
     pthread_mutex_lock( &video->g_mutexCount );
     amazeinfo_t amaze_params = {

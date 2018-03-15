@@ -273,7 +273,7 @@ void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outpu
     int shift_val = (llrpHQDualIso(video)) ? 0 : (16 - video->RAWI.raw_info.bits_per_pixel);
 
     /* convert uint16_t raw data -> float raw_data for processing with amaze or bilinear debayer, both need data input as float */
-    for (int i = 0; i < pixels_count; ++i)
+    for (volatile int i = 0; i < pixels_count; ++i)
     {
         outputFrame[i] = (float)(unpacked_frame[i] << shift_val);
     }
