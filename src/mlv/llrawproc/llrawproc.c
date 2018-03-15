@@ -128,7 +128,7 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
     }
 
     /* subtruct dark frame if Ext or Int mode specified and df_init is successful */
-    if (!df_init(video))
+    if (!df_init(video, NULL))
     {
 #ifndef STDOUT_SILENT
         printf("Subtracting Dark Frame... ");
@@ -495,4 +495,9 @@ int llrpGetDarkFrameIntStatus(mlvObject_t * video)
 {
     if(video->DARK.blockType[0]) return 1;
     return 0;
+}
+
+int llrpValidateExtDarkFrame(mlvObject_t * video, char * df_filename, char * error_message)
+{
+    return df_validate(video, df_filename, error_message);
 }

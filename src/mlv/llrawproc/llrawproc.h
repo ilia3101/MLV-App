@@ -107,4 +107,6 @@ void llrpSetDarkFrameMode(mlvObject_t * video, int value);
 int llrpGetDarkFrameExtStatus(mlvObject_t * video);
 int llrpGetDarkFrameIntStatus(mlvObject_t * video);
 
+int llrpValidateExtDarkFrame(mlvObject_t * video, char * df_filename, char * error_message);
+
 #endif

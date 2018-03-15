@@ -32,7 +32,8 @@ void df_init_filename(mlvObject_t * video, char * df_filename);
 void df_free_filename(mlvObject_t * video);
 
 enum { DF_OFF, DF_EXT, DF_INT };
-int df_init(mlvObject_t * video);
+int df_validate(mlvObject_t * video, char * df_filename, char * error_message);
+int df_init(mlvObject_t * video, char * error_message);
 void df_free(mlvObject_t * video);
 
 void df_subtract(mlvObject_t * video, uint16_t * raw_image_buff, size_t raw_image_size);

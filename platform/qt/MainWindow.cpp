@@ -5312,6 +5312,20 @@ void MainWindow::on_lineEditDarkFrameFile_textChanged(const QString &arg1)
     if( QFileInfo( arg1 ).exists() && arg1.endsWith( ".MLV", Qt::CaseInsensitive ) )
     {
         QByteArray darkFrameFileName = arg1.toLatin1();
+
+        char errorMessage[256] = { 0 };
+        int ret = llrpValidateExtDarkFrame(m_pMlvObject, darkFrameFileName.data(), errorMessage);
+        if( ret )
+        {
+            QMessageBox::critical( this, tr( "Error" ), tr( "%1" ).arg( errorMessage ), tr("Cancel") );
+            ui->lineEditDarkFrameFile->setText( "No file selected" );
+            return;
+        }
+        else if( !ret && errorMessage[0] )
+        {
+            QMessageBox::warning( this, tr( "Warning" ), tr( "%1" ).arg( errorMessage ), tr("Ok") );
+        }
+
         llrpInitDarkFrameExtFileName(m_pMlvObject, darkFrameFileName.data());
         ui->toolButtonDarkFrameSubtractionExt->setEnabled( true );
         setToolButtonDarkFrameSubtraction( 1 );

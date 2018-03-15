@@ -39,7 +39,7 @@ static uint64_t file_set_pos(FILE *stream, uint64_t offset, int whence)
 }
 
 /* load dark frame from external averaged MLV file */
-static int df_load_ext(mlvObject_t * video)
+static int df_load_ext(mlvObject_t * video, char * error_message)
 {
     /* If file name is not set return error */
     if(!video->llrawproc->dark_frame_filename) return 1;
@@ -52,40 +52,60 @@ static int df_load_ext(mlvObject_t * video)
 #ifndef STDOUT_SILENT
         printf("DF: %s\n", err_msg);
 #endif
+        if(error_message != NULL) strcpy(error_message, err_msg);
         return ret;
     }
-    /* if losless MLV return error */
+
+    /* if lossless MLV return error */
     if(df_mlv.MLVI.videoClass & MLV_VIDEO_CLASS_FLAG_LJ92)
     {
+        sprintf(err_msg, "Can not use lossless MLV as a dark frame: %s", video->llrawproc->dark_frame_filename);
 #ifndef STDOUT_SILENT
-        printf("DF: can not use lossless MLV as a dark frame\n");
+        printf("DF: %s\n", err_msg);
 #endif
+        if(error_message != NULL) strcpy(error_message, err_msg);
         return 1;
     }
     /* if resolution mismatch detected */
     if( (df_mlv.RAWI.xRes != video->RAWI.xRes) || (df_mlv.RAWI.yRes != video->RAWI.yRes) )
     {
+        sprintf(err_msg, "Video clip and dark frame resolutions not matched in: %s", video->llrawproc->dark_frame_filename);
 #ifndef STDOUT_SILENT
-        printf("DF: video clip and dark frame resolutions not matched\n");
+        printf("DF: %s\n", err_msg);
 #endif
+        if(error_message != NULL) strcpy(error_message, err_msg);
         return 1;
     }
+    /* if MLV has more than one frame just show the warning */
+    if( df_mlv.MLVI.videoFrameCount > 1 )
+    {
+        sprintf(err_msg, "For proper use as a dark frame all frames of this MLV have to be averaged first: %s", video->llrawproc->dark_frame_filename);
+#ifndef STDOUT_SILENT
+        printf("DF: %s\n", err_msg);
+#endif
+        if(error_message != NULL) strcpy(error_message, err_msg);
+    }
+
     /* Allocate dark frame data buffer */
     uint8_t * df_packed_buf = calloc(df_mlv.video_index[0].frame_size, 1);
     if(!df_packed_buf)
     {
+        sprintf(err_msg, "Packed buffer allocation error");
 #ifndef STDOUT_SILENT
-        printf("DF: packed buffer allocation error\n");
+        printf("DF: %s\n", err_msg);
 #endif
+        if(error_message != NULL) strcpy(error_message, err_msg);
         return 1;
     }
     /* Load dark frame data to the allocated buffer */
     file_set_pos(df_mlv.file[0], df_mlv.video_index[0].frame_offset, SEEK_SET);
     if ( fread(df_packed_buf, df_mlv.video_index[0].frame_size, 1, df_mlv.file[0]) != 1 )
     {
+        sprintf(err_msg, "Could not read dark frame from: %s", video->llrawproc->dark_frame_filename);
 #ifndef STDOUT_SILENT
-        printf("DF: could not read frame: %s\n", video->llrawproc->dark_frame_filename);
+        printf("DF: %s\n", err_msg);
 #endif
+        if(error_message != NULL) strcpy(error_message, err_msg);
         free(df_packed_buf);
         return 1;
     }
@@ -95,7 +115,7 @@ static int df_load_ext(mlvObject_t * video)
     memcpy(&video->llrawproc->dark_frame_hdr.blockType, "DARK", 4);
     video->llrawproc->dark_frame_hdr.blockSize = sizeof(mlv_dark_hdr_t) + df_mlv.video_index[0].frame_size;
     video->llrawproc->dark_frame_hdr.timestamp = 0xFFFFFFFFFFFFFFFF;
-    video->llrawproc->dark_frame_hdr.samplesAveraged = MAX(df_mlv.VIDF.frameNumber, df_mlv.MLVI.videoFrameCount);
+    video->llrawproc->dark_frame_hdr.samplesAveraged = MAX(df_mlv.VIDF.frameNumber + 1, df_mlv.MLVI.videoFrameCount);
     video->llrawproc->dark_frame_hdr.cameraModel = df_mlv.IDNT.cameraModel;
     video->llrawproc->dark_frame_hdr.xRes = df_mlv.RAWI.xRes;
     video->llrawproc->dark_frame_hdr.yRes = df_mlv.RAWI.yRes;
@@ -208,13 +228,24 @@ void df_subtract(mlvObject_t * video, uint16_t * raw_image_buff, size_t raw_imag
     }
 }
 
+/* validate external dark frame file */
+int df_validate(mlvObject_t * video, char * df_filename, char * error_message)
+{
+    df_init_filename(video, df_filename);
+    int ret = df_load_ext(video, error_message);
+    df_free_filename(video);
+    df_free(video);
+
+    return ret;
+}
+
 /* process DF modes: Off, Ext or Int, if Off just free all DF data */
-int df_init(mlvObject_t * video)
+int df_init(mlvObject_t * video, char * error_message)
 {
     switch(video->llrawproc->dark_frame)
     {
         case DF_EXT:
-            return df_load_ext(video);
+            return df_load_ext(video, error_message);
         case DF_INT:
             return df_load_int(video);
         default:
