@@ -3528,8 +3528,10 @@ void MainWindow::on_actionExportActualFrame_triggered()
     //Get frame from library
     getMlvProcessedFrame8( m_pMlvObject, ui->horizontalSliderPosition->value(), m_pRawImage, 1 );
 
-    QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject) * getHorizontalStretchFactor(), getMlvHeight(m_pMlvObject) * getVerticalStretchFactor(), QImage::Format_RGB888 )
-                        .save( fileName, "png", -1 );
+    QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
+            .scaled( getMlvWidth(m_pMlvObject) * getHorizontalStretchFactor(), getMlvHeight(m_pMlvObject) * getVerticalStretchFactor(),
+                     Qt::IgnoreAspectRatio, Qt::SmoothTransformation )
+            .save( fileName, "png", -1 );
 }
 
 //Enable / Disable the highlight reconstruction
