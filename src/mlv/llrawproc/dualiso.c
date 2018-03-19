@@ -1779,6 +1779,20 @@ int diso_get_full20bit(struct raw_info raw_info, uint16_t * image_data, int inte
     int h = raw_info.height;
     
     if (w <= 0 || h <= 0) return 0;
+
+    if (raw_info.bits_per_pixel < 14)
+    {
+        int pixel_count = w * h;
+        int shift_bits = 14 - raw_info.bits_per_pixel;
+
+        raw_info.black_level <<= shift_bits;
+        raw_info.white_level <<= shift_bits;
+
+        for(int i = 0; i < pixel_count; ++i)
+        {
+            image_data[i] <<= shift_bits;
+        }
+    }
     
     /* RGGB or GBRG? */
     int rggb = identify_rggb_or_gbrg(raw_info, image_data);
