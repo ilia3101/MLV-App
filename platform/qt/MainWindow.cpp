@@ -1128,7 +1128,7 @@ void MainWindow::startExportPipe(QString fileName)
             m_resizeWidth += m_resizeWidth % 2;
             height += height % 2;
         }
-        resizeFilter = QString( "-vf scale=w=%1:h=%2:in_color_matrix=bt601:out_color_matrix=bt709 " ).arg( m_resizeWidth ).arg( height );
+        resizeFilter = QString( "-vf scale=w=%1:h=%2:in_color_matrix=bt601:out_color_matrix=bt709" ).arg( m_resizeWidth ).arg( height );
     }
     else if( m_exportQueue.first()->stretchFactorX() != 1.0
           || m_exportQueue.first()->stretchFactorY() != 1.0 )
@@ -1142,15 +1142,20 @@ void MainWindow::startExportPipe(QString fileName)
             width += width % 2;
             height += height % 2;
         }
-        resizeFilter = QString( "-vf scale=w=%1:h=%2:in_color_matrix=bt601:out_color_matrix=bt709 " )
+        resizeFilter = QString( "-vf scale=w=%1:h=%2:in_color_matrix=bt601:out_color_matrix=bt709" )
                 .arg( width )
                 .arg( height );
     }
     else
     {
         //a colorspace conversion is always needed to get right colors
-        resizeFilter = QString( "-vf scale=in_color_matrix=bt601:out_color_matrix=bt709 " );
+        resizeFilter = QString( "-vf scale=in_color_matrix=bt601:out_color_matrix=bt709" );
     }
+
+    //UpsideDown?
+    if( m_exportQueue.first()->upsideDown() ) resizeFilter.append( ",vflip,hflip " );
+    else resizeFilter.append( " " );
+
     //qDebug() << resizeFilter;
 
     //FFMpeg export
@@ -2234,6 +2239,11 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
             receipt->setStretchFactorY( Rxml->readElementText().toDouble() );
             Rxml->readNext();
         }
+        else if( Rxml->isStartElement() && Rxml->name() == "upsideDown" )
+        {
+            receipt->setUpsideDown( (bool)Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
         else if( Rxml->isStartElement() && Rxml->name() == "cutIn" )
         {
             receipt->setCutIn( Rxml->readElementText().toInt() );
@@ -2292,6 +2302,7 @@ void MainWindow::writeXmlElementsToFile(QXmlStreamWriter *xmlWriter, ReceiptSett
     xmlWriter->writeTextElement( "filterStrength",          QString( "%1" ).arg( receipt->filterStrength() ) );
     xmlWriter->writeTextElement( "stretchFactorX",          QString( "%1" ).arg( receipt->stretchFactorX() ) );
     xmlWriter->writeTextElement( "stretchFactorY",          QString( "%1" ).arg( receipt->stretchFactorY() ) );
+    xmlWriter->writeTextElement( "upsideDown",              QString( "%1" ).arg( receipt->upsideDown() ) );
     xmlWriter->writeTextElement( "cutIn",                   QString( "%1" ).arg( receipt->cutIn() ) );
     xmlWriter->writeTextElement( "cutOut",                  QString( "%1" ).arg( receipt->cutOut() ) );
 }
@@ -2498,6 +2509,9 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     else ui->comboBoxVStretch->setCurrentIndex( 1 );
     on_comboBoxVStretch_currentIndexChanged( ui->comboBoxVStretch->currentIndex() );
 
+    ui->checkBoxUpsideDown->setChecked( receipt->upsideDown() );
+    on_checkBoxUpsideDown_toggled( receipt->upsideDown() );
+
     if( !paste && !receipt->wasNeverLoaded() )
     {
         ui->spinBoxCutIn->setValue( receipt->cutIn() );
@@ -2552,6 +2566,7 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
 
     receipt->setStretchFactorX( getHorizontalStretchFactor() );
     receipt->setStretchFactorY( getVerticalStretchFactor() );
+    receipt->setUpsideDown( ui->checkBoxUpsideDown->isChecked() );
 
     receipt->setCutIn( ui->spinBoxCutIn->value() );
     receipt->setCutOut( ui->spinBoxCutOut->value() );
@@ -2600,6 +2615,7 @@ void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings 
 
     receiptTarget->setStretchFactorX( receiptSource->stretchFactorX() );
     receiptTarget->setStretchFactorY( receiptSource->stretchFactorY() );
+    receiptTarget->setUpsideDown( receiptSource->upsideDown() );
 
     if( !paste )
     {
@@ -2686,6 +2702,7 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
 
     receipt->setStretchFactorX( m_pSessionReceipts.at( row )->stretchFactorX() );
     receipt->setStretchFactorY( m_pSessionReceipts.at( row )->stretchFactorY() );
+    receipt->setUpsideDown( m_pSessionReceipts.at( row )->upsideDown() );
 
     receipt->setFileName( m_pSessionReceipts.at( row )->fileName() );
     receipt->setCutIn( m_pSessionReceipts.at( row )->cutIn() );
@@ -3531,6 +3548,7 @@ void MainWindow::on_actionExportActualFrame_triggered()
     QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
             .scaled( getMlvWidth(m_pMlvObject) * getHorizontalStretchFactor(), getMlvHeight(m_pMlvObject) * getVerticalStretchFactor(),
                      Qt::IgnoreAspectRatio, Qt::SmoothTransformation )
+            .transformed( getPicUpsideDownTransformation(), Qt::SmoothTransformation )
             .save( fileName, "png", -1 );
 }
 
@@ -4783,7 +4801,8 @@ void MainWindow::drawFrameReady()
         QPixmap pic = QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
                                           .scaled( desWidth * devicePixelRatio(),
                                                    desHeight * devicePixelRatio(),
-                                                   Qt::IgnoreAspectRatio, Qt::SmoothTransformation) );//alternative: Qt::FastTransformation
+                                                   Qt::IgnoreAspectRatio, Qt::SmoothTransformation)
+                                          .transformed( getPicUpsideDownTransformation(), Qt::SmoothTransformation ) );//alternative: Qt::FastTransformation
         //Set Picture to Retina
         pic.setDevicePixelRatio( devicePixelRatio() );
         //Bring frame to GUI (fit to window)
@@ -4797,7 +4816,7 @@ void MainWindow::drawFrameReady()
         if( getVerticalStretchFactor() == 1.0
          && getHorizontalStretchFactor() == 1.0 ) //Fast mode for 1.0 stretch factor
         {
-            m_pGraphicsItem->setPixmap( QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 ) ) );
+            m_pGraphicsItem->setPixmap( QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 ).transformed( getPicUpsideDownTransformation(), Qt::SmoothTransformation ) ) );
             m_pScene->setSceneRect( 0, 0, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject) );
         }
         else
@@ -4805,7 +4824,8 @@ void MainWindow::drawFrameReady()
             m_pGraphicsItem->setPixmap( QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
                                               .scaled( getMlvWidth(m_pMlvObject) * getHorizontalStretchFactor(),
                                                        getMlvHeight(m_pMlvObject) * getVerticalStretchFactor(),
-                                                       Qt::IgnoreAspectRatio, Qt::SmoothTransformation) ) );//alternative: Qt::FastTransformation
+                                                       Qt::IgnoreAspectRatio, Qt::SmoothTransformation)
+                                              .transformed( getPicUpsideDownTransformation(), Qt::SmoothTransformation ) ) );//alternative: Qt::FastTransformation
             m_pScene->setSceneRect( 0, 0, getMlvWidth(m_pMlvObject) * getHorizontalStretchFactor(), getMlvHeight(m_pMlvObject) * getVerticalStretchFactor() );
         }
     }
@@ -5100,6 +5120,15 @@ void MainWindow::setWhiteBalanceFromMlv(ReceiptSettings *sliders)
     }
 }
 
+//get transformation of picture upside down (rotate 180 degree)
+QTransform MainWindow::getPicUpsideDownTransformation( void )
+{
+    QTransform myTransform;
+    if( !ui->checkBoxUpsideDown->isChecked() ) myTransform.rotate( 0 );
+    else myTransform.rotate( 180 );
+    return myTransform;
+}
+
 //Cut In button clicked
 void MainWindow::on_toolButtonCutIn_clicked(void)
 {
@@ -5218,6 +5247,12 @@ void MainWindow::on_comboBoxVStretch_currentIndexChanged(int index)
 {
     m_pGradientElement->setStrechFactorY( getVerticalStretchFactor() );
     m_zoomModeChanged = true;
+    m_frameChanged = true;
+}
+
+//Upside Down changed
+void MainWindow::on_checkBoxUpsideDown_toggled(bool checked)
+{
     m_frameChanged = true;
 }
 

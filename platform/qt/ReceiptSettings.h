@@ -52,6 +52,7 @@ public:
     void setDarkFrameFileName( QString name ) {m_darkFrameSubtractionName = name;}
     void setStretchFactorX( double factor )   {m_stretchFactorX = factor;}
     void setStretchFactorY( double factor )   {m_stretchFactorY = factor;}
+    void setUpsideDown( bool on )             {m_upsideDown = on;}
     void setFilterEnabled( bool on )          {m_filterEnabled = on;}
     void setFilterIndex( uint8_t idx )        {m_filterIndex = idx;}
     void setFilterStrength( int value )       {m_filterStrength = value;}
@@ -93,6 +94,7 @@ public:
     QString darkFrameFileName( void ){return m_darkFrameSubtractionName;}
     double stretchFactorX( void ){return m_stretchFactorX;}
     double stretchFactorY( void ){return m_stretchFactorY;}
+    bool upsideDown( void ){return m_upsideDown;}
     bool filterEnabled( void ){return m_filterEnabled;}
     uint8_t filterIndex( void ){return m_filterIndex;}
     int filterStrength( void ){return m_filterStrength;}
@@ -138,6 +140,7 @@ private:
     QString m_darkFrameSubtractionName; // FileName
     double m_stretchFactorX;
     double m_stretchFactorY;
+    bool m_upsideDown;
     bool m_filterEnabled;
     uint8_t m_filterIndex;
     int m_filterStrength;

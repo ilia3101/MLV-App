@@ -190,6 +190,7 @@ private slots:
 
     void on_comboBoxHStretch_currentIndexChanged(int index);
     void on_comboBoxVStretch_currentIndexChanged(int index);
+    void on_checkBoxUpsideDown_toggled(bool checked);
 
     void mpTcLabel_customContextMenuRequested(const QPoint &pos);
     void on_actionTimecodePositionMiddle_triggered();
@@ -316,6 +317,7 @@ private:
     double getHorizontalStretchFactor();
     double getVerticalStretchFactor();
     void setWhiteBalanceFromMlv( ReceiptSettings *sliders );
+    QTransform getPicUpsideDownTransformation( void );
 
 signals:
     void exportReady( void );

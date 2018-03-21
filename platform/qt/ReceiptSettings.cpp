@@ -45,6 +45,7 @@ ReceiptSettings::ReceiptSettings()
     m_darkFrameSubtractionName = QString( "No file selected" );
     m_stretchFactorX = 1.0;
     m_stretchFactorY = 1.0;
+    m_upsideDown = false;
     m_filterEnabled = false;
     m_filterIndex = 0;
     m_filterStrength = 100;
