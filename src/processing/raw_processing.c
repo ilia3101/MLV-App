@@ -291,6 +291,7 @@ void apply_processing_object( processingObject_t * processing,
     int32_t ** pm = processing->pre_calc_matrix;
     uint16_t * out_img = outputImage;
     uint16_t * img = inputImage;
+    uint16_t * tmp = inputImage;
     uint16_t * img_end = img + img_s;
 
     /* Apply some precalcuolated settings */
@@ -300,7 +301,7 @@ void apply_processing_object( processingObject_t * processing,
         img[i] = processing->pre_calc_levels[ img[i] ];
     }
 
-    /* white balance & exposure & highlights */
+    /* white balance & exposure & highlights & gamma & highlight reconstruction */
     for (uint16_t * pix = img, * bpix = blurImage; pix < img_end; pix += 3, bpix += 3)
     {
         /* Blur pixLZ */
@@ -311,28 +312,29 @@ void apply_processing_object( processingObject_t * processing,
         /* highlight exposure factor */
         double expo_highlights = processing->shadows_highlights.shadow_highlight_curve[LIMIT16(bval)];
 
+        /* white balance & exposure & highlights */
         int32_t pix0 = (pm[0][pix[0]] + pm[1][pix[1]] + pm[2][pix[2]])*expo_highlights;
         int32_t pix1 = (pm[3][pix[0]] + pm[4][pix[1]] + pm[5][pix[2]])*expo_highlights;
         int32_t pix2 = (pm[6][pix[0]] + pm[7][pix[1]] + pm[8][pix[2]])*expo_highlights;
+        int32_t tmp1 = (pm[3][pix[0]] + pm[4][pix[1]] + pm[5][pix[2]]);
 
         pix[0] = LIMIT16(pix0);
         pix[1] = LIMIT16(pix1);
         pix[2] = LIMIT16(pix2);
-    }
+        uint16_t tmp1b = LIMIT16(tmp1);
 
-    /* Gamma */
-    for (int i = 0; i < img_s; ++i)
-    {
-        img[i] = processing->pre_calc_gamma[ img[i] ];
-    }
+        /* Gamma */
+        for( int i = 0; i < 3; i++ )
+        {
+            pix[i] = processing->pre_calc_gamma[ pix[i] ];
+        }
+        tmp1b = processing->pre_calc_gamma[ tmp1b ];
 
-    /* Now highlilght reconstruction */
-    if (processing->exposure_stops < 0.0 && processing->highest_green < 65535 && processing->highlight_reconstruction)
-    {
-        for (uint16_t * pix = img; pix < img_end; pix += 3)
+        /* Now highlilght reconstruction */
+        if (processing->exposure_stops < 0.0 && processing->highest_green < 65535 && processing->highlight_reconstruction)
         {
             /* Check if its the highest green value possible */
-            if (pix[1] == processing->highest_green)
+            if (tmp1b == processing->highest_green)
             {
                 pix[1] = (pix[0] + pix[2]) / 2;
             }
