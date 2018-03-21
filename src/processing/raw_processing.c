@@ -291,7 +291,6 @@ void apply_processing_object( processingObject_t * processing,
     int32_t ** pm = processing->pre_calc_matrix;
     uint16_t * out_img = outputImage;
     uint16_t * img = inputImage;
-    uint16_t * tmp = inputImage;
     uint16_t * img_end = img + img_s;
 
     /* Apply some precalcuolated settings */
@@ -331,7 +330,7 @@ void apply_processing_object( processingObject_t * processing,
         tmp1b = processing->pre_calc_gamma[ tmp1b ];
 
         /* Now highlilght reconstruction */
-        if (processing->exposure_stops < 0.0 && processing->highest_green < 65535 && processing->highlight_reconstruction)
+        if (/*processing->exposure_stops < 1.0 &&*/ processing->highest_green < 65535 && processing->highlight_reconstruction)
         {
             /* Check if its the highest green value possible */
             if (tmp1b == processing->highest_green)
