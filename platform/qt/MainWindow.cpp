@@ -4598,6 +4598,7 @@ void MainWindow::on_checkBoxRawFixEnable_clicked(bool checked)
     ui->BadPixelsInterpolationMethodLabel->setEnabled( checked );
     ui->ChromaSmoothLabel->setEnabled( checked );
     ui->PatternNoiseLabel->setEnabled( checked );
+    ui->UpsideDownLabel->setEnabled( checked );
     ui->VerticalStripesLabel->setEnabled( checked );
     ui->DeflickerTargetLabel->setEnabled( checked );
     ui->DualISOLabel->setEnabled( checked );
@@ -4612,6 +4613,7 @@ void MainWindow::on_checkBoxRawFixEnable_clicked(bool checked)
     ui->toolButtonBadPixelsInterpolation->setEnabled( checked );
     ui->toolButtonChroma->setEnabled( checked );
     ui->toolButtonPatternNoise->setEnabled( checked );
+    ui->toolButtonUpsideDown->setEnabled( checked );
     ui->toolButtonVerticalStripes->setEnabled( checked );
     ui->toolButtonDualIso->setEnabled( checked );
     ui->toolButtonDualIsoInterpolation->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() == 1 ) );
