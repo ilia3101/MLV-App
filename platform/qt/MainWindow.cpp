@@ -1128,7 +1128,7 @@ void MainWindow::startExportPipe(QString fileName)
             m_resizeWidth += m_resizeWidth % 2;
             height += height % 2;
         }
-        resizeFilter = QString( "-vf scale=w=%1:h=%2:in_color_matrix=bt601:out_color_matrix=bt709" ).arg( m_resizeWidth ).arg( height );
+        resizeFilter = QString( "-vf scale=w=%1:h=%2:in_color_matrix=bt601:out_color_matrix=bt709 " ).arg( m_resizeWidth ).arg( height );
     }
     else if( m_exportQueue.first()->stretchFactorX() != 1.0
           || m_exportQueue.first()->stretchFactorY() != 1.0 )
@@ -1142,20 +1142,15 @@ void MainWindow::startExportPipe(QString fileName)
             width += width % 2;
             height += height % 2;
         }
-        resizeFilter = QString( "-vf scale=w=%1:h=%2:in_color_matrix=bt601:out_color_matrix=bt709" )
+        resizeFilter = QString( "-vf scale=w=%1:h=%2:in_color_matrix=bt601:out_color_matrix=bt709 " )
                 .arg( width )
                 .arg( height );
     }
     else
     {
         //a colorspace conversion is always needed to get right colors
-        resizeFilter = QString( "-vf scale=in_color_matrix=bt601:out_color_matrix=bt709" );
+        resizeFilter = QString( "-vf scale=in_color_matrix=bt601:out_color_matrix=bt709 " );
     }
-
-    //UpsideDown?
-    if( m_exportQueue.first()->upsideDown() ) resizeFilter.append( ",vflip,hflip " );
-    else resizeFilter.append( " " );
-
     //qDebug() << resizeFilter;
 
     //FFMpeg export
@@ -2457,6 +2452,7 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     setToolButtonBadPixelsIntMethod( receipt->bpiMethod() );
     setToolButtonChromaSmooth( receipt->chromaSmooth() );
     setToolButtonPatternNoise( receipt->patternNoise() );
+    setToolButtonUpsideDown( receipt->upsideDown() );
     setToolButtonVerticalStripes( receipt->verticalStripes() );
     setToolButtonDualIso( receipt->dualIso() );
     setToolButtonDualIsoInterpolation( receipt->dualIsoInterpolation() );
@@ -2509,9 +2505,6 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     else ui->comboBoxVStretch->setCurrentIndex( 1 );
     on_comboBoxVStretch_currentIndexChanged( ui->comboBoxVStretch->currentIndex() );
 
-    ui->checkBoxUpsideDown->setChecked( receipt->upsideDown() );
-    on_checkBoxUpsideDown_toggled( receipt->upsideDown() );
-
     if( !paste && !receipt->wasNeverLoaded() )
     {
         ui->spinBoxCutIn->setValue( receipt->cutIn() );
@@ -2552,6 +2545,7 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     receipt->setBpiMethod( toolButtonBadPixelsIntMethodCurrentIndex() );
     receipt->setChromaSmooth( toolButtonChromaSmoothCurrentIndex() );
     receipt->setPatternNoise( toolButtonPatternNoiseCurrentIndex() );
+    receipt->setUpsideDown( toolButtonUpsideDownCurrentIndex() );
     receipt->setDeflickerTarget( ui->spinBoxDeflickerTarget->value() );
     receipt->setDualIso( toolButtonDualIsoCurrentIndex() );
     receipt->setDualIsoInterpolation( toolButtonDualIsoInterpolationCurrentIndex() );
@@ -2566,7 +2560,6 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
 
     receipt->setStretchFactorX( getHorizontalStretchFactor() );
     receipt->setStretchFactorY( getVerticalStretchFactor() );
-    receipt->setUpsideDown( ui->checkBoxUpsideDown->isChecked() );
 
     receipt->setCutIn( ui->spinBoxCutIn->value() );
     receipt->setCutOut( ui->spinBoxCutOut->value() );
@@ -2987,6 +2980,23 @@ void MainWindow::setToolButtonPatternNoise(int index)
     if( actualize ) toolButtonPatternNoiseChanged();
 }
 
+//Set Toolbuttons Upside Down
+void MainWindow::setToolButtonUpsideDown(int index)
+{
+    bool actualize = false;
+    if( index == toolButtonUpsideDownCurrentIndex() ) actualize = true;
+
+    switch( index )
+    {
+    case 0: ui->toolButtonUpsideDownOff->setChecked( true );
+        break;
+    case 1: ui->toolButtonUpsideDownOn->setChecked( true );
+        break;
+    default: break;
+    }
+    if( actualize ) toolButtonUpsideDownChanged();
+}
+
 //Set Toolbuttons Vertical Stripes
 void MainWindow::setToolButtonVerticalStripes(int index)
 {
@@ -3148,6 +3158,13 @@ int MainWindow::toolButtonChromaSmoothCurrentIndex()
 int MainWindow::toolButtonPatternNoiseCurrentIndex()
 {
     if( ui->toolButtonPatternNoiseOff->isChecked() ) return 0;
+    else return 1;
+}
+
+//Get toolbutton index of upside down
+int MainWindow::toolButtonUpsideDownCurrentIndex()
+{
+    if( ui->toolButtonUpsideDownOff->isChecked() ) return 0;
     else return 1;
 }
 
@@ -3548,7 +3565,6 @@ void MainWindow::on_actionExportActualFrame_triggered()
     QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
             .scaled( getMlvWidth(m_pMlvObject) * getHorizontalStretchFactor(), getMlvHeight(m_pMlvObject) * getVerticalStretchFactor(),
                      Qt::IgnoreAspectRatio, Qt::SmoothTransformation )
-            .transformed( getPicUpsideDownTransformation(), Qt::SmoothTransformation )
             .save( fileName, "png", -1 );
 }
 
@@ -4451,6 +4467,15 @@ void MainWindow::toolButtonPatternNoiseChanged( void )
     m_frameChanged = true;
 }
 
+//Upside Down Mode changed
+void MainWindow::toolButtonUpsideDownChanged( void )
+{
+    //TODO: llrp...(  );
+    resetMlvCache( m_pMlvObject );
+    resetMlvCachedFrame( m_pMlvObject );
+    m_frameChanged = true;
+}
+
 //Vertical Stripes changed
 void MainWindow::toolButtonVerticalStripesChanged( void )
 {
@@ -4801,8 +4826,7 @@ void MainWindow::drawFrameReady()
         QPixmap pic = QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
                                           .scaled( desWidth * devicePixelRatio(),
                                                    desHeight * devicePixelRatio(),
-                                                   Qt::IgnoreAspectRatio, Qt::SmoothTransformation)
-                                          .transformed( getPicUpsideDownTransformation(), Qt::SmoothTransformation ) );//alternative: Qt::FastTransformation
+                                                   Qt::IgnoreAspectRatio, Qt::SmoothTransformation) );//alternative: Qt::FastTransformation
         //Set Picture to Retina
         pic.setDevicePixelRatio( devicePixelRatio() );
         //Bring frame to GUI (fit to window)
@@ -4816,7 +4840,7 @@ void MainWindow::drawFrameReady()
         if( getVerticalStretchFactor() == 1.0
          && getHorizontalStretchFactor() == 1.0 ) //Fast mode for 1.0 stretch factor
         {
-            m_pGraphicsItem->setPixmap( QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 ).transformed( getPicUpsideDownTransformation(), Qt::SmoothTransformation ) ) );
+            m_pGraphicsItem->setPixmap( QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 ) ) );
             m_pScene->setSceneRect( 0, 0, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject) );
         }
         else
@@ -4824,8 +4848,7 @@ void MainWindow::drawFrameReady()
             m_pGraphicsItem->setPixmap( QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
                                               .scaled( getMlvWidth(m_pMlvObject) * getHorizontalStretchFactor(),
                                                        getMlvHeight(m_pMlvObject) * getVerticalStretchFactor(),
-                                                       Qt::IgnoreAspectRatio, Qt::SmoothTransformation)
-                                              .transformed( getPicUpsideDownTransformation(), Qt::SmoothTransformation ) ) );//alternative: Qt::FastTransformation
+                                                       Qt::IgnoreAspectRatio, Qt::SmoothTransformation) ) );//alternative: Qt::FastTransformation
             m_pScene->setSceneRect( 0, 0, getMlvWidth(m_pMlvObject) * getHorizontalStretchFactor(), getMlvHeight(m_pMlvObject) * getVerticalStretchFactor() );
         }
     }
@@ -5120,15 +5143,6 @@ void MainWindow::setWhiteBalanceFromMlv(ReceiptSettings *sliders)
     }
 }
 
-//get transformation of picture upside down (rotate 180 degree)
-QTransform MainWindow::getPicUpsideDownTransformation( void )
-{
-    QTransform myTransform;
-    if( !ui->checkBoxUpsideDown->isChecked() ) myTransform.rotate( 0 );
-    else myTransform.rotate( 180 );
-    return myTransform;
-}
-
 //Cut In button clicked
 void MainWindow::on_toolButtonCutIn_clicked(void)
 {
@@ -5247,12 +5261,6 @@ void MainWindow::on_comboBoxVStretch_currentIndexChanged(int index)
 {
     m_pGradientElement->setStrechFactorY( getVerticalStretchFactor() );
     m_zoomModeChanged = true;
-    m_frameChanged = true;
-}
-
-//Upside Down changed
-void MainWindow::on_checkBoxUpsideDown_toggled(bool checked)
-{
     m_frameChanged = true;
 }
 

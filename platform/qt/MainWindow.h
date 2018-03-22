@@ -141,6 +141,7 @@ private slots:
     void toolButtonBadPixelsIntMethodChanged( void );
     void toolButtonChromaSmoothChanged( void );
     void toolButtonPatternNoiseChanged( void );
+    void toolButtonUpsideDownChanged( void );
     void toolButtonVerticalStripesChanged( void );
     void on_spinBoxDeflickerTarget_valueChanged(int arg1);
     void toolButtonDualIsoChanged( void );
@@ -190,7 +191,6 @@ private slots:
 
     void on_comboBoxHStretch_currentIndexChanged(int index);
     void on_comboBoxVStretch_currentIndexChanged(int index);
-    void on_checkBoxUpsideDown_toggled(bool checked);
 
     void mpTcLabel_customContextMenuRequested(const QPoint &pos);
     void on_actionTimecodePositionMiddle_triggered();
@@ -294,6 +294,7 @@ private:
     void setToolButtonBadPixelsIntMethod( int index );
     void setToolButtonChromaSmooth( int index );
     void setToolButtonPatternNoise( int index );
+    void setToolButtonUpsideDown( int index );
     void setToolButtonVerticalStripes( int index );
     void setToolButtonDualIso( int index );
     void setToolButtonDualIsoInterpolation( int index );
@@ -307,6 +308,7 @@ private:
     int toolButtonBadPixelsIntMethodCurrentIndex( void );
     int toolButtonChromaSmoothCurrentIndex( void );
     int toolButtonPatternNoiseCurrentIndex( void );
+    int toolButtonUpsideDownCurrentIndex( void );
     int toolButtonVerticalStripesCurrentIndex( void );
     int toolButtonDualIsoCurrentIndex( void );
     int toolButtonDualIsoInterpolationCurrentIndex( void );
@@ -317,7 +319,6 @@ private:
     double getHorizontalStretchFactor();
     double getVerticalStretchFactor();
     void setWhiteBalanceFromMlv( ReceiptSettings *sliders );
-    QTransform getPicUpsideDownTransformation( void );
 
 signals:
     void exportReady( void );

@@ -21,7 +21,7 @@
    <bool>true</bool>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <layout class="QGridLayout" name="gridLayout_31">
+   <layout class="QGridLayout" name="gridLayout_24">
     <property name="leftMargin">
      <number>5</number>
     </property>
@@ -388,7 +388,7 @@ QGroupBox::indicator:checked {
             <x>0</x>
             <y>0</y>
             <width>195</width>
-            <height>3064</height>
+            <height>3093</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayoutScrollArea">
@@ -1899,6 +1899,97 @@ QGroupBox::indicator:checked {
                     </item>
                     <item>
                      <widget class="ColorToolButton" name="toolButtonPatternNoiseOn">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="font">
+                       <font>
+                        <pointsize>10</pointsize>
+                       </font>
+                      </property>
+                      <property name="text">
+                       <string>On</string>
+                      </property>
+                      <property name="checkable">
+                       <bool>true</bool>
+                      </property>
+                      <property name="autoExclusive">
+                       <bool>true</bool>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="Line" name="line_12">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="UpsideDownLabel">
+                   <property name="font">
+                    <font>
+                     <pointsize>10</pointsize>
+                    </font>
+                   </property>
+                   <property name="text">
+                    <string>Upside Down</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QFrame" name="toolButtonUpsideDown">
+                   <layout class="QHBoxLayout" name="horizontalLayout_29">
+                    <property name="spacing">
+                     <number>0</number>
+                    </property>
+                    <property name="leftMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="topMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="rightMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="bottomMargin">
+                     <number>0</number>
+                    </property>
+                    <item>
+                     <widget class="ColorToolButton" name="toolButtonUpsideDownOff">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="font">
+                       <font>
+                        <pointsize>10</pointsize>
+                       </font>
+                      </property>
+                      <property name="text">
+                       <string>Off</string>
+                      </property>
+                      <property name="checkable">
+                       <bool>true</bool>
+                      </property>
+                      <property name="checked">
+                       <bool>true</bool>
+                      </property>
+                      <property name="autoExclusive">
+                       <bool>true</bool>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="ColorToolButton" name="toolButtonUpsideDownOn">
                       <property name="sizePolicy">
                        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                         <horstretch>0</horstretch>
@@ -4800,53 +4891,16 @@ QGroupBox::indicator:checked {
                  </property>
                  <item>
                   <layout class="QGridLayout" name="gridLayout_21">
-                   <item row="1" column="0">
-                    <widget class="QLabel" name="label_7">
-                     <property name="sizePolicy">
-                      <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                       <horstretch>0</horstretch>
-                       <verstretch>0</verstretch>
-                      </sizepolicy>
-                     </property>
+                   <item row="0" column="0">
+                    <widget class="QLabel" name="label_8">
                      <property name="font">
                       <font>
                        <pointsize>10</pointsize>
                       </font>
                      </property>
                      <property name="text">
-                      <string>Height Stretch</string>
+                      <string>Width Stretch</string>
                      </property>
-                    </widget>
-                   </item>
-                   <item row="1" column="1">
-                    <widget class="QComboBox" name="comboBoxVStretch">
-                     <property name="sizePolicy">
-                      <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
-                       <horstretch>0</horstretch>
-                       <verstretch>0</verstretch>
-                      </sizepolicy>
-                     </property>
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
-                     <property name="layoutDirection">
-                      <enum>Qt::LeftToRight</enum>
-                     </property>
-                     <property name="sizeAdjustPolicy">
-                      <enum>QComboBox::AdjustToContentsOnFirstShow</enum>
-                     </property>
-                     <item>
-                      <property name="text">
-                       <string>1.0x</string>
-                      </property>
-                     </item>
-                     <item>
-                      <property name="text">
-                       <string>1.67x</string>
-                      </property>
-                     </item>
                     </widget>
                    </item>
                    <item row="0" column="1">
@@ -4894,22 +4948,44 @@ QGroupBox::indicator:checked {
                      </item>
                     </widget>
                    </item>
-                   <item row="0" column="0">
-                    <widget class="QLabel" name="label_8">
+                   <item row="1" column="1">
+                    <widget class="QComboBox" name="comboBoxVStretch">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
                      <property name="font">
                       <font>
                        <pointsize>10</pointsize>
                       </font>
                      </property>
-                     <property name="text">
-                      <string>Width Stretch</string>
+                     <property name="layoutDirection">
+                      <enum>Qt::LeftToRight</enum>
                      </property>
+                     <property name="sizeAdjustPolicy">
+                      <enum>QComboBox::AdjustToContentsOnFirstShow</enum>
+                     </property>
+                     <item>
+                      <property name="text">
+                       <string>1.0x</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>1.67x</string>
+                      </property>
+                     </item>
                     </widget>
                    </item>
-                   <item row="2" column="0" colspan="2">
-                    <widget class="QCheckBox" name="checkBoxUpsideDown">
-                     <property name="enabled">
-                      <bool>true</bool>
+                   <item row="1" column="0">
+                    <widget class="QLabel" name="label_7">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
                      </property>
                      <property name="font">
                       <font>
@@ -4917,7 +4993,7 @@ QGroupBox::indicator:checked {
                       </font>
                      </property>
                      <property name="text">
-                      <string>Upside Down</string>
+                      <string>Height Stretch</string>
                      </property>
                     </widget>
                    </item>
@@ -6350,6 +6426,38 @@ QGroupBox::indicator:checked {
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>toolButtonUpsideDownOff</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>toolButtonUpsideDownChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>1040</x>
+     <y>816</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>599</x>
+     <y>349</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>toolButtonUpsideDownOn</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>toolButtonUpsideDownChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>1124</x>
+     <y>816</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>599</x>
+     <y>349</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>toolButtonFocusPixelsChanged()</slot>
@@ -6365,5 +6473,6 @@ QGroupBox::indicator:checked {
   <slot>toolButtonDualIsoFullresBlendingChanged()</slot>
   <slot>toolButtonBadPixelsSearchMethodChanged()</slot>
   <slot>toolButtonDarkFrameSubtractionChanged(bool)</slot>
+  <slot>toolButtonUpsideDownChanged()</slot>
  </slots>
 </ui>
