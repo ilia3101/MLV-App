@@ -72,6 +72,8 @@ make app -j4
 - `make -j4` (for quad core)
 - `./mlvapp` and have fun
 
+A detailed guide for compiling MLV-App on Linux can be found [here](https://sternenkarten.com/tutorial-englisch/) (thanks to @seescho).
+
 ## The Code
 All the MLV stuff is in src/mlv
 
