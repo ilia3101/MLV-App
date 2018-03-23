@@ -4471,8 +4471,6 @@ void MainWindow::toolButtonPatternNoiseChanged( void )
 void MainWindow::toolButtonUpsideDownChanged( void )
 {
     processingSetTransformation( m_pProcessingObject, toolButtonUpsideDownCurrentIndex() );
-    resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
 }
 
