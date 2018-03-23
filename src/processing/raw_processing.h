@@ -158,6 +158,9 @@ void processingSetSaturation(processingObject_t * processing, double saturationF
 #define processingDisableTonemapping(processing) processing_disable_tonemapping(processing)
 
 
+/* Set transformation */
+void processingSetTransformation(processingObject_t * processing, int transformation);
+
 
 /*
  *******************************************************************************
@@ -171,6 +174,9 @@ void apply_processing_object( processingObject_t * processing,
                               uint16_t * __restrict inputImage, 
                               uint16_t * __restrict outputImage,
                               uint16_t * __restrict blurImage );
+
+/* Pass frame buffer and do the transform on it */
+void get_frame_transformed(processingObject_t * processing, uint16_t * frame_buf , uint16_t imageX, uint16_t imageY);
 
 /* Useful info:
  * http://www.magiclantern.fm/forum/index.php?topic=19270

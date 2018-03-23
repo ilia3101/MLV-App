@@ -94,6 +94,6 @@ void RenderFrameThread::run(void)
 void RenderFrameThread::drawFrame()
 {
     //Get frame from library
-    getMlvProcessedFrame8( m_pMlvObject, m_frameNumber, m_pRawImage, QThread::idealThreadCount(), TR_ROT180 );
+    getMlvProcessedFrame8( m_pMlvObject, m_frameNumber, m_pRawImage, QThread::idealThreadCount() );
     emit frameReady();
 }

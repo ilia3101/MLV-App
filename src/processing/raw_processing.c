@@ -115,11 +115,12 @@ processingObject_t * initProcessingObject()
     processingSetSharpening(processing, 0.0);
     processingSetHighlights(processing, 0.0);
     processingSetShadows(processing, 0.0);
+    processingSetTransformation(processing, TR_NONE);
 
     /* Just in case (should be done tho already) */
     processing_update_matrices(processing);
     processing_update_shadow_highlight_curve(processing);
-    
+
     return processing;
 }
 
@@ -207,6 +208,9 @@ void applyProcessingObject( processingObject_t * processing,
                             uint16_t * __restrict outputImage,
                             int threads, int imageChanged )
 {
+    /* Do transformation */
+    get_frame_transformed(processing, inputImage, imageX, imageY);
+
     /* Resize image buffer to make sure its right size */
     if (imageChanged) buffer_set_size(processing->shadows_highlights.blur_image, imageX, imageY);
 
@@ -275,7 +279,6 @@ void applyProcessingObject( processingObject_t * processing,
         pthread_join(threadid[t], NULL);
     }
 }
-
 
 /* A private part of the processing machine */
 void apply_processing_object( processingObject_t * processing, 
@@ -456,6 +459,25 @@ void apply_processing_object( processingObject_t * processing,
     if (processing->filter_on)
     {
         applyFilterObject(processing->filter, imageX, imageY, outputImage);
+    }
+}
+
+/* Pass frame buffer and do the transform on it */
+void get_frame_transformed(processingObject_t *processing, uint16_t * frame_buf, uint16_t imageX, uint16_t imageY)
+{
+    if(processing->transformation == TR_ROT180)
+    {
+        int half_pixels = imageX * imageY / 2;
+        int frame_size = imageX * imageY * sizeof(uint16_t) * 3;
+
+        uint8_t rgb_pixel[6];
+        uint8_t * rgb_buf = (uint8_t*)frame_buf;
+        for(int i = 0; i < half_pixels; ++i)
+        {
+            memcpy(rgb_pixel, rgb_buf + i*6, 6);
+            memcpy(rgb_buf + i*6, rgb_buf + frame_size - 6 - i*6, 6);
+            memcpy(rgb_buf + frame_size - 6 - i*6, rgb_pixel, 6);
+        }
     }
 }
 
@@ -720,6 +742,12 @@ void processingSetWhiteLevel(processingObject_t * processing, int whiteLevel)
     processingSetBlackAndWhiteLevel( processing,
                                      processingGetBlackLevel(processing),
                                      whiteLevel );
+}
+
+/* Set transformation */
+void processingSetTransformation(processingObject_t * processing, int transformation)
+{
+    processing->transformation = transformation;
 }
 
 /* Decomissions a processing object completely(I hope) */

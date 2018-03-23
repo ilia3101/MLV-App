@@ -34,6 +34,31 @@
     <property name="bottomMargin">
      <number>5</number>
     </property>
+    <item row="5" column="0">
+     <widget class="ResizeLabel" name="labelAudioTrack">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>32</height>
+       </size>
+      </property>
+      <property name="lineWidth">
+       <number>0</number>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="pixmap">
+       <pixmap resource="ressources.qrc">:/IMG/IMG/Histogram.png</pixmap>
+      </property>
+      <property name="scaledContents">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </item>
     <item row="0" column="0">
      <widget class="GraphicsZoomView" name="graphicsView">
       <property name="contextMenuPolicy">
@@ -68,38 +93,13 @@
       </property>
      </widget>
     </item>
-    <item row="1" column="0">
+    <item row="4" column="0">
      <widget class="JumpSlider" name="horizontalSliderPosition">
       <property name="pageStep">
        <number>1</number>
       </property>
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="0">
-     <widget class="ResizeLabel" name="labelAudioTrack">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
-      <property name="maximumSize">
-       <size>
-        <width>16777215</width>
-        <height>32</height>
-       </size>
-      </property>
-      <property name="lineWidth">
-       <number>0</number>
-      </property>
-      <property name="text">
-       <string/>
-      </property>
-      <property name="pixmap">
-       <pixmap resource="ressources.qrc">:/IMG/IMG/Histogram.png</pixmap>
-      </property>
-      <property name="scaledContents">
-       <bool>true</bool>
       </property>
      </widget>
     </item>
@@ -386,9 +386,9 @@ QGroupBox::indicator:checked {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>0</y>
+            <y>-2589</y>
             <width>195</width>
-            <height>3093</height>
+            <height>3110</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayoutScrollArea">
@@ -1899,97 +1899,6 @@ QGroupBox::indicator:checked {
                     </item>
                     <item>
                      <widget class="ColorToolButton" name="toolButtonPatternNoiseOn">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                        <horstretch>0</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                      <property name="font">
-                       <font>
-                        <pointsize>10</pointsize>
-                       </font>
-                      </property>
-                      <property name="text">
-                       <string>On</string>
-                      </property>
-                      <property name="checkable">
-                       <bool>true</bool>
-                      </property>
-                      <property name="autoExclusive">
-                       <bool>true</bool>
-                      </property>
-                     </widget>
-                    </item>
-                   </layout>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="Line" name="line_12">
-                   <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QLabel" name="UpsideDownLabel">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-                   <property name="text">
-                    <string>Upside Down</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QFrame" name="toolButtonUpsideDown">
-                   <layout class="QHBoxLayout" name="horizontalLayout_29">
-                    <property name="spacing">
-                     <number>0</number>
-                    </property>
-                    <property name="leftMargin">
-                     <number>0</number>
-                    </property>
-                    <property name="topMargin">
-                     <number>0</number>
-                    </property>
-                    <property name="rightMargin">
-                     <number>0</number>
-                    </property>
-                    <property name="bottomMargin">
-                     <number>0</number>
-                    </property>
-                    <item>
-                     <widget class="ColorToolButton" name="toolButtonUpsideDownOff">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                        <horstretch>0</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                      <property name="font">
-                       <font>
-                        <pointsize>10</pointsize>
-                       </font>
-                      </property>
-                      <property name="text">
-                       <string>Off</string>
-                      </property>
-                      <property name="checkable">
-                       <bool>true</bool>
-                      </property>
-                      <property name="checked">
-                       <bool>true</bool>
-                      </property>
-                      <property name="autoExclusive">
-                       <bool>true</bool>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="ColorToolButton" name="toolButtonUpsideDownOn">
                       <property name="sizePolicy">
                        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                         <horstretch>0</horstretch>
@@ -4851,9 +4760,9 @@ QGroupBox::indicator:checked {
             </widget>
            </item>
            <item>
-            <widget class="QGroupBox" name="groupBoxAspectRatio">
+            <widget class="QGroupBox" name="groupBoxTransformation">
              <property name="title">
-              <string>Aspect Ratio</string>
+              <string>Transformation</string>
              </property>
              <property name="checkable">
               <bool>true</bool>
@@ -5000,6 +4909,97 @@ QGroupBox::indicator:checked {
                   </layout>
                  </item>
                 </layout>
+               </widget>
+              </item>
+              <item row="3" column="0">
+               <widget class="QFrame" name="toolButtonUpsideDown">
+                <layout class="QHBoxLayout" name="horizontalLayout_29">
+                 <property name="spacing">
+                  <number>0</number>
+                 </property>
+                 <property name="leftMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>0</number>
+                 </property>
+                 <item>
+                  <widget class="ColorToolButton" name="toolButtonUpsideDownOff">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="font">
+                    <font>
+                     <pointsize>10</pointsize>
+                    </font>
+                   </property>
+                   <property name="text">
+                    <string>Off</string>
+                   </property>
+                   <property name="checkable">
+                    <bool>true</bool>
+                   </property>
+                   <property name="checked">
+                    <bool>true</bool>
+                   </property>
+                   <property name="autoExclusive">
+                    <bool>true</bool>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="ColorToolButton" name="toolButtonUpsideDownOn">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="font">
+                    <font>
+                     <pointsize>10</pointsize>
+                    </font>
+                   </property>
+                   <property name="text">
+                    <string>On</string>
+                   </property>
+                   <property name="checkable">
+                    <bool>true</bool>
+                   </property>
+                   <property name="autoExclusive">
+                    <bool>true</bool>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+              <item row="1" column="0">
+               <widget class="Line" name="line_12">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="0">
+               <widget class="QLabel" name="UpsideDownLabel">
+                <property name="font">
+                 <font>
+                  <pointsize>10</pointsize>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>Upside Down</string>
+                </property>
                </widget>
               </item>
              </layout>

@@ -123,6 +123,9 @@ typedef struct {
     /* Precalculated values for saturation */
     int32_t    pre_calc_sat[131072]; int use_saturation; /* Saturation is disable-able */
 
+    /* Transformation */
+    enum transform { TR_NONE, TR_ROT180 };
+    uint8_t    transformation;
 } processingObject_t;
 
 /* Maybe save edits to MLV file as a block? */

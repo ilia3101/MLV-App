@@ -981,7 +981,7 @@ void MainWindow::readSettings()
     ui->groupBoxColorWheels->setChecked( set.value( "expandedColorWheels", false ).toBool() );
     ui->groupBoxFilter->setChecked( set.value( "expandedFilter", false ).toBool() );
     ui->groupBoxLinearGradient->setChecked( set.value( "expandedLinGradient", false ).toBool() );
-    ui->groupBoxAspectRatio->setChecked( set.value( "expandAspectRatio", false ).toBool() );
+    ui->groupBoxTransformation->setChecked( set.value( "expandedTransformation", false ).toBool() );
     ui->actionCreateMappFiles->setChecked( set.value( "createMappFiles", false ).toBool() );
     m_timeCodePosition = set.value( "tcPos", 1 ).toUInt();
 }
@@ -1014,7 +1014,7 @@ void MainWindow::writeSettings()
     set.setValue( "expandedColorWheels", ui->groupBoxColorWheels->isChecked() );
     set.setValue( "expandedFilter", ui->groupBoxFilter->isChecked() );
     set.setValue( "expandedLinGradient", ui->groupBoxLinearGradient->isChecked() );
-    set.setValue( "expandAspectRatio", ui->groupBoxAspectRatio->isChecked() );
+    set.setValue( "expandedTransformation", ui->groupBoxTransformation->isChecked() );
     set.setValue( "createMappFiles", ui->actionCreateMappFiles->isChecked() );
     set.setValue( "tcPos", m_timeCodePosition );
 }
@@ -1405,7 +1405,7 @@ void MainWindow::startExportPipe(QString fileName)
         {
             //Get picture, and lock render thread... there can only be one!
             m_pRenderThread->lock();
-            getMlvProcessedFrame16( m_pMlvObject, i, imgBuffer, QThread::idealThreadCount(), TR_ROT180 );
+            getMlvProcessedFrame16( m_pMlvObject, i, imgBuffer, QThread::idealThreadCount() );
             m_pRenderThread->unlock();
 
             //Write to pipe
@@ -2711,7 +2711,7 @@ void MainWindow::previewPicture( int row )
     m_pMlvObject->llrawproc->fix_raw = 0;
 
     //Get frame from library
-    getMlvProcessedFrame8( m_pMlvObject, 0, m_pRawImage, QThread::idealThreadCount(), TR_ROT180 );
+    getMlvProcessedFrame8( m_pMlvObject, 0, m_pRawImage, QThread::idealThreadCount() );
 
     //Display in SessionList
     QPixmap pic = QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
@@ -3560,7 +3560,7 @@ void MainWindow::on_actionExportActualFrame_triggered()
 
 
     //Get frame from library
-    getMlvProcessedFrame8( m_pMlvObject, ui->horizontalSliderPosition->value(), m_pRawImage, 1, TR_ROT180 );
+    getMlvProcessedFrame8( m_pMlvObject, ui->horizontalSliderPosition->value(), m_pRawImage, 1 );
 
     QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
             .scaled( getMlvWidth(m_pMlvObject) * getHorizontalStretchFactor(), getMlvHeight(m_pMlvObject) * getVerticalStretchFactor(),
@@ -4470,7 +4470,7 @@ void MainWindow::toolButtonPatternNoiseChanged( void )
 //Upside Down Mode changed
 void MainWindow::toolButtonUpsideDownChanged( void )
 {
-    //TODO: llrp...(  );
+    processingSetTransformation( m_pProcessingObject, toolButtonUpsideDownCurrentIndex() );
     resetMlvCache( m_pMlvObject );
     resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
@@ -4598,7 +4598,6 @@ void MainWindow::on_checkBoxRawFixEnable_clicked(bool checked)
     ui->BadPixelsInterpolationMethodLabel->setEnabled( checked );
     ui->ChromaSmoothLabel->setEnabled( checked );
     ui->PatternNoiseLabel->setEnabled( checked );
-    ui->UpsideDownLabel->setEnabled( checked );
     ui->VerticalStripesLabel->setEnabled( checked );
     ui->DeflickerTargetLabel->setEnabled( checked );
     ui->DualISOLabel->setEnabled( checked );
@@ -4613,7 +4612,6 @@ void MainWindow::on_checkBoxRawFixEnable_clicked(bool checked)
     ui->toolButtonBadPixelsInterpolation->setEnabled( checked );
     ui->toolButtonChroma->setEnabled( checked );
     ui->toolButtonPatternNoise->setEnabled( checked );
-    ui->toolButtonUpsideDown->setEnabled( checked );
     ui->toolButtonVerticalStripes->setEnabled( checked );
     ui->toolButtonDualIso->setEnabled( checked );
     ui->toolButtonDualIsoInterpolation->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() == 1 ) );
@@ -4784,11 +4782,11 @@ void MainWindow::on_groupBoxLinearGradient_toggled(bool arg1)
 }
 
 //Collapse & Expand Viewer
-void MainWindow::on_groupBoxAspectRatio_toggled(bool arg1)
+void MainWindow::on_groupBoxTransformation_toggled(bool arg1)
 {
     ui->frameAspectRatio->setVisible( arg1 );
-    if( !arg1 ) ui->groupBoxAspectRatio->setMaximumHeight( 30 );
-    else ui->groupBoxAspectRatio->setMaximumHeight( 16777215 );
+    if( !arg1 ) ui->groupBoxTransformation->setMaximumHeight( 30 );
+    else ui->groupBoxTransformation->setMaximumHeight( 16777215 );
 }
 
 //Abort pressed while exporting
