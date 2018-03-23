@@ -407,7 +407,7 @@ void getMlvRawFrameDebayered(mlvObject_t * video, uint64_t frameIndex, uint16_t 
 /* Pass frame buffer and do the transform on it */
 void getRGBFrameTransformed(mlvObject_t * video, uint16_t * frame_buf, int transform)
 {
-    if(transform == TR_VFLIP)
+    if(transform == TR_ROT180)
     {
         int half_pixels = getMlvWidth(video) * getMlvHeight(video) / 2;
         int frame_size = getMlvWidth(video) * getMlvHeight(video) * sizeof(uint16_t) * 3;

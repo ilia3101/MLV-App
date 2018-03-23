@@ -54,7 +54,7 @@ void setMlvRawCacheLimitFrames(mlvObject_t * video, uint64_t frameLimit);
 void setMlvProcessing(mlvObject_t * video, processingObject_t * processing);
 
 /* Pass frame buffer and do the transform on it */
-enum transform { TR_NONE, TR_VFLIP, TR_HFLIP };
+enum transform { TR_NONE, TR_ROT180 };
 void getRGBFrameTransformed(mlvObject_t * video, uint16_t * frame_buf, int transform);
 
 /* Functions for getting processed MLV frames - uses the 'processing' module,
