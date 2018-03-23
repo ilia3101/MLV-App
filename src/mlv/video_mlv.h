@@ -53,12 +53,16 @@ void setMlvRawCacheLimitFrames(mlvObject_t * video, uint64_t frameLimit);
 /* Links processing settings() with an MLV object */
 void setMlvProcessing(mlvObject_t * video, processingObject_t * processing);
 
+/* Pass frame buffer and do the transform on it */
+enum transform { TR_NONE, TR_VFLIP, TR_HFLIP };
+void getRGBFrameTransformed(mlvObject_t * video, uint16_t * frame_buf, int transform);
+
 /* Functions for getting processed MLV frames - uses the 'processing' module,
  * Avalible in 8 and 16 bit! Neither is faster as processing for both is done in 16 bit,
  * only use more than one thread in threads argument for speedier preview, not for export
  * as it may have minor artifacts (though I haven't found them yet) */
-void getMlvProcessedFrame8(mlvObject_t * video, uint64_t frameIndex, uint8_t * outputFrame, int threads);
-void getMlvProcessedFrame16(mlvObject_t * video, uint64_t frameIndex, uint16_t * outputFrame, int threads);
+void getMlvProcessedFrame8(mlvObject_t * video, uint64_t frameIndex, uint8_t * outputFrame, int threads, int transform);
+void getMlvProcessedFrame16(mlvObject_t * video, uint64_t frameIndex, uint16_t * outputFrame, int threads, int transform);
 
 /* Unpacks the bits of a frame to get a bayer B&W image (without black level correction)
  * Needs memory to return to, sized: sizeof(float) * getMlvHeight(urvid) * getMlvWidth(urvid)

@@ -1405,7 +1405,7 @@ void MainWindow::startExportPipe(QString fileName)
         {
             //Get picture, and lock render thread... there can only be one!
             m_pRenderThread->lock();
-            getMlvProcessedFrame16( m_pMlvObject, i, imgBuffer, QThread::idealThreadCount() );
+            getMlvProcessedFrame16( m_pMlvObject, i, imgBuffer, QThread::idealThreadCount(), TR_VFLIP );
             m_pRenderThread->unlock();
 
             //Write to pipe
@@ -2711,7 +2711,7 @@ void MainWindow::previewPicture( int row )
     m_pMlvObject->llrawproc->fix_raw = 0;
 
     //Get frame from library
-    getMlvProcessedFrame8( m_pMlvObject, 0, m_pRawImage, QThread::idealThreadCount() );
+    getMlvProcessedFrame8( m_pMlvObject, 0, m_pRawImage, QThread::idealThreadCount(), TR_VFLIP );
 
     //Display in SessionList
     QPixmap pic = QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
@@ -3560,7 +3560,7 @@ void MainWindow::on_actionExportActualFrame_triggered()
 
 
     //Get frame from library
-    getMlvProcessedFrame8( m_pMlvObject, ui->horizontalSliderPosition->value(), m_pRawImage, 1 );
+    getMlvProcessedFrame8( m_pMlvObject, ui->horizontalSliderPosition->value(), m_pRawImage, 1, TR_VFLIP );
 
     QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
             .scaled( getMlvWidth(m_pMlvObject) * getHorizontalStretchFactor(), getMlvHeight(m_pMlvObject) * getVerticalStretchFactor(),
