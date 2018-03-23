@@ -4,6 +4,8 @@
 #include "image_profile.h"
 #include "filter/filter.h"
 
+enum transform { TR_NONE, TR_ROT180 };
+
 typedef struct {
     uint16_t width, height;
     uint16_t * image;
@@ -124,7 +126,6 @@ typedef struct {
     int32_t    pre_calc_sat[131072]; int use_saturation; /* Saturation is disable-able */
 
     /* Transformation */
-    enum transform { TR_NONE, TR_ROT180 };
     uint8_t    transformation;
 } processingObject_t;
 
