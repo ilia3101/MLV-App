@@ -25,5 +25,6 @@
         <file>darkstyle/icon_radiobutton_unchecked_disabled.png</file>
         <file>darkstyle/darkstyleOSX.qss</file>
         <file>darkstyle/SliderHandle.png</file>
+        <file>darkstyle/SliderHandleDisabled.png</file>
     </qresource>
 </RCC>

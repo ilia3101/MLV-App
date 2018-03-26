@@ -329,6 +329,15 @@ QSlider::handle:horizontal{
   min-height:20px;
   margin:0 -4px;
 }
+QSlider::handle:horizontal:disabled{
+  border-radius:7px;
+  border:1px solid rgba(25,25,25,255);
+  background-color:rgba(125,125,125,255);
+  border-image:none;
+  image:url(:/darkstyle/SliderHandleDisabled.png);
+  min-height:20px;
+  margin:0 -4px;
+}
 QSlider::handle:horizontal:hover{
   background:palette(highlight);
 }
