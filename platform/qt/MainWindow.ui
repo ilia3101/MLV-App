@@ -21,7 +21,7 @@
    <bool>true</bool>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <layout class="QGridLayout" name="gridLayout_24">
+   <layout class="QGridLayout" name="gridLayoutMain">
     <property name="leftMargin">
      <number>0</number>
     </property>
@@ -5772,7 +5772,7 @@ QGroupBox::indicator:checked {
  <connections>
   <connection>
    <sender>actionShowSessionArea</sender>
-   <signal>triggered(bool)</signal>
+   <signal>toggled(bool)</signal>
    <receiver>dockWidgetSession</receiver>
    <slot>setVisible(bool)</slot>
    <hints>
@@ -5788,7 +5788,7 @@ QGroupBox::indicator:checked {
   </connection>
   <connection>
    <sender>actionShowEditArea</sender>
-   <signal>triggered(bool)</signal>
+   <signal>toggled(bool)</signal>
    <receiver>dockWidgetEdit</receiver>
    <slot>setVisible(bool)</slot>
    <hints>

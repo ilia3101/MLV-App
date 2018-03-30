@@ -108,7 +108,7 @@ private slots:
     void on_listWidgetSession_activated(const QModelIndex &index);
     void on_dockWidgetSession_visibilityChanged(bool visible);
     void on_dockWidgetEdit_visibilityChanged(bool visible);
-    void on_actionShowAudioTrack_triggered(bool checked);
+    void on_actionShowAudioTrack_toggled(bool checked);
     void on_listWidgetSession_customContextMenuRequested(const QPoint &pos);
     void deleteFileFromSession( void );
     void rightClickShowFile( void );

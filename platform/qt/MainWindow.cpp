@@ -749,8 +749,6 @@ void MainWindow::initGui( void )
     QPixmap pic = QPixmap::fromImage( m_pAudioWave->getMonoWave( NULL, 0, 100, devicePixelRatio() ) );
     pic.setDevicePixelRatio( devicePixelRatio() );
     ui->labelAudioTrack->setPixmap( pic );
-    //Fullscreen does not work well, so disable
-    ui->actionFullscreen->setVisible( false );
     //Disable caching by default to avoid crashes
     //ui->actionCaching->setVisible( false );
     //Disable unused (for now) actions
@@ -3976,7 +3974,7 @@ void MainWindow::on_dockWidgetEdit_visibilityChanged(bool visible)
 }
 
 //Set visibility of audio track
-void MainWindow::on_actionShowAudioTrack_triggered(bool checked)
+void MainWindow::on_actionShowAudioTrack_toggled(bool checked)
 {
     ui->labelAudioTrack->setVisible( checked );
     qApp->processEvents();
@@ -4077,13 +4075,16 @@ void MainWindow::pictureCustomContextMenuRequested(const QPoint &pos)
     myMenu.addMenu( ui->menuDemosaicForPreview );
     myMenu.addSeparator();
     myMenu.addAction( ui->actionShowZebras );
-    if( ui->graphicsView->isFullScreen() )
+    if( ui->actionFullscreen->isChecked() )
     {
         myMenu.addSeparator();
         myMenu.addAction( ui->actionGoto_First_Frame );
+        myMenu.addAction( ui->actionPreviousFrame );
         myMenu.addAction( ui->actionPlay );
+        myMenu.addAction( ui->actionNextFrame );
         myMenu.addAction( ui->actionLoop );
         myMenu.addSeparator();
+        myMenu.addAction( ui->actionFullscreen );
     }
     // Show context menu at handling position
     myMenu.exec( globalPos );
@@ -4242,15 +4243,42 @@ void MainWindow::on_label_FilterStrengthVal_doubleClicked()
 //Fullscreen Mode
 void MainWindow::on_actionFullscreen_triggered( bool checked )
 {
+    static bool editWasActive;
+    static bool sessionWasActive;
+    static bool audioWasActive;
+
     if( checked )
     {
-        ui->graphicsView->setWindowFlags( Qt::Dialog );
-        ui->graphicsView->showFullScreen();
+        ui->statusBar->hide();
+        ui->mainToolBar->hide();
+        ui->menuBar->hide();
+        ui->horizontalSliderPosition->hide();
+        ui->gridLayoutMain->setContentsMargins( 0, 0, 0, 0 );
+        editWasActive = ui->actionShowEditArea->isChecked();
+        sessionWasActive = ui->actionShowSessionArea->isChecked();
+        audioWasActive = ui->actionShowAudioTrack->isChecked();
+        ui->actionShowEditArea->setChecked( false );
+        ui->actionShowSessionArea->setChecked( false );
+        ui->actionShowAudioTrack->setChecked( false );
+        ui->actionShowEditArea->setEnabled( false );
+        ui->actionShowSessionArea->setEnabled( false );
+        ui->actionShowAudioTrack->setEnabled( false );
+        this->showFullScreen();
     }
     else
     {
-        ui->graphicsView->setWindowFlags( Qt::Widget );
-        ui->graphicsView->showNormal();
+        this->showNormal();
+        ui->statusBar->show();
+        ui->mainToolBar->show();
+        ui->menuBar->show();
+        ui->horizontalSliderPosition->show();
+        ui->gridLayoutMain->setContentsMargins( 0, 5, 0, 5 );
+        if( !ui->actionShowEditArea->isChecked() && editWasActive ) ui->actionShowEditArea->setChecked( true );
+        if( !ui->actionShowSessionArea->isChecked() && sessionWasActive ) ui->actionShowSessionArea->setChecked( true );
+        if( !ui->actionShowAudioTrack->isChecked() && audioWasActive ) ui->actionShowAudioTrack->setChecked( true );
+        ui->actionShowEditArea->setEnabled( true );
+        ui->actionShowSessionArea->setEnabled( true );
+        ui->actionShowAudioTrack->setEnabled( true );
     }
     qApp->processEvents();
     m_frameChanged = true;
