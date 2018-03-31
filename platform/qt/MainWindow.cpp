@@ -32,7 +32,7 @@
 #include "DarkStyle.h"
 
 #define APPNAME "MLV App"
-#define VERSION "0.14 alpha"
+#define VERSION "0.15 alpha"
 
 #define FACTOR_DS       22.5
 #define FACTOR_LS       11.2
@@ -749,6 +749,8 @@ void MainWindow::initGui( void )
     QPixmap pic = QPixmap::fromImage( m_pAudioWave->getMonoWave( NULL, 0, 100, devicePixelRatio() ) );
     pic.setDevicePixelRatio( devicePixelRatio() );
     ui->labelAudioTrack->setPixmap( pic );
+    //Fullscreen does not work well, so disable
+    ui->actionFullscreen->setVisible( false );
     //Disable caching by default to avoid crashes
     //ui->actionCaching->setVisible( false );
     //Disable unused (for now) actions
