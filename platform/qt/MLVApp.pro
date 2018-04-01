@@ -216,7 +216,7 @@ linux-g++ {
     EXTRA_FILES += \
         mlvapp.desktop
     for(FILE,EXTRA_FILES){
-        QMAKE_POST_LINK += $$quote(cp $${FILE} $${DESTDIR/usr/share/applications}$$escape_expand(\n\t))
+        QMAKE_POST_LINK += $$quote(cp $${FILE} $${DESTDIR/usr/share/applications/}$$escape_expand(\n\t))
     }
 }
 
