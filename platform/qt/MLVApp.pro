@@ -183,7 +183,8 @@ DISTFILES += \
     Info.plist \
     MLVAPP.ico \
     darkstyle/darkstyle.qss \
-    darkstyle/darkstyleOSX.qss
+    darkstyle/darkstyleOSX.qss \
+    mlvapp.desktop
 
 win32: RC_ICONS = MLVAPP.ico
 macx: ICON = MLVAPP.icns

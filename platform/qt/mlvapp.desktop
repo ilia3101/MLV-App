@@ -1,0 +1,9 @@
+[Desktop Entry]
+Encoding=UTF-8
+Type=Application
+Name=MLVApp
+Comment=Magic Lantern Video Processing Application
+Exec=mlvapp
+Icon=MLVAPP
+Terminal=false
+Categories=AudioVideo;Video;
