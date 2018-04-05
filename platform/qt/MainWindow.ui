@@ -155,6 +155,8 @@
     </property>
     <addaction name="actionAbout"/>
     <addaction name="actionAboutQt"/>
+    <addaction name="separator"/>
+    <addaction name="actionCheckForUpdates"/>
    </widget>
    <widget class="QMenu" name="menuPlayback">
     <property name="title">
@@ -5720,6 +5722,11 @@ QGroupBox::indicator:checked {
    </property>
    <property name="shortcut">
     <string>T</string>
+   </property>
+  </action>
+  <action name="actionCheckForUpdates">
+   <property name="text">
+    <string>Check for Updates</string>
    </property>
   </action>
  </widget>

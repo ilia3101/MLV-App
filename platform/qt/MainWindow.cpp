@@ -30,9 +30,11 @@
 #include "ExportSettingsDialog.h"
 #include "EditSliderValueDialog.h"
 #include "DarkStyle.h"
+#include "Updater/updaterUI/cupdaterdialog.h"
 
 #define APPNAME "MLV App"
 #define VERSION "0.15 alpha"
+#define GITVERSION "QTv0.15alpha"
 
 #define FACTOR_DS       22.5
 #define FACTOR_LS       11.2
@@ -750,7 +752,7 @@ void MainWindow::initGui( void )
     pic.setDevicePixelRatio( devicePixelRatio() );
     ui->labelAudioTrack->setPixmap( pic );
     //Fullscreen does not work well, so disable
-    ui->actionFullscreen->setVisible( false );
+    //ui->actionFullscreen->setVisible( false );
     //Disable caching by default to avoid crashes
     //ui->actionCaching->setVisible( false );
     //Disable unused (for now) actions
@@ -3232,8 +3234,9 @@ void MainWindow::on_actionAbout_triggered()
                                   " <p>%2 v%3</p>"
                                   " <p>%7</p>"
                                   " <p>See <a href='%8'>this site</a> for more information.</p>"
-                                  " <p>Darkstyle Copyright (c) 2017, <a href='%9'>Juergen Skrotzky</a></p>"
+                                  " <p>Darkstyle Copyright (c) 2017, <a href='%9'>Juergen Skrotzky</a> under MIT</p>"
                                   " <p>Some icons by <a href='%10'>Double-J Design</a> under <a href='%11'>CC4.0</a></p>"
+                                  " <p>Autoupdater Copyright (c) 2016, <a href='%12'>Violet Giraffe</a> under MIT</p>"
                                   " </body></html>" )
                                  .arg( pic )
                                  .arg( APPNAME )
@@ -3242,7 +3245,8 @@ void MainWindow::on_actionAbout_triggered()
                                  .arg( "https://github.com/ilia3101/MLV-App" )
                                  .arg( "https://github.com/Jorgen-VikingGod" )
                                  .arg( "http://www.doublejdesign.co.uk/" )
-                            .arg( "https://creativecommons.org/licenses/by/4.0/" ) );
+                                 .arg( "https://creativecommons.org/licenses/by/4.0/" )
+                                 .arg( "https://github.com/VioletGiraffe/github-releases-autoupdater" ) );
 }
 
 //Qt Infobox
@@ -5412,4 +5416,11 @@ void MainWindow::on_lineEditDarkFrameFile_textChanged(const QString &arg1)
         ui->toolButtonDarkFrameSubtractionExt->setEnabled( false );
         setToolButtonDarkFrameSubtraction( 0 );
     }
+}
+
+//Check if there is an update availlable
+void MainWindow::on_actionCheckForUpdates_triggered()
+{
+    CUpdaterDialog dialog(this,QString("https://github.com/ilia3101/MLV-App"), GITVERSION, false );
+    dialog.exec();
 }

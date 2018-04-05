@@ -99,7 +99,9 @@ SOURCES += \
     TimeCodeLabel.cpp \
     ../../src/mlv/llrawproc/darkframe.c \
     ColorWheel.cpp \
-    ../../src/mlv/audio_mlv.c
+    ../../src/mlv/audio_mlv.c \
+    Updater/updaterUI/cupdaterdialog.cpp \
+    Updater/cautoupdatergithub.cpp
 
 macx: SOURCES += ../cocoa/avf_lib/avf_lib.m
 
@@ -161,7 +163,9 @@ HEADERS += \
     ../../src/mlv/llrawproc/darkframe.h \
     ColorWheel.h \
     ../../src/mlv/audio_mlv.h \
-    ../../src/mlv/macros.h
+    ../../src/mlv/macros.h \
+    Updater/updaterUI/cupdaterdialog.h \
+    Updater/cautoupdatergithub.h
 
 macx: HEADERS += \
     ../cocoa/avf_lib/avencoder.h \
@@ -173,7 +177,8 @@ FORMS += \
     InfoDialog.ui \
     StatusDialog.ui \
     ExportSettingsDialog.ui \
-    EditSliderValueDialog.ui
+    EditSliderValueDialog.ui \
+    Updater/updaterUI/cupdaterdialog.ui
 
 RESOURCES += \
     ressources.qrc \
