@@ -201,7 +201,7 @@ private slots:
     void on_toolButtonDarkFrameSubtractionFile_clicked();
     void on_lineEditDarkFrameFile_textChanged(const QString &arg1);
 
-    void on_actionCheckForUpdates_triggered();
+    void on_actionCheckForUpdates_triggered(void);
 
 private:
     Ui::MainWindow *ui;

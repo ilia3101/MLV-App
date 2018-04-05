@@ -5419,8 +5419,8 @@ void MainWindow::on_lineEditDarkFrameFile_textChanged(const QString &arg1)
 }
 
 //Check if there is an update availlable
-void MainWindow::on_actionCheckForUpdates_triggered()
+void MainWindow::on_actionCheckForUpdates_triggered( void )
 {
-    CUpdaterDialog dialog(this,QString("https://github.com/ilia3101/MLV-App"), GITVERSION, false );
+    CUpdaterDialog dialog( this, QString( "https://github.com/ilia3101/MLV-App" ), GITVERSION, false );
     dialog.exec();
 }

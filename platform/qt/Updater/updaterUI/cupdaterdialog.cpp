@@ -16,6 +16,7 @@ CUpdaterDialog::CUpdaterDialog(QWidget *parent, const QString& githubRepoAddress
 	_updater(githubRepoAddress, versionString)
 {
 	ui->setupUi(this);
+    setWindowFlags( Qt::Dialog | Qt::WindowTitleHint | Qt::WindowCloseButtonHint | Qt::WindowStaysOnTopHint );
 
 	if (_silent)
 		hide();
