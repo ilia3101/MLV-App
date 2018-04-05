@@ -136,26 +136,12 @@ void CAutoUpdaterGithub::updateCheckRequestFinished()
 		if (!naturalSortQstringComparator(_currentVersionString, updateVersion))
 			continue; // version <= _currentVersionString, skipping
 
-        if (!updateVersion.startsWith( "QT" ))
+        if (!updateVersion.startsWith( _currentVersionString.at(0) ))
             continue;
 
         const QString updateChanges = match(changelogPattern, releaseText, offset, offset);
 
-        QString url = QString( "/ilia3101/MLV-App/releases" );
-        while (offset != -1)
-		{
-
-			const QString newUrl = match(releaseUrlPattern, releaseText, offset, offset);
-			if (newUrl.endsWith(UPDATE_FILE_EXTENSION))
-			{
-                //assert_message_r(url.isEmpty(), "More than one suitable update URL found");
-                if( !url.isEmpty() ) qDebug() << "More than one suitable update URL found";
-				url = newUrl;
-			}
-        }
-
-		if (!url.isEmpty())
-			changelog.push_back({ updateVersion, updateChanges, "https://github.com" + url });
+        changelog.push_back({ updateVersion, updateChanges, _updatePageAddress });
 	}
 
 	if (_listener)
