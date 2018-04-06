@@ -34,7 +34,7 @@
 
 #define APPNAME "MLV App"
 #define VERSION "0.15 alpha"
-#define GITVERSION "QTv0.14alpha"
+#define GITVERSION "QTv0.15alpha"
 
 #define FACTOR_DS       22.5
 #define FACTOR_LS       11.2
