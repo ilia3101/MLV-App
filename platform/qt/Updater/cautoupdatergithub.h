@@ -1,4 +1,5 @@
-#pragma once
+#ifndef CAUTOUPDATERGITHUB_H
+#define CAUTOUPDATERGITHUB_H
 
 #include <QNetworkAccessManager>
 #include <QString>
@@ -53,3 +54,4 @@ private:
 	QNetworkAccessManager _networkManager;
 };
 
+#endif // CAUTOUPDATERGITHUB_H

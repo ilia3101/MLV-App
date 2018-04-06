@@ -1,10 +1,8 @@
-#pragma once
+#ifndef CUPDATERDIALOG_H
+#define CUPDATERDIALOG_H
 
 #include "../cautoupdatergithub.h"
-
-//DISABLE_COMPILER_WARNINGS
 #include <QDialog>
-//RESTORE_COMPILER_WARNINGS
 
 namespace Ui {
 	class CUpdaterDialog;
@@ -37,3 +35,4 @@ private:
 	CAutoUpdaterGithub _updater;
 };
 
+#endif // CUPDATERDIALOG_H
