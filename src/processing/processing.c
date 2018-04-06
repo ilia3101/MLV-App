@@ -333,6 +333,10 @@ void blur_image( uint16_t * __restrict in,
                  int do_r, int do_g, int do_b, /* Which channels to blur or not */
                  int start_y, int end_y )
 {
+    /* Hide warnings */
+    (void)start_y;
+    (void)end_y;
+
     /* Row length */
     int rl = width * 3;
 

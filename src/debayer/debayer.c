@@ -116,6 +116,9 @@ void debayerAmaze(uint16_t * __restrict debayerto, float * __restrict bayerdata,
 /* Quite quick bilinear debayer, floating point sadly; threads argument is unused */
 void debayerBasic(uint16_t * __restrict debayerto, float * __restrict bayerdata, int width, int height, int threads)
 {
+    /* Hide warning */
+    (void)threads;
+
     /* Debayer pixel size(limit with 1 pixel border to avoid seg fault, fix blank pixels L8ter) */
     int pixelsizeDB = width * (height - 1); /* How many pixels to go through in debayer (height - 1 to avoid bottom row) */
     int widthDB = width - 1; /* Debayering width */

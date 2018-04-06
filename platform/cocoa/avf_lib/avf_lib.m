@@ -242,5 +242,7 @@ void endWritingVideoFile(AVEncoder_t * encoder)
 
 void endWritingVideoFileWithAudio(AVEncoder_t * encoder, uint16_t * audioData, uint64_t audioDataSize)
 {
+    (void)audioData; //hide warning
+    (void)audioDataSize; //hide warning
     endWritingVideoFile(encoder);
 }
