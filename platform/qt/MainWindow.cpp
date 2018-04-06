@@ -119,6 +119,14 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
             m_sessionFileName = fileName;
         }
     }
+
+    //Update check
+    if( ui->actionAutoCheckForUpdates->isChecked() )
+    {
+        m_pUpdateCheck = new CUpdater( this, QString( "https://github.com/ilia3101/MLV-App" ), GITVERSION );
+        connect( m_pUpdateCheck, SIGNAL(updateAvailable(bool)), this, SLOT(updateCheckResponse(bool)) );
+        m_pUpdateCheck->checkForUpdates();
+    }
 }
 
 //Destructor
@@ -991,6 +999,7 @@ void MainWindow::readSettings()
     ui->groupBoxTransformation->setChecked( set.value( "expandedTransformation", false ).toBool() );
     ui->actionCreateMappFiles->setChecked( set.value( "createMappFiles", false ).toBool() );
     m_timeCodePosition = set.value( "tcPos", 1 ).toUInt();
+    ui->actionAutoCheckForUpdates->setChecked( set.value( "autoUpdateCheck", true ).toBool() );
 }
 
 //Save some settings to registry
@@ -1024,6 +1033,7 @@ void MainWindow::writeSettings()
     set.setValue( "expandedTransformation", ui->groupBoxTransformation->isChecked() );
     set.setValue( "createMappFiles", ui->actionCreateMappFiles->isChecked() );
     set.setValue( "tcPos", m_timeCodePosition );
+    set.setValue( "autoUpdateCheck", ui->actionAutoCheckForUpdates->isChecked() );
 }
 
 //Start Export via Pipe
@@ -5288,6 +5298,7 @@ void MainWindow::on_actionPreviewPicture_triggered()
 //Input of Stretch Width (horizontal) Factor
 void MainWindow::on_comboBoxHStretch_currentIndexChanged(int index)
 {
+    Q_UNUSED( index );
     m_pGradientElement->setStrechFactorX( getHorizontalStretchFactor() );
     m_zoomModeChanged = true;
     m_frameChanged = true;
@@ -5296,6 +5307,7 @@ void MainWindow::on_comboBoxHStretch_currentIndexChanged(int index)
 //Input of Stretch Height (vertical) Factor
 void MainWindow::on_comboBoxVStretch_currentIndexChanged(int index)
 {
+    Q_UNUSED( index );
     m_pGradientElement->setStrechFactorY( getVerticalStretchFactor() );
     m_zoomModeChanged = true;
     m_frameChanged = true;
@@ -5428,4 +5440,13 @@ void MainWindow::on_actionCheckForUpdates_triggered( void )
 {
     CUpdaterDialog dialog( this, QString( "https://github.com/ilia3101/MLV-App" ), GITVERSION, false );
     dialog.exec();
+}
+
+//Autocheck for updates told there is an update
+void MainWindow::updateCheckResponse(bool arg)
+{
+    if( arg ) on_actionCheckForUpdates_triggered();
+
+    disconnect( m_pUpdateCheck, SIGNAL(updateAvailable(bool)), this, SLOT(updateCheckResponse(bool)) );
+    delete m_pUpdateCheck;
 }

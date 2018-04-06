@@ -157,6 +157,7 @@
     <addaction name="actionAboutQt"/>
     <addaction name="separator"/>
     <addaction name="actionCheckForUpdates"/>
+    <addaction name="actionAutoCheckForUpdates"/>
    </widget>
    <widget class="QMenu" name="menuPlayback">
     <property name="title">
@@ -5727,6 +5728,17 @@ QGroupBox::indicator:checked {
   <action name="actionCheckForUpdates">
    <property name="text">
     <string>Check for Updates</string>
+   </property>
+  </action>
+  <action name="actionAutoCheckForUpdates">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Auto Check for Updates</string>
+   </property>
+   <property name="toolTip">
+    <string>Auto Check for Updates on Startup</string>
    </property>
   </action>
  </widget>

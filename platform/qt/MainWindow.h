@@ -34,6 +34,7 @@
 #include "GradientElement.h"
 #include "TimeCodeLabel.h"
 #include "DoubleClickLabel.h"
+#include "Updater/updaterUI/CUpdater.h"
 
 namespace Ui {
 class MainWindow;
@@ -202,6 +203,7 @@ private slots:
     void on_lineEditDarkFrameFile_textChanged(const QString &arg1);
 
     void on_actionCheckForUpdates_triggered(void);
+    void updateCheckResponse( bool arg );
 
 private:
     Ui::MainWindow *ui;
@@ -219,6 +221,7 @@ private:
     GradientElement *m_pGradientElement;
     GraphicsPickerScene* m_pScene;
     TimeCodeLabel* m_pTimeCodeImage;
+    CUpdater* m_pUpdateCheck;
     uint8_t m_timeCodePosition;
     QLabel *m_pCachingStatus;
     QLabel *m_pFpsStatus;

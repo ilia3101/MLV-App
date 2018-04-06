@@ -101,7 +101,8 @@ SOURCES += \
     ColorWheel.cpp \
     ../../src/mlv/audio_mlv.c \
     Updater/updaterUI/cupdaterdialog.cpp \
-    Updater/cautoupdatergithub.cpp
+    Updater/cautoupdatergithub.cpp \
+    Updater/updaterUI/CUpdater.cpp
 
 macx: SOURCES += ../cocoa/avf_lib/avf_lib.m
 
@@ -165,7 +166,8 @@ HEADERS += \
     ../../src/mlv/audio_mlv.h \
     ../../src/mlv/macros.h \
     Updater/updaterUI/cupdaterdialog.h \
-    Updater/cautoupdatergithub.h
+    Updater/cautoupdatergithub.h \
+    Updater/updaterUI/CUpdater.h
 
 macx: HEADERS += \
     ../cocoa/avf_lib/avencoder.h \
