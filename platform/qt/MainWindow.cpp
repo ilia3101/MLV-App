@@ -34,7 +34,7 @@
 
 #define APPNAME "MLV App"
 #define VERSION "0.15 alpha"
-#define GITVERSION "QTv0.15alpha"
+#define GITVERSION "QTv0.14alpha"
 
 #define FACTOR_DS       22.5
 #define FACTOR_LS       11.2
@@ -69,6 +69,11 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     m_zoomTo100Center = false;
     m_zoomModeChanged = false;
     m_tryToSyncAudio = false;
+
+#ifdef STDOUT_SILENT
+    //QtNetwork: shut up please!
+    QLoggingCategory::setFilterRules(QStringLiteral("qt.network.ssl=false"));
+#endif
 
     //Set Render Thread
     m_pRenderThread = new RenderFrameThread();
