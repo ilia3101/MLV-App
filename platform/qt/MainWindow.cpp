@@ -19,6 +19,7 @@
 #include <QMimeData>
 #include <QDir>
 #include <QSpacerItem>
+#include <QDate>
 #include <unistd.h>
 #include <math.h>
 
@@ -120,8 +121,10 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
         }
     }
 
-    //Update check
-    if( ui->actionAutoCheckForUpdates->isChecked() )
+    //Update check, if autocheck enabled, once a day
+    QSettings set( QSettings::UserScope, "magiclantern.MLVApp", "MLVApp" );
+    QString date = set.value( "lastUpdateCheck", QString( "" ) ).toString();
+    if( ui->actionAutoCheckForUpdates->isChecked() && date != QDate::currentDate().toString() )
     {
         m_pUpdateCheck = new CUpdater( this, QString( "https://github.com/ilia3101/MLV-App" ), GITVERSION );
         connect( m_pUpdateCheck, SIGNAL(updateAvailable(bool)), this, SLOT(updateCheckResponse(bool)) );
@@ -5440,6 +5443,9 @@ void MainWindow::on_actionCheckForUpdates_triggered( void )
 {
     CUpdaterDialog dialog( this, QString( "https://github.com/ilia3101/MLV-App" ), GITVERSION, false );
     dialog.exec();
+
+    QSettings set( QSettings::UserScope, "magiclantern.MLVApp", "MLVApp" );
+    set.setValue( "lastUpdateCheck", QDate::currentDate().toString() );
 }
 
 //Autocheck for updates told there is an update
@@ -5449,4 +5455,7 @@ void MainWindow::updateCheckResponse(bool arg)
 
     disconnect( m_pUpdateCheck, SIGNAL(updateAvailable(bool)), this, SLOT(updateCheckResponse(bool)) );
     delete m_pUpdateCheck;
+
+    QSettings set( QSettings::UserScope, "magiclantern.MLVApp", "MLVApp" );
+    set.setValue( "lastUpdateCheck", QDate::currentDate().toString() );
 }
