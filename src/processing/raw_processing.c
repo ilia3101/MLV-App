@@ -232,7 +232,7 @@ void applyProcessingObject( processingObject_t * processing,
         {
             //memcpy(get_buffer(processing->shadows_highlights.blur_image), inputImage, imageX * imageY * sizeof(uint16_t) * 3);
             //blur_image(get_buffer(processing->shadows_highlights.blur_image), outputImage, imageX, imageY, blur_radius, 1, 1, 1, 0, imageY-1);
-            blur_image_threaded( get_buffer(processing->shadows_highlights.blur_image), outputImage, imageX, imageY, blur_radius, 1 );
+            blur_image_threaded( get_buffer(processing->shadows_highlights.blur_image), outputImage, imageX, imageY, blur_radius, threads );
             /* Apply basic levels */
             int img_s = imageX * imageY * 3;
             uint16_t * img = get_buffer(processing->shadows_highlights.blur_image);
