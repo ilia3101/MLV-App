@@ -102,7 +102,8 @@ SOURCES += \
     ../../src/mlv/audio_mlv.c \
     Updater/updaterUI/cupdaterdialog.cpp \
     Updater/cautoupdatergithub.cpp \
-    Updater/updaterUI/CUpdater.cpp
+    Updater/updaterUI/CUpdater.cpp \
+    ../../src/processing/blur_threaded.c
 
 macx: SOURCES += ../cocoa/avf_lib/avf_lib.m
 
@@ -167,7 +168,8 @@ HEADERS += \
     ../../src/mlv/macros.h \
     Updater/updaterUI/cupdaterdialog.h \
     Updater/cautoupdatergithub.h \
-    Updater/updaterUI/CUpdater.h
+    Updater/updaterUI/CUpdater.h \
+    ../../src/processing/blur_threaded.h
 
 macx: HEADERS += \
     ../cocoa/avf_lib/avencoder.h \
