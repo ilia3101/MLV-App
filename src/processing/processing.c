@@ -705,7 +705,7 @@ void processing_update_matrices(processingObject_t * processing)
 #ifdef USE_LMS
     /* Transfer to cone space with bradford/ciecam whatever its called matrix */
     multiplyMatrices(temp_matrix_a, (double *)ciecam02, temp_matrix_b);
-    kelvin_StandardIlluminant_to_LMS(6504, k1);
+    kelvin_StandardIlluminant_to_LMS(5000, k1);
     kelvin_StandardIlluminant_to_LMS(processing->kelvin, k2);
     for (int i = 0; i < 3; ++i) wb[i] = (k1[i]/k2[i]);
 
@@ -719,12 +719,12 @@ void processing_update_matrices(processingObject_t * processing)
     multiplyMatrices(temp_matrix_b, temp_matrix_c, temp_matrix_a);
 #else
     multiplyMatrices(temp_matrix_a, (double *)id_matrix, temp_matrix_b); /* (nothing) */
-    // kelvin_StandardIlluminant_to_XYZ(6504, k1);
+    // kelvin_StandardIlluminant_to_XYZ(5000, k1);
     // kelvin_StandardIlluminant_to_XYZ(processing->kelvin, k2);
-    // kelvin_BlackBody_to_XYZ(6504, k1);
-    // kelvin_BlackBody_to_XYZ(processing->kelvin, k2);
-    get_kelvin_multipliers_rgb(6500, k2);
-    get_kelvin_multipliers_rgb(processing->kelvin, k1);
+    kelvin_BlackBody_to_XYZ(5000, k1);
+    kelvin_BlackBody_to_XYZ(processing->kelvin, k2);
+    // get_kelvin_multipliers_rgb(5000, k2);
+    // get_kelvin_multipliers_rgb(processing->kelvin, k1);
     for (int i = 0; i < 3; ++i) wb[i] = (k1[i]/k2[i]);
 
     /* The tint application method is not at all scientific */
