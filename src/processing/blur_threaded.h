@@ -8,7 +8,7 @@
 #ifndef _blur_threaded_
 #define _blur_threaded_
 
-#include <stdlib.h>
+#include <stdint.h>
 
 void blur_image_threaded( uint16_t * __restrict in,
                  uint16_t * __restrict temp,
