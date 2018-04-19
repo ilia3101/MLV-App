@@ -220,12 +220,12 @@ PACKAGE_FILES.files += ../../src/mlv/llrawproc/pixelmaps/80000331_1872x1059.fpm
 PACKAGE_FILES.path = Contents/MacOS
 QMAKE_BUNDLE_DATA += PACKAGE_FILES
 
-linux-g++ {
+#linux-g++ {
     #Add desktop file
-    EXTRA_FILES += \
-        mlvapp.desktop
-    for(FILE,EXTRA_FILES){
-        QMAKE_POST_LINK += $$quote(cp $${FILE} $${DESTDIR/usr/share/applications/}$$escape_expand(\n\t))
-    }
-}
+#    EXTRA_FILES += \
+#        mlvapp.desktop
+#    for(FILE,EXTRA_FILES){
+#        QMAKE_POST_LINK += $$quote(cp $${FILE} $${DESTDIR/usr/share/applications/}$$escape_expand(\n\t))
+#    }
+#}
 
