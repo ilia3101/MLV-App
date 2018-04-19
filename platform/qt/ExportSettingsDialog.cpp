@@ -32,7 +32,7 @@ ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, uint8_t currentCodec
     ui->checkBoxExportAudio->setChecked( exportAudio );
     ui->toolButtonLockHeight->setChecked( heightLocked );
 
-    //Disable audio & resize for AVFoundation
+    //Disable resize for AVFoundation
     if( ui->comboBoxOption->currentText() == QString( "Apple AVFoundation" ) )
     {
         on_comboBoxOption_currentIndexChanged( QString( "Apple AVFoundation" ) );
@@ -276,9 +276,6 @@ void ExportSettingsDialog::on_comboBoxOption_currentIndexChanged(const QString &
 {
     if( arg1 == QString( "Apple AVFoundation" ) )
     {
-        ui->checkBoxExportAudio->setChecked( false );
-        ui->checkBoxExportAudio->setEnabled( false );
-
         ui->checkBoxResize->setChecked( false );
         ui->checkBoxResize->setEnabled( false );
     }

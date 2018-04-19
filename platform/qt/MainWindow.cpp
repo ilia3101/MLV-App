@@ -1790,6 +1790,41 @@ void MainWindow::startExportAVFoundation(QString fileName)
     endWritingVideoFile(encoder);
     freeAVEncoder(encoder);
 
+    //Audio
+    if( m_audioExportEnabled && doesMlvHaveAudio( m_pMlvObject ) )
+    {
+        QString wavFileName = QString( "%1.wav" ).arg( fileName.left( fileName.lastIndexOf( "." ) ) );
+        writeMlvAudioToWaveCut( m_pMlvObject, wavFileName.toLatin1().data(), m_exportQueue.first()->cutIn(), m_exportQueue.first()->cutOut() );
+
+        QString tempFileName = QString( "%1_temp.mov" ).arg( fileName.left( fileName.lastIndexOf( "." ) ) );
+        QFile *file = new QFile( fileName );
+        file->rename( tempFileName );
+        delete file;
+
+        //FFMpeg export
+        QString ffmpegAudioCommand = QCoreApplication::applicationDirPath();
+        ffmpegAudioCommand.append( QString( "/ffmpeg\"" ) );
+        ffmpegAudioCommand.prepend( QString( "\"" ) );
+
+#ifdef STDOUT_SILENT
+        ffmpegAudioCommand.append( QString( " -loglevel 0" ) );
+#endif
+
+        ffmpegAudioCommand.append( QString( " -i %1 -i %2 -map 0:0 -map 1:0 -c copy %3" )
+                .arg( tempFileName ).arg( wavFileName ).arg( fileName ) );
+
+        QProcess ffmpegProc;
+        //qDebug() << ffmpegAudioCommand <<
+        ffmpegProc.execute( ffmpegAudioCommand );
+
+        file = new QFile( tempFileName );
+        file->remove();
+        delete file;
+        file = new QFile( wavFileName );
+        file->remove();
+        delete file;
+    }
+
     //If we don't like amaze we switch it off again
     if( !ui->actionAlwaysUseAMaZE->isChecked() ) setMlvDontAlwaysUseAmaze( m_pMlvObject );
 
