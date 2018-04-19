@@ -43,6 +43,36 @@
 #define LOCK(x) static pthread_mutex_t x = PTHREAD_MUTEX_INITIALIZER; pthread_mutex_lock(&x);
 #define UNLOCK(x) pthread_mutex_unlock(&(x));
 
+void scale_bits_for_diso(struct raw_info * raw_info, uint16_t * image_data, int lossless_bpp)
+{
+    if (raw_info->bits_per_pixel < 14)
+    {
+        int pixel_count = raw_info->width * raw_info->height;
+        int shift_bits = 14 - raw_info->bits_per_pixel;
+
+        raw_info->black_level <<= shift_bits;
+        raw_info->white_level <<= shift_bits;
+
+        for(int i = 0; i < pixel_count; ++i)
+        {
+            image_data[i] <<= shift_bits;
+        }
+    }
+    else if(lossless_bpp < 14)
+    {
+        int pixel_count = raw_info->width * raw_info->height;
+        int multiplier = 2 * (raw_info->bits_per_pixel - lossless_bpp);
+
+        raw_info->black_level = (raw_info->black_level - 2048) * multiplier + 2048;
+        raw_info->white_level = (raw_info->white_level - 2048) * multiplier + 2048;
+
+        for(int i = 0; i < pixel_count; ++i)
+        {
+            image_data[i] = (image_data[i] - 2048) * multiplier + 2048;
+        }
+    }
+}
+
 //this is just meant to be fast
 int diso_get_preview(uint16_t * image_data, uint16_t width, uint16_t height, int32_t black, int32_t white, int diso_check)
 {
@@ -1780,20 +1810,6 @@ int diso_get_full20bit(struct raw_info raw_info, uint16_t * image_data, int inte
     
     if (w <= 0 || h <= 0) return 0;
 
-    if (raw_info.bits_per_pixel < 14)
-    {
-        int pixel_count = w * h;
-        int shift_bits = 14 - raw_info.bits_per_pixel;
-
-        raw_info.black_level <<= shift_bits;
-        raw_info.white_level <<= shift_bits;
-
-        for(int i = 0; i < pixel_count; ++i)
-        {
-            image_data[i] <<= shift_bits;
-        }
-    }
-    
     /* RGGB or GBRG? */
     int rggb = identify_rggb_or_gbrg(raw_info, image_data);
     

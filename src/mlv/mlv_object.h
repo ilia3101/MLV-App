@@ -90,6 +90,8 @@ typedef struct {
     processingObject_t * processing;
     llrawprocObject_t * llrawproc;
 
+    /* Restricted lossless raw data bit depth */
+    int lossless_bpp;
 
     /************************************************************
      *** CACHE AREA - used by getMlvProcessedFrame and things ***

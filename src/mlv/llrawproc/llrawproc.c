@@ -217,6 +217,7 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
                 raw_info.active_area.y2 = raw_info.height;
                 raw_info.black_level = video->RAWI.raw_info.black_level;
                 raw_info.white_level = video->RAWI.raw_info.white_level;
+                scale_bits_for_diso(&raw_info, raw_image_buff, video->lossless_bpp);
                 diso_get_full20bit(raw_info,
                                    raw_image_buff,
                                    video->llrawproc->diso_averaging,

@@ -4,6 +4,7 @@
 #include <string.h>
 #include <strings.h>
 #include <pthread.h>
+#include <math.h>
 
 #if defined(__linux)
 #include <alloca.h>
@@ -493,7 +494,7 @@ mlvObject_t * initMlvObject()
     /* Seems about right */
     setMlvCpuCores(video, 4);
 
-    /* init low level raw processing object */
+    /* Init low level raw processing object */
     video->llrawproc = initLLRawProcObject();
 
     /* Retun pointer */
@@ -1496,6 +1497,9 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode, char * error
     if(open_mode == MLV_OPEN_MAPP) save_mapp(video);
 
 short_cut:
+
+    /* Calculate imaginary bit depth for restricted lossledd raw data */
+    video->lossless_bpp = ceil( log2( video->RAWI.raw_info.white_level - video->RAWI.raw_info.black_level ) );
 
     /* Mutexes for every file */
     video->main_file_mutex = calloc(sizeof(pthread_mutex_t), video->filenum);

@@ -569,9 +569,6 @@ int MainWindow::openMlv( QString fileName )
     float shutterSpeed = 1000000.0f / (float)(getMlvShutter( m_pMlvObject ));
     float shutterAngle = getMlvFramerate( m_pMlvObject ) * 360.0f / shutterSpeed;
 
-    //Calculate bit dept used according to black and white levels
-    int bitDepth = ceil( log2( getMlvWhiteLevel( m_pMlvObject ) - getMlvBlackLevel( m_pMlvObject ) ) );
-
     //Set Clip Info to Dialog
     m_pInfoDialog->ui->tableWidget->item( 0, 1 )->setText( QString( "%1" ).arg( (char*)getMlvCamera( m_pMlvObject ) ) );
     m_pInfoDialog->ui->tableWidget->item( 1, 1 )->setText( QString( "%1" ).arg( (char*)getMlvLens( m_pMlvObject ) ) );
@@ -583,7 +580,7 @@ int MainWindow::openMlv( QString fileName )
     m_pInfoDialog->ui->tableWidget->item( 7, 1 )->setText( QString( "1/%1 s,  %2 deg,  %3 µs" ).arg( (uint16_t)(shutterSpeed + 0.5f) ).arg( (uint16_t)(shutterAngle + 0.5f) ).arg( getMlvShutter( m_pMlvObject )) );
     m_pInfoDialog->ui->tableWidget->item( 8, 1 )->setText( QString( "ƒ/%1" ).arg( getMlvAperture( m_pMlvObject ) / 100.0, 0, 'f', 1 ) );
     m_pInfoDialog->ui->tableWidget->item( 9, 1 )->setText( QString( "%1" ).arg( (int)getMlvIso( m_pMlvObject ) ) );
-    m_pInfoDialog->ui->tableWidget->item( 10, 1 )->setText( QString( "%1 bits,  %2" ).arg( bitDepth ).arg( getMlvCompression( m_pMlvObject ) ) );
+    m_pInfoDialog->ui->tableWidget->item( 10, 1 )->setText( QString( "%1 bits,  %2" ).arg( getLosslessBpp( m_pMlvObject ) ).arg( getMlvCompression( m_pMlvObject ) ) );
     m_pInfoDialog->ui->tableWidget->item( 11, 1 )->setText( QString( "%1 black,  %2 white" ).arg( getMlvBlackLevel( m_pMlvObject ) ).arg( getMlvWhiteLevel( m_pMlvObject ) ) );
     m_pInfoDialog->ui->tableWidget->item( 12, 1 )->setText( QString( "%1-%2-%3 / %4:%5:%6" )
                                                             .arg( getMlvTmYear(m_pMlvObject) )

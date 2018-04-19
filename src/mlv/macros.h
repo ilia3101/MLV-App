@@ -50,6 +50,7 @@
 #define getMlvTmSec(video)     (video)->RTCI.tm_sec
 #define getMlvWbMode(video)    (video)->WBAL.wb_mode
 #define getMlvWbKelvin(video)  (video)->WBAL.kelvin
+#define getLosslessBpp(video)  (video)->lossless_bpp
 
 /* Useful setting macros (functions) */
 
