@@ -86,7 +86,9 @@ void beginWritingVideoFile(AVEncoder_t * encoder, char * path)
     NSError *error = nil;
 
     NSURL * outURL = [NSURL fileURLWithPath:[NSString stringWithFormat: @"%s", path]];
+#ifndef STDOUT_SILENT
     NSLog(@"%s", [outURL.absoluteString UTF8String]);
+#endif
 
     CGSize imageSize = CGSizeMake(encoder->width, encoder->height);
     
@@ -162,7 +164,9 @@ void addFrameToVideoFile(AVEncoder_t * encoder, uint16_t * frame)
     int j = 0;
     while (!append_ok && j < 30) {
         if (encoder->adaptor.assetWriterInput.readyForMoreMediaData)  {
+#ifndef STDOUT_SILENT
             NSLog(@"Processing video frame %d",encoder->frames_encoded);
+#endif
 
             CMTime frameTime = CMTimeMake(encoder->frames_encoded * 10000.0, (int32_t)(encoder->fps * 10000.0));
             append_ok = [encoder->adaptor appendPixelBuffer:buffer withPresentationTime:frameTime];
@@ -208,7 +212,9 @@ void addFrameToVideoFile8bit(AVEncoder_t * encoder, uint8_t * frame)
     int j = 0;
     while (!append_ok && j < 30) {
         if (encoder->adaptor.assetWriterInput.readyForMoreMediaData)  {
+#ifndef STDOUT_SILENT
             NSLog(@"Processing video frame %d",encoder->frames_encoded);
+#endif
 
             CMTime frameTime = CMTimeMake(encoder->frames_encoded * 10000.0, (int32_t)(encoder->fps * 10000.0));
             append_ok = [encoder->adaptor appendPixelBuffer:buffer withPresentationTime:frameTime];
@@ -234,8 +240,11 @@ void addFrameToVideoFile8bit(AVEncoder_t * encoder, uint8_t * frame)
 void endWritingVideoFile(AVEncoder_t * encoder)
 {
     [encoder->video_writer_input markAsFinished];
-    [encoder->video_writer finishWriting];
-    NSLog(@"Write Ended");
+    [encoder->video_writer finishWritingWithCompletionHandler:^(){
+#ifndef STDOUT_SILENT
+        NSLog(@"Write Ended");
+#endif
+    }];
 
     encoder->currently_writing = 0;
 }
