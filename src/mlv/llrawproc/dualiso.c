@@ -61,14 +61,13 @@ void scale_bits_for_diso(struct raw_info * raw_info, uint16_t * image_data, int 
     else if(lossless_bpp < 14)
     {
         int pixel_count = raw_info->width * raw_info->height;
-        int multiplier = 2 * (raw_info->bits_per_pixel - lossless_bpp);
+        int multiplier = raw_info->bits_per_pixel - lossless_bpp;
 
-        raw_info->black_level = (raw_info->black_level - 2048) * multiplier + 2048;
-        raw_info->white_level = (raw_info->white_level - 2048) * multiplier + 2048;
+        raw_info->white_level = (raw_info->white_level - raw_info->black_level) * multiplier + raw_info->black_level;
 
         for(int i = 0; i < pixel_count; ++i)
         {
-            image_data[i] = (image_data[i] - 2048) * multiplier + 2048;
+            image_data[i] = (image_data[i] - raw_info->black_level) * multiplier + raw_info->black_level;
         }
     }
 }
