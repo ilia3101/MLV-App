@@ -765,7 +765,7 @@ void MainWindow::initGui( void )
     pic.setDevicePixelRatio( devicePixelRatio() );
     ui->labelAudioTrack->setPixmap( pic );
     //Fullscreen does not work well, so disable
-    //ui->actionFullscreen->setVisible( false );
+    ui->actionFullscreen->setVisible( false );
     //Disable caching by default to avoid crashes
     //ui->actionCaching->setVisible( false );
     //Disable unused (for now) actions
@@ -4016,17 +4016,23 @@ void MainWindow::on_listWidgetSession_activated(const QModelIndex &index)
 //Sessionlist visibility changed -> redraw picture
 void MainWindow::on_dockWidgetSession_visibilityChanged(bool visible)
 {
-    ui->actionShowSessionArea->setChecked( visible );
-    qApp->processEvents();
-    m_frameChanged = true;
+    if( !isMinimized() )
+    {
+        ui->actionShowSessionArea->setChecked( visible );
+        qApp->processEvents();
+        m_frameChanged = true;
+    }
 }
 
 //Edit area visibility changed -> redraw picture
 void MainWindow::on_dockWidgetEdit_visibilityChanged(bool visible)
 {
-    ui->actionShowEditArea->setChecked( visible );
-    qApp->processEvents();
-    m_frameChanged = true;
+    if( !isMinimized() )
+    {
+        ui->actionShowEditArea->setChecked( visible );
+        qApp->processEvents();
+        m_frameChanged = true;
+    }
 }
 
 //Set visibility of audio track
