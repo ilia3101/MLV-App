@@ -1797,9 +1797,7 @@ void MainWindow::startExportAVFoundation(QString fileName)
         writeMlvAudioToWaveCut( m_pMlvObject, wavFileName.toLatin1().data(), m_exportQueue.first()->cutIn(), m_exportQueue.first()->cutOut() );
 
         QString tempFileName = QString( "%1_temp.mov" ).arg( fileName.left( fileName.lastIndexOf( "." ) ) );
-        QFile *file = new QFile( fileName );
-        file->rename( tempFileName );
-        delete file;
+        QFile( fileName ).rename( tempFileName );
 
         //FFMpeg export
         QString ffmpegAudioCommand = QCoreApplication::applicationDirPath();
@@ -1820,12 +1818,8 @@ void MainWindow::startExportAVFoundation(QString fileName)
         //qDebug() << ffmpegAudioCommand <<
         ffmpegProc.execute( ffmpegAudioCommand );
 
-        file = new QFile( tempFileName );
-        file->remove();
-        delete file;
-        file = new QFile( wavFileName );
-        file->remove();
-        delete file;
+        QFile( tempFileName ).remove();
+        QFile( wavFileName ).remove();
     }
 
     //If we don't like amaze we switch it off again
