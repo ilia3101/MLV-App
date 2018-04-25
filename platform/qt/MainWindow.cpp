@@ -55,7 +55,7 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     //Change working directory for C part
-    chdir( QCoreApplication::applicationDirPath().toLatin1().data() );
+    chdir( QCoreApplication::applicationDirPath().toUtf8().data() );
 
     ui->setupUi(this);
     setAcceptDrops(true);
@@ -418,7 +418,7 @@ int MainWindow::openMlvForPreview(QString fileName)
 {
     int mlvErr = MLV_ERR_NONE;
     char mlvErrMsg[256] = { 0 };
-    mlvObject_t * new_MlvObject = initMlvObjectWithClip( fileName.toLatin1().data(), MLV_OPEN_PREVIEW, &mlvErr, mlvErrMsg );
+    mlvObject_t * new_MlvObject = initMlvObjectWithClip( fileName.toUtf8().data(), MLV_OPEN_PREVIEW, &mlvErr, mlvErrMsg );
     if( mlvErr )
     {
         QMessageBox::critical( this, tr( "MLV Error" ), tr( "%1" ).arg( mlvErrMsg ), tr("Cancel") );
@@ -512,7 +512,7 @@ int MainWindow::openMlv( QString fileName )
 
     int mlvErr = MLV_ERR_NONE;
     char mlvErrMsg[256] = { 0 };
-    mlvObject_t * new_MlvObject = initMlvObjectWithClip( fileName.toLatin1().data(), mlvOpenMode, &mlvErr, mlvErrMsg );
+    mlvObject_t * new_MlvObject = initMlvObjectWithClip( fileName.toUtf8().data(), mlvOpenMode, &mlvErr, mlvErrMsg );
     if( mlvErr )
     {
         QMessageBox::critical( this, tr( "MLV Error" ), tr( "%1" ).arg( mlvErrMsg ), tr("Cancel") );
@@ -1069,7 +1069,7 @@ void MainWindow::startExportPipe(QString fileName)
     ffmpegAudioCommand.clear();
     if( m_audioExportEnabled && doesMlvHaveAudio( m_pMlvObject ) )
     {
-        writeMlvAudioToWaveCut( m_pMlvObject, wavFileName.toLatin1().data(), m_exportQueue.first()->cutIn(), m_exportQueue.first()->cutOut() );
+        writeMlvAudioToWaveCut( m_pMlvObject, wavFileName.toUtf8().data(), m_exportQueue.first()->cutIn(), m_exportQueue.first()->cutOut() );
         if( m_codecProfile == CODEC_H264 || m_codecProfile == CODEC_H265 ) ffmpegAudioCommand = QString( "-i \"%1\" -c:a aac " ).arg( wavFileName );
         else ffmpegAudioCommand = QString( "-i \"%1\" -c:a copy " ).arg( wavFileName );
     }
@@ -1396,9 +1396,9 @@ void MainWindow::startExportPipe(QString fileName)
     FILE *pPipe;
     //qDebug() << program;
 #ifdef Q_OS_UNIX
-    if( !( pPipe = popen( program.toLatin1().data(), "w" ) ) )
+    if( !( pPipe = popen( program.toUtf8().data(), "w" ) ) )
 #else
-    if( !( pPipe = popen( program.toLatin1().data(), "wb" ) ) )
+    if( !( pPipe = popen( program.toUtf8().data(), "wb" ) ) )
 #endif
     {
         QMessageBox::critical( this, tr( "File export failed" ), tr( "Could not export with ffmpeg." ) );
@@ -1520,7 +1520,7 @@ void MainWindow::startExportCdng(QString fileName)
             .arg( getMlvTmMonth( m_pMlvObject ), 2, 10, QChar('0') )
             .arg( getMlvTmDay( m_pMlvObject ), 2, 10, QChar('0') );
         //qDebug() << wavFileName;
-        writeMlvAudioToWaveCut( m_pMlvObject, wavFileName.toLatin1().data(), m_exportQueue.first()->cutIn(), m_exportQueue.first()->cutOut() );
+        writeMlvAudioToWaveCut( m_pMlvObject, wavFileName.toUtf8().data(), m_exportQueue.first()->cutIn(), m_exportQueue.first()->cutOut() );
     }
 
     //Set aspect ratio of the picture
@@ -1579,10 +1579,9 @@ void MainWindow::startExportCdng(QString fileName)
 
         QString filePathNr = pathName;
         filePathNr = filePathNr.append( "/" + dngName );
-        QByteArray dngFileName = filePathNr.toLatin1();
 
         //Save cDNG frame
-        if( saveDngFrame( m_pMlvObject, cinemaDng, frame, dngFileName.data() ) )
+        if( saveDngFrame( m_pMlvObject, cinemaDng, frame, filePathNr.toUtf8().data() ) )
         {
             m_pStatusDialog->hide();
             qApp->processEvents();
@@ -1645,10 +1644,9 @@ void MainWindow::startExportMlv(QString fileName)
     fileName = QFileInfo( fileName ).fileName();
     //fileName = fileName.left( fileName.indexOf( '.' ) );
     pathName = pathName.append( "/%1" ).arg( fileName );
-    QByteArray MlvFileName = pathName.toLatin1();
 
     /* open .MLV file for writing */
-    FILE* mlvOut = fopen(MlvFileName.data(), "wb");
+    FILE* mlvOut = fopen(pathName.toUtf8().data(), "wb");
     if (!mlvOut)
     {
         return;
@@ -1753,7 +1751,7 @@ void MainWindow::startExportAVFoundation(QString fileName)
                                            AVF_COLOURSPACE_SRGB,
                                            getFramerate() );
 
-    beginWritingVideoFile(encoder, fileName.toLatin1().data());
+    beginWritingVideoFile(encoder, fileName.toUtf8().data());
 
     //Build buffer
     uint32_t frameSize = getMlvWidth( m_pMlvObject ) * getMlvHeight( m_pMlvObject ) * 3;
@@ -1794,7 +1792,7 @@ void MainWindow::startExportAVFoundation(QString fileName)
     if( m_audioExportEnabled && doesMlvHaveAudio( m_pMlvObject ) )
     {
         QString wavFileName = QString( "%1.wav" ).arg( fileName.left( fileName.lastIndexOf( "." ) ) );
-        writeMlvAudioToWaveCut( m_pMlvObject, wavFileName.toLatin1().data(), m_exportQueue.first()->cutIn(), m_exportQueue.first()->cutOut() );
+        writeMlvAudioToWaveCut( m_pMlvObject, wavFileName.toUtf8().data(), m_exportQueue.first()->cutIn(), m_exportQueue.first()->cutOut() );
 
         QString tempFileName = QString( "%1_temp.mov" ).arg( fileName.left( fileName.lastIndexOf( "." ) ) );
         QFile( fileName ).rename( tempFileName );
@@ -5446,7 +5444,7 @@ void MainWindow::on_lineEditDarkFrameFile_textChanged(const QString &arg1)
 {
     if( QFileInfo( arg1 ).exists() && arg1.endsWith( ".MLV", Qt::CaseInsensitive ) )
     {
-        QByteArray darkFrameFileName = arg1.toLatin1();
+        QByteArray darkFrameFileName = arg1.toUtf8();
 
         char errorMessage[256] = { 0 };
         int ret = llrpValidateExtDarkFrame(m_pMlvObject, darkFrameFileName.data(), errorMessage);
