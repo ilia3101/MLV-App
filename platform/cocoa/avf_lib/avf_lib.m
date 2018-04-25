@@ -85,9 +85,10 @@ void beginWritingVideoFile(AVEncoder_t * encoder, char * path)
 
     NSError *error = nil;
 
-    NSURL * outURL = [NSURL fileURLWithPath:[NSString stringWithFormat: @"%s", path]];
+    NSURL * outURL = [NSURL fileURLWithPath:[NSString stringWithUTF8String:path]];
+
 #ifndef STDOUT_SILENT
-    NSLog(@"%s", [outURL.absoluteString UTF8String]);
+    NSLog(@"%s", [outURL.absoluteString UTF8String]); //Wrong format, äöü is shown wrong :-(
 #endif
 
     CGSize imageSize = CGSizeMake(encoder->width, encoder->height);
