@@ -55,11 +55,7 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     //Change working directory for C part
-#ifdef Q_OS_UNIX
-    chdir( QCoreApplication::applicationDirPath().toUtf8().data() );
-#else
     chdir( QCoreApplication::applicationDirPath().toLatin1().data() );
-#endif
 
     ui->setupUi(this);
     setAcceptDrops(true);
