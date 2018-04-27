@@ -9,6 +9,7 @@
 #define EXPORTSETTINGSDIALOG_H
 
 #include <QDialog>
+#include <Scripting.h>
 
 #define CODEC_PRORES422PROXY        0
 #define CODEC_PRORES422LT           1
@@ -69,6 +70,7 @@ class ExportSettingsDialog : public QDialog
 
 public:
     explicit ExportSettingsDialog(QWidget *parent = 0,
+                                  Scripting *scripting = 0,
                                   uint8_t currentCodecProfile = 0,
                                   uint8_t currentCodecOption = 0,
                                   uint8_t debayerMode = 1,
@@ -99,8 +101,11 @@ private slots:
     void on_comboBoxOption_currentIndexChanged(const QString &arg1);
     void on_toolButtonLockHeight_toggled(bool checked);
 
+    void on_comboBoxPostExportScript_currentIndexChanged(const QString &arg1);
+
 private:
     Ui::ExportSettingsDialog *ui;
+    Scripting *m_pScripting;
 };
 
 #endif // EXPORTSETTINGSDIALOG_H

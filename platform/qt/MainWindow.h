@@ -34,6 +34,7 @@
 #include "GradientElement.h"
 #include "TimeCodeLabel.h"
 #include "DoubleClickLabel.h"
+#include "Scripting.h"
 #include "Updater/updaterUI/CUpdater.h"
 
 namespace Ui {
@@ -221,6 +222,7 @@ private:
     GradientElement *m_pGradientElement;
     GraphicsPickerScene* m_pScene;
     TimeCodeLabel* m_pTimeCodeImage;
+    Scripting* m_pScripting;
     CUpdater* m_pUpdateCheck;
     uint8_t m_timeCodePosition;
     QLabel *m_pCachingStatus;

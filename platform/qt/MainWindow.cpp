@@ -82,6 +82,10 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     connect( m_pRenderThread, SIGNAL(frameReady()), this, SLOT(drawFrameReady()) );
     while( !m_pRenderThread->isRunning() ) {}
 
+    //Init scripting engine
+    m_pScripting = new Scripting( this );
+    m_pScripting->scanScripts();
+
     //Init the GUI
     initGui();
 
@@ -119,6 +123,11 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
             m_inOpeningProcess = false;
             m_sessionFileName = fileName;
         }
+        else if( QFile(fileName).exists() && fileName.endsWith( ".command", Qt::CaseInsensitive ) )
+        {
+            if( m_pScripting->installScript( fileName ) )
+                QMessageBox::information( this, APPNAME, tr( "Installation of script %1 successful." ).arg( QFileInfo( fileName ).fileName() ) );
+        }
     }
 
     //Update check, if autocheck enabled, once a day
@@ -147,6 +156,7 @@ MainWindow::~MainWindow()
 
     //Save settings
     writeSettings();
+    delete m_pScripting;
     delete m_pReceiptClipboard;
     delete m_pAudioPlayback;
     delete m_pAudioWave;
@@ -285,6 +295,11 @@ bool MainWindow::event(QEvent *event)
             m_sessionFileName = fileName;
             m_inOpeningProcess = false;
         }
+        else if( QFile(fileName).exists() && fileName.endsWith( ".command", Qt::CaseInsensitive ) )
+        {
+            if( m_pScripting->installScript( fileName ) )
+                QMessageBox::information( this, APPNAME, tr( "Installation of script %1 successful." ).arg( QFileInfo( fileName ).fileName() ) );
+        }
         else return false;
     }
     return QMainWindow::event(event);
@@ -304,6 +319,13 @@ void MainWindow::dropEvent(QDropEvent *event)
     for( int i = 0; i < event->mimeData()->urls().count(); i++ )
     {
         QString fileName = event->mimeData()->urls().at(i).path();
+
+        if( QFile(fileName).exists() && fileName.endsWith( ".command", Qt::CaseInsensitive ) )
+        {
+            if( m_pScripting->installScript( fileName ) )
+                QMessageBox::information( this, APPNAME, tr( "Installation of script %1 successful." ).arg( QFileInfo( fileName ).fileName() ) );
+            return;
+        }
 
         //Exit if not an MLV file or aborted
         if( fileName == QString( "" ) || !fileName.endsWith( ".mlv", Qt::CaseInsensitive ) ) continue;
@@ -1234,6 +1256,8 @@ void MainWindow::startExportPipe(QString fileName)
         {
             QFile::copy( wavFileName, QString( "%1/%2.wav" ).arg( folderName ).arg( shortFileName.left( shortFileName.lastIndexOf( "." ) ) ) );
         }
+        //Setup for scripting
+        m_pScripting->setNextScriptInputTiff( getMlvFramerate( m_pMlvObject ) );
     }
     else if( m_codecProfile == CODEC_AVIRAW )
     {
@@ -3610,6 +3634,9 @@ void MainWindow::on_actionExport_triggered()
     setEnabled( false );
     m_pStatusDialog->setEnabled( true );
 
+    //Scripting class wants to know the export folder
+    m_pScripting->setExportDir( QFileInfo( m_exportQueue.first()->fileName() ).absolutePath() );
+
     //startExport
     exportHandler();
 }
@@ -3818,6 +3845,7 @@ void MainWindow::on_actionExportSettings_triggered()
     ui->actionPlay->setChecked( false );
 
     ExportSettingsDialog *pExportSettings = new ExportSettingsDialog( this,
+                                                                      m_pScripting,
                                                                       m_codecProfile,
                                                                       m_codecOption,
                                                                       m_exportDebayerMode,
@@ -4455,7 +4483,12 @@ void MainWindow::exportHandler( void )
         //Export is ready
         exportRunning = false;
 
-        if( !m_exportAbortPressed ) QMessageBox::information( this, tr( "Export" ), tr( "Export is ready." ) );
+        if( !m_exportAbortPressed )
+        {
+            //Start export script when ready
+            m_pScripting->executePostExportScript();
+            QMessageBox::information( this, tr( "Export" ), tr( "Export is ready." ) );
+        }
         else QMessageBox::information( this, tr( "Export" ), tr( "Export aborted." ) );
 
         //Caching is in which state? Set it!

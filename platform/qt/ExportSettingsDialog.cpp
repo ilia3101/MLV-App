@@ -12,7 +12,7 @@
 #include <QStandardItem>
 
 //Constructor
-ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, uint8_t currentCodecProfile, uint8_t currentCodecOption, uint8_t debayerMode, bool resize, uint16_t resizeWidth, uint16_t resizeHeight, bool fpsOverride, double fps, bool exportAudio, bool heightLocked) :
+ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, Scripting *scripting, uint8_t currentCodecProfile, uint8_t currentCodecOption, uint8_t debayerMode, bool resize, uint16_t resizeWidth, uint16_t resizeHeight, bool fpsOverride, double fps, bool exportAudio, bool heightLocked) :
     QDialog(parent),
     ui(new Ui::ExportSettingsDialog)
 {
@@ -37,6 +37,18 @@ ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, uint8_t currentCodec
     {
         on_comboBoxOption_currentIndexChanged( QString( "Apple AVFoundation" ) );
     }
+
+#ifndef Q_OS_OSX
+    //No scriptsupport for Windows and Linux
+    ui->groupBoxScripting->setVisible( false );
+#else
+    m_pScripting = scripting;
+    ui->comboBoxPostExportScript->blockSignals( true );
+    ui->comboBoxPostExportScript->clear();
+    ui->comboBoxPostExportScript->addItems( m_pScripting->getScriptNames() );
+    ui->comboBoxPostExportScript->setCurrentText( m_pScripting->postExportScriptName() );
+    ui->comboBoxPostExportScript->blockSignals( false );
+#endif
 
     adjustSize();
 }
@@ -303,4 +315,10 @@ void ExportSettingsDialog::on_toolButtonLockHeight_toggled(bool checked)
     if( !checked && ui->checkBoxResize->isChecked() ) ui->spinBoxHeight->setEnabled( true );
     else ui->spinBoxHeight->setEnabled( false );
 
+}
+
+//Post export script chosen
+void ExportSettingsDialog::on_comboBoxPostExportScript_currentIndexChanged(const QString &arg1)
+{
+    m_pScripting->setPostExportScript( arg1 );
 }

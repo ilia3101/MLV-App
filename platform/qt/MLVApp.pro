@@ -103,7 +103,8 @@ SOURCES += \
     Updater/updaterUI/cupdaterdialog.cpp \
     Updater/cautoupdatergithub.cpp \
     Updater/updaterUI/CUpdater.cpp \
-    ../../src/processing/blur_threaded.c
+    ../../src/processing/blur_threaded.c \
+    Scripting.cpp
 
 macx: SOURCES += ../cocoa/avf_lib/avf_lib.m
 
@@ -169,7 +170,8 @@ HEADERS += \
     Updater/updaterUI/cupdaterdialog.h \
     Updater/cautoupdatergithub.h \
     Updater/updaterUI/CUpdater.h \
-    ../../src/processing/blur_threaded.h
+    ../../src/processing/blur_threaded.h \
+    Scripting.h
 
 macx: HEADERS += \
     ../cocoa/avf_lib/avencoder.h \
@@ -199,6 +201,7 @@ win32: RC_ICONS = MLVAPP.ico
 macx: ICON = MLVAPP.icns
 QMAKE_INFO_PLIST = Info.plist
 PACKAGE_FILES.files = FFmpeg/ffmpeg #Unzip the file before building the App!!!
+PACKAGE_FILES.files += bash_scripts/HDR_MOV.command
 #PACKAGE_FILES.files += ../../src/mlv/llrawproc/pixelmaps/80000301_1808x727.fpm
 #PACKAGE_FILES.files += ../../src/mlv/llrawproc/pixelmaps/80000301_1808x1190.fpm
 #PACKAGE_FILES.files += ../../src/mlv/llrawproc/pixelmaps/80000301_1872x1060.fpm
