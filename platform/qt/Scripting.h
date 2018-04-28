@@ -21,7 +21,7 @@ public:
     void setPostExportScript( QString name );
     void setPostExportScript( uint16_t index );
     void setExportDir( QString dir );
-    void setNextScriptInputTiff( float fps );
+    void setNextScriptInputTiff(float fps , QString folderName);
     QString postExportScriptName( void );
     uint16_t postExportScriptIndex( void );
     void executePostExportScript( void );

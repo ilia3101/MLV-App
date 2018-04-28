@@ -59,10 +59,26 @@ void Scripting::setExportDir(QString dir)
 }
 
 //Define that next script looks for tiff and fps file
-void Scripting::setNextScriptInputTiff(float fps)
+void Scripting::setNextScriptInputTiff(float fps, QString folderName)
 {
-    m_isTiff = true;
-    m_fps = fps;
+    //qDebug() << QString( "%1/fps" ).arg( folderName ) << m_postExportScriptIndex;
+
+    if( m_postExportScriptIndex )
+    {
+        m_isTiff = true;
+        m_fps = fps;
+
+        //Solving the . and , problem at fps in the command
+        QLocale locale = QLocale(QLocale::English, QLocale::UnitedKingdom);
+        locale.setNumberOptions(QLocale::OmitGroupSeparator);
+
+        //we also need to know HDR fps from the actual MLV files since tif doesn´t reveal frames per second.
+        QString fps = locale.toString( m_fps );
+        QFile file( QString( "%1/fps" ).arg( folderName ) );
+        file.open(QIODevice::WriteOnly);
+        file.write(fps.toUtf8());
+        file.close();
+    }
 }
 
 //Get name of chosen export script
@@ -104,17 +120,6 @@ void Scripting::executePostExportScript()
         QFile file3(filename3);
         file3.open(QIODevice::WriteOnly);
         file3.close();
-
-        //Solving the . and , problem at fps in the command
-        QLocale locale = QLocale(QLocale::English, QLocale::UnitedKingdom);
-        locale.setNumberOptions(QLocale::OmitGroupSeparator);
-
-        //we also need to know HDR fps from the actual MLV files since tif doesn´t reveal frames per second.
-        QString fps = locale.toString( m_fps );
-        QFile file5(m_exportDir + "/fps");
-        file5.open(QIODevice::WriteOnly);
-        file5.write(fps.toUtf8());
-        file5.close();
     }
 
     //enabling HDR processing, no questions asked. Yet.

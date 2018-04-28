@@ -1257,7 +1257,7 @@ void MainWindow::startExportPipe(QString fileName)
             QFile::copy( wavFileName, QString( "%1/%2.wav" ).arg( folderName ).arg( shortFileName.left( shortFileName.lastIndexOf( "." ) ) ) );
         }
         //Setup for scripting
-        m_pScripting->setNextScriptInputTiff( getMlvFramerate( m_pMlvObject ) );
+        m_pScripting->setNextScriptInputTiff( getMlvFramerate( m_pMlvObject ), folderName );
     }
     else if( m_codecProfile == CODEC_AVIRAW )
     {
@@ -3635,7 +3635,7 @@ void MainWindow::on_actionExport_triggered()
     m_pStatusDialog->setEnabled( true );
 
     //Scripting class wants to know the export folder
-    m_pScripting->setExportDir( QFileInfo( m_exportQueue.first()->fileName() ).absolutePath() );
+    m_pScripting->setExportDir( QFileInfo( m_exportQueue.first()->exportFileName() ).absolutePath() );
 
     //startExport
     exportHandler();
