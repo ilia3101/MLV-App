@@ -135,7 +135,7 @@ void Scripting::executePostExportScript()
     if( m_isTiff )
     {
         //working with HDR tif files. Bash script need to know about this. Send a file tmp which bash can look for
-        filename = "/tmp/tif_creation";
+        filename = "/tmp/mlvapp_path/tif_creation";
         QFile file3(filename);
         file3.open(QIODevice::WriteOnly);
         file3.close();
