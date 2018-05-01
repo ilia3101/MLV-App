@@ -58,6 +58,12 @@ void Scripting::setExportDir(QString dir)
     m_exportDir = dir;
 }
 
+//Set all mlv filenames
+void Scripting::setMlvFileNames(QStringList mlvFileNames)
+{
+    m_mlvFileNames = mlvFileNames;
+}
+
 //Define that next script looks for tiff and fps file
 void Scripting::setNextScriptInputTiff(float fps, QString folderName)
 {
@@ -99,25 +105,38 @@ void Scripting::executePostExportScript()
     //if none selected do nothing
     if( !m_postExportScriptIndex ) return;
 
+    //Create temp folder
+    QDir().mkdir("/tmp/mlvapp_path/");
+
     //path to MacOS folder(applications. Before appending
-    QString filename2 = "/tmp/Data2.txt";
-    QFile file2(filename2);
+    QString filename = "/tmp/mlvapp_path/app_path.txt";
+    QFile file2(filename);
     file2.open(QIODevice::WriteOnly);
     file2.write(QCoreApplication::applicationDirPath().toUtf8());
     file2.close();
 
     //path to output folder. Needed for bash script workflows
-    QString filename = "/tmp/Data.txt";
+    filename = "/tmp/mlvapp_path/output_folder.txt";
     QFile file1(filename);
     file1.open(QIODevice::WriteOnly);
     file1.write(m_exportDir.toUtf8());
     file1.close();
 
+    //path to output folder. Needed for bash script workflows
+    filename = "/tmp/mlvapp_path/file_names.txt";
+    QFile file4(filename);
+    file4.open(QIODevice::WriteOnly);
+    for( int i = 0; i < m_mlvFileNames.count(); i++ )
+    {
+        file4.write( QString( "%1\n" ).arg( m_mlvFileNames.at(i) ).toUtf8() );
+    }
+    file4.close();
+
     if( m_isTiff )
     {
         //working with HDR tif files. Bash script need to know about this. Send a file tmp which bash can look for
-        QString filename3 = "/tmp/tif_creation";
-        QFile file3(filename3);
+        filename = "/tmp/tif_creation";
+        QFile file3(filename);
         file3.open(QIODevice::WriteOnly);
         file3.close();
     }
@@ -125,17 +144,6 @@ void Scripting::executePostExportScript()
     //enabling HDR processing, no questions asked. Yet.
     QProcess process;
     process.startDetached("/bin/bash", QStringList()<< "HDR_MOV.command");
-
-    //Cleanup temp files
-    /*
-    QFile( "/tmp/Data2.txt" ).remove();
-    QFile( "/tmp/Data.txt" ).remove();
-    if( m_isTiff )
-    {
-        QFile( "/tmp/tif_creation" ).remove();
-        QFile( m_exportDir + "/fps" ).remove();
-    }
-    */
 
     //set back for next time
     m_isTiff = false;
