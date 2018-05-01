@@ -144,14 +144,18 @@ void Scripting::executePostExportScript()
 //Install a new script to MLVApp
 bool Scripting::installScript(QString fileName)
 {
+    //Where to install it?
     QString newFileName = QCoreApplication::applicationDirPath().append( "/" ).append( QFileInfo(fileName).fileName() );
+    //Remove existing script
     if( QFileInfo( newFileName ).exists() )
     {
         QFile( newFileName ).remove();
     }
+    //Copy new one to app
     bool ret = QFile::copy( fileName, newFileName );
     if( ret )
     {
+        //if successful update application
         scanScripts();
     }
     return ret;
