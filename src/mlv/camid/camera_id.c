@@ -48,7 +48,7 @@
        Forward Matrix 1 : 0.7868 0.0092 0.1683 0.2291 0.8615 -0.0906 0.0027 -0.4752 1.2976
        Forward Matrix 2 : 0.7637 0.0805 0.1201 0.2649 0.9179 -0.1828 0.0137 -0.2456 1.057
 
-       get even (0,2,4,...) elements of array by multiplying these numbers to 10000, odd elements equal to multiplier
+       get even (0,2,4,...) elements of array by multiplying these numbers to multiplier, odd array elements equal to multiplier
 */
 static camera_id_t camera_id[] = {
 	{
