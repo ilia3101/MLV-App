@@ -143,7 +143,7 @@ void Scripting::executePostExportScript()
 
     //enabling HDR processing, no questions asked. Yet.
     QProcess process;
-    process.startDetached("/bin/bash", QStringList()<< "HDR_MOV.command");
+    process.startDetached("/bin/bash", QStringList() << m_scriptNames.at( m_postExportScriptIndex ) );
 
     //set back for next time
     m_isTiff = false;
