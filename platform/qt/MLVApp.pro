@@ -202,6 +202,7 @@ macx: ICON = MLVAPP.icns
 QMAKE_INFO_PLIST = Info.plist
 PACKAGE_FILES.files = FFmpeg/ffmpeg #Unzip the file before building the App!!!
 PACKAGE_FILES.files += bash_scripts/HDR_MOV.command
+PACKAGE_FILES.files += bash_scripts/tif_clean.command
 #PACKAGE_FILES.files += ../../src/mlv/llrawproc/pixelmaps/80000301_1808x727.fpm
 #PACKAGE_FILES.files += ../../src/mlv/llrawproc/pixelmaps/80000301_1808x1190.fpm
 #PACKAGE_FILES.files += ../../src/mlv/llrawproc/pixelmaps/80000301_1872x1060.fpm
