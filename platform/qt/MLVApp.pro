@@ -233,3 +233,12 @@ QMAKE_BUNDLE_DATA += PACKAGE_FILES
 #    }
 #}
 
+linux-g++ {
+    target.path = $$(HOME)/bin
+    desktop.path = $$(HOME)/.local/share/applications
+    desktop.files += mlvapp.desktop
+    icon512.path = $$(HOME)/.local/share/icons/hicolor/512x512/apps
+    icon512.files += RetinaIMG/MLVAPP.png
+
+    INSTALLS += target desktop icon512
+}
