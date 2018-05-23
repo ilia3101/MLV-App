@@ -29,7 +29,7 @@ Find the latest releases [here](https://ilia3101.github.io/MLV-App/). Download, 
 - Auto load white balance, if MLV was filmed at sunny, shade, cloudy, thungsten, fluorescent, flash or kelvin
 - Single frame (3x)8bit PNG export
 - Clip export via ffmpeg 10bit ProRes 422 (Proxy, LT, Standard, HQ), ProRes 4444, RAW AVI, 8bit H.264 and H.265, 16bit TIFF sequence, DNxHD, DNxHR; all with or without audio
-- macOS only: Clip export via Apple AVFoundation 12bit ProRes 422, ProRes 4444 and 8bit H.264, all without audio (for now)
+- macOS only: Clip export via Apple AVFoundation 12bit ProRes 422, ProRes 4444 and 8bit H.264, all with or without audio
 - Clip export to (10/12/14/16bit for Dual ISO) Cinema DNG files (with default or Davinci Resolve naming). Exporting modes: uncompressed, lossless and fast pass (in the last one no RAW correction, processing or decompressing/compressing is done, raw data copied as is from MLV to DNG uncompressed or lossless).
 - MLV export (fast pass, compressed, averaged frame (for darkframe creation), extract internal darkframe)
 - Audio only export
@@ -39,9 +39,11 @@ Find the latest releases [here](https://ilia3101.github.io/MLV-App/). Download, 
 - Upside down transformation
 - Resize frame resolution for (batch) export
 - Clip batch export
+- Post export scripting on macOS (thx @dannephoto)
 - Zoom: fit to screen, 100% and free zoom, scroll through picture
 - Zebras
 - Create and load MAPP files (this files include all required information from the original MLV, plus video and audio frame index. If .MAPP file already created, importing is lot faster especially on slower HDD)
+- Update checker
 
 ## Compiling :collision:
 #### Cocoa App
