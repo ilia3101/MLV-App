@@ -120,7 +120,12 @@ void debayerBasic(uint16_t * __restrict debayerto, float * __restrict bayerdata,
     (void)threads;
 
     /* Debayer pixel size(limit with 1 pixel border to avoid seg fault, fix blank pixels L8ter) */
-    int pixelsizeDB = width * (height - 1); /* How many pixels to go through in debayer (height - 1 to avoid bottom row) */
+    int pixelsizeDB;
+    /* when odd height, do less... */
+    if( height % 2 == 0 )
+        pixelsizeDB = width * (height - 1); /* How many pixels to go through in debayer (height - 1 to avoid bottom row) */
+    else
+        pixelsizeDB = width * (height - 2); /* How many pixels to go through in debayer (height - 2 to avoid bottom row) */
     int widthDB = width - 1; /* Debayering width */
 
     int step = width * 2; /* How many pixels to skip each time(2 rows worth) */
