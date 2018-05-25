@@ -16,3 +16,7 @@ void NoScrollSlider::wheelEvent(QWheelEvent *)
 {
     //Do nothing!!!
 }
+
+void NoScrollSlider::mouseDoubleClickEvent(QMouseEvent*) {
+    emit doubleClicked();
+}

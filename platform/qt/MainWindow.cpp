@@ -3491,6 +3491,105 @@ void MainWindow::on_horizontalSliderFilterStrength_valueChanged(int position)
     m_frameChanged = true;
 }
 
+void MainWindow::on_horizontalSliderExposure_doubleClicked()
+{
+    ReceiptSettings *sliders = new ReceiptSettings(); //default
+    ui->horizontalSliderExposure->setValue( sliders->exposure() );
+    delete sliders;
+}
+
+void MainWindow::on_horizontalSliderTemperature_doubleClicked()
+{
+    ReceiptSettings *sliders = new ReceiptSettings(); //default
+    setWhiteBalanceFromMlv( sliders );
+    ui->horizontalSliderTemperature->setValue( sliders->temperature() );
+    delete sliders;
+}
+
+void MainWindow::on_horizontalSliderTint_doubleClicked()
+{
+    ReceiptSettings *sliders = new ReceiptSettings(); //default
+    ui->horizontalSliderTint->setValue( sliders->tint() );
+    delete sliders;
+}
+
+void MainWindow::on_horizontalSliderSaturation_doubleClicked()
+{
+    ReceiptSettings *sliders = new ReceiptSettings(); //default
+    ui->horizontalSliderSaturation->setValue( sliders->saturation() );
+    delete sliders;
+}
+
+void MainWindow::on_horizontalSliderDS_doubleClicked()
+{
+    ReceiptSettings *sliders = new ReceiptSettings(); //default
+    ui->horizontalSliderDS->setValue( sliders->ds() );
+    delete sliders;
+}
+
+void MainWindow::on_horizontalSliderDR_doubleClicked()
+{
+    ReceiptSettings *sliders = new ReceiptSettings(); //default
+    ui->horizontalSliderDR->setValue( sliders->dr() );
+    delete sliders;
+}
+
+void MainWindow::on_horizontalSliderLS_doubleClicked()
+{
+    ReceiptSettings *sliders = new ReceiptSettings(); //default
+    ui->horizontalSliderLS->setValue( sliders->ls() );
+    delete sliders;
+}
+
+void MainWindow::on_horizontalSliderLR_doubleClicked()
+{
+    ReceiptSettings *sliders = new ReceiptSettings(); //default
+    ui->horizontalSliderLR->setValue( sliders->lr() );
+    delete sliders;
+}
+
+void MainWindow::on_horizontalSliderLighten_doubleClicked()
+{
+    ReceiptSettings *sliders = new ReceiptSettings(); //default
+    ui->horizontalSliderLighten->setValue( sliders->lightening() );
+    delete sliders;
+}
+
+void MainWindow::on_horizontalSliderShadows_doubleClicked()
+{
+    ReceiptSettings *sliders = new ReceiptSettings(); //default
+    ui->horizontalSliderShadows->setValue( sliders->shadows() );
+    delete sliders;
+}
+
+void MainWindow::on_horizontalSliderHighlights_doubleClicked()
+{
+    ReceiptSettings *sliders = new ReceiptSettings(); //default
+    ui->horizontalSliderHighlights->setValue( sliders->highlights() );
+    delete sliders;
+}
+
+void MainWindow::on_horizontalSliderSharpen_doubleClicked()
+{
+    ReceiptSettings *sliders = new ReceiptSettings(); //default
+    ui->horizontalSliderSharpen->setValue( sliders->sharpen() );
+    delete sliders;
+}
+
+void MainWindow::on_horizontalSliderChromaBlur_doubleClicked()
+{
+    ReceiptSettings *sliders = new ReceiptSettings(); //default
+    ui->horizontalSliderChromaBlur->setValue( sliders->chromaBlur() );
+    delete sliders;
+}
+
+void MainWindow::on_horizontalSliderFilterStrength_doubleClicked()
+{
+    ReceiptSettings *sliders = new ReceiptSettings(); //default
+    ui->horizontalSliderFilterStrength->setValue( sliders->filterStrength() );
+    delete sliders;
+}
+
 //Jump to first frame
 void MainWindow::on_actionGoto_First_Frame_triggered()
 {

@@ -18,8 +18,12 @@ class NoScrollSlider : public QSlider
 public:
     explicit NoScrollSlider(QWidget* parent = Q_NULLPTR);
 
+signals:
+    void doubleClicked();
+
 protected:
     void wheelEvent(QWheelEvent*);
+    void mouseDoubleClickEvent(QMouseEvent*);
 };
 
 #endif // NOSCROLLSLIDER_H

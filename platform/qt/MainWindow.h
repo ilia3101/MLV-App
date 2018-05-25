@@ -77,6 +77,22 @@ private slots:
     void on_horizontalSliderSharpen_valueChanged(int position);
     void on_horizontalSliderChromaBlur_valueChanged(int position);
     void on_horizontalSliderFilterStrength_valueChanged(int position);
+
+    void on_horizontalSliderExposure_doubleClicked();
+    void on_horizontalSliderTemperature_doubleClicked();
+    void on_horizontalSliderTint_doubleClicked();
+    void on_horizontalSliderSaturation_doubleClicked();
+    void on_horizontalSliderDS_doubleClicked();
+    void on_horizontalSliderDR_doubleClicked();
+    void on_horizontalSliderLS_doubleClicked();
+    void on_horizontalSliderLR_doubleClicked();
+    void on_horizontalSliderLighten_doubleClicked();
+    void on_horizontalSliderShadows_doubleClicked();
+    void on_horizontalSliderHighlights_doubleClicked();
+    void on_horizontalSliderSharpen_doubleClicked();
+    void on_horizontalSliderChromaBlur_doubleClicked();
+    void on_horizontalSliderFilterStrength_doubleClicked();
+
     void on_actionGoto_First_Frame_triggered();
     void on_actionExport_triggered();
     void on_actionExportActualFrame_triggered();
