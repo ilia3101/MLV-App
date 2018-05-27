@@ -241,4 +241,6 @@ linux-g++ {
     icon512.files += RetinaIMG/MLVAPP.png
 
     INSTALLS += target desktop icon512
+
+    QMAKE_POST_LINK += tar -C $$(HOME)/bin -xvJf FFmpeg/ffmpegLinux.tar.xz --strip=1 --wildcards */ffmpeg
 }
