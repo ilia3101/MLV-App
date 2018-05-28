@@ -59,6 +59,7 @@ echo ""  >> TIFCLEAN_LOG.txt
 echo "take note that if you run the script for the first time
 dependencies will naturally be missing in this log file"  >> TIFCLEAN_LOG.txt
 
+cat <<'EOF' > /tmp/TIF_CLEAN.command
 ###########dependencies############
 #homebrew
 if ! [ -f "/usr/local/bin/brew" ]
@@ -180,8 +181,6 @@ else
 ls *.{MOV,mov,mp4,MP4,mkv,MKV,avi,AVI} > /tmp/TIFCLEAN
 fi
 
-
-cat <<'EOF' > /tmp/TIF_CLEAN.command
 while grep 'MOV\|mov\|mp4\|MP4\|mkv\|MKV\|avi\|AVI\|./' /tmp/TIFCLEAN; do
 #enter output folder
 #LOG
