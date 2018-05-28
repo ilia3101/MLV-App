@@ -7,7 +7,7 @@ objects = main.o video_mlv.o debayer.o amaze_demosaic.o raw_processing.o \
 		  camera_matrices.o frame_caching.o lj92.o session_methods.o \
 		  delegate.o mlv_view.o llrawproc.o pixelproc.o stripes.o \
 		  patternnoise.o hist.o dualiso.o avf_lib.o filter.o genann.o \
-		  dng.o darkframe.o camera_id.o audio_mlv.o
+		  blur_threaded.o dng.o darkframe.o camera_id.o audio_mlv.o
 
 # All macOS frameworks for the link
 frameworks = -framework Cocoa -framework AppKit -framework Foundation \
@@ -100,6 +100,8 @@ filter.o : ../../src/processing/filter/filter.c
 	$(CC) $(cflags) ../../src/processing/filter/filter.c
 genann.o : ../../src/processing/filter/genann/genann.c
 	$(CC) $(cflags) ../../src/processing/filter/genann/genann.c
+blur_threaded.o : ../../src/processing/blur_threaded.c
+	$(CC) $(cflags) ../../src/processing/blur_threaded.c
 matrix.o : ../../src/matrix/matrix.c
 	$(CC) $(cflags) ../../src/matrix/matrix.c
 camera_id.o : ../../src/mlv/camid/camera_id.c
