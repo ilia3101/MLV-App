@@ -59,6 +59,17 @@ echo ""  >> TIFCLEAN_LOG.txt
 echo "take note that if you run the script for the first time
 dependencies will naturally be missing in this log file"  >> TIFCLEAN_LOG.txt
 
+
+#list files for multiprocessing
+#first check for tif creation
+if [ -f /tmp/mlvapp_path/tif_creation ]
+then
+rm /tmp/mlvapp_path/tif_creation
+find -s . -maxdepth 2 -name '*.tif' -print0 | xargs -0 -n1 dirname | sort --unique > /tmp/TIFCLEAN
+else
+ls *.{MOV,mov,mp4,MP4,mkv,MKV,avi,AVI} > /tmp/TIFCLEAN
+fi
+
 cat <<'EOF' > /tmp/TIF_CLEAN.command
 ###########dependencies############
 #homebrew
@@ -169,16 +180,6 @@ sleep 1
 . "$(cat /tmp/mlvapp_path/app_path.txt | tr -d '"' )"/TIF_CLEAN.command
 ;;
 esac
-fi
-
-#list files for multiprocessing
-#first check for tif creation
-if [ -f /tmp/mlvapp_path/tif_creation ]
-then
-rm /tmp/mlvapp_path/tif_creation
-find -s . -maxdepth 2 -name '*.tif' -print0 | xargs -0 -n1 dirname | sort --unique > /tmp/TIFCLEAN
-else
-ls *.{MOV,mov,mp4,MP4,mkv,MKV,avi,AVI} > /tmp/TIFCLEAN
 fi
 
 while grep 'MOV\|mov\|mp4\|MP4\|mkv\|MKV\|avi\|AVI\|./' /tmp/TIFCLEAN; do
