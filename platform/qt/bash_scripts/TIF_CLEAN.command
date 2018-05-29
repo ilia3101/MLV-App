@@ -20,15 +20,14 @@
 #the script uses 5 files to average/enfuse into one file then moves forward to the consecutive frame. Surrounded tifs are used. E.g tif1,tif2,tifinput,tif3,tif4
 #final output is a high quality prores file
 
-
 #start clean
-rm /tmp/TIFCLEAN
-rm /tmp/TIF_CLEAN.command
+[ -f /tmp/TIFCLEAN ] && rm /tmp/TIFCLEAN
+[ -f /tmp/TIF_CLEAN.command ] && rm /tmp/TIF_CLEAN.command
 
 #!/bin/bash
 cd "$(cat /tmp/mlvapp_path/output_folder.txt)"
 #log
-rm "$(cat /tmp/mlvapp_path/output_folder.txt)"/TIFCLEAN_LOG.txt
+[ -f "$(cat /tmp/mlvapp_path/output_folder.txt)"/TIFCLEAN_LOG.txt ] && rm "$(cat /tmp/mlvapp_path/output_folder.txt)"/TIFCLEAN_LOG.txt
 echo "$(date)" >> TIFCLEAN_LOG.txt
 echo "##################TIF_CLEAN.command#####################" >> TIFCLEAN_LOG.txt
 echo "" >> TIFCLEAN_LOG.txt
@@ -67,7 +66,7 @@ then
 rm /tmp/mlvapp_path/tif_creation
 find -s . -maxdepth 2 -name '*.tif' -print0 | xargs -0 -n1 dirname | sort --unique > /tmp/TIFCLEAN
 else
-ls *.{MOV,mov,mp4,MP4,mkv,MKV,avi,AVI} > /tmp/TIFCLEAN
+ls *.{MOV,mov,mp4,MP4,mkv,MKV,avi,AVI} >/dev/null 2>&1 > /tmp/TIFCLEAN
 fi
 
 cat <<'EOF' > /tmp/TIF_CLEAN.command
