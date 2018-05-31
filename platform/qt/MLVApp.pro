@@ -224,15 +224,14 @@ PACKAGE_FILES.files += ../../src/mlv/llrawproc/pixelmaps/80000331_1872x1059.fpm
 PACKAGE_FILES.path = Contents/MacOS
 QMAKE_BUNDLE_DATA += PACKAGE_FILES
 
-#linux-g++ {
-    #Add desktop file
-#    EXTRA_FILES += \
-#        mlvapp.desktop
-#    for(FILE,EXTRA_FILES){
-#        QMAKE_POST_LINK += $$quote(cp $${FILE} $${DESTDIR/usr/share/applications/}$$escape_expand(\n\t))
-#    }
-#}
+unix{
+    OBJECTS_DIR = .obj
+    MOC_DIR = .moc
+    UI_DIR = .ui
+    RCC_DIR = .rcc
+}
 
+#for using the compiled version
 linux-g++ {
     target.path = $$(HOME)/bin
     desktop.path = $$(HOME)/.local/share/applications
@@ -244,3 +243,20 @@ linux-g++ {
 
     QMAKE_POST_LINK += tar -C $$(HOME)/bin -xvJf FFmpeg/ffmpegLinux.tar.xz --strip=1 --wildcards */ffmpeg
 }
+
+#for using linuxdeployqt
+#->run "make INSTALL_ROOT=. -j$(nproc) install" (is possible via QtCreators Project tab, add build step (make))
+#->run via terminal "linuxdeployqt-continuous-x86_64.AppImage path/to/appdir/usr/share/applications/mlvapp.desktop -appimage -qmake=pathToQmake/qmake"
+#linux-g++ {
+#    isEmpty(PREFIX) {
+#        PREFIX = /usr
+#    }
+#    target.path = $$PREFIX/bin
+#    desktop.path = $$PREFIX/.local/share/applications
+#    desktop.files += mlvapp.desktop
+#    icon512.path = $$PREFIX/.local/share/icons/hicolor/512x512/apps
+#    icon512.files += RetinaIMG/MLVAPP.png
+#    INSTALLS += icon512
+#    INSTALLS += desktop
+#    INSTALLS += target
+#}
