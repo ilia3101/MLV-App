@@ -248,8 +248,10 @@ linux-g++ {
 #->run "make INSTALL_ROOT=. -j$(nproc) install" (is possible via QtCreators Project tab, add build step (make))
 #->run via terminal "linuxdeployqt-continuous-x86_64.AppImage path/to/appdir/usr/share/applications/mlvapp.desktop -appimage -qmake=pathToQmake/qmake"
 #linux-g++ {
+#    DEFINES += APP_IMAGE
+
 #    QMAKE_POST_LINK += tar -C ../qt/FFmpeg/ -xvJf ../qt/FFmpeg/ffmpegLinux.tar.xz --strip=1 --wildcards */ffmpeg
-#
+
 #    isEmpty(PREFIX) {
 #        PREFIX = /usr
 #    }

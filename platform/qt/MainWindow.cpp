@@ -1205,7 +1205,7 @@ void MainWindow::startExportPipe(QString fileName)
     //qDebug() << resizeFilter;
 
     //FFMpeg export
-#ifdef __linux__
+#if defined __linux__ && !defined APP_IMAGE
     QString program = QString( "ffmpeg" );
 #elif __WIN32__
     QString program = QString( "ffmpeg" );
