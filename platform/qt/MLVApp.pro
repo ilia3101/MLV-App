@@ -248,14 +248,19 @@ linux-g++ {
 #->run "make INSTALL_ROOT=. -j$(nproc) install" (is possible via QtCreators Project tab, add build step (make))
 #->run via terminal "linuxdeployqt-continuous-x86_64.AppImage path/to/appdir/usr/share/applications/mlvapp.desktop -appimage -qmake=pathToQmake/qmake"
 #linux-g++ {
+#    QMAKE_POST_LINK += tar -C ../qt/FFmpeg/ -xvJf ../qt/FFmpeg/ffmpegLinux.tar.xz --strip=1 --wildcards */ffmpeg
+#
 #    isEmpty(PREFIX) {
 #        PREFIX = /usr
 #    }
 #    target.path = $$PREFIX/bin
+#    ffmpegSt.path = $$PREFIX/bin
+#    ffmpegSt.files += FFmpeg/ffmpeg
 #    desktop.path = $$PREFIX/.local/share/applications
 #    desktop.files += mlvapp.desktop
 #    icon512.path = $$PREFIX/.local/share/icons/hicolor/512x512/apps
 #    icon512.files += RetinaIMG/MLVAPP.png
+#    INSTALLS += ffmpegSt
 #    INSTALLS += icon512
 #    INSTALLS += desktop
 #    INSTALLS += target
