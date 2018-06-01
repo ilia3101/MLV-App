@@ -250,7 +250,8 @@ linux-g++ {
 #linux-g++ {
 #    DEFINES += APP_IMAGE
 
-#    QMAKE_POST_LINK += tar -C ../qt/FFmpeg/ -xvJf ../qt/FFmpeg/ffmpegLinux.tar.xz --strip=1 --wildcards */ffmpeg
+#    QMAKE_POST_LINK += tar -C ../qt/FFmpeg/ -xvJf ../qt/FFmpeg/ffmpegLinux.tar.xz --strip=1 --wildcards */ffmpeg $$escape_expand(\n\t)
+#    QMAKE_POST_LINK += chmod a+x ../qt/FFmpeg/ffmpeg
 
 #    isEmpty(PREFIX) {
 #        PREFIX = /usr
