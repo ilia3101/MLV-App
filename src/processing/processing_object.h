@@ -28,6 +28,7 @@ typedef struct {
 
     /* (RAW) white and black levels */
     int black_level, white_level;
+    int bw_levels_changed;
 
     /* Do highlight reconstrucion? It's slow */
     int highlight_reconstruction;

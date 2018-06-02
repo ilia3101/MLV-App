@@ -31,6 +31,7 @@
 #include "dualiso.h"
 #include "hist.h"
 #include "darkframe.h"
+#include "../../processing/raw_processing.h"
 
 static void deflicker(mlvObject_t * video, uint16_t * raw_image_buff, size_t raw_image_size)
 {
@@ -217,7 +218,19 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
                 raw_info.active_area.y2 = raw_info.height;
                 raw_info.black_level = video->RAWI.raw_info.black_level;
                 raw_info.white_level = video->RAWI.raw_info.white_level;
-                scale_bits_for_diso(&raw_info, raw_image_buff, video->lossless_bpp);
+
+                int scale_bits = scale_bits_for_diso(&raw_info, raw_image_buff, video->lossless_bpp);
+                if(scale_bits)
+                {
+#ifndef STDOUT_SILENT
+                    if(scale_bits == 2) printf("Scaling uncompressed dual iso\n");
+                    else printf("Scaling losless dual iso\n");
+                    printf("Changing B/W levels\n");
+#endif
+                    processingSetBlackAndWhiteLevel(video->processing, raw_info.black_level << 2, raw_info.white_level << 2); // << 2 for upresing scaled to 14bit levels further to 16bits
+                    video->processing->bw_levels_changed = 1;
+                }
+
                 diso_get_full20bit(raw_info,
                                    raw_image_buff,
                                    video->llrawproc->diso_averaging,
@@ -236,9 +249,22 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
                                  0); // dual iso check mode is off
                 break;
             }
+            default: // off
+            {
+                if(video->processing->bw_levels_changed)
+                {
+                    int bits_shift = 16 - video->RAWI.raw_info.bits_per_pixel;
+                    processingSetBlackAndWhiteLevel(video->processing, video->RAWI.raw_info.black_level << bits_shift, video->RAWI.raw_info.white_level << bits_shift);
+                    video->processing->bw_levels_changed = 0;
+#ifndef STDOUT_SILENT
+                    printf("Restoring B/W levels\n");
+                    printf("ProcBlack = %d, ProcWhite = %d, RawBlack = %d, RawWhite = %d\n", video->processing->black_level, video->processing->white_level, video->RAWI.raw_info.black_level << bits_shift, video->RAWI.raw_info.white_level << bits_shift);
+#endif
+                }
+            }
         }
-    }
 
+    }
 
     /* do chroma smoothing */
     if (video->llrawproc->chroma_smooth && (video->llrawproc->dual_iso != 1 || !video->llrawproc->is_dual_iso)) // do not smooth 20bit dualiso raw

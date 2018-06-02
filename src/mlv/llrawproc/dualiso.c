@@ -43,7 +43,7 @@
 #define LOCK(x) static pthread_mutex_t x = PTHREAD_MUTEX_INITIALIZER; pthread_mutex_lock(&x);
 #define UNLOCK(x) pthread_mutex_unlock(&(x));
 
-void scale_bits_for_diso(struct raw_info * raw_info, uint16_t * image_data, int lossless_bpp)
+int scale_bits_for_diso(struct raw_info * raw_info, uint16_t * image_data, int lossless_bpp)
 {
     if (raw_info->bits_per_pixel < 14)
     {
@@ -57,19 +57,25 @@ void scale_bits_for_diso(struct raw_info * raw_info, uint16_t * image_data, int 
         {
             image_data[i] <<= shift_bits;
         }
+
+        return 2; // scaled for uncompressed (<14bit) dualiso
     }
     else if(lossless_bpp < 14)
     {
         int pixel_count = raw_info->width * raw_info->height;
-        int multiplier = raw_info->bits_per_pixel - lossless_bpp;
+        int shift_bits = raw_info->bits_per_pixel - lossless_bpp;
 
-        raw_info->white_level = (raw_info->white_level - raw_info->black_level) * multiplier + raw_info->black_level;
+        raw_info->white_level = ((raw_info->white_level - raw_info->black_level) << shift_bits) + raw_info->black_level;
 
         for(int i = 0; i < pixel_count; ++i)
         {
-            image_data[i] = (image_data[i] - raw_info->black_level) * multiplier + raw_info->black_level;
+            image_data[i] = ((image_data[i] - raw_info->black_level) << shift_bits) + raw_info->black_level;
         }
+
+        return 1; // scaled for losless dualiso
     }
+
+    return 0; // not scaled
 }
 
 //this is just meant to be fast
