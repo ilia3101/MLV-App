@@ -241,7 +241,7 @@ linux-g++ {
 
     INSTALLS += target desktop icon512
 
-    QMAKE_POST_LINK += tar -C $$(HOME)/bin -xvJf FFmpeg/ffmpegLinux.tar.xz --strip=1 --wildcards */ffmpeg
+    QMAKE_POST_LINK += tar -C $$(HOME)/bin -xvJf FFmpeg/ffmpegLinux.tar.xz --strip=1 ffmpeg-4.0-64bit-static/ffmpeg
 }
 
 #for using linuxdeployqt
