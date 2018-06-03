@@ -200,7 +200,6 @@ DISTFILES += \
 win32: RC_ICONS = MLVAPP.ico
 macx: ICON = MLVAPP.icns
 QMAKE_INFO_PLIST = Info.plist
-PACKAGE_FILES.files = FFmpeg/ffmpeg #Unzip the file before building the App!!!
 PACKAGE_FILES.files += bash_scripts/HDR_MOV.command
 PACKAGE_FILES.files += bash_scripts/TIF_CLEAN.command
 #PACKAGE_FILES.files += ../../src/mlv/llrawproc/pixelmaps/80000301_1808x727.fpm
@@ -223,6 +222,9 @@ PACKAGE_FILES.files += ../../src/mlv/llrawproc/pixelmaps/80000331_1872x1059.fpm
 #PACKAGE_FILES.files += ../../src/mlv/llrawproc/pixelmaps/80000346_2592x1108.fpm
 PACKAGE_FILES.path = Contents/MacOS
 QMAKE_BUNDLE_DATA += PACKAGE_FILES
+#unpack & install ffmpeg on OSX
+macx: QMAKE_POST_LINK += unzip -o ../qt/FFmpeg/ffmpegOSX.zip $$escape_expand(\n\t)
+macx: QMAKE_POST_LINK += "mv ffmpeg MLV\ App.app/Contents/MacOS/"
 
 unix{
     OBJECTS_DIR = .obj
