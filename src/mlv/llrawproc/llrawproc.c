@@ -220,7 +220,7 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
                 raw_info.white_level = video->RAWI.raw_info.white_level;
 
                 int scale_bits = scale_bits_for_diso(&raw_info, raw_image_buff, video->lossless_bpp);
-                if(scale_bits)
+                if(!video->processing->bw_levels_changed && scale_bits)
                 {
 #ifndef STDOUT_SILENT
                     if(scale_bits == 2) printf("Scaling uncompressed dual iso\n");
@@ -239,8 +239,20 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
                                    video->llrawproc->chroma_smooth);
                 break;
             }
+
             case 2: // preview mode
             {
+                if(video->processing->bw_levels_changed)
+                {
+                    int bits_shift = 16 - video->RAWI.raw_info.bits_per_pixel;
+                    processingSetBlackAndWhiteLevel(video->processing, video->RAWI.raw_info.black_level << bits_shift, video->RAWI.raw_info.white_level << bits_shift);
+                    video->processing->bw_levels_changed = 0;
+#ifndef STDOUT_SILENT
+                    printf("Restoring B/W levels\n");
+                    printf("ProcBlack = %d, ProcWhite = %d, RawBlack = %d, RawWhite = %d\n", video->processing->black_level, video->processing->white_level, video->RAWI.raw_info.black_level << bits_shift, video->RAWI.raw_info.white_level << bits_shift);
+#endif
+                }
+
                 diso_get_preview(raw_image_buff,
                                  video->RAWI.xRes,
                                  video->RAWI.yRes,
@@ -249,6 +261,7 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
                                  0); // dual iso check mode is off
                 break;
             }
+
             default: // off
             {
                 if(video->processing->bw_levels_changed)
