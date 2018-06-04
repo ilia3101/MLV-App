@@ -2294,6 +2294,16 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
             receipt->setDualIsoFrBlending( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
+        else if( Rxml->isStartElement() && Rxml->name() == "dualIsoWhite" )
+        {
+            receipt->setDualIsoWhite( Rxml->readElementText().toUInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == "dualIsoBlack" )
+        {
+            receipt->setDualIsoBlack( Rxml->readElementText().toUInt() );
+            Rxml->readNext();
+        }
         else if( Rxml->isStartElement() && Rxml->name() == "darkFrameFileName" )
         {
             receipt->setDarkFrameFileName( Rxml->readElementText() );
@@ -2385,6 +2395,8 @@ void MainWindow::writeXmlElementsToFile(QXmlStreamWriter *xmlWriter, ReceiptSett
     xmlWriter->writeTextElement( "dualIsoInterpolation",    QString( "%1" ).arg( receipt->dualIsoInterpolation() ) );
     xmlWriter->writeTextElement( "dualIsoAliasMap",         QString( "%1" ).arg( receipt->dualIsoAliasMap() ) );
     xmlWriter->writeTextElement( "dualIsoFrBlending",       QString( "%1" ).arg( receipt->dualIsoFrBlending() ) );
+    xmlWriter->writeTextElement( "dualIsoWhite",            QString( "%1" ).arg( receipt->dualIsoWhite() ) );
+    xmlWriter->writeTextElement( "dualIsoBlack",            QString( "%1" ).arg( receipt->dualIsoBlack() ) );
     xmlWriter->writeTextElement( "darkFrameFileName",       QString( "%1" ).arg( receipt->darkFrameFileName() ) );
     xmlWriter->writeTextElement( "darkFrameEnabled",        QString( "%1" ).arg( receipt->darkFrameEnabled() ) );
     xmlWriter->writeTextElement( "filterEnabled",           QString( "%1" ).arg( receipt->filterEnabled() ) );
@@ -2553,6 +2565,7 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     setToolButtonDualIsoInterpolation( receipt->dualIsoInterpolation() );
     setToolButtonDualIsoAliasMap( receipt->dualIsoAliasMap() );
     setToolButtonDualIsoFullresBlending( receipt->dualIsoFrBlending() );
+    if( receipt->dualIso() != 0 ) processingSetBlackAndWhiteLevel( m_pMlvObject->processing, receipt->dualIsoBlack(), receipt->dualIsoWhite() );
     ui->spinBoxDeflickerTarget->setValue( receipt->deflickerTarget() );
     on_spinBoxDeflickerTarget_valueChanged( receipt->deflickerTarget() );
     ui->lineEditDarkFrameFile->setText( receipt->darkFrameFileName() );
@@ -2646,6 +2659,8 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     receipt->setDualIsoInterpolation( toolButtonDualIsoInterpolationCurrentIndex() );
     receipt->setDualIsoAliasMap( toolButtonDualIsoAliasMapCurrentIndex() );
     receipt->setDualIsoFrBlending( toolButtonDualIsoFullresBlendingCurrentIndex() );
+    receipt->setDualIsoWhite( processingGetWhiteLevel( m_pMlvObject->processing ) );
+    receipt->setDualIsoBlack( processingGetBlackLevel( m_pMlvObject->processing ) );
     receipt->setDarkFrameFileName( ui->lineEditDarkFrameFile->text() );
     receipt->setDarkFrameEnabled( toolButtonDarkFrameSubtractionCurrentIndex() );
 
@@ -2694,6 +2709,8 @@ void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings 
     receiptTarget->setDualIsoInterpolation( receiptSource->dualIsoInterpolation() );
     receiptTarget->setDualIsoAliasMap( receiptSource->dualIsoAliasMap() );
     receiptTarget->setDualIsoFrBlending( receiptSource->dualIsoFrBlending() );
+    receiptTarget->setDualIsoWhite( receiptSource->dualIsoWhite() );
+    receiptTarget->setDualIsoBlack( receiptSource->dualIsoBlack() );
     receiptTarget->setDarkFrameFileName( receiptSource->darkFrameFileName() );
     receiptTarget->setDarkFrameEnabled( receiptSource->darkFrameEnabled() );
 
@@ -2781,6 +2798,8 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     receipt->setDualIsoInterpolation( m_pSessionReceipts.at( row )->dualIsoInterpolation() );
     receipt->setDualIsoAliasMap( m_pSessionReceipts.at( row )->dualIsoAliasMap() );
     receipt->setDualIsoFrBlending( m_pSessionReceipts.at( row )->dualIsoFrBlending() );
+    receipt->setDualIsoWhite( m_pSessionReceipts.at( row )->dualIsoWhite() );
+    receipt->setDualIsoBlack( m_pSessionReceipts.at( row )->dualIsoBlack() );
     receipt->setDarkFrameFileName( m_pSessionReceipts.at( row )->darkFrameFileName() );
     receipt->setDarkFrameEnabled( m_pSessionReceipts.at( row )->darkFrameEnabled() );
 
