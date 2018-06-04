@@ -261,9 +261,9 @@ linux-g++ {
 #    target.path = $$PREFIX/bin
 #    ffmpegSt.path = $$PREFIX/bin
 #    ffmpegSt.files += FFmpeg/ffmpeg
-#    desktop.path = $$PREFIX/.local/share/applications
+#    desktop.path = $$PREFIX/share/applications
 #    desktop.files += mlvapp.desktop
-#    icon512.path = $$PREFIX/.local/share/icons/hicolor/512x512/apps
+#    icon512.path = $$PREFIX/share/icons/hicolor/512x512/apps
 #    icon512.files += RetinaIMG/MLVAPP.png
 #    INSTALLS += ffmpegSt
 #    INSTALLS += icon512
