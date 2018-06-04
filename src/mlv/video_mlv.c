@@ -194,6 +194,7 @@ int getMlvRawFrameUint16(mlvObject_t * video, uint64_t frameIndex, uint16_t * un
         {
             DEBUG( printf("Frame data read error\n"); )
             free(raw_frame);
+            pthread_mutex_unlock(video->main_file_mutex + chunk);
             return 1;
         }
 
@@ -227,6 +228,7 @@ int getMlvRawFrameUint16(mlvObject_t * video, uint64_t frameIndex, uint16_t * un
         {
             DEBUG( printf("Frame data read error\n"); )
             free(raw_frame);
+            pthread_mutex_unlock(video->main_file_mutex + chunk);
             return 1;
         }
 
