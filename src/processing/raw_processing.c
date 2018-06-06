@@ -305,22 +305,34 @@ void apply_processing_object( processingObject_t * processing,
         img[i] = processing->pre_calc_levels[ img[i] ];
     }
 
-    /* find highest green in actual picture for highlight reconstruction */
+    /* find highest green peak in actual picture for highlight reconstruction */
     uint16_t highest_green = 0;
+    uint16_t highest_value = 0;
     if ( *processing->dual_iso != 0 )
     {
-        /* for dual iso the highest green has to be searched */
+        /* for dual iso the highest green peak has to be searched */
+        /* build histogram for green channel */
+        uint16_t tableG[65535] = {0};
         for (uint16_t * pix = img; pix < img_end; pix += 3)
         {
             uint16_t pix1 = processing->pre_calc_gamma[ LIMIT16(pm[3][pix[0]] + pm[4][pix[1]] + pm[5][pix[2]]) ];
-            if( highest_green < pix1 ) highest_green = pix1;
+            tableG[pix1]++;
+        }
+        /* search the brightest (the most right) peak (I made it equivalent to the number of lines to process in the image or more) */
+        uint16_t limitPixels = imageY;
+        for( uint16_t i = 65535; i >= 0; i-- )
+        {
+            if( highest_value < tableG[i] )
+            {
+                highest_value = tableG[i];
+                highest_green = i;
+                if( highest_value > limitPixels ) break;
+            }
         }
     }
-    else
-    {
-        /* for non dual iso the highest green was calculated from matrix */
-        highest_green = processing->highest_green;
-    }
+#ifndef STDOUT_SILENT
+    printf( "highest green: %d (from 16bit); %d pixels; %d processed lines\r\n", highest_green, highest_value, imageY );
+#endif
 
     /* white balance & exposure & highlights & gamma & highlight reconstruction */
     for (uint16_t * pix = img, * bpix = blurImage; pix < img_end; pix += 3, bpix += 3)
@@ -354,10 +366,22 @@ void apply_processing_object( processingObject_t * processing,
         /* Now highlight reconstruction */
         if (processing->highlight_reconstruction)
         {
-            /* Check if its the highest green value possible */
-            if (tmp1b == highest_green)
+            if(*processing->dual_iso != 0)
             {
-                pix[1] = (pix[0] + pix[2]) / 2;
+                /* Check if its the range of highest green value possible */
+                /* the range makes it cleaner against pink noise */
+                if (tmp1b >= highest_green - 100 && tmp1b <= highest_green + 100)
+                {
+                    pix[1] = (pix[0] + pix[2]) / 2;
+                }
+            }
+            else
+            {
+                /* Check if its the highest green value possible */
+                if (tmp1b == processing->highest_green)
+                {
+                    pix[1] = (pix[0] + pix[2]) / 2;
+                }
             }
         }
     }
