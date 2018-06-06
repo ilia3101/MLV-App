@@ -308,7 +308,7 @@ void apply_processing_object( processingObject_t * processing,
     /* find highest green peak in actual picture for highlight reconstruction */
     uint16_t highest_green = 0;
     uint16_t highest_value = 0;
-    if ( *processing->dual_iso != 0 )
+    if ( *processing->dual_iso != 0 && processing->highlight_reconstruction )
     {
         /* for dual iso the highest green peak has to be searched */
         /* build histogram for green channel */
