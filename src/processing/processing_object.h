@@ -128,6 +128,9 @@ typedef struct {
 
     /* Transformation */
     uint8_t    transformation;
+
+    /* Pointer to dual iso variable from llrawproc, needed for highest green analysis */
+    int        *dual_iso;
 } processingObject_t;
 
 /* Maybe save edits to MLV file as a block? */

@@ -291,6 +291,9 @@ void setMlvProcessing(mlvObject_t * video, processingObject_t * processing)
     /* Easy bit */
     video->processing = processing;
 
+    /* Link dual_iso value, because it is needed */
+    video->processing->dual_iso = &video->llrawproc->dual_iso;
+
     /* MATRIX stuff (not working, so commented out - 
      * processing object defaults to 1,0,0,0,1,0,0,0,1) */
 

@@ -305,6 +305,23 @@ void apply_processing_object( processingObject_t * processing,
         img[i] = processing->pre_calc_levels[ img[i] ];
     }
 
+    /* find highest green in actual picture for highlight reconstruction */
+    uint16_t highest_green = 0;
+    if ( *processing->dual_iso != 0 )
+    {
+        /* for dual iso the highest green has to be searched */
+        for (uint16_t * pix = img; pix < img_end; pix += 3)
+        {
+            uint16_t pix1 = processing->pre_calc_gamma[ LIMIT16(pm[3][pix[0]] + pm[4][pix[1]] + pm[5][pix[2]]) ];
+            if( highest_green < pix1 ) highest_green = pix1;
+        }
+    }
+    else
+    {
+        /* for non dual iso the highest green was calculated from matrix */
+        highest_green = processing->highest_green;
+    }
+
     /* white balance & exposure & highlights & gamma & highlight reconstruction */
     for (uint16_t * pix = img, * bpix = blurImage; pix < img_end; pix += 3, bpix += 3)
     {
@@ -325,7 +342,7 @@ void apply_processing_object( processingObject_t * processing,
         pix[0] = LIMIT16(pix0);
         pix[1] = LIMIT16(pix1);
         pix[2] = LIMIT16(pix2);
-        uint16_t tmp1b = LIMIT16(tmp1);
+        uint32_t tmp1b = LIMIT16(tmp1);
 
         /* Gamma */
         for( int i = 0; i < 3; i++ )
@@ -334,11 +351,11 @@ void apply_processing_object( processingObject_t * processing,
         }
         tmp1b = processing->pre_calc_gamma[ tmp1b ];
 
-        /* Now highlilght reconstruction */
-        if (/*processing->exposure_stops < 1.0 &&*/ processing->highest_green < 65535 && processing->highlight_reconstruction)
+        /* Now highlight reconstruction */
+        if (processing->highlight_reconstruction)
         {
             /* Check if its the highest green value possible */
-            if (tmp1b == processing->highest_green)
+            if (tmp1b == highest_green)
             {
                 pix[1] = (pix[0] + pix[2]) / 2;
             }
