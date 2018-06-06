@@ -342,7 +342,7 @@ void apply_processing_object( processingObject_t * processing,
         pix[0] = LIMIT16(pix0);
         pix[1] = LIMIT16(pix1);
         pix[2] = LIMIT16(pix2);
-        uint32_t tmp1b = LIMIT16(tmp1);
+        uint16_t tmp1b = LIMIT16(tmp1);
 
         /* Gamma */
         for( int i = 0; i < 3; i++ )
