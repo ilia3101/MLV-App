@@ -12,7 +12,7 @@
 
 typedef struct {
     uint16_t dimension;
-    float *cube;
+    double *cube;
 } lut3d_t;
 
 void load_lut3d(lut3d_t *lut3d, char *filename);

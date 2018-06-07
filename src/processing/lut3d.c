@@ -57,6 +57,9 @@ void apply_lut3d(lut3d_t *lut3d, int width, int height, uint16_t *image)
         uint16_t green0 = (uint16_t)green;
         uint16_t blue0 = (uint16_t)blue;
 
+        if( red0 >= lut3d->dimension ) red0 = lut3d->dimension - 1;
+        if( green0 >= lut3d->dimension ) green0 = lut3d->dimension - 1;
+        if( blue0 >= lut3d->dimension ) blue0 = lut3d->dimension - 1;
         uint32_t red0_offs = red0 * lut3d->dimension * lut3d->dimension;
         uint32_t green0_offs = green0 * lut3d->dimension;
         uint32_t blue0_offs = blue0;
@@ -65,9 +68,9 @@ void apply_lut3d(lut3d_t *lut3d, int width, int height, uint16_t *image)
         uint32_t red1 = red0 + 1;
         uint32_t green1 = green0 + 1;
         uint32_t blue1 = blue0 + 1;
-        if( red1 > lut3d->dimension ) red1 = lut3d->dimension;
-        if( green1 > lut3d->dimension ) green1 = lut3d->dimension;
-        if( blue1 > lut3d->dimension ) blue1 = lut3d->dimension;
+        if( red1 >= lut3d->dimension ) red1 = lut3d->dimension - 1;
+        if( green1 >= lut3d->dimension ) green1 = lut3d->dimension - 1;
+        if( blue1 >= lut3d->dimension ) blue1 = lut3d->dimension - 1;
 
         uint32_t red1_offs = red1 * lut3d->dimension * lut3d->dimension;
         uint32_t green1_offs = green1 * lut3d->dimension;
