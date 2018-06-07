@@ -104,7 +104,8 @@ SOURCES += \
     Updater/cautoupdatergithub.cpp \
     Updater/updaterUI/CUpdater.cpp \
     ../../src/processing/blur_threaded.c \
-    Scripting.cpp
+    Scripting.cpp \
+    ../../src/processing/lut3d.c
 
 macx: SOURCES += ../cocoa/avf_lib/avf_lib.m
 
@@ -171,7 +172,8 @@ HEADERS += \
     Updater/cautoupdatergithub.h \
     Updater/updaterUI/CUpdater.h \
     ../../src/processing/blur_threaded.h \
-    Scripting.h
+    Scripting.h \
+    ../../src/processing/lut3d.h
 
 macx: HEADERS += \
     ../cocoa/avf_lib/avencoder.h \
