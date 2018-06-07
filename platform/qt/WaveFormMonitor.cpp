@@ -15,7 +15,9 @@
 //Constructor
 WaveFormMonitor::WaveFormMonitor( uint16_t width )
 {
-    m_pWaveForm = new QImage( width / MERGE, 256, QImage::Format_RGB888 );
+    uint16_t imgX = width / MERGE;
+    if( width % MERGE > 0 ) imgX++;
+    m_pWaveForm = new QImage( imgX, 256, QImage::Format_RGB888 );
 }
 
 //Destructor
