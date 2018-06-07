@@ -627,8 +627,8 @@ static void dng_fill_header(mlvObject_t * mlv_data, dngObject_t * dng_data, uint
             {tcExifIFD,                     ttLong,     1,      exif_ifd_offset},
             {tcDNGVersion,                  ttByte,     4,      0x00000401}, //1.4.0.0 in little endian
             {tcUniqueCameraModel,           ttAscii,    STRING_ENTRY(unique_model, header, &data_offset)},
-            {tcBlackLevel,                  ttLong,     1,      (llrpHQDualIso(mlv_data)) ? mlv_data->RAWI.raw_info.black_level << (16 - mlv_data->RAWI.raw_info.bits_per_pixel) : mlv_data->RAWI.raw_info.black_level},
-            {tcWhiteLevel,                  ttLong,     1,      (llrpHQDualIso(mlv_data)) ? mlv_data->RAWI.raw_info.white_level << (16 - mlv_data->RAWI.raw_info.bits_per_pixel) : mlv_data->RAWI.raw_info.white_level},
+            {tcBlackLevel,                  ttLong,     1,      (llrpHQDualIso(mlv_data)) ? mlv_data->llrawproc->diso_black_level << (16 - mlv_data->RAWI.raw_info.bits_per_pixel) : mlv_data->RAWI.raw_info.black_level},
+            {tcWhiteLevel,                  ttLong,     1,      (llrpHQDualIso(mlv_data)) ? mlv_data->llrawproc->diso_white_level << (16 - mlv_data->RAWI.raw_info.bits_per_pixel) : mlv_data->RAWI.raw_info.white_level},
             {tcDefaultScale,                ttRational, RATIONAL_ENTRY(par, header, &data_offset, 4)},
             {tcDefaultCropOrigin,           ttShort,    2,      PACK(mlv_data->RAWI.raw_info.crop.origin)},
             {tcDefaultCropSize,             ttShort,    2,      PACK2((mlv_data->RAWI.raw_info.active_area.x2 - mlv_data->RAWI.raw_info.active_area.x1), (mlv_data->RAWI.raw_info.active_area.y2 - mlv_data->RAWI.raw_info.active_area.y1))},

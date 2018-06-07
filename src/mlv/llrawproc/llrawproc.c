@@ -112,6 +112,11 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
                                                          video->RAWI.raw_info.black_level,
                                                          video->RAWI.raw_info.white_level,
                                                          1); // dual iso check mode is on
+
+        /* initialize dual iso black and white levels */
+        video->llrawproc->diso_black_level = video->RAWI.raw_info.black_level;
+        video->llrawproc->diso_white_level = video->RAWI.raw_info.white_level;
+
         /* initialise LUTs */
         video->llrawproc->raw2ev = get_raw2ev(video->RAWI.raw_info.black_level);
         video->llrawproc->ev2raw = get_ev2raw(video->RAWI.raw_info.black_level);
@@ -220,6 +225,14 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
                 raw_info.white_level = video->RAWI.raw_info.white_level;
 
                 int scale_bits = scale_bits_for_diso(&raw_info, raw_image_buff, video->lossless_bpp);
+
+                /* lossless dualiso case */
+                if(scale_bits == 1)
+                {
+                    video->llrawproc->diso_black_level = raw_info.black_level;
+                    video->llrawproc->diso_white_level = raw_info.white_level;
+                }
+
                 if(!video->processing->bw_levels_changed && scale_bits)
                 {
 #ifndef STDOUT_SILENT
@@ -231,12 +244,12 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
                     video->processing->bw_levels_changed = 1;
                 }
 
-                diso_get_full20bit(raw_info,
-                                   raw_image_buff,
-                                   video->llrawproc->diso_averaging,
-                                   video->llrawproc->diso_alias_map,
-                                   video->llrawproc->diso_frblending,
-                                   video->llrawproc->chroma_smooth);
+                video->llrawproc->is_dual_iso = diso_get_full20bit(raw_info,
+                                                                   raw_image_buff,
+                                                                   video->llrawproc->diso_averaging,
+                                                                   video->llrawproc->diso_alias_map,
+                                                                   video->llrawproc->diso_frblending,
+                                                                   video->llrawproc->chroma_smooth);
                 break;
             }
 
