@@ -505,11 +505,11 @@ void apply_processing_object( processingObject_t * processing,
     }
 
     //TODO: JUST FOR LUT TESTING! LOADING AND FREEING SHOULD NOT BE HERE!
-    //lut3d_t *lut3d = malloc( sizeof( lut3d_t ) );
-    //load_lut3d( lut3d, "/Users/masc/Desktop/test.cube" );
-    //apply_lut3d( lut3d, imageX, imageY, outputImage );
-    //unload_lut3d( lut3d );
-    //free( lut3d );
+    /*lut3d_t *lut3d = malloc( sizeof( lut3d_t ) );
+    load_lut3d( lut3d, "/Users/masc/Desktop/test.cube" );
+    apply_lut3d( lut3d, imageX, imageY, outputImage );
+    unload_lut3d( lut3d );
+    free( lut3d );*/
 }
 
 /* Pass frame buffer and do the transform on it */
