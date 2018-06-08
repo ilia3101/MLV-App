@@ -17,9 +17,9 @@ typedef struct {
 } lut_t;
 
 lut_t * init_lut( void );
-void free_lut( lut_t *lut3d );
-int load_lut(lut_t *lut3d, char *filename);
-void unload_lut( lut_t *lut3d );
-void apply_lut( lut_t *lut3d, int width, int height, uint16_t * image );
+void free_lut( lut_t *lut );
+int load_lut(lut_t *lut, char *filename);
+void unload_lut( lut_t *lut );
+void apply_lut( lut_t *lut, int width, int height, uint16_t * image );
 
 #endif // LUT_H
