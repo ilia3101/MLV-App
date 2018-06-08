@@ -44,9 +44,9 @@ void applyProcessingObject( processingObject_t * processing,
 #define processingEnableFilters(processing) processing->filter_on = 1
 #define processingDisableFilters(processing) processing->filter_on = 0
 
-/* Enable/disable the LUT3D module (lut3d.h) */
-#define processingEnableLut3d(processing) processing->lut3d_on = 1
-#define processingDisableLut3d(processing) processing->lut3d_on = 0
+/* Enable/disable the LUT module (lut3d.h) */
+#define processingEnableLut(processing) processing->lut_on = 1
+#define processingDisableLut(processing) processing->lut_on = 0
 
 /* Highlights/shadows, input: -1.0 to +1.0 (show as -100 to +100) */
 void processingSetHighlights(processingObject_t * processing, double value);

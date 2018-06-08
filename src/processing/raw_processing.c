@@ -64,8 +64,8 @@ processingObject_t * initProcessingObject()
 
     processing->filter = initFilterObject();
 
-    processing->lut3d = init_lut3d();
-    processing->lut3d_on = 0;
+    processing->lut = init_lut();
+    processing->lut_on = 0;
 
     /* For precalculated matrix values */
     for (int i = 0; i < 9; ++i)
@@ -502,9 +502,9 @@ void apply_processing_object( processingObject_t * processing,
         convert_YCbCr_to_rgb(outputImage, img_s, processing->cs_zone.pre_calc_YCbCr_to_rgb);
     }
 
-    if (processing->lut3d_on)
+    if (processing->lut_on)
     {
-        apply_lut3d( processing->lut3d, imageX, imageY, outputImage );
+        apply_lut( processing->lut, imageX, imageY, outputImage );
     }
 
     if (processing->filter_on)
@@ -805,7 +805,7 @@ void processingSetTransformation(processingObject_t * processing, int transforma
 void freeProcessingObject(processingObject_t * processing)
 {
     freeFilterObject(processing->filter);
-    free_lut3d(processing->lut3d);
+    free_lut(processing->lut);
     for (int i = 8; i >= 0; --i) free(processing->pre_calc_matrix[i]);
     for (int i = 6; i >= 0; --i) free(processing->cs_zone.pre_calc_rgb_to_YCbCr[i]);
     for (int i = 3; i >= 0; --i) free(processing->cs_zone.pre_calc_YCbCr_to_rgb[i]);

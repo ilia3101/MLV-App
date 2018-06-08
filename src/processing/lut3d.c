@@ -15,70 +15,80 @@
 
 // //////////////
 //Interpolation functions
-double lerp(double x, double x1, double x2, double q00, double q01) {
+float lerp(float x, float x1, float x2, float q00, float q01) {
     if( ( x2 - x1 ) == 0 ) return q00;
     else return ( ( ( x2 - x ) / ( x2 - x1 ) ) * q00 ) + ( ( ( x - x1 ) / ( x2 - x1 ) ) * q01 );
 }
 
-double biLerp(double x, double y, double q11, double q12, double q21, double q22, double x1, double x2, double y1, double y2) {
-  double r1 = lerp(x, x1, x2, q11, q21);
-  double r2 = lerp(x, x1, x2, q12, q22);
+float biLerp(float x, float y, float q11, float q12, float q21, float q22, float x1, float x2, float y1, float y2) {
+  float r1 = lerp(x, x1, x2, q11, q21);
+  float r2 = lerp(x, x1, x2, q12, q22);
 
   return lerp(y, y1, y2, r1, r2);
 }
 
-double triLerp(double x, double y, double z, double q000, double q001, double q010, double q011, double q100, double q101, double q110, double q111, double x1, double x2, double y1, double y2, double z1, double z2) {
-  double x00 = lerp(x, x1, x2, q000, q100);
-  double x10 = lerp(x, x1, x2, q010, q110);
-  double x01 = lerp(x, x1, x2, q001, q101);
-  double x11 = lerp(x, x1, x2, q011, q111);
-  double r0 = lerp(y, y1, y2, x00, x10);
-  double r1 = lerp(y, y1, y2, x01, x11);
+float triLerp(float x, float y, float z, float q000, float q001, float q010, float q011, float q100, float q101, float q110, float q111, float x1, float x2, float y1, float y2, float z1, float z2) {
+  float x00 = lerp(x, x1, x2, q000, q100);
+  float x10 = lerp(x, x1, x2, q010, q110);
+  float x01 = lerp(x, x1, x2, q001, q101);
+  float x11 = lerp(x, x1, x2, q011, q111);
+  float r0 = lerp(y, y1, y2, x00, x10);
+  float r1 = lerp(y, y1, y2, x01, x11);
 
   return lerp(z, z1, z2, r0, r1);
 }
 // //////////////
 
-//Initialize 3d LUT object
-lut3d_t * init_lut3d( void )
+//Initialize LUT object
+lut_t * init_lut( void )
 {
-    lut3d_t *lut3d = malloc( sizeof( lut3d_t ) );
+    lut_t *lut3d = malloc( sizeof( lut_t ) );
     lut3d->dimension = 0;
     return lut3d;
 }
 
 //Unload the whole lut object
-void free_lut3d(lut3d_t *lut3d)
+void free_lut(lut_t *lut3d)
 {
     if( lut3d )
     {
-        unload_lut3d( lut3d );
+        unload_lut( lut3d );
         free( lut3d );
     }
 }
 
-//Load the 3dLUT
-int load_lut3d( lut3d_t *lut3d, char *filename )
+//Load the LUT
+int load_lut( lut_t *lut3d, char *filename )
 {
     FILE *fp;
     fp = fopen( filename, "r" );
     uint16_t dimension = 33;
     lut3d->dimension = dimension;
-    lut3d->cube = malloc( (uint32_t)dimension * (uint32_t)dimension * (uint32_t)dimension * 3 * sizeof( double ) );
-
-    for( uint32_t i = 0; i < dimension*dimension*dimension*3; i+=3 )
+    lut3d->is3d = 1;
+    uint32_t size;
+    if( !lut3d->is3d )
     {
-        double r, g, b;
-        int ret = fscanf(fp, "%lf %lf %lf\n", &r, &g, &b);
+        size = dimension * 3;
+    }
+    else
+    {
+        size = (uint32_t)dimension * (uint32_t)dimension * (uint32_t)dimension * 3;
+    }
+
+    lut3d->cube = malloc( size * sizeof( float ) );
+    for( uint32_t i = 0; i < size; i+=3 )
+    {
+        float r, g, b;
+        int ret = fscanf(fp, "%f %f %f\n", &r, &g, &b);
         if( ret == EOF ) //Error! File to short.
         {
-            unload_lut3d( lut3d );
+            unload_lut( lut3d );
             fclose( fp );
             return -1;
         }
-        if( ret != 3 ) //Error! Not 3 doubles found in line!
+        if( ret != 3 ) //Error! Not 3 floats found in line!
         {
-            unload_lut3d( lut3d );
+            unload_lut( lut3d );
             fclose( fp );
             return -2;
         }
@@ -92,7 +102,7 @@ int load_lut3d( lut3d_t *lut3d, char *filename )
 }
 
 //Unload the LUT
-void unload_lut3d( lut3d_t *lut3d )
+void unload_lut( lut_t *lut3d )
 {
     if( !lut3d ) return;
     if( lut3d->dimension == 0 ) return;
@@ -100,8 +110,15 @@ void unload_lut3d( lut3d_t *lut3d )
     lut3d->dimension = 0;
 }
 
-//Read out a point from the lut (input: 0..dimension-1)
-double getLutPoint( lut3d_t *lut3d, uint16_t rIn, uint16_t gIn, uint16_t bIn, uint8_t outChannel )
+//Read out a point from the 1dlut (input: 0..dimension-1)
+float getLut1dPoint( lut_t *lut3d, uint16_t inPos, uint8_t outChannel )
+{
+    if( inPos >= lut3d->dimension ) inPos = lut3d->dimension - 1;
+    return lut3d->cube[ inPos * 3 + outChannel ];
+}
+
+//Read out a point from the 3dlut (input: 0..dimension-1)
+float getLut3dPoint( lut_t *lut3d, uint16_t rIn, uint16_t gIn, uint16_t bIn, uint8_t outChannel )
 {
     if( rIn >= lut3d->dimension ) rIn = lut3d->dimension - 1;
     if( gIn >= lut3d->dimension ) gIn = lut3d->dimension - 1;
@@ -115,7 +132,7 @@ double getLutPoint( lut3d_t *lut3d, uint16_t rIn, uint16_t gIn, uint16_t bIn, ui
 }
 
 //Apply LUT on picture
-void apply_lut3d(lut3d_t *lut3d, int width, int height, uint16_t *image)
+void apply_lut(lut_t *lut3d, int width, int height, uint16_t *image)
 {
     if( lut3d->dimension <= 1 || !lut3d->cube ) return;
 
@@ -124,9 +141,9 @@ void apply_lut3d(lut3d_t *lut3d, int width, int height, uint16_t *image)
     for (uint16_t * pix = image; pix < end; pix += 3)
     {
         //x
-        double red = pix[0] * ( lut3d->dimension - 1 ) / 65536.0;
-        double green = pix[1] * ( lut3d->dimension - 1 ) / 65536.0;
-        double blue = pix[2] * ( lut3d->dimension - 1 ) / 65536.0;
+        float red = pix[0] * ( lut3d->dimension - 1 ) / 65536.0;
+        float green = pix[1] * ( lut3d->dimension - 1 ) / 65536.0;
+        float blue = pix[2] * ( lut3d->dimension - 1 ) / 65536.0;
 
         //x0
         uint16_t r0 = (uint16_t)red;
@@ -137,20 +154,20 @@ void apply_lut3d(lut3d_t *lut3d, int width, int height, uint16_t *image)
         uint16_t g1 = g0 + 1;
         uint16_t b1 = b0 + 1;
 
-        if( 0 )
+        if( lut3d->is3d == 0 )
         {
             //Linear Interpolation
             //y0 & //y1
-            double pix00 = getLutPoint( lut3d, r0, g0, b0, 0 );
-            double pix01 = getLutPoint( lut3d, r1, g1, b1, 0 );
-            double pix10 = getLutPoint( lut3d, r0, g0, b0, 1 );
-            double pix11 = getLutPoint( lut3d, r1, g1, b1, 1 );
-            double pix20 = getLutPoint( lut3d, r0, g0, b0, 2 );
-            double pix21 = getLutPoint( lut3d, r1, g1, b1, 2 );
+            float pix00 = getLut1dPoint( lut3d, r0, 0 );
+            float pix01 = getLut1dPoint( lut3d, r1, 0 );
+            float pix10 = getLut1dPoint( lut3d, g0, 1 );
+            float pix11 = getLut1dPoint( lut3d, g1, 1 );
+            float pix20 = getLut1dPoint( lut3d, b0, 2 );
+            float pix21 = getLut1dPoint( lut3d, b1, 2 );
             //3x Linear Interpolation
-            double a = lerp( red,   r0, r1, pix00, pix01 );
-            double b = lerp( green, g0, g1, pix10, pix11 );
-            double c = lerp( blue,  b0, b1, pix20, pix21 );
+            float a = lerp( red,   r0, r1, pix00, pix01 );
+            float b = lerp( green, g0, g1, pix10, pix11 );
+            float c = lerp( blue,  b0, b1, pix20, pix21 );
             //Output
             pix[0] = LIMIT16( a * 65535.0 );
             pix[1] = LIMIT16( b * 65535.0 );
@@ -161,16 +178,16 @@ void apply_lut3d(lut3d_t *lut3d, int width, int height, uint16_t *image)
             //Trilinear Interpolation
             for( int i = 0; i < 3; i++ )
             {
-                double q000 = getLutPoint( lut3d, r0, g0, b0, i );
-                double q001 = getLutPoint( lut3d, r0, g0, b1, i );
-                double q010 = getLutPoint( lut3d, r0, g1, b0, i );
-                double q011 = getLutPoint( lut3d, r0, g1, b1, i );
-                double q100 = getLutPoint( lut3d, r1, g0, b0, i );
-                double q101 = getLutPoint( lut3d, r1, g0, b1, i );
-                double q110 = getLutPoint( lut3d, r1, g1, b0, i );
-                double q111 = getLutPoint( lut3d, r1, g1, b1, i );
+                float q000 = getLut3dPoint( lut3d, r0, g0, b0, i );
+                float q001 = getLut3dPoint( lut3d, r0, g0, b1, i );
+                float q010 = getLut3dPoint( lut3d, r0, g1, b0, i );
+                float q011 = getLut3dPoint( lut3d, r0, g1, b1, i );
+                float q100 = getLut3dPoint( lut3d, r1, g0, b0, i );
+                float q101 = getLut3dPoint( lut3d, r1, g0, b1, i );
+                float q110 = getLut3dPoint( lut3d, r1, g1, b0, i );
+                float q111 = getLut3dPoint( lut3d, r1, g1, b1, i );
 
-                double out = triLerp(red, green, blue, q000, q001, q010, q011, q100, q101, q110, q111, r0, r1, g0, g1, b0, b1);
+                float out = triLerp(red, green, blue, q000, q001, q010, q011, q100, q101, q110, q111, r0, r1, g0, g1, b0, b1);
 
                 //Output
                 pix[i] = LIMIT16( out * 65535.0 );

@@ -4915,8 +4915,8 @@ void MainWindow::on_checkBoxRawFixEnable_clicked(bool checked)
 //En-/disable all LUT processing
 void MainWindow::on_checkBoxLutEnable_clicked(bool checked)
 {
-    if( checked ) processingEnableLut3d( m_pProcessingObject );
-    else processingDisableLut3d( m_pProcessingObject );
+    if( checked ) processingEnableLut( m_pProcessingObject );
+    else processingDisableLut( m_pProcessingObject );
     m_frameChanged = true;
 
     ui->toolButtonLoadLut->setEnabled( checked );
@@ -5751,18 +5751,18 @@ void MainWindow::on_lineEditLutName_textChanged(const QString &arg1)
         QByteArray lutName = arg1.toLatin1();
 #endif
 
-        int ret = load_lut3d( m_pProcessingObject->lut3d, lutName.data() );
+        int ret = load_lut( m_pProcessingObject->lut, lutName.data() );
         if( ret < 0 )
         {
             QMessageBox::critical( this, tr( "Error" ), tr( "Error loading LUT." ) );
             ui->lineEditLutName->setText( "" );
-            unload_lut3d( m_pProcessingObject->lut3d );
+            unload_lut( m_pProcessingObject->lut );
             return;
         }
     }
     else
     {
-        unload_lut3d( m_pProcessingObject->lut3d );
+        unload_lut( m_pProcessingObject->lut );
         ui->lineEditLutName->setText( "" );
     }
 
