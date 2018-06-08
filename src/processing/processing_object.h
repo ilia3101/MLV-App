@@ -18,6 +18,9 @@ typedef struct {
     filterObject_t * filter;
     int filter_on;
 
+    lut3d_t * lut3d;
+    int lut3d_on;
+
     /* Image profile, options:
      * PROFILE_STANDARD   : Gamma Corrected
      * PROFILE_TONEMAPPED : Gamma Corrected + Tonemapped

@@ -64,6 +64,9 @@ processingObject_t * initProcessingObject()
 
     processing->filter = initFilterObject();
 
+    processing->lut3d = init_lut3d();
+    processing->lut3d_on = 0;
+
     /* For precalculated matrix values */
     for (int i = 0; i < 9; ++i)
         processing->pre_calc_matrix[i] = malloc( 65536 * sizeof(int32_t) );
@@ -499,17 +502,15 @@ void apply_processing_object( processingObject_t * processing,
         convert_YCbCr_to_rgb(outputImage, img_s, processing->cs_zone.pre_calc_YCbCr_to_rgb);
     }
 
+    if (processing->lut3d_on)
+    {
+        apply_lut3d( processing->lut3d, imageX, imageY, outputImage );
+    }
+
     if (processing->filter_on)
     {
         applyFilterObject(processing->filter, imageX, imageY, outputImage);
     }
-
-    //TODO: JUST FOR LUT TESTING! LOADING AND FREEING SHOULD NOT BE HERE!
-    /*lut3d_t *lut3d = malloc( sizeof( lut3d_t ) );
-    load_lut3d( lut3d, "/Users/masc/Desktop/test.cube" );
-    apply_lut3d( lut3d, imageX, imageY, outputImage );
-    unload_lut3d( lut3d );
-    free( lut3d );*/
 }
 
 /* Pass frame buffer and do the transform on it */
@@ -804,6 +805,7 @@ void processingSetTransformation(processingObject_t * processing, int transforma
 void freeProcessingObject(processingObject_t * processing)
 {
     freeFilterObject(processing->filter);
+    free_lut3d(processing->lut3d);
     for (int i = 8; i >= 0; --i) free(processing->pre_calc_matrix[i]);
     for (int i = 6; i >= 0; --i) free(processing->cs_zone.pre_calc_rgb_to_YCbCr[i]);
     for (int i = 3; i >= 0; --i) free(processing->cs_zone.pre_calc_YCbCr_to_rgb[i]);

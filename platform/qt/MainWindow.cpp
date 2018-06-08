@@ -1024,6 +1024,7 @@ void MainWindow::readSettings()
     ui->groupBoxProcessing->setChecked( set.value( "expandedProcessing", true ).toBool() );
     ui->groupBoxDetails->setChecked( set.value( "expandedDetails", false ).toBool() );
     ui->groupBoxColorWheels->setChecked( set.value( "expandedColorWheels", false ).toBool() );
+    ui->groupBoxLut->setChecked( set.value( "expandedLut", false ).toBool() );
     ui->groupBoxFilter->setChecked( set.value( "expandedFilter", false ).toBool() );
     ui->groupBoxLinearGradient->setChecked( set.value( "expandedLinGradient", false ).toBool() );
     ui->groupBoxTransformation->setChecked( set.value( "expandedTransformation", false ).toBool() );
@@ -1058,6 +1059,7 @@ void MainWindow::writeSettings()
     set.setValue( "expandedProcessing", ui->groupBoxProcessing->isChecked() );
     set.setValue( "expandedDetails", ui->groupBoxDetails->isChecked() );
     set.setValue( "expandedColorWheels", ui->groupBoxColorWheels->isChecked() );
+    set.setValue( "expandedLut", ui->groupBoxLut->isChecked() );
     set.setValue( "expandedFilter", ui->groupBoxFilter->isChecked() );
     set.setValue( "expandedLinGradient", ui->groupBoxLinearGradient->isChecked() );
     set.setValue( "expandedTransformation", ui->groupBoxTransformation->isChecked() );
@@ -2314,6 +2316,16 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
             receipt->setDarkFrameEnabled( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
+        else if( Rxml->isStartElement() && Rxml->name() == "lutEnabled" )
+        {
+            receipt->setLutEnabled( (bool)Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == "lutName" )
+        {
+            receipt->setLutName( Rxml->readElementText() );
+            Rxml->readNext();
+        }
         else if( Rxml->isStartElement() && Rxml->name() == "filterEnabled" )
         {
             receipt->setFilterEnabled( (bool)Rxml->readElementText().toInt() );
@@ -2399,6 +2411,8 @@ void MainWindow::writeXmlElementsToFile(QXmlStreamWriter *xmlWriter, ReceiptSett
     xmlWriter->writeTextElement( "dualIsoBlack",            QString( "%1" ).arg( receipt->dualIsoBlack() ) );
     xmlWriter->writeTextElement( "darkFrameFileName",       QString( "%1" ).arg( receipt->darkFrameFileName() ) );
     xmlWriter->writeTextElement( "darkFrameEnabled",        QString( "%1" ).arg( receipt->darkFrameEnabled() ) );
+    xmlWriter->writeTextElement( "lutEnabled",              QString( "%1" ).arg( receipt->lutEnabled() ) );
+    xmlWriter->writeTextElement( "lutName",                 QString( "%1" ).arg( receipt->lutName() ) );
     xmlWriter->writeTextElement( "filterEnabled",           QString( "%1" ).arg( receipt->filterEnabled() ) );
     xmlWriter->writeTextElement( "filterIndex",             QString( "%1" ).arg( receipt->filterIndex() ) );
     xmlWriter->writeTextElement( "filterStrength",          QString( "%1" ).arg( receipt->filterStrength() ) );
@@ -2589,6 +2603,11 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
         setToolButtonDarkFrameSubtraction( receipt->darkFrameEnabled() );
     }
 
+    ui->checkBoxLutEnable->setChecked( receipt->lutEnabled() );
+    on_checkBoxLutEnable_clicked( receipt->lutEnabled() );
+    ui->lineEditLutName->setText( receipt->lutName() );
+    on_lineEditLutName_textChanged( receipt->lutName() );
+
     ui->checkBoxFilterEnable->setChecked( receipt->filterEnabled() );
     on_checkBoxFilterEnable_clicked( receipt->filterEnabled() );
     ui->comboBoxFilterName->setCurrentIndex( receipt->filterIndex() );
@@ -2663,6 +2682,9 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     receipt->setDualIsoBlack( processingGetBlackLevel( m_pMlvObject->processing ) );
     receipt->setDarkFrameFileName( ui->lineEditDarkFrameFile->text() );
     receipt->setDarkFrameEnabled( toolButtonDarkFrameSubtractionCurrentIndex() );
+
+    receipt->setLutEnabled( ui->checkBoxLutEnable->isChecked() );
+    receipt->setLutName( ui->lineEditLutName->text() );
 
     receipt->setFilterEnabled( ui->checkBoxFilterEnable->isChecked() );
     receipt->setFilterIndex( ui->comboBoxFilterName->currentIndex() );
@@ -4890,6 +4912,17 @@ void MainWindow::on_checkBoxRawFixEnable_clicked(bool checked)
     ui->lineEditDarkFrameFile->setEnabled( checked );
 }
 
+//En-/disable all LUT processing
+void MainWindow::on_checkBoxLutEnable_clicked(bool checked)
+{
+    if( checked ) processingEnableLut3d( m_pProcessingObject );
+    else processingDisableLut3d( m_pProcessingObject );
+    m_frameChanged = true;
+
+    ui->toolButtonLoadLut->setEnabled( checked );
+    ui->lineEditLutName->setEnabled( checked );
+}
+
 //En-/disable all filter processing
 void MainWindow::on_checkBoxFilterEnable_clicked(bool checked)
 {
@@ -5019,6 +5052,14 @@ void MainWindow::on_groupBoxColorWheels_toggled(bool arg1)
     ui->frameColorWheels->setVisible( arg1 );
     if( !arg1 ) ui->groupBoxColorWheels->setMaximumHeight( 30 );
     else ui->groupBoxColorWheels->setMaximumHeight( 16777215 );
+}
+
+//Collapse & Expand LUT
+void MainWindow::on_groupBoxLut_toggled(bool arg1)
+{
+    ui->frameLut->setVisible( arg1 );
+    if( !arg1 ) ui->groupBoxLut->setMaximumHeight( 30 );
+    else ui->groupBoxLut->setMaximumHeight( 16777215 );
 }
 
 //Collapse & Expand Filter
@@ -5676,4 +5717,54 @@ void MainWindow::updateCheckResponse(bool arg)
 
     QSettings set( QSettings::UserScope, "magiclantern.MLVApp", "MLVApp" );
     set.setValue( "lastUpdateCheck", QDate::currentDate().toString() );
+}
+
+//Load Lut button pressed
+void MainWindow::on_toolButtonLoadLut_clicked()
+{
+    if( !m_fileLoaded ) return;
+
+    QString path = QFileInfo( m_lastSaveFileName ).absolutePath();
+    if( !QDir( path ).exists() ) path = QDir::homePath();
+
+    //Open File Dialog
+    QString fileName = QFileDialog::getOpenFileName( this, tr("Open cube LUT (*.cube)..."),
+                                                    path,
+                                                    tr("Cube LUT (*.cube *.CUBE)") );
+
+    if( QFileInfo( fileName ).exists() && fileName.endsWith( ".cube", Qt::CaseInsensitive ) )
+    {
+        ui->lineEditLutName->setText( fileName );
+    }
+}
+
+//LUT filename changed
+void MainWindow::on_lineEditLutName_textChanged(const QString &arg1)
+{
+    if( !m_fileLoaded || !m_pProcessingObject ) return;
+
+    if( QFileInfo( arg1 ).exists() && arg1.endsWith( ".cube", Qt::CaseInsensitive ) )
+    {
+#ifdef Q_OS_UNIX
+        QByteArray lutName = arg1.toUtf8();
+#else
+        QByteArray lutName = arg1.toLatin1();
+#endif
+
+        int ret = load_lut3d( m_pProcessingObject->lut3d, lutName.data() );
+        if( ret < 0 )
+        {
+            QMessageBox::critical( this, tr( "Error" ), tr( "Error loading LUT." ) );
+            ui->lineEditLutName->setText( "" );
+            unload_lut3d( m_pProcessingObject->lut3d );
+            return;
+        }
+    }
+    else
+    {
+        unload_lut3d( m_pProcessingObject->lut3d );
+        ui->lineEditLutName->setText( "" );
+    }
+
+    m_frameChanged = true;
 }

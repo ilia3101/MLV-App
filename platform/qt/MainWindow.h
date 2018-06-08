@@ -170,6 +170,7 @@ private slots:
     void on_actionNextFrame_triggered();
     void on_actionPreviousFrame_triggered();
     void on_checkBoxRawFixEnable_clicked(bool checked);
+    void on_checkBoxLutEnable_clicked(bool checked);
     void on_checkBoxFilterEnable_clicked(bool checked);
     void on_actionWhiteBalancePicker_toggled(bool checked);
     void whiteBalancePicked( int x, int y );
@@ -180,6 +181,7 @@ private slots:
     void on_groupBoxProcessing_toggled(bool arg1);
     void on_groupBoxDetails_toggled(bool arg1);
     void on_groupBoxColorWheels_toggled(bool arg1);
+    void on_groupBoxLut_toggled(bool arg1);
     void on_groupBoxFilter_toggled(bool arg1);
     void on_groupBoxLinearGradient_toggled(bool arg1);
     void on_groupBoxTransformation_toggled(bool arg1);
@@ -221,6 +223,9 @@ private slots:
 
     void on_actionCheckForUpdates_triggered(void);
     void updateCheckResponse( bool arg );
+
+    void on_toolButtonLoadLut_clicked();
+    void on_lineEditLutName_textChanged(const QString &arg1);
 
 private:
     Ui::MainWindow *ui;

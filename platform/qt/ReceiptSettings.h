@@ -55,6 +55,8 @@ public:
     void setStretchFactorX( double factor )   {m_stretchFactorX = factor;}
     void setStretchFactorY( double factor )   {m_stretchFactorY = factor;}
     void setUpsideDown( bool on )             {m_upsideDown = on;}
+    void setLutEnabled( bool on )             {m_lutEnabled = on;}
+    void setLutName( QString name )           {m_lutName = name;}
     void setFilterEnabled( bool on )          {m_filterEnabled = on;}
     void setFilterIndex( uint8_t idx )        {m_filterIndex = idx;}
     void setFilterStrength( int value )       {m_filterStrength = value;}
@@ -99,6 +101,8 @@ public:
     double stretchFactorX( void ){return m_stretchFactorX;}
     double stretchFactorY( void ){return m_stretchFactorY;}
     bool upsideDown( void ){return m_upsideDown;}
+    bool lutEnabled( void ){return m_lutEnabled;}
+    QString lutName( void ){return m_lutName;}
     bool filterEnabled( void ){return m_filterEnabled;}
     uint8_t filterIndex( void ){return m_filterIndex;}
     int filterStrength( void ){return m_filterStrength;}
@@ -147,6 +151,8 @@ private:
     double m_stretchFactorX;
     double m_stretchFactorY;
     bool m_upsideDown;
+    bool m_lutEnabled;
+    QString m_lutName;
     bool m_filterEnabled;
     uint8_t m_filterIndex;
     int m_filterStrength;
