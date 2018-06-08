@@ -17,7 +17,7 @@
 //Interpolation functions
 double lerp(double x, double x1, double x2, double q00, double q01) {
     if( ( x2 - x1 ) == 0 ) return q00;
-    else return ((x2 - x) / (x2 - x1)) * q00 + ((x - x1) / (x2 - x1)) * q01;
+    else return ( ( ( x2 - x ) / ( x2 - x1 ) ) * q00 ) + ( ( ( x - x1 ) / ( x2 - x1 ) ) * q01 );
 }
 
 double biLerp(double x, double y, double q11, double q12, double q21, double q22, double x1, double x2, double y1, double y2) {
@@ -32,8 +32,8 @@ double triLerp(double x, double y, double z, double q000, double q001, double q0
   double x10 = lerp(x, x1, x2, q010, q110);
   double x01 = lerp(x, x1, x2, q001, q101);
   double x11 = lerp(x, x1, x2, q011, q111);
-  double r0 = lerp(y, y1, y2, x00, x01);
-  double r1 = lerp(y, y1, y2, x10, x11);
+  double r0 = lerp(y, y1, y2, x00, x10);
+  double r1 = lerp(y, y1, y2, x01, x11);
 
   return lerp(z, z1, z2, r0, r1);
 }
@@ -137,7 +137,7 @@ void apply_lut3d(lut3d_t *lut3d, int width, int height, uint16_t *image)
         uint16_t g1 = g0 + 1;
         uint16_t b1 = b0 + 1;
 
-        if( 1 )
+        if( 0 )
         {
             //Linear Interpolation
             //y0 & //y1
