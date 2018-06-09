@@ -2,7 +2,7 @@
  * \file cube_lut.h
  * \author masc4ii
  * \copyright 2018
- * \brief this module allows loading 3d luts (.cube) and applies them on a picture
+ * \brief this module allows loading 1d/3d luts (.cube) and applies them on a picture
  */
 
 #ifndef CUBE_LUT_H
