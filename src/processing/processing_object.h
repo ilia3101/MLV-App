@@ -3,7 +3,7 @@
 
 #include "image_profile.h"
 #include "filter/filter.h"
-#include "lut3d.h"
+#include "cube_lut.h"
 
 enum transform { TR_NONE, TR_ROT180 };
 

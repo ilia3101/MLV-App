@@ -1,11 +1,11 @@
 /*!
- * \file lut3d.c
+ * \file cube_lut.c
  * \author masc4ii
  * \copyright 2018
  * \brief this module allows loading 3d luts (.cube) and applies them on a picture
  */
 
-#include "lut3d.h"
+#include "cube_lut.h"
 #include <stdlib.h>
 #include <stdio.h>
 
