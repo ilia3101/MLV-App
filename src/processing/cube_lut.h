@@ -21,7 +21,7 @@ typedef struct {
 
 lut_t * init_lut( void );
 void free_lut( lut_t *lut );
-int load_lut(lut_t *lut, char *filename);
+int load_lut(lut_t *lut, char *filename, char *error_message);
 void unload_lut( lut_t *lut );
 void apply_lut( lut_t *lut, int width, int height, uint16_t * image );
 

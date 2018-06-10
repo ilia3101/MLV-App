@@ -5741,6 +5741,7 @@ void MainWindow::on_toolButtonLoadLut_clicked()
 //LUT filename changed
 void MainWindow::on_lineEditLutName_textChanged(const QString &arg1)
 {
+    char errorMessage[256] = { 0 };
     if( !m_fileLoaded || !m_pProcessingObject ) return;
 
     if( QFileInfo( arg1 ).exists() && arg1.endsWith( ".cube", Qt::CaseInsensitive ) )
@@ -5750,11 +5751,11 @@ void MainWindow::on_lineEditLutName_textChanged(const QString &arg1)
 #else
         QByteArray lutName = arg1.toLatin1();
 #endif
-
-        int ret = load_lut( m_pProcessingObject->lut, lutName.data() );
+        char errorMessage[256] = { 0 };
+        int ret = load_lut( m_pProcessingObject->lut, lutName.data(), errorMessage );
         if( ret < 0 )
         {
-            QMessageBox::critical( this, tr( "Error" ), tr( "Error loading LUT." ) );
+            QMessageBox::critical( this, tr( "Error" ), tr( "%1" ).arg( errorMessage ), tr("Cancel") );
             ui->lineEditLutName->setText( "" );
             unload_lut( m_pProcessingObject->lut );
             return;

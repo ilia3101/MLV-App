@@ -57,7 +57,7 @@ void free_lut(lut_t *lut)
 }
 
 //Load the LUT
-int load_lut( lut_t *lut, char *filename )
+int load_lut( lut_t *lut, char *filename, char *error_message )
 {
     unsigned int i = 0;
     char line[250];
@@ -71,17 +71,23 @@ int load_lut( lut_t *lut, char *filename )
     {
         if(line[0] == '#') //Comment, just skip this line
         {
+#ifndef STDOUT_SILENT
             printf("Comment line found and ignored\n");
+#endif
             continue;
         }
         else if( sscanf(line, "TITLE%*[ \t]%[^\n]", lut->title ) == 1) //Title is set
         {
+#ifndef STDOUT_SILENT
             printf("TITLE %s\n", lut->title);
+#endif
             continue;
         }
         else if( sscanf(line, "LUT_1D_SIZE%*[ \t]%hu%*[^\n]", &lut->dimension) == 1) //LUT is 1D
         {
+#ifndef STDOUT_SILENT
             printf("LUT_1D_SIZE %u\n", lut->dimension);
+#endif
             lut_size = lut->dimension * 3;
             lut->is3d = 0;
             lut->cube = malloc( lut_size * sizeof( float ) );
@@ -89,7 +95,9 @@ int load_lut( lut_t *lut, char *filename )
         }
         else if( sscanf(line, "LUT_3D_SIZE%*[ \t]%hu%*[^\n]", &lut->dimension) == 1) //LUT is 3D
         {
+#ifndef STDOUT_SILENT
             printf("LUT_3D_SIZE %u\n", lut->dimension);
+#endif
             lut_size = (uint32_t)lut->dimension * (uint32_t)lut->dimension * (uint32_t)lut->dimension * 3;
             lut->is3d = 1;
             lut->cube = malloc( lut_size * sizeof( float ) );
@@ -99,12 +107,17 @@ int load_lut( lut_t *lut, char *filename )
         {
             if(!lut_size || i >= lut_size) //File with invalid header or file is too long
             {
-                printf("File with invalid header or file is too long\n");
+                sprintf(error_message, "File with invalid header or file is too long.");
+#ifndef STDOUT_SILENT
+                printf("%s\n", error_message);
+#endif
                 unload_lut( lut );
                 fclose( fp );
                 return -1;
             }
+#ifndef STDOUT_SILENT
             printf("Data line #%d values: r = %f, g = %f, b = %f\n", i/3, r, g, b);
+#endif
             lut->cube[i+0] = r;
             lut->cube[i+1] = g;
             lut->cube[i+2] = b;
@@ -112,17 +125,24 @@ int load_lut( lut_t *lut, char *filename )
         }
         else if( sscanf(line, "DOMAIN_MIN%*[ \t]%f%*[ \t]%f%*[ \t]%f%*[^\n]", &lut->domain_min[0], &lut->domain_min[1], &lut->domain_min[2]) == 3) //Read domain min values
         {
+#ifndef STDOUT_SILENT
             printf("DOMAIN_MIN %f %f %f\n", lut->domain_min[0], lut->domain_min[1], lut->domain_min[2]);
+#endif
             continue;
         }
         else if( sscanf(line, "DOMAIN_MAX%*[ \t]%f%*[ \t]%f%*[ \t]%f%*[^\n]", &lut->domain_max[0], &lut->domain_max[1], &lut->domain_max[2]) == 3) //Read domain max values
         {
+#ifndef STDOUT_SILENT
             printf("DOMAIN_MAX %f %f %f\n", lut->domain_max[0], lut->domain_max[1], lut->domain_max[2]);
+#endif
             continue;
         }
         else //Invalid file
         {
-            printf("Invalid file\n");
+            sprintf(error_message, "Invalid file.");
+#ifndef STDOUT_SILENT
+            printf("%s\n", error_message);
+#endif
             unload_lut( lut );
             fclose( fp );
             return -2;
@@ -131,7 +151,10 @@ int load_lut( lut_t *lut, char *filename )
 
     if(i < lut_size) //File is too short
     {
-        printf("File too short\n");
+        sprintf(error_message, "File too short.");
+#ifndef STDOUT_SILENT
+        printf("%s\n", error_message);
+#endif
         unload_lut( lut );
         fclose( fp );
         return -3;
