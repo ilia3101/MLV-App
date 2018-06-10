@@ -996,6 +996,7 @@ void MainWindow::readSettings()
     if( set.value( "audioOutput", true ).toBool() ) ui->actionAudioOutput->setChecked( true );
     if( set.value( "zebras", false ).toBool() ) ui->actionShowZebras->setChecked( true );
     m_lastSaveFileName = set.value( "lastFileName", QDir::homePath() ).toString();
+    m_lastLutFileName = set.value( "lastLutFile", QDir::homePath() ).toString();
     m_codecProfile = set.value( "codecProfile", 4 ).toUInt();
     m_codecOption = set.value( "codecOption", 0 ).toUInt();
     m_exportDebayerMode = set.value( "exportDebayerMode", 1 ).toUInt();
@@ -1043,6 +1044,7 @@ void MainWindow::writeSettings()
     set.setValue( "audioOutput", ui->actionAudioOutput->isChecked() );
     set.setValue( "zebras", ui->actionShowZebras->isChecked() );
     set.setValue( "lastFileName", m_lastSaveFileName );
+    set.setValue( "lastLutFile", m_lastLutFileName );
     set.setValue( "codecProfile", m_codecProfile );
     set.setValue( "codecOption", m_codecOption );
     set.setValue( "exportDebayerMode", m_exportDebayerMode );
@@ -5724,7 +5726,7 @@ void MainWindow::on_toolButtonLoadLut_clicked()
 {
     if( !m_fileLoaded ) return;
 
-    QString path = QFileInfo( m_lastSaveFileName ).absolutePath();
+    QString path = QFileInfo( m_lastLutFileName ).absolutePath();
     if( !QDir( path ).exists() ) path = QDir::homePath();
 
     //Open File Dialog
@@ -5741,7 +5743,6 @@ void MainWindow::on_toolButtonLoadLut_clicked()
 //LUT filename changed
 void MainWindow::on_lineEditLutName_textChanged(const QString &arg1)
 {
-    char errorMessage[256] = { 0 };
     if( !m_fileLoaded || !m_pProcessingObject ) return;
 
     if( QFileInfo( arg1 ).exists() && arg1.endsWith( ".cube", Qt::CaseInsensitive ) )
@@ -5760,6 +5761,7 @@ void MainWindow::on_lineEditLutName_textChanged(const QString &arg1)
             unload_lut( m_pProcessingObject->lut );
             return;
         }
+        m_lastLutFileName = arg1;
     }
     else
     {

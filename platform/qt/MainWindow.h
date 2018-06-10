@@ -278,6 +278,7 @@ private:
     bool m_zoomTo100Center;
     bool m_zoomModeChanged;
     QString m_lastSaveFileName;
+    QString m_lastLutFileName;
     QString m_sessionFileName;
     ReceiptSettings *m_pReceiptClipboard;
     QVector<ReceiptSettings*> m_pSessionReceipts;
