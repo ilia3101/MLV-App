@@ -76,7 +76,7 @@ int load_lut( lut_t *lut, char *filename, char *error_message )
 
     while( fgets (line, 250, fp) != NULL ) //No more than 250 characters on the line, cube specification
     {
-        if(line[0] == '#') //Comment, just skip this line
+        if(line[0] == '#' || line[0] == '\n') //Comment, just skip this line
         {
 #ifndef STDOUT_SILENT
             printf("Comment line found and ignored\n");
