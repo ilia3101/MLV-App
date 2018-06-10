@@ -43,12 +43,6 @@ float triLerp(float x, float y, float z, float q000, float q001, float q010, flo
 lut_t * init_lut( void )
 {
     lut_t *lut = calloc( 1, sizeof( lut_t ) );
-    //Settings standard parameters, which mustn't be in cube file
-    for( int i = 0; i < 3; i++ )
-    {
-        lut->domain_min[i] = 0.0;
-        lut->domain_max[i] = 1.0;
-    }
     return lut;
 }
 
@@ -72,6 +66,13 @@ int load_lut( lut_t *lut, char *filename, char *error_message )
 
     FILE *fp;
     fp = fopen( filename, "r" );
+
+    //Settings standard parameters, which mustn't be in cube file
+    for( int i = 0; i < 3; i++ )
+    {
+        lut->domain_min[i] = 0.0;
+        lut->domain_max[i] = 1.0;
+    }
 
     while( fgets (line, 250, fp) != NULL ) //No more than 250 characters on the line, cube specification
     {
@@ -210,9 +211,9 @@ void apply_lut(lut_t *lut, int width, int height, uint16_t *image)
     for (uint16_t * pix = image; pix < end; pix += 3)
     {
         //x
-        float red   = ( pix[0] * ( lut->dimension - 1 ) / 65536.0 / ( lut->domain_max[0] - lut->domain_min[0] ) ) + lut->domain_min[0];
-        float green = ( pix[1] * ( lut->dimension - 1 ) / 65536.0 / ( lut->domain_max[1] - lut->domain_min[1] ) ) + lut->domain_min[1];
-        float blue  = ( pix[2] * ( lut->dimension - 1 ) / 65536.0 / ( lut->domain_max[2] - lut->domain_min[2] ) ) + lut->domain_min[2];
+        float red   = ( pix[0] * ( lut->dimension - 1 ) / 65536.0 / ( lut->domain_max[0] - lut->domain_min[0] ) ) - lut->domain_min[0];
+        float green = ( pix[1] * ( lut->dimension - 1 ) / 65536.0 / ( lut->domain_max[1] - lut->domain_min[1] ) ) - lut->domain_min[1];
+        float blue  = ( pix[2] * ( lut->dimension - 1 ) / 65536.0 / ( lut->domain_max[2] - lut->domain_min[2] ) ) - lut->domain_min[2];
 
         //x0
         uint16_t r0 = (uint16_t)red;
