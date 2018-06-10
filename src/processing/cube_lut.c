@@ -42,8 +42,7 @@ float triLerp(float x, float y, float z, float q000, float q001, float q010, flo
 //Initialize LUT object
 lut_t * init_lut( void )
 {
-    lut_t *lut = malloc( sizeof( lut_t ) );
-    lut->dimension = 0;
+    lut_t *lut = calloc( 1, sizeof( lut_t ) );
     return lut;
 }
 
@@ -60,41 +59,82 @@ void free_lut(lut_t *lut)
 //Load the LUT
 int load_lut( lut_t *lut, char *filename )
 {
+    unsigned int i = 0;
+    char line[250];
+    uint32_t lut_size = 0;
+    float r, g, b;
+
     FILE *fp;
     fp = fopen( filename, "r" );
-    uint16_t dimension = 33;
-    lut->dimension = dimension;
-    lut->is3d = 1;
-    uint32_t size;
-    if( !lut->is3d )
-    {
-        size = dimension * 3;
-    }
-    else
-    {
-        size = (uint32_t)dimension * (uint32_t)dimension * (uint32_t)dimension * 3;
-    }
 
-    lut->cube = malloc( size * sizeof( float ) );
-    for( uint32_t i = 0; i < size; i+=3 )
+    while( fgets (line, 250, fp) != NULL ) //No more than 250 characters on the line, cube specification
     {
-        float r, g, b;
-        int ret = fscanf(fp, "%f %f %f\n", &r, &g, &b);
-        if( ret == EOF ) //Error! File to short.
+        if(line[0] == '#') //Comment, just skip this line
         {
-            unload_lut( lut );
-            fclose( fp );
-            return -1;
+            printf("Comment line found and ignored\n");
+            continue;
         }
-        if( ret != 3 ) //Error! Not 3 floats found in line!
+        else if( sscanf(line, "TITLE%*[ \t]%[^\n]", lut->title ) == 1) //Title is set
         {
+            printf("TITLE %s\n", lut->title);
+            continue;
+        }
+        else if( sscanf(line, "LUT_1D_SIZE%*[ \t]%hu%*[^\n]", &lut->dimension) == 1) //LUT is 1D
+        {
+            printf("LUT_1D_SIZE %u\n", lut->dimension);
+            lut_size = lut->dimension * 3;
+            lut->is3d = 0;
+            lut->cube = malloc( lut_size * sizeof( float ) );
+            continue;
+        }
+        else if( sscanf(line, "LUT_3D_SIZE%*[ \t]%hu%*[^\n]", &lut->dimension) == 1) //LUT is 3D
+        {
+            printf("LUT_3D_SIZE %u\n", lut->dimension);
+            lut_size = (uint32_t)lut->dimension * (uint32_t)lut->dimension * (uint32_t)lut->dimension * 3;
+            lut->is3d = 1;
+            lut->cube = malloc( lut_size * sizeof( float ) );
+            continue;
+        }
+        else if( sscanf(line, "%f%*[ \t]%f%*[ \t]%f%*[^\n]", &r, &g, &b ) == 3) //Read data
+        {
+            if(!lut_size || i >= lut_size) //File with invalid header or file is too long
+            {
+                printf("File with invalid header or file is too long\n");
+                unload_lut( lut );
+                fclose( fp );
+                return -1;
+            }
+            printf("Data line #%d values: r = %f, g = %f, b = %f\n", i/3, r, g, b);
+            lut->cube[i+0] = r;
+            lut->cube[i+1] = g;
+            lut->cube[i+2] = b;
+            i+=3;
+        }
+        else if( sscanf(line, "DOMAIN_MIN%*[ \t]%f%*[ \t]%f%*[ \t]%f%*[^\n]", &lut->domain_min[0], &lut->domain_min[1], &lut->domain_min[2]) == 3) //Read domain min values
+        {
+            printf("DOMAIN_MIN %f %f %f\n", lut->domain_min[0], lut->domain_min[1], lut->domain_min[2]);
+            continue;
+        }
+        else if( sscanf(line, "DOMAIN_MAX%*[ \t]%f%*[ \t]%f%*[ \t]%f%*[^\n]", &lut->domain_max[0], &lut->domain_max[1], &lut->domain_max[2]) == 3) //Read domain max values
+        {
+            printf("DOMAIN_MAX %f %f %f\n", lut->domain_max[0], lut->domain_max[1], lut->domain_max[2]);
+            continue;
+        }
+        else //Invalid file
+        {
+            printf("Invalid file\n");
             unload_lut( lut );
             fclose( fp );
             return -2;
         }
-        lut->cube[i+0] = r;
-        lut->cube[i+1] = g;
-        lut->cube[i+2] = b;
+    }
+
+    if(i < lut_size) //File is too short
+    {
+        printf("File too short\n");
+        unload_lut( lut );
+        fclose( fp );
+        return -3;
     }
 
     fclose( fp );

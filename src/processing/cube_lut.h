@@ -11,7 +11,10 @@
 #include <stdint.h>
 
 typedef struct {
+    char title[200];
     uint16_t dimension;
+    float domain_min[3];
+    float domain_max[3];
     float *cube;
     int is3d;
 } lut_t;
