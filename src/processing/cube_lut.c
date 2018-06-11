@@ -270,6 +270,84 @@ void apply_lut(lut_t *lut, int width, int height, uint16_t *image)
                 //Output
                 pix[i] = LIMIT16( out * 65535.0 );
             }
+
+            //Tetrahedral Interpolation
+            /*green = green / (float)(lut->dimension - 1);
+            red = red / (float)(lut->dimension - 1);
+            blue = blue / (float)(lut->dimension - 1);
+
+            if( green >= blue && blue >= red ) //T1
+            {
+                for( uint8_t i = 0; i < 3; i++ )
+                {
+                    float out = ( (1.0 - green) * getLut3dPoint( lut, r0, g0, b0, i ) )
+                            + ( ( green - blue ) * getLut3dPoint( lut, r0, g1, b0, i ) )
+                            + ( ( blue - red ) * getLut3dPoint( lut, r0, g1, b1, i ) )
+                            + ( red * getLut3dPoint( lut, r1, g1, b1, i ) );
+                    //Output
+                    pix[i] = LIMIT16( out * 65535.0 );
+                }
+            }
+            else if( blue > red && red > green ) //T2
+            {
+                for( uint8_t i = 0; i < 3; i++ )
+                {
+                    float out = ( (1.0 - blue) * getLut3dPoint( lut, r0, g0, b0, i ) )
+                            + ( ( blue - red ) * getLut3dPoint( lut, r0, g0, b1, i ) )
+                            + ( ( red - green ) * getLut3dPoint( lut, r1, g0, b1, i ) )
+                            + ( green * getLut3dPoint( lut, r1, g1, b1, i ) );
+                    //Output
+                    pix[i] = LIMIT16( out * 65535.0 );
+                }
+            }
+            else if( blue > green && green >= red ) //T3
+            {
+                for( uint8_t i = 0; i < 3; i++ )
+                {
+                    float out = ( (1.0 - blue) * getLut3dPoint( lut, r0, g0, b0, i ) )
+                            + ( ( blue - green ) * getLut3dPoint( lut, r0, g0, b1, i ) )
+                            + ( ( green - red ) * getLut3dPoint( lut, r0, g1, b1, i ) )
+                            + ( red * getLut3dPoint( lut, r1, g1, b1, i ) );
+                    //Output
+                    pix[i] = LIMIT16( out * 65535.0 );
+                }
+            }
+            else if( red >= green && green > blue ) //T4
+            {
+                for( uint8_t i = 0; i < 3; i++ )
+                {
+                    float out = ( (1.0 - red) * getLut3dPoint( lut, r0, g0, b0, i ) )
+                            + ( ( red - green ) * getLut3dPoint( lut, r1, g0, b0, i ) )
+                            + ( ( green - blue ) * getLut3dPoint( lut, r1, g1, b0, i ) )
+                            + ( blue * getLut3dPoint( lut, r1, g1, b1, i ) );
+                    //Output
+                    pix[i] = LIMIT16( out * 65535.0 );
+                }
+            }
+            else if( green > red && red >= blue ) //T5
+            {
+                for( uint8_t i = 0; i < 3; i++ )
+                {
+                    float out = ( (1.0 - green) * getLut3dPoint( lut, r0, g0, b0, i ) )
+                            + ( ( green - red ) * getLut3dPoint( lut, r0, g1, b0, i ) )
+                            + ( ( red - blue ) * getLut3dPoint( lut, r1, g1, b0, i ) )
+                            + ( blue * getLut3dPoint( lut, r1, g1, b1, i ) );
+                    //Output
+                    pix[i] = LIMIT16( out * 65535.0 );
+                }
+            }
+            else //T6
+            {
+                for( uint8_t i = 0; i < 3; i++ )
+                {
+                    float out = ( (1.0 - red) * getLut3dPoint( lut, r0, g0, b0, i ) )
+                            + ( ( red - blue ) * getLut3dPoint( lut, r1, g0, b0, i ) )
+                            + ( ( blue - green ) * getLut3dPoint( lut, r1, g0, b1, i ) )
+                            + ( green * getLut3dPoint( lut, r1, g1, b1, i ) );
+                    //Output
+                    pix[i] = LIMIT16( out * 65535.0 );
+                }
+            }*/
         }
     }
 }
