@@ -27,6 +27,7 @@ Find the latest releases [here](https://ilia3101.github.io/MLV-App/). Download, 
 - Show next frame, previous frame and scroll though timeline
 - Label for timecode and duration of edited clip
 - Auto load white balance, if MLV was filmed at sunny, shade, cloudy, thungsten, fluorescent, flash or kelvin
+- 1D/3D LUT (.cube) support
 - Single frame (3x)8bit PNG export
 - Clip export via ffmpeg 10bit ProRes 422 (Proxy, LT, Standard, HQ), ProRes 4444, RAW AVI, 8bit H.264 and H.265, 16bit TIFF sequence, DNxHD, DNxHR; all with or without audio
 - macOS only: Clip export via Apple AVFoundation 12bit ProRes 422, ProRes 4444 and 8bit H.264, all with or without audio
