@@ -63,6 +63,7 @@ int load_lut( lut_t *lut, char *filename, char *error_message )
     char line[250];
     uint32_t lut_size = 0;
     float r, g, b;
+    float inMin, inMax;
 
     FILE *fp;
     fp = fopen( filename, "r" );
@@ -76,7 +77,7 @@ int load_lut( lut_t *lut, char *filename, char *error_message )
 
     while( fgets (line, 250, fp) != NULL ) //No more than 250 characters on the line, cube specification
     {
-        if(line[0] == '#' || line[0] == '\n') //Comment, just skip this line
+        if(line[0] == '#' || line[0] == '\n' || line[0] == '\r') //Comment, just skip this line
         {
 #ifndef STDOUT_SILENT
             printf("Comment line found and ignored\n");
@@ -141,6 +142,13 @@ int load_lut( lut_t *lut, char *filename, char *error_message )
         {
 #ifndef STDOUT_SILENT
             printf("DOMAIN_MAX %f %f %f\n", lut->domain_max[0], lut->domain_max[1], lut->domain_max[2]);
+#endif
+            continue;
+        }
+        else if( sscanf(line, "LUT_3D_INPUT_RANGE%*[ \t]%f%*[ \t]%f%*[^\n]", &inMin, &inMax) == 2) //Read input range values (Resolve created), do nothing with it, because it is not in the specs
+        {
+#ifndef STDOUT_SILENT
+            printf("LUT_3D_INPUT_RANGE %f %f\n", &inMin, &inMax);
 #endif
             continue;
         }
