@@ -2827,6 +2827,9 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     receipt->setDarkFrameFileName( m_pSessionReceipts.at( row )->darkFrameFileName() );
     receipt->setDarkFrameEnabled( m_pSessionReceipts.at( row )->darkFrameEnabled() );
 
+    receipt->setLutEnabled( m_pSessionReceipts.at( row )->lutEnabled() );
+    receipt->setLutName( m_pSessionReceipts.at( row )->lutName() );
+
     receipt->setFilterEnabled( m_pSessionReceipts.at( row )->filterEnabled() );
     receipt->setFilterIndex( m_pSessionReceipts.at( row )->filterIndex() );
     receipt->setFilterStrength( m_pSessionReceipts.at( row )->filterStrength() );

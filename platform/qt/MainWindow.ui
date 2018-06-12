@@ -389,7 +389,7 @@ QGroupBox::indicator:checked {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>-2471</y>
+            <y>0</y>
             <width>195</width>
             <height>3177</height>
            </rect>
@@ -4277,6 +4277,9 @@ QGroupBox::indicator:checked {
                   <layout class="QHBoxLayout" name="horizontalLayout_30">
                    <item>
                     <widget class="QToolButton" name="toolButtonLoadLut">
+                     <property name="enabled">
+                      <bool>false</bool>
+                     </property>
                      <property name="sizePolicy">
                       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                        <horstretch>0</horstretch>
@@ -4300,6 +4303,9 @@ QGroupBox::indicator:checked {
                    </item>
                    <item>
                     <widget class="QLineEdit" name="lineEditLutName">
+                     <property name="enabled">
+                      <bool>false</bool>
+                     </property>
                      <property name="font">
                       <font>
                        <pointsize>10</pointsize>
