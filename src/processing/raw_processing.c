@@ -385,6 +385,14 @@ void apply_processing_object( processingObject_t * processing,
                 {
                     pix[1] = (pix[0] + pix[2]) / 2;
                 }
+                /* Aggressive mode */
+                /*if (tmp1b >= processing->highest_green - 15000 && tmp1b <= processing->highest_green)
+                {
+                    if( pix[1] < 1.1*pix[0] && pix[1] < pix[2] )
+                    {
+                        pix[1] = (pix[0] + pix[2]) / 2;
+                    }
+                }*/
             }
         }
     }
