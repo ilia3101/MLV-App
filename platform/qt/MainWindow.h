@@ -77,6 +77,8 @@ private slots:
     void on_horizontalSliderSharpen_valueChanged(int position);
     void on_horizontalSliderChromaBlur_valueChanged(int position);
     void on_horizontalSliderFilterStrength_valueChanged(int position);
+    void on_horizontalSliderRawWhite_valueChanged(int position);
+    void on_horizontalSliderRawBlack_valueChanged(int position);
 
     void on_horizontalSliderExposure_doubleClicked();
     void on_horizontalSliderTemperature_doubleClicked();
@@ -92,6 +94,8 @@ private slots:
     void on_horizontalSliderSharpen_doubleClicked();
     void on_horizontalSliderChromaBlur_doubleClicked();
     void on_horizontalSliderFilterStrength_doubleClicked();
+    void on_horizontalSliderRawWhite_doubleClicked();
+    void on_horizontalSliderRawBlack_doubleClicked();
 
     void on_actionGoto_First_Frame_triggered();
     void on_actionExport_triggered();
@@ -148,6 +152,8 @@ private slots:
     void on_label_ChromaBlur_doubleClicked( void );
     void on_labelAudioTrack_sizeChanged( void );
     void on_label_FilterStrengthVal_doubleClicked( void );
+    void on_label_RawWhiteVal_doubleClicked( void );
+    void on_label_RawBlackVal_doubleClicked( void );
     void on_actionFullscreen_triggered(bool checked);
     void exportHandler( void );
     void on_actionPlay_triggered(bool checked);

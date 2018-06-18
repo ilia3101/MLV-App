@@ -488,6 +488,18 @@ int MainWindow::openMlvForPreview(QString fileName)
 
     m_fileLoaded = true;
 
+    //Raw black & white level (needed for preview picture)
+    ui->horizontalSliderRawBlack->blockSignals( true );
+    ui->horizontalSliderRawBlack->setMaximum( 16383 );
+    ui->horizontalSliderRawBlack->blockSignals( false );
+    ui->horizontalSliderRawWhite->blockSignals( true );
+    ui->horizontalSliderRawWhite->setMaximum( 16383 );
+    ui->horizontalSliderRawWhite->blockSignals( false );
+    /*ui->horizontalSliderRawBlack->setValue( getMlvBlackLevel( m_pMlvObject ) );
+    on_horizontalSliderRawBlack_valueChanged( getMlvBlackLevel( m_pMlvObject ) );
+    ui->horizontalSliderRawWhite->setValue( getMlvWhiteLevel( m_pMlvObject ) );
+    on_horizontalSliderRawWhite_valueChanged( getMlvWhiteLevel( m_pMlvObject ) );*/
+
     return MLV_ERR_NONE;
 }
 
@@ -687,6 +699,18 @@ int MainWindow::openMlv( QString fileName )
 
     //Cut In & Out
     initCutInOut( getMlvFrames( m_pMlvObject ) );
+
+    //Raw black & white level
+    ui->horizontalSliderRawBlack->blockSignals( true );
+    ui->horizontalSliderRawBlack->setMaximum( ( 2 << ( getLosslessBpp( m_pMlvObject ) - 1 ) ) - 1 );
+    ui->horizontalSliderRawBlack->blockSignals( false );
+    ui->horizontalSliderRawWhite->blockSignals( true );
+    ui->horizontalSliderRawWhite->setMaximum( ( 2 << ( getLosslessBpp( m_pMlvObject ) - 1 ) ) - 1 );
+    ui->horizontalSliderRawWhite->blockSignals( false );
+    ui->horizontalSliderRawBlack->setValue( getMlvBlackLevel( m_pMlvObject ) );
+    on_horizontalSliderRawBlack_valueChanged( getMlvBlackLevel( m_pMlvObject ) );
+    ui->horizontalSliderRawWhite->setValue( getMlvWhiteLevel( m_pMlvObject ) );
+    on_horizontalSliderRawWhite_valueChanged( getMlvWhiteLevel( m_pMlvObject ) );
 
     m_frameChanged = true;
 
@@ -2318,6 +2342,16 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
             receipt->setDarkFrameEnabled( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
+        else if( Rxml->isStartElement() && Rxml->name() == "rawBlack" )
+        {
+            receipt->setRawBlack( Rxml->readElementText().toUInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == "rawWhite" )
+        {
+            receipt->setRawWhite( Rxml->readElementText().toUInt() );
+            Rxml->readNext();
+        }
         else if( Rxml->isStartElement() && Rxml->name() == "lutEnabled" )
         {
             receipt->setLutEnabled( (bool)Rxml->readElementText().toInt() );
@@ -2413,6 +2447,8 @@ void MainWindow::writeXmlElementsToFile(QXmlStreamWriter *xmlWriter, ReceiptSett
     xmlWriter->writeTextElement( "dualIsoBlack",            QString( "%1" ).arg( receipt->dualIsoBlack() ) );
     xmlWriter->writeTextElement( "darkFrameFileName",       QString( "%1" ).arg( receipt->darkFrameFileName() ) );
     xmlWriter->writeTextElement( "darkFrameEnabled",        QString( "%1" ).arg( receipt->darkFrameEnabled() ) );
+    xmlWriter->writeTextElement( "rawBlack",                QString( "%1" ).arg( receipt->rawBlack() ) );
+    xmlWriter->writeTextElement( "rawWhite",                QString( "%1" ).arg( receipt->rawWhite() ) );
     xmlWriter->writeTextElement( "lutEnabled",              QString( "%1" ).arg( receipt->lutEnabled() ) );
     xmlWriter->writeTextElement( "lutName",                 QString( "%1" ).arg( receipt->lutName() ) );
     xmlWriter->writeTextElement( "filterEnabled",           QString( "%1" ).arg( receipt->filterEnabled() ) );
@@ -2642,6 +2678,15 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
         on_spinBoxCutOut_valueChanged( receipt->cutOut() );
     }
 
+    if( receipt->rawBlack() != -1 )
+    {
+        ui->horizontalSliderRawBlack->setValue( receipt->rawBlack() );
+    }
+    if( receipt->rawWhite() != -1 )
+    {
+        ui->horizontalSliderRawWhite->setValue( receipt->rawWhite() );
+    }
+
     m_pMlvObject->current_cached_frame_active = 0;
 }
 
@@ -2684,6 +2729,8 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     receipt->setDualIsoBlack( processingGetBlackLevel( m_pMlvObject->processing ) );
     receipt->setDarkFrameFileName( ui->lineEditDarkFrameFile->text() );
     receipt->setDarkFrameEnabled( toolButtonDarkFrameSubtractionCurrentIndex() );
+    receipt->setRawBlack( ui->horizontalSliderRawBlack->value() );
+    receipt->setRawWhite( ui->horizontalSliderRawWhite->value() );
 
     receipt->setLutEnabled( ui->checkBoxLutEnable->isChecked() );
     receipt->setLutName( ui->lineEditLutName->text() );
@@ -2737,6 +2784,8 @@ void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings 
     receiptTarget->setDualIsoBlack( receiptSource->dualIsoBlack() );
     receiptTarget->setDarkFrameFileName( receiptSource->darkFrameFileName() );
     receiptTarget->setDarkFrameEnabled( receiptSource->darkFrameEnabled() );
+    receiptTarget->setRawBlack( receiptSource->rawBlack() );
+    receiptTarget->setRawWhite( receiptSource->rawWhite() );
 
     receiptTarget->setFilterEnabled( receiptSource->filterEnabled() );
     receiptTarget->setFilterIndex( receiptSource->filterIndex() );
@@ -2826,6 +2875,8 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     receipt->setDualIsoBlack( m_pSessionReceipts.at( row )->dualIsoBlack() );
     receipt->setDarkFrameFileName( m_pSessionReceipts.at( row )->darkFrameFileName() );
     receipt->setDarkFrameEnabled( m_pSessionReceipts.at( row )->darkFrameEnabled() );
+    receipt->setRawBlack( m_pSessionReceipts.at( row )->rawBlack() );
+    receipt->setRawWhite( m_pSessionReceipts.at( row )->rawWhite() );
 
     receipt->setLutEnabled( m_pSessionReceipts.at( row )->lutEnabled() );
     receipt->setLutName( m_pSessionReceipts.at( row )->lutName() );
@@ -3537,6 +3588,33 @@ void MainWindow::on_horizontalSliderFilterStrength_valueChanged(int position)
     m_frameChanged = true;
 }
 
+void MainWindow::on_horizontalSliderRawWhite_valueChanged(int position)
+{
+    if( !m_fileLoaded ) return;
+    if( getLosslessBpp( m_pMlvObject ) == 0 ) return;
+    if( getLosslessBpp( m_pMlvObject ) > 16 ) return;
+
+    /* Lowering white level a bit avoids pink grain in highlihgt reconstruction */
+    int positionCorr = (int)((double)position * 0.993);
+
+    int shift = 16 - getLosslessBpp( m_pMlvObject );
+    processingSetWhiteLevel( m_pProcessingObject, positionCorr << shift );
+    ui->label_RawWhiteVal->setText( QString("%1").arg( position ) );
+    m_frameChanged = true;
+}
+
+void MainWindow::on_horizontalSliderRawBlack_valueChanged(int position)
+{
+    if( !m_fileLoaded ) return;
+    if( getLosslessBpp( m_pMlvObject ) == 0 ) return;
+    if( getLosslessBpp( m_pMlvObject ) > 16 ) return;
+
+    int shift = 16 - getLosslessBpp( m_pMlvObject );
+    processingSetBlackLevel( m_pProcessingObject, position << shift );
+    ui->label_RawBlackVal->setText( QString("%1").arg( position ) );
+    m_frameChanged = true;
+}
+
 void MainWindow::on_horizontalSliderExposure_doubleClicked()
 {
     ReceiptSettings *sliders = new ReceiptSettings(); //default
@@ -3634,6 +3712,16 @@ void MainWindow::on_horizontalSliderFilterStrength_doubleClicked()
     ReceiptSettings *sliders = new ReceiptSettings(); //default
     ui->horizontalSliderFilterStrength->setValue( sliders->filterStrength() );
     delete sliders;
+}
+
+void MainWindow::on_horizontalSliderRawWhite_doubleClicked()
+{
+    ui->horizontalSliderRawWhite->setValue( getMlvWhiteLevel( m_pMlvObject ) );
+}
+
+void MainWindow::on_horizontalSliderRawBlack_doubleClicked()
+{
+    ui->horizontalSliderRawBlack->setValue( getMlvBlackLevel( m_pMlvObject ) );
 }
 
 //Jump to first frame
@@ -4500,6 +4588,22 @@ void MainWindow::on_label_FilterStrengthVal_doubleClicked()
     ui->horizontalSliderFilterStrength->setValue( editSlider.getValue() );
 }
 
+void MainWindow::on_label_RawWhiteVal_doubleClicked()
+{
+    EditSliderValueDialog editSlider;
+    editSlider.autoSetup( ui->horizontalSliderRawWhite, ui->label_RawWhiteVal, 1.0, 0, 1.0 );
+    editSlider.exec();
+    ui->horizontalSliderRawWhite->setValue( editSlider.getValue() );
+}
+
+void MainWindow::on_label_RawBlackVal_doubleClicked()
+{
+    EditSliderValueDialog editSlider;
+    editSlider.autoSetup( ui->horizontalSliderRawBlack, ui->label_RawBlackVal, 1.0, 0, 1.0 );
+    editSlider.exec();
+    ui->horizontalSliderRawBlack->setValue( editSlider.getValue() );
+}
+
 //Fullscreen Mode
 void MainWindow::on_actionFullscreen_triggered( bool checked )
 {
@@ -4915,6 +5019,25 @@ void MainWindow::on_checkBoxRawFixEnable_clicked(bool checked)
     ui->toolButtonDarkFrameSubtraction->setEnabled( checked );
     ui->toolButtonDarkFrameSubtractionFile->setEnabled( checked );
     ui->lineEditDarkFrameFile->setEnabled( checked );
+
+    ui->RawBlackLabel->setEnabled( checked );
+    ui->horizontalSliderRawBlack->setEnabled( checked );
+    ui->label_RawBlackVal->setEnabled( checked );
+    ui->RawWhiteLabel->setEnabled( checked );
+    ui->horizontalSliderRawWhite->setEnabled( checked );
+    ui->label_RawWhiteVal->setEnabled( checked );
+    if( checked )
+    {
+        on_horizontalSliderRawBlack_valueChanged( ui->horizontalSliderRawBlack->value() );
+        on_horizontalSliderRawWhite_valueChanged( ui->horizontalSliderRawWhite->value() );
+    }
+    else
+    {
+        int shift = 16 - getLosslessBpp( m_pMlvObject );
+        processingSetBlackLevel( m_pProcessingObject, getMlvBlackLevel( m_pMlvObject ) << shift );
+        /* Lowering white level a bit avoids pink grain in highlihgt reconstruction */
+        processingSetWhiteLevel( m_pProcessingObject, (int)((double)getMlvWhiteLevel( m_pMlvObject ) * 0.993 ) << shift );
+    }
 }
 
 //En-/disable all LUT processing

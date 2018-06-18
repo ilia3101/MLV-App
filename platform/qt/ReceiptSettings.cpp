@@ -54,6 +54,8 @@ ReceiptSettings::ReceiptSettings()
     m_filterIndex = 0;
     m_filterStrength = 100;
     m_profile = 1;
+    m_rawWhite = -1;
+    m_rawBlack = -1;
     m_cutIn = 1;
     m_cutOut = INT32_MAX;
 }

@@ -32,6 +32,8 @@ public:
     void setHighlightReconstruction( bool on ){m_highlightReconstruction = on;}
     void setChromaSeparation( bool on ){m_chromaSeparation = on;}
     void setProfile( uint8_t num )  {m_profile = num;}
+    void setRawWhite( uint16_t value ) {m_rawWhite = value;}
+    void setRawBlack( uint16_t value ) {m_rawBlack = value;}
     void setFileName( QString fileName )      {m_fileName = fileName;}
     void setExportFileName( QString fileName ){m_exportFileName = fileName;}
     void setRawFixesEnabled( bool on )        {m_rawFixesEnabled = on;}
@@ -109,6 +111,8 @@ public:
     uint32_t cutIn( void ) {return m_cutIn;}
     uint32_t cutOut( void ){return m_cutOut;}
     uint8_t profile( void ){return m_profile;}
+    int rawWhite( void ) {return m_rawWhite;}
+    int rawBlack( void ) {return m_rawBlack;}
     QString fileName( void ){return m_fileName;}
     QString exportFileName( void ){return m_exportFileName;}
 
@@ -159,6 +163,8 @@ private:
     uint32_t m_cutIn;
     uint32_t m_cutOut;
     uint8_t m_profile;
+    int m_rawWhite;
+    int m_rawBlack;
     QString m_fileName;
     QString m_exportFileName;
 };
