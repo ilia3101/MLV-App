@@ -490,10 +490,10 @@ int MainWindow::openMlvForPreview(QString fileName)
 
     //Raw black & white level (needed for preview picture)
     ui->horizontalSliderRawBlack->blockSignals( true );
-    ui->horizontalSliderRawBlack->setMaximum( ( 2 << ( getLosslessBpp( m_pMlvObject ) - 1 ) ) - 1 );
+    ui->horizontalSliderRawBlack->setMaximum( ( 2 << ( getMlvBitdepth( m_pMlvObject ) - 1 ) ) - 1 );
     ui->horizontalSliderRawBlack->blockSignals( false );
     ui->horizontalSliderRawWhite->blockSignals( true );
-    ui->horizontalSliderRawWhite->setMaximum( ( 2 << ( getLosslessBpp( m_pMlvObject ) - 1 ) ) - 1 );
+    ui->horizontalSliderRawWhite->setMaximum( ( 2 << ( getMlvBitdepth( m_pMlvObject ) - 1 ) ) - 1 );
     ui->horizontalSliderRawWhite->blockSignals( false );
     ui->horizontalSliderRawBlack->setValue( getMlvBlackLevel( m_pMlvObject ) );
     on_horizontalSliderRawBlack_valueChanged( getMlvBlackLevel( m_pMlvObject ) );
@@ -702,10 +702,10 @@ int MainWindow::openMlv( QString fileName )
 
     //Raw black & white level
     ui->horizontalSliderRawBlack->blockSignals( true );
-    ui->horizontalSliderRawBlack->setMaximum( ( 2 << ( getLosslessBpp( m_pMlvObject ) - 1 ) ) - 1 );
+    ui->horizontalSliderRawBlack->setMaximum( ( 2 << ( getMlvBitdepth( m_pMlvObject ) - 1 ) ) - 1 );
     ui->horizontalSliderRawBlack->blockSignals( false );
     ui->horizontalSliderRawWhite->blockSignals( true );
-    ui->horizontalSliderRawWhite->setMaximum( ( 2 << ( getLosslessBpp( m_pMlvObject ) - 1 ) ) - 1 );
+    ui->horizontalSliderRawWhite->setMaximum( ( 2 << ( getMlvBitdepth( m_pMlvObject ) - 1 ) ) - 1 );
     ui->horizontalSliderRawWhite->blockSignals( false );
     ui->horizontalSliderRawBlack->setValue( getMlvBlackLevel( m_pMlvObject ) );
     on_horizontalSliderRawBlack_valueChanged( getMlvBlackLevel( m_pMlvObject ) );
@@ -3591,13 +3591,13 @@ void MainWindow::on_horizontalSliderFilterStrength_valueChanged(int position)
 void MainWindow::on_horizontalSliderRawWhite_valueChanged(int position)
 {
     if( !m_fileLoaded ) return;
-    if( getLosslessBpp( m_pMlvObject ) == 0 ) return;
-    if( getLosslessBpp( m_pMlvObject ) > 16 ) return;
+    if( getMlvBitdepth( m_pMlvObject ) == 0 ) return;
+    if( getMlvBitdepth( m_pMlvObject ) > 16 ) return;
 
     /* Lowering white level a bit avoids pink grain in highlihgt reconstruction */
     int positionCorr = (int)((double)position * 0.993);
 
-    int shift = 16 - getLosslessBpp( m_pMlvObject );
+    int shift = 16 - getMlvBitdepth( m_pMlvObject );
     processingSetWhiteLevel( m_pProcessingObject, positionCorr << shift );
     ui->label_RawWhiteVal->setText( QString("%1").arg( position ) );
     m_frameChanged = true;
@@ -3606,10 +3606,10 @@ void MainWindow::on_horizontalSliderRawWhite_valueChanged(int position)
 void MainWindow::on_horizontalSliderRawBlack_valueChanged(int position)
 {
     if( !m_fileLoaded ) return;
-    if( getLosslessBpp( m_pMlvObject ) == 0 ) return;
-    if( getLosslessBpp( m_pMlvObject ) > 16 ) return;
+    if( getMlvBitdepth( m_pMlvObject ) == 0 ) return;
+    if( getMlvBitdepth( m_pMlvObject ) > 16 ) return;
 
-    int shift = 16 - getLosslessBpp( m_pMlvObject );
+    int shift = 16 - getMlvBitdepth( m_pMlvObject );
     processingSetBlackLevel( m_pProcessingObject, position << shift );
     ui->label_RawBlackVal->setText( QString("%1").arg( position ) );
     m_frameChanged = true;
@@ -5033,7 +5033,7 @@ void MainWindow::on_checkBoxRawFixEnable_clicked(bool checked)
     }
     else
     {
-        int shift = 16 - getLosslessBpp( m_pMlvObject );
+        int shift = 16 - getMlvBitdepth( m_pMlvObject );
         processingSetBlackLevel( m_pProcessingObject, getMlvBlackLevel( m_pMlvObject ) << shift );
         /* Lowering white level a bit avoids pink grain in highlihgt reconstruction */
         processingSetWhiteLevel( m_pProcessingObject, (int)((double)getMlvWhiteLevel( m_pMlvObject ) * 0.993 ) << shift );
