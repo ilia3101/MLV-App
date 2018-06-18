@@ -490,15 +490,15 @@ int MainWindow::openMlvForPreview(QString fileName)
 
     //Raw black & white level (needed for preview picture)
     ui->horizontalSliderRawBlack->blockSignals( true );
-    ui->horizontalSliderRawBlack->setMaximum( 16383 );
+    ui->horizontalSliderRawBlack->setMaximum( ( 2 << ( getLosslessBpp( m_pMlvObject ) - 1 ) ) - 1 );
     ui->horizontalSliderRawBlack->blockSignals( false );
     ui->horizontalSliderRawWhite->blockSignals( true );
-    ui->horizontalSliderRawWhite->setMaximum( 16383 );
+    ui->horizontalSliderRawWhite->setMaximum( ( 2 << ( getLosslessBpp( m_pMlvObject ) - 1 ) ) - 1 );
     ui->horizontalSliderRawWhite->blockSignals( false );
-    /*ui->horizontalSliderRawBlack->setValue( getMlvBlackLevel( m_pMlvObject ) );
+    ui->horizontalSliderRawBlack->setValue( getMlvBlackLevel( m_pMlvObject ) );
     on_horizontalSliderRawBlack_valueChanged( getMlvBlackLevel( m_pMlvObject ) );
     ui->horizontalSliderRawWhite->setValue( getMlvWhiteLevel( m_pMlvObject ) );
-    on_horizontalSliderRawWhite_valueChanged( getMlvWhiteLevel( m_pMlvObject ) );*/
+    on_horizontalSliderRawWhite_valueChanged( getMlvWhiteLevel( m_pMlvObject ) );
 
     return MLV_ERR_NONE;
 }
@@ -707,11 +707,10 @@ int MainWindow::openMlv( QString fileName )
     ui->horizontalSliderRawWhite->blockSignals( true );
     ui->horizontalSliderRawWhite->setMaximum( ( 2 << ( getLosslessBpp( m_pMlvObject ) - 1 ) ) - 1 );
     ui->horizontalSliderRawWhite->blockSignals( false );
-    int shift = 14 - getLosslessBpp( m_pMlvObject );
-    ui->horizontalSliderRawBlack->setValue( getMlvBlackLevel( m_pMlvObject ) >> shift );
-    on_horizontalSliderRawBlack_valueChanged( getMlvBlackLevel( m_pMlvObject ) >> shift );
-    ui->horizontalSliderRawWhite->setValue( getMlvWhiteLevel( m_pMlvObject ) >> shift );
-    on_horizontalSliderRawWhite_valueChanged( getMlvWhiteLevel( m_pMlvObject ) >> shift );
+    ui->horizontalSliderRawBlack->setValue( getMlvBlackLevel( m_pMlvObject ) );
+    on_horizontalSliderRawBlack_valueChanged( getMlvBlackLevel( m_pMlvObject ) );
+    ui->horizontalSliderRawWhite->setValue( getMlvWhiteLevel( m_pMlvObject ) );
+    on_horizontalSliderRawWhite_valueChanged( getMlvWhiteLevel( m_pMlvObject ) );
 
     m_frameChanged = true;
 
@@ -3717,14 +3716,12 @@ void MainWindow::on_horizontalSliderFilterStrength_doubleClicked()
 
 void MainWindow::on_horizontalSliderRawWhite_doubleClicked()
 {
-    int shift = 14 - getLosslessBpp( m_pMlvObject );
-    ui->horizontalSliderRawWhite->setValue( getMlvWhiteLevel( m_pMlvObject ) >> shift );
+    ui->horizontalSliderRawWhite->setValue( getMlvWhiteLevel( m_pMlvObject ) );
 }
 
 void MainWindow::on_horizontalSliderRawBlack_doubleClicked()
 {
-    int shift = 14 - getLosslessBpp( m_pMlvObject );
-    ui->horizontalSliderRawBlack->setValue( getMlvBlackLevel( m_pMlvObject ) >> shift );
+    ui->horizontalSliderRawBlack->setValue( getMlvBlackLevel( m_pMlvObject ) );
 }
 
 //Jump to first frame
