@@ -351,6 +351,7 @@ private:
     int toolButtonDualIsoFullresBlendingCurrentIndex( void );
     int toolButtonDarkFrameSubtractionCurrentIndex( void );
     void initCutInOut( int frames );
+    void initRawBlackAndWhite( void );
     double getHorizontalStretchFactor();
     double getVerticalStretchFactor();
     void setWhiteBalanceFromMlv( ReceiptSettings *sliders );

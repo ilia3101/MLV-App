@@ -489,16 +489,7 @@ int MainWindow::openMlvForPreview(QString fileName)
     m_fileLoaded = true;
 
     //Raw black & white level (needed for preview picture)
-    ui->horizontalSliderRawBlack->blockSignals( true );
-    ui->horizontalSliderRawBlack->setMaximum( ( 2 << ( getMlvBitdepth( m_pMlvObject ) - 1 ) ) - 1 );
-    ui->horizontalSliderRawBlack->blockSignals( false );
-    ui->horizontalSliderRawWhite->blockSignals( true );
-    ui->horizontalSliderRawWhite->setMaximum( ( 2 << ( getMlvBitdepth( m_pMlvObject ) - 1 ) ) - 1 );
-    ui->horizontalSliderRawWhite->blockSignals( false );
-    ui->horizontalSliderRawBlack->setValue( getMlvBlackLevel( m_pMlvObject ) );
-    on_horizontalSliderRawBlack_valueChanged( getMlvBlackLevel( m_pMlvObject ) );
-    ui->horizontalSliderRawWhite->setValue( getMlvWhiteLevel( m_pMlvObject ) );
-    on_horizontalSliderRawWhite_valueChanged( getMlvWhiteLevel( m_pMlvObject ) );
+    initRawBlackAndWhite();
 
     return MLV_ERR_NONE;
 }
@@ -701,16 +692,7 @@ int MainWindow::openMlv( QString fileName )
     initCutInOut( getMlvFrames( m_pMlvObject ) );
 
     //Raw black & white level
-    ui->horizontalSliderRawBlack->blockSignals( true );
-    ui->horizontalSliderRawBlack->setMaximum( ( 2 << ( getMlvBitdepth( m_pMlvObject ) - 1 ) ) - 1 );
-    ui->horizontalSliderRawBlack->blockSignals( false );
-    ui->horizontalSliderRawWhite->blockSignals( true );
-    ui->horizontalSliderRawWhite->setMaximum( ( 2 << ( getMlvBitdepth( m_pMlvObject ) - 1 ) ) - 1 );
-    ui->horizontalSliderRawWhite->blockSignals( false );
-    ui->horizontalSliderRawBlack->setValue( getMlvBlackLevel( m_pMlvObject ) );
-    on_horizontalSliderRawBlack_valueChanged( getMlvBlackLevel( m_pMlvObject ) );
-    ui->horizontalSliderRawWhite->setValue( getMlvWhiteLevel( m_pMlvObject ) );
-    on_horizontalSliderRawWhite_valueChanged( getMlvWhiteLevel( m_pMlvObject ) );
+    initRawBlackAndWhite();
 
     m_frameChanged = true;
 
@@ -5522,6 +5504,21 @@ void MainWindow::initCutInOut(int frames)
         ui->spinBoxCutOut->setMaximum( frames );
         //ui->spinBoxCutOut->setValue( frames );
     }
+}
+
+//Set the sliders to what is saved into the mlv
+void MainWindow::initRawBlackAndWhite()
+{
+    ui->horizontalSliderRawBlack->blockSignals( true );
+    ui->horizontalSliderRawBlack->setMaximum( ( 2 << ( getMlvBitdepth( m_pMlvObject ) - 1 ) ) - 1 );
+    ui->horizontalSliderRawBlack->blockSignals( false );
+    ui->horizontalSliderRawWhite->blockSignals( true );
+    ui->horizontalSliderRawWhite->setMaximum( ( 2 << ( getMlvBitdepth( m_pMlvObject ) - 1 ) ) - 1 );
+    ui->horizontalSliderRawWhite->blockSignals( false );
+    ui->horizontalSliderRawBlack->setValue( getMlvBlackLevel( m_pMlvObject ) );
+    on_horizontalSliderRawBlack_valueChanged( getMlvBlackLevel( m_pMlvObject ) );
+    ui->horizontalSliderRawWhite->setValue( getMlvWhiteLevel( m_pMlvObject ) );
+    on_horizontalSliderRawWhite_valueChanged( getMlvWhiteLevel( m_pMlvObject ) );
 }
 
 //Get the current horizontal stretch factor
