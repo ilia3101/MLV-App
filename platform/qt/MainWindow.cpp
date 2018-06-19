@@ -4140,6 +4140,8 @@ void MainWindow::on_actionExportSettings_triggered()
 void MainWindow::on_actionResetReceipt_triggered()
 {
     ReceiptSettings *sliders = new ReceiptSettings(); //default
+    sliders->setRawWhite( getMlvWhiteLevel( m_pMlvObject ) );
+    sliders->setRawBlack( getMlvBlackLevel( m_pMlvObject ) );
     setSliders( sliders, false );
     delete sliders;
 }

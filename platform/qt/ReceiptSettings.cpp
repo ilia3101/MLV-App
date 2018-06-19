@@ -29,7 +29,7 @@ ReceiptSettings::ReceiptSettings()
     m_chromaSeparation = false;
     m_rawFixesEnabled = true;
     m_vertical_stripes = 0;
-    m_focus_pixels = 1;
+    m_focus_pixels = -1;
     m_fpi_method = 0;
     m_bad_pixels = 1;
     m_bps_method = 0;
