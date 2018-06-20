@@ -33,6 +33,8 @@
 #define getMlvVersion(video) (video)->MLVI.versionString
 #define getMlvBlackLevel(video) (video)->RAWI.raw_info.black_level
 #define getMlvWhiteLevel(video) (video)->RAWI.raw_info.white_level
+#define getMlvOriginalBlackLevel(video) (video)->original_black_level
+#define getMlvOriginalWhiteLevel(video) (video)->original_white_level
 #define getMlvIso(video) (video)->EXPO.isoValue
 #define getMlvFocalLength(video) (video)->LENS.focalLength
 #define getMlvShutter(video) (video)->EXPO.shutterValue

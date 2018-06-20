@@ -337,6 +337,10 @@ void setMlvProcessing(mlvObject_t * video, processingObject_t * processing)
             }
         }
 
+        /* Save these values to reset them after having played around in GUI */
+        video->original_black_level = CorrectedBlackLevel;
+        video->original_white_level = CorrectedWhiteLevel;
+
         /* Lowering white level a bit avoids pink grain in highlihgt reconstruction */
         CorrectedWhiteLevel = (int)((double)CorrectedWhiteLevel * 0.993);
     }
