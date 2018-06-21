@@ -852,11 +852,9 @@ void processingFindWhiteBalance(processingObject_t *processing, int imageX, int 
     /* Trail & Error :-P */
     for( int temp = 2300; temp <= 10000; temp += 100 )
     {
-        processingSetWhiteBalanceKelvin( processing, (double)temp );
-
         for( int tint = -10; tint <= 10; tint += 2 )
         {
-            processingSetWhiteBalanceTint( processing, (double)tint );
+            processingSetWhiteBalance( processing, temp, tint );
 
             /* --- maybe this can also be exchanged by apply_processing_object, but here it is simplified and hopefully faster --- */
             /* white balance & exposure */
@@ -890,8 +888,7 @@ void processingFindWhiteBalance(processingObject_t *processing, int imageX, int 
     }
 
     /* set it back to where we began */
-    processingSetWhiteBalanceKelvin( processing, (double)oriTemp );
-    processingSetWhiteBalanceTint( processing, (double)oriTint );
+    processingSetWhiteBalance( processing, (double)oriTemp, (double)oriTint );
 
     /* give the GUI what it wanted */
     *wbTemp = nearestTemp;
