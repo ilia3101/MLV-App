@@ -305,6 +305,8 @@ void setMlvProcessing(mlvObject_t * video, processingObject_t * processing)
     /* Corrected RAW black/white levels */
     int CorrectedBlackLevel = getMlvBlackLevel(video);
     int CorrectedWhiteLevel = getMlvWhiteLevel(video);
+    video->original_black_level = CorrectedBlackLevel;
+    video->original_white_level = CorrectedWhiteLevel;
 
     if(CorrectedBlackLevel && CorrectedWhiteLevel)
     {
@@ -338,8 +340,21 @@ void setMlvProcessing(mlvObject_t * video, processingObject_t * processing)
         }
 
         /* Save these values to reset them after having played around in GUI */
-        video->original_black_level = CorrectedBlackLevel;
-        video->original_white_level = CorrectedWhiteLevel;
+        switch(getMlvBitdepth(video))
+        {
+            case 10:
+                video->original_black_level = CorrectedBlackLevel / 16;
+                video->original_white_level = CorrectedWhiteLevel / 16;
+                break;
+            case 12:
+                video->original_black_level = CorrectedBlackLevel / 4;
+                video->original_white_level = CorrectedWhiteLevel / 4;
+                break;
+            default:
+                video->original_black_level = CorrectedBlackLevel;
+                video->original_white_level = CorrectedWhiteLevel;
+                break;
+        }
 
         /* Lowering white level a bit avoids pink grain in highlihgt reconstruction */
         CorrectedWhiteLevel = (int)((double)CorrectedWhiteLevel * 0.993);
