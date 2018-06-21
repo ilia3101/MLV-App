@@ -305,8 +305,6 @@ void setMlvProcessing(mlvObject_t * video, processingObject_t * processing)
     /* Corrected RAW black/white levels */
     int CorrectedBlackLevel = getMlvBlackLevel(video);
     int CorrectedWhiteLevel = getMlvWhiteLevel(video);
-    video->original_black_level = CorrectedBlackLevel;
-    video->original_white_level = CorrectedWhiteLevel;
 
     if(CorrectedBlackLevel && CorrectedWhiteLevel)
     {
