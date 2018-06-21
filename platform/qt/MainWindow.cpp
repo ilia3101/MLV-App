@@ -812,8 +812,8 @@ void MainWindow::initGui( void )
     //Set fit to screen as default zoom
     ui->actionZoomFit->setChecked( true );
     //Make whiteBalance picker invisible, so nobody asks why it does not work :-)
-    ui->actionWhiteBalancePicker->setVisible( false );
-    ui->toolButtonWb->setVisible( false );
+    //ui->actionWhiteBalancePicker->setVisible( false );
+    //ui->toolButtonWb->setVisible( false );
     //If no clip loaded, import receipt is disabled
     ui->actionImportReceipt->setEnabled( false );
     //If no clip loaded, disable session save
@@ -5075,8 +5075,12 @@ void MainWindow::whiteBalancePicked( int x, int y )
     //Quit if click not in picture
     if( x < 0 || y < 0 || x > getMlvWidth( m_pMlvObject ) || y > getMlvHeight( m_pMlvObject ) ) return;
 
-    //TODO: send to Ilias lib and get sliderpos
-    qDebug() << "Click in Scene:" << x << y;
+    int temp, tint;
+    //qDebug() << "Click in Scene:" << x << y;
+    findMlvWhiteBalance( m_pMlvObject, ui->horizontalSliderPosition->value(), x, y, &temp, &tint );
+    //qDebug() << "wbTemp:" << temp << "wbTint" << tint;
+    ui->horizontalSliderTemperature->setValue( temp );
+    ui->horizontalSliderTint->setValue( tint*10 );
 }
 
 //Gradient anchor was selected by user

@@ -52,6 +52,8 @@ void setMlvRawCacheLimitFrames(mlvObject_t * video, uint64_t frameLimit);
 
 /* Links processing settings() with an MLV object */
 void setMlvProcessing(mlvObject_t * video, processingObject_t * processing);
+/* Function for WB Picker */
+void findMlvWhiteBalance(mlvObject_t * video, uint64_t frameIndex, int posX, int posY, int *wbTemp, int *wbTint);
 
 /* Functions for getting processed MLV frames - uses the 'processing' module,
  * Avalible in 8 and 16 bit! Neither is faster as processing for both is done in 16 bit,

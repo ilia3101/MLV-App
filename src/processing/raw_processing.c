@@ -820,3 +820,80 @@ void freeProcessingObject(processingObject_t * processing)
     free_image_buffer(processing->shadows_highlights.blur_image);
     free(processing);
 }
+
+/* Find correct white balance setting for one selected pixel */
+void processingFindWhiteBalance(processingObject_t *processing, int imageX, int imageY, uint16_t *inputImage, int posX, int posY, int *wbTemp, int *wbTint)
+{
+    /* Number of elements */
+    int img_s = imageX * imageY * 3;
+
+    /* (for shorter code) */
+    int32_t ** pm = processing->pre_calc_matrix;
+    uint16_t * img = inputImage;
+
+    /* Apply some precalcuolated settings */
+    for (int i = 0; i < img_s; ++i)
+    {
+        /* Black + white level */
+        img[i] = processing->pre_calc_levels[ img[i] ];
+    }
+
+    double oriTemp = processing->kelvin;
+    double oriTint = processing->wb_tint;
+    int nearestTemp;
+    int nearestTint;
+    uint32_t deltaMin = UINT32_MAX;
+
+    /* this is the pixel for what we search the parameters */
+    uint16_t * pix = img + ( ( posY * imageX + posX ) * 3 );
+
+    /* TODO: average with neighbor pixels */
+
+    /* Trail & Error :-P */
+    for( int temp = 2300; temp <= 10000; temp += 100 )
+    {
+        processingSetWhiteBalanceKelvin( processing, (double)temp );
+
+        for( int tint = -10; tint <= 10; tint += 2 )
+        {
+            processingSetWhiteBalanceTint( processing, (double)tint );
+
+            /* --- maybe this can also be exchanged by apply_processing_object, but here it is simplified and hopefully faster --- */
+            /* white balance & exposure */
+            int32_t pix0 = processing->pre_calc_gamma[ LIMIT16(pm[0][pix[0]] + pm[1][pix[1]] + pm[2][pix[2]]) ];
+            int32_t pix1 = processing->pre_calc_gamma[ LIMIT16(pm[3][pix[0]] + pm[4][pix[1]] + pm[5][pix[2]]) ];
+            int32_t pix2 = processing->pre_calc_gamma[ LIMIT16(pm[6][pix[0]] + pm[7][pix[1]] + pm[8][pix[2]]) ];
+
+            /* standard highlight reconstruction */
+            if( processing->highlight_reconstruction && pix1 == processing->highest_green )
+            {
+                pix1 = ( pix0 + pix2 ) / 2;
+            }
+            /* --- */
+
+            /* for neutral grey all 3 are the same, so searching the min delta */
+            uint32_t delta = abs( pix0 - pix1 ) + abs( pix1 - pix2 ) + abs( pix0 - pix2 );
+
+            if( delta < deltaMin )
+            {
+                nearestTemp = temp;
+                nearestTint = tint;
+                deltaMin = delta;
+            }
+
+            /* delta won't be smaller than 0 */
+            if( deltaMin == 0 ) break;
+        }
+
+        /* delta won't be smaller than 0 */
+        if( deltaMin == 0 ) break;
+    }
+
+    /* set it back to where we began */
+    processingSetWhiteBalanceKelvin( processing, (double)oriTemp );
+    processingSetWhiteBalanceTint( processing, (double)oriTint );
+
+    /* give the GUI what it wanted */
+    *wbTemp = nearestTemp;
+    *wbTint = nearestTint;
+}

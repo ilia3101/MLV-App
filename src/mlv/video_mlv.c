@@ -1584,3 +1584,29 @@ void printMlvInfo(mlvObject_t * video)
     printf("      White Level: %i\n", video->RAWI.raw_info.white_level);
     printf("     Bits / Pixel: %i\n\n", video->RAWI.raw_info.bits_per_pixel);
 }
+
+/* WB Picker function; selects the pic and sends task to processing module */
+void findMlvWhiteBalance(mlvObject_t *video, uint64_t frameIndex, int posX, int posY, int *wbTemp, int *wbTint)
+{
+    /* Useful */
+    int width = getMlvWidth(video);
+    int height = getMlvHeight(video);
+
+    /* Size of RAW frame */
+    int rgb_frame_size = height * width * 3;
+
+    /* Unprocessed debayered frame (RGB) */
+    uint16_t * unprocessed_frame = malloc( rgb_frame_size * sizeof(uint16_t) );
+
+    /* Get the raw data in B&W */
+    getMlvRawFrameDebayered(video, frameIndex, unprocessed_frame);
+
+    /* find WB.......... */
+    processingFindWhiteBalance( video->processing,
+                                width, height,
+                                unprocessed_frame,
+                                posX, posY,
+                                wbTemp, wbTint);
+
+    free(unprocessed_frame);
+}

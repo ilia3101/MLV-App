@@ -134,7 +134,11 @@ void processingSetWhiteBalanceKelvin(processingObject_t * processing, double WBK
 void processingSetWhiteBalanceTint(processingObject_t * processing, double WBTint);
 #define processingGetWhiteBalanceKelvin(processing) (processing)->kelvin
 #define processingGetWhiteBalanceTint(processing) (processing)->wb_tint
-
+void processingFindWhiteBalance(processingObject_t * processing,
+                                int imageX, int imageY,
+                                uint16_t * __restrict inputImage,
+                                int posX, int posY,
+                                int *wbTemp, int *wbTint);
 
 
 /* Black/white level set */
