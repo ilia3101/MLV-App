@@ -1024,6 +1024,7 @@ void MainWindow::readSettings()
     m_resizeWidth = set.value( "resizeWidth", 1920 ).toUInt();
     m_resizeHeight = set.value( "resizeHeight", 1080 ).toUInt();
     m_resizeFilterHeightLocked = set.value( "resizeLockHeight", false ).toBool();
+    m_smoothFilterEnabled = set.value( "smoothEnabled", false ).toBool();
     m_frameRate = set.value( "frameRate", 25 ).toDouble();
     m_audioExportEnabled = set.value( "audioExportEnabled", true ).toBool();
     ui->groupBoxRawCorrection->setChecked( set.value( "expandedRawCorrection", false ).toBool() );
@@ -1060,6 +1061,7 @@ void MainWindow::writeSettings()
     set.setValue( "resizeWidth", m_resizeWidth );
     set.setValue( "resizeHeight", m_resizeHeight );
     set.setValue( "resizeLockHeight", m_resizeFilterHeightLocked );
+    set.setValue( "smoothEnabled", m_smoothFilterEnabled );
     set.setValue( "frameRate", m_frameRate );
     set.setValue( "audioExportEnabled", m_audioExportEnabled );
     set.setValue( "expandedRawCorrection", ui->groupBoxRawCorrection->isChecked() );
@@ -1163,6 +1165,21 @@ void MainWindow::startExportPipe(QString fileName)
         return;
     }
 
+    //Solving the . and , problem at fps in the command
+    QLocale locale = QLocale(QLocale::English, QLocale::UnitedKingdom);
+    locale.setNumberOptions(QLocale::OmitGroupSeparator);
+    QString fps = locale.toString( getFramerate() );
+
+    //Doing something against moiree
+    QString moireeFilter = QString( "" );
+    if( m_smoothFilterEnabled )
+    {
+        //minterpolate, tblend and framestep are filters. The 1st does the oversampling.
+        //The 2nd, the blended frames, and 3rd reduces the stream back to original fps.
+        moireeFilter = QString( "minterpolate=%1,tblend=all_mode=average,framestep=2," )
+                .arg( locale.toString( getFramerate() * 2.0 ) );
+    }
+
     //Resize Filter + colorspace conversion (for getting right colors)
     QString resizeFilter = QString( "" );
     if( m_resizeFilterEnabled )
@@ -1189,7 +1206,10 @@ void MainWindow::startExportPipe(QString fileName)
             m_resizeWidth += m_resizeWidth % 2;
             height += height % 2;
         }
-        resizeFilter = QString( "-vf scale=w=%1:h=%2:in_color_matrix=bt601:out_color_matrix=bt709 " ).arg( m_resizeWidth ).arg( height );
+        resizeFilter = QString( "-vf %1scale=w=%2:h=%3:in_color_matrix=bt601:out_color_matrix=bt709 " )
+                .arg( moireeFilter )
+                .arg( m_resizeWidth )
+                .arg( height );
     }
     else if( m_exportQueue.first()->stretchFactorX() != 1.0
           || m_exportQueue.first()->stretchFactorY() != 1.0 )
@@ -1203,14 +1223,16 @@ void MainWindow::startExportPipe(QString fileName)
             width += width % 2;
             height += height % 2;
         }
-        resizeFilter = QString( "-vf scale=w=%1:h=%2:in_color_matrix=bt601:out_color_matrix=bt709 " )
+        resizeFilter = QString( "-vf %1scale=w=%2:h=%3:in_color_matrix=bt601:out_color_matrix=bt709 " )
+                .arg( moireeFilter )
                 .arg( width )
                 .arg( height );
     }
     else
     {
         //a colorspace conversion is always needed to get right colors
-        resizeFilter = QString( "-vf scale=in_color_matrix=bt601:out_color_matrix=bt709 " );
+        resizeFilter = QString( "-vf %1scale=in_color_matrix=bt601:out_color_matrix=bt709 " )
+                .arg( moireeFilter );
     }
     //qDebug() << resizeFilter;
 
@@ -1228,11 +1250,6 @@ void MainWindow::startExportPipe(QString fileName)
 #ifdef STDOUT_SILENT
     program.append( QString( " -loglevel 0" ) );
 #endif
-
-    //Solving the . and , problem at fps in the command
-    QLocale locale = QLocale(QLocale::English, QLocale::UnitedKingdom);
-    locale.setNumberOptions(QLocale::OmitGroupSeparator);
-    QString fps = locale.toString( getFramerate() );
 
     QString output = fileName.left( fileName.lastIndexOf( "." ) );
     QString resolution = QString( "%1x%2" ).arg( getMlvWidth( m_pMlvObject ) ).arg( getMlvHeight( m_pMlvObject ) );
@@ -4078,7 +4095,8 @@ void MainWindow::on_actionExportSettings_triggered()
                                                                       m_fpsOverride,
                                                                       m_frameRate,
                                                                       m_audioExportEnabled,
-                                                                      m_resizeFilterHeightLocked );
+                                                                      m_resizeFilterHeightLocked,
+                                                                      m_smoothFilterEnabled);
     pExportSettings->exec();
     m_codecProfile = pExportSettings->encoderSetting();
     m_codecOption = pExportSettings->encoderOption();
@@ -4090,6 +4108,7 @@ void MainWindow::on_actionExportSettings_triggered()
     m_frameRate = pExportSettings->getFps();
     m_audioExportEnabled = pExportSettings->isExportAudioEnabled();
     m_resizeFilterHeightLocked = pExportSettings->isHeightLocked();
+    m_smoothFilterEnabled = pExportSettings->isSmoothEnabled();
     delete pExportSettings;
 
     if( m_fileLoaded )

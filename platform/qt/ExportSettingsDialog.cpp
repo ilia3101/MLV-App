@@ -12,7 +12,7 @@
 #include <QStandardItem>
 
 //Constructor
-ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, Scripting *scripting, uint8_t currentCodecProfile, uint8_t currentCodecOption, uint8_t debayerMode, bool resize, uint16_t resizeWidth, uint16_t resizeHeight, bool fpsOverride, double fps, bool exportAudio, bool heightLocked) :
+ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, Scripting *scripting, uint8_t currentCodecProfile, uint8_t currentCodecOption, uint8_t debayerMode, bool resize, uint16_t resizeWidth, uint16_t resizeHeight, bool fpsOverride, double fps, bool exportAudio, bool heightLocked, bool smooth) :
     QDialog(parent),
     ui(new Ui::ExportSettingsDialog)
 {
@@ -31,6 +31,7 @@ ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, Scripting *scripting
     ui->doubleSpinBoxFps->setValue( fps );
     ui->checkBoxExportAudio->setChecked( exportAudio );
     ui->toolButtonLockHeight->setChecked( heightLocked );
+    ui->checkBoxSmooth->setChecked( smooth );
 
     //Disable resize for AVFoundation
     if( ui->comboBoxOption->currentText() == QString( "Apple AVFoundation" ) )
@@ -117,6 +118,12 @@ bool ExportSettingsDialog::isExportAudioEnabled()
 bool ExportSettingsDialog::isHeightLocked()
 {
     return ui->toolButtonLockHeight->isChecked();
+}
+
+//Get if smooth filter is enabled
+bool ExportSettingsDialog::isSmoothEnabled()
+{
+    return ui->checkBoxSmooth->isChecked();
 }
 
 //Close clicked
@@ -244,8 +251,10 @@ void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
     if( !enableResize )
     {
         ui->checkBoxResize->setChecked( false );
+        ui->checkBoxSmooth->setChecked( false );
     }
     ui->checkBoxResize->setEnabled( enableResize );
+    ui->checkBoxSmooth->setEnabled( enableResize );
 
     //En-/disable fps override
     if( ( index == CODEC_MLV ) || ( index == CODEC_TIFF ) || ( index == CODEC_AUDIO_ONLY ) )
@@ -290,6 +299,8 @@ void ExportSettingsDialog::on_comboBoxOption_currentIndexChanged(const QString &
     {
         ui->checkBoxResize->setChecked( false );
         ui->checkBoxResize->setEnabled( false );
+        ui->checkBoxSmooth->setChecked( false );
+        ui->checkBoxSmooth->setEnabled( false );
     }
     else
     {
@@ -302,6 +313,7 @@ void ExportSettingsDialog::on_comboBoxOption_currentIndexChanged(const QString &
         {
             ui->checkBoxExportAudio->setEnabled( true );
             ui->checkBoxResize->setEnabled( true );
+            ui->checkBoxSmooth->setEnabled( true );
         }
     }
 }

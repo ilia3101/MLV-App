@@ -80,7 +80,8 @@ public:
                                   bool fpsOverride = false,
                                   double fps = 25,
                                   bool exportAudio = true,
-                                  bool heightLocked = false);
+                                  bool heightLocked = false,
+                                  bool smooth = false);
     ~ExportSettingsDialog();
     uint8_t encoderSetting(void);
     uint8_t encoderOption(void);
@@ -92,6 +93,7 @@ public:
     double getFps(void);
     bool isExportAudioEnabled(void);
     bool isHeightLocked(void);
+    bool isSmoothEnabled(void);
 
 private slots:
     void on_pushButtonClose_clicked();
