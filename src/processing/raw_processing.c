@@ -845,9 +845,29 @@ void processingFindWhiteBalance(processingObject_t *processing, int imageX, int 
     uint32_t deltaMin = UINT32_MAX;
 
     /* this is the pixel for what we search the parameters */
-    uint16_t * pix = img + ( ( posY * imageX + posX ) * 3 );
+    uint32_t pixR = 0;
+    uint32_t pixG = 0;
+    uint32_t pixB = 0;
+    uint32_t counter = 0;
 
-    /* TODO: average with neighbor pixels */
+    /* average with neighbor pixels */
+    for( int y = -10; y <= 10; y++ )
+    {
+        for( int x = -10; x <= 10; x++ )
+        {
+            if( posX+x < 0 || posY+y < 0 || posX+x >= imageX || posY+y >= imageY ) continue;
+
+            uint16_t * pix = img + ( ( (posY+y) * imageX + (posX+x) ) * 3 );
+
+            pixR += pix[0];
+            pixG += pix[1];
+            pixB += pix[2];
+            counter++;
+        }
+    }
+    pixR /= counter;
+    pixG /= counter;
+    pixB /= counter;
 
     /* Trail & Error :-P */
     for( int temp = 2300; temp <= 10000; temp += 100 )
@@ -858,9 +878,9 @@ void processingFindWhiteBalance(processingObject_t *processing, int imageX, int 
 
             /* --- maybe this can also be exchanged by apply_processing_object, but here it is simplified and hopefully faster --- */
             /* white balance & exposure */
-            int32_t pix0 = processing->pre_calc_gamma[ LIMIT16(pm[0][pix[0]] + pm[1][pix[1]] + pm[2][pix[2]]) ];
-            int32_t pix1 = processing->pre_calc_gamma[ LIMIT16(pm[3][pix[0]] + pm[4][pix[1]] + pm[5][pix[2]]) ];
-            int32_t pix2 = processing->pre_calc_gamma[ LIMIT16(pm[6][pix[0]] + pm[7][pix[1]] + pm[8][pix[2]]) ];
+            int32_t pix0 = processing->pre_calc_gamma[ LIMIT16(pm[0][pixR] + pm[1][pixG] + pm[2][pixB]) ];
+            int32_t pix1 = processing->pre_calc_gamma[ LIMIT16(pm[3][pixR] + pm[4][pixG] + pm[5][pixB]) ];
+            int32_t pix2 = processing->pre_calc_gamma[ LIMIT16(pm[6][pixR] + pm[7][pixG] + pm[8][pixB]) ];
 
             /* standard highlight reconstruction */
             if( processing->highlight_reconstruction && pix1 == processing->highest_green )
