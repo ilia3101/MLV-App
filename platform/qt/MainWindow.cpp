@@ -1459,7 +1459,7 @@ void MainWindow::startExportPipe(QString fileName)
     //Do 3pass filtering!
     if( m_smoothFilterEnabled )
     {
-        QString pass3 = QString( "-vf minterpolate=50,tblend=all_mode=average,framestep=2 -f matroska - | %1 -f matroska -i - -vf minterpolate=50,tblend=all_mode=average,framestep=2 -f matroska - | %1 -i - " ).arg( ffmpegCommand );
+        QString pass3 = QString( "-vf minterpolate=%2,tblend=all_mode=average,framestep=2 -f matroska - | %1 -f matroska -i - -vf minterpolate=%2,tblend=all_mode=average,framestep=2 -f matroska - | %1 -i - " ).arg( ffmpegCommand ).arg( locale.toString( getFramerate() * 2.0 ) );
         program.insert( program.indexOf( "-c:v" ), pass3 );
     }
 
