@@ -778,11 +778,11 @@ void processingSetBlackAndWhiteLevel( processingObject_t * processing,
         {
             processing->pre_calc_levels[i] = new_value;
         }
-        else if (new_value < 0)
+        else if (new_value <= 0)
         {
             processing->pre_calc_levels[i] = 0;
         }
-        else if (new_value > 65535)
+        else if (new_value >= 65535)
         {
             processing->pre_calc_levels[i] = 65535;
         }
