@@ -305,6 +305,7 @@ void setMlvProcessing(mlvObject_t * video, processingObject_t * processing)
     /* Corrected RAW black/white levels */
     int CorrectedBlackLevel = getMlvBlackLevel(video);
     int CorrectedWhiteLevel = getMlvWhiteLevel(video);
+    int factor = 1;
 
     if(CorrectedBlackLevel && CorrectedWhiteLevel)
     {
@@ -312,47 +313,33 @@ void setMlvProcessing(mlvObject_t * video, processingObject_t * processing)
         switch(getMlvBitdepth(video))
         {
             case 10:
-                CorrectedBlackLevel *= 16;
-                CorrectedWhiteLevel *= 16;
+                factor = 16;
                 break;
             case 12:
-                CorrectedBlackLevel *= 4;
-                CorrectedWhiteLevel *= 4;
+                factor = 4;
+                break;
+            default:
                 break;
         }
 
         /* let's be kind and repair black level if it's broken (OMG IT WORKS!) */
-        if ((CorrectedBlackLevel < 1700) || (CorrectedBlackLevel > 2200))
+        if ((CorrectedBlackLevel < (1700 / factor)) || (CorrectedBlackLevel > (2200 / factor)))
         {
             /* Camera specific stuff */
             switch(getMlvCameraModel(video))
             {
                 case 0x80000218: // 5D2
                 case 0x80000261: // 50D
-                    CorrectedBlackLevel = 1792;
+                    CorrectedBlackLevel = 1792 / factor;
                     break;
                 default: // all other cameras
-                    CorrectedBlackLevel = 2048;
+                    CorrectedBlackLevel = 2048 / factor;
                     break;
             }
         }
 
-        /* Save these values to reset them after having played around in GUI */
-        switch(getMlvBitdepth(video))
-        {
-            case 10:
-                video->original_black_level = CorrectedBlackLevel / 16;
-                video->original_white_level = CorrectedWhiteLevel / 16;
-                break;
-            case 12:
-                video->original_black_level = CorrectedBlackLevel / 4;
-                video->original_white_level = CorrectedWhiteLevel / 4;
-                break;
-            default:
-                video->original_black_level = CorrectedBlackLevel;
-                video->original_white_level = CorrectedWhiteLevel;
-                break;
-        }
+        video->original_black_level = CorrectedBlackLevel;
+        video->original_white_level = CorrectedWhiteLevel;
 
         /* Lowering white level a bit avoids pink grain in highlihgt reconstruction */
         CorrectedWhiteLevel = (int)((double)CorrectedWhiteLevel * 0.993);
@@ -360,8 +347,8 @@ void setMlvProcessing(mlvObject_t * video, processingObject_t * processing)
 
     /* BLACK / WHITE level */
     processingSetBlackAndWhiteLevel( processing, 
-                                     CorrectedBlackLevel * 4,
-                                     CorrectedWhiteLevel * 4 );
+                                     CorrectedBlackLevel * 4 * factor,
+                                     CorrectedWhiteLevel * 4 * factor );
 
     /* If 5D3 or cropmode */
     if (strlen((char *)getMlvCamera(video)) > 20 || getMlvMaxWidth(video) > 1920)
