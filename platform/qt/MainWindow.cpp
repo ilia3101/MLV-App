@@ -1250,6 +1250,8 @@ void MainWindow::startExportPipe(QString fileName)
 #ifdef STDOUT_SILENT
     program.append( QString( " -loglevel 0" ) );
 #endif
+    //We need it later for multipass
+    QString ffmpegCommand = program;
 
     QString output = fileName.left( fileName.lastIndexOf( "." ) );
     QString resolution = QString( "%1x%2" ).arg( getMlvWidth( m_pMlvObject ) ).arg( getMlvHeight( m_pMlvObject ) );
@@ -1453,11 +1455,16 @@ void MainWindow::startExportPipe(QString fileName)
     //There is a %5 in the string, so another arg is not possible - so do that:
     program.insert( program.indexOf( "-c:v" ), ffmpegAudioCommand );
 
-    //qDebug() << "Call ffmpeg:" << program;
+    //Do 3pass filtering!
+    if( m_smoothFilterEnabled )
+    {
+        QString pass3 = QString( "-vf minterpolate=50,tblend=all_mode=average,framestep=2 -f matroska - | %1 -f matroska -i - -vf minterpolate=50,tblend=all_mode=average,framestep=2 -f matroska - | %1 -i - " ).arg( ffmpegCommand );
+        program.insert( program.indexOf( "-c:v" ), pass3 );
+    }
 
     //Try to open pipe
     FILE *pPipe;
-    //qDebug() << program;
+    //qDebug() << "Call ffmpeg:" << program;
 #ifdef Q_OS_UNIX
     if( !( pPipe = popen( program.toUtf8().data(), "w" ) ) )
 #else
