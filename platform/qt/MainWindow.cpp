@@ -1178,6 +1178,7 @@ void MainWindow::startExportPipe(QString fileName)
         //The 2nd, the blended frames, and 3rd reduces the stream back to original fps.
         moireeFilter = QString( "minterpolate=%1,tblend=all_mode=average,framestep=2," )
                 .arg( locale.toString( getFramerate() * 2.0 ) );
+        moireeFilter.append( QString( "unsharp=7:7:0.8:7:7:0," ) );
     }
 
     //Resize Filter + colorspace conversion (for getting right colors)
