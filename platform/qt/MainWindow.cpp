@@ -811,9 +811,6 @@ void MainWindow::initGui( void )
     ui->actionExportActualFrame->setEnabled( false );
     //Set fit to screen as default zoom
     ui->actionZoomFit->setChecked( true );
-    //Make whiteBalance picker invisible, so nobody asks why it does not work :-)
-    //ui->actionWhiteBalancePicker->setVisible( false );
-    //ui->toolButtonWb->setVisible( false );
     //If no clip loaded, import receipt is disabled
     ui->actionImportReceipt->setEnabled( false );
     //If no clip loaded, disable session save
