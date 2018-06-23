@@ -18,6 +18,7 @@ Find the latest releases [here](https://ilia3101.github.io/MLV-App/). Download, 
 - Autodetection for focus pixels and vertical stretching
 - MLV darkframe subtraction (with external / internal darkframe)
 - Support for dual ISO
+- Whitebalance picker
 - Show clip information
 - Analysis: histogram (including markers for under-/overexposed), waveform monitor, RGB parade, vector scope
 - Session: open, import to, delete from, save, copy receipt, paste receipt (also batch paste), reset receipt, receipt file import & export, preview pictures for all clips
@@ -40,6 +41,7 @@ Find the latest releases [here](https://ilia3101.github.io/MLV-App/). Download, 
 - Upside down transformation
 - Resize frame resolution for (batch) export
 - Clip batch export
+- Smooth artifacts filter (minimizes moiree) for all ffmpeg export codecs, realized by ffmpeg filter combination
 - Post export scripting on macOS (thx @dannephoto)
 - Zoom: fit to screen, 100% and free zoom, scroll through picture
 - Zebras
