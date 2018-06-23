@@ -1,7 +1,7 @@
 # :fire::fire::fire: MLV App :fire::fire::fire:
 What is MLV App? A cross platform RAW conversion software that works **natively** with Magic Lantern MLV files.
 
-![MLVAppQt](https://user-images.githubusercontent.com/30245296/37848667-37aea932-2ed5-11e8-9373-88ef728e5ef8.png)
+![MLVAppQt](https://user-images.githubusercontent.com/30245296/41743762-0da2ceb6-75a2-11e8-8c3f-63435cd2c1a8.png)
 
 Find the latest releases [here](https://ilia3101.github.io/MLV-App/). Download, unpack and start.
 
@@ -14,7 +14,7 @@ Find the latest releases [here](https://ilia3101.github.io/MLV-App/). Download, 
 - Processing with many parameters (exposure, white balance, saturation, dark & light adjustments, highlights & shadows, sharpen,…)
 - Processing filters for film emulation powered by neural networks :ghost:
 - Processing in sRGB or several LOG
-- RAW corrections (fix focus & bad pixels, chroma smoothing, pattern noise, vertical stripes, deflicker)
+- RAW corrections (fix focus & bad pixels, chroma smoothing, pattern noise, vertical stripes, deflicker, adjust RAW black & white level)
 - Autodetection for focus pixels and vertical stretching
 - MLV darkframe subtraction (with external / internal darkframe)
 - Support for dual ISO
