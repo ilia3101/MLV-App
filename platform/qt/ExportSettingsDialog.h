@@ -60,6 +60,11 @@
 #define CODEC_DNXHR_SQ_1080p_8bit   3
 #define CODEC_DNXHR_LB_1080p_8bit   4
 
+#define SMOOTH_FILTER_OFF           0
+#define SMOOTH_FILTER_1PASS         1
+#define SMOOTH_FILTER_3PASS         2
+#define SMOOTH_FILTER_3PASS_USM     3
+
 namespace Ui {
 class ExportSettingsDialog;
 }
@@ -81,7 +86,7 @@ public:
                                   double fps = 25,
                                   bool exportAudio = true,
                                   bool heightLocked = false,
-                                  bool smooth = false);
+                                  uint8_t smooth = 0);
     ~ExportSettingsDialog();
     uint8_t encoderSetting(void);
     uint8_t encoderOption(void);
@@ -93,7 +98,7 @@ public:
     double getFps(void);
     bool isExportAudioEnabled(void);
     bool isHeightLocked(void);
-    bool isSmoothEnabled(void);
+    uint8_t smoothSetting(void);
 
 private slots:
     void on_pushButtonClose_clicked();

@@ -274,7 +274,7 @@ private:
     int m_timerCacheId;
     bool m_resizeFilterEnabled;
     bool m_resizeFilterHeightLocked;
-    bool m_smoothFilterEnabled;
+    uint8_t m_smoothFilterSetting;
     uint16_t m_resizeWidth;
     uint16_t m_resizeHeight;
     bool m_fpsOverride;

@@ -1024,7 +1024,7 @@ void MainWindow::readSettings()
     m_resizeWidth = set.value( "resizeWidth", 1920 ).toUInt();
     m_resizeHeight = set.value( "resizeHeight", 1080 ).toUInt();
     m_resizeFilterHeightLocked = set.value( "resizeLockHeight", false ).toBool();
-    m_smoothFilterEnabled = set.value( "smoothEnabled", false ).toBool();
+    m_smoothFilterSetting = set.value( "smoothEnabled", 0 ).toUInt();
     m_frameRate = set.value( "frameRate", 25 ).toDouble();
     m_audioExportEnabled = set.value( "audioExportEnabled", true ).toBool();
     ui->groupBoxRawCorrection->setChecked( set.value( "expandedRawCorrection", false ).toBool() );
@@ -1061,7 +1061,7 @@ void MainWindow::writeSettings()
     set.setValue( "resizeWidth", m_resizeWidth );
     set.setValue( "resizeHeight", m_resizeHeight );
     set.setValue( "resizeLockHeight", m_resizeFilterHeightLocked );
-    set.setValue( "smoothEnabled", m_smoothFilterEnabled );
+    set.setValue( "smoothEnabled", m_smoothFilterSetting );
     set.setValue( "frameRate", m_frameRate );
     set.setValue( "audioExportEnabled", m_audioExportEnabled );
     set.setValue( "expandedRawCorrection", ui->groupBoxRawCorrection->isChecked() );
@@ -1172,13 +1172,16 @@ void MainWindow::startExportPipe(QString fileName)
 
     //Doing something against moiree
     QString moireeFilter = QString( "" );
-    if( m_smoothFilterEnabled )
+    if( m_smoothFilterSetting != SMOOTH_FILTER_OFF )
     {
         //minterpolate, tblend and framestep are filters. The 1st does the oversampling.
         //The 2nd, the blended frames, and 3rd reduces the stream back to original fps.
         moireeFilter = QString( "minterpolate=%1,tblend=all_mode=average,framestep=2," )
                 .arg( locale.toString( getFramerate() * 2.0 ) );
-        moireeFilter.append( QString( "unsharp=7:7:0.8:7:7:0," ) );
+        if( m_smoothFilterSetting == SMOOTH_FILTER_3PASS_USM )
+        {
+            moireeFilter.append( QString( "unsharp=7:7:0.8:7:7:0," ) );
+        }
     }
 
     //Resize Filter + colorspace conversion (for getting right colors)
@@ -1457,7 +1460,7 @@ void MainWindow::startExportPipe(QString fileName)
     program.insert( program.indexOf( "-c:v" ), ffmpegAudioCommand );
 
     //Do 3pass filtering!
-    if( m_smoothFilterEnabled )
+    if( m_smoothFilterSetting == SMOOTH_FILTER_3PASS || m_smoothFilterSetting == SMOOTH_FILTER_3PASS_USM )
     {
         QString pass3 = QString( "-vf minterpolate=%2,tblend=all_mode=average,framestep=2 -f matroska - | %1 -i - -vf minterpolate=%2,tblend=all_mode=average,framestep=2 -f matroska - | %1 -i - " ).arg( ffmpegCommand ).arg( locale.toString( getFramerate() * 2.0 ) );
         program.insert( program.indexOf( "-c:v" ), pass3 );
@@ -4104,7 +4107,7 @@ void MainWindow::on_actionExportSettings_triggered()
                                                                       m_frameRate,
                                                                       m_audioExportEnabled,
                                                                       m_resizeFilterHeightLocked,
-                                                                      m_smoothFilterEnabled);
+                                                                      m_smoothFilterSetting);
     pExportSettings->exec();
     m_codecProfile = pExportSettings->encoderSetting();
     m_codecOption = pExportSettings->encoderOption();
@@ -4116,7 +4119,7 @@ void MainWindow::on_actionExportSettings_triggered()
     m_frameRate = pExportSettings->getFps();
     m_audioExportEnabled = pExportSettings->isExportAudioEnabled();
     m_resizeFilterHeightLocked = pExportSettings->isHeightLocked();
-    m_smoothFilterEnabled = pExportSettings->isSmoothEnabled();
+    m_smoothFilterSetting = pExportSettings->smoothSetting();
     delete pExportSettings;
 
     if( m_fileLoaded )

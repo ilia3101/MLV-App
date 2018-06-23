@@ -276,9 +276,12 @@
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_5">
         <item>
-         <widget class="QCheckBox" name="checkBoxSmooth">
-          <property name="toolTip">
-           <string>Cleans aliasing artifacts, but is very slow</string>
+         <widget class="QLabel" name="label_Smoothing">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
           </property>
           <property name="text">
            <string>Smooth aliasing</string>
@@ -286,17 +289,32 @@
          </widget>
         </item>
         <item>
-         <spacer name="horizontalSpacer_3">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
+         <widget class="QComboBox" name="comboBoxSmoothing">
+          <property name="toolTip">
+           <string>Use this option to smooth aliasing / moiree artifacts.
+This option is very slow and runs when export progressbar is at 100%!</string>
           </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
+          <item>
+           <property name="text">
+            <string>Off</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>1 pass</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>3 pass</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>3 pass + unsharp mask</string>
+           </property>
+          </item>
+         </widget>
         </item>
        </layout>
       </item>

@@ -12,7 +12,7 @@
 #include <QStandardItem>
 
 //Constructor
-ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, Scripting *scripting, uint8_t currentCodecProfile, uint8_t currentCodecOption, uint8_t debayerMode, bool resize, uint16_t resizeWidth, uint16_t resizeHeight, bool fpsOverride, double fps, bool exportAudio, bool heightLocked, bool smooth) :
+ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, Scripting *scripting, uint8_t currentCodecProfile, uint8_t currentCodecOption, uint8_t debayerMode, bool resize, uint16_t resizeWidth, uint16_t resizeHeight, bool fpsOverride, double fps, bool exportAudio, bool heightLocked, uint8_t smooth) :
     QDialog(parent),
     ui(new Ui::ExportSettingsDialog)
 {
@@ -31,7 +31,7 @@ ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, Scripting *scripting
     ui->doubleSpinBoxFps->setValue( fps );
     ui->checkBoxExportAudio->setChecked( exportAudio );
     ui->toolButtonLockHeight->setChecked( heightLocked );
-    ui->checkBoxSmooth->setChecked( smooth );
+    ui->comboBoxSmoothing->setCurrentIndex( smooth );
 
     //Disable resize for AVFoundation
     if( ui->comboBoxOption->currentText() == QString( "Apple AVFoundation" ) )
@@ -121,9 +121,9 @@ bool ExportSettingsDialog::isHeightLocked()
 }
 
 //Get if smooth filter is enabled
-bool ExportSettingsDialog::isSmoothEnabled()
+uint8_t ExportSettingsDialog::smoothSetting()
 {
-    return ui->checkBoxSmooth->isChecked();
+    return ui->comboBoxSmoothing->currentIndex();
 }
 
 //Close clicked
@@ -251,10 +251,11 @@ void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
     if( !enableResize )
     {
         ui->checkBoxResize->setChecked( false );
-        ui->checkBoxSmooth->setChecked( false );
+        ui->comboBoxSmoothing->setCurrentIndex( 0 );
     }
     ui->checkBoxResize->setEnabled( enableResize );
-    ui->checkBoxSmooth->setEnabled( enableResize );
+    ui->comboBoxSmoothing->setEnabled( enableResize );
+    ui->label_Smoothing->setEnabled( enableResize );
 
     //En-/disable fps override
     if( ( index == CODEC_MLV ) || ( index == CODEC_TIFF ) || ( index == CODEC_AUDIO_ONLY ) )
@@ -299,8 +300,9 @@ void ExportSettingsDialog::on_comboBoxOption_currentIndexChanged(const QString &
     {
         ui->checkBoxResize->setChecked( false );
         ui->checkBoxResize->setEnabled( false );
-        ui->checkBoxSmooth->setChecked( false );
-        ui->checkBoxSmooth->setEnabled( false );
+        ui->comboBoxSmoothing->setCurrentIndex( 0 );
+        ui->comboBoxSmoothing->setEnabled( false );
+        ui->label_Smoothing->setEnabled( false );
     }
     else
     {
@@ -313,7 +315,8 @@ void ExportSettingsDialog::on_comboBoxOption_currentIndexChanged(const QString &
         {
             ui->checkBoxExportAudio->setEnabled( true );
             ui->checkBoxResize->setEnabled( true );
-            ui->checkBoxSmooth->setEnabled( true );
+            ui->comboBoxSmoothing->setEnabled( true );
+            ui->label_Smoothing->setEnabled( true );
         }
     }
 }
