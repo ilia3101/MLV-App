@@ -5110,7 +5110,7 @@ void MainWindow::whiteBalancePicked( int x, int y )
     findMlvWhiteBalance( m_pMlvObject, ui->horizontalSliderPosition->value(), x, y, &temp, &tint );
     //qDebug() << "wbTemp:" << temp << "wbTint" << tint;
     ui->horizontalSliderTemperature->setValue( temp );
-    ui->horizontalSliderTint->setValue( tint*10 );
+    ui->horizontalSliderTint->setValue( tint );
 }
 
 //Gradient anchor was selected by user

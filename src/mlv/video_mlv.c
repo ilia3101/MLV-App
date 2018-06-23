@@ -294,6 +294,9 @@ void setMlvProcessing(mlvObject_t * video, processingObject_t * processing)
     /* Link dual_iso value, because it is needed */
     video->processing->dual_iso = &video->llrawproc->dual_iso;
 
+    /* explicitely switch whitebalance find flag off to get right matrix values */
+    video->processing->wbFindActive = 0;
+
     /* MATRIX stuff (not working, so commented out - 
      * processing object defaults to 1,0,0,0,1,0,0,0,1) */
 

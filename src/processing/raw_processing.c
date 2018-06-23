@@ -869,12 +869,18 @@ void processingFindWhiteBalance(processingObject_t *processing, int imageX, int 
     pixG /= counter;
     pixB /= counter;
 
+    /* activate quick matrix build (we need matrix just for this RGB values) */
+    processing->wbR = pixR;
+    processing->wbG = pixG;
+    processing->wbB = pixB;
+    processing->wbFindActive = 1;
+
     /* Trail & Error :-P */
-    for( int temp = 2300; temp <= 10000; temp += 100 )
+    for( int temp = 2300; temp <= 10000; temp += 10 )
     {
-        for( int tint = -10; tint <= 10; tint += 2 )
+        for( int tint = -100; tint <= 100; tint += 1 )
         {
-            processingSetWhiteBalance( processing, temp, tint );
+            processingSetWhiteBalance( processing, temp, tint/10.0 );
 
             /* --- maybe this can also be exchanged by apply_processing_object, but here it is simplified and hopefully faster --- */
             /* white balance & exposure */
@@ -906,6 +912,9 @@ void processingFindWhiteBalance(processingObject_t *processing, int imageX, int 
         /* delta won't be smaller than 0 */
         if( deltaMin == 0 ) break;
     }
+
+    /* deactivate quick matrix build */
+    processing->wbFindActive = 0;
 
     /* set it back to where we began */
     processingSetWhiteBalance( processing, (double)oriTemp, (double)oriTint );

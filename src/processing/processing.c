@@ -299,12 +299,25 @@ void processing_update_matrices(processingObject_t * processing)
 
     /* Matrix stuff done I guess */
 
-    /* Precalculate 0-65535 */
-    for (int i = 0; i < 9; ++i)
+    if( processing->wbFindActive == 0 )
     {
-        for (int j = 0; j < 65536; ++j)
+        /* Precalculate 0-65535 */
+        for (int i = 0; i < 9; ++i)
         {
-            pm[i][j] = (int32_t)((double)j * processing->final_matrix[i]);
+            for (int j = 0; j < 65536; ++j)
+            {
+                pm[i][j] = (int32_t)((double)j * processing->final_matrix[i]);
+            }
+        }
+    }
+    else
+    {
+        /* If whitebalance find algorithm is on the run, we need it only for one single RGB -> faster */
+        for (int i = 0; i < 9; ++i)
+        {
+            pm[i][processing->wbR] = (int32_t)((double)processing->wbR * processing->final_matrix[i]);
+            pm[i][processing->wbG] = (int32_t)((double)processing->wbG * processing->final_matrix[i]);
+            pm[i][processing->wbB] = (int32_t)((double)processing->wbB * processing->final_matrix[i]);
         }
     }
 

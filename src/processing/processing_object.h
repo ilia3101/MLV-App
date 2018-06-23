@@ -21,6 +21,10 @@ typedef struct {
     lut_t * lut;
     int lut_on;
 
+    /* If whitebalance find algorithm is on the run, we need it only for one single RGB -> faster */
+    int wbFindActive;
+    uint16_t wbR, wbG, wbB;
+
     /* Image profile, options:
      * PROFILE_STANDARD   : Gamma Corrected
      * PROFILE_TONEMAPPED : Gamma Corrected + Tonemapped
