@@ -46,13 +46,7 @@ void GraphicsZoomView::resetZoom()
 void GraphicsZoomView::setWbPickerActive(bool on)
 {
     m_isWbPickerActive = on;
-    //Calc cursor here,to make it work when monitor changed on runtime to retina
-    QPixmap cursorPixmap = QPixmap( ":/RetinaIMG/RetinaIMG/Actions-color-picker-icon.png" )
-                                   .scaled( 32 * devicePixelRatio(),
-                                            32 * devicePixelRatio(),
-                                            Qt::KeepAspectRatio, Qt::SmoothTransformation);
-    cursorPixmap.setDevicePixelRatio( devicePixelRatio() );
-    if( on ) viewport()->setCursor(QCursor(cursorPixmap,4,27));
+    if( on ) setPipetteCursor();
     else viewport()->setCursor( Qt::OpenHandCursor );
 }
 
@@ -78,7 +72,8 @@ void GraphicsZoomView::mousePressEvent(QMouseEvent *event)
     //viewport()->setCursor(QCursor(m_cursorPixmap,0,31));
     if( m_isWbPickerActive )
     {
-        m_isWbPickerActive = false;
+        //m_isWbPickerActive = false; //Needed for single click wb picking
+        setPipetteCursor(); //Needed for wb picking until deactivation
         emit wbPicked( event->pos().x(), event->pos().y() );
     }
 }
@@ -89,6 +84,12 @@ void GraphicsZoomView::mouseReleaseEvent(QMouseEvent *event)
     m_isMousePressed = false;
     QGraphicsView::mouseReleaseEvent(event);
     //viewport()->setCursor(QCursor(m_cursorPixmap,0,31));
+
+    //Needed for wb picking until deactivation
+    if( m_isWbPickerActive )
+    {
+        setPipetteCursor();
+    }
 }
 
 //The mousewheel event
@@ -115,4 +116,16 @@ void GraphicsZoomView::wheelEvent(QWheelEvent *event)
     {
         //do nothing
     }
+}
+
+//Show the wb picker icon as cursor
+void GraphicsZoomView::setPipetteCursor()
+{
+    //Calc cursor here,to make it work when monitor changed on runtime to retina
+    QPixmap cursorPixmap = QPixmap( ":/RetinaIMG/RetinaIMG/Actions-color-picker-icon.png" )
+                                   .scaled( 32 * devicePixelRatio(),
+                                            32 * devicePixelRatio(),
+                                            Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    cursorPixmap.setDevicePixelRatio( devicePixelRatio() );
+    viewport()->setCursor(QCursor(cursorPixmap,4,27));
 }

@@ -5087,7 +5087,8 @@ void MainWindow::on_actionWhiteBalancePicker_toggled(bool checked)
 //wb picking ready
 void MainWindow::whiteBalancePicked( int x, int y )
 {
-    ui->actionWhiteBalancePicker->setChecked( false );
+    //ui->actionWhiteBalancePicker->setChecked( false ); //Single Click
+    on_actionWhiteBalancePicker_toggled( true ); //Click until deactivation
 
     //Quit if no mlv loaded
     if( !m_fileLoaded ) return;

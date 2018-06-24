@@ -33,6 +33,7 @@ protected:
     void mousePressEvent(QMouseEvent *event);
     void mouseReleaseEvent(QMouseEvent *event);
     void wheelEvent(QWheelEvent *event);
+    void setPipetteCursor();
     bool m_isZoomEnabled;
     bool m_isWbPickerActive;
     bool m_isMousePressed;
