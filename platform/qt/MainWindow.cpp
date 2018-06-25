@@ -950,6 +950,10 @@ void MainWindow::initGui( void )
     //Call temp sliders once for stylesheet
     on_horizontalSliderTemperature_valueChanged( ui->horizontalSliderTemperature->value() );
     on_horizontalSliderTint_valueChanged( ui->horizontalSliderTint->value() );
+
+    //WB Picker Mode
+    m_wbMode = 0;
+    ui->toolButtonWbMode->setToolTip( tr( "Chose between WB picker on grey or on skin" ) );
 }
 
 //Initialize the library
@@ -5105,10 +5109,27 @@ void MainWindow::whiteBalancePicked( int x, int y )
 
     int temp, tint;
     //qDebug() << "Click in Scene:" << x << y;
-    findMlvWhiteBalance( m_pMlvObject, ui->horizontalSliderPosition->value(), x, y, &temp, &tint );
+    findMlvWhiteBalance( m_pMlvObject, ui->horizontalSliderPosition->value(), x, y, &temp, &tint, m_wbMode );
     //qDebug() << "wbTemp:" << temp << "wbTint" << tint;
     ui->horizontalSliderTemperature->setValue( temp );
     ui->horizontalSliderTint->setValue( tint );
+}
+
+//WB Picker Type change
+void MainWindow::on_toolButtonWbMode_clicked()
+{
+    if( m_wbMode )
+    {
+        m_wbMode = 0;
+        ui->toolButtonWbMode->setIcon( QIcon( ":/IMG/IMG/Grey-Ball-icon.png" ) );
+        ui->toolButtonWbMode->setToolTip( tr( "WB picker on grey" ) );
+    }
+    else
+    {
+        m_wbMode = 1;
+        ui->toolButtonWbMode->setIcon( QIcon( ":/RetinaIMG/RetinaIMG/face.png" ) );
+        ui->toolButtonWbMode->setToolTip( tr( "WB picker on skin" ) );
+    }
 }
 
 //Gradient anchor was selected by user

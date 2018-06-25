@@ -1589,7 +1589,7 @@ void printMlvInfo(mlvObject_t * video)
 }
 
 /* WB Picker function; selects the pic and sends task to processing module */
-void findMlvWhiteBalance(mlvObject_t *video, uint64_t frameIndex, int posX, int posY, int *wbTemp, int *wbTint)
+void findMlvWhiteBalance(mlvObject_t *video, uint64_t frameIndex, int posX, int posY, int *wbTemp, int *wbTint, int mode)
 {
     /* Useful */
     int width = getMlvWidth(video);
@@ -1609,7 +1609,7 @@ void findMlvWhiteBalance(mlvObject_t *video, uint64_t frameIndex, int posX, int 
                                 width, height,
                                 unprocessed_frame,
                                 posX, posY,
-                                wbTemp, wbTint);
+                                wbTemp, wbTint, mode);
 
     free(unprocessed_frame);
 }

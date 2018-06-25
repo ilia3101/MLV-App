@@ -180,6 +180,7 @@ private slots:
     void on_checkBoxFilterEnable_clicked(bool checked);
     void on_actionWhiteBalancePicker_toggled(bool checked);
     void whiteBalancePicked( int x, int y );
+    void on_toolButtonWbMode_clicked();
     void gradientAnchorPicked( int x, int y );
     void gradientFinalPosPicked(int x, int y , bool isFinished);
     void on_groupBoxRawCorrection_toggled(bool arg1);
@@ -263,6 +264,7 @@ private:
     uint8_t m_codecOption;
     uint8_t m_exportDebayerMode;
     uint8_t m_previewMode;
+    uint8_t m_wbMode;
     bool m_frameChanged;
     int m_currentFrameIndex;
     double m_newPosDropMode;

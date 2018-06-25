@@ -138,7 +138,7 @@ void processingFindWhiteBalance(processingObject_t * processing,
                                 int imageX, int imageY,
                                 uint16_t * __restrict inputImage,
                                 int posX, int posY,
-                                int *wbTemp, int *wbTint);
+                                int *wbTemp, int *wbTint, int mode);
 
 
 /* Black/white level set */

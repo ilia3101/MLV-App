@@ -822,7 +822,7 @@ void freeProcessingObject(processingObject_t * processing)
 }
 
 /* Find correct white balance setting for one selected pixel */
-void processingFindWhiteBalance(processingObject_t *processing, int imageX, int imageY, uint16_t *inputImage, int posX, int posY, int *wbTemp, int *wbTint)
+void processingFindWhiteBalance(processingObject_t *processing, int imageX, int imageY, uint16_t *inputImage, int posX, int posY, int *wbTemp, int *wbTint, int mode)
 {
     /* Number of elements */
     int img_s = imageX * imageY * 3;
@@ -868,6 +868,13 @@ void processingFindWhiteBalance(processingObject_t *processing, int imageX, int 
     pixR /= counter;
     pixG /= counter;
     pixB /= counter;
+
+    /* skin wb mode */
+    if( mode == 1 )
+    {
+        pixR *= 1.0 / (4686.0 / 6069 * 1.979);
+        pixB *= 1.0 / (2817.0 / 6069 * 1.678);
+    }
 
     /* activate quick matrix build (we need matrix just for this RGB values) */
     processing->wbR = pixR;

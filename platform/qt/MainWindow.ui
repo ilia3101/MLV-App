@@ -389,8 +389,8 @@ QGroupBox::indicator:checked {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>-323</y>
-            <width>195</width>
+            <y>0</y>
+            <width>200</width>
             <height>3279</height>
            </rect>
           </property>
@@ -2421,7 +2421,7 @@ QGroupBox::indicator:checked {
                      </property>
                     </widget>
                    </item>
-                   <item row="1" column="0" colspan="4">
+                   <item row="1" column="0" colspan="5">
                     <widget class="NoScrollSlider" name="horizontalSliderTemperature">
                      <property name="sizePolicy">
                       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -2467,7 +2467,7 @@ QGroupBox::indicator:checked {
                      </property>
                     </widget>
                    </item>
-                   <item row="0" column="2">
+                   <item row="0" column="3">
                     <spacer name="horizontalSpacer_2">
                      <property name="orientation">
                       <enum>Qt::Horizontal</enum>
@@ -2483,7 +2483,7 @@ QGroupBox::indicator:checked {
                      </property>
                     </spacer>
                    </item>
-                   <item row="0" column="3">
+                   <item row="0" column="4">
                     <widget class="DoubleClickLabel" name="label_TemperatureVal">
                      <property name="font">
                       <font>
@@ -2498,6 +2498,17 @@ QGroupBox::indicator:checked {
                      </property>
                      <property name="alignment">
                       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="0" column="2">
+                    <widget class="QToolButton" name="toolButtonWbMode">
+                     <property name="text">
+                      <string/>
+                     </property>
+                     <property name="icon">
+                      <iconset resource="ressources.qrc">
+                       <normaloff>:/IMG/IMG/Grey-Ball-icon.png</normaloff>:/IMG/IMG/Grey-Ball-icon.png</iconset>
                      </property>
                     </widget>
                    </item>
