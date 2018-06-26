@@ -148,6 +148,13 @@ int load_lut( lut_t *lut, char *filename, char *error_message )
 #endif
             continue;
         }
+        else if( sscanf(line, "LUT_1D_INPUT_RANGE%*[ \t]%f%*[ \t]%f%*[^\n]", &inMin, &inMax) == 2) //Read input range values (Resolve created), do nothing with it, because it is not in the specs
+        {
+#ifndef STDOUT_SILENT
+            printf("LUT_1D_INPUT_RANGE %f %f\n", &inMin, &inMax);
+#endif
+            continue;
+        }
         else if( sscanf(line, "LUT_3D_INPUT_RANGE%*[ \t]%f%*[ \t]%f%*[^\n]", &inMin, &inMax) == 2) //Read input range values (Resolve created), do nothing with it, because it is not in the specs
         {
 #ifndef STDOUT_SILENT
