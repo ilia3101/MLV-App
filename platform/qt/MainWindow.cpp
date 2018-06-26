@@ -5112,7 +5112,9 @@ void MainWindow::whiteBalancePicked( int x, int y )
     findMlvWhiteBalance( m_pMlvObject, ui->horizontalSliderPosition->value(), x, y, &temp, &tint, m_wbMode );
     //qDebug() << "wbTemp:" << temp << "wbTint" << tint;
     ui->horizontalSliderTemperature->setValue( temp );
+    on_horizontalSliderTemperature_valueChanged( temp );
     ui->horizontalSliderTint->setValue( tint );
+    on_horizontalSliderTint_valueChanged( tint );
 }
 
 //WB Picker Type change
