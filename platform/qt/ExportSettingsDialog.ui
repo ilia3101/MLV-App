@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>340</width>
+    <width>363</width>
     <height>427</height>
    </rect>
   </property>
@@ -312,6 +312,11 @@ This option is very slow and runs when export progressbar is at 100%!</string>
           <item>
            <property name="text">
             <string>3 pass + unsharp mask</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>3 pass + unsharp mask + box blur</string>
            </property>
           </item>
          </widget>
