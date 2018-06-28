@@ -1179,9 +1179,13 @@ void MainWindow::startExportPipe(QString fileName)
         //The 2nd, the blended frames, and 3rd reduces the stream back to original fps.
         moireeFilter = QString( "minterpolate=%1,tblend=all_mode=average,framestep=2," )
                 .arg( locale.toString( getFramerate() * 2.0 ) );
-        if( m_smoothFilterSetting == SMOOTH_FILTER_3PASS_USM || m_smoothFilterSetting == SMOOTH_FILTER_3PASS_USM_BB )
+        if( m_smoothFilterSetting == SMOOTH_FILTER_3PASS_USM )
         {
             moireeFilter.append( QString( "unsharp=7:7:0.8:7:7:0," ) );
+        }
+        else if( m_smoothFilterSetting == SMOOTH_FILTER_3PASS_USM_BB )
+        {
+            moireeFilter.append( QString( "unsharp=5:5:0.6:5:5:0," ) );
         }
     }
 
@@ -1463,13 +1467,13 @@ void MainWindow::startExportPipe(QString fileName)
     //Do 3pass filtering!
     if( m_smoothFilterSetting == SMOOTH_FILTER_3PASS || m_smoothFilterSetting == SMOOTH_FILTER_3PASS_USM )
     {
-        QString pass3 = QString( "-vf minterpolate=%2,tblend=all_mode=average,framestep=2 -f matroska - | %1 -i - -vf minterpolate=%2,tblend=all_mode=average,framestep=2 -f matroska - | %1 -y -i - " ).arg( ffmpegCommand ).arg( locale.toString( getFramerate() * 2.0 ) );
+        QString pass3 = QString( "-vf minterpolate=%2,tblend=all_mode=average,framestep=2 -c:v libx264 -preset ultrafast -crf 10 -f matroska - | %1 -i - -vf minterpolate=%2,tblend=all_mode=average,framestep=2 -c:v libx264 -preset ultrafast -crf 10 -f matroska - | %1 -y -i - " ).arg( ffmpegCommand ).arg( locale.toString( getFramerate() * 2.0 ) );
         program.insert( program.indexOf( "-c:v" ), pass3 );
     }
     //Plus box blur
     else if( m_smoothFilterSetting == SMOOTH_FILTER_3PASS_USM_BB )
     {
-        QString pass3 = QString( "-filter_complex \"[0:v] boxblur=1 [tmp]; [0:v][tmp] blend=all_mode='normal':all_opacity=0.5\" -f matroska - | %1 -i - -vf minterpolate=%2,tblend=all_mode=average,framestep=2 -f matroska - | %1 -i - -vf minterpolate=%2,tblend=all_mode=average,framestep=2 -f matroska - | %1 -y -i - " ).arg( ffmpegCommand ).arg( locale.toString( getFramerate() * 2.0 ) );
+        QString pass3 = QString( "-filter_complex \"[0:v] boxblur=2:cr=5:ar=5 [tmp]; [0:v][tmp] blend=all_mode='normal':all_opacity=0.5\" -c:v libx264 -preset ultrafast -crf 10 -f matroska - | %1 -i - -vf minterpolate=%2,tblend=all_mode=average,framestep=2 -c:v libx264 -preset ultrafast -crf 10 -f matroska - | %1 -i - -vf minterpolate=%2,tblend=all_mode=average,framestep=2 -c:v libx264 -preset ultrafast -crf 10 -f matroska - | %1 -y -i - " ).arg( ffmpegCommand ).arg( locale.toString( getFramerate() * 2.0 ) );
         program.insert( program.indexOf( "-c:v" ), pass3 );
     }
 

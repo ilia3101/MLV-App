@@ -64,7 +64,7 @@
 #define SMOOTH_FILTER_1PASS         1
 #define SMOOTH_FILTER_3PASS         2
 #define SMOOTH_FILTER_3PASS_USM     3
-#define SMOOTH_FILTER_3PASS_USM_BB  4
+#define SMOOTH_FILTER_3PASS_USM_BB  4 //=last resort
 
 namespace Ui {
 class ExportSettingsDialog;
