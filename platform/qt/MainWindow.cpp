@@ -1473,7 +1473,7 @@ void MainWindow::startExportPipe(QString fileName)
     //Plus box blur
     else if( m_smoothFilterSetting == SMOOTH_FILTER_3PASS_USM_BB )
     {
-        QString pass3 = QString( "-filter_complex \"[0:v] boxblur=2:cr=5:ar=5 [tmp]; [0:v][tmp] blend=all_mode='normal':all_opacity=0.5\" -c:v libx264 -preset ultrafast -crf 10 -f matroska - | %1 -i - -vf minterpolate=%2,tblend=all_mode=average,framestep=2 -c:v libx264 -preset ultrafast -crf 10 -f matroska - | %1 -i - -vf minterpolate=%2,tblend=all_mode=average,framestep=2 -c:v libx264 -preset ultrafast -crf 10 -f matroska - | %1 -y -i - " ).arg( ffmpegCommand ).arg( locale.toString( getFramerate() * 2.0 ) );
+        QString pass3 = QString( "-filter_complex \"[0:v] boxblur=1:cr=5:ar=5 [tmp]; [0:v][tmp] blend=all_mode='normal':all_opacity=0.7\" -c:v libx264 -preset ultrafast -crf 10 -f matroska - | %1 -i - -vf minterpolate=%2,tblend=all_mode=average,framestep=2 -c:v libx264 -preset ultrafast -crf 10 -f matroska - | %1 -i - -vf minterpolate=%2,tblend=all_mode=average,framestep=2 -c:v libx264 -preset ultrafast -crf 10 -f matroska - | %1 -y -i - " ).arg( ffmpegCommand ).arg( locale.toString( getFramerate() * 2.0 ) );
         program.insert( program.indexOf( "-c:v" ), pass3 );
     }
 
