@@ -69,7 +69,7 @@ int scale_bits_for_diso(struct raw_info * raw_info, uint16_t * image_data, int l
 
         for(int i = 0; i < pixel_count; ++i)
         {
-            image_data[i] = ((image_data[i] - raw_info->black_level) << shift_bits) + raw_info->black_level;
+            image_data[i] = MIN( (((image_data[i] - raw_info->black_level) << shift_bits) + raw_info->black_level), raw_info->white_level);
         }
 
         return 1; // scaled for losless dualiso
