@@ -1297,13 +1297,30 @@ void MainWindow::startExportPipe(QString fileName)
         //Setup for scripting
         m_pScripting->setNextScriptInputTiff( getMlvFramerate( m_pMlvObject ), folderName );
     }
-    else if( m_codecProfile == CODEC_AVIRAW )
+    else if( m_codecProfile == CODEC_AVI )
     {
         output.append( QString( ".avi" ) );
-        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v rawvideo -pix_fmt %3 %4\"%5\"" )
+
+        QString option3;
+        QString option4;
+
+        switch( m_codecOption )
+        {
+            case CODEC_AVI_OPTION_RAW:
+                option3 = "rawvideo";
+                option4 = "yuv420p";
+                break;
+            case CODEC_AVI_OPTION_V210:
+                option3 = "v210";
+                option4 = "yuv422p10le";
+                break;
+        }
+
+        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v %3 -pix_fmt %4 %5\"%6\"" )
                     .arg( fps )
                     .arg( resolution )
-                    .arg( "yuv420p" )
+                    .arg( option3 )
+                    .arg( option4 )
                     .arg( resizeFilter )
                     .arg( output ) );
     }
@@ -3789,7 +3806,7 @@ void MainWindow::on_actionExport_triggered()
     QString fileType;
     QString fileEnding;
     saveFileName = saveFileName.left( saveFileName.lastIndexOf( "." ) );
-    if( m_codecProfile == CODEC_AVIRAW )
+    if( m_codecProfile == CODEC_AVI )
     {
         saveFileName.append( ".avi" );
         fileType = tr("Audio Video Interleave (*.avi)");

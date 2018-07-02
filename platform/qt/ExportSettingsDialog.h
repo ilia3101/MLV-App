@@ -16,7 +16,7 @@
 #define CODEC_PRORES422ST           2
 #define CODEC_PRORES422HQ           3
 #define CODEC_PRORES4444            4
-#define CODEC_AVIRAW                5
+#define CODEC_AVI                   5
 #define CODEC_CDNG                  6
 #define CODEC_CDNG_LOSSLESS         7
 #define CODEC_CDNG_FAST             8
@@ -27,6 +27,9 @@
 #define CODEC_DNXHD                 13
 #define CODEC_DNXHR                 14
 #define CODEC_AUDIO_ONLY            15
+
+#define CODEC_AVI_OPTION_RAW        0
+#define CODEC_AVI_OPTION_V210       1
 
 #define CODEC_PRORES_OPTION_KS      0
 #define CODEC_PRORES_OPTION_AW      1

@@ -162,6 +162,14 @@ void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
             item->setFlags(item->flags() & ~Qt::ItemIsSelectable);
         }
     }
+    else if( index == CODEC_AVI )
+    {
+        ui->labelDebayer->setEnabled( true );
+        ui->comboBoxDebayer->setEnabled( true );
+        ui->comboBoxOption->setEnabled( true );
+        ui->comboBoxOption->addItem( QString( "RAW 8bit" ) );
+        ui->comboBoxOption->addItem( QString( "V210 10bit" ) );
+    }
     else if( index == CODEC_CDNG
           || index == CODEC_CDNG_LOSSLESS
           || index == CODEC_CDNG_FAST )
