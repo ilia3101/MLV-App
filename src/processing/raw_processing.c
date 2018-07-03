@@ -373,9 +373,12 @@ void apply_processing_object( processingObject_t * processing,
             {
                 /* Check if its the range of highest green value possible */
                 /* the range makes it cleaner against pink noise */
-                if (tmp1b >= highest_green - 100 && tmp1b <= highest_green + 100)
+                if (tmp1b >= LIMIT16( highest_green - 1000 ) && tmp1b <= LIMIT16( highest_green + 1000 ))
                 {
-                    pix[1] = (pix[0] + pix[2]) / 2;
+                    if( pix[1] < 1.1*pix[0] && pix[1] < pix[2] )
+                    {
+                        pix[1] = (pix[0] + pix[2]) / 2;
+                    }
                 }
             }
             else
