@@ -2382,12 +2382,12 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
         }
         else if( Rxml->isStartElement() && Rxml->name() == "rawBlack" )
         {
-            receipt->setRawBlack( Rxml->readElementText().toUInt() );
+            receipt->setRawBlack( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
         else if( Rxml->isStartElement() && Rxml->name() == "rawWhite" )
         {
-            receipt->setRawWhite( Rxml->readElementText().toUInt() );
+            receipt->setRawWhite( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
         else if( Rxml->isStartElement() && Rxml->name() == "lutEnabled" )

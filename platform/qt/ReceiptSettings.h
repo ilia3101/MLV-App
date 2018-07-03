@@ -32,8 +32,8 @@ public:
     void setHighlightReconstruction( bool on ){m_highlightReconstruction = on;}
     void setChromaSeparation( bool on ){m_chromaSeparation = on;}
     void setProfile( uint8_t num )  {m_profile = num;}
-    void setRawWhite( uint16_t value ) {m_rawWhite = value;}
-    void setRawBlack( uint16_t value ) {m_rawBlack = value;}
+    void setRawWhite( int value ) {m_rawWhite = value;}
+    void setRawBlack( int value ) {m_rawBlack = value;}
     void setFileName( QString fileName )      {m_fileName = fileName;}
     void setExportFileName( QString fileName ){m_exportFileName = fileName;}
     void setRawFixesEnabled( bool on )        {m_rawFixesEnabled = on;}
