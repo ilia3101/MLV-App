@@ -3639,6 +3639,8 @@ void MainWindow::on_horizontalSliderRawWhite_valueChanged(int position)
     int shift = 16 - getMlvBitdepth( m_pMlvObject );
     processingSetWhiteLevel( m_pProcessingObject, positionCorr << shift );
     ui->label_RawWhiteVal->setText( QString("%1").arg( position ) );
+    resetMlvCache( m_pMlvObject );
+    resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
 }
 
@@ -3652,6 +3654,8 @@ void MainWindow::on_horizontalSliderRawBlack_valueChanged(int position)
     int shift = 16 - getMlvBitdepth( m_pMlvObject );
     processingSetBlackLevel( m_pProcessingObject, position << shift );
     ui->label_RawBlackVal->setText( QString("%1").arg( position ) );
+    resetMlvCache( m_pMlvObject );
+    resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
 }
 
