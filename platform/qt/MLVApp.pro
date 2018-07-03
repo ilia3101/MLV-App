@@ -222,6 +222,7 @@ PACKAGE_FILES.files += ../../src/mlv/llrawproc/pixelmaps/80000331_1872x1059.fpm
 #PACKAGE_FILES.files += ../../src/mlv/llrawproc/pixelmaps/80000346_1808x1190.fpm
 #PACKAGE_FILES.files += ../../src/mlv/llrawproc/pixelmaps/80000346_1872x1060.fpm
 #PACKAGE_FILES.files += ../../src/mlv/llrawproc/pixelmaps/80000346_2592x1108.fpm
+#PACKAGE_FILES.files += ../../src/mlv/llrawproc/pixelmaps/80000346_2592x1332.fpm
 PACKAGE_FILES.path = Contents/MacOS
 QMAKE_BUNDLE_DATA += PACKAGE_FILES
 #unpack & install ffmpeg on OSX
