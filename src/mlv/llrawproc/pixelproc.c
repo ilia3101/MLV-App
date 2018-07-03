@@ -486,18 +486,17 @@ static void fpm_mv1080crop(pixel_map * map, int pattern, int32_t raw_width)
 }
 
 /* generate the focus pixel pattern for zoom video mode */
-static void fpm_zoom(pixel_map * map, int pattern, int32_t raw_width)
+static void fpm_zoom(pixel_map * map, int pattern, int32_t raw_width, int32_t raw_height)
 {
     int shift = 0;
     int fp_start = 31;
-    int fp_end = 1103;
+    int fp_end = raw_height - 1;
     int x_rep = 24;
     int y_rep = 60;
 
     if(pattern == PATTERN_100D)
     {
         fp_start = 28;
-        fp_end = 1105;
         x_rep = 12;
         y_rep = 6;
     }
@@ -798,11 +797,11 @@ static void fpm_mv1080crop_u(pixel_map * map, int pattern, int32_t raw_width)
   zoom_u() function
   Draw unified focus pixel pattern for Zoom video mode.
 */
-static void fpm_zoom_u(pixel_map * map, int pattern, int32_t raw_width)
+static void fpm_zoom_u(pixel_map * map, int pattern, int32_t raw_width, int32_t raw_height)
 {
     int shift = 0;
     int fp_start = 28;
-    int fp_end = 1107;
+    int fp_end = raw_height - 1;
     int x_rep = 8;
     int y_rep = 60;
 
@@ -839,6 +838,35 @@ static void fpm_zoom_u(pixel_map * map, int pattern, int32_t raw_width)
                 else if(((y + 5) % y_rep) == 0) shift = 1;
                 else if(((y + 6) % y_rep) == 0) shift = 6;
                 else if(((y + 7) % y_rep) == 0) shift = 7;
+                else continue;
+                break;
+        }
+
+        for(int x = 72; x < raw_width; x++)
+        {
+            if(((x + shift) % x_rep) == 0)
+            {
+                add_pixel_to_map(map, x, y);
+            }
+        }
+    }
+
+    for(int y = fp_start; y <= fp_end; y++)
+    {
+        switch(pattern)
+        {
+            case PATTERN_EOSM:
+            case PATTERN_650D:
+            case PATTERN_700D:
+                if(((y + 14) % y_rep) == 0) shift = 4;
+                else continue;
+                break;
+
+            case PATTERN_100D:
+                if(((y + 2) % y_rep) == 0) shift = 4;
+                else if(((y + 5) % y_rep) == 0) shift = 5;
+                else if(((y + 6) % y_rep) == 0) shift = 10;
+                else if(((y + 7) % y_rep) == 0) shift = 11;
                 else continue;
                 break;
         }
@@ -1036,7 +1064,7 @@ fpm_check:
 #ifndef STDOUT_SILENT
                         printf("'mvZoom' mode\n");
 #endif
-                        fpm_zoom(focus_pixel_map, pattern, raw_width);
+                        fpm_zoom(focus_pixel_map, pattern, raw_width, raw_height);
                         break;
 
                     case MV_CROPREC:
@@ -1071,7 +1099,7 @@ fpm_check:
 #ifndef STDOUT_SILENT
                         printf("'mvZoom' unified mode\n");
 #endif
-                        fpm_zoom_u(focus_pixel_map, pattern, raw_width);
+                        fpm_zoom_u(focus_pixel_map, pattern, raw_width, raw_height);
                         break;
 
                     case MV_CROPREC_U:
