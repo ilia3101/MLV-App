@@ -3632,6 +3632,12 @@ void MainWindow::on_horizontalSliderRawWhite_valueChanged(int position)
     if( getMlvBitdepth( m_pMlvObject ) == 0 ) return;
     if( getMlvBitdepth( m_pMlvObject ) > 16 ) return;
 
+    if( position <= ui->horizontalSliderRawBlack->value() + 1 )
+    {
+        position = ui->horizontalSliderRawBlack->value() + 1;
+        ui->horizontalSliderRawWhite->setValue( position );
+    }
+
     /* Lowering white level a bit avoids pink grain in highlihgt reconstruction */
     int positionCorr = (int)((double)position * 0.993);
 
@@ -3649,6 +3655,12 @@ void MainWindow::on_horizontalSliderRawBlack_valueChanged(int position)
     if( !m_fileLoaded ) return;
     if( getMlvBitdepth( m_pMlvObject ) == 0 ) return;
     if( getMlvBitdepth( m_pMlvObject ) > 16 ) return;
+
+    if( position >= ui->horizontalSliderRawWhite->value() - 1 )
+    {
+        position = ui->horizontalSliderRawWhite->value() - 1;
+        ui->horizontalSliderRawBlack->setValue( position );
+    }
 
     m_pMlvObject->RAWI.raw_info.black_level = position; //TODO: that is still bad style
     int shift = 16 - getMlvBitdepth( m_pMlvObject );
