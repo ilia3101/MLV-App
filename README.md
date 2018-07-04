@@ -56,6 +56,7 @@ Find the latest releases [here](https://ilia3101.github.io/MLV-App/). Download, 
 - open `platform/qt/MLVApp.pro` in QtCreator
 - go to tab project, add command line argument -j4 (for quad core) 
 - Build and Start
+- OR download and doubleclick easy-to-use [compiler app](https://bitbucket.org/Dannephoto/mlv_app_compiler/downloads/mlv_app_compiler.dmg) from @dannephoto
 
 #### Qt App Windows
 - install Qt5 (minimum 5.6)
