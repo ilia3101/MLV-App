@@ -3638,6 +3638,8 @@ void MainWindow::on_horizontalSliderRawWhite_valueChanged(int position)
         ui->horizontalSliderRawWhite->setValue( position );
     }
 
+    while( !m_pRenderThread->isIdle() ) QThread::msleep(1);
+
     /* Lowering white level a bit avoids pink grain in highlihgt reconstruction */
     int positionCorr = (int)((double)position * 0.993);
 
@@ -3661,6 +3663,8 @@ void MainWindow::on_horizontalSliderRawBlack_valueChanged(int position)
         position = ui->horizontalSliderRawWhite->value() - 1;
         ui->horizontalSliderRawBlack->setValue( position );
     }
+
+    while( !m_pRenderThread->isIdle() ) QThread::msleep(1);
 
     m_pMlvObject->RAWI.raw_info.black_level = position; //TODO: that is still bad style
     int shift = 16 - getMlvBitdepth( m_pMlvObject );
