@@ -49,13 +49,6 @@ Find the latest releases [here](https://ilia3101.github.io/MLV-App/). Download, 
 - Update checker
 
 ## Compiling :collision:
-#### Cocoa App
-```
-git clone https://github.com/ilia3101/MLV-App.git
-cd MLV-App/platform/cocoa
-make app -j4
-```
-
 #### Qt App macOS
 - install XCode depending on your OSX
 - install Qt5 (minimum 5.6)
@@ -79,6 +72,13 @@ make app -j4
 - `./mlvapp` and have fun
 
 A detailed guide for compiling MLV-App on Linux can be found [here](https://sternenkarten.com/tutorial-englisch/) (thanks to @seescho).
+
+#### Cocoa App (very very deprecated)
+```
+git clone https://github.com/ilia3101/MLV-App.git
+cd MLV-App/platform/cocoa
+make app -j4
+```
 
 ## The Code
 All the MLV stuff is in src/mlv
