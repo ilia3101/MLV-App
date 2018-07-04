@@ -65,7 +65,7 @@ int scale_bits_for_diso(struct raw_info * raw_info, uint16_t * image_data, int l
         int pixel_count = raw_info->width * raw_info->height;
         int shift_bits = raw_info->bits_per_pixel - lossless_bpp;
 
-        raw_info->white_level = ((raw_info->white_level - raw_info->black_level) << shift_bits) + raw_info->black_level;
+        raw_info->white_level = COERCE( (((raw_info->white_level - raw_info->black_level) << shift_bits) + raw_info->black_level), 10000, 16383);
 
         for(int i = 0; i < pixel_count; ++i)
         {
