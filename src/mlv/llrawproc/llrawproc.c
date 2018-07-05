@@ -223,13 +223,13 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
                 raw_info.active_area.y2 = raw_info.height;
                 raw_info.black_level = video->RAWI.raw_info.black_level;
                 raw_info.white_level = video->RAWI.raw_info.white_level;
-//#ifndef STDOUT_SILENT
+#ifndef STDOUT_SILENT
                 printf("\nold_black = %u, old_white = %u\n", raw_info.black_level, raw_info.white_level);
-//#endif
+#endif
                 int scale_bits = scale_bits_for_diso(&raw_info, raw_image_buff, video->lossless_bpp);
-//#ifndef STDOUT_SILENT
+#ifndef STDOUT_SILENT
                 printf("new_black = %u, new_white = %u\n", raw_info.black_level, raw_info.white_level);
-//#endif
+#endif
                 if(scale_bits)
                 {
 #ifndef STDOUT_SILENT
