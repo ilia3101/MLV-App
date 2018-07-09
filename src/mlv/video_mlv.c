@@ -542,7 +542,7 @@ void freeMlvObject(mlvObject_t * video)
 
     /* Mutex things here... */
     for (int i = 0; i < video->filenum; ++i)
-        pthread_mutex_destroy(video->main_file_mutex + i);
+        if(video->main_file_mutex) pthread_mutex_destroy(video->main_file_mutex + i);
     if(video->main_file_mutex) free(video->main_file_mutex);
     pthread_mutex_destroy(&video->g_mutexFind);
     pthread_mutex_destroy(&video->g_mutexCount);
