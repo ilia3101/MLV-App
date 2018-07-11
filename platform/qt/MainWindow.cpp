@@ -2841,16 +2841,27 @@ void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings 
 }
 
 //Show the file in
-void MainWindow::showFileInEditor(int row)
+int MainWindow::showFileInEditor(int row)
 {
-    if( m_pSessionReceipts.count() <= 0 ) return;
+    if( m_pSessionReceipts.count() <= 0 ) return 1;
 
     //Stop Playback
     ui->actionPlay->setChecked( false );
     //Save slider receipt
     if( !m_pSessionReceipts.at( m_lastActiveClipInSession )->wasNeverLoaded() ) setReceipt( m_pSessionReceipts.at( m_lastActiveClipInSession ) );
     //Open new MLV
-    openMlv( ui->listWidgetSession->item( row )->toolTip() );
+    if( openMlv( ui->listWidgetSession->item( row )->toolTip() ) )
+    {
+        //If one file is selected, reselect the last one, else do nothing (export)
+        //And if there is another file we can switch to...
+        if( ui->listWidgetSession->selectedItems().count() <= 1
+         && ui->listWidgetSession->count() > 1)
+        {
+            ui->listWidgetSession->setCurrentRow( m_lastActiveClipInSession );
+            showFileInEditor( m_lastActiveClipInSession );
+        }
+        return 1;
+    }
     //Now set it was loaded once
     m_pSessionReceipts.at( row )->setLoaded();
     //Set sliders to receipt
@@ -2860,6 +2871,8 @@ void MainWindow::showFileInEditor(int row)
 
     //Caching is in which state? Set it!
     if( ui->actionCaching->isChecked() ) on_actionCaching_triggered();
+
+    return 0;
 }
 
 //Add the clip in SessionList position "row" at last position in ExportQueue
@@ -2872,7 +2885,7 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
         m_pStatusDialog->ui->labelEstimatedTime->setText( "" );
         m_pStatusDialog->ui->progressBar->setValue( 0 );
         m_pStatusDialog->show();
-        showFileInEditor( row );
+        if( showFileInEditor( row ) ) return; //Don't add to export queue when corrupted file
         qApp->processEvents();
         setReceipt( m_pSessionReceipts.at( row ) );
     }
@@ -4751,7 +4764,12 @@ void MainWindow::exportHandler( void )
         exportRunning = true;
         jobNumber++;
         //Open file and settings
-        openMlv( m_exportQueue.first()->fileName() );
+        if( openMlv( m_exportQueue.first()->fileName() ) )
+        {
+            //auto skip corrupted file
+            emit exportReady();
+            return;
+        }
         //Set sliders to receipt
         setSliders( m_exportQueue.first(), false );
         //Fill label in StatusDialog

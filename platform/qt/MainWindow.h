@@ -317,7 +317,7 @@ private:
     void setSliders(ReceiptSettings *sliders , bool paste);
     void setReceipt( ReceiptSettings *sliders );
     void replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings *receiptSource , bool paste);
-    void showFileInEditor(int row);
+    int showFileInEditor(int row);
     void addClipToExportQueue( int row, QString fileName );
     void previewPicture( int row );
     void setPreviewMode( void );
