@@ -1,10 +1,21 @@
 #ifndef _debayer_
 #define _debayer_
 
+/* None debayer, just copy data to something visible */
+void debayerNone(uint16_t * __restrict debayerto, float * __restrict bayerdata, int width, int height, int threads);
 /* Quite quick bilinear debayer, floating point sadly; threads argument is unused */
 void debayerBasic(uint16_t * __restrict debayerto, float * __restrict bayerdata, int width, int height, int threads);
 /* More useable amaze, threads number should be the number of cores(or threads if >= i7) your cpu has */
 void debayerAmaze(uint16_t * __restrict debayerto, float * __restrict bayerdata, int width, int height, int threads);
+
+/* None debayer structure for multithread */
+typedef struct {
+    uint16_t * __restrict debayerto; //output
+    float * __restrict bayerdata; //input
+    int width; //complete width
+    int height; //cropped height to render
+    int offsetY; //start of crop for thread in height
+} nonedebayerinfo_t;
 
 /* AMaZe input as struct for posixz */
 typedef struct {

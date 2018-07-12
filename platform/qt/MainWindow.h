@@ -110,8 +110,10 @@ private slots:
     void on_actionShowWaveFormMonitor_triggered(void);
     void on_actionShowParade_triggered(void);
     void on_actionShowVectorScope_triggered(void);
+    void on_actionUseNoneDebayer_triggered();
     void on_actionUseBilinear_triggered();
     void on_actionAlwaysUseAMaZE_triggered();
+    void on_actionCaching_triggered();
     void on_actionExportSettings_triggered();
     void on_actionResetReceipt_triggered();
     void on_actionCopyRecept_triggered();
@@ -122,7 +124,6 @@ private slots:
     void on_actionSaveAsSession_triggered();
     void on_actionImportReceipt_triggered();
     void on_actionExportReceipt_triggered();
-    void on_actionCaching_triggered();
     void on_actionNext_Clip_triggered();
     void on_actionPrevious_Clip_triggered();
     void on_actionSelectAllClips_triggered();

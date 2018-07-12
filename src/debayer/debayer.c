@@ -248,3 +248,73 @@ void debayerBasic(uint16_t * __restrict debayerto, float * __restrict bayerdata,
     memcpy(debayerto + (width * (height - 1) * 3), debayerto + (width * (height - 2) * 3), width * 3 * sizeof(uint16_t));
 
 }
+
+/* no debayer single thread, just copy some bytes to somewhere else :-P */
+void debayerNoneThread( nonedebayerinfo_t * data )
+{
+    int start = data->width * data->offsetY;
+    int end = data->width * data->height;
+
+    for( int i = start; i < end; i++ )
+    {
+        /* no idea what I do here, but I get a B/W picture */
+        data->debayerto[i*3] = (uint16_t)data->bayerdata[i];
+        data->debayerto[i*3+1] = (uint16_t)data->bayerdata[i];
+        data->debayerto[i*3+2] = (uint16_t)data->bayerdata[i];
+    }
+}
+
+/* no debayer, just copy some bytes to somewhere else :-P , threaded */
+void debayerNone(uint16_t * __restrict debayerto, float * __restrict bayerdata, int width, int height, int threads)
+{
+    /* If threads is < 2 just do it normal */
+    if (threads < 2)
+    {
+        debayerNoneThread( & (nonedebayerinfo_t) { debayerto, bayerdata, width, height, 0 } );
+    }
+    else
+    {
+        int startchunk_y[threads];
+        int endchunk_y[threads];
+
+        /* How big each thread's chunk is, multiple of 2 - or debayer
+         * would start on wrong pixel and magenta stripes appear */
+        int chunk_height = height / threads;
+        chunk_height -= chunk_height % 2;
+
+        /* Calculate chunks of image for each thread */
+        for (int thread = 0; thread < threads; ++thread)
+        {
+            startchunk_y[thread] = chunk_height * thread;
+            endchunk_y[thread] = chunk_height * (thread + 1);
+        }
+
+        /* Last chunk must reach end of frame */
+        endchunk_y[threads-1] = height;
+
+        pthread_t thread_id[threads];
+        nonedebayerinfo_t none_arguments[threads];
+
+        /* Create pthreads */
+        for (int thread = 0; thread < threads; ++thread)
+        {
+            /* Amaze arguments */
+            none_arguments[thread] = (nonedebayerinfo_t) {
+                debayerto,
+                bayerdata,
+                /* Crop out a part for each thread */
+                width,
+                endchunk_y[thread],
+                startchunk_y[thread] };
+
+            /* Create pthread! */
+            pthread_create( &thread_id[thread], NULL, (void *)&debayerNoneThread, (void *)&none_arguments[thread] );
+        }
+
+        /* let all threads finish */
+        for (int thread = 0; thread < threads; ++thread)
+        {
+            pthread_join( thread_id[thread], NULL );
+        }
+    }
+}

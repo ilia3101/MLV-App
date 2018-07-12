@@ -299,10 +299,15 @@ void get_mlv_raw_frame_debayered( mlvObject_t * video,
     /* Get the raw data in B&W */
     getMlvRawFrameFloat(video, frame_index, temp_memory);
 
-    if (debayer_type)
+    if (debayer_type == 1)
     {
         /* Debayer AMAZEly - using all cores! */
         debayerAmaze(output_frame, temp_memory, width, height, getMlvCpuCores(video));
+    }
+    else if(debayer_type == 2)
+    {
+        /* Ultra fast without any quality */
+        debayerNone(output_frame, temp_memory, width, height, getMlvCpuCores(video));
     }
     else
     {

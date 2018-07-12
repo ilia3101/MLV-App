@@ -69,6 +69,8 @@
 /* Or this one for speed/ultimate playback performance, will give AMaZE if it is in cache, 
  * or bilinear if cached AMaZE frame is not avalible in cache */
 #define setMlvDontAlwaysUseAmaze(video) (video)->use_amaze = 0; (video)->current_cached_frame_active = 0
+/* Use the non debayer for best speed + no quality :-P */
+#define setMlvUseNoneDebayer(video) (video)->use_amaze = 2; (video)->current_cached_frame_active = 0
 
 /* Reset the current cached frame. Needed if a raw correction parameter changed */
 #define resetMlvCachedFrame(video) (video)->current_cached_frame_active = 0

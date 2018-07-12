@@ -167,6 +167,7 @@
      <property name="title">
       <string>Debayer for Preview</string>
      </property>
+     <addaction name="actionUseNoneDebayer"/>
      <addaction name="actionUseBilinear"/>
      <addaction name="actionAlwaysUseAMaZE"/>
      <addaction name="actionCaching"/>
@@ -6036,6 +6037,14 @@ QGroupBox::indicator:checked {
    </property>
    <property name="toolTip">
     <string>Auto Check for Updates on Startup</string>
+   </property>
+  </action>
+  <action name="actionUseNoneDebayer">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>None (monochrome)</string>
    </property>
   </action>
  </widget>

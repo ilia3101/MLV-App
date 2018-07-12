@@ -4114,9 +4114,28 @@ void MainWindow::on_actionShowVectorScope_triggered()
     m_frameChanged = true;
 }
 
+//Use none debayer (speedy B&W)
+void MainWindow::on_actionUseNoneDebayer_triggered()
+{
+    ui->actionUseNoneDebayer->setChecked( true );
+    ui->actionUseBilinear->setChecked( false );
+    ui->actionAlwaysUseAMaZE->setChecked( false );
+    ui->actionCaching->setChecked( false );
+
+    setMlvUseNoneDebayer( m_pMlvObject );
+
+    disableMlvCaching( m_pMlvObject );
+
+    llrpResetFpmStatus(m_pMlvObject);
+    llrpResetBpmStatus(m_pMlvObject);
+    llrpComputeStripesOn(m_pMlvObject);
+    m_frameChanged = true;
+}
+
 //Don't use AMaZE -> bilinear
 void MainWindow::on_actionUseBilinear_triggered()
 {
+    ui->actionUseNoneDebayer->setChecked( false );
     ui->actionUseBilinear->setChecked( true );
     ui->actionAlwaysUseAMaZE->setChecked( false );
     ui->actionCaching->setChecked( false );
@@ -4135,6 +4154,7 @@ void MainWindow::on_actionUseBilinear_triggered()
 //Use AMaZE or not
 void MainWindow::on_actionAlwaysUseAMaZE_triggered()
 {
+    ui->actionUseNoneDebayer->setChecked( false );
     ui->actionUseBilinear->setChecked( false );
     ui->actionAlwaysUseAMaZE->setChecked( true );
     ui->actionCaching->setChecked( false );
@@ -4143,6 +4163,25 @@ void MainWindow::on_actionAlwaysUseAMaZE_triggered()
     setMlvAlwaysUseAmaze( m_pMlvObject );
 
     disableMlvCaching( m_pMlvObject );
+
+    llrpResetFpmStatus(m_pMlvObject);
+    llrpResetBpmStatus(m_pMlvObject);
+    llrpComputeStripesOn(m_pMlvObject);
+    m_frameChanged = true;
+}
+
+//En-/Disable Caching
+void MainWindow::on_actionCaching_triggered()
+{
+    ui->actionUseNoneDebayer->setChecked( false );
+    ui->actionUseBilinear->setChecked( false );
+    ui->actionAlwaysUseAMaZE->setChecked( false );
+    ui->actionCaching->setChecked( true );
+
+    /* Use AMaZE */
+    setMlvAlwaysUseAmaze( m_pMlvObject );
+
+    enableMlvCaching( m_pMlvObject );
 
     llrpResetFpmStatus(m_pMlvObject);
     llrpResetBpmStatus(m_pMlvObject);
@@ -4311,24 +4350,6 @@ void MainWindow::on_actionSaveAsSession_triggered()
     m_sessionFileName = fileName;
 
     saveSession( fileName );
-}
-
-//En-/Disable Caching
-void MainWindow::on_actionCaching_triggered()
-{
-    ui->actionUseBilinear->setChecked( false );
-    ui->actionAlwaysUseAMaZE->setChecked( false );
-    ui->actionCaching->setChecked( true );
-
-    /* Use AMaZE */
-    setMlvAlwaysUseAmaze( m_pMlvObject );
-
-    enableMlvCaching( m_pMlvObject );
-
-    llrpResetFpmStatus(m_pMlvObject);
-    llrpResetBpmStatus(m_pMlvObject);
-    llrpComputeStripesOn(m_pMlvObject);
-    m_frameChanged = true;
 }
 
 //Jump to next clip
