@@ -651,6 +651,10 @@ int MainWindow::openMlv( QString fileName )
     {
         setMlvAlwaysUseAmaze( m_pMlvObject );
     }
+    else if( ui->actionUseNoneDebayer->isChecked() )
+    {
+        setMlvUseNoneDebayer( m_pMlvObject );
+    }
     else
     {
         setMlvDontAlwaysUseAmaze( m_pMlvObject );

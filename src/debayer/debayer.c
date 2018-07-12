@@ -249,18 +249,52 @@ void debayerBasic(uint16_t * __restrict debayerto, float * __restrict bayerdata,
 
 }
 
+/* easy debayer single thread: one RGB pixel is 2x2 RAW pixels */
+void debayerEasyThread( nonedebayerinfo_t * data )
+{
+    int start = data->width * data->offsetY;
+    int end = data->width * data->height;
+    int pixelSkipR = 3 * data->width;
+    int pixelSkipB = 3 * data->width - 2;
+
+    for( int i = start, o = start*3; i < end; i++, o+=3 )
+    {
+        /* copy colors always to the whole 2x2 pixel */
+        if( (i % 2) == 0 && ( ( i / data->width ) % 2 ) == 0 ) //R
+        {
+            data->debayerto[o] = (uint16_t)data->bayerdata[i];
+            data->debayerto[o+3] = (uint16_t)data->bayerdata[i]; // +1pixel
+            data->debayerto[o+pixelSkipR] = (uint16_t)data->bayerdata[i]; // +1line
+            data->debayerto[o+pixelSkipR+3] = (uint16_t)data->bayerdata[i]; // +1line +1pixel
+        }
+        else if( (i % 2) == 1 && ( ( i / data->width ) % 2 ) == 1 ) //B
+        {
+            data->debayerto[o+2] = (uint16_t)data->bayerdata[i];
+            data->debayerto[o-1] = (uint16_t)data->bayerdata[i]; // -1pixel
+            data->debayerto[o-pixelSkipB] = (uint16_t)data->bayerdata[i]; // -1line
+            data->debayerto[o-pixelSkipB-3] = (uint16_t)data->bayerdata[i]; // -1line -1pixel
+        }
+        else //G
+        {
+            data->debayerto[o+1] = (uint16_t)data->bayerdata[i];
+            if( (i % 2) == 0 ) data->debayerto[o-2] = (uint16_t)data->bayerdata[i]; // -1pixel
+            else data->debayerto[o+4] = (uint16_t)data->bayerdata[i]; // +1pixel
+        }
+    }
+}
+
 /* no debayer single thread, just copy some bytes to somewhere else :-P */
 void debayerNoneThread( nonedebayerinfo_t * data )
 {
     int start = data->width * data->offsetY;
     int end = data->width * data->height;
 
-    for( int i = start; i < end; i++ )
+    for( int i = start, o = start*3; i < end; i++, o+=3 )
     {
         /* no idea what I do here, but I get a B/W picture */
-        data->debayerto[i*3] = (uint16_t)data->bayerdata[i];
-        data->debayerto[i*3+1] = (uint16_t)data->bayerdata[i];
-        data->debayerto[i*3+2] = (uint16_t)data->bayerdata[i];
+        data->debayerto[o] = (uint16_t)data->bayerdata[i];
+        data->debayerto[o+1] = (uint16_t)data->bayerdata[i];
+        data->debayerto[o+2] = (uint16_t)data->bayerdata[i];
     }
 }
 
