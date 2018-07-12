@@ -168,6 +168,7 @@
       <string>Debayer for Preview</string>
      </property>
      <addaction name="actionUseNoneDebayer"/>
+     <addaction name="actionUseSimpleDebayer"/>
      <addaction name="actionUseBilinear"/>
      <addaction name="actionAlwaysUseAMaZE"/>
      <addaction name="actionCaching"/>
@@ -391,7 +392,7 @@ QGroupBox::indicator:checked {
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>200</width>
+            <width>199</width>
             <height>3279</height>
            </rect>
           </property>
@@ -6045,6 +6046,14 @@ QGroupBox::indicator:checked {
    </property>
    <property name="text">
     <string>None (monochrome)</string>
+   </property>
+  </action>
+  <action name="actionUseSimpleDebayer">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Simple</string>
    </property>
   </action>
  </widget>

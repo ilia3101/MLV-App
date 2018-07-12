@@ -646,7 +646,7 @@ int MainWindow::openMlv( QString fileName )
     //Reinitialize VectorScope
     m_pVectorScope = new VectorScope( ui->labelHistogram->width() * 2, ui->labelHistogram->height() * 2 );
 
-    //Always use amaze?
+    //Set selected debayer type
     if( ui->actionAlwaysUseAMaZE->isChecked() )
     {
         setMlvAlwaysUseAmaze( m_pMlvObject );
@@ -654,6 +654,10 @@ int MainWindow::openMlv( QString fileName )
     else if( ui->actionUseNoneDebayer->isChecked() )
     {
         setMlvUseNoneDebayer( m_pMlvObject );
+    }
+    else if( ui->actionUseSimpleDebayer->isChecked() )
+    {
+        setMlvUseSimpleDebayer( m_pMlvObject );
     }
     else
     {
@@ -4122,6 +4126,7 @@ void MainWindow::on_actionShowVectorScope_triggered()
 void MainWindow::on_actionUseNoneDebayer_triggered()
 {
     ui->actionUseNoneDebayer->setChecked( true );
+    ui->actionUseSimpleDebayer->setChecked( false );
     ui->actionUseBilinear->setChecked( false );
     ui->actionAlwaysUseAMaZE->setChecked( false );
     ui->actionCaching->setChecked( false );
@@ -4136,10 +4141,30 @@ void MainWindow::on_actionUseNoneDebayer_triggered()
     m_frameChanged = true;
 }
 
+//Use simple debayer (speedy colored)
+void MainWindow::on_actionUseSimpleDebayer_triggered()
+{
+    ui->actionUseNoneDebayer->setChecked( false );
+    ui->actionUseSimpleDebayer->setChecked( true );
+    ui->actionUseBilinear->setChecked( false );
+    ui->actionAlwaysUseAMaZE->setChecked( false );
+    ui->actionCaching->setChecked( false );
+
+    setMlvUseSimpleDebayer( m_pMlvObject );
+
+    disableMlvCaching( m_pMlvObject );
+
+    llrpResetFpmStatus(m_pMlvObject);
+    llrpResetBpmStatus(m_pMlvObject);
+    llrpComputeStripesOn(m_pMlvObject);
+    m_frameChanged = true;
+}
+
 //Don't use AMaZE -> bilinear
 void MainWindow::on_actionUseBilinear_triggered()
 {
     ui->actionUseNoneDebayer->setChecked( false );
+    ui->actionUseSimpleDebayer->setChecked( false );
     ui->actionUseBilinear->setChecked( true );
     ui->actionAlwaysUseAMaZE->setChecked( false );
     ui->actionCaching->setChecked( false );
@@ -4159,6 +4184,7 @@ void MainWindow::on_actionUseBilinear_triggered()
 void MainWindow::on_actionAlwaysUseAMaZE_triggered()
 {
     ui->actionUseNoneDebayer->setChecked( false );
+    ui->actionUseSimpleDebayer->setChecked( false );
     ui->actionUseBilinear->setChecked( false );
     ui->actionAlwaysUseAMaZE->setChecked( true );
     ui->actionCaching->setChecked( false );
@@ -4178,6 +4204,7 @@ void MainWindow::on_actionAlwaysUseAMaZE_triggered()
 void MainWindow::on_actionCaching_triggered()
 {
     ui->actionUseNoneDebayer->setChecked( false );
+    ui->actionUseSimpleDebayer->setChecked( false );
     ui->actionUseBilinear->setChecked( false );
     ui->actionAlwaysUseAMaZE->setChecked( false );
     ui->actionCaching->setChecked( true );

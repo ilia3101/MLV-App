@@ -304,10 +304,10 @@ void get_mlv_raw_frame_debayered( mlvObject_t * video,
         /* Debayer AMAZEly - using all cores! */
         debayerAmaze(output_frame, temp_memory, width, height, getMlvCpuCores(video));
     }
-    else if(debayer_type == 2)
+    else if(debayer_type == 2 || debayer_type == 3)
     {
-        /* Ultra fast without any quality */
-        debayerNone(output_frame, temp_memory, width, height, getMlvCpuCores(video));
+        /* threaded easy types */
+        debayerEasy(output_frame, temp_memory, width, height, getMlvCpuCores(video), debayer_type);
     }
     else
     {

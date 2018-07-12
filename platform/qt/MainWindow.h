@@ -111,6 +111,7 @@ private slots:
     void on_actionShowParade_triggered(void);
     void on_actionShowVectorScope_triggered(void);
     void on_actionUseNoneDebayer_triggered();
+    void on_actionUseSimpleDebayer_triggered();
     void on_actionUseBilinear_triggered();
     void on_actionAlwaysUseAMaZE_triggered();
     void on_actionCaching_triggered();

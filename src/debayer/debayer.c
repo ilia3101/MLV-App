@@ -249,8 +249,8 @@ void debayerBasic(uint16_t * __restrict debayerto, float * __restrict bayerdata,
 
 }
 
-/* easy debayer single thread: one RGB pixel is 2x2 RAW pixels */
-void debayerEasyThread( nonedebayerinfo_t * data )
+/* Simple debayer single thread: one RGB pixel is 2x2 RAW pixels */
+void debayerSimpleThread( easydebayerinfo_t * data )
 {
     int start = data->width * data->offsetY;
     int end = data->width * data->height;
@@ -277,14 +277,14 @@ void debayerEasyThread( nonedebayerinfo_t * data )
         else //G
         {
             data->debayerto[o+1] = (uint16_t)data->bayerdata[i];
-            if( (i % 2) == 0 ) data->debayerto[o-2] = (uint16_t)data->bayerdata[i]; // -1pixel
+            if( (i % 2) == 1 ) data->debayerto[o-2] = (uint16_t)data->bayerdata[i]; // -1pixel
             else data->debayerto[o+4] = (uint16_t)data->bayerdata[i]; // +1pixel
         }
     }
 }
 
 /* no debayer single thread, just copy some bytes to somewhere else :-P */
-void debayerNoneThread( nonedebayerinfo_t * data )
+void debayerNoneThread( easydebayerinfo_t * data )
 {
     int start = data->width * data->offsetY;
     int end = data->width * data->height;
@@ -298,13 +298,14 @@ void debayerNoneThread( nonedebayerinfo_t * data )
     }
 }
 
-/* no debayer, just copy some bytes to somewhere else :-P , threaded */
-void debayerNone(uint16_t * __restrict debayerto, float * __restrict bayerdata, int width, int height, int threads)
+/* easy debayer types, threaded */
+void debayerEasy(uint16_t * __restrict debayerto, float * __restrict bayerdata, int width, int height, int threads, int type)
 {
     /* If threads is < 2 just do it normal */
     if (threads < 2)
     {
-        debayerNoneThread( & (nonedebayerinfo_t) { debayerto, bayerdata, width, height, 0 } );
+        if( type == 2 ) debayerNoneThread( & (easydebayerinfo_t) { debayerto, bayerdata, width, height, 0 } );
+        else debayerSimpleThread( & (easydebayerinfo_t) { debayerto, bayerdata, width, height, 0 } );
     }
     else
     {
@@ -327,13 +328,13 @@ void debayerNone(uint16_t * __restrict debayerto, float * __restrict bayerdata, 
         endchunk_y[threads-1] = height;
 
         pthread_t thread_id[threads];
-        nonedebayerinfo_t none_arguments[threads];
+        easydebayerinfo_t none_arguments[threads];
 
         /* Create pthreads */
         for (int thread = 0; thread < threads; ++thread)
         {
             /* Amaze arguments */
-            none_arguments[thread] = (nonedebayerinfo_t) {
+            none_arguments[thread] = (easydebayerinfo_t) {
                 debayerto,
                 bayerdata,
                 /* Crop out a part for each thread */
@@ -342,7 +343,8 @@ void debayerNone(uint16_t * __restrict debayerto, float * __restrict bayerdata, 
                 startchunk_y[thread] };
 
             /* Create pthread! */
-            pthread_create( &thread_id[thread], NULL, (void *)&debayerNoneThread, (void *)&none_arguments[thread] );
+            if( type == 2 ) pthread_create( &thread_id[thread], NULL, (void *)&debayerNoneThread, (void *)&none_arguments[thread] );
+            else pthread_create( &thread_id[thread], NULL, (void *)&debayerSimpleThread, (void *)&none_arguments[thread] );
         }
 
         /* let all threads finish */
