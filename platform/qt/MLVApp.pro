@@ -33,8 +33,7 @@ DEFINES += STDOUT_SILENT
 # Compiler flags
 ##############
 # OSX
-macx: QMAKE_CXXFLAGS_DEBUG += -ObjC++
-macx: QMAKE_CXXFLAGS_RELEASE += -ObjC++
+macx: QMAKE_CXXFLAGS += -ObjC++
 macx: LIBS += -framework CoreVideo \
               -framework AVFoundation \
               -framework Cocoa \
@@ -44,12 +43,14 @@ macx: LIBS += -framework CoreVideo \
 
 
 # Windows
-win32: QMAKE_CFLAGS_DEBUG += -O2 -msse4.1 -mssse3 -msse3 -msse2 -msse -D_FILE_OFFSET_BITS=64 -std=c99
-win32: QMAKE_CFLAGS_RELEASE += -O2 -msse4.1 -mssse3 -msse3 -msse2 -msse -D_FILE_OFFSET_BITS=64 -std=c99
+win32: QMAKE_CFLAGS += -O2 -fopenmp -msse4.1 -mssse3 -msse3 -msse2 -msse -D_FILE_OFFSET_BITS=64 -std=c99
+win32: QMAKE_CXXFLAGS += -fopenmp
+win32: LIBS += -llibgomp-1
 
 # Linux
-linux-g++*: QMAKE_CFLAGS_DEBUG += -O3 -msse4.1 -mssse3 -msse3 -msse2 -msse -std=c99
-linux-g++*: QMAKE_CFLAGS_RELEASE += -O3 -msse4.1 -mssse3 -msse3 -msse2 -msse -std=c99
+linux-g++*: QMAKE_CFLAGS += -O3 -fopenmp -msse4.1 -mssse3 -msse3 -msse2 -msse -std=c99
+linux-g++*: QMAKE_CXXFLAGS += -fopenmp
+linux-g++*: LIBS += -L/usr/lib/gcc/x86_64-linux-gnu/4.8 -lgomp
 
 ##############
 SOURCES += \
