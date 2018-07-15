@@ -113,6 +113,7 @@ private slots:
     void on_actionUseNoneDebayer_triggered();
     void on_actionUseSimpleDebayer_triggered();
     void on_actionUseBilinear_triggered();
+    void on_actionUseLmmseDebayer_triggered();
     void on_actionAlwaysUseAMaZE_triggered();
     void on_actionCaching_triggered();
     void on_actionExportSettings_triggered();

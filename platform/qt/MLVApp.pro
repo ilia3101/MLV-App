@@ -58,6 +58,9 @@ SOURCES += \
         MainWindow.cpp \
     ../../src/debayer/amaze_demosaic.c \
     ../../src/debayer/debayer.c \
+    ../../src/debayer/conv.c \
+    ../../src/debayer/dmzhangwu.c \
+    ../../src/debayer/basic.c \
     ../../src/matrix/matrix.c \
     ../../src/mlv/camera_matrices.c \
     ../../src/mlv/frame_caching.c \
@@ -114,6 +117,9 @@ HEADERS += \
         MainWindow.h \
     ../../src/debayer/debayer.h \
     ../../src/debayer/helpersse2.h \
+    ../../src/debayer/conv.h \
+    ../../src/debayer/dmzhangwu.h \
+    ../../src/debayer/basic.h \
     ../../src/matrix/matrix.h \
     ../../src/mlv/mlv.h \
     ../../src/mlv/mlv_object.h \

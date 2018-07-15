@@ -309,6 +309,11 @@ void get_mlv_raw_frame_debayered( mlvObject_t * video,
         /* threaded easy types */
         debayerEasy(output_frame, temp_memory, width, height, getMlvCpuCores(video), debayer_type);
     }
+    else if (debayer_type == 4)
+    {
+        /* Debayer LMMSE */
+        debayerLmmse(output_frame, temp_memory, width, height, getMlvCpuCores(video));
+    }
     else
     {
         /* Debayer quickly (bilinearly) */

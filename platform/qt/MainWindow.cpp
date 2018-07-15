@@ -659,6 +659,10 @@ int MainWindow::openMlv( QString fileName )
     {
         setMlvUseSimpleDebayer( m_pMlvObject );
     }
+    else if( ui->actionUseLmmseDebayer->isChecked() )
+    {
+        setMlvUseLmmseDebayer( m_pMlvObject );
+    }
     else
     {
         setMlvDontAlwaysUseAmaze( m_pMlvObject );
@@ -1014,7 +1018,7 @@ void MainWindow::readSettings()
     m_lastLutFileName = set.value( "lastLutFile", QDir::homePath() ).toString();
     m_codecProfile = set.value( "codecProfile", 4 ).toUInt();
     m_codecOption = set.value( "codecOption", 0 ).toUInt();
-    m_exportDebayerMode = set.value( "exportDebayerMode", 1 ).toUInt();
+    m_exportDebayerMode = set.value( "exportDebayerMode", 2 ).toUInt();
     m_previewMode = set.value( "previewMode", 1 ).toUInt();
     switch( m_previewMode )
     {
@@ -1094,9 +1098,13 @@ void MainWindow::startExportPipe(QString fileName)
     m_dontDraw = true;
 
     //chose if we want to get amaze frames for exporting, or bilinear
-    if( m_exportDebayerMode == 1 )
+    if( m_exportDebayerMode == 2 )
     {
         setMlvAlwaysUseAmaze( m_pMlvObject );
+    }
+    else if( m_exportDebayerMode == 1 )
+    {
+        setMlvUseLmmseDebayer( m_pMlvObject );
     }
     else
     {
@@ -1829,9 +1837,13 @@ void MainWindow::startExportAVFoundation(QString fileName)
     m_dontDraw = true;
 
     //chose if we want to get amaze frames for exporting, or bilinear
-    if( m_exportDebayerMode == 1 )
+    if( m_exportDebayerMode == 2 )
     {
         setMlvAlwaysUseAmaze( m_pMlvObject );
+    }
+    else if( m_exportDebayerMode == 1 )
+    {
+        setMlvUseLmmseDebayer( m_pMlvObject );
     }
     else
     {
@@ -3486,6 +3498,7 @@ void MainWindow::on_actionAbout_triggered()
                                   " <p>Darkstyle Copyright (c) 2017, <a href='%9'>Juergen Skrotzky</a> under MIT</p>"
                                   " <p>Some icons by <a href='%10'>Double-J Design</a> under <a href='%11'>CC4.0</a></p>"
                                   " <p>Autoupdater Copyright (c) 2016, <a href='%12'>Violet Giraffe</a> under MIT</p>"
+                                  " <p>Zhang-Wu LMMSE Image Demosaicking by Pascal Getreuer under <a href='%13'>BSD</a>.</p>"
                                   " </body></html>" )
                                  .arg( pic )
                                  .arg( APPNAME )
@@ -3495,7 +3508,8 @@ void MainWindow::on_actionAbout_triggered()
                                  .arg( "https://github.com/Jorgen-VikingGod" )
                                  .arg( "http://www.doublejdesign.co.uk/" )
                                  .arg( "https://creativecommons.org/licenses/by/4.0/" )
-                                 .arg( "https://github.com/VioletGiraffe/github-releases-autoupdater" ) );
+                                 .arg( "https://github.com/VioletGiraffe/github-releases-autoupdater" )
+                                 .arg( "http://www.opensource.org/licenses/bsd-license.html" ) );
 }
 
 //Qt Infobox
@@ -4128,6 +4142,7 @@ void MainWindow::on_actionUseNoneDebayer_triggered()
     ui->actionUseNoneDebayer->setChecked( true );
     ui->actionUseSimpleDebayer->setChecked( false );
     ui->actionUseBilinear->setChecked( false );
+    ui->actionUseLmmseDebayer->setChecked( false );
     ui->actionAlwaysUseAMaZE->setChecked( false );
     ui->actionCaching->setChecked( false );
 
@@ -4147,6 +4162,7 @@ void MainWindow::on_actionUseSimpleDebayer_triggered()
     ui->actionUseNoneDebayer->setChecked( false );
     ui->actionUseSimpleDebayer->setChecked( true );
     ui->actionUseBilinear->setChecked( false );
+    ui->actionUseLmmseDebayer->setChecked( false );
     ui->actionAlwaysUseAMaZE->setChecked( false );
     ui->actionCaching->setChecked( false );
 
@@ -4166,11 +4182,33 @@ void MainWindow::on_actionUseBilinear_triggered()
     ui->actionUseNoneDebayer->setChecked( false );
     ui->actionUseSimpleDebayer->setChecked( false );
     ui->actionUseBilinear->setChecked( true );
+    ui->actionUseLmmseDebayer->setChecked( false );
     ui->actionAlwaysUseAMaZE->setChecked( false );
     ui->actionCaching->setChecked( false );
 
     /* Don't use AMaZE */
     setMlvDontAlwaysUseAmaze( m_pMlvObject );
+
+    disableMlvCaching( m_pMlvObject );
+
+    llrpResetFpmStatus(m_pMlvObject);
+    llrpResetBpmStatus(m_pMlvObject);
+    llrpComputeStripesOn(m_pMlvObject);
+    m_frameChanged = true;
+}
+
+//Use LMMSE debayer
+void MainWindow::on_actionUseLmmseDebayer_triggered()
+{
+    ui->actionUseNoneDebayer->setChecked( false );
+    ui->actionUseSimpleDebayer->setChecked( false );
+    ui->actionUseBilinear->setChecked( false );
+    ui->actionUseLmmseDebayer->setChecked( true );
+    ui->actionAlwaysUseAMaZE->setChecked( false );
+    ui->actionCaching->setChecked( false );
+
+    /* Use LMMSE */
+    setMlvUseLmmseDebayer( m_pMlvObject );
 
     disableMlvCaching( m_pMlvObject );
 
@@ -4186,6 +4224,7 @@ void MainWindow::on_actionAlwaysUseAMaZE_triggered()
     ui->actionUseNoneDebayer->setChecked( false );
     ui->actionUseSimpleDebayer->setChecked( false );
     ui->actionUseBilinear->setChecked( false );
+    ui->actionUseLmmseDebayer->setChecked( false );
     ui->actionAlwaysUseAMaZE->setChecked( true );
     ui->actionCaching->setChecked( false );
 
@@ -4206,6 +4245,7 @@ void MainWindow::on_actionCaching_triggered()
     ui->actionUseNoneDebayer->setChecked( false );
     ui->actionUseSimpleDebayer->setChecked( false );
     ui->actionUseBilinear->setChecked( false );
+    ui->actionUseLmmseDebayer->setChecked( false );
     ui->actionAlwaysUseAMaZE->setChecked( false );
     ui->actionCaching->setChecked( true );
 

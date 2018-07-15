@@ -7,6 +7,8 @@ void debayerEasy(uint16_t * __restrict debayerto, float * __restrict bayerdata, 
 void debayerBasic(uint16_t * __restrict debayerto, float * __restrict bayerdata, int width, int height, int threads);
 /* More useable amaze, threads number should be the number of cores(or threads if >= i7) your cpu has */
 void debayerAmaze(uint16_t * __restrict debayerto, float * __restrict bayerdata, int width, int height, int threads);
+/* Use LMMSE debayer */
+void debayerLmmse(uint16_t * __restrict debayerto, float * __restrict bayerdata, int width, int height, int threads);
 
 /* None debayer structure for multithread */
 typedef struct {

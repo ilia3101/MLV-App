@@ -5,6 +5,7 @@
 #include <pthread.h>
 
 #include "debayer.h"
+#include "dmzhangwu.h"
 
 #define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
 
@@ -353,4 +354,27 @@ void debayerEasy(uint16_t * __restrict debayerto, float * __restrict bayerdata, 
             pthread_join( thread_id[thread], NULL );
         }
     }
+}
+
+/* Use LMMSE debayer */
+void debayerLmmse(uint16_t * __restrict debayerto, float * __restrict bayerdata, int width, int height, int threads)
+{
+    (void)threads;
+
+    int datasize = width * height * 3;
+    int pixels = width * height;
+
+    float * __restrict output = (float *)malloc( datasize * sizeof( float ) );
+    ZhangWuDemosaic( output, bayerdata, width, height, 0, 0, 1 );
+
+    /* Give back as RGB, not separate channels */
+    for (int i = 0; i < pixels; i++)
+    {
+        int j = i * 3;
+        debayerto[ j ] = MIN((uint32_t)output[i], 65535);
+        debayerto[j+1] = MIN((uint32_t)output[i+pixels], 65535);
+        debayerto[j+2] = MIN((uint32_t)output[i+(pixels<<1)], 65535);
+    }
+
+    free( output );
 }

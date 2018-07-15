@@ -73,6 +73,8 @@
 #define setMlvUseNoneDebayer(video) (video)->use_amaze = 2; (video)->current_cached_frame_active = 0
 /* Use the easy debayer for best speed + a little quality */
 #define setMlvUseSimpleDebayer(video) (video)->use_amaze = 3; (video)->current_cached_frame_active = 0
+/* Use the LMMSE debayer */
+#define setMlvUseLmmseDebayer(video) (video)->use_amaze = 4; (video)->current_cached_frame_active = 0
 
 /* Reset the current cached frame. Needed if a raw correction parameter changed */
 #define resetMlvCachedFrame(video) (video)->current_cached_frame_active = 0
