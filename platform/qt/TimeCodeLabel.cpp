@@ -101,6 +101,8 @@ QImage TimeCodeLabel::getTimeCodeLabel(uint32_t frameNumber, float clipFps)
 //Generate Timecode String
 QString TimeCodeLabel::getTimeCodeFromFps(uint32_t frameNumber, float clipFps, bool space)
 {
+    if( clipFps < 1.0 ) clipFps = 1.0;
+
     int frame = (int) (frameNumber % (int)(clipFps+0.5));
     frameNumber /= (int)(clipFps+0.5);
     int seconds = (int) (frameNumber % 60);
