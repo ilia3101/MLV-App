@@ -16,7 +16,7 @@
 #ifndef _DMZHANGWU_H_
 #define _DMZHANGWU_H_
 
-int ZhangWuDemosaic(float *Output, const float *Input, 
+int ZhangWuDemosaic(float *Output, float *Input,
     int Width, int Height, int RedX, int RedY, int UseZhangCodeEst);
 
 #endif /* _DMZHANGWU_H_ */

@@ -27,6 +27,24 @@
 #include "conv.h"
 #include "dmzhangwu.h"
 
+/* assume RGGB */
+/* see RT rawimage.h */
+static inline int FC(int row, int col)
+{
+    register int row2 = row%2;
+    register int col2 = col%2;
+    if (row2 == 0 && col2 == 0)
+        return 0;  /* red */
+    else if (row2 == 1 && col2 == 1)
+        return 2;  /* blue */
+    else
+        return 1;  /* green */
+}
+
+#define MAX(a,b) \
+({ __typeof__ ((a)+(b)) _a = (a); \
+__typeof__ ((a)+(b)) _b = (b); \
+_a > _b ? _a : _b; })
 
 float DiagonalAverage(const float *Image, int Width, int Height, int x, int y);
 float AxialAverage(const float *Image, int Width, int Height, int x, int y);
@@ -57,7 +75,7 @@ float AxialAverage(const float *Image, int Width, int Height, int x, int y);
  * smoothed signal averaged over a window.  In the MATLAB code, the smoothed
  * signal is used directly as the estimate of the signal mean.
  */
-int ZhangWuDemosaic(float *Output, const float *Input, 
+int ZhangWuDemosaic(float *Output, float *Input,
     int Width, int Height, int RedX, int RedY, int UseZhangCodeEst)
 {
     /* Window size for estimating LMMSE statistics */
@@ -85,6 +103,67 @@ int ZhangWuDemosaic(float *Output, const float *Input,
     int x, y, i, m, m0, m1, Success = 0;
 
     
+    /* "white balance" */
+    float wb_b, wb_g, wb_r; /* White balaance multipliers */
+    /* Generate mulipliers and apply to the image */
+    {
+        int t_r=0,t_g=0,t_b=0; /* Totals we have counted (R,G and B) */
+        float avg_r=0.0,avg_g=0.0,avg_b=0.0; /* Average values (RGB) */
+        for (int y = 0; y < Height; y += 7) /* Skip amounts can be anything odd, lower = slower (and no point) */
+            for (int x = 0; x < Width; x += 13)
+                switch (FC(y,x))
+                {
+                    case 0:
+                        avg_r += Input[y*Width+x];
+                        t_r++;
+                        break;
+                    case 1:
+                        avg_g += Input[y*Width+x];
+                        t_g++;
+                        break;
+                    case 2:
+                        avg_b += Input[y*Width+x];
+                        t_b++;
+                        break;
+                }
+
+        /* Divide by total to get average value (and make 0-1) */
+        avg_r /= (float)t_r;
+        avg_g /= (float)t_g;
+        avg_b /= (float)t_b;
+        /* subtract something approximate to black level */
+        /*avg_r -= 4000.0;
+        avg_g -= 4000.0;
+        avg_b -= 4000.0;*/
+        // printf("\nAverages:\nred %i\ngreen: %i\nblue: %i\n\n", (int)avg_r, (int)avg_g, (int)avg_b);
+        avg_r = 1.0f/avg_r; /* inverty */
+        avg_g = 1.0f/avg_g;
+        avg_b = 1.0f/avg_b;
+
+        /* Create multipliers */
+        #define WB_POWER 2.3 /* Strengthen difference applied, seems to help */
+        wb_r = powf(avg_r/MAX(MAX(avg_r, avg_g), avg_b), WB_POWER);
+        wb_g = powf(avg_g/MAX(MAX(avg_r, avg_g), avg_b), WB_POWER);
+        wb_b = powf(avg_b/MAX(MAX(avg_r, avg_g), avg_b), WB_POWER);
+
+        // printf("\nWB Multipliers AMaZE\nred %f\ngreen: %f\nblue: %f\n\n", wb_r, wb_g, wb_b);
+
+        /* Applying */
+        for (int y = 0; y < Height; ++y)
+            for (int x = 0; x < Width; ++x)
+                switch (FC(y,x))
+                {
+                    case 0:
+                        Input[y*Width+x] *= wb_r;
+                        break;
+                    case 1:
+                        Input[y*Width+x] *= wb_g;
+                        break;
+                    case 2:
+                        Input[y*Width+x] *= wb_b;
+                }
+    }
+
     /* Allocate memory for workspace buffers */
     if(!(FilteredH = (float *)Malloc(sizeof(float)*NumPixels))
         || !(FilteredV = (float *)Malloc(sizeof(float)*NumPixels))
@@ -256,6 +335,25 @@ Catch: /* This label is used for error handling.  If something went wrong
     Free(DiffH);
     Free(FilteredV);
     Free(FilteredH);
+
+
+    /* "white balance" */
+    {
+        /* Invert the multiplierds */
+        wb_r = 1.0 / wb_r;
+        wb_g = 1.0 / wb_g;
+        wb_b = 1.0 / wb_b;
+        for (int y = 0; y < Height; ++y)
+            for (int x = 0; x < Width; ++x)
+                OutputRed[y*Width+x] *= wb_r;
+        for (int y = 0; y < Height; ++y)
+            for (int x = 0; x < Width; ++x)
+                OutputGreen[y*Width+x] *= wb_g;
+        for (int y = 0; y < Height; ++y)
+            for (int x = 0; x < Width; ++x)
+                OutputBlue[y*Width+x] *= wb_b;
+    }
+
     return Success;
 }
 
