@@ -11,12 +11,16 @@
  * redistribute it under the terms of the simplified BSD License. You 
  * should have received a copy of this license along this program. If 
  * not, see <http://www.opensource.org/licenses/bsd-license.html>.
+ *
+ * Changes for MLVApp by masc for multithreading.
  */
 
 #ifndef _DMZHANGWU_H_
 #define _DMZHANGWU_H_
 
-int ZhangWuDemosaic(float *Output, float *Input,
-    int Width, int Height, int RedX, int RedY, int UseZhangCodeEst);
+#include "debayer.h"
+
+void ZhangWuDemosaic(lmmseinfo_t * inputdata );
+
 
 #endif /* _DMZHANGWU_H_ */

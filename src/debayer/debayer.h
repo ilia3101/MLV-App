@@ -30,6 +30,15 @@ typedef struct {
     int cfa;
 } amazeinfo_t;
 
+/* LMMSE input as struct for posixz */
+typedef struct {
+    float * __restrict Input;
+    float * __restrict Output;
+    int winx; int winy; /* crop window for demosaicing */
+    int winw; int winh;
+    int numOverallPixels;
+} lmmseinfo_t;
+
 /* Amaze demosaic */
 void
 #ifdef __MINGW32__

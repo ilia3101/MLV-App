@@ -21,6 +21,8 @@
  * redistribute it under the terms of the simplified BSD License. You 
  * should have received a copy of this license along this program. If 
  * not, see <http://www.opensource.org/licenses/bsd-license.html>.
+ *
+ * Changes for MLVApp by masc for multithreading.
  */
 
 #include "basic.h"
@@ -55,9 +57,11 @@ float AxialAverage(const float *Image, int Width, int Height, int x, int y);
  *
  * @param Output pointer to memory to store the demosaiced image
  * @param Input the input image as a flattened 2D array
- * @param Width, Height the image dimensions
- * @param RedX, RedY the coordinates of the upper-rightmost red pixel
- * @param UseZhangCodeEst flag to determine how to estimate local signal mean
+ * @param X, Y The crop starting point inside the image
+ * @param Width, Height the image dimensions of the cropped area
+ * @param numOverallPixels is the number of pixels in the whole image
+ * RedX, RedY the coordinates of the upper-rightmost red pixel (in MLVApp = 0,0)
+ * UseZhangCodeEst flag to determine how to estimate local signal mean (here always = 1)
  *
  * The Input image is a 2D float array of the input RGB values of size 
  * Width*Height in row-major order.  RedX, RedY are the coordinates of the 
@@ -75,9 +79,22 @@ float AxialAverage(const float *Image, int Width, int Height, int x, int y);
  * smoothed signal averaged over a window.  In the MATLAB code, the smoothed
  * signal is used directly as the estimate of the signal mean.
  */
-int ZhangWuDemosaic(float *Output, float *Input,
-    int Width, int Height, int RedX, int RedY, int UseZhangCodeEst)
+
+void ZhangWuDemosaic( lmmseinfo_t * inputdata )
 {
+    float * restrict Input = inputdata->Input;
+    float * restrict Output = inputdata->Output;
+    int winx = inputdata->winx; int winy = inputdata->winy; /* crop window for demosaicing */
+    int winw = inputdata->winw; int winh = inputdata->winh;
+    int Width = winw;
+    int Height = winh;
+    int dataOffset = winy * winw;
+    int endx = winx + winw;
+    int endy = winy + winh;
+    int RedX = 0;
+    int RedY = 0;
+    int UseZhangCodeEst = 1;
+
     /* Window size for estimating LMMSE statistics */
     const int M = 4;
     /* Small value added in denominators to avoid divide-by-zero */
@@ -95,8 +112,8 @@ int ZhangWuDemosaic(float *Output, float *Input,
     const int NumPixels = Width*Height;
     const int Green = 1 - ((RedX + RedY) & 1);
     float *OutputRed = Output;
-    float *OutputGreen = Output + NumPixels;
-    float *OutputBlue = Output + 2*NumPixels;
+    float *OutputGreen = Output + inputdata->numOverallPixels;
+    float *OutputBlue = Output + 2*inputdata->numOverallPixels;
     float *FilteredH = NULL, *FilteredV = NULL;
     float *DiffH = NULL, *DiffV = NULL, *DiffGR, *DiffGB;
     float mom1, h, H, mh, ph, Rh, v, V, mv, pv, Rv, Temp;
@@ -109,20 +126,20 @@ int ZhangWuDemosaic(float *Output, float *Input,
     {
         int t_r=0,t_g=0,t_b=0; /* Totals we have counted (R,G and B) */
         float avg_r=0.0,avg_g=0.0,avg_b=0.0; /* Average values (RGB) */
-        for (int y = 0; y < Height; y += 7) /* Skip amounts can be anything odd, lower = slower (and no point) */
-            for (int x = 0; x < Width; x += 13)
+        for (int y = winy; y < endy; y += 7) /* Skip amounts can be anything odd, lower = slower (and no point) */
+            for (int x = winx; x < endx; x += 13)
                 switch (FC(y,x))
                 {
                     case 0:
-                        avg_r += Input[y*Width+x];
+                        avg_r += Input[y*winw+x];
                         t_r++;
                         break;
                     case 1:
-                        avg_g += Input[y*Width+x];
+                        avg_g += Input[y*winw+x];
                         t_g++;
                         break;
                     case 2:
-                        avg_b += Input[y*Width+x];
+                        avg_b += Input[y*winw+x];
                         t_b++;
                         break;
                 }
@@ -149,18 +166,18 @@ int ZhangWuDemosaic(float *Output, float *Input,
         // printf("\nWB Multipliers AMaZE\nred %f\ngreen: %f\nblue: %f\n\n", wb_r, wb_g, wb_b);
 
         /* Applying */
-        for (int y = 0; y < Height; ++y)
-            for (int x = 0; x < Width; ++x)
+        for (int y = winy; y < endy; ++y)
+            for (int x = winx; x < endx; ++x)
                 switch (FC(y,x))
                 {
                     case 0:
-                        Input[y*Width+x] *= wb_r;
+                        Input[y*winw+x] *= wb_r;
                         break;
                     case 1:
-                        Input[y*Width+x] *= wb_g;
+                        Input[y*winw+x] *= wb_g;
                         break;
                     case 2:
-                        Input[y*Width+x] *= wb_b;
+                        Input[y*winw+x] *= wb_b;
                 }
     }
 
@@ -174,11 +191,11 @@ int ZhangWuDemosaic(float *Output, float *Input,
     /* Horizontal and vertical 1D interpolations */
     for(y = 0; y < Height; y++)
         Conv1D(FilteredH + Width*y, 1, 
-            Input + Width*y, 1, InterpFilter, Boundary, Width);
+            Input + dataOffset + Width*y, 1, InterpFilter, Boundary, Width);
     
     for(x = 0; x < Width; x++)
         Conv1D(FilteredV + x, Width, 
-            Input + x, Width, InterpFilter, Boundary, Height);
+            Input + dataOffset + x, Width, InterpFilter, Boundary, Height);
     
     /* Local noise estimation for LMMSE */
     for(y = 0, i = 0; y < Height; y++)
@@ -186,13 +203,13 @@ int ZhangWuDemosaic(float *Output, float *Input,
         {
             if(((x + y) & 1) == Green)
             {
-                DiffH[i] = Input[i] - FilteredH[i];
-                DiffV[i] = Input[i] - FilteredV[i];
+                DiffH[i] = Input[i+dataOffset] - FilteredH[i];
+                DiffV[i] = Input[i+dataOffset] - FilteredV[i];
             }
             else
             {
-                DiffH[i] = FilteredH[i] - Input[i];
-                DiffV[i] = FilteredV[i] - Input[i];
+                DiffH[i] = FilteredH[i] - Input[i+dataOffset];
+                DiffV[i] = FilteredV[i] - Input[i+dataOffset];
             }
         }
     
@@ -283,20 +300,20 @@ int ZhangWuDemosaic(float *Output, float *Input,
                 
                 /* Fuse the directional estimates to obtain 
                    the green component. */
-                OutputGreen[i] = Input[i] + (V*h + H*v) / (H + V);
+                OutputGreen[i+dataOffset] = Input[i+dataOffset] + (V*h + H*v) / (H + V);
             }
             else
-                OutputGreen[i] = Input[i];
+                OutputGreen[i+dataOffset] = Input[i+dataOffset];
         }
     
     /* Compute the primary difference signals:
           DiffGR = Green - Red   (known at red locations)
           DiffGB = Green - Blue  (known at blue locations)   */     
-    for(y = 0, i = 0; y < Height; y++)
-        for(x = 0; x < Width; x++, i++)
+    for(y = winy, i = 0; y < endy; y++)
+        for(x = winx; x < endx; x++, i++)
             if(((x + y) & 1) != Green)
                 (((y & 1) == RedY) ? DiffGR : DiffGB)[i]
-                    = OutputGreen[i] - Input[i];
+                    = OutputGreen[i+dataOffset] - Input[i+dataOffset];
 
     /* Interpolate DiffGR at blue locations and DiffGB at red locations */
     for(y = 0, i = 0; y < Height; y++)
@@ -322,8 +339,8 @@ int ZhangWuDemosaic(float *Output, float *Input,
     for(y = 0, i = 0; y < Height; y++)
         for(x = 0; x < Width; x++, i++)
         {
-            OutputRed[i] = OutputGreen[i] - DiffGR[i];
-            OutputBlue[i] = OutputGreen[i] - DiffGB[i];
+            OutputRed[i+dataOffset] = OutputGreen[i+dataOffset] - DiffGR[i];
+            OutputBlue[i+dataOffset] = OutputGreen[i+dataOffset] - DiffGB[i];
         }
 
     Success = 1;
@@ -343,18 +360,18 @@ Catch: /* This label is used for error handling.  If something went wrong
         wb_r = 1.0 / wb_r;
         wb_g = 1.0 / wb_g;
         wb_b = 1.0 / wb_b;
-        for (int y = 0; y < Height; ++y)
-            for (int x = 0; x < Width; ++x)
-                OutputRed[y*Width+x] *= wb_r;
-        for (int y = 0; y < Height; ++y)
-            for (int x = 0; x < Width; ++x)
-                OutputGreen[y*Width+x] *= wb_g;
-        for (int y = 0; y < Height; ++y)
-            for (int x = 0; x < Width; ++x)
-                OutputBlue[y*Width+x] *= wb_b;
+        for (int y = winy; y < endy; ++y)
+            for (int x = winx; x < endx; ++x)
+                OutputRed[y*winw+x] *= wb_r;
+        for (int y = winy; y < endy; ++y)
+            for (int x = winx; x < endx; ++x)
+                OutputGreen[y*winw+x] *= wb_g;
+        for (int y = winy; y < endy; ++y)
+            for (int x = winx; x < endx; ++x)
+                OutputBlue[y*winw+x] *= wb_b;
     }
 
-    return Success;
+    return;// Success;
 }
 
 

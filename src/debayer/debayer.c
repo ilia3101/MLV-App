@@ -365,7 +365,61 @@ void debayerLmmse(uint16_t * __restrict debayerto, float * __restrict bayerdata,
     int pixels = width * height;
 
     float * __restrict output = (float *)malloc( datasize * sizeof( float ) );
-    ZhangWuDemosaic( output, bayerdata, width, height, 0, 0, 1 );
+
+    if ( threads < 2)
+    {
+        /* run the Amaze */
+        ZhangWuDemosaic( & (lmmseinfo_t) {
+                  bayerdata,
+                  output,
+                  0, 0, /* crop window for demosaicing */
+                  width, height, width*height } );
+    }
+    else
+    {
+        int startchunk_y[threads];
+        int endchunk_y[threads];
+
+        /* How big each thread's chunk is, multiple of 2 - or debayer
+         * would start on wrong pixel and magenta stripes appear */
+        int chunk_height = height / threads;
+        chunk_height -= chunk_height % 2;
+
+        /* Calculate chunks of image for each thread */
+        for (int thread = 0; thread < threads; ++thread)
+        {
+            startchunk_y[thread] = chunk_height * thread;
+            endchunk_y[thread] = chunk_height * (thread + 1);
+        }
+
+        /* Last chunk must reach end of frame */
+        endchunk_y[threads-1] = height;
+
+        pthread_t thread_id[threads];
+        lmmseinfo_t lmmse_arguments[threads];
+
+        /* Create amaze pthreads */
+        for (int thread = 0; thread < threads; ++thread)
+        {
+            /* Amaze arguments */
+            lmmse_arguments[thread] = (lmmseinfo_t) {
+                bayerdata,
+                output,
+                /* Crop out a part for each thread */
+                0, startchunk_y[thread],    /* crop window for demosaicing */
+                width, (endchunk_y[thread] - startchunk_y[thread]),
+                width*height};
+
+            /* Create pthread! */
+            pthread_create( &thread_id[thread], NULL, (void *)&ZhangWuDemosaic, (void *)&lmmse_arguments[thread] );
+        }
+
+        /* let all threads finish */
+        for (int thread = 0; thread < threads; ++thread)
+        {
+            pthread_join( thread_id[thread], NULL );
+        }
+    }
 
     /* Give back as RGB, not separate channels */
     for (int i = 0; i < pixels; i++)
