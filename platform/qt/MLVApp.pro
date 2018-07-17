@@ -109,7 +109,9 @@ SOURCES += \
     Updater/updaterUI/CUpdater.cpp \
     ../../src/processing/blur_threaded.c \
     Scripting.cpp \
-    ../../src/processing/cube_lut.c
+    ../../src/processing/cube_lut.c \
+    ../../src/processing/denoiser/libdenoising.cpp \
+    ../../src/processing/denoiser/mt19937ar.c
 
 macx: SOURCES += ../cocoa/avf_lib/avf_lib.m
 
@@ -180,7 +182,9 @@ HEADERS += \
     Updater/updaterUI/CUpdater.h \
     ../../src/processing/blur_threaded.h \
     Scripting.h \
-    ../../src/processing/cube_lut.h
+    ../../src/processing/cube_lut.h \
+    ../../src/processing/denoiser/libdenoising.h \
+    ../../src/processing/denoiser/mt19937ar.h
 
 macx: HEADERS += \
     ../cocoa/avf_lib/avencoder.h \

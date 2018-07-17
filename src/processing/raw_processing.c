@@ -9,6 +9,7 @@
 #include "raw_processing.h"
 #include "../mlv/video_mlv.h"
 #include "filter/filter.h"
+#include "denoiser/libdenoising.h"
 
 /* Matrix functions which are useful */
 #include "../matrix/matrix.h"
@@ -516,6 +517,8 @@ void apply_processing_object( processingObject_t * processing,
     if (processing->lut_on)
     {
         apply_lut( processing->lut, imageX, imageY, outputImage );
+        //Test denoiser on activating lut checkbox
+        //denoise( outputImage, imageX, imageY, 10.0f );
     }
 
     if (processing->filter_on)
