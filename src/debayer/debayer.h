@@ -10,6 +10,7 @@ void debayerAmaze(uint16_t * __restrict debayerto, float * __restrict bayerdata,
 /* Use LMMSE debayer */
 void debayerLmmse(uint16_t * __restrict debayerto, float * __restrict bayerdata, int width, int height, int threads);
 
+
 /* None debayer structure for multithread */
 typedef struct {
     uint16_t * __restrict debayerto; //output
@@ -45,6 +46,11 @@ void
 /* Needed for win32/mingw (might need include gaurd with another compiler) */
 __attribute__ ((force_align_arg_pointer))
 #endif
+
+/*AMaZE algo*/
 demosaic(amazeinfo_t * inputdata);
+
+/* igv algo */
+void igv_demosaic(amazeinfo_t * inputdata);
 
 #endif

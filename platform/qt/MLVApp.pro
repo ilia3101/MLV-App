@@ -111,7 +111,8 @@ SOURCES += \
     Scripting.cpp \
     ../../src/processing/cube_lut.c \
     ../../src/processing/denoiser/libdenoising.cpp \
-    ../../src/processing/denoiser/mt19937ar.c
+    ../../src/processing/denoiser/mt19937ar.c \
+    ../../src/debayer/igv_demosaic.c
 
 macx: SOURCES += ../cocoa/avf_lib/avf_lib.m
 
