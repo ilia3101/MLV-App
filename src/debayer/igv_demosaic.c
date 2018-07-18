@@ -322,7 +322,7 @@ void igv_demosaic( amazeinfo_t * inputdata )
                 }
     }
 
-    border_interpolate2(tilew,tileh,7,rawData,red,green,blue);
+    //border_interpolate2(tilew,tileh,7,rawData,red,green,blue);
 
     {
 
@@ -457,6 +457,8 @@ void igv_demosaic( amazeinfo_t * inputdata )
     free(rgbarray);
     free(vdif);
     free(hdif);
+
+    border_interpolate2(tilew,tileh,8,rawData,red,green,blue);
 
     /* "white balance" */
     {
