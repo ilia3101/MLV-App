@@ -42,11 +42,30 @@
 
 #define MAX(i,j) ( (i)<(j) ? (j):(i) )
 #define MIN(i,j) ( (i)<(j) ? (i):(j) )
-
+#define LIMIT16(X) MAX(MIN(X, 65535), 0)
 
 #define dTiny 1e-10
 #define fTiny 0.00000001f
 #define fLarge 100000000.0f
+
+///// LUT tables
+#define LUTMAX 30.0
+#define LUTMAXM1 29.0
+#define LUTPRECISION 1000.0
+
+void nlmeans_ipol(int iDWin,            // Half size of comparison window
+                  int iDBloc,           // Half size of research window
+                  float fSigma,         // Noise parameter
+                  float fFiltPar,       // Filtering parameter
+                  float **fpI,          // Input
+                  float **fpO,          // Output
+                  int iChannels, int iWidth,int iHeight);
+
+void  wxFillExpLut(float *lut,int size);        // Fill exp(-x) lut
+float wxSLUT(float dif,float *lut);             // look at LUT
+void fpClear(float *fpI,float fValue, int iLength);
+float fiL2FloatDist ( float * u0, float  *u1, int i0, int j0, int i1, int j1, int radius, int width0, int width1 );
+float fiL2FloatDist ( float **u0, float **u1, int i0, int j0, int i1, int j1, int radius, int channels, int width0, int width1 );
 
 void denoiseNlMeans(uint16_t *data, int width, int height, float sigma)
 {
@@ -54,6 +73,19 @@ void denoiseNlMeans(uint16_t *data, int width, int height, float sigma)
     int d_wh = width * height;
     int d_whc = d_c * width * height;
     float *noisy = new float[d_whc];
+
+    //Copy data to input
+    /*for( int i = 0; i < d_wh; i++ )
+    {
+        noisy[i          ] = (float)data[i*3]/256.0f;
+        noisy[i+d_wh     ] = (float)data[i*3+1]/256.0f;
+        noisy[i+(d_wh<<1)] = (float)data[i*3+2]/256.0f;
+    }*/
+    for( int i = 0; i < d_whc; i++ )
+    {
+        noisy[i] = (float)data[i]/256.0f;
+    }
+
     float **fpI = new float*[d_c];
     float **fpO = new float*[d_c];
     float *denoised = new float[d_whc];
@@ -64,15 +96,28 @@ void denoiseNlMeans(uint16_t *data, int width, int height, float sigma)
         fpO[ii] = &denoised[ii * d_wh];
     }
 
-    //TODO: Copy data to input
-
     int win = 1;
     int bloc = 10;
     float fFiltPar = 0.55f;
 
     nlmeans_ipol(win, bloc, sigma, fFiltPar, fpI,  fpO, d_c, width, height);
 
-    //TODO: Copy output to data
+    //Copy output back to data
+    /*for( int i = 0; i < d_wh; i++ )
+    {
+        data[i*3  ] = (uint16_t)LIMIT16(denoised[i]*256.0f);
+        data[i*3+1] = (uint16_t)LIMIT16(denoised[i+d_wh]*256.0f);
+        data[i*3+2] = (uint16_t)LIMIT16(denoised[i+(d_wh<<1)]*256.0f);
+    }*/
+    for( int i = 0; i < d_whc; i++ )
+    {
+        data[i] = (uint16_t)LIMIT16(denoised[i])*256.0f;
+    }
+
+    delete[] denoised;
+    delete[] fpO;
+    delete[] fpI;
+    delete[] noisy;
 }
 
 void nlmeans_ipol(int iDWin,            // Half size of patch
@@ -150,7 +195,7 @@ void nlmeans_ipol(int iDWin,            // Half size of patch
                     for (int i=imin ; i <= imax; i++)
                         if (i!=x || j!=y) {
 
-                            float fDif = fiL2FloatDist2(fpI,fpI,x,y,i,j,iDWin0,iChannels,iWidth,iWidth);
+                            float fDif = fiL2FloatDist(fpI,fpI,x,y,i,j,iDWin0,iChannels,iWidth,iWidth);
 
                             // dif^2 - 2 * fSigma^2 * N      dif is not normalized
                             fDif = MAX(fDif - 2.0f * (float) icwl *  fSigma2, 0.0f);
@@ -255,7 +300,7 @@ float wxSLUT(float dif, float *lut)
     return y1 + (y2-y1)*(dif*LUTPRECISION -  x);
 }
 
-float fiL2FloatDist1(float *u0,float *u1,int i0,int j0,int i1,int j1,int radius,int width0, int width1) {
+float fiL2FloatDist(float *u0,float *u1,int i0,int j0,int i1,int j1,int radius,int width0, int width1) {
     float dist=0.0;
     for (int s=-radius; s<= radius; s++) 
     {
@@ -273,12 +318,12 @@ float fiL2FloatDist1(float *u0,float *u1,int i0,int j0,int i1,int j1,int radius,
     return dist;
 }
 
-float fiL2FloatDist2(float **u0,float **u1,int i0,int j0,int i1,int j1,int radius,int channels, int width0, int width1)
+float fiL2FloatDist(float **u0,float **u1,int i0,int j0,int i1,int j1,int radius,int channels, int width0, int width1)
 {
     float dif = 0.0f;
 
     for (int ii=0; ii < channels; ii++) {
-        dif += fiL2FloatDist1(u0[ii],u1[ii],i0,j0,i1,j1,radius,width0, width1);
+        dif += fiL2FloatDist(u0[ii],u1[ii],i0,j0,i1,j1,radius,width0, width1);
     }
     return dif;
 }

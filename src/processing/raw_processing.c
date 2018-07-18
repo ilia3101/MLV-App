@@ -518,7 +518,7 @@ void apply_processing_object( processingObject_t * processing,
     {
         apply_lut( processing->lut, imageX, imageY, outputImage );
         //Test denoiser on activating lut checkbox
-        //denoise( outputImage, imageX, imageY, 10.0f );
+        //denoiseNlMeans( outputImage, imageX, imageY, 10.0f );
     }
 
     if (processing->filter_on)

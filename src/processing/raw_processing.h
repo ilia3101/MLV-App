@@ -4,7 +4,6 @@
 #include "processing_object.h"
 #include "filter/filter.h"
 
-
 /* Intitialises a 'processing object' which is a structure 
  * that makes it easy to contol all the processing */
 processingObject_t * initProcessingObject();
