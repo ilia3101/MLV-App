@@ -131,15 +131,15 @@ void ZhangWuDemosaic( lmmseinfo_t * inputdata )
                 switch (FC(y,x))
                 {
                     case 0:
-                        avg_r += Input[y*winw+x];
+                        avg_r += Input[y*winw+x]-inputdata->blacklevel;
                         t_r++;
                         break;
                     case 1:
-                        avg_g += Input[y*winw+x];
+                        avg_g += Input[y*winw+x]-inputdata->blacklevel;
                         t_g++;
                         break;
                     case 2:
-                        avg_b += Input[y*winw+x];
+                        avg_b += Input[y*winw+x]-inputdata->blacklevel;
                         t_b++;
                         break;
                 }
@@ -148,10 +148,6 @@ void ZhangWuDemosaic( lmmseinfo_t * inputdata )
         avg_r /= (float)t_r;
         avg_g /= (float)t_g;
         avg_b /= (float)t_b;
-        /* subtract 2x black level */
-        avg_r -= inputdata->blacklevel << 1;
-        avg_g -= inputdata->blacklevel << 1;
-        avg_b -= inputdata->blacklevel << 1;
         // printf("\nAverages:\nred %i\ngreen: %i\nblue: %i\n\n", (int)avg_r, (int)avg_g, (int)avg_b);
         avg_r = 1.0f/avg_r; /* inverty */
         avg_g = 1.0f/avg_g;
