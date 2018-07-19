@@ -10,7 +10,7 @@ Find the latest releases [here](https://ilia3101.github.io/MLV-App/). Download, 
 - Support for spanned mlv (.m00, .m01, ...)
 - Support for lossless mlv
 - Support for any bit depth (…, 10, 12, 14bit)
-- Demosaic bilinear or multithreaded AMaZE
+- Demosaic algorithms: None, Simple (fastest), bilinear, multithreaded AMaZE & LMMSE, or IGV
 - Processing with many parameters (exposure, white balance, saturation, dark & light adjustments, highlights & shadows, sharpen,…)
 - Processing filters for film emulation powered by neural networks :ghost:
 - Processing in sRGB or several LOG
