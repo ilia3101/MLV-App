@@ -215,7 +215,7 @@ void df_subtract(mlvObject_t * video, uint16_t * raw_image_buff, size_t raw_imag
     printf("Subtracting dark frame...'\n\n");
 #endif
     uint16_t * dark_frame_data = video->llrawproc->dark_frame_data;
-    uint32_t black_level = video->RAWI.raw_info.black_level;
+    uint32_t black_level = video->llrawproc->dark_frame_hdr.black_level;
     uint16_t white_level = (1 << video->RAWI.raw_info.bits_per_pixel) - 1;
 
     uint32_t pixel_count = raw_image_size / 2;
