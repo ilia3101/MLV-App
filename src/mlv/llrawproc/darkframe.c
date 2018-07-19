@@ -219,6 +219,7 @@ void df_subtract(mlvObject_t * video, uint16_t * raw_image_buff, size_t raw_imag
     uint16_t white_level = (1 << video->RAWI.raw_info.bits_per_pixel) - 1;
 
     uint32_t pixel_count = raw_image_size / 2;
+#pragma omp parallel for
     for(uint32_t i = 0; i < pixel_count; i++)
     {
         int32_t orig_val = raw_image_buff[i];
