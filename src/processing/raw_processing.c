@@ -446,14 +446,14 @@ void apply_processing_object( processingObject_t * processing,
     }
 
     /* Basic box blur */
-    /*if (processingGetChromaBlurRadius(processing) > 0 && processingUsesChromaSeparation(processing))
+    if (processingGetChromaBlurRadius(processing) > 0 && processingUsesChromaSeparation(processing))
     {
         memcpy(out_img, img, img_s * sizeof(uint16_t));
         blur_image( img, out_img,
                     imageX, imageY, processingGetChromaBlurRadius(processing),
                     0,1,1,
                     0,0 );
-    }*/
+    }
 
     if (processingGetSharpening(processing) > 0.005)
     {
