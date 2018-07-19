@@ -78,6 +78,11 @@ SOURCES += \
     ../../src/processing/filter/filter.c \
     ../../src/processing/filter/genann/genann.c \
     ../../src/processing/image_profiles.c \
+    ../../src/processing/cube_lut.c \
+    ../../src/processing/denoiser/libdenoising.cpp \
+    ../../src/processing/denoiser/mt19937ar.c \
+    ../../src/debayer/igv_demosaic.c \
+    ../../src/processing/denoiser/easy_denoise.c \
     ../../src/mlv/llrawproc/dualiso.c \
     ../../src/dng/dng.c \
     InfoDialog.cpp \
@@ -108,11 +113,7 @@ SOURCES += \
     Updater/cautoupdatergithub.cpp \
     Updater/updaterUI/CUpdater.cpp \
     ../../src/processing/blur_threaded.c \
-    Scripting.cpp \
-    ../../src/processing/cube_lut.c \
-    ../../src/processing/denoiser/libdenoising.cpp \
-    ../../src/processing/denoiser/mt19937ar.c \
-    ../../src/debayer/igv_demosaic.c
+    Scripting.cpp
 
 macx: SOURCES += ../cocoa/avf_lib/avf_lib.m
 
@@ -150,6 +151,10 @@ HEADERS += \
     ../../src/processing/filter/film.h \
     ../../src/processing/filter/genann/genann.h \
     ../../src/processing/image_profile.h \
+    ../../src/processing/cube_lut.h \
+    ../../src/processing/denoiser/libdenoising.h \
+    ../../src/processing/denoiser/mt19937ar.h \
+    ../../src/processing/denoiser/easy_denoise.h \
     InfoDialog.h \
     MyApplication.h \
     StatusDialog.h \
@@ -182,10 +187,7 @@ HEADERS += \
     Updater/cautoupdatergithub.h \
     Updater/updaterUI/CUpdater.h \
     ../../src/processing/blur_threaded.h \
-    Scripting.h \
-    ../../src/processing/cube_lut.h \
-    ../../src/processing/denoiser/libdenoising.h \
-    ../../src/processing/denoiser/mt19937ar.h
+    Scripting.h
 
 macx: HEADERS += \
     ../cocoa/avf_lib/avencoder.h \

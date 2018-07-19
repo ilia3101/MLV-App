@@ -10,6 +10,7 @@
 #include "../mlv/video_mlv.h"
 #include "filter/filter.h"
 #include "denoiser/libdenoising.h"
+#include "denoiser/easy_denoise.h"
 
 /* Matrix functions which are useful */
 #include "../matrix/matrix.h"
@@ -445,14 +446,14 @@ void apply_processing_object( processingObject_t * processing,
     }
 
     /* Basic box blur */
-    if (processingGetChromaBlurRadius(processing) > 0 && processingUsesChromaSeparation(processing))
+    /*if (processingGetChromaBlurRadius(processing) > 0 && processingUsesChromaSeparation(processing))
     {
         memcpy(out_img, img, img_s * sizeof(uint16_t));
         blur_image( img, out_img,
                     imageX, imageY, processingGetChromaBlurRadius(processing),
                     0,1,1,
                     0,0 );
-    }
+    }*/
 
     if (processingGetSharpening(processing) > 0.005)
     {
@@ -519,6 +520,7 @@ void apply_processing_object( processingObject_t * processing,
         apply_lut( processing->lut, imageX, imageY, outputImage );
         //Test denoiser on activating lut checkbox
         //denoiseNlMeans( outputImage, imageX, imageY, 10.0f );
+        //easy_denoise( outputImage, imageX, imageY, 9 );
     }
 
     if (processing->filter_on)
