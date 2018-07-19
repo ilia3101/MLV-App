@@ -663,6 +663,10 @@ int MainWindow::openMlv( QString fileName )
     {
         setMlvUseLmmseDebayer( m_pMlvObject );
     }
+    else if( ui->actionUseIgvDebayer->isChecked() )
+    {
+        setMlvUseIgvDebayer( m_pMlvObject );
+    }
     else
     {
         setMlvDontAlwaysUseAmaze( m_pMlvObject );
@@ -1098,13 +1102,17 @@ void MainWindow::startExportPipe(QString fileName)
     m_dontDraw = true;
 
     //chose if we want to get amaze frames for exporting, or bilinear
-    if( m_exportDebayerMode == 2 )
+    if( m_exportDebayerMode == 1 )
     {
         setMlvAlwaysUseAmaze( m_pMlvObject );
     }
-    else if( m_exportDebayerMode == 1 )
+    else if( m_exportDebayerMode == 2 )
     {
         setMlvUseLmmseDebayer( m_pMlvObject );
+    }
+    else if( m_exportDebayerMode == 3 )
+    {
+        setMlvUseIgvDebayer( m_pMlvObject );
     }
     else
     {
@@ -1837,13 +1845,17 @@ void MainWindow::startExportAVFoundation(QString fileName)
     m_dontDraw = true;
 
     //chose if we want to get amaze frames for exporting, or bilinear
-    if( m_exportDebayerMode == 2 )
+    if( m_exportDebayerMode == 1 )
     {
         setMlvAlwaysUseAmaze( m_pMlvObject );
     }
-    else if( m_exportDebayerMode == 1 )
+    else if( m_exportDebayerMode == 2 )
     {
         setMlvUseLmmseDebayer( m_pMlvObject );
+    }
+    else if( m_exportDebayerMode == 3 )
+    {
+        setMlvUseIgvDebayer( m_pMlvObject );
     }
     else
     {
@@ -4144,6 +4156,7 @@ void MainWindow::on_actionUseNoneDebayer_triggered()
     ui->actionUseSimpleDebayer->setChecked( false );
     ui->actionUseBilinear->setChecked( false );
     ui->actionUseLmmseDebayer->setChecked( false );
+    ui->actionUseIgvDebayer->setChecked( false );
     ui->actionAlwaysUseAMaZE->setChecked( false );
     ui->actionCaching->setChecked( false );
 
@@ -4164,6 +4177,7 @@ void MainWindow::on_actionUseSimpleDebayer_triggered()
     ui->actionUseSimpleDebayer->setChecked( true );
     ui->actionUseBilinear->setChecked( false );
     ui->actionUseLmmseDebayer->setChecked( false );
+    ui->actionUseIgvDebayer->setChecked( false );
     ui->actionAlwaysUseAMaZE->setChecked( false );
     ui->actionCaching->setChecked( false );
 
@@ -4184,6 +4198,7 @@ void MainWindow::on_actionUseBilinear_triggered()
     ui->actionUseSimpleDebayer->setChecked( false );
     ui->actionUseBilinear->setChecked( true );
     ui->actionUseLmmseDebayer->setChecked( false );
+    ui->actionUseIgvDebayer->setChecked( false );
     ui->actionAlwaysUseAMaZE->setChecked( false );
     ui->actionCaching->setChecked( false );
 
@@ -4205,11 +4220,34 @@ void MainWindow::on_actionUseLmmseDebayer_triggered()
     ui->actionUseSimpleDebayer->setChecked( false );
     ui->actionUseBilinear->setChecked( false );
     ui->actionUseLmmseDebayer->setChecked( true );
+    ui->actionUseIgvDebayer->setChecked( false );
     ui->actionAlwaysUseAMaZE->setChecked( false );
     ui->actionCaching->setChecked( false );
 
     /* Use LMMSE */
     setMlvUseLmmseDebayer( m_pMlvObject );
+
+    disableMlvCaching( m_pMlvObject );
+
+    llrpResetFpmStatus(m_pMlvObject);
+    llrpResetBpmStatus(m_pMlvObject);
+    llrpComputeStripesOn(m_pMlvObject);
+    m_frameChanged = true;
+}
+
+//Use IGV debayer
+void MainWindow::on_actionUseIgvDebayer_triggered()
+{
+    ui->actionUseNoneDebayer->setChecked( false );
+    ui->actionUseSimpleDebayer->setChecked( false );
+    ui->actionUseBilinear->setChecked( false );
+    ui->actionUseLmmseDebayer->setChecked( false );
+    ui->actionUseIgvDebayer->setChecked( true );
+    ui->actionAlwaysUseAMaZE->setChecked( false );
+    ui->actionCaching->setChecked( false );
+
+    /* Use LMMSE */
+    setMlvUseIgvDebayer( m_pMlvObject );
 
     disableMlvCaching( m_pMlvObject );
 
@@ -4226,6 +4264,7 @@ void MainWindow::on_actionAlwaysUseAMaZE_triggered()
     ui->actionUseSimpleDebayer->setChecked( false );
     ui->actionUseBilinear->setChecked( false );
     ui->actionUseLmmseDebayer->setChecked( false );
+    ui->actionUseIgvDebayer->setChecked( false );
     ui->actionAlwaysUseAMaZE->setChecked( true );
     ui->actionCaching->setChecked( false );
 
@@ -4247,6 +4286,7 @@ void MainWindow::on_actionCaching_triggered()
     ui->actionUseSimpleDebayer->setChecked( false );
     ui->actionUseBilinear->setChecked( false );
     ui->actionUseLmmseDebayer->setChecked( false );
+    ui->actionUseIgvDebayer->setChecked( false );
     ui->actionAlwaysUseAMaZE->setChecked( false );
     ui->actionCaching->setChecked( true );
 

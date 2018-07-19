@@ -137,12 +137,17 @@
           </item>
           <item>
            <property name="text">
+            <string>AMaZE</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
             <string>LMMSE</string>
            </property>
           </item>
           <item>
            <property name="text">
-            <string>AMaZE</string>
+            <string>IGV</string>
            </property>
           </item>
          </widget>

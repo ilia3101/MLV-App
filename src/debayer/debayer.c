@@ -10,7 +10,7 @@
 #define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
 
 /* AmAZeMEmE debayer easier to use */
-void debayerAmaze(uint16_t * __restrict debayerto, float * __restrict bayerdata, int width, int height, int threads)
+void debayerAmaze(uint16_t * __restrict debayerto, float * __restrict bayerdata, int width, int height, int threads, int blacklevel)
 {
     int pixelsize = width * height;
 
@@ -40,7 +40,8 @@ void debayerAmaze(uint16_t * __restrict debayerto, float * __restrict bayerdata,
                   blue2d,
                   0, 0, /* crop window for demosaicing */
                   width, height,
-                  0 } );
+                  0,
+                  blacklevel} );
     }
 
     /* Else do multithreading */
@@ -79,7 +80,8 @@ void debayerAmaze(uint16_t * __restrict debayerto, float * __restrict bayerdata,
                 /* Crop out a part for each thread */
                 0, startchunk_y[thread],    /* crop window for demosaicing */
                 width, (endchunk_y[thread] - startchunk_y[thread]),
-                0 };
+                0,
+                blacklevel };
 
             /* Create pthread! */
             pthread_create( &thread_id[thread], NULL, (void *)&demosaic, (void *)&amaze_arguments[thread] );
@@ -357,7 +359,7 @@ void debayerEasy(uint16_t * __restrict debayerto, float * __restrict bayerdata, 
 }
 
 /* Use LMMSE debayer */
-void debayerLmmse(uint16_t * __restrict debayerto, float * __restrict bayerdata, int width, int height, int threads)
+void debayerLmmse(uint16_t * __restrict debayerto, float * __restrict bayerdata, int width, int height, int threads, int blacklevel)
 {
     (void)threads;
 
@@ -373,7 +375,7 @@ void debayerLmmse(uint16_t * __restrict debayerto, float * __restrict bayerdata,
                   bayerdata,
                   output,
                   0, 0, /* crop window for demosaicing */
-                  width, height, width*height } );
+                  width, height, width*height, blacklevel } );
     }
     else
     {
@@ -408,7 +410,8 @@ void debayerLmmse(uint16_t * __restrict debayerto, float * __restrict bayerdata,
                 /* Crop out a part for each thread */
                 0, startchunk_y[thread],    /* crop window for demosaicing */
                 width, (endchunk_y[thread] - startchunk_y[thread]),
-                width*height};
+                width*height,
+                blacklevel};
 
             /* Create pthread! */
             pthread_create( &thread_id[thread], NULL, (void *)&ZhangWuDemosaic, (void *)&lmmse_arguments[thread] );
@@ -431,4 +434,53 @@ void debayerLmmse(uint16_t * __restrict debayerto, float * __restrict bayerdata,
     }
 
     free( output );
+}
+
+/* IGV debayer easier to use */
+void debayerIgv(uint16_t * __restrict debayerto, float * __restrict bayerdata, int width, int height, int blacklevel)
+{
+    int pixelsize = width * height;
+
+    /* IGV wants an image as floating points and 2d arrey as well */
+    float ** __restrict imagefloat2d = (float **)malloc(height * sizeof(float *));
+    for (int y = 0; y < height; ++y) imagefloat2d[y] = (float *)(bayerdata+(y*width));
+
+    /* IGV also wants to return floats, so heres memeory 4 it */
+    float  * __restrict red1d = (float *)malloc(pixelsize * sizeof(float));
+    float ** __restrict red2d = (float **)malloc(height * sizeof(float *));
+    for (int y = 0; y < height; ++y) red2d[y] = (float *)(red1d+(y*width));
+    float  * __restrict green1d = (float *)malloc(pixelsize * sizeof(float));
+    float ** __restrict green2d = (float **)malloc(height * sizeof(float *));
+    for (int y = 0; y < height; ++y) green2d[y] = (float *)(green1d+(y*width));
+    float  * __restrict blue1d = (float *)malloc(pixelsize * sizeof(float));
+    float ** __restrict blue2d = (float **)malloc(height * sizeof(float *));
+    for (int y = 0; y < height; ++y) blue2d[y] = (float *)(blue1d+(y*width));
+
+    igv_demosaic( & (amazeinfo_t) {
+                  imagefloat2d,
+                  red2d,
+                  green2d,
+                  blue2d,
+                  0, 0, /* crop window for demosaicing */
+                  width, height,
+                  0, blacklevel } );
+
+    //int rgb_pixels = pixelsize * 3;
+
+    /* Giv back as RGB, not separate channels */
+    for (int i = 0; i < pixelsize; i++)
+    {
+        int j = i * 3;
+        debayerto[ j ] = MIN((uint32_t)red1d[i], 65535);
+        debayerto[j+1] = MIN((uint32_t)green1d[i], 65535);
+        debayerto[j+2] = MIN((uint32_t)blue1d[i], 65535);
+    }
+
+    free(red1d);
+    free(red2d);
+    free(green1d);
+    free(green2d);
+    free(blue1d);
+    free(blue2d);
+    free(imagefloat2d);
 }

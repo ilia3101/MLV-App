@@ -289,10 +289,10 @@ void igv_demosaic( amazeinfo_t * inputdata )
         avg_r /= (float)t_r;
         avg_g /= (float)t_g;
         avg_b /= (float)t_b;
-        /* subtract something approximate to black level */
-        avg_r -= 4000.0;
-        avg_g -= 4000.0;
-        avg_b -= 4000.0;
+        /* subtract 2x black level */
+        avg_r -= inputdata->blacklevel << 1;
+        avg_g -= inputdata->blacklevel << 1;
+        avg_b -= inputdata->blacklevel << 1;
         // printf("\nAverages:\nred %i\ngreen: %i\nblue: %i\n\n", (int)avg_r, (int)avg_g, (int)avg_b);
         avg_r = 1.0f/avg_r; /* inverty */
         avg_g = 1.0f/avg_g;
@@ -307,6 +307,9 @@ void igv_demosaic( amazeinfo_t * inputdata )
         // printf("\nWB Multipliers AMaZE\nred %f\ngreen: %f\nblue: %f\n\n", wb_r, wb_g, wb_b);
 
         /* Applying */
+#ifdef _OPENMP
+#pragma omp for
+#endif
         for (int y = tiley; y < endy; ++y)
             for (int x = tilex; x < endx; ++x)
                 switch (FC(y,x))
@@ -323,13 +326,17 @@ void igv_demosaic( amazeinfo_t * inputdata )
     }
 
     //border_interpolate2(tilew,tileh,7,rawData,red,green,blue);
-
+#ifdef _OPENMP
+#pragma omp parallel default(none) shared(rgb,vdif,hdif,chr)
+#endif
     {
 
         float ng, eg, wg, sg, nv, ev, wv, sv, nwg, neg, swg, seg, nwv, nev, swv, sev;
 
         int refcol = 1-(tilex%2);
-
+#ifdef _OPENMP
+#pragma omp for
+#endif
         for (int row=0, row2=tiley; row<height-0; row++, row2++) {
             for (int col=0, col2=tilex, indx=row*width+col; col<width-0; col++, col2++, indx++) {
                 int c=FC(row,col);
@@ -340,7 +347,12 @@ void igv_demosaic( amazeinfo_t * inputdata )
             }
         }
         //	border_interpolate2(7, rgb);
-
+#ifdef _OPENMP
+#pragma omp single
+#endif
+#ifdef _OPENMP
+#pragma omp for
+#endif
         for (int row=5, row2=tiley+row; row<height-5; row++, row2++)
             for (int col=5+(FC(row,refcol)&1), col2=tilex+col, indx=row*width+col, c=FC(row,col); col<width-5; col+=2, col2+=2, indx+=2) {
                 //N,E,W,S Gradients
@@ -358,8 +370,13 @@ void igv_demosaic( amazeinfo_t * inputdata )
                 //Horizontal and vertical color differences
                 vdif[indx>>1]=(sg*nv+ng*sv)/(ng+sg)-(rgb[c][indx])/65535.f;
                 hdif[indx>>1]=(wg*ev+eg*wv)/(eg+wg)-(rgb[c][indx])/65535.f;
-            }
-
+            } 
+#ifdef _OPENMP
+#pragma omp single
+#endif
+#ifdef _OPENMP
+#pragma omp for
+#endif
         for (int row=7, row2=tiley+row; row<height-7; row++, row2++)
             for (int col=7+(FC(row,refcol)&1), col2=tilex+col, indx=row*width+col, c=FC(row,col), d=c/2; col<width-7; col+=2, col2+=2, indx+=2) {
                 //H&V integrated gaussian vector over variance on color differences
@@ -376,7 +393,12 @@ void igv_demosaic( amazeinfo_t * inputdata )
                 //Green channel population
                 rgb[1][indx]=rgb[c][indx]+65535.f*chr[d][indx];
             }
-
+#ifdef _OPENMP
+#pragma omp single
+#endif
+#ifdef _OPENMP
+#pragma omp for
+#endif
         for (int row=7, row2=tiley+row; row<height-7; row+=2, row2+=2)
             for (int col=7+(FC(row,refcol)&1), col2=tilex+col, indx=row*width+col, c=1-FC(row,col)/2; col<width-7; col+=2, col2+=2, indx+=2) {
                 //NW,NE,SW,SE Gradients
@@ -392,7 +414,12 @@ void igv_demosaic( amazeinfo_t * inputdata )
                 //Interpolate chrominance: R@B and B@R
                 chr[c][indx]=(nwg*nwv+neg*nev+swg*swv+seg*sev)/(nwg+neg+swg+seg);
             }
-
+#ifdef _OPENMP
+#pragma omp single
+#endif
+#ifdef _OPENMP
+#pragma omp for
+#endif
         for (int row=8, row2=tiley+row; row<height-7; row+=2, row2+=2)
             for (int col=7+(FC(row,refcol)&1), col2=tilex+col, indx=row*width+col, c=1-FC(row,col)/2; col<width-7; col+=2, col2+=2, indx+=2) {
                 //NW,NE,SW,SE Gradients
@@ -408,7 +435,12 @@ void igv_demosaic( amazeinfo_t * inputdata )
                 //Interpolate chrominance: R@B and B@R
                 chr[c][indx]=(nwg*nwv+neg*nev+swg*swv+seg*sev)/(nwg+neg+swg+seg);
             }
-
+#ifdef _OPENMP
+#pragma omp single
+#endif
+#ifdef _OPENMP
+#pragma omp for
+#endif
         for (int row=7, row2=tiley+row; row<height-7; row++, row2++)
             for (int col=7+(FC(row,0)&1), col2=tilex+col, indx=row*width+col; col<width-7; col+=2, col2+=2, indx+=2) {
                 //N,E,W,S Gradients
@@ -419,7 +451,12 @@ void igv_demosaic( amazeinfo_t * inputdata )
                 //Interpolate chrominance: R@G and B@G
                 chr[0][indx]=((ng*chr[0][indx-v1]+eg*chr[0][indx+h1]+wg*chr[0][indx-h1]+sg*chr[0][indx+v1])/(ng+eg+wg+sg));
             }
-
+#ifdef _OPENMP
+#pragma omp single
+#endif
+#ifdef _OPENMP
+#pragma omp for
+#endif
         for (int row=7, row2=tiley+row; row<height-7; row++, row2++)
             for (int col=7+(FC(row,0)&1), col2=tilex+col, indx=row*width+col; col<width-7; col+=2, col2+=2, indx+=2) {
 
@@ -431,7 +468,9 @@ void igv_demosaic( amazeinfo_t * inputdata )
                 //Interpolate chrominance: R@G and B@G
                 chr[1][indx]=((ng*chr[1][indx-v1]+eg*chr[1][indx+h1]+wg*chr[1][indx-h1]+sg*chr[1][indx+v1])/(ng+eg+wg+sg));
             }
-
+#ifdef _OPENMP
+#pragma omp single
+#endif
         //	border_interpolate2(7, rgb);
         /*for (int row=0; row < height; row++)  //borders
             for (int col=0; col < width; col++) {
@@ -442,7 +481,9 @@ void igv_demosaic( amazeinfo_t * inputdata )
                 green[row][col] = rgb[indxc][1];
                 blue [row][col] = rgb[indxc][2];
             }*/
-
+#ifdef _OPENMP
+#pragma omp for
+#endif
         for(int row=7, row2=tiley+row; row<height-7; row++, row2++)
             for(int col=7, col2=tilex+col, indx=row*width+col; col<width-7; col++, col2++, indx++) {
                 red  [row2][col2] = CLIP(rgb[1][indx]-65535.f*chr[0][indx]);
@@ -468,15 +509,15 @@ void igv_demosaic( amazeinfo_t * inputdata )
         wb_b = 1.0 / wb_b;
         int endx = tilex + tilew;
         int endy = tiley + tileh;
+#ifdef _OPENMP
+#pragma omp for
+#endif
         for (int y = tiley; y < endy; ++y)
-            for (int x = tilex; x < endx; ++x)
+            for (int x = tilex; x < endx; ++x){
                 red[y][x] *= wb_r;
-        for (int y = tiley; y < endy; ++y)
-            for (int x = tilex; x < endx; ++x)
                 green[y][x] *= wb_g;
-        for (int y = tiley; y < endy; ++y)
-            for (int x = tilex; x < endx; ++x)
                 blue[y][x] *= wb_b;
+            }
     }
 }
 

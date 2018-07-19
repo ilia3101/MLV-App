@@ -171,6 +171,7 @@
      <addaction name="actionUseSimpleDebayer"/>
      <addaction name="actionUseBilinear"/>
      <addaction name="actionUseLmmseDebayer"/>
+     <addaction name="actionUseIgvDebayer"/>
      <addaction name="actionAlwaysUseAMaZE"/>
      <addaction name="actionCaching"/>
     </widget>
@@ -393,7 +394,7 @@ QGroupBox::indicator:checked {
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>199</width>
+            <width>200</width>
             <height>3279</height>
            </rect>
           </property>
@@ -6063,6 +6064,14 @@ QGroupBox::indicator:checked {
    </property>
    <property name="text">
     <string>LMMSE</string>
+   </property>
+  </action>
+  <action name="actionUseIgvDebayer">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>IGV</string>
    </property>
   </action>
  </widget>

@@ -6,10 +6,11 @@ void debayerEasy(uint16_t * __restrict debayerto, float * __restrict bayerdata, 
 /* Quite quick bilinear debayer, floating point sadly; threads argument is unused */
 void debayerBasic(uint16_t * __restrict debayerto, float * __restrict bayerdata, int width, int height, int threads);
 /* More useable amaze, threads number should be the number of cores(or threads if >= i7) your cpu has */
-void debayerAmaze(uint16_t * __restrict debayerto, float * __restrict bayerdata, int width, int height, int threads);
+void debayerAmaze(uint16_t * __restrict debayerto, float * __restrict bayerdata, int width, int height, int threads, int blacklevel);
 /* Use LMMSE debayer */
-void debayerLmmse(uint16_t * __restrict debayerto, float * __restrict bayerdata, int width, int height, int threads);
-
+void debayerLmmse(uint16_t * __restrict debayerto, float * __restrict bayerdata, int width, int height, int threads, int blacklevel);
+/* More useable IGV */
+void debayerIgv(uint16_t * __restrict debayerto, float * __restrict bayerdata, int width, int height, int blacklevel);
 
 /* None debayer structure for multithread */
 typedef struct {
@@ -29,6 +30,7 @@ typedef struct {
     int winx; int winy; /* crop window for demosaicing */
     int winw; int winh;
     int cfa;
+    int blacklevel;
 } amazeinfo_t;
 
 /* LMMSE input as struct for posixz */
@@ -38,6 +40,7 @@ typedef struct {
     int winx; int winy; /* crop window for demosaicing */
     int winw; int winh;
     int numOverallPixels;
+    int blacklevel;
 } lmmseinfo_t;
 
 /* Amaze demosaic */

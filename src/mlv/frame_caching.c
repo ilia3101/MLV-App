@@ -302,7 +302,7 @@ void get_mlv_raw_frame_debayered( mlvObject_t * video,
     if (debayer_type == 1)
     {
         /* Debayer AMAZEly - using all cores! */
-        debayerAmaze(output_frame, temp_memory, width, height, getMlvCpuCores(video));
+        debayerAmaze(output_frame, temp_memory, width, height, getMlvCpuCores(video), getMlvBlackLevel(video));
     }
     else if(debayer_type == 2 || debayer_type == 3)
     {
@@ -312,7 +312,12 @@ void get_mlv_raw_frame_debayered( mlvObject_t * video,
     else if (debayer_type == 4)
     {
         /* Debayer LMMSE */
-        debayerLmmse(output_frame, temp_memory, width, height, getMlvCpuCores(video));
+        debayerLmmse(output_frame, temp_memory, width, height, getMlvCpuCores(video), getMlvBlackLevel(video));
+    }
+    else if (debayer_type == 5)
+    {
+        /* Debayer IGV */
+        debayerIgv(output_frame, temp_memory, width, height, getMlvBlackLevel(video));
     }
     else
     {
