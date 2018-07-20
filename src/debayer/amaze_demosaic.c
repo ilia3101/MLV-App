@@ -299,15 +299,15 @@ void demosaic(amazeinfo_t * inputdata) /* All arguments in 1 struct for posix */
 				switch (FC(y,x))
 				{
 					case 0:
-                        avg_r += rawData[y][x]-inputdata->blacklevel;
+                        avg_r += rawData[y][x];//-inputdata->blacklevel;
 						t_r++;
 						break;
 					case 1:
-                        avg_g += rawData[y][x]-inputdata->blacklevel;
+                        avg_g += rawData[y][x];//-inputdata->blacklevel;
 						t_g++;
 						break;
 					case 2:
-                        avg_b += rawData[y][x]-inputdata->blacklevel;
+                        avg_b += rawData[y][x];//-inputdata->blacklevel;
 						t_b++;
 						break;
 				}
@@ -316,6 +316,10 @@ void demosaic(amazeinfo_t * inputdata) /* All arguments in 1 struct for posix */
 		avg_r /= (float)t_r;
 		avg_g /= (float)t_g;
         avg_b /= (float)t_b;
+        /* Subtract 4000 for blacklevel */
+        avg_r -= 4000;
+        avg_g -= 4000;
+        avg_b -= 4000;
 		// printf("\nAverages:\nred %i\ngreen: %i\nblue: %i\n\n", (int)avg_r, (int)avg_g, (int)avg_b);
 		avg_r = 1.0f/avg_r; /* inverty */
 		avg_g = 1.0f/avg_g;
