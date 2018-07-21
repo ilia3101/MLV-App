@@ -3030,7 +3030,6 @@ void MainWindow::setPreviewMode( void )
 double MainWindow::getFramerate( void )
 {
     if( m_fpsOverride ) return m_frameRate;
-    else if( getMlvFramerate( m_pMlvObject ) < 1.0 ) return 1.0;
     else return getMlvFramerate( m_pMlvObject );
 }
 
