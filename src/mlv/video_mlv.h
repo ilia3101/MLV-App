@@ -101,10 +101,10 @@ void cache_mlv_frames(mlvObject_t * video);
 
 /* Gets a debayered frame; how is it different from getMlvRawFrameDebayered?... it doesn't get it from cache ever
  * also you must allocate it some temporary memory because that's how it works and you shouldnt be looking anyway */
-void get_mlv_raw_frame_debayered( mlvObject_t * video, 
-                                  int frame_index, 
-                                  float * temp_memory, 
-                                  uint16_t * output_frame, 
+void get_mlv_raw_frame_debayered(mlvObject_t * video,
+                                  uint64_t frame_index,
+                                  float * temp_memory,
+                                  uint16_t * output_frame,
                                   int debayer_type ); /* Debayer type: 0=bilinear 1=amaze */
 
 

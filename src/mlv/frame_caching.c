@@ -288,7 +288,7 @@ void an_mlv_cache_thread(mlvObject_t * video)
 
 /* Gets a freshly debayered frame every time ( temp memory should be Width * Height * sizeof(float) ) */
 void get_mlv_raw_frame_debayered( mlvObject_t * video, 
-                                  int frame_index, 
+                                  uint64_t frame_index,
                                   float * temp_memory, 
                                   uint16_t * output_frame, 
                                   int debayer_type ) /* 0=bilinear 1=amaze */
