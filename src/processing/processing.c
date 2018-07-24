@@ -76,8 +76,8 @@ double BmdFilmTonemap(double x)
     if( input >= 4095 ) input = 4095;
     uint16_t in = (uint16_t) input;
 
-    double pix00 = bmd_film[0,in];
-    double pix01 = bmd_film[0,in+1];
+    double pix00 = bmd_film[in  ][0];
+    double pix01 = bmd_film[in+1][0];
 
     return interpol( input, in, in+1, pix00, pix01 );
 }

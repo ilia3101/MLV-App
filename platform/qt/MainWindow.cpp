@@ -4056,7 +4056,8 @@ void MainWindow::on_comboBoxProfile_currentIndexChanged(int index)
      || ( index == PROFILE_CINEON_LOG )
      || ( index == PROFILE_SONY_LOG_3 )
      || ( index == PROFILE_SRGB )
-     || ( index == PROFILE_REC709 ) )
+     || ( index == PROFILE_REC709 )
+     || ( index == PROFILE_BMDFILM ) )
     {
         enable = false;
     }
