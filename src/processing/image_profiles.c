@@ -1,5 +1,5 @@
 /* The standard MLV App image profiles, more can be added here. */
-static image_profile_t default_image_profiles[] = 
+static image_profile_t default_image_profiles[] =
 {
     { /* PROFILE_STANDARD */
         .disable_settings = {
@@ -99,6 +99,36 @@ static image_profile_t default_image_profiles[] =
             .tonemapping = 0
         },
         .tone_mapping_function = NULL,
+        .gamma_power = 1.0,
+        .xy_chromaticity = {
+            .red = {0,0},
+            .green = {0,0},
+            .blue = {0,0},
+            .white = {0,0},
+        }
+    },
+    { /* PROFILE_SRGB */
+        .disable_settings = {
+            .saturation = 0,
+            .curves = 0,
+            .tonemapping = 1
+        },
+        .tone_mapping_function = &sRGBTonemap,
+        .gamma_power = 1.0,
+        .xy_chromaticity = {
+            .red = {0,0},
+            .green = {0,0},
+            .blue = {0,0},
+            .white = {0,0},
+        }
+    },
+    { /* PROFILE_REC709 */
+        .disable_settings = {
+            .saturation = 0,
+            .curves = 0,
+            .tonemapping = 1
+        },
+        .tone_mapping_function = &Rec709Tonemap,
         .gamma_power = 1.0,
         .xy_chromaticity = {
             .red = {0,0},

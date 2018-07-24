@@ -23,6 +23,8 @@ void processingSetImageProfile(processingObject_t * processing, int imageProfile
 #define PROFILE_CINEON_LOG  4   /* Cineon Log */
 #define PROFILE_SONY_LOG_3  5   /* Sony S-Log 3 */
 #define PROFILE_LINEAR      6   /* Linear, idk who would want this */
+#define PROFILE_SRGB        7	/* sRGB */
+#define PROFILE_REC709      8	/* Rec. 709 (HDTV) */
 
 /* Set a custom image profile using the image_profile struct */
 void processingSetCustomImageProfile(processingObject_t * processing, image_profile_t * imageProfile);

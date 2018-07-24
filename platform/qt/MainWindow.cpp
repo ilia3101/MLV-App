@@ -4042,7 +4042,11 @@ void MainWindow::on_comboBoxProfile_currentIndexChanged(int index)
     m_frameChanged = true;
     //Disable parameters if log
     bool enable = true;
-    if( ( index == PROFILE_ALEXA_LOG ) || ( index == PROFILE_CINEON_LOG ) || ( index == PROFILE_SONY_LOG_3 ) )
+    if( ( index == PROFILE_ALEXA_LOG )
+     || ( index == PROFILE_CINEON_LOG )
+     || ( index == PROFILE_SONY_LOG_3 )
+     || ( index == PROFILE_SRGB )
+     || ( index == PROFILE_REC709 ) )
     {
         enable = false;
     }

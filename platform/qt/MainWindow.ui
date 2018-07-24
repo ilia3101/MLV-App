@@ -395,7 +395,7 @@ QGroupBox::indicator:checked {
             <x>0</x>
             <y>0</y>
             <width>200</width>
-            <height>3279</height>
+            <height>3295</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayoutScrollArea">
@@ -3356,6 +3356,16 @@ QGroupBox::indicator:checked {
                    <item>
                     <property name="text">
                      <string>Linear</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>sRGB</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Rec. 709</string>
                     </property>
                    </item>
                   </widget>
