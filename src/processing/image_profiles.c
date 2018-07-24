@@ -136,5 +136,20 @@ static image_profile_t default_image_profiles[] =
             .blue = {0,0},
             .white = {0,0},
         }
+    },
+    { /* BMDFilm */
+        .disable_settings = {
+            .saturation = 0,
+            .curves = 0,
+            .tonemapping = 1
+        },
+        .tone_mapping_function = &BmdFilmTonemap,
+        .gamma_power = 1.0,
+        .xy_chromaticity = {
+            .red = {0,0},
+            .green = {0,0},
+            .blue = {0,0},
+            .white = {0,0},
+        }
     }
 };

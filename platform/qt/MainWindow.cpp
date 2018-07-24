@@ -3680,6 +3680,7 @@ void MainWindow::on_horizontalSliderRawWhite_valueChanged(int position)
     if( getMlvBitdepth( m_pMlvObject ) > 16 ) return;
 
     ui->label_RawWhiteVal->setText( QString("%1").arg( position ) );
+
     if( !ui->checkBoxRawFixEnable->isChecked() )
     {
         position = getMlvOriginalWhiteLevel( m_pMlvObject );
@@ -3710,6 +3711,7 @@ void MainWindow::on_horizontalSliderRawBlack_valueChanged(int position)
     if( getMlvBitdepth( m_pMlvObject ) > 16 ) return;
 
     ui->label_RawBlackVal->setText( QString("%1").arg( position ) );
+
     if( !ui->checkBoxRawFixEnable->isChecked() )
     {
         position = getMlvOriginalBlackLevel( m_pMlvObject );

@@ -6,6 +6,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include "processing_object.h"
+#include "bmd_film.h"
+
+//Interpolation functions
+double interpol(double x, double x1, double x2, double q00, double q01) {
+    if( ( x2 - x1 ) == 0 ) return q00;
+    else return ( ( ( x2 - x ) / ( x2 - x1 ) ) * q00 ) + ( ( ( x - x1 ) / ( x2 - x1 ) ) * q01 );
+}
 
 /* Measurements taken from 5D Mark II RAW photos using EXIFtool, surely Canon can't be wrong about WB mutipliers? */
 static const int wb_kelvin[]   = {  2000,  2500,  3000,  3506,  4000,  4503,  5011,  5517,  6018,  6509,  7040,  7528,  8056,  8534,  9032,  9531, 10000 };
@@ -61,6 +68,19 @@ float sRGBTonemap_f(float x) { return x < 0.0031308f ? x * 12.92f : (1.055f * po
 /* rec709 */
 double Rec709Tonemap(double x) { return x <= 0.018 ? (x * 4.5) : 1.099 * pow( x, (0.45) ) - 0.099; }
 float Rec709Tonemap_f(float x) { return x <= 0.018f ? (x * 4.5f) : 1.099f * powf( x, (0.45f) ) - 0.099f; }
+
+/* BMDFilm via LUT */
+double BmdFilmTonemap(double x)
+{
+    double input = ( x * ( 4095.0 ) / pow(2.0, 1.2) / 5.7661304310 );
+    if( input >= 4095 ) input = 4095;
+    uint16_t in = (uint16_t) input;
+
+    double pix00 = bmd_film[0,in];
+    double pix01 = bmd_film[0,in+1];
+
+    return interpol( input, in, in+1, pix00, pix01 );
+}
 
 /* Returns multipliers for white balance by (linearly) interpolating measured 
  * Canon values... stupidly simple, also range limited to 2500-10000 (pls obey) */

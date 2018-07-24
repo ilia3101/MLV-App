@@ -155,6 +155,7 @@ HEADERS += \
     ../../src/processing/denoiser/libdenoising.h \
     ../../src/processing/denoiser/mt19937ar.h \
     ../../src/processing/denoiser/easy_denoise.h \
+    ../../src/processing/bmd_film.h \
     InfoDialog.h \
     MyApplication.h \
     StatusDialog.h \

@@ -3368,6 +3368,11 @@ QGroupBox::indicator:checked {
                      <string>Rec. 709</string>
                     </property>
                    </item>
+                   <item>
+                    <property name="text">
+                     <string>BMDFilm</string>
+                    </property>
+                   </item>
                   </widget>
                  </item>
                 </layout>
