@@ -91,6 +91,7 @@ typedef struct {
     /* Generic processing things */
     double     exposure_stops; /* Make this -4 to +4 STOPS */
     double     saturation; /* Slider from 0 to 2, to power of log(base2)of 3.5, so 1 stays in the middle, but max is 3.5 */
+    double     contrast; /* Slider from -100 to 100 */
 
     /* The two part 'contrast' or S-curve */
     double     light_contrast_factor; /* 0 - 5 */

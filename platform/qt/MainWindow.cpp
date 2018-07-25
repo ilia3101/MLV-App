@@ -2241,6 +2241,11 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
             receipt->setExposure( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
+        else if( Rxml->isStartElement() && Rxml->name() == "contrast" )
+        {
+            receipt->setContrast( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
         else if( Rxml->isStartElement() && Rxml->name() == "temperature" )
         {
             receipt->setTemperature( Rxml->readElementText().toInt() );
@@ -2484,6 +2489,7 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
 void MainWindow::writeXmlElementsToFile(QXmlStreamWriter *xmlWriter, ReceiptSettings *receipt)
 {
     xmlWriter->writeTextElement( "exposure",                QString( "%1" ).arg( receipt->exposure() ) );
+    xmlWriter->writeTextElement( "contrast",                QString( "%1" ).arg( receipt->contrast() ) );
     xmlWriter->writeTextElement( "temperature",             QString( "%1" ).arg( receipt->temperature() ) );
     xmlWriter->writeTextElement( "tint",                    QString( "%1" ).arg( receipt->tint() ) );
     xmlWriter->writeTextElement( "saturation",              QString( "%1" ).arg( receipt->saturation() ) );
@@ -2633,6 +2639,7 @@ bool MainWindow::isFileInSession(QString fileName)
 void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
 {
     ui->horizontalSliderExposure->setValue( receipt->exposure() );
+    ui->horizontalSliderContrast->setValue( receipt->contrast() );
     if( receipt->temperature() == -1 )
     {
         //Init Temp read from the file when imported and loaded very first time completely
@@ -2764,6 +2771,7 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
 void MainWindow::setReceipt( ReceiptSettings *receipt )
 {
     receipt->setExposure( ui->horizontalSliderExposure->value() );
+    receipt->setContrast( ui->horizontalSliderContrast->value() );
     receipt->setTemperature( ui->horizontalSliderTemperature->value() );
     receipt->setTint( ui->horizontalSliderTint->value() );
     receipt->setSaturation( ui->horizontalSliderSaturation->value() );
@@ -2820,6 +2828,7 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
 void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings *receiptSource, bool paste)
 {
     receiptTarget->setExposure( receiptSource->exposure() );
+    receiptTarget->setContrast( receiptSource->contrast() );
     receiptTarget->setTemperature( receiptSource->temperature() );
     receiptTarget->setTint( receiptSource->tint() );
     receiptTarget->setSaturation( receiptSource->saturation() );
@@ -2924,6 +2933,7 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
 
     ReceiptSettings *receipt = new ReceiptSettings();
     receipt->setExposure( m_pSessionReceipts.at( row )->exposure() );
+    receipt->setContrast( m_pSessionReceipts.at( row )->contrast() );
     receipt->setTemperature( m_pSessionReceipts.at( row )->temperature() );
     receipt->setTint( m_pSessionReceipts.at( row )->tint() );
     receipt->setSaturation( m_pSessionReceipts.at( row )->saturation() );
@@ -3561,6 +3571,13 @@ void MainWindow::on_horizontalSliderExposure_valueChanged(int position)
     m_frameChanged = true;
 }
 
+void MainWindow::on_horizontalSliderContrast_valueChanged(int position)
+{
+    processingSetSimpleContrast( m_pProcessingObject, position );
+    ui->label_ContrastVal->setText( QString("%1").arg( position ) );
+    m_frameChanged = true;
+}
+
 void MainWindow::on_horizontalSliderTemperature_valueChanged(int position)
 {
     int value = ( 218 - 42 ) * ( ui->horizontalSliderTemperature->value() - ui->horizontalSliderTemperature->minimum() ) / ( ui->horizontalSliderTemperature->maximum() - ui->horizontalSliderTemperature->minimum() );
@@ -3740,6 +3757,13 @@ void MainWindow::on_horizontalSliderExposure_doubleClicked()
 {
     ReceiptSettings *sliders = new ReceiptSettings(); //default
     ui->horizontalSliderExposure->setValue( sliders->exposure() );
+    delete sliders;
+}
+
+void MainWindow::on_horizontalSliderContrast_doubleClicked()
+{
+    ReceiptSettings *sliders = new ReceiptSettings(); //default
+    ui->horizontalSliderContrast->setValue( sliders->contrast() );
     delete sliders;
 }
 
@@ -4689,6 +4713,15 @@ void MainWindow::on_label_ExposureVal_doubleClicked( void )
     editSlider.autoSetup( ui->horizontalSliderExposure, ui->label_ExposureVal, 0.01, 2, 100.0 );
     editSlider.exec();
     ui->horizontalSliderExposure->setValue( editSlider.getValue() );
+}
+
+//DoubleClick on Contrast Label
+void MainWindow::on_label_ContrastVal_doubleClicked()
+{
+    EditSliderValueDialog editSlider;
+    editSlider.autoSetup( ui->horizontalSliderContrast, ui->label_ContrastVal, 1.0, 0, 1.0 );
+    editSlider.exec();
+    ui->horizontalSliderContrast->setValue( editSlider.getValue() );
 }
 
 //DoubleClick on Temperature Label

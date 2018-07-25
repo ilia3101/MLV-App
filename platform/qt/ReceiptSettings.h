@@ -17,6 +17,7 @@ public:
     void setLoaded( void )          {m_neverLoaded = false;}
 
     void setExposure( int value )   {m_exposure = value;}
+    void setContrast( int value )   {m_contrast = value;}
     void setTemperature( int value ){m_temperature = value;}
     void setTint( int value )       {m_tint = value;}
     void setSaturation( int value ) {m_saturation = value;}
@@ -68,6 +69,7 @@ public:
     bool wasNeverLoaded( void ){return m_neverLoaded;}
 
     int exposure( void )   {return m_exposure;}
+    int contrast( void )   {return m_contrast;}
     int temperature( void ){return m_temperature;}
     int tint( void )       {return m_tint;}
     int saturation( void ) {return m_saturation;}
@@ -120,6 +122,7 @@ private:
     bool m_neverLoaded;
 
     int m_exposure;
+    int m_contrast;
     int m_temperature;
     int m_tint;
     int m_saturation;

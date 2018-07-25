@@ -128,7 +128,9 @@ void processingSetExposureStops(processingObject_t * processing, double exposure
 /* Gets a processing object's exposure value in stops */
 #define processingGetExposureStops(processing) (processing)->exposure_stops
 
-
+/* Set simple contrast */
+#define processingSetSimpleContrast(processing, contrastVal) (processing)->contrast = (contrastVal)
+#define processingGetSimpleContrast(processing) (processing)->contrast
 
 /* Set white balance by kelvin and/or tint value; Kelvin range: 2500-10000, tint -10 to +10 */
 void processingSetWhiteBalance(processingObject_t * processing, double WBKelvin, double WBTint);

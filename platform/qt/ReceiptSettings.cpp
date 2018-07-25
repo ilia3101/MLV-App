@@ -13,6 +13,7 @@ ReceiptSettings::ReceiptSettings()
 
     //default settings
     m_exposure = 0;
+    m_contrast = 0;
     m_temperature = -1;
     m_tint = 0;
     m_saturation = 0;

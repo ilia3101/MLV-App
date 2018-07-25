@@ -402,6 +402,19 @@ void apply_processing_object( processingObject_t * processing,
         }
     }
 
+    /* Make it faster when unused */
+    if( processing->contrast <= -1.0 || processing->contrast >= 1.0 )
+    {
+        /* Simple Contrast Slider */
+        double factor = ( 259.0 * ( processing->contrast + 255.0 ) ) / ( 255.0 * ( 259.0 - processing->contrast ) );
+        for (uint16_t * pix = img; pix < img_end; pix += 3)
+        {
+            pix[0] = LIMIT16( (int32_t)( factor * ( (int32_t)pix[0] - 32768 ) + 32768 ) );
+            pix[1] = LIMIT16( (int32_t)( factor * ( (int32_t)pix[1] - 32768 ) + 32768 ) );
+            pix[2] = LIMIT16( (int32_t)( factor * ( (int32_t)pix[2] - 32768 ) + 32768 ) );
+        }
+    }
+
     if (processing->use_saturation)
     {
         /* Now saturation (looks way better after gamma) */

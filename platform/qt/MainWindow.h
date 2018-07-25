@@ -64,6 +64,7 @@ private slots:
     void on_horizontalSliderPosition_valueChanged(int position);
     void on_actionClip_Information_triggered();
     void on_horizontalSliderExposure_valueChanged(int position);
+    void on_horizontalSliderContrast_valueChanged(int position);
     void on_horizontalSliderTemperature_valueChanged(int position);
     void on_horizontalSliderTint_valueChanged(int position);
     void on_horizontalSliderSaturation_valueChanged(int position);
@@ -81,6 +82,7 @@ private slots:
     void on_horizontalSliderRawBlack_valueChanged(int position);
 
     void on_horizontalSliderExposure_doubleClicked();
+    void on_horizontalSliderContrast_doubleClicked();
     void on_horizontalSliderTemperature_doubleClicked();
     void on_horizontalSliderTint_doubleClicked();
     void on_horizontalSliderSaturation_doubleClicked();
@@ -142,6 +144,7 @@ private slots:
     void pictureCustomContextMenuRequested(const QPoint &pos);
     void on_labelHistogram_customContextMenuRequested(const QPoint &pos);
     void on_label_ExposureVal_doubleClicked( void );
+    void on_label_ContrastVal_doubleClicked( void );
     void on_label_TemperatureVal_doubleClicked( void );
     void on_label_TintVal_doubleClicked( void );
     void on_label_SaturationVal_doubleClicked( void );
