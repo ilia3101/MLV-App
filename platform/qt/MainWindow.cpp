@@ -3696,16 +3696,11 @@ void MainWindow::on_horizontalSliderRawWhite_valueChanged(int position)
     /* Lowering white level a bit avoids pink grain in highlihgt reconstruction */
     int positionCorr = (int)((double)position * 0.993);
 
+    m_pMlvObject->RAWI.raw_info.white_level = position; //TODO: that is still bad style
     int shift = 16 - getMlvBitdepth( m_pMlvObject );
-    if( !ui->checkBoxRawFixEnable->isChecked() )
-    {
-        m_pMlvObject->RAWI.raw_info.white_level = position << shift; //TODO: that is still bad style
-    }
-    else
-    {
-        m_pMlvObject->RAWI.raw_info.white_level = position; //TODO: that is still bad style
-    }
     processingSetWhiteLevel( m_pProcessingObject, positionCorr << shift );
+    llrpResetFpmStatus(m_pMlvObject);
+    llrpResetBpmStatus(m_pMlvObject);
     resetMlvCache( m_pMlvObject );
     resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
@@ -3731,16 +3726,11 @@ void MainWindow::on_horizontalSliderRawBlack_valueChanged(int position)
 
     while( !m_pRenderThread->isIdle() ) QThread::msleep(1);
 
+    m_pMlvObject->RAWI.raw_info.black_level = position; //TODO: that is still bad style
     int shift = 16 - getMlvBitdepth( m_pMlvObject );
-    if( !ui->checkBoxRawFixEnable->isChecked() )
-    {
-        m_pMlvObject->RAWI.raw_info.black_level = position << shift; //TODO: that is still bad style
-    }
-    else
-    {
-        m_pMlvObject->RAWI.raw_info.black_level = position; //TODO: that is still bad style
-    }
     processingSetBlackLevel( m_pProcessingObject, position << shift );
+    llrpResetFpmStatus(m_pMlvObject);
+    llrpResetBpmStatus(m_pMlvObject);
     resetMlvCache( m_pMlvObject );
     resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
