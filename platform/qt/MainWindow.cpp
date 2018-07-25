@@ -820,6 +820,10 @@ void MainWindow::initGui( void )
     ui->actionFullscreen->setVisible( false );
     //Disable caching by default to avoid crashes
     //ui->actionCaching->setVisible( false );
+    //Disable contrast slider, works not good
+    ui->horizontalSliderContrast->setVisible( false );
+    ui->label_contrast->setVisible( false );
+    ui->label_ContrastVal->setVisible( false );
     //Disable unused (for now) actions
     ui->actionPasteReceipt->setEnabled( false );
     //Disable export until file opened!
