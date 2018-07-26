@@ -62,7 +62,6 @@ SOURCES += \
     ../../src/debayer/dmzhangwu.c \
     ../../src/debayer/basic.c \
     ../../src/matrix/matrix.c \
-    ../../src/mlv/camera_matrices.c \
     ../../src/mlv/frame_caching.c \
     ../../src/mlv/video_mlv.c \
     ../../src/mlv/liblj92/lj92.c \
