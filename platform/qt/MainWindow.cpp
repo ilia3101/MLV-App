@@ -820,10 +820,6 @@ void MainWindow::initGui( void )
     ui->actionFullscreen->setVisible( false );
     //Disable caching by default to avoid crashes
     //ui->actionCaching->setVisible( false );
-    //Disable contrast slider, works not good
-    ui->horizontalSliderContrast->setVisible( false );
-    ui->label_contrast->setVisible( false );
-    ui->label_ContrastVal->setVisible( false );
     //Disable unused (for now) actions
     ui->actionPasteReceipt->setEnabled( false );
     //Disable export until file opened!
@@ -3577,7 +3573,7 @@ void MainWindow::on_horizontalSliderExposure_valueChanged(int position)
 
 void MainWindow::on_horizontalSliderContrast_valueChanged(int position)
 {
-    processingSetSimpleContrast( m_pProcessingObject, position );
+    processingSetSimpleContrast( m_pProcessingObject, position * 1.3 / 100.0 );
     ui->label_ContrastVal->setText( QString("%1").arg( position ) );
     m_frameChanged = true;
 }

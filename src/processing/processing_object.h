@@ -91,7 +91,9 @@ typedef struct {
     /* Generic processing things */
     double     exposure_stops; /* Make this -4 to +4 STOPS */
     double     saturation; /* Slider from 0 to 2, to power of log(base2)of 3.5, so 1 stays in the middle, but max is 3.5 */
+    double     vibrance; /* Slider from 0 to 2, to power of log(base2)of 3.5, so 1 stays in the middle, but max is 3.5 */
     double     contrast; /* Slider from -100 to 100 */
+    double     contrast_curve[65536]; /* Contrast precalculated exposure factors */
 
     /* The two part 'contrast' or S-curve */
     double     light_contrast_factor; /* 0 - 5 */
@@ -133,6 +135,8 @@ typedef struct {
     uint16_t   pre_calc_sharp_y[65536]; /* In vertical dimension */
     /* Precalculated values for saturation */
     int32_t    pre_calc_sat[131072]; int use_saturation; /* Saturation is disable-able */
+    /* Precalculated values for vibrance */
+    int32_t    pre_calc_vibrance[131072];
 
     /* Transformation */
     uint8_t    transformation;

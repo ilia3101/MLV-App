@@ -395,7 +395,7 @@ QGroupBox::indicator:checked {
             <x>0</x>
             <y>-785</y>
             <width>199</width>
-            <height>3319</height>
+            <height>3327</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayoutScrollArea">
@@ -2418,6 +2418,22 @@ QGroupBox::indicator:checked {
                     </widget>
                    </item>
                    <item row="0" column="1">
+                    <spacer name="horizontalSpacer_28">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                     <property name="sizeType">
+                      <enum>QSizePolicy::Maximum</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>40</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                   <item row="0" column="2">
                     <widget class="DoubleClickLabel" name="label_ContrastVal">
                      <property name="font">
                       <font>
@@ -2435,7 +2451,7 @@ QGroupBox::indicator:checked {
                      </property>
                     </widget>
                    </item>
-                   <item row="1" column="0" colspan="2">
+                   <item row="1" column="0" colspan="3">
                     <widget class="NoScrollSlider" name="horizontalSliderContrast">
                      <property name="sizePolicy">
                       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">

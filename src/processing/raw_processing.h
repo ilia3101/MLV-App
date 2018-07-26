@@ -129,8 +129,10 @@ void processingSetExposureStops(processingObject_t * processing, double exposure
 #define processingGetExposureStops(processing) (processing)->exposure_stops
 
 /* Set simple contrast */
-#define processingSetSimpleContrast(processing, contrastVal) (processing)->contrast = (contrastVal)
+void processingSetSimpleContrast(processingObject_t * processing, double value);
 #define processingGetSimpleContrast(processing) (processing)->contrast
+/* Calculate contrast exposure LUT */
+void processing_update_contrast_curve(processingObject_t * processing);
 
 /* Set white balance by kelvin and/or tint value; Kelvin range: 2500-10000, tint -10 to +10 */
 void processingSetWhiteBalance(processingObject_t * processing, double WBKelvin, double WBTint);
@@ -159,7 +161,10 @@ void processingSetSaturation(processingObject_t * processing, double saturationF
 /* Get saturation - I don't see the use but maybe useful */
 #define processingGetSaturation(processing) (processing)->saturation
 
-
+/* Vibrance setting: 1.0 = no vibrance added, 0.0 = black and white ... */
+void processingSetVibrance(processingObject_t * processing, double vibranceFactor);
+/* Get vibrance */
+#define processingGetVibrance(processing) (processing)->vibrance
 
 /* Enable/disable tonemapping - DEPRECATED!!! (made private) */
 #define processingEnableTonemapping(processing) processing_enable_tonemapping(processing)

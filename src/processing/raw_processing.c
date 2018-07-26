@@ -10,7 +10,6 @@
 #include "../mlv/video_mlv.h"
 #include "filter/filter.h"
 #include "denoiser/libdenoising.h"
-#include "denoiser/easy_denoise.h"
 
 /* Matrix functions which are useful */
 #include "../matrix/matrix.h"
@@ -115,12 +114,14 @@ processingObject_t * initProcessingObject()
     processingSetBlackAndWhiteLevel(processing, 8192.0, 64000.0); /* 16 bit! */
     processingSetExposureStops(processing, 0.0);
     processingSetGamma(processing, STANDARD_GAMMA);
+    processingSetVibrance(processing, 1.0);
     processingSetSaturation(processing, 1.0);
     processingSetContrast(processing, 0.73, 5.175, 0.5, 0.0, 0.0);
     processingSetImageProfile(processing, PROFILE_TONEMAPPED);
     processingSetSharpening(processing, 0.0);
     processingSetHighlights(processing, 0.0);
     processingSetShadows(processing, 0.0);
+    processingSetSimpleContrast(processing, 0.0);
     processingSetTransformation(processing, TR_NONE);
 
     /* Just in case (should be done tho already) */
@@ -194,6 +195,34 @@ void processing_update_shadow_highlight_curve(processingObject_t * processing)
         expo_factor = value/newvalue;
 
         processing->shadows_highlights.shadow_highlight_curve[i] = expo_factor;
+    }
+}
+
+void processingSetSimpleContrast(processingObject_t * processing, double value)
+{
+    processing->contrast = value;
+    processing_update_contrast_curve(processing);
+}
+
+void processing_update_contrast_curve(processingObject_t * processing)
+{
+    double shadows_expo = -processing->contrast;
+    double highlight_expo = pow(2.0, processing->contrast*(-1.5));
+    for (int i = 0; i < 65536; ++i)
+    {
+        double expo_factor;
+        double value = pow(((double)i)/65536.0, 0.75);
+
+        double newvalue = add_contrast(value, 0.7, shadows_expo*0.5, 0.0, 0.0);
+
+        if (newvalue > 0.2) {
+            double fac = (newvalue - 0.2)*(1/0.8);
+            newvalue = newvalue*(1.0-fac) + newvalue*highlight_expo*fac;
+        }
+
+        expo_factor = value/newvalue;
+
+        processing->contrast_curve[i] = expo_factor;
     }
 }
 
@@ -350,10 +379,20 @@ void apply_processing_object( processingObject_t * processing,
         /* highlight exposure factor */
         double expo_highlights = processing->shadows_highlights.shadow_highlight_curve[LIMIT16(bval)];
 
+        /* Contrast on untouched pixel */
+        double expo_contrast = 1.0;
+        if( processing->contrast <= -0.01 || processing->contrast >= 0.01 )
+        {
+            int32_t cval = ( ((pm[0][pix[0]] + pm[1][pix[1]] + pm[2][pix[2]]) << 2)
+                           + ((pm[3][pix[0]] + pm[4][pix[1]] + pm[5][pix[2]]) * 11)
+                           +  (pm[6][pix[0]] + pm[7][pix[1]] + pm[8][pix[2]]) ) >> 4;
+            expo_contrast = processing->contrast_curve[LIMIT16(cval)];
+        }
+
         /* white balance & exposure & highlights */
-        int32_t pix0 = (pm[0][pix[0]] + pm[1][pix[1]] + pm[2][pix[2]])*expo_highlights;
-        int32_t pix1 = (pm[3][pix[0]] + pm[4][pix[1]] + pm[5][pix[2]])*expo_highlights;
-        int32_t pix2 = (pm[6][pix[0]] + pm[7][pix[1]] + pm[8][pix[2]])*expo_highlights;
+        int32_t pix0 = (pm[0][pix[0]] + pm[1][pix[1]] + pm[2][pix[2]])*expo_highlights*expo_contrast;
+        int32_t pix1 = (pm[3][pix[0]] + pm[4][pix[1]] + pm[5][pix[2]])*expo_highlights*expo_contrast;
+        int32_t pix2 = (pm[6][pix[0]] + pm[7][pix[1]] + pm[8][pix[2]])*expo_highlights*expo_contrast;
         int32_t tmp1 = (pm[3][pix[0]] + pm[4][pix[1]] + pm[5][pix[2]]);
 
         pix[0] = LIMIT16(pix0);
@@ -402,21 +441,53 @@ void apply_processing_object( processingObject_t * processing,
         }
     }
 
-    /* Make it faster when unused */
-    if( processing->contrast <= -1.0 || processing->contrast >= 1.0 )
-    {
-        /* Simple Contrast Slider */
-        double factor = ( 259.0 * ( processing->contrast + 255.0 ) ) / ( 255.0 * ( 259.0 - processing->contrast ) );
-        for (uint16_t * pix = img; pix < img_end; pix += 3)
-        {
-            pix[0] = LIMIT16( (int32_t)( factor * ( (int32_t)pix[0] - 32768 ) + 32768 ) );
-            pix[1] = LIMIT16( (int32_t)( factor * ( (int32_t)pix[1] - 32768 ) + 32768 ) );
-            pix[2] = LIMIT16( (int32_t)( factor * ( (int32_t)pix[2] - 32768 ) + 32768 ) );
-        }
-    }
-
     if (processing->use_saturation)
     {
+        /* Now vibrance, before saturation, because we need untouched colors (in terms of saturation) */
+        for (uint16_t * pix = img; pix < img_end; pix += 3)
+        {
+            /* Pixel brightness = 4/16 R, 11/16 G, 1/16 blue; Try swapping the channels, it will look worse */
+            int32_t Y1 = ((pix[0] << 2) + (pix[1] * 11) + pix[2]) >> 4;
+            int32_t Y2 = Y1 - 65536;
+
+            /* Increase difference between channels and the saturation midpoint */
+            int32_t pix0 = processing->pre_calc_vibrance[pix[0] - Y2] + Y1;
+            int32_t pix1 = processing->pre_calc_vibrance[pix[1] - Y2] + Y1;
+            int32_t pix2 = processing->pre_calc_vibrance[pix[2] - Y2] + Y1;
+
+            /* Positive vibrance in dependency to raw saturation */
+            if( processing->vibrance > 1.0 )
+            {
+                /* Calculate saturation value of untouched pixel */
+                double sat = 0;
+                if( pix[0] > 0 && pix[1] > 0 && pix[2] > 0 )
+                {
+                    uint16_t biggest = 0;
+                    uint16_t smallest = 65535;
+                    for( int i = 0; i < 3; i++ )
+                    {
+                        if( pix[i] > biggest ) biggest = pix[i];
+                        if( pix[i] < smallest ) smallest = pix[i];
+                    }
+                    sat = ((double)biggest - (double)smallest) / (double)biggest;
+                }
+                /* Some cheat factor to make the effect more visible */
+                sat *= 2.0;
+                if( sat > 1.0 ) sat = 1.0;
+                /* The less saturated the pixel was, the more saturation it gets */
+                pix[0] = LIMIT16( pix[0] * sat + pix0 * ( 1.0 - sat ) );
+                pix[1] = LIMIT16( pix[1] * sat + pix1 * ( 1.0 - sat ) );
+                pix[2] = LIMIT16( pix[2] * sat + pix2 * ( 1.0 - sat ) );
+            }
+            /* Negative vibrance is the same as (un)saturation */
+            else
+            {
+                pix[0] = LIMIT16(pix0);
+                pix[1] = LIMIT16(pix1);
+                pix[2] = LIMIT16(pix2);
+            }
+        }
+
         /* Now saturation (looks way better after gamma) */
         for (uint16_t * pix = img; pix < img_end; pix += 3)
         {
@@ -625,6 +696,20 @@ void processingSetSaturation(processingObject_t * processing, double saturationF
     {
         double value = (i - 65536) * saturationFactor;
         processing->pre_calc_sat[i] = value;
+    }
+}
+
+
+/* Sets and precalculaes vibrance */
+void processingSetVibrance(processingObject_t *processing, double vibranceFactor)
+{
+    processing->vibrance = vibranceFactor;
+
+    /* Precaluclate for the algorithm */
+    for (int i = 0; i < 131072; ++i)
+    {
+        double value = (i - 65536) * vibranceFactor;
+        processing->pre_calc_vibrance[i] = value;
     }
 }
 

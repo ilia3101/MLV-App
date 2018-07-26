@@ -82,7 +82,6 @@ SOURCES += \
     ../../src/processing/denoiser/libdenoising.cpp \
     ../../src/processing/denoiser/mt19937ar.c \
     ../../src/debayer/igv_demosaic.c \
-    ../../src/processing/denoiser/easy_denoise.c \
     ../../src/mlv/llrawproc/dualiso.c \
     ../../src/dng/dng.c \
     InfoDialog.cpp \
@@ -154,7 +153,6 @@ HEADERS += \
     ../../src/processing/cube_lut.h \
     ../../src/processing/denoiser/libdenoising.h \
     ../../src/processing/denoiser/mt19937ar.h \
-    ../../src/processing/denoiser/easy_denoise.h \
     ../../src/processing/bmd_film.h \
     InfoDialog.h \
     MyApplication.h \
