@@ -20,6 +20,7 @@ public:
     void setContrast( int value )   {m_contrast = value;}
     void setTemperature( int value ){m_temperature = value;}
     void setTint( int value )       {m_tint = value;}
+    void setVibrance( int value )   {m_vibrance = value;}
     void setSaturation( int value ) {m_saturation = value;}
     void setDr( int value )         {m_dr = value;}
     void setDs( int value )         {m_ds = value;}
@@ -72,6 +73,7 @@ public:
     int contrast( void )   {return m_contrast;}
     int temperature( void ){return m_temperature;}
     int tint( void )       {return m_tint;}
+    int vibrance( void )   {return m_vibrance;}
     int saturation( void ) {return m_saturation;}
     int dr( void )         {return m_dr;}
     int ds( void )         {return m_ds;}
@@ -125,6 +127,7 @@ private:
     int m_contrast;
     int m_temperature;
     int m_tint;
+    int m_vibrance;
     int m_saturation;
     int m_dr;
     int m_ds;
