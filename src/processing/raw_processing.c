@@ -472,7 +472,7 @@ void apply_processing_object( processingObject_t * processing,
                     sat = ((double)biggest - (double)smallest) / (double)biggest;
                 }
                 /* Some cheat factor to make the effect more visible */
-                sat = 2.0 * sat / ( sat + 1 );
+                sat = 2.0 * sat / ( sat * sat + 1 );
                 if( sat > 1.0 ) sat = 1.0;
                 /* The less saturated the pixel was, the more saturation it gets */
                 pix[0] = LIMIT16( pix[0] * sat + pix0 * ( 1.0 - sat ) );
