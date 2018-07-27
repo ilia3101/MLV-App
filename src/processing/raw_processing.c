@@ -226,16 +226,16 @@ void processing_update_contrast_curve(processingObject_t * processing)
     }
 }
 
-void processingSetClearance(processingObject_t * processing, double value)
+void processingSetClarity(processingObject_t * processing, double value)
 {
-    processing->clearance = value;
-    processing_update_clearance_curve(processing);
+    processing->clarity = value;
+    processing_update_clarity_curve(processing);
 }
 
-void processing_update_clearance_curve(processingObject_t * processing)
+void processing_update_clarity_curve(processingObject_t * processing)
 {
-    double shadows_expo = -processing->clearance;
-    double highlight_expo = pow(2.0, processing->clearance*(-1.5));
+    double shadows_expo = -processing->clarity;
+    double highlight_expo = pow(2.0, processing->clarity*(-1.5));
     for (int i = 0; i < 65536; ++i)
     {
         double expo_factor;
@@ -250,11 +250,11 @@ void processing_update_clearance_curve(processingObject_t * processing)
 
         expo_factor = value/newvalue;
 
-        processing->clearance_sh_curve[i] = expo_factor;
+        processing->clarity_sh_curve[i] = expo_factor;
     }
 
-    shadows_expo = processing->clearance;
-    highlight_expo = pow(2.0, -processing->clearance*(-1.5));
+    shadows_expo = processing->clarity;
+    highlight_expo = pow(2.0, -processing->clarity*(-1.5));
     for (int i = 0; i < 65536; ++i)
     {
         double expo_factor;
@@ -269,7 +269,7 @@ void processing_update_clearance_curve(processingObject_t * processing)
 
         expo_factor = value/newvalue;
 
-        processing->clearance_bl_curve[i] = expo_factor;
+        processing->clarity_bl_curve[i] = expo_factor;
     }
 }
 
@@ -301,7 +301,7 @@ void applyProcessingObject( processingObject_t * processing,
     /* If shadows/highlights off don't do anything. Maybe this blurring bit could b multithreaded I need to think */
     if( ( processing->shadows_highlights.shadows <= -0.01 || processing->shadows_highlights.shadows >= 0.01 )
      || ( processing->shadows_highlights.highlights <= -0.01 || processing->shadows_highlights.highlights >= 0.01 )
-     || ( processing->clearance <= -0.01 || processing->clearance >= 0.01 ) )
+     || ( processing->clarity <= -0.01 || processing->clarity >= 0.01 ) )
     {
 
         /* Blur diameter depends on image diagonal */
@@ -418,20 +418,20 @@ void apply_processing_object( processingObject_t * processing,
     for (uint16_t * pix = img, * bpix = blurImage; pix < img_end; pix += 3, bpix += 3)
     {
         double expo_correction = 1.0;
-        /* shadows & highlights, clearance part 1 */
+        /* shadows & highlights, clarity part 1 */
         if( ( processing->shadows_highlights.shadows <= -0.01 || processing->shadows_highlights.shadows >= 0.01 )
          || ( processing->shadows_highlights.highlights <= -0.01 || processing->shadows_highlights.highlights >= 0.01 )
-         || ( processing->clearance <= -0.01 || processing->clearance >= 0.01 ) )
+         || ( processing->clarity <= -0.01 || processing->clarity >= 0.01 ) )
         {
             /* Blur pixLZ */
             int32_t bval = ( ((pm[0][bpix[0]] + pm[1][bpix[1]] + pm[2][bpix[2]]) << 2)
                            + ((pm[3][bpix[0]] + pm[4][bpix[1]] + pm[5][bpix[2]]) * 11)
                            +  (pm[6][bpix[0]] + pm[7][bpix[1]] + pm[8][bpix[2]]) ) >> 4;
 
-            if( processing->clearance <= -0.01 || processing->clearance >= 0.01 )
+            if( processing->clarity <= -0.01 || processing->clarity >= 0.01 )
             {
-                /* clearance part 1 */
-                double factor = processing->clearance_bl_curve[LIMIT16(bval)];
+                /* clarity part 1 */
+                double factor = processing->clarity_bl_curve[LIMIT16(bval)];
                 expo_correction *= factor * factor;
             }
             if( ( processing->shadows_highlights.shadows <= -0.01 || processing->shadows_highlights.shadows >= 0.01 )
@@ -444,16 +444,16 @@ void apply_processing_object( processingObject_t * processing,
 
         /* Contrast on untouched pixel */
         if( ( processing->contrast <= -0.01 || processing->contrast >= 0.01 )
-         || ( processing->clearance <= -0.01 || processing->clearance >= 0.01 ) )
+         || ( processing->clarity <= -0.01 || processing->clarity >= 0.01 ) )
         {
             int32_t cval = ( ((pm[0][pix[0]] + pm[1][pix[1]] + pm[2][pix[2]]) << 2)
                            + ((pm[3][pix[0]] + pm[4][pix[1]] + pm[5][pix[2]]) * 11)
                            +  (pm[6][pix[0]] + pm[7][pix[1]] + pm[8][pix[2]]) ) >> 4;
 
-            if( processing->clearance <= -0.01 || processing->clearance >= 0.01 )
+            if( processing->clarity <= -0.01 || processing->clarity >= 0.01 )
             {
-                /* clearance part 2 */
-                double factor = processing->clearance_sh_curve[LIMIT16(cval)];
+                /* clarity part 2 */
+                double factor = processing->clarity_sh_curve[LIMIT16(cval)];
                 expo_correction *= factor * factor;
             }
             if( processing->contrast <= -0.01 || processing->contrast >= 0.01 )

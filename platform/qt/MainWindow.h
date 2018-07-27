@@ -67,7 +67,7 @@ private slots:
     void on_horizontalSliderContrast_valueChanged(int position);
     void on_horizontalSliderTemperature_valueChanged(int position);
     void on_horizontalSliderTint_valueChanged(int position);
-    void on_horizontalSliderClearance_valueChanged(int position);
+    void on_horizontalSliderClarity_valueChanged(int position);
     void on_horizontalSliderVibrance_valueChanged(int position);
     void on_horizontalSliderSaturation_valueChanged(int position);
     void on_horizontalSliderDS_valueChanged(int position);
@@ -87,7 +87,7 @@ private slots:
     void on_horizontalSliderContrast_doubleClicked();
     void on_horizontalSliderTemperature_doubleClicked();
     void on_horizontalSliderTint_doubleClicked();
-    void on_horizontalSliderClearance_doubleClicked();
+    void on_horizontalSliderClarity_doubleClicked();
     void on_horizontalSliderVibrance_doubleClicked();
     void on_horizontalSliderSaturation_doubleClicked();
     void on_horizontalSliderDS_doubleClicked();
@@ -151,7 +151,7 @@ private slots:
     void on_label_ContrastVal_doubleClicked( void );
     void on_label_TemperatureVal_doubleClicked( void );
     void on_label_TintVal_doubleClicked( void );
-    void on_label_ClearanceVal_doubleClicked( void );
+    void on_label_ClarityVal_doubleClicked( void );
     void on_label_VibranceVal_doubleClicked( void );
     void on_label_SaturationVal_doubleClicked( void );
     void on_label_DrVal_doubleClicked( void );

@@ -2256,9 +2256,9 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
             receipt->setTint( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "clearance" )
+        else if( Rxml->isStartElement() && Rxml->name() == "clarity" )
         {
-            receipt->setClearance( Rxml->readElementText().toInt() );
+            receipt->setClarity( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
         else if( Rxml->isStartElement() && Rxml->name() == "vibrance" )
@@ -2502,7 +2502,7 @@ void MainWindow::writeXmlElementsToFile(QXmlStreamWriter *xmlWriter, ReceiptSett
     xmlWriter->writeTextElement( "contrast",                QString( "%1" ).arg( receipt->contrast() ) );
     xmlWriter->writeTextElement( "temperature",             QString( "%1" ).arg( receipt->temperature() ) );
     xmlWriter->writeTextElement( "tint",                    QString( "%1" ).arg( receipt->tint() ) );
-    xmlWriter->writeTextElement( "clearance",               QString( "%1" ).arg( receipt->clearance() ) );
+    xmlWriter->writeTextElement( "clarity",               QString( "%1" ).arg( receipt->clarity() ) );
     xmlWriter->writeTextElement( "vibrance",                QString( "%1" ).arg( receipt->vibrance() ) );
     xmlWriter->writeTextElement( "saturation",              QString( "%1" ).arg( receipt->saturation() ) );
     xmlWriter->writeTextElement( "ds",                      QString( "%1" ).arg( receipt->ds() ) );
@@ -2659,7 +2659,7 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     }
     ui->horizontalSliderTemperature->setValue( receipt->temperature() );
     ui->horizontalSliderTint->setValue( receipt->tint() );
-    ui->horizontalSliderClearance->setValue( receipt->clearance() );
+    ui->horizontalSliderClarity->setValue( receipt->clarity() );
     ui->horizontalSliderVibrance->setValue( receipt->vibrance() );
     ui->horizontalSliderSaturation->setValue( receipt->saturation() );
 
@@ -2788,7 +2788,7 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     receipt->setContrast( ui->horizontalSliderContrast->value() );
     receipt->setTemperature( ui->horizontalSliderTemperature->value() );
     receipt->setTint( ui->horizontalSliderTint->value() );
-    receipt->setClearance( ui->horizontalSliderClearance->value() );
+    receipt->setClarity( ui->horizontalSliderClarity->value() );
     receipt->setVibrance( ui->horizontalSliderVibrance->value() );
     receipt->setSaturation( ui->horizontalSliderSaturation->value() );
     receipt->setDs( ui->horizontalSliderDS->value() );
@@ -2847,7 +2847,7 @@ void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings 
     receiptTarget->setContrast( receiptSource->contrast() );
     receiptTarget->setTemperature( receiptSource->temperature() );
     receiptTarget->setTint( receiptSource->tint() );
-    receiptTarget->setClearance( receiptSource->clearance() );
+    receiptTarget->setClarity( receiptSource->clarity() );
     receiptTarget->setVibrance( receiptSource->vibrance() );
     receiptTarget->setSaturation( receiptSource->saturation() );
     receiptTarget->setDs( receiptSource->ds() );
@@ -2954,7 +2954,7 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     receipt->setContrast( m_pSessionReceipts.at( row )->contrast() );
     receipt->setTemperature( m_pSessionReceipts.at( row )->temperature() );
     receipt->setTint( m_pSessionReceipts.at( row )->tint() );
-    receipt->setClearance( m_pSessionReceipts.at( row )->clearance() );
+    receipt->setClarity( m_pSessionReceipts.at( row )->clarity() );
     receipt->setVibrance( m_pSessionReceipts.at( row )->vibrance() );
     receipt->setSaturation( m_pSessionReceipts.at( row )->saturation() );
     receipt->setDr( m_pSessionReceipts.at( row )->dr() );
@@ -3632,10 +3632,10 @@ void MainWindow::on_horizontalSliderTint_valueChanged(int position)
     m_frameChanged = true;
 }
 
-void MainWindow::on_horizontalSliderClearance_valueChanged(int position)
+void MainWindow::on_horizontalSliderClarity_valueChanged(int position)
 {
-    processingSetClearance( m_pProcessingObject, position / 100.0 );
-    ui->label_ClearanceVal->setText( QString("%1").arg( position ) );
+    processingSetClarity( m_pProcessingObject, position / 100.0 );
+    ui->label_ClarityVal->setText( QString("%1").arg( position ) );
     m_frameChanged = true;
 }
 
@@ -3817,10 +3817,10 @@ void MainWindow::on_horizontalSliderTint_doubleClicked()
     delete sliders;
 }
 
-void MainWindow::on_horizontalSliderClearance_doubleClicked()
+void MainWindow::on_horizontalSliderClarity_doubleClicked()
 {
     ReceiptSettings *sliders = new ReceiptSettings(); //default
-    ui->horizontalSliderClearance->setValue( sliders->clearance() );
+    ui->horizontalSliderClarity->setValue( sliders->clarity() );
     delete sliders;
 }
 
@@ -4796,13 +4796,13 @@ void MainWindow::on_label_TintVal_doubleClicked()
     ui->horizontalSliderTint->setValue( editSlider.getValue() );
 }
 
-//DoubleClick on Clearance Label
-void MainWindow::on_label_ClearanceVal_doubleClicked()
+//DoubleClick on Clarity Label
+void MainWindow::on_label_ClarityVal_doubleClicked()
 {
     EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderClearance, ui->label_ClearanceVal, 1.0, 0, 1.0 );
+    editSlider.autoSetup( ui->horizontalSliderClarity, ui->label_ClarityVal, 1.0, 0, 1.0 );
     editSlider.exec();
-    ui->horizontalSliderClearance->setValue( editSlider.getValue() );
+    ui->horizontalSliderClarity->setValue( editSlider.getValue() );
 }
 
 //DoubleClick on Vibrance Label

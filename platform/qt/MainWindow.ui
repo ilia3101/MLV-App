@@ -2712,14 +2712,14 @@ QGroupBox::indicator:checked {
                     <number>0</number>
                    </property>
                    <item row="0" column="0">
-                    <widget class="QLabel" name="label_clearance">
+                    <widget class="QLabel" name="label_clarity">
                      <property name="font">
                       <font>
                        <pointsize>10</pointsize>
                       </font>
                      </property>
                      <property name="text">
-                      <string>Clearance</string>
+                      <string>Clarity</string>
                      </property>
                     </widget>
                    </item>
@@ -2740,7 +2740,7 @@ QGroupBox::indicator:checked {
                     </spacer>
                    </item>
                    <item row="0" column="2">
-                    <widget class="DoubleClickLabel" name="label_ClearanceVal">
+                    <widget class="DoubleClickLabel" name="label_ClarityVal">
                      <property name="font">
                       <font>
                        <pointsize>10</pointsize>
@@ -2758,7 +2758,7 @@ QGroupBox::indicator:checked {
                     </widget>
                    </item>
                    <item row="1" column="0" colspan="3">
-                    <widget class="NoScrollSlider" name="horizontalSliderClearance">
+                    <widget class="NoScrollSlider" name="horizontalSliderClarity">
                      <property name="sizePolicy">
                       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                        <horstretch>0</horstretch>

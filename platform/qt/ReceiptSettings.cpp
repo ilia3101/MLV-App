@@ -16,7 +16,7 @@ ReceiptSettings::ReceiptSettings()
     m_contrast = 0;
     m_temperature = -1;
     m_tint = 0;
-    m_clearance = 0;
+    m_clarity = 0;
     m_vibrance = 0;
     m_saturation = 0;
     m_ds = 22;
