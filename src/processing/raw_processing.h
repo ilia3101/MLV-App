@@ -134,6 +134,12 @@ void processingSetSimpleContrast(processingObject_t * processing, double value);
 /* Calculate contrast exposure LUT */
 void processing_update_contrast_curve(processingObject_t * processing);
 
+/* Set clearance */
+void processingSetClearance(processingObject_t * processing, double value);
+#define processingGetClearance(processing) (processing)->clearance
+/* Calculate contrast exposure LUT */
+void processing_update_clearance_curve(processingObject_t * processing);
+
 /* Set white balance by kelvin and/or tint value; Kelvin range: 2500-10000, tint -10 to +10 */
 void processingSetWhiteBalance(processingObject_t * processing, double WBKelvin, double WBTint);
 void processingSetWhiteBalanceKelvin(processingObject_t * processing, double WBKelvin);

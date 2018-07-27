@@ -95,6 +95,11 @@ typedef struct {
     double     contrast; /* Slider from -100 to 100 */
     double     contrast_curve[65536]; /* Contrast precalculated exposure factors */
 
+    /* Clearance */
+    double     clearance;
+    double     clearance_sh_curve[65536]; /* Curve for sharp positive contrast */
+    double     clearance_bl_curve[65536]; /* Curve for blurred negative contrast */
+
     /* The two part 'contrast' or S-curve */
     double     light_contrast_factor; /* 0 - 5 */
     double     light_contrast_range; /* 0 - 1, or how much of the value range will be affected */
