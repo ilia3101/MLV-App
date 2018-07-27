@@ -371,28 +371,32 @@ void apply_processing_object( processingObject_t * processing,
     /* white balance & exposure & highlights & gamma & highlight reconstruction */
     for (uint16_t * pix = img, * bpix = blurImage; pix < img_end; pix += 3, bpix += 3)
     {
-        /* Blur pixLZ */
-        int32_t bval = ( ((pm[0][bpix[0]] + pm[1][bpix[1]] + pm[2][bpix[2]]) << 2)
-                       + ((pm[3][bpix[0]] + pm[4][bpix[1]] + pm[5][bpix[2]]) * 11)
-                       +  (pm[6][bpix[0]] + pm[7][bpix[1]] + pm[8][bpix[2]]) ) >> 4;
+        double expo_correction = 1.0;
+        if( ( processing->shadows_highlights.shadows <= -0.01 || processing->shadows_highlights.shadows >= 0.01 )
+         || ( processing->shadows_highlights.highlights <= -0.01 || processing->shadows_highlights.highlights >= 0.01 ) )
+        {
+            /* Blur pixLZ */
+            int32_t bval = ( ((pm[0][bpix[0]] + pm[1][bpix[1]] + pm[2][bpix[2]]) << 2)
+                           + ((pm[3][bpix[0]] + pm[4][bpix[1]] + pm[5][bpix[2]]) * 11)
+                           +  (pm[6][bpix[0]] + pm[7][bpix[1]] + pm[8][bpix[2]]) ) >> 4;
 
-        /* highlight exposure factor */
-        double expo_highlights = processing->shadows_highlights.shadow_highlight_curve[LIMIT16(bval)];
+            /* highlight exposure factor */
+            expo_correction *= processing->shadows_highlights.shadow_highlight_curve[LIMIT16(bval)];
+        }
 
         /* Contrast on untouched pixel */
-        double expo_contrast = 1.0;
         if( processing->contrast <= -0.01 || processing->contrast >= 0.01 )
         {
             int32_t cval = ( ((pm[0][pix[0]] + pm[1][pix[1]] + pm[2][pix[2]]) << 2)
                            + ((pm[3][pix[0]] + pm[4][pix[1]] + pm[5][pix[2]]) * 11)
                            +  (pm[6][pix[0]] + pm[7][pix[1]] + pm[8][pix[2]]) ) >> 4;
-            expo_contrast = processing->contrast_curve[LIMIT16(cval)];
+            expo_correction *= processing->contrast_curve[LIMIT16(cval)];
         }
 
         /* white balance & exposure & highlights */
-        int32_t pix0 = (pm[0][pix[0]] + pm[1][pix[1]] + pm[2][pix[2]])*expo_highlights*expo_contrast;
-        int32_t pix1 = (pm[3][pix[0]] + pm[4][pix[1]] + pm[5][pix[2]])*expo_highlights*expo_contrast;
-        int32_t pix2 = (pm[6][pix[0]] + pm[7][pix[1]] + pm[8][pix[2]])*expo_highlights*expo_contrast;
+        int32_t pix0 = (pm[0][pix[0]] + pm[1][pix[1]] + pm[2][pix[2]])*expo_correction;
+        int32_t pix1 = (pm[3][pix[0]] + pm[4][pix[1]] + pm[5][pix[2]])*expo_correction;
+        int32_t pix2 = (pm[6][pix[0]] + pm[7][pix[1]] + pm[8][pix[2]])*expo_correction;
         int32_t tmp1 = (pm[3][pix[0]] + pm[4][pix[1]] + pm[5][pix[2]]);
 
         pix[0] = LIMIT16(pix0);
@@ -443,66 +447,72 @@ void apply_processing_object( processingObject_t * processing,
 
     if (processing->use_saturation)
     {
-        /* Now vibrance, before saturation, because we need untouched colors (in terms of saturation) */
-        for (uint16_t * pix = img; pix < img_end; pix += 3)
+        if( processing->vibrance > 1.01 || processing->vibrance < 0.99 )
         {
-            /* Pixel brightness = 4/16 R, 11/16 G, 1/16 blue; Try swapping the channels, it will look worse */
-            int32_t Y1 = ((pix[0] << 2) + (pix[1] * 11) + pix[2]) >> 4;
-            int32_t Y2 = Y1 - 65536;
-
-            /* Increase difference between channels and the saturation midpoint */
-            int32_t pix0 = processing->pre_calc_vibrance[pix[0] - Y2] + Y1;
-            int32_t pix1 = processing->pre_calc_vibrance[pix[1] - Y2] + Y1;
-            int32_t pix2 = processing->pre_calc_vibrance[pix[2] - Y2] + Y1;
-
-            /* Positive vibrance in dependency to raw saturation */
-            if( processing->vibrance > 1.0 )
+            /* Now vibrance, before saturation, because we need untouched colors (in terms of saturation) */
+            for (uint16_t * pix = img; pix < img_end; pix += 3)
             {
-                /* Calculate saturation value of untouched pixel */
-                double sat = 0;
-                if( pix[0] > 0 && pix[1] > 0 && pix[2] > 0 )
+                /* Pixel brightness = 4/16 R, 11/16 G, 1/16 blue; Try swapping the channels, it will look worse */
+                int32_t Y1 = ((pix[0] << 2) + (pix[1] * 11) + pix[2]) >> 4;
+                int32_t Y2 = Y1 - 65536;
+
+                /* Increase difference between channels and the saturation midpoint */
+                int32_t pix0 = processing->pre_calc_vibrance[pix[0] - Y2] + Y1;
+                int32_t pix1 = processing->pre_calc_vibrance[pix[1] - Y2] + Y1;
+                int32_t pix2 = processing->pre_calc_vibrance[pix[2] - Y2] + Y1;
+
+                /* Positive vibrance in dependency to raw saturation */
+                if( processing->vibrance > 1.0 )
                 {
-                    uint16_t biggest = 0;
-                    uint16_t smallest = 65535;
-                    for( int i = 0; i < 3; i++ )
+                    /* Calculate saturation value of untouched pixel */
+                    double sat = 0;
+                    if( pix[0] > 0 && pix[1] > 0 && pix[2] > 0 )
                     {
-                        if( pix[i] > biggest ) biggest = pix[i];
-                        if( pix[i] < smallest ) smallest = pix[i];
+                        uint16_t biggest = 0;
+                        uint16_t smallest = 65535;
+                        for( int i = 0; i < 3; i++ )
+                        {
+                            if( pix[i] > biggest ) biggest = pix[i];
+                            if( pix[i] < smallest ) smallest = pix[i];
+                        }
+                        sat = ((double)biggest - (double)smallest) / (double)biggest;
                     }
-                    sat = ((double)biggest - (double)smallest) / (double)biggest;
+                    /* Some cheat factor to make the effect more visible */
+                    sat = 2.0 * sat / ( sat * sat + 1 );
+                    if( sat > 1.0 ) sat = 1.0;
+                    /* The less saturated the pixel was, the more saturation it gets */
+                    pix[0] = LIMIT16( pix[0] * sat + pix0 * ( 1.0 - sat ) );
+                    pix[1] = LIMIT16( pix[1] * sat + pix1 * ( 1.0 - sat ) );
+                    pix[2] = LIMIT16( pix[2] * sat + pix2 * ( 1.0 - sat ) );
                 }
-                /* Some cheat factor to make the effect more visible */
-                sat = 2.0 * sat / ( sat * sat + 1 );
-                if( sat > 1.0 ) sat = 1.0;
-                /* The less saturated the pixel was, the more saturation it gets */
-                pix[0] = LIMIT16( pix[0] * sat + pix0 * ( 1.0 - sat ) );
-                pix[1] = LIMIT16( pix[1] * sat + pix1 * ( 1.0 - sat ) );
-                pix[2] = LIMIT16( pix[2] * sat + pix2 * ( 1.0 - sat ) );
+                /* Negative vibrance is the same as (un)saturation */
+                else
+                {
+                    pix[0] = LIMIT16(pix0);
+                    pix[1] = LIMIT16(pix1);
+                    pix[2] = LIMIT16(pix2);
+                }
             }
-            /* Negative vibrance is the same as (un)saturation */
-            else
+        }
+
+        if( processing->saturation > 1.01 || processing->saturation < 0.99 )
+        {
+            /* Now saturation (looks way better after gamma) */
+            for (uint16_t * pix = img; pix < img_end; pix += 3)
             {
+                /* Pixel brightness = 4/16 R, 11/16 G, 1/16 blue; Try swapping the channels, it will look worse */
+                int32_t Y1 = ((pix[0] << 2) + (pix[1] * 11) + pix[2]) >> 4;
+                int32_t Y2 = Y1 - 65536;
+
+                /* Increase difference between channels and the saturation midpoint */
+                int32_t pix0 = processing->pre_calc_sat[pix[0] - Y2] + Y1;
+                int32_t pix1 = processing->pre_calc_sat[pix[1] - Y2] + Y1;
+                int32_t pix2 = processing->pre_calc_sat[pix[2] - Y2] + Y1;
+
                 pix[0] = LIMIT16(pix0);
                 pix[1] = LIMIT16(pix1);
                 pix[2] = LIMIT16(pix2);
             }
-        }
-
-        /* Now saturation (looks way better after gamma) */
-        for (uint16_t * pix = img; pix < img_end; pix += 3)
-        {
-            /* Pixel brightness = 4/16 R, 11/16 G, 1/16 blue; Try swapping the channels, it will look worse */
-            int32_t Y1 = ((pix[0] << 2) + (pix[1] * 11) + pix[2]) >> 4;
-            int32_t Y2 = Y1 - 65536;
-
-            /* Increase difference between channels and the saturation midpoint */
-            int32_t pix0 = processing->pre_calc_sat[pix[0] - Y2] + Y1;
-            int32_t pix1 = processing->pre_calc_sat[pix[1] - Y2] + Y1;
-            int32_t pix2 = processing->pre_calc_sat[pix[2] - Y2] + Y1;
-
-            pix[0] = LIMIT16(pix0);
-            pix[1] = LIMIT16(pix1);
-            pix[2] = LIMIT16(pix2);
         }
     }
 
