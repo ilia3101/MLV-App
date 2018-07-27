@@ -3634,7 +3634,7 @@ void MainWindow::on_horizontalSliderTint_valueChanged(int position)
 
 void MainWindow::on_horizontalSliderClearance_valueChanged(int position)
 {
-    processingSetClearance( m_pProcessingObject, position * 1.3 / 100.0 );
+    processingSetClearance( m_pProcessingObject, position / 100.0 );
     ui->label_ClearanceVal->setText( QString("%1").arg( position ) );
     m_frameChanged = true;
 }

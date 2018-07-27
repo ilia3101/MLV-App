@@ -431,7 +431,8 @@ void apply_processing_object( processingObject_t * processing,
             if( processing->clearance <= -0.01 || processing->clearance >= 0.01 )
             {
                 /* clearance part 1 */
-                expo_correction *= processing->clearance_bl_curve[LIMIT16(bval)];
+                double factor = processing->clearance_bl_curve[LIMIT16(bval)];
+                expo_correction *= factor * factor;
             }
             if( ( processing->shadows_highlights.shadows <= -0.01 || processing->shadows_highlights.shadows >= 0.01 )
              || ( processing->shadows_highlights.highlights <= -0.01 || processing->shadows_highlights.highlights >= 0.01 ) )
@@ -452,7 +453,8 @@ void apply_processing_object( processingObject_t * processing,
             if( processing->clearance <= -0.01 || processing->clearance >= 0.01 )
             {
                 /* clearance part 2 */
-                expo_correction *= processing->clearance_sh_curve[LIMIT16(cval)];
+                double factor = processing->clearance_sh_curve[LIMIT16(cval)];
+                expo_correction *= factor * factor;
             }
             if( processing->contrast <= -0.01 || processing->contrast >= 0.01 )
             {
