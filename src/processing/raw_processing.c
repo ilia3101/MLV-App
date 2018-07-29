@@ -250,26 +250,7 @@ void processing_update_clarity_curve(processingObject_t * processing)
 
         expo_factor = value/newvalue;
 
-        processing->clarity_sh_curve[i] = expo_factor;
-    }
-
-    shadows_expo = processing->clarity;
-    highlight_expo = pow(2.0, -processing->clarity*(-1.5));
-    for (int i = 0; i < 65536; ++i)
-    {
-        double expo_factor;
-        double value = pow(((double)i)/65536.0, 0.75);
-
-        double newvalue = add_contrast(value, 0.7, shadows_expo*0.5, 0.0, 0.0);
-
-        if (newvalue > 0.2) {
-            double fac = (newvalue - 0.2)*(1/0.8);
-            newvalue = newvalue*(1.0-fac) + newvalue*highlight_expo*fac;
-        }
-
-        expo_factor = value/newvalue;
-
-        processing->clarity_bl_curve[i] = expo_factor;
+        processing->clarity_curve[i] = expo_factor;
     }
 }
 
@@ -431,8 +412,8 @@ void apply_processing_object( processingObject_t * processing,
             if( processing->clarity <= -0.01 || processing->clarity >= 0.01 )
             {
                 /* clarity part 1 */
-                double factor = processing->clarity_bl_curve[LIMIT16(bval)];
-                expo_correction *= factor * factor;
+                double factor = processing->clarity_curve[LIMIT16(bval)];
+                expo_correction /= (factor * factor);
             }
             if( ( processing->shadows_highlights.shadows <= -0.01 || processing->shadows_highlights.shadows >= 0.01 )
              || ( processing->shadows_highlights.highlights <= -0.01 || processing->shadows_highlights.highlights >= 0.01 ) )
@@ -453,7 +434,7 @@ void apply_processing_object( processingObject_t * processing,
             if( processing->clarity <= -0.01 || processing->clarity >= 0.01 )
             {
                 /* clarity part 2 */
-                double factor = processing->clarity_sh_curve[LIMIT16(cval)];
+                double factor = processing->clarity_curve[LIMIT16(cval)];
                 expo_correction *= factor * factor;
             }
             if( processing->contrast <= -0.01 || processing->contrast >= 0.01 )

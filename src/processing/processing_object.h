@@ -97,8 +97,7 @@ typedef struct {
 
     /* Clarity */
     double     clarity;
-    double     clarity_sh_curve[65536]; /* Curve for sharp positive contrast */
-    double     clarity_bl_curve[65536]; /* Curve for blurred negative contrast */
+    double     clarity_curve[65536]; /* Curve for clarity */
 
     /* The two part 'contrast' or S-curve */
     double     light_contrast_factor; /* 0 - 5 */
