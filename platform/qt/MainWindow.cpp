@@ -2267,7 +2267,7 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
         }
         else if( Rxml->isStartElement() && Rxml->name() == "vibrance" )
         {
-            receipt->setVibrance( ( Rxml->readElementText().toInt() * 2.0 ) - 100.0 );
+            receipt->setVibrance( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
         else if( Rxml->isStartElement() && Rxml->name() == "saturation" )
@@ -2506,7 +2506,7 @@ void MainWindow::writeXmlElementsToFile(QXmlStreamWriter *xmlWriter, ReceiptSett
     xmlWriter->writeTextElement( "contrast",                QString( "%1" ).arg( receipt->contrast() ) );
     xmlWriter->writeTextElement( "temperature",             QString( "%1" ).arg( receipt->temperature() ) );
     xmlWriter->writeTextElement( "tint",                    QString( "%1" ).arg( receipt->tint() ) );
-    xmlWriter->writeTextElement( "clarity",               QString( "%1" ).arg( receipt->clarity() ) );
+    xmlWriter->writeTextElement( "clarity",                 QString( "%1" ).arg( receipt->clarity() ) );
     xmlWriter->writeTextElement( "vibrance",                QString( "%1" ).arg( receipt->vibrance() ) );
     xmlWriter->writeTextElement( "saturation",              QString( "%1" ).arg( receipt->saturation() ) );
     xmlWriter->writeTextElement( "ds",                      QString( "%1" ).arg( receipt->ds() ) );
