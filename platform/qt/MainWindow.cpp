@@ -820,6 +820,10 @@ void MainWindow::initGui( void )
     ui->actionFullscreen->setVisible( false );
     //Disable caching by default to avoid crashes
     //ui->actionCaching->setVisible( false );
+    //Hide deflicker target - no one knows what it does...
+    ui->spinBoxDeflickerTarget->setVisible( false );
+    ui->DeflickerTargetLabel->setVisible( false );
+    ui->line_11->setVisible( false );
     //Disable unused (for now) actions
     ui->actionPasteReceipt->setEnabled( false );
     //Disable export until file opened!
