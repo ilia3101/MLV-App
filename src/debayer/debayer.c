@@ -264,6 +264,9 @@ void debayerBasic(uint16_t * __restrict debayerto, float * __restrict bayerdata,
 /* Simple debayer single thread: one RGB pixel is 2x2 RAW pixels */
 void debayerSimpleThread( easydebayerinfo_t * data )
 {
+    /* single lines can't be handled */
+    if( data->height % 2 ) data->height--;
+
     int start = data->width * data->offsetY;
     int end = data->width * data->height;
     int pixelSkipR = 3 * data->width;
