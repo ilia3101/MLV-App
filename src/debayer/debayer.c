@@ -55,6 +55,15 @@ void debayerAmaze(uint16_t * __restrict debayerto, float * __restrict bayerdata,
         int chunk_height = height / threads;
         chunk_height -= chunk_height % 2;
 
+        /* To small chunk heights bring AMaZE module to crash */
+        while( chunk_height <= 32 )
+        {
+            if( threads <= 1 ) break;
+            threads--;
+            chunk_height = height / threads;
+            chunk_height -= chunk_height % 2;
+        }
+
         /* Calculate chunks of image for each thread */
         for (int thread = 0; thread < threads; ++thread)
         {
