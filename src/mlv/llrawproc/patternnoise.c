@@ -48,6 +48,7 @@ _a > _b ? _a : _b; })
 /* out = a - b */
 static void subtract(int16_t * a, int16_t * b, int16_t * out, int w, int h)
 {
+    #pragma omp parallel for
     for (int i = 0; i < w*h; i++)
     {
         out[i] = a[i] - b[i];
@@ -57,6 +58,7 @@ static void subtract(int16_t * a, int16_t * b, int16_t * out, int w, int h)
 /* out = (a + b) / 2 */
 static void average(int16_t * a, int16_t * b, int16_t * out, int w, int h)
 {
+    #pragma omp parallel for
     for (int i = 0; i < w*h; i++)
     {
         out[i] = ((int)a[i] + (int)b[i]) / 2;
@@ -66,6 +68,7 @@ static void average(int16_t * a, int16_t * b, int16_t * out, int w, int h)
 /* w and h are the size of input buffer; the output buffer will have the dimensions swapped */
 static void transpose(int16_t * in, int16_t * out, int w, int h)
 {
+    #pragma omp parallel for
     for (int y = 0; y < h; y++)
     {
         for (int x = 0; x < w; x++)
@@ -77,6 +80,7 @@ static void transpose(int16_t * in, int16_t * out, int w, int h)
 
 static void horizontal_gradient(int16_t * in, int16_t * out, int w, int h)
 {
+    #pragma omp parallel for
     for (int i = 2; i < w*h-2; i++)
     {
         out[i] = in[i-2] - in[i+2];
@@ -112,7 +116,7 @@ static void horizontal_edge_aware_blur_rggb(
     average(in_g1, in_g2, avg_g, w, h);
     subtract(in_r, avg_g, dif_rg, w, h);
     subtract(in_b, avg_g, dif_bg, w, h);
-    
+
     for (int y = 0; y < h; y++)
     {
         int prev_xl = -1;
@@ -200,7 +204,8 @@ static void fix_column_noise(int16_t * original, int16_t * denoised, int w, int 
     int16_t * hgrad = malloc(w * h * sizeof(mask[0]));
     
     horizontal_gradient(original, hgrad, w, h);
-    
+
+    #pragma omp parallel for
     for (int y = 0; y < h; y++)
     {
         for (int x = 0; x < w; x++)
@@ -257,6 +262,7 @@ static void fix_column_noise(int16_t * original, int16_t * denoised, int w, int 
     }
     
     /* almost done, now apply the offsets */
+    #pragma omp parallel for
     for (int y = 0; y < h; y++)
     {
         for (int x = 0; x < w; x++)
@@ -268,7 +274,8 @@ static void fix_column_noise(int16_t * original, int16_t * denoised, int w, int 
     /* remove median from offsets, to prevent color cast */
     /* note: median modifies the array, so we do this after applying the offsets to the image */
     int mc = median_int_wirth(col_offsets, w);
-    
+
+    #pragma omp parallel for
     for (int i = 0; i < w*h; i++)
     {
         /* FIXME: clamping to 32766 causes overflow */
@@ -288,6 +295,7 @@ end:
 /* dx and dy can be 0 or 1 */
 static void extract_channel(int16_t * in, int16_t * out, int w, int h, int dx, int dy)
 {
+    #pragma omp parallel for
     for (int y = dy; y < h; y += 2)
     {
         for (int x = dx; x < w; x += 2)
@@ -302,6 +310,7 @@ static void extract_channel(int16_t * in, int16_t * out, int w, int h, int dx, i
 /* dx and dy can be 0 or 1 */
 static void set_channel(int16_t * out, int16_t * in, int w, int h, int dx, int dy)
 {
+    #pragma omp parallel for
     for (int y = dy; y < h; y += 2)
     {
         for (int x = dx; x < w; x += 2)

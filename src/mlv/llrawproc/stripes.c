@@ -211,6 +211,7 @@ void stripes_apply_correction(stripes_correction * correction,
 
     uint16_t black = black_level;
     uint16_t white = white_level;
+    #pragma omp parallel for
     for(size_t i = 0; i < size; i++)
     {
         double correction_coeffficient = correction->coeffficients[(i) % 8];
