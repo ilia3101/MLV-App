@@ -1325,6 +1325,39 @@ void MainWindow::startExportPipe(QString fileName)
         //Setup for scripting
         m_pScripting->setNextScriptInputTiff( getMlvFramerate( m_pMlvObject ), folderName );
     }
+    else if( m_codecProfile == CODEC_JPG2K )
+    {
+        //Creating a folder with the initial filename
+        QString folderName = QFileInfo( fileName ).path();
+        QString shortFileName = QFileInfo( fileName ).fileName();
+        folderName.append( "/" )
+                .append( shortFileName.left( shortFileName.lastIndexOf( "." ) ) );
+
+        QDir dir;
+        dir.mkpath( folderName );
+
+        //Now add the numbered filename
+        output = folderName;
+        output.append( "/" )
+                .append( shortFileName.left( shortFileName.lastIndexOf( "." ) ) )
+                .append( QString( "_%06d.jp2" ) );
+
+        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v jpeg2000 -pix_fmt %3 -start_number %4 -color_primaries bt709 -color_trc bt709 -colorspace bt709 %5\"%6\"" )
+                    .arg( fps )
+                    .arg( resolution )
+                    .arg( "yuv444p" )
+                    .arg( m_exportQueue.first()->cutIn() - 1 )
+                    .arg( resizeFilter )
+                    .arg( output ) );
+
+        //copy wav to the location, ffmpeg does not like to do it for us :-(
+        if( m_audioExportEnabled && doesMlvHaveAudio( m_pMlvObject ) )
+        {
+            QFile::copy( wavFileName, QString( "%1/%2.wav" ).arg( folderName ).arg( shortFileName.left( shortFileName.lastIndexOf( "." ) ) ) );
+        }
+        //Setup for scripting
+        m_pScripting->setNextScriptInputTiff( getMlvFramerate( m_pMlvObject ), folderName );
+    }
     else if( m_codecProfile == CODEC_AVI )
     {
         output.append( QString( ".avi" ) );
@@ -3990,6 +4023,12 @@ void MainWindow::on_actionExport_triggered()
         saveFileName.append( ".tif" );
         fileType = tr("TIFF (*.tif)");
         fileEnding = ".tif";
+    }
+    else if( m_codecProfile == CODEC_JPG2K )
+    {
+        saveFileName.append( ".jp2" );
+        fileType = tr("JPEG2000 (*.jp2)");
+        fileEnding = ".jp2";
     }
     else if( m_codecProfile == CODEC_AUDIO_ONLY )
     {

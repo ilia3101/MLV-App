@@ -266,7 +266,7 @@ void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
     ui->label_Smoothing->setEnabled( enableResize );
 
     //En-/disable fps override
-    if( ( index == CODEC_MLV ) || ( index == CODEC_TIFF ) || ( index == CODEC_AUDIO_ONLY ) )
+    if( ( index == CODEC_MLV ) || ( index == CODEC_TIFF ) || ( index == CODEC_JPG2K ) || ( index == CODEC_AUDIO_ONLY ) )
     {
         ui->checkBoxFpsOverride->setEnabled( false );
         ui->checkBoxFpsOverride->setChecked( false );

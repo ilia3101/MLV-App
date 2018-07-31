@@ -92,6 +92,11 @@
           </item>
           <item>
            <property name="text">
+            <string>JPEG2000 Sequence</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
             <string>MLV</string>
            </property>
           </item>
