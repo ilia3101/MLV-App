@@ -2663,6 +2663,7 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     }
     ui->horizontalSliderTemperature->setValue( receipt->temperature() );
     ui->horizontalSliderTint->setValue( receipt->tint() );
+    on_horizontalSliderTint_valueChanged( receipt->tint() ); // Tint needs sometimes extra invitation
     ui->horizontalSliderClarity->setValue( receipt->clarity() );
     ui->horizontalSliderVibrance->setValue( receipt->vibrance() );
     ui->horizontalSliderSaturation->setValue( receipt->saturation() );
