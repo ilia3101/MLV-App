@@ -244,6 +244,7 @@ void processing_update_curves(processingObject_t * processing)
     double lighten_pow = 1.0 - processing->lighten;
 
     /* Precalculate the contrast(curve) from 0 to 1 */
+    #pragma omp parallel for
     for (int i = 0; i < 65536; ++i)
     {
         double pixel_value/*, pixel_rgb[3]*/;

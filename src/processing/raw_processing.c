@@ -180,6 +180,7 @@ void processing_update_shadow_highlight_curve(processingObject_t * processing)
 {
     double shadows_expo = processing->shadows_highlights.shadows;
     double highlight_expo = pow(2.0, processing->shadows_highlights.highlights*(-1.5));
+    #pragma omp parallel for
     for (int i = 0; i < 65536; ++i)
     {
         double expo_factor;
@@ -200,7 +201,7 @@ void processing_update_shadow_highlight_curve(processingObject_t * processing)
 
 void processingSetSimpleContrast(processingObject_t * processing, double value)
 {
-    processing->contrast = value;
+    processing->contrast = value * 0.65;
     processing_update_contrast_curve(processing);
 }
 
@@ -208,6 +209,7 @@ void processing_update_contrast_curve(processingObject_t * processing)
 {
     double shadows_expo = -processing->contrast;
     double highlight_expo = pow(2.0, processing->contrast*(-1.5));
+    #pragma omp parallel for
     for (int i = 0; i < 65536; ++i)
     {
         double expo_factor;
@@ -228,6 +230,7 @@ void processing_update_contrast_curve(processingObject_t * processing)
 
 void processingSetClarity(processingObject_t * processing, double value)
 {
+    if( value < 0 ) value /= 2.0;
     processing->clarity = value;
     processing_update_clarity_curve(processing);
 }
@@ -236,6 +239,7 @@ void processing_update_clarity_curve(processingObject_t * processing)
 {
     double shadows_expo = -processing->clarity;
     double highlight_expo = pow(2.0, processing->clarity*(-1.5));
+    #pragma omp parallel for
     for (int i = 0; i < 65536; ++i)
     {
         double expo_factor;
