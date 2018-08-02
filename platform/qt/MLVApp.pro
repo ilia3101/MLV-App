@@ -45,6 +45,7 @@ macx: LIBS += -framework CoreVideo \
 #macx{
 #    QMAKE_CC = /usr/local/opt/llvm/bin/clang
 #    QMAKE_CXX = /usr/local/opt/llvm/bin/clang++
+#    QMAKE_LINK = /usr/local/opt/llvm/bin/clang++
 #    QMAKE_CFLAGS += -fopenmp
 #    QMAKE_CXXFLAGS += -fopenmp
 #    INCLUDEPATH += -I/usr/local/opt/llvm/include
