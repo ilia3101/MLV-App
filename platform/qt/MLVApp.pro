@@ -41,13 +41,16 @@ macx: LIBS += -framework CoreVideo \
               -framework CoreFoundation \
               -framework CoreMedia
 
-#OpenMP on macOS: first install llvm via brew
-#in makefile replace /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/
-#with /usr/local/opt/llvm/bin/
-#macx: QMAKE_CFLAGS += -fopenmp
-#macx: QMAKE_CXXFLAGS += -fopenmp
-#macx: INCLUDEPATH += -I/usr/local/opt/llvm/include
-#macx: LIBS += -L/usr/local/opt/llvm/lib -lgomp
+#OpenMP on macOS: first install llvm via brew, setup llvm kit & compiler in Qt settings!
+#macx{
+#    QMAKE_CC = /usr/local/Cellar/llvm/6.0.1/bin/clang-6.0
+#    QMAKE_CXX = /usr/local/Cellar/llvm/6.0.1/bin/clang-6.0
+#    QMAKE_CFLAGS += -fopenmp
+#    QMAKE_CXXFLAGS += -fopenmp
+#    INCLUDEPATH += -I/usr/local/opt/llvm/include
+#    LIBS += -L/usr/local/opt/llvm/lib -lgomp
+#    QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.8
+#}
 
 # Windows
 win32: QMAKE_CFLAGS += -O2 -fopenmp -msse4.1 -mssse3 -msse3 -msse2 -msse -D_FILE_OFFSET_BITS=64 -std=c99
