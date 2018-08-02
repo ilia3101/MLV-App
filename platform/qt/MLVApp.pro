@@ -43,8 +43,8 @@ macx: LIBS += -framework CoreVideo \
 
 #OpenMP on macOS: first install llvm via brew, setup llvm kit & compiler in Qt settings!
 #macx{
-#    QMAKE_CC = /usr/local/Cellar/llvm/6.0.1/bin/clang-6.0
-#    QMAKE_CXX = /usr/local/Cellar/llvm/6.0.1/bin/clang-6.0
+#    QMAKE_CC = /usr/local/opt/llvm/bin/clang
+#    QMAKE_CXX = /usr/local/opt/llvm/bin/clang++
 #    QMAKE_CFLAGS += -fopenmp
 #    QMAKE_CXXFLAGS += -fopenmp
 #    INCLUDEPATH += -I/usr/local/opt/llvm/include
