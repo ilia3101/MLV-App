@@ -68,7 +68,7 @@ static void average(int16_t * a, int16_t * b, int16_t * out, int w, int h)
 /* w and h are the size of input buffer; the output buffer will have the dimensions swapped */
 static void transpose(int16_t * in, int16_t * out, int w, int h)
 {
-    #pragma omp parallel for
+    #pragma omp parallel for collapse(2)
     for (int y = 0; y < h; y++)
     {
         for (int x = 0; x < w; x++)
@@ -205,7 +205,7 @@ static void fix_column_noise(int16_t * original, int16_t * denoised, int w, int 
     
     horizontal_gradient(original, hgrad, w, h);
 
-    #pragma omp parallel for
+    #pragma omp parallel for collapse(2)
     for (int y = 0; y < h; y++)
     {
         for (int x = 0; x < w; x++)
@@ -262,7 +262,7 @@ static void fix_column_noise(int16_t * original, int16_t * denoised, int w, int 
     }
     
     /* almost done, now apply the offsets */
-    #pragma omp parallel for
+    #pragma omp parallel for collapse(2)
     for (int y = 0; y < h; y++)
     {
         for (int x = 0; x < w; x++)
@@ -295,7 +295,7 @@ end:
 /* dx and dy can be 0 or 1 */
 static void extract_channel(int16_t * in, int16_t * out, int w, int h, int dx, int dy)
 {
-    #pragma omp parallel for
+    #pragma omp parallel for collapse(2)
     for (int y = dy; y < h; y += 2)
     {
         for (int x = dx; x < w; x += 2)
@@ -310,7 +310,7 @@ static void extract_channel(int16_t * in, int16_t * out, int w, int h, int dx, i
 /* dx and dy can be 0 or 1 */
 static void set_channel(int16_t * out, int16_t * in, int w, int h, int dx, int dy)
 {
-    #pragma omp parallel for
+    #pragma omp parallel for collapse(2)
     for (int y = dy; y < h; y += 2)
     {
         for (int x = dx; x < w; x += 2)

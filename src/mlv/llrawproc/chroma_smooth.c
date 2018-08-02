@@ -23,7 +23,7 @@ static void CHROMA_SMOOTH_FUNC(int w, int h, CHROMA_SMOOTH_TYPE * inp, CHROMA_SM
 {
     int x,y;
 
-    #pragma omp parallel for
+    #pragma omp parallel for collapse(2)
     for (y = 2+CHROMA_SMOOTH_MAX_XY_IJ; y < h-3-CHROMA_SMOOTH_MAX_XY_IJ; y += 2)
     {
         for (x = 2+CHROMA_SMOOTH_MAX_XY_IJ; x < w-2-CHROMA_SMOOTH_MAX_XY_IJ; x += 2)
