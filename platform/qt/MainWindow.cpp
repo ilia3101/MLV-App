@@ -5626,6 +5626,9 @@ void MainWindow::exportAbort( void )
 //Draw the frame when render thread is ready
 void MainWindow::drawFrameReady()
 {
+    Qt::TransformationMode mode = Qt::FastTransformation;
+    if( !ui->actionPlay->isChecked() ) mode = Qt::SmoothTransformation;
+
     if( ui->actionZoomFit->isChecked() )
     {
         //Some math to have the picture exactly in the frame
@@ -5650,10 +5653,12 @@ void MainWindow::drawFrameReady()
         }
 
         //Get Picture
+
+
         QPixmap pic = QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
                                           .scaled( desWidth * devicePixelRatio(),
                                                    desHeight * devicePixelRatio(),
-                                                   Qt::IgnoreAspectRatio, Qt::SmoothTransformation) );//alternative: Qt::FastTransformation
+                                                   Qt::IgnoreAspectRatio, mode) );
         //Set Picture to Retina
         pic.setDevicePixelRatio( devicePixelRatio() );
         //Bring frame to GUI (fit to window)
@@ -5675,10 +5680,11 @@ void MainWindow::drawFrameReady()
             m_pGraphicsItem->setPixmap( QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
                                               .scaled( getMlvWidth(m_pMlvObject) * getHorizontalStretchFactor(),
                                                        getMlvHeight(m_pMlvObject) * getVerticalStretchFactor(),
-                                                       Qt::IgnoreAspectRatio, Qt::SmoothTransformation) ) );//alternative: Qt::FastTransformation
+                                                       Qt::IgnoreAspectRatio, mode) ) );
             m_pScene->setSceneRect( 0, 0, getMlvWidth(m_pMlvObject) * getHorizontalStretchFactor(), getMlvHeight(m_pMlvObject) * getVerticalStretchFactor() );
         }
     }
+
     //Add zebras on the image
     uint8_t underOver = drawZebras();
     //Bring over/under to histogram

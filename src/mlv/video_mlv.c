@@ -235,6 +235,7 @@ int getMlvRawFrameUint16(mlvObject_t * video, uint64_t frameIndex, uint16_t * un
         pthread_mutex_unlock(video->main_file_mutex + chunk);
 
         uint32_t mask = (1 << bitdepth) - 1;
+        #pragma omp parallel for
         for (int i = 0; i < pixels_count; ++i)
         {
             uint32_t bits_offset = i * bitdepth;
@@ -276,6 +277,7 @@ void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outpu
     int shift_val = (llrpHQDualIso(video)) ? 0 : (16 - video->RAWI.raw_info.bits_per_pixel);
 
     /* convert uint16_t raw data -> float raw_data for processing with amaze or bilinear debayer, both need data input as float */
+    #pragma omp parallel for
     for (volatile int i = 0; i < pixels_count; ++i)
     {
         outputFrame[i] = (float)(unpacked_frame[i] << shift_val);
@@ -456,6 +458,7 @@ void getMlvProcessedFrame8(mlvObject_t * video, uint64_t frameIndex, uint8_t * o
     getMlvProcessedFrame16(video, frameIndex, processed_frame, threads);
 
     /* Copy (and 8-bitize) */
+    #pragma omp parallel for
     for (int i = 0; i < rgb_frame_size; ++i)
     {
         outputFrame[i] = processed_frame[i] >> 8;
