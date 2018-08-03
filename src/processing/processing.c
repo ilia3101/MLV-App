@@ -331,6 +331,7 @@ void processing_update_matrices(processingObject_t * processing)
     if( processing->wbFindActive == 0 )
     {
         /* Precalculate 0-65535 */
+        #pragma omp parallel for collapse(2)
         for (int i = 0; i < 9; ++i)
         {
             for (int j = 0; j < 65536; ++j)

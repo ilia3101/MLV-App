@@ -301,6 +301,7 @@ void applyProcessingObject( processingObject_t * processing,
             /* Apply basic levels */
             int img_s = imageX * imageY * 3;
             uint16_t * img = get_buffer(processing->shadows_highlights.blur_image);
+            #pragma omp parallel for
             for (int i = 0; i < img_s; ++i) img[i] = processing->pre_calc_levels[ img[i] ];
         }
     }
