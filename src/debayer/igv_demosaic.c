@@ -304,7 +304,7 @@ void igv_demosaic( amazeinfo_t * inputdata )
 
         /* Applying */
 #ifdef _OPENMP
-#pragma omp for
+#pragma omp parallel for collapse(2)
 #endif
         for (int y = tiley; y < endy; ++y)
             for (int x = tilex; x < endx; ++x)
@@ -506,7 +506,7 @@ void igv_demosaic( amazeinfo_t * inputdata )
         int endx = tilex + tilew;
         int endy = tiley + tileh;
 #ifdef _OPENMP
-#pragma omp for
+#pragma omp parallel for collapse(2)
 #endif
         for (int y = tiley; y < endy; ++y)
             for (int x = tilex; x < endx; ++x){
