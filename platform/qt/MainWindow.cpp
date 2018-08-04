@@ -179,7 +179,17 @@ void MainWindow::timerEvent(QTimerEvent *t)
     //Main timer
     if( t->timerId() == m_timerId )
     {
-        if( m_frameStillDrawing ) return;
+        if( m_frameStillDrawing )
+        {
+            //On setup slider priority
+            if( !ui->actionPlay->isChecked() ) return;
+            //else fast playback priority
+            while( m_frameStillDrawing )
+            {
+                qApp->processEvents();
+                QThread::msleep(1);
+            }
+        }
         if( !m_exportQueue.empty() ) return;
 
         //Time measurement
