@@ -144,9 +144,9 @@ void debayerBasic(uint16_t * __restrict debayerto, float * __restrict bayerdata,
     int nextRowRGB = width * 3; /* Size of a row in colour, so it does not need to be calculated 1000x */
 
     /* Debayer main chunk, start 1 row in to avoid ze segfault :D */
+    #pragma omp parallel for
     for (int Y = width; Y < pixelsizeDB; Y += step)
     {
-
         for (int x = 1; x < widthDB; x += 2) /* Stepping in rows */
         {
             /* Indexes of bayer pixels:

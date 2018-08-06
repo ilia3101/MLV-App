@@ -689,6 +689,7 @@ void dng_unpack_image_bits(uint16_t * output_buffer, uint16_t * input_buffer, in
     uint16_t *packed_bits = input_buffer;
     uint16_t *unpacked_bits = output_buffer;
 
+    #pragma omp parallel for
     for (uint32_t pixel_index = 0; pixel_index < pixel_count; pixel_index++)
     {
         uint32_t bits_offset = pixel_index * bpp;
@@ -809,6 +810,7 @@ static void dng_reverse_byte_order(uint16_t * input_buffer, size_t buf_size)
 {
     uint32_t index_max = buf_size / 2;
 
+    #pragma omp parallel for
     for (uint32_t index = 0; index < index_max; index++)
     {
         input_buffer[index] = ROL16(input_buffer[index], 8);
