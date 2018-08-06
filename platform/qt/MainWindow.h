@@ -57,7 +57,11 @@ protected:
     void dropEvent( QDropEvent *event );
     void closeEvent( QCloseEvent *event );
 
+signals:
+    void frameReady( void );
+
 private slots:
+    void timerFrameEvent( void );
     void on_actionOpen_triggered();
     void on_actionAbout_triggered();
     void on_actionAboutQt_triggered();
@@ -287,6 +291,7 @@ private:
     bool m_inOpeningProcess;
     int m_timerId;
     int m_timerCacheId;
+    int8_t m_countTimeDown;
     bool m_resizeFilterEnabled;
     bool m_resizeFilterHeightLocked;
     uint8_t m_smoothFilterSetting;

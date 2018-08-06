@@ -169,66 +169,73 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+//Called from timer and frame ready: initiate drawing next frame
+void MainWindow::timerFrameEvent( void )
+{
+    static QTime lastTime;              //Last Time a picture was rendered
+    static int timeDiff = 0;            //TimeDiff between 2 rendered frames in Playback
+
+    if( m_frameStillDrawing )
+    {
+        //On setup slider priority
+        if( !ui->actionPlay->isChecked() ) return;
+        //else fast playback priority -> frame n+1 will be calculated as soon as frame n is ready
+        connect( this, SIGNAL(frameReady()), this, SLOT(timerFrameEvent()) );
+        return;
+    }
+    else
+    {
+        //disconnect the link from above again
+        disconnect( this, SIGNAL(frameReady()), this, SLOT(timerFrameEvent()) );
+    }
+    if( !m_exportQueue.empty() ) return;
+
+    //Time measurement
+    QTime nowTime = QTime::currentTime();
+    timeDiff = lastTime.msecsTo( nowTime );
+
+    //Playback
+    playbackHandling( timeDiff );
+
+    //Give free one core for responsive GUI
+    if( m_frameChanged )
+    {
+        m_countTimeDown = 3; //3 secs
+        int cores = QThread::idealThreadCount();
+        if( cores > 1 ) cores -= 1; // -1 for the processing
+        setMlvCpuCores( m_pMlvObject, cores );
+    }
+
+    //Trigger Drawing
+    if( m_frameChanged && !m_dontDraw && !m_inOpeningProcess )
+    {
+        m_frameChanged = false; //first do this, if there are changes between rendering
+        drawFrame();
+        //Allow interaction while playback
+        //qApp->processEvents();
+
+        //fps measurement
+        if( timeDiff != 0 ) m_pFpsStatus->setText( tr( "Playback: %1 fps" ).arg( (int)( 1000 / lastTime.msecsTo( nowTime ) ) ) );
+        lastTime = nowTime;
+
+        //When playback is off, the timeDiff is set to 0 for DropFrameMode
+        if( !ui->actionPlay->isChecked() ) timeDiff = 1000 / getFramerate();
+    }
+    else
+    {
+        m_pFpsStatus->setText( tr( "Playback: 0 fps" ) );
+        lastTime = QTime::currentTime(); //do that for calculation of timeDiff for DropFrameMode;
+
+    }
+}
+
 //Timer
 void MainWindow::timerEvent(QTimerEvent *t)
 {
-    static QTime lastTime;              //Last Time a picture was rendered
-    static int8_t countTimeDown = -1;   //Time in seconds for CPU countdown
-    static int timeDiff = 0;            //TimeDiff between 2 rendered frames in Playback
-
     //Main timer
     if( t->timerId() == m_timerId )
     {
-        if( m_frameStillDrawing )
-        {
-            //On setup slider priority
-            if( !ui->actionPlay->isChecked() ) return;
-            //else fast playback priority
-            while( m_frameStillDrawing )
-            {
-                qApp->processEvents();
-                QThread::msleep(1);
-            }
-        }
-        if( !m_exportQueue.empty() ) return;
-
-        //Time measurement
-        QTime nowTime = QTime::currentTime();
-        timeDiff = lastTime.msecsTo( nowTime );
-
-        //Playback
-        playbackHandling( timeDiff );
-
-        //Give free one core for responsive GUI
-        if( m_frameChanged )
-        {
-            countTimeDown = 3; //3 secs
-            int cores = QThread::idealThreadCount();
-            if( cores > 1 ) cores -= 1; // -1 for the processing
-            setMlvCpuCores( m_pMlvObject, cores );
-        }
-
-        //Trigger Drawing
-        if( m_frameChanged && !m_dontDraw && !m_inOpeningProcess )
-        {
-            m_frameChanged = false; //first do this, if there are changes between rendering
-            drawFrame();
-            //Allow interaction while playback
-            //qApp->processEvents();
-
-            //fps measurement
-            if( timeDiff != 0 ) m_pFpsStatus->setText( tr( "Playback: %1 fps" ).arg( (int)( 1000 / lastTime.msecsTo( nowTime ) ) ) );
-            lastTime = nowTime;
-
-            //When playback is off, the timeDiff is set to 0 for DropFrameMode
-            if( !ui->actionPlay->isChecked() ) timeDiff = 1000 / getFramerate();
-        }
-        else
-        {
-            m_pFpsStatus->setText( tr( "Playback: 0 fps" ) );
-            lastTime = QTime::currentTime(); //do that for calculation of timeDiff for DropFrameMode;
-
-        }
+        timerFrameEvent();
         return;
     }
     //1sec Timer
@@ -247,8 +254,8 @@ void MainWindow::timerEvent(QTimerEvent *t)
         if( m_fileLoaded )
         {
             //get all cores again
-            if( countTimeDown == 0 ) setMlvCpuCores( m_pMlvObject, QThread::idealThreadCount() );
-            if( countTimeDown >= 0 ) countTimeDown--;
+            if( m_countTimeDown == 0 ) setMlvCpuCores( m_pMlvObject, QThread::idealThreadCount() );
+            if( m_countTimeDown >= 0 ) m_countTimeDown--;
         }
     }
 }
@@ -984,6 +991,9 @@ void MainWindow::initGui( void )
     //WB Picker Mode
     m_wbMode = 0;
     ui->toolButtonWbMode->setToolTip( tr( "Chose between WB picker on grey or on skin" ) );
+
+    //set CPU Usage
+    m_countTimeDown = -1;   //Time in seconds for CPU countdown
 }
 
 //Initialize the library
@@ -5783,6 +5793,8 @@ void MainWindow::drawFrameReady()
 
     //Reset delete clip action as enabled
     ui->actionDeleteSelectedClips->setEnabled( true );
+
+    emit frameReady();
 }
 
 //Paintmode for gradient enabled/disabled
