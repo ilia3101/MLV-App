@@ -5647,7 +5647,15 @@ void MainWindow::exportAbort( void )
 void MainWindow::drawFrameReady()
 {
     Qt::TransformationMode mode = Qt::FastTransformation;
-    if( !ui->actionPlay->isChecked() || ui->actionUseNoneDebayer->isChecked() ) mode = Qt::SmoothTransformation;
+    if( !ui->actionPlay->isChecked()
+     || ui->actionUseNoneDebayer->isChecked()
+     || ui->actionUseLmmseDebayer->isChecked()
+     || ui->actionUseIgvDebayer->isChecked()
+     || ui->actionAlwaysUseAMaZE->isChecked()
+     || ui->actionCaching->isChecked() )
+    {
+        mode = Qt::SmoothTransformation;
+    }
 
     if( ui->actionZoomFit->isChecked() )
     {
