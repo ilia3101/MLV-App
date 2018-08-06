@@ -186,7 +186,8 @@ void MainWindow::timerEvent(QTimerEvent *t)
             //else fast playback priority
             while( m_frameStillDrawing )
             {
-                qApp->processEvents();
+                //Don't allow rightclick menus while the while is running
+                qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
                 QThread::msleep(1);
             }
         }
