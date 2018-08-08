@@ -1992,7 +1992,7 @@ void MainWindow::startExportAVFoundation(QString fileName)
     freeAVEncoder(encoder);
 
     //Audio
-    if( m_audioExportEnabled && doesMlvHaveAudio( m_pMlvObject ) )
+    if( m_audioExportEnabled && doesMlvHaveAudio( m_pMlvObject ) && !m_exportAbortPressed )
     {
         QString wavFileName = QString( "%1.wav" ).arg( fileName.left( fileName.lastIndexOf( "." ) ) );
         writeMlvAudioToWaveCut( m_pMlvObject, wavFileName.toUtf8().data(), m_exportQueue.first()->cutIn(), m_exportQueue.first()->cutOut() );
