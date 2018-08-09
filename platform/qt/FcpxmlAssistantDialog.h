@@ -27,6 +27,7 @@ private slots:
 
 private:
     Ui::FcpxmlAssistantDialog *ui;
+    void xmlParser( QString fileName );
 };
 
 #endif // FCPXMLASSISTANTDIALOG_H
