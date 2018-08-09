@@ -63,6 +63,7 @@ signals:
 private slots:
     void timerFrameEvent( void );
     void on_actionOpen_triggered();
+    void on_actionFcpxmlImportAssistant_triggered();
     void on_actionAbout_triggered();
     void on_actionAboutQt_triggered();
     void on_horizontalSliderPosition_valueChanged(int position);
@@ -250,6 +251,7 @@ private slots:
 
     void on_toolButtonLoadLut_clicked();
     void on_lineEditLutName_textChanged(const QString &arg1);
+
 
 private:
     Ui::MainWindow *ui;

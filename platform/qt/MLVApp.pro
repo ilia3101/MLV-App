@@ -122,7 +122,8 @@ SOURCES += \
     Updater/cautoupdatergithub.cpp \
     Updater/updaterUI/CUpdater.cpp \
     ../../src/processing/blur_threaded.c \
-    Scripting.cpp
+    Scripting.cpp \
+    FcpxmlAssistantDialog.cpp
 
 macx: SOURCES += ../cocoa/avf_lib/avf_lib.m
 
@@ -196,7 +197,8 @@ HEADERS += \
     Updater/cautoupdatergithub.h \
     Updater/updaterUI/CUpdater.h \
     ../../src/processing/blur_threaded.h \
-    Scripting.h
+    Scripting.h \
+    FcpxmlAssistantDialog.h
 
 macx: HEADERS += \
     ../cocoa/avf_lib/avencoder.h \
@@ -209,7 +211,8 @@ FORMS += \
     StatusDialog.ui \
     ExportSettingsDialog.ui \
     EditSliderValueDialog.ui \
-    Updater/updaterUI/cupdaterdialog.ui
+    Updater/updaterUI/cupdaterdialog.ui \
+    FcpxmlAssistantDialog.ui
 
 RESOURCES += \
     ressources.qrc \

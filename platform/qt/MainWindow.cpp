@@ -32,6 +32,7 @@
 #include "EditSliderValueDialog.h"
 #include "DarkStyle.h"
 #include "Updater/updaterUI/cupdaterdialog.h"
+#include <FcpxmlAssistantDialog.h>
 
 #define APPNAME "MLV App"
 #define VERSION "0.17 alpha"
@@ -548,6 +549,14 @@ void MainWindow::on_actionOpen_triggered()
     m_inOpeningProcess = false;
 }
 
+//Import MLV files to session, which were used in FCPXML project
+void MainWindow::on_actionFcpxmlImportAssistant_triggered()
+{
+    FcpxmlAssistantDialog *fcpAssi = new FcpxmlAssistantDialog( this );
+    fcpAssi->exec();
+    delete fcpAssi;
+}
+
 //Open MLV procedure
 int MainWindow::openMlv( QString fileName )
 {
@@ -991,6 +1000,9 @@ void MainWindow::initGui( void )
     //WB Picker Mode
     m_wbMode = 0;
     ui->toolButtonWbMode->setToolTip( tr( "Chose between WB picker on grey or on skin" ) );
+
+    //Hide FCPXML dialog - not ready yet
+    ui->actionFcpxmlImportAssistant->setVisible( false );
 
     //set CPU Usage
     m_countTimeDown = -1;   //Time in seconds for CPU countdown

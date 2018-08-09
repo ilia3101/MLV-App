@@ -14,7 +14,7 @@
    <string>MLV App</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="ressources.qrc">
+   <iconset>
     <normaloff>:/RetinaIMG/RetinaIMG/MLVAPP.png</normaloff>:/RetinaIMG/RetinaIMG/MLVAPP.png</iconset>
   </property>
   <property name="unifiedTitleAndToolBarOnMac">
@@ -96,7 +96,7 @@
        <string/>
       </property>
       <property name="pixmap">
-       <pixmap resource="ressources.qrc">:/IMG/IMG/Histogram.png</pixmap>
+       <pixmap>:/IMG/IMG/Histogram.png</pixmap>
       </property>
       <property name="scaledContents">
        <bool>true</bool>
@@ -126,6 +126,7 @@
     <addaction name="actionCreateMappFiles"/>
     <addaction name="separator"/>
     <addaction name="actionOpen"/>
+    <addaction name="actionFcpxmlImportAssistant"/>
     <addaction name="actionClip_Information"/>
     <addaction name="actionExport"/>
     <addaction name="actionExportActualFrame"/>
@@ -347,7 +348,7 @@
           <string/>
          </property>
          <property name="pixmap">
-          <pixmap resource="ressources.qrc">:/IMG/IMG/Histogram.png</pixmap>
+          <pixmap>:/IMG/IMG/Histogram.png</pixmap>
          </property>
          <property name="scaledContents">
           <bool>true</bool>
@@ -393,7 +394,7 @@ QGroupBox::indicator:checked {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>-840</y>
+            <y>0</y>
             <width>199</width>
             <height>3435</height>
            </rect>
@@ -509,7 +510,7 @@ QGroupBox::indicator:checked {
                       <string>Select File...</string>
                      </property>
                      <property name="icon">
-                      <iconset resource="ressources.qrc">
+                      <iconset>
                        <normaloff>:/RetinaIMG/RetinaIMG/Folder-Open-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Folder-Open-icon.png</iconset>
                      </property>
                      <property name="iconSize">
@@ -2209,7 +2210,7 @@ QGroupBox::indicator:checked {
                     <string>...</string>
                    </property>
                    <property name="icon">
-                    <iconset resource="ressources.qrc">
+                    <iconset>
                      <normaloff>:/RetinaIMG/RetinaIMG/Delete-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Delete-icon.png</iconset>
                    </property>
                   </widget>
@@ -2260,7 +2261,7 @@ QGroupBox::indicator:checked {
                     <string>...</string>
                    </property>
                    <property name="icon">
-                    <iconset resource="ressources.qrc">
+                    <iconset>
                      <normaloff>:/RetinaIMG/RetinaIMG/Delete-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Delete-icon.png</iconset>
                    </property>
                   </widget>
@@ -2511,7 +2512,7 @@ QGroupBox::indicator:checked {
                       <string>White Balance Picker</string>
                      </property>
                      <property name="icon">
-                      <iconset resource="ressources.qrc">
+                      <iconset>
                        <normaloff>:/RetinaIMG/RetinaIMG/Actions-color-picker-grey-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Actions-color-picker-grey-icon.png</iconset>
                      </property>
                      <property name="checkable">
@@ -2605,7 +2606,7 @@ QGroupBox::indicator:checked {
                       <string/>
                      </property>
                      <property name="icon">
-                      <iconset resource="ressources.qrc">
+                      <iconset>
                        <normaloff>:/IMG/IMG/Grey-Ball-icon.png</normaloff>:/IMG/IMG/Grey-Ball-icon.png</iconset>
                      </property>
                     </widget>
@@ -4782,7 +4783,7 @@ QGroupBox::indicator:checked {
                       <string>Load LUT</string>
                      </property>
                      <property name="icon">
-                      <iconset resource="ressources.qrc">
+                      <iconset>
                        <normaloff>:/RetinaIMG/RetinaIMG/Folder-Open-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Folder-Open-icon.png</iconset>
                      </property>
                      <property name="iconSize">
@@ -5077,7 +5078,7 @@ QGroupBox::indicator:checked {
                       <string>...</string>
                      </property>
                      <property name="icon">
-                      <iconset resource="ressources.qrc">
+                      <iconset>
                        <normaloff>:/RetinaIMG/RetinaIMG/Pencil-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Pencil-icon.png</iconset>
                      </property>
                      <property name="checkable">
@@ -5702,7 +5703,7 @@ QGroupBox::indicator:checked {
   </widget>
   <action name="actionOpen">
    <property name="icon">
-    <iconset resource="ressources.qrc">
+    <iconset>
      <normaloff>:/RetinaIMG/RetinaIMG/Movie-icon.png</normaloff>
      <normalon>:/IMG/IMG/fileopen.png</normalon>:/RetinaIMG/RetinaIMG/Movie-icon.png</iconset>
    </property>
@@ -5718,7 +5719,7 @@ QGroupBox::indicator:checked {
   </action>
   <action name="actionCopyRecept">
    <property name="icon">
-    <iconset resource="ressources.qrc">
+    <iconset>
      <normaloff>:/RetinaIMG/RetinaIMG/File-Copy-icon.png</normaloff>:/RetinaIMG/RetinaIMG/File-Copy-icon.png</iconset>
    </property>
    <property name="text">
@@ -5733,7 +5734,7 @@ QGroupBox::indicator:checked {
   </action>
   <action name="actionPasteReceipt">
    <property name="icon">
-    <iconset resource="ressources.qrc">
+    <iconset>
      <normaloff>:/RetinaIMG/RetinaIMG/Paste-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Paste-icon.png</iconset>
    </property>
    <property name="text">
@@ -5761,7 +5762,7 @@ QGroupBox::indicator:checked {
   </action>
   <action name="actionExport">
    <property name="icon">
-    <iconset resource="ressources.qrc">
+    <iconset>
      <normaloff>:/RetinaIMG/RetinaIMG/Export-To-File-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Export-To-File-icon.png</iconset>
    </property>
    <property name="text">
@@ -5776,7 +5777,7 @@ QGroupBox::indicator:checked {
   </action>
   <action name="actionClip_Information">
    <property name="icon">
-    <iconset resource="ressources.qrc">
+    <iconset>
      <normaloff>:/IMG/IMG/information-icon.png</normaloff>:/IMG/IMG/information-icon.png</iconset>
    </property>
    <property name="text">
@@ -5794,7 +5795,7 @@ QGroupBox::indicator:checked {
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="ressources.qrc">
+    <iconset>
      <normaloff>:/AudioVideoIcons/AudioVideoIcons/Play.png</normaloff>:/AudioVideoIcons/AudioVideoIcons/Play.png</iconset>
    </property>
    <property name="text">
@@ -5809,7 +5810,7 @@ QGroupBox::indicator:checked {
   </action>
   <action name="actionGoto_First_Frame">
    <property name="icon">
-    <iconset resource="ressources.qrc">
+    <iconset>
      <normaloff>:/AudioVideoIcons/AudioVideoIcons/FirstFrame.png</normaloff>:/AudioVideoIcons/AudioVideoIcons/FirstFrame.png</iconset>
    </property>
    <property name="text">
@@ -5827,7 +5828,7 @@ QGroupBox::indicator:checked {
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="ressources.qrc">
+    <iconset>
      <normaloff>:/AudioVideoIcons/AudioVideoIcons/Loop.png</normaloff>:/AudioVideoIcons/AudioVideoIcons/Loop.png</iconset>
    </property>
    <property name="text">
@@ -5850,7 +5851,7 @@ QGroupBox::indicator:checked {
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="ressources.qrc">
+    <iconset>
      <normaloff>:/RetinaIMG/RetinaIMG/Actions-zoom-fit-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Actions-zoom-fit-icon.png</iconset>
    </property>
    <property name="text">
@@ -5862,7 +5863,7 @@ QGroupBox::indicator:checked {
   </action>
   <action name="actionZoom100">
    <property name="icon">
-    <iconset resource="ressources.qrc">
+    <iconset>
      <normaloff>:/RetinaIMG/RetinaIMG/Actions-zoom-100-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Actions-zoom-100-icon.png</iconset>
    </property>
    <property name="text">
@@ -5904,7 +5905,7 @@ QGroupBox::indicator:checked {
   </action>
   <action name="actionExportSettings">
    <property name="icon">
-    <iconset resource="ressources.qrc">
+    <iconset>
      <normaloff>:/RetinaIMG/RetinaIMG/Settings-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Settings-icon.png</iconset>
    </property>
    <property name="text">
@@ -5941,7 +5942,7 @@ QGroupBox::indicator:checked {
   </action>
   <action name="actionResetReceipt">
    <property name="icon">
-    <iconset resource="ressources.qrc">
+    <iconset>
      <normaloff>:/RetinaIMG/RetinaIMG/Recycle-Bin-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Recycle-Bin-icon.png</iconset>
    </property>
    <property name="text">
@@ -5959,7 +5960,7 @@ QGroupBox::indicator:checked {
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="ressources.qrc">
+    <iconset>
      <normaloff>:/RetinaIMG/RetinaIMG/File-New-icon.png</normaloff>:/RetinaIMG/RetinaIMG/File-New-icon.png</iconset>
    </property>
    <property name="text">
@@ -5974,7 +5975,7 @@ QGroupBox::indicator:checked {
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="ressources.qrc">
+    <iconset>
      <normaloff>:/RetinaIMG/RetinaIMG/Folder-Open-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Folder-Open-icon.png</iconset>
    </property>
    <property name="text">
@@ -5989,7 +5990,7 @@ QGroupBox::indicator:checked {
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="ressources.qrc">
+    <iconset>
      <normaloff>:/RetinaIMG/RetinaIMG/Save-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Save-icon.png</iconset>
    </property>
    <property name="text">
@@ -6004,7 +6005,7 @@ QGroupBox::indicator:checked {
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="ressources.qrc">
+    <iconset>
      <normaloff>:/RetinaIMG/RetinaIMG/Actions-window-fullscreen-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Actions-window-fullscreen-icon.png</iconset>
    </property>
    <property name="text">
@@ -6060,7 +6061,7 @@ QGroupBox::indicator:checked {
     <bool>false</bool>
    </property>
    <property name="icon">
-    <iconset resource="ressources.qrc">
+    <iconset>
      <normaloff>:/RetinaIMG/RetinaIMG/speaker-icon.png</normaloff>:/RetinaIMG/RetinaIMG/speaker-icon.png</iconset>
    </property>
    <property name="text">
@@ -6083,7 +6084,7 @@ QGroupBox::indicator:checked {
   </action>
   <action name="actionNextFrame">
    <property name="icon">
-    <iconset resource="ressources.qrc">
+    <iconset>
      <normaloff>:/AudioVideoIcons/AudioVideoIcons/FrameFW.png</normaloff>:/AudioVideoIcons/AudioVideoIcons/FrameFW.png</iconset>
    </property>
    <property name="text">
@@ -6095,7 +6096,7 @@ QGroupBox::indicator:checked {
   </action>
   <action name="actionPreviousFrame">
    <property name="icon">
-    <iconset resource="ressources.qrc">
+    <iconset>
      <normaloff>:/AudioVideoIcons/AudioVideoIcons/FrameBW.png</normaloff>:/AudioVideoIcons/AudioVideoIcons/FrameBW.png</iconset>
    </property>
    <property name="text">
@@ -6121,7 +6122,7 @@ QGroupBox::indicator:checked {
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="ressources.qrc">
+    <iconset>
      <normaloff>:/RetinaIMG/RetinaIMG/Actions-color-picker-grey-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Actions-color-picker-grey-icon.png</iconset>
    </property>
    <property name="text">
@@ -6133,7 +6134,7 @@ QGroupBox::indicator:checked {
   </action>
   <action name="actionExportActualFrame">
    <property name="icon">
-    <iconset resource="ressources.qrc">
+    <iconset>
      <normaloff>:/RetinaIMG/RetinaIMG/Export-Image-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Export-Image-icon.png</iconset>
    </property>
    <property name="text">
@@ -6153,7 +6154,7 @@ QGroupBox::indicator:checked {
   </action>
   <action name="actionExportReceipt">
    <property name="icon">
-    <iconset resource="ressources.qrc">
+    <iconset>
      <normaloff>:/RetinaIMG/RetinaIMG/ExportReceipt-icon.png</normaloff>:/RetinaIMG/RetinaIMG/ExportReceipt-icon.png</iconset>
    </property>
    <property name="text">
@@ -6168,7 +6169,7 @@ QGroupBox::indicator:checked {
   </action>
   <action name="actionImportReceipt">
    <property name="icon">
-    <iconset resource="ressources.qrc">
+    <iconset>
      <normaloff>:/RetinaIMG/RetinaIMG/ImportReceipt-icon.png</normaloff>:/RetinaIMG/RetinaIMG/ImportReceipt-icon.png</iconset>
    </property>
    <property name="text">
@@ -6221,7 +6222,7 @@ QGroupBox::indicator:checked {
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="ressources.qrc">
+    <iconset>
      <normaloff>:/RetinaIMG/RetinaIMG/map-icon.png</normaloff>:/RetinaIMG/RetinaIMG/map-icon.png</iconset>
    </property>
    <property name="text">
@@ -6295,7 +6296,7 @@ QGroupBox::indicator:checked {
   </action>
   <action name="actionSaveAsSession">
    <property name="icon">
-    <iconset resource="ressources.qrc">
+    <iconset>
      <normaloff>:/RetinaIMG/RetinaIMG/Save-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Save-icon.png</iconset>
    </property>
    <property name="text">
@@ -6364,6 +6365,14 @@ QGroupBox::indicator:checked {
     <string>IGV</string>
    </property>
   </action>
+  <action name="actionFcpxmlImportAssistant">
+   <property name="text">
+    <string>FCPXML Import Assistant</string>
+   </property>
+   <property name="toolTip">
+    <string>Import MLV files to session, which were used in FCPXML project</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
@@ -6408,9 +6417,7 @@ QGroupBox::indicator:checked {
   <tabstop>graphicsView</tabstop>
   <tabstop>horizontalSliderPosition</tabstop>
  </tabstops>
- <resources>
-  <include location="ressources.qrc"/>
- </resources>
+ <resources/>
  <connections>
   <connection>
    <sender>actionShowSessionArea</sender>
