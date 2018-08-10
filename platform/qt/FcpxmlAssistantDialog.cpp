@@ -20,6 +20,7 @@ FcpxmlAssistantDialog::FcpxmlAssistantDialog(QWidget *parent) :
     ui->setupUi(this);
     setWindowFlags( Qt::Dialog | Qt::WindowTitleHint | Qt::WindowCloseButtonHint | Qt::WindowStaysOnTopHint );
     m_fileList.clear();
+    ui->labelStatus->setText( "" );
 }
 
 //Destructor
@@ -53,6 +54,7 @@ void FcpxmlAssistantDialog::on_pushButtonFcpxml_clicked()
 //Search in the fcpxml for <clip... entries and bring to table
 void FcpxmlAssistantDialog::xmlParser(QString fileName)
 {
+    ui->labelStatus->setText( "" );
     while( ui->tableWidget->rowCount() > 0 ) ui->tableWidget->removeRow( 0 );
 
     //Open a XML stream for the file
@@ -101,8 +103,10 @@ void FcpxmlAssistantDialog::xmlParser(QString fileName)
 //Search filenames from table in given folder
 void FcpxmlAssistantDialog::searchMlvs()
 {
+    ui->labelStatus->setText( "" );
     if( ui->tableWidget->rowCount() == 0 ) return;
     if( ui->lineEditFcpxml->text().count() == 0 ) return;
+    if( ui->lineEditMlvFolder->text().count() == 0 ) return;
 
     m_fileList.clear();
 
@@ -122,6 +126,10 @@ void FcpxmlAssistantDialog::searchMlvs()
             m_fileList.append( mlvFileName );
         }
     }
+
+
+    //Status
+    ui->labelStatus->setText( QString( "Found %1 MLV file(s)" ).arg( m_fileList.count() ) );
 }
 
 //Select MLV folder
