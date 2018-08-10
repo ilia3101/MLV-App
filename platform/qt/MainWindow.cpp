@@ -552,9 +552,39 @@ void MainWindow::on_actionOpen_triggered()
 //Import MLV files to session, which were used in FCPXML project
 void MainWindow::on_actionFcpxmlImportAssistant_triggered()
 {
+    //Stop playback if active
+    ui->actionPlay->setChecked( false );
+
+    //Get files from assistant dialog
     FcpxmlAssistantDialog *fcpAssi = new FcpxmlAssistantDialog( this );
-    fcpAssi->exec();
+    QStringList files;
+    if( fcpAssi->exec() ) files = fcpAssi->getFileNames();
+    else files.clear();
     delete fcpAssi;
+
+    //No files or aborted? Do nothing...
+    if( files.empty() ) return;
+
+    //Open files
+    m_inOpeningProcess = true;
+
+    for( int i = 0; i < files.count(); i++ )
+    {
+        QString fileName = files.at(i);
+
+        //Exit if not an MLV file or aborted
+        if( fileName == QString( "" ) || !fileName.endsWith( ".mlv", Qt::CaseInsensitive ) ) continue;
+
+        importNewMlv( fileName );
+    }
+
+    //Show last imported file
+    if( m_pSessionReceipts.count() ) showFileInEditor( m_pSessionReceipts.count() - 1 );
+
+    //Caching is in which state? Set it!
+    if( ui->actionCaching->isChecked() ) on_actionCaching_triggered();
+
+    m_inOpeningProcess = false;
 }
 
 //Open MLV procedure
@@ -1000,9 +1030,6 @@ void MainWindow::initGui( void )
     //WB Picker Mode
     m_wbMode = 0;
     ui->toolButtonWbMode->setToolTip( tr( "Chose between WB picker on grey or on skin" ) );
-
-    //Hide FCPXML dialog - not ready yet
-    ui->actionFcpxmlImportAssistant->setVisible( false );
 
     //set CPU Usage
     m_countTimeDown = -1;   //Time in seconds for CPU countdown

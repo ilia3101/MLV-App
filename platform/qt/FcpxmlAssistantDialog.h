@@ -21,13 +21,17 @@ class FcpxmlAssistantDialog : public QDialog
 public:
     explicit FcpxmlAssistantDialog(QWidget *parent = 0);
     ~FcpxmlAssistantDialog();
+    QStringList getFileNames( void );
 
 private slots:
     void on_pushButtonFcpxml_clicked();
+    void on_pushButtonMlv_clicked();
 
 private:
     Ui::FcpxmlAssistantDialog *ui;
+    QStringList m_fileList;
     void xmlParser( QString fileName );
+    void searchMlvs();
 };
 
 #endif // FCPXMLASSISTANTDIALOG_H
