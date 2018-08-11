@@ -21,6 +21,7 @@ FcpxmlAssistantDialog::FcpxmlAssistantDialog(QWidget *parent) :
     setWindowFlags( Qt::Dialog | Qt::WindowTitleHint | Qt::WindowCloseButtonHint | Qt::WindowStaysOnTopHint );
     m_fileList.clear();
     ui->labelStatus->setText( "" );
+    ui->pushButtonImport->setEnabled( false );
 }
 
 //Destructor
@@ -55,6 +56,7 @@ void FcpxmlAssistantDialog::on_pushButtonFcpxml_clicked()
 void FcpxmlAssistantDialog::xmlParser(QString fileName)
 {
     ui->labelStatus->setText( "" );
+    ui->pushButtonImport->setEnabled( false );
     while( ui->tableWidget->rowCount() > 0 ) ui->tableWidget->removeRow( 0 );
 
     //Open a XML stream for the file
@@ -104,6 +106,7 @@ void FcpxmlAssistantDialog::xmlParser(QString fileName)
 void FcpxmlAssistantDialog::searchMlvs()
 {
     ui->labelStatus->setText( "" );
+    ui->pushButtonImport->setEnabled( false );
     if( ui->tableWidget->rowCount() == 0 ) return;
     if( ui->lineEditFcpxml->text().count() == 0 ) return;
     if( ui->lineEditMlvFolder->text().count() == 0 ) return;
@@ -130,6 +133,8 @@ void FcpxmlAssistantDialog::searchMlvs()
 
     //Status
     ui->labelStatus->setText( QString( "Found %1 MLV file(s)" ).arg( m_fileList.count() ) );
+    if( m_fileList.count() > 0 ) ui->pushButtonImport->setEnabled( true );
+    else ui->pushButtonImport->setEnabled( false );
 }
 
 //Select MLV folder
@@ -137,7 +142,7 @@ void FcpxmlAssistantDialog::on_pushButtonMlv_clicked()
 {
     //Folder Dialog
     QString path = QDir::homePath();
-    QString folderName = QFileDialog::getExistingDirectory(this, tr("Chose MLV Folder"),
+    QString folderName = QFileDialog::getExistingDirectory(this, tr("Choose MLV Folder"),
                                                       path,
                                                       QFileDialog::ShowDirsOnly
                                                       | QFileDialog::DontResolveSymlinks);
