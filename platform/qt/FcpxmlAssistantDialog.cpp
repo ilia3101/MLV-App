@@ -8,6 +8,7 @@
 #include "QFileDialog"
 #include "QFile"
 #include "QXmlStreamReader"
+#include "QDirIterator"
 
 #include "FcpxmlAssistantDialog.h"
 #include "ui_FcpxmlAssistantDialog.h"
@@ -93,8 +94,10 @@ void FcpxmlAssistantDialog::xmlParser(QString fileName)
                 if( add )
                 {
                     ui->tableWidget->insertRow( row );
-                    QTableWidgetItem *item = new QTableWidgetItem( clip );
-                    ui->tableWidget->setItem( row, 0, item );
+                    QTableWidgetItem *item1 = new QTableWidgetItem( clip );
+                    ui->tableWidget->setItem( row, 0, item1 );
+                    QTableWidgetItem *item2 = new QTableWidgetItem( "" );
+                    ui->tableWidget->setItem( row, 1, item2 );
                 }
             }
         }
@@ -115,18 +118,30 @@ void FcpxmlAssistantDialog::searchMlvs()
 
     for( int i = 0; i < ui->tableWidget->rowCount(); i++ )
     {
-        QString mlvFileName = ui->lineEditMlvFolder->text();
-        if( !mlvFileName.endsWith( '/' ) || !mlvFileName.endsWith( '\\' ) )
+        QString name = QString( ui->tableWidget->item( i, 0 )->text() ).append( ".MLV" );
+        QString dir = ui->lineEditMlvFolder->text();
+        if( !dir.endsWith( '/' ) || !dir.endsWith( '\\' ) )
         {
-            mlvFileName.append( '/' );
+            dir.append( '/' );
         }
-        mlvFileName.append( ui->tableWidget->item( i, 0 )->text() ).append( ".MLV" );
 
-        if( QFile( mlvFileName ).exists() )
+        //Prepare scan option
+        QDirIterator::IteratorFlag recOrNot = QDirIterator::Subdirectories;
+        if( !ui->checkBoxScanRecursively->isChecked() ) recOrNot = QDirIterator::NoIteratorFlags;
+
+        //Scan
+        QDirIterator it(dir, QStringList() << name, QDir::Files, recOrNot);
+
+        //Show results
+        if( it.hasNext() )
         {
-            QTableWidgetItem *item = new QTableWidgetItem( mlvFileName );
-            ui->tableWidget->setItem( i, 1, item );
-            m_fileList.append( mlvFileName );
+            QString entry = it.next();
+            ui->tableWidget->item( i, 1 )->setText( entry );
+            m_fileList.append( entry );
+        }
+        else
+        {
+            ui->tableWidget->item( i, 1 )->setText( "" );
         }
     }
 
@@ -151,5 +166,11 @@ void FcpxmlAssistantDialog::on_pushButtonMlv_clicked()
     //Show folder name
     ui->lineEditMlvFolder->setText( folderName );
 
+    searchMlvs();
+}
+
+//Changed recursively checkbox -> rescan
+void FcpxmlAssistantDialog::on_checkBoxScanRecursively_clicked()
+{
     searchMlvs();
 }

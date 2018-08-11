@@ -27,6 +27,8 @@ private slots:
     void on_pushButtonFcpxml_clicked();
     void on_pushButtonMlv_clicked();
 
+    void on_checkBoxScanRecursively_clicked();
+
 private:
     Ui::FcpxmlAssistantDialog *ui;
     QStringList m_fileList;
