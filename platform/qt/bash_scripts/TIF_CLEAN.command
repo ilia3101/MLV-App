@@ -439,7 +439,8 @@ if grep "$check" <<< $(cat /tmp/mlvapp_path/file_names.txt)
 then
 if grep './' /tmp/TIFCLEAN
 then
-rm -r ../$(cat /tmp/TIFCLEAN | head -1 | cut -d '/' -f2 | cut -d "." -f1)
+#rm -r ../$(cat /tmp/TIFCLEAN | head -1 | cut -d '/' -f2 | cut -d "." -f1)
+echo "excluded due to unknown issue"
 fi
 else
 mv *.{mov,MOV} "$(cat /tmp/mlvapp_path/output_folder.txt)"/

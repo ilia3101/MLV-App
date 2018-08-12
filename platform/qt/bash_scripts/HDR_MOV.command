@@ -192,10 +192,12 @@ then
 check="$(cat /tmp/HDRMOVaa | head -1 | cut -d "." -f1)".MLV
 if grep "$check" <<< $(cat /tmp/mlvapp_path/file_names.txt)
 then
-rm -r ../$(cat /tmp/HDRMOVaa | head -1 | cut -d "." -f1)
+#rm -r ../$(cat /tmp/HDRMOVaa | head -1 | cut -d "." -f1)
+echo "excluded due to unknown issue"
 else
 mv *.{MOV,mov,mp4,MP4,mkv,MKV,avi,AVI} ../
-rm -r ../$(cat /tmp/HDRMOVaa | head -1 | cut -d "." -f1)
+#rm -r ../$(cat /tmp/HDRMOVaa | head -1 | cut -d "." -f1)
+echo "excluded due to unknown issue"
 fi
 else
 "$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg $wav -r $(cat fps) -i "$(cat /tmp/HDRMOVaa | head -1 | cut -d '/' -f2 | cut -d "." -f1)"_%06d.tiff $acodec -vcodec prores -pix_fmt yuv422p10le ../HDR_$(cat /tmp/HDRMOVaa | head -1 | cut -d '/' -f2 | cut -d "." -f1).mov 2>> "$(cat /tmp/mlvapp_path/output_folder.txt)"/HDRMOV_LOG.txt
@@ -204,7 +206,8 @@ else
 check="$(cat /tmp/HDRMOVaa | head -1 | cut -d '/' -f2 | cut -d "." -f1)".MLV
 if grep "$check" <<< $(cat /tmp/mlvapp_path/file_names.txt)
 then
-rm -r ../$(cat /tmp/HDRMOVaa | head -1 | cut -d '/' -f2 | cut -d "." -f1)
+#rm -r ../$(cat /tmp/HDRMOVaa | head -1 | cut -d '/' -f2 | cut -d "." -f1)
+echo "excluded due to unknown issue"
 fi
 fi
 #let´s go back 
@@ -335,10 +338,12 @@ then
 check="$(cat /tmp/HDRMOVab | head -1 | cut -d "." -f1)".MLV
 if grep "$check" <<< $(cat /tmp/mlvapp_path/file_names.txt)
 then
-rm -r ../$(cat /tmp/HDRMOVab | head -1 | cut -d "." -f1)
+#rm -r ../$(cat /tmp/HDRMOVab | head -1 | cut -d "." -f1)
+echo "excluded due to unknown issue"
 else
 mv *.{MOV,mov,mp4,MP4,mkv,MKV,avi,AVI} ../
-rm -r ../$(cat /tmp/HDRMOVab | head -1 | cut -d "." -f1)
+#rm -r ../$(cat /tmp/HDRMOVab | head -1 | cut -d "." -f1)
+echo "excluded due to unknown issue"
 fi
 else
 "$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg $wav -r $(cat fps) -i "$(cat /tmp/HDRMOVab | head -1 | cut -d '/' -f2 | cut -d "." -f1)"_%06d.tiff $acodec -vcodec prores -pix_fmt yuv422p10le ../HDR_$(cat /tmp/HDRMOVab | head -1 | cut -d '/' -f2 | cut -d "." -f1).mov 2>> /tmp/HDRMOV_LOGS/HDR_script1_LOG.txt
@@ -347,7 +352,8 @@ else
 check="$(cat /tmp/HDRMOVab | head -1 | cut -d '/' -f2 | cut -d "." -f1)".MLV
 if grep "$check" <<< $(cat /tmp/mlvapp_path/file_names.txt)
 then
-rm -r ../$(cat /tmp/HDRMOVab | head -1 | cut -d '/' -f2 | cut -d "." -f1)
+#rm -r ../$(cat /tmp/HDRMOVab | head -1 | cut -d '/' -f2 | cut -d "." -f1)
+echo "excluded due to unknown issue"
 fi
 fi
 #let´s go back 
@@ -479,10 +485,12 @@ then
 check="$(cat /tmp/HDRMOVac | head -1 | cut -d "." -f1)".MLV
 if grep "$check" <<< $(cat /tmp/mlvapp_path/file_names.txt)
 then
-rm -r ../$(cat /tmp/HDRMOVac | head -1 | cut -d "." -f1)
+#rm -r ../$(cat /tmp/HDRMOVac | head -1 | cut -d "." -f1)
+echo "excluded due to unknown issue"
 else
 mv *.{MOV,mov,mp4,MP4,mkv,MKV,avi,AVI} ../
-rm -r ../$(cat /tmp/HDRMOVac | head -1 | cut -d "." -f1)
+#rm -r ../$(cat /tmp/HDRMOVac | head -1 | cut -d "." -f1)
+echo "excluded due to unknown issue"
 fi
 else
 "$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg $wav -r $(cat fps) -i "$(cat /tmp/HDRMOVac | head -1 | cut -d '/' -f2 | cut -d "." -f1)"_%06d.tiff $acodec -vcodec prores -pix_fmt yuv422p10le ../HDR_$(cat /tmp/HDRMOVac | head -1 | cut -d '/' -f2 | cut -d "." -f1).mov 2>> /tmp/HDRMOV_LOGS/HDR_script2_LOG.txt
@@ -491,7 +499,8 @@ else
 check="$(cat /tmp/HDRMOVac | head -1 | cut -d '/' -f2 | cut -d "." -f1)".MLV
 if grep "$check" <<< $(cat /tmp/mlvapp_path/file_names.txt)
 then
-rm -r ../$(cat /tmp/HDRMOVac | head -1 | cut -d '/' -f2 | cut -d "." -f1)
+#rm -r ../$(cat /tmp/HDRMOVac | head -1 | cut -d '/' -f2 | cut -d "." -f1)
+echo "excluded due to unknown issue"
 fi
 fi
 #let´s go back 
@@ -624,10 +633,12 @@ then
 check="$(cat /tmp/HDRMOVad | head -1 | cut -d "." -f1)".MLV
 if grep "$check" <<< $(cat /tmp/mlvapp_path/file_names.txt)
 then
-rm -r ../$(cat /tmp/HDRMOVad | head -1 | cut -d "." -f1)
+#rm -r ../$(cat /tmp/HDRMOVad | head -1 | cut -d "." -f1)
+echo "excluded due to unknown issue"
 else
 mv *.{MOV,mov,mp4,MP4,mkv,MKV,avi,AVI} ../
-rm -r ../$(cat /tmp/HDRMOVad | head -1 | cut -d "." -f1)
+#rm -r ../$(cat /tmp/HDRMOVad | head -1 | cut -d "." -f1)
+echo "excluded due to unknown issue"
 fi
 else
 "$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg $wav -r $(cat fps) -i "$(cat /tmp/HDRMOVad | head -1 | cut -d '/' -f2 | cut -d "." -f1)"_%06d.tiff $acodec -vcodec prores -pix_fmt yuv422p10le ../HDR_$(cat /tmp/HDRMOVad | head -1 | cut -d '/' -f2 | cut -d "." -f1).mov 2>> /tmp/HDRMOV_LOGS/HDR_script3_LOG.txt
@@ -636,7 +647,8 @@ else
 check="$(cat /tmp/HDRMOVad | head -1 | cut -d '/' -f2 | cut -d "." -f1)".MLV
 if grep "$check" <<< $(cat /tmp/mlvapp_path/file_names.txt)
 then
-rm -r ../$(cat /tmp/HDRMOVad | head -1 | cut -d '/' -f2 | cut -d "." -f1)
+#rm -r ../$(cat /tmp/HDRMOVad | head -1 | cut -d '/' -f2 | cut -d "." -f1)
+echo "excluded due to unknown issue"
 fi
 fi
 #let´s go back 
