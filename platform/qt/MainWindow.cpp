@@ -4068,7 +4068,8 @@ void MainWindow::on_actionExport_triggered()
     QString fileType;
     QString fileEnding;
     saveFileName = saveFileName.left( saveFileName.lastIndexOf( "." ) );
-    if( m_codecProfile == CODEC_AVI )
+    if( m_codecProfile == CODEC_AVI
+     || m_codecProfile == CODEC_MJPEG )
     {
         saveFileName.append( ".avi" );
         fileType = tr("Audio Video Interleave (*.avi)");
