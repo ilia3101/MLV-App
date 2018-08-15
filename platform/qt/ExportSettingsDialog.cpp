@@ -197,6 +197,16 @@ void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
         }
 #endif
     }
+    else if( index == CODEC_FFVHUFF )
+    {
+        ui->labelDebayer->setEnabled( true );
+        ui->comboBoxDebayer->setEnabled( true );
+        ui->comboBoxOption->setEnabled( true );
+        ui->comboBoxOption->addItem( QString( "10bit YUV 4:4:4" ) );
+        ui->comboBoxOption->addItem( QString( "12bit YUV 4:4:4" ) );
+        ui->comboBoxOption->addItem( QString( "16bit YUV 4:4:4" ) );
+        ui->comboBoxOption->setCurrentIndex( 2 );
+    }
     else if( index == CODEC_MLV )
     {
         ui->labelDebayer->setEnabled( false );

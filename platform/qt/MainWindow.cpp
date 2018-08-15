@@ -1458,11 +1458,27 @@ void MainWindow::startExportPipe(QString fileName)
     else if( m_codecProfile == CODEC_FFVHUFF )
     {
         output.append( QString( ".avi" ) );
+
+        QString option;
+
+        switch( m_codecOption )
+        {
+            case CODEC_FFVHUFF_OPTION10:
+                option = "yuv444p10le";
+                break;
+            case CODEC_FFVHUFF_OPTION12:
+                option = "yuv444p12le";
+                break;
+            default: //16bit
+                option = "yuv444p16le";
+                break;
+        }
+
         program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v %3 -pix_fmt %4 %5\"%6\"" )
                     .arg( fps )
                     .arg( resolution )
                     .arg( "ffvhuff" )
-                    .arg( "yuv444p16le" )
+                    .arg( option )
                     .arg( resizeFilter )
                     .arg( output ) );
     }

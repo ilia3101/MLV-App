@@ -50,6 +50,10 @@
 #define CODEC_H265_MP4              1
 #define CODEC_H265_MKV              2
 
+#define CODEC_FFVHUFF_OPTION10      0
+#define CODEC_FFVHUFF_OPTION12      1
+#define CODEC_FFVHUFF_OPTION16      2
+
 #define CODEC_MLV_FASTPASS          0
 #define CODEC_MLV_COMPRESSED        1
 #define CODEC_MLV_AVERAGED          2
