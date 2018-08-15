@@ -25,10 +25,11 @@
 #define CODEC_TIFF                  11
 #define CODEC_JPG2K                 12
 #define CODEC_MJPEG                 13
-#define CODEC_MLV                   14
-#define CODEC_DNXHD                 15
-#define CODEC_DNXHR                 16
-#define CODEC_AUDIO_ONLY            17
+#define CODEC_FFVHUFF               14
+#define CODEC_MLV                   15
+#define CODEC_DNXHD                 16
+#define CODEC_DNXHR                 17
+#define CODEC_AUDIO_ONLY            18
 
 #define CODEC_AVI_OPTION_RAW        0
 #define CODEC_AVI_OPTION_V210       1

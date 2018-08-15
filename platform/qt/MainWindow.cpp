@@ -1455,6 +1455,17 @@ void MainWindow::startExportPipe(QString fileName)
                     .arg( resizeFilter )
                     .arg( output ) );
     }
+    else if( m_codecProfile == CODEC_FFVHUFF )
+    {
+        output.append( QString( ".avi" ) );
+        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v %3 -pix_fmt %4 %5\"%6\"" )
+                    .arg( fps )
+                    .arg( resolution )
+                    .arg( "ffvhuff" )
+                    .arg( "yuv444p16le" )
+                    .arg( resizeFilter )
+                    .arg( output ) );
+    }
     else if( m_codecProfile == CODEC_H264 )
     {
         if( m_codecOption == CODEC_H264_MOV ) output.append( QString( ".mov" ) );
@@ -4069,7 +4080,8 @@ void MainWindow::on_actionExport_triggered()
     QString fileEnding;
     saveFileName = saveFileName.left( saveFileName.lastIndexOf( "." ) );
     if( m_codecProfile == CODEC_AVI
-     || m_codecProfile == CODEC_MJPEG )
+     || m_codecProfile == CODEC_MJPEG
+     || m_codecProfile == CODEC_FFVHUFF )
     {
         saveFileName.append( ".avi" );
         fileType = tr("Audio Video Interleave (*.avi)");

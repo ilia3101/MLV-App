@@ -102,6 +102,11 @@
           </item>
           <item>
            <property name="text">
+            <string>Huff YUV (FFVH)</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
             <string>MLV</string>
            </property>
           </item>
