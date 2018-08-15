@@ -1444,6 +1444,17 @@ void MainWindow::startExportPipe(QString fileName)
                     .arg( resizeFilter )
                     .arg( output ) );
     }
+    else if( m_codecProfile == CODEC_MJPEG )
+    {
+        output.append( QString( ".avi" ) );
+        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v %3 -pix_fmt %4 -q:v 2 -huffman optimal -an -vtag MJPG %5\"%6\"" )
+                    .arg( fps )
+                    .arg( resolution )
+                    .arg( "mjpeg" )
+                    .arg( "yuvj444p" )
+                    .arg( resizeFilter )
+                    .arg( output ) );
+    }
     else if( m_codecProfile == CODEC_H264 )
     {
         if( m_codecOption == CODEC_H264_MOV ) output.append( QString( ".mov" ) );
