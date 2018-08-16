@@ -159,6 +159,69 @@ then
 /Applications/Hugin/tools_mac/enfuse 00001b.tiff 00002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 5' | cut -d "." -f2 | tr -d "/").tiff & 
 #wait for jobs to end
     wait < <(jobs -p)
+
+#safeguards
+   if ! [ -f 1.tiff ] || ! [ -f 2.tiff ]
+   then
+   sleep 2
+rm $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 1' | cut -d "." -f2 | tr -d "/").tiff
+#align images and rename
+/Applications/Hugin/Hugin.app/Contents/MacOS/align_image_stack -a aligned.tif $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 1') $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 2') && mv aligned.tif0000.tif 1.tiff && mv aligned.tif0001.tif 2.tiff 
+
+"$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 1.tiff -pix_fmt rgb24 -vf $crp_fix 1b.tiff 
+"$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 2.tiff -pix_fmt rgb24 -vf $crp_fix 2b.tiff 
+
+/Applications/Hugin/tools_mac/enfuse 1b.tiff 2b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 1' | cut -d "." -f2 | tr -d "/").tiff 
+   fi
+
+   if ! [ -f 01.tiff ] || ! [ -f 02.tiff ]
+   then
+   sleep 2
+rm $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 2' | cut -d "." -f2 | tr -d "/").tiff
+/Applications/Hugin/Hugin.app/Contents/MacOS/align_image_stack -a aligned2.tif $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 2') $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 3') && mv aligned2.tif0000.tif 01.tiff && mv aligned2.tif0001.tif 02.tiff 
+
+"$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 01.tiff -pix_fmt rgb24 -vf $crp_fix 01b.tiff 
+"$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 02.tiff -pix_fmt rgb24 -vf $crp_fix 02b.tiff 
+
+/Applications/Hugin/tools_mac/enfuse 01b.tiff 02b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 2' | cut -d "." -f2 | tr -d "/").tiff 
+   fi 
+
+   if ! [ -f 001.tiff ] || ! [ -f 002.tiff ]
+   then
+   sleep 2
+rm $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 3' | cut -d "." -f2 | tr -d "/").tiff
+/Applications/Hugin/Hugin.app/Contents/MacOS/align_image_stack -a aligned3.tif $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 3') $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 4') && mv aligned3.tif0000.tif 001.tiff && mv aligned3.tif0001.tif 002.tiff
+
+"$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 001.tiff -pix_fmt rgb24 -vf $crp_fix 001b.tiff 
+"$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 002.tiff -pix_fmt rgb24 -vf $crp_fix 002b.tiff
+
+/Applications/Hugin/tools_mac/enfuse 001b.tiff 002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 3' | cut -d "." -f2 | tr -d "/").tiff 
+   fi 
+
+   if ! [ -f 0001.tiff ] || ! [ -f 0002.tiff ]
+   then
+   sleep 2
+rm $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 4' | cut -d "." -f2 | tr -d "/").tiff
+/Applications/Hugin/Hugin.app/Contents/MacOS/align_image_stack -a aligned4.tif $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 4') $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 5') && mv aligned4.tif0000.tif 0001.tiff && mv aligned4.tif0001.tif 0002.tiff
+
+"$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 0001.tiff -pix_fmt rgb24 -vf $crp_fix 0001b.tiff 
+"$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 0002.tiff -pix_fmt rgb24 -vf $crp_fix 0002b.tiff 
+
+/Applications/Hugin/tools_mac/enfuse 0001b.tiff 0002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 4' | cut -d "." -f2 | tr -d "/").tiff 
+   fi 
+
+   if ! [ -f 00001.tiff ] || ! [ -f 00002.tiff ]
+   then
+   sleep 2
+rm $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 5' | cut -d "." -f2 | tr -d "/").tiff
+/Applications/Hugin/Hugin.app/Contents/MacOS/align_image_stack -a aligned5.tif $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 5') $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 6') && mv aligned5.tif0000.tif 00001.tiff && mv aligned5.tif0001.tif 00002.tiff
+
+"$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 00001.tiff -pix_fmt rgb24 -vf $crp_fix 00001b.tiff 
+"$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 00002.tiff -pix_fmt rgb24 -vf $crp_fix 00002b.tiff 
+
+/Applications/Hugin/tools_mac/enfuse 00001b.tiff 00002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 5' | cut -d "." -f2 | tr -d "/").tiff 
+   fi 
+
 #remove unwanted files
 rm 00001.tiff 00002.tiff 0001.tiff 0002.tiff 001.tiff 002.tiff 01.tiff 02.tiff 1.tiff 2.tiff
 rm 00001b.tiff 00002b.tiff 0001b.tiff 0002b.tiff 001b.tiff 002b.tiff 01b.tiff 02b.tiff 1b.tiff 2b.tiff
@@ -305,6 +368,69 @@ then
 /Applications/Hugin/tools_mac/enfuse 00001b.tiff 00002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 5' | cut -d "." -f2 | tr -d "/").tiff & 
 #wait for jobs to end
     wait < <(jobs -p)
+
+#safeguards
+   if ! [ -f 1.tiff ] || ! [ -f 2.tiff ]
+   then
+   sleep 2
+rm $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 1' | cut -d "." -f2 | tr -d "/").tiff
+#align images and rename
+/Applications/Hugin/Hugin.app/Contents/MacOS/align_image_stack -a aligned.tif $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 1') $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 2') && mv aligned.tif0000.tif 1.tiff && mv aligned.tif0001.tif 2.tiff 
+
+"$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 1.tiff -pix_fmt rgb24 -vf $crp_fix 1b.tiff 
+"$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 2.tiff -pix_fmt rgb24 -vf $crp_fix 2b.tiff 
+
+/Applications/Hugin/tools_mac/enfuse 1b.tiff 2b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 1' | cut -d "." -f2 | tr -d "/").tiff 
+   fi
+
+   if ! [ -f 01.tiff ] || ! [ -f 02.tiff ]
+   then
+   sleep 2
+rm $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 2' | cut -d "." -f2 | tr -d "/").tiff
+/Applications/Hugin/Hugin.app/Contents/MacOS/align_image_stack -a aligned2.tif $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 2') $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 3') && mv aligned2.tif0000.tif 01.tiff && mv aligned2.tif0001.tif 02.tiff 
+
+"$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 01.tiff -pix_fmt rgb24 -vf $crp_fix 01b.tiff 
+"$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 02.tiff -pix_fmt rgb24 -vf $crp_fix 02b.tiff 
+
+/Applications/Hugin/tools_mac/enfuse 01b.tiff 02b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 2' | cut -d "." -f2 | tr -d "/").tiff 
+   fi 
+
+   if ! [ -f 001.tiff ] || ! [ -f 002.tiff ]
+   then
+   sleep 2
+rm $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 3' | cut -d "." -f2 | tr -d "/").tiff
+/Applications/Hugin/Hugin.app/Contents/MacOS/align_image_stack -a aligned3.tif $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 3') $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 4') && mv aligned3.tif0000.tif 001.tiff && mv aligned3.tif0001.tif 002.tiff
+
+"$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 001.tiff -pix_fmt rgb24 -vf $crp_fix 001b.tiff 
+"$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 002.tiff -pix_fmt rgb24 -vf $crp_fix 002b.tiff
+
+/Applications/Hugin/tools_mac/enfuse 001b.tiff 002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 3' | cut -d "." -f2 | tr -d "/").tiff 
+   fi 
+
+   if ! [ -f 0001.tiff ] || ! [ -f 0002.tiff ]
+   then
+   sleep 2
+rm $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 4' | cut -d "." -f2 | tr -d "/").tiff
+/Applications/Hugin/Hugin.app/Contents/MacOS/align_image_stack -a aligned4.tif $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 4') $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 5') && mv aligned4.tif0000.tif 0001.tiff && mv aligned4.tif0001.tif 0002.tiff
+
+"$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 0001.tiff -pix_fmt rgb24 -vf $crp_fix 0001b.tiff 
+"$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 0002.tiff -pix_fmt rgb24 -vf $crp_fix 0002b.tiff 
+
+/Applications/Hugin/tools_mac/enfuse 0001b.tiff 0002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 4' | cut -d "." -f2 | tr -d "/").tiff 
+   fi 
+
+   if ! [ -f 00001.tiff ] || ! [ -f 00002.tiff ]
+   then
+   sleep 2
+rm $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 5' | cut -d "." -f2 | tr -d "/").tiff
+/Applications/Hugin/Hugin.app/Contents/MacOS/align_image_stack -a aligned5.tif $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 5') $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 6') && mv aligned5.tif0000.tif 00001.tiff && mv aligned5.tif0001.tif 00002.tiff
+
+"$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 00001.tiff -pix_fmt rgb24 -vf $crp_fix 00001b.tiff 
+"$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 00002.tiff -pix_fmt rgb24 -vf $crp_fix 00002b.tiff 
+
+/Applications/Hugin/tools_mac/enfuse 00001b.tiff 00002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 5' | cut -d "." -f2 | tr -d "/").tiff 
+   fi
+
 #remove unwanted files
 rm 00001.tiff 00002.tiff 0001.tiff 0002.tiff 001.tiff 002.tiff 01.tiff 02.tiff 1.tiff 2.tiff
 rm 00001b.tiff 00002b.tiff 0001b.tiff 0002b.tiff 001b.tiff 002b.tiff 01b.tiff 02b.tiff 1b.tiff 2b.tiff
@@ -452,6 +578,69 @@ then
 /Applications/Hugin/tools_mac/enfuse 00001b.tiff 00002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 5' | cut -d "." -f2 | tr -d "/").tiff & 
 #wait for jobs to end
     wait < <(jobs -p)
+
+#safeguards
+   if ! [ -f 1.tiff ] || ! [ -f 2.tiff ]
+   then
+   sleep 2
+rm $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 1' | cut -d "." -f2 | tr -d "/").tiff
+#align images and rename
+/Applications/Hugin/Hugin.app/Contents/MacOS/align_image_stack -a aligned.tif $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 1') $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 2') && mv aligned.tif0000.tif 1.tiff && mv aligned.tif0001.tif 2.tiff 
+
+"$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 1.tiff -pix_fmt rgb24 -vf $crp_fix 1b.tiff 
+"$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 2.tiff -pix_fmt rgb24 -vf $crp_fix 2b.tiff 
+
+/Applications/Hugin/tools_mac/enfuse 1b.tiff 2b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 1' | cut -d "." -f2 | tr -d "/").tiff 
+   fi
+
+   if ! [ -f 01.tiff ] || ! [ -f 02.tiff ]
+   then
+   sleep 2
+rm $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 2' | cut -d "." -f2 | tr -d "/").tiff
+/Applications/Hugin/Hugin.app/Contents/MacOS/align_image_stack -a aligned2.tif $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 2') $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 3') && mv aligned2.tif0000.tif 01.tiff && mv aligned2.tif0001.tif 02.tiff 
+
+"$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 01.tiff -pix_fmt rgb24 -vf $crp_fix 01b.tiff 
+"$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 02.tiff -pix_fmt rgb24 -vf $crp_fix 02b.tiff 
+
+/Applications/Hugin/tools_mac/enfuse 01b.tiff 02b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 2' | cut -d "." -f2 | tr -d "/").tiff 
+   fi 
+
+   if ! [ -f 001.tiff ] || ! [ -f 002.tiff ]
+   then
+   sleep 2
+rm $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 3' | cut -d "." -f2 | tr -d "/").tiff
+/Applications/Hugin/Hugin.app/Contents/MacOS/align_image_stack -a aligned3.tif $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 3') $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 4') && mv aligned3.tif0000.tif 001.tiff && mv aligned3.tif0001.tif 002.tiff
+
+"$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 001.tiff -pix_fmt rgb24 -vf $crp_fix 001b.tiff 
+"$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 002.tiff -pix_fmt rgb24 -vf $crp_fix 002b.tiff
+
+/Applications/Hugin/tools_mac/enfuse 001b.tiff 002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 3' | cut -d "." -f2 | tr -d "/").tiff 
+   fi 
+
+   if ! [ -f 0001.tiff ] || ! [ -f 0002.tiff ]
+   then
+   sleep 2
+rm $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 4' | cut -d "." -f2 | tr -d "/").tiff
+/Applications/Hugin/Hugin.app/Contents/MacOS/align_image_stack -a aligned4.tif $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 4') $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 5') && mv aligned4.tif0000.tif 0001.tiff && mv aligned4.tif0001.tif 0002.tiff
+
+"$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 0001.tiff -pix_fmt rgb24 -vf $crp_fix 0001b.tiff 
+"$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 0002.tiff -pix_fmt rgb24 -vf $crp_fix 0002b.tiff 
+
+/Applications/Hugin/tools_mac/enfuse 0001b.tiff 0002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 4' | cut -d "." -f2 | tr -d "/").tiff 
+   fi 
+
+   if ! [ -f 00001.tiff ] || ! [ -f 00002.tiff ]
+   then
+   sleep 2
+rm $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 5' | cut -d "." -f2 | tr -d "/").tiff
+/Applications/Hugin/Hugin.app/Contents/MacOS/align_image_stack -a aligned5.tif $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 5') $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 6') && mv aligned5.tif0000.tif 00001.tiff && mv aligned5.tif0001.tif 00002.tiff
+
+"$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 00001.tiff -pix_fmt rgb24 -vf $crp_fix 00001b.tiff 
+"$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 00002.tiff -pix_fmt rgb24 -vf $crp_fix 00002b.tiff 
+
+/Applications/Hugin/tools_mac/enfuse 00001b.tiff 00002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 5' | cut -d "." -f2 | tr -d "/").tiff 
+   fi
+
 #remove unwanted files
 rm 00001.tiff 00002.tiff 0001.tiff 0002.tiff 001.tiff 002.tiff 01.tiff 02.tiff 1.tiff 2.tiff
 rm 00001b.tiff 00002b.tiff 0001b.tiff 0002b.tiff 001b.tiff 002b.tiff 01b.tiff 02b.tiff 1b.tiff 2b.tiff
@@ -600,6 +789,69 @@ then
 /Applications/Hugin/tools_mac/enfuse 00001b.tiff 00002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 5' | cut -d "." -f2 | tr -d "/").tiff & 
 #wait for jobs to end
     wait < <(jobs -p)
+
+#safeguards
+   if ! [ -f 1.tiff ] || ! [ -f 2.tiff ]
+   then
+   sleep 2
+rm $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 1' | cut -d "." -f2 | tr -d "/").tiff
+#align images and rename
+/Applications/Hugin/Hugin.app/Contents/MacOS/align_image_stack -a aligned.tif $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 1') $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 2') && mv aligned.tif0000.tif 1.tiff && mv aligned.tif0001.tif 2.tiff 
+
+"$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 1.tiff -pix_fmt rgb24 -vf $crp_fix 1b.tiff 
+"$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 2.tiff -pix_fmt rgb24 -vf $crp_fix 2b.tiff 
+
+/Applications/Hugin/tools_mac/enfuse 1b.tiff 2b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 1' | cut -d "." -f2 | tr -d "/").tiff 
+   fi
+
+   if ! [ -f 01.tiff ] || ! [ -f 02.tiff ]
+   then
+   sleep 2
+rm $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 2' | cut -d "." -f2 | tr -d "/").tiff
+/Applications/Hugin/Hugin.app/Contents/MacOS/align_image_stack -a aligned2.tif $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 2') $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 3') && mv aligned2.tif0000.tif 01.tiff && mv aligned2.tif0001.tif 02.tiff 
+
+"$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 01.tiff -pix_fmt rgb24 -vf $crp_fix 01b.tiff 
+"$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 02.tiff -pix_fmt rgb24 -vf $crp_fix 02b.tiff 
+
+/Applications/Hugin/tools_mac/enfuse 01b.tiff 02b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 2' | cut -d "." -f2 | tr -d "/").tiff 
+   fi 
+
+   if ! [ -f 001.tiff ] || ! [ -f 002.tiff ]
+   then
+   sleep 2
+rm $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 3' | cut -d "." -f2 | tr -d "/").tiff
+/Applications/Hugin/Hugin.app/Contents/MacOS/align_image_stack -a aligned3.tif $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 3') $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 4') && mv aligned3.tif0000.tif 001.tiff && mv aligned3.tif0001.tif 002.tiff
+
+"$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 001.tiff -pix_fmt rgb24 -vf $crp_fix 001b.tiff 
+"$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 002.tiff -pix_fmt rgb24 -vf $crp_fix 002b.tiff
+
+/Applications/Hugin/tools_mac/enfuse 001b.tiff 002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 3' | cut -d "." -f2 | tr -d "/").tiff 
+   fi 
+
+   if ! [ -f 0001.tiff ] || ! [ -f 0002.tiff ]
+   then
+   sleep 2
+rm $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 4' | cut -d "." -f2 | tr -d "/").tiff
+/Applications/Hugin/Hugin.app/Contents/MacOS/align_image_stack -a aligned4.tif $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 4') $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 5') && mv aligned4.tif0000.tif 0001.tiff && mv aligned4.tif0001.tif 0002.tiff
+
+"$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 0001.tiff -pix_fmt rgb24 -vf $crp_fix 0001b.tiff 
+"$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 0002.tiff -pix_fmt rgb24 -vf $crp_fix 0002b.tiff 
+
+/Applications/Hugin/tools_mac/enfuse 0001b.tiff 0002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 4' | cut -d "." -f2 | tr -d "/").tiff 
+   fi 
+
+   if ! [ -f 00001.tiff ] || ! [ -f 00002.tiff ]
+   then
+   sleep 2
+rm $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 5' | cut -d "." -f2 | tr -d "/").tiff
+/Applications/Hugin/Hugin.app/Contents/MacOS/align_image_stack -a aligned5.tif $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 5') $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 6') && mv aligned5.tif0000.tif 00001.tiff && mv aligned5.tif0001.tif 00002.tiff
+
+"$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 00001.tiff -pix_fmt rgb24 -vf $crp_fix 00001b.tiff 
+"$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 00002.tiff -pix_fmt rgb24 -vf $crp_fix 00002b.tiff 
+
+/Applications/Hugin/tools_mac/enfuse 00001b.tiff 00002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 5' | cut -d "." -f2 | tr -d "/").tiff 
+   fi
+
 #remove unwanted files
 rm 00001.tiff 00002.tiff 0001.tiff 0002.tiff 001.tiff 002.tiff 01.tiff 02.tiff 1.tiff 2.tiff
 rm 00001b.tiff 00002b.tiff 0001b.tiff 0002b.tiff 001b.tiff 002b.tiff 01b.tiff 02b.tiff 1b.tiff 2b.tiff
