@@ -104,7 +104,11 @@ void processingSet3WayCorrection( processingObject_t * processing,
 #define processingSetChromaBlurRadius(processing, radius) (processing)->cs_zone.chroma_blur_radius = (radius)
 #define processingGetChromaBlurRadius(processing) (processing)->cs_zone.chroma_blur_radius
 
-
+/* Denoiser */
+#define processingSetDenoiserWindow(processing, window) (processing)->denoiserWindow = (window)
+#define processingGetDenoiserWindow(processing) (processing)->denoiserWindow
+#define processingSetDenoiserStrength(processing, strength) (processing)->denoiserStrength = (strength)
+#define processingGetDenoiserStrength(processing) (processing)->denoiserStrength
 
 /* Just don't touch this or keep at ~2.2 (or more for a lighter image) */
 void processingSetGamma(processingObject_t * processing, double gammaValue);

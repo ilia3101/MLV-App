@@ -42,16 +42,16 @@ macx: LIBS += -framework CoreVideo \
               -framework CoreMedia
 
 #OpenMP on macOS: first install llvm via brew, setup llvm kit & compiler in Qt settings!
-#macx{
-#    QMAKE_CC = /usr/local/opt/llvm/bin/clang
-#    QMAKE_CXX = /usr/local/opt/llvm/bin/clang++
-#    QMAKE_LINK = /usr/local/opt/llvm/bin/clang++
-#    QMAKE_CFLAGS += -fopenmp
-#    QMAKE_CXXFLAGS += -fopenmp
-#    INCLUDEPATH += -I/usr/local/opt/llvm/include
-#    LIBS += -L/usr/local/opt/llvm/lib -lgomp
-#    QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.8
-#}
+macx{
+    QMAKE_CC = /usr/local/opt/llvm/bin/clang
+    QMAKE_CXX = /usr/local/opt/llvm/bin/clang++
+    QMAKE_LINK = /usr/local/opt/llvm/bin/clang++
+    QMAKE_CFLAGS += -fopenmp
+    QMAKE_CXXFLAGS += -fopenmp
+    INCLUDEPATH += -I/usr/local/opt/llvm/include
+    LIBS += -L/usr/local/opt/llvm/lib -lgomp
+    QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.8
+}
 
 # Windows
 win32: QMAKE_CFLAGS += -O2 -fopenmp -msse4.1 -mssse3 -msse3 -msse2 -msse -D_FILE_OFFSET_BITS=64 -std=c99
@@ -123,7 +123,8 @@ SOURCES += \
     Updater/updaterUI/CUpdater.cpp \
     ../../src/processing/blur_threaded.c \
     Scripting.cpp \
-    FcpxmlAssistantDialog.cpp
+    FcpxmlAssistantDialog.cpp \
+    ../../src/processing/denoiser/denoiser_2d_median.c
 
 macx: SOURCES += ../cocoa/avf_lib/avf_lib.m
 
@@ -164,6 +165,7 @@ HEADERS += \
     ../../src/processing/cube_lut.h \
     ../../src/processing/denoiser/libdenoising.h \
     ../../src/processing/denoiser/mt19937ar.h \
+    ../../src/processing/denoiser/denoiser_2d_median.h \
     ../../src/processing/bmd_film.h \
     InfoDialog.h \
     MyApplication.h \

@@ -32,6 +32,8 @@ public:
     void setHighlights( int value ) {m_highlights = value;}
     void setSharpen( int value )    {m_sharpen = value;}
     void setChromaBlur( int value ) {m_chromaBlur = value;}
+    void setDenoiserWindow( int value ){m_denoiserWindow = value;}
+    void setDenoiserStrength( int value ){m_denoiserStrength = value;}
     void setHighlightReconstruction( bool on ){m_highlightReconstruction = on;}
     void setChromaSeparation( bool on ){m_chromaSeparation = on;}
     void setProfile( uint8_t num )  {m_profile = num;}
@@ -86,6 +88,8 @@ public:
     int highlights( void ) {return m_highlights;}
     int sharpen( void )    {return m_sharpen;}
     int chromaBlur( void ) {return m_chromaBlur;}
+    int denoiserWindow( void ){return m_denoiserWindow;}
+    int denoiserStrength( void ){return m_denoiserStrength;}
     bool isHighlightReconstruction( void ){return m_highlightReconstruction;}
     bool isChromaSeparation( void ){return m_chromaSeparation;}
     bool rawFixesEnabled( void ){return m_rawFixesEnabled;}
@@ -141,6 +145,8 @@ private:
     int m_highlights;
     int m_sharpen;
     int m_chromaBlur;
+    int m_denoiserWindow;
+    int m_denoiserStrength;
     bool m_highlightReconstruction;
     bool m_chromaSeparation;
     bool m_rawFixesEnabled; // Enable/Disable all raw fixes

@@ -84,6 +84,7 @@ private slots:
     void on_horizontalSliderHighlights_valueChanged(int position);
     void on_horizontalSliderSharpen_valueChanged(int position);
     void on_horizontalSliderChromaBlur_valueChanged(int position);
+    void on_horizontalSliderDenoiseStrength_valueChanged(int position);
     void on_horizontalSliderFilterStrength_valueChanged(int position);
     void on_horizontalSliderRawWhite_valueChanged(int position);
     void on_horizontalSliderRawBlack_valueChanged(int position);
@@ -104,6 +105,7 @@ private slots:
     void on_horizontalSliderHighlights_doubleClicked();
     void on_horizontalSliderSharpen_doubleClicked();
     void on_horizontalSliderChromaBlur_doubleClicked();
+    void on_horizontalSliderDenoiseStrength_doubleClicked();
     void on_horizontalSliderFilterStrength_doubleClicked();
     void on_horizontalSliderRawWhite_doubleClicked();
     void on_horizontalSliderRawBlack_doubleClicked();
@@ -115,6 +117,7 @@ private slots:
     void on_checkBoxChromaSeparation_toggled(bool checked);
     void on_comboBoxProfile_currentIndexChanged(int index);
     void on_comboBoxFilterName_currentIndexChanged(int index);
+    void on_comboBoxDenoiseWindow_currentIndexChanged(int index);
     void on_actionZoomFit_triggered(bool on);
     void on_actionZoom100_triggered();
     void on_actionShowHistogram_triggered(void);
@@ -168,6 +171,7 @@ private slots:
     void on_label_HighlightsVal_doubleClicked( void );
     void on_label_Sharpen_doubleClicked( void );
     void on_label_ChromaBlur_doubleClicked( void );
+    void on_label_DenoiseStrength_doubleClicked( void );
     void on_labelAudioTrack_sizeChanged( void );
     void on_label_FilterStrengthVal_doubleClicked( void );
     void on_label_RawWhiteVal_doubleClicked( void );

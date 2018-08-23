@@ -9,7 +9,7 @@
 #include "raw_processing.h"
 #include "../mlv/video_mlv.h"
 #include "filter/filter.h"
-#include "denoiser/libdenoising.h"
+#include "denoiser/denoiser_2d_median.h"
 
 /* Matrix functions which are useful */
 #include "../matrix/matrix.h"
@@ -123,6 +123,8 @@ processingObject_t * initProcessingObject()
     processingSetShadows(processing, 0.0);
     processingSetSimpleContrast(processing, 0.0);
     processingSetTransformation(processing, TR_NONE);
+    processingSetDenoiserStrength(processing, 0);
+    processingSetDenoiserWindow(processing, 2);
 
     /* Just in case (should be done tho already) */
     processing_update_matrices(processing);
@@ -310,41 +312,48 @@ void applyProcessingObject( processingObject_t * processing,
     if (threads == 1)
     {
         apply_processing_object(processing, imageX, imageY, inputImage, outputImage, get_buffer(processing->shadows_highlights.blur_image));
-        return;
+    }
+    else
+    {
+        apply_processing_parameters_t * params = alloca(sizeof(apply_processing_parameters_t) * threads);
+
+        /* All chunks this height except possibly slightly longer last one */
+        int chunk_size = imageY/threads;
+        /* Size of a chunk */
+        uint32_t offset_chunk = imageX * chunk_size * 3;
+
+        /* Split in to chunks for each thread */
+        for (int t = 0; t < threads; ++t)
+        {
+            params[t].processing = processing;
+            params[t].imageX = imageX;
+            params[t].imageY = chunk_size;
+            params[t].inputImage = inputImage + offset_chunk*t;
+            params[t].outputImage = outputImage + offset_chunk*t;
+            params[t].blurImage = get_buffer(processing->shadows_highlights.blur_image) + offset_chunk*t;
+        }
+
+        /* To make sure bottom is processed */
+        params[threads-1].imageY = imageY - chunk_size * (threads-1);
+
+        pthread_t * threadid = alloca(threads * sizeof(pthread_t));
+
+        /* Do threads */
+        for (int t = 0; t < threads; ++t)
+        {
+            pthread_create(&threadid[t], NULL, (void *)&processing_object_thread, (void *)(params + t));
+        }
+        /* let all threads finish */
+        for (int t = 0; t < threads; ++t)
+        {
+            pthread_join(threadid[t], NULL);
+        }
     }
 
-    apply_processing_parameters_t * params = alloca(sizeof(apply_processing_parameters_t) * threads);
-
-    /* All chunks this height except possibly slightly longer last one */
-    int chunk_size = imageY/threads;
-    /* Size of a chunk */
-    uint32_t offset_chunk = imageX * chunk_size * 3;
-    
-    /* Split in to chunks for each thread */
-    for (int t = 0; t < threads; ++t)
+    /* Denoiser must render on complete image, because of 2D median border problem */
+    if( processing->denoiserStrength > 0 )
     {
-        params[t].processing = processing;
-        params[t].imageX = imageX;
-        params[t].imageY = chunk_size;
-        params[t].inputImage = inputImage + offset_chunk*t;
-        params[t].outputImage = outputImage + offset_chunk*t;
-        params[t].blurImage = get_buffer(processing->shadows_highlights.blur_image) + offset_chunk*t;
-    }
-
-    /* To make sure bottom is processed */
-    params[threads-1].imageY = imageY - chunk_size * (threads-1);
-
-    pthread_t * threadid = alloca(threads * sizeof(pthread_t));
-
-    /* Do threads */
-    for (int t = 0; t < threads; ++t)
-    {
-        pthread_create(&threadid[t], NULL, (void *)&processing_object_thread, (void *)(params + t));
-    }
-    /* let all threads finish */
-    for (int t = 0; t < threads; ++t)
-    {
-        pthread_join(threadid[t], NULL);
+        denoise_2D_median( outputImage, imageX, imageY, processing->denoiserWindow, processing->denoiserStrength );
     }
 }
 
@@ -668,9 +677,6 @@ void apply_processing_object( processingObject_t * processing,
     if (processing->lut_on)
     {
         apply_lut( processing->lut, imageX, imageY, outputImage );
-        //Test denoiser on activating lut checkbox
-        //denoiseNlMeans( outputImage, imageX, imageY, 10.0f );
-        //easy_denoise( outputImage, imageX, imageY, 9 );
     }
 
     if (processing->filter_on)

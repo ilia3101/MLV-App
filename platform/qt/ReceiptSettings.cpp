@@ -28,6 +28,8 @@ ReceiptSettings::ReceiptSettings()
     m_highlights = 0;
     m_sharpen = 0;
     m_chromaBlur = 0;
+    m_denoiserWindow = 2;
+    m_denoiserStrength = 0;
     m_highlightReconstruction = false;
     m_chromaSeparation = false;
     m_rawFixesEnabled = true;

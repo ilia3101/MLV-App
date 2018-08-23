@@ -2471,6 +2471,16 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
             else receipt->setProfile( profile );
             Rxml->readNext();
         }
+        else if( Rxml->isStartElement() && Rxml->name() == "denoiserWindow" )
+        {
+            receipt->setDenoiserWindow( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == "denoiserStrength" )
+        {
+            receipt->setDenoiserStrength( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
         else if( Rxml->isStartElement() && Rxml->name() == "rawFixesEnabled" )
         {
             receipt->setRawFixesEnabled( (bool)Rxml->readElementText().toInt() );
@@ -2651,6 +2661,8 @@ void MainWindow::writeXmlElementsToFile(QXmlStreamWriter *xmlWriter, ReceiptSett
     xmlWriter->writeTextElement( "highlightReconstruction", QString( "%1" ).arg( receipt->isHighlightReconstruction() ) );
     xmlWriter->writeTextElement( "chromaSeparation",        QString( "%1" ).arg( receipt->isChromaSeparation() ) );
     xmlWriter->writeTextElement( "profile",                 QString( "%1" ).arg( receipt->profile() ) );
+    xmlWriter->writeTextElement( "denoiserStrength",        QString( "%1" ).arg( receipt->denoiserStrength() ) );
+    xmlWriter->writeTextElement( "denoiserWindow",          QString( "%1" ).arg( receipt->denoiserWindow() ) );
     xmlWriter->writeTextElement( "rawFixesEnabled",         QString( "%1" ).arg( receipt->rawFixesEnabled() ) );
     xmlWriter->writeTextElement( "verticalStripes",         QString( "%1" ).arg( receipt->verticalStripes() ) );
     xmlWriter->writeTextElement( "focusPixels",             QString( "%1" ).arg( receipt->focusPixels() ) );
@@ -2820,6 +2832,10 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     ui->comboBoxProfile->setCurrentIndex( receipt->profile() );
     on_comboBoxProfile_currentIndexChanged( receipt->profile() );
 
+    ui->horizontalSliderDenoiseStrength->setValue( receipt->denoiserStrength() );
+    ui->comboBoxDenoiseWindow->setCurrentIndex( receipt->denoiserWindow() - 2 );
+    on_comboBoxDenoiseWindow_currentIndexChanged( receipt->denoiserWindow() - 2 );
+
     ui->checkBoxRawFixEnable->setChecked( receipt->rawFixesEnabled() );
     on_checkBoxRawFixEnable_clicked( receipt->rawFixesEnabled() );
     if( receipt->focusPixels() == -1 )
@@ -2938,6 +2954,8 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     receipt->setHighlightReconstruction( ui->checkBoxHighLightReconstruction->isChecked() );
     receipt->setChromaSeparation( ui->checkBoxChromaSeparation->isChecked() );
     receipt->setProfile( ui->comboBoxProfile->currentIndex() );
+    receipt->setDenoiserStrength( ui->horizontalSliderDenoiseStrength->value() );
+    receipt->setDenoiserWindow( ui->comboBoxDenoiseWindow->currentIndex() + 2 );
 
     receipt->setRawFixesEnabled( ui->checkBoxRawFixEnable->isChecked() );
     receipt->setVerticalStripes( toolButtonVerticalStripesCurrentIndex() );
@@ -2997,6 +3015,8 @@ void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings 
     receiptTarget->setHighlightReconstruction( receiptSource->isHighlightReconstruction() );
     receiptTarget->setChromaSeparation( receiptSource->isChromaSeparation() );
     receiptTarget->setProfile( receiptSource->profile() );
+    receiptTarget->setDenoiserStrength( receiptSource->denoiserStrength() );
+    receiptTarget->setDenoiserWindow( receiptSource->denoiserWindow() );
 
     receiptTarget->setRawFixesEnabled( receiptSource->rawFixesEnabled() );
     receiptTarget->setVerticalStripes( receiptSource->verticalStripes() );
@@ -3104,6 +3124,8 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     receipt->setHighlightReconstruction( m_pSessionReceipts.at( row )->isHighlightReconstruction() );
     receipt->setChromaSeparation( m_pSessionReceipts.at( row )->isChromaSeparation() );
     receipt->setProfile( m_pSessionReceipts.at( row )->profile() );
+    receipt->setDenoiserStrength( m_pSessionReceipts.at( row )->denoiserStrength() );
+    receipt->setDenoiserWindow( m_pSessionReceipts.at( row )->denoiserWindow() );
 
     receipt->setRawFixesEnabled( m_pSessionReceipts.at( row )->rawFixesEnabled() );
     receipt->setVerticalStripes( m_pSessionReceipts.at( row )->verticalStripes() );
@@ -3853,6 +3875,13 @@ void MainWindow::on_horizontalSliderChromaBlur_valueChanged(int position)
     m_frameChanged = true;
 }
 
+void MainWindow::on_horizontalSliderDenoiseStrength_valueChanged(int position)
+{
+    processingSetDenoiserStrength( m_pProcessingObject, position );
+    ui->label_DenoiseStrength->setText( QString("%1").arg( position ) );
+    m_frameChanged = true;
+}
+
 void MainWindow::on_horizontalSliderFilterStrength_valueChanged(int position)
 {
     filterObjectSetFilterStrength( m_pProcessingObject->filter, position / 100.0 );
@@ -4033,6 +4062,13 @@ void MainWindow::on_horizontalSliderChromaBlur_doubleClicked()
 {
     ReceiptSettings *sliders = new ReceiptSettings(); //default
     ui->horizontalSliderChromaBlur->setValue( sliders->chromaBlur() );
+    delete sliders;
+}
+
+void MainWindow::on_horizontalSliderDenoiseStrength_doubleClicked()
+{
+    ReceiptSettings *sliders = new ReceiptSettings(); //default
+    ui->horizontalSliderDenoiseStrength->setValue( sliders->denoiserStrength() );
     delete sliders;
 }
 
@@ -4308,6 +4344,13 @@ void MainWindow::on_comboBoxProfile_currentIndexChanged(int index)
 void MainWindow::on_comboBoxFilterName_currentIndexChanged(int index)
 {
     filterObjectSetFilter( m_pProcessingObject->filter, index );
+    m_frameChanged = true;
+}
+
+//Denoiser Window Selection
+void MainWindow::on_comboBoxDenoiseWindow_currentIndexChanged(int index)
+{
+    processingSetDenoiserWindow( m_pProcessingObject, index + 2 );
     m_frameChanged = true;
 }
 
@@ -5045,6 +5088,15 @@ void MainWindow::on_label_ChromaBlur_doubleClicked()
     editSlider.autoSetup( ui->horizontalSliderChromaBlur, ui->label_ChromaBlur, 1.0, 0, 1.0 );
     editSlider.exec();
     ui->horizontalSliderChromaBlur->setValue( editSlider.getValue() );
+}
+
+//DoubleClick on DenoiseStrength Label
+void MainWindow::on_label_DenoiseStrength_doubleClicked()
+{
+    EditSliderValueDialog editSlider;
+    editSlider.autoSetup( ui->horizontalSliderDenoiseStrength, ui->label_DenoiseStrength, 1.0, 0, 1.0 );
+    editSlider.exec();
+    ui->horizontalSliderDenoiseStrength->setValue( editSlider.getValue() );
 }
 
 //Repaint audio if its size changed

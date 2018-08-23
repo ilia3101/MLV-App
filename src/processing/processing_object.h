@@ -147,6 +147,10 @@ typedef struct {
 
     /* Pointer to dual iso variable from llrawproc, needed for highest green analysis */
     int        *dual_iso;
+
+    /* 2D Median Denoiser */
+    uint8_t    denoiserWindow;
+    uint8_t    denoiserStrength;
 } processingObject_t;
 
 /* Maybe save edits to MLV file as a block? */
