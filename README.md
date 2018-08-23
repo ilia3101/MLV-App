@@ -42,6 +42,7 @@ Find the latest releases [here](https://ilia3101.github.io/MLV-App/). Download, 
 - Resize frame resolution for (batch) export
 - Clip batch export
 - Smooth artifacts filter (minimizes moiree) for all ffmpeg export codecs, realized by ffmpeg filter combination
+- 2D median denoiser (don't expect wonders!)
 - Post export scripting on macOS (thx @dannephoto)
 - Zoom: fit to screen, 100% and free zoom, scroll through picture
 - Zebras
