@@ -8,6 +8,8 @@
 #ifndef DENOISER_2D_MEDIAN_H
 #define DENOISER_2D_MEDIAN_H
 
+#include <stdint.h>
+
 void denoise_2D_median(uint16_t *data, int width, int height, uint8_t window, uint8_t strength);
 
 #endif // DENOISER_2D_MEDIAN_H
