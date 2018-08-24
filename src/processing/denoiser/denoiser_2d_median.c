@@ -68,7 +68,7 @@ void denoise_2D_median(uint16_t *data, int width, int height, uint8_t window, ui
     uint16_t edgeY = window / 2;
     uint8_t middle = window * window / 2;
 
-#pragma omp parallel for collapse(2)
+#pragma omp parallel for// collapse(2) //collapse did not work here in test on Windows
     for( uint16_t x = edgeX; x < width-edgeX; x++ )
     {
         for( uint16_t y = edgeY; y < height-edgeY; y++ )
