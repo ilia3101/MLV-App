@@ -7,11 +7,45 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include "denoiser_2d_median.h"
 
-//Compare function, needed by qsort
-int compare (const void * a, const void * b)
+void swap(int *a, int *b)
 {
-    return ( *(int*)a - *(int*)b );
+    int temp;
+    temp=*a;
+    *a=*b;
+    *b=temp;
+}
+
+/* the aim of the partition is to return the subscript of the exact */
+/* position of the pivot when it is sorted */
+// the low variable is used to point to the position of the next lowest element
+int partition(int arr[], int first, int last)
+{
+    int pivot = arr[last]; // changed the pivot
+    int low = first;
+    int i = first; // changed
+    while(i <= last-1 ){// or you can do for(i=first;i<last;i++)
+        if(arr[i] < pivot){
+            swap(&arr[i], &arr[low]);
+            low++;
+        }
+        i++;
+    }
+    swap(&arr[last], &arr[low]);
+    // after finishing putting all the lower element than the pivot
+    // It's time to put the pivot into its place and return its position
+    return low;
+}
+
+void quick_sort(int arr[], int first, int last)
+{
+    int pivot_pos;
+    if(first < last){
+        pivot_pos = partition(arr, first, last);
+        quick_sort(arr, first, pivot_pos-1);
+        quick_sort(arr, pivot_pos+1, last);
+    }
 }
 
 //2D median filter
@@ -59,9 +93,9 @@ void denoise_2D_median(uint16_t *data, int width, int height, uint8_t window, ui
                 }
             }
             //sort window values
-            qsort (windowR, winSize, sizeof(int), compare);
-            qsort (windowG, winSize, sizeof(int), compare);
-            qsort (windowB, winSize, sizeof(int), compare);
+            quick_sort( windowR, 0, winSize-1 );
+            quick_sort( windowG, 0, winSize-1 );
+            quick_sort( windowB, 0, winSize-1 );
 
             //write output
             data[(y*width+x)*3+0] = strengthF*windowR[middle] + antiStrengthF*data[(y*width+x)*3+0];
