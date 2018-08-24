@@ -394,7 +394,7 @@ QGroupBox::indicator:checked {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>-1385</y>
+            <y>0</y>
             <width>200</width>
             <height>3542</height>
            </rect>
@@ -3900,6 +3900,9 @@ QGroupBox::indicator:checked {
                       <font>
                        <pointsize>10</pointsize>
                       </font>
+                     </property>
+                     <property name="currentIndex">
+                      <number>1</number>
                      </property>
                      <item>
                       <property name="text">
