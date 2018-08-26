@@ -1033,14 +1033,6 @@ void MainWindow::initGui( void )
 
     //set CPU Usage
     m_countTimeDown = -1;   //Time in seconds for CPU countdown
-
-    //Denoiser - hide it because there are still problems on Linux
-    ui->horizontalSliderDenoiseStrength->setVisible( false );
-    ui->comboBoxDenoiseWindow->setVisible( false );
-    ui->label_DenoiseStrength->setVisible( false );
-    ui->label_32->setVisible( false );
-    ui->line_19->setVisible( false );
-    ui->label_31->setVisible( false );
 }
 
 //Initialize the library
