@@ -35,8 +35,8 @@
 #include <FcpxmlAssistantDialog.h>
 
 #define APPNAME "MLV App"
-#define VERSION "0.17 alpha"
-#define GITVERSION "QTv0.17alpha"
+#define VERSION "1.0"
+#define GITVERSION "QTv1.0"
 
 #define FACTOR_DS       22.5
 #define FACTOR_LS       11.2
@@ -1033,6 +1033,14 @@ void MainWindow::initGui( void )
 
     //set CPU Usage
     m_countTimeDown = -1;   //Time in seconds for CPU countdown
+
+    //Denoiser - hide it because there are still problems on Linux
+    ui->horizontalSliderDenoiseStrength->setVisible( false );
+    ui->comboBoxDenoiseWindow->setVisible( false );
+    ui->label_DenoiseStrength->setVisible( false );
+    ui->label_32->setVisible( false );
+    ui->line_19->setVisible( false );
+    ui->label_31->setVisible( false );
 }
 
 //Initialize the library
