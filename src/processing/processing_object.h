@@ -55,6 +55,7 @@ typedef struct {
     double final_matrix[9];
     /* Precalculated all matrix values 0-65535 */
     int32_t * pre_calc_matrix[9];
+    int32_t * pre_calc_matrix_gradient[9];
 
     struct {
         /* "use chroma separation" */

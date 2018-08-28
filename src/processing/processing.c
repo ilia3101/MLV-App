@@ -360,6 +360,63 @@ void processing_update_matrices(processingObject_t * processing)
     /* done? */
 }
 
+/* Calculates the final matrix for the gradient image;
+ * Combines: exposure + white balance + camera specific adjustment all in one matrix! */
+void processing_update_matrices_gradient(processingObject_t * processing)
+{
+    /* Temporary working matrix */
+    double temp_matrix_a[9];
+    double temp_matrix_b[9];
+    double final_matrix[9];
+
+    /* (for shorter code) */
+    int32_t ** pm = processing->pre_calc_matrix_gradient;
+
+    /* Create a camera to sRGB matrix in temp_matrix_a */
+    // memcpy(temp_matrix_a, processing->cam_to_sRGB_matrix, 9 * sizeof(double));
+    memcpy(temp_matrix_a, (double *)id_matrix, 9 * sizeof(double)); /* just nothjng for now */
+
+    /* whitebalance */
+
+    // multiplyMatrices(temp_matrix_a, (double *)ciecam02, temp_matrix_b); /* No ciecam for now */
+    multiplyMatrices(temp_matrix_a, (double *)id_matrix, temp_matrix_b); /* (nothing) */
+    memcpy(temp_matrix_a, temp_matrix_b, 9 * sizeof(double));
+
+    /* Multiply channels */
+    for (int i = 0; i < 3; ++i) temp_matrix_b[i] *= processing->wb_multipliers[0];
+    for (int i = 3; i < 6; ++i) temp_matrix_b[i] *= processing->wb_multipliers[1];
+    for (int i = 6; i < 9; ++i) temp_matrix_b[i] *= processing->wb_multipliers[2];
+
+    /* Convert back to XYZ space from cone space -> to temp_matrix_a */
+    // invertMatrix((double *)ciecam02, temp_matrix_c);
+    // multiplyMatrices(temp_matrix_b, temp_matrix_c, temp_matrix_a); /* No ciecam for now */
+    multiplyMatrices(temp_matrix_b, (double *)id_matrix, temp_matrix_a); /* aka do nothing */
+
+    /* Multiply the currently XYZ matrix back to RGB in to final_matrix */
+    multiplyMatrices( temp_matrix_a,
+                      processing->xyz_to_rgb_matrix,
+                      final_matrix );
+
+    /* Exposure, done here if smaller than 0, or no tonemapping - else done at gamma function */
+    if ((processing->exposure_stops + processing->gradient_exposure_stops) < 0.0 || !processing->tone_mapping)
+    {
+        double exposure_factor = pow(2.0, (processing->exposure_stops + processing->gradient_exposure_stops));
+        for (int i = 0; i < 9; ++i) final_matrix[i] *= exposure_factor;
+    }
+
+    /* Matrix stuff done I guess */
+
+    /* Precalculate 0-65535 */
+    #pragma omp parallel for collapse(2)
+    for (int i = 0; i < 9; ++i)
+    {
+        for (int j = 0; j < 65536; ++j)
+        {
+            pm[i][j] = (int32_t)((double)j * final_matrix[i]);
+        }
+    }
+}
+
 void processing_update_highest_green(processingObject_t * processing)
 {
     /* Highest green value - pixels at this value will need to be reconstructed */

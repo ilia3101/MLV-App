@@ -3748,6 +3748,14 @@ void MainWindow::on_horizontalSliderExposure_valueChanged(int position)
     m_frameChanged = true;
 }
 
+void MainWindow::on_horizontalSliderExposureGradient_valueChanged(int position)
+{
+    double value = position / 100.0;
+    processingSetGradientExposure( m_pProcessingObject, value );
+    ui->label_ExposureGradient->setText( QString("%1").arg( value, 0, 'f', 2 ) );
+    m_frameChanged = true;
+}
+
 void MainWindow::on_horizontalSliderContrast_valueChanged(int position)
 {
     processingSetSimpleContrast( m_pProcessingObject, position / 100.0 );

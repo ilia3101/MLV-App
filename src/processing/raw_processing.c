@@ -70,7 +70,10 @@ processingObject_t * initProcessingObject()
 
     /* For precalculated matrix values */
     for (int i = 0; i < 9; ++i)
+    {
         processing->pre_calc_matrix[i] = malloc( 65536 * sizeof(int32_t) );
+        processing->pre_calc_matrix_gradient[i] = malloc( 65536 * sizeof(int32_t) );
+    }
 
     /* A nothing matrix */
     processing->cam_to_sRGB_matrix[0] = 1.0;
@@ -372,9 +375,11 @@ void apply_processing_object( processingObject_t * processing,
 
     /* (for shorter code) */
     int32_t ** pm = processing->pre_calc_matrix;
+    int32_t ** pmg = processing->pre_calc_matrix_gradient;
     uint16_t * out_img = outputImage;
     uint16_t * img = inputImage;
     uint16_t * img_end = img + img_s;
+    uint16_t * gm = processing->gradient_mask; //TODO: should only be the part for the thread -> single thread only atm
 
     /* Apply some precalcuolated settings */
     for (int i = 0; i < img_s; ++i)
@@ -413,7 +418,7 @@ void apply_processing_object( processingObject_t * processing,
 #endif
 
     /* white balance & exposure & highlights & gamma & highlight reconstruction */
-    for (uint16_t * pix = img, * bpix = blurImage; pix < img_end; pix += 3, bpix += 3)
+    for (uint16_t * pix = img, * bpix = blurImage, *gmpix = gm; pix < img_end; pix += 3, bpix += 3, gmpix++)
     {
         double expo_correction = 1.0;
         /* shadows & highlights, clarity part 1 */
@@ -478,6 +483,35 @@ void apply_processing_object( processingObject_t * processing,
             pix[i] = processing->pre_calc_gamma[ pix[i] ];
         }
         tmp1b = processing->pre_calc_gamma[ tmp1b ];
+
+        if( processing->gradient_enable )
+        {
+            //TODO: must be different, because pix is overwritten already :(
+            /* do the same for gradient as for the pic itself, but before the values are overwritten */
+            /* white balance & exposure & highlights */
+            int32_t pix0g = (pmg[0][pix[0]] + pmg[1][pix[1]] + pmg[2][pix[2]])*expo_correction;
+            int32_t pix1g = (pmg[3][pix[0]] + pmg[4][pix[1]] + pmg[5][pix[2]])*expo_correction;
+            int32_t pix2g = (pmg[6][pix[0]] + pmg[7][pix[1]] + pmg[8][pix[2]])*expo_correction;
+            int32_t tmp1g = (pmg[3][pix[0]] + pmg[4][pix[1]] + pmg[5][pix[2]]);
+
+            uint16_t pixg[3];
+            pixg[0] = LIMIT16(pix0g);
+            pixg[1] = LIMIT16(pix1g);
+            pixg[2] = LIMIT16(pix2g);
+            uint16_t tmp1gb = LIMIT16(tmp1g);
+
+            /* Gamma */
+            for( int i = 0; i < 3; i++ )
+            {
+                pixg[i] = processing->pre_calc_gamma[ pixg[i] ];
+            }
+            tmp1gb = processing->pre_calc_gamma[ tmp1gb ];
+
+            pix[0] = gmpix[0] / 65535.0 * pixg[0] + (65535 - gmpix[0]) / 65535.0 * pix[0];
+            pix[1] = gmpix[0] / 65535.0 * pixg[1] + (65535 - gmpix[0]) / 65535.0 * pix[1];
+            pix[2] = gmpix[0] / 65535.0 * pixg[2] + (65535 - gmpix[0]) / 65535.0 * pix[2];
+            tmp1b = gmpix[0] / 65535.0 * tmp1gb + (65535 - gmpix[0]) / 65535.0 * tmp1b;
+        }
 
         /* Now highlight reconstruction */
         if (processing->highlight_reconstruction)
@@ -757,7 +791,9 @@ void processingSetExposureStops(processingObject_t * processing, double exposure
     processing->exposure_stops = exposureStops;
 
     processingSetGamma(processing, processing->gamma_power);
+    //TODO: set gamma of gradient
     processing_update_matrices(processing);
+    processing_update_matrices_gradient(processing);
 }
 
 
@@ -997,6 +1033,7 @@ void freeProcessingObject(processingObject_t * processing)
     freeFilterObject(processing->filter);
     free_lut(processing->lut);
     for (int i = 8; i >= 0; --i) free(processing->pre_calc_matrix[i]);
+    for (int i = 8; i >= 0; --i) free(processing->pre_calc_matrix_gradient[i]);
     for (int i = 6; i >= 0; --i) free(processing->cs_zone.pre_calc_rgb_to_YCbCr[i]);
     for (int i = 3; i >= 0; --i) free(processing->cs_zone.pre_calc_YCbCr_to_rgb[i]);
     free_image_buffer(processing->shadows_highlights.blur_image);

@@ -69,6 +69,7 @@ private slots:
     void on_horizontalSliderPosition_valueChanged(int position);
     void on_actionClip_Information_triggered();
     void on_horizontalSliderExposure_valueChanged(int position);
+    void on_horizontalSliderExposureGradient_valueChanged(int position);
     void on_horizontalSliderContrast_valueChanged(int position);
     void on_horizontalSliderTemperature_valueChanged(int position);
     void on_horizontalSliderTint_valueChanged(int position);
