@@ -9,6 +9,7 @@
 #define GRADIENTELEMENT_H
 
 #include "GraphicsPolygonMoveItem.h"
+#include <QPoint>
 
 class GradientElement
 {
@@ -21,6 +22,8 @@ public:
     void setUiAngle( double uiAngle );
     void setStrechFactorX( double factor );
     void setStrechFactorY( double factor );
+    QPointF getStartPos( void );
+    QPointF getFinalPos( void );
     void reset();
 
     int uiLength( void );

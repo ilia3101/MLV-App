@@ -87,6 +87,24 @@ void GradientElement::setStrechFactorY(double factor)
     calcFromPoints();
 }
 
+//Get the start position from the class
+QPointF GradientElement::getStartPos()
+{
+    QPoint pos;
+    pos.setX( m_startX );
+    pos.setY( m_startY );
+    return pos;
+}
+
+//Get the final position from the class
+QPointF GradientElement::getFinalPos()
+{
+    QPoint pos;
+    pos.setX( m_endX );
+    pos.setY( m_endY );
+    return pos;
+}
+
 //Get length for UI element numbers
 int GradientElement::uiLength()
 {

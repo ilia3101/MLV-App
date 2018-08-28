@@ -110,6 +110,13 @@ void processingSet3WayCorrection( processingObject_t * processing,
 #define processingSetDenoiserStrength(processing, strength) (processing)->denoiserStrength = (strength)
 #define processingGetDenoiserStrength(processing) (processing)->denoiserStrength
 
+/* Gradient */
+void processingSetGradientMask(processingObject_t * processing, uint16_t width, uint16_t height, float x1, float y1, float x2, float y2 );
+#define processingSetGradientExposure(processing, value) (processing)->gradient_exposure_stops = (value)
+#define processingGetGradientExposure(processing) (processing)->gradient_exposure_stops
+#define processingSetGradientEnable(processing, value) (processing)->gradient_enable = (value)
+#define processingIsGradientEnabled(processing) (processing)->gradient_enable
+
 /* Just don't touch this or keep at ~2.2 (or more for a lighter image) */
 void processingSetGamma(processingObject_t * processing, double gammaValue);
 #define processingGetGamma(processing) (processing)->gamma_power

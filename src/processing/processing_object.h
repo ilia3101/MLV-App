@@ -151,6 +151,11 @@ typedef struct {
     /* 2D Median Denoiser */
     uint8_t    denoiserWindow;
     uint8_t    denoiserStrength;
+
+    /* Gradient */
+    double     gradient_exposure_stops;
+    uint8_t    gradient_enable;
+    uint16_t * gradient_mask; //same size like picture, alpha mask
 } processingObject_t;
 
 /* Maybe save edits to MLV file as a block? */

@@ -923,10 +923,10 @@ void MainWindow::initGui( void )
     connect( m_pGradientElement->gradientGraphicsElement(), SIGNAL( itemMoved(int,int) ), this, SLOT( gradientGraphicElementMoved(int,int) ) );
     connect( m_pGradientElement->gradientGraphicsElement(), SIGNAL( itemHovered(bool) ), this, SLOT( gradientGraphicElementHovered(bool) ) );
     //Disable Gradient while no file loaded
-    ui->checkBoxGradientEnable->setChecked( false );
+    /*ui->checkBoxGradientEnable->setChecked( false );
     ui->checkBoxGradientEnable->setEnabled( false );
     ui->toolButtonGradientPaint->setEnabled( false );
-    ui->groupBoxLinearGradient->setVisible( false );
+    ui->groupBoxLinearGradient->setVisible( false );*/
 
     //Cut In & Out
     initCutInOut( -1 );
@@ -5685,6 +5685,8 @@ void MainWindow::gradientFinalPosPicked(int x, int y, bool isFinished)
     {
         ui->toolButtonGradientPaint->setChecked( false );
     }
+
+    setGradientMask();
 }
 
 //Collapse & Expand Raw Correction
@@ -5959,6 +5961,8 @@ void MainWindow::on_checkBoxGradientEnable_toggled(bool checked)
 {
     if( checked ) m_pGradientElement->gradientGraphicsElement()->show();
     else m_pGradientElement->gradientGraphicsElement()->hide();
+
+    processingSetGradientEnable( m_pProcessingObject, checked );
 }
 
 //The gradient startPoint X has changed
@@ -5971,6 +5975,9 @@ void MainWindow::on_spinBoxGradientX_valueChanged(int arg1)
                                                getMlvWidth( m_pMlvObject ),
                                                getMlvHeight( m_pMlvObject ) );
     m_pGradientElement->gradientGraphicsElement()->blockSignals( false );
+
+    //Send to processing module
+    setGradientMask();
 }
 
 //The gradient startPoint Y has changed
@@ -5983,6 +5990,9 @@ void MainWindow::on_spinBoxGradientY_valueChanged(int arg1)
                                                getMlvWidth( m_pMlvObject ),
                                                getMlvHeight( m_pMlvObject ) );
     m_pGradientElement->gradientGraphicsElement()->blockSignals( false );
+
+    //Send to processing module
+    setGradientMask();
 }
 
 //The gradient length has changed
@@ -5995,6 +6005,9 @@ void MainWindow::on_spinBoxGradientLength_valueChanged(int arg1)
                                                getMlvWidth( m_pMlvObject ),
                                                getMlvHeight( m_pMlvObject ) );
     m_pGradientElement->gradientGraphicsElement()->blockSignals( false );
+
+    //Send to processing module
+    setGradientMask();
 }
 
 //The gradient angle label was doubleclicked
@@ -6030,6 +6043,9 @@ void MainWindow::on_dialGradientAngle_valueChanged(int value)
                                                getMlvWidth( m_pMlvObject ),
                                                getMlvHeight( m_pMlvObject ) );
     m_pGradientElement->gradientGraphicsElement()->blockSignals( false );
+
+    //Send to processing module
+    setGradientMask();
 }
 
 //Someone moved the gradient graphics element
@@ -6047,6 +6063,9 @@ void MainWindow::gradientGraphicElementMoved(int x, int y)
     ui->spinBoxGradientY->setValue( y );
     ui->spinBoxGradientX->blockSignals( false );
     ui->spinBoxGradientY->blockSignals( false );
+
+    //Send to processing module
+    setGradientMask();
 }
 
 //Someone starts/stops hovering the element
@@ -6151,6 +6170,21 @@ void MainWindow::setWhiteBalanceFromMlv(ReceiptSettings *sliders)
         sliders->setTemperature( 6000 );
         break;
     }
+}
+
+//Set the gradient mask into processing module
+void MainWindow::setGradientMask(void)
+{
+    //Send to processing module
+    processingSetGradientMask( m_pProcessingObject,
+                               getMlvWidth( m_pMlvObject ),
+                               getMlvHeight( m_pMlvObject ),
+                               (float)m_pGradientElement->getFinalPos().x(),
+                               (float)m_pGradientElement->getFinalPos().y(),
+                               (float)m_pGradientElement->getStartPos().x(),
+                               (float)m_pGradientElement->getStartPos().y() );
+
+    m_frameChanged = true;
 }
 
 //Cut In button clicked

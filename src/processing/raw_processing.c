@@ -109,6 +109,9 @@ processingObject_t * initProcessingObject()
         }
     }
 
+    /* Gradient */
+    processing->gradient_exposure_stops = 0.0;
+
     /* Default settings */
     processingSetWhiteBalance(processing, 6000.0, 0.0);
     processingSetBlackAndWhiteLevel(processing, 8192.0, 64000.0); /* 16 bit! */
@@ -990,6 +993,7 @@ void processingSetTransformation(processingObject_t * processing, int transforma
 /* Decomissions a processing object completely(I hope) */
 void freeProcessingObject(processingObject_t * processing)
 {
+    if(processing->gradient_mask) free(processing->gradient_mask);
     freeFilterObject(processing->filter);
     free_lut(processing->lut);
     for (int i = 8; i >= 0; --i) free(processing->pre_calc_matrix[i]);
@@ -1107,4 +1111,27 @@ void processingFindWhiteBalance(processingObject_t *processing, int imageX, int 
     /* give the GUI what it wanted */
     *wbTemp = nearestTemp;
     *wbTint = nearestTint;
+}
+
+/* Set and calculate the gradient alpha mask */
+void processingSetGradientMask(processingObject_t *processing, uint16_t width, uint16_t height, float x1, float y1, float x2, float y2)
+{
+    float A = (x2 - x1);
+    float B = (y2 - y1);
+    float C1 = A * x1 + B * y1;
+    float C2 = A * x2 + B * y2;
+
+    for( uint16_t x = 0; x < width; x++ )
+    {
+        for( uint16_t y = 0; y < height; y++ )
+        {
+            float C = A * x + B * y;
+            if( C <= C1 ) processing->gradient_mask[y*width+x] = 0;
+            else if( C >= C2 ) processing->gradient_mask[y*width+x] = 65535;
+            else
+            {
+                processing->gradient_mask[y*width+x] = LIMIT16( ( 65535 * ( C - C1 ) ) / ( C2 - C1 ) );
+            }
+        }
+    }
 }

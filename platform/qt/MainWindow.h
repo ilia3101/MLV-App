@@ -382,6 +382,7 @@ private:
     double getHorizontalStretchFactor();
     double getVerticalStretchFactor();
     void setWhiteBalanceFromMlv( ReceiptSettings *sliders );
+    void setGradientMask( void );
 
 signals:
     void exportReady( void );
