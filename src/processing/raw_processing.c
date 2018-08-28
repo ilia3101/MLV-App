@@ -1121,6 +1121,7 @@ void processingSetGradientMask(processingObject_t *processing, uint16_t width, u
     float C1 = A * x1 + B * y1;
     float C2 = A * x2 + B * y2;
 
+#pragma omp parallel for collapse(2)
     for( uint16_t x = 0; x < width; x++ )
     {
         for( uint16_t y = 0; y < height; y++ )
