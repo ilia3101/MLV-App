@@ -141,17 +141,31 @@ GraphicsPolygonMoveItem *GradientElement::gradientGraphicsElement()
 void GradientElement::createGradientElement( int scaledLength )
 {
     QPolygon polygon;
-    polygon << QPoint(0, -scaledLength)
-            << QPoint(-10000, -scaledLength)
-            << QPoint(10000, -scaledLength)
-            << QPoint(0, -scaledLength)
-            << QPoint(-10, -scaledLength+10)
-            << QPoint(10, -scaledLength+10)
-            << QPoint(0, -scaledLength)
-            << QPoint(0, 0)
-            << QPoint(-10000, 0)
-            << QPoint(10000, 0)
-            << QPoint(0, 0);
+    if( m_stretchFactorX != 1.0 || m_stretchFactorY != 1.0 )
+    {
+        polygon << QPoint(0, -scaledLength)
+                << QPoint(-10, -scaledLength+10)
+                << QPoint(10, -scaledLength+10)
+                << QPoint(0, -scaledLength)
+                << QPoint(0, 0)
+                << QPoint(-10, 0)
+                << QPoint(10, 0)
+                << QPoint(0, 0);
+    }
+    else
+    {
+        polygon << QPoint(0, -scaledLength)
+                << QPoint(-10000, -scaledLength)
+                << QPoint(10000, -scaledLength)
+                << QPoint(0, -scaledLength)
+                << QPoint(-10, -scaledLength+10)
+                << QPoint(10, -scaledLength+10)
+                << QPoint(0, -scaledLength)
+                << QPoint(0, 0)
+                << QPoint(-10000, 0)
+                << QPoint(10000, 0)
+                << QPoint(0, 0);
+    }
     m_pGradientGraphicsItem->setPolygon( polygon );
 }
 
