@@ -50,6 +50,8 @@ void GradientElement::setFinalPos(double x, double y)
 //Set the UI length, calc all other values
 void GradientElement::setUiLength(int uiLength)
 {
+    if( uiLength < 1 ) uiLength = 1;
+
     //calc final x,y with ui angle
     m_endX = m_startX + ( uiLength * sin( m_angleUi * M_PI / 180.0 ) );
     m_endY = m_startY - ( uiLength * cos( m_angleUi * M_PI / 180.0 ) );

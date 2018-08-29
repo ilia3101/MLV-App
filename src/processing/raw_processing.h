@@ -247,6 +247,7 @@ void get_kelvin_multipliers_xyz(double T, double * RGB);
 
 /* Calculates final_matrix, incorporating white balance, exposure and all the XYZ stuff */
 void processing_update_matrices(processingObject_t * processing);
+void processing_update_matrices_gradient(processingObject_t * processing);
 
 /* Calculates green clip value, so highlight reconstruction can work */
 void processing_update_highest_green(processingObject_t * processing);

@@ -278,10 +278,14 @@ void MainWindow::resizeEvent(QResizeEvent *event)
     if( m_fileLoaded )
     {
         drawFrame();
-        m_pGradientElement->redrawGradientElement( m_pScene->width(),
-                                                   m_pScene->height(),
-                                                   getMlvWidth( m_pMlvObject ),
-                                                   getMlvHeight( m_pMlvObject ) );
+        if( ui->checkBoxGradientEnable->isChecked() && ui->groupBoxLinearGradient->isChecked() )
+        {
+            while( m_frameStillDrawing ) qApp->processEvents();
+            m_pGradientElement->redrawGradientElement( m_pScene->width(),
+                                                       m_pScene->height(),
+                                                       getMlvWidth( m_pMlvObject ),
+                                                       getMlvHeight( m_pMlvObject ) );
+        }
     }
     event->accept();
 }
@@ -923,10 +927,9 @@ void MainWindow::initGui( void )
     connect( m_pGradientElement->gradientGraphicsElement(), SIGNAL( itemMoved(int,int) ), this, SLOT( gradientGraphicElementMoved(int,int) ) );
     connect( m_pGradientElement->gradientGraphicsElement(), SIGNAL( itemHovered(bool) ), this, SLOT( gradientGraphicElementHovered(bool) ) );
     //Disable Gradient while no file loaded
-//    ui->checkBoxGradientEnable->setChecked( false );
-//    ui->checkBoxGradientEnable->setEnabled( false );
-//    ui->toolButtonGradientPaint->setEnabled( false );
-//    ui->groupBoxLinearGradient->setVisible( false );
+    ui->checkBoxGradientEnable->setChecked( false );
+    ui->checkBoxGradientEnable->setEnabled( false );
+    ui->toolButtonGradientPaint->setEnabled( false );
 
     //Cut In & Out
     initCutInOut( -1 );
@@ -2444,6 +2447,36 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
             receipt->setHighlights( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
+        else if( Rxml->isStartElement() && Rxml->name() == "gradientEnabled" )
+        {
+            receipt->setGradientEnabled( (bool)Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == "gradientExposure" )
+        {
+            receipt->setGradientExposure( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == "gradientStartX" )
+        {
+            receipt->setGradientStartX( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == "gradientStartY" )
+        {
+            receipt->setGradientStartY( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == "gradientLength" )
+        {
+            receipt->setGradientLength( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == "gradientAngle" )
+        {
+            receipt->setGradientAngle( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
         else if( Rxml->isStartElement() && Rxml->name() == "sharpen" )
         {
             receipt->setSharpen( Rxml->readElementText().toInt() );
@@ -2656,6 +2689,12 @@ void MainWindow::writeXmlElementsToFile(QXmlStreamWriter *xmlWriter, ReceiptSett
     xmlWriter->writeTextElement( "lightening",              QString( "%1" ).arg( receipt->lightening() ) );
     xmlWriter->writeTextElement( "shadows",                 QString( "%1" ).arg( receipt->shadows() ) );
     xmlWriter->writeTextElement( "highlights",              QString( "%1" ).arg( receipt->highlights() ) );
+    xmlWriter->writeTextElement( "gradientEnabled",         QString( "%1" ).arg( receipt->isGradientEnabled() ) );
+    xmlWriter->writeTextElement( "gradientExposure",        QString( "%1" ).arg( receipt->gradientExposure() ) );
+    xmlWriter->writeTextElement( "gradientStartX",          QString( "%1" ).arg( receipt->gradientStartX() ) );
+    xmlWriter->writeTextElement( "gradientStartY",          QString( "%1" ).arg( receipt->gradientStartY() ) );
+    xmlWriter->writeTextElement( "gradientLength",          QString( "%1" ).arg( receipt->gradientLength() ) );
+    xmlWriter->writeTextElement( "gradientAngle",           QString( "%1" ).arg( receipt->gradientAngle() ) );
     xmlWriter->writeTextElement( "sharpen",                 QString( "%1" ).arg( receipt->sharpen() ) );
     xmlWriter->writeTextElement( "chromaBlur",              QString( "%1" ).arg( receipt->chromaBlur() ) );
     xmlWriter->writeTextElement( "highlightReconstruction", QString( "%1" ).arg( receipt->isHighlightReconstruction() ) );
@@ -2820,6 +2859,13 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     ui->horizontalSliderShadows->setValue( receipt->shadows() );
     ui->horizontalSliderHighlights->setValue( receipt->highlights() );
 
+    ui->checkBoxGradientEnable->setChecked( receipt->isGradientEnabled() );
+    ui->horizontalSliderExposureGradient->setValue( receipt->gradientExposure() );
+    ui->spinBoxGradientX->setValue( receipt->gradientStartX() );
+    ui->spinBoxGradientY->setValue( receipt->gradientStartY() );
+    ui->dialGradientAngle->setValue( receipt->gradientAngle() );
+    ui->spinBoxGradientLength->setValue( receipt->gradientLength() );
+
     ui->horizontalSliderSharpen->setValue( receipt->sharpen() );
     ui->horizontalSliderChromaBlur->setValue( receipt->chromaBlur() );
 
@@ -2949,6 +2995,14 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     receipt->setLightening( ui->horizontalSliderLighten->value() );
     receipt->setShadows( ui->horizontalSliderShadows->value() );
     receipt->setHighlights( ui->horizontalSliderHighlights->value() );
+
+    receipt->setGradientEnabled( ui->checkBoxGradientEnable->isChecked() );
+    receipt->setGradientExposure( ui->horizontalSliderExposureGradient->value() );
+    receipt->setGradientStartX( ui->spinBoxGradientX->value() );
+    receipt->setGradientStartY( ui->spinBoxGradientY->value() );
+    receipt->setGradientLength( ui->spinBoxGradientLength->value() );
+    receipt->setGradientAngle( ui->dialGradientAngle->value() );
+
     receipt->setSharpen( ui->horizontalSliderSharpen->value() );
     receipt->setChromaBlur( ui->horizontalSliderChromaBlur->value() );
     receipt->setHighlightReconstruction( ui->checkBoxHighLightReconstruction->isChecked() );
@@ -3010,6 +3064,14 @@ void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings 
     receiptTarget->setLightening( receiptSource->lightening() );
     receiptTarget->setShadows( receiptSource->shadows() );
     receiptTarget->setHighlights( receiptSource->highlights() );
+
+    receiptTarget->setGradientEnabled( receiptSource->isGradientEnabled() );
+    receiptTarget->setGradientExposure( receiptSource->gradientExposure() );
+    receiptTarget->setGradientStartX( receiptSource->gradientStartX() );
+    receiptTarget->setGradientStartY( receiptSource->gradientStartY() );
+    receiptTarget->setGradientLength( receiptSource->gradientLength() );
+    receiptTarget->setGradientAngle( receiptSource->gradientAngle() );
+
     receiptTarget->setSharpen( receiptSource->sharpen() );
     receiptTarget->setChromaBlur( receiptSource->chromaBlur() );
     receiptTarget->setHighlightReconstruction( receiptSource->isHighlightReconstruction() );
@@ -3119,6 +3181,14 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     receipt->setLightening( m_pSessionReceipts.at( row )->lightening() );
     receipt->setShadows( m_pSessionReceipts.at( row )->shadows() );
     receipt->setHighlights( m_pSessionReceipts.at( row )->highlights() );
+
+    receipt->setGradientEnabled( m_pSessionReceipts.at( row )->isGradientEnabled() );
+    receipt->setGradientExposure( m_pSessionReceipts.at( row )->gradientExposure() );
+    receipt->setGradientStartX( m_pSessionReceipts.at( row )->gradientStartX() );
+    receipt->setGradientStartY( m_pSessionReceipts.at( row )->gradientStartY() );
+    receipt->setGradientLength( m_pSessionReceipts.at( row )->gradientLength() );
+    receipt->setGradientAngle( m_pSessionReceipts.at( row )->gradientAngle() );
+
     receipt->setSharpen( m_pSessionReceipts.at( row )->sharpen() );
     receipt->setChromaBlur( m_pSessionReceipts.at( row )->chromaBlur() );
     receipt->setHighlightReconstruction( m_pSessionReceipts.at( row )->isHighlightReconstruction() );
@@ -4968,6 +5038,15 @@ void MainWindow::on_label_ExposureVal_doubleClicked( void )
     ui->horizontalSliderExposure->setValue( editSlider.getValue() );
 }
 
+//DoubleClick on Exposure Gradient Label
+void MainWindow::on_label_ExposureGradient_doubleClicked()
+{
+    EditSliderValueDialog editSlider;
+    editSlider.autoSetup( ui->horizontalSliderExposureGradient, ui->label_ExposureGradient, 0.01, 2, 100.0 );
+    editSlider.exec();
+    ui->horizontalSliderExposureGradient->setValue( editSlider.getValue() );
+}
+
 //DoubleClick on Contrast Label
 void MainWindow::on_label_ContrastVal_doubleClicked()
 {
@@ -6200,6 +6279,11 @@ void MainWindow::setGradientMask(void)
                                (float)m_pGradientElement->getFinalPos().y(),
                                (float)m_pGradientElement->getStartPos().x(),
                                (float)m_pGradientElement->getStartPos().y() );
+
+    /*qDebug() << "Gradient" << (float)m_pGradientElement->getFinalPos().x() <<
+            (float)m_pGradientElement->getFinalPos().y() <<
+            (float)m_pGradientElement->getStartPos().x() <<
+            (float)m_pGradientElement->getStartPos().y();*/
 
     m_frameChanged = true;
 }

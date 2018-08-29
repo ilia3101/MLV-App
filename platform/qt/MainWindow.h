@@ -158,6 +158,7 @@ private slots:
     void pictureCustomContextMenuRequested(const QPoint &pos);
     void on_labelHistogram_customContextMenuRequested(const QPoint &pos);
     void on_label_ExposureVal_doubleClicked( void );
+    void on_label_ExposureGradient_doubleClicked( void );
     void on_label_ContrastVal_doubleClicked( void );
     void on_label_TemperatureVal_doubleClicked( void );
     void on_label_TintVal_doubleClicked( void );

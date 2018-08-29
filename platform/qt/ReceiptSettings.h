@@ -31,7 +31,12 @@ public:
     void setShadows( int value )    {m_shadows = value;}
     void setHighlights( int value ) {m_highlights = value;}
 
+    void setGradientEnabled( bool on ){m_isGradientEnabled = on;}
     void setGradientExposure( int value ){m_gradientExposure = value;}
+    void setGradientStartX( int value ){m_gradientX1 = value;}
+    void setGradientStartY( int value ){m_gradientY1 = value;}
+    void setGradientLength( int value ){m_gradientLength = value;}
+    void setGradientAngle( int value ){m_gradientAngle = value;}
 
     void setSharpen( int value )    {m_sharpen = value;}
     void setChromaBlur( int value ) {m_chromaBlur = value;}
@@ -90,7 +95,12 @@ public:
     int shadows( void )    {return m_shadows;}
     int highlights( void ) {return m_highlights;}
 
-    int gradientExposure( void){return m_gradientExposure;}
+    bool isGradientEnabled( void ){return m_isGradientEnabled;}
+    int gradientExposure( void ){return m_gradientExposure;}
+    int gradientStartX( void ){return m_gradientX1;}
+    int gradientStartY( void ){return m_gradientY1;}
+    int gradientLength( void ){return m_gradientLength;}
+    int gradientAngle( void ){return m_gradientAngle;}
 
     int sharpen( void )    {return m_sharpen;}
     int chromaBlur( void ) {return m_chromaBlur;}
@@ -150,6 +160,7 @@ private:
     int m_shadows;
     int m_highlights;
 
+    bool m_isGradientEnabled;
     int m_gradientExposure;
     int m_gradientX1;
     int m_gradientY1;

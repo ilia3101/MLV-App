@@ -27,10 +27,11 @@ ReceiptSettings::ReceiptSettings()
     m_shadows = 0;
     m_highlights = 0;
 
+    m_isGradientEnabled = false;
     m_gradientExposure = 0;
     m_gradientX1 = 0;
     m_gradientY1 = 0;
-    m_gradientLength = 0;
+    m_gradientLength = 1;
     m_gradientAngle = 0;
 
     m_sharpen = 0;

@@ -27,6 +27,7 @@ void GraphicsPickerScene::setWbPickerActive(bool on)
 void GraphicsPickerScene::setGradientAdjustment(bool on)
 {
     m_isGradientAdjustment = on;
+    m_isMousePressed = false;
 }
 
 //Click event

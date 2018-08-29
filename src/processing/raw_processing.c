@@ -120,6 +120,7 @@ processingObject_t * initProcessingObject()
     processingSetBlackAndWhiteLevel(processing, 8192.0, 64000.0); /* 16 bit! */
     processingSetExposureStops(processing, 0.0);
     processingSetGamma(processing, STANDARD_GAMMA);
+    processingSetGammaGradient(processing, STANDARD_GAMMA);
     processingSetVibrance(processing, 1.0);
     processingSetSaturation(processing, 1.0);
     processingSetContrast(processing, 0.73, 5.175, 0.5, 0.0, 0.0);
@@ -134,6 +135,7 @@ processingObject_t * initProcessingObject()
 
     /* Just in case (should be done tho already) */
     processing_update_matrices(processing);
+    processing_update_matrices_gradient(processing);
     processing_update_shadow_highlight_curve(processing);
 
     return processing;
@@ -156,6 +158,7 @@ void processingSetCustomImageProfile(processingObject_t * processing, image_prof
     processing->use_rgb_curves = imageProfile->disable_settings.curves;
     processing->use_saturation = imageProfile->disable_settings.saturation;
     processingSetGamma(processing, imageProfile->gamma_power);
+    processingSetGammaGradient(processing, imageProfile->gamma_power);
     if (imageProfile->disable_settings.tonemapping)
     {
         processing->tone_mapping_function = imageProfile->tone_mapping_function;
@@ -171,6 +174,7 @@ void processingCamTosRGBMatrix(processingObject_t * processing, double * camTosR
     memcpy(processing->cam_to_sRGB_matrix, camTosRGBMatrix, sizeof(double) * 9);
     /* Calculates final main matrix */
     processing_update_matrices(processing);
+    processing_update_matrices_gradient(processing);
 }
 
 void processingSetHighlights(processingObject_t * processing, double value)
@@ -382,7 +386,7 @@ void apply_processing_object( processingObject_t * processing,
     uint16_t * out_img = outputImage;
     uint16_t * img = inputImage;
     uint16_t * img_end = img + img_s;
-    uint16_t * gm = gradientMask; //TODO: should only be the part for the thread -> single thread only atm
+    uint16_t * gm = gradientMask;
 
     /* Apply some precalcuolated settings */
     for (int i = 0; i < img_s; ++i)
@@ -959,6 +963,7 @@ void processingSetWhiteBalance(processingObject_t * processing, double WBKelvin,
 
     /* White balance is part of the matrix */
     processing_update_matrices(processing);
+    processing_update_matrices_gradient(processing);
 }
 
 /* WB just by kelvin */
@@ -1074,7 +1079,9 @@ void processing_enable_tonemapping(processingObject_t * processing)
     (processing)->tone_mapping = 1;
     /* This will update everything necessary to enable tonemapping */
     processingSetGamma(processing, processing->gamma_power);
+    processingSetGammaGradient(processing, processing->gamma_power);
     processing_update_matrices(processing);
+    processing_update_matrices_gradient(processing);
 }
 
 void processing_disable_tonemapping(processingObject_t * processing) 
@@ -1082,7 +1089,9 @@ void processing_disable_tonemapping(processingObject_t * processing)
     (processing)->tone_mapping = 0;
     /* This will update everything necessary to disable tonemapping */
     processingSetGamma(processing, processing->gamma_power);
+    processingSetGammaGradient(processing, processing->gamma_power);
     processing_update_matrices(processing);
+    processing_update_matrices_gradient(processing);
 }
 
 /* Set black and white level */
@@ -1267,9 +1276,9 @@ void processingSetGradientMask(processingObject_t *processing, uint16_t width, u
     float C1 = A * x1 + B * y1;
     float C2 = A * x2 + B * y2;
 
-#pragma omp parallel for collapse(2)
     for( uint16_t x = 0; x < width; x++ )
     {
+        #pragma omp parallel for
         for( uint16_t y = 0; y < height; y++ )
         {
             float C = A * x + B * y;
