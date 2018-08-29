@@ -6053,7 +6053,7 @@ void MainWindow::on_toolButtonGradientPaint_toggled(bool checked)
 //Gradient Enable checked/unchecked
 void MainWindow::on_checkBoxGradientEnable_toggled(bool checked)
 {
-    if( checked ) m_pGradientElement->gradientGraphicsElement()->show();
+    if( checked && ui->groupBoxLinearGradient->isChecked() ) m_pGradientElement->gradientGraphicsElement()->show();
     else m_pGradientElement->gradientGraphicsElement()->hide();
 
     processingSetGradientEnable( m_pProcessingObject, checked );
