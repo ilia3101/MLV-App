@@ -40,6 +40,7 @@ typedef struct {
     /* Do highlight reconstrucion? It's slow */
     int highlight_reconstruction;
     uint16_t highest_green; /* Used for reconstruction */
+    uint16_t highest_green_gradient; /* Used for reconstruction */
 
     /* Do tonemapping? */
     int tone_mapping;
@@ -135,6 +136,7 @@ typedef struct {
     uint16_t   pre_calc_curve_b[65536]; int use_rgb_curves; /* The r, g and b curves can be disabled */
     uint16_t   pre_calc_levels[65536]; /* For black level and white level */
     uint16_t   pre_calc_gamma[65536];
+    uint16_t   pre_calc_gamma_gradient[65536];
     uint32_t   pre_calc_sharp_a[65536];
     uint16_t   pre_calc_sharp_x[65536]; /* In horizontal dimension */
     uint16_t   pre_calc_sharp_y[65536]; /* In vertical dimension */

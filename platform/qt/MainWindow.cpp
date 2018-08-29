@@ -923,10 +923,10 @@ void MainWindow::initGui( void )
     connect( m_pGradientElement->gradientGraphicsElement(), SIGNAL( itemMoved(int,int) ), this, SLOT( gradientGraphicElementMoved(int,int) ) );
     connect( m_pGradientElement->gradientGraphicsElement(), SIGNAL( itemHovered(bool) ), this, SLOT( gradientGraphicElementHovered(bool) ) );
     //Disable Gradient while no file loaded
-    ui->checkBoxGradientEnable->setChecked( false );
-    ui->checkBoxGradientEnable->setEnabled( false );
-    ui->toolButtonGradientPaint->setEnabled( false );
-    ui->groupBoxLinearGradient->setVisible( false );
+//    ui->checkBoxGradientEnable->setChecked( false );
+//    ui->checkBoxGradientEnable->setEnabled( false );
+//    ui->toolButtonGradientPaint->setEnabled( false );
+//    ui->groupBoxLinearGradient->setVisible( false );
 
     //Cut In & Out
     initCutInOut( -1 );
@@ -3967,6 +3967,13 @@ void MainWindow::on_horizontalSliderExposure_doubleClicked()
     delete sliders;
 }
 
+void MainWindow::on_horizontalSliderExposureGradient_doubleClicked()
+{
+    ReceiptSettings *sliders = new ReceiptSettings(); //default
+    ui->horizontalSliderExposureGradient->setValue( sliders->gradientExposure() );
+    delete sliders;
+}
+
 void MainWindow::on_horizontalSliderContrast_doubleClicked()
 {
     ReceiptSettings *sliders = new ReceiptSettings(); //default
@@ -5971,6 +5978,8 @@ void MainWindow::on_checkBoxGradientEnable_toggled(bool checked)
     else m_pGradientElement->gradientGraphicsElement()->hide();
 
     processingSetGradientEnable( m_pProcessingObject, checked );
+
+    m_frameChanged = true;
 }
 
 //The gradient startPoint X has changed

@@ -112,7 +112,7 @@ void processingSet3WayCorrection( processingObject_t * processing,
 
 /* Gradient */
 void processingSetGradientMask(processingObject_t * processing, uint16_t width, uint16_t height, float x1, float y1, float x2, float y2 );
-#define processingSetGradientExposure(processing, value) (processing)->gradient_exposure_stops = (value)
+void processingSetGradientExposure(processingObject_t * processing, double value);
 #define processingGetGradientExposure(processing) (processing)->gradient_exposure_stops
 #define processingSetGradientEnable(processing, value) (processing)->gradient_enable = (value)
 #define processingIsGradientEnabled(processing) (processing)->gradient_enable
@@ -120,7 +120,7 @@ void processingSetGradientMask(processingObject_t * processing, uint16_t width, 
 /* Just don't touch this or keep at ~2.2 (or more for a lighter image) */
 void processingSetGamma(processingObject_t * processing, double gammaValue);
 #define processingGetGamma(processing) (processing)->gamma_power
-
+void processingSetGammaGradient(processingObject_t * processing, double gammaValue);
 
 
 /* Enable/disable highlight reconstruction */
@@ -203,7 +203,8 @@ void apply_processing_object( processingObject_t * processing,
                               int imageX, int imageY, 
                               uint16_t * __restrict inputImage, 
                               uint16_t * __restrict outputImage,
-                              uint16_t * __restrict blurImage );
+                              uint16_t * __restrict blurImage,
+                              uint16_t * __restrict gradientMask );
 
 /* Pass frame buffer and do the transform on it */
 void get_frame_transformed(processingObject_t * processing, uint16_t * frame_buf , uint16_t imageX, uint16_t imageY);
@@ -218,6 +219,7 @@ typedef struct {
     uint16_t * inputImage;
     uint16_t * outputImage;
     uint16_t * blurImage;
+    uint16_t * gradientMask;
 } apply_processing_parameters_t;
 
 /* applyProcessingObject but with one argument for pthreading  */
@@ -248,6 +250,7 @@ void processing_update_matrices(processingObject_t * processing);
 
 /* Calculates green clip value, so highlight reconstruction can work */
 void processing_update_highest_green(processingObject_t * processing);
+void processing_update_highest_green_gradient(processingObject_t * processing);
 
 /* Precalculates curve with contrast and colour correction */
 void processing_update_curves(processingObject_t * processing);

@@ -30,6 +30,9 @@ public:
     void setLightening( int value ) {m_lightening = value;}
     void setShadows( int value )    {m_shadows = value;}
     void setHighlights( int value ) {m_highlights = value;}
+
+    void setGradientExposure( int value ){m_gradientExposure = value;}
+
     void setSharpen( int value )    {m_sharpen = value;}
     void setChromaBlur( int value ) {m_chromaBlur = value;}
     void setDenoiserWindow( int value ){m_denoiserWindow = value;}
@@ -86,6 +89,9 @@ public:
     int lightening( void ) {return m_lightening;}
     int shadows( void )    {return m_shadows;}
     int highlights( void ) {return m_highlights;}
+
+    int gradientExposure( void){return m_gradientExposure;}
+
     int sharpen( void )    {return m_sharpen;}
     int chromaBlur( void ) {return m_chromaBlur;}
     int denoiserWindow( void ){return m_denoiserWindow;}
@@ -143,6 +149,13 @@ private:
     int m_lightening;
     int m_shadows;
     int m_highlights;
+
+    int m_gradientExposure;
+    int m_gradientX1;
+    int m_gradientY1;
+    int m_gradientLength;
+    int m_gradientAngle;
+
     int m_sharpen;
     int m_chromaBlur;
     int m_denoiserWindow;

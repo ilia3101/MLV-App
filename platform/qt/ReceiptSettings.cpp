@@ -26,6 +26,13 @@ ReceiptSettings::ReceiptSettings()
     m_lightening = 0;
     m_shadows = 0;
     m_highlights = 0;
+
+    m_gradientExposure = 0;
+    m_gradientX1 = 0;
+    m_gradientY1 = 0;
+    m_gradientLength = 0;
+    m_gradientAngle = 0;
+
     m_sharpen = 0;
     m_chromaBlur = 0;
     m_denoiserWindow = 3;

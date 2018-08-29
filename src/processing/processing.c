@@ -415,6 +415,9 @@ void processing_update_matrices_gradient(processingObject_t * processing)
             pm[i][j] = (int32_t)((double)j * final_matrix[i]);
         }
     }
+
+    /* Highest green value - pixels at this value will need to be reconstructed */
+    processing_update_highest_green_gradient(processing);
 }
 
 void processing_update_highest_green(processingObject_t * processing)
@@ -423,6 +426,14 @@ void processing_update_highest_green(processingObject_t * processing)
     processing->highest_green = processing->pre_calc_gamma[ LIMIT16( MAX(processing->pre_calc_matrix[3][65535],processing->pre_calc_matrix[3][0])
                                                                    + MAX(processing->pre_calc_matrix[4][65535],processing->pre_calc_matrix[4][0]) 
                                                                    + MAX(processing->pre_calc_matrix[5][65535],processing->pre_calc_matrix[5][0]) ) ];
+}
+
+void processing_update_highest_green_gradient(processingObject_t * processing)
+{
+    /* Highest green value - pixels at this value will need to be reconstructed */
+    processing->highest_green_gradient = processing->pre_calc_gamma_gradient[ LIMIT16( MAX(processing->pre_calc_matrix_gradient[3][65535],processing->pre_calc_matrix_gradient[3][0])
+                                                                                     + MAX(processing->pre_calc_matrix_gradient[4][65535],processing->pre_calc_matrix_gradient[4][0])
+                                                                                     + MAX(processing->pre_calc_matrix_gradient[5][65535],processing->pre_calc_matrix_gradient[5][0]) ) ];
 }
 
 /* Box blur */

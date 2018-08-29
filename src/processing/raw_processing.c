@@ -273,7 +273,8 @@ void processing_object_thread(apply_processing_parameters_t * p)
                              p->imageX, p->imageY, 
                              p->inputImage, 
                              p->outputImage,
-                             p->blurImage );
+                             p->blurImage,
+                             p->gradientMask );
 }
 
 /* Apply it with multiple threads */
@@ -317,7 +318,7 @@ void applyProcessingObject( processingObject_t * processing,
     /* If threads is 1, no threads are needed */
     if (threads == 1)
     {
-        apply_processing_object(processing, imageX, imageY, inputImage, outputImage, get_buffer(processing->shadows_highlights.blur_image));
+        apply_processing_object(processing, imageX, imageY, inputImage, outputImage, get_buffer(processing->shadows_highlights.blur_image), processing->gradient_mask);
     }
     else
     {
@@ -337,6 +338,7 @@ void applyProcessingObject( processingObject_t * processing,
             params[t].inputImage = inputImage + offset_chunk*t;
             params[t].outputImage = outputImage + offset_chunk*t;
             params[t].blurImage = get_buffer(processing->shadows_highlights.blur_image) + offset_chunk*t;
+            params[t].gradientMask = processing->gradient_mask + (imageX * chunk_size * t);
         }
 
         /* To make sure bottom is processed */
@@ -368,7 +370,8 @@ void apply_processing_object( processingObject_t * processing,
                               int imageX, int imageY, 
                               uint16_t * __restrict inputImage, 
                               uint16_t * __restrict outputImage,
-                              uint16_t * __restrict blurImage )
+                              uint16_t * __restrict blurImage,
+                              uint16_t * __restrict gradientMask )
 {
     /* Number of elements */
     int img_s = imageX * imageY * 3;
@@ -379,7 +382,7 @@ void apply_processing_object( processingObject_t * processing,
     uint16_t * out_img = outputImage;
     uint16_t * img = inputImage;
     uint16_t * img_end = img + img_s;
-    uint16_t * gm = processing->gradient_mask; //TODO: should only be the part for the thread -> single thread only atm
+    uint16_t * gm = gradientMask; //TODO: should only be the part for the thread -> single thread only atm
 
     /* Apply some precalcuolated settings */
     for (int i = 0; i < img_s; ++i)
@@ -390,7 +393,9 @@ void apply_processing_object( processingObject_t * processing,
 
     /* find highest green peak in actual picture for highlight reconstruction */
     uint16_t highest_green = 0;
+    uint16_t highest_green_gradient = 0;
     uint16_t highest_value = 0;
+    uint16_t highest_value_gradient = 0;
     if ( *processing->dual_iso != 0 && processing->highlight_reconstruction )
     {
         /* for dual iso the highest green peak has to be searched */
@@ -410,6 +415,26 @@ void apply_processing_object( processingObject_t * processing,
                 highest_value = tableG[i];
                 highest_green = i;
                 if( highest_value > limitPixels ) break;
+            }
+        }
+
+        /* And now the same for the gradient part image */
+        if( processing->gradient_enable && ( processing->gradient_exposure_stops < -0.01 || processing->gradient_exposure_stops > 0.01 ) )
+        {
+            uint16_t tableGg[65535] = {0};
+            for (uint16_t * pix = img; pix < img_end; pix += 3)
+            {
+                uint16_t pix1 = processing->pre_calc_gamma_gradient[ LIMIT16(pmg[3][pix[0]] + pmg[4][pix[1]] + pmg[5][pix[2]]) ];
+                tableGg[pix1]++;
+            }
+            for( uint16_t i = 65535; i >= 0; i-- )
+            {
+                if( highest_value_gradient < tableGg[i] )
+                {
+                    highest_value_gradient = tableGg[i];
+                    highest_green_gradient = i;
+                    if( highest_value_gradient > limitPixels ) break;
+                }
             }
         }
     }
@@ -466,6 +491,22 @@ void apply_processing_object( processingObject_t * processing,
             }
         }
 
+        /* Gradient variables and part 1 */
+        int32_t pix0g;
+        int32_t pix1g;
+        int32_t pix2g;
+        int32_t tmp1g;
+        if( processing->gradient_enable && gmpix[0] != 0 &&
+          ( processing->gradient_exposure_stops < -0.01 || processing->gradient_exposure_stops > 0.01 ) )
+        {
+            /* do the same for gradient as for the pic itself, but before the values are overwritten */
+            /* white balance & exposure & highlights */
+            pix0g = (pmg[0][pix[0]] + pmg[1][pix[1]] + pmg[2][pix[2]])*expo_correction;
+            pix1g = (pmg[3][pix[0]] + pmg[4][pix[1]] + pmg[5][pix[2]])*expo_correction;
+            pix2g = (pmg[6][pix[0]] + pmg[7][pix[1]] + pmg[8][pix[2]])*expo_correction;
+            tmp1g = (pmg[3][pix[0]] + pmg[4][pix[1]] + pmg[5][pix[2]]);
+        }
+
         /* white balance & exposure & highlights */
         int32_t pix0 = (pm[0][pix[0]] + pm[1][pix[1]] + pm[2][pix[2]])*expo_correction;
         int32_t pix1 = (pm[3][pix[0]] + pm[4][pix[1]] + pm[5][pix[2]])*expo_correction;
@@ -483,35 +524,6 @@ void apply_processing_object( processingObject_t * processing,
             pix[i] = processing->pre_calc_gamma[ pix[i] ];
         }
         tmp1b = processing->pre_calc_gamma[ tmp1b ];
-
-        if( processing->gradient_enable )
-        {
-            //TODO: must be different, because pix is overwritten already :(
-            /* do the same for gradient as for the pic itself, but before the values are overwritten */
-            /* white balance & exposure & highlights */
-            int32_t pix0g = (pmg[0][pix[0]] + pmg[1][pix[1]] + pmg[2][pix[2]])*expo_correction;
-            int32_t pix1g = (pmg[3][pix[0]] + pmg[4][pix[1]] + pmg[5][pix[2]])*expo_correction;
-            int32_t pix2g = (pmg[6][pix[0]] + pmg[7][pix[1]] + pmg[8][pix[2]])*expo_correction;
-            int32_t tmp1g = (pmg[3][pix[0]] + pmg[4][pix[1]] + pmg[5][pix[2]]);
-
-            uint16_t pixg[3];
-            pixg[0] = LIMIT16(pix0g);
-            pixg[1] = LIMIT16(pix1g);
-            pixg[2] = LIMIT16(pix2g);
-            uint16_t tmp1gb = LIMIT16(tmp1g);
-
-            /* Gamma */
-            for( int i = 0; i < 3; i++ )
-            {
-                pixg[i] = processing->pre_calc_gamma[ pixg[i] ];
-            }
-            tmp1gb = processing->pre_calc_gamma[ tmp1gb ];
-
-            pix[0] = gmpix[0] / 65535.0 * pixg[0] + (65535 - gmpix[0]) / 65535.0 * pix[0];
-            pix[1] = gmpix[0] / 65535.0 * pixg[1] + (65535 - gmpix[0]) / 65535.0 * pix[1];
-            pix[2] = gmpix[0] / 65535.0 * pixg[2] + (65535 - gmpix[0]) / 65535.0 * pix[2];
-            tmp1b = gmpix[0] / 65535.0 * tmp1gb + (65535 - gmpix[0]) / 65535.0 * tmp1b;
-        }
 
         /* Now highlight reconstruction */
         if (processing->highlight_reconstruction)
@@ -544,6 +556,55 @@ void apply_processing_object( processingObject_t * processing,
                     }
                 }*/
             }
+        }
+
+        /* Gradient part 2 & blending */
+        if( processing->gradient_enable && gmpix[0] != 0 &&
+          ( processing->gradient_exposure_stops < -0.01 || processing->gradient_exposure_stops > 0.01 ) )
+        {
+            uint16_t pixg[3];
+            pixg[0] = LIMIT16(pix0g);
+            pixg[1] = LIMIT16(pix1g);
+            pixg[2] = LIMIT16(pix2g);
+            uint16_t tmp1gb = LIMIT16(tmp1g);
+
+            /* Gamma */
+            for( int i = 0; i < 3; i++ )
+            {
+                pixg[i] = processing->pre_calc_gamma_gradient[ pixg[i] ];
+            }
+            tmp1gb = processing->pre_calc_gamma_gradient[ tmp1gb ];
+
+            /* Now highlight reconstruction */
+            if (processing->highlight_reconstruction)
+            {
+                if(*processing->dual_iso != 0)
+                {
+                    /* Check if its the range of highest green value possible */
+                    /* the range makes it cleaner against pink noise */
+                    if (tmp1gb >= LIMIT16( highest_green_gradient - 1000 ) && tmp1gb <= LIMIT16( highest_green_gradient + 1000 ))
+                    {
+                        if( pixg[1] < 1.1*pixg[0] && pixg[1] < pixg[2] )
+                        {
+                            pixg[1] = (pixg[0] + pixg[2]) / 2;
+                        }
+                    }
+                }
+                else
+                {
+                    /* Check if its the highest green value possible */
+                    if (tmp1gb == processing->highest_green_gradient)
+                    {
+                        pixg[1] = (pixg[0] + pixg[2]) / 2;
+                    }
+                }
+            }
+
+            /* Blending using the mask */
+            pix[0] = gmpix[0] / 65535.0 * pixg[0] + (65535 - gmpix[0]) / 65535.0 * pix[0];
+            pix[1] = gmpix[0] / 65535.0 * pixg[1] + (65535 - gmpix[0]) / 65535.0 * pix[1];
+            pix[2] = gmpix[0] / 65535.0 * pixg[2] + (65535 - gmpix[0]) / 65535.0 * pix[2];
+            tmp1b = gmpix[0] / 65535.0 * tmp1gb + (65535 - gmpix[0]) / 65535.0 * tmp1b;
         }
     }
 
@@ -791,11 +852,21 @@ void processingSetExposureStops(processingObject_t * processing, double exposure
     processing->exposure_stops = exposureStops;
 
     processingSetGamma(processing, processing->gamma_power);
-    //TODO: set gamma of gradient
+    processingSetGammaGradient(processing, processing->gamma_power);
     processing_update_matrices(processing);
     processing_update_matrices_gradient(processing);
 }
 
+/* Have a guess what this does */
+void processingSetGradientExposure(processingObject_t * processing, double value)
+{
+    processing->gradient_exposure_stops = value;
+
+    processingSetGamma(processing, processing->gamma_power);
+    processingSetGammaGradient(processing, processing->gamma_power);
+    processing_update_matrices(processing);
+    processing_update_matrices_gradient(processing);
+}
 
 /* Sets and precalculaes saturation */
 void processingSetSaturation(processingObject_t * processing, double saturationFactor)
@@ -904,7 +975,6 @@ void processingSetWhiteBalanceTint(processingObject_t * processing, double WBTin
                                WBTint );
 }
 
-
 /* Set gamma (Log-ing / tonemapping done here) */
 void processingSetGamma(processingObject_t * processing, double gammaValue)
 {
@@ -942,6 +1012,45 @@ void processingSetGamma(processingObject_t * processing, double gammaValue)
     }
     /* So highlight reconstruction works */
     processing_update_highest_green(processing);
+}
+
+/* Set gamma for gradient image part (Log-ing / tonemapping done here) */
+void processingSetGammaGradient(processingObject_t * processing, double gammaValue)
+{
+    processing->gamma_power = gammaValue;
+
+    /* Needs to be inverse */
+    double gamma = 1.0 / gammaValue;
+
+    if (processing->exposure_stops+processing->gradient_exposure_stops < 0.0 || !processing->tone_mapping)
+    {
+        /* Precalculate the exposure curve */
+        for (int i = 0; i < 65536; ++i)
+        {
+            double pixel = (double)i/65535.0;
+            if (processing->tone_mapping) pixel = processing->tone_mapping_function(pixel);
+            processing->pre_calc_gamma_gradient[i] = (uint16_t)(65535.0 * pow(pixel, gamma));
+        }
+    }
+    /* Else exposure done here if it is positive */
+    else
+    {
+        /* Exposure */
+        double exposure_factor = pow(2.0, processing->exposure_stops+processing->gradient_exposure_stops);
+        /* Precalculate the curve */
+        for (int i = 0; i < 65536; ++i)
+        {
+            /* Tone mapping also (reinhard) */
+            double pixel = (double)i/65535.0;
+            pixel *= exposure_factor;
+            pixel = processing->tone_mapping_function(pixel);
+            pixel = 65535.0 * pow(pixel, gamma);
+            pixel = LIMIT16(pixel);
+            processing->pre_calc_gamma_gradient[i] = pixel;
+        }
+    }
+    /* So highlight reconstruction works */
+    processing_update_highest_green_gradient(processing);
 }
 
 /* Range of saturation and hue is 0.0-1.0 */

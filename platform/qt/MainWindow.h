@@ -91,6 +91,7 @@ private slots:
     void on_horizontalSliderRawBlack_valueChanged(int position);
 
     void on_horizontalSliderExposure_doubleClicked();
+    void on_horizontalSliderExposureGradient_doubleClicked();
     void on_horizontalSliderContrast_doubleClicked();
     void on_horizontalSliderTemperature_doubleClicked();
     void on_horizontalSliderTint_doubleClicked();
