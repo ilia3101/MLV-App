@@ -135,7 +135,7 @@ processingObject_t * initProcessingObject()
 
     /* Just in case (should be done tho already) */
     processing_update_matrices(processing);
-    processing_update_matrices_gradient(processing);
+    //processing_update_matrices_gradient(processing);
     processing_update_shadow_highlight_curve(processing);
 
     return processing;
@@ -158,7 +158,7 @@ void processingSetCustomImageProfile(processingObject_t * processing, image_prof
     processing->use_rgb_curves = imageProfile->disable_settings.curves;
     processing->use_saturation = imageProfile->disable_settings.saturation;
     processingSetGamma(processing, imageProfile->gamma_power);
-    processingSetGammaGradient(processing, imageProfile->gamma_power);
+    if( processing->gradient_enable != 0 ) processingSetGammaGradient(processing, imageProfile->gamma_power);
     if (imageProfile->disable_settings.tonemapping)
     {
         processing->tone_mapping_function = imageProfile->tone_mapping_function;
@@ -174,7 +174,7 @@ void processingCamTosRGBMatrix(processingObject_t * processing, double * camTosR
     memcpy(processing->cam_to_sRGB_matrix, camTosRGBMatrix, sizeof(double) * 9);
     /* Calculates final main matrix */
     processing_update_matrices(processing);
-    processing_update_matrices_gradient(processing);
+    if( processing->gradient_enable != 0 ) processing_update_matrices_gradient(processing);
 }
 
 void processingSetHighlights(processingObject_t * processing, double value)
@@ -895,9 +895,9 @@ void processingSetExposureStops(processingObject_t * processing, double exposure
     processing->exposure_stops = exposureStops;
 
     processingSetGamma(processing, processing->gamma_power);
-    processingSetGammaGradient(processing, processing->gamma_power);
+    if( processing->gradient_enable != 0 ) processingSetGammaGradient(processing, processing->gamma_power);
     processing_update_matrices(processing);
-    processing_update_matrices_gradient(processing);
+    if( processing->gradient_enable != 0 ) processing_update_matrices_gradient(processing);
 }
 
 /* Have a guess what this does */
@@ -1002,7 +1002,7 @@ void processingSetWhiteBalance(processingObject_t * processing, double WBKelvin,
 
     /* White balance is part of the matrix */
     processing_update_matrices(processing);
-    processing_update_matrices_gradient(processing);
+    if( processing->gradient_enable != 0 ) processing_update_matrices_gradient(processing);
 }
 
 /* WB just by kelvin */
