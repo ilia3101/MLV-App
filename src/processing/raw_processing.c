@@ -452,7 +452,8 @@ void apply_processing_object( processingObject_t * processing,
         }
 
         /* And now the same for the gradient part image */
-        if( processing->gradient_enable && ( processing->gradient_exposure_stops < -0.01 || processing->gradient_exposure_stops > 0.01 ) )
+        if( processing->gradient_enable && ( ( processing->gradient_exposure_stops < -0.01 || processing->gradient_exposure_stops > 0.01 )
+                                          || ( processing->gradient_contrast < -0.01 || processing->gradient_contrast > 0.01 ) ) )
         {
             uint16_t tableGg[65535] = {0};
             for (uint16_t * pix = img; pix < img_end; pix += 3)
