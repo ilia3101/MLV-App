@@ -220,13 +220,13 @@ void GradientElement::calcFromPoints()
 //Reset all members
 void GradientElement::reset()
 {
-    m_startX = 0;
-    m_startY = 0;
-    m_endX = 0;
-    m_endY = 0;
-    m_angleUi = 0;
-    m_lengthUi = 0;
-    m_angleStretched = 0;
-    m_lengthStretched = 0;
+    m_startX = 0.0;
+    m_startY = 0.0;
+    m_endX = 0.0;
+    m_endY = -1.0;
+    m_lengthUi = 1.0;
+    m_lengthStretched = 1.0;
+    m_angleUi = 0.0;
+    m_angleStretched = 0.0;
     m_pGradientGraphicsItem->hide();
 }
