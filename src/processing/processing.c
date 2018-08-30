@@ -364,6 +364,8 @@ void processing_update_matrices(processingObject_t * processing)
  * Combines: exposure + white balance + camera specific adjustment all in one matrix! */
 void processing_update_matrices_gradient(processingObject_t * processing)
 {
+    if( processing->wbFindActive == 1 ) return;
+
     /* Temporary working matrix */
     double temp_matrix_a[9];
     double temp_matrix_b[9];
