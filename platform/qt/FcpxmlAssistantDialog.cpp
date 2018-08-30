@@ -73,12 +73,24 @@ void FcpxmlAssistantDialog::xmlParser(QString fileName)
     while( !Rxml.atEnd() )
     {
         Rxml.readNext();
-        if( Rxml.isStartElement() && Rxml.name() == "clip" )
+        if( Rxml.isStartElement() && ( Rxml.name() == "clip" || Rxml.name() == "asset-clip" )  )
         {
             //Read clipname
             if( Rxml.attributes().count() != 0 )
             {
-                QString clip = Rxml.attributes().at(0).value().toString();
+                QString clip;
+                for( int i = 0; i < Rxml.attributes().count(); i++ )
+                {
+                    if( Rxml.attributes().at(i).name() == QString( "name" ) )
+                    {
+                        clip = Rxml.attributes().at(i).value().toString();
+                    }
+                }
+                if( clip.isEmpty() ) continue;
+
+                //Clean the davinci resolve naming to a correct real name
+                if( clip.contains( ".[" ) ) clip = clip.left( clip.indexOf( ".[" ) );
+                if( clip.right(5).contains( "." ) ) clip = clip.left( clip.lastIndexOf( "." ) );
 
                 int row = ui->tableWidget->rowCount();
                 bool add = true;
