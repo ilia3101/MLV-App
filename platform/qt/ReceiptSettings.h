@@ -33,6 +33,7 @@ public:
 
     void setGradientEnabled( bool on ){m_isGradientEnabled = on;}
     void setGradientExposure( int value ){m_gradientExposure = value;}
+    void setGradientContrast( int value ){m_gradientContrast = value;}
     void setGradientStartX( int value ){m_gradientX1 = value;}
     void setGradientStartY( int value ){m_gradientY1 = value;}
     void setGradientLength( int value ){m_gradientLength = value;}
@@ -97,6 +98,7 @@ public:
 
     bool isGradientEnabled( void ){return m_isGradientEnabled;}
     int gradientExposure( void ){return m_gradientExposure;}
+    int gradientContrast( void ){return m_gradientContrast;}
     int gradientStartX( void ){return m_gradientX1;}
     int gradientStartY( void ){return m_gradientY1;}
     int gradientLength( void ){return m_gradientLength;}
@@ -162,6 +164,7 @@ private:
 
     bool m_isGradientEnabled;
     int m_gradientExposure;
+    int m_gradientContrast;
     int m_gradientX1;
     int m_gradientY1;
     int m_gradientLength;

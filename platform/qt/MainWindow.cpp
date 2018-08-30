@@ -2457,6 +2457,11 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
             receipt->setGradientExposure( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
+        else if( Rxml->isStartElement() && Rxml->name() == "gradientContrast" )
+        {
+            receipt->setGradientContrast( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
         else if( Rxml->isStartElement() && Rxml->name() == "gradientStartX" )
         {
             receipt->setGradientStartX( Rxml->readElementText().toInt() );
@@ -2691,6 +2696,7 @@ void MainWindow::writeXmlElementsToFile(QXmlStreamWriter *xmlWriter, ReceiptSett
     xmlWriter->writeTextElement( "highlights",              QString( "%1" ).arg( receipt->highlights() ) );
     xmlWriter->writeTextElement( "gradientEnabled",         QString( "%1" ).arg( receipt->isGradientEnabled() ) );
     xmlWriter->writeTextElement( "gradientExposure",        QString( "%1" ).arg( receipt->gradientExposure() ) );
+    xmlWriter->writeTextElement( "gradientContrast",        QString( "%1" ).arg( receipt->gradientContrast() ) );
     xmlWriter->writeTextElement( "gradientStartX",          QString( "%1" ).arg( receipt->gradientStartX() ) );
     xmlWriter->writeTextElement( "gradientStartY",          QString( "%1" ).arg( receipt->gradientStartY() ) );
     xmlWriter->writeTextElement( "gradientLength",          QString( "%1" ).arg( receipt->gradientLength() ) );
@@ -2861,6 +2867,7 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
 
     ui->checkBoxGradientEnable->setChecked( receipt->isGradientEnabled() );
     ui->horizontalSliderExposureGradient->setValue( receipt->gradientExposure() );
+    ui->horizontalSliderContrastGradient->setValue( receipt->gradientContrast() );
     ui->spinBoxGradientX->setValue( receipt->gradientStartX() );
     ui->spinBoxGradientY->setValue( receipt->gradientStartY() );
     ui->dialGradientAngle->setValue( receipt->gradientAngle() );
@@ -2998,6 +3005,7 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
 
     receipt->setGradientEnabled( ui->checkBoxGradientEnable->isChecked() );
     receipt->setGradientExposure( ui->horizontalSliderExposureGradient->value() );
+    receipt->setGradientContrast( ui->horizontalSliderContrastGradient->value() );
     receipt->setGradientStartX( ui->spinBoxGradientX->value() );
     receipt->setGradientStartY( ui->spinBoxGradientY->value() );
     receipt->setGradientLength( ui->spinBoxGradientLength->value() );
@@ -3067,6 +3075,7 @@ void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings 
 
     receiptTarget->setGradientEnabled( receiptSource->isGradientEnabled() );
     receiptTarget->setGradientExposure( receiptSource->gradientExposure() );
+    receiptTarget->setGradientContrast( receiptSource->gradientContrast() );
     receiptTarget->setGradientStartX( receiptSource->gradientStartX() );
     receiptTarget->setGradientStartY( receiptSource->gradientStartY() );
     receiptTarget->setGradientLength( receiptSource->gradientLength() );
@@ -3184,6 +3193,7 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
 
     receipt->setGradientEnabled( m_pSessionReceipts.at( row )->isGradientEnabled() );
     receipt->setGradientExposure( m_pSessionReceipts.at( row )->gradientExposure() );
+    receipt->setGradientContrast( m_pSessionReceipts.at( row )->gradientContrast() );
     receipt->setGradientStartX( m_pSessionReceipts.at( row )->gradientStartX() );
     receipt->setGradientStartY( m_pSessionReceipts.at( row )->gradientStartY() );
     receipt->setGradientLength( m_pSessionReceipts.at( row )->gradientLength() );
@@ -3833,6 +3843,13 @@ void MainWindow::on_horizontalSliderContrast_valueChanged(int position)
     m_frameChanged = true;
 }
 
+void MainWindow::on_horizontalSliderContrastGradient_valueChanged(int position)
+{
+    processingSetSimpleContrastGradient( m_pProcessingObject, position / 100.0 );
+    ui->label_ContrastGradientVal->setText( QString("%1").arg( position ) );
+    m_frameChanged = true;
+}
+
 void MainWindow::on_horizontalSliderTemperature_valueChanged(int position)
 {
     int value = ( 218 - 42 ) * ( ui->horizontalSliderTemperature->value() - ui->horizontalSliderTemperature->minimum() ) / ( ui->horizontalSliderTemperature->maximum() - ui->horizontalSliderTemperature->minimum() );
@@ -4048,6 +4065,13 @@ void MainWindow::on_horizontalSliderContrast_doubleClicked()
 {
     ReceiptSettings *sliders = new ReceiptSettings(); //default
     ui->horizontalSliderContrast->setValue( sliders->contrast() );
+    delete sliders;
+}
+
+void MainWindow::on_horizontalSliderContrastGradient_doubleClicked()
+{
+    ReceiptSettings *sliders = new ReceiptSettings(); //default
+    ui->horizontalSliderContrastGradient->setValue( sliders->gradientContrast() );
     delete sliders;
 }
 
@@ -5054,6 +5078,15 @@ void MainWindow::on_label_ContrastVal_doubleClicked()
     editSlider.autoSetup( ui->horizontalSliderContrast, ui->label_ContrastVal, 1.0, 0, 1.0 );
     editSlider.exec();
     ui->horizontalSliderContrast->setValue( editSlider.getValue() );
+}
+
+//DoubleClick on Contrast Gradient Label
+void MainWindow::on_label_ContrastGradientVal_doubleClicked()
+{
+    EditSliderValueDialog editSlider;
+    editSlider.autoSetup( ui->horizontalSliderContrastGradient, ui->label_ContrastGradientVal, 1.0, 0, 1.0 );
+    editSlider.exec();
+    ui->horizontalSliderContrastGradient->setValue( editSlider.getValue() );
 }
 
 //DoubleClick on Temperature Label

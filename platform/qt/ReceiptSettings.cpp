@@ -29,6 +29,7 @@ ReceiptSettings::ReceiptSettings()
 
     m_isGradientEnabled = false;
     m_gradientExposure = 0;
+    m_gradientContrast = 0;
     m_gradientX1 = 0;
     m_gradientY1 = 0;
     m_gradientLength = 1;

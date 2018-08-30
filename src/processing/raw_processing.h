@@ -116,6 +116,11 @@ void processingSetGradientExposure(processingObject_t * processing, double value
 #define processingGetGradientExposure(processing) (processing)->gradient_exposure_stops
 #define processingSetGradientEnable(processing, value) (processing)->gradient_enable = (value)
 #define processingIsGradientEnabled(processing) (processing)->gradient_enable
+/* Gradient simple contrast */
+void processingSetSimpleContrastGradient(processingObject_t * processing, double value);
+#define processingGetSimpleContrastGradient(processing) (processing)->gradient_contrast
+/* Calculate gradient contrast exposure LUT */
+void processing_update_contrast_curve_gradient(processingObject_t * processing);
 
 /* Just don't touch this or keep at ~2.2 (or more for a lighter image) */
 void processingSetGamma(processingObject_t * processing, double gammaValue);

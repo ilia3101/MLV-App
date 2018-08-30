@@ -157,6 +157,8 @@ typedef struct {
 
     /* Gradient */
     double     gradient_exposure_stops;
+    double     gradient_contrast;
+    double     gradient_contrast_curve[65536];
     uint8_t    gradient_enable;
     uint16_t * gradient_mask; //same size like picture, alpha mask
 } processingObject_t;
