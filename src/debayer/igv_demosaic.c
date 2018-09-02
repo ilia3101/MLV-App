@@ -308,17 +308,23 @@ void igv_demosaic( amazeinfo_t * inputdata )
 #endif
         for (int y = tiley; y < endy; ++y)
             for (int x = tilex; x < endx; ++x)
+            {
                 switch (FC(y,x))
                 {
                     case 0:
                         rawData[y][x] *= wb_r;
+                        //No real idea why it has to be limited here - but this prevents defect highlight
+                        if( rawData[y][x] > 40000.0 ) rawData[y][x] = 40000.0;
                         break;
                     case 1:
                         rawData[y][x] *= wb_g;
                         break;
                     case 2:
                         rawData[y][x] *= wb_b;
+                        //No real idea why it has to be limited here - but this prevents defect highlight
+                        if( rawData[y][x] > 40000.0 ) rawData[y][x] = 40000.0;
                 }
+            }
     }
 
     //border_interpolate2(tilew,tileh,7,rawData,red,green,blue);
