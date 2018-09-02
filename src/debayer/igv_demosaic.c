@@ -296,9 +296,9 @@ void igv_demosaic( amazeinfo_t * inputdata )
 
         /* Create multipliers */
         #define WB_POWER 2.3 /* Strengthen difference applied, seems to help */
-        wb_r = powf(avg_r/MAX(MAX(avg_r, avg_g), avg_b), WB_POWER);
-        wb_g = powf(avg_g/MAX(MAX(avg_r, avg_g), avg_b), WB_POWER);
-        wb_b = powf(avg_b/MAX(MAX(avg_r, avg_g), avg_b), WB_POWER);
+        wb_r = powf(avg_r/MAX(MAX(avg_r, avg_g), avg_b), WB_POWER) * 40000.0 / 65536.0;
+        wb_g = powf(avg_g/MAX(MAX(avg_r, avg_g), avg_b), WB_POWER) * 40000.0 / 65536.0;
+        wb_b = powf(avg_b/MAX(MAX(avg_r, avg_g), avg_b), WB_POWER) * 40000.0 / 65536.0;
 
         // printf("\nWB Multipliers AMaZE\nred %f\ngreen: %f\nblue: %f\n\n", wb_r, wb_g, wb_b);
 
