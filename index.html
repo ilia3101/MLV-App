@@ -120,10 +120,11 @@
                         document.getElementById("QtRelases").appendChild(releaseFrame);
                         document.getElementById("QtRelases").appendChild(document.createElement("br"));
                     }
-                    if (Releases[i].name.includes("[Cocoa]"))
+                    /* Allow last couple of cocoa versions in to release list just for preservation */
+                    if (Releases[i].name.includes("[Cocoa]") && (Releases[i].tag_name.includes("22") || Releases[i].tag_name.includes("21") || Releases[i].tag_name.includes("20") || Releases[i].tag_name.includes("19")))
                     {
-                        // document.getElementById("CocoaRelases").appendChild(releaseFrame);
-                        // document.getElementById("CocoaRelases").appendChild(document.createElement("br"));
+                        document.getElementById("QtRelases").appendChild(releaseFrame);
+                        document.getElementById("QtRelases").appendChild(document.createElement("br"));
                     }
                 }
             }
