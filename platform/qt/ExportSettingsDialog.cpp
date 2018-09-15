@@ -197,6 +197,14 @@ void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
         }
 #endif
     }
+    else if( index == CODEC_JPG2K )
+    {
+        ui->labelDebayer->setEnabled( true );
+        ui->comboBoxDebayer->setEnabled( true );
+        ui->comboBoxOption->setEnabled( true );
+        ui->comboBoxOption->addItem( QString( "Sequence (*.jp2)" ) );
+        ui->comboBoxOption->addItem( QString( "Movie (*.mov)" ) );
+    }
     else if( index == CODEC_FFVHUFF )
     {
         ui->labelDebayer->setEnabled( true );
@@ -335,6 +343,18 @@ void ExportSettingsDialog::on_comboBoxOption_currentIndexChanged(const QString &
             ui->checkBoxResize->setEnabled( true );
             ui->comboBoxSmoothing->setEnabled( true );
             ui->label_Smoothing->setEnabled( true );
+        }
+
+        //En-/disable fps override
+        if( ( ui->comboBoxCodec->currentIndex() == CODEC_JPG2K )
+         && arg1 != QString( "Movie (*.mov)" ) )
+        {
+            ui->checkBoxFpsOverride->setEnabled( false );
+            ui->checkBoxFpsOverride->setChecked( false );
+        }
+        else
+        {
+            ui->checkBoxFpsOverride->setEnabled( true );
         }
     }
 }

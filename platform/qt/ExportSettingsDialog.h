@@ -50,6 +50,9 @@
 #define CODEC_H265_MP4              1
 #define CODEC_H265_MKV              2
 
+#define CODEC_JPG2K_SEQ             0
+#define CODEC_JPG2K_MOV             1
+
 #define CODEC_FFVHUFF_OPTION10      0
 #define CODEC_FFVHUFF_OPTION12      1
 #define CODEC_FFVHUFF_OPTION16      2

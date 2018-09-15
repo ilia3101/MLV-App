@@ -1387,7 +1387,7 @@ void MainWindow::startExportPipe(QString fileName)
         //Setup for scripting
         m_pScripting->setNextScriptInputTiff( getMlvFramerate( m_pMlvObject ), folderName );
     }
-    else if( m_codecProfile == CODEC_JPG2K )
+    else if( m_codecProfile == CODEC_JPG2K && m_codecOption == CODEC_JPG2K_SEQ )
     {
         //Creating a folder with the initial filename
         QString folderName = QFileInfo( fileName ).path();
@@ -1419,6 +1419,17 @@ void MainWindow::startExportPipe(QString fileName)
         }
         //Setup for scripting
         m_pScripting->setNextScriptInputTiff( getMlvFramerate( m_pMlvObject ), folderName );
+    }
+    else if( m_codecProfile == CODEC_JPG2K && m_codecOption == CODEC_JPG2K_MOV )
+    {
+        output.append( QString( ".mov" ) );
+
+        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v jpeg2000 -pix_fmt %3 -color_primaries bt709 -color_trc bt709 -colorspace bt709 %4\"%5\"" )
+                    .arg( fps )
+                    .arg( resolution )
+                    .arg( "yuv444p" )
+                    .arg( resizeFilter )
+                    .arg( output ) );
     }
     else if( m_codecProfile == CODEC_AVI )
     {
