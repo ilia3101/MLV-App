@@ -32,7 +32,8 @@
 #include "EditSliderValueDialog.h"
 #include "DarkStyle.h"
 #include "Updater/updaterUI/cupdaterdialog.h"
-#include <FcpxmlAssistantDialog.h>
+#include "FcpxmlAssistantDialog.h"
+#include "ReceiptCopyMaskDialog.h"
 
 #define APPNAME "MLV App"
 #define VERSION "1.0"
@@ -4775,6 +4776,10 @@ void MainWindow::on_actionResetReceipt_triggered()
 //Copy receipt to clipboard
 void MainWindow::on_actionCopyRecept_triggered()
 {
+    ReceiptCopyMaskDialog *mask = new ReceiptCopyMaskDialog( this );
+    //mask->exec();
+    delete mask;
+
     setReceipt( m_pReceiptClipboard );
     ui->actionPasteReceipt->setEnabled( true );
 }

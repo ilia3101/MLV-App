@@ -124,7 +124,8 @@ SOURCES += \
     ../../src/processing/blur_threaded.c \
     Scripting.cpp \
     FcpxmlAssistantDialog.cpp \
-    ../../src/processing/denoiser/denoiser_2d_median.c
+    ../../src/processing/denoiser/denoiser_2d_median.c \
+    ReceiptCopyMaskDialog.cpp
 
 macx: SOURCES += ../cocoa/avf_lib/avf_lib.m
 
@@ -200,7 +201,8 @@ HEADERS += \
     Updater/updaterUI/CUpdater.h \
     ../../src/processing/blur_threaded.h \
     Scripting.h \
-    FcpxmlAssistantDialog.h
+    FcpxmlAssistantDialog.h \
+    ReceiptCopyMaskDialog.h
 
 macx: HEADERS += \
     ../cocoa/avf_lib/avencoder.h \
@@ -214,7 +216,8 @@ FORMS += \
     ExportSettingsDialog.ui \
     EditSliderValueDialog.ui \
     Updater/updaterUI/cupdaterdialog.ui \
-    FcpxmlAssistantDialog.ui
+    FcpxmlAssistantDialog.ui \
+    ReceiptCopyMaskDialog.ui
 
 RESOURCES += \
     ressources.qrc \
