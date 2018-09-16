@@ -33,7 +33,6 @@
 #include "DarkStyle.h"
 #include "Updater/updaterUI/cupdaterdialog.h"
 #include "FcpxmlAssistantDialog.h"
-#include "ReceiptCopyMaskDialog.h"
 
 #define APPNAME "MLV App"
 #define VERSION "1.0"
@@ -160,6 +159,7 @@ MainWindow::~MainWindow()
     writeSettings();
     delete m_pScripting;
     delete m_pReceiptClipboard;
+    delete m_pCopyMask;
     delete m_pAudioPlayback;
     delete m_pAudioWave;
     delete m_pVectorScope;
@@ -864,6 +864,7 @@ void MainWindow::initGui( void )
     //Init the Dialogs
     m_pInfoDialog = new InfoDialog( this );
     m_pStatusDialog = new StatusDialog( this );
+    m_pCopyMask = new ReceiptCopyMaskDialog( this );
     m_pHistogram = new Histogram();
     m_pVectorScope = new VectorScope( 420, 140 );
     ui->actionShowHistogram->setChecked( true );
@@ -3070,65 +3071,82 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
 //Replace receipt settings
 void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings *receiptSource, bool paste)
 {
-    receiptTarget->setExposure( receiptSource->exposure() );
-    receiptTarget->setContrast( receiptSource->contrast() );
-    receiptTarget->setTemperature( receiptSource->temperature() );
-    receiptTarget->setTint( receiptSource->tint() );
-    receiptTarget->setClarity( receiptSource->clarity() );
-    receiptTarget->setVibrance( receiptSource->vibrance() );
-    receiptTarget->setSaturation( receiptSource->saturation() );
-    receiptTarget->setDs( receiptSource->ds() );
-    receiptTarget->setDr( receiptSource->dr() );
-    receiptTarget->setLs( receiptSource->ls() );
-    receiptTarget->setLr( receiptSource->lr() );
-    receiptTarget->setLightening( receiptSource->lightening() );
-    receiptTarget->setShadows( receiptSource->shadows() );
-    receiptTarget->setHighlights( receiptSource->highlights() );
+    Ui::ReceiptCopyMaskDialog *cdui = m_pCopyMask->ui;
 
-    receiptTarget->setGradientEnabled( receiptSource->isGradientEnabled() );
-    receiptTarget->setGradientExposure( receiptSource->gradientExposure() );
-    receiptTarget->setGradientContrast( receiptSource->gradientContrast() );
-    receiptTarget->setGradientStartX( receiptSource->gradientStartX() );
-    receiptTarget->setGradientStartY( receiptSource->gradientStartY() );
-    receiptTarget->setGradientLength( receiptSource->gradientLength() );
-    receiptTarget->setGradientAngle( receiptSource->gradientAngle() );
+    if( paste && cdui->checkBoxExposure->isChecked() )   receiptTarget->setExposure( receiptSource->exposure() );
+    if( paste && cdui->checkBoxContrast->isChecked() )   receiptTarget->setContrast( receiptSource->contrast() );
+    if( paste && cdui->checkBoxWb->isChecked() )         receiptTarget->setTemperature( receiptSource->temperature() );
+    if( paste && cdui->checkBoxWb->isChecked() )         receiptTarget->setTint( receiptSource->tint() );
+    if( paste && cdui->checkBoxClarity->isChecked() )    receiptTarget->setClarity( receiptSource->clarity() );
+    if( paste && cdui->checkBoxVibrance->isChecked() )   receiptTarget->setVibrance( receiptSource->vibrance() );
+    if( paste && cdui->checkBoxSaturation->isChecked() ) receiptTarget->setSaturation( receiptSource->saturation() );
+    if( paste && cdui->checkBoxCurve->isChecked() )      receiptTarget->setDs( receiptSource->ds() );
+    if( paste && cdui->checkBoxCurve->isChecked() )      receiptTarget->setDr( receiptSource->dr() );
+    if( paste && cdui->checkBoxCurve->isChecked() )      receiptTarget->setLs( receiptSource->ls() );
+    if( paste && cdui->checkBoxCurve->isChecked() )      receiptTarget->setLr( receiptSource->lr() );
+    if( paste && cdui->checkBoxCurve->isChecked() )      receiptTarget->setLightening( receiptSource->lightening() );
+    if( paste && cdui->checkBoxShadows->isChecked() )    receiptTarget->setShadows( receiptSource->shadows() );
+    if( paste && cdui->checkBoxHighlights->isChecked() ) receiptTarget->setHighlights( receiptSource->highlights() );
 
-    receiptTarget->setSharpen( receiptSource->sharpen() );
-    receiptTarget->setChromaBlur( receiptSource->chromaBlur() );
-    receiptTarget->setHighlightReconstruction( receiptSource->isHighlightReconstruction() );
-    receiptTarget->setChromaSeparation( receiptSource->isChromaSeparation() );
-    receiptTarget->setProfile( receiptSource->profile() );
-    receiptTarget->setDenoiserStrength( receiptSource->denoiserStrength() );
-    receiptTarget->setDenoiserWindow( receiptSource->denoiserWindow() );
+    if( paste && cdui->checkBoxGradient->isChecked() )
+    {
+        receiptTarget->setGradientEnabled( receiptSource->isGradientEnabled() );
+        receiptTarget->setGradientExposure( receiptSource->gradientExposure() );
+        receiptTarget->setGradientContrast( receiptSource->gradientContrast() );
+        receiptTarget->setGradientStartX( receiptSource->gradientStartX() );
+        receiptTarget->setGradientStartY( receiptSource->gradientStartY() );
+        receiptTarget->setGradientLength( receiptSource->gradientLength() );
+        receiptTarget->setGradientAngle( receiptSource->gradientAngle() );
+    }
 
-    receiptTarget->setRawFixesEnabled( receiptSource->rawFixesEnabled() );
-    receiptTarget->setVerticalStripes( receiptSource->verticalStripes() );
-    receiptTarget->setFocusPixels( receiptSource->focusPixels() );
-    receiptTarget->setFpiMethod( receiptSource->fpiMethod() );
-    receiptTarget->setBadPixels( receiptSource->badPixels() );
-    receiptTarget->setBpsMethod( receiptSource->bpsMethod() );
-    receiptTarget->setBpiMethod( receiptSource->bpiMethod() );
-    receiptTarget->setChromaSmooth( receiptSource->chromaSmooth() );
-    receiptTarget->setPatternNoise( receiptSource->patternNoise() );
+    if( paste && cdui->checkBoxSharpen->isChecked() )    receiptTarget->setSharpen( receiptSource->sharpen() );
+    if( paste && cdui->checkBoxChromaBlur->isChecked() ) receiptTarget->setChromaBlur( receiptSource->chromaBlur() );
+    if( paste && cdui->checkBoxHighlightReconstruction->isChecked() ) receiptTarget->setHighlightReconstruction( receiptSource->isHighlightReconstruction() );
+    if( paste && cdui->checkBoxChromaBlur->isChecked() ) receiptTarget->setChromaSeparation( receiptSource->isChromaSeparation() );
+    if( paste && cdui->checkBoxProfile->isChecked() )    receiptTarget->setProfile( receiptSource->profile() );
+    if( paste && cdui->checkBoxDenoise->isChecked() )    receiptTarget->setDenoiserStrength( receiptSource->denoiserStrength() );
+    if( paste && cdui->checkBoxDenoise->isChecked() )    receiptTarget->setDenoiserWindow( receiptSource->denoiserWindow() );
+
+    if( paste && cdui->checkBoxRawCorrectEnable->isChecked() ) receiptTarget->setRawFixesEnabled( receiptSource->rawFixesEnabled() );
+    if( paste && cdui->checkBoxDarkFrameSubtraction->isChecked() ) receiptTarget->setDarkFrameFileName( receiptSource->darkFrameFileName() );
+    if( paste && cdui->checkBoxDarkFrameSubtraction->isChecked() ) receiptTarget->setDarkFrameEnabled( receiptSource->darkFrameEnabled() );
+    if( paste && cdui->checkBoxVerticalStripes->isChecked() )  receiptTarget->setVerticalStripes( receiptSource->verticalStripes() );
+    if( paste && cdui->checkBoxFoxusDots->isChecked() )        receiptTarget->setFocusPixels( receiptSource->focusPixels() );
+    if( paste && cdui->checkBoxFoxusDots->isChecked() )        receiptTarget->setFpiMethod( receiptSource->fpiMethod() );
+    if( paste && cdui->checkBoxBadPixels->isChecked() )        receiptTarget->setBadPixels( receiptSource->badPixels() );
+    if( paste && cdui->checkBoxBadPixels->isChecked() )        receiptTarget->setBpsMethod( receiptSource->bpsMethod() );
+    if( paste && cdui->checkBoxBadPixels->isChecked() )        receiptTarget->setBpiMethod( receiptSource->bpiMethod() );
+    if( paste && cdui->checkBoxChromaSmooth->isChecked() )     receiptTarget->setChromaSmooth( receiptSource->chromaSmooth() );
+    if( paste && cdui->checkBoxPatternNoise->isChecked() )     receiptTarget->setPatternNoise( receiptSource->patternNoise() );
+    if( paste && cdui->checkBoxDualIso->isChecked() )          receiptTarget->setDualIso( receiptSource->dualIso() );
+    if( paste && cdui->checkBoxDualIso->isChecked() )          receiptTarget->setDualIsoInterpolation( receiptSource->dualIsoInterpolation() );
+    if( paste && cdui->checkBoxDualIso->isChecked() )          receiptTarget->setDualIsoAliasMap( receiptSource->dualIsoAliasMap() );
+    if( paste && cdui->checkBoxDualIso->isChecked() )          receiptTarget->setDualIsoFrBlending( receiptSource->dualIsoFrBlending() );
+    if( paste && cdui->checkBoxDualIso->isChecked() )          receiptTarget->setDualIsoWhite( receiptSource->dualIsoWhite() );
+    if( paste && cdui->checkBoxDualIso->isChecked() )          receiptTarget->setDualIsoBlack( receiptSource->dualIsoBlack() );
+    if( paste && cdui->checkBoxRawBlackLevel->isChecked() )    receiptTarget->setRawBlack( receiptSource->rawBlack() );
+    if( paste && cdui->checkBoxRawWhiteLevel->isChecked() )    receiptTarget->setRawWhite( receiptSource->rawWhite() );
     receiptTarget->setDeflickerTarget( receiptSource->deflickerTarget() );
-    receiptTarget->setDualIso( receiptSource->dualIso() );
-    receiptTarget->setDualIsoInterpolation( receiptSource->dualIsoInterpolation() );
-    receiptTarget->setDualIsoAliasMap( receiptSource->dualIsoAliasMap() );
-    receiptTarget->setDualIsoFrBlending( receiptSource->dualIsoFrBlending() );
-    receiptTarget->setDualIsoWhite( receiptSource->dualIsoWhite() );
-    receiptTarget->setDualIsoBlack( receiptSource->dualIsoBlack() );
-    receiptTarget->setDarkFrameFileName( receiptSource->darkFrameFileName() );
-    receiptTarget->setDarkFrameEnabled( receiptSource->darkFrameEnabled() );
-    receiptTarget->setRawBlack( receiptSource->rawBlack() );
-    receiptTarget->setRawWhite( receiptSource->rawWhite() );
 
-    receiptTarget->setFilterEnabled( receiptSource->filterEnabled() );
-    receiptTarget->setFilterIndex( receiptSource->filterIndex() );
-    receiptTarget->setFilterStrength( receiptSource->filterStrength() );
+    if( paste && cdui->checkBoxLut->isChecked() )
+    {
+        receiptTarget->setLutEnabled( receiptSource->lutEnabled() );
+        receiptTarget->setLutName( receiptSource->lutName() );
+    }
 
-    receiptTarget->setStretchFactorX( receiptSource->stretchFactorX() );
-    receiptTarget->setStretchFactorY( receiptSource->stretchFactorY() );
-    receiptTarget->setUpsideDown( receiptSource->upsideDown() );
+    if( paste && cdui->checkBoxFilter->isChecked() )
+    {
+        receiptTarget->setFilterEnabled( receiptSource->filterEnabled() );
+        receiptTarget->setFilterIndex( receiptSource->filterIndex() );
+        receiptTarget->setFilterStrength( receiptSource->filterStrength() );
+    }
+
+    if( paste && cdui->checkBoxTransformation->isChecked() )
+    {
+        receiptTarget->setStretchFactorX( receiptSource->stretchFactorX() );
+        receiptTarget->setStretchFactorY( receiptSource->stretchFactorY() );
+        receiptTarget->setUpsideDown( receiptSource->upsideDown() );
+    }
 
     if( !paste )
     {
@@ -4776,9 +4794,7 @@ void MainWindow::on_actionResetReceipt_triggered()
 //Copy receipt to clipboard
 void MainWindow::on_actionCopyRecept_triggered()
 {
-    ReceiptCopyMaskDialog *mask = new ReceiptCopyMaskDialog( this );
-    //mask->exec();
-    delete mask;
+    m_pCopyMask->exec();
 
     setReceipt( m_pReceiptClipboard );
     ui->actionPasteReceipt->setEnabled( true );
@@ -4787,25 +4803,15 @@ void MainWindow::on_actionCopyRecept_triggered()
 //Paste receipt from clipboard
 void MainWindow::on_actionPasteReceipt_triggered()
 {
-    //If one file is selected
-    if( ui->listWidgetSession->selectedItems().count() <= 1 )
+    for( int row = 0; row < ui->listWidgetSession->count(); row++ )
     {
-        //No matter which clip is selected, the actual clip gets the receipt
-        setSliders( m_pReceiptClipboard, true );
-    }
-    else
-    {
-        for( int row = 0; row < ui->listWidgetSession->count(); row++ )
+        if( !ui->listWidgetSession->item( row )->isSelected() ) continue;
+        //Each selected clip gets the receipt
+        replaceReceipt( m_pSessionReceipts.at(row), m_pReceiptClipboard, true );
+        //If the actual is selected (may have changed since copy action), set sliders and get receipt
+        if( row == m_lastActiveClipInSession )
         {
-            if( !ui->listWidgetSession->item( row )->isSelected() ) continue;
-            //If the actual is selected (may have changed since copy action), set sliders and get receipt
-            if( row == m_lastActiveClipInSession )
-            {
-                setSliders( m_pReceiptClipboard, true );
-                continue;
-            }
-            //Each other selected clip gets the receipt
-            replaceReceipt( m_pSessionReceipts.at(row), m_pReceiptClipboard, true );
+            setSliders( m_pSessionReceipts.at(row), true );
         }
     }
 }

@@ -36,6 +36,7 @@
 #include "DoubleClickLabel.h"
 #include "Scripting.h"
 #include "Updater/updaterUI/CUpdater.h"
+#include "ReceiptCopyMaskDialog.h"
 
 namespace Ui {
 class MainWindow;
@@ -262,7 +263,6 @@ private slots:
     void on_toolButtonLoadLut_clicked();
     void on_lineEditLutName_textChanged(const QString &arg1);
 
-
 private:
     Ui::MainWindow *ui;
     InfoDialog *m_pInfoDialog;
@@ -279,6 +279,7 @@ private:
     GradientElement *m_pGradientElement;
     GraphicsPickerScene* m_pScene;
     TimeCodeLabel* m_pTimeCodeImage;
+    ReceiptCopyMaskDialog *m_pCopyMask;
     Scripting* m_pScripting;
     CUpdater* m_pUpdateCheck;
     uint8_t m_timeCodePosition;

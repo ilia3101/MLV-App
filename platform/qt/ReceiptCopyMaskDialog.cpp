@@ -12,7 +12,10 @@ ReceiptCopyMaskDialog::ReceiptCopyMaskDialog(QWidget *parent) :
     ui(new Ui::ReceiptCopyMaskDialog)
 {
     ui->setupUi(this);
+    setWindowFlags( Qt::Dialog | Qt::WindowTitleHint | Qt::WindowCloseButtonHint );
+    adjustSize();
 
+    connect( ui->checkBoxRawCorrectEnable, SIGNAL(clicked(bool)), this, SLOT(checkBoxRawCorrectionState()) );
     connect( ui->checkBoxDarkFrameSubtraction, SIGNAL(clicked(bool)), this, SLOT(checkBoxRawCorrectionState()) );
     connect( ui->checkBoxFoxusDots, SIGNAL(clicked(bool)), this, SLOT(checkBoxRawCorrectionState()) );
     connect( ui->checkBoxBadPixels, SIGNAL(clicked(bool)), this, SLOT(checkBoxRawCorrectionState()) );
@@ -37,6 +40,9 @@ ReceiptCopyMaskDialog::ReceiptCopyMaskDialog(QWidget *parent) :
 
     connect( ui->checkBoxSharpen, SIGNAL(clicked(bool)), this, SLOT(checkBoxDetailsState()) );
     connect( ui->checkBoxChromaBlur, SIGNAL(clicked(bool)), this, SLOT(checkBoxDetailsState()) );
+    connect( ui->checkBoxDenoise, SIGNAL(clicked(bool)), this, SLOT(checkBoxDetailsState()) );
+
+    on_pushButtonAll_clicked();
 }
 
 ReceiptCopyMaskDialog::~ReceiptCopyMaskDialog()
@@ -46,7 +52,8 @@ ReceiptCopyMaskDialog::~ReceiptCopyMaskDialog()
 
 void ReceiptCopyMaskDialog::checkBoxRawCorrectionState()
 {
-    if( ui->checkBoxDarkFrameSubtraction->isChecked()
+    if( ui->checkBoxRawCorrectEnable->isChecked()
+     && ui->checkBoxDarkFrameSubtraction->isChecked()
      && ui->checkBoxFoxusDots->isChecked()
      && ui->checkBoxBadPixels->isChecked()
      && ui->checkBoxChromaSmooth->isChecked()
@@ -59,7 +66,8 @@ void ReceiptCopyMaskDialog::checkBoxRawCorrectionState()
         ui->checkBoxRawCorrection->setTristate( false );
         ui->checkBoxRawCorrection->setCheckState( Qt::Checked );
     }
-    else if( !ui->checkBoxDarkFrameSubtraction->isChecked()
+    else if( !ui->checkBoxRawCorrectEnable->isChecked()
+          && !ui->checkBoxDarkFrameSubtraction->isChecked()
           && !ui->checkBoxFoxusDots->isChecked()
           && !ui->checkBoxBadPixels->isChecked()
           && !ui->checkBoxChromaSmooth->isChecked()
@@ -121,13 +129,15 @@ void ReceiptCopyMaskDialog::checkBoxProcessingState()
 void ReceiptCopyMaskDialog::checkBoxDetailsState()
 {
     if( ui->checkBoxSharpen->isChecked()
-     && ui->checkBoxChromaBlur->isChecked() )
+     && ui->checkBoxChromaBlur->isChecked()
+     && ui->checkBoxDenoise->isChecked() )
     {
         ui->checkBoxDetails->setTristate( false );
         ui->checkBoxDetails->setCheckState( Qt::Checked );
     }
     else if( !ui->checkBoxSharpen->isChecked()
-          && !ui->checkBoxChromaBlur->isChecked() )
+          && !ui->checkBoxChromaBlur->isChecked()
+          && !ui->checkBoxDenoise->isChecked() )
     {
         ui->checkBoxDetails->setTristate( false );
         ui->checkBoxDetails->setCheckState( Qt::Unchecked );
@@ -141,6 +151,9 @@ void ReceiptCopyMaskDialog::checkBoxDetailsState()
 
 void ReceiptCopyMaskDialog::on_checkBoxRawCorrection_clicked(bool checked)
 {
+    ui->checkBoxRawCorrection->setTristate( false );
+
+    ui->checkBoxRawCorrectEnable->setChecked( checked );
     ui->checkBoxDarkFrameSubtraction->setChecked( checked );
     ui->checkBoxFoxusDots->setChecked( checked );
     ui->checkBoxBadPixels->setChecked( checked );
@@ -154,6 +167,8 @@ void ReceiptCopyMaskDialog::on_checkBoxRawCorrection_clicked(bool checked)
 
 void ReceiptCopyMaskDialog::on_checkBoxProcessing_clicked(bool checked)
 {
+    ui->checkBoxProcessing->setTristate( false );
+
     ui->checkBoxExposure->setChecked( checked );
     ui->checkBoxContrast->setChecked( checked );
     ui->checkBoxWb->setChecked( checked );
@@ -170,12 +185,21 @@ void ReceiptCopyMaskDialog::on_checkBoxProcessing_clicked(bool checked)
 void ReceiptCopyMaskDialog::on_checkBoxDetails_clicked(bool checked)
 {
     ui->checkBoxDetails->setTristate( false );
+
     ui->checkBoxSharpen->setChecked( checked );
     ui->checkBoxChromaBlur->setChecked( checked );
+    ui->checkBoxDenoise->setChecked( checked );
 }
 
 void ReceiptCopyMaskDialog::on_pushButtonAll_clicked()
 {
+    ui->checkBoxRawCorrection->setTristate( false );
+    ui->checkBoxRawCorrection->setCheckState( Qt::Checked );
+    ui->checkBoxProcessing->setTristate( false );
+    ui->checkBoxProcessing->setCheckState( Qt::Checked );
+    ui->checkBoxDetails->setTristate( false );
+    ui->checkBoxDetails->setCheckState( Qt::Checked );
+
     ui->checkBoxRawCorrection->setChecked( true );
     on_checkBoxRawCorrection_clicked( true );
     ui->checkBoxProcessing->setChecked( true );
@@ -190,6 +214,13 @@ void ReceiptCopyMaskDialog::on_pushButtonAll_clicked()
 
 void ReceiptCopyMaskDialog::on_pushButtonNone_clicked()
 {
+    ui->checkBoxRawCorrection->setTristate( false );
+    ui->checkBoxRawCorrection->setCheckState( Qt::Unchecked );
+    ui->checkBoxProcessing->setTristate( false );
+    ui->checkBoxProcessing->setCheckState( Qt::Unchecked );
+    ui->checkBoxDetails->setTristate( false );
+    ui->checkBoxDetails->setCheckState( Qt::Unchecked );
+
     ui->checkBoxRawCorrection->setChecked( false );
     on_checkBoxRawCorrection_clicked( false );
     ui->checkBoxProcessing->setChecked( false );

@@ -60,6 +60,13 @@
             </property>
            </widget>
           </item>
+          <item>
+           <widget class="QCheckBox" name="checkBoxDenoise">
+            <property name="text">
+             <string>Denoise</string>
+            </property>
+           </widget>
+          </item>
          </layout>
         </item>
         <item row="0" column="0" colspan="2">
@@ -191,6 +198,13 @@
            <enum>QLayout::SetMinimumSize</enum>
           </property>
           <item>
+           <widget class="QCheckBox" name="checkBoxRawCorrectEnable">
+            <property name="text">
+             <string>Enable</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QCheckBox" name="checkBoxDarkFrameSubtraction">
             <property name="text">
              <string>Dark Frame Subtraction</string>
@@ -271,7 +285,7 @@
         <item row="3" column="4" colspan="2">
          <widget class="QCheckBox" name="checkBoxGradient">
           <property name="text">
-           <string>Gradient</string>
+           <string>Linear Gradient</string>
           </property>
          </widget>
         </item>
