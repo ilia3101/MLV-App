@@ -49,6 +49,8 @@
 #define STRETCH_H_200   2.0
 #define STRETCH_V_100   1.0
 #define STRETCH_V_167   1.6667
+#define STRETCH_V_300   3.0
+#define STRETCH_V_033   0.3333
 
 //Constructor
 MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
@@ -1835,6 +1837,14 @@ void MainWindow::startExportCdng(QString fileName)
     {
         picAR[2] = 5; picAR[3] = 3;
     }
+    else if(m_exportQueue.first()->stretchFactorY() == STRETCH_V_300)
+    {
+        picAR[2] = 3; picAR[3] = 1;
+    }
+    else if(m_exportQueue.first()->stretchFactorY() == STRETCH_V_033)
+    {
+        picAR[2] = 1; picAR[3] = 3;
+    }
     else
     {
         picAR[2] = 1; picAR[3] = 1;
@@ -2970,12 +2980,18 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
 
     if( receipt->stretchFactorY() == -1 )
     {
+        float ratioV = getMlvAspectRatio( m_pMlvObject );
+        if( ratioV == 0.0 ) ratioV = 1.0; // set it to 1 if no information in the MLV file
         //Init vertical stretching automatically when imported and loaded very first time completely
-        if( getMlvAspectRatio( m_pMlvObject ) <= 1.0 ) ui->comboBoxVStretch->setCurrentIndex( 0 );
-        else ui->comboBoxVStretch->setCurrentIndex( 1 );
+        if( ratioV > 0.9 && ratioV < 1.1 ) ui->comboBoxVStretch->setCurrentIndex( 0 );
+        else if( ratioV > 1.6 && ratioV < 1.7 ) ui->comboBoxVStretch->setCurrentIndex( 1 );
+        else if( ratioV > 2.9 && ratioV < 3.1 ) ui->comboBoxVStretch->setCurrentIndex( 2 );
+        else ui->comboBoxVStretch->setCurrentIndex( 3 );
     }
     else if( receipt->stretchFactorY() == STRETCH_V_100 ) ui->comboBoxVStretch->setCurrentIndex( 0 );
-    else ui->comboBoxVStretch->setCurrentIndex( 1 );
+    else if( receipt->stretchFactorY() == STRETCH_V_167 ) ui->comboBoxVStretch->setCurrentIndex( 1 );
+    else if( receipt->stretchFactorY() == STRETCH_V_300 ) ui->comboBoxVStretch->setCurrentIndex( 2 );
+    else ui->comboBoxVStretch->setCurrentIndex( 3 );
     on_comboBoxVStretch_currentIndexChanged( ui->comboBoxVStretch->currentIndex() );
 
     if( !paste && !receipt->wasNeverLoaded() )
@@ -6284,7 +6300,9 @@ double MainWindow::getHorizontalStretchFactor()
 double MainWindow::getVerticalStretchFactor( void )
 {
     if( ui->comboBoxVStretch->currentIndex() == 0 ) return STRETCH_V_100;
-    else return STRETCH_V_167;
+    else if( ui->comboBoxVStretch->currentIndex() == 1 ) return STRETCH_V_167;
+    else if( ui->comboBoxVStretch->currentIndex() == 2 ) return STRETCH_V_300;
+    else  return STRETCH_V_033;
 }
 
 //Read Whitebalance Info from MLV and setup slider
