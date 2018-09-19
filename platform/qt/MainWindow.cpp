@@ -5772,6 +5772,11 @@ void MainWindow::whiteBalancePicked( int x, int y )
         x *= getMlvWidth( m_pMlvObject ) / m_pScene->width();
         y *= getMlvHeight( m_pMlvObject ) / m_pScene->height();
     }
+    else
+    {
+        x /= getHorizontalStretchFactor();
+        y /= getVerticalStretchFactor();
+    }
 
     //Quit if click not in picture
     if( x < 0 || y < 0 || x > getMlvWidth( m_pMlvObject ) || y > getMlvHeight( m_pMlvObject ) ) return;
