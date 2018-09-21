@@ -28,7 +28,7 @@ void printMlvInfo(mlvObject_t * video);
  * no debayering or processing */
 int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode, char * error_message);
 /* return error codes of and open modes of openMlvClip() */
-enum mlv_err { MLV_ERR_NONE, MLV_ERR_OPEN, MLV_ERR_INVALID, MLV_ERR_IO };
+enum mlv_err { MLV_ERR_NONE, MLV_ERR_OPEN, MLV_ERR_IO, MLV_ERR_CORRUPTED, MLV_ERR_INVALID };
 enum open_mode { MLV_OPEN_FULL, MLV_OPEN_MAPP, MLV_OPEN_PREVIEW };
 
 /* Functions for saving cut or averaged MLV */

@@ -1503,7 +1503,7 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode, char * error
                     sprintf(error_message, "Unknown blockType '%s' or corrupted file:  %s", block_type, video->path);
                     DEBUG( printf("\n%s\n", error_message); )
                             --video->filenum;
-                    return MLV_ERR_INVALID;
+                    return MLV_ERR_CORRUPTED;
                 }
                 continue;
             }
