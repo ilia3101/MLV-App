@@ -66,7 +66,6 @@ llrawprocObject_t * initLLRawProcObject()
     llrawproc->compute_stripes = 0;
     llrawproc->first_time = 1;
     llrawproc->dual_iso = 0;
-    llrawproc->is_dual_iso = 0;
     llrawproc->diso_averaging = 0;
     llrawproc->diso_alias_map = 1;
     llrawproc->diso_frblending = 1;
@@ -105,14 +104,6 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
     /* do first time stuff */
     if(video->llrawproc->first_time)
     {
-        /* check dual iso */
-        video->llrawproc->is_dual_iso = diso_get_preview(raw_image_buff,
-                                                         video->RAWI.xRes,
-                                                         video->RAWI.yRes,
-                                                         video->RAWI.raw_info.black_level,
-                                                         video->RAWI.raw_info.white_level,
-                                                         1); // dual iso check mode is on
-
         /* initialize dual iso black and white levels */
         video->llrawproc->diso_black_level = video->RAWI.raw_info.black_level;
         video->llrawproc->diso_white_level = video->RAWI.raw_info.white_level;
@@ -179,7 +170,7 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
                          crop_rec,
                          unified_mode,
                          video->llrawproc->fpi_method,
-                         video->llrawproc->is_dual_iso,
+                         (video->llrawproc->dual_iso),
                          video->llrawproc->raw2ev,
                          video->llrawproc->ev2raw);
     }
@@ -201,13 +192,13 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
                        (video->llrawproc->bad_pixels == 2),
                        video->llrawproc->bps_method,
                        video->llrawproc->bpi_method,
-                       video->llrawproc->is_dual_iso,
+                       (video->llrawproc->dual_iso),
                        video->llrawproc->raw2ev,
                        video->llrawproc->ev2raw);
     }
 
     /* dual iso processing */
-    if(video->llrawproc->is_dual_iso)
+    if(video->llrawproc->dual_iso)
     {
         switch(video->llrawproc->dual_iso)
         {
@@ -242,12 +233,12 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
                     processingSetBlackAndWhiteLevel(video->processing, raw_info.black_level << 2, raw_info.white_level << 2); // << 2 for upresing scaled to 14bit levels further to 16bits
                 }
 
-                video->llrawproc->is_dual_iso = diso_get_full20bit(raw_info,
-                                                                   raw_image_buff,
-                                                                   video->llrawproc->diso_averaging,
-                                                                   video->llrawproc->diso_alias_map,
-                                                                   video->llrawproc->diso_frblending,
-                                                                   video->llrawproc->chroma_smooth);
+                diso_get_full20bit(raw_info,
+                                   raw_image_buff,
+                                   video->llrawproc->diso_averaging,
+                                   video->llrawproc->diso_alias_map,
+                                   video->llrawproc->diso_frblending,
+                                   video->llrawproc->chroma_smooth);
                 break;
             }
 
@@ -283,7 +274,7 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
     }
 
     /* do chroma smoothing */
-    if (video->llrawproc->chroma_smooth && (video->llrawproc->dual_iso != 1 || !video->llrawproc->is_dual_iso)) // do not smooth 20bit dualiso raw
+    if (video->llrawproc->chroma_smooth && video->llrawproc->dual_iso != 1) // do not smooth 20bit dualiso raw
     {
 #ifndef STDOUT_SILENT
             printf("\nUsing chroma smooth method: '%dx%d'\n\n", video->llrawproc->chroma_smooth, video->llrawproc->chroma_smooth);
@@ -304,8 +295,8 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
         fix_vertical_stripes(&video->llrawproc->stripe_corrections,
                              raw_image_buff,
                              raw_image_size / 2,
-                             (video->llrawproc->dual_iso == 1 && video->llrawproc->is_dual_iso) ? video->RAWI.raw_info.black_level * 4 : video->RAWI.raw_info.black_level,
-                             (video->llrawproc->dual_iso == 1 && video->llrawproc->is_dual_iso) ? video->RAWI.raw_info.white_level * 4 : video->RAWI.raw_info.white_level,
+                             (video->llrawproc->dual_iso == 1) ? video->RAWI.raw_info.black_level * 4 : video->RAWI.raw_info.black_level,
+                             (video->llrawproc->dual_iso == 1) ? video->RAWI.raw_info.white_level * 4 : video->RAWI.raw_info.white_level,
                              video->RAWI.raw_info.frame_size,
                              video->RAWI.xRes,
                              video->RAWI.yRes,
@@ -488,12 +479,13 @@ void llrpSetDualIsoFullResBlendingMode(mlvObject_t * video, int value)
 
 int llrpIsDualIso(mlvObject_t * video)
 {
-    return video->llrawproc->is_dual_iso;
+    if(video->DISO.blockType[0]) return 1;
+    return 0;
 }
 
 int llrpHQDualIso(mlvObject_t * video)
 {
-    return ((video->llrawproc->dual_iso == 1) && video->llrawproc->is_dual_iso);
+    return (video->llrawproc->dual_iso == 1) && (llrpGetFixRawMode(video));
 }
 
 void llrpResetFpmStatus(mlvObject_t * video)
