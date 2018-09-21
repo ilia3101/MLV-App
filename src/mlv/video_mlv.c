@@ -5,6 +5,7 @@
 #include <strings.h>
 #include <pthread.h>
 #include <math.h>
+#include <inttypes.h>
 
 #if defined(__linux)
 #include <alloca.h>
@@ -64,6 +65,33 @@ static uint64_t file_get_pos(FILE *stream)
 #else
 #define FMT_SIZE "%zu"
 #endif
+
+static int seek_to_next_known_block(FILE * in_file)
+{
+    uint64_t read_ahead_size = 128 * 1024 * 1024;
+    uint8_t * ahead = malloc(read_ahead_size);
+
+    uint64_t read = fread(ahead, 1, read_ahead_size, in_file);
+    file_set_pos(in_file, -read, SEEK_CUR);
+    for (uint64_t i = 0; i < read; i++)
+    {
+        if (memcmp(ahead + i, "VIDF", 4) == 0 ||
+            memcmp(ahead + i, "AUDF", 4) == 0 ||
+            memcmp(ahead + i, "NULL", 4) == 0 ||
+            memcmp(ahead + i, "RTCI", 4) == 0)
+        {
+            DEBUG( printf("Next known block: %c%c%c%c at 0x%"PRIx64"+0x%"PRIx64" = ", ahead[i], ahead[i+1], ahead[i+2], ahead[i+3], file_get_pos(in_file), i); )
+            file_set_pos(in_file, i, SEEK_CUR);
+            DEBUG( printf("0x%"PRIx64"\n", file_get_pos(in_file)); )
+            free(ahead);
+            return 1;
+        }
+    }
+
+    DEBUG( printf("Could not find any known block from 0x%"PRIx64".\n", file_get_pos(in_file)); )
+    free(ahead);
+    return 0;
+}
 
 /* Spanned multichunk MLV file handling */
 static FILE **load_all_chunks(char *base_filename, int *entries)
@@ -1467,12 +1495,17 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode, char * error
             }
             else
             {
-                char block_type[5] = { 0 };
-                memcpy(block_type, block_header.blockType, 4);
-                sprintf(error_message, "Unknown blockType '%s' or corrupted file:  %s", block_type, video->path);
-                DEBUG( printf("\n%s\n", error_message); )
-                --video->filenum;
-                return MLV_ERR_INVALID;
+                /* block name is wrong, so try to brute force the position of next valid block */
+                if(!seek_to_next_known_block(video->file[i]))
+                {
+                    char block_type[5] = { 0 };
+                    memcpy(block_type, block_header.blockType, 4);
+                    sprintf(error_message, "Unknown blockType '%s' or corrupted file:  %s", block_type, video->path);
+                    DEBUG( printf("\n%s\n", error_message); )
+                            --video->filenum;
+                    return MLV_ERR_INVALID;
+                }
+                continue;
             }
 
             /* Printing stuff for fun */
