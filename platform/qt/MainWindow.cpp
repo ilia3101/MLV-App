@@ -912,6 +912,12 @@ void MainWindow::initGui( void )
     ui->label_FilterStrengthText->setEnabled( false );
     ui->horizontalSliderFilterStrength->setEnabled( false );
 
+    //Hide DualIso Fullres Blending (only brings black frame if off)
+    ui->DualISOFullresBlendingLabel->setVisible( false );
+    ui->toolButtonDualIsoFullresBlending->setVisible( false );
+    ui->toolButtonDualIsoFullresBlendingOff->setVisible( false );
+    ui->toolButtonDualIsoFullresBlendingOn->setVisible( false );
+
     //Set up image in GUI
     QImage image(":/IMG/IMG/histogram.png");
     m_pGraphicsItem = new QGraphicsPixmapItem( QPixmap::fromImage(image) );
