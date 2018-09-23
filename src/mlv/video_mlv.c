@@ -519,6 +519,9 @@ mlvObject_t * initMlvObject()
     video->video_index = NULL;
     video->audio_index = NULL;
 
+    /* Init audio buffer pointer */
+    video->audio_data = NULL;
+
     /* Cache things, only one element for now as it is empty */
     video->rgb_raw_frames = NULL;
     video->rgb_raw_current_frame = NULL;
@@ -562,9 +565,16 @@ void freeMlvObject(mlvObject_t * video)
     if(video->video_index) free(video->video_index);
     if(video->audio_index) free(video->audio_index);
 
-    /* Now free these */
-    if(video->cached_frames){
+    /* Free audio buffer */
+    if(video->audio_data)
+    {
+        free(video->audio_data);
+        video->audio_data = NULL;
+    }
 
+    /* Now free these */
+    if(video->cached_frames)
+    {
         free(video->cached_frames);
         video->cached_frames = NULL;
     }
@@ -1155,7 +1165,7 @@ int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
     {
         /* Get MLV audio data into buffer */
         uint64_t mlv_audio_size = 0;
-        int16_t * mlv_audio_data = (int16_t*)getMlvAudioData(video, &mlv_audio_size);
+        int16_t * mlv_audio_data = (int16_t*)loadMlvAudioData(video, &mlv_audio_size);
         if(!mlv_audio_data)
         {
             sprintf(error_message, "Could not allocate memory for audio data");
@@ -1543,6 +1553,9 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode, char * error
     video->frames = video_frames;
     /* Set audio count in video object */
     video->audios = audio_frames;
+
+    /* load audio into the buffer */
+    video->audio_data = (uint8_t*)loadMlvAudioData(video, &video->audio_size);
 
     /* Save mapp file if this feature is on */
     if(open_mode == MLV_OPEN_MAPP) save_mapp(video);

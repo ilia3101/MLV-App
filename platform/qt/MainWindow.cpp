@@ -96,7 +96,7 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     initLib();
 
     //Setup AudioPlayback
-    m_pAudioPlayback = new AudioPlayback( m_pMlvObject, this );
+    m_pAudioPlayback = new AudioPlayback( this );
 
     //Set timers
     m_timerId = startTimer( 40 ); //25fps initially only, is set after import
@@ -486,8 +486,8 @@ int MainWindow::openMlvForPreview(QString fileName)
     //Waiting for frame ready because it works with m_pMlvObject
     while( m_frameStillDrawing ) {qApp->processEvents();}
 
-    //Unload audio
-    m_pAudioPlayback->unloadAudio();
+    //Reset audio playback engine
+    //m_pAudioPlayback->resetAudioEngine();
 
     /* Destroy it just for simplicity... and make a new one */
     freeMlvObject( m_pMlvObject );
@@ -621,7 +621,7 @@ int MainWindow::openMlv( QString fileName )
 
     m_fileLoaded = false;
 
-    //disable drawing and kill old timer and old WaveFormMonitor
+    //Disable drawing and kill old timer and old WaveFormMonitor
     killTimer( m_timerId );
     m_dontDraw = true;
 
@@ -632,8 +632,8 @@ int MainWindow::openMlv( QString fileName )
     delete m_pWaveFormMonitor;
     delete m_pVectorScope;
 
-    //Unload audio
-    m_pAudioPlayback->unloadAudio();
+    //Reset audio engine
+    m_pAudioPlayback->resetAudioEngine();
 
     /* Destroy it just for simplicity... and make a new one */
     freeMlvObject( m_pMlvObject );
@@ -735,8 +735,8 @@ int MainWindow::openMlv( QString fileName )
         setMlvDontAlwaysUseAmaze( m_pMlvObject );
     }
 
-    //Load audio
-    m_pAudioPlayback->loadAudio( m_pMlvObject );
+    //Init audio playback engine
+    m_pAudioPlayback->initAudioEngine( m_pMlvObject );
 
     m_fileLoaded = true;
 
@@ -3380,11 +3380,9 @@ void MainWindow::paintAudioTrack( void )
     else
     {
         //Get audio data
-        uint64_t audio_size = m_pAudioPlayback->getAudioSize();
-        int16_t* audio_data = (int16_t*)m_pAudioPlayback->getAudioData();
-        //Correct audio length to video length
-        uint64_t theoreticSize = getMlvAudioChannels( m_pMlvObject ) * getMlvSampleRate( m_pMlvObject ) * sizeof( uint16_t ) * getMlvFrames( m_pMlvObject ) / getMlvFramerate( m_pMlvObject );
-        if( theoreticSize < audio_size ) audio_size = theoreticSize;
+        int16_t* audio_data = (int16_t*)getMlvAudioData( m_pMlvObject );
+        uint64_t audio_size = getMlvAudioSize( m_pMlvObject );
+
         //paint
         pic = QPixmap::fromImage( m_pAudioWave->getMonoWave( audio_data, audio_size, ui->labelAudioTrack->width(), devicePixelRatio() ) );
         pic.setDevicePixelRatio( devicePixelRatio() );
@@ -4059,7 +4057,7 @@ void MainWindow::on_horizontalSliderRawWhite_valueChanged(int position)
     /* Lowering white level a bit avoids pink grain in highlihgt reconstruction */
     int positionCorr = (int)((double)position * 0.993);
 
-    m_pMlvObject->RAWI.raw_info.white_level = position; //TODO: that is still bad style
+    setMlvWhiteLevel( m_pMlvObject, position );
     int shift = 16 - getMlvBitdepth( m_pMlvObject );
     processingSetWhiteLevel( m_pProcessingObject, positionCorr << shift );
     llrpResetFpmStatus(m_pMlvObject);
@@ -4089,7 +4087,7 @@ void MainWindow::on_horizontalSliderRawBlack_valueChanged(int position)
 
     while( !m_pRenderThread->isIdle() ) QThread::msleep(1);
 
-    m_pMlvObject->RAWI.raw_info.black_level = position; //TODO: that is still bad style
+    setMlvBlackLevel( m_pMlvObject, position );
     int shift = 16 - getMlvBitdepth( m_pMlvObject );
     processingSetBlackLevel( m_pProcessingObject, position << shift );
     llrpResetFpmStatus(m_pMlvObject);

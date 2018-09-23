@@ -9,38 +9,36 @@
 #include <QDebug>
 
 //Constructor
-AudioPlayback::AudioPlayback(mlvObject_t *pMlvObject , QObject *parent)
+AudioPlayback::AudioPlayback( QObject *parent )
     : QObject( parent )
 {
-    m_pMlvObject = pMlvObject;
-    m_audio_size = 0;
-    m_pAudioData = NULL;
-    m_audioLoaded = false;
-    m_audioRunning = false;
+    m_audioEngineInitialized = false;
+    m_audioEngineRunning = false;
 }
 
 //Destructor
 AudioPlayback::~AudioPlayback()
 {
-    if( m_audioLoaded ) unloadAudio();
+    if( m_audioEngineInitialized ) resetAudioEngine();
 }
 
-//Load the audio of a mlv
-void AudioPlayback::loadAudio( mlvObject_t *pMlvObject )
+//Initialize audio engine
+void AudioPlayback::initAudioEngine( mlvObject_t *pMlvObject )
 {
-    //Unload last file
-    if( m_audioLoaded ) unloadAudio();
+    if( !doesMlvHaveAudio( pMlvObject ) ) return;
 
-    //Add new pointer
-    m_pMlvObject = pMlvObject;
+    m_audioSampleRate = getMlvSampleRate( pMlvObject );
+    m_audioChannels = getMlvAudioChannels( pMlvObject );
+    m_pMlvAudioData = getMlvAudioData( pMlvObject );
+    m_mlvAudioSize = getMlvAudioSize( pMlvObject );
+    m_mlvFrameRate = getMlvFramerate( pMlvObject );
 
-    //No audio? Quit!
-    if( !doesMlvHaveAudio( m_pMlvObject ) ) return;
+    if( m_audioEngineInitialized ) resetAudioEngine();
 
     //Set up the format, eg.
     QAudioFormat format;
-    format.setSampleRate( getMlvSampleRate( m_pMlvObject ) );
-    format.setChannelCount( getMlvAudioChannels( m_pMlvObject ) );
+    format.setSampleRate( m_audioSampleRate );
+    format.setChannelCount( m_audioChannels );
     format.setSampleSize( 16 );
     format.setCodec( "audio/pcm" );
     format.setByteOrder( QAudioFormat::LittleEndian );
@@ -49,11 +47,10 @@ void AudioPlayback::loadAudio( mlvObject_t *pMlvObject )
 
     m_pByteArrayAudio = new QByteArray();
     m_pAudioStream = new QDataStream(m_pByteArrayAudio, QIODevice::ReadWrite);
-    m_pAudioData = (uint8_t*)getMlvAudioData( m_pMlvObject, &m_audio_size );
 
-    for( uint64_t x = 0; x < m_audio_size; x++ )
+    for( uint64_t x = 0; x < m_mlvAudioSize; x++ )
     {
-        (*m_pAudioStream) << m_pAudioData[x];
+        (*m_pAudioStream) << m_pMlvAudioData[x];
     }
     m_pAudioStream->device()->seek( 0 );
 #ifdef Q_OS_LINUX
@@ -66,61 +63,51 @@ void AudioPlayback::loadAudio( mlvObject_t *pMlvObject )
     m_pAudioOutput->setVolume( 1.0 );
     m_pAudioOutput->suspend();
 
-    m_audioLoaded = true;
+    m_audioEngineInitialized = true;
 }
 
 //Unload the audio of a mlv
-void AudioPlayback::unloadAudio()
+void AudioPlayback::resetAudioEngine()
 {
-    if( !m_audioLoaded ) return;
+    if( !m_audioEngineInitialized ) return;
 
     stop();
-    if(m_pAudioData) free( m_pAudioData );
-    m_pAudioData = NULL;
     delete m_pAudioStream;
     delete m_pByteArrayAudio;
     delete m_pAudioOutput;
 
-    m_audioLoaded = false;
+    m_audioEngineInitialized = false;
+    m_audioEngineRunning = false;
 }
 
 //Jump to frame
 void AudioPlayback::jumpToPos( int frame )
 {
-    if( !doesMlvHaveAudio( m_pMlvObject ) ) return;
+    if( !m_audioEngineInitialized ) return;
 
-    qint64 position = 4 * (qint64)( frame * getMlvSampleRate( m_pMlvObject ) / getMlvFramerate( m_pMlvObject ) );
+    qint64 position = 4 * (qint64)( frame * m_audioSampleRate / m_mlvFrameRate );
     m_pAudioStream->device()->seek( position );
 }
 
 //Play audio
 void AudioPlayback::play()
 {
-    if( !doesMlvHaveAudio( m_pMlvObject ) ) return;
+    if( !m_audioEngineInitialized ) return;
 
     m_pAudioOutput->start( m_pAudioStream->device() );
     m_pAudioOutput->resume();
-    m_audioRunning = true;
+    m_audioEngineRunning = true;
 }
 
 //Stop audio
 void AudioPlayback::stop()
 {
-    if( !doesMlvHaveAudio( m_pMlvObject ) ) return;
+    if( !m_audioEngineInitialized ) return;
 
-    if( !m_audioRunning ) return;
+    if( !m_audioEngineRunning ) return;
     m_pAudioOutput->suspend();
     m_pAudioOutput->stop();
     m_pAudioOutput->reset();
-    m_audioRunning = false;
+    m_audioEngineRunning = false;
 }
 
-uint8_t* AudioPlayback::getAudioData()
-{
-    return m_pAudioData;
-}
-
-uint64_t AudioPlayback::getAudioSize()
-{
-    return m_audio_size;
-}

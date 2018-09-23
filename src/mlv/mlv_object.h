@@ -90,6 +90,10 @@ typedef struct {
     uint32_t    audios;          /* Number of audio blocks */
     frame_index_t * audio_index;
 
+    /* Audio buffer pointer and size */
+    uint8_t * audio_data;
+    uint64_t  audio_size;
+
     /* Image processing object pointer (it is to be made separately) */
     processingObject_t * processing;
     llrawprocObject_t * llrawproc;

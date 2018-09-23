@@ -33,6 +33,8 @@
 #define getMlvVersion(video) (video)->MLVI.versionString
 #define getMlvBlackLevel(video) (video)->RAWI.raw_info.black_level
 #define getMlvWhiteLevel(video) (video)->RAWI.raw_info.white_level
+#define setMlvBlackLevel(video, blackLevel) (video)->RAWI.raw_info.black_level = (blackLevel)
+#define setMlvWhiteLevel(video, whiteLevel) (video)->RAWI.raw_info.white_level = (whiteLevel)
 #define getMlvOriginalBlackLevel(video) (video)->original_black_level
 #define getMlvOriginalWhiteLevel(video) (video)->original_white_level
 #define getMlvIso(video) (video)->EXPO.isoValue
@@ -44,6 +46,8 @@
 #define getMlvAudioChannels(video) (video)->WAVI.channels
 #define getMlvAudioBytesPerSecond(video) (video)->WAVI.bytesPerSecond
 #define getMlvAudioBitsPerSample(video) (video)->WAVI.bitsPerSample
+#define getMlvAudioData(video) (video)->audio_data
+#define getMlvAudioSize(video) (video)->audio_size
 #define getMlvTmYear(video)    ((video)->RTCI.tm_year+1900)
 #define getMlvTmMonth(video)   ((video)->RTCI.tm_mon+1)
 #define getMlvTmDay(video)     (video)->RTCI.tm_mday

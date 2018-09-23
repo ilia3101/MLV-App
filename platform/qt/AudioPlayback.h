@@ -18,25 +18,28 @@ class AudioPlayback : public QObject
 {
     Q_OBJECT
 public:
-    explicit AudioPlayback( mlvObject_t *pMlvObject, QObject *parent = Q_NULLPTR );
+    explicit AudioPlayback( QObject *parent = Q_NULLPTR );
     ~AudioPlayback();
-    void loadAudio( mlvObject_t *pMlvObject );
-    void unloadAudio( void );
+    void initAudioEngine( mlvObject_t *pMlvObject );
+    void resetAudioEngine( void );
     void jumpToPos( int frame );
     void play( void );
     void stop( void );
-    uint8_t* getAudioData( void );
-    uint64_t getAudioSize( void );
 
 private:
-    mlvObject_t *m_pMlvObject;
+    uint8_t *m_pMlvAudioData;
+    uint64_t m_mlvAudioSize;
+    uint32_t m_audioSampleRate;
+    uint16_t m_audioChannels;
+
+    bool m_audioEngineInitialized;
+    bool m_audioEngineRunning;
+
     QByteArray *m_pByteArrayAudio;
     QDataStream *m_pAudioStream;
     QAudioOutput *m_pAudioOutput;
-    uint8_t *m_pAudioData;
-    uint64_t m_audio_size;
-    bool m_audioLoaded;
-    bool m_audioRunning;
+
+    double m_mlvFrameRate;
 };
 
 #endif // AUDIOPLAYBACK_H

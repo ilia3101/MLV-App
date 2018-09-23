@@ -94,7 +94,7 @@ static uint64_t file_set_pos(FILE *stream, uint64_t offset, int whence)
 }
 
 /* When allocating memory for audio use this */
-static uint64_t getMlvAudioSize(mlvObject_t * video)
+static uint64_t initMlvAudioSize(mlvObject_t * video)
 {
     uint64_t size = 0;
     for (uint32_t i = 0; i < video->audios; ++i)
@@ -104,7 +104,7 @@ static uint64_t getMlvAudioSize(mlvObject_t * video)
     return size;
 }
 
-/*generate the header for the audio wave file*/
+/* Generate the header for the audio wave file */
 static wave_header_t generateMlvAudioToWaveHeader(mlvObject_t * video, uint64_t wave_data_size, uint32_t frame_offset)
 {
     uint64_t file_size = wave_data_size + sizeof(wave_header_t);
@@ -177,11 +177,8 @@ void writeMlvAudioToWaveCut(mlvObject_t * video, char * path, uint32_t cut_in, u
     /* Check if output_audio_size is multiple of 4096 bytes and add one more block */
     uint64_t theoretic_size_aligned = theoretic_size - (theoretic_size % 4096) + 4096;
 
-    /* Get audio data and size */
-    uint64_t audio_size = 0;
-    int16_t * audio_data = (int16_t*)getMlvAudioData(video, &audio_size);
     /* Wav audio data size */
-    uint64_t wave_data_size = MIN(theoretic_size_aligned, audio_size);
+    uint64_t wave_data_size = MIN(theoretic_size_aligned, video->audio_size);
     /* Get wav header */
     wave_header_t wave_header = generateMlvAudioToWaveHeader(video, wave_data_size, cut_in - 1);
 
@@ -189,10 +186,9 @@ void writeMlvAudioToWaveCut(mlvObject_t * video, char * path, uint32_t cut_in, u
     /* Write header */
     fwrite(&wave_header, sizeof(wave_header_t), 1, wave_file);
     /* Write data, shift buffer by in_offset_aligned */
-    fwrite((uint8_t*)audio_data + in_offset_aligned, wave_data_size, 1, wave_file);
+    fwrite(video->audio_data + in_offset_aligned, wave_data_size, 1, wave_file);
 
     fclose(wave_file);
-    free(audio_data);
 }
 
 /* Writes the MLV's audio in WAVE format to a given file path */
@@ -208,9 +204,7 @@ void writeMlvAudioToWave(mlvObject_t * video, char * path)
     /* Check if output_audio_size is multiple of 'block_align' bytes and add one more block */
     uint64_t theoretic_size_aligned = theoretic_size - (theoretic_size % block_align) + block_align;
 
-    uint64_t audio_size = 0;
-    int16_t * audio_data = (int16_t*)getMlvAudioData(video, &audio_size);
-    uint64_t wave_data_size = MIN(theoretic_size_aligned, audio_size);
+    uint64_t wave_data_size = MIN(theoretic_size_aligned, video->audio_size);
 
     wave_header_t wave_header = generateMlvAudioToWaveHeader(video, wave_data_size, 0);
 
@@ -219,19 +213,18 @@ void writeMlvAudioToWave(mlvObject_t * video, char * path)
     /* Write header */
     fwrite(&wave_header, sizeof(wave_header_t), 1, wave_file);
     /* Write data */
-    fwrite((uint8_t *)audio_data, wave_data_size, 1, wave_file);
+    fwrite(video->audio_data, wave_data_size, 1, wave_file);
 
     fclose(wave_file);
-    free(audio_data);
 }
 
-void * getMlvAudioData(mlvObject_t * video, uint64_t * output_audio_size)
+void * loadMlvAudioData(mlvObject_t * video, uint64_t * output_audio_size)
 {
     if (!doesMlvHaveAudio(video)) return NULL;
 
     int fread_err = 1;
     uint64_t audio_buffer_offset = 0;
-    uint64_t audio_size = getMlvAudioSize(video);
+    uint64_t audio_size = initMlvAudioSize(video);
     uint8_t * audio_buffer = malloc(audio_size);
     if(!audio_buffer)
     {
@@ -243,12 +236,10 @@ void * getMlvAudioData(mlvObject_t * video, uint64_t * output_audio_size)
 
     for (uint32_t i = 0; i < video->audios; ++i)
     {
-        pthread_mutex_lock(video->main_file_mutex + video->audio_index[i].chunk_num);
         /* Go to audio block position */
         file_set_pos(video->file[video->audio_index[i].chunk_num], video->audio_index[i].frame_offset, SEEK_SET);
         /* Read to location of audio */
         fread_err &= fread(audio_buffer + audio_buffer_offset, video->audio_index[i].frame_size, 1, video->file[video->audio_index[i].chunk_num]);
-        pthread_mutex_unlock(video->main_file_mutex + video->audio_index[i].chunk_num);
         /* New audio position */
         audio_buffer_offset += video->audio_index[i].frame_size;
     }
