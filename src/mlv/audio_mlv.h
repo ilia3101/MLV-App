@@ -11,7 +11,7 @@
 void writeMlvAudioToWaveCut(mlvObject_t * video, char * path, uint32_t cut_in, uint32_t cut_out);
 /* Writes MLV audio into Broacast Wave format */
 void writeMlvAudioToWave(mlvObject_t * video, char * path);
-/* Returnes pointer to the MLV audio buffer and audio size as parameter */
-void * loadMlvAudioData(mlvObject_t * video, uint64_t * output_audio_size);
+/* Fills mlvObject_t fields, allocates audio buffer and sets audio size */
+void readMlvAudioData(mlvObject_t * video);
 
 #endif

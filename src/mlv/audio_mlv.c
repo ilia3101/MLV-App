@@ -4,6 +4,7 @@
 #include <string.h>
 #include <strings.h>
 #include <pthread.h>
+#include <inttypes.h>
 
 #include "audio_mlv.h"
 #include "video_mlv.h"
@@ -109,7 +110,7 @@ static wave_header_t generateMlvAudioToWaveHeader(mlvObject_t * video, uint64_t 
 {
     uint64_t file_size = wave_data_size + sizeof(wave_header_t);
     /* time reference is the audio sample count from recording start */
-    uint64_t time_reference = (uint64_t)( (double)( (video->video_index[0].frame_number + frame_offset) * getMlvSampleRate(video) ) / (double)getMlvFramerate(video) );
+    uint64_t time_reference = (uint64_t)( (double)( (video->video_index[0].frame_number + frame_offset) * getMlvSampleRate(video) ) / (double)getMlvFramerateOrig(video) );
 
     wave_header_t wave_header = {
         .RIFF                = {'R','I','F','F'},
@@ -134,7 +135,7 @@ static wave_header_t generateMlvAudioToWaveHeader(mlvObject_t * video, uint64_t 
         .subchunk2_size      = wave_data_size
     };
 
-    char temp[33];
+    char temp[33] = { 0 };
     snprintf(temp, sizeof(temp), "Exported MLV Audio");
     memcpy(wave_header.bext.description, temp, 32);
     snprintf(temp, sizeof(temp), "%s", getMlvCamera(video));
@@ -168,17 +169,18 @@ void writeMlvAudioToWaveCut(mlvObject_t * video, char * path, uint32_t cut_in, u
 
     /* Calculate the sum of audio sample sizes for all audio channels */
     uint64_t audio_sample_size = getMlvAudioChannels(video) * (getMlvAudioBitsPerSample(video) / 8);
-
-    uint64_t in_offset = (uint64_t)( (double)(getMlvSampleRate(video) * audio_sample_size * ( cut_in - 1 )) / (double)getMlvFramerate(video) );
+    /* Calculate the audio alignement block size in bytes */
+    uint16_t block_align = audio_sample_size * 1024;
+    /* Calculate cut_in offset */
+    uint64_t in_offset = (uint64_t)( (double)(getMlvSampleRate(video) * audio_sample_size * ( cut_in - 1 )) / (double)getMlvFramerateOrig(video) );
     /* Make sure in offset value is multiple of sum of all channel sample sizes */
     uint64_t in_offset_aligned = in_offset - (in_offset % audio_sample_size);
-
-    uint64_t theoretic_size = (uint64_t)( (double)(getMlvSampleRate(video) * audio_sample_size * frames) / (double)getMlvFramerate(video) );
+    /* Calculate cut audio size */
+    uint64_t cut_audio_size = (uint64_t)( (double)(getMlvSampleRate(video) * audio_sample_size * frames) / (double)getMlvFramerate(video) );
     /* Check if output_audio_size is multiple of 4096 bytes and add one more block */
-    uint64_t theoretic_size_aligned = theoretic_size - (theoretic_size % 4096) + 4096;
-
+    uint64_t cut_audio_size_aligned = cut_audio_size - (cut_audio_size % block_align) + block_align;
     /* Wav audio data size */
-    uint64_t wave_data_size = MIN(theoretic_size_aligned, video->audio_size);
+    uint64_t wave_data_size = MIN(cut_audio_size_aligned, video->audio_size);
     /* Get wav header */
     wave_header_t wave_header = generateMlvAudioToWaveHeader(video, wave_data_size, cut_in - 1);
 
@@ -196,42 +198,32 @@ void writeMlvAudioToWave(mlvObject_t * video, char * path)
 {
     if (!doesMlvHaveAudio(video)) return;
 
-    /* Calculate the sum of audio sample sizes for all audio channels */
-    uint64_t audio_sample_size = getMlvAudioChannels(video) * (getMlvAudioBitsPerSample(video) / 8);
-    uint64_t theoretic_size = (uint64_t)( (double)( getMlvSampleRate(video) * audio_sample_size * getMlvFrames(video) ) / (double)getMlvFramerate(video) );
-    /* Calculate the audio alignement block size in bytes */
-    uint16_t block_align = getMlvAudioChannels(video) * getMlvAudioBitsPerSample(video) * 1024 / 8;
-    /* Check if output_audio_size is multiple of 'block_align' bytes and add one more block */
-    uint64_t theoretic_size_aligned = theoretic_size - (theoretic_size % block_align) + block_align;
-
-    uint64_t wave_data_size = MIN(theoretic_size_aligned, video->audio_size);
-
-    wave_header_t wave_header = generateMlvAudioToWaveHeader(video, wave_data_size, 0);
+    /* Get wav header */
+    wave_header_t wave_header = generateMlvAudioToWaveHeader(video, video->audio_size, 0);
 
     FILE * wave_file = fopen(path, "wb");
-
     /* Write header */
     fwrite(&wave_header, sizeof(wave_header_t), 1, wave_file);
     /* Write data */
-    fwrite(video->audio_data, wave_data_size, 1, wave_file);
+    fwrite(video->audio_data, video->audio_size, 1, wave_file);
 
     fclose(wave_file);
 }
 
-void * loadMlvAudioData(mlvObject_t * video, uint64_t * output_audio_size)
+void loadMlvAudioData(mlvObject_t * video)
 {
-    if (!doesMlvHaveAudio(video)) return NULL;
+    if (!doesMlvHaveAudio(video)) return;
 
     int fread_err = 1;
-    uint64_t audio_buffer_offset = 0;
-    uint64_t audio_size = initMlvAudioSize(video);
-    uint8_t * audio_buffer = malloc(audio_size);
-    if(!audio_buffer)
+    uint64_t mlv_audio_buffer_offset = 0;
+    uint64_t mlv_audio_size = initMlvAudioSize(video);
+    uint8_t * mlv_audio_buffer = malloc(mlv_audio_size);
+    if(!mlv_audio_buffer)
     {
 #ifndef STDOUT_SILENT
     printf("Audio frame buffer allocation error");
 #endif
-        return NULL;
+        return;
     }
 
     for (uint32_t i = 0; i < video->audios; ++i)
@@ -239,9 +231,9 @@ void * loadMlvAudioData(mlvObject_t * video, uint64_t * output_audio_size)
         /* Go to audio block position */
         file_set_pos(video->file[video->audio_index[i].chunk_num], video->audio_index[i].frame_offset, SEEK_SET);
         /* Read to location of audio */
-        fread_err &= fread(audio_buffer + audio_buffer_offset, video->audio_index[i].frame_size, 1, video->file[video->audio_index[i].chunk_num]);
+        fread_err &= fread(mlv_audio_buffer + mlv_audio_buffer_offset, video->audio_index[i].frame_size, 1, video->file[video->audio_index[i].chunk_num]);
         /* New audio position */
-        audio_buffer_offset += video->audio_index[i].frame_size;
+        mlv_audio_buffer_offset += video->audio_index[i].frame_size;
     }
 
     if(!fread_err)
@@ -249,44 +241,52 @@ void * loadMlvAudioData(mlvObject_t * video, uint64_t * output_audio_size)
 #ifndef STDOUT_SILENT
         printf("Audio frame data read error");
 #endif
-        free(audio_buffer);
-        return NULL;
+        free(mlv_audio_buffer);
+        return;
     }
 
     /* Calculate the sum of audio sample sizes for all audio channels */
     uint64_t audio_sample_size = getMlvAudioChannels(video) * (getMlvAudioBitsPerSample(video) / 8);
+    /* Calculate the audio alignement block size in bytes */
+    uint16_t block_align = audio_sample_size * 1024;
+
     /* Get time difference of first video and audio frames and calculate the sync offset */
-    int64_t sync_offset = (int64_t)( ( (double)video->video_index[0].frame_time - (double)video->audio_index[0].frame_time ) * (double)( getMlvSampleRate(video) * audio_sample_size / 1000000.0 ) );
     uint64_t negative_offset = 0;
     uint64_t positive_offset = 0;
-
+    int64_t sync_offset = (int64_t)( ( (double)video->video_index[0].frame_time - (double)video->audio_index[0].frame_time ) * (double)( getMlvSampleRate(video) * audio_sample_size / 1000000.0 ) );
     if(sync_offset >= 0) negative_offset = (uint64_t)sync_offset - ((uint64_t)sync_offset % audio_sample_size); // Make sure value is multiple of sum of all channel sample sizes
     else positive_offset = (uint64_t)(-sync_offset) - ((uint64_t)(-sync_offset) % audio_sample_size);
 
     /* Calculate synced audio size */
-    uint64_t synced_audio_size = audio_size - negative_offset + positive_offset;
-    /* Calculate the audio alignement block size in bytes */
-    uint16_t block_align = getMlvAudioChannels(video) * getMlvAudioBitsPerSample(video) * 1024 / 8;
-    /* Check if output_audio_size is multiple of 'block_align' bytes and add one more block */
-    uint64_t output_audio_size_aligned = synced_audio_size - (synced_audio_size % block_align) + block_align;
+    uint64_t synced_audio_size = mlv_audio_size - negative_offset + positive_offset;
+    /* Check if synced_audio_size is multiple of 'block_align' bytes and add one more block */
+    uint64_t synced_audio_size_aligned = synced_audio_size - (synced_audio_size % block_align) + block_align;
+
     /* Allocate synced audio buffer */
-    void * output_audio = calloc( output_audio_size_aligned, 1 );
-    if(!output_audio)
+    video->audio_data = calloc( synced_audio_size_aligned, 1 );
+    if(!video->audio_data)
     {
 #ifndef STDOUT_SILENT
         printf("Synced and aligned audio buffer allocation error");
 #endif
-        free(audio_buffer);
-        return NULL;
+        free(mlv_audio_buffer);
+        return;
     }
 
     /* Copy cut/shifted audio data to the synced audio buffer */
-    memcpy(output_audio + positive_offset, audio_buffer + negative_offset, audio_size - negative_offset);
-    free(audio_buffer);
+    memcpy(video->audio_data + positive_offset, mlv_audio_buffer + negative_offset, mlv_audio_size - negative_offset);
+    free(mlv_audio_buffer);
 #ifndef STDOUT_SILENT
     printf("negative_offset = %lu, positive_offset = %lu, output_audio_size_aligned = %lu\n", negative_offset, positive_offset, output_audio_size_aligned);
 #endif
 
-    *output_audio_size = output_audio_size_aligned;
-    return output_audio;
+    /* Calculate theoretical audio size according to fps */
+    uint64_t theoretic_size = (uint64_t)( (double)( getMlvSampleRate(video) * audio_sample_size * getMlvFrames(video) ) / getMlvFramerateOrig(video) );
+    /* Check if theoretic_size is multiple of 'block_align' bytes and add one more block */
+    uint64_t theoretic_size_aligned = theoretic_size - (theoretic_size % block_align) + block_align;
+    /* Check calculated synced_audio_size_aligned against theoretic_size_aligned */
+    uint64_t final_audio_size_aligned = MIN(theoretic_size_aligned, synced_audio_size_aligned);
+
+    video->audio_buffer_size = synced_audio_size_aligned;
+    video->audio_size = final_audio_size_aligned;
 }

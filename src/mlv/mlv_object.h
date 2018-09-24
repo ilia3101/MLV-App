@@ -91,8 +91,9 @@ typedef struct {
     frame_index_t * audio_index;
 
     /* Audio buffer pointer and size */
-    uint8_t * audio_data;
-    uint64_t  audio_size;
+    uint8_t * audio_data;        /* Audio buffer pointer */
+    uint64_t  audio_size;        /* Aligned usable audio size */
+    uint64_t  audio_buffer_size; /* Full audio buffer size to be freed */
 
     /* Image processing object pointer (it is to be made separately) */
     processingObject_t * processing;
