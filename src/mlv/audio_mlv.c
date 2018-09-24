@@ -210,7 +210,7 @@ void writeMlvAudioToWave(mlvObject_t * video, char * path)
     fclose(wave_file);
 }
 
-void loadMlvAudioData(mlvObject_t * video)
+void readMlvAudioData(mlvObject_t * video)
 {
     if (!doesMlvHaveAudio(video)) return;
 
