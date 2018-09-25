@@ -150,6 +150,7 @@ private slots:
     void on_actionPrevious_Clip_triggered();
     void on_actionSelectAllClips_triggered();
     void on_actionDeleteSelectedClips_triggered();
+    void on_actionHelp_triggered();
     void on_listWidgetSession_activated(const QModelIndex &index);
     void on_dockWidgetSession_visibilityChanged(bool visible);
     void on_dockWidgetEdit_visibilityChanged(bool visible);

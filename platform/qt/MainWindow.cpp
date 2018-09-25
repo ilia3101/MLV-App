@@ -33,6 +33,7 @@
 #include "DarkStyle.h"
 #include "Updater/updaterUI/cupdaterdialog.h"
 #include "FcpxmlAssistantDialog.h"
+#include "UserManualDialog.h"
 
 #define APPNAME "MLV App"
 #define VERSION "1.0"
@@ -6689,4 +6690,12 @@ void MainWindow::on_lineEditLutName_textChanged(const QString &arg1)
     }
 
     m_frameChanged = true;
+}
+
+//Open UserManualDialog
+void MainWindow::on_actionHelp_triggered()
+{
+    UserManualDialog *help = new UserManualDialog( this );
+    help->exec();
+    delete help;
 }

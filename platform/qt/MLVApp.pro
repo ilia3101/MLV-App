@@ -125,7 +125,8 @@ SOURCES += \
     Scripting.cpp \
     FcpxmlAssistantDialog.cpp \
     ../../src/processing/denoiser/denoiser_2d_median.c \
-    ReceiptCopyMaskDialog.cpp
+    ReceiptCopyMaskDialog.cpp \
+    UserManualDialog.cpp
 
 macx: SOURCES += ../cocoa/avf_lib/avf_lib.m
 
@@ -202,7 +203,8 @@ HEADERS += \
     ../../src/processing/blur_threaded.h \
     Scripting.h \
     FcpxmlAssistantDialog.h \
-    ReceiptCopyMaskDialog.h
+    ReceiptCopyMaskDialog.h \
+    UserManualDialog.h
 
 macx: HEADERS += \
     ../cocoa/avf_lib/avencoder.h \
@@ -217,7 +219,8 @@ FORMS += \
     EditSliderValueDialog.ui \
     Updater/updaterUI/cupdaterdialog.ui \
     FcpxmlAssistantDialog.ui \
-    ReceiptCopyMaskDialog.ui
+    ReceiptCopyMaskDialog.ui \
+    UserManualDialog.ui
 
 RESOURCES += \
     ressources.qrc \

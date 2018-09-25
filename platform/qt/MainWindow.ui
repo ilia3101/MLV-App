@@ -162,6 +162,8 @@
     <addaction name="separator"/>
     <addaction name="actionCheckForUpdates"/>
     <addaction name="actionAutoCheckForUpdates"/>
+    <addaction name="separator"/>
+    <addaction name="actionHelp"/>
    </widget>
    <widget class="QMenu" name="menuPlayback">
     <property name="title">
@@ -397,7 +399,7 @@ QGroupBox::indicator:checked {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>-3069</y>
+            <y>0</y>
             <width>200</width>
             <height>3590</height>
            </rect>
@@ -6624,6 +6626,11 @@ QGroupBox::indicator:checked {
    </property>
    <property name="toolTip">
     <string>Import MLV files to session, which were used in FCPXML project</string>
+   </property>
+  </action>
+  <action name="actionHelp">
+   <property name="text">
+    <string>Help</string>
    </property>
   </action>
  </widget>

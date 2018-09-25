@@ -51,4 +51,12 @@
     <qresource prefix="/Fonts">
         <file>Fonts/DSEG7Modern-Regular.ttf</file>
     </qresource>
+    <qresource prefix="/help">
+        <file>help/demosaic.gif</file>
+        <file>help/fcpxml.png</file>
+        <file>help/badpixels.png</file>
+        <file>help/focusdots.png</file>
+        <file>help/gradient.png</file>
+        <file>help/virtstripes.png</file>
+    </qresource>
 </RCC>
