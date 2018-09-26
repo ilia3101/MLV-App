@@ -80,9 +80,11 @@ static int seek_to_next_known_block(FILE * in_file)
             memcmp(ahead + i, "NULL", 4) == 0 ||
             memcmp(ahead + i, "RTCI", 4) == 0)
         {
-            DEBUG( printf("Next known block: %c%c%c%c at 0x%"PRIx64"+0x%"PRIx64" = ", ahead[i], ahead[i+1], ahead[i+2], ahead[i+3], file_get_pos(in_file), i); )
+            //DEBUG(
+            printf("Next known block: %c%c%c%c at 0x%"PRIx64"+0x%"PRIx64" = ", ahead[i], ahead[i+1], ahead[i+2], ahead[i+3], file_get_pos(in_file), i); //)
             file_set_pos(in_file, i, SEEK_CUR);
-            DEBUG( printf("0x%"PRIx64"\n", file_get_pos(in_file)); )
+            //DEBUG(
+            printf("0x%"PRIx64"\n", file_get_pos(in_file)); //)
             free(ahead);
             return 1;
         }
@@ -1243,10 +1245,14 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode, char * error
         return MLV_ERR_OPEN; // can not open file
     }
 
-    int block_num = 0; /* Number of blocks in file */
+    /* Mutexes for every file */
+    video->main_file_mutex = calloc(sizeof(pthread_mutex_t), video->filenum);
+    for (int i = 0; i < video->filenum; ++i)
+        pthread_mutex_init(video->main_file_mutex + i, NULL);
 
     if(!load_mapp(video)) goto short_cut;
 
+    int block_num = 0; /* Number of blocks in file */
     mlv_hdr_t block_header; /* Basic MLV block header */
     uint64_t video_frames = 0; /* Number of frames in video */
     uint64_t audio_frames = 0; /* Number of audio blocks in video */
@@ -1529,6 +1535,9 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode, char * error
         return MLV_ERR_INVALID;
     }
 
+    /* Set total block amount in mlv */
+    video->block_num = block_num;
+
     /* Sort video and audio frames by time stamp */
     if(video_frames) frame_index_sort(video->video_index, video_frames);
     if(audio_frames) frame_index_sort(video->audio_index, audio_frames);
@@ -1551,13 +1560,6 @@ short_cut:
     /* Calculate imaginary bit depth for restricted lossledd raw data */
     video->lossless_bpp = ceil( log2( video->RAWI.raw_info.white_level - video->RAWI.raw_info.black_level ) );
 
-    /* Mutexes for every file */
-    video->main_file_mutex = calloc(sizeof(pthread_mutex_t), video->filenum);
-    for (int i = 0; i < video->filenum; ++i)
-        pthread_mutex_init(video->main_file_mutex + i, NULL);
-
-    /* Set total block amount in mlv */
-    video->block_num = block_num;
     /* NON compressed frame size */
     video->frame_size = (getMlvHeight(video) * getMlvWidth(video) * getMlvBitdepth(video)) / 8;
     /* Calculate framerate */

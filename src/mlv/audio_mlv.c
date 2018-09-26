@@ -228,10 +228,12 @@ void readMlvAudioData(mlvObject_t * video)
 
     for (uint32_t i = 0; i < video->audios; ++i)
     {
+        pthread_mutex_lock(video->main_file_mutex + video->audio_index[i].chunk_num);
         /* Go to audio block position */
         file_set_pos(video->file[video->audio_index[i].chunk_num], video->audio_index[i].frame_offset, SEEK_SET);
         /* Read to location of audio */
         fread_err &= fread(mlv_audio_buffer + mlv_audio_buffer_offset, video->audio_index[i].frame_size, 1, video->file[video->audio_index[i].chunk_num]);
+        pthread_mutex_unlock(video->main_file_mutex + video->audio_index[i].chunk_num);
         /* New audio position */
         mlv_audio_buffer_offset += video->audio_index[i].frame_size;
     }
