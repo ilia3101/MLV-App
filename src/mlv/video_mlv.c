@@ -80,11 +80,9 @@ static int seek_to_next_known_block(FILE * in_file)
             memcmp(ahead + i, "NULL", 4) == 0 ||
             memcmp(ahead + i, "RTCI", 4) == 0)
         {
-            //DEBUG(
-            printf("Next known block: %c%c%c%c at 0x%"PRIx64"+0x%"PRIx64" = ", ahead[i], ahead[i+1], ahead[i+2], ahead[i+3], file_get_pos(in_file), i); //)
+            DEBUG( printf("Next known block: %c%c%c%c at 0x%"PRIx64"+0x%"PRIx64" = ", ahead[i], ahead[i+1], ahead[i+2], ahead[i+3], file_get_pos(in_file), i); )
             file_set_pos(in_file, i, SEEK_CUR);
-            //DEBUG(
-            printf("0x%"PRIx64"\n", file_get_pos(in_file)); //)
+            DEBUG( printf("0x%"PRIx64"\n", file_get_pos(in_file)); )
             free(ahead);
             return 1;
         }
