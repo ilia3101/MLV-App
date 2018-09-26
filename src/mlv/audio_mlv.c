@@ -278,9 +278,6 @@ void readMlvAudioData(mlvObject_t * video)
     /* Copy cut/shifted audio data to the synced audio buffer */
     memcpy(video->audio_data + positive_offset, mlv_audio_buffer + negative_offset, mlv_audio_size - negative_offset);
     free(mlv_audio_buffer);
-#ifndef STDOUT_SILENT
-    printf("negative_offset = %lu, positive_offset = %lu, output_audio_size_aligned = %lu\n", negative_offset, positive_offset, output_audio_size_aligned);
-#endif
 
     /* Calculate theoretical audio size according to fps */
     uint64_t theoretic_size = (uint64_t)( (double)( getMlvSampleRate(video) * audio_sample_size * getMlvFrames(video) ) / getMlvFramerateOrig(video) );
@@ -291,4 +288,8 @@ void readMlvAudioData(mlvObject_t * video)
 
     video->audio_buffer_size = synced_audio_size_aligned;
     video->audio_size = final_audio_size_aligned;
+
+#ifndef STDOUT_SILENT
+    printf("\nnegative_offset = %lu, positive_offset = %lu, synced_audio_size_aligned = %lu, final_audio_size_aligned = %lu\n", negative_offset, positive_offset, synced_audio_size_aligned, final_audio_size_aligned);
+#endif
 }

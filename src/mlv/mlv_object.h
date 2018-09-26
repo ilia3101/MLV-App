@@ -30,10 +30,15 @@ typedef struct
 
 /* MLV App map file header (.MAPP) */
 typedef struct {
-    uint8_t     block_type[4]; /* MAPP */
-    uint32_t    block_size;    /* header block size */
+    uint8_t     fileMagic[4];  /* MAPP */
+    uint64_t    mapp_size;     /* total MAPP file size */
+    uint8_t     mapp_version;  /* MAPP structure version */
+    uint32_t    block_num;     /* total block count */
     uint32_t    video_frames;  /* total video frames */
     uint32_t    audio_frames;  /* total audio frames */
+    uint64_t    audio_size;    /* total size of audio data in bytes */
+    uint64_t    df_offset;     /* offset to the dark frame location */
+    uint64_t    reserved;      /* reserved for future use */
 } mapp_header_t;
 
 /* Struct for MLV handling */

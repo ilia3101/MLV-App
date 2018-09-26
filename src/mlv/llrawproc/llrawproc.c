@@ -244,13 +244,12 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
 
             case 2: // preview mode
             {
+                int bits_shift = 16 - video->RAWI.raw_info.bits_per_pixel;
+                processingSetBlackAndWhiteLevel(video->processing, video->RAWI.raw_info.black_level << bits_shift, video->RAWI.raw_info.white_level << bits_shift);
 #ifndef STDOUT_SILENT
                 printf("Restoring B/W levels\n");
                 printf("ProcBlack = %d, ProcWhite = %d, RawBlack = %d, RawWhite = %d\n", video->processing->black_level, video->processing->white_level, video->RAWI.raw_info.black_level << bits_shift, video->RAWI.raw_info.white_level << bits_shift);
 #endif
-                int bits_shift = 16 - video->RAWI.raw_info.bits_per_pixel;
-                processingSetBlackAndWhiteLevel(video->processing, video->RAWI.raw_info.black_level << bits_shift, video->RAWI.raw_info.white_level << bits_shift);
-
                 diso_get_preview(raw_image_buff,
                                  video->RAWI.xRes,
                                  video->RAWI.yRes,
@@ -262,12 +261,12 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
 
             default: // off
             {
+                int bits_shift = 16 - video->RAWI.raw_info.bits_per_pixel;
+                processingSetBlackAndWhiteLevel(video->processing, video->RAWI.raw_info.black_level << bits_shift, video->RAWI.raw_info.white_level << bits_shift);
 #ifndef STDOUT_SILENT
                 printf("Restoring B/W levels\n");
                 printf("ProcBlack = %d, ProcWhite = %d, RawBlack = %d, RawWhite = %d\n", video->processing->black_level, video->processing->white_level, video->RAWI.raw_info.black_level << bits_shift, video->RAWI.raw_info.white_level << bits_shift);
 #endif
-                int bits_shift = 16 - video->RAWI.raw_info.bits_per_pixel;
-                processingSetBlackAndWhiteLevel(video->processing, video->RAWI.raw_info.black_level << bits_shift, video->RAWI.raw_info.white_level << bits_shift);
             }
         }
 
