@@ -23,13 +23,14 @@
 #define CODEC_H264                  9
 #define CODEC_H265                  10
 #define CODEC_TIFF                  11
-#define CODEC_JPG2K                 12
-#define CODEC_MJPEG                 13
-#define CODEC_FFVHUFF               14
-#define CODEC_MLV                   15
-#define CODEC_DNXHD                 16
-#define CODEC_DNXHR                 17
-#define CODEC_AUDIO_ONLY            18
+#define CODEC_PNG                   12
+#define CODEC_JPG2K                 13
+#define CODEC_MJPEG                 14
+#define CODEC_FFVHUFF               15
+#define CODEC_MLV                   16
+#define CODEC_DNXHD                 17
+#define CODEC_DNXHR                 18
+#define CODEC_AUDIO_ONLY            19
 
 #define CODEC_AVI_OPTION_RAW        0
 #define CODEC_AVI_OPTION_V210       1
