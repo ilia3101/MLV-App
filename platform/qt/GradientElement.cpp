@@ -92,7 +92,7 @@ void GradientElement::setStrechFactorY(double factor)
 //Get the start position from the class
 QPointF GradientElement::getStartPos()
 {
-    QPoint pos;
+    QPointF pos;
     pos.setX( m_startX );
     pos.setY( m_startY );
     return pos;
@@ -101,7 +101,7 @@ QPointF GradientElement::getStartPos()
 //Get the final position from the class
 QPointF GradientElement::getFinalPos()
 {
-    QPoint pos;
+    QPointF pos;
     pos.setX( m_endX );
     pos.setY( m_endY );
     return pos;
