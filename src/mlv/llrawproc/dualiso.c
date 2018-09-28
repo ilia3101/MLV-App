@@ -1941,55 +1941,65 @@ int diso_get_full20bit(struct raw_info raw_info, uint16_t * image_data, int inte
     /* estimate ISO difference between bright and dark exposures */
     double corr_ev = 0;
     int white_darkened = white_bright;
-    if(match_exposures(raw_info, raw_buffer_32, &corr_ev, &white_darkened, is_bright))
+
+    int expo_matched = match_exposures(raw_info, raw_buffer_32, &corr_ev, &white_darkened, is_bright);
+#ifndef STDOUT_SILENT
+    if(expo_matched)
     {
-        /* estimate dynamic range */
-        double lowiso_dr = log2(white - black) - dark_noise_ev;
-        double highiso_dr = log2(white_bright - black) - bright_noise_ev;
-#ifndef STDOUT_SILENT
-        printf("Dynamic range   : %.02f (+) %.02f => %.02f EV (in theory)\n", lowiso_dr, highiso_dr, highiso_dr + corr_ev);
+        printf("Exposures matched");
+    }
+    else
+    {
+        printf("Exposures not matched");
+    }
 #endif
-        /* correction factor for the bright exposure, which was just darkened */
-        double corr = pow(2, corr_ev);
-        
-        /* update bright noise measurements, so they can be compared after scaling */
-        bright_noise /= corr;
-        bright_noise_ev -= corr_ev;
-        
-        if(interp_method == 0)
-        {
-            amaze_interpolate(raw_info, raw_buffer_32, dark, bright, black, white, white_darkened, is_bright);
-        }
-        else
-        {
-            mean23_interpolate(raw_info, raw_buffer_32, dark, bright, black, white, white_darkened, is_bright);
-        }
-        
-        border_interpolate(raw_info, raw_buffer_32, dark, bright, is_bright);
-        
-        if (use_fullres) fullres_reconstruction(raw_info, fullres, dark, bright, white_darkened, is_bright);
-        
-        if(mix_images(raw_info, fullres, fullres_smooth, halfres, halfres_smooth, alias_map, dark, bright, overexposed, dark_noise, white_darkened, corr_ev, lowiso_dr, black, white, chroma_smooth_method))
-        {
-            /* let's check the ideal noise levels (on the halfres image, which in black areas is identical to the bright one) */
-            //#pragma omp parallel for collapse(2)
-            for (int y = 3; y < h-2; y ++)
-                for (int x = 2; x < w-2; x ++)
-                    raw_set_pixel32(x, y, bright[x + y*w]);
-            compute_black_noise(raw_info, image_data, 8, raw_info.active_area.x1 - 8, raw_info.active_area.y1 + 20, raw_info.active_area.y2 - 20, 1, 1, &noise_avg, &noise_std[0]);
-            double ideal_noise_std = noise_std[0];
-            
-            final_blend(raw_info, raw_buffer_32, fullres, fullres_smooth, halfres_smooth, dark, bright, overexposed, alias_map, black, white, dark_noise);
-            
-            /* let's see how much dynamic range we actually got */
-            compute_black_noise(raw_info, image_data, 8, raw_info.active_area.x1 - 8, raw_info.active_area.y1 + 20, raw_info.active_area.y2 - 20, 1, 1, &noise_avg, &noise_std[0]);
+    /* estimate dynamic range */
+    double lowiso_dr = log2(white - black) - dark_noise_ev;
 #ifndef STDOUT_SILENT
-            printf("Noise level     : %.02f (20-bit), ideally %.02f\n", noise_std[0], ideal_noise_std);
-            printf("Dynamic range   : %.02f EV (cooked)\n", log2(white - black) - log2(noise_std[0]));
+    double highiso_dr = log2(white_bright - black) - bright_noise_ev;
+    printf("Dynamic range   : %.02f (+) %.02f => %.02f EV (in theory)\n", lowiso_dr, highiso_dr, highiso_dr + corr_ev);
 #endif
-            convert_20_to_16bit(raw_info, image_data, raw_buffer_32);
-            ret = 1;
-        }
+    /* correction factor for the bright exposure, which was just darkened */
+    double corr = pow(2, corr_ev);
+
+    /* update bright noise measurements, so they can be compared after scaling */
+    bright_noise /= corr;
+    bright_noise_ev -= corr_ev;
+
+    if(interp_method == 0)
+    {
+        amaze_interpolate(raw_info, raw_buffer_32, dark, bright, black, white, white_darkened, is_bright);
+    }
+    else
+    {
+        mean23_interpolate(raw_info, raw_buffer_32, dark, bright, black, white, white_darkened, is_bright);
+    }
+
+    border_interpolate(raw_info, raw_buffer_32, dark, bright, is_bright);
+
+    if (use_fullres) fullres_reconstruction(raw_info, fullres, dark, bright, white_darkened, is_bright);
+
+    if(mix_images(raw_info, fullres, fullres_smooth, halfres, halfres_smooth, alias_map, dark, bright, overexposed, dark_noise, white_darkened, corr_ev, lowiso_dr, black, white, chroma_smooth_method))
+    {
+        /* let's check the ideal noise levels (on the halfres image, which in black areas is identical to the bright one) */
+        //#pragma omp parallel for collapse(2)
+        for (int y = 3; y < h-2; y ++)
+            for (int x = 2; x < w-2; x ++)
+                raw_set_pixel32(x, y, bright[x + y*w]);
+        compute_black_noise(raw_info, image_data, 8, raw_info.active_area.x1 - 8, raw_info.active_area.y1 + 20, raw_info.active_area.y2 - 20, 1, 1, &noise_avg, &noise_std[0]);
+#ifndef STDOUT_SILENT
+        double ideal_noise_std = noise_std[0];
+#endif
+        final_blend(raw_info, raw_buffer_32, fullres, fullres_smooth, halfres_smooth, dark, bright, overexposed, alias_map, black, white, dark_noise);
+
+        /* let's see how much dynamic range we actually got */
+        compute_black_noise(raw_info, image_data, 8, raw_info.active_area.x1 - 8, raw_info.active_area.y1 + 20, raw_info.active_area.y2 - 20, 1, 1, &noise_avg, &noise_std[0]);
+#ifndef STDOUT_SILENT
+        printf("Noise level     : %.02f (20-bit), ideally %.02f\n", noise_std[0], ideal_noise_std);
+        printf("Dynamic range   : %.02f EV (cooked)\n", log2(white - black) - log2(noise_std[0]));
+#endif
+        convert_20_to_16bit(raw_info, image_data, raw_buffer_32);
+        ret = 1;
     }
     
     if (!rggb) /* back to GBRG */
