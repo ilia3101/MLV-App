@@ -124,6 +124,7 @@ SOURCES += \
     ../../src/processing/blur_threaded.c \
     Scripting.cpp \
     FcpxmlAssistantDialog.cpp \
+    FcpxmlSelectDialog.cpp \
     ../../src/processing/denoiser/denoiser_2d_median.c \
     ReceiptCopyMaskDialog.cpp \
     UserManualDialog.cpp
@@ -203,6 +204,7 @@ HEADERS += \
     ../../src/processing/blur_threaded.h \
     Scripting.h \
     FcpxmlAssistantDialog.h \
+    FcpxmlSelectDialog.h \
     ReceiptCopyMaskDialog.h \
     UserManualDialog.h
 
@@ -219,6 +221,7 @@ FORMS += \
     EditSliderValueDialog.ui \
     Updater/updaterUI/cupdaterdialog.ui \
     FcpxmlAssistantDialog.ui \
+    FcpxmlSelectDialog.ui \
     ReceiptCopyMaskDialog.ui \
     UserManualDialog.ui
 

@@ -130,6 +130,7 @@
     <addaction name="separator"/>
     <addaction name="actionOpen"/>
     <addaction name="actionFcpxmlImportAssistant"/>
+    <addaction name="actionFcpxmlSelectionAssistant"/>
     <addaction name="actionClip_Information"/>
     <addaction name="actionExport"/>
     <addaction name="actionExportActualFrame"/>
@@ -6631,6 +6632,18 @@ QGroupBox::indicator:checked {
   <action name="actionHelp">
    <property name="text">
     <string>Help</string>
+   </property>
+  </action>
+  <action name="actionFcpxmlSelectionAssistant">
+   <property name="icon">
+    <iconset resource="ressources.qrc">
+     <normaloff>:/RetinaIMG/RetinaIMG/Window-Left-Panel-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Window-Left-Panel-icon.png</iconset>
+   </property>
+   <property name="text">
+    <string>FCPXML Selection Assistant</string>
+   </property>
+   <property name="toolTip">
+    <string>Select clips in session in dependency to clips which were used in FCPXML project</string>
    </property>
   </action>
  </widget>

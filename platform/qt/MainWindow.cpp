@@ -33,6 +33,7 @@
 #include "DarkStyle.h"
 #include "Updater/updaterUI/cupdaterdialog.h"
 #include "FcpxmlAssistantDialog.h"
+#include "FcpxmlSelectDialog.h"
 #include "UserManualDialog.h"
 
 #define APPNAME "MLV App"
@@ -593,6 +594,14 @@ void MainWindow::on_actionFcpxmlImportAssistant_triggered()
     if( ui->actionCaching->isChecked() ) on_actionCaching_triggered();
 
     m_inOpeningProcess = false;
+}
+
+//Open an assistant, which helps selection clips in session in dependency to clips which were used in FCPXML project
+void MainWindow::on_actionFcpxmlSelectionAssistant_triggered()
+{
+    FcpxmlSelectDialog *sd = new FcpxmlSelectDialog( this, ui->listWidgetSession );
+    sd->exec();
+    delete sd;
 }
 
 //Open MLV procedure

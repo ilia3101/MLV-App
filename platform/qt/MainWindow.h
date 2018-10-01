@@ -65,6 +65,7 @@ private slots:
     void timerFrameEvent( void );
     void on_actionOpen_triggered();
     void on_actionFcpxmlImportAssistant_triggered();
+    void on_actionFcpxmlSelectionAssistant_triggered();
     void on_actionAbout_triggered();
     void on_actionAboutQt_triggered();
     void on_horizontalSliderPosition_valueChanged(int position);

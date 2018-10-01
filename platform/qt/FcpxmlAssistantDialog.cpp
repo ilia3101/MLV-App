@@ -159,7 +159,7 @@ void FcpxmlAssistantDialog::searchMlvs()
 
 
     //Status
-    ui->labelStatus->setText( QString( "Found %1 MLV file(s)" ).arg( m_fileList.count() ) );
+    ui->labelStatus->setText( tr( "Found %1 MLV file(s)" ).arg( m_fileList.count() ) );
     if( m_fileList.count() > 0 ) ui->pushButtonImport->setEnabled( true );
     else ui->pushButtonImport->setEnabled( false );
 }
