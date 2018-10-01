@@ -97,7 +97,7 @@ void FcpxmlSelectDialog::xmlParser(QString fileName)
                 int row = ui->tableWidget->rowCount();
                 for( int i = 0; i < row; i++ )
                 {
-                    if( ui->tableWidget->item( i, 0 )->text() == clip )
+                    if( ui->tableWidget->item( i, 0 )->text().contains( clip ) )
                     {
                         if( !ui->checkBoxInvert->isChecked() ) ui->tableWidget->item( i, 0 )->setCheckState( Qt::Checked );
                         else ui->tableWidget->item( i, 0 )->setCheckState( Qt::Unchecked );
