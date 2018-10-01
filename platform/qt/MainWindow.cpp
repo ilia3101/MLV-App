@@ -36,8 +36,8 @@
 #include "UserManualDialog.h"
 
 #define APPNAME "MLV App"
-#define VERSION "1.0"
-#define GITVERSION "QTv1.0"
+#define VERSION "1.1"
+#define GITVERSION "QTv1.1"
 
 #define FACTOR_DS       22.5
 #define FACTOR_LS       11.2
