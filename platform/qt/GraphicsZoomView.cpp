@@ -14,6 +14,7 @@ GraphicsZoomView::GraphicsZoomView(QWidget *parent) :
     QGraphicsView(parent)
 {
     setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
+    setAcceptDrops( true );
     m_isZoomEnabled = false;
     m_isWbPickerActive = false;
     m_isMousePressed = false;

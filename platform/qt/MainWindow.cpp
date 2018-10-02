@@ -342,10 +342,22 @@ void MainWindow::dragEnterEvent(QDragEnterEvent *event)
 //The dropEvent() is used to unpack dropped data and handle it in way that is suitable for your application.
 void MainWindow::dropEvent(QDropEvent *event)
 {
-    m_inOpeningProcess = true;
+    QStringList list;
     for( int i = 0; i < event->mimeData()->urls().count(); i++ )
     {
-        QString fileName = event->mimeData()->urls().at(i).path();
+        list.append( event->mimeData()->urls().at(i).path() );
+    }
+    openMlvSet( list );
+    event->acceptProposedAction();
+}
+
+//Open a couple of MLVs
+void MainWindow::openMlvSet( QStringList list )
+{
+    m_inOpeningProcess = true;
+    for( int i = 0; i < list.count(); i++ )
+    {
+        QString fileName = list.at(i);
 
         if( QFile(fileName).exists() && fileName.endsWith( ".command", Qt::CaseInsensitive ) )
         {
@@ -372,7 +384,6 @@ void MainWindow::dropEvent(QDropEvent *event)
     if( ui->actionCaching->isChecked() ) on_actionCaching_triggered();
 
     m_inOpeningProcess = false;
-    event->acceptProposedAction();
 }
 
 //App shall close -> hammer method, we shot on the main class... for making the app close and killing everything in background
@@ -937,6 +948,7 @@ void MainWindow::initGui( void )
     ui->graphicsView->show();
     connect( ui->graphicsView, SIGNAL( customContextMenuRequested(QPoint) ), this, SLOT( pictureCustomContextMenuRequested(QPoint) ) );
     connect( m_pScene, SIGNAL( wbPicked(int,int) ), this, SLOT( whiteBalancePicked(int,int) ) );
+    connect( m_pScene, SIGNAL( filesDropped(QStringList) ), this, SLOT( openMlvSet(QStringList) ) );
 
     //Prepare gradient elements
     QPolygon polygon;

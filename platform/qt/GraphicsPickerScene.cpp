@@ -7,6 +7,8 @@
 
 #include "GraphicsPickerScene.h"
 #include <QDebug>
+#include <QMimeData>
+#include <QUrl>
 
 //Constructor
 GraphicsPickerScene::GraphicsPickerScene(QObject *parent) :
@@ -65,4 +67,16 @@ void GraphicsPickerScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     {
         emit gradientFinalPos( event->scenePos().x(), event->scenePos().y(), false );
     }
+}
+
+//Drop Event for opening MLV files
+void GraphicsPickerScene::dropEvent(QGraphicsSceneDragDropEvent *event)
+{
+    QStringList list;
+    for( int i = 0; i < event->mimeData()->urls().count(); i++ )
+    {
+        list.append( event->mimeData()->urls().at(i).path() );
+    }
+    emit filesDropped( list );
+    event->acceptProposedAction();
 }
