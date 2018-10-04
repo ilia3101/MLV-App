@@ -672,7 +672,7 @@ void apply_processing_object( processingObject_t * processing,
                 {
                     /* Calculate saturation value of untouched pixel */
                     double sat = 0;
-                    if( pix[0] > 0 && pix[1] > 0 && pix[2] > 0 )
+                    if( !( pix[0] == 0 && pix[1] == 0 && pix[2] == 0 ) )
                     {
                         uint16_t biggest = 0;
                         uint16_t smallest = 65535;
