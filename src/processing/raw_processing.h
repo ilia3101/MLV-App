@@ -170,10 +170,11 @@ void processingFindWhiteBalance(processingObject_t * processing,
 
 
 /* Black/white level set */
-void processingSetBlackLevel(processingObject_t * processing, int blackLevel);
-void processingSetWhiteLevel(processingObject_t * processing, int whiteLevel);
-void processingSetBlackAndWhiteLevel( processingObject_t * processing, 
-                                      int blackLevel, int whiteLevel );
+void processingSetBlackLevel(processingObject_t * processing, int mlvBlackLevel, int mlvBitDepth);
+void processingSetWhiteLevel(processingObject_t * processing, int mlvWhiteLevel, int mlvBitDepth);
+void processingSetBlackAndWhiteLevel( processingObject_t * processing,
+                                      int mlvBlackLevel, int mlvWhiteLevel, int mlvBitDepth );
+
 /* Get black/white level */
 #define processingGetBlackLevel(processing) (processing)->black_level
 #define processingGetWhiteLevel(processing) (processing)->white_level

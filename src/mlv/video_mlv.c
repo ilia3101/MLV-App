@@ -338,53 +338,8 @@ void setMlvProcessing(mlvObject_t * video, processingObject_t * processing)
     /* Set Camera to RGB */
     //processingCamTosRGBMatrix(processing, camera_matrix); /* Still not used in processing cos not working right */
 
-    /* Corrected RAW black/white levels */
-    int CorrectedBlackLevel = getMlvBlackLevel(video);
-    int CorrectedWhiteLevel = getMlvWhiteLevel(video);
-    int factor = 1;
-
-    if(CorrectedBlackLevel && CorrectedWhiteLevel)
-    {
-        /* We work in an imaginary 14 bit world, so if its 10/12 bit, blackwhite levels shall be multiplied */
-        switch(getMlvBitdepth(video))
-        {
-            case 10:
-                factor = 16;
-                break;
-            case 12:
-                factor = 4;
-                break;
-            default:
-                break;
-        }
-
-        /* let's be kind and repair black level if it's broken (OMG IT WORKS!) */
-        if ((CorrectedBlackLevel < (1700 / factor)) || (CorrectedBlackLevel > (2200 / factor)))
-        {
-            /* Camera specific stuff */
-            switch(getMlvCameraModel(video))
-            {
-                case 0x80000218: // 5D2
-                case 0x80000261: // 50D
-                    CorrectedBlackLevel = 1792 / factor;
-                    break;
-                default: // all other cameras
-                    CorrectedBlackLevel = 2048 / factor;
-                    break;
-            }
-        }
-
-        video->original_black_level = CorrectedBlackLevel;
-        video->original_white_level = CorrectedWhiteLevel;
-
-        /* Lowering white level a bit avoids pink grain in highlihgt reconstruction */
-        CorrectedWhiteLevel = (int)((double)CorrectedWhiteLevel * 0.993);
-    }
-
     /* BLACK / WHITE level */
-    processingSetBlackAndWhiteLevel( processing, 
-                                     CorrectedBlackLevel * 4 * factor,
-                                     CorrectedWhiteLevel * 4 * factor );
+    processingSetBlackAndWhiteLevel( processing, getMlvBlackLevel(video), getMlvWhiteLevel(video), getMlvBitdepth(video) );
 
     /* If 5D3 or cropmode */
     if (strlen((char *)getMlvCamera(video)) > 20 || getMlvMaxWidth(video) > 1920)
@@ -1621,7 +1576,7 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode, char * error
 short_cut:
 
     /* Calculate imaginary bit depth for restricted lossledd raw data */
-    video->lossless_bpp = ceil( log2( video->RAWI.raw_info.white_level - video->RAWI.raw_info.black_level ) );
+    video->lossless_bpp = ceil( log2( getMlvWhiteLevel(video) - getMlvBlackLevel(video) ) );
 
     /* NON compressed frame size */
     video->frame_size = (getMlvHeight(video) * getMlvWidth(video) * getMlvBitdepth(video)) / 8;

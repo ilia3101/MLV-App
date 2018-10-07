@@ -117,7 +117,7 @@ processingObject_t * initProcessingObject()
 
     /* Default settings */
     processingSetWhiteBalance(processing, 6000.0, 0.0);
-    processingSetBlackAndWhiteLevel(processing, 8192.0, 64000.0); /* 16 bit! */
+    processingSetBlackAndWhiteLevel(processing, 2048, 15000, 14); /* 14 bit! */
     processingSetExposureStops(processing, 0.0);
     processingSetGamma(processing, STANDARD_GAMMA);
     processingSetGammaGradient(processing, STANDARD_GAMMA);
@@ -1192,18 +1192,25 @@ void processing_disable_tonemapping(processingObject_t * processing)
 
 /* Set black and white level */
 void processingSetBlackAndWhiteLevel( processingObject_t * processing, 
-                                      int blackLevel, int whiteLevel )
+                                      int mlvBlackLevel, int mlvWhiteLevel, int mlvBitDepth )
 {
-    processing->black_level = blackLevel;
-    processing->white_level = whiteLevel;
+    /* Convert levels to 16bit */
+    int bits_shift = 14 - mlvBitDepth + 2;
+    if(mlvBlackLevel) processing->black_level = mlvBlackLevel << bits_shift;
+    if(mlvWhiteLevel)
+    {
+        processing->white_level = mlvWhiteLevel << bits_shift;
+        /* Lowering white level a bit avoids pink grain in highlihgt reconstruction */
+        //processing->white_level = (int)((double)(mlvWhiteLevel << bits_shift) * 0.993);
+    }
 
     /* How much it needs to be stretched */
-    double stretch = 65535.0 / (whiteLevel - blackLevel);
+    double stretch = 65535.0 / (processing->white_level - processing->black_level);
 
     for (int i = 0; i < 65536; ++i)
     {
         /* Stretch to the black-white level range */
-        int new_value = (int)((double)(i - blackLevel) * stretch);
+        int new_value = (int)((double)(i - processing->black_level) * stretch);
 
         if (new_value < 65536 && new_value > 0)
         {
@@ -1221,17 +1228,19 @@ void processingSetBlackAndWhiteLevel( processingObject_t * processing,
 }
 
 /* Cheat functions */
-void processingSetBlackLevel(processingObject_t * processing, int blackLevel)
+void processingSetBlackLevel(processingObject_t * processing, int mlvBlackLevel, int mlvBitDepth)
 {
     processingSetBlackAndWhiteLevel( processing,
-                                     blackLevel,
-                                     processingGetWhiteLevel(processing) );
+                                     mlvBlackLevel,
+                                     0, // if zero leave value untouched
+                                     mlvBitDepth );
 }
-void processingSetWhiteLevel(processingObject_t * processing, int whiteLevel)
+void processingSetWhiteLevel(processingObject_t * processing, int mlvWhiteLevel, int mlvBitDepth)
 {
     processingSetBlackAndWhiteLevel( processing,
-                                     processingGetBlackLevel(processing),
-                                     whiteLevel );
+                                     0, // if zero leave value untouched
+                                     mlvWhiteLevel,
+                                     mlvBitDepth );
 }
 
 /* Set transformation */

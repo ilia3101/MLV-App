@@ -64,17 +64,20 @@ int scale_bits_for_diso(struct raw_info * raw_info, uint16_t * image_data, int l
     else if(lossless_bpp < 14)
     {
         int pixel_count = raw_info->width * raw_info->height;
-        int shift_bits = raw_info->bits_per_pixel - lossless_bpp;
+        //int shift_bits = raw_info->bits_per_pixel - lossless_bpp;
 
-        raw_info->white_level = COERCE( (((raw_info->white_level - raw_info->black_level) << shift_bits) + raw_info->black_level), 10000, 16383);
+        double scale_ratio = (15000.0 - (double)raw_info->black_level) / (double)(raw_info->white_level - raw_info->black_level);
+        raw_info->white_level = 15000;
+        //raw_info->white_level = COERCE( (((raw_info->white_level - raw_info->black_level) << shift_bits) + raw_info->black_level), 10000, 16383);
 
         #pragma omp parallel for
         for(int i = 0; i < pixel_count; ++i)
         {
-            image_data[i] = MIN( (((image_data[i] - raw_info->black_level) << shift_bits) + raw_info->black_level), raw_info->white_level);
+            //image_data[i] = MIN( (((image_data[i] - raw_info->black_level) << shift_bits) + raw_info->black_level), raw_info->white_level);
+            image_data[i] = (uint16_t)((image_data[i] - raw_info->black_level) * scale_ratio + raw_info->black_level);
         }
 
-        return 1; // scaled for losless dualiso
+        return 1; // scaled for lossless dualiso
     }
 
     return 0; // not scaled
