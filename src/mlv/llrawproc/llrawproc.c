@@ -105,8 +105,7 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
     if(video->llrawproc->first_time)
     {
         /* initialize dual iso black and white levels */
-        video->llrawproc->diso_black_level = video->RAWI.raw_info.black_level;
-        video->llrawproc->diso_white_level = video->RAWI.raw_info.white_level;
+        llrpResetDualIsoBWLevels(video);
 
         /* initialise LUTs */
         video->llrawproc->raw2ev = get_raw2ev(video->RAWI.raw_info.black_level);
