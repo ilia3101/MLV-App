@@ -4945,6 +4945,9 @@ void MainWindow::on_actionSaveAsSession_triggered()
     //Abort selected
     if( fileName.count() == 0 ) return;
 
+    //Add ending, if it got lost using some OS...
+    if( !fileName.endsWith( ".masxml" ) ) fileName.append( ".masxml" );
+
     m_sessionFileName = fileName;
 
     saveSession( fileName );
