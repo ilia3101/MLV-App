@@ -1201,7 +1201,7 @@ void processingSetBlackAndWhiteLevel( processingObject_t * processing,
     {
         processing->white_level = mlvWhiteLevel << bits_shift;
         /* Lowering white level a bit avoids pink grain in highlihgt reconstruction */
-        //processing->white_level = (int)((double)(mlvWhiteLevel << bits_shift) * 0.993);
+        processing->white_level = (int)((double)(mlvWhiteLevel << bits_shift) * 0.993);
     }
 
     /* How much it needs to be stretched */

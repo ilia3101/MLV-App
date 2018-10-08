@@ -4108,12 +4108,13 @@ void MainWindow::on_horizontalSliderRawWhite_valueChanged(int position)
 
     while( !m_pRenderThread->isIdle() ) QThread::msleep(1);
 
-    /* Lowering white level a bit avoids pink grain in highlihgt reconstruction */
-    //int positionCorr = (int)((double)position * 0.993);
-
+    /* Set mlv raw white level to the slider value */
     setMlvWhiteLevel( m_pMlvObject, position );
-    //int shift = 16 - getMlvBitdepth( m_pMlvObject );
-    processingSetWhiteLevel( m_pProcessingObject, position, getMlvBitdepth( m_pMlvObject ) );
+    /* Lowering white level a bit avoids pink grain in highlihgt reconstruction */
+    int positionCorr = (int)((double)position * 0.993);
+    /* Set processing white level with correction */
+    processingSetWhiteLevel( m_pProcessingObject, positionCorr, getMlvBitdepth( m_pMlvObject ) );
+
     llrpResetFpmStatus(m_pMlvObject);
     llrpResetBpmStatus(m_pMlvObject);
     resetMlvCache( m_pMlvObject );
