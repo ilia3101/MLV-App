@@ -208,27 +208,35 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
         raw_info.active_area.y1 = 0;
         raw_info.active_area.x2 = raw_info.width;
         raw_info.active_area.y2 = raw_info.height;
-#ifndef STDOUT_SILENT
+//#ifndef STDOUT_SILENT
         printf("\nold_black = %u, old_white = %u\n", raw_info.black_level, raw_info.white_level);
-#endif
+//#endif
         int scale_bits = scale_bits_for_diso(&raw_info, raw_image_buff, video->lossless_bpp);
-#ifndef STDOUT_SILENT
+//#ifndef STDOUT_SILENT
         printf("new_black = %u, new_white = %u\n", raw_info.black_level, raw_info.white_level);
-#endif
+//#endif
         if(scale_bits)
         {
-#ifndef STDOUT_SILENT
+//#ifndef STDOUT_SILENT
             if(scale_bits == 2) printf("Scaling uncompressed dual iso\n");
             else printf("Scaling losless dual iso\n");
             printf("'20bit': changing B/W levels\n");
             printf("Proc_Black = %d, Proc_White = %d, Raw_Black = %d, Raw_White = %d <= BEFORE\n", video->processing->black_level, video->processing->white_level, raw_info.black_level, raw_info.white_level);
-#endif
-            video->llrawproc->diso_black_level = raw_info.black_level;
-            video->llrawproc->diso_white_level = raw_info.white_level;
+//#endif
             processingSetBlackAndWhiteLevel(video->processing, raw_info.black_level, raw_info.white_level, 14); // black and white levels are 14bit after scaling above
-#ifndef STDOUT_SILENT
+//#ifndef STDOUT_SILENT
             printf("Proc_Black = %d, Proc_White = %d, Raw_Black = %d, Raw_White = %d <= AFTER\n", video->processing->black_level, video->processing->white_level, raw_info.black_level, raw_info.white_level);
-#endif
+//#endif
+            /* Needed for cDNG export */
+            video->llrawproc->diso_black_level = raw_info.black_level << 2; // Convert 14bit to 16bit
+            video->llrawproc->diso_white_level = raw_info.white_level << 2;
+        }
+        else
+        {
+            /* Needed for cDNG export */
+            int bits_shift = 16 - raw_info.bits_per_pixel;
+            video->llrawproc->diso_black_level = raw_info.black_level << bits_shift; // Convert MLV bit depth to 16bit
+            video->llrawproc->diso_white_level = raw_info.white_level << bits_shift;
         }
 
         diso_get_full20bit(raw_info,
@@ -244,6 +252,9 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
         raw_info.width = video->RAWI.xRes;
         raw_info.height = video->RAWI.yRes;
         //int scale_bits = scale_bits_for_diso(&raw_info, raw_image_buff, video->lossless_bpp);
+        /* Needed for cDNG export */
+        video->llrawproc->diso_black_level = raw_info.black_level;
+        video->llrawproc->diso_white_level = raw_info.white_level;
 #ifndef STDOUT_SILENT
         printf("'Prev': changing B/W levels\n");
         printf("Proc_Black = %d, Proc_White = %d, Raw_Black = %d, Raw_White = %d <= BEFORE\n", video->processing->black_level, video->processing->white_level, video->RAWI.raw_info.black_level, video->RAWI.raw_info.white_level);
@@ -474,6 +485,12 @@ int llrpIsDualIso(mlvObject_t * video)
 int llrpHQDualIso(mlvObject_t * video)
 {
     return (video->llrawproc->dual_iso == 1) && (llrpGetFixRawMode(video));
+}
+
+void llrpResetDualIsoBWLevels(mlvObject_t * video)
+{
+    video->llrawproc->diso_black_level = video->RAWI.raw_info.black_level;
+    video->llrawproc->diso_white_level = video->RAWI.raw_info.white_level;
 }
 
 void llrpResetFpmStatus(mlvObject_t * video)

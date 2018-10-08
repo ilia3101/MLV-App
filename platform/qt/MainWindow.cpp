@@ -5665,6 +5665,8 @@ void MainWindow::toolButtonDualIsoChanged( void )
     llrpSetDualIsoMode( m_pMlvObject, toolButtonDualIsoCurrentIndex() );
     //Reset processing black and white levels
     processingSetBlackAndWhiteLevel( m_pMlvObject->processing, getMlvBlackLevel( m_pMlvObject ), getMlvWhiteLevel( m_pMlvObject ), getMlvBitdepth( m_pMlvObject ) );
+    //Reset diso levels to mlv raw levels
+    llrpResetDualIsoBWLevels( m_pMlvObject );
     resetMlvCache( m_pMlvObject );
     resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
