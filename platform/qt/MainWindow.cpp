@@ -698,7 +698,7 @@ int MainWindow::openMlv( QString fileName )
     m_pInfoDialog->ui->tableWidget->item( 8, 1 )->setText( QString( "ƒ/%1" ).arg( getMlvAperture( m_pMlvObject ) / 100.0, 0, 'f', 1 ) );
     m_pInfoDialog->ui->tableWidget->item( 9, 1 )->setText( QString( "%1" ).arg( (int)getMlvIso( m_pMlvObject ) ) );
     m_pInfoDialog->ui->tableWidget->item( 10, 1 )->setText( QString( "%1 bits,  %2" ).arg( getLosslessBpp( m_pMlvObject ) ).arg( getMlvCompression( m_pMlvObject ) ) );
-    m_pInfoDialog->ui->tableWidget->item( 11, 1 )->setText( QString( "%1 black,  %2 white" ).arg( getMlvBlackLevel( m_pMlvObject ) ).arg( getMlvWhiteLevel( m_pMlvObject ) ) );
+    m_pInfoDialog->ui->tableWidget->item( 11, 1 )->setText( QString( "%1 black,  %2 white" ).arg( getMlvOriginalBlackLevel( m_pMlvObject ) ).arg( getMlvOriginalWhiteLevel( m_pMlvObject ) ) );
     m_pInfoDialog->ui->tableWidget->item( 12, 1 )->setText( QString( "%1-%2-%3 / %4:%5:%6" )
                                                             .arg( getMlvTmYear(m_pMlvObject) )
                                                             .arg( getMlvTmMonth(m_pMlvObject), 2, 10, QChar('0') )
@@ -4098,7 +4098,7 @@ void MainWindow::on_horizontalSliderRawWhite_valueChanged(int position)
 
     if( !ui->checkBoxRawFixEnable->isChecked() )
     {
-        position = getMlvWhiteLevel( m_pMlvObject );
+        position = getMlvOriginalWhiteLevel( m_pMlvObject );
     }
     else if( position <= ui->horizontalSliderRawBlack->value() + 1 )
     {
@@ -4131,7 +4131,7 @@ void MainWindow::on_horizontalSliderRawBlack_valueChanged(int position)
 
     if( !ui->checkBoxRawFixEnable->isChecked() )
     {
-        position = getMlvBlackLevel( m_pMlvObject );
+        position = getMlvOriginalBlackLevel( m_pMlvObject );
     }
     else if( position >= ui->horizontalSliderRawWhite->value() - 1 )
     {
@@ -4294,12 +4294,12 @@ void MainWindow::on_horizontalSliderFilterStrength_doubleClicked()
 
 void MainWindow::on_horizontalSliderRawWhite_doubleClicked()
 {
-    ui->horizontalSliderRawWhite->setValue( getMlvWhiteLevel( m_pMlvObject ) );
+    ui->horizontalSliderRawWhite->setValue( getMlvOriginalWhiteLevel( m_pMlvObject ) );
 }
 
 void MainWindow::on_horizontalSliderRawBlack_doubleClicked()
 {
-    ui->horizontalSliderRawBlack->setValue( getMlvBlackLevel( m_pMlvObject ) );
+    ui->horizontalSliderRawBlack->setValue( getMlvOriginalBlackLevel( m_pMlvObject ) );
 }
 
 //Jump to first frame
@@ -4859,8 +4859,8 @@ void MainWindow::on_actionExportSettings_triggered()
 void MainWindow::on_actionResetReceipt_triggered()
 {
     ReceiptSettings *sliders = new ReceiptSettings(); //default
-    sliders->setRawWhite( getMlvWhiteLevel( m_pMlvObject ) );
-    sliders->setRawBlack( getMlvBlackLevel( m_pMlvObject ) );
+    sliders->setRawWhite( getMlvOriginalWhiteLevel( m_pMlvObject ) );
+    sliders->setRawBlack( getMlvOriginalBlackLevel( m_pMlvObject ) );
     setSliders( sliders, false );
     delete sliders;
 }
@@ -6344,10 +6344,10 @@ void MainWindow::initRawBlackAndWhite()
     ui->horizontalSliderRawWhite->setMaximum( ( 2 << ( getMlvBitdepth( m_pMlvObject ) - 1 ) ) - 1 );
     ui->horizontalSliderRawWhite->setValue( ( 2 << ( getMlvBitdepth( m_pMlvObject ) - 1 ) ) - 1 ); //set value to max, because otherwise the new black value is blocked by old white value
     ui->horizontalSliderRawWhite->blockSignals( false );
-    ui->horizontalSliderRawBlack->setValue( getMlvBlackLevel( m_pMlvObject ) );
-    on_horizontalSliderRawBlack_valueChanged( getMlvBlackLevel( m_pMlvObject ) );
-    ui->horizontalSliderRawWhite->setValue( getMlvWhiteLevel( m_pMlvObject ) );
-    on_horizontalSliderRawWhite_valueChanged( getMlvWhiteLevel( m_pMlvObject ) );
+    ui->horizontalSliderRawBlack->setValue( getMlvOriginalBlackLevel( m_pMlvObject ) );
+    on_horizontalSliderRawBlack_valueChanged( getMlvOriginalBlackLevel( m_pMlvObject ) );
+    ui->horizontalSliderRawWhite->setValue( getMlvOriginalWhiteLevel( m_pMlvObject ) );
+    on_horizontalSliderRawWhite_valueChanged( getMlvOriginalWhiteLevel( m_pMlvObject ) );
 }
 
 //Get the current horizontal stretch factor

@@ -338,6 +338,10 @@ void setMlvProcessing(mlvObject_t * video, processingObject_t * processing)
     /* Set Camera to RGB */
     //processingCamTosRGBMatrix(processing, camera_matrix); /* Still not used in processing cos not working right */
 
+    /* Make copy of original black and white levels, because it can be changed from the gui */
+    video->original_black_level = getMlvBlackLevel(video);
+    video->original_white_level = getMlvWhiteLevel(video);
+
     /* BLACK / WHITE level */
     processingSetBlackAndWhiteLevel( processing, getMlvBlackLevel(video), getMlvWhiteLevel(video), getMlvBitdepth(video) );
 
