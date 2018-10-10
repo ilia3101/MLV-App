@@ -2996,7 +2996,7 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     setToolButtonDualIsoInterpolation( receipt->dualIsoInterpolation() );
     setToolButtonDualIsoAliasMap( receipt->dualIsoAliasMap() );
     setToolButtonDualIsoFullresBlending( receipt->dualIsoFrBlending() );
-    if( receipt->dualIso() != 0 ) processingSetBlackAndWhiteLevel( m_pMlvObject->processing, receipt->dualIsoBlack(), receipt->dualIsoWhite(), getMlvBitdepth( m_pMlvObject ) );
+    if( receipt->dualIso() != 0 ) processingSetBlackAndWhiteLevel( m_pMlvObject->processing, receipt->dualIsoBlack(), receipt->dualIsoWhite(), 16 );
     ui->spinBoxDeflickerTarget->setValue( receipt->deflickerTarget() );
     on_spinBoxDeflickerTarget_valueChanged( receipt->deflickerTarget() );
     ui->lineEditDarkFrameFile->setText( receipt->darkFrameFileName() );
