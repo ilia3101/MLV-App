@@ -794,6 +794,9 @@ int MainWindow::openMlv( QString fileName )
     //Raw black & white level
     initRawBlackAndWhite();
 
+    //Set raw black level auto correct button
+    ui->toolButtonRawBlackAutoCorrect->setEnabled( isRawBlackLevelWrong() );
+
     m_frameChanged = true;
 
     return MLV_ERR_NONE;
@@ -6432,6 +6435,52 @@ void MainWindow::setGradientMask(void)
     m_frameChanged = true;
 }
 
+//Calculate correct RAW black level
+uint16_t MainWindow::autoCorrectRawBlackLevel()
+{
+    int factor = 1;
+    switch( getMlvBitdepth( m_pMlvObject ) )
+    {
+        case 10: factor = 16;
+            break;
+        case 12: factor = 4;
+            break;
+        default:
+            break;
+    }
+    //If already in range, go with it!
+    if( getMlvOriginalBlackLevel( m_pMlvObject ) >= (1700 / factor)
+     && getMlvOriginalBlackLevel( m_pMlvObject ) <= (2200 / factor) )
+        return getMlvOriginalBlackLevel( m_pMlvObject );
+
+    if( getMlvCameraModel( m_pMlvObject ) == 0x80000218
+     || getMlvCameraModel( m_pMlvObject ) == 0x80000261 )
+        return 1792 / factor;
+    else
+        return 2048 / factor;
+}
+
+//Get info, if RAW black level is wrong
+bool MainWindow::isRawBlackLevelWrong()
+{
+    int factor = 1;
+    switch( getMlvBitdepth( m_pMlvObject ) )
+    {
+        case 10: factor = 16;
+            break;
+        case 12: factor = 4;
+            break;
+        default:
+            break;
+    }
+    //If already in range, go with it!
+    if( getMlvOriginalBlackLevel( m_pMlvObject ) >= (1700 / factor)
+     && getMlvOriginalBlackLevel( m_pMlvObject ) <= (2200 / factor) )
+        return false;
+    else
+        return true;
+}
+
 //Cut In button clicked
 void MainWindow::on_toolButtonCutIn_clicked(void)
 {
@@ -6752,6 +6801,14 @@ void MainWindow::on_lineEditLutName_textChanged(const QString &arg1)
     }
 
     m_frameChanged = true;
+}
+
+//Auto correct RAW black level
+void MainWindow::on_toolButtonRawBlackAutoCorrect_clicked()
+{
+    int value = autoCorrectRawBlackLevel();
+    if( value != getMlvOriginalBlackLevel( m_pMlvObject ) )
+        ui->horizontalSliderRawBlack->setValue( value );
 }
 
 //Open UserManualDialog

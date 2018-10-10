@@ -266,6 +266,8 @@ private slots:
     void on_toolButtonLoadLut_clicked();
     void on_lineEditLutName_textChanged(const QString &arg1);
 
+    void on_toolButtonRawBlackAutoCorrect_clicked();
+
 private:
     Ui::MainWindow *ui;
     InfoDialog *m_pInfoDialog;
@@ -393,6 +395,8 @@ private:
     double getVerticalStretchFactor();
     void setWhiteBalanceFromMlv( ReceiptSettings *sliders );
     void setGradientMask( void );
+    uint16_t autoCorrectRawBlackLevel( void );
+    bool isRawBlackLevelWrong( void );
 
 signals:
     void exportReady( void );
