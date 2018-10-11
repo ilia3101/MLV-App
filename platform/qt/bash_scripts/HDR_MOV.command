@@ -1061,11 +1061,8 @@ cd "$(cat /tmp/mlvapp_path/output_folder.txt)"
 patio="$PWD"
 
 #HDR_MOV bash
-printf '\e[8;9;24t'
+printf '\e[8;10;24t'
 printf '\e[3;955;0t'
-
-while :
-do 
 
 clear
 cat<<EOF1
@@ -1075,10 +1072,84 @@ cat<<EOF1
  $(tput bold)$(tput setaf 1)(C) CANCEL$(tput sgr0)
  $(tput bold)$(tput setaf 1)(e) Close this window$(tput sgr0)
 
-Selection number:
+     $(tput bold)Working.....
+
+Selection:
 EOF1
+
+while sleep 1; 
+do
+
+if ! [ x"$dot5" = x ]
+then
+dot1=
+dot2=
+dot3=
+dot4=
+dot5=
+fi
+
+if ! [ x"$dot4" = x ]
+then
+dot5=$(echo .)
+fi
+
+if ! [ x"$dot3" = x ]
+then
+dot4=$(echo .)
+fi
+
+if ! [ x"$dot2" = x ]
+then
+dot3=$(echo .)
+fi
+
+if ! [ x"$dot1" = x ]
+then
+dot2=$(echo .)
+fi
+
+if [ x"$dot1" = x ]
+then
+dot1=$(echo .)
+fi
+
+cat<<EOF1
+    ------------
+    $(tput setaf 0)$(tput bold)HDR_MOV bash$(tput sgr0)
+    ------------
+ $(tput bold)$(tput setaf 1)(C) CANCEL$(tput sgr0)
+ $(tput bold)$(tput setaf 1)(e) Close this window$(tput sgr0)
+
+     $(tput bold)Working$dot1$dot2$dot3$dot4$dot5
+
+Selection:
+EOF1
+if ! ls /tmp/HDRMOVaa >/dev/null 2>&1;
+then 
+ if ! ls /tmp/HDRMOVab >/dev/null 2>&1;
+ then
+   if ! ls /tmp/HDRMOVac >/dev/null 2>&1;
+   then
+    if ! ls /tmp/HDRMOVad >/dev/null 2>&1;
+    then
+afplay /System/Library/Sounds/Tink.aiff
+sleep 0.5
+afplay /System/Library/Sounds/Tink.aiff
+sleep 0.5
+afplay /System/Library/Sounds/Tink.aiff
+sleep 0.5
+echo -n -e "\033]0;HDRwindow\007"
+kill $(echo $$)
+osascript -e 'tell application "Terminal" to close (every window whose name contains "HDRwindow")' & exit 
+fi
+ fi
+  fi
+   fi
+done &
     read -n1
     case "$REPLY" in
+
     "C") 
 echo "" >> HDRMOV_LOG.txt
 echo "##################progress_bar.command#####################" >> HDRMOV_LOG.txt
@@ -1111,7 +1182,6 @@ osascript -e 'tell application "Terminal" to close first window' & exit
     "Q")  echo "case sensitive!!"   ;;
      * )  echo "invalid option"     ;;
     esac 
-done
 EOF
 
 #open fps command and progress_bar.command
