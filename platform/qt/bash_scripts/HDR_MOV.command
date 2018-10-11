@@ -1066,9 +1066,9 @@ printf '\e[3;955;0t'
 
 clear
 cat<<EOF1
-    ------------
-    $(tput setaf 0)$(tput bold)HDR_MOV bash$(tput sgr0)
-    ------------
+     ------------
+     $(tput setaf 0)$(tput bold)HDR_MOV bash$(tput sgr0)
+     ------------
  $(tput bold)$(tput setaf 1)(C) CANCEL$(tput sgr0)
  $(tput bold)$(tput setaf 1)(e) Close this window$(tput sgr0)
 
@@ -1115,9 +1115,9 @@ dot1=$(echo .)
 fi
 
 cat<<EOF1
-    ------------
-    $(tput setaf 0)$(tput bold)HDR_MOV bash$(tput sgr0)
-    ------------
+     ------------
+     $(tput setaf 0)$(tput bold)HDR_MOV bash$(tput sgr0)
+     ------------
  $(tput bold)$(tput setaf 1)(C) CANCEL$(tput sgr0)
  $(tput bold)$(tput setaf 1)(e) Close this window$(tput sgr0)
 
