@@ -2999,7 +2999,6 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     setToolButtonDualIsoInterpolation( receipt->dualIsoInterpolation() );
     setToolButtonDualIsoAliasMap( receipt->dualIsoAliasMap() );
     setToolButtonDualIsoFullresBlending( receipt->dualIsoFrBlending() );
-    if( receipt->dualIso() != 0 ) processingSetBlackAndWhiteLevel( m_pMlvObject->processing, receipt->dualIsoBlack(), receipt->dualIsoWhite(), 16 );
     ui->spinBoxDeflickerTarget->setValue( receipt->deflickerTarget() );
     on_spinBoxDeflickerTarget_valueChanged( receipt->deflickerTarget() );
     ui->lineEditDarkFrameFile->setText( receipt->darkFrameFileName() );
@@ -4113,10 +4112,8 @@ void MainWindow::on_horizontalSliderRawWhite_valueChanged(int position)
 
     /* Set mlv raw white level to the slider value */
     setMlvWhiteLevel( m_pMlvObject, position );
-    /* Lowering white level a bit avoids pink grain in highlihgt reconstruction */
-    int positionCorr = (int)((double)position * 0.993);
     /* Set processing white level with correction */
-    processingSetWhiteLevel( m_pProcessingObject, positionCorr, getMlvBitdepth( m_pMlvObject ) );
+    processingSetWhiteLevel( m_pProcessingObject, position, getMlvBitdepth( m_pMlvObject ) );
 
     llrpResetFpmStatus(m_pMlvObject);
     llrpResetBpmStatus(m_pMlvObject);
