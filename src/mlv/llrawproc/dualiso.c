@@ -63,18 +63,31 @@ int scale_bits_for_diso(struct raw_info * raw_info, uint16_t * image_data, int l
     }
     else if(lossless_bpp < 14)
     {
-        int pixel_count = raw_info->width * raw_info->height;
-        //int shift_bits = raw_info->bits_per_pixel - lossless_bpp;
-
-        double scale_ratio = (15000.0 - (double)raw_info->black_level) / (double)(raw_info->white_level - raw_info->black_level);
-        raw_info->white_level = 15000;
-        //raw_info->white_level = COERCE( (((raw_info->white_level - raw_info->black_level) << shift_bits) + raw_info->black_level), 10000, 16383);
+        uint32_t pixel_count = raw_info->width * raw_info->height;
+#if 0
+        int32_t min_level = image_data[0];
+        int32_t max_level = image_data[0];
 
         #pragma omp parallel for
-        for(int i = 0; i < pixel_count; ++i)
+        for(uint32_t i = 1; i < pixel_count; ++i)
         {
-            //image_data[i] = MIN( (((image_data[i] - raw_info->black_level) << shift_bits) + raw_info->black_level), raw_info->white_level);
-            image_data[i] = (uint16_t)((image_data[i] - raw_info->black_level) * scale_ratio + raw_info->black_level);
+            if(image_data[i] < min_level) min_level = image_data[i];
+            if(image_data[i] > max_level) max_level = image_data[i];
+        }
+#ifndef STDOUT_SILENT
+        printf("min_level = %d, max_level = %d\n", min_level, max_level);
+#endif
+        raw_info->black_level = MAX(min_level, raw_info->black_level);
+        raw_info->white_level = max_level;
+#endif
+        int32_t scaled_white_level = 15000;
+        double scale_ratio = (double)(scaled_white_level - raw_info->black_level) / (double)(raw_info->white_level - raw_info->black_level);
+        raw_info->white_level = scaled_white_level;
+
+        #pragma omp parallel for
+        for(uint32_t i = 0; i < pixel_count; ++i)
+        {
+            image_data[i] = (uint16_t)(((image_data[i] - raw_info->black_level) * scale_ratio + raw_info->black_level) + 0.5);
         }
 
         return 1; // scaled for lossless dualiso
