@@ -194,6 +194,7 @@
     <addaction name="actionAudioOutput"/>
     <addaction name="separator"/>
     <addaction name="actionDropFrameMode"/>
+    <addaction name="actionPlaybackPosition"/>
     <addaction name="menuDemosaicForPreview"/>
     <addaction name="separator"/>
     <addaction name="actionZoomFit"/>
@@ -400,7 +401,7 @@ QGroupBox::indicator:checked {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>-527</y>
+            <y>0</y>
             <width>199</width>
             <height>3570</height>
            </rect>
@@ -6654,6 +6655,14 @@ QGroupBox::indicator:checked {
    </property>
    <property name="toolTip">
     <string>Select clips in session in dependency to clips which were used in FCPXML project</string>
+   </property>
+  </action>
+  <action name="actionPlaybackPosition">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Remember Playback Position</string>
    </property>
   </action>
  </widget>

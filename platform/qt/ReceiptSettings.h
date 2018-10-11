@@ -79,6 +79,8 @@ public:
     void setCutIn( uint32_t frame )           {m_cutIn = frame;}
     void setCutOut( uint32_t frame )          {m_cutOut = frame;}
 
+    void setLastPlaybackPosition( uint32_t pos ){m_lastPlaybackPosition = pos;}
+
     bool wasNeverLoaded( void ){return m_neverLoaded;}
 
     int exposure( void )   {return m_exposure;}
@@ -143,6 +145,7 @@ public:
     int rawBlack( void ) {return m_rawBlack;}
     QString fileName( void ){return m_fileName;}
     QString exportFileName( void ){return m_exportFileName;}
+    uint32_t lastPlaybackPosition( void ){return m_lastPlaybackPosition;}
 
 private:
     bool m_neverLoaded;
@@ -209,6 +212,7 @@ private:
     int m_rawBlack;
     QString m_fileName;
     QString m_exportFileName;
+    uint32_t m_lastPlaybackPosition;
 };
 
 #endif // RECEIPTSETTINGS_H

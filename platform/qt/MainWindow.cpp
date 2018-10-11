@@ -1157,6 +1157,7 @@ void MainWindow::readSettings()
     ui->actionCreateMappFiles->setChecked( set.value( "createMappFiles", false ).toBool() );
     m_timeCodePosition = set.value( "tcPos", 1 ).toUInt();
     ui->actionAutoCheckForUpdates->setChecked( set.value( "autoUpdateCheck", true ).toBool() );
+    ui->actionPlaybackPosition->setChecked( set.value( "rememberPlaybackPos", false ).toBool() );
 }
 
 //Save some settings to registry
@@ -1194,6 +1195,7 @@ void MainWindow::writeSettings()
     set.setValue( "createMappFiles", ui->actionCreateMappFiles->isChecked() );
     set.setValue( "tcPos", m_timeCodePosition );
     set.setValue( "autoUpdateCheck", ui->actionAutoCheckForUpdates->isChecked() );
+    set.setValue( "rememberPlaybackPos", ui->actionPlaybackPosition->isChecked() );
 }
 
 //Start Export via Pipe
@@ -3075,6 +3077,8 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     }
 
     m_pMlvObject->current_cached_frame_active = 0;
+
+    if( ui->actionPlaybackPosition->isChecked() ) ui->horizontalSliderPosition->setValue( receipt->lastPlaybackPosition() );
 }
 
 //Set the receipt from sliders
@@ -3145,6 +3149,9 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
 
     receipt->setCutIn( ui->spinBoxCutIn->value() );
     receipt->setCutOut( ui->spinBoxCutOut->value() );
+
+    if( ui->actionPlaybackPosition->isChecked() ) receipt->setLastPlaybackPosition( ui->horizontalSliderPosition->value() );
+    else receipt->setLastPlaybackPosition( 0 );
 }
 
 //Replace receipt settings
