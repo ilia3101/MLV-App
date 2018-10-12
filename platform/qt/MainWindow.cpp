@@ -5847,6 +5847,7 @@ void MainWindow::on_actionWhiteBalancePicker_toggled(bool checked)
 {
     ui->graphicsView->setWbPickerActive( checked );
     m_pScene->setWbPickerActive( checked );
+    m_pGradientElement->setMovable( !checked );
 }
 
 //wb picking ready
@@ -6335,6 +6336,7 @@ void MainWindow::gradientGraphicElementMoved(int x, int y)
 //Someone starts/stops hovering the element
 void MainWindow::gradientGraphicElementHovered(bool isHovered)
 {
+    if( ui->actionWhiteBalancePicker->isChecked() ) isHovered = false;
     //Change color of grading elements to show the user it is hovered
     QPen pen;
     if( isHovered ) pen = QPen( Qt::yellow );

@@ -34,6 +34,8 @@ public:
     GraphicsPolygonMoveItem* gradientGraphicsElement( void );
     void redrawGradientElement( int sceneX, int sceneY, int picX, int picY );
 
+    void setMovable( bool on );
+
 private:
     void calcFromPoints();
     void createGradientElement( int scaledLength );

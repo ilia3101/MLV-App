@@ -180,6 +180,12 @@ void GradientElement::redrawGradientElement(int sceneX, int sceneY, int picX, in
     m_pGradientGraphicsItem->blockSignals( false );
 }
 
+//Set movability on/off
+void GradientElement::setMovable(bool on)
+{
+    m_pGradientGraphicsItem->setFlag( QGraphicsItem::ItemIsMovable, on );
+}
+
 //Calc both, ui numbers and viewer numbers
 void GradientElement::calcFromPoints()
 {
