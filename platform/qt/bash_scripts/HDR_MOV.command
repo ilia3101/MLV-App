@@ -1,4 +1,4 @@
-#GNU public license
+is needed#GNU public license
 
 #This program is free software; you can redistribute it and/or
  # modify it under the terms of the GNU General Public License
@@ -103,7 +103,7 @@ else
 cd "$(cat /tmp/HDRMOVaa | head -1 | cut -d '/' -f2)"
 fi
 
-#crop and rescale is needed is needed after aligning. Will take place in #output cropped and aligned images section
+#crop and rescale is needed after aligning. Will take place in #output cropped and aligned images section
 #check for tif folders
 if ! grep './' /tmp/HDRMOVaa
 then
@@ -311,7 +311,7 @@ else
 cd "$(cat /tmp/HDRMOVab | head -1 | cut -d '/' -f2)"
 fi
 
-#crop and rescale is needed is needed after aligning. Will take place in #output cropped and aligned images section
+#crop and rescale is needed after aligning. Will take place in #output cropped and aligned images section
 #check for tif folders
 if ! grep './' /tmp/HDRMOVab
 then
@@ -520,7 +520,7 @@ else
 cd "$(cat /tmp/HDRMOVac | head -1 | cut -d '/' -f2)"
 fi
 
-#crop and rescale is needed is needed after aligning. Will take place in #output cropped and aligned images section
+#crop and rescale is needed after aligning. Will take place in #output cropped and aligned images section
 #check for tif folders
 if ! grep './' /tmp/HDRMOVac
 then
@@ -730,7 +730,7 @@ else
 cd "$(cat /tmp/HDRMOVad | head -1 | cut -d '/' -f2)"
 fi
 
-#crop and rescale is needed is needed after aligning. Will take place in #output cropped and aligned images section
+#crop and rescale is needed after aligning. Will take place in #output cropped and aligned images section
 #check for tif folders
 if ! grep './' /tmp/HDRMOVad
 then
