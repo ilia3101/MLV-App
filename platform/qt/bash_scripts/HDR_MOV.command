@@ -152,11 +152,11 @@ then
 #wait for jobs to end
     wait < <(jobs -p)
 
-/Applications/Hugin/tools_mac/enfuse --exposure-mu=0.5 --exposure-sigma=0.5 1b.tiff 2b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 1' | cut -d "." -f2 | tr -d "/").tiff &
-/Applications/Hugin/tools_mac/enfuse --exposure-mu=0.5 --exposure-sigma=0.5 01b.tiff 02b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 2' | cut -d "." -f2 | tr -d "/").tiff &
-/Applications/Hugin/tools_mac/enfuse --exposure-mu=0.5 --exposure-sigma=0.5 001b.tiff 002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 3' | cut -d "." -f2 | tr -d "/").tiff &
-/Applications/Hugin/tools_mac/enfuse --exposure-mu=0.5 --exposure-sigma=0.5 0001b.tiff 0002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 4' | cut -d "." -f2 | tr -d "/").tiff &
-/Applications/Hugin/tools_mac/enfuse --exposure-mu=0.5 --exposure-sigma=0.5 00001b.tiff 00002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 5' | cut -d "." -f2 | tr -d "/").tiff & 
+/Applications/Hugin/tools_mac/enfuse --exposure-optimum=0.5 --exposure-width=0.5 1b.tiff 2b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 1' | cut -d "." -f2 | tr -d "/").tiff &
+/Applications/Hugin/tools_mac/enfuse --exposure-optimum=0.5 --exposure-width=0.5 01b.tiff 02b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 2' | cut -d "." -f2 | tr -d "/").tiff &
+/Applications/Hugin/tools_mac/enfuse --exposure-optimum=0.5 --exposure-width=0.5 001b.tiff 002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 3' | cut -d "." -f2 | tr -d "/").tiff &
+/Applications/Hugin/tools_mac/enfuse --exposure-optimum=0.5 --exposure-width=0.5 0001b.tiff 0002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 4' | cut -d "." -f2 | tr -d "/").tiff &
+/Applications/Hugin/tools_mac/enfuse --exposure-optimum=0.5 --exposure-width=0.5 00001b.tiff 00002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 5' | cut -d "." -f2 | tr -d "/").tiff & 
 #wait for jobs to end
     wait < <(jobs -p)
 
@@ -171,7 +171,7 @@ rm $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 1' | cut -d "." -f2 | tr
 "$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 1.tiff -pix_fmt rgb24 -vf $crp_fix 1b.tiff 
 "$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 2.tiff -pix_fmt rgb24 -vf $crp_fix 2b.tiff 
 
-/Applications/Hugin/tools_mac/enfuse --exposure-mu=0.5 --exposure-sigma=0.5 1b.tiff 2b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 1' | cut -d "." -f2 | tr -d "/").tiff 
+/Applications/Hugin/tools_mac/enfuse --exposure-optimum=0.5 --exposure-width=0.5 1b.tiff 2b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 1' | cut -d "." -f2 | tr -d "/").tiff 
    fi
 
    if ! [ -f 01.tiff ] || ! [ -f 02.tiff ]
@@ -183,7 +183,7 @@ rm $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 2' | cut -d "." -f2 | tr
 "$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 01.tiff -pix_fmt rgb24 -vf $crp_fix 01b.tiff 
 "$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 02.tiff -pix_fmt rgb24 -vf $crp_fix 02b.tiff 
 
-/Applications/Hugin/tools_mac/enfuse --exposure-mu=0.5 --exposure-sigma=0.5 01b.tiff 02b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 2' | cut -d "." -f2 | tr -d "/").tiff 
+/Applications/Hugin/tools_mac/enfuse --exposure-optimum=0.5 --exposure-width=0.5 01b.tiff 02b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 2' | cut -d "." -f2 | tr -d "/").tiff 
    fi 
 
    if ! [ -f 001.tiff ] || ! [ -f 002.tiff ]
@@ -195,7 +195,7 @@ rm $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 3' | cut -d "." -f2 | tr
 "$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 001.tiff -pix_fmt rgb24 -vf $crp_fix 001b.tiff 
 "$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 002.tiff -pix_fmt rgb24 -vf $crp_fix 002b.tiff
 
-/Applications/Hugin/tools_mac/enfuse --exposure-mu=0.5 --exposure-sigma=0.5 001b.tiff 002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 3' | cut -d "." -f2 | tr -d "/").tiff 
+/Applications/Hugin/tools_mac/enfuse --exposure-optimum=0.5 --exposure-width=0.5 001b.tiff 002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 3' | cut -d "." -f2 | tr -d "/").tiff 
    fi 
 
    if ! [ -f 0001.tiff ] || ! [ -f 0002.tiff ]
@@ -207,7 +207,7 @@ rm $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 4' | cut -d "." -f2 | tr
 "$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 0001.tiff -pix_fmt rgb24 -vf $crp_fix 0001b.tiff 
 "$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 0002.tiff -pix_fmt rgb24 -vf $crp_fix 0002b.tiff 
 
-/Applications/Hugin/tools_mac/enfuse --exposure-mu=0.5 --exposure-sigma=0.5 0001b.tiff 0002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 4' | cut -d "." -f2 | tr -d "/").tiff 
+/Applications/Hugin/tools_mac/enfuse --exposure-optimum=0.5 --exposure-width=0.5 0001b.tiff 0002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 4' | cut -d "." -f2 | tr -d "/").tiff 
    fi 
 
    if ! [ -f 00001.tiff ] || ! [ -f 00002.tiff ]
@@ -219,7 +219,7 @@ rm $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 5' | cut -d "." -f2 | tr
 "$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 00001.tiff -pix_fmt rgb24 -vf $crp_fix 00001b.tiff 
 "$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 00002.tiff -pix_fmt rgb24 -vf $crp_fix 00002b.tiff 
 
-/Applications/Hugin/tools_mac/enfuse --exposure-mu=0.5 --exposure-sigma=0.5 00001b.tiff 00002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 5' | cut -d "." -f2 | tr -d "/").tiff 
+/Applications/Hugin/tools_mac/enfuse --exposure-optimum=0.5 --exposure-width=0.5 00001b.tiff 00002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 5' | cut -d "." -f2 | tr -d "/").tiff 
    fi 
 
 #remove unwanted files
@@ -361,11 +361,11 @@ then
 #wait for jobs to end
     wait < <(jobs -p)
 
-/Applications/Hugin/tools_mac/enfuse --exposure-mu=0.5 --exposure-sigma=0.5 1b.tiff 2b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 1' | cut -d "." -f2 | tr -d "/").tiff &
-/Applications/Hugin/tools_mac/enfuse --exposure-mu=0.5 --exposure-sigma=0.5 01b.tiff 02b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 2' | cut -d "." -f2 | tr -d "/").tiff &
-/Applications/Hugin/tools_mac/enfuse --exposure-mu=0.5 --exposure-sigma=0.5 001b.tiff 002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 3' | cut -d "." -f2 | tr -d "/").tiff &
-/Applications/Hugin/tools_mac/enfuse --exposure-mu=0.5 --exposure-sigma=0.5 0001b.tiff 0002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 4' | cut -d "." -f2 | tr -d "/").tiff &
-/Applications/Hugin/tools_mac/enfuse --exposure-mu=0.5 --exposure-sigma=0.5 00001b.tiff 00002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 5' | cut -d "." -f2 | tr -d "/").tiff & 
+/Applications/Hugin/tools_mac/enfuse --exposure-optimum=0.5 --exposure-width=0.5 1b.tiff 2b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 1' | cut -d "." -f2 | tr -d "/").tiff &
+/Applications/Hugin/tools_mac/enfuse --exposure-optimum=0.5 --exposure-width=0.5 01b.tiff 02b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 2' | cut -d "." -f2 | tr -d "/").tiff &
+/Applications/Hugin/tools_mac/enfuse --exposure-optimum=0.5 --exposure-width=0.5 001b.tiff 002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 3' | cut -d "." -f2 | tr -d "/").tiff &
+/Applications/Hugin/tools_mac/enfuse --exposure-optimum=0.5 --exposure-width=0.5 0001b.tiff 0002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 4' | cut -d "." -f2 | tr -d "/").tiff &
+/Applications/Hugin/tools_mac/enfuse --exposure-optimum=0.5 --exposure-width=0.5 00001b.tiff 00002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 5' | cut -d "." -f2 | tr -d "/").tiff & 
 #wait for jobs to end
     wait < <(jobs -p)
 
@@ -380,7 +380,7 @@ rm $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 1' | cut -d "." -f2 | tr
 "$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 1.tiff -pix_fmt rgb24 -vf $crp_fix 1b.tiff 
 "$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 2.tiff -pix_fmt rgb24 -vf $crp_fix 2b.tiff 
 
-/Applications/Hugin/tools_mac/enfuse --exposure-mu=0.5 --exposure-sigma=0.5 1b.tiff 2b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 1' | cut -d "." -f2 | tr -d "/").tiff 
+/Applications/Hugin/tools_mac/enfuse --exposure-optimum=0.5 --exposure-width=0.5 1b.tiff 2b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 1' | cut -d "." -f2 | tr -d "/").tiff 
    fi
 
    if ! [ -f 01.tiff ] || ! [ -f 02.tiff ]
@@ -392,7 +392,7 @@ rm $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 2' | cut -d "." -f2 | tr
 "$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 01.tiff -pix_fmt rgb24 -vf $crp_fix 01b.tiff 
 "$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 02.tiff -pix_fmt rgb24 -vf $crp_fix 02b.tiff 
 
-/Applications/Hugin/tools_mac/enfuse --exposure-mu=0.5 --exposure-sigma=0.5 01b.tiff 02b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 2' | cut -d "." -f2 | tr -d "/").tiff 
+/Applications/Hugin/tools_mac/enfuse --exposure-optimum=0.5 --exposure-width=0.5 01b.tiff 02b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 2' | cut -d "." -f2 | tr -d "/").tiff 
    fi 
 
    if ! [ -f 001.tiff ] || ! [ -f 002.tiff ]
@@ -404,7 +404,7 @@ rm $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 3' | cut -d "." -f2 | tr
 "$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 001.tiff -pix_fmt rgb24 -vf $crp_fix 001b.tiff 
 "$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 002.tiff -pix_fmt rgb24 -vf $crp_fix 002b.tiff
 
-/Applications/Hugin/tools_mac/enfuse --exposure-mu=0.5 --exposure-sigma=0.5 001b.tiff 002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 3' | cut -d "." -f2 | tr -d "/").tiff 
+/Applications/Hugin/tools_mac/enfuse --exposure-optimum=0.5 --exposure-width=0.5 001b.tiff 002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 3' | cut -d "." -f2 | tr -d "/").tiff 
    fi 
 
    if ! [ -f 0001.tiff ] || ! [ -f 0002.tiff ]
@@ -416,7 +416,7 @@ rm $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 4' | cut -d "." -f2 | tr
 "$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 0001.tiff -pix_fmt rgb24 -vf $crp_fix 0001b.tiff 
 "$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 0002.tiff -pix_fmt rgb24 -vf $crp_fix 0002b.tiff 
 
-/Applications/Hugin/tools_mac/enfuse --exposure-mu=0.5 --exposure-sigma=0.5 0001b.tiff 0002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 4' | cut -d "." -f2 | tr -d "/").tiff 
+/Applications/Hugin/tools_mac/enfuse --exposure-optimum=0.5 --exposure-width=0.5 0001b.tiff 0002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 4' | cut -d "." -f2 | tr -d "/").tiff 
    fi 
 
    if ! [ -f 00001.tiff ] || ! [ -f 00002.tiff ]
@@ -428,7 +428,7 @@ rm $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 5' | cut -d "." -f2 | tr
 "$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 00001.tiff -pix_fmt rgb24 -vf $crp_fix 00001b.tiff 
 "$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 00002.tiff -pix_fmt rgb24 -vf $crp_fix 00002b.tiff 
 
-/Applications/Hugin/tools_mac/enfuse --exposure-mu=0.5 --exposure-sigma=0.5 00001b.tiff 00002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 5' | cut -d "." -f2 | tr -d "/").tiff 
+/Applications/Hugin/tools_mac/enfuse --exposure-optimum=0.5 --exposure-width=0.5 00001b.tiff 00002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 5' | cut -d "." -f2 | tr -d "/").tiff 
    fi
 
 #remove unwanted files
@@ -571,11 +571,11 @@ then
 #wait for jobs to end
     wait < <(jobs -p)
 
-/Applications/Hugin/tools_mac/enfuse --exposure-mu=0.5 --exposure-sigma=0.5 1b.tiff 2b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 1' | cut -d "." -f2 | tr -d "/").tiff &
-/Applications/Hugin/tools_mac/enfuse --exposure-mu=0.5 --exposure-sigma=0.5 01b.tiff 02b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 2' | cut -d "." -f2 | tr -d "/").tiff &
-/Applications/Hugin/tools_mac/enfuse --exposure-mu=0.5 --exposure-sigma=0.5 001b.tiff 002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 3' | cut -d "." -f2 | tr -d "/").tiff &
-/Applications/Hugin/tools_mac/enfuse --exposure-mu=0.5 --exposure-sigma=0.5 0001b.tiff 0002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 4' | cut -d "." -f2 | tr -d "/").tiff &
-/Applications/Hugin/tools_mac/enfuse --exposure-mu=0.5 --exposure-sigma=0.5 00001b.tiff 00002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 5' | cut -d "." -f2 | tr -d "/").tiff & 
+/Applications/Hugin/tools_mac/enfuse --exposure-optimum=0.5 --exposure-width=0.5 1b.tiff 2b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 1' | cut -d "." -f2 | tr -d "/").tiff &
+/Applications/Hugin/tools_mac/enfuse --exposure-optimum=0.5 --exposure-width=0.5 01b.tiff 02b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 2' | cut -d "." -f2 | tr -d "/").tiff &
+/Applications/Hugin/tools_mac/enfuse --exposure-optimum=0.5 --exposure-width=0.5 001b.tiff 002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 3' | cut -d "." -f2 | tr -d "/").tiff &
+/Applications/Hugin/tools_mac/enfuse --exposure-optimum=0.5 --exposure-width=0.5 0001b.tiff 0002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 4' | cut -d "." -f2 | tr -d "/").tiff &
+/Applications/Hugin/tools_mac/enfuse --exposure-optimum=0.5 --exposure-width=0.5 00001b.tiff 00002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 5' | cut -d "." -f2 | tr -d "/").tiff & 
 #wait for jobs to end
     wait < <(jobs -p)
 
@@ -590,7 +590,7 @@ rm $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 1' | cut -d "." -f2 | tr
 "$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 1.tiff -pix_fmt rgb24 -vf $crp_fix 1b.tiff 
 "$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 2.tiff -pix_fmt rgb24 -vf $crp_fix 2b.tiff 
 
-/Applications/Hugin/tools_mac/enfuse --exposure-mu=0.5 --exposure-sigma=0.5 1b.tiff 2b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 1' | cut -d "." -f2 | tr -d "/").tiff 
+/Applications/Hugin/tools_mac/enfuse --exposure-optimum=0.5 --exposure-width=0.5 1b.tiff 2b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 1' | cut -d "." -f2 | tr -d "/").tiff 
    fi
 
    if ! [ -f 01.tiff ] || ! [ -f 02.tiff ]
@@ -602,7 +602,7 @@ rm $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 2' | cut -d "." -f2 | tr
 "$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 01.tiff -pix_fmt rgb24 -vf $crp_fix 01b.tiff 
 "$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 02.tiff -pix_fmt rgb24 -vf $crp_fix 02b.tiff 
 
-/Applications/Hugin/tools_mac/enfuse --exposure-mu=0.5 --exposure-sigma=0.5 01b.tiff 02b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 2' | cut -d "." -f2 | tr -d "/").tiff 
+/Applications/Hugin/tools_mac/enfuse --exposure-optimum=0.5 --exposure-width=0.5 01b.tiff 02b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 2' | cut -d "." -f2 | tr -d "/").tiff 
    fi 
 
    if ! [ -f 001.tiff ] || ! [ -f 002.tiff ]
@@ -614,7 +614,7 @@ rm $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 3' | cut -d "." -f2 | tr
 "$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 001.tiff -pix_fmt rgb24 -vf $crp_fix 001b.tiff 
 "$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 002.tiff -pix_fmt rgb24 -vf $crp_fix 002b.tiff
 
-/Applications/Hugin/tools_mac/enfuse --exposure-mu=0.5 --exposure-sigma=0.5 001b.tiff 002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 3' | cut -d "." -f2 | tr -d "/").tiff 
+/Applications/Hugin/tools_mac/enfuse --exposure-optimum=0.5 --exposure-width=0.5 001b.tiff 002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 3' | cut -d "." -f2 | tr -d "/").tiff 
    fi 
 
    if ! [ -f 0001.tiff ] || ! [ -f 0002.tiff ]
@@ -626,7 +626,7 @@ rm $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 4' | cut -d "." -f2 | tr
 "$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 0001.tiff -pix_fmt rgb24 -vf $crp_fix 0001b.tiff 
 "$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 0002.tiff -pix_fmt rgb24 -vf $crp_fix 0002b.tiff 
 
-/Applications/Hugin/tools_mac/enfuse --exposure-mu=0.5 --exposure-sigma=0.5 0001b.tiff 0002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 4' | cut -d "." -f2 | tr -d "/").tiff 
+/Applications/Hugin/tools_mac/enfuse --exposure-optimum=0.5 --exposure-width=0.5 0001b.tiff 0002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 4' | cut -d "." -f2 | tr -d "/").tiff 
    fi 
 
    if ! [ -f 00001.tiff ] || ! [ -f 00002.tiff ]
@@ -638,7 +638,7 @@ rm $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 5' | cut -d "." -f2 | tr
 "$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 00001.tiff -pix_fmt rgb24 -vf $crp_fix 00001b.tiff 
 "$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 00002.tiff -pix_fmt rgb24 -vf $crp_fix 00002b.tiff 
 
-/Applications/Hugin/tools_mac/enfuse --exposure-mu=0.5 --exposure-sigma=0.5 00001b.tiff 00002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 5' | cut -d "." -f2 | tr -d "/").tiff 
+/Applications/Hugin/tools_mac/enfuse --exposure-optimum=0.5 --exposure-width=0.5 00001b.tiff 00002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 5' | cut -d "." -f2 | tr -d "/").tiff 
    fi
 
 #remove unwanted files
@@ -782,11 +782,11 @@ then
 #wait for jobs to end
     wait < <(jobs -p)
 
-/Applications/Hugin/tools_mac/enfuse --exposure-mu=0.5 --exposure-sigma=0.5 1b.tiff 2b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 1' | cut -d "." -f2 | tr -d "/").tiff &
-/Applications/Hugin/tools_mac/enfuse --exposure-mu=0.5 --exposure-sigma=0.5 01b.tiff 02b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 2' | cut -d "." -f2 | tr -d "/").tiff &
-/Applications/Hugin/tools_mac/enfuse --exposure-mu=0.5 --exposure-sigma=0.5 001b.tiff 002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 3' | cut -d "." -f2 | tr -d "/").tiff &
-/Applications/Hugin/tools_mac/enfuse --exposure-mu=0.5 --exposure-sigma=0.5 0001b.tiff 0002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 4' | cut -d "." -f2 | tr -d "/").tiff &
-/Applications/Hugin/tools_mac/enfuse --exposure-mu=0.5 --exposure-sigma=0.5 00001b.tiff 00002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 5' | cut -d "." -f2 | tr -d "/").tiff & 
+/Applications/Hugin/tools_mac/enfuse --exposure-optimum=0.5 --exposure-width=0.5 1b.tiff 2b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 1' | cut -d "." -f2 | tr -d "/").tiff &
+/Applications/Hugin/tools_mac/enfuse --exposure-optimum=0.5 --exposure-width=0.5 01b.tiff 02b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 2' | cut -d "." -f2 | tr -d "/").tiff &
+/Applications/Hugin/tools_mac/enfuse --exposure-optimum=0.5 --exposure-width=0.5 001b.tiff 002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 3' | cut -d "." -f2 | tr -d "/").tiff &
+/Applications/Hugin/tools_mac/enfuse --exposure-optimum=0.5 --exposure-width=0.5 0001b.tiff 0002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 4' | cut -d "." -f2 | tr -d "/").tiff &
+/Applications/Hugin/tools_mac/enfuse --exposure-optimum=0.5 --exposure-width=0.5 00001b.tiff 00002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 5' | cut -d "." -f2 | tr -d "/").tiff & 
 #wait for jobs to end
     wait < <(jobs -p)
 
@@ -801,7 +801,7 @@ rm $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 1' | cut -d "." -f2 | tr
 "$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 1.tiff -pix_fmt rgb24 -vf $crp_fix 1b.tiff 
 "$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 2.tiff -pix_fmt rgb24 -vf $crp_fix 2b.tiff 
 
-/Applications/Hugin/tools_mac/enfuse --exposure-mu=0.5 --exposure-sigma=0.5 1b.tiff 2b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 1' | cut -d "." -f2 | tr -d "/").tiff 
+/Applications/Hugin/tools_mac/enfuse --exposure-optimum=0.5 --exposure-width=0.5 1b.tiff 2b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 1' | cut -d "." -f2 | tr -d "/").tiff 
    fi
 
    if ! [ -f 01.tiff ] || ! [ -f 02.tiff ]
@@ -813,7 +813,7 @@ rm $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 2' | cut -d "." -f2 | tr
 "$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 01.tiff -pix_fmt rgb24 -vf $crp_fix 01b.tiff 
 "$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 02.tiff -pix_fmt rgb24 -vf $crp_fix 02b.tiff 
 
-/Applications/Hugin/tools_mac/enfuse --exposure-mu=0.5 --exposure-sigma=0.5 01b.tiff 02b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 2' | cut -d "." -f2 | tr -d "/").tiff 
+/Applications/Hugin/tools_mac/enfuse --exposure-optimum=0.5 --exposure-width=0.5 01b.tiff 02b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 2' | cut -d "." -f2 | tr -d "/").tiff 
    fi 
 
    if ! [ -f 001.tiff ] || ! [ -f 002.tiff ]
@@ -825,7 +825,7 @@ rm $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 3' | cut -d "." -f2 | tr
 "$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 001.tiff -pix_fmt rgb24 -vf $crp_fix 001b.tiff 
 "$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 002.tiff -pix_fmt rgb24 -vf $crp_fix 002b.tiff
 
-/Applications/Hugin/tools_mac/enfuse --exposure-mu=0.5 --exposure-sigma=0.5 001b.tiff 002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 3' | cut -d "." -f2 | tr -d "/").tiff 
+/Applications/Hugin/tools_mac/enfuse --exposure-optimum=0.5 --exposure-width=0.5 001b.tiff 002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 3' | cut -d "." -f2 | tr -d "/").tiff 
    fi 
 
    if ! [ -f 0001.tiff ] || ! [ -f 0002.tiff ]
@@ -837,7 +837,7 @@ rm $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 4' | cut -d "." -f2 | tr
 "$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 0001.tiff -pix_fmt rgb24 -vf $crp_fix 0001b.tiff 
 "$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 0002.tiff -pix_fmt rgb24 -vf $crp_fix 0002b.tiff 
 
-/Applications/Hugin/tools_mac/enfuse --exposure-mu=0.5 --exposure-sigma=0.5 0001b.tiff 0002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 4' | cut -d "." -f2 | tr -d "/").tiff 
+/Applications/Hugin/tools_mac/enfuse --exposure-optimum=0.5 --exposure-width=0.5 0001b.tiff 0002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 4' | cut -d "." -f2 | tr -d "/").tiff 
    fi 
 
    if ! [ -f 00001.tiff ] || ! [ -f 00002.tiff ]
@@ -849,7 +849,7 @@ rm $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 5' | cut -d "." -f2 | tr
 "$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 00001.tiff -pix_fmt rgb24 -vf $crp_fix 00001b.tiff 
 "$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg -i 00002.tiff -pix_fmt rgb24 -vf $crp_fix 00002b.tiff 
 
-/Applications/Hugin/tools_mac/enfuse --exposure-mu=0.5 --exposure-sigma=0.5 00001b.tiff 00002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 5' | cut -d "." -f2 | tr -d "/").tiff 
+/Applications/Hugin/tools_mac/enfuse --exposure-optimum=0.5 --exposure-width=0.5 00001b.tiff 00002b.tiff -o $(find -s . -maxdepth 1 -iname '*.tif' | awk 'FNR == 5' | cut -d "." -f2 | tr -d "/").tiff 
    fi
 
 #remove unwanted files
