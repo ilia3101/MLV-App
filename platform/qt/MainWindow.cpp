@@ -64,6 +64,7 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
 
     ui->setupUi(this);
     setAcceptDrops(true);
+    qApp->installEventFilter( this );
 
     //Set bools for draw rules
     m_dontDraw = true;
@@ -394,6 +395,24 @@ void MainWindow::closeEvent(QCloseEvent *event)
 
     qApp->quit();
     event->accept();
+}
+
+//Disable WBPicker if picture is left
+bool MainWindow::eventFilter(QObject *watched, QEvent *event)
+{
+    Q_UNUSED( watched );
+    if (event->type() == QEvent::MouseMove)
+    {
+        static bool graphicsViewReached = false;
+        if( ui->graphicsView->underMouse() ) graphicsViewReached = true;
+        if( !ui->graphicsView->underMouse() && graphicsViewReached )
+        {
+            graphicsViewReached = false;
+            ui->toolButtonWb->setChecked( false );
+            ui->actionWhiteBalancePicker->setChecked( false );
+        }
+    }
+    return false;
 }
 
 //Draw a raw picture to the gui -> start render thread
