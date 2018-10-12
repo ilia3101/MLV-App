@@ -114,15 +114,6 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
         video->llrawproc->first_time = 0;
     }
 
-    /* deflicker RAW data */
-    if (video->llrawproc->deflicker_target)
-    {
-#ifndef STDOUT_SILENT
-        printf("Per-frame exposure compensation: 'ON'\nDeflicker target: '%d'\n\n", video->llrawproc->deflicker_target);
-#endif
-        deflicker(video, raw_image_buff, raw_image_size);
-    }
-
     /* subtruct dark frame if Ext or Int mode specified and df_init is successful */
     if (!df_init(video))
     {
@@ -135,16 +126,18 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
 #endif
     }
 
-    /* fix pattern noise */
-    if (video->llrawproc->pattern_noise)
+    /* fix vertical stripes */
+    if (video->llrawproc->vertical_stripes)
     {
-#ifndef STDOUT_SILENT
-        printf("Fixing pattern noise... ");
-#endif
-        fix_pattern_noise((int16_t *)raw_image_buff, video->RAWI.xRes, video->RAWI.yRes, video->RAWI.raw_info.white_level, 0);
-#ifndef STDOUT_SILENT
-        printf("Done\n\n");
-#endif
+        fix_vertical_stripes(&video->llrawproc->stripe_corrections,
+                             raw_image_buff,
+                             (video->llrawproc->dual_iso == 1) ? video->RAWI.raw_info.black_level * 4 : video->RAWI.raw_info.black_level,
+                             (video->llrawproc->dual_iso == 1) ? video->RAWI.raw_info.white_level * 4 : video->RAWI.raw_info.white_level,
+                             video->RAWI.raw_info.frame_size,
+                             video->RAWI.xRes,
+                             video->RAWI.yRes,
+                             video->llrawproc->vertical_stripes,
+                             &video->llrawproc->compute_stripes);
     }
 
     /* fix focus pixels */
@@ -194,6 +187,18 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
                        (video->llrawproc->dual_iso),
                        video->llrawproc->raw2ev,
                        video->llrawproc->ev2raw);
+    }
+
+    /* fix pattern noise */
+    if (video->llrawproc->pattern_noise)
+    {
+#ifndef STDOUT_SILENT
+        printf("Fixing pattern noise... ");
+#endif
+        fix_pattern_noise((int16_t *)raw_image_buff, video->RAWI.xRes, video->RAWI.yRes, video->RAWI.raw_info.white_level, 0);
+#ifndef STDOUT_SILENT
+        printf("Done\n\n");
+#endif
     }
 
     /* dual iso processing */
@@ -296,19 +301,13 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
                       video->llrawproc->ev2raw);
     }
 
-    /* fix vertical stripes */
-    if (video->llrawproc->vertical_stripes)
+    /* deflicker RAW data */
+    if (video->llrawproc->deflicker_target)
     {
-        fix_vertical_stripes(&video->llrawproc->stripe_corrections,
-                             raw_image_buff,
-                             raw_image_size / 2,
-                             (video->llrawproc->dual_iso == 1) ? video->RAWI.raw_info.black_level * 4 : video->RAWI.raw_info.black_level,
-                             (video->llrawproc->dual_iso == 1) ? video->RAWI.raw_info.white_level * 4 : video->RAWI.raw_info.white_level,
-                             video->RAWI.raw_info.frame_size,
-                             video->RAWI.xRes,
-                             video->RAWI.yRes,
-                             video->llrawproc->vertical_stripes,
-                             &video->llrawproc->compute_stripes);
+#ifndef STDOUT_SILENT
+        printf("Per-frame exposure compensation: 'ON'\nDeflicker target: '%d'\n\n", video->llrawproc->deflicker_target);
+#endif
+        deflicker(video, raw_image_buff, raw_image_size);
     }
 }
 

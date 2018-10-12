@@ -34,7 +34,6 @@ typedef struct {
 
 void fix_vertical_stripes(stripes_correction * correction,
                           uint16_t * image_data,
-                          size_t size,
                           int32_t black_level,
                           int32_t white_level,
                           int32_t frame_size,
@@ -42,20 +41,4 @@ void fix_vertical_stripes(stripes_correction * correction,
                           uint16_t height,
                           int vertical_stripes,
                           int * compute_stripes);
-
-void stripes_compute_correction(stripes_correction * correction,
-                                uint16_t * image_data,
-                                int32_t black_level,
-                                int32_t white_level,
-                                int32_t frame_size,
-                                uint16_t width,
-                                uint16_t height);
-
-void stripes_apply_correction(stripes_correction * correction,
-                              uint16_t * image_data,
-                              size_t size,
-                              int32_t black_level,
-                              int32_t white_level,
-                              uint16_t width);
-
 #endif
