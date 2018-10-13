@@ -19,8 +19,8 @@ ReceiptSettings::ReceiptSettings()
     m_clarity = 0;
     m_vibrance = 0;
     m_saturation = 0;
-    m_ds = 22;
-    m_dr = 73;
+    m_ds = 20;
+    m_dr = 75;
     m_ls = 0;
     m_lr = 50;
     m_lightening = 0;
