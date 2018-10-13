@@ -3120,7 +3120,7 @@ QGroupBox::indicator:checked {
                       <enum>Qt::RightToLeft</enum>
                      </property>
                      <property name="text">
-                      <string>75</string>
+                      <string>70</string>
                      </property>
                      <property name="alignment">
                       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -3151,7 +3151,7 @@ QGroupBox::indicator:checked {
                       <number>100</number>
                      </property>
                      <property name="value">
-                      <number>75</number>
+                      <number>70</number>
                      </property>
                      <property name="orientation">
                       <enum>Qt::Horizontal</enum>

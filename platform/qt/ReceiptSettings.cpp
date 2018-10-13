@@ -20,7 +20,7 @@ ReceiptSettings::ReceiptSettings()
     m_vibrance = 0;
     m_saturation = 0;
     m_ds = 20;
-    m_dr = 75;
+    m_dr = 70;
     m_ls = 0;
     m_lr = 50;
     m_lightening = 0;
