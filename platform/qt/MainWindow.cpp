@@ -423,7 +423,16 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
         }
 
     }
-    return false;
+    else if( event->type() == QEvent::Resize
+          && ( watched == ui->dockWidgetEdit || watched == ui->dockWidgetSession ) )
+    {
+        /*QResizeEvent *resizeEvent = static_cast<QResizeEvent*>(event);
+        qDebug("Dock Resized (New Size) - Width: %d Height: %d",
+               resizeEvent->size().width(),
+               resizeEvent->size().height());*/
+        m_frameChanged = true;
+    }
+    return QWidget::eventFilter(watched, event);
 }
 
 //Draw a raw picture to the gui -> start render thread
@@ -1188,6 +1197,8 @@ void MainWindow::readSettings()
     m_timeCodePosition = set.value( "tcPos", 1 ).toUInt();
     ui->actionAutoCheckForUpdates->setChecked( set.value( "autoUpdateCheck", true ).toBool() );
     ui->actionPlaybackPosition->setChecked( set.value( "rememberPlaybackPos", false ).toBool() );
+    resizeDocks({ui->dockWidgetEdit}, {set.value( "dockEditSize", 212 ).toInt()}, Qt::Horizontal);
+    resizeDocks({ui->dockWidgetSession}, {set.value( "dockSessionSize", 170 ).toInt()}, Qt::Horizontal);
 }
 
 //Save some settings to registry
@@ -1226,6 +1237,8 @@ void MainWindow::writeSettings()
     set.setValue( "tcPos", m_timeCodePosition );
     set.setValue( "autoUpdateCheck", ui->actionAutoCheckForUpdates->isChecked() );
     set.setValue( "rememberPlaybackPos", ui->actionPlaybackPosition->isChecked() );
+    set.setValue( "dockEditSize", ui->dockWidgetEdit->width() );
+    set.setValue( "dockSessionSize", ui->dockWidgetSession->width() );
 }
 
 //Start Export via Pipe

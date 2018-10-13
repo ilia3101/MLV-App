@@ -285,6 +285,12 @@
    <property name="enabled">
     <bool>true</bool>
    </property>
+   <property name="maximumSize">
+    <size>
+     <width>500</width>
+     <height>524287</height>
+    </size>
+   </property>
    <property name="features">
     <set>QDockWidget::DockWidgetClosable</set>
    </property>
@@ -306,14 +312,11 @@
     </property>
     <property name="maximumSize">
      <size>
-      <width>212</width>
+      <width>16777215</width>
       <height>16777215</height>
      </size>
     </property>
-    <layout class="QVBoxLayout" name="verticalLayout_5">
-     <property name="spacing">
-      <number>0</number>
-     </property>
+    <layout class="QGridLayout" name="gridLayout_37">
      <property name="leftMargin">
       <number>0</number>
      </property>
@@ -326,44 +329,98 @@
      <property name="bottomMargin">
       <number>0</number>
      </property>
-     <item>
+     <property name="spacing">
+      <number>0</number>
+     </property>
+     <item row="0" column="0">
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <property name="spacing">
         <number>0</number>
        </property>
        <item>
-        <widget class="QLabel" name="labelHistogram">
-         <property name="minimumSize">
-          <size>
-           <width>200</width>
-           <height>70</height>
-          </size>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>300</width>
-           <height>70</height>
-          </size>
-         </property>
-         <property name="contextMenuPolicy">
-          <enum>Qt::CustomContextMenu</enum>
-         </property>
-         <property name="lineWidth">
+        <layout class="QHBoxLayout" name="horizontalLayout_32">
+         <property name="spacing">
           <number>0</number>
          </property>
-         <property name="text">
-          <string/>
-         </property>
-         <property name="pixmap">
-          <pixmap resource="ressources.qrc">:/IMG/IMG/Histogram.png</pixmap>
-         </property>
-         <property name="scaledContents">
-          <bool>true</bool>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
-        </widget>
+         <item>
+          <widget class="QFrame" name="frameHistogramBackgroundL">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">background:palette(base);</string>
+           </property>
+           <property name="frameShape">
+            <enum>QFrame::NoFrame</enum>
+           </property>
+           <property name="frameShadow">
+            <enum>QFrame::Plain</enum>
+           </property>
+           <property name="lineWidth">
+            <number>0</number>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="labelHistogram">
+           <property name="minimumSize">
+            <size>
+             <width>212</width>
+             <height>70</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>212</width>
+             <height>70</height>
+            </size>
+           </property>
+           <property name="contextMenuPolicy">
+            <enum>Qt::CustomContextMenu</enum>
+           </property>
+           <property name="lineWidth">
+            <number>0</number>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="pixmap">
+            <pixmap resource="ressources.qrc">:/IMG/IMG/Histogram.png</pixmap>
+           </property>
+           <property name="scaledContents">
+            <bool>true</bool>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QFrame" name="frameHistogramBackgroundR">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">background:palette(base);</string>
+           </property>
+           <property name="frameShape">
+            <enum>QFrame::NoFrame</enum>
+           </property>
+           <property name="frameShadow">
+            <enum>QFrame::Plain</enum>
+           </property>
+           <property name="lineWidth">
+            <number>0</number>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
        <item>
         <widget class="QScrollArea" name="scrollArea">
@@ -401,8 +458,8 @@ QGroupBox::indicator:checked {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>-1098</y>
-            <width>199</width>
+            <y>0</y>
+            <width>243</width>
             <height>3570</height>
            </rect>
           </property>
@@ -2006,7 +2063,7 @@ QGroupBox::indicator:checked {
                    <item row="1" column="0" colspan="4">
                     <widget class="NoScrollSlider" name="horizontalSliderRawBlack">
                      <property name="sizePolicy">
-                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                        <horstretch>0</horstretch>
                        <verstretch>0</verstretch>
                       </sizepolicy>
@@ -2019,7 +2076,7 @@ QGroupBox::indicator:checked {
                      </property>
                      <property name="maximumSize">
                       <size>
-                       <width>200</width>
+                       <width>16777215</width>
                        <height>16777215</height>
                       </size>
                      </property>
@@ -2103,7 +2160,7 @@ QGroupBox::indicator:checked {
                    <item row="1" column="0" colspan="3">
                     <widget class="NoScrollSlider" name="horizontalSliderRawWhite">
                      <property name="sizePolicy">
-                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                        <horstretch>0</horstretch>
                        <verstretch>0</verstretch>
                       </sizepolicy>
@@ -2116,7 +2173,7 @@ QGroupBox::indicator:checked {
                      </property>
                      <property name="maximumSize">
                       <size>
-                       <width>200</width>
+                       <width>16777215</width>
                        <height>16777215</height>
                       </size>
                      </property>
@@ -2385,7 +2442,7 @@ QGroupBox::indicator:checked {
                    <item row="1" column="0" colspan="3">
                     <widget class="NoScrollSlider" name="horizontalSliderExposure">
                      <property name="sizePolicy">
-                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                        <horstretch>0</horstretch>
                        <verstretch>0</verstretch>
                       </sizepolicy>
@@ -2398,7 +2455,7 @@ QGroupBox::indicator:checked {
                      </property>
                      <property name="maximumSize">
                       <size>
-                       <width>200</width>
+                       <width>16777215</width>
                        <height>16777215</height>
                       </size>
                      </property>
@@ -2472,7 +2529,7 @@ QGroupBox::indicator:checked {
                    <item row="1" column="0" colspan="3">
                     <widget class="NoScrollSlider" name="horizontalSliderContrast">
                      <property name="sizePolicy">
-                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                        <horstretch>0</horstretch>
                        <verstretch>0</verstretch>
                       </sizepolicy>
@@ -2485,7 +2542,7 @@ QGroupBox::indicator:checked {
                      </property>
                      <property name="maximumSize">
                       <size>
-                       <width>200</width>
+                       <width>16777215</width>
                        <height>16777215</height>
                       </size>
                      </property>
@@ -2540,7 +2597,7 @@ QGroupBox::indicator:checked {
                    <item row="1" column="0" colspan="5">
                     <widget class="NoScrollSlider" name="horizontalSliderTemperature">
                      <property name="sizePolicy">
-                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                        <horstretch>0</horstretch>
                        <verstretch>0</verstretch>
                       </sizepolicy>
@@ -2553,7 +2610,7 @@ QGroupBox::indicator:checked {
                      </property>
                      <property name="maximumSize">
                       <size>
-                       <width>200</width>
+                       <width>16777215</width>
                        <height>16777215</height>
                       </size>
                      </property>
@@ -2684,7 +2741,7 @@ QGroupBox::indicator:checked {
                    <item row="1" column="0" colspan="3">
                     <widget class="NoScrollSlider" name="horizontalSliderTint">
                      <property name="sizePolicy">
-                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                        <horstretch>0</horstretch>
                        <verstretch>0</verstretch>
                       </sizepolicy>
@@ -2697,7 +2754,7 @@ QGroupBox::indicator:checked {
                      </property>
                      <property name="maximumSize">
                       <size>
-                       <width>200</width>
+                       <width>16777215</width>
                        <height>16777215</height>
                       </size>
                      </property>
@@ -2778,7 +2835,7 @@ QGroupBox::indicator:checked {
                    <item row="1" column="0" colspan="3">
                     <widget class="NoScrollSlider" name="horizontalSliderClarity">
                      <property name="sizePolicy">
-                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                        <horstretch>0</horstretch>
                        <verstretch>0</verstretch>
                       </sizepolicy>
@@ -2791,7 +2848,7 @@ QGroupBox::indicator:checked {
                      </property>
                      <property name="maximumSize">
                       <size>
-                       <width>200</width>
+                       <width>16777215</width>
                        <height>16777215</height>
                       </size>
                      </property>
@@ -2865,7 +2922,7 @@ QGroupBox::indicator:checked {
                    <item row="1" column="0" colspan="3">
                     <widget class="NoScrollSlider" name="horizontalSliderVibrance">
                      <property name="sizePolicy">
-                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                        <horstretch>0</horstretch>
                        <verstretch>0</verstretch>
                       </sizepolicy>
@@ -2878,7 +2935,7 @@ QGroupBox::indicator:checked {
                      </property>
                      <property name="maximumSize">
                       <size>
-                       <width>200</width>
+                       <width>16777215</width>
                        <height>16777215</height>
                       </size>
                      </property>
@@ -2952,7 +3009,7 @@ QGroupBox::indicator:checked {
                    <item row="1" column="0" colspan="3">
                     <widget class="NoScrollSlider" name="horizontalSliderSaturation">
                      <property name="sizePolicy">
-                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                        <horstretch>0</horstretch>
                        <verstretch>0</verstretch>
                       </sizepolicy>
@@ -2965,7 +3022,7 @@ QGroupBox::indicator:checked {
                      </property>
                      <property name="maximumSize">
                       <size>
-                       <width>200</width>
+                       <width>16777215</width>
                        <height>16777215</height>
                       </size>
                      </property>
@@ -3046,7 +3103,7 @@ QGroupBox::indicator:checked {
                    <item row="1" column="0" colspan="3">
                     <widget class="NoScrollSlider" name="horizontalSliderDS">
                      <property name="sizePolicy">
-                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                        <horstretch>0</horstretch>
                        <verstretch>0</verstretch>
                       </sizepolicy>
@@ -3059,7 +3116,7 @@ QGroupBox::indicator:checked {
                      </property>
                      <property name="maximumSize">
                       <size>
-                       <width>200</width>
+                       <width>16777215</width>
                        <height>16777215</height>
                       </size>
                      </property>
@@ -3130,7 +3187,7 @@ QGroupBox::indicator:checked {
                    <item row="1" column="0" colspan="3">
                     <widget class="NoScrollSlider" name="horizontalSliderDR">
                      <property name="sizePolicy">
-                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                        <horstretch>0</horstretch>
                        <verstretch>0</verstretch>
                       </sizepolicy>
@@ -3143,7 +3200,7 @@ QGroupBox::indicator:checked {
                      </property>
                      <property name="maximumSize">
                       <size>
-                       <width>200</width>
+                       <width>16777215</width>
                        <height>16777215</height>
                       </size>
                      </property>
@@ -3214,7 +3271,7 @@ QGroupBox::indicator:checked {
                    <item row="1" column="0" colspan="3">
                     <widget class="NoScrollSlider" name="horizontalSliderLS">
                      <property name="sizePolicy">
-                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                        <horstretch>0</horstretch>
                        <verstretch>0</verstretch>
                       </sizepolicy>
@@ -3227,7 +3284,7 @@ QGroupBox::indicator:checked {
                      </property>
                      <property name="maximumSize">
                       <size>
-                       <width>200</width>
+                       <width>16777215</width>
                        <height>16777215</height>
                       </size>
                      </property>
@@ -3295,7 +3352,7 @@ QGroupBox::indicator:checked {
                    <item row="1" column="0" colspan="3">
                     <widget class="NoScrollSlider" name="horizontalSliderLR">
                      <property name="sizePolicy">
-                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                        <horstretch>0</horstretch>
                        <verstretch>0</verstretch>
                       </sizepolicy>
@@ -3308,7 +3365,7 @@ QGroupBox::indicator:checked {
                      </property>
                      <property name="maximumSize">
                       <size>
-                       <width>200</width>
+                       <width>16777215</width>
                        <height>16777215</height>
                       </size>
                      </property>
@@ -3379,7 +3436,7 @@ QGroupBox::indicator:checked {
                    <item row="1" column="0" colspan="3">
                     <widget class="NoScrollSlider" name="horizontalSliderLighten">
                      <property name="sizePolicy">
-                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                        <horstretch>0</horstretch>
                        <verstretch>0</verstretch>
                       </sizepolicy>
@@ -3392,7 +3449,7 @@ QGroupBox::indicator:checked {
                      </property>
                      <property name="maximumSize">
                       <size>
-                       <width>200</width>
+                       <width>16777215</width>
                        <height>16777215</height>
                       </size>
                      </property>
@@ -3455,7 +3512,7 @@ QGroupBox::indicator:checked {
                    <item row="1" column="0" colspan="4">
                     <widget class="NoScrollSlider" name="horizontalSliderHighlights">
                      <property name="sizePolicy">
-                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                        <horstretch>0</horstretch>
                        <verstretch>0</verstretch>
                       </sizepolicy>
@@ -3468,7 +3525,7 @@ QGroupBox::indicator:checked {
                      </property>
                      <property name="maximumSize">
                       <size>
-                       <width>200</width>
+                       <width>16777215</width>
                        <height>16777215</height>
                       </size>
                      </property>
@@ -3551,7 +3608,7 @@ QGroupBox::indicator:checked {
                    <item row="1" column="0" colspan="4">
                     <widget class="NoScrollSlider" name="horizontalSliderShadows">
                      <property name="sizePolicy">
-                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                        <horstretch>0</horstretch>
                        <verstretch>0</verstretch>
                       </sizepolicy>
@@ -3564,7 +3621,7 @@ QGroupBox::indicator:checked {
                      </property>
                      <property name="maximumSize">
                       <size>
-                       <width>200</width>
+                       <width>16777215</width>
                        <height>16777215</height>
                       </size>
                      </property>
@@ -3779,14 +3836,14 @@ QGroupBox::indicator:checked {
                    <item row="1" column="0" colspan="3">
                     <widget class="NoScrollSlider" name="horizontalSliderSharpen">
                      <property name="sizePolicy">
-                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                        <horstretch>0</horstretch>
                        <verstretch>0</verstretch>
                       </sizepolicy>
                      </property>
                      <property name="maximumSize">
                       <size>
-                       <width>200</width>
+                       <width>16777215</width>
                        <height>16777215</height>
                       </size>
                      </property>
@@ -3835,14 +3892,14 @@ QGroupBox::indicator:checked {
                       <bool>false</bool>
                      </property>
                      <property name="sizePolicy">
-                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                        <horstretch>0</horstretch>
                        <verstretch>0</verstretch>
                       </sizepolicy>
                      </property>
                      <property name="maximumSize">
                       <size>
-                       <width>200</width>
+                       <width>16777215</width>
                        <height>16777215</height>
                       </size>
                      </property>
@@ -3990,14 +4047,14 @@ QGroupBox::indicator:checked {
                    <item row="1" column="0" colspan="3">
                     <widget class="NoScrollSlider" name="horizontalSliderDenoiseStrength">
                      <property name="sizePolicy">
-                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                        <horstretch>0</horstretch>
                        <verstretch>0</verstretch>
                       </sizepolicy>
                      </property>
                      <property name="maximumSize">
                       <size>
-                       <width>200</width>
+                       <width>16777215</width>
                        <height>16777215</height>
                       </size>
                      </property>
@@ -5196,14 +5253,14 @@ QGroupBox::indicator:checked {
                    <item row="1" column="0" colspan="3">
                     <widget class="NoScrollSlider" name="horizontalSliderExposureGradient">
                      <property name="sizePolicy">
-                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                        <horstretch>0</horstretch>
                        <verstretch>0</verstretch>
                       </sizepolicy>
                      </property>
                      <property name="maximumSize">
                       <size>
-                       <width>200</width>
+                       <width>16777215</width>
                        <height>16777215</height>
                       </size>
                      </property>
@@ -5283,7 +5340,7 @@ QGroupBox::indicator:checked {
                 <item row="1" column="0" colspan="3">
                  <widget class="NoScrollSlider" name="horizontalSliderContrastGradient">
                   <property name="sizePolicy">
-                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                   <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
@@ -5296,7 +5353,7 @@ QGroupBox::indicator:checked {
                   </property>
                   <property name="maximumSize">
                    <size>
-                    <width>200</width>
+                    <width>16777215</width>
                     <height>16777215</height>
                    </size>
                   </property>
@@ -5568,7 +5625,7 @@ QGroupBox::indicator:checked {
                    <item row="1" column="0" colspan="3">
                     <widget class="NoScrollSlider" name="horizontalSliderFilterStrength">
                      <property name="sizePolicy">
-                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                        <horstretch>0</horstretch>
                        <verstretch>0</verstretch>
                       </sizepolicy>
@@ -5581,7 +5638,7 @@ QGroupBox::indicator:checked {
                      </property>
                      <property name="maximumSize">
                       <size>
-                       <width>200</width>
+                       <width>16777215</width>
                        <height>16777215</height>
                       </size>
                      </property>
@@ -5900,7 +5957,7 @@ QGroupBox::indicator:checked {
    </property>
    <property name="maximumSize">
     <size>
-     <width>170</width>
+     <width>500</width>
      <height>524287</height>
     </size>
    </property>
