@@ -10,6 +10,7 @@
 #include "../mlv/video_mlv.h"
 #include "filter/filter.h"
 #include "denoiser/denoiser_2d_median.h"
+#include "../mlv/camid/camera_id.h"
 
 /* Matrix functions which are useful */
 #include "../matrix/matrix.h"
@@ -24,6 +25,8 @@
 #include "processing.c"
 /* Default image profiles */
 #include "image_profiles.c"
+/* White balance cr4p */
+#include "white_balance.c"
 
 #if defined(__linux)
 #include <alloca.h>
@@ -76,13 +79,13 @@ processingObject_t * initProcessingObject()
     }
 
     /* A nothing matrix */
-    processing->cam_to_sRGB_matrix[0] = 1.0;
-    processing->cam_to_sRGB_matrix[4] = 1.0;
-    processing->cam_to_sRGB_matrix[8] = 1.0;
-    /* Different matrix BTW */
-    processing->xyz_to_rgb_matrix[0] = 1.0;
-    processing->xyz_to_rgb_matrix[4] = 1.0;
-    processing->xyz_to_rgb_matrix[8] = 1.0;
+    // processing->cam_to_sRGB_matrix[0] = 1.0;
+    // processing->cam_to_sRGB_matrix[4] = 1.0;
+    // processing->cam_to_sRGB_matrix[8] = 1.0;
+    // /* Different matrix BTW */
+    // processing->xyz_to_rgb_matrix[0] = 1.0;
+    // processing->xyz_to_rgb_matrix[4] = 1.0;
+    // processing->xyz_to_rgb_matrix[8] = 1.0;
 
     /* Blur buffer images (may change size) */
     processing->shadows_highlights.blur_image = new_image_buffer();
@@ -169,9 +172,9 @@ void processingSetCustomImageProfile(processingObject_t * processing, image_prof
 
 
 /* Takes those matrices I learned about on the forum */
-void processingCamTosRGBMatrix(processingObject_t * processing, double * camTosRGBMatrix)
+void processingSetCamMatrix(processingObject_t * processing, double * camMatrix)
 {
-    memcpy(processing->cam_to_sRGB_matrix, camTosRGBMatrix, sizeof(double) * 9);
+    memcpy(processing->cam_matrix, camMatrix, sizeof(double) * 9);
     /* Calculates final main matrix */
     processing_update_matrices(processing);
     if( processing->gradient_enable != 0 ) processing_update_matrices_gradient(processing);
@@ -424,6 +427,67 @@ void apply_processing_object( processingObject_t * processing,
         img[i] = processing->pre_calc_levels[ img[i] ];
     }
 
+
+    double proper_wb_matrix_b[9] = {1,0,0,0,1,0,0,0,1};
+    /* Check if doing proper white balance */
+    if (1)
+    {
+        /* Get multipliers for this to undo what has been done, it was only done to do highlihgt reconstrucytion now */
+        double multiplierz[3] = {1,1,1};
+        get_kelvin_multipliers_rgb(processingGetWhiteBalanceKelvin(processing), multiplierz); 
+
+        /* Now create a matrix, which will take us back to raw colour by undoing
+         * basic wb (which was useful for highlight reconstruction, also where tint was done) */
+        double proper_wb_matrix_a[9] = {
+            1.0/multiplierz[0], 0, 0,
+            0, 1.0/multiplierz[1], 0,
+            0, 0, 1.0/multiplierz[2]
+        };
+
+        double temp_mat[9];
+
+        /* 1: 5D2, 2: 7D, 3: 5D3 */
+        int32_t * cam_matrix_int = camidGetColorMatrix2( /* 0x80000218 */0x80000250/* 0x80000285 */ );
+        double xyz_to_cam[9];
+        for (int i = 0; i < 9; ++i) xyz_to_cam[i] = ((double)cam_matrix_int[i*2])/((double)cam_matrix_int[i*2+1]);
+
+        double XYZ_white[3];
+        double XYZ_temp[3];
+        Kelvin_Daylight_to_XYZ(5000, XYZ_white);
+        Kelvin_Daylight_to_XYZ(processingGetWhiteBalanceKelvin(processing), XYZ_temp);
+        double XYZ_multipliers[3];
+        for (int i = 0; i < 3; ++i) XYZ_multipliers[i] = XYZ_white[i]/XYZ_temp[i];
+
+        // double XYZ_multipliers2[3];
+        // get_kelvin_multipliers_rgb(processingGetWhiteBalanceKelvin(processing), XYZ_multipliers2);
+        // for (int i = 0; i < 3; ++i) XYZ_multipliers[i] = XYZ_multipliers[i]*0.7+XYZ_multipliers2[i]*0.3;
+
+        printf("temp:%f\n", processingGetWhiteBalanceKelvin(processing));
+
+        double cam_to_xyz[9];
+        invertMatrix(xyz_to_cam, cam_to_xyz);
+
+        multiplyMatrices(proper_wb_matrix_a, cam_to_xyz, proper_wb_matrix_b);
+
+        /* Apply multipliers in XYZ */
+        for (int i = 0; i < 3; ++i)
+        {
+            int pos = i * 3;
+            for (int j = 0; j < 3; ++j)
+            {
+                proper_wb_matrix_b[pos+j] = proper_wb_matrix_b[pos+j] * XYZ_multipliers[i];
+            }
+        }  
+
+        // /* Back to sRGB */
+        multiplyMatrices(proper_wb_matrix_b, xyz_to_rgb, proper_wb_matrix_a);
+        /* copy to b for ocnvenience */
+        memcpy(proper_wb_matrix_b, proper_wb_matrix_a, 9*sizeof(double));
+
+        /* Apply */
+        // for (uint16_t * pix = img; pix < img_end; pix += 3)
+    }
+
     /* find highest green peak in actual picture for highlight reconstruction */
     uint16_t highest_green = 0;
     uint16_t highest_green_gradient = 0;
@@ -479,93 +543,17 @@ void apply_processing_object( processingObject_t * processing,
     /* white balance & exposure & highlights & gamma & highlight reconstruction */
     for (uint16_t * pix = img, * bpix = blurImage, *gmpix = gm; pix < img_end; pix += 3, bpix += 3, gmpix++)
     {
-        double expo_correction = 1.0;
-        double expo_correction_gradient = 1.0;
-        /* shadows & highlights, clarity part 1 */
-        if( ( processing->shadows_highlights.shadows    <= -0.01 || processing->shadows_highlights.shadows    >= 0.01 )
-         || ( processing->shadows_highlights.highlights <= -0.01 || processing->shadows_highlights.highlights >= 0.01 )
-         || ( processing->clarity                       <= -0.01 || processing->clarity                       >= 0.01 ) )
-        {
-            /* Blur pixLZ */
-            int32_t bval = ( ((pm[0][bpix[0]] + pm[1][bpix[1]] + pm[2][bpix[2]]) << 2)
-                           + ((pm[3][bpix[0]] + pm[4][bpix[1]] + pm[5][bpix[2]]) * 11)
-                           +  (pm[6][bpix[0]] + pm[7][bpix[1]] + pm[8][bpix[2]]) ) >> 4;
-
-            if( processing->clarity <= -0.01 || processing->clarity >= 0.01 )
-            {
-                /* clarity part 1 */
-                double factor = processing->clarity_curve[LIMIT16(bval)];
-                expo_correction /= (factor * factor);
-            }
-            if( ( processing->shadows_highlights.shadows <= -0.01 || processing->shadows_highlights.shadows >= 0.01 )
-             || ( processing->shadows_highlights.highlights <= -0.01 || processing->shadows_highlights.highlights >= 0.01 ) )
-            {
-                /* highlight exposure factor */
-                expo_correction *= processing->shadows_highlights.shadow_highlight_curve[LIMIT16(bval)];
-            }
-        }
-
-        /* Contrast on untouched pixel */
-        if( ( processing->contrast          <= -0.01 || processing->contrast          >= 0.01 )
-         || ( processing->clarity           <= -0.01 || processing->clarity           >= 0.01 )
-         || ( processing->gradient_contrast <= -0.01 || processing->gradient_contrast >= 0.01 ) )
-        {
-            int32_t cval = ( ((pm[0][pix[0]] + pm[1][pix[1]] + pm[2][pix[2]]) << 2)
-                           + ((pm[3][pix[0]] + pm[4][pix[1]] + pm[5][pix[2]]) * 11)
-                           +  (pm[6][pix[0]] + pm[7][pix[1]] + pm[8][pix[2]]) ) >> 4;
-
-            if( processing->clarity <= -0.01 || processing->clarity >= 0.01 )
-            {
-                /* clarity part 2 */
-                double factor = processing->clarity_curve[LIMIT16(cval)];
-                expo_correction *= factor * factor;
-            }
-            if( processing->contrast <= -0.01 || processing->contrast >= 0.01 )
-            {
-                /* contrast factor */
-                expo_correction *= processing->contrast_curve[LIMIT16(cval)];
-            }
-            if( processing->gradient_contrast <= -0.01 || processing->gradient_contrast >= 0.01 )
-            {
-                /* gradient contrast factor */
-                expo_correction_gradient *= processing->gradient_contrast_curve[LIMIT16(cval)];
-            }
-        }
-
-        /* Gradient variables and part 1 */
-        int32_t pix0g;
-        int32_t pix1g;
-        int32_t pix2g;
-        int32_t tmp1g;
-        if( processing->gradient_enable && gmpix[0] != 0 &&
-          ( ( processing->gradient_exposure_stops < -0.01 || processing->gradient_exposure_stops > 0.01 )
-         || ( processing->gradient_contrast       < -0.01 || processing->gradient_contrast       > 0.01 ) ) )
-        {
-            /* do the same for gradient as for the pic itself, but before the values are overwritten */
-            /* white balance & exposure & highlights */
-            pix0g = (pmg[0][pix[0]] + pmg[1][pix[1]] + pmg[2][pix[2]])*expo_correction*expo_correction_gradient;
-            pix1g = (pmg[3][pix[0]] + pmg[4][pix[1]] + pmg[5][pix[2]])*expo_correction*expo_correction_gradient;
-            pix2g = (pmg[6][pix[0]] + pmg[7][pix[1]] + pmg[8][pix[2]])*expo_correction*expo_correction_gradient;
-            tmp1g = (pmg[3][pix[0]] + pmg[4][pix[1]] + pmg[5][pix[2]]);
-        }
 
         /* white balance & exposure & highlights */
-        int32_t pix0 = (pm[0][pix[0]] + pm[1][pix[1]] + pm[2][pix[2]])*expo_correction;
-        int32_t pix1 = (pm[3][pix[0]] + pm[4][pix[1]] + pm[5][pix[2]])*expo_correction;
-        int32_t pix2 = (pm[6][pix[0]] + pm[7][pix[1]] + pm[8][pix[2]])*expo_correction;
-        int32_t tmp1 = (pm[3][pix[0]] + pm[4][pix[1]] + pm[5][pix[2]]);
+        int32_t pix0 = (pm[0][pix[0]] /* + pm[1][pix[1]] + pm[2][pix[2]] */);
+        int32_t pix1 = (/* pm[3][pix[0]] + */ pm[4][pix[1]] /* + pm[5][pix[2]] */);
+        int32_t pix2 = (/* pm[6][pix[0]] + pm[7][pix[1]] + */ pm[8][pix[2]]);
+        int32_t tmp1 = (/* pm[3][pix[0]] + */ pm[4][pix[1]] /* + pm[5][pix[2]] */);
 
         pix[0] = LIMIT16(pix0);
         pix[1] = LIMIT16(pix1);
         pix[2] = LIMIT16(pix2);
         uint16_t tmp1b = LIMIT16(tmp1);
-
-        /* Gamma */
-        for( int i = 0; i < 3; i++ )
-        {
-            pix[i] = processing->pre_calc_gamma[ pix[i] ];
-        }
-        tmp1b = processing->pre_calc_gamma[ tmp1b ];
 
         /* Now highlight reconstruction */
         if (processing->highlight_reconstruction)
@@ -599,6 +587,94 @@ void apply_processing_object( processingObject_t * processing,
                 }*/
             }
         }
+
+        {
+            uint16_t pix0b = pix[0], pix1b = pix[1], pix2b = pix[2];
+            double result[3];
+            result[0] = pix0b * proper_wb_matrix_b[0] + pix1b * proper_wb_matrix_b[1] + pix2b * proper_wb_matrix_b[2];
+            result[1] = pix0b * proper_wb_matrix_b[3] + pix1b * proper_wb_matrix_b[4] + pix2b * proper_wb_matrix_b[5];
+            result[2] = pix0b * proper_wb_matrix_b[6] + pix1b * proper_wb_matrix_b[7] + pix2b * proper_wb_matrix_b[8];
+            pix[0] = LIMIT16(result[0]);
+            pix[1] = LIMIT16(result[1]);
+            pix[2] = LIMIT16(result[2]);
+        }
+
+        double expo_correction = 1.0;
+        double expo_correction_gradient = 1.0;
+        /* shadows & highlights, clarity part 1 */
+        if( ( processing->shadows_highlights.shadows    <= -0.01 || processing->shadows_highlights.shadows    >= 0.01 )
+         || ( processing->shadows_highlights.highlights <= -0.01 || processing->shadows_highlights.highlights >= 0.01 )
+         || ( processing->clarity                       <= -0.01 || processing->clarity                       >= 0.01 ) )
+        {
+            /* Blur pixLZ */
+            int32_t bval = ( ((pm[0][bpix[0]] /* + pm[1][bpix[1]] + pm[2][bpix[2]] */) << 2)
+                           + ((/* pm[3][bpix[0]] + */ pm[4][bpix[1]] /* + pm[5][bpix[2]] */) * 11)
+                           +  (/* pm[6][bpix[0]] + pm[7][bpix[1]] + */ pm[8][bpix[2]]) ) >> 4;
+
+            if( processing->clarity <= -0.01 || processing->clarity >= 0.01 )
+            {
+                /* clarity part 1 */
+                double factor = processing->clarity_curve[LIMIT16(bval)];
+                expo_correction /= (factor * factor);
+            }
+            if( ( processing->shadows_highlights.shadows <= -0.01 || processing->shadows_highlights.shadows >= 0.01 )
+             || ( processing->shadows_highlights.highlights <= -0.01 || processing->shadows_highlights.highlights >= 0.01 ) )
+            {
+                /* highlight exposure factor */
+                expo_correction *= processing->shadows_highlights.shadow_highlight_curve[LIMIT16(bval)];
+            }
+        }
+
+        /* Contrast on untouched pixel */
+        if( ( processing->contrast          <= -0.01 || processing->contrast          >= 0.01 )
+         || ( processing->clarity           <= -0.01 || processing->clarity           >= 0.01 )
+         || ( processing->gradient_contrast <= -0.01 || processing->gradient_contrast >= 0.01 ) )
+        {
+            int32_t cval = ( ((pm[0][pix[0]] /* + pm[1][pix[1]] + pm[2][pix[2]] */) << 2)
+                           + ((/* pm[3][pix[0]] + */ pm[4][pix[1]] /* + pm[5][pix[2]] */) * 11)
+                           +  (/* pm[6][pix[0]] + pm[7][pix[1]] + */ pm[8][pix[2]]) ) >> 4;
+
+            if( processing->clarity <= -0.01 || processing->clarity >= 0.01 )
+            {
+                /* clarity part 2 */
+                double factor = processing->clarity_curve[LIMIT16(cval)];
+                expo_correction *= factor * factor;
+            }
+            if( processing->contrast <= -0.01 || processing->contrast >= 0.01 )
+            {
+                /* contrast factor */
+                expo_correction *= processing->contrast_curve[LIMIT16(cval)];
+            }
+            if( processing->gradient_contrast <= -0.01 || processing->gradient_contrast >= 0.01 )
+            {
+                /* gradient contrast factor */
+                expo_correction_gradient *= processing->gradient_contrast_curve[LIMIT16(cval)];
+            }
+        }
+
+        /* Gradient variables and part 1 */
+        int32_t pix0g;
+        int32_t pix1g;
+        int32_t pix2g;
+        int32_t tmp1g;
+        if( processing->gradient_enable && gmpix[0] != 0 &&
+          ( ( processing->gradient_exposure_stops < -0.01 || processing->gradient_exposure_stops > 0.01 )
+         || ( processing->gradient_contrast       < -0.01 || processing->gradient_contrast       > 0.01 ) ) )
+        {
+            /* do the same for gradient as for the pic itself, but before the values are overwritten */
+            /* white balance & exposure & highlights */
+            pix0g = (pmg[0][pix[0]] /* + pmg[1][pix[1]] + pmg[2][pix[2]] */)*expo_correction*expo_correction_gradient;
+            pix1g = (/* pmg[3][pix[0]] + */ pmg[4][pix[1]] /* + pmg[5][pix[2]] */)*expo_correction*expo_correction_gradient;
+            pix2g = (/* pmg[6][pix[0]] + pmg[7][pix[1]] */ + pmg[8][pix[2]])*expo_correction*expo_correction_gradient;
+            tmp1g = (/* pmg[3][pix[0]] + */ pmg[4][pix[1]] /* + pmg[5][pix[2]] */);
+        }
+
+        /* Gamma */
+        for( int i = 0; i < 3; i++ )
+        {
+            pix[i] = processing->pre_calc_gamma[ pix[i] ];
+        }
+        tmp1b = processing->pre_calc_gamma[ tmp1b ];
 
         /* Gradient part 2 & blending */
         if( processing->gradient_enable && gmpix[0] != 0 &&
@@ -1205,7 +1281,7 @@ void processingSetBlackAndWhiteLevel( processingObject_t * processing,
     }
 
     /* How much it needs to be stretched */
-    double stretch = 65535.0 / (double)(processing->white_level - processing->black_level);
+    double stretch = 65535.0 / (processing->white_level - processing->black_level);
 
     for (int i = 0; i < 65536; ++i)
     {
