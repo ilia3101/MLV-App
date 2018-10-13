@@ -80,6 +80,9 @@ typedef struct {
     /* Dark frame info */
     uint64_t dark_frame_offset;
 
+    /* 14 minus original bit depth, uncompressed 10/12bit case */
+    uint16_t bits_diff;
+
     /* Black and white level correction */
     uint16_t original_black_level;
     uint16_t original_white_level;

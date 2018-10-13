@@ -688,6 +688,7 @@ void dng_unpack_image_bits(uint16_t * output_buffer, uint16_t * input_buffer, in
     uint32_t mask = (1 << bpp) - 1;
     uint16_t *packed_bits = input_buffer;
     uint16_t *unpacked_bits = output_buffer;
+    uint16_t to_14bit = 14 - bpp;
 
     #pragma omp parallel for
     for (uint32_t pixel_index = 0; pixel_index < pixel_count; pixel_index++)
@@ -703,7 +704,7 @@ void dng_unpack_image_bits(uint16_t * output_buffer, uint16_t * input_buffer, in
         uint32_t uncorrected_data = *((uint32_t *)&packed_bits[bits_address]);
         uint32_t data = ROR32(uncorrected_data, rotate_value);
 
-        unpacked_bits[pixel_index] = (uint16_t)(data & mask);
+        unpacked_bits[pixel_index] = ((uint16_t)(data & mask)) << to_14bit;
     }
 }
 
@@ -868,7 +869,7 @@ static int dng_get_frame(mlvObject_t * mlv_data, dngObject_t * dng_data, uint32_
                                         dng_data->image_buf_unpacked,
                                         mlv_data->RAWI.xRes,
                                         mlv_data->RAWI.yRes,
-                                        mlv_data->RAWI.raw_info.bits_per_pixel,
+                                        mlv_data->RAWI.raw_info.bits_per_pixel - mlv_data->bits_diff,
                                         1);
                 }
                 else
@@ -899,7 +900,7 @@ static int dng_get_frame(mlvObject_t * mlv_data, dngObject_t * dng_data, uint32_
                                   dng_data->image_buf,
                                   mlv_data->RAWI.xRes,
                                   mlv_data->RAWI.yRes,
-                                  mlv_data->RAWI.raw_info.bits_per_pixel);
+                                  mlv_data->RAWI.raw_info.bits_per_pixel - mlv_data->bits_diff);
 
             /* apply low level raw processing to the unpacked_frame */
             applyLLRawProcObject(mlv_data, dng_data->image_buf_unpacked, dng_data->image_size_unpacked);
