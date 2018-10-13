@@ -4149,6 +4149,8 @@ void MainWindow::on_horizontalSliderRawWhite_valueChanged(int position)
 
     /* Set mlv raw white level to the slider value */
     setMlvWhiteLevel( m_pMlvObject, position );
+    /* Set imaginary lossless bit depth */
+    setMlvLosslessBpp(m_pMlvObject);
     /* Set processing white level with correction */
     processingSetWhiteLevel( m_pProcessingObject, position, getMlvBitdepth( m_pMlvObject ) );
 
@@ -4179,9 +4181,13 @@ void MainWindow::on_horizontalSliderRawBlack_valueChanged(int position)
 
     while( !m_pRenderThread->isIdle() ) QThread::msleep(1);
 
+    /* Set mlv raw white level to the slider value */
     setMlvBlackLevel( m_pMlvObject, position );
-    //int shift = 16 - getMlvBitdepth( m_pMlvObject );
+    /* Set imaginary lossless bit depth */
+    setMlvLosslessBpp(m_pMlvObject);
+    /* Set processing white level with correction */
     processingSetBlackLevel( m_pProcessingObject, position, getMlvBitdepth( m_pMlvObject ) );
+
     llrpResetFpmStatus(m_pMlvObject);
     llrpResetBpmStatus(m_pMlvObject);
     resetMlvCache( m_pMlvObject );

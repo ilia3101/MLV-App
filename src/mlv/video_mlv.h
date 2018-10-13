@@ -77,6 +77,9 @@ void getMlvCameraTosRGBMatrix(mlvObject_t * video, double * outputMatrix); /* St
 /* Gets image aspect ratio according to RAWC block info, calculating from binnin + skipping values */
 float getMlvAspectRatio(mlvObject_t * video);
 
+/* Set imaginary lossless bit depth value */
+void setMlvLosslessBpp(mlvObject_t * video);
+
 /******************************** 
  ********* PRIVATE AREA *********
  ********************************/

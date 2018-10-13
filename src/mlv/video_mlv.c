@@ -1586,8 +1586,7 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode, char * error
 
 short_cut:
 
-    /* Calculate imaginary bit depth for restricted lossledd raw data */
-    video->lossless_bpp = ceil( log2( getMlvWhiteLevel(video) - getMlvBlackLevel(video) ) );
+    setMlvLosslessBpp(video);
 
     /* NON compressed frame size */
     video->frame_size = (getMlvHeight(video) * getMlvWidth(video) * getMlvBitdepth(video)) / 8;
@@ -1614,6 +1613,12 @@ short_cut:
     }
 
     return MLV_ERR_NONE;
+}
+
+void setMlvLosslessBpp(mlvObject_t * video)
+{
+    /* Calculate imaginary bit depth for restricted lossledd raw data */
+    video->lossless_bpp = ceil( log2( getMlvWhiteLevel(video) - getMlvBlackLevel(video) ) );
 }
 
 /* Get image aspect ratio according to RAWC block info, calculating from binnin + skipping values.
