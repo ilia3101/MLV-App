@@ -156,7 +156,6 @@ static void detect_vertical_stripes_coeffs(stripes_correction * correction,
     {
         /* first line is RG */
         struct raw_8pixels * rg;
-        #pragma omp parallel
         for (rg = row; (void*)rg < (void*)row + pitch - sizeof(struct raw_8pixels); rg++)
         {
             /* next line is GB */
@@ -298,7 +297,6 @@ static void apply_vertical_stripes_correction(stripes_correction * correction,
     for (row = (void*)image_data; (void*)row < (void*)image_data + pitch * height; row += pitch / sizeof(struct raw_8pixels))
     {
         struct raw_8pixels * p;
-        #pragma omp parallel
         for (p = row; (void*)p < (void*)row + pitch; p++)
         {
             white = MAX(white, PA);
@@ -316,7 +314,6 @@ static void apply_vertical_stripes_correction(stripes_correction * correction,
     for (row = (void*)image_data; (void*)row < (void*)image_data + pitch * height; row += pitch / sizeof(struct raw_8pixels))
     {
         struct raw_8pixels * p;
-        #pragma omp parallel for
         for (p = row; (void*)p < (void*)row + pitch; p++)
         {
             int pa = PA;
