@@ -414,7 +414,9 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
     }
     else if( event->type() == QEvent::MouseButtonPress )
     {
-        if( !ui->graphicsView->underMouse() && ui->actionWhiteBalancePicker->isChecked() )
+        if( !ui->graphicsView->underMouse()
+         && !ui->toolButtonWb->underMouse()
+         && ui->actionWhiteBalancePicker->isChecked() )
         {
             ui->toolButtonWb->setChecked( false );
             ui->actionWhiteBalancePicker->setChecked( false );
