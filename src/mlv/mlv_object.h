@@ -80,10 +80,12 @@ typedef struct {
     /* Dark frame info */
     uint64_t dark_frame_offset;
 
-    /* 14 minus original bit depth, uncompressed 10/12bit case */
+    /* 14 minus original bit depth
+     * needed to recover original MLV bit depth because
+     * uncompressed 10/12bit raw always converted to 14bit */
     uint16_t bits_diff;
 
-    /* Black and white level correction */
+    /* Black and white level copy for resseting to the original */
     uint16_t original_black_level;
     uint16_t original_white_level;
 

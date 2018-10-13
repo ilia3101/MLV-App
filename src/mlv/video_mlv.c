@@ -272,7 +272,7 @@ int getMlvRawFrameUint16(mlvObject_t * video, uint64_t frameIndex, uint16_t * un
             uint32_t rotate_value = 16 + ((32 - bitdepth) - bits_shift);
             uint32_t uncorrected_data = *((uint32_t *)&((uint16_t *)raw_frame)[bits_address]);
             uint32_t data = ROR32(uncorrected_data, rotate_value);
-            unpackedFrame[i] = ((uint16_t)(data & mask)) << video->bits_diff;
+            unpackedFrame[i] = ((uint16_t)(data & mask)) << video->bits_diff; // Left shift converts to 14bit if uncompressed 10/12bit raw detected (bits_diff > 0)
         }
     }
 

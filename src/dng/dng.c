@@ -602,13 +602,17 @@ static void dng_fill_header(mlvObject_t * mlv_data, dngObject_t * dng_data, uint
         char * ext_dot = strrchr(reel_name, '.');
         if(ext_dot) *ext_dot = '\000';
 
+        int bits_diff = 0;
+        /* If uncompressed original raw data has to be passed trough */
+        if(dng_data->raw_output_state == UNCOMPRESSED_ORIG) bits_diff = mlv_data->bits_diff;
+
         /* Fill up IFD structs */
         struct directory_entry IFD0[IFD0_COUNT] =
         {
             {tcNewSubFileType,              ttLong,     1,      sfMainImage},
             {tcImageWidth,                  ttLong,     1,      mlv_data->RAWI.xRes},
             {tcImageLength,                 ttLong,     1,      mlv_data->RAWI.yRes},
-            {tcBitsPerSample,               ttShort,    1,      (llrpHQDualIso(mlv_data)) ? 16 : mlv_data->RAWI.raw_info.bits_per_pixel},
+            {tcBitsPerSample,               ttShort,    1,      (llrpHQDualIso(mlv_data)) ? 16 : mlv_data->RAWI.raw_info.bits_per_pixel - bits_diff},
             {tcCompression,                 ttShort,    1,      (!(dng_data->raw_output_state % 2)) ? ccUncompressed : ccJPEG},
             {tcPhotometricInterpretation,   ttShort,    1,      piCFA},
             {tcFillOrder,                   ttShort,    1,      1},
@@ -627,8 +631,8 @@ static void dng_fill_header(mlvObject_t * mlv_data, dngObject_t * dng_data, uint
             {tcExifIFD,                     ttLong,     1,      exif_ifd_offset},
             {tcDNGVersion,                  ttByte,     4,      0x00000401}, //1.4.0.0 in little endian
             {tcUniqueCameraModel,           ttAscii,    STRING_ENTRY(unique_model, header, &data_offset)},
-            {tcBlackLevel,                  ttLong,     1,      (llrpGetDualIsoMode(mlv_data)) ? mlv_data->llrawproc->diso_black_level : mlv_data->RAWI.raw_info.black_level},
-            {tcWhiteLevel,                  ttLong,     1,      (llrpGetDualIsoMode(mlv_data)) ? mlv_data->llrawproc->diso_white_level : mlv_data->RAWI.raw_info.white_level},
+            {tcBlackLevel,                  ttLong,     1,      (llrpGetDualIsoMode(mlv_data)) ? mlv_data->llrawproc->diso_black_level : mlv_data->RAWI.raw_info.black_level >> bits_diff},
+            {tcWhiteLevel,                  ttLong,     1,      (llrpGetDualIsoMode(mlv_data)) ? mlv_data->llrawproc->diso_white_level : mlv_data->RAWI.raw_info.white_level >> bits_diff},
             {tcDefaultScale,                ttRational, RATIONAL_ENTRY(par, header, &data_offset, 4)},
             {tcDefaultCropOrigin,           ttShort,    2,      PACK(mlv_data->RAWI.raw_info.crop.origin)},
             {tcDefaultCropSize,             ttShort,    2,      PACK2((mlv_data->RAWI.raw_info.active_area.x2 - mlv_data->RAWI.raw_info.active_area.x1), (mlv_data->RAWI.raw_info.active_area.y2 - mlv_data->RAWI.raw_info.active_area.y1))},
@@ -675,7 +679,7 @@ static void dng_fill_header(mlvObject_t * mlv_data, dngObject_t * dng_data, uint
     }
 }
 
-/* unpack bits to 16 bit little endian
+/* unpack bits to 16 bit little endian and converts to real 14bit if less then 14bit depth detected
    output_buffer - the buffer where the result will be written
    input_buffer - a buffer containing the packed imaged data
    width - image width
@@ -688,7 +692,7 @@ void dng_unpack_image_bits(uint16_t * output_buffer, uint16_t * input_buffer, in
     uint32_t mask = (1 << bpp) - 1;
     uint16_t *packed_bits = input_buffer;
     uint16_t *unpacked_bits = output_buffer;
-    uint16_t to_14bit = 14 - bpp;
+    uint16_t bits_diff = 14 - bpp;
 
     #pragma omp parallel for
     for (uint32_t pixel_index = 0; pixel_index < pixel_count; pixel_index++)
@@ -704,7 +708,7 @@ void dng_unpack_image_bits(uint16_t * output_buffer, uint16_t * input_buffer, in
         uint32_t uncorrected_data = *((uint32_t *)&packed_bits[bits_address]);
         uint32_t data = ROR32(uncorrected_data, rotate_value);
 
-        unpacked_bits[pixel_index] = ((uint16_t)(data & mask)) << to_14bit;
+        unpacked_bits[pixel_index] = ((uint16_t)(data & mask)) << bits_diff; // Left shift converts to 14bit if uncompressed 10/12bit raw detected (bits_diff > 0)
     }
 }
 
@@ -825,7 +829,7 @@ static int dng_get_frame(mlvObject_t * mlv_data, dngObject_t * dng_data, uint32_
     /* Move to start of frame in file and read the RAW data */
     file_set_pos(mlv_data->file[mlv_data->video_index[frame_index].chunk_num], mlv_data->video_index[frame_index].frame_offset, SEEK_SET);
 
-    if (dng_data->raw_input_state == COMPRESSED_RAW) /* If losless, decompress or pass trough */
+    if (dng_data->raw_input_state == COMPRESSED_RAW) /* If lossless, decompress or pass trough */
     {
         dng_data->image_size = dng_get_image_size(mlv_data, IMG_SIZE_LOSLESS, frame_index);
         if(fread(dng_data->image_buf, dng_data->image_size, 1, mlv_data->file[mlv_data->video_index[frame_index].chunk_num]) != 1)
@@ -869,7 +873,7 @@ static int dng_get_frame(mlvObject_t * mlv_data, dngObject_t * dng_data, uint32_
                                         dng_data->image_buf_unpacked,
                                         mlv_data->RAWI.xRes,
                                         mlv_data->RAWI.yRes,
-                                        mlv_data->RAWI.raw_info.bits_per_pixel - mlv_data->bits_diff,
+                                        mlv_data->RAWI.raw_info.bits_per_pixel,
                                         1);
                 }
                 else

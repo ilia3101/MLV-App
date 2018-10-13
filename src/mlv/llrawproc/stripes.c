@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2014 The Magic Lantern Team
+ * Adapted to MLV App by boucyball (2018)
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -16,9 +17,8 @@
  * Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor,
  * Boston, MA  02110-1301, USA.
- */
-
-/**
+ *
+ *
  * Fix vertical stripes (banding) from 5D Mark III (and maybe others).
  * 
  * These stripes are periodic, they repeat every 8 pixels.
@@ -358,7 +358,7 @@ void fix_vertical_stripes(stripes_correction * correction,
     if (*compute_stripes || vertical_stripes == 2)
     {
         detect_vertical_stripes_coeffs(correction, image_data, black_level, white_level, frame_size, width, height);
-//#ifndef STDOUT_SILENT
+#ifndef STDOUT_SILENT
         const char * method = NULL;
         if (vertical_stripes == 2)
         {
@@ -382,7 +382,7 @@ void fix_vertical_stripes(stripes_correction * correction,
                 printf("    1  ");
         }
         printf("\n\n");
-//#endif
+#endif
         *compute_stripes = 0;
     }
 
