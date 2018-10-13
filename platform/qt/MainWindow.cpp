@@ -397,11 +397,11 @@ void MainWindow::closeEvent(QCloseEvent *event)
     event->accept();
 }
 
-//Disable WBPicker if picture is left
+//Disable WBPicker if picture is left and if mouse is clicked somewhere else
 bool MainWindow::eventFilter(QObject *watched, QEvent *event)
 {
     Q_UNUSED( watched );
-    if (event->type() == QEvent::MouseMove)
+    if( event->type() == QEvent::MouseMove )
     {
         static bool graphicsViewReached = false;
         if( ui->graphicsView->underMouse() ) graphicsViewReached = true;
@@ -411,6 +411,15 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
             ui->toolButtonWb->setChecked( false );
             ui->actionWhiteBalancePicker->setChecked( false );
         }
+    }
+    else if( event->type() == QEvent::MouseButtonPress )
+    {
+        if( !ui->graphicsView->underMouse() && ui->actionWhiteBalancePicker->isChecked() )
+        {
+            ui->toolButtonWb->setChecked( false );
+            ui->actionWhiteBalancePicker->setChecked( false );
+        }
+
     }
     return false;
 }
@@ -5848,6 +5857,7 @@ void MainWindow::on_actionWhiteBalancePicker_toggled(bool checked)
     ui->graphicsView->setWbPickerActive( checked );
     m_pScene->setWbPickerActive( checked );
     m_pGradientElement->setMovable( !checked );
+    ui->toolButtonGradientPaint->setChecked( false );
 }
 
 //wb picking ready
@@ -6336,7 +6346,9 @@ void MainWindow::gradientGraphicElementMoved(int x, int y)
 //Someone starts/stops hovering the element
 void MainWindow::gradientGraphicElementHovered(bool isHovered)
 {
+    //We don't want to see hovering if wb picker is enabled
     if( ui->actionWhiteBalancePicker->isChecked() ) isHovered = false;
+
     //Change color of grading elements to show the user it is hovered
     QPen pen;
     if( isHovered ) pen = QPen( Qt::yellow );
