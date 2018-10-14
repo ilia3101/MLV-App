@@ -5663,7 +5663,6 @@ void MainWindow::toolButtonChromaSmoothChanged( void )
     default:
         llrpSetChromaSmoothMode(m_pMlvObject, CS_OFF);
     }
-    llrpComputeStripesOn(m_pMlvObject);
     resetMlvCache( m_pMlvObject );
     resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
@@ -5690,6 +5689,8 @@ void MainWindow::toolButtonVerticalStripesChanged( void )
 {
     llrpSetVerticalStripeMode( m_pMlvObject, toolButtonVerticalStripesCurrentIndex() );
     llrpComputeStripesOn(m_pMlvObject);
+    llrpResetFpmStatus(m_pMlvObject);
+    llrpResetBpmStatus(m_pMlvObject);
     resetMlvCache( m_pMlvObject );
     resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;

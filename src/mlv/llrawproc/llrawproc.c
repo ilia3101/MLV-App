@@ -139,8 +139,8 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
     {
         fix_vertical_stripes(&video->llrawproc->stripe_corrections,
                              raw_image_buff,
-                             (video->llrawproc->dual_iso == 1) ? video->RAWI.raw_info.black_level * 4 : video->RAWI.raw_info.black_level,
-                             (video->llrawproc->dual_iso == 1) ? video->RAWI.raw_info.white_level * 4 : video->RAWI.raw_info.white_level,
+                             video->RAWI.raw_info.black_level,
+                             video->RAWI.raw_info.white_level,
                              video->RAWI.raw_info.frame_size,
                              video->RAWI.xRes,
                              video->RAWI.yRes,
