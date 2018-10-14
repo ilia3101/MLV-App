@@ -356,7 +356,7 @@ void fix_vertical_stripes(stripes_correction * correction,
     if (*compute_stripes || vertical_stripes == 2)
     {
         detect_vertical_stripes_coeffs(correction, image_data, black_level, white_level, raw_info_frame_size, width, height);
-//#ifndef STDOUT_SILENT
+#ifndef STDOUT_SILENT
         const char * method = NULL;
         if (vertical_stripes == 2)
         {
@@ -380,7 +380,7 @@ void fix_vertical_stripes(stripes_correction * correction,
                 printf("    1  ");
         }
         printf("\n\n");
-//#endif
+#endif
         *compute_stripes = 0;
     }
 
