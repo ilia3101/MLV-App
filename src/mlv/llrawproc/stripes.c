@@ -356,13 +356,13 @@ void fix_vertical_stripes(stripes_correction * correction,
     if (*compute_stripes || vertical_stripes == 2)
     {
         detect_vertical_stripes_coeffs(correction, image_data, black_level, white_level, raw_info_frame_size, width, height);
-#ifndef STDOUT_SILENT
+//#ifndef STDOUT_SILENT
         const char * method = NULL;
         if (vertical_stripes == 2)
         {
             method = "FORCED";
         }
-        else if (corrections.correction_needed)
+        else if (correction->correction_needed)
         {
             method = "NEEDED";
         }
@@ -374,13 +374,13 @@ void fix_vertical_stripes(stripes_correction * correction,
         printf("\nVertical stripes correction: '%s'\n", method);
         for (int j = 0; j < 8; j++)
         {
-            if (corrections.coeffficients[j])
-                printf("  %.5f", (double)corrections.coeffficients[j] / FIXP_ONE);
+            if (correction->coeffficients[j])
+                printf("  %.5f", (double)correction->coeffficients[j] / FIXP_ONE);
             else
                 printf("    1  ");
         }
         printf("\n\n");
-#endif
+//#endif
         *compute_stripes = 0;
     }
 
