@@ -1435,6 +1435,7 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode, char * error
                     video->RAWI.raw_info.black_level <<= video->bits_diff;
                     video->RAWI.raw_info.white_level <<= video->bits_diff;
                     video->RAWI.raw_info.bits_per_pixel = 14;
+                    video->RAWI.raw_info.frame_size = video->RAWI.raw_info.width * video->RAWI.raw_info.height * 14 / 8;
                 }
             }
             else if ( memcmp(block_header.blockType, "RAWC", 4) == 0 )

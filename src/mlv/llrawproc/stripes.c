@@ -1,6 +1,5 @@
 /*
  * Copyright (C) 2014 The Magic Lantern Team
- * Adapted to MLV App by boucyball (2018)
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -136,13 +135,12 @@ static void detect_vertical_stripes_coeffs(stripes_correction * correction,
                                            uint16_t * image_data,
                                            int32_t black_level,
                                            int32_t white_level,
-                                           int32_t frame_size,
+                                           int32_t raw_info_frame_size,
                                            uint16_t width,
                                            uint16_t height)
 {
     static int hist[8][FIXP_RANGE];
     static int num[8];
-    
     memset(hist, 0, sizeof(hist));
     memset(num, 0, sizeof(num));
 
@@ -218,7 +216,7 @@ static void detect_vertical_stripes_coeffs(stripes_correction * correction,
     /* compute the median correction factor (this will reject outliers) */
     for (j = 0; j < 8; j++)
     {
-        if (num[j] < frame_size / 128) continue;
+        if (num[j] < raw_info_frame_size / 128) continue;
         int t = 0;
         for (k = 0; k < FIXP_RANGE; k++)
         {
@@ -348,23 +346,23 @@ void fix_vertical_stripes(stripes_correction * correction,
                           uint16_t * image_data,
                           int32_t black_level,
                           int32_t white_level,
-                          int32_t frame_size,
+                          int32_t raw_info_frame_size,
                           uint16_t width,
                           uint16_t height,
                           int vertical_stripes,
                           int * compute_stripes)
 {
-    /* for speed: only detect correction factors from the first frame if not forced by value 2 */
+    /* for speed: only detect correction factors from the first frame if not forced */
     if (*compute_stripes || vertical_stripes == 2)
     {
-        detect_vertical_stripes_coeffs(correction, image_data, black_level, white_level, frame_size, width, height);
+        detect_vertical_stripes_coeffs(correction, image_data, black_level, white_level, raw_info_frame_size, width, height);
 #ifndef STDOUT_SILENT
         const char * method = NULL;
         if (vertical_stripes == 2)
         {
             method = "FORCED";
         }
-        else if (correction->correction_needed)
+        else if (corrections.correction_needed)
         {
             method = "NEEDED";
         }
@@ -376,8 +374,8 @@ void fix_vertical_stripes(stripes_correction * correction,
         printf("\nVertical stripes correction: '%s'\n", method);
         for (int j = 0; j < 8; j++)
         {
-            if (correction->coeffficients[j])
-                printf("  %.5f", (double)correction->coeffficients[j] / FIXP_ONE);
+            if (corrections.coeffficients[j])
+                printf("  %.5f", (double)corrections.coeffficients[j] / FIXP_ONE);
             else
                 printf("    1  ");
         }
