@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2014 The Magic Lantern Team
+ * Adapted to MLV App by bouncyball (2018)
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -16,20 +17,6 @@
  * Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor,
  * Boston, MA  02110-1301, USA.
- *
- *
- * Fix vertical stripes (banding) from 5D Mark III (and maybe others).
- * 
- * These stripes are periodic, they repeat every 8 pixels.
- * It looks like some columns have different luma amplification;
- * correction factors are somewhere around 0.98 - 1.02, maybe camera-specific, maybe depends on
- * certain settings, I have no idea. So, this fix compares luma values within one pixel block,
- * computes the correction factors (using median to reject outliers) and decides
- * whether to apply the correction or not.
- * 
- * For speed reasons:
- * - Correction factors are computed from the first frame only.
- * - Only channels with error greater than 0.2% are corrected.
  */
 
 #include <stdlib.h>
@@ -37,6 +24,23 @@
 #include <string.h>
 #include <math.h>
 #include "stripes.h"
+
+/* Vertical stripes correction code from raw2dng, credits: a1ex */
+
+/**
+ * Fix vertical stripes (banding) from 5D Mark III (and maybe others).
+ *
+ * These stripes are periodic, they repeat every 8 pixels.
+ * It looks like some columns have different luma amplification;
+ * correction factors are somewhere around 0.98 - 1.02, maybe camera-specific, maybe depends on
+ * certain settings, I have no idea. So, this fix compares luma values within one pixel block,
+ * computes the correction factors (using median to reject outliers) and decides
+ * whether to apply the correction or not.
+ *
+ * For speed reasons:
+ * - Correction factors are computed from the first frame only.
+ * - Only channels with error greater than 0.2% are corrected.
+ */
 
 #define FIXP_ONE 65536
 #define FIXP_RANGE 65536
