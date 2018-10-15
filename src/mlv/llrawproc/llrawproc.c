@@ -66,17 +66,18 @@ static void undo_14bit(uint16_t * raw_image_buff, size_t raw_image_size, uint32_
 {
     uint32_t pixel_count = raw_image_size / 2;
     int bits_shift = 14 - bpp;
+    /* calculate rounding number to be added to the raw value before shifting right to minimize rounding error */
+    uint32_t rounding_number = (uint32_t)pow(2, bits_shift - 1);
 
     #pragma omp parallel for
     for(uint32_t i = 0; i < pixel_count; ++i)
     {
-        raw_image_buff[i] >>= bits_shift;
+        raw_image_buff[i] = (raw_image_buff[i] + rounding_number) >> bits_shift;
     }
 }
 
 static void scale_restricted_range(struct raw_info * raw_info, uint16_t * image_data)
 {
-
     uint32_t pixel_count = raw_info->width * raw_info->height;
 #if 0
     int32_t min_level = image_data[0];
@@ -172,7 +173,7 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
                                                         1); // dual iso check mode is on
 
         /* initialize dual iso black and white levels */
-        llrpResetDualIsoBWLevels(video);
+        llrpResetDngBWLevels(video);
 
         /* initialise LUTs */
         video->llrawproc->raw2ev = get_raw2ev(video->RAWI.raw_info.black_level);
@@ -218,7 +219,7 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
     if (video->llrawproc->focus_pixels && video->llrawproc->fpm_status < 3)
     {
         /* detect if raw data is restricted to 8-12bit lossless mode */
-        //int restricted_lossless = ( (video->MLVI.videoClass & MLV_VIDEO_CLASS_FLAG_LJ92) && (video->RAWI.raw_info.white_level < 15000) );
+        //int restricted_lossless = ( (video->MLVI.videoClass & MLV_VIDEO_CLASS_FLAG_LJ92) && video->lossless_bpp < 14 );
         /* detect crop_rec mode */
         int crop_rec = (llrpDetectFocusDotFixMode(video) == 2) ? 1 : (video->llrawproc->focus_pixels == 2);
         /* if raw data is lossless set unified mode */
@@ -288,7 +289,9 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
 #ifndef STDOUT_SILENT
         printf("Proc_Black = %d, Proc_White = %d, Raw_Black = %d, Raw_White = %d <= BEFORE SCALING\n", video->processing->black_level, video->processing->white_level, raw_info.black_level, raw_info.white_level);
 #endif
-        if(video->lossless_bpp < 14)
+        /* if raw data is restricted lossless */
+        int restricted_lossless = (video->MLVI.videoClass & MLV_VIDEO_CLASS_FLAG_LJ92) && video->lossless_bpp < 14;
+        if(restricted_lossless)
         {
             scale_restricted_range(&raw_info, raw_image_buff);
 #ifndef STDOUT_SILENT
@@ -300,16 +303,6 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
 #ifndef STDOUT_SILENT
             printf("Proc_Black = %d, Proc_White = %d, Raw_Black = %d, Raw_White = %d <= AFTER SET PROC BW\n", video->processing->black_level, video->processing->white_level, raw_info.black_level, raw_info.white_level);
 #endif
-            /* Needed for cDNG export */
-            video->llrawproc->diso_black_level = raw_info.black_level << 2; // Convert 14bit to 16bit
-            video->llrawproc->diso_white_level = raw_info.white_level << 2;
-        }
-        else
-        {
-            /* Needed for cDNG export */
-            int bits_shift = 16 - raw_info.bits_per_pixel;
-            video->llrawproc->diso_black_level = raw_info.black_level << bits_shift; // Convert MLV bit depth to 16bit
-            video->llrawproc->diso_white_level = raw_info.white_level << bits_shift;
         }
 
         /* dual iso processing */
@@ -321,6 +314,12 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
                                video->llrawproc->diso_alias_map,
                                video->llrawproc->diso_frblending,
                                video->llrawproc->chroma_smooth);
+
+            /* for full20bit set diso levels and bit depth to 16 bit, needed for cDNG export */
+            int bits_shift = 16 - raw_info.bits_per_pixel;
+            video->llrawproc->dng_black_level = raw_info.black_level << bits_shift;
+            video->llrawproc->dng_white_level = raw_info.white_level << bits_shift;
+            video->llrawproc->dng_bit_depth = 16;
         }
         else if (video->llrawproc->dual_iso == 2) // Preview mode
         {
@@ -349,8 +348,8 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
                       video->llrawproc->ev2raw);
     }
 
-    /* undo 14bit conversion of uncompressed 10/12bit raw data */
-    if(video->RAWI.raw_info.bits_per_pixel < 14)
+    /* undo 14bit conversion of uncompressed 10/12bit raw data, except when 20bit dual iso processing is active */
+    if(video->RAWI.raw_info.bits_per_pixel < 14 && video->llrawproc->dual_iso != 1)
     {
         undo_14bit(raw_image_buff, raw_image_size, video->RAWI.raw_info.bits_per_pixel);
     }
@@ -552,10 +551,11 @@ int llrpHQDualIso(mlvObject_t * video)
     return (video->llrawproc->dual_iso == 1) && video->llrawproc->diso_valid && (llrpGetFixRawMode(video));
 }
 
-void llrpResetDualIsoBWLevels(mlvObject_t * video)
+void llrpResetDngBWLevels(mlvObject_t * video)
 {
-    video->llrawproc->diso_black_level = video->RAWI.raw_info.black_level;
-    video->llrawproc->diso_white_level = video->RAWI.raw_info.white_level;
+    video->llrawproc->dng_bit_depth = video->RAWI.raw_info.bits_per_pixel;
+    video->llrawproc->dng_black_level = video->RAWI.raw_info.black_level;
+    video->llrawproc->dng_white_level = video->RAWI.raw_info.white_level;
 }
 
 void llrpResetFpmStatus(mlvObject_t * video)

@@ -52,9 +52,10 @@ typedef struct
     int diso_frblending;  // flag for Fullres Blending switching on/off
     int dark_frame;       // flag for Dark Frame subtraction mode 0 = off, 1 = ext, 2 = int
 
-    /* calculated dual iso black and white levels */
-    int diso_black_level;
-    int diso_white_level;
+    /* cDNG bit depth and black/white levels */
+    int dng_bit_depth;
+    int dng_black_level;
+    int dng_white_level;
 
     /* external dark frame file name */
     char * dark_frame_filename;
