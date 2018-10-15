@@ -195,7 +195,7 @@ static void frame_index_sort(frame_index_t *frame_index, uint32_t entries)
 /* Unpack or decompress original raw data */
 int getMlvRawFrameUint16(mlvObject_t * video, uint64_t frameIndex, uint16_t * unpackedFrame)
 {
-    int bitdepth = video->RAWI.raw_info.bits_per_pixel - video->bits_diff;
+    int bitdepth = video->RAWI.raw_info.bits_per_pixel;
     int width = video->RAWI.xRes;
     int height = video->RAWI.yRes;
     int pixels_count = width * height;
@@ -272,7 +272,7 @@ int getMlvRawFrameUint16(mlvObject_t * video, uint64_t frameIndex, uint16_t * un
             uint32_t rotate_value = 16 + ((32 - bitdepth) - bits_shift);
             uint32_t uncorrected_data = *((uint32_t *)&((uint16_t *)raw_frame)[bits_address]);
             uint32_t data = ROR32(uncorrected_data, rotate_value);
-            unpackedFrame[i] = ((uint16_t)(data & mask)) << video->bits_diff; // Left shift converts to 14bit if uncompressed 10/12bit raw detected (bits_diff > 0)
+            unpackedFrame[i] = ((uint16_t)(data & mask));
         }
     }
 
@@ -1429,14 +1429,6 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode, char * error
             else if ( memcmp(block_header.blockType, "RAWI", 4) == 0 )
             {
                 fread_err &= fread(&video->RAWI, sizeof(mlv_rawi_hdr_t), 1, video->file[i]);
-                if(video->RAWI.raw_info.bits_per_pixel < 14)
-                {
-                    video->bits_diff = 14 - video->RAWI.raw_info.bits_per_pixel;
-                    video->RAWI.raw_info.black_level <<= video->bits_diff;
-                    video->RAWI.raw_info.white_level <<= video->bits_diff;
-                    video->RAWI.raw_info.bits_per_pixel = 14;
-                    video->RAWI.raw_info.frame_size = video->RAWI.raw_info.width * video->RAWI.raw_info.height * 14 / 8;
-                }
             }
             else if ( memcmp(block_header.blockType, "RAWC", 4) == 0 )
             {
