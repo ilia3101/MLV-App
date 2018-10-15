@@ -236,14 +236,15 @@ DISTFILES += \
     darkstyle/darkstyleOSX.qss \
     mlvapp.desktop
 
-win32{
-    RC_ICONS = MLVAPP.ico
-    QMAKE_TARGET_COMPANY = magiclantern
-    QMAKE_TARGET_DESCRIPTION = "Processing and converting tool for MLV files"
-    QMAKE_TARGET_PRODUCT = MLVApp
-    VERSION = 0.17.0
-    RC_CODEPAGE = 1252
-}
+RC_ICONS = MLVAPP.ico
+#win32{
+#    RC_ICONS = MLVAPP.ico
+#    QMAKE_TARGET_COMPANY = magiclantern
+#    QMAKE_TARGET_DESCRIPTION = "Processing and converting tool for MLV files"
+#    QMAKE_TARGET_PRODUCT = MLVApp
+#    VERSION = 0.17.0
+#    RC_CODEPAGE = 1252
+#}
 macx: ICON = MLVAPP.icns
 QMAKE_INFO_PLIST = Info.plist
 PACKAGE_FILES.files += bash_scripts/HDR_MOV.command
