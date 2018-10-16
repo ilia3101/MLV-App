@@ -50,6 +50,7 @@ A very first version of a kind of user manual can be found [here](https://github
 - Zebras
 - Create and load MAPP files (this files include all required information from the original MLV, plus video and audio frame index. If .MAPP file already created, importing is lot faster especially on slower HDD)
 - FCPXML Import Assistant: helps importing the MLV files, which were used as proxy in a NLE project
+- FCPXML Selection Assistant: helps selection the MLV files, which were or were not used as proxy in a NLE project
 - Update checker
 
 ## Compiling :collision:
