@@ -430,7 +430,7 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
         qDebug("Dock Resized (New Size) - Width: %d Height: %d",
                resizeEvent->size().width(),
                resizeEvent->size().height());*/
-        setPreviewMode();
+        //setPreviewMode();
         m_frameChanged = true;
     }
     return QWidget::eventFilter(watched, event);
