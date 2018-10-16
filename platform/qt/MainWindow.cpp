@@ -3437,7 +3437,7 @@ void MainWindow::setPreviewMode( void )
     {
         ui->listWidgetSession->setViewMode( QListView::ListMode );
         ui->listWidgetSession->setIconSize( QSize( 50, 30 ) );
-        ui->listWidgetSession->setGridSize( QSize( 50, 30 ) );
+        ui->listWidgetSession->setGridSize( QSize( -1, -1 ) );
         ui->listWidgetSession->setAlternatingRowColors( true );
         ui->listWidgetSession->setResizeMode( QListView::Fixed );
         ui->listWidgetSession->setFlow( QListView::TopToBottom );
@@ -3446,7 +3446,7 @@ void MainWindow::setPreviewMode( void )
     else if( m_previewMode == 2 )
     {
         ui->listWidgetSession->setViewMode( QListView::IconMode );
-        ui->listWidgetSession->setIconSize( QSize( 140, 100 ) );
+        ui->listWidgetSession->setIconSize( QSize( 130, 80 ) );
         ui->listWidgetSession->setGridSize( QSize( 140, 100 ) );
         ui->listWidgetSession->setAlternatingRowColors( false );
         ui->listWidgetSession->setResizeMode( QListView::Adjust );
