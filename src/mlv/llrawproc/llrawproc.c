@@ -158,29 +158,8 @@ void freeLLRawProcObject(mlvObject_t * video)
 /* all low level raw processing takes place here */
 void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t raw_image_size)
 {
-    /* on fix_raw=0 skip raw processing alltogether */
+    /* if 'fix_raw == false' skip raw processing alltogether */
     if(!video->llrawproc->fix_raw) return;
-
-    /* do first time stuff */
-    if(video->llrawproc->first_time)
-    {
-        /* check dual iso validity */
-        video->llrawproc->diso_valid = diso_get_preview(raw_image_buff,
-                                                        video->RAWI.xRes,
-                                                        video->RAWI.yRes,
-                                                        video->RAWI.raw_info.black_level,
-                                                        video->RAWI.raw_info.white_level,
-                                                        1); // dual iso check mode is on
-
-        /* initialize dual iso black and white levels */
-        llrpResetDngBWLevels(video);
-
-        /* initialise LUTs */
-        video->llrawproc->raw2ev = get_raw2ev(video->RAWI.raw_info.black_level);
-        video->llrawproc->ev2raw = get_ev2raw(video->RAWI.raw_info.black_level);
-
-        video->llrawproc->first_time = 0;
-    }
 
     /* subtruct dark frame if Ext or Int mode specified and df_init is successful */
     if (!df_init(video))
@@ -194,11 +173,34 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
 #endif
     }
 
+    /* make copy of 'RAWI.raw_info' struct for subsequent modification */
     struct raw_info raw_info = video->RAWI.raw_info;
+
     /* convert uncompressed 10/12bit raw data to 14bits for correct processing */
     if(video->RAWI.raw_info.bits_per_pixel < 14)
     {
         make_14bit(raw_image_buff, raw_image_size, &raw_info);
+    }
+
+    /* do one time stuff */
+    if(video->llrawproc->first_time)
+    {
+        /* check dual iso validity */
+        video->llrawproc->diso_valid = diso_get_preview(raw_image_buff,
+                                                        video->RAWI.xRes,
+                                                        video->RAWI.yRes,
+                                                        raw_info.black_level,
+                                                        raw_info.white_level,
+                                                        1); // dual iso check mode is on
+
+        /* initialize dual iso black and white levels */
+        llrpResetDngBWLevels(video);
+
+        /* initialise LUTs */
+        video->llrawproc->raw2ev = get_raw2ev(raw_info.black_level);
+        video->llrawproc->ev2raw = get_ev2raw(raw_info.black_level);
+
+        video->llrawproc->first_time = 0;
     }
 
     /* fix vertical stripes */
@@ -218,8 +220,6 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
     /* fix focus pixels */
     if (video->llrawproc->focus_pixels && video->llrawproc->fpm_status < 3)
     {
-        /* detect if raw data is restricted to 8-12bit lossless mode */
-        //int restricted_lossless = ( (video->MLVI.videoClass & MLV_VIDEO_CLASS_FLAG_LJ92) && video->lossless_bpp < 14 );
         /* detect crop_rec mode */
         int crop_rec = (llrpDetectFocusDotFixMode(video) == 2) ? 1 : (video->llrawproc->focus_pixels == 2);
         /* if raw data is lossless set unified mode */
@@ -289,7 +289,7 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
 #ifndef STDOUT_SILENT
         printf("Proc_Black = %d, Proc_White = %d, Raw_Black = %d, Raw_White = %d <= BEFORE SCALING\n", video->processing->black_level, video->processing->white_level, raw_info.black_level, raw_info.white_level);
 #endif
-        /* if raw data is restricted lossless */
+        /* detect if lossless raw data is restricted to imaginary 8-12bit levels */
         int restricted_lossless = (video->MLVI.videoClass & MLV_VIDEO_CLASS_FLAG_LJ92) && video->lossless_bpp < 14;
         if(restricted_lossless)
         {
