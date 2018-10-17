@@ -33,6 +33,7 @@
 #include "darkframe.h"
 #include "../../processing/raw_processing.h"
 
+/* this is DNG feature only */
 static void deflicker(mlvObject_t * video, uint16_t * raw_image_buff, size_t raw_image_size)
 {
     uint16_t black = video->RAWI.raw_info.black_level;
@@ -46,6 +47,7 @@ static void deflicker(mlvObject_t * video, uint16_t * raw_image_buff, size_t raw
     video->RAWI.raw_info.exposure_bias[1] = 10000;
 }
 
+/* convert uncompressed 10/12bit raw data to 14bit for subsequent processing */
 static void make_14bit(uint16_t * raw_image_buff, size_t raw_image_size, struct raw_info * raw_info)
 {
     uint32_t pixel_count = raw_image_size / 2;
@@ -62,6 +64,7 @@ static void make_14bit(uint16_t * raw_image_buff, size_t raw_image_size, struct 
     }
 }
 
+/* undo 14bit conversion to initial bit depth with rounding error minimizing */
 static void undo_14bit(uint16_t * raw_image_buff, size_t raw_image_size, uint32_t bpp)
 {
     uint32_t pixel_count = raw_image_size / 2;
@@ -76,10 +79,12 @@ static void undo_14bit(uint16_t * raw_image_buff, size_t raw_image_size, uint32_
     }
 }
 
+/* rescale restricted to imaginary 10-12bit levels of lossless raw data to about real 14bit range */
 static void scale_restricted_range(struct raw_info * raw_info, uint16_t * image_data)
 {
     uint32_t pixel_count = raw_info->width * raw_info->height;
 #if 0
+    /* find min and max level values in the currecnt raw frame */
     int32_t min_level = image_data[0];
     int32_t max_level = image_data[0];
 
@@ -102,7 +107,7 @@ static void scale_restricted_range(struct raw_info * raw_info, uint16_t * image_
 #pragma omp parallel for
     for(uint32_t i = 0; i < pixel_count; ++i)
     {
-        image_data[i] = (uint16_t)(((image_data[i] - raw_info->black_level) * scale_ratio + raw_info->black_level) + 0.5);
+        image_data[i] = (uint16_t)((double)((image_data[i] - raw_info->black_level) * scale_ratio + raw_info->black_level) + 0.5);
     }
 }
 
@@ -342,8 +347,8 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
                       raw_image_buff,
                       video->RAWI.xRes,
                       video->RAWI.yRes,
-                      video->RAWI.raw_info.black_level,
-                      video->RAWI.raw_info.white_level,
+                      raw_info.black_level,
+                      raw_info.white_level,
                       video->llrawproc->raw2ev,
                       video->llrawproc->ev2raw);
     }
@@ -354,7 +359,7 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
         undo_14bit(raw_image_buff, raw_image_size, video->RAWI.raw_info.bits_per_pixel);
     }
 
-    /* deflicker RAW data */
+    /* deflicker RAW data by changing 'tcBaselineExposure' tag in the exported DNG */
     if (video->llrawproc->deflicker_target)
     {
 #ifndef STDOUT_SILENT
