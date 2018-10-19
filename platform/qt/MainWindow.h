@@ -248,6 +248,7 @@ private slots:
     void on_actionPreviewDisabled_triggered();
     void on_actionPreviewList_triggered();
     void on_actionPreviewPicture_triggered();
+    void on_actionPreviewPictureBottom_triggered();
 
     void on_comboBoxHStretch_currentIndexChanged(int index);
     void on_comboBoxVStretch_currentIndexChanged(int index);

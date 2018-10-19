@@ -212,6 +212,7 @@
      <addaction name="actionPreviewDisabled"/>
      <addaction name="actionPreviewList"/>
      <addaction name="actionPreviewPicture"/>
+     <addaction name="actionPreviewPictureBottom"/>
     </widget>
     <widget class="QMenu" name="menuPlayback_Elements">
      <property name="title">
@@ -460,7 +461,7 @@ QGroupBox::indicator:checked {
             <x>0</x>
             <y>0</y>
             <width>244</width>
-            <height>3592</height>
+            <height>3570</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayoutScrollArea">
@@ -5952,7 +5953,7 @@ QGroupBox::indicator:checked {
    <property name="minimumSize">
     <size>
      <width>170</width>
-     <height>166</height>
+     <height>130</height>
     </size>
    </property>
    <property name="maximumSize">
@@ -5965,13 +5966,13 @@ QGroupBox::indicator:checked {
     <set>QDockWidget::DockWidgetClosable</set>
    </property>
    <property name="allowedAreas">
-    <set>Qt::LeftDockWidgetArea</set>
+    <set>Qt::BottomDockWidgetArea|Qt::LeftDockWidgetArea</set>
    </property>
    <property name="windowTitle">
     <string>Session</string>
    </property>
    <attribute name="dockWidgetArea">
-    <number>1</number>
+    <number>8</number>
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_2">
     <layout class="QGridLayout" name="gridLayout_2">
@@ -6523,7 +6524,7 @@ QGroupBox::indicator:checked {
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Picture Mode</string>
+    <string>Picture Mode Left</string>
    </property>
   </action>
   <action name="actionUseBilinear">
@@ -6720,6 +6721,14 @@ QGroupBox::indicator:checked {
    </property>
    <property name="text">
     <string>Remember Playback Position</string>
+   </property>
+  </action>
+  <action name="actionPreviewPictureBottom">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Picture Mode Bottom</string>
    </property>
   </action>
  </widget>

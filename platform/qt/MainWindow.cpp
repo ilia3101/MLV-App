@@ -927,6 +927,12 @@ void MainWindow::initGui( void )
     ui->dockWidgetContents->setMinimumWidth( 240 );
 #endif
 
+    //Dock area behavior
+    setCorner( Qt::TopLeftCorner, Qt::LeftDockWidgetArea );
+    setCorner( Qt::TopRightCorner, Qt::RightDockWidgetArea );
+    setCorner( Qt::BottomLeftCorner, Qt::LeftDockWidgetArea );
+    setCorner( Qt::BottomRightCorner, Qt::RightDockWidgetArea );
+
     //Init the Dialogs
     m_pInfoDialog = new InfoDialog( this );
     m_pStatusDialog = new StatusDialog( this );
@@ -1173,8 +1179,11 @@ void MainWindow::readSettings()
     case 1:
         on_actionPreviewList_triggered();
         break;
-    default:
+    case 2:
         on_actionPreviewPicture_triggered();
+        break;
+    default:
+        on_actionPreviewPictureBottom_triggered();
         break;
     }
     ui->actionCaching->setChecked( false );
@@ -3443,7 +3452,7 @@ void MainWindow::setPreviewMode( void )
         ui->listWidgetSession->setFlow( QListView::TopToBottom );
         ui->listWidgetSession->setWrapping( false );
     }
-    else if( m_previewMode == 2 )
+    else if( m_previewMode == 2 || m_previewMode == 3 )
     {
         ui->listWidgetSession->setViewMode( QListView::IconMode );
         ui->listWidgetSession->setIconSize( QSize( 130, 80 ) );
@@ -6635,8 +6644,10 @@ void MainWindow::on_actionPreviewDisabled_triggered()
     ui->actionPreviewDisabled->setChecked( true );
     ui->actionPreviewList->setChecked( false );
     ui->actionPreviewPicture->setChecked( false );
+    ui->actionPreviewPictureBottom->setChecked( false );
     m_previewMode = 0;
     setPreviewMode();
+    addDockWidget( Qt::LeftDockWidgetArea, ui->dockWidgetSession );
 }
 
 //Session Preview  List
@@ -6645,17 +6656,34 @@ void MainWindow::on_actionPreviewList_triggered()
     ui->actionPreviewDisabled->setChecked( false );
     ui->actionPreviewList->setChecked( true );
     ui->actionPreviewPicture->setChecked( false );
+    ui->actionPreviewPictureBottom->setChecked( false );
     m_previewMode = 1;
     setPreviewMode();
+    addDockWidget( Qt::LeftDockWidgetArea, ui->dockWidgetSession );
 }
 
-//Session Preview Picture
+//Session Preview Picture Left
 void MainWindow::on_actionPreviewPicture_triggered()
-{    ui->actionPreviewDisabled->setChecked( false );
+{
+    ui->actionPreviewDisabled->setChecked( false );
     ui->actionPreviewList->setChecked( false );
     ui->actionPreviewPicture->setChecked( true );
+    ui->actionPreviewPictureBottom->setChecked( false );
     m_previewMode = 2;
     setPreviewMode();
+    addDockWidget( Qt::LeftDockWidgetArea, ui->dockWidgetSession );
+}
+
+//Session Preview Picture Bottom
+void MainWindow::on_actionPreviewPictureBottom_triggered()
+{
+    ui->actionPreviewDisabled->setChecked( false );
+    ui->actionPreviewList->setChecked( false );
+    ui->actionPreviewPicture->setChecked( false );
+    ui->actionPreviewPictureBottom->setChecked( true );
+    m_previewMode = 3;
+    setPreviewMode();
+    addDockWidget( Qt::BottomDockWidgetArea, ui->dockWidgetSession );
 }
 
 //Input of Stretch Width (horizontal) Factor
