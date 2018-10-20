@@ -6806,6 +6806,7 @@ void MainWindow::on_toolButtonDarkFrameSubtractionFile_clicked()
     if( QFileInfo( fileName ).exists() && fileName.endsWith( ".MLV", Qt::CaseInsensitive ) )
     {
         ui->lineEditDarkFrameFile->setText( fileName );
+        m_lastDarkframeFileName = fileName;
     }
 }
 
