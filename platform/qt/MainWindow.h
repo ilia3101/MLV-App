@@ -160,6 +160,7 @@ private slots:
     void on_actionShowAudioTrack_toggled(bool checked);
     void on_listWidgetSession_customContextMenuRequested(const QPoint &pos);
     void deleteFileFromSession( void );
+    void on_actionShowInFinder_triggered( void );
     void rightClickShowFile( void );
     void selectAllFiles( void );
     void pictureCustomContextMenuRequested(const QPoint &pos);

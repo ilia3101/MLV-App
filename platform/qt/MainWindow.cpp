@@ -1122,6 +1122,12 @@ void MainWindow::initGui( void )
     m_wbMode = 0;
     ui->toolButtonWbMode->setToolTip( tr( "Chose between WB picker on grey or on skin" ) );
 
+    //Reveal in Explorer
+#ifdef Q_OS_WIN
+    ui->actionShowInFinder->setText( tr( "Reveal in Explorer" ) );
+    ui->actionShowInFinder->setToolTip(); tr( "Reveal selected file in Explorer" ) );
+#endif
+
     //set CPU Usage
     m_countTimeDown = -1;   //Time in seconds for CPU countdown
 }
@@ -5139,6 +5145,12 @@ void MainWindow::on_listWidgetSession_customContextMenuRequested(const QPoint &p
             myMenu.addAction( "Select all",  this, SLOT( selectAllFiles() ) );
             myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Image-icon.png" ), "Show in editor",  this, SLOT( rightClickShowFile() ) );
             myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Delete-icon.png" ), "Delete selected file from session",  this, SLOT( deleteFileFromSession() ) );
+#ifdef Q_OS_WIN
+            myMenu.addAction( ui->actionShowInFinder );
+#endif
+#ifdef Q_OS_OSX
+            myMenu.addAction( ui->actionShowInFinder );
+#endif
             myMenu.addSeparator();
         }
         else if( ui->listWidgetSession->selectedItems().size() > 1 )
@@ -6933,4 +6945,35 @@ void MainWindow::on_actionHelp_triggered()
     UserManualDialog *help = new UserManualDialog( this );
     help->exec();
     delete help;
+}
+
+//Show selected file from session in OSX Finder
+void MainWindow::on_actionShowInFinder_triggered( void )
+{
+    QString path = m_pSessionReceipts.at( ui->listWidgetSession->currentRow() )->fileName();
+
+    QFileInfo info(path);
+#if defined(Q_OS_WIN)
+    QStringList args;
+    if (!info.isDir())
+        args << "/select,";
+    args << QDir::toNativeSeparators(path);
+    if (QProcess::startDetached("explorer", args))
+        return;
+#elif defined(Q_OS_MAC)
+    QStringList args;
+    args << "-e";
+    args << "tell application \"Finder\"";
+    args << "-e";
+    args << "activate";
+    args << "-e";
+    args << "select POSIX file \"" + path + "\"";
+    args << "-e";
+    args << "end tell";
+    args << "-e";
+    args << "return";
+    if (!QProcess::execute("/usr/bin/osascript", args))
+        return;
+#endif
+    QDesktopServices::openUrl(QUrl::fromLocalFile(info.isDir()? path : info.path()));
 }
