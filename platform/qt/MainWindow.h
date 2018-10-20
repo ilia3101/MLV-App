@@ -324,7 +324,10 @@ private:
     bool m_exportAbortPressed;
     bool m_zoomTo100Center;
     bool m_zoomModeChanged;
-    QString m_lastSaveFileName;
+    QString m_lastSessionFileName;
+    QString m_lastMlvOpenFileName;
+    QString m_lastReceiptFileName;
+    QString m_lastDarkframeFileName;
     QString m_lastLutFileName;
     QString m_sessionFileName;
     ReceiptSettings *m_pReceiptClipboard;

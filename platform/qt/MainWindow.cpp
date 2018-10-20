@@ -502,7 +502,7 @@ void MainWindow::importNewMlv(QString fileName)
         if( !openMlvForPreview( fileName ) )
         {
             //Save last file name
-            m_lastSaveFileName = fileName;
+            m_lastMlvOpenFileName = fileName;
 
             on_actionResetReceipt_triggered();
 
@@ -585,7 +585,7 @@ void MainWindow::on_actionOpen_triggered()
     //Stop playback if active
     ui->actionPlay->setChecked( false );
 
-    QString path = QFileInfo( m_lastSaveFileName ).absolutePath();
+    QString path = QFileInfo( m_lastMlvOpenFileName ).absolutePath();
     if( !QDir( path ).exists() ) path = QDir::homePath();
 
     //Open File Dialog
@@ -1172,7 +1172,10 @@ void MainWindow::readSettings()
     if( set.value( "dragFrameMode", true ).toBool() ) ui->actionDropFrameMode->setChecked( true );
     if( set.value( "audioOutput", true ).toBool() ) ui->actionAudioOutput->setChecked( true );
     if( set.value( "zebras", false ).toBool() ) ui->actionShowZebras->setChecked( true );
-    m_lastSaveFileName = set.value( "lastFileName", QDir::homePath() ).toString();
+    m_lastMlvOpenFileName = set.value( "lastMlvFileName", QDir::homePath() ).toString();
+    m_lastSessionFileName = set.value( "lastSessionFileName", QDir::homePath() ).toString();
+    m_lastReceiptFileName = set.value( "lastReceiptFileName", QDir::homePath() ).toString();
+    m_lastDarkframeFileName = set.value( "lastDarkframeFileName", QDir::homePath() ).toString();
     m_lastLutFileName = set.value( "lastLutFile", QDir::homePath() ).toString();
     m_codecProfile = set.value( "codecProfile", 4 ).toUInt();
     m_codecOption = set.value( "codecOption", 0 ).toUInt();
@@ -1227,7 +1230,10 @@ void MainWindow::writeSettings()
     set.setValue( "dragFrameMode", ui->actionDropFrameMode->isChecked() );
     set.setValue( "audioOutput", ui->actionAudioOutput->isChecked() );
     set.setValue( "zebras", ui->actionShowZebras->isChecked() );
-    set.setValue( "lastFileName", m_lastSaveFileName );
+    set.setValue( "lastMlvFileName", m_lastMlvOpenFileName );
+    set.setValue( "lastSessionFileName", m_lastSessionFileName );
+    set.setValue( "lastReceiptFileName", m_lastReceiptFileName );
+    set.setValue( "lastDarkframeFileName", m_lastDarkframeFileName );
     set.setValue( "lastLutFile", m_lastLutFileName );
     set.setValue( "codecProfile", m_codecProfile );
     set.setValue( "codecOption", m_codecOption );
@@ -2342,7 +2348,7 @@ void MainWindow::openSession(QString fileNameSession)
                     if( QFile( fileName ).exists() )
                     {
                         //Save last file name
-                        m_lastSaveFileName = fileName;
+                        m_lastSessionFileName = fileName;
                         //Add file to Sessionlist
                         addFileToSession( fileName );
                         //Open the file
@@ -2439,7 +2445,7 @@ void MainWindow::on_actionImportReceipt_triggered()
     //If no clip loaded, abort
     if( m_pSessionReceipts.empty() ) return;
 
-    QString path = QFileInfo( m_lastSaveFileName ).absolutePath();
+    QString path = QFileInfo( m_lastReceiptFileName ).absolutePath();
     QString fileName = QFileDialog::getOpenFileName(this,
                                            tr("Open MLV App Receipt Xml"), path,
                                            tr("MLV App Receipt Xml files (*.marxml)"));
@@ -2486,7 +2492,7 @@ void MainWindow::on_actionExportReceipt_triggered()
     //Stop playback if active
     ui->actionPlay->setChecked( false );
 
-    QString path = QFileInfo( m_lastSaveFileName ).absolutePath();
+    QString path = QFileInfo( m_lastReceiptFileName ).absolutePath();
     QString fileName = QFileDialog::getSaveFileName(this,
                                            tr("Save MLV App Receipt Xml"), path,
                                            tr("MLV App Receipt Xml files (*.marxml)"));
@@ -4557,7 +4563,7 @@ void MainWindow::on_actionExportActualFrame_triggered()
 {
     //File name proposal
     QString saveFileName = m_pSessionReceipts.at( m_lastActiveClipInSession )->fileName();
-    saveFileName = saveFileName.left( m_lastSaveFileName.lastIndexOf( "." ) );
+    saveFileName = saveFileName.left( saveFileName.lastIndexOf( "." ) );
     saveFileName.append( QString( "_frame_%1.png" ).arg( ui->horizontalSliderPosition->value() + 1 ) );
 
     //File Dialog
@@ -4988,7 +4994,7 @@ void MainWindow::on_actionOpenSession_triggered()
     //Stop playback if active
     ui->actionPlay->setChecked( false );
 
-    QString path = QFileInfo( m_lastSaveFileName ).absolutePath();
+    QString path = QFileInfo( m_lastSessionFileName ).absolutePath();
     if( !QDir( path ).exists() ) path = QDir::homePath();
 
     QString fileName = QFileDialog::getOpenFileName(this,
@@ -5003,6 +5009,7 @@ void MainWindow::on_actionOpenSession_triggered()
     //Show last imported file
     showFileInEditor( m_pSessionReceipts.count() - 1 );
     m_sessionFileName = fileName;
+    m_lastSessionFileName = fileName;
     m_inOpeningProcess = false;
 }
 
@@ -5022,7 +5029,7 @@ void MainWindow::on_actionSaveAsSession_triggered()
     //Stop playback if active
     ui->actionPlay->setChecked( false );
 
-    QString path = QFileInfo( m_lastSaveFileName ).absolutePath();
+    QString path = QFileInfo( m_lastSessionFileName ).absolutePath();
     QString fileName = QFileDialog::getSaveFileName(this,
                                            tr("Save MLV App Session Xml"), path,
                                            tr("MLV App Session Xml files (*.masxml)"));
@@ -5034,6 +5041,7 @@ void MainWindow::on_actionSaveAsSession_triggered()
     if( !fileName.endsWith( ".masxml" ) ) fileName.append( ".masxml" );
 
     m_sessionFileName = fileName;
+    m_lastSessionFileName = fileName;
 
     saveSession( fileName );
 }
@@ -6787,7 +6795,7 @@ void MainWindow::on_actionToggleTimecodeDisplay_triggered()
 //Select Darkframe Subtraction File
 void MainWindow::on_toolButtonDarkFrameSubtractionFile_clicked()
 {
-    QString path = QFileInfo( m_lastSaveFileName ).absolutePath();
+    QString path = QFileInfo( m_lastDarkframeFileName ).absolutePath();
     if( !QDir( path ).exists() ) path = QDir::homePath();
 
     //Open File Dialog
