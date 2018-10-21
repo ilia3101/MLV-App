@@ -6744,6 +6744,14 @@ QGroupBox::indicator:checked {
     <string>Open with external application</string>
    </property>
   </action>
+  <action name="actionSelectExternalApplication">
+   <property name="text">
+    <string>Select external application</string>
+   </property>
+   <property name="toolTip">
+    <string>Select external application</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>

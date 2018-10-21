@@ -1196,6 +1196,7 @@ void MainWindow::readSettings()
     m_lastSessionFileName = set.value( "lastSessionFileName", QDir::homePath() ).toString();
     m_lastReceiptFileName = set.value( "lastReceiptFileName", QDir::homePath() ).toString();
     m_lastDarkframeFileName = set.value( "lastDarkframeFileName", QDir::homePath() ).toString();
+    m_externalApplicationName = set.value( "externalAppName", QString( "" ) ).toString();
     m_lastLutFileName = set.value( "lastLutFile", QDir::homePath() ).toString();
     m_codecProfile = set.value( "codecProfile", 4 ).toUInt();
     m_codecOption = set.value( "codecOption", 0 ).toUInt();
@@ -1254,6 +1255,7 @@ void MainWindow::writeSettings()
     set.setValue( "lastSessionFileName", m_lastSessionFileName );
     set.setValue( "lastReceiptFileName", m_lastReceiptFileName );
     set.setValue( "lastDarkframeFileName", m_lastDarkframeFileName );
+    set.setValue( "externalAppName", m_externalApplicationName );
     set.setValue( "lastLutFile", m_lastLutFileName );
     set.setValue( "codecProfile", m_codecProfile );
     set.setValue( "codecOption", m_codecOption );
@@ -5160,11 +5162,14 @@ void MainWindow::on_listWidgetSession_customContextMenuRequested(const QPoint &p
             myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Image-icon.png" ), "Show in editor",  this, SLOT( rightClickShowFile() ) );
             myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Delete-icon.png" ), "Delete selected file from session",  this, SLOT( deleteFileFromSession() ) );
 #ifdef Q_OS_WIN
+            myMenu.addSeparator();
             myMenu.addAction( ui->actionShowInFinder );
 #endif
 #ifdef Q_OS_OSX
+            myMenu.addSeparator();
             myMenu.addAction( ui->actionShowInFinder );
             myMenu.addAction( ui->actionOpenWithExternalApplication );
+            myMenu.addAction( ui->actionSelectExternalApplication );
 #endif
             myMenu.addSeparator();
         }
@@ -6979,11 +6984,51 @@ void MainWindow::on_actionShowInFinder_triggered( void )
 void MainWindow::on_actionOpenWithExternalApplication_triggered( void )
 {
 #ifdef _WIN32    //Code for Windows
-    QProcess::startDetached( QString( "%1" ).arg( "mlrawviewer.exe" ), QDir::toNativeSeparators( m_pSessionReceipts.at( ui->listWidgetSession->currentRow() )->fileName() ) );
+    //First check -> select app if fail
+    if( !QFileInfo( m_externalApplicationName ).exists() ) on_actionSelectExternalApplication_triggered();
+    //2nd check -> cancel if still fails
+    if( !QFileInfo( m_externalApplicationName ).exists() ) return;
+    //Now open
+    QProcess::startDetached( QString( "%1" ).arg( m_externalApplicationName ), QDir::toNativeSeparators( m_pSessionReceipts.at( ui->listWidgetSession->currentRow() )->fileName() ) );
 #endif
 #ifdef Q_OS_OSX     //Code for OSX
+    //First check -> select app if fail
+    if( !QDir( m_externalApplicationName ).exists() || m_externalApplicationName.count() == 0 )
+    {
+        on_actionSelectExternalApplication_triggered();
+    }
+    //2nd check -> cancel if still fails
+    if( !QDir( m_externalApplicationName ).exists() )
+    {
+        return;
+    }
+    //Now open
+    QFileInfo info( m_externalApplicationName );
+    QString path = info.fileName();
+    if( path.endsWith( ".app" ) ) path = path.left( path.count() - 4 );
     QProcess::startDetached( QString( "open -a \"%1\" %2" )
-                           .arg( "MlRawViewer" )
+                           .arg( path )
                            .arg( m_pSessionReceipts.at( ui->listWidgetSession->currentRow() )->fileName() ) );
 #endif
+}
+
+//Select the application for "Open with external application"
+void MainWindow::on_actionSelectExternalApplication_triggered()
+{
+    QString path;
+#ifdef _WIN32
+    path = "C:\\";
+    path = QFileDialog::getOpenFileName( this,
+                 tr("Select external application"), path,
+                 tr("Executable (*.exe)") );
+    path.append( "\"" );
+    path.prepend( "\"" );
+#endif
+#ifdef Q_OS_OSX
+    path = "/Applications/";
+    path = QFileDialog::getOpenFileName( this,
+                 tr("Select external application"), path,
+                 tr("Application (*.app)") );
+#endif
+    m_externalApplicationName = path;
 }

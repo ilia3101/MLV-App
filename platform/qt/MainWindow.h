@@ -272,6 +272,8 @@ private slots:
 
     void on_toolButtonRawBlackAutoCorrect_clicked();
 
+    void on_actionSelectExternalApplication_triggered();
+
 private:
     Ui::MainWindow *ui;
     InfoDialog *m_pInfoDialog;
@@ -331,6 +333,7 @@ private:
     QString m_lastReceiptFileName;
     QString m_lastDarkframeFileName;
     QString m_lastLutFileName;
+    QString m_externalApplicationName;
     QString m_sessionFileName;
     ReceiptSettings *m_pReceiptClipboard;
     QVector<ReceiptSettings*> m_pSessionReceipts;
