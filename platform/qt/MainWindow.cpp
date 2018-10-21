@@ -393,8 +393,10 @@ void MainWindow::closeEvent(QCloseEvent *event)
     ui->actionPlay->setChecked( false );
     on_actionPlay_triggered( false );
 
-    if( !QMessageBox::warning( this, APPNAME, tr( "Do you really like to quit MLVApp? Don't forget to save the session!" ),
-                                tr( "Abort" ), tr( "Quit" ) ) )
+    //Ask before quit
+    int ret = QMessageBox::warning( this, APPNAME, tr( "Do you really like to quit MLVApp? Don't forget to save the session!" ),
+                                    tr( "Abort" ), tr( "Quit" ) );
+    if( ret == QMessageBox::Escape || ret == 0 )
     {
         event->ignore();
         return;
