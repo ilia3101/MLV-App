@@ -394,12 +394,24 @@ void MainWindow::closeEvent(QCloseEvent *event)
     on_actionPlay_triggered( false );
 
     //Ask before quit
-    int ret = QMessageBox::warning( this, APPNAME, tr( "Do you really like to quit MLVApp? Don't forget to save the session!" ),
-                                    tr( "Abort" ), tr( "Quit" ) );
+    int ret = QMessageBox::warning( this, APPNAME, tr( "Do you really like to quit MLVApp? Do you like to save the session?" ),
+                                    tr( "Cancel" ), tr( "Quit without saving" ), tr( "Save and quit" ) );
+    //Aborted
     if( ret == QMessageBox::Escape || ret == 0 )
     {
         event->ignore();
         return;
+    }
+    //Save and quit
+    else if( ret == 2 )
+    {
+        on_actionSaveSession_triggered();
+        //Saving was aborted -> abort quit
+        if( m_sessionFileName.count() == 0 )
+        {
+            event->ignore();
+            return;
+        }
     }
 
     qApp->quit();
