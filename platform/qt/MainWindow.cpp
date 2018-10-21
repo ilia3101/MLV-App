@@ -6988,12 +6988,12 @@ void MainWindow::on_actionShowInFinder_triggered( void )
     QString path = m_pSessionReceipts.at( ui->listWidgetSession->currentRow() )->fileName();
 
 #ifdef _WIN32    //Code for Windows
-    QProcess::startDetached("explorer.exe", {"/select,", QDir::toNativeSeparators(path)});
+    QProcess::startDetached("explorer.exe", {"/select,", QString( "\"%1\"" ).arg( QDir::toNativeSeparators(path) )});
 #elif defined(__APPLE__)    //Code for Mac
     QProcess::execute("/usr/bin/osascript", {"-e", "tell application \"Finder\" to reveal POSIX file \"" + path + "\""});
     QProcess::execute("/usr/bin/osascript", {"-e", "tell application \"Finder\" to activate"});
 #elif defined( Q_OS_LINUX )
-    QProcess::startDetached("nautilus", QDir::toNativeSeparators(path) );
+    QProcess::startDetached("nautilus", QString( "\"%1\"" ).arg( QDir::toNativeSeparators(path) ) );
 #endif
 }
 
@@ -7008,7 +7008,7 @@ void MainWindow::on_actionOpenWithExternalApplication_triggered( void )
     //2nd check -> cancel if still fails
     if( !QFileInfo( m_externalApplicationName ).exists() ) return;
     //Now open
-    QProcess::startDetached( QString( "%1" ).arg( m_externalApplicationName ), QDir::toNativeSeparators( m_pSessionReceipts.at( ui->listWidgetSession->currentRow() )->fileName() ) );
+    QProcess::startDetached( QString( "\"%1\"" ).arg( m_externalApplicationName ), QString( "\"%1\"" ).arg( QDir::toNativeSeparators( m_pSessionReceipts.at( ui->listWidgetSession->currentRow() )->fileName() ) ) );
 #endif
 #ifdef Q_OS_OSX     //Code for OSX
     //First check -> select app if fail
@@ -7025,7 +7025,7 @@ void MainWindow::on_actionOpenWithExternalApplication_triggered( void )
     QFileInfo info( m_externalApplicationName );
     QString path = info.fileName();
     if( path.endsWith( ".app" ) ) path = path.left( path.count() - 4 );
-    QProcess::startDetached( QString( "open -a \"%1\" %2" )
+    QProcess::startDetached( QString( "open -a \"%1\" \"%2\"" )
                            .arg( path )
                            .arg( m_pSessionReceipts.at( ui->listWidgetSession->currentRow() )->fileName() ) );
 #endif
