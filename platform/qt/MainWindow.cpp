@@ -1060,8 +1060,15 @@ void MainWindow::initGui( void )
     //m_pFpsStatus->setFrameStyle(QFrame::Panel | QFrame::Sunken);
     statusBar()->addWidget( m_pFrameNumber );
 
+    //Recent sessions menu
+    m_pRecentFilesMenu = new QRecentFilesMenu(tr("Recent Sessions"), ui->menuFile);
+
     //Read Settings
     readSettings();
+
+    //Add recent sessions to filemenu
+    ui->menuFile->insertMenu( ui->actionSaveSession, m_pRecentFilesMenu );
+    connect( m_pRecentFilesMenu, SIGNAL(recentFileTriggered(const QString &)), this, SLOT(openRecentSession(const QString &)) );
 
     //Init clipboard
     m_pReceiptClipboard = new ReceiptSettings();
@@ -1244,6 +1251,7 @@ void MainWindow::readSettings()
     ui->actionPlaybackPosition->setChecked( set.value( "rememberPlaybackPos", false ).toBool() );
     resizeDocks({ui->dockWidgetEdit}, {set.value( "dockEditSize", 212 ).toInt()}, Qt::Horizontal);
     resizeDocks({ui->dockWidgetSession}, {set.value( "dockSessionSize", 170 ).toInt()}, Qt::Horizontal);
+    m_pRecentFilesMenu->restoreState( set.value("recentSessions").toByteArray() );
 }
 
 //Save some settings to registry
@@ -1288,6 +1296,7 @@ void MainWindow::writeSettings()
     set.setValue( "rememberPlaybackPos", ui->actionPlaybackPosition->isChecked() );
     set.setValue( "dockEditSize", ui->dockWidgetEdit->width() );
     set.setValue( "dockSessionSize", ui->dockWidgetSession->width() );
+    set.setValue( "recentSessions", m_pRecentFilesMenu->saveState() );
 }
 
 //Start Export via Pipe
@@ -2428,7 +2437,7 @@ void MainWindow::openSession(QString fileNameSession)
         return;
     }
 
-
+    m_pRecentFilesMenu->addRecentFile( fileNameSession );
 }
 
 //Save Session
@@ -2459,6 +2468,8 @@ void MainWindow::saveSession(QString fileName)
     xmlWriter.writeEndDocument();
 
     file.close();
+
+    m_pRecentFilesMenu->addRecentFile( fileName );
 }
 
 
@@ -3995,6 +4006,7 @@ void MainWindow::on_actionAbout_triggered()
                                   " <p>Some icons by <a href='%10'>Double-J Design</a> under <a href='%11'>CC4.0</a></p>"
                                   " <p>Autoupdater Copyright (c) 2016, <a href='%12'>Violet Giraffe</a> under MIT</p>"
                                   " <p>Zhang-Wu LMMSE Image Demosaicking by Pascal Getreuer under <a href='%13'>BSD</a>.</p>"
+                                  " <p>QRecentFilesMenu Copyright (c) 2011 by Morgan Leborgne under <a href='%14'>MIT</a>.</p>"
                                   " </body></html>" )
                                  .arg( pic )
                                  .arg( APPNAME )
@@ -4005,7 +4017,8 @@ void MainWindow::on_actionAbout_triggered()
                                  .arg( "http://www.doublejdesign.co.uk/" )
                                  .arg( "https://creativecommons.org/licenses/by/4.0/" )
                                  .arg( "https://github.com/VioletGiraffe/github-releases-autoupdater" )
-                                 .arg( "http://www.opensource.org/licenses/bsd-license.html" ) );
+                                 .arg( "http://www.opensource.org/licenses/bsd-license.html" )
+                                 .arg( "https://github.com/mojocorp/QRecentFilesMenu/blob/master/LICENSE" ) );
 }
 
 //Qt Infobox
@@ -6970,6 +6983,8 @@ void MainWindow::on_actionHelp_triggered()
 //Show selected file from session in OSX Finder
 void MainWindow::on_actionShowInFinder_triggered( void )
 {
+    if( ui->listWidgetSession->count() == 0 || m_pSessionReceipts.count() == 0 ) return;
+
     QString path = m_pSessionReceipts.at( ui->listWidgetSession->currentRow() )->fileName();
 
 #ifdef _WIN32    //Code for Windows
@@ -6985,6 +7000,8 @@ void MainWindow::on_actionShowInFinder_triggered( void )
 //Show selected file with external application
 void MainWindow::on_actionOpenWithExternalApplication_triggered( void )
 {
+    if( ui->listWidgetSession->count() == 0 || m_pSessionReceipts.count() == 0 ) return;
+
 #ifdef _WIN32    //Code for Windows
     //First check -> select app if fail
     if( !QFileInfo( m_externalApplicationName ).exists() ) on_actionSelectExternalApplication_triggered();
@@ -7035,4 +7052,44 @@ void MainWindow::on_actionSelectExternalApplication_triggered()
     if( path.count() == 0 ) return;
 #endif
     m_externalApplicationName = path;
+}
+
+//Open one of the recent sessions
+void MainWindow::openRecentSession(QString fileName)
+{
+    //Save actual session?
+    if( ui->listWidgetSession->count() > 0 )
+    {
+        int ret = QMessageBox::warning( this, APPNAME, tr( "Do you like to save the session before loading?" ),
+                                                       QMessageBox::Yes, QMessageBox::No, QMessageBox::Cancel );
+        //Save
+        if( ret == QMessageBox::Yes )
+        {
+            on_actionSaveSession_triggered();
+            //Saving was aborted -> abort quit
+            if( m_sessionFileName.count() == 0 )
+            {
+                return;
+            }
+        }
+        //Cancel
+        else if( ret == QMessageBox::Escape || ret == QMessageBox::Cancel )
+        {
+            return;
+        }
+    }
+
+    if( !QFileInfo( fileName ).exists() )
+    {
+        m_pRecentFilesMenu->removeRecentFile( fileName );
+        return;
+    }
+
+    m_inOpeningProcess = true;
+    openSession( fileName );
+    //Show last imported file
+    showFileInEditor( m_pSessionReceipts.count() - 1 );
+    m_sessionFileName = fileName;
+    m_lastSessionFileName = fileName;
+    m_inOpeningProcess = false;
 }

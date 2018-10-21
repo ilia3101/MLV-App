@@ -127,7 +127,8 @@ SOURCES += \
     FcpxmlSelectDialog.cpp \
     ../../src/processing/denoiser/denoiser_2d_median.c \
     ReceiptCopyMaskDialog.cpp \
-    UserManualDialog.cpp
+    UserManualDialog.cpp \
+    QRecentFilesMenu.cpp
 
 macx: SOURCES += ../cocoa/avf_lib/avf_lib.m
 
@@ -206,7 +207,8 @@ HEADERS += \
     FcpxmlAssistantDialog.h \
     FcpxmlSelectDialog.h \
     ReceiptCopyMaskDialog.h \
-    UserManualDialog.h
+    UserManualDialog.h \
+    QRecentFilesMenu.h
 
 macx: HEADERS += \
     ../cocoa/avf_lib/avencoder.h \

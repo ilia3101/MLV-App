@@ -137,6 +137,10 @@
     <addaction name="separator"/>
     <addaction name="actionExportSettings"/>
     <addaction name="separator"/>
+    <addaction name="actionShowInFinder"/>
+    <addaction name="actionOpenWithExternalApplication"/>
+    <addaction name="actionSelectExternalApplication"/>
+    <addaction name="separator"/>
     <addaction name="actionQuit"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
@@ -6738,15 +6742,24 @@ QGroupBox::indicator:checked {
    <property name="toolTip">
     <string>Reveal selected file in Finder</string>
    </property>
+   <property name="shortcut">
+    <string>Alt+R</string>
+   </property>
   </action>
   <action name="actionOpenWithExternalApplication">
    <property name="text">
-    <string>Open with external application</string>
+    <string>Open with External Application</string>
+   </property>
+   <property name="toolTip">
+    <string>Open selected clip with external application</string>
+   </property>
+   <property name="shortcut">
+    <string>Alt+A</string>
    </property>
   </action>
   <action name="actionSelectExternalApplication">
    <property name="text">
-    <string>Select external application</string>
+    <string>Select External Application</string>
    </property>
    <property name="toolTip">
     <string>Select external application</string>

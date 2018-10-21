@@ -37,6 +37,7 @@
 #include "Scripting.h"
 #include "Updater/updaterUI/CUpdater.h"
 #include "ReceiptCopyMaskDialog.h"
+#include "QRecentFilesMenu.h"
 
 namespace Ui {
 class MainWindow;
@@ -273,6 +274,7 @@ private slots:
     void on_toolButtonRawBlackAutoCorrect_clicked();
 
     void on_actionSelectExternalApplication_triggered();
+    void openRecentSession( QString fileName );
 
 private:
     Ui::MainWindow *ui;
@@ -407,6 +409,7 @@ private:
     void setGradientMask( void );
     uint16_t autoCorrectRawBlackLevel( void );
     bool isRawBlackLevelWrong( void );
+    QRecentFilesMenu *m_pRecentFilesMenu;
 
 signals:
     void exportReady( void );
