@@ -5175,9 +5175,9 @@ void MainWindow::on_listWidgetSession_customContextMenuRequested(const QPoint &p
     {
         if( ui->listWidgetSession->selectedItems().size() == 1 )
         {
-            myMenu.addAction( "Select all",  this, SLOT( selectAllFiles() ) );
-            myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Image-icon.png" ), "Show in editor",  this, SLOT( rightClickShowFile() ) );
-            myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Delete-icon.png" ), "Delete selected file from session",  this, SLOT( deleteFileFromSession() ) );
+            myMenu.addAction( ui->actionSelectAllClips );
+            myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Image-icon.png" ), "Show in Editor",  this, SLOT( rightClickShowFile() ) );
+            myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Delete-icon.png" ), "Delete Selected File from Session",  this, SLOT( deleteFileFromSession() ) );
             myMenu.addSeparator();
             myMenu.addAction( ui->actionShowInFinder );
 #ifdef Q_OS_OSX
@@ -5189,7 +5189,7 @@ void MainWindow::on_listWidgetSession_customContextMenuRequested(const QPoint &p
         else if( ui->listWidgetSession->selectedItems().size() > 1 )
         {
             myMenu.addAction( ui->actionPasteReceipt );
-            myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Delete-icon.png" ), "Delete selected files from session",  this, SLOT( deleteFileFromSession() ) );
+            myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Delete-icon.png" ), "Delete Selected File from Session",  this, SLOT( deleteFileFromSession() ) );
             myMenu.addSeparator();
         }
     }
