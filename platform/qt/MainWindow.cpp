@@ -1141,6 +1141,10 @@ void MainWindow::initGui( void )
     ui->actionShowInFinder->setText( tr( "Reveal in Explorer" ) );
     ui->actionShowInFinder->setToolTip(); tr( "Reveal selected file in Explorer" ) );
 #endif
+#ifdef Q_OS_LINUX
+    ui->actionShowInFinder->setText( tr( "Reveal in Nautilus" ) );
+    ui->actionShowInFinder->setToolTip(); tr( "Reveal selected file in Nautilus" ) );
+#endif
 
     //set CPU Usage
     m_countTimeDown = -1;   //Time in seconds for CPU countdown
@@ -5161,13 +5165,9 @@ void MainWindow::on_listWidgetSession_customContextMenuRequested(const QPoint &p
             myMenu.addAction( "Select all",  this, SLOT( selectAllFiles() ) );
             myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Image-icon.png" ), "Show in editor",  this, SLOT( rightClickShowFile() ) );
             myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Delete-icon.png" ), "Delete selected file from session",  this, SLOT( deleteFileFromSession() ) );
-#ifdef Q_OS_WIN
             myMenu.addSeparator();
             myMenu.addAction( ui->actionShowInFinder );
-#endif
 #ifdef Q_OS_OSX
-            myMenu.addSeparator();
-            myMenu.addAction( ui->actionShowInFinder );
             myMenu.addAction( ui->actionOpenWithExternalApplication );
             myMenu.addAction( ui->actionSelectExternalApplication );
 #endif
@@ -6977,6 +6977,8 @@ void MainWindow::on_actionShowInFinder_triggered( void )
 #elif defined(__APPLE__)    //Code for Mac
     QProcess::execute("/usr/bin/osascript", {"-e", "tell application \"Finder\" to reveal POSIX file \"" + path + "\""});
     QProcess::execute("/usr/bin/osascript", {"-e", "tell application \"Finder\" to activate"});
+#elif defined( Q_OS_LINUX )
+    QProcess::startDetached("nautilus", QDir::toNativeSeparators(path) );
 #endif
 }
 
