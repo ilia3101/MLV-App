@@ -7021,6 +7021,7 @@ void MainWindow::on_actionSelectExternalApplication_triggered()
     path = QFileDialog::getOpenFileName( this,
                  tr("Select external application"), path,
                  tr("Executable (*.exe)") );
+    if( path.count() == 0 ) return;
     path.append( "\"" );
     path.prepend( "\"" );
 #endif
@@ -7029,6 +7030,7 @@ void MainWindow::on_actionSelectExternalApplication_triggered()
     path = QFileDialog::getOpenFileName( this,
                  tr("Select external application"), path,
                  tr("Application (*.app)") );
+    if( path.count() == 0 ) return;
 #endif
     m_externalApplicationName = path;
 }
