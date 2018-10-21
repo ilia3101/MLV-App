@@ -6,7 +6,7 @@ static const qint32 RecentFilesMenuMagic = 0xff;
 
 QRecentFilesMenu::QRecentFilesMenu(QWidget * parent)
 : QMenu(parent)
-, m_maxCount(5)
+, m_maxCount(10)
 , m_format(QLatin1String("%d %s"))
 {
     connect(this, SIGNAL(triggered(QAction*)), this, SLOT(menuTriggered(QAction*)));
@@ -16,7 +16,7 @@ QRecentFilesMenu::QRecentFilesMenu(QWidget * parent)
 
 QRecentFilesMenu::QRecentFilesMenu(const QString & title, QWidget * parent)
 : QMenu(title, parent)
-, m_maxCount(5)
+, m_maxCount(10)
 , m_format(QLatin1String("%d %s"))
 {
     connect(this, SIGNAL(triggered(QAction*)), this, SLOT(menuTriggered(QAction*)));
