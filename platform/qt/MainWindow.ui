@@ -6739,6 +6739,11 @@ QGroupBox::indicator:checked {
     <string>Reveal selected file in Finder</string>
    </property>
   </action>
+  <action name="actionOpenWithExternalApplication">
+   <property name="text">
+    <string>Open with external application</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>

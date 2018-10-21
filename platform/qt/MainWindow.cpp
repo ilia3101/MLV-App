@@ -5164,6 +5164,7 @@ void MainWindow::on_listWidgetSession_customContextMenuRequested(const QPoint &p
 #endif
 #ifdef Q_OS_OSX
             myMenu.addAction( ui->actionShowInFinder );
+            myMenu.addAction( ui->actionOpenWithExternalApplication );
 #endif
             myMenu.addSeparator();
         }
@@ -6971,5 +6972,18 @@ void MainWindow::on_actionShowInFinder_triggered( void )
 #elif defined(__APPLE__)    //Code for Mac
     QProcess::execute("/usr/bin/osascript", {"-e", "tell application \"Finder\" to reveal POSIX file \"" + path + "\""});
     QProcess::execute("/usr/bin/osascript", {"-e", "tell application \"Finder\" to activate"});
+#endif
+}
+
+//Show selected file with external application
+void MainWindow::on_actionOpenWithExternalApplication_triggered( void )
+{
+#ifdef _WIN32    //Code for Windows
+    QProcess::startDetached( QString( "%1" ).arg( "mlrawviewer.exe" ), QDir::toNativeSeparators( m_pSessionReceipts.at( ui->listWidgetSession->currentRow() )->fileName() ) );
+#endif
+#ifdef Q_OS_OSX     //Code for OSX
+    QProcess::startDetached( QString( "open -a \"%1\" %2" )
+                           .arg( "MlRawViewer" )
+                           .arg( m_pSessionReceipts.at( ui->listWidgetSession->currentRow() )->fileName() ) );
 #endif
 }
