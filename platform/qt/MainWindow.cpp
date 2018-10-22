@@ -35,6 +35,8 @@
 #include "FcpxmlAssistantDialog.h"
 #include "FcpxmlSelectDialog.h"
 #include "UserManualDialog.h"
+#include "StretchFactors.h"
+#include "SingleFrameExportDialog.h"
 
 #define APPNAME "MLV App"
 #define VERSION "1.1"
@@ -43,16 +45,6 @@
 #define FACTOR_DS       22.5
 #define FACTOR_LS       11.2
 #define FACTOR_LIGHTEN  0.6
-#define STRETCH_H_100   1.0
-#define STRETCH_H_133   1.3333
-#define STRETCH_H_150   1.5
-#define STRETCH_H_175   1.75
-#define STRETCH_H_180   1.8
-#define STRETCH_H_200   2.0
-#define STRETCH_V_100   1.0
-#define STRETCH_V_167   1.6667
-#define STRETCH_V_300   3.0
-#define STRETCH_V_033   0.3333
 
 //Constructor
 MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
@@ -833,7 +825,7 @@ int MainWindow::openMlv( QString fileName )
 
     //Enable export now
     ui->actionExport->setEnabled( true );
-    ui->actionExportActualFrame->setEnabled( true );
+    ui->actionExportCurrentFrame->setEnabled( true );
 
     //If clip loaded, import receipt is enabled
     ui->actionImportReceipt->setEnabled( true );
@@ -983,7 +975,7 @@ void MainWindow::initGui( void )
     ui->actionPasteReceipt->setEnabled( false );
     //Disable export until file opened!
     ui->actionExport->setEnabled( false );
-    ui->actionExportActualFrame->setEnabled( false );
+    ui->actionExportCurrentFrame->setEnabled( false );
     //Set fit to screen as default zoom
     ui->actionZoomFit->setChecked( true );
     //If no clip loaded, import receipt is disabled
@@ -2085,77 +2077,6 @@ void MainWindow::startExportCdng(QString fileName)
     emit exportReady();
 }
 
-void MainWindow::on_actionExport_Actual_Raw_Frame_triggered()
-{
-    //File name proposal
-    QString saveFileName = m_pSessionReceipts.at( m_lastActiveClipInSession )->fileName();
-    saveFileName = saveFileName.left( saveFileName.lastIndexOf( "." ) );
-    saveFileName.append( QString( "_frame_%1.dng" ).arg( ui->horizontalSliderPosition->value() + 1 ) );
-    //File Dialog
-    QString fileName = QFileDialog::getSaveFileName( this, tr("Export..."), saveFileName, "Raw frame as CinemaDNG (*.dng)" );
-
-    //Set aspect ratio of the picture
-    int32_t picAR[4] = { 0 };
-    //Set horizontal stretch
-    if( m_pSessionReceipts.at( m_lastActiveClipInSession )->stretchFactorX() == STRETCH_H_133 )
-    {
-        picAR[0] = 4; picAR[1] = 3;
-    }
-    else if( m_pSessionReceipts.at( m_lastActiveClipInSession )->stretchFactorX() == STRETCH_H_150 )
-    {
-        picAR[0] = 3; picAR[1] = 2;
-    }
-    else if( m_pSessionReceipts.at( m_lastActiveClipInSession )->stretchFactorX() == STRETCH_H_175 )
-    {
-        picAR[0] = 7; picAR[1] = 4;
-    }
-    else if( m_pSessionReceipts.at( m_lastActiveClipInSession )->stretchFactorX() == STRETCH_H_180 )
-    {
-        picAR[0] = 9; picAR[1] = 5;
-    }
-    else if( m_pSessionReceipts.at( m_lastActiveClipInSession )->stretchFactorX() == STRETCH_H_200 )
-    {
-        picAR[0] = 2; picAR[1] = 1;
-    }
-    else
-    {
-        picAR[0] = 1; picAR[1] = 1;
-    }
-    //Set vertical stretch
-    if( m_pSessionReceipts.at( m_lastActiveClipInSession )->stretchFactorY() == STRETCH_V_167)
-    {
-        picAR[2] = 5; picAR[3] = 3;
-    }
-    else if( m_pSessionReceipts.at( m_lastActiveClipInSession )->stretchFactorY() == STRETCH_V_300)
-    {
-        picAR[2] = 3; picAR[3] = 1;
-    }
-    else if( m_pSessionReceipts.at( m_lastActiveClipInSession )->stretchFactorY() == STRETCH_V_033)
-    {
-        picAR[2] = 1; picAR[3] = 3;
-    }
-    else
-    {
-        picAR[2] = 1; picAR[3] = 1;
-    }
-
-    //Init DNG data struct
-    dngObject_t * cinemaDng = initDngObject( m_pMlvObject, m_codecProfile - 6, getFramerate(), picAR);
-
-    //Save cDNG frame
-#ifdef Q_OS_UNIX
-    if( saveDngFrame( m_pMlvObject, cinemaDng, ui->horizontalSliderPosition->value() + 1, fileName.toUtf8().data() ) )
-#else
-    if( saveDngFrame( m_pMlvObject, cinemaDng, frame, filePathNr.toLatin1().data() ) )
-#endif
-    {
-        QMessageBox::critical( this, tr( "MLV App - Export file error" ), tr( "Could not save: %1\n" ).arg( fileName ), tr( "Cancel" ), 0, 0);
-    }
-
-    //Free DNG data struct
-    freeDngObject( cinemaDng );
-}
-
 //MLV export
 void MainWindow::startExportMlv(QString fileName)
 {
@@ -3032,7 +2953,7 @@ void MainWindow::deleteSession()
 
     //Export not possible without mlv file
     ui->actionExport->setEnabled( false );
-    ui->actionExportActualFrame->setEnabled( false );
+    ui->actionExportCurrentFrame->setEnabled( false );
 
     //Set Clip Info to Dialog
     m_pInfoDialog->ui->tableWidget->item( 0, 1 )->setText( "-" );
@@ -4671,30 +4592,16 @@ void MainWindow::on_actionExport_triggered()
 }
 
 //Export actual frame as 16bit png
-void MainWindow::on_actionExportActualFrame_triggered()
+void MainWindow::on_actionExportCurrentFrame_triggered()
 {
-    //File name proposal
-    QString saveFileName = m_pSessionReceipts.at( m_lastActiveClipInSession )->fileName();
-    saveFileName = saveFileName.left( saveFileName.lastIndexOf( "." ) );
-    saveFileName.append( QString( "_frame_%1.png" ).arg( ui->horizontalSliderPosition->value() + 1 ) );
-
-    //File Dialog
-    QString fileName = QFileDialog::getSaveFileName( this, tr("Export..."),
-                                                    saveFileName,
-                                                    "8bit PNG (*.png)" );
-
-    //Exit if not an PNG file or aborted
-    if( fileName == QString( "" )
-            || !fileName.endsWith( ".png", Qt::CaseInsensitive ) ) return;
-
-
-    //Get frame from library
-    getMlvProcessedFrame8( m_pMlvObject, ui->horizontalSliderPosition->value(), m_pRawImage, 1 );
-
-    QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
-            .scaled( getMlvWidth(m_pMlvObject) * getHorizontalStretchFactor(), getMlvHeight(m_pMlvObject) * getVerticalStretchFactor(),
-                     Qt::IgnoreAspectRatio, Qt::SmoothTransformation )
-            .save( fileName, "png", -1 );
+    SingleFrameExportDialog *exportDialog = new SingleFrameExportDialog( this,
+                                                                         m_pMlvObject,
+                                                                         m_pSessionReceipts.at( m_lastActiveClipInSession )->fileName(),
+                                                                         ui->horizontalSliderPosition->value(),
+                                                                         getHorizontalStretchFactor(),
+                                                                         getVerticalStretchFactor() );
+    exportDialog->exec();
+    delete exportDialog;
 }
 
 //Enable / Disable the highlight reconstruction

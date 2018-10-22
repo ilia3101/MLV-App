@@ -128,7 +128,8 @@ SOURCES += \
     ../../src/processing/denoiser/denoiser_2d_median.c \
     ReceiptCopyMaskDialog.cpp \
     UserManualDialog.cpp \
-    QRecentFilesMenu.cpp
+    QRecentFilesMenu.cpp \
+    SingleFrameExportDialog.cpp
 
 macx: SOURCES += ../cocoa/avf_lib/avf_lib.m
 
@@ -208,7 +209,9 @@ HEADERS += \
     FcpxmlSelectDialog.h \
     ReceiptCopyMaskDialog.h \
     UserManualDialog.h \
-    QRecentFilesMenu.h
+    QRecentFilesMenu.h \
+    SingleFrameExportDialog.h \
+    StretchFactors.h
 
 macx: HEADERS += \
     ../cocoa/avf_lib/avencoder.h \
@@ -225,7 +228,8 @@ FORMS += \
     FcpxmlAssistantDialog.ui \
     FcpxmlSelectDialog.ui \
     ReceiptCopyMaskDialog.ui \
-    UserManualDialog.ui
+    UserManualDialog.ui \
+    SingleFrameExportDialog.ui
 
 RESOURCES += \
     ressources.qrc \

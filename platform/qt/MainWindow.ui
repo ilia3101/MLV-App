@@ -133,8 +133,7 @@
     <addaction name="actionFcpxmlSelectionAssistant"/>
     <addaction name="actionClip_Information"/>
     <addaction name="actionExport"/>
-    <addaction name="actionExportActualFrame"/>
-    <addaction name="actionExport_Actual_Raw_Frame"/>
+    <addaction name="actionExportCurrentFrame"/>
     <addaction name="separator"/>
     <addaction name="actionExportSettings"/>
     <addaction name="separator"/>
@@ -465,8 +464,8 @@ QGroupBox::indicator:checked {
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>245</width>
-            <height>3433</height>
+            <width>244</width>
+            <height>3570</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayoutScrollArea">
@@ -6458,16 +6457,16 @@ QGroupBox::indicator:checked {
     <string>B</string>
    </property>
   </action>
-  <action name="actionExportActualFrame">
+  <action name="actionExportCurrentFrame">
    <property name="icon">
     <iconset resource="ressources.qrc">
      <normaloff>:/RetinaIMG/RetinaIMG/Export-Image-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Export-Image-icon.png</iconset>
    </property>
    <property name="text">
-    <string>Export Actual Frame</string>
+    <string>Export Current Frame</string>
    </property>
    <property name="toolTip">
-    <string>Export actual frame as 16 bit PNG</string>
+    <string>Export current frame...</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+Shift+E</string>
@@ -6764,21 +6763,6 @@ QGroupBox::indicator:checked {
    </property>
    <property name="toolTip">
     <string>Select external application</string>
-   </property>
-  </action>
-  <action name="actionExport_Actual_Raw_Frame">
-   <property name="icon">
-    <iconset resource="ressources.qrc">
-     <normaloff>:/RetinaIMG/RetinaIMG/Export-Image-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Export-Image-icon.png</iconset>
-   </property>
-   <property name="text">
-    <string>Export Actual Raw Frame</string>
-   </property>
-   <property name="toolTip">
-    <string>Export Actual Raw Frame as Cinema DNG</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+Shift+R</string>
    </property>
   </action>
  </widget>

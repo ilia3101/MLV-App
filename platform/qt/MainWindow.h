@@ -121,7 +121,7 @@ private slots:
 
     void on_actionGoto_First_Frame_triggered();
     void on_actionExport_triggered();
-    void on_actionExportActualFrame_triggered();
+    void on_actionExportCurrentFrame_triggered();
     void on_checkBoxHighLightReconstruction_toggled(bool checked);
     void on_checkBoxChromaSeparation_toggled(bool checked);
     void on_comboBoxProfile_currentIndexChanged(int index);
@@ -275,8 +275,6 @@ private slots:
 
     void on_actionSelectExternalApplication_triggered();
     void openRecentSession( QString fileName );
-
-    void on_actionExport_Actual_Raw_Frame_triggered();
 
 private:
     Ui::MainWindow *ui;
