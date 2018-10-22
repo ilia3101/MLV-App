@@ -2085,6 +2085,77 @@ void MainWindow::startExportCdng(QString fileName)
     emit exportReady();
 }
 
+void MainWindow::on_actionExport_Actual_Raw_Frame_triggered()
+{
+    //File name proposal
+    QString saveFileName = m_pSessionReceipts.at( m_lastActiveClipInSession )->fileName();
+    saveFileName = saveFileName.left( saveFileName.lastIndexOf( "." ) );
+    saveFileName.append( QString( "_frame_%1.dng" ).arg( ui->horizontalSliderPosition->value() + 1 ) );
+    //File Dialog
+    QString fileName = QFileDialog::getSaveFileName( this, tr("Export..."), saveFileName, "Raw frame as CinemaDNG (*.dng)" );
+
+    //Set aspect ratio of the picture
+    int32_t picAR[4] = { 0 };
+    //Set horizontal stretch
+    if( m_pSessionReceipts.at( m_lastActiveClipInSession )->stretchFactorX() == STRETCH_H_133 )
+    {
+        picAR[0] = 4; picAR[1] = 3;
+    }
+    else if( m_pSessionReceipts.at( m_lastActiveClipInSession )->stretchFactorX() == STRETCH_H_150 )
+    {
+        picAR[0] = 3; picAR[1] = 2;
+    }
+    else if( m_pSessionReceipts.at( m_lastActiveClipInSession )->stretchFactorX() == STRETCH_H_175 )
+    {
+        picAR[0] = 7; picAR[1] = 4;
+    }
+    else if( m_pSessionReceipts.at( m_lastActiveClipInSession )->stretchFactorX() == STRETCH_H_180 )
+    {
+        picAR[0] = 9; picAR[1] = 5;
+    }
+    else if( m_pSessionReceipts.at( m_lastActiveClipInSession )->stretchFactorX() == STRETCH_H_200 )
+    {
+        picAR[0] = 2; picAR[1] = 1;
+    }
+    else
+    {
+        picAR[0] = 1; picAR[1] = 1;
+    }
+    //Set vertical stretch
+    if( m_pSessionReceipts.at( m_lastActiveClipInSession )->stretchFactorY() == STRETCH_V_167)
+    {
+        picAR[2] = 5; picAR[3] = 3;
+    }
+    else if( m_pSessionReceipts.at( m_lastActiveClipInSession )->stretchFactorY() == STRETCH_V_300)
+    {
+        picAR[2] = 3; picAR[3] = 1;
+    }
+    else if( m_pSessionReceipts.at( m_lastActiveClipInSession )->stretchFactorY() == STRETCH_V_033)
+    {
+        picAR[2] = 1; picAR[3] = 3;
+    }
+    else
+    {
+        picAR[2] = 1; picAR[3] = 1;
+    }
+
+    //Init DNG data struct
+    dngObject_t * cinemaDng = initDngObject( m_pMlvObject, m_codecProfile - 6, getFramerate(), picAR);
+
+    //Save cDNG frame
+#ifdef Q_OS_UNIX
+    if( saveDngFrame( m_pMlvObject, cinemaDng, ui->horizontalSliderPosition->value() + 1, fileName.toUtf8().data() ) )
+#else
+    if( saveDngFrame( m_pMlvObject, cinemaDng, frame, filePathNr.toLatin1().data() ) )
+#endif
+    {
+        QMessageBox::critical( this, tr( "MLV App - Export file error" ), tr( "Could not save: %1\n" ).arg( fileName ), tr( "Cancel" ), 0, 0);
+    }
+
+    //Free DNG data struct
+    freeDngObject( cinemaDng );
+}
+
 //MLV export
 void MainWindow::startExportMlv(QString fileName)
 {

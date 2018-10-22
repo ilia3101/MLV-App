@@ -276,6 +276,8 @@ private slots:
     void on_actionSelectExternalApplication_triggered();
     void openRecentSession( QString fileName );
 
+    void on_actionExport_Actual_Raw_Frame_triggered();
+
 private:
     Ui::MainWindow *ui;
     InfoDialog *m_pInfoDialog;
