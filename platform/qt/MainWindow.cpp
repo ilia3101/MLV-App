@@ -1251,6 +1251,7 @@ void MainWindow::readSettings()
     ui->actionPlaybackPosition->setChecked( set.value( "rememberPlaybackPos", false ).toBool() );
     resizeDocks({ui->dockWidgetEdit}, {set.value( "dockEditSize", 212 ).toInt()}, Qt::Horizontal);
     resizeDocks({ui->dockWidgetSession}, {set.value( "dockSessionSize", 170 ).toInt()}, Qt::Horizontal);
+    resizeDocks({ui->dockWidgetSession}, {set.value( "dockSessionSize", 130 ).toInt()}, Qt::Vertical);
     m_pRecentFilesMenu->restoreState( set.value("recentSessions").toByteArray() );
 }
 
@@ -1295,7 +1296,8 @@ void MainWindow::writeSettings()
     set.setValue( "autoUpdateCheck", ui->actionAutoCheckForUpdates->isChecked() );
     set.setValue( "rememberPlaybackPos", ui->actionPlaybackPosition->isChecked() );
     set.setValue( "dockEditSize", ui->dockWidgetEdit->width() );
-    set.setValue( "dockSessionSize", ui->dockWidgetSession->width() );
+    if( m_previewMode == 3 ) set.setValue( "dockSessionSize", ui->dockWidgetSession->height() );
+    else set.setValue( "dockSessionSize", ui->dockWidgetSession->width() );
     set.setValue( "recentSessions", m_pRecentFilesMenu->saveState() );
 }
 
