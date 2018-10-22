@@ -1146,7 +1146,7 @@ void MainWindow::initGui( void )
     //Reveal in Explorer
 #ifdef Q_OS_WIN
     ui->actionShowInFinder->setText( tr( "Reveal in Explorer" ) );
-    ui->actionShowInFinder->setToolTip(); tr( "Reveal selected file in Explorer" ) );
+    ui->actionShowInFinder->setToolTip( tr( "Reveal selected file in Explorer" ) );
 #endif
 #ifdef Q_OS_LINUX
     ui->actionShowInFinder->setText( tr( "Reveal in Nautilus" ) );
@@ -5180,7 +5180,7 @@ void MainWindow::on_listWidgetSession_customContextMenuRequested(const QPoint &p
             myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Delete-icon.png" ), "Delete Selected File from Session",  this, SLOT( deleteFileFromSession() ) );
             myMenu.addSeparator();
             myMenu.addAction( ui->actionShowInFinder );
-#ifdef Q_OS_OSX
+#ifndef Q_OS_LINUX
             myMenu.addAction( ui->actionOpenWithExternalApplication );
             myMenu.addAction( ui->actionSelectExternalApplication );
 #endif
@@ -6988,7 +6988,7 @@ void MainWindow::on_actionShowInFinder_triggered( void )
     QString path = m_pSessionReceipts.at( ui->listWidgetSession->currentRow() )->fileName();
 
 #ifdef _WIN32    //Code for Windows
-    QProcess::startDetached("explorer.exe", {"/select,", QString( "\"%1\"" ).arg( QDir::toNativeSeparators(path) )});
+    QProcess::startDetached("explorer.exe", {"/select,", QDir::toNativeSeparators(path)});
 #elif defined(__APPLE__)    //Code for Mac
     QProcess::execute("/usr/bin/osascript", {"-e", "tell application \"Finder\" to reveal POSIX file \"" + path + "\""});
     QProcess::execute("/usr/bin/osascript", {"-e", "tell application \"Finder\" to activate"});
@@ -7008,7 +7008,7 @@ void MainWindow::on_actionOpenWithExternalApplication_triggered( void )
     //2nd check -> cancel if still fails
     if( !QFileInfo( m_externalApplicationName ).exists() ) return;
     //Now open
-    QProcess::startDetached( QString( "\"%1\"" ).arg( m_externalApplicationName ), QString( "\"%1\"" ).arg( QDir::toNativeSeparators( m_pSessionReceipts.at( ui->listWidgetSession->currentRow() )->fileName() ) ) );
+    QProcess::execute( QString( "%1" ).arg( m_externalApplicationName ), {QString( "%1" ).arg( QDir::toNativeSeparators( m_pSessionReceipts.at( ui->listWidgetSession->currentRow() )->fileName() ) ) } );
 #endif
 #ifdef Q_OS_OSX     //Code for OSX
     //First check -> select app if fail
@@ -7041,8 +7041,6 @@ void MainWindow::on_actionSelectExternalApplication_triggered()
                  tr("Select external application"), path,
                  tr("Executable (*.exe)") );
     if( path.count() == 0 ) return;
-    path.append( "\"" );
-    path.prepend( "\"" );
 #endif
 #ifdef Q_OS_OSX
     path = "/Applications/";
