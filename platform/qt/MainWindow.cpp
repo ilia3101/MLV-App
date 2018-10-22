@@ -1150,7 +1150,7 @@ void MainWindow::initGui( void )
 #endif
 #ifdef Q_OS_LINUX
     ui->actionShowInFinder->setText( tr( "Reveal in Nautilus" ) );
-    ui->actionShowInFinder->setToolTip(); tr( "Reveal selected file in Nautilus" ) );
+    ui->actionShowInFinder->setToolTip( tr( "Reveal selected file in Nautilus" ) );
 #endif
 
     //set CPU Usage
@@ -6993,7 +6993,7 @@ void MainWindow::on_actionShowInFinder_triggered( void )
     QProcess::execute("/usr/bin/osascript", {"-e", "tell application \"Finder\" to reveal POSIX file \"" + path + "\""});
     QProcess::execute("/usr/bin/osascript", {"-e", "tell application \"Finder\" to activate"});
 #elif defined( Q_OS_LINUX )
-    QProcess::startDetached("nautilus", QString( "\"%1\"" ).arg( QDir::toNativeSeparators(path) ) );
+    QProcess::startDetached(QString( "/usr/bin/nautilus \"%1\"" ).arg( QDir::toNativeSeparators(path) ) );
 #endif
 }
 
