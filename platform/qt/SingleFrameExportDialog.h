@@ -34,6 +34,7 @@ private:
     Ui::SingleFrameExportDialog *ui;
     mlvObject_t *m_pMlvObject;
     QString m_fileName;
+    QString m_lastPath;
     int m_frameNr;
     double m_stretchX;
     double m_stretchY;

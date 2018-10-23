@@ -12,6 +12,7 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QSettings>
+#include <QDebug>
 
 //Constructor
 SingleFrameExportDialog::SingleFrameExportDialog(QWidget *parent,
@@ -34,6 +35,7 @@ SingleFrameExportDialog::SingleFrameExportDialog(QWidget *parent,
 
     QSettings set( QSettings::UserScope, "magiclantern.MLVApp", "MLVApp" );
     ui->comboBoxCodec->setCurrentIndex( set.value( "singleFrameExportCodec", 0 ).toUInt() );
+    m_lastPath = set.value( "lastSingleFramePath", QDir::homePath() ).toString();
 }
 
 //Destructor
@@ -41,6 +43,7 @@ SingleFrameExportDialog::~SingleFrameExportDialog()
 {
     QSettings set( QSettings::UserScope, "magiclantern.MLVApp", "MLVApp" );
     set.setValue( "singleFrameExportCodec", ui->comboBoxCodec->currentIndex() );
+    set.setValue( "lastSingleFramePath", m_lastPath );
     delete ui;
 }
 
@@ -66,6 +69,9 @@ void SingleFrameExportDialog::exportViaQt()
     saveFileName = saveFileName.left( saveFileName.lastIndexOf( "." ) );
     saveFileName.append( QString( "_frame_%1.png" ).arg( m_frameNr + 1 ) );
 
+    //But take the folder from last export
+    saveFileName = QString( "%1/%2" ).arg( m_lastPath ).arg( QFileInfo( saveFileName ).fileName() );
+
     //File Dialog
     QString fileName = QFileDialog::getSaveFileName( this, tr("Export..."),
                                                     saveFileName,
@@ -75,6 +81,8 @@ void SingleFrameExportDialog::exportViaQt()
     if( fileName == QString( "" )
             || !fileName.endsWith( ".png", Qt::CaseInsensitive ) ) return;
 
+    //Save last path for next time
+    m_lastPath = QFileInfo( fileName ).absolutePath();
 
     //Get frame from library
     uint8_t *pRawImage = (uint8_t*)malloc( 3 * getMlvWidth(m_pMlvObject) * getMlvHeight(m_pMlvObject) * sizeof( uint8_t ) );
@@ -95,8 +103,18 @@ void SingleFrameExportDialog::exportDng()
     QString saveFileName = m_fileName;
     saveFileName = saveFileName.left( saveFileName.lastIndexOf( "." ) );
     saveFileName.append( QString( "_frame_%1.dng" ).arg( m_frameNr + 1 ) );
+    //But take the folder from last export
+    saveFileName = QString( "%1/%2" ).arg( m_lastPath ).arg( QFileInfo( saveFileName ).fileName() );
+
     //File Dialog
     QString fileName = QFileDialog::getSaveFileName( this, tr("Export..."), saveFileName, "Raw frame as CinemaDNG (*.dng)" );
+
+    //Exit if not an PNG file or aborted
+    if( fileName == QString( "" )
+            || !fileName.endsWith( ".dng", Qt::CaseInsensitive ) ) return;
+
+    //Save last path for next time
+    m_lastPath = QFileInfo( fileName ).absolutePath();
 
     //Set aspect ratio of the picture
     int32_t picAR[4] = { 0 };
