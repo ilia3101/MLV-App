@@ -24,6 +24,8 @@ SingleFrameExportDialog::SingleFrameExportDialog(QWidget *parent,
     ui(new Ui::SingleFrameExportDialog)
 {
     ui->setupUi(this);
+    setWindowFlags( Qt::Dialog | Qt::WindowTitleHint | Qt::WindowCloseButtonHint );
+
     m_pMlvObject = pMlvObject;
     m_fileName = fileName;
     m_frameNr = frameNr;
