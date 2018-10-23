@@ -239,6 +239,8 @@
     <addaction name="actionShowParade"/>
     <addaction name="actionShowVectorScope"/>
     <addaction name="actionShowZebras"/>
+    <addaction name="separator"/>
+    <addaction name="actionAskForSavingOnQuit"/>
    </widget>
    <widget class="QMenu" name="menuWindow">
     <property name="title">
@@ -465,7 +467,7 @@ QGroupBox::indicator:checked {
             <x>0</x>
             <y>0</y>
             <width>244</width>
-            <height>3570</height>
+            <height>3592</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayoutScrollArea">
@@ -6763,6 +6765,14 @@ QGroupBox::indicator:checked {
    </property>
    <property name="toolTip">
     <string>Select external application</string>
+   </property>
+  </action>
+  <action name="actionAskForSavingOnQuit">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Ask for Saving on Quit</string>
    </property>
   </action>
  </widget>

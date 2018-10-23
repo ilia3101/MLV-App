@@ -385,24 +385,28 @@ void MainWindow::closeEvent(QCloseEvent *event)
     ui->actionPlay->setChecked( false );
     on_actionPlay_triggered( false );
 
-    //Ask before quit
-    int ret = QMessageBox::warning( this, APPNAME, tr( "Do you really like to quit MLVApp? Do you like to save the session?" ),
-                                    tr( "Cancel" ), tr( "Quit without saving" ), tr( "Save and quit" ) );
-    //Aborted
-    if( ret == QMessageBox::Escape || ret == 0 )
+    //If user wants to be asked
+    if( ui->actionAskForSavingOnQuit->isChecked() )
     {
-        event->ignore();
-        return;
-    }
-    //Save and quit
-    else if( ret == 2 )
-    {
-        on_actionSaveSession_triggered();
-        //Saving was aborted -> abort quit
-        if( m_sessionFileName.count() == 0 )
+        //Ask before quit
+        int ret = QMessageBox::warning( this, APPNAME, tr( "Do you really like to quit MLVApp? Do you like to save the session?" ),
+                                        tr( "Cancel" ), tr( "Quit without saving" ), tr( "Save and quit" ) );
+        //Aborted
+        if( ret == QMessageBox::Escape || ret == 0 )
         {
             event->ignore();
             return;
+        }
+        //Save and quit
+        else if( ret == 2 )
+        {
+            on_actionSaveSession_triggered();
+            //Saving was aborted -> abort quit
+            if( m_sessionFileName.count() == 0 )
+            {
+                event->ignore();
+                return;
+            }
         }
     }
 
@@ -1245,6 +1249,7 @@ void MainWindow::readSettings()
     resizeDocks({ui->dockWidgetSession}, {set.value( "dockSessionSize", 170 ).toInt()}, Qt::Horizontal);
     resizeDocks({ui->dockWidgetSession}, {set.value( "dockSessionSize", 130 ).toInt()}, Qt::Vertical);
     m_pRecentFilesMenu->restoreState( set.value("recentSessions").toByteArray() );
+    ui->actionAskForSavingOnQuit->setChecked( set.value( "askForSavingOnQuit", true ).toBool() );
 }
 
 //Save some settings to registry
@@ -1291,6 +1296,7 @@ void MainWindow::writeSettings()
     if( m_previewMode == 3 ) set.setValue( "dockSessionSize", ui->dockWidgetSession->height() );
     else set.setValue( "dockSessionSize", ui->dockWidgetSession->width() );
     set.setValue( "recentSessions", m_pRecentFilesMenu->saveState() );
+    set.setValue( "askForSavingOnQuit", ui->actionAskForSavingOnQuit->isChecked() );
 }
 
 //Start Export via Pipe
