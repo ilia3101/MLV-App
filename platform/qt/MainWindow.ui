@@ -441,6 +441,12 @@ QGroupBox::indicator:unchecked {
 }
 QGroupBox::indicator:checked {
     image: url(:/darkstyle/icon_branch_open.png);
+}
+QGroupBox::indicator:unchecked:disabled {
+    image: url(:/darkstyle/icon_branch_closed_disabled.png);
+}
+QGroupBox::indicator:checked:disabled {
+    image: url(:/darkstyle/icon_branch_open_disabled.png);
 }</string>
          </property>
          <property name="frameShape">
