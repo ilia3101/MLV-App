@@ -2437,7 +2437,7 @@ void MainWindow::openSession(QString fileNameSession)
         return;
     }
 
-    m_pRecentFilesMenu->addRecentFile( fileNameSession );
+    m_pRecentFilesMenu->addRecentFile( QDir::toNativeSeparators( fileNameSession ) );
 }
 
 //Save Session
@@ -2469,7 +2469,7 @@ void MainWindow::saveSession(QString fileName)
 
     file.close();
 
-    m_pRecentFilesMenu->addRecentFile( fileName );
+    m_pRecentFilesMenu->addRecentFile( QDir::toNativeSeparators( fileName ) );
 }
 
 
