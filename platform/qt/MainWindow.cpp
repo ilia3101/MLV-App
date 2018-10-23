@@ -5166,10 +5166,8 @@ void MainWindow::on_listWidgetSession_customContextMenuRequested(const QPoint &p
             myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Delete-icon.png" ), "Delete Selected File from Session",  this, SLOT( deleteFileFromSession() ) );
             myMenu.addSeparator();
             myMenu.addAction( ui->actionShowInFinder );
-#ifndef Q_OS_LINUX
             myMenu.addAction( ui->actionOpenWithExternalApplication );
             myMenu.addAction( ui->actionSelectExternalApplication );
-#endif
             myMenu.addSeparator();
         }
         else if( ui->listWidgetSession->selectedItems().size() > 1 )
@@ -6988,14 +6986,6 @@ void MainWindow::on_actionOpenWithExternalApplication_triggered( void )
 {
     if( ui->listWidgetSession->count() == 0 || m_pSessionReceipts.count() == 0 ) return;
 
-#ifdef _WIN32    //Code for Windows
-    //First check -> select app if fail
-    if( !QFileInfo( m_externalApplicationName ).exists() ) on_actionSelectExternalApplication_triggered();
-    //2nd check -> cancel if still fails
-    if( !QFileInfo( m_externalApplicationName ).exists() ) return;
-    //Now open
-    QProcess::execute( QString( "%1" ).arg( m_externalApplicationName ), {QString( "%1" ).arg( QDir::toNativeSeparators( m_pSessionReceipts.at( ui->listWidgetSession->currentRow() )->fileName() ) ) } );
-#endif
 #ifdef Q_OS_OSX     //Code for OSX
     //First check -> select app if fail
     if( !QDir( m_externalApplicationName ).exists() || m_externalApplicationName.count() == 0 )
@@ -7014,6 +7004,13 @@ void MainWindow::on_actionOpenWithExternalApplication_triggered( void )
     QProcess::startDetached( QString( "open -a \"%1\" \"%2\"" )
                            .arg( path )
                            .arg( m_pSessionReceipts.at( ui->listWidgetSession->currentRow() )->fileName() ) );
+#else    //Code for Windows & Linux
+    //First check -> select app if fail
+    if( !QFileInfo( m_externalApplicationName ).exists() ) on_actionSelectExternalApplication_triggered();
+    //2nd check -> cancel if still fails
+    if( !QFileInfo( m_externalApplicationName ).exists() ) return;
+    //Now open
+    QProcess::execute( QString( "%1" ).arg( m_externalApplicationName ), {QString( "%1" ).arg( QDir::toNativeSeparators( m_pSessionReceipts.at( ui->listWidgetSession->currentRow() )->fileName() ) ) } );
 #endif
 }
 
@@ -7026,6 +7023,13 @@ void MainWindow::on_actionSelectExternalApplication_triggered()
     path = QFileDialog::getOpenFileName( this,
                  tr("Select external application"), path,
                  tr("Executable (*.exe)") );
+    if( path.count() == 0 ) return;
+#endif
+#ifdef Q_OS_LINUX
+    path = "/";
+    path = QFileDialog::getOpenFileName( this,
+                 tr("Select external application"), path,
+                 tr("Application (*)") );
     if( path.count() == 0 ) return;
 #endif
 #ifdef Q_OS_OSX
