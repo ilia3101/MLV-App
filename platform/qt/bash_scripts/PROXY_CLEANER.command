@@ -1,5 +1,3 @@
-
-#proxymain command
 cat <<'EOF' > /tmp/proxy1.command
 #!/bin/bash
 #Processing MLV files into folders with dng files
@@ -60,9 +58,8 @@ EOF
 
 cat <<'EOF' > /tmp/proxy2.command
 #!/bin/bash
-#Processing MLV files into folders with dng files
 #!/bin/bash
-#entering the MLV folder. Place proxy MOV files next to your MLV or else this script will have no affect
+#entering the MLV folder.
 cd "$(cat /tmp/mlvapp_path/output_folder.txt)"
 while ! [ x"$(cat /tmp/PROXYFILESab)" = x ]
    do 
@@ -115,9 +112,8 @@ EOF
 
 cat <<'EOF' > /tmp/proxy3.command
 #!/bin/bash
-#Processing MLV files into folders with dng files
 #!/bin/bash
-#entering the MLV folder. Place proxy MOV files next to your MLV or else this script will have no affect
+#entering the MLV folder.
 cd "$(cat /tmp/mlvapp_path/output_folder.txt)"
 while ! [ x"$(cat /tmp/PROXYFILESac)" = x ]
    do 
@@ -169,9 +165,8 @@ EOF
 
 cat <<'EOF' > /tmp/proxy4.command
 #!/bin/bash
-#entering the MLV folder. Place proxy MOV files next to your MLV or else this script will have no affect
+#entering the MLV folder.
 cd "$(cat /tmp/mlvapp_path/output_folder.txt)"
-#Processing MLV files into folders with dng files
 #!/bin/bash
 while ! [ x"$(cat /tmp/PROXYFILESad)" = x ]
    do 
