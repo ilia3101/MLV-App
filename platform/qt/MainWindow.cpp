@@ -31,6 +31,7 @@
 #include "ExportSettingsDialog.h"
 #include "EditSliderValueDialog.h"
 #include "DarkStyle.h"
+#include "DarkStyleModern.h"
 #include "Updater/updaterUI/cupdaterdialog.h"
 #include "FcpxmlAssistantDialog.h"
 #include "FcpxmlSelectDialog.h"
@@ -936,8 +937,13 @@ void MainWindow::initGui( void )
     //We dont want a context menu which could disable the menu bar
     setContextMenuPolicy(Qt::NoContextMenu);
 
-    //Apply DarkStyle
-    CDarkStyle::assign();
+    //Darktheme menu
+    m_darkFrameGroup = new QActionGroup( this );
+    m_darkFrameGroup->setExclusive( true );
+    m_darkFrameGroup->addAction( ui->actionDarkThemeStandard );
+    m_darkFrameGroup->addAction( ui->actionDarkThemeModern );
+    ui->actionDarkThemeStandard->setChecked( true );
+
 #ifdef Q_OS_LINUX
     //if not doing this, some elements are covered by the scrollbar on Linux only
     ui->dockWidgetEdit->setMinimumWidth( 240 );
@@ -1250,6 +1256,17 @@ void MainWindow::readSettings()
     resizeDocks({ui->dockWidgetSession}, {set.value( "dockSessionSize", 130 ).toInt()}, Qt::Vertical);
     m_pRecentFilesMenu->restoreState( set.value("recentSessions").toByteArray() );
     ui->actionAskForSavingOnQuit->setChecked( set.value( "askForSavingOnQuit", true ).toBool() );
+    int themeId = set.value( "themeId", 0 ).toInt();
+    if( themeId == 0 )
+    {
+        ui->actionDarkThemeStandard->setChecked( true );
+        on_actionDarkThemeStandard_triggered( true );
+    }
+    else
+    {
+        ui->actionDarkThemeModern->setChecked( true );
+        on_actionDarkThemeModern_triggered( true );
+    }
 }
 
 //Save some settings to registry
@@ -1297,6 +1314,8 @@ void MainWindow::writeSettings()
     else set.setValue( "dockSessionSize", ui->dockWidgetSession->width() );
     set.setValue( "recentSessions", m_pRecentFilesMenu->saveState() );
     set.setValue( "askForSavingOnQuit", ui->actionAskForSavingOnQuit->isChecked() );
+    if( ui->actionDarkThemeStandard->isChecked() ) set.setValue( "themeId", 0 );
+    else set.setValue( "themeId", 1 );
 }
 
 //Start Export via Pipe
@@ -7080,4 +7099,16 @@ void MainWindow::openRecentSession(QString fileName)
     m_sessionFileName = fileName;
     m_lastSessionFileName = fileName;
     m_inOpeningProcess = false;
+}
+
+//Darktheme standard
+void MainWindow::on_actionDarkThemeStandard_triggered(bool checked)
+{
+    if( checked ) CDarkStyle::assign();
+}
+
+//Darktheme by bouncyball
+void MainWindow::on_actionDarkThemeModern_triggered(bool checked)
+{
+    if( checked ) DarkStyleModern::assign();
 }

@@ -20,6 +20,7 @@
 #include <QGraphicsPixmapItem>
 #include <QCloseEvent>
 #include <QXmlStreamWriter>
+#include <QActionGroup>
 #include "../../src/mlv_include.h"
 #include "InfoDialog.h"
 #include "StatusDialog.h"
@@ -276,6 +277,10 @@ private slots:
     void on_actionSelectExternalApplication_triggered();
     void openRecentSession( QString fileName );
 
+    void on_actionDarkThemeStandard_triggered(bool checked);
+
+    void on_actionDarkThemeModern_triggered(bool checked);
+
 private:
     Ui::MainWindow *ui;
     InfoDialog *m_pInfoDialog;
@@ -299,6 +304,7 @@ private:
     QLabel *m_pCachingStatus;
     QLabel *m_pFpsStatus;
     QLabel *m_pFrameNumber;
+    QActionGroup *m_darkFrameGroup;
     DoubleClickLabel *m_pTcLabel;
     bool m_tcModeDuration;
     uint8_t *m_pRawImage;

@@ -211,7 +211,8 @@ HEADERS += \
     UserManualDialog.h \
     QRecentFilesMenu.h \
     SingleFrameExportDialog.h \
-    StretchFactors.h
+    StretchFactors.h \
+    DarkStyleModern.h
 
 macx: HEADERS += \
     ../cocoa/avf_lib/avencoder.h \

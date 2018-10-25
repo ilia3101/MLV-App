@@ -227,6 +227,13 @@
      <addaction name="separator"/>
      <addaction name="actionToggleTimecodeDisplay"/>
     </widget>
+    <widget class="QMenu" name="menuTheme">
+     <property name="title">
+      <string>Theme</string>
+     </property>
+     <addaction name="actionDarkThemeStandard"/>
+     <addaction name="actionDarkThemeModern"/>
+    </widget>
     <addaction name="actionShowSessionArea"/>
     <addaction name="actionShowEditArea"/>
     <addaction name="actionShowAudioTrack"/>
@@ -239,6 +246,8 @@
     <addaction name="actionShowParade"/>
     <addaction name="actionShowVectorScope"/>
     <addaction name="actionShowZebras"/>
+    <addaction name="separator"/>
+    <addaction name="menuTheme"/>
     <addaction name="separator"/>
     <addaction name="actionAskForSavingOnQuit"/>
    </widget>
@@ -473,7 +482,7 @@ QGroupBox::indicator:checked:disabled {
             <x>0</x>
             <y>0</y>
             <width>244</width>
-            <height>3592</height>
+            <height>3570</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayoutScrollArea">
@@ -6779,6 +6788,27 @@ QGroupBox::indicator:checked:disabled {
    </property>
    <property name="text">
     <string>Ask for Saving on Quit</string>
+   </property>
+  </action>
+  <action name="actionDarktheme">
+   <property name="text">
+    <string>Darktheme</string>
+   </property>
+  </action>
+  <action name="actionDarkThemeStandard">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>DarkTheme Standard</string>
+   </property>
+  </action>
+  <action name="actionDarkThemeModern">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>DarkTheme Modern</string>
    </property>
   </action>
  </widget>
