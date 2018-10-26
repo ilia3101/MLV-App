@@ -6714,6 +6714,7 @@ void MainWindow::on_actionPreviewDisabled_triggered()
     m_previewMode = 0;
     setPreviewMode();
     addDockWidget( Qt::LeftDockWidgetArea, ui->dockWidgetSession );
+    ui->listWidgetSession->verticalScrollBar()->setSingleStep( 1 );
 }
 
 //Session Preview  List
@@ -6726,6 +6727,7 @@ void MainWindow::on_actionPreviewList_triggered()
     m_previewMode = 1;
     setPreviewMode();
     addDockWidget( Qt::LeftDockWidgetArea, ui->dockWidgetSession );
+    ui->listWidgetSession->verticalScrollBar()->setSingleStep( 1 );
 }
 
 //Session Preview Picture Left
@@ -6738,6 +6740,7 @@ void MainWindow::on_actionPreviewPicture_triggered()
     m_previewMode = 2;
     setPreviewMode();
     addDockWidget( Qt::LeftDockWidgetArea, ui->dockWidgetSession );
+    ui->listWidgetSession->verticalScrollBar()->setSingleStep( 82 );
 }
 
 //Session Preview Picture Bottom
@@ -6750,6 +6753,7 @@ void MainWindow::on_actionPreviewPictureBottom_triggered()
     m_previewMode = 3;
     setPreviewMode();
     addDockWidget( Qt::BottomDockWidgetArea, ui->dockWidgetSession );
+    ui->listWidgetSession->verticalScrollBar()->setSingleStep( 82 );
 }
 
 //Input of Stretch Width (horizontal) Factor
