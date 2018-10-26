@@ -3587,6 +3587,9 @@ void MainWindow::paintAudioTrack( void )
     }
     ui->labelAudioTrack->setMinimumSize( 1, 1 ); //Otherwise window won't be smaller than picture
     ui->labelAudioTrack->setAlignment( Qt::AlignCenter ); //Always in the middle
+    ui->labelAudioTrack->setSizePolicy( QSizePolicy::Preferred, QSizePolicy::Fixed );
+    ui->labelAudioTrack->setMinimumHeight( 32 );
+    ui->labelAudioTrack->setMaximumHeight( 32 );
 }
 
 //Draw Zebras, return: 1=under, 2=over, 3=under+over, 0=okay
@@ -7105,16 +7108,10 @@ void MainWindow::openRecentSession(QString fileName)
 void MainWindow::on_actionDarkThemeStandard_triggered(bool checked)
 {
     if( checked ) CDarkStyle::assign();
-    ui->labelAudioTrack->setSizePolicy( QSizePolicy::Preferred, QSizePolicy::Fixed );
-    ui->labelAudioTrack->setMinimumHeight( 32 );
-    ui->labelAudioTrack->setMaximumHeight( 32 );
 }
 
 //Darktheme by bouncyball
 void MainWindow::on_actionDarkThemeModern_triggered(bool checked)
 {
     if( checked ) DarkStyleModern::assign();
-    ui->labelAudioTrack->setSizePolicy( QSizePolicy::Preferred, QSizePolicy::Fixed );
-    ui->labelAudioTrack->setMinimumHeight( 32 );
-    ui->labelAudioTrack->setMaximumHeight( 32 );
 }
