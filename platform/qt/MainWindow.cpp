@@ -7105,10 +7105,16 @@ void MainWindow::openRecentSession(QString fileName)
 void MainWindow::on_actionDarkThemeStandard_triggered(bool checked)
 {
     if( checked ) CDarkStyle::assign();
+    ui->labelAudioTrack->setSizePolicy( QSizePolicy::Preferred, QSizePolicy::Fixed );
+    ui->labelAudioTrack->setMinimumHeight( 32 );
+    ui->labelAudioTrack->setMaximumHeight( 32 );
 }
 
 //Darktheme by bouncyball
 void MainWindow::on_actionDarkThemeModern_triggered(bool checked)
 {
     if( checked ) DarkStyleModern::assign();
+    ui->labelAudioTrack->setSizePolicy( QSizePolicy::Preferred, QSizePolicy::Fixed );
+    ui->labelAudioTrack->setMinimumHeight( 32 );
+    ui->labelAudioTrack->setMaximumHeight( 32 );
 }
