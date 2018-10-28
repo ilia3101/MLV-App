@@ -74,4 +74,6 @@ ReceiptSettings::ReceiptSettings()
     m_cutOut = INT32_MAX;
 
     m_lastPlaybackPosition = 0;
+
+    m_debayer = AMaZE;
 }

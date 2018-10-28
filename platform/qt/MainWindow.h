@@ -222,6 +222,7 @@ private slots:
     void gradientFinalPosPicked(int x, int y , bool isFinished);
     void on_groupBoxRawCorrection_toggled(bool arg1);
     void on_groupBoxCutInOut_toggled(bool arg1);
+    void on_groupBoxDebayer_toggled(bool arg1);
     void on_groupBoxProcessing_toggled(bool arg1);
     void on_groupBoxDetails_toggled(bool arg1);
     void on_groupBoxColorWheels_toggled(bool arg1);

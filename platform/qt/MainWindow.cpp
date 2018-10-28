@@ -1137,6 +1137,9 @@ void MainWindow::initGui( void )
     ui->labelColorWheelHighlights->paintElement();
     ui->groupBoxColorWheels->setVisible( false );
 
+    //Debayer in Receipt
+    ui->groupBoxDebayer->setVisible( false );
+
     //Call temp sliders once for stylesheet
     on_horizontalSliderTemperature_valueChanged( ui->horizontalSliderTemperature->value() );
     on_horizontalSliderTint_valueChanged( ui->horizontalSliderTint->value() );
@@ -1240,6 +1243,7 @@ void MainWindow::readSettings()
     m_audioExportEnabled = set.value( "audioExportEnabled", true ).toBool();
     ui->groupBoxRawCorrection->setChecked( set.value( "expandedRawCorrection", false ).toBool() );
     ui->groupBoxCutInOut->setChecked( set.value( "expandedCutInOut", false ).toBool() );
+    ui->groupBoxDebayer->setChecked( set.value( "expandedDebayer", true ).toBool() );
     ui->groupBoxProcessing->setChecked( set.value( "expandedProcessing", true ).toBool() );
     ui->groupBoxDetails->setChecked( set.value( "expandedDetails", false ).toBool() );
     ui->groupBoxColorWheels->setChecked( set.value( "expandedColorWheels", false ).toBool() );
@@ -1298,6 +1302,7 @@ void MainWindow::writeSettings()
     set.setValue( "audioExportEnabled", m_audioExportEnabled );
     set.setValue( "expandedRawCorrection", ui->groupBoxRawCorrection->isChecked() );
     set.setValue( "expandedCutInOut", ui->groupBoxCutInOut->isChecked() );
+    set.setValue( "expandedDebayer", ui->groupBoxDebayer->isChecked() );
     set.setValue( "expandedProcessing", ui->groupBoxProcessing->isChecked() );
     set.setValue( "expandedDetails", ui->groupBoxDetails->isChecked() );
     set.setValue( "expandedColorWheels", ui->groupBoxColorWheels->isChecked() );
@@ -6086,6 +6091,14 @@ void MainWindow::on_groupBoxCutInOut_toggled(bool arg1)
     ui->frameCutInOut->setVisible( arg1 );
     if( !arg1 ) ui->groupBoxCutInOut->setMaximumHeight( 30 );
     else ui->groupBoxCutInOut->setMaximumHeight( 16777215 );
+}
+
+//Collapse & Expand Debayer
+void MainWindow::on_groupBoxDebayer_toggled(bool arg1)
+{
+    ui->frameDebayer->setVisible( arg1 );
+    if( !arg1 ) ui->groupBoxDebayer->setMaximumHeight( 30 );
+    else ui->groupBoxDebayer->setMaximumHeight( 16777215 );
 }
 
 //Collapse & Expand Processing
