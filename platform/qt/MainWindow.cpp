@@ -7167,7 +7167,7 @@ void MainWindow::selectDebayerAlgorithm()
     //Do nothing while preview pics are rendered when importing
     if( m_inOpeningProcess ) return;
 
-    //If no playback active change debayer
+    //If no playback active change debayer to receipt settings
     if( !ui->actionPlay->isChecked() )
     {
         switch( ui->comboBoxDebayer->currentIndex() )
@@ -7195,6 +7195,7 @@ void MainWindow::selectDebayerAlgorithm()
         }
         disableMlvCaching( m_pMlvObject );
     }
+    //Else change debayer to the selected one from preview menu
     else
     {
         if( ui->actionUseNoneDebayer->isChecked() )
@@ -7217,7 +7218,7 @@ void MainWindow::selectDebayerAlgorithm()
             setMlvAlwaysUseAmaze( m_pMlvObject );
             enableMlvCaching( m_pMlvObject );
         }
-        //ADD HERE OTHER CACHED DEBAYERS!
+        ///@todo: ADD HERE OTHER CACHED DEBAYERS! AND ADD SOME SPECIAL TRICK FOR CACHING
     }
     llrpResetFpmStatus(m_pMlvObject);
     llrpResetBpmStatus(m_pMlvObject);
