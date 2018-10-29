@@ -308,6 +308,8 @@ private:
     QLabel *m_pFpsStatus;
     QLabel *m_pFrameNumber;
     QActionGroup *m_darkFrameGroup;
+    QActionGroup *m_previewDebayerGroup;
+    QActionGroup *m_scopeGroup;
     DoubleClickLabel *m_pTcLabel;
     bool m_tcModeDuration;
     uint8_t *m_pRawImage;

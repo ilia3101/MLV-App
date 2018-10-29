@@ -180,7 +180,10 @@ void MainWindow::timerFrameEvent( void )
     if( m_frameStillDrawing )
     {
         //On setup slider priority
-        if( !ui->actionPlay->isChecked() ) return;
+        if( !ui->actionPlay->isChecked() )
+        {
+            return;
+        }
         //else fast playback priority -> frame n+1 will be calculated as soon as frame n is ready
         connect( this, SIGNAL(frameReady()), this, SLOT(timerFrameEvent()) );
         return;
@@ -949,6 +952,26 @@ void MainWindow::initGui( void )
     m_darkFrameGroup->addAction( ui->actionDarkThemeStandard );
     m_darkFrameGroup->addAction( ui->actionDarkThemeModern );
     ui->actionDarkThemeStandard->setChecked( true );
+
+    //Preview debayer as group
+    m_previewDebayerGroup = new QActionGroup( this );
+    m_previewDebayerGroup->setExclusive( true );
+    m_previewDebayerGroup->addAction( ui->actionUseNoneDebayer );
+    m_previewDebayerGroup->addAction( ui->actionUseSimpleDebayer );
+    m_previewDebayerGroup->addAction( ui->actionUseBilinear );
+    m_previewDebayerGroup->addAction( ui->actionUseLmmseDebayer );
+    m_previewDebayerGroup->addAction( ui->actionUseIgvDebayer );
+    m_previewDebayerGroup->addAction( ui->actionAlwaysUseAMaZE );
+    m_previewDebayerGroup->addAction( ui->actionCaching );
+    ui->actionUseBilinear->setChecked( true );
+
+    //Scope menu as group
+    m_scopeGroup = new QActionGroup( this );
+    m_scopeGroup->setExclusive( true );
+    m_scopeGroup->addAction( ui->actionShowVectorScope );
+    m_scopeGroup->addAction( ui->actionShowWaveFormMonitor );
+    m_scopeGroup->addAction( ui->actionShowHistogram );
+    m_scopeGroup->addAction( ui->actionShowParade );
 
 #ifdef Q_OS_LINUX
     //if not doing this, some elements are covered by the scrollbar on Linux only
@@ -4819,121 +4842,51 @@ void MainWindow::on_actionZoom100_triggered()
 //Show Histogram
 void MainWindow::on_actionShowHistogram_triggered(void)
 {
-    ui->actionShowVectorScope->setChecked( false );
-    ui->actionShowHistogram->setChecked( true );
-    ui->actionShowWaveFormMonitor->setChecked( false );
-    ui->actionShowParade->setChecked( false );
     m_frameChanged = true;
 }
 
 //Show Waveform
 void MainWindow::on_actionShowWaveFormMonitor_triggered(void)
 {
-    ui->actionShowVectorScope->setChecked( false );
-    ui->actionShowWaveFormMonitor->setChecked( true );
-    ui->actionShowHistogram->setChecked( false );
-    ui->actionShowParade->setChecked( false );
     m_frameChanged = true;
 }
 
 //Show Parade
 void MainWindow::on_actionShowParade_triggered()
 {
-    ui->actionShowVectorScope->setChecked( false );
-    ui->actionShowParade->setChecked( true );
-    ui->actionShowWaveFormMonitor->setChecked( false );
-    ui->actionShowHistogram->setChecked( false );
     m_frameChanged = true;
 }
 
 //Show VectorScope
 void MainWindow::on_actionShowVectorScope_triggered()
 {
-    ui->actionShowVectorScope->setChecked( true );
-    ui->actionShowParade->setChecked( false );
-    ui->actionShowWaveFormMonitor->setChecked( false );
-    ui->actionShowHistogram->setChecked( false );
     m_frameChanged = true;
 }
 
 //Use none debayer (speedy B&W)
 void MainWindow::on_actionUseNoneDebayer_triggered()
 {
-    ui->actionUseNoneDebayer->setChecked( true );
-    ui->actionUseSimpleDebayer->setChecked( false );
-    ui->actionUseBilinear->setChecked( false );
-    ui->actionUseLmmseDebayer->setChecked( false );
-    ui->actionUseIgvDebayer->setChecked( false );
-    ui->actionAlwaysUseAMaZE->setChecked( false );
-    ui->actionCaching->setChecked( false );
     selectDebayerAlgorithm();
     return;
-    setMlvUseNoneDebayer( m_pMlvObject );
-
-    disableMlvCaching( m_pMlvObject );
-
-    llrpResetFpmStatus(m_pMlvObject);
-    llrpResetBpmStatus(m_pMlvObject);
-    llrpComputeStripesOn(m_pMlvObject);
-    m_frameChanged = true;
 }
 
 //Use simple debayer (speedy colored)
 void MainWindow::on_actionUseSimpleDebayer_triggered()
 {
-    ui->actionUseNoneDebayer->setChecked( false );
-    ui->actionUseSimpleDebayer->setChecked( true );
-    ui->actionUseBilinear->setChecked( false );
-    ui->actionUseLmmseDebayer->setChecked( false );
-    ui->actionUseIgvDebayer->setChecked( false );
-    ui->actionAlwaysUseAMaZE->setChecked( false );
-    ui->actionCaching->setChecked( false );
     selectDebayerAlgorithm();
     return;
-    setMlvUseSimpleDebayer( m_pMlvObject );
-
-    disableMlvCaching( m_pMlvObject );
-
-    llrpResetFpmStatus(m_pMlvObject);
-    llrpResetBpmStatus(m_pMlvObject);
-    llrpComputeStripesOn(m_pMlvObject);
-    m_frameChanged = true;
 }
 
 //Don't use AMaZE -> bilinear
 void MainWindow::on_actionUseBilinear_triggered()
 {
-    ui->actionUseNoneDebayer->setChecked( false );
-    ui->actionUseSimpleDebayer->setChecked( false );
-    ui->actionUseBilinear->setChecked( true );
-    ui->actionUseLmmseDebayer->setChecked( false );
-    ui->actionUseIgvDebayer->setChecked( false );
-    ui->actionAlwaysUseAMaZE->setChecked( false );
-    ui->actionCaching->setChecked( false );
     selectDebayerAlgorithm();
     return;
-    /* Don't use AMaZE */
-    setMlvDontAlwaysUseAmaze( m_pMlvObject );
-
-    disableMlvCaching( m_pMlvObject );
-
-    llrpResetFpmStatus(m_pMlvObject);
-    llrpResetBpmStatus(m_pMlvObject);
-    llrpComputeStripesOn(m_pMlvObject);
-    m_frameChanged = true;
 }
 
 //Use LMMSE debayer
 void MainWindow::on_actionUseLmmseDebayer_triggered()
 {
-    ui->actionUseNoneDebayer->setChecked( false );
-    ui->actionUseSimpleDebayer->setChecked( false );
-    ui->actionUseBilinear->setChecked( false );
-    ui->actionUseLmmseDebayer->setChecked( true );
-    ui->actionUseIgvDebayer->setChecked( false );
-    ui->actionAlwaysUseAMaZE->setChecked( false );
-    ui->actionCaching->setChecked( false );
-
     /* Use LMMSE */
     setMlvUseLmmseDebayer( m_pMlvObject );
 
@@ -4948,15 +4901,7 @@ void MainWindow::on_actionUseLmmseDebayer_triggered()
 //Use IGV debayer
 void MainWindow::on_actionUseIgvDebayer_triggered()
 {
-    ui->actionUseNoneDebayer->setChecked( false );
-    ui->actionUseSimpleDebayer->setChecked( false );
-    ui->actionUseBilinear->setChecked( false );
-    ui->actionUseLmmseDebayer->setChecked( false );
-    ui->actionUseIgvDebayer->setChecked( true );
-    ui->actionAlwaysUseAMaZE->setChecked( false );
-    ui->actionCaching->setChecked( false );
-
-    /* Use LMMSE */
+    /* Use IGV */
     setMlvUseIgvDebayer( m_pMlvObject );
 
     disableMlvCaching( m_pMlvObject );
@@ -4970,14 +4915,6 @@ void MainWindow::on_actionUseIgvDebayer_triggered()
 //Use AMaZE or not
 void MainWindow::on_actionAlwaysUseAMaZE_triggered()
 {
-    ui->actionUseNoneDebayer->setChecked( false );
-    ui->actionUseSimpleDebayer->setChecked( false );
-    ui->actionUseBilinear->setChecked( false );
-    ui->actionUseLmmseDebayer->setChecked( false );
-    ui->actionUseIgvDebayer->setChecked( false );
-    ui->actionAlwaysUseAMaZE->setChecked( true );
-    ui->actionCaching->setChecked( false );
-
     /* Use AMaZE */
     setMlvAlwaysUseAmaze( m_pMlvObject );
 
@@ -4992,14 +4929,6 @@ void MainWindow::on_actionAlwaysUseAMaZE_triggered()
 //En-/Disable Caching
 void MainWindow::on_actionCaching_triggered()
 {
-    ui->actionUseNoneDebayer->setChecked( false );
-    ui->actionUseSimpleDebayer->setChecked( false );
-    ui->actionUseBilinear->setChecked( false );
-    ui->actionUseLmmseDebayer->setChecked( false );
-    ui->actionUseIgvDebayer->setChecked( false );
-    ui->actionAlwaysUseAMaZE->setChecked( false );
-    ui->actionCaching->setChecked( true );
-
     /* Use AMaZE */
     setMlvAlwaysUseAmaze( m_pMlvObject );
 
@@ -7225,6 +7154,7 @@ void MainWindow::on_comboBoxDebayer_currentIndexChanged(int index)
 //Select the debayer algorithm in dependency to playback and chosen playback setting, or clip setting
 void MainWindow::selectDebayerAlgorithm()
 {
+    //Do nothing while preview pics are rendered when importing
     if( m_inOpeningProcess ) return;
 
     //If no playback active change debayer
