@@ -70,6 +70,7 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     m_zoomTo100Center = false;
     m_zoomModeChanged = false;
     m_tryToSyncAudio = false;
+    m_playbackStopped = false;
 
 #ifdef STDOUT_SILENT
     //QtNetwork: shut up please!
@@ -5687,8 +5688,10 @@ void MainWindow::on_actionPlay_triggered(bool checked)
 //Play button toggled (by program)
 void MainWindow::on_actionPlay_toggled(bool checked)
 {
-    Q_UNUSED( checked );
-    selectDebayerAlgorithm();
+    //When stopping, debayer selection has to come in right order from render thread
+    if( !checked ) m_playbackStopped = true;
+    //When starting we can do it whenever we want -> now
+    else selectDebayerAlgorithm();
 }
 
 //Zebras en-/disabled -> redraw
@@ -6336,6 +6339,13 @@ void MainWindow::drawFrameReady()
                                                    m_pScene->height(),
                                                    getMlvWidth( m_pMlvObject ),
                                                    getMlvHeight( m_pMlvObject ) );
+    }
+
+    //One more frame if stopped
+    if( m_playbackStopped == true )
+    {
+        selectDebayerAlgorithm();
+        m_playbackStopped = false;
     }
 
     //Reset delete clip action as enabled

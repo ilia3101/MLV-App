@@ -341,6 +341,7 @@ private:
     bool m_exportAbortPressed;
     bool m_zoomTo100Center;
     bool m_zoomModeChanged;
+    bool m_playbackStopped;
     QString m_lastSessionFileName;
     QString m_lastMlvOpenFileName;
     QString m_lastReceiptFileName;
