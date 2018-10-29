@@ -4861,7 +4861,7 @@ void MainWindow::on_actionUseNoneDebayer_triggered()
     ui->actionUseIgvDebayer->setChecked( false );
     ui->actionAlwaysUseAMaZE->setChecked( false );
     ui->actionCaching->setChecked( false );
-
+    selectDebayerAlgorithm();
     return;
     setMlvUseNoneDebayer( m_pMlvObject );
 
@@ -4883,7 +4883,7 @@ void MainWindow::on_actionUseSimpleDebayer_triggered()
     ui->actionUseIgvDebayer->setChecked( false );
     ui->actionAlwaysUseAMaZE->setChecked( false );
     ui->actionCaching->setChecked( false );
-
+    selectDebayerAlgorithm();
     return;
     setMlvUseSimpleDebayer( m_pMlvObject );
 
@@ -4905,7 +4905,7 @@ void MainWindow::on_actionUseBilinear_triggered()
     ui->actionUseIgvDebayer->setChecked( false );
     ui->actionAlwaysUseAMaZE->setChecked( false );
     ui->actionCaching->setChecked( false );
-
+    selectDebayerAlgorithm();
     return;
     /* Don't use AMaZE */
     setMlvDontAlwaysUseAmaze( m_pMlvObject );
