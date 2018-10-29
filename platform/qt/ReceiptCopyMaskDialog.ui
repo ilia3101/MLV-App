@@ -25,20 +25,68 @@
         <property name="verticalSpacing">
          <number>-1</number>
         </property>
-        <item row="0" column="2" colspan="2">
-         <widget class="QCheckBox" name="checkBoxProcessing">
+        <item row="0" column="4" colspan="2">
+         <widget class="QCheckBox" name="checkBoxDebayer">
           <property name="text">
-           <string>Processing</string>
+           <string>Debayer Algorithm</string>
           </property>
-          <property name="checked">
-           <bool>false</bool>
+         </widget>
+        </item>
+        <item row="7" column="4" colspan="2">
+         <widget class="QCheckBox" name="checkBoxTransformation">
+          <property name="text">
+           <string>Transformation</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0" colspan="2">
+         <widget class="QCheckBox" name="checkBoxRawCorrection">
+          <property name="text">
+           <string>RAW Correction</string>
           </property>
           <property name="tristate">
            <bool>false</bool>
           </property>
          </widget>
         </item>
-        <item row="1" column="5" rowspan="2">
+        <item row="6" column="4" colspan="2">
+         <widget class="QCheckBox" name="checkBoxFilter">
+          <property name="text">
+           <string>Filter</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="4" colspan="2">
+         <widget class="QCheckBox" name="checkBoxGradient">
+          <property name="text">
+           <string>Linear Gradient</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="4" colspan="2">
+         <widget class="QCheckBox" name="checkBoxDetails">
+          <property name="text">
+           <string>Details</string>
+          </property>
+          <property name="tristate">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="8" column="4" colspan="2">
+         <spacer name="verticalSpacer_4">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="2" column="5" rowspan="2">
          <layout class="QVBoxLayout" name="verticalLayout">
           <property name="spacing">
            <number>-1</number>
@@ -69,27 +117,27 @@
           </item>
          </layout>
         </item>
-        <item row="0" column="0" colspan="2">
-         <widget class="QCheckBox" name="checkBoxRawCorrection">
+        <item row="5" column="4" colspan="2">
+         <widget class="QCheckBox" name="checkBoxLut">
           <property name="text">
-           <string>RAW Correction</string>
+           <string>LUT</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="2" colspan="2">
+         <widget class="QCheckBox" name="checkBoxProcessing">
+          <property name="text">
+           <string>Processing</string>
+          </property>
+          <property name="checked">
+           <bool>false</bool>
           </property>
           <property name="tristate">
            <bool>false</bool>
           </property>
          </widget>
         </item>
-        <item row="0" column="4" colspan="2">
-         <widget class="QCheckBox" name="checkBoxDetails">
-          <property name="text">
-           <string>Details</string>
-          </property>
-          <property name="tristate">
-           <bool>false</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="3" rowspan="7">
+        <item row="1" column="3" rowspan="8">
          <layout class="QVBoxLayout" name="verticalLayout_2">
           <property name="spacing">
            <number>-1</number>
@@ -189,7 +237,7 @@
           </item>
          </layout>
         </item>
-        <item row="1" column="1" rowspan="7">
+        <item row="1" column="1" rowspan="8">
          <layout class="QVBoxLayout" name="verticalLayout_3">
           <property name="spacing">
            <number>-1</number>
@@ -282,47 +330,6 @@
           </item>
          </layout>
         </item>
-        <item row="3" column="4" colspan="2">
-         <widget class="QCheckBox" name="checkBoxGradient">
-          <property name="text">
-           <string>Linear Gradient</string>
-          </property>
-         </widget>
-        </item>
-        <item row="4" column="4" colspan="2">
-         <widget class="QCheckBox" name="checkBoxLut">
-          <property name="text">
-           <string>LUT</string>
-          </property>
-         </widget>
-        </item>
-        <item row="5" column="4" colspan="2">
-         <widget class="QCheckBox" name="checkBoxFilter">
-          <property name="text">
-           <string>Filter</string>
-          </property>
-         </widget>
-        </item>
-        <item row="6" column="4" colspan="2">
-         <widget class="QCheckBox" name="checkBoxTransformation">
-          <property name="text">
-           <string>Transformation</string>
-          </property>
-         </widget>
-        </item>
-        <item row="7" column="4" colspan="2">
-         <spacer name="verticalSpacer_3">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>40</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
        </layout>
       </item>
      </layout>
@@ -389,7 +396,6 @@
   <tabstop>pushButtonOk</tabstop>
   <tabstop>pushButtonAll</tabstop>
   <tabstop>pushButtonNone</tabstop>
-  <tabstop>checkBoxRawCorrection</tabstop>
   <tabstop>checkBoxDarkFrameSubtraction</tabstop>
   <tabstop>checkBoxFoxusDots</tabstop>
   <tabstop>checkBoxBadPixels</tabstop>
@@ -399,7 +405,6 @@
   <tabstop>checkBoxPatternNoise</tabstop>
   <tabstop>checkBoxRawBlackLevel</tabstop>
   <tabstop>checkBoxRawWhiteLevel</tabstop>
-  <tabstop>checkBoxProcessing</tabstop>
   <tabstop>checkBoxExposure</tabstop>
   <tabstop>checkBoxContrast</tabstop>
   <tabstop>checkBoxWb</tabstop>
@@ -414,10 +419,6 @@
   <tabstop>checkBoxDetails</tabstop>
   <tabstop>checkBoxSharpen</tabstop>
   <tabstop>checkBoxChromaBlur</tabstop>
-  <tabstop>checkBoxGradient</tabstop>
-  <tabstop>checkBoxLut</tabstop>
-  <tabstop>checkBoxFilter</tabstop>
-  <tabstop>checkBoxTransformation</tabstop>
  </tabstops>
  <resources/>
  <connections>

@@ -25,6 +25,7 @@
 
 #ifdef Q_OS_MACX
 #include "AvfLibWrapper.h"
+#include "MainWindow.h"
 #endif
 
 #include "SystemMemory.h"
@@ -1138,7 +1139,11 @@ void MainWindow::initGui( void )
     ui->groupBoxColorWheels->setVisible( false );
 
     //Debayer in Receipt
-    ui->groupBoxDebayer->setVisible( false );
+    //ui->groupBoxDebayer->setVisible( false );
+    ui->actionUseLmmseDebayer->setVisible( false );
+    ui->actionUseIgvDebayer->setVisible( false );
+    ui->actionAlwaysUseAMaZE->setVisible( false );
+    ui->actionCaching->setVisible( false );
 
     //Call temp sliders once for stylesheet
     on_horizontalSliderTemperature_valueChanged( ui->horizontalSliderTemperature->value() );
@@ -1216,7 +1221,7 @@ void MainWindow::readSettings()
     m_lastLutFileName = set.value( "lastLutFile", QDir::homePath() ).toString();
     m_codecProfile = set.value( "codecProfile", 4 ).toUInt();
     m_codecOption = set.value( "codecOption", 0 ).toUInt();
-    m_exportDebayerMode = set.value( "exportDebayerMode", 2 ).toUInt();
+    m_exportDebayerMode = set.value( "exportDebayerMode", 4 ).toUInt();
     m_previewMode = set.value( "previewMode", 1 ).toUInt();
     switch( m_previewMode )
     {
@@ -1330,7 +1335,11 @@ void MainWindow::startExportPipe(QString fileName)
     m_dontDraw = true;
 
     //chose if we want to get amaze frames for exporting, or bilinear
-    if( m_exportDebayerMode == 1 )
+    if( m_exportDebayerMode == 0 )
+    {
+        setMlvDontAlwaysUseAmaze( m_pMlvObject );
+    }
+    else if( m_exportDebayerMode == 1 )
     {
         setMlvAlwaysUseAmaze( m_pMlvObject );
     }
@@ -1344,7 +1353,29 @@ void MainWindow::startExportPipe(QString fileName)
     }
     else
     {
-        setMlvDontAlwaysUseAmaze( m_pMlvObject );
+        switch( m_exportQueue.first()->debayer() )
+        {
+        case ReceiptSettings::None:
+            setMlvUseNoneDebayer( m_pMlvObject );
+            break;
+        case ReceiptSettings::Simple:
+            setMlvUseSimpleDebayer( m_pMlvObject );
+            break;
+        case ReceiptSettings::Bilinear:
+            setMlvDontAlwaysUseAmaze( m_pMlvObject );
+            break;
+        case ReceiptSettings::LMMSE:
+            setMlvUseLmmseDebayer( m_pMlvObject );
+            break;
+        case ReceiptSettings::IGV:
+            setMlvUseIgvDebayer( m_pMlvObject );
+            break;
+        case ReceiptSettings::AMaZE:
+            setMlvAlwaysUseAmaze( m_pMlvObject );
+            break;
+        default:
+            break;
+        }
     }
     llrpResetFpmStatus(m_pMlvObject);
     llrpResetBpmStatus(m_pMlvObject);
@@ -2196,7 +2227,11 @@ void MainWindow::startExportAVFoundation(QString fileName)
     m_dontDraw = true;
 
     //chose if we want to get amaze frames for exporting, or bilinear
-    if( m_exportDebayerMode == 1 )
+    if( m_exportDebayerMode == 0 )
+    {
+        setMlvDontAlwaysUseAmaze( m_pMlvObject );
+    }
+    else if( m_exportDebayerMode == 1 )
     {
         setMlvAlwaysUseAmaze( m_pMlvObject );
     }
@@ -2210,7 +2245,29 @@ void MainWindow::startExportAVFoundation(QString fileName)
     }
     else
     {
-        setMlvDontAlwaysUseAmaze( m_pMlvObject );
+        switch( m_exportQueue.first()->debayer() )
+        {
+        case ReceiptSettings::None:
+            setMlvUseNoneDebayer( m_pMlvObject );
+            break;
+        case ReceiptSettings::Simple:
+            setMlvUseSimpleDebayer( m_pMlvObject );
+            break;
+        case ReceiptSettings::Bilinear:
+            setMlvDontAlwaysUseAmaze( m_pMlvObject );
+            break;
+        case ReceiptSettings::LMMSE:
+            setMlvUseLmmseDebayer( m_pMlvObject );
+            break;
+        case ReceiptSettings::IGV:
+            setMlvUseIgvDebayer( m_pMlvObject );
+            break;
+        case ReceiptSettings::AMaZE:
+            setMlvAlwaysUseAmaze( m_pMlvObject );
+            break;
+        default:
+            break;
+        }
     }
     llrpResetFpmStatus(m_pMlvObject);
     llrpResetBpmStatus(m_pMlvObject);
@@ -3206,6 +3263,8 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     m_pMlvObject->current_cached_frame_active = 0;
 
     if( ui->actionPlaybackPosition->isChecked() ) ui->horizontalSliderPosition->setValue( receipt->lastPlaybackPosition() );
+    ui->comboBoxDebayer->setCurrentIndex( receipt->debayer() );
+    on_comboBoxDebayer_currentIndexChanged( receipt->debayer() );
 }
 
 //Set the receipt from sliders
@@ -3279,6 +3338,8 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
 
     if( ui->actionPlaybackPosition->isChecked() ) receipt->setLastPlaybackPosition( ui->horizontalSliderPosition->value() );
     else receipt->setLastPlaybackPosition( 0 );
+
+    receipt->setDebayer( ui->comboBoxDebayer->currentIndex() );
 }
 
 //Replace receipt settings
@@ -3340,6 +3401,8 @@ void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings 
     if( paste && cdui->checkBoxRawBlackLevel->isChecked() )    receiptTarget->setRawBlack( receiptSource->rawBlack() );
     if( paste && cdui->checkBoxRawWhiteLevel->isChecked() )    receiptTarget->setRawWhite( receiptSource->rawWhite() );
     receiptTarget->setDeflickerTarget( receiptSource->deflickerTarget() );
+
+    if( paste && cdui->checkBoxDebayer->isChecked() )          receiptTarget->setDebayer( receiptSource->debayer() );
 
     if( paste && cdui->checkBoxLut->isChecked() )
     {
@@ -3481,6 +3544,8 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     receipt->setStretchFactorX( m_pSessionReceipts.at( row )->stretchFactorX() );
     receipt->setStretchFactorY( m_pSessionReceipts.at( row )->stretchFactorY() );
     receipt->setUpsideDown( m_pSessionReceipts.at( row )->upsideDown() );
+
+    receipt->setDebayer( m_pSessionReceipts.at( row )->debayer() );
 
     receipt->setFileName( m_pSessionReceipts.at( row )->fileName() );
     receipt->setCutIn( m_pSessionReceipts.at( row )->cutIn() );
@@ -4797,6 +4862,7 @@ void MainWindow::on_actionUseNoneDebayer_triggered()
     ui->actionAlwaysUseAMaZE->setChecked( false );
     ui->actionCaching->setChecked( false );
 
+    return;
     setMlvUseNoneDebayer( m_pMlvObject );
 
     disableMlvCaching( m_pMlvObject );
@@ -4818,6 +4884,7 @@ void MainWindow::on_actionUseSimpleDebayer_triggered()
     ui->actionAlwaysUseAMaZE->setChecked( false );
     ui->actionCaching->setChecked( false );
 
+    return;
     setMlvUseSimpleDebayer( m_pMlvObject );
 
     disableMlvCaching( m_pMlvObject );
@@ -4839,6 +4906,7 @@ void MainWindow::on_actionUseBilinear_triggered()
     ui->actionAlwaysUseAMaZE->setChecked( false );
     ui->actionCaching->setChecked( false );
 
+    return;
     /* Don't use AMaZE */
     setMlvDontAlwaysUseAmaze( m_pMlvObject );
 
@@ -5268,7 +5336,7 @@ void MainWindow::pictureCustomContextMenuRequested(const QPoint &pos)
     myMenu.addAction( ui->actionZoomFit );
     myMenu.addAction( ui->actionZoom100 );
     myMenu.addSeparator();
-    myMenu.addMenu( ui->menuDemosaicForPreview );
+    myMenu.addMenu( ui->menuDemosaicForPlayback );
     myMenu.addSeparator();
     myMenu.addAction( ui->actionShowZebras );
     if( ui->actionFullscreen->isChecked() )
@@ -5658,7 +5726,7 @@ void MainWindow::exportHandler( void )
     }
 }
 
-//Play button pressed or toggled
+//Play button pressed
 void MainWindow::on_actionPlay_triggered(bool checked)
 {
     //If no audio, we have nothing to do here
@@ -5679,6 +5747,13 @@ void MainWindow::on_actionPlay_triggered(bool checked)
             m_tryToSyncAudio = true;
         }
     }
+}
+
+//Play button toggled (by program)
+void MainWindow::on_actionPlay_toggled(bool checked)
+{
+    Q_UNUSED( checked );
+    selectDebayerAlgorithm();
 }
 
 //Zebras en-/disabled -> redraw
@@ -7131,4 +7206,72 @@ void MainWindow::on_actionDarkThemeStandard_triggered(bool checked)
 void MainWindow::on_actionDarkThemeModern_triggered(bool checked)
 {
     if( checked ) DarkStyleModern::assign();
+}
+
+//Debayer algorithm selection per clip
+void MainWindow::on_comboBoxDebayer_currentIndexChanged(int index)
+{
+    Q_UNUSED( index );
+    selectDebayerAlgorithm();
+}
+
+//Select the debayer algorithm in dependency to playback and chosen playback setting, or clip setting
+void MainWindow::selectDebayerAlgorithm()
+{
+    //If no playback active change debayer
+    if( !ui->actionPlay->isChecked() )
+    {
+        switch( ui->comboBoxDebayer->currentIndex() )
+        {
+        case ReceiptSettings::None:
+            setMlvUseNoneDebayer( m_pMlvObject );
+            break;
+        case ReceiptSettings::Simple:
+            setMlvUseSimpleDebayer( m_pMlvObject );
+            break;
+        case ReceiptSettings::Bilinear:
+            setMlvDontAlwaysUseAmaze( m_pMlvObject );
+            break;
+        case ReceiptSettings::LMMSE:
+            setMlvUseLmmseDebayer( m_pMlvObject );
+            break;
+        case ReceiptSettings::IGV:
+            setMlvUseIgvDebayer( m_pMlvObject );
+            break;
+        case ReceiptSettings::AMaZE:
+            setMlvAlwaysUseAmaze( m_pMlvObject );
+            break;
+        default:
+            break;
+        }
+        disableMlvCaching( m_pMlvObject );
+    }
+    else
+    {
+        if( ui->actionUseNoneDebayer->isChecked() )
+        {
+            setMlvUseNoneDebayer( m_pMlvObject );
+            disableMlvCaching( m_pMlvObject );
+        }
+        else if( ui->actionUseSimpleDebayer->isChecked() )
+        {
+            setMlvUseSimpleDebayer( m_pMlvObject );
+            disableMlvCaching( m_pMlvObject );
+        }
+        else if( ui->actionUseBilinear->isChecked() )
+        {
+            setMlvDontAlwaysUseAmaze( m_pMlvObject );
+            disableMlvCaching( m_pMlvObject );
+        }
+        else if( ui->actionCaching->isChecked() )
+        {
+            setMlvAlwaysUseAmaze( m_pMlvObject );
+            enableMlvCaching( m_pMlvObject );
+        }
+        //ADD HERE OTHER CACHED DEBAYERS!
+    }
+    llrpResetFpmStatus(m_pMlvObject);
+    llrpResetBpmStatus(m_pMlvObject);
+    llrpComputeStripesOn(m_pMlvObject);
+    m_frameChanged = true;
 }

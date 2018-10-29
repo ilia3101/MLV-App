@@ -194,6 +194,7 @@ private slots:
     void on_actionFullscreen_triggered(bool checked);
     void exportHandler( void );
     void on_actionPlay_triggered(bool checked);
+    void on_actionPlay_toggled(bool checked);
     void on_actionShowZebras_triggered();
     void toolButtonFocusPixelsChanged( void );
     void toolButtonFocusPixelsIntMethodChanged( void );
@@ -279,8 +280,9 @@ private slots:
     void openRecentSession( QString fileName );
 
     void on_actionDarkThemeStandard_triggered(bool checked);
-
     void on_actionDarkThemeModern_triggered(bool checked);
+
+    void on_comboBoxDebayer_currentIndexChanged( int index );
 
 private:
     Ui::MainWindow *ui;
@@ -417,6 +419,7 @@ private:
     uint16_t autoCorrectRawBlackLevel( void );
     bool isRawBlackLevelWrong( void );
     QRecentFilesMenu *m_pRecentFilesMenu;
+    void selectDebayerAlgorithm( void );
 
 signals:
     void exportReady( void );
