@@ -122,6 +122,7 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
             if( m_pSessionReceipts.count() ) showFileInEditor( m_pSessionReceipts.count() - 1 );
             m_inOpeningProcess = false;
             m_sessionFileName = fileName;
+            selectDebayerAlgorithm();
         }
         else if( QFile(fileName).exists() && fileName.endsWith( ".command", Qt::CaseInsensitive ) )
         {
@@ -316,6 +317,7 @@ bool MainWindow::event(QEvent *event)
             if( ui->actionCaching->isChecked() ) on_actionCaching_triggered();
             m_sessionFileName = fileName;
             m_inOpeningProcess = false;
+            selectDebayerAlgorithm();
         }
         else if( QFile(fileName).exists() && fileName.endsWith( ".command", Qt::CaseInsensitive ) )
         {
@@ -379,6 +381,7 @@ void MainWindow::openMlvSet( QStringList list )
     if( ui->actionCaching->isChecked() ) on_actionCaching_triggered();
 
     m_inOpeningProcess = false;
+    selectDebayerAlgorithm();
 }
 
 //App shall close -> hammer method, we shot on the main class... for making the app close and killing everything in background
@@ -626,6 +629,7 @@ void MainWindow::on_actionOpen_triggered()
     if( ui->actionCaching->isChecked() ) on_actionCaching_triggered();
 
     m_inOpeningProcess = false;
+    selectDebayerAlgorithm();
 }
 
 //Import MLV files to session, which were used in FCPXML project
@@ -664,6 +668,7 @@ void MainWindow::on_actionFcpxmlImportAssistant_triggered()
     if( ui->actionCaching->isChecked() ) on_actionCaching_triggered();
 
     m_inOpeningProcess = false;
+    selectDebayerAlgorithm();
 }
 
 //Open an assistant, which helps selection clips in session in dependency to clips which were used in FCPXML project
@@ -5131,6 +5136,7 @@ void MainWindow::on_actionOpenSession_triggered()
     m_sessionFileName = fileName;
     m_lastSessionFileName = fileName;
     m_inOpeningProcess = false;
+    selectDebayerAlgorithm();
 }
 
 //Save Session (just save)
@@ -7194,6 +7200,7 @@ void MainWindow::openRecentSession(QString fileName)
     m_sessionFileName = fileName;
     m_lastSessionFileName = fileName;
     m_inOpeningProcess = false;
+    selectDebayerAlgorithm();
 }
 
 //Darktheme standard
@@ -7218,6 +7225,8 @@ void MainWindow::on_comboBoxDebayer_currentIndexChanged(int index)
 //Select the debayer algorithm in dependency to playback and chosen playback setting, or clip setting
 void MainWindow::selectDebayerAlgorithm()
 {
+    if( m_inOpeningProcess ) return;
+
     //If no playback active change debayer
     if( !ui->actionPlay->isChecked() )
     {
