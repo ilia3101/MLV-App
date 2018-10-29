@@ -5688,10 +5688,10 @@ void MainWindow::on_actionPlay_triggered(bool checked)
 //Play button toggled (by program)
 void MainWindow::on_actionPlay_toggled(bool checked)
 {
-    //When stopping, debayer selection has to come in right order from render thread
+    //When stopping, debayer selection has to come in right order from render thread (extra-invitation)
     if( !checked ) m_playbackStopped = true;
-    //When starting we can do it whenever we want -> now
-    else selectDebayerAlgorithm();
+
+    selectDebayerAlgorithm();
 }
 
 //Zebras en-/disabled -> redraw
