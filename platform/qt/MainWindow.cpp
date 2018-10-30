@@ -1242,6 +1242,7 @@ void MainWindow::readSettings()
     if( set.value( "dragFrameMode", true ).toBool() ) ui->actionDropFrameMode->setChecked( true );
     if( set.value( "audioOutput", true ).toBool() ) ui->actionAudioOutput->setChecked( true );
     if( set.value( "zebras", false ).toBool() ) ui->actionShowZebras->setChecked( true );
+    m_lastExportPath = set.value( "lastExportPath", QDir::homePath() ).toString();
     m_lastMlvOpenFileName = set.value( "lastMlvFileName", QDir::homePath() ).toString();
     m_lastSessionFileName = set.value( "lastSessionFileName", QDir::homePath() ).toString();
     m_lastReceiptFileName = set.value( "lastReceiptFileName", QDir::homePath() ).toString();
@@ -1316,6 +1317,7 @@ void MainWindow::writeSettings()
     set.setValue( "dragFrameMode", ui->actionDropFrameMode->isChecked() );
     set.setValue( "audioOutput", ui->actionAudioOutput->isChecked() );
     set.setValue( "zebras", ui->actionShowZebras->isChecked() );
+    set.setValue( "lastExportPath", m_lastExportPath );
     set.setValue( "lastMlvFileName", m_lastMlvOpenFileName );
     set.setValue( "lastSessionFileName", m_lastSessionFileName );
     set.setValue( "lastReceiptFileName", m_lastReceiptFileName );
@@ -4593,6 +4595,9 @@ void MainWindow::on_actionExport_triggered()
 
     //Filename proposal in dependency to actual file
     QString saveFileName = m_pSessionReceipts.at( m_lastActiveClipInSession )->fileName();
+    //But take the folder from last export
+    saveFileName = QString( "%1/%2" ).arg( m_lastExportPath ).arg( QFileInfo( saveFileName ).fileName() );
+
     QString fileType;
     QString fileEnding;
     saveFileName = saveFileName.left( saveFileName.lastIndexOf( "." ) );
@@ -4673,6 +4678,9 @@ void MainWindow::on_actionExport_triggered()
         if( fileName == QString( "" )
                 && !fileName.endsWith( fileEnding, Qt::CaseInsensitive ) ) return;
 
+        //Save last path for next time
+        m_lastExportPath = QFileInfo( fileName ).absolutePath();
+
         //Get receipt into queue
         addClipToExportQueue( m_lastActiveClipInSession, fileName );
     }
@@ -4686,6 +4694,9 @@ void MainWindow::on_actionExport_triggered()
                                                           | QFileDialog::DontResolveSymlinks);
 
         if( folderName.length() == 0 ) return;
+
+        //Save last path for next time
+        m_lastExportPath = folderName;
 
         //for all selected
         for( int row = 0; row < ui->listWidgetSession->count(); row++ )
