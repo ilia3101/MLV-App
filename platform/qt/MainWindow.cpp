@@ -344,11 +344,27 @@ void MainWindow::dragEnterEvent(QDragEnterEvent *event)
 void MainWindow::dropEvent(QDropEvent *event)
 {
     QStringList list;
-    for( int i = 0; i < event->mimeData()->urls().count(); i++ )
+    if( event->mimeData()->urls().count() > 1 )
     {
-        list.append( event->mimeData()->urls().at(i).path() );
+        for( int i = 0; i < event->mimeData()->urls().count(); i++ )
+        {
+            list.append( event->mimeData()->urls().at(i).path() );
+        }
+        openMlvSet( list );
     }
-    openMlvSet( list );
+    else
+    {
+        if( event->mimeData()->urls().at(0).path().endsWith( ".masxml", Qt::CaseInsensitive ) )
+        {
+            m_inOpeningProcess = true;
+            openSession( event->mimeData()->urls().at(0).path() );
+            //Show last imported file
+            if( m_pSessionReceipts.count() ) showFileInEditor( m_pSessionReceipts.count() - 1 );
+            m_inOpeningProcess = false;
+            m_sessionFileName = event->mimeData()->urls().at(0).path();
+            selectDebayerAlgorithm();
+        }
+    }
     event->acceptProposedAction();
 }
 
@@ -360,19 +376,27 @@ void MainWindow::openMlvSet( QStringList list )
     {
         QString fileName = list.at(i);
 
-        if( QFile(fileName).exists() && fileName.endsWith( ".command", Qt::CaseInsensitive ) )
+        if( i == 0 && QFile(fileName).exists() && fileName.endsWith( ".command", Qt::CaseInsensitive ) )
         {
             if( m_pScripting->installScript( fileName ) )
                 QMessageBox::information( this, APPNAME, tr( "Installation of script %1 successful." ).arg( QFileInfo( fileName ).fileName() ) );
+            m_inOpeningProcess = false;
             return;
         }
 
-        //Exit if not an MLV file or aborted
-        if( fileName == QString( "" ) || !fileName.endsWith( ".mlv", Qt::CaseInsensitive ) ) continue;
+        if( i == 0 && QFile(fileName).exists() && fileName.endsWith( ".masxml", Qt::CaseInsensitive ) )
+        {
+            openSession( fileName );
+        }
+        else
+        {
+            //Exit if not an MLV file or aborted
+            if( fileName == QString( "" ) || !fileName.endsWith( ".mlv", Qt::CaseInsensitive ) ) continue;
 #ifdef WIN32
-        if( fileName.startsWith( "/" ) ) fileName.remove( 0, 1 );
+            if( fileName.startsWith( "/" ) ) fileName.remove( 0, 1 );
 #endif
-        importNewMlv( fileName );
+            importNewMlv( fileName );
+        }
     }
 
     if( m_pSessionReceipts.count() )
