@@ -564,7 +564,7 @@ QGroupBox::indicator:checked:disabled {
                  <item>
                   <widget class="Line" name="line_10">
                    <property name="styleSheet">
-                    <string notr="true">background-color: rgb(128, 128, 128);</string>
+                    <string notr="true">background-color: rgb(115, 115, 115);</string>
                    </property>
                    <property name="orientation">
                     <enum>Qt::Horizontal</enum>
@@ -750,7 +750,7 @@ QGroupBox::indicator:checked:disabled {
                  <item>
                   <widget class="Line" name="line_7">
                    <property name="styleSheet">
-                    <string notr="true">background-color: rgb(128, 128, 128);</string>
+                    <string notr="true">background-color: rgb(115, 115, 115);</string>
                    </property>
                    <property name="orientation">
                     <enum>Qt::Horizontal</enum>
@@ -959,7 +959,7 @@ QGroupBox::indicator:checked:disabled {
                  <item>
                   <widget class="Line" name="line_3">
                    <property name="styleSheet">
-                    <string notr="true">background-color: rgb(128, 128, 128);</string>
+                    <string notr="true">background-color: rgb(115, 115, 115);</string>
                    </property>
                    <property name="orientation">
                     <enum>Qt::Horizontal</enum>
@@ -1268,7 +1268,7 @@ QGroupBox::indicator:checked:disabled {
                  <item>
                   <widget class="Line" name="line_4">
                    <property name="styleSheet">
-                    <string notr="true">background-color: rgb(128, 128, 128);</string>
+                    <string notr="true">background-color: rgb(115, 115, 115);</string>
                    </property>
                    <property name="orientation">
                     <enum>Qt::Horizontal</enum>
@@ -1410,7 +1410,7 @@ QGroupBox::indicator:checked:disabled {
                  <item>
                   <widget class="Line" name="line_8">
                    <property name="styleSheet">
-                    <string notr="true">background-color: rgb(128, 128, 128);</string>
+                    <string notr="true">background-color: rgb(115, 115, 115);</string>
                    </property>
                    <property name="orientation">
                     <enum>Qt::Horizontal</enum>
@@ -1528,7 +1528,7 @@ QGroupBox::indicator:checked:disabled {
                  <item>
                   <widget class="Line" name="line_9">
                    <property name="styleSheet">
-                    <string notr="true">background-color: rgb(128, 128, 128);</string>
+                    <string notr="true">background-color: rgb(115, 115, 115);</string>
                    </property>
                    <property name="orientation">
                     <enum>Qt::Horizontal</enum>
@@ -1910,7 +1910,7 @@ QGroupBox::indicator:checked:disabled {
                  <item>
                   <widget class="Line" name="line_6">
                    <property name="styleSheet">
-                    <string notr="true">background-color: rgb(128, 128, 128);</string>
+                    <string notr="true">background-color: rgb(115, 115, 115);</string>
                    </property>
                    <property name="orientation">
                     <enum>Qt::Horizontal</enum>
@@ -1960,7 +1960,7 @@ QGroupBox::indicator:checked:disabled {
                  <item>
                   <widget class="Line" name="line_11">
                    <property name="styleSheet">
-                    <string notr="true">background-color: rgb(128, 128, 128);</string>
+                    <string notr="true">background-color: rgb(115, 115, 115);</string>
                    </property>
                    <property name="orientation">
                     <enum>Qt::Horizontal</enum>
@@ -2054,7 +2054,7 @@ QGroupBox::indicator:checked:disabled {
                  <item>
                   <widget class="Line" name="line_16">
                    <property name="styleSheet">
-                    <string notr="true">background-color: rgb(128, 128, 128);</string>
+                    <string notr="true">background-color: rgb(115, 115, 115);</string>
                    </property>
                    <property name="orientation">
                     <enum>Qt::Horizontal</enum>
@@ -2710,7 +2710,7 @@ QGroupBox::indicator:checked:disabled {
                  <item>
                   <widget class="Line" name="line_17">
                    <property name="styleSheet">
-                    <string notr="true">background-color: rgb(128, 128, 128);</string>
+                    <string notr="true">background-color: rgb(115, 115, 115);</string>
                    </property>
                    <property name="orientation">
                     <enum>Qt::Horizontal</enum>
@@ -2925,7 +2925,7 @@ QGroupBox::indicator:checked:disabled {
                  <item>
                   <widget class="Line" name="line_18">
                    <property name="styleSheet">
-                    <string notr="true">background-color: rgb(128, 128, 128);</string>
+                    <string notr="true">background-color: rgb(115, 115, 115);</string>
                    </property>
                    <property name="orientation">
                     <enum>Qt::Horizontal</enum>
@@ -3196,7 +3196,7 @@ QGroupBox::indicator:checked:disabled {
                  <item>
                   <widget class="Line" name="line_2">
                    <property name="styleSheet">
-                    <string notr="true">background-color: rgb(128, 128, 128);</string>
+                    <string notr="true">background-color: rgb(115, 115, 115);</string>
                    </property>
                    <property name="orientation">
                     <enum>Qt::Horizontal</enum>
@@ -3620,7 +3620,7 @@ QGroupBox::indicator:checked:disabled {
                  <item>
                   <widget class="Line" name="line_ShadowsHighlights">
                    <property name="styleSheet">
-                    <string notr="true">background-color: rgb(128, 128, 128);</string>
+                    <string notr="true">background-color: rgb(115, 115, 115);</string>
                    </property>
                    <property name="orientation">
                     <enum>Qt::Horizontal</enum>
@@ -3798,7 +3798,7 @@ QGroupBox::indicator:checked:disabled {
                  <item>
                   <widget class="Line" name="line">
                    <property name="styleSheet">
-                    <string notr="true">background-color: rgb(128, 128, 128);</string>
+                    <string notr="true">background-color: rgb(115, 115, 115);</string>
                    </property>
                    <property name="orientation">
                     <enum>Qt::Horizontal</enum>
@@ -4110,7 +4110,7 @@ QGroupBox::indicator:checked:disabled {
                  <item>
                   <widget class="Line" name="line_19">
                    <property name="styleSheet">
-                    <string notr="true">background-color: rgb(128, 128, 128);</string>
+                    <string notr="true">background-color: rgb(115, 115, 115);</string>
                    </property>
                    <property name="orientation">
                     <enum>Qt::Horizontal</enum>
@@ -4492,7 +4492,7 @@ QGroupBox::indicator:checked:disabled {
                  <item>
                   <widget class="Line" name="line_13">
                    <property name="styleSheet">
-                    <string notr="true">background-color: rgb(128, 128, 128);</string>
+                    <string notr="true">background-color: rgb(115, 115, 115);</string>
                    </property>
                    <property name="orientation">
                     <enum>Qt::Horizontal</enum>
@@ -4696,7 +4696,7 @@ QGroupBox::indicator:checked:disabled {
                  <item>
                   <widget class="Line" name="line_14">
                    <property name="styleSheet">
-                    <string notr="true">background-color: rgb(128, 128, 128);</string>
+                    <string notr="true">background-color: rgb(115, 115, 115);</string>
                    </property>
                    <property name="orientation">
                     <enum>Qt::Horizontal</enum>
@@ -4900,7 +4900,7 @@ QGroupBox::indicator:checked:disabled {
                  <item>
                   <widget class="Line" name="line_15">
                    <property name="styleSheet">
-                    <string notr="true">background-color: rgb(128, 128, 128);</string>
+                    <string notr="true">background-color: rgb(115, 115, 115);</string>
                    </property>
                    <property name="orientation">
                     <enum>Qt::Horizontal</enum>
@@ -5367,7 +5367,7 @@ QGroupBox::indicator:checked:disabled {
                  <item>
                   <widget class="Line" name="line_5">
                    <property name="styleSheet">
-                    <string notr="true">background-color: rgb(128, 128, 128);</string>
+                    <string notr="true">background-color: rgb(115, 115, 115);</string>
                    </property>
                    <property name="orientation">
                     <enum>Qt::Horizontal</enum>
@@ -6011,7 +6011,7 @@ QGroupBox::indicator:checked:disabled {
                    <item row="2" column="0" colspan="2">
                     <widget class="Line" name="line_12">
                      <property name="styleSheet">
-                      <string notr="true">background-color: rgb(128, 128, 128);</string>
+                      <string notr="true">background-color: rgb(115, 115, 115);</string>
                      </property>
                      <property name="orientation">
                       <enum>Qt::Horizontal</enum>
