@@ -447,7 +447,7 @@ void apply_processing_object( processingObject_t * processing,
         double temp_mat[9];
 
         /* 1: 5D2, 2: 7D, 3: 5D3 */
-        int32_t * cam_matrix_int = camidGetColorMatrix2( /* 0x80000218 */0x80000250/* 0x80000285 */ );
+        int32_t * cam_matrix_int = camidGetColorMatrix2( 0x80000218 /* 0x80000250 */ /* 0x80000285 */ );
         double xyz_to_cam[9];
         for (int i = 0; i < 9; ++i) xyz_to_cam[i] = ((double)cam_matrix_int[i*2])/((double)cam_matrix_int[i*2+1]);
 
@@ -467,7 +467,7 @@ void apply_processing_object( processingObject_t * processing,
         double cam_to_xyz[9];
         invertMatrix(xyz_to_cam, cam_to_xyz);
 
-        multiplyMatrices(proper_wb_matrix_a, cam_to_xyz, proper_wb_matrix_b);
+        multiplyMatrices(cam_to_xyz, proper_wb_matrix_a, proper_wb_matrix_b);
 
         /* Apply multipliers in XYZ */
         for (int i = 0; i < 3; ++i)
@@ -480,7 +480,7 @@ void apply_processing_object( processingObject_t * processing,
         }  
 
         // /* Back to sRGB */
-        multiplyMatrices(proper_wb_matrix_b, xyz_to_rgb, proper_wb_matrix_a);
+        multiplyMatrices(xyz_to_rgb, proper_wb_matrix_b, proper_wb_matrix_a);
         /* copy to b for ocnvenience */
         memcpy(proper_wb_matrix_b, proper_wb_matrix_a, 9*sizeof(double));
 
