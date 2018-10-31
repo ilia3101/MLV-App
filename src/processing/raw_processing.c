@@ -453,7 +453,7 @@ void apply_processing_object( processingObject_t * processing,
 
         double XYZ_white[3];
         double XYZ_temp[3];
-        Kelvin_Daylight_to_XYZ(5000, XYZ_white);
+        Kelvin_Daylight_to_XYZ(6500, XYZ_white);
         Kelvin_Daylight_to_XYZ(processingGetWhiteBalanceKelvin(processing), XYZ_temp);
         double XYZ_multipliers[3];
         for (int i = 0; i < 3; ++i) XYZ_multipliers[i] = XYZ_white[i]/XYZ_temp[i];
@@ -672,7 +672,7 @@ void apply_processing_object( processingObject_t * processing,
         /* Gamma */
         for( int i = 0; i < 3; i++ )
         {
-            pix[i] = processing->pre_calc_gamma[ pix[i] ];
+            pix[i] = processing->pre_calc_gamma[ (uint16_t)LIMIT16( pix[i] * expo_correction ) ];
         }
         tmp1b = processing->pre_calc_gamma[ tmp1b ];
 
