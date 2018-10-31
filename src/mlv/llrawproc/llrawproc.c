@@ -100,7 +100,7 @@ static void scale_restricted_range(struct raw_info * raw_info, uint16_t * image_
     raw_info->black_level = MAX(min_level, raw_info->black_level);
     raw_info->white_level = max_level;
 #endif
-    int32_t scaled_white_level = 15000;
+    int32_t scaled_white_level = 16200;
     double scale_ratio = (double)(scaled_white_level - raw_info->black_level) / (double)(raw_info->white_level - raw_info->black_level);
     raw_info->white_level = scaled_white_level;
 
@@ -190,14 +190,6 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
     /* do one time stuff */
     if(video->llrawproc->first_time)
     {
-        /* check dual iso validity */
-        video->llrawproc->diso_valid = diso_get_preview(raw_image_buff,
-                                                        video->RAWI.xRes,
-                                                        video->RAWI.yRes,
-                                                        raw_info.black_level,
-                                                        raw_info.white_level,
-                                                        1); // dual iso check mode is on
-
         /* initialize dual iso black and white levels */
         llrpResetDngBWLevels(video);
 
@@ -545,10 +537,25 @@ void llrpSetDualIsoFullResBlendingMode(mlvObject_t * video, int value)
     video->llrawproc->diso_frblending = value;
 }
 
-int llrpIsDualIso(mlvObject_t * video)
+int llrpGetDualIsoValidity(mlvObject_t * video)
 {
-    if(video->DISO.blockType[0]) return 1;
-    return 0;
+    return video->llrawproc->diso_valid;
+}
+
+void llrpSetDualIsoValidity(mlvObject_t * video, int diso_force)
+{
+    if(diso_force)
+    {
+        video->llrawproc->diso_valid = DISO_FORCED;
+    }
+    else if(video->DISO.blockType[0])
+    {
+        video->llrawproc->diso_valid = DISO_VALID;
+    }
+    else
+    {
+        video->llrawproc->diso_valid = DISO_INVALID;
+    }
 }
 
 int llrpHQDualIso(mlvObject_t * video)

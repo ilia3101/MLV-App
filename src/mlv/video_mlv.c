@@ -1579,14 +1579,17 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode, char * error
 
 short_cut:
 
+    /* Set imaginary lossless bit depth */
     setMlvLosslessBpp(video);
+    /* Check and set dual iso validity */
+    llrpSetDualIsoValidity(video, 0);
 
     /* NON compressed frame size */
     video->frame_size = (getMlvHeight(video) * getMlvWidth(video) * getMlvBitdepth(video)) / 8;
     /* Calculate framerate */
     video->frame_rate = getMlvFramerateOrig(video);
 
-    /* Make sure frame cache number is up to date by rerunning thiz */
+    /* Make sure frame cache number is up to date by rerunniinitLLRawProcObjectng thiz */
     setMlvRawCacheLimitMegaBytes(video, getMlvRawCacheLimitMegaBytes(video));
 
     /* For frame cache */
