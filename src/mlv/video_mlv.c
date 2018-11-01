@@ -6,6 +6,7 @@
 #include <pthread.h>
 #include <math.h>
 #include <inttypes.h>
+#include "camid/camera_id.h"
 
 #if defined(__linux)
 #include <alloca.h>
@@ -321,9 +322,6 @@ void setMlvProcessing(mlvObject_t * video, processingObject_t * processing)
     /* Easy bit */
     video->processing = processing;
 
-    /* Set camera model ID */
-    processingSetCameraModel(processing, getMlvCameraModel(video));
-
     /* Link dual_iso value, because it is needed */
     video->processing->dual_iso = &video->llrawproc->dual_iso;
 
@@ -357,6 +355,10 @@ void setMlvProcessing(mlvObject_t * video, processingObject_t * processing)
     {
         processingSetSharpeningBias(processing, -0.33);
     }
+
+    /* Get camera matrix */
+    int32_t *cam_matrix_int = camidGetColorMatrix2(getMlvCameraModel(video));
+    for (int i = 0; i < 9; ++i) processing->cam_matrix[i] = ((double)cam_matrix_int[i*2])/((double)cam_matrix_int[i*2+1]);
 }
 
 void getMlvRawFrameDebayered(mlvObject_t * video, uint64_t frameIndex, uint16_t * outputFrame)
