@@ -49,9 +49,7 @@ typedef struct {
 
 
     /* Camera's matrix - will need to be set on opening clip, default set for 5D Mark II */
-    double cam_to_sRGB_matrix[9];
-    /* What is used to turn XYZ produced form previious matrix into RGB image */
-    double xyz_to_rgb_matrix[9];
+    double cam_matrix[9];
     /* Main matrix: combined white balance + exposure + whatever the cmaera matrix does */
     double final_matrix[9];
     /* Precalculated all matrix values 0-65535 */
@@ -162,21 +160,5 @@ typedef struct {
     uint8_t    gradient_enable;
     uint16_t * gradient_mask; //same size like picture, alpha mask
 } processingObject_t;
-
-/* Maybe save edits to MLV file as a block? */
-typedef struct {
-    uint8_t    blockType[4]; /* "EDIT" */
-    uint32_t   blockSize;    /* total block size */
-    double     kelvin;
-    double     wb_tint;
-    double     exposure_stops;
-    double     saturation;
-    double     light_contrast_factor;
-    double     light_contrast_range;
-    double     dark_contrast_factor;
-    double     dark_contrast_range;
-    double     gamma_power;
-    double     lighten;
-}  mlv_edit_hdr_t;
 
 #endif
