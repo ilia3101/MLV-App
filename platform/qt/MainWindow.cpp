@@ -1206,6 +1206,9 @@ void MainWindow::initGui( void )
     m_wbMode = 0;
     ui->toolButtonWbMode->setToolTip( tr( "Chose between WB picker on grey or on skin" ) );
 
+    //DualIso Button by default invisible
+    ui->toolButtonDualIsoForce->setVisible( false );
+
     //Reveal in Explorer
 #ifdef Q_OS_WIN
     ui->actionShowInFinder->setText( tr( "Reveal in Explorer" ) );
