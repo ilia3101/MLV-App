@@ -344,17 +344,17 @@ void MainWindow::dragEnterEvent(QDragEnterEvent *event)
 void MainWindow::dropEvent(QDropEvent *event)
 {
     QStringList list;
-    if( event->mimeData()->urls().count() > 1 )
+    if( event->mimeData()->urls().count() > 0 )
     {
-        for( int i = 0; i < event->mimeData()->urls().count(); i++ )
+        if( event->mimeData()->urls().at(0).path().endsWith( ".MLV", Qt::CaseInsensitive ) )
         {
-            list.append( event->mimeData()->urls().at(i).path() );
+            for( int i = 0; i < event->mimeData()->urls().count(); i++ )
+            {
+                list.append( event->mimeData()->urls().at(i).path() );
+            }
+            openMlvSet( list );
         }
-        openMlvSet( list );
-    }
-    else
-    {
-        if( event->mimeData()->urls().at(0).path().endsWith( ".masxml", Qt::CaseInsensitive ) )
+        else if( event->mimeData()->urls().at(0).path().endsWith( ".masxml", Qt::CaseInsensitive ) )
         {
             m_inOpeningProcess = true;
             openSession( event->mimeData()->urls().at(0).path() );
@@ -1205,6 +1205,9 @@ void MainWindow::initGui( void )
     //WB Picker Mode
     m_wbMode = 0;
     ui->toolButtonWbMode->setToolTip( tr( "Chose between WB picker on grey or on skin" ) );
+
+    //DualIso Button by default invisible
+    ui->toolButtonDualIsoForce->setVisible( false );
 
     //Reveal in Explorer
 #ifdef Q_OS_WIN
@@ -2897,6 +2900,11 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
             receipt->setDeflickerTarget( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
+        else if( Rxml->isStartElement() && Rxml->name() == "dualIsoForced" )
+        {
+            receipt->setDualIsoForced( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
         else if( Rxml->isStartElement() && Rxml->name() == "dualIso" )
         {
             receipt->setDualIso( Rxml->readElementText().toInt() );
@@ -3046,6 +3054,7 @@ void MainWindow::writeXmlElementsToFile(QXmlStreamWriter *xmlWriter, ReceiptSett
     xmlWriter->writeTextElement( "chromaSmooth",            QString( "%1" ).arg( receipt->chromaSmooth() ) );
     xmlWriter->writeTextElement( "patternNoise",            QString( "%1" ).arg( receipt->patternNoise() ) );
     xmlWriter->writeTextElement( "deflickerTarget",         QString( "%1" ).arg( receipt->deflickerTarget() ) );
+    xmlWriter->writeTextElement( "dualIsoForced",           QString( "%1" ).arg( receipt->dualIsoForced() ) );
     xmlWriter->writeTextElement( "dualIso",                 QString( "%1" ).arg( receipt->dualIso() ) );
     xmlWriter->writeTextElement( "dualIsoInterpolation",    QString( "%1" ).arg( receipt->dualIsoInterpolation() ) );
     xmlWriter->writeTextElement( "dualIsoAliasMap",         QString( "%1" ).arg( receipt->dualIsoAliasMap() ) );
@@ -3236,6 +3245,26 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     setToolButtonPatternNoise( receipt->patternNoise() );
     setToolButtonUpsideDown( receipt->upsideDown() );
     setToolButtonVerticalStripes( receipt->verticalStripes() );
+
+    //Init
+    if( receipt->dualIsoForced() == -1 )
+    {
+        receipt->setDualIsoForced( llrpGetDualIsoValidity( m_pMlvObject ) );
+    }
+    //Copy & Paste problems between old and new dual iso
+    else if( receipt->dualIsoForced() == DISO_FORCED && llrpGetDualIsoValidity( m_pMlvObject ) == DISO_VALID )
+    {
+        receipt->setDualIsoForced( DISO_VALID );
+    }
+    //Copy & Paste problems between old and new dual iso
+    else if( receipt->dualIsoForced() == DISO_VALID && llrpGetDualIsoValidity( m_pMlvObject ) == DISO_INVALID )
+    {
+        receipt->setDualIsoForced( DISO_FORCED );
+    }
+    ui->toolButtonDualIsoForce->setVisible( receipt->dualIsoForced() != DISO_VALID );
+    ui->toolButtonDualIsoForce->setChecked( receipt->dualIsoForced() == DISO_FORCED );
+    on_toolButtonDualIsoForce_toggled( receipt->dualIsoForced() == DISO_FORCED );
+
     setToolButtonDualIso( receipt->dualIso() );
     setToolButtonDualIsoInterpolation( receipt->dualIsoInterpolation() );
     setToolButtonDualIsoAliasMap( receipt->dualIsoAliasMap() );
@@ -3367,6 +3396,7 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     receipt->setPatternNoise( toolButtonPatternNoiseCurrentIndex() );
     receipt->setUpsideDown( toolButtonUpsideDownCurrentIndex() );
     receipt->setDeflickerTarget( ui->spinBoxDeflickerTarget->value() );
+    receipt->setDualIsoForced( llrpGetDualIsoValidity( m_pMlvObject ) );
     receipt->setDualIso( toolButtonDualIsoCurrentIndex() );
     receipt->setDualIsoInterpolation( toolButtonDualIsoInterpolationCurrentIndex() );
     receipt->setDualIsoAliasMap( toolButtonDualIsoAliasMapCurrentIndex() );
@@ -3447,6 +3477,7 @@ void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings 
     if( paste && cdui->checkBoxBadPixels->isChecked() )        receiptTarget->setBpiMethod( receiptSource->bpiMethod() );
     if( paste && cdui->checkBoxChromaSmooth->isChecked() )     receiptTarget->setChromaSmooth( receiptSource->chromaSmooth() );
     if( paste && cdui->checkBoxPatternNoise->isChecked() )     receiptTarget->setPatternNoise( receiptSource->patternNoise() );
+    if( paste && cdui->checkBoxDualIso->isChecked() )          receiptTarget->setDualIsoForced( receiptSource->dualIsoForced() );
     if( paste && cdui->checkBoxDualIso->isChecked() )          receiptTarget->setDualIso( receiptSource->dualIso() );
     if( paste && cdui->checkBoxDualIso->isChecked() )          receiptTarget->setDualIsoInterpolation( receiptSource->dualIsoInterpolation() );
     if( paste && cdui->checkBoxDualIso->isChecked() )          receiptTarget->setDualIsoAliasMap( receiptSource->dualIsoAliasMap() );
@@ -3578,6 +3609,7 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     receipt->setChromaSmooth( m_pSessionReceipts.at( row )->chromaSmooth() );
     receipt->setPatternNoise( m_pSessionReceipts.at( row )->patternNoise() );
     receipt->setDeflickerTarget( m_pSessionReceipts.at( row )->deflickerTarget() );
+    receipt->setDualIsoForced( m_pSessionReceipts.at( row )->dualIsoForced() );
     receipt->setDualIso( m_pSessionReceipts.at( row )->dualIso() );
     receipt->setDualIsoInterpolation( m_pSessionReceipts.at( row )->dualIsoInterpolation() );
     receipt->setDualIsoAliasMap( m_pSessionReceipts.at( row )->dualIsoAliasMap() );
@@ -5844,6 +5876,29 @@ void MainWindow::on_spinBoxDeflickerTarget_valueChanged(int arg1)
     resetMlvCache( m_pMlvObject );
     resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
+}
+
+//Dual iso force button toggled
+void MainWindow::on_toolButtonDualIsoForce_toggled( bool checked )
+{
+    if( llrpGetDualIsoValidity( m_pMlvObject ) == DISO_VALID )
+    {
+        ui->toolButtonDualIsoOff->setEnabled( true );
+        ui->toolButtonDualIsoOn->setEnabled( true );
+        ui->toolButtonDualIsoPreview->setEnabled( true );
+    }
+    else
+    {
+        ui->toolButtonDualIsoOff->setEnabled( checked );
+        ui->toolButtonDualIsoOn->setEnabled( checked );
+        ui->toolButtonDualIsoPreview->setEnabled( checked );
+        llrpSetDualIsoValidity( m_pMlvObject, checked );
+
+        if( !checked )
+        {
+            setToolButtonDualIso( false );
+        }
+    }
 }
 
 //DualISO changed
