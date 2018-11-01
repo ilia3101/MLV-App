@@ -344,17 +344,17 @@ void MainWindow::dragEnterEvent(QDragEnterEvent *event)
 void MainWindow::dropEvent(QDropEvent *event)
 {
     QStringList list;
-    if( event->mimeData()->urls().count() > 1 )
+    if( event->mimeData()->urls().count() > 0 )
     {
-        for( int i = 0; i < event->mimeData()->urls().count(); i++ )
+        if( event->mimeData()->urls().at(0).path().endsWith( ".MLV", Qt::CaseInsensitive ) )
         {
-            list.append( event->mimeData()->urls().at(i).path() );
+            for( int i = 0; i < event->mimeData()->urls().count(); i++ )
+            {
+                list.append( event->mimeData()->urls().at(i).path() );
+            }
+            openMlvSet( list );
         }
-        openMlvSet( list );
-    }
-    else
-    {
-        if( event->mimeData()->urls().at(0).path().endsWith( ".masxml", Qt::CaseInsensitive ) )
+        else if( event->mimeData()->urls().at(0).path().endsWith( ".masxml", Qt::CaseInsensitive ) )
         {
             m_inOpeningProcess = true;
             openSession( event->mimeData()->urls().at(0).path() );
