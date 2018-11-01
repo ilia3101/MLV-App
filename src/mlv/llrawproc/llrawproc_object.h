@@ -45,7 +45,10 @@ typedef struct
     int pattern_noise;    // fix pattern noise (0, 1)
     int deflicker_target; // deflicker value
     int first_time;       // controls some events which should occur only once per object instance
-    int diso_valid;       // dual iso: 0 - not valid, 1 - valid
+    int diso_valid;       // Dual iso status:
+                          // 0 - not valid (no DISO block found, can be older dual iso clip),
+                          // 1 - forced (forced to be processed as dual iso when older dual iso clip w/o DISO block is loaded),
+                          // 2 - valid (DISO block is found, means this is real dual iso clip)
     int dual_iso;         // use dualiso processing, 0 - do not use, 1 - full 20 bit processing (high quality, slow), 2 - preview mode (low quality)
     int diso_averaging;   // dual iso interpolation method, 0 - amaze-edge, 1 - mean23
     int diso_alias_map;   // flag for Alias Map switchin on/off
