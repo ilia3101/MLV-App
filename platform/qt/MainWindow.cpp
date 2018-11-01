@@ -5904,9 +5904,6 @@ void MainWindow::on_toolButtonDualIsoForce_toggled( bool checked )
 //DualISO changed
 void MainWindow::toolButtonDualIsoChanged( void )
 {
-    qDebug() << "Black = " << getMlvBlackLevel( m_pMlvObject ) << "White = " << getMlvWhiteLevel( m_pMlvObject ) << "File Loaded = " << m_fileLoaded;
-    if(!m_fileLoaded) return;
-
     //In preview mode, the other dualIso options are grayed out
     if( ( toolButtonDualIsoCurrentIndex() == 1 ) && ui->checkBoxRawFixEnable->isChecked() )
     {
@@ -5920,7 +5917,6 @@ void MainWindow::toolButtonDualIsoChanged( void )
         ui->toolButtonDualIsoAliasMap->setEnabled( false );
         ui->toolButtonDualIsoFullresBlending->setEnabled( false );
     }
-
     //Set dualIso mode
     llrpSetDualIsoMode( m_pMlvObject, toolButtonDualIsoCurrentIndex() );
     //Reset processing black and white levels
