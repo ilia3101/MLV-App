@@ -62,6 +62,7 @@ public:
     void setChromaSmooth( int mode )          {m_chroma_smooth = mode;}
     void setPatternNoise( int on )            {m_pattern_noise = on;}
     void setDeflickerTarget( int value )      {m_deflicker_target = value;}
+    void setDualIsoForced( int value )        {m_dualIsoForced = value;}
     void setDualIso( int mode )               {m_dualIsoOn = mode;}
     void setDualIsoInterpolation( int mode )  {m_dualIsoInt = mode;}
     void setDualIsoAliasMap( int on )         {m_dualIsoAliasMap = on;}
@@ -126,6 +127,7 @@ public:
     int chromaSmooth( void ){return m_chroma_smooth;}
     int patternNoise( void ){return m_pattern_noise;}
     int deflickerTarget( void ){return m_deflicker_target;}
+    int dualIsoForced( void ){return m_dualIsoForced;}
     int dualIso( void )    {return m_dualIsoOn;}
     int dualIsoInterpolation( void ){return m_dualIsoInt;}
     int dualIsoAliasMap( void ){return m_dualIsoAliasMap;}
@@ -194,6 +196,7 @@ private:
     int m_chroma_smooth;    // chroma smooth, 2 - cs2x2, 3 cs3x3, 5 - cs5x5
     int m_pattern_noise;    // fix pattern noise (0, 1)
     int m_deflicker_target; // deflicker value
+    int m_dualIsoForced;    // -1 = uninitialized, 0 = DISO_INVALID, 1 = DISO_FORCED, 2 = DISO_VALID
     int m_dualIsoOn;        // DualISO, 0 = off, 1 = on, 2 = preview
     int m_dualIsoInt;       // DualIsoInterpolation method, 0 - amaze-edge, 1 - mean23
     int m_dualIsoAliasMap;  // flag for Alias Map switchin on/off

@@ -51,6 +51,7 @@ ReceiptSettings::ReceiptSettings()
     m_chroma_smooth = 0;
     m_pattern_noise = 0;
     m_deflicker_target = 0;
+    m_dualIsoForced = -1;
     m_dualIsoOn = 0;
     m_dualIsoInt = 0;
     m_dualIsoAliasMap = 1;

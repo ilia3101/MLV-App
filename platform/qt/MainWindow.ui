@@ -489,7 +489,7 @@ QGroupBox::indicator:checked:disabled {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>0</y>
+            <y>-162</y>
             <width>244</width>
             <height>3666</height>
            </rect>
@@ -1565,6 +1565,16 @@ QGroupBox::indicator:checked:disabled {
                     <property name="bottomMargin">
                      <number>0</number>
                     </property>
+                    <item>
+                     <widget class="ColorToolButton" name="toolButtonDualIsoForce">
+                      <property name="text">
+                       <string>Force</string>
+                      </property>
+                      <property name="checkable">
+                       <bool>true</bool>
+                      </property>
+                     </widget>
+                    </item>
                     <item>
                      <widget class="ColorToolButton" name="toolButtonDualIsoOff">
                       <property name="sizePolicy">
