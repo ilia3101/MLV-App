@@ -1281,7 +1281,7 @@ void processingSetBlackAndWhiteLevel( processingObject_t * processing,
     }
 
     /* How much it needs to be stretched */
-    double stretch = 65535.0 / (processing->white_level - processing->black_level);
+    double stretch = 65535.0 / (double)(processing->white_level - processing->black_level);
 
     for (int i = 0; i < 65536; ++i)
     {

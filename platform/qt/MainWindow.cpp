@@ -5849,6 +5849,9 @@ void MainWindow::on_spinBoxDeflickerTarget_valueChanged(int arg1)
 //DualISO changed
 void MainWindow::toolButtonDualIsoChanged( void )
 {
+    qDebug() << "Black = " << getMlvBlackLevel( m_pMlvObject ) << "White = " << getMlvWhiteLevel( m_pMlvObject ) << "File Loaded = " << m_fileLoaded;
+    if(!m_fileLoaded) return;
+
     //In preview mode, the other dualIso options are grayed out
     if( ( toolButtonDualIsoCurrentIndex() == 1 ) && ui->checkBoxRawFixEnable->isChecked() )
     {
@@ -5862,8 +5865,7 @@ void MainWindow::toolButtonDualIsoChanged( void )
         ui->toolButtonDualIsoAliasMap->setEnabled( false );
         ui->toolButtonDualIsoFullresBlending->setEnabled( false );
     }
-    //If invalid, the next functions would lead to crash
-    if( llrpGetDualIsoValidity( m_pMlvObject ) == DISO_INVALID ) return;
+
     //Set dualIso mode
     llrpSetDualIsoMode( m_pMlvObject, toolButtonDualIsoCurrentIndex() );
     //Reset processing black and white levels
