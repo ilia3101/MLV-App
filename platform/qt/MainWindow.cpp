@@ -5862,6 +5862,8 @@ void MainWindow::toolButtonDualIsoChanged( void )
         ui->toolButtonDualIsoAliasMap->setEnabled( false );
         ui->toolButtonDualIsoFullresBlending->setEnabled( false );
     }
+    //If invalid, the next functions would lead to crash
+    if( llrpGetDualIsoValidity( m_pMlvObject ) == DISO_INVALID ) return;
     //Set dualIso mode
     llrpSetDualIsoMode( m_pMlvObject, toolButtonDualIsoCurrentIndex() );
     //Reset processing black and white levels
