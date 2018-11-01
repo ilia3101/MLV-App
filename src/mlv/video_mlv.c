@@ -1392,7 +1392,7 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode, char * error
                 {
                     video->frames = video_frames;
                     video->audios = audio_frames;
-                    goto short_cut;
+                    goto preview_out;
                 }
             }
             else if ( memcmp(block_header.blockType, "AUDF", 4) == 0 )
@@ -1588,6 +1588,8 @@ short_cut:
     setMlvLosslessBpp(video);
     /* Check and set dual iso validity */
     llrpSetDualIsoValidity(video, 0);
+
+preview_out:
 
     /* NON compressed frame size */
     video->frame_size = (getMlvHeight(video) * getMlvWidth(video) * getMlvBitdepth(video)) / 8;

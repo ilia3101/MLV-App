@@ -119,7 +119,6 @@ typedef struct {
     /* Will be set to 1 for cache threads to stop (probably only by freeMlvObject) */
     int stop_caching;
 
-
     /* Decides whether or not AMaZE *has* to be used or not, normally disabled for smooth playback */
     int use_amaze;
 
