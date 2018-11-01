@@ -135,7 +135,7 @@ void processingSetGammaGradient(processingObject_t * processing, double gammaVal
 
 
 /* Set Camera RAW -> sRGB matrix */
-void processingCamTosRGBMatrix(processingObject_t * processing, double * camTosRGBMatrix);
+void processingSetCamMatrix(processingObject_t * processing, double * camMatrix);
 
 
 

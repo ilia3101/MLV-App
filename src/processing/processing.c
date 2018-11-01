@@ -23,9 +23,9 @@ static const double wb_blue[]  = { 4.587, 3.985, 3.184, 2.524, 2.103, 1.903, 1.7
 static const double id_matrix[] = {1,0,0,0,1,0,0,0,1};
 
 static const double xyz_to_rgb[] = {
-    3.240710, -0.9692580,  0.0556352,
-   -1.537260,  1.8759900, -0.2039960,
-   -0.498571,  0.0415557,  1.0570700
+     3.2404542, -1.5371385, -0.4985314,
+    -0.9692660,  1.8760108,  0.0415560,
+     0.0556434, -0.2040259,  1.0572252,
 };
 
 /* Cone space! */
@@ -316,7 +316,7 @@ void processing_update_matrices(processingObject_t * processing)
 
     /* Multiply the currently XYZ matrix back to RGB in to final_matrix */
     multiplyMatrices( temp_matrix_a,
-                      processing->xyz_to_rgb_matrix,
+                      id_matrix,
                       processing->final_matrix );
 
     /* Exposure, done here if smaller than 0, or no tonemapping - else done at gamma function */
@@ -396,7 +396,7 @@ void processing_update_matrices_gradient(processingObject_t * processing)
 
     /* Multiply the currently XYZ matrix back to RGB in to final_matrix */
     multiplyMatrices( temp_matrix_a,
-                      processing->xyz_to_rgb_matrix,
+                      id_matrix,
                       final_matrix );
 
     /* Exposure, done here if smaller than 0, or no tonemapping - else done at gamma function */
@@ -425,17 +425,17 @@ void processing_update_matrices_gradient(processingObject_t * processing)
 void processing_update_highest_green(processingObject_t * processing)
 {
     /* Highest green value - pixels at this value will need to be reconstructed */
-    processing->highest_green = processing->pre_calc_gamma[ LIMIT16( MAX(processing->pre_calc_matrix[3][65535],processing->pre_calc_matrix[3][0])
-                                                                   + MAX(processing->pre_calc_matrix[4][65535],processing->pre_calc_matrix[4][0]) 
-                                                                   + MAX(processing->pre_calc_matrix[5][65535],processing->pre_calc_matrix[5][0]) ) ];
+    processing->highest_green = LIMIT16( MAX(processing->pre_calc_matrix[3][65535],processing->pre_calc_matrix[3][0])
+                                       + MAX(processing->pre_calc_matrix[4][65535],processing->pre_calc_matrix[4][0]) 
+                                       + MAX(processing->pre_calc_matrix[5][65535],processing->pre_calc_matrix[5][0]) );
 }
 
 void processing_update_highest_green_gradient(processingObject_t * processing)
 {
     /* Highest green value - pixels at this value will need to be reconstructed */
-    processing->highest_green_gradient = processing->pre_calc_gamma_gradient[ LIMIT16( MAX(processing->pre_calc_matrix_gradient[3][65535],processing->pre_calc_matrix_gradient[3][0])
-                                                                                     + MAX(processing->pre_calc_matrix_gradient[4][65535],processing->pre_calc_matrix_gradient[4][0])
-                                                                                     + MAX(processing->pre_calc_matrix_gradient[5][65535],processing->pre_calc_matrix_gradient[5][0]) ) ];
+    processing->highest_green_gradient = LIMIT16( MAX(processing->pre_calc_matrix_gradient[3][65535],processing->pre_calc_matrix_gradient[3][0])
+                                                + MAX(processing->pre_calc_matrix_gradient[4][65535],processing->pre_calc_matrix_gradient[4][0])
+                                                + MAX(processing->pre_calc_matrix_gradient[5][65535],processing->pre_calc_matrix_gradient[5][0]) );
 }
 
 /* Box blur */
