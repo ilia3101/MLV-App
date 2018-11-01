@@ -40,7 +40,8 @@ void applyProcessingObject( processingObject_t * processing,
                             uint16_t * __restrict outputImage,
                             int threads, int imageChanged );
 
-
+/* Set/get currenc camera model id */
+void processingSetCameraModel(processingObject_t *processing, uint32_t cam_id);
 
 /* Enable/disable the filter module (filter/filter.h) */
 #define processingEnableFilters(processing) processing->filter_on = 1

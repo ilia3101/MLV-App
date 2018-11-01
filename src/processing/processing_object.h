@@ -47,7 +47,8 @@ typedef struct {
     /* Pick any tonemapping function */
     double (* tone_mapping_function)(double);
 
-
+    /* Camera's model ID */
+    uint32_t cam_id;
     /* Camera's matrix - will need to be set on opening clip, default set for 5D Mark II */
     double cam_matrix[9];
     /* Main matrix: combined white balance + exposure + whatever the cmaera matrix does */

@@ -447,7 +447,7 @@ void apply_processing_object( processingObject_t * processing,
         double temp_mat[9];
 
         /* 1: 5D2, 2: 7D, 3: 5D3 */
-        int32_t * cam_matrix_int = camidGetColorMatrix2( 0x80000218 /* 0x80000250 */ /* 0x80000285 */ );
+        int32_t * cam_matrix_int = camidGetColorMatrix2( processing->cam_id );
         double xyz_to_cam[9];
         for (int i = 0; i < 9; ++i) xyz_to_cam[i] = ((double)cam_matrix_int[i*2])/((double)cam_matrix_int[i*2+1]);
 
@@ -1471,4 +1471,9 @@ void processingSetGradientMask(processingObject_t *processing, uint16_t width, u
             }
         }
     }
+}
+
+void processingSetCameraModel(processingObject_t *processing, uint32_t cam_id)
+{
+    processing->cam_id = cam_id;
 }

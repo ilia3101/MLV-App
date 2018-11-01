@@ -321,6 +321,9 @@ void setMlvProcessing(mlvObject_t * video, processingObject_t * processing)
     /* Easy bit */
     video->processing = processing;
 
+    /* Set camera model ID */
+    processingSetCameraModel(processing, getMlvCameraModel(video));
+
     /* Link dual_iso value, because it is needed */
     video->processing->dual_iso = &video->llrawproc->dual_iso;
 
