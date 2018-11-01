@@ -444,13 +444,6 @@ void apply_processing_object( processingObject_t * processing,
             0, 0, 1.0/multiplierz[2]
         };
 
-        double temp_mat[9];
-
-        /* 1: 5D2, 2: 7D, 3: 5D3 */
-//        int32_t * cam_matrix_int = camidGetColorMatrix2( 0x80000218 /*0x80000250*/ /* 0x80000285 */ );
-//        double xyz_to_cam[9];
-//        for (int i = 0; i < 9; ++i) xyz_to_cam[i] = ((double)cam_matrix_int[i*2])/((double)cam_matrix_int[i*2+1]);
-
         double XYZ_white[3];
         double XYZ_temp[3];
         Kelvin_Daylight_to_XYZ(6500, XYZ_white);
@@ -1407,11 +1400,55 @@ void processingFindWhiteBalance(processingObject_t *processing, int imageX, int 
         {
             processingSetWhiteBalance( processing, temp, tint/10.0 );
 
+            double proper_wb_matrix_b[9] = {1,0,0,0,1,0,0,0,1};
+            /* Check if doing proper white balance */
+            if (1)
+            {
+                /* Get multipliers for this to undo what has been done, it was only done to do highlihgt reconstrucytion now */
+                double multiplierz[3] = {1,1,1};
+                get_kelvin_multipliers_rgb(temp, multiplierz);
+
+                /* Now create a matrix, which will take us back to raw colour by undoing
+                 * basic wb (which was useful for highlight reconstruction, also where tint was done) */
+                double proper_wb_matrix_a[9] = {
+                    1.0/multiplierz[0], 0, 0,
+                    0, 1.0/multiplierz[1], 0,
+                    0, 0, 1.0/multiplierz[2]
+                };
+
+                double XYZ_white[3];
+                double XYZ_temp[3];
+                Kelvin_Daylight_to_XYZ(6500, XYZ_white);
+                Kelvin_Daylight_to_XYZ(temp, XYZ_temp);
+                double XYZ_multipliers[3];
+                for (int i = 0; i < 3; ++i) XYZ_multipliers[i] = XYZ_white[i]/XYZ_temp[i];
+
+                double cam_to_xyz[9];
+                invertMatrix(processing->cam_matrix, cam_to_xyz);
+
+                multiplyMatrices(proper_wb_matrix_a, cam_to_xyz, proper_wb_matrix_b);
+
+                /* Apply multipliers in XYZ */
+                for (int i = 0; i < 3; ++i)
+                {
+                    int pos = i * 3;
+                    for (int j = 0; j < 3; ++j)
+                    {
+                        proper_wb_matrix_b[pos+j] = proper_wb_matrix_b[pos+j] * XYZ_multipliers[i];
+                    }
+                }
+
+                // /* Back to sRGB */
+                multiplyMatrices(proper_wb_matrix_b, xyz_to_rgb, proper_wb_matrix_a);
+                /* copy to b for ocnvenience */
+                memcpy(proper_wb_matrix_b, proper_wb_matrix_a, 9*sizeof(double));
+            }
+
             /* --- maybe this can also be exchanged by apply_processing_object, but here it is simplified and hopefully faster --- */
             /* white balance & exposure */
-            int32_t pix0 = processing->pre_calc_gamma[ LIMIT16(pm[0][pixR] + pm[1][pixG] + pm[2][pixB]) ];
-            int32_t pix1 = processing->pre_calc_gamma[ LIMIT16(pm[3][pixR] + pm[4][pixG] + pm[5][pixB]) ];
-            int32_t pix2 = processing->pre_calc_gamma[ LIMIT16(pm[6][pixR] + pm[7][pixG] + pm[8][pixB]) ];
+            int32_t pix0 = LIMIT16(pm[0][pixR] /*+ pm[1][pixG] + pm[2][pixB]*/);
+            int32_t pix1 = LIMIT16(/*pm[3][pixR] +*/ pm[4][pixG] /*+ pm[5][pixB]*/);
+            int32_t pix2 = LIMIT16(/*pm[6][pixR] + pm[7][pixG] +*/ pm[8][pixB]);
 
             /* standard highlight reconstruction */
             if( processing->highlight_reconstruction && pix1 == processing->highest_green )
@@ -1419,6 +1456,20 @@ void processingFindWhiteBalance(processingObject_t *processing, int imageX, int 
                 pix1 = ( pix0 + pix2 ) / 2;
             }
             /* --- */
+
+            {
+                uint16_t pix0b = pix0, pix1b = pix1, pix2b = pix2;
+                double result[3];
+                result[0] = pix0b * proper_wb_matrix_b[0] + pix1b * proper_wb_matrix_b[1] + pix2b * proper_wb_matrix_b[2];
+                result[1] = pix0b * proper_wb_matrix_b[3] + pix1b * proper_wb_matrix_b[4] + pix2b * proper_wb_matrix_b[5];
+                result[2] = pix0b * proper_wb_matrix_b[6] + pix1b * proper_wb_matrix_b[7] + pix2b * proper_wb_matrix_b[8];
+                pix0 = LIMIT16(result[0]);
+                pix1 = LIMIT16(result[1]);
+                pix2 = LIMIT16(result[2]);
+            }
+            pix0 = processing->pre_calc_gamma[ pix0 ];
+            pix1 = processing->pre_calc_gamma[ pix1 ];
+            pix2 = processing->pre_calc_gamma[ pix2 ];
 
             /* for neutral grey all 3 are the same, so searching the min delta */
             uint32_t delta = abs( pix0 - pix1 ) + abs( pix1 - pix2 ) + abs( pix0 - pix2 );
