@@ -536,62 +536,6 @@ void apply_processing_object( processingObject_t * processing,
     /* white balance & exposure & highlights & gamma & highlight reconstruction */
     for (uint16_t * pix = img, * bpix = blurImage, *gmpix = gm; pix < img_end; pix += 3, bpix += 3, gmpix++)
     {
-
-        /* white balance & exposure & highlights */
-        int32_t pix0 = (pm[0][pix[0]] /* + pm[1][pix[1]] + pm[2][pix[2]] */);
-        int32_t pix1 = (/* pm[3][pix[0]] + */ pm[4][pix[1]] /* + pm[5][pix[2]] */);
-        int32_t pix2 = (/* pm[6][pix[0]] + pm[7][pix[1]] + */ pm[8][pix[2]]);
-        int32_t tmp1 = (/* pm[3][pix[0]] + */ pm[4][pix[1]] /* + pm[5][pix[2]] */);
-
-        pix[0] = LIMIT16(pix0);
-        pix[1] = LIMIT16(pix1);
-        pix[2] = LIMIT16(pix2);
-        uint16_t tmp1b = LIMIT16(tmp1);
-
-        /* Now highlight reconstruction */
-        if (processing->highlight_reconstruction)
-        {
-            if(*processing->dual_iso != 0)
-            {
-                /* Check if its the range of highest green value possible */
-                /* the range makes it cleaner against pink noise */
-                if (tmp1b >= LIMIT16( highest_green - 1000 ) && tmp1b <= LIMIT16( highest_green + 1000 ))
-                {
-                    if( pix[1] < 1.1*pix[0] && pix[1] < pix[2] )
-                    {
-                        pix[1] = (pix[0] + pix[2]) / 2;
-                    }
-                }
-            }
-            else
-            {
-                /* Check if its the highest green value possible */
-                if (tmp1b == processing->highest_green)
-                {
-                    pix[1] = (pix[0] + pix[2]) / 2;
-                }
-                /* Aggressive mode */
-                /*if (tmp1b >= processing->highest_green - 15000 && tmp1b <= processing->highest_green)
-                {
-                    if( pix[1] < 1.1*pix[0] && pix[1] < pix[2] )
-                    {
-                        pix[1] = (pix[0] + pix[2]) / 2;
-                    }
-                }*/
-            }
-        }
-
-        {
-            uint16_t pix0b = pix[0], pix1b = pix[1], pix2b = pix[2];
-            double result[3];
-            result[0] = pix0b * proper_wb_matrix_b[0] + pix1b * proper_wb_matrix_b[1] + pix2b * proper_wb_matrix_b[2];
-            result[1] = pix0b * proper_wb_matrix_b[3] + pix1b * proper_wb_matrix_b[4] + pix2b * proper_wb_matrix_b[5];
-            result[2] = pix0b * proper_wb_matrix_b[6] + pix1b * proper_wb_matrix_b[7] + pix2b * proper_wb_matrix_b[8];
-            pix[0] = LIMIT16(result[0]);
-            pix[1] = LIMIT16(result[1]);
-            pix[2] = LIMIT16(result[2]);
-        }
-
         double expo_correction = 1.0;
         double expo_correction_gradient = 1.0;
         /* shadows & highlights, clarity part 1 */
@@ -645,6 +589,12 @@ void apply_processing_object( processingObject_t * processing,
             }
         }
 
+        /* white balance & exposure & highlights */
+        int32_t pix0 = (pm[0][pix[0]] /* + pm[1][pix[1]] + pm[2][pix[2]] */);
+        int32_t pix1 = (/* pm[3][pix[0]] + */ pm[4][pix[1]] /* + pm[5][pix[2]] */);
+        int32_t pix2 = (/* pm[6][pix[0]] + pm[7][pix[1]] + */ pm[8][pix[2]]);
+        int32_t tmp1 = (/* pm[3][pix[0]] + */ pm[4][pix[1]] /* + pm[5][pix[2]] */);
+
         /* Gradient variables and part 1 */
         int32_t pix0g;
         int32_t pix1g;
@@ -656,36 +606,16 @@ void apply_processing_object( processingObject_t * processing,
         {
             /* do the same for gradient as for the pic itself, but before the values are overwritten */
             /* white balance & exposure & highlights */
-            pix0g = (pmg[0][pix[0]] /* + pmg[1][pix[1]] + pmg[2][pix[2]] */)*expo_correction*expo_correction_gradient;
-            pix1g = (/* pmg[3][pix[0]] + */ pmg[4][pix[1]] /* + pmg[5][pix[2]] */)*expo_correction*expo_correction_gradient;
-            pix2g = (/* pmg[6][pix[0]] + pmg[7][pix[1]] */ + pmg[8][pix[2]])*expo_correction*expo_correction_gradient;
+            pix0g = (pmg[0][pix[0]] /* + pmg[1][pix[1]] + pmg[2][pix[2]] */);
+            pix1g = (/* pmg[3][pix[0]] + */ pmg[4][pix[1]] /* + pmg[5][pix[2]] */);
+            pix2g = (/* pmg[6][pix[0]] + pmg[7][pix[1]] */ + pmg[8][pix[2]]);
             tmp1g = (/* pmg[3][pix[0]] + */ pmg[4][pix[1]] /* + pmg[5][pix[2]] */);
-        }
 
-        /* Gamma */
-        for( int i = 0; i < 3; i++ )
-        {
-            pix[i] = processing->pre_calc_gamma[ (uint16_t)LIMIT16( pix[i] * expo_correction ) ];
-        }
-        tmp1b = processing->pre_calc_gamma[ tmp1b ];
-
-        /* Gradient part 2 & blending */
-        if( processing->gradient_enable && gmpix[0] != 0 &&
-          ( ( processing->gradient_exposure_stops < -0.01 || processing->gradient_exposure_stops > 0.01 )
-         || ( processing->gradient_contrast       < -0.01 || processing->gradient_contrast       > 0.01 ) ) )
-        {
             uint16_t pixg[3];
             pixg[0] = LIMIT16(pix0g);
             pixg[1] = LIMIT16(pix1g);
             pixg[2] = LIMIT16(pix2g);
-            uint16_t tmp1gb = LIMIT16(tmp1g);
-
-            /* Gamma */
-            for( int i = 0; i < 3; i++ )
-            {
-                pixg[i] = processing->pre_calc_gamma_gradient[ pixg[i] ];
-            }
-            tmp1gb = processing->pre_calc_gamma_gradient[ tmp1gb ];
+            uint16_t tmp1b = LIMIT16(tmp1g);
 
             /* Now highlight reconstruction */
             if (processing->highlight_reconstruction)
@@ -694,7 +624,7 @@ void apply_processing_object( processingObject_t * processing,
                 {
                     /* Check if its the range of highest green value possible */
                     /* the range makes it cleaner against pink noise */
-                    if (tmp1gb >= LIMIT16( highest_green_gradient - 1000 ) && tmp1gb <= LIMIT16( highest_green_gradient + 1000 ))
+                    if (tmp1b >= LIMIT16( highest_green_gradient - 1000 ) && tmp1b <= LIMIT16( highest_green_gradient + 1000 ))
                     {
                         if( pixg[1] < 1.1*pixg[0] && pixg[1] < pixg[2] )
                         {
@@ -705,18 +635,96 @@ void apply_processing_object( processingObject_t * processing,
                 else
                 {
                     /* Check if its the highest green value possible */
-                    if (tmp1gb == processing->highest_green_gradient)
+                    if (tmp1b == processing->highest_green_gradient)
                     {
                         pixg[1] = (pixg[0] + pixg[2]) / 2;
                     }
                 }
+            }
+            pix0g = pixg[0];
+            pix1g = pixg[1];
+            pix2g = pixg[2];
+        }
+
+        pix[0] = LIMIT16(pix0);
+        pix[1] = LIMIT16(pix1);
+        pix[2] = LIMIT16(pix2);
+        uint16_t tmp1b = LIMIT16(tmp1);
+
+        /* Now highlight reconstruction */
+        if (processing->highlight_reconstruction)
+        {
+            if(*processing->dual_iso != 0)
+            {
+                /* Check if its the range of highest green value possible */
+                /* the range makes it cleaner against pink noise */
+                if (tmp1b >= LIMIT16( highest_green - 1000 ) && tmp1b <= LIMIT16( highest_green + 1000 ))
+                {
+                    if( pix[1] < 1.1*pix[0] && pix[1] < pix[2] )
+                    {
+                        pix[1] = (pix[0] + pix[2]) / 2;
+                    }
+                }
+            }
+            else
+            {
+                /* Check if its the highest green value possible */
+                if (tmp1b == processing->highest_green)
+                {
+                    pix[1] = (pix[0] + pix[2]) / 2;
+                }
+                /* Aggressive mode */
+                /*if (tmp1b >= processing->highest_green - 15000 && tmp1b <= processing->highest_green)
+                {
+                    if( pix[1] < 1.1*pix[0] && pix[1] < pix[2] )
+                    {
+                        pix[1] = (pix[0] + pix[2]) / 2;
+                    }
+                }*/
+            }
+        }
+        {
+            uint16_t pix0b = pix[0], pix1b = pix[1], pix2b = pix[2];
+            double result[3];
+            result[0] = pix0b * proper_wb_matrix_b[0] + pix1b * proper_wb_matrix_b[1] + pix2b * proper_wb_matrix_b[2];
+            result[1] = pix0b * proper_wb_matrix_b[3] + pix1b * proper_wb_matrix_b[4] + pix2b * proper_wb_matrix_b[5];
+            result[2] = pix0b * proper_wb_matrix_b[6] + pix1b * proper_wb_matrix_b[7] + pix2b * proper_wb_matrix_b[8];
+            pix[0] = LIMIT16(result[0]);
+            pix[1] = LIMIT16(result[1]);
+            pix[2] = LIMIT16(result[2]);
+        }
+
+        /* Gamma */
+        for( int i = 0; i < 3; i++ )
+        {
+            pix[i] = processing->pre_calc_gamma[ (uint16_t)LIMIT16( pix[i] * expo_correction ) ];
+        }
+
+        /* Gradient part 2 & blending */
+        if( processing->gradient_enable && gmpix[0] != 0 &&
+          ( ( processing->gradient_exposure_stops < -0.01 || processing->gradient_exposure_stops > 0.01 )
+         || ( processing->gradient_contrast       < -0.01 || processing->gradient_contrast       > 0.01 ) ) )
+        {
+            uint16_t pix0b = pix0g, pix1b = pix1g, pix2b = pix2g;
+            double result[3];
+            result[0] = pix0b * proper_wb_matrix_b[0] + pix1b * proper_wb_matrix_b[1] + pix2b * proper_wb_matrix_b[2];
+            result[1] = pix0b * proper_wb_matrix_b[3] + pix1b * proper_wb_matrix_b[4] + pix2b * proper_wb_matrix_b[5];
+            result[2] = pix0b * proper_wb_matrix_b[6] + pix1b * proper_wb_matrix_b[7] + pix2b * proper_wb_matrix_b[8];
+            uint16_t pixg[3];
+            pixg[0] = LIMIT16(result[0]);
+            pixg[1] = LIMIT16(result[1]);
+            pixg[2] = LIMIT16(result[2]);
+
+            /* Gamma */
+            for( int i = 0; i < 3; i++ )
+            {
+                pixg[i] = processing->pre_calc_gamma_gradient[ (uint16_t)LIMIT16( pixg[i] * expo_correction * expo_correction_gradient ) ];
             }
 
             /* Blending using the mask */
             pix[0] = gmpix[0] / 65535.0 * pixg[0] + (65535 - gmpix[0]) / 65535.0 * pix[0];
             pix[1] = gmpix[0] / 65535.0 * pixg[1] + (65535 - gmpix[0]) / 65535.0 * pix[1];
             pix[2] = gmpix[0] / 65535.0 * pixg[2] + (65535 - gmpix[0]) / 65535.0 * pix[2];
-            tmp1b = gmpix[0] / 65535.0 * tmp1gb + (65535 - gmpix[0]) / 65535.0 * tmp1b;
         }
     }
 
