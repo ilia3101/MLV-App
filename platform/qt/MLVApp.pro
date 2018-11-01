@@ -127,7 +127,9 @@ SOURCES += \
     FcpxmlSelectDialog.cpp \
     ../../src/processing/denoiser/denoiser_2d_median.c \
     ReceiptCopyMaskDialog.cpp \
-    UserManualDialog.cpp
+    UserManualDialog.cpp \
+    QRecentFilesMenu.cpp \
+    SingleFrameExportDialog.cpp
 
 macx: SOURCES += ../cocoa/avf_lib/avf_lib.m
 
@@ -206,7 +208,11 @@ HEADERS += \
     FcpxmlAssistantDialog.h \
     FcpxmlSelectDialog.h \
     ReceiptCopyMaskDialog.h \
-    UserManualDialog.h
+    UserManualDialog.h \
+    QRecentFilesMenu.h \
+    SingleFrameExportDialog.h \
+    StretchFactors.h \
+    DarkStyleModern.h
 
 macx: HEADERS += \
     ../cocoa/avf_lib/avencoder.h \
@@ -223,7 +229,8 @@ FORMS += \
     FcpxmlAssistantDialog.ui \
     FcpxmlSelectDialog.ui \
     ReceiptCopyMaskDialog.ui \
-    UserManualDialog.ui
+    UserManualDialog.ui \
+    SingleFrameExportDialog.ui
 
 RESOURCES += \
     ressources.qrc \
@@ -236,12 +243,22 @@ DISTFILES += \
     darkstyle/darkstyleOSX.qss \
     mlvapp.desktop
 
-win32: RC_ICONS = MLVAPP.ico
+RC_ICONS = MLVAPP.ico
+#win32{
+#    RC_ICONS = MLVAPP.ico
+#    QMAKE_TARGET_COMPANY = magiclantern
+#    QMAKE_TARGET_DESCRIPTION = "Processing and converting tool for MLV files"
+#    QMAKE_TARGET_PRODUCT = MLVApp
+#    VERSION = 0.17.0
+#    RC_CODEPAGE = 1252
+#}
 macx: ICON = MLVAPP.icns
 QMAKE_INFO_PLIST = Info.plist
 PACKAGE_FILES.files += bash_scripts/HDR_MOV.command
 PACKAGE_FILES.files += bash_scripts/TIF_CLEAN.command
+PACKAGE_FILES.files += bash_scripts/PROXY_CLEANER.command
 PACKAGE_FILES.files += ../../src/mlv/llrawproc/pixelmaps/80000331_1872x1059.fpm
+PACKAGE_FILES.files += ../../src/mlv/llrawproc/pixelmaps/80000326_1808x3508.fpm
 PACKAGE_FILES.path = Contents/MacOS
 QMAKE_BUNDLE_DATA += PACKAGE_FILES
 #unpack & install ffmpeg on OSX

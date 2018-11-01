@@ -1,3 +1,27 @@
+QFrame{
+  font: 8pt;
+}
+
+QToolButton{
+  font: 8pt;
+}
+
+QSpinBox{
+  font: 8pt;
+}
+
+QLineEdit{
+  font: 8pt;
+}
+
+QComboBox{
+  font: 8pt;
+}
+
+QCheckBox{
+  font: 8pt;
+}
+
 QToolTip{
   color:#ffffff;
   background-color:palette(base);
@@ -127,19 +151,17 @@ QDockWidget::float-button{
   right:25px;
 }
 QGroupBox{
-  background-color:rgba(66,66,66,50%);
+  background-color:rgba(66,66,66,100%);
   margin-top:23px;
-  border:1px solid rgba(25,25,25,127);
   border-top-left-radius:4px;
   border-top-right-radius:4px;
 }
 QGroupBox::title{
   subcontrol-origin:margin;
   subcontrol-position:left top;
-  padding:3px 6px;
+  padding:5px 6px;
   margin-left:3px;
-  background-color:qlineargradient(x1:0,y1:1,x2:0,y2:0,stop:0 rgba(25,25,25,127),stop:1 rgba(53,53,53,75));
-  border:1px solid rgba(25,25,25,75);
+  background-color:rgba(66,66,66,100%);
   border-top-left-radius:4px;
   border-top-right-radius:4px;
 }
@@ -339,20 +361,20 @@ QSlider::handle:horizontal:hover{
   background:palette(highlight);
 }
 QSlider::add-page:horizontal{
-  background:palette(base);
+  background:rgba(35,35,35,255);
   height: 4px;
   border-radius: 2px;
-  border: 1px solid rgba(35,35,35,255);
+  border: 1px solid rgba(25,25,25,255);
 }
 QSlider::sub-page:horizontal{
   background:palette(highlight);
   height: 4px;
   border-radius: 2px;
-  border: 1px solid rgba(35,35,35,255);
+  border: 1px solid rgba(25,25,25,255);
 }
 QSlider::sub-page:horizontal:disabled{
   background:rgb(80,80,80);
   height: 4px;
   border-radius: 2px;
-  border: 1px solid rgba(35,35,35,255);
+  border: 1px solid rgba(25,25,25,255);
 }

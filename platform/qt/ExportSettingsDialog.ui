@@ -152,22 +152,27 @@
          <widget class="QComboBox" name="comboBoxDebayer">
           <item>
            <property name="text">
-            <string>Bilinear</string>
+            <string>Force Bilinear</string>
            </property>
           </item>
           <item>
            <property name="text">
-            <string>AMaZE</string>
+            <string>Force AMaZE</string>
            </property>
           </item>
           <item>
            <property name="text">
-            <string>LMMSE</string>
+            <string>Force LMMSE</string>
            </property>
           </item>
           <item>
            <property name="text">
-            <string>IGV</string>
+            <string>Force IGV</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Receipt configuration</string>
            </property>
           </item>
          </widget>

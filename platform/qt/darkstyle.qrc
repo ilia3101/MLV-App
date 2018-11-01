@@ -26,5 +26,9 @@
         <file>darkstyle/darkstyleOSX.qss</file>
         <file>darkstyle/SliderHandle.png</file>
         <file>darkstyle/SliderHandleDisabled.png</file>
+        <file>darkstyle/icon_branch_closed_disabled.png</file>
+        <file>darkstyle/icon_branch_open_disabled.png</file>
+        <file>darkstyle/darkstyleModern.qss</file>
+        <file>darkstyle/darkstyleModernOSX.qss</file>
     </qresource>
 </RCC>

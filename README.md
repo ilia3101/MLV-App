@@ -1,7 +1,7 @@
 # :fire::fire::fire: MLV App :fire::fire::fire:
 What is MLV App? Lightroom, but for Magic Lantern MLV Video (and open source and cross platform)
 
-![MLV App](https://user-images.githubusercontent.com/30245296/46308556-42329400-c5ba-11e8-8101-1feef23ee706.png)
+![MLV App](https://user-images.githubusercontent.com/30245296/47175618-db301180-d313-11e8-9e55-acad188b6171.png)
 
 Find the latest releases [here](https://ilia3101.github.io/MLV-App/). Download, unpack and start.
 
@@ -31,7 +31,7 @@ A very first version of a kind of user manual can be found [here](https://github
 - Label for timecode and duration of edited clip
 - Auto load white balance, if MLV was filmed at sunny, shade, cloudy, thungsten, fluorescent, flash or kelvin
 - 1D/3D LUT (.cube) support
-- Single frame (3x)8bit PNG export
+- Single frame (3x)8bit PNG and Cinema DNG (compressed/lossless) export
 - Clip export via ffmpeg 10bit ProRes 422 (Proxy, LT, Standard, HQ), ProRes 4444, RAW AVI, 8bit H.264 and H.265, 16bit TIFF sequence, DNxHD, DNxHR, JPEG2000, MotionJPEG, 10/12/16bit HuffYUV 4:4:4; all with or without audio
 - macOS only: Clip export via Apple AVFoundation 12bit ProRes 422, ProRes 4444 and 8bit H.264, all with or without audio
 - Clip export to (10/12/14/16bit for Dual ISO) Cinema DNG files (with default or Davinci Resolve naming). Exporting modes: uncompressed, lossless and fast pass (in the last one no RAW correction, processing or decompressing/compressing is done, raw data copied as is from MLV to DNG uncompressed or lossless).
@@ -50,6 +50,7 @@ A very first version of a kind of user manual can be found [here](https://github
 - Zebras
 - Create and load MAPP files (this files include all required information from the original MLV, plus video and audio frame index. If .MAPP file already created, importing is lot faster especially on slower HDD)
 - FCPXML Import Assistant: helps importing the MLV files, which were used as proxy in a NLE project
+- FCPXML Selection Assistant: helps selecting the MLV files, which were or were not used as proxy in a NLE project
 - Update checker
 
 ## Compiling :collision:

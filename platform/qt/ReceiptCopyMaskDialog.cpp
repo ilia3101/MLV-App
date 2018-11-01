@@ -204,6 +204,7 @@ void ReceiptCopyMaskDialog::on_pushButtonAll_clicked()
     on_checkBoxRawCorrection_clicked( true );
     ui->checkBoxProcessing->setChecked( true );
     on_checkBoxProcessing_clicked( true );
+    ui->checkBoxDebayer->setChecked( true );
     ui->checkBoxDetails->setChecked( true );
     on_checkBoxDetails_clicked( true );
     ui->checkBoxGradient->setChecked( true );
@@ -225,6 +226,7 @@ void ReceiptCopyMaskDialog::on_pushButtonNone_clicked()
     on_checkBoxRawCorrection_clicked( false );
     ui->checkBoxProcessing->setChecked( false );
     on_checkBoxProcessing_clicked( false );
+    ui->checkBoxDebayer->setChecked( false );
     ui->checkBoxDetails->setChecked( false );
     on_checkBoxDetails_clicked( false );
     ui->checkBoxGradient->setChecked( false );

@@ -20,6 +20,7 @@
 #include <QGraphicsPixmapItem>
 #include <QCloseEvent>
 #include <QXmlStreamWriter>
+#include <QActionGroup>
 #include "../../src/mlv_include.h"
 #include "InfoDialog.h"
 #include "StatusDialog.h"
@@ -37,6 +38,7 @@
 #include "Scripting.h"
 #include "Updater/updaterUI/CUpdater.h"
 #include "ReceiptCopyMaskDialog.h"
+#include "QRecentFilesMenu.h"
 
 namespace Ui {
 class MainWindow;
@@ -120,7 +122,7 @@ private slots:
 
     void on_actionGoto_First_Frame_triggered();
     void on_actionExport_triggered();
-    void on_actionExportActualFrame_triggered();
+    void on_actionExportCurrentFrame_triggered();
     void on_checkBoxHighLightReconstruction_toggled(bool checked);
     void on_checkBoxChromaSeparation_toggled(bool checked);
     void on_comboBoxProfile_currentIndexChanged(int index);
@@ -160,6 +162,8 @@ private slots:
     void on_actionShowAudioTrack_toggled(bool checked);
     void on_listWidgetSession_customContextMenuRequested(const QPoint &pos);
     void deleteFileFromSession( void );
+    void on_actionShowInFinder_triggered( void );
+    void on_actionOpenWithExternalApplication_triggered( void );
     void rightClickShowFile( void );
     void selectAllFiles( void );
     void pictureCustomContextMenuRequested(const QPoint &pos);
@@ -190,6 +194,7 @@ private slots:
     void on_actionFullscreen_triggered(bool checked);
     void exportHandler( void );
     void on_actionPlay_triggered(bool checked);
+    void on_actionPlay_toggled(bool checked);
     void on_actionShowZebras_triggered();
     void toolButtonFocusPixelsChanged( void );
     void toolButtonFocusPixelsIntMethodChanged( void );
@@ -218,6 +223,7 @@ private slots:
     void gradientFinalPosPicked(int x, int y , bool isFinished);
     void on_groupBoxRawCorrection_toggled(bool arg1);
     void on_groupBoxCutInOut_toggled(bool arg1);
+    void on_groupBoxDebayer_toggled(bool arg1);
     void on_groupBoxProcessing_toggled(bool arg1);
     void on_groupBoxDetails_toggled(bool arg1);
     void on_groupBoxColorWheels_toggled(bool arg1);
@@ -248,6 +254,7 @@ private slots:
     void on_actionPreviewDisabled_triggered();
     void on_actionPreviewList_triggered();
     void on_actionPreviewPicture_triggered();
+    void on_actionPreviewPictureBottom_triggered();
 
     void on_comboBoxHStretch_currentIndexChanged(int index);
     void on_comboBoxVStretch_currentIndexChanged(int index);
@@ -268,6 +275,14 @@ private slots:
     void on_lineEditLutName_textChanged(const QString &arg1);
 
     void on_toolButtonRawBlackAutoCorrect_clicked();
+
+    void on_actionSelectExternalApplication_triggered();
+    void openRecentSession( QString fileName );
+
+    void on_actionDarkThemeStandard_triggered(bool checked);
+    void on_actionDarkThemeModern_triggered(bool checked);
+
+    void on_comboBoxDebayer_currentIndexChanged( int index );
 
 private:
     Ui::MainWindow *ui;
@@ -292,6 +307,9 @@ private:
     QLabel *m_pCachingStatus;
     QLabel *m_pFpsStatus;
     QLabel *m_pFrameNumber;
+    QActionGroup *m_darkFrameGroup;
+    QActionGroup *m_previewDebayerGroup;
+    QActionGroup *m_scopeGroup;
     DoubleClickLabel *m_pTcLabel;
     bool m_tcModeDuration;
     uint8_t *m_pRawImage;
@@ -323,8 +341,14 @@ private:
     bool m_exportAbortPressed;
     bool m_zoomTo100Center;
     bool m_zoomModeChanged;
-    QString m_lastSaveFileName;
+    bool m_playbackStopped;
+    QString m_lastExportPath;
+    QString m_lastSessionFileName;
+    QString m_lastMlvOpenFileName;
+    QString m_lastReceiptFileName;
+    QString m_lastDarkframeFileName;
     QString m_lastLutFileName;
+    QString m_externalApplicationName;
     QString m_sessionFileName;
     ReceiptSettings *m_pReceiptClipboard;
     QVector<ReceiptSettings*> m_pSessionReceipts;
@@ -398,6 +422,8 @@ private:
     void setGradientMask( void );
     uint16_t autoCorrectRawBlackLevel( void );
     bool isRawBlackLevelWrong( void );
+    QRecentFilesMenu *m_pRecentFilesMenu;
+    void selectDebayerAlgorithm( void );
 
 signals:
     void exportReady( void );

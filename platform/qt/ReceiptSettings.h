@@ -13,6 +13,8 @@
 class ReceiptSettings
 {
 public:
+    enum DebayerAlgorithm{ None = 0, Simple, Bilinear, LMMSE, IGV, AMaZE };
+
     ReceiptSettings();
     void setLoaded( void )          {m_neverLoaded = false;}
 
@@ -81,6 +83,8 @@ public:
 
     void setLastPlaybackPosition( uint32_t pos ){m_lastPlaybackPosition = pos;}
 
+    void setDebayer( uint8_t algorithm )      {m_debayer = algorithm;}
+
     bool wasNeverLoaded( void ){return m_neverLoaded;}
 
     int exposure( void )   {return m_exposure;}
@@ -146,6 +150,7 @@ public:
     QString fileName( void ){return m_fileName;}
     QString exportFileName( void ){return m_exportFileName;}
     uint32_t lastPlaybackPosition( void ){return m_lastPlaybackPosition;}
+    uint8_t debayer( void ){return m_debayer;}
 
 private:
     bool m_neverLoaded;
@@ -213,6 +218,7 @@ private:
     QString m_fileName;
     QString m_exportFileName;
     uint32_t m_lastPlaybackPosition;
+    uint8_t m_debayer;
 };
 
 #endif // RECEIPTSETTINGS_H

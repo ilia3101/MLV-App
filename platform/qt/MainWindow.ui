@@ -34,9 +34,6 @@
     <property name="bottomMargin">
      <number>5</number>
     </property>
-    <property name="horizontalSpacing">
-     <number>-1</number>
-    </property>
     <item row="0" column="0">
      <widget class="GraphicsZoomView" name="graphicsView">
       <property name="contextMenuPolicy">
@@ -86,6 +83,18 @@
       <property name="enabled">
        <bool>false</bool>
       </property>
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="minimumSize">
+       <size>
+        <width>0</width>
+        <height>32</height>
+       </size>
+      </property>
       <property name="maximumSize">
        <size>
         <width>16777215</width>
@@ -133,9 +142,13 @@
     <addaction name="actionFcpxmlSelectionAssistant"/>
     <addaction name="actionClip_Information"/>
     <addaction name="actionExport"/>
-    <addaction name="actionExportActualFrame"/>
+    <addaction name="actionExportCurrentFrame"/>
     <addaction name="separator"/>
     <addaction name="actionExportSettings"/>
+    <addaction name="separator"/>
+    <addaction name="actionShowInFinder"/>
+    <addaction name="actionOpenWithExternalApplication"/>
+    <addaction name="actionSelectExternalApplication"/>
     <addaction name="separator"/>
     <addaction name="actionQuit"/>
    </widget>
@@ -170,9 +183,9 @@
     <property name="title">
      <string>Playback</string>
     </property>
-    <widget class="QMenu" name="menuDemosaicForPreview">
+    <widget class="QMenu" name="menuDemosaicForPlayback">
      <property name="title">
-      <string>Debayer for Preview</string>
+      <string>Debayer for Playback</string>
      </property>
      <addaction name="actionUseNoneDebayer"/>
      <addaction name="actionUseSimpleDebayer"/>
@@ -195,7 +208,7 @@
     <addaction name="separator"/>
     <addaction name="actionDropFrameMode"/>
     <addaction name="actionPlaybackPosition"/>
-    <addaction name="menuDemosaicForPreview"/>
+    <addaction name="menuDemosaicForPlayback"/>
     <addaction name="separator"/>
     <addaction name="actionZoomFit"/>
     <addaction name="actionZoom100"/>
@@ -212,6 +225,7 @@
      <addaction name="actionPreviewDisabled"/>
      <addaction name="actionPreviewList"/>
      <addaction name="actionPreviewPicture"/>
+     <addaction name="actionPreviewPictureBottom"/>
     </widget>
     <widget class="QMenu" name="menuPlayback_Elements">
      <property name="title">
@@ -221,6 +235,13 @@
      <addaction name="actionTimecodePositionRight"/>
      <addaction name="separator"/>
      <addaction name="actionToggleTimecodeDisplay"/>
+    </widget>
+    <widget class="QMenu" name="menuTheme">
+     <property name="title">
+      <string>Theme</string>
+     </property>
+     <addaction name="actionDarkThemeStandard"/>
+     <addaction name="actionDarkThemeModern"/>
     </widget>
     <addaction name="actionShowSessionArea"/>
     <addaction name="actionShowEditArea"/>
@@ -234,6 +255,10 @@
     <addaction name="actionShowParade"/>
     <addaction name="actionShowVectorScope"/>
     <addaction name="actionShowZebras"/>
+    <addaction name="separator"/>
+    <addaction name="menuTheme"/>
+    <addaction name="separator"/>
+    <addaction name="actionAskForSavingOnQuit"/>
    </widget>
    <widget class="QMenu" name="menuWindow">
     <property name="title">
@@ -434,6 +459,12 @@ QGroupBox::indicator:unchecked {
 }
 QGroupBox::indicator:checked {
     image: url(:/darkstyle/icon_branch_open.png);
+}
+QGroupBox::indicator:unchecked:disabled {
+    image: url(:/darkstyle/icon_branch_closed_disabled.png);
+}
+QGroupBox::indicator:checked:disabled {
+    image: url(:/darkstyle/icon_branch_open_disabled.png);
 }</string>
          </property>
          <property name="frameShape">
@@ -459,8 +490,8 @@ QGroupBox::indicator:checked {
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>243</width>
-            <height>3570</height>
+            <width>244</width>
+            <height>3666</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayoutScrollArea">
@@ -532,6 +563,9 @@ QGroupBox::indicator:checked {
                  </item>
                  <item>
                   <widget class="Line" name="line_10">
+                   <property name="styleSheet">
+                    <string notr="true">background-color: rgb(115, 115, 115);</string>
+                   </property>
                    <property name="orientation">
                     <enum>Qt::Horizontal</enum>
                    </property>
@@ -715,6 +749,9 @@ QGroupBox::indicator:checked {
                  </item>
                  <item>
                   <widget class="Line" name="line_7">
+                   <property name="styleSheet">
+                    <string notr="true">background-color: rgb(115, 115, 115);</string>
+                   </property>
                    <property name="orientation">
                     <enum>Qt::Horizontal</enum>
                    </property>
@@ -921,6 +958,9 @@ QGroupBox::indicator:checked {
                  </item>
                  <item>
                   <widget class="Line" name="line_3">
+                   <property name="styleSheet">
+                    <string notr="true">background-color: rgb(115, 115, 115);</string>
+                   </property>
                    <property name="orientation">
                     <enum>Qt::Horizontal</enum>
                    </property>
@@ -1227,6 +1267,9 @@ QGroupBox::indicator:checked {
                  </item>
                  <item>
                   <widget class="Line" name="line_4">
+                   <property name="styleSheet">
+                    <string notr="true">background-color: rgb(115, 115, 115);</string>
+                   </property>
                    <property name="orientation">
                     <enum>Qt::Horizontal</enum>
                    </property>
@@ -1366,6 +1409,9 @@ QGroupBox::indicator:checked {
                  </item>
                  <item>
                   <widget class="Line" name="line_8">
+                   <property name="styleSheet">
+                    <string notr="true">background-color: rgb(115, 115, 115);</string>
+                   </property>
                    <property name="orientation">
                     <enum>Qt::Horizontal</enum>
                    </property>
@@ -1481,6 +1527,9 @@ QGroupBox::indicator:checked {
                  </item>
                  <item>
                   <widget class="Line" name="line_9">
+                   <property name="styleSheet">
+                    <string notr="true">background-color: rgb(115, 115, 115);</string>
+                   </property>
                    <property name="orientation">
                     <enum>Qt::Horizontal</enum>
                    </property>
@@ -1860,6 +1909,9 @@ QGroupBox::indicator:checked {
                  </item>
                  <item>
                   <widget class="Line" name="line_6">
+                   <property name="styleSheet">
+                    <string notr="true">background-color: rgb(115, 115, 115);</string>
+                   </property>
                    <property name="orientation">
                     <enum>Qt::Horizontal</enum>
                    </property>
@@ -1907,6 +1959,9 @@ QGroupBox::indicator:checked {
                  </item>
                  <item>
                   <widget class="Line" name="line_11">
+                   <property name="styleSheet">
+                    <string notr="true">background-color: rgb(115, 115, 115);</string>
+                   </property>
                    <property name="orientation">
                     <enum>Qt::Horizontal</enum>
                    </property>
@@ -1998,6 +2053,9 @@ QGroupBox::indicator:checked {
                  </item>
                  <item>
                   <widget class="Line" name="line_16">
+                   <property name="styleSheet">
+                    <string notr="true">background-color: rgb(115, 115, 115);</string>
+                   </property>
                    <property name="orientation">
                     <enum>Qt::Horizontal</enum>
                    </property>
@@ -2347,6 +2405,93 @@ QGroupBox::indicator:checked {
             </widget>
            </item>
            <item>
+            <widget class="QGroupBox" name="groupBoxDebayer">
+             <property name="title">
+              <string>Debayer Algorithm</string>
+             </property>
+             <property name="checkable">
+              <bool>true</bool>
+             </property>
+             <layout class="QGridLayout" name="gridLayout_39">
+              <property name="leftMargin">
+               <number>5</number>
+              </property>
+              <property name="topMargin">
+               <number>5</number>
+              </property>
+              <property name="rightMargin">
+               <number>5</number>
+              </property>
+              <property name="bottomMargin">
+               <number>5</number>
+              </property>
+              <item row="0" column="0">
+               <widget class="QFrame" name="frameDebayer">
+                <layout class="QGridLayout" name="gridLayout_40">
+                 <property name="leftMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="horizontalSpacing">
+                  <number>5</number>
+                 </property>
+                 <item row="0" column="0">
+                  <widget class="QComboBox" name="comboBoxDebayer">
+                   <property name="font">
+                    <font>
+                     <pointsize>10</pointsize>
+                    </font>
+                   </property>
+                   <property name="currentIndex">
+                    <number>5</number>
+                   </property>
+                   <item>
+                    <property name="text">
+                     <string>None</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Simple</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Bilinear</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>LMMSE</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>IGV</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>AMaZE</string>
+                    </property>
+                   </item>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item>
             <widget class="QGroupBox" name="groupBoxProcessing">
              <property name="title">
               <string>Processing</string>
@@ -2564,6 +2709,9 @@ QGroupBox::indicator:checked {
                  </item>
                  <item>
                   <widget class="Line" name="line_17">
+                   <property name="styleSheet">
+                    <string notr="true">background-color: rgb(115, 115, 115);</string>
+                   </property>
                    <property name="orientation">
                     <enum>Qt::Horizontal</enum>
                    </property>
@@ -2776,6 +2924,9 @@ QGroupBox::indicator:checked {
                  </item>
                  <item>
                   <widget class="Line" name="line_18">
+                   <property name="styleSheet">
+                    <string notr="true">background-color: rgb(115, 115, 115);</string>
+                   </property>
                    <property name="orientation">
                     <enum>Qt::Horizontal</enum>
                    </property>
@@ -3044,6 +3195,9 @@ QGroupBox::indicator:checked {
                  </item>
                  <item>
                   <widget class="Line" name="line_2">
+                   <property name="styleSheet">
+                    <string notr="true">background-color: rgb(115, 115, 115);</string>
+                   </property>
                    <property name="orientation">
                     <enum>Qt::Horizontal</enum>
                    </property>
@@ -3465,6 +3619,9 @@ QGroupBox::indicator:checked {
                  </item>
                  <item>
                   <widget class="Line" name="line_ShadowsHighlights">
+                   <property name="styleSheet">
+                    <string notr="true">background-color: rgb(115, 115, 115);</string>
+                   </property>
                    <property name="orientation">
                     <enum>Qt::Horizontal</enum>
                    </property>
@@ -3640,6 +3797,9 @@ QGroupBox::indicator:checked {
                  </item>
                  <item>
                   <widget class="Line" name="line">
+                   <property name="styleSheet">
+                    <string notr="true">background-color: rgb(115, 115, 115);</string>
+                   </property>
                    <property name="orientation">
                     <enum>Qt::Horizontal</enum>
                    </property>
@@ -3949,6 +4109,9 @@ QGroupBox::indicator:checked {
                  </item>
                  <item>
                   <widget class="Line" name="line_19">
+                   <property name="styleSheet">
+                    <string notr="true">background-color: rgb(115, 115, 115);</string>
+                   </property>
                    <property name="orientation">
                     <enum>Qt::Horizontal</enum>
                    </property>
@@ -4328,6 +4491,9 @@ QGroupBox::indicator:checked {
                  </item>
                  <item>
                   <widget class="Line" name="line_13">
+                   <property name="styleSheet">
+                    <string notr="true">background-color: rgb(115, 115, 115);</string>
+                   </property>
                    <property name="orientation">
                     <enum>Qt::Horizontal</enum>
                    </property>
@@ -4529,6 +4695,9 @@ QGroupBox::indicator:checked {
                  </item>
                  <item>
                   <widget class="Line" name="line_14">
+                   <property name="styleSheet">
+                    <string notr="true">background-color: rgb(115, 115, 115);</string>
+                   </property>
                    <property name="orientation">
                     <enum>Qt::Horizontal</enum>
                    </property>
@@ -4730,6 +4899,9 @@ QGroupBox::indicator:checked {
                  </item>
                  <item>
                   <widget class="Line" name="line_15">
+                   <property name="styleSheet">
+                    <string notr="true">background-color: rgb(115, 115, 115);</string>
+                   </property>
                    <property name="orientation">
                     <enum>Qt::Horizontal</enum>
                    </property>
@@ -5194,6 +5366,9 @@ QGroupBox::indicator:checked {
                  </item>
                  <item>
                   <widget class="Line" name="line_5">
+                   <property name="styleSheet">
+                    <string notr="true">background-color: rgb(115, 115, 115);</string>
+                   </property>
                    <property name="orientation">
                     <enum>Qt::Horizontal</enum>
                    </property>
@@ -5835,6 +6010,9 @@ QGroupBox::indicator:checked {
                    </item>
                    <item row="2" column="0" colspan="2">
                     <widget class="Line" name="line_12">
+                     <property name="styleSheet">
+                      <string notr="true">background-color: rgb(115, 115, 115);</string>
+                     </property>
                      <property name="orientation">
                       <enum>Qt::Horizontal</enum>
                      </property>
@@ -5952,12 +6130,12 @@ QGroupBox::indicator:checked {
    <property name="minimumSize">
     <size>
      <width>170</width>
-     <height>166</height>
+     <height>130</height>
     </size>
    </property>
    <property name="maximumSize">
     <size>
-     <width>500</width>
+     <width>524287</width>
      <height>524287</height>
     </size>
    </property>
@@ -5965,7 +6143,7 @@ QGroupBox::indicator:checked {
     <set>QDockWidget::DockWidgetClosable</set>
    </property>
    <property name="allowedAreas">
-    <set>Qt::LeftDockWidgetArea</set>
+    <set>Qt::BottomDockWidgetArea|Qt::LeftDockWidgetArea</set>
    </property>
    <property name="windowTitle">
     <string>Session</string>
@@ -6452,16 +6630,16 @@ QGroupBox::indicator:checked {
     <string>B</string>
    </property>
   </action>
-  <action name="actionExportActualFrame">
+  <action name="actionExportCurrentFrame">
    <property name="icon">
     <iconset resource="ressources.qrc">
      <normaloff>:/RetinaIMG/RetinaIMG/Export-Image-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Export-Image-icon.png</iconset>
    </property>
    <property name="text">
-    <string>Export Actual Frame</string>
+    <string>Export Current Frame</string>
    </property>
    <property name="toolTip">
-    <string>Export actual frame as 16 bit PNG</string>
+    <string>Export current frame...</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+Shift+E</string>
@@ -6523,7 +6701,7 @@ QGroupBox::indicator:checked {
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Picture Mode</string>
+    <string>Picture Mode Left</string>
    </property>
   </action>
   <action name="actionUseBilinear">
@@ -6720,6 +6898,73 @@ QGroupBox::indicator:checked {
    </property>
    <property name="text">
     <string>Remember Playback Position</string>
+   </property>
+  </action>
+  <action name="actionPreviewPictureBottom">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Picture Mode Bottom</string>
+   </property>
+  </action>
+  <action name="actionShowInFinder">
+   <property name="text">
+    <string>Reveal in Finder</string>
+   </property>
+   <property name="toolTip">
+    <string>Reveal selected file in Finder</string>
+   </property>
+   <property name="shortcut">
+    <string>Alt+R</string>
+   </property>
+  </action>
+  <action name="actionOpenWithExternalApplication">
+   <property name="text">
+    <string>Open with External Application</string>
+   </property>
+   <property name="toolTip">
+    <string>Open selected clip with external application</string>
+   </property>
+   <property name="shortcut">
+    <string>Alt+A</string>
+   </property>
+  </action>
+  <action name="actionSelectExternalApplication">
+   <property name="text">
+    <string>Select External Application</string>
+   </property>
+   <property name="toolTip">
+    <string>Select external application</string>
+   </property>
+  </action>
+  <action name="actionAskForSavingOnQuit">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Ask for Saving on Quit</string>
+   </property>
+  </action>
+  <action name="actionDarktheme">
+   <property name="text">
+    <string>Darktheme</string>
+   </property>
+  </action>
+  <action name="actionDarkThemeStandard">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>DarkTheme Standard</string>
+   </property>
+  </action>
+  <action name="actionDarkThemeModern">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>DarkTheme Modern</string>
    </property>
   </action>
  </widget>

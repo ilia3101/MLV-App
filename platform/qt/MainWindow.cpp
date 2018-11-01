@@ -25,34 +25,28 @@
 
 #ifdef Q_OS_MACX
 #include "AvfLibWrapper.h"
+#include "MainWindow.h"
 #endif
 
 #include "SystemMemory.h"
 #include "ExportSettingsDialog.h"
 #include "EditSliderValueDialog.h"
 #include "DarkStyle.h"
+#include "DarkStyleModern.h"
 #include "Updater/updaterUI/cupdaterdialog.h"
 #include "FcpxmlAssistantDialog.h"
 #include "FcpxmlSelectDialog.h"
 #include "UserManualDialog.h"
+#include "StretchFactors.h"
+#include "SingleFrameExportDialog.h"
 
 #define APPNAME "MLV App"
-#define VERSION "1.1"
-#define GITVERSION "QTv1.1"
+#define VERSION "1.2"
+#define GITVERSION "QTv1.2"
 
 #define FACTOR_DS       22.5
 #define FACTOR_LS       11.2
 #define FACTOR_LIGHTEN  0.6
-#define STRETCH_H_100   1.0
-#define STRETCH_H_133   1.3333
-#define STRETCH_H_150   1.5
-#define STRETCH_H_175   1.75
-#define STRETCH_H_180   1.8
-#define STRETCH_H_200   2.0
-#define STRETCH_V_100   1.0
-#define STRETCH_V_167   1.6667
-#define STRETCH_V_300   3.0
-#define STRETCH_V_033   0.3333
 
 //Constructor
 MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
@@ -76,6 +70,7 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     m_zoomTo100Center = false;
     m_zoomModeChanged = false;
     m_tryToSyncAudio = false;
+    m_playbackStopped = false;
 
 #ifdef STDOUT_SILENT
     //QtNetwork: shut up please!
@@ -128,6 +123,7 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
             if( m_pSessionReceipts.count() ) showFileInEditor( m_pSessionReceipts.count() - 1 );
             m_inOpeningProcess = false;
             m_sessionFileName = fileName;
+            selectDebayerAlgorithm();
         }
         else if( QFile(fileName).exists() && fileName.endsWith( ".command", Qt::CaseInsensitive ) )
         {
@@ -185,7 +181,10 @@ void MainWindow::timerFrameEvent( void )
     if( m_frameStillDrawing )
     {
         //On setup slider priority
-        if( !ui->actionPlay->isChecked() ) return;
+        if( !ui->actionPlay->isChecked() )
+        {
+            return;
+        }
         //else fast playback priority -> frame n+1 will be calculated as soon as frame n is ready
         connect( this, SIGNAL(frameReady()), this, SLOT(timerFrameEvent()) );
         return;
@@ -322,6 +321,7 @@ bool MainWindow::event(QEvent *event)
             if( ui->actionCaching->isChecked() ) on_actionCaching_triggered();
             m_sessionFileName = fileName;
             m_inOpeningProcess = false;
+            selectDebayerAlgorithm();
         }
         else if( QFile(fileName).exists() && fileName.endsWith( ".command", Qt::CaseInsensitive ) )
         {
@@ -344,11 +344,27 @@ void MainWindow::dragEnterEvent(QDragEnterEvent *event)
 void MainWindow::dropEvent(QDropEvent *event)
 {
     QStringList list;
-    for( int i = 0; i < event->mimeData()->urls().count(); i++ )
+    if( event->mimeData()->urls().count() > 1 )
     {
-        list.append( event->mimeData()->urls().at(i).path() );
+        for( int i = 0; i < event->mimeData()->urls().count(); i++ )
+        {
+            list.append( event->mimeData()->urls().at(i).path() );
+        }
+        openMlvSet( list );
     }
-    openMlvSet( list );
+    else
+    {
+        if( event->mimeData()->urls().at(0).path().endsWith( ".masxml", Qt::CaseInsensitive ) )
+        {
+            m_inOpeningProcess = true;
+            openSession( event->mimeData()->urls().at(0).path() );
+            //Show last imported file
+            if( m_pSessionReceipts.count() ) showFileInEditor( m_pSessionReceipts.count() - 1 );
+            m_inOpeningProcess = false;
+            m_sessionFileName = event->mimeData()->urls().at(0).path();
+            selectDebayerAlgorithm();
+        }
+    }
     event->acceptProposedAction();
 }
 
@@ -360,19 +376,27 @@ void MainWindow::openMlvSet( QStringList list )
     {
         QString fileName = list.at(i);
 
-        if( QFile(fileName).exists() && fileName.endsWith( ".command", Qt::CaseInsensitive ) )
+        if( i == 0 && QFile(fileName).exists() && fileName.endsWith( ".command", Qt::CaseInsensitive ) )
         {
             if( m_pScripting->installScript( fileName ) )
                 QMessageBox::information( this, APPNAME, tr( "Installation of script %1 successful." ).arg( QFileInfo( fileName ).fileName() ) );
+            m_inOpeningProcess = false;
             return;
         }
 
-        //Exit if not an MLV file or aborted
-        if( fileName == QString( "" ) || !fileName.endsWith( ".mlv", Qt::CaseInsensitive ) ) continue;
+        if( i == 0 && QFile(fileName).exists() && fileName.endsWith( ".masxml", Qt::CaseInsensitive ) )
+        {
+            openSession( fileName );
+        }
+        else
+        {
+            //Exit if not an MLV file or aborted
+            if( fileName == QString( "" ) || !fileName.endsWith( ".mlv", Qt::CaseInsensitive ) ) continue;
 #ifdef WIN32
-        if( fileName.startsWith( "/" ) ) fileName.remove( 0, 1 );
+            if( fileName.startsWith( "/" ) ) fileName.remove( 0, 1 );
 #endif
-        importNewMlv( fileName );
+            importNewMlv( fileName );
+        }
     }
 
     if( m_pSessionReceipts.count() )
@@ -385,6 +409,7 @@ void MainWindow::openMlvSet( QStringList list )
     if( ui->actionCaching->isChecked() ) on_actionCaching_triggered();
 
     m_inOpeningProcess = false;
+    selectDebayerAlgorithm();
 }
 
 //App shall close -> hammer method, we shot on the main class... for making the app close and killing everything in background
@@ -392,6 +417,31 @@ void MainWindow::closeEvent(QCloseEvent *event)
 {
     ui->actionPlay->setChecked( false );
     on_actionPlay_triggered( false );
+
+    //If user wants to be asked
+    if( ui->actionAskForSavingOnQuit->isChecked() )
+    {
+        //Ask before quit
+        int ret = QMessageBox::warning( this, APPNAME, tr( "Do you really like to quit MLVApp? Do you like to save the session?" ),
+                                        tr( "Cancel" ), tr( "Quit without saving" ), tr( "Save and quit" ) );
+        //Aborted
+        if( ret == QMessageBox::Escape || ret == 0 )
+        {
+            event->ignore();
+            return;
+        }
+        //Save and quit
+        else if( ret == 2 )
+        {
+            on_actionSaveSession_triggered();
+            //Saving was aborted -> abort quit
+            if( m_sessionFileName.count() == 0 )
+            {
+                event->ignore();
+                return;
+            }
+        }
+    }
 
     qApp->quit();
     event->accept();
@@ -430,6 +480,7 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
         qDebug("Dock Resized (New Size) - Width: %d Height: %d",
                resizeEvent->size().width(),
                resizeEvent->size().height());*/
+        //setPreviewMode();
         m_frameChanged = true;
     }
     return QWidget::eventFilter(watched, event);
@@ -494,7 +545,7 @@ void MainWindow::importNewMlv(QString fileName)
         if( !openMlvForPreview( fileName ) )
         {
             //Save last file name
-            m_lastSaveFileName = fileName;
+            m_lastMlvOpenFileName = fileName;
 
             on_actionResetReceipt_triggered();
 
@@ -577,7 +628,7 @@ void MainWindow::on_actionOpen_triggered()
     //Stop playback if active
     ui->actionPlay->setChecked( false );
 
-    QString path = QFileInfo( m_lastSaveFileName ).absolutePath();
+    QString path = QFileInfo( m_lastMlvOpenFileName ).absolutePath();
     if( !QDir( path ).exists() ) path = QDir::homePath();
 
     //Open File Dialog
@@ -606,6 +657,7 @@ void MainWindow::on_actionOpen_triggered()
     if( ui->actionCaching->isChecked() ) on_actionCaching_triggered();
 
     m_inOpeningProcess = false;
+    selectDebayerAlgorithm();
 }
 
 //Import MLV files to session, which were used in FCPXML project
@@ -644,6 +696,7 @@ void MainWindow::on_actionFcpxmlImportAssistant_triggered()
     if( ui->actionCaching->isChecked() ) on_actionCaching_triggered();
 
     m_inOpeningProcess = false;
+    selectDebayerAlgorithm();
 }
 
 //Open an assistant, which helps selection clips in session in dependency to clips which were used in FCPXML project
@@ -736,8 +789,8 @@ int MainWindow::openMlv( QString fileName )
     m_pInfoDialog->ui->tableWidget->item( 7, 1 )->setText( QString( "1/%1 s,  %2 deg,  %3 µs" ).arg( (uint16_t)(shutterSpeed + 0.5f) ).arg( (uint16_t)(shutterAngle + 0.5f) ).arg( getMlvShutter( m_pMlvObject )) );
     m_pInfoDialog->ui->tableWidget->item( 8, 1 )->setText( QString( "ƒ/%1" ).arg( getMlvAperture( m_pMlvObject ) / 100.0, 0, 'f', 1 ) );
     m_pInfoDialog->ui->tableWidget->item( 9, 1 )->setText( QString( "%1" ).arg( (int)getMlvIso( m_pMlvObject ) ) );
-    m_pInfoDialog->ui->tableWidget->item( 10, 1 )->setText( QString( "%1 bits,  %2" ).arg( getLosslessBpp( m_pMlvObject ) - m_pMlvObject->bits_diff ).arg( getMlvCompression( m_pMlvObject ) ) );
-    m_pInfoDialog->ui->tableWidget->item( 11, 1 )->setText( QString( "%1 black,  %2 white" ).arg( getMlvOriginalBlackLevel( m_pMlvObject ) >> m_pMlvObject->bits_diff ).arg( getMlvOriginalWhiteLevel( m_pMlvObject ) >> m_pMlvObject->bits_diff ) );
+    m_pInfoDialog->ui->tableWidget->item( 10, 1 )->setText( QString( "%1 bits,  %2" ).arg( getLosslessBpp( m_pMlvObject ) ).arg( getMlvCompression( m_pMlvObject ) ) );
+    m_pInfoDialog->ui->tableWidget->item( 11, 1 )->setText( QString( "%1 black,  %2 white" ).arg( getMlvOriginalBlackLevel( m_pMlvObject ) ).arg( getMlvOriginalWhiteLevel( m_pMlvObject ) ) );
     m_pInfoDialog->ui->tableWidget->item( 12, 1 )->setText( QString( "%1-%2-%3 / %4:%5:%6" )
                                                             .arg( getMlvTmYear(m_pMlvObject) )
                                                             .arg( getMlvTmMonth(m_pMlvObject), 2, 10, QChar('0') )
@@ -811,7 +864,7 @@ int MainWindow::openMlv( QString fileName )
 
     //Enable export now
     ui->actionExport->setEnabled( true );
-    ui->actionExportActualFrame->setEnabled( true );
+    ui->actionExportCurrentFrame->setEnabled( true );
 
     //If clip loaded, import receipt is enabled
     ui->actionImportReceipt->setEnabled( true );
@@ -918,13 +971,44 @@ void MainWindow::initGui( void )
     //We dont want a context menu which could disable the menu bar
     setContextMenuPolicy(Qt::NoContextMenu);
 
-    //Apply DarkStyle
-    CDarkStyle::assign();
+    //Darktheme menu
+    m_darkFrameGroup = new QActionGroup( this );
+    m_darkFrameGroup->setExclusive( true );
+    m_darkFrameGroup->addAction( ui->actionDarkThemeStandard );
+    m_darkFrameGroup->addAction( ui->actionDarkThemeModern );
+    ui->actionDarkThemeStandard->setChecked( true );
+
+    //Preview debayer as group
+    m_previewDebayerGroup = new QActionGroup( this );
+    m_previewDebayerGroup->setExclusive( true );
+    m_previewDebayerGroup->addAction( ui->actionUseNoneDebayer );
+    m_previewDebayerGroup->addAction( ui->actionUseSimpleDebayer );
+    m_previewDebayerGroup->addAction( ui->actionUseBilinear );
+    m_previewDebayerGroup->addAction( ui->actionUseLmmseDebayer );
+    m_previewDebayerGroup->addAction( ui->actionUseIgvDebayer );
+    m_previewDebayerGroup->addAction( ui->actionAlwaysUseAMaZE );
+    m_previewDebayerGroup->addAction( ui->actionCaching );
+    ui->actionUseBilinear->setChecked( true );
+
+    //Scope menu as group
+    m_scopeGroup = new QActionGroup( this );
+    m_scopeGroup->setExclusive( true );
+    m_scopeGroup->addAction( ui->actionShowVectorScope );
+    m_scopeGroup->addAction( ui->actionShowWaveFormMonitor );
+    m_scopeGroup->addAction( ui->actionShowHistogram );
+    m_scopeGroup->addAction( ui->actionShowParade );
+
 #ifdef Q_OS_LINUX
     //if not doing this, some elements are covered by the scrollbar on Linux only
     ui->dockWidgetEdit->setMinimumWidth( 240 );
     ui->dockWidgetContents->setMinimumWidth( 240 );
 #endif
+
+    //Dock area behavior
+    setCorner( Qt::TopLeftCorner, Qt::LeftDockWidgetArea );
+    setCorner( Qt::TopRightCorner, Qt::RightDockWidgetArea );
+    setCorner( Qt::BottomLeftCorner, Qt::LeftDockWidgetArea );
+    setCorner( Qt::BottomRightCorner, Qt::RightDockWidgetArea );
 
     //Init the Dialogs
     m_pInfoDialog = new InfoDialog( this );
@@ -955,7 +1039,7 @@ void MainWindow::initGui( void )
     ui->actionPasteReceipt->setEnabled( false );
     //Disable export until file opened!
     ui->actionExport->setEnabled( false );
-    ui->actionExportActualFrame->setEnabled( false );
+    ui->actionExportCurrentFrame->setEnabled( false );
     //Set fit to screen as default zoom
     ui->actionZoomFit->setChecked( true );
     //If no clip loaded, import receipt is disabled
@@ -1032,8 +1116,15 @@ void MainWindow::initGui( void )
     //m_pFpsStatus->setFrameStyle(QFrame::Panel | QFrame::Sunken);
     statusBar()->addWidget( m_pFrameNumber );
 
+    //Recent sessions menu
+    m_pRecentFilesMenu = new QRecentFilesMenu(tr("Recent Sessions"), ui->menuFile);
+
     //Read Settings
     readSettings();
+
+    //Add recent sessions to filemenu
+    ui->menuFile->insertMenu( ui->actionSaveSession, m_pRecentFilesMenu );
+    connect( m_pRecentFilesMenu, SIGNAL(recentFileTriggered(const QString &)), this, SLOT(openRecentSession(const QString &)) );
 
     //Init clipboard
     m_pReceiptClipboard = new ReceiptSettings();
@@ -1100,6 +1191,13 @@ void MainWindow::initGui( void )
     ui->labelColorWheelHighlights->paintElement();
     ui->groupBoxColorWheels->setVisible( false );
 
+    //Debayer in Receipt
+    //ui->groupBoxDebayer->setVisible( false );
+    ui->actionUseLmmseDebayer->setVisible( false );
+    ui->actionUseIgvDebayer->setVisible( false );
+    ui->actionAlwaysUseAMaZE->setVisible( false );
+    ui->actionCaching->setVisible( false );
+
     //Call temp sliders once for stylesheet
     on_horizontalSliderTemperature_valueChanged( ui->horizontalSliderTemperature->value() );
     on_horizontalSliderTint_valueChanged( ui->horizontalSliderTint->value() );
@@ -1107,6 +1205,16 @@ void MainWindow::initGui( void )
     //WB Picker Mode
     m_wbMode = 0;
     ui->toolButtonWbMode->setToolTip( tr( "Chose between WB picker on grey or on skin" ) );
+
+    //Reveal in Explorer
+#ifdef Q_OS_WIN
+    ui->actionShowInFinder->setText( tr( "Reveal in Explorer" ) );
+    ui->actionShowInFinder->setToolTip( tr( "Reveal selected file in Explorer" ) );
+#endif
+#ifdef Q_OS_LINUX
+    ui->actionShowInFinder->setText( tr( "Reveal in Nautilus" ) );
+    ui->actionShowInFinder->setToolTip( tr( "Reveal selected file in Nautilus" ) );
+#endif
 
     //set CPU Usage
     m_countTimeDown = -1;   //Time in seconds for CPU countdown
@@ -1158,11 +1266,16 @@ void MainWindow::readSettings()
     if( set.value( "dragFrameMode", true ).toBool() ) ui->actionDropFrameMode->setChecked( true );
     if( set.value( "audioOutput", true ).toBool() ) ui->actionAudioOutput->setChecked( true );
     if( set.value( "zebras", false ).toBool() ) ui->actionShowZebras->setChecked( true );
-    m_lastSaveFileName = set.value( "lastFileName", QDir::homePath() ).toString();
+    m_lastExportPath = set.value( "lastExportPath", QDir::homePath() ).toString();
+    m_lastMlvOpenFileName = set.value( "lastMlvFileName", QDir::homePath() ).toString();
+    m_lastSessionFileName = set.value( "lastSessionFileName", QDir::homePath() ).toString();
+    m_lastReceiptFileName = set.value( "lastReceiptFileName", QDir::homePath() ).toString();
+    m_lastDarkframeFileName = set.value( "lastDarkframeFileName", QDir::homePath() ).toString();
+    m_externalApplicationName = set.value( "externalAppName", QString( "" ) ).toString();
     m_lastLutFileName = set.value( "lastLutFile", QDir::homePath() ).toString();
     m_codecProfile = set.value( "codecProfile", 4 ).toUInt();
     m_codecOption = set.value( "codecOption", 0 ).toUInt();
-    m_exportDebayerMode = set.value( "exportDebayerMode", 2 ).toUInt();
+    m_exportDebayerMode = set.value( "exportDebayerMode", 4 ).toUInt();
     m_previewMode = set.value( "previewMode", 1 ).toUInt();
     switch( m_previewMode )
     {
@@ -1172,8 +1285,11 @@ void MainWindow::readSettings()
     case 1:
         on_actionPreviewList_triggered();
         break;
-    default:
+    case 2:
         on_actionPreviewPicture_triggered();
+        break;
+    default:
+        on_actionPreviewPictureBottom_triggered();
         break;
     }
     ui->actionCaching->setChecked( false );
@@ -1186,6 +1302,7 @@ void MainWindow::readSettings()
     m_audioExportEnabled = set.value( "audioExportEnabled", true ).toBool();
     ui->groupBoxRawCorrection->setChecked( set.value( "expandedRawCorrection", false ).toBool() );
     ui->groupBoxCutInOut->setChecked( set.value( "expandedCutInOut", false ).toBool() );
+    ui->groupBoxDebayer->setChecked( set.value( "expandedDebayer", true ).toBool() );
     ui->groupBoxProcessing->setChecked( set.value( "expandedProcessing", true ).toBool() );
     ui->groupBoxDetails->setChecked( set.value( "expandedDetails", false ).toBool() );
     ui->groupBoxColorWheels->setChecked( set.value( "expandedColorWheels", false ).toBool() );
@@ -1199,6 +1316,20 @@ void MainWindow::readSettings()
     ui->actionPlaybackPosition->setChecked( set.value( "rememberPlaybackPos", false ).toBool() );
     resizeDocks({ui->dockWidgetEdit}, {set.value( "dockEditSize", 212 ).toInt()}, Qt::Horizontal);
     resizeDocks({ui->dockWidgetSession}, {set.value( "dockSessionSize", 170 ).toInt()}, Qt::Horizontal);
+    resizeDocks({ui->dockWidgetSession}, {set.value( "dockSessionSize", 130 ).toInt()}, Qt::Vertical);
+    m_pRecentFilesMenu->restoreState( set.value("recentSessions").toByteArray() );
+    ui->actionAskForSavingOnQuit->setChecked( set.value( "askForSavingOnQuit", true ).toBool() );
+    int themeId = set.value( "themeId", 0 ).toInt();
+    if( themeId == 0 )
+    {
+        ui->actionDarkThemeStandard->setChecked( true );
+        on_actionDarkThemeStandard_triggered( true );
+    }
+    else
+    {
+        ui->actionDarkThemeModern->setChecked( true );
+        on_actionDarkThemeModern_triggered( true );
+    }
 }
 
 //Save some settings to registry
@@ -1210,7 +1341,12 @@ void MainWindow::writeSettings()
     set.setValue( "dragFrameMode", ui->actionDropFrameMode->isChecked() );
     set.setValue( "audioOutput", ui->actionAudioOutput->isChecked() );
     set.setValue( "zebras", ui->actionShowZebras->isChecked() );
-    set.setValue( "lastFileName", m_lastSaveFileName );
+    set.setValue( "lastExportPath", m_lastExportPath );
+    set.setValue( "lastMlvFileName", m_lastMlvOpenFileName );
+    set.setValue( "lastSessionFileName", m_lastSessionFileName );
+    set.setValue( "lastReceiptFileName", m_lastReceiptFileName );
+    set.setValue( "lastDarkframeFileName", m_lastDarkframeFileName );
+    set.setValue( "externalAppName", m_externalApplicationName );
     set.setValue( "lastLutFile", m_lastLutFileName );
     set.setValue( "codecProfile", m_codecProfile );
     set.setValue( "codecOption", m_codecOption );
@@ -1226,6 +1362,7 @@ void MainWindow::writeSettings()
     set.setValue( "audioExportEnabled", m_audioExportEnabled );
     set.setValue( "expandedRawCorrection", ui->groupBoxRawCorrection->isChecked() );
     set.setValue( "expandedCutInOut", ui->groupBoxCutInOut->isChecked() );
+    set.setValue( "expandedDebayer", ui->groupBoxDebayer->isChecked() );
     set.setValue( "expandedProcessing", ui->groupBoxProcessing->isChecked() );
     set.setValue( "expandedDetails", ui->groupBoxDetails->isChecked() );
     set.setValue( "expandedColorWheels", ui->groupBoxColorWheels->isChecked() );
@@ -1238,7 +1375,12 @@ void MainWindow::writeSettings()
     set.setValue( "autoUpdateCheck", ui->actionAutoCheckForUpdates->isChecked() );
     set.setValue( "rememberPlaybackPos", ui->actionPlaybackPosition->isChecked() );
     set.setValue( "dockEditSize", ui->dockWidgetEdit->width() );
-    set.setValue( "dockSessionSize", ui->dockWidgetSession->width() );
+    if( m_previewMode == 3 ) set.setValue( "dockSessionSize", ui->dockWidgetSession->height() );
+    else set.setValue( "dockSessionSize", ui->dockWidgetSession->width() );
+    set.setValue( "recentSessions", m_pRecentFilesMenu->saveState() );
+    set.setValue( "askForSavingOnQuit", ui->actionAskForSavingOnQuit->isChecked() );
+    if( ui->actionDarkThemeStandard->isChecked() ) set.setValue( "themeId", 0 );
+    else set.setValue( "themeId", 1 );
 }
 
 //Start Export via Pipe
@@ -1248,7 +1390,11 @@ void MainWindow::startExportPipe(QString fileName)
     m_dontDraw = true;
 
     //chose if we want to get amaze frames for exporting, or bilinear
-    if( m_exportDebayerMode == 1 )
+    if( m_exportDebayerMode == 0 )
+    {
+        setMlvDontAlwaysUseAmaze( m_pMlvObject );
+    }
+    else if( m_exportDebayerMode == 1 )
     {
         setMlvAlwaysUseAmaze( m_pMlvObject );
     }
@@ -1262,7 +1408,29 @@ void MainWindow::startExportPipe(QString fileName)
     }
     else
     {
-        setMlvDontAlwaysUseAmaze( m_pMlvObject );
+        switch( m_exportQueue.first()->debayer() )
+        {
+        case ReceiptSettings::None:
+            setMlvUseNoneDebayer( m_pMlvObject );
+            break;
+        case ReceiptSettings::Simple:
+            setMlvUseSimpleDebayer( m_pMlvObject );
+            break;
+        case ReceiptSettings::Bilinear:
+            setMlvDontAlwaysUseAmaze( m_pMlvObject );
+            break;
+        case ReceiptSettings::LMMSE:
+            setMlvUseLmmseDebayer( m_pMlvObject );
+            break;
+        case ReceiptSettings::IGV:
+            setMlvUseIgvDebayer( m_pMlvObject );
+            break;
+        case ReceiptSettings::AMaZE:
+            setMlvAlwaysUseAmaze( m_pMlvObject );
+            break;
+        default:
+            break;
+        }
     }
     llrpResetFpmStatus(m_pMlvObject);
     llrpResetBpmStatus(m_pMlvObject);
@@ -2114,7 +2282,11 @@ void MainWindow::startExportAVFoundation(QString fileName)
     m_dontDraw = true;
 
     //chose if we want to get amaze frames for exporting, or bilinear
-    if( m_exportDebayerMode == 1 )
+    if( m_exportDebayerMode == 0 )
+    {
+        setMlvDontAlwaysUseAmaze( m_pMlvObject );
+    }
+    else if( m_exportDebayerMode == 1 )
     {
         setMlvAlwaysUseAmaze( m_pMlvObject );
     }
@@ -2128,7 +2300,29 @@ void MainWindow::startExportAVFoundation(QString fileName)
     }
     else
     {
-        setMlvDontAlwaysUseAmaze( m_pMlvObject );
+        switch( m_exportQueue.first()->debayer() )
+        {
+        case ReceiptSettings::None:
+            setMlvUseNoneDebayer( m_pMlvObject );
+            break;
+        case ReceiptSettings::Simple:
+            setMlvUseSimpleDebayer( m_pMlvObject );
+            break;
+        case ReceiptSettings::Bilinear:
+            setMlvDontAlwaysUseAmaze( m_pMlvObject );
+            break;
+        case ReceiptSettings::LMMSE:
+            setMlvUseLmmseDebayer( m_pMlvObject );
+            break;
+        case ReceiptSettings::IGV:
+            setMlvUseIgvDebayer( m_pMlvObject );
+            break;
+        case ReceiptSettings::AMaZE:
+            setMlvAlwaysUseAmaze( m_pMlvObject );
+            break;
+        default:
+            break;
+        }
     }
     llrpResetFpmStatus(m_pMlvObject);
     llrpResetBpmStatus(m_pMlvObject);
@@ -2325,7 +2519,7 @@ void MainWindow::openSession(QString fileNameSession)
                     if( QFile( fileName ).exists() )
                     {
                         //Save last file name
-                        m_lastSaveFileName = fileName;
+                        m_lastSessionFileName = fileName;
                         //Add file to Sessionlist
                         addFileToSession( fileName );
                         //Open the file
@@ -2379,7 +2573,7 @@ void MainWindow::openSession(QString fileNameSession)
         return;
     }
 
-
+    m_pRecentFilesMenu->addRecentFile( QDir::toNativeSeparators( fileNameSession ) );
 }
 
 //Save Session
@@ -2410,6 +2604,8 @@ void MainWindow::saveSession(QString fileName)
     xmlWriter.writeEndDocument();
 
     file.close();
+
+    m_pRecentFilesMenu->addRecentFile( QDir::toNativeSeparators( fileName ) );
 }
 
 
@@ -2422,7 +2618,7 @@ void MainWindow::on_actionImportReceipt_triggered()
     //If no clip loaded, abort
     if( m_pSessionReceipts.empty() ) return;
 
-    QString path = QFileInfo( m_lastSaveFileName ).absolutePath();
+    QString path = QFileInfo( m_lastReceiptFileName ).absolutePath();
     QString fileName = QFileDialog::getOpenFileName(this,
                                            tr("Open MLV App Receipt Xml"), path,
                                            tr("MLV App Receipt Xml files (*.marxml)"));
@@ -2469,7 +2665,7 @@ void MainWindow::on_actionExportReceipt_triggered()
     //Stop playback if active
     ui->actionPlay->setChecked( false );
 
-    QString path = QFileInfo( m_lastSaveFileName ).absolutePath();
+    QString path = QFileInfo( m_lastReceiptFileName ).absolutePath();
     QString fileName = QFileDialog::getSaveFileName(this,
                                            tr("Save MLV App Receipt Xml"), path,
                                            tr("MLV App Receipt Xml files (*.marxml)"));
@@ -2899,7 +3095,7 @@ void MainWindow::deleteSession()
 
     //Export not possible without mlv file
     ui->actionExport->setEnabled( false );
-    ui->actionExportActualFrame->setEnabled( false );
+    ui->actionExportCurrentFrame->setEnabled( false );
 
     //Set Clip Info to Dialog
     m_pInfoDialog->ui->tableWidget->item( 0, 1 )->setText( "-" );
@@ -3122,6 +3318,8 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     m_pMlvObject->current_cached_frame_active = 0;
 
     if( ui->actionPlaybackPosition->isChecked() ) ui->horizontalSliderPosition->setValue( receipt->lastPlaybackPosition() );
+    ui->comboBoxDebayer->setCurrentIndex( receipt->debayer() );
+    on_comboBoxDebayer_currentIndexChanged( receipt->debayer() );
 }
 
 //Set the receipt from sliders
@@ -3195,6 +3393,8 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
 
     if( ui->actionPlaybackPosition->isChecked() ) receipt->setLastPlaybackPosition( ui->horizontalSliderPosition->value() );
     else receipt->setLastPlaybackPosition( 0 );
+
+    receipt->setDebayer( ui->comboBoxDebayer->currentIndex() );
 }
 
 //Replace receipt settings
@@ -3256,6 +3456,8 @@ void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings 
     if( paste && cdui->checkBoxRawBlackLevel->isChecked() )    receiptTarget->setRawBlack( receiptSource->rawBlack() );
     if( paste && cdui->checkBoxRawWhiteLevel->isChecked() )    receiptTarget->setRawWhite( receiptSource->rawWhite() );
     receiptTarget->setDeflickerTarget( receiptSource->deflickerTarget() );
+
+    if( paste && cdui->checkBoxDebayer->isChecked() )          receiptTarget->setDebayer( receiptSource->debayer() );
 
     if( paste && cdui->checkBoxLut->isChecked() )
     {
@@ -3398,6 +3600,8 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     receipt->setStretchFactorY( m_pSessionReceipts.at( row )->stretchFactorY() );
     receipt->setUpsideDown( m_pSessionReceipts.at( row )->upsideDown() );
 
+    receipt->setDebayer( m_pSessionReceipts.at( row )->debayer() );
+
     receipt->setFileName( m_pSessionReceipts.at( row )->fileName() );
     receipt->setCutIn( m_pSessionReceipts.at( row )->cutIn() );
     receipt->setCutOut( m_pSessionReceipts.at( row )->cutOut() );
@@ -3436,19 +3640,31 @@ void MainWindow::setPreviewMode( void )
     {
         ui->listWidgetSession->setViewMode( QListView::ListMode );
         ui->listWidgetSession->setIconSize( QSize( 50, 30 ) );
+        ui->listWidgetSession->setGridSize( QSize( -1, -1 ) );
         ui->listWidgetSession->setAlternatingRowColors( true );
+        ui->listWidgetSession->setResizeMode( QListView::Fixed );
+        ui->listWidgetSession->setFlow( QListView::TopToBottom );
+        ui->listWidgetSession->setWrapping( false );
     }
-    else if( m_previewMode == 2 )
+    else if( m_previewMode == 2 || m_previewMode == 3 )
     {
         ui->listWidgetSession->setViewMode( QListView::IconMode );
-        ui->listWidgetSession->setIconSize( QSize( ui->listWidgetSession->width()-30, 100 ) );
+        ui->listWidgetSession->setIconSize( QSize( 130, 80 ) );
+        ui->listWidgetSession->setGridSize( QSize( 140, 100 ) );
         ui->listWidgetSession->setAlternatingRowColors( false );
+        ui->listWidgetSession->setResizeMode( QListView::Adjust );
+        ui->listWidgetSession->setFlow( QListView::LeftToRight );
+        ui->listWidgetSession->setWrapping( true );
     }
     else
     {
         ui->listWidgetSession->setViewMode( QListView::ListMode );
         ui->listWidgetSession->setIconSize( QSize( 0, 0 ) );
+        ui->listWidgetSession->setGridSize( QSize( -1, -1 ) );
         ui->listWidgetSession->setAlternatingRowColors( true );
+        ui->listWidgetSession->setResizeMode( QListView::Fixed );
+        ui->listWidgetSession->setFlow( QListView::TopToBottom );
+        ui->listWidgetSession->setWrapping( false );
     }
 }
 
@@ -3496,6 +3712,9 @@ void MainWindow::paintAudioTrack( void )
     }
     ui->labelAudioTrack->setMinimumSize( 1, 1 ); //Otherwise window won't be smaller than picture
     ui->labelAudioTrack->setAlignment( Qt::AlignCenter ); //Always in the middle
+    ui->labelAudioTrack->setSizePolicy( QSizePolicy::Preferred, QSizePolicy::Fixed );
+    ui->labelAudioTrack->setMinimumHeight( 32 );
+    ui->labelAudioTrack->setMaximumHeight( 32 );
 }
 
 //Draw Zebras, return: 1=under, 2=over, 3=under+over, 0=okay
@@ -3934,6 +4153,7 @@ void MainWindow::on_actionAbout_triggered()
                                   " <p>Some icons by <a href='%10'>Double-J Design</a> under <a href='%11'>CC4.0</a></p>"
                                   " <p>Autoupdater Copyright (c) 2016, <a href='%12'>Violet Giraffe</a> under MIT</p>"
                                   " <p>Zhang-Wu LMMSE Image Demosaicking by Pascal Getreuer under <a href='%13'>BSD</a>.</p>"
+                                  " <p>QRecentFilesMenu Copyright (c) 2011 by Morgan Leborgne under <a href='%14'>MIT</a>.</p>"
                                   " </body></html>" )
                                  .arg( pic )
                                  .arg( APPNAME )
@@ -3944,7 +4164,8 @@ void MainWindow::on_actionAbout_triggered()
                                  .arg( "http://www.doublejdesign.co.uk/" )
                                  .arg( "https://creativecommons.org/licenses/by/4.0/" )
                                  .arg( "https://github.com/VioletGiraffe/github-releases-autoupdater" )
-                                 .arg( "http://www.opensource.org/licenses/bsd-license.html" ) );
+                                 .arg( "http://www.opensource.org/licenses/bsd-license.html" )
+                                 .arg( "https://github.com/mojocorp/QRecentFilesMenu/blob/master/LICENSE" ) );
 }
 
 //Qt Infobox
@@ -4398,6 +4619,9 @@ void MainWindow::on_actionExport_triggered()
 
     //Filename proposal in dependency to actual file
     QString saveFileName = m_pSessionReceipts.at( m_lastActiveClipInSession )->fileName();
+    //But take the folder from last export
+    saveFileName = QString( "%1/%2" ).arg( m_lastExportPath ).arg( QFileInfo( saveFileName ).fileName() );
+
     QString fileType;
     QString fileEnding;
     saveFileName = saveFileName.left( saveFileName.lastIndexOf( "." ) );
@@ -4478,6 +4702,9 @@ void MainWindow::on_actionExport_triggered()
         if( fileName == QString( "" )
                 && !fileName.endsWith( fileEnding, Qt::CaseInsensitive ) ) return;
 
+        //Save last path for next time
+        m_lastExportPath = QFileInfo( fileName ).absolutePath();
+
         //Get receipt into queue
         addClipToExportQueue( m_lastActiveClipInSession, fileName );
     }
@@ -4491,6 +4718,9 @@ void MainWindow::on_actionExport_triggered()
                                                           | QFileDialog::DontResolveSymlinks);
 
         if( folderName.length() == 0 ) return;
+
+        //Save last path for next time
+        m_lastExportPath = folderName;
 
         //for all selected
         for( int row = 0; row < ui->listWidgetSession->count(); row++ )
@@ -4524,30 +4754,16 @@ void MainWindow::on_actionExport_triggered()
 }
 
 //Export actual frame as 16bit png
-void MainWindow::on_actionExportActualFrame_triggered()
+void MainWindow::on_actionExportCurrentFrame_triggered()
 {
-    //File name proposal
-    QString saveFileName = m_pSessionReceipts.at( m_lastActiveClipInSession )->fileName();
-    saveFileName = saveFileName.left( m_lastSaveFileName.lastIndexOf( "." ) );
-    saveFileName.append( QString( "_frame_%1.png" ).arg( ui->horizontalSliderPosition->value() + 1 ) );
-
-    //File Dialog
-    QString fileName = QFileDialog::getSaveFileName( this, tr("Export..."),
-                                                    saveFileName,
-                                                    "8bit PNG (*.png)" );
-
-    //Exit if not an PNG file or aborted
-    if( fileName == QString( "" )
-            || !fileName.endsWith( ".png", Qt::CaseInsensitive ) ) return;
-
-
-    //Get frame from library
-    getMlvProcessedFrame8( m_pMlvObject, ui->horizontalSliderPosition->value(), m_pRawImage, 1 );
-
-    QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
-            .scaled( getMlvWidth(m_pMlvObject) * getHorizontalStretchFactor(), getMlvHeight(m_pMlvObject) * getVerticalStretchFactor(),
-                     Qt::IgnoreAspectRatio, Qt::SmoothTransformation )
-            .save( fileName, "png", -1 );
+    SingleFrameExportDialog *exportDialog = new SingleFrameExportDialog( this,
+                                                                         m_pMlvObject,
+                                                                         m_pSessionReceipts.at( m_lastActiveClipInSession )->fileName(),
+                                                                         ui->horizontalSliderPosition->value(),
+                                                                         getHorizontalStretchFactor(),
+                                                                         getVerticalStretchFactor() );
+    exportDialog->exec();
+    delete exportDialog;
 }
 
 //Enable / Disable the highlight reconstruction
@@ -4662,118 +4878,51 @@ void MainWindow::on_actionZoom100_triggered()
 //Show Histogram
 void MainWindow::on_actionShowHistogram_triggered(void)
 {
-    ui->actionShowVectorScope->setChecked( false );
-    ui->actionShowHistogram->setChecked( true );
-    ui->actionShowWaveFormMonitor->setChecked( false );
-    ui->actionShowParade->setChecked( false );
     m_frameChanged = true;
 }
 
 //Show Waveform
 void MainWindow::on_actionShowWaveFormMonitor_triggered(void)
 {
-    ui->actionShowVectorScope->setChecked( false );
-    ui->actionShowWaveFormMonitor->setChecked( true );
-    ui->actionShowHistogram->setChecked( false );
-    ui->actionShowParade->setChecked( false );
     m_frameChanged = true;
 }
 
 //Show Parade
 void MainWindow::on_actionShowParade_triggered()
 {
-    ui->actionShowVectorScope->setChecked( false );
-    ui->actionShowParade->setChecked( true );
-    ui->actionShowWaveFormMonitor->setChecked( false );
-    ui->actionShowHistogram->setChecked( false );
     m_frameChanged = true;
 }
 
 //Show VectorScope
 void MainWindow::on_actionShowVectorScope_triggered()
 {
-    ui->actionShowVectorScope->setChecked( true );
-    ui->actionShowParade->setChecked( false );
-    ui->actionShowWaveFormMonitor->setChecked( false );
-    ui->actionShowHistogram->setChecked( false );
     m_frameChanged = true;
 }
 
 //Use none debayer (speedy B&W)
 void MainWindow::on_actionUseNoneDebayer_triggered()
 {
-    ui->actionUseNoneDebayer->setChecked( true );
-    ui->actionUseSimpleDebayer->setChecked( false );
-    ui->actionUseBilinear->setChecked( false );
-    ui->actionUseLmmseDebayer->setChecked( false );
-    ui->actionUseIgvDebayer->setChecked( false );
-    ui->actionAlwaysUseAMaZE->setChecked( false );
-    ui->actionCaching->setChecked( false );
-
-    setMlvUseNoneDebayer( m_pMlvObject );
-
-    disableMlvCaching( m_pMlvObject );
-
-    llrpResetFpmStatus(m_pMlvObject);
-    llrpResetBpmStatus(m_pMlvObject);
-    llrpComputeStripesOn(m_pMlvObject);
-    m_frameChanged = true;
+    selectDebayerAlgorithm();
+    return;
 }
 
 //Use simple debayer (speedy colored)
 void MainWindow::on_actionUseSimpleDebayer_triggered()
 {
-    ui->actionUseNoneDebayer->setChecked( false );
-    ui->actionUseSimpleDebayer->setChecked( true );
-    ui->actionUseBilinear->setChecked( false );
-    ui->actionUseLmmseDebayer->setChecked( false );
-    ui->actionUseIgvDebayer->setChecked( false );
-    ui->actionAlwaysUseAMaZE->setChecked( false );
-    ui->actionCaching->setChecked( false );
-
-    setMlvUseSimpleDebayer( m_pMlvObject );
-
-    disableMlvCaching( m_pMlvObject );
-
-    llrpResetFpmStatus(m_pMlvObject);
-    llrpResetBpmStatus(m_pMlvObject);
-    llrpComputeStripesOn(m_pMlvObject);
-    m_frameChanged = true;
+    selectDebayerAlgorithm();
+    return;
 }
 
 //Don't use AMaZE -> bilinear
 void MainWindow::on_actionUseBilinear_triggered()
 {
-    ui->actionUseNoneDebayer->setChecked( false );
-    ui->actionUseSimpleDebayer->setChecked( false );
-    ui->actionUseBilinear->setChecked( true );
-    ui->actionUseLmmseDebayer->setChecked( false );
-    ui->actionUseIgvDebayer->setChecked( false );
-    ui->actionAlwaysUseAMaZE->setChecked( false );
-    ui->actionCaching->setChecked( false );
-
-    /* Don't use AMaZE */
-    setMlvDontAlwaysUseAmaze( m_pMlvObject );
-
-    disableMlvCaching( m_pMlvObject );
-
-    llrpResetFpmStatus(m_pMlvObject);
-    llrpResetBpmStatus(m_pMlvObject);
-    llrpComputeStripesOn(m_pMlvObject);
-    m_frameChanged = true;
+    selectDebayerAlgorithm();
+    return;
 }
 
 //Use LMMSE debayer
 void MainWindow::on_actionUseLmmseDebayer_triggered()
 {
-    ui->actionUseNoneDebayer->setChecked( false );
-    ui->actionUseSimpleDebayer->setChecked( false );
-    ui->actionUseBilinear->setChecked( false );
-    ui->actionUseLmmseDebayer->setChecked( true );
-    ui->actionUseIgvDebayer->setChecked( false );
-    ui->actionAlwaysUseAMaZE->setChecked( false );
-    ui->actionCaching->setChecked( false );
-
     /* Use LMMSE */
     setMlvUseLmmseDebayer( m_pMlvObject );
 
@@ -4788,15 +4937,7 @@ void MainWindow::on_actionUseLmmseDebayer_triggered()
 //Use IGV debayer
 void MainWindow::on_actionUseIgvDebayer_triggered()
 {
-    ui->actionUseNoneDebayer->setChecked( false );
-    ui->actionUseSimpleDebayer->setChecked( false );
-    ui->actionUseBilinear->setChecked( false );
-    ui->actionUseLmmseDebayer->setChecked( false );
-    ui->actionUseIgvDebayer->setChecked( true );
-    ui->actionAlwaysUseAMaZE->setChecked( false );
-    ui->actionCaching->setChecked( false );
-
-    /* Use LMMSE */
+    /* Use IGV */
     setMlvUseIgvDebayer( m_pMlvObject );
 
     disableMlvCaching( m_pMlvObject );
@@ -4810,14 +4951,6 @@ void MainWindow::on_actionUseIgvDebayer_triggered()
 //Use AMaZE or not
 void MainWindow::on_actionAlwaysUseAMaZE_triggered()
 {
-    ui->actionUseNoneDebayer->setChecked( false );
-    ui->actionUseSimpleDebayer->setChecked( false );
-    ui->actionUseBilinear->setChecked( false );
-    ui->actionUseLmmseDebayer->setChecked( false );
-    ui->actionUseIgvDebayer->setChecked( false );
-    ui->actionAlwaysUseAMaZE->setChecked( true );
-    ui->actionCaching->setChecked( false );
-
     /* Use AMaZE */
     setMlvAlwaysUseAmaze( m_pMlvObject );
 
@@ -4832,14 +4965,6 @@ void MainWindow::on_actionAlwaysUseAMaZE_triggered()
 //En-/Disable Caching
 void MainWindow::on_actionCaching_triggered()
 {
-    ui->actionUseNoneDebayer->setChecked( false );
-    ui->actionUseSimpleDebayer->setChecked( false );
-    ui->actionUseBilinear->setChecked( false );
-    ui->actionUseLmmseDebayer->setChecked( false );
-    ui->actionUseIgvDebayer->setChecked( false );
-    ui->actionAlwaysUseAMaZE->setChecked( false );
-    ui->actionCaching->setChecked( true );
-
     /* Use AMaZE */
     setMlvAlwaysUseAmaze( m_pMlvObject );
 
@@ -4959,7 +5084,7 @@ void MainWindow::on_actionOpenSession_triggered()
     //Stop playback if active
     ui->actionPlay->setChecked( false );
 
-    QString path = QFileInfo( m_lastSaveFileName ).absolutePath();
+    QString path = QFileInfo( m_lastSessionFileName ).absolutePath();
     if( !QDir( path ).exists() ) path = QDir::homePath();
 
     QString fileName = QFileDialog::getOpenFileName(this,
@@ -4974,7 +5099,9 @@ void MainWindow::on_actionOpenSession_triggered()
     //Show last imported file
     showFileInEditor( m_pSessionReceipts.count() - 1 );
     m_sessionFileName = fileName;
+    m_lastSessionFileName = fileName;
     m_inOpeningProcess = false;
+    selectDebayerAlgorithm();
 }
 
 //Save Session (just save)
@@ -4993,7 +5120,7 @@ void MainWindow::on_actionSaveAsSession_triggered()
     //Stop playback if active
     ui->actionPlay->setChecked( false );
 
-    QString path = QFileInfo( m_lastSaveFileName ).absolutePath();
+    QString path = QFileInfo( m_lastSessionFileName ).absolutePath();
     QString fileName = QFileDialog::getSaveFileName(this,
                                            tr("Save MLV App Session Xml"), path,
                                            tr("MLV App Session Xml files (*.masxml)"));
@@ -5005,6 +5132,7 @@ void MainWindow::on_actionSaveAsSession_triggered()
     if( !fileName.endsWith( ".masxml" ) ) fileName.append( ".masxml" );
 
     m_sessionFileName = fileName;
+    m_lastSessionFileName = fileName;
 
     saveSession( fileName );
 }
@@ -5099,15 +5227,19 @@ void MainWindow::on_listWidgetSession_customContextMenuRequested(const QPoint &p
     {
         if( ui->listWidgetSession->selectedItems().size() == 1 )
         {
-            myMenu.addAction( "Select all",  this, SLOT( selectAllFiles() ) );
-            myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Image-icon.png" ), "Show in editor",  this, SLOT( rightClickShowFile() ) );
-            myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Delete-icon.png" ), "Delete selected file from session",  this, SLOT( deleteFileFromSession() ) );
+            myMenu.addAction( ui->actionSelectAllClips );
+            myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Image-icon.png" ), "Show in Editor",  this, SLOT( rightClickShowFile() ) );
+            myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Delete-icon.png" ), "Delete Selected File from Session",  this, SLOT( deleteFileFromSession() ) );
+            myMenu.addSeparator();
+            myMenu.addAction( ui->actionShowInFinder );
+            myMenu.addAction( ui->actionOpenWithExternalApplication );
+            myMenu.addAction( ui->actionSelectExternalApplication );
             myMenu.addSeparator();
         }
         else if( ui->listWidgetSession->selectedItems().size() > 1 )
         {
             myMenu.addAction( ui->actionPasteReceipt );
-            myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Delete-icon.png" ), "Delete selected files from session",  this, SLOT( deleteFileFromSession() ) );
+            myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Delete-icon.png" ), "Delete Selected File from Session",  this, SLOT( deleteFileFromSession() ) );
             myMenu.addSeparator();
         }
     }
@@ -5175,7 +5307,7 @@ void MainWindow::pictureCustomContextMenuRequested(const QPoint &pos)
     myMenu.addAction( ui->actionZoomFit );
     myMenu.addAction( ui->actionZoom100 );
     myMenu.addSeparator();
-    myMenu.addMenu( ui->menuDemosaicForPreview );
+    myMenu.addMenu( ui->menuDemosaicForPlayback );
     myMenu.addSeparator();
     myMenu.addAction( ui->actionShowZebras );
     if( ui->actionFullscreen->isChecked() )
@@ -5565,7 +5697,7 @@ void MainWindow::exportHandler( void )
     }
 }
 
-//Play button pressed or toggled
+//Play button pressed
 void MainWindow::on_actionPlay_triggered(bool checked)
 {
     //If no audio, we have nothing to do here
@@ -5586,6 +5718,15 @@ void MainWindow::on_actionPlay_triggered(bool checked)
             m_tryToSyncAudio = true;
         }
     }
+}
+
+//Play button toggled (by program)
+void MainWindow::on_actionPlay_toggled(bool checked)
+{
+    //When stopping, debayer selection has to come in right order from render thread (extra-invitation)
+    if( !checked ) m_playbackStopped = true;
+
+    selectDebayerAlgorithm();
 }
 
 //Zebras en-/disabled -> redraw
@@ -5663,7 +5804,6 @@ void MainWindow::toolButtonChromaSmoothChanged( void )
     default:
         llrpSetChromaSmoothMode(m_pMlvObject, CS_OFF);
     }
-    llrpComputeStripesOn(m_pMlvObject);
     resetMlvCache( m_pMlvObject );
     resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
@@ -5690,6 +5830,8 @@ void MainWindow::toolButtonVerticalStripesChanged( void )
 {
     llrpSetVerticalStripeMode( m_pMlvObject, toolButtonVerticalStripesCurrentIndex() );
     llrpComputeStripesOn(m_pMlvObject);
+    llrpResetFpmStatus(m_pMlvObject);
+    llrpResetBpmStatus(m_pMlvObject);
     resetMlvCache( m_pMlvObject );
     resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
@@ -5725,7 +5867,7 @@ void MainWindow::toolButtonDualIsoChanged( void )
     //Reset processing black and white levels
     processingSetBlackAndWhiteLevel( m_pMlvObject->processing, getMlvBlackLevel( m_pMlvObject ), getMlvWhiteLevel( m_pMlvObject ), getMlvBitdepth( m_pMlvObject ) );
     //Reset diso levels to mlv raw levels
-    llrpResetDualIsoBWLevels( m_pMlvObject );
+    llrpResetDngBWLevels( m_pMlvObject );
     resetMlvCache( m_pMlvObject );
     resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
@@ -5999,6 +6141,14 @@ void MainWindow::on_groupBoxCutInOut_toggled(bool arg1)
     else ui->groupBoxCutInOut->setMaximumHeight( 16777215 );
 }
 
+//Collapse & Expand Debayer
+void MainWindow::on_groupBoxDebayer_toggled(bool arg1)
+{
+    ui->frameDebayer->setVisible( arg1 );
+    if( !arg1 ) ui->groupBoxDebayer->setMaximumHeight( 30 );
+    else ui->groupBoxDebayer->setMaximumHeight( 16777215 );
+}
+
 //Collapse & Expand Processing
 void MainWindow::on_groupBoxProcessing_toggled(bool arg1)
 {
@@ -6076,9 +6226,6 @@ void MainWindow::drawFrameReady()
     Qt::TransformationMode mode = Qt::FastTransformation;
     if( !ui->actionPlay->isChecked()
      || ui->actionUseNoneDebayer->isChecked()
-     || ui->actionUseLmmseDebayer->isChecked()
-     || ui->actionUseIgvDebayer->isChecked()
-     || ui->actionAlwaysUseAMaZE->isChecked()
      || ui->actionCaching->isChecked() )
     {
         mode = Qt::SmoothTransformation;
@@ -6224,6 +6371,13 @@ void MainWindow::drawFrameReady()
                                                    m_pScene->height(),
                                                    getMlvWidth( m_pMlvObject ),
                                                    getMlvHeight( m_pMlvObject ) );
+    }
+
+    //One more frame if stopped
+    if( m_playbackStopped == true )
+    {
+        selectDebayerAlgorithm();
+        m_playbackStopped = false;
     }
 
     //Reset delete clip action as enabled
@@ -6621,8 +6775,11 @@ void MainWindow::on_actionPreviewDisabled_triggered()
     ui->actionPreviewDisabled->setChecked( true );
     ui->actionPreviewList->setChecked( false );
     ui->actionPreviewPicture->setChecked( false );
+    ui->actionPreviewPictureBottom->setChecked( false );
     m_previewMode = 0;
     setPreviewMode();
+    addDockWidget( Qt::LeftDockWidgetArea, ui->dockWidgetSession );
+    ui->listWidgetSession->verticalScrollBar()->setSingleStep( 1 );
 }
 
 //Session Preview  List
@@ -6631,17 +6788,37 @@ void MainWindow::on_actionPreviewList_triggered()
     ui->actionPreviewDisabled->setChecked( false );
     ui->actionPreviewList->setChecked( true );
     ui->actionPreviewPicture->setChecked( false );
+    ui->actionPreviewPictureBottom->setChecked( false );
     m_previewMode = 1;
     setPreviewMode();
+    addDockWidget( Qt::LeftDockWidgetArea, ui->dockWidgetSession );
+    ui->listWidgetSession->verticalScrollBar()->setSingleStep( 1 );
 }
 
-//Session Preview Picture
+//Session Preview Picture Left
 void MainWindow::on_actionPreviewPicture_triggered()
-{    ui->actionPreviewDisabled->setChecked( false );
+{
+    ui->actionPreviewDisabled->setChecked( false );
     ui->actionPreviewList->setChecked( false );
     ui->actionPreviewPicture->setChecked( true );
+    ui->actionPreviewPictureBottom->setChecked( false );
     m_previewMode = 2;
     setPreviewMode();
+    addDockWidget( Qt::LeftDockWidgetArea, ui->dockWidgetSession );
+    ui->listWidgetSession->verticalScrollBar()->setSingleStep( 82 );
+}
+
+//Session Preview Picture Bottom
+void MainWindow::on_actionPreviewPictureBottom_triggered()
+{
+    ui->actionPreviewDisabled->setChecked( false );
+    ui->actionPreviewList->setChecked( false );
+    ui->actionPreviewPicture->setChecked( false );
+    ui->actionPreviewPictureBottom->setChecked( true );
+    m_previewMode = 3;
+    setPreviewMode();
+    addDockWidget( Qt::BottomDockWidgetArea, ui->dockWidgetSession );
+    ui->listWidgetSession->verticalScrollBar()->setSingleStep( 82 );
 }
 
 //Input of Stretch Width (horizontal) Factor
@@ -6738,7 +6915,7 @@ void MainWindow::on_actionToggleTimecodeDisplay_triggered()
 //Select Darkframe Subtraction File
 void MainWindow::on_toolButtonDarkFrameSubtractionFile_clicked()
 {
-    QString path = QFileInfo( m_lastSaveFileName ).absolutePath();
+    QString path = QFileInfo( m_lastDarkframeFileName ).absolutePath();
     if( !QDir( path ).exists() ) path = QDir::homePath();
 
     //Open File Dialog
@@ -6749,6 +6926,7 @@ void MainWindow::on_toolButtonDarkFrameSubtractionFile_clicked()
     if( QFileInfo( fileName ).exists() && fileName.endsWith( ".MLV", Qt::CaseInsensitive ) )
     {
         ui->lineEditDarkFrameFile->setText( fileName );
+        m_lastDarkframeFileName = fileName;
     }
 }
 
@@ -6875,4 +7053,207 @@ void MainWindow::on_actionHelp_triggered()
     UserManualDialog *help = new UserManualDialog( this );
     help->exec();
     delete help;
+}
+
+//Show selected file from session in OSX Finder
+void MainWindow::on_actionShowInFinder_triggered( void )
+{
+    if( ui->listWidgetSession->count() == 0 || m_pSessionReceipts.count() == 0 ) return;
+
+    QString path = m_pSessionReceipts.at( ui->listWidgetSession->currentRow() )->fileName();
+
+#ifdef _WIN32    //Code for Windows
+    QProcess::startDetached("explorer.exe", {"/select,", QDir::toNativeSeparators(path)});
+#elif defined(__APPLE__)    //Code for Mac
+    QProcess::execute("/usr/bin/osascript", {"-e", "tell application \"Finder\" to reveal POSIX file \"" + path + "\""});
+    QProcess::execute("/usr/bin/osascript", {"-e", "tell application \"Finder\" to activate"});
+#elif defined( Q_OS_LINUX )
+    QProcess::startDetached(QString( "/usr/bin/nautilus \"%1\"" ).arg( QDir::toNativeSeparators(path) ) );
+#endif
+}
+
+//Show selected file with external application
+void MainWindow::on_actionOpenWithExternalApplication_triggered( void )
+{
+    if( ui->listWidgetSession->count() == 0 || m_pSessionReceipts.count() == 0 ) return;
+
+#ifdef Q_OS_OSX     //Code for OSX
+    //First check -> select app if fail
+    if( !QDir( m_externalApplicationName ).exists() || m_externalApplicationName.count() == 0 )
+    {
+        on_actionSelectExternalApplication_triggered();
+    }
+    //2nd check -> cancel if still fails
+    if( !QDir( m_externalApplicationName ).exists() )
+    {
+        return;
+    }
+    //Now open
+    QFileInfo info( m_externalApplicationName );
+    QString path = info.fileName();
+    if( path.endsWith( ".app" ) ) path = path.left( path.count() - 4 );
+    QProcess::startDetached( QString( "open -a \"%1\" \"%2\"" )
+                           .arg( path )
+                           .arg( m_pSessionReceipts.at( ui->listWidgetSession->currentRow() )->fileName() ) );
+#else    //Code for Windows & Linux
+    //First check -> select app if fail
+    if( !QFileInfo( m_externalApplicationName ).exists() ) on_actionSelectExternalApplication_triggered();
+    //2nd check -> cancel if still fails
+    if( !QFileInfo( m_externalApplicationName ).exists() ) return;
+    //Now open
+    QProcess::execute( QString( "%1" ).arg( m_externalApplicationName ), {QString( "%1" ).arg( QDir::toNativeSeparators( m_pSessionReceipts.at( ui->listWidgetSession->currentRow() )->fileName() ) ) } );
+#endif
+}
+
+//Select the application for "Open with external application"
+void MainWindow::on_actionSelectExternalApplication_triggered()
+{
+    QString path;
+#ifdef _WIN32
+    path = "C:\\";
+    path = QFileDialog::getOpenFileName( this,
+                 tr("Select external application"), path,
+                 tr("Executable (*.exe)") );
+    if( path.count() == 0 ) return;
+#endif
+#ifdef Q_OS_LINUX
+    path = "/";
+    path = QFileDialog::getOpenFileName( this,
+                 tr("Select external application"), path,
+                 tr("Application (*)") );
+    if( path.count() == 0 ) return;
+#endif
+#ifdef Q_OS_OSX
+    path = "/Applications/";
+    path = QFileDialog::getOpenFileName( this,
+                 tr("Select external application"), path,
+                 tr("Application (*.app)") );
+    if( path.count() == 0 ) return;
+#endif
+    m_externalApplicationName = path;
+}
+
+//Open one of the recent sessions
+void MainWindow::openRecentSession(QString fileName)
+{
+    //Save actual session?
+    if( ui->listWidgetSession->count() > 0 )
+    {
+        int ret = QMessageBox::warning( this, APPNAME, tr( "Do you like to save the session before loading?" ),
+                                                       QMessageBox::Yes, QMessageBox::No, QMessageBox::Cancel );
+        //Save
+        if( ret == QMessageBox::Yes )
+        {
+            on_actionSaveSession_triggered();
+            //Saving was aborted -> abort quit
+            if( m_sessionFileName.count() == 0 )
+            {
+                return;
+            }
+        }
+        //Cancel
+        else if( ret == QMessageBox::Escape || ret == QMessageBox::Cancel )
+        {
+            return;
+        }
+    }
+
+    if( !QFileInfo( fileName ).exists() )
+    {
+        m_pRecentFilesMenu->removeRecentFile( fileName );
+        return;
+    }
+
+    m_inOpeningProcess = true;
+    openSession( fileName );
+    //Show last imported file
+    showFileInEditor( m_pSessionReceipts.count() - 1 );
+    m_sessionFileName = fileName;
+    m_lastSessionFileName = fileName;
+    m_inOpeningProcess = false;
+    selectDebayerAlgorithm();
+}
+
+//Darktheme standard
+void MainWindow::on_actionDarkThemeStandard_triggered(bool checked)
+{
+    if( checked ) CDarkStyle::assign();
+}
+
+//Darktheme by bouncyball
+void MainWindow::on_actionDarkThemeModern_triggered(bool checked)
+{
+    if( checked ) DarkStyleModern::assign();
+}
+
+//Debayer algorithm selection per clip
+void MainWindow::on_comboBoxDebayer_currentIndexChanged(int index)
+{
+    Q_UNUSED( index );
+    selectDebayerAlgorithm();
+}
+
+//Select the debayer algorithm in dependency to playback and chosen playback setting, or clip setting
+void MainWindow::selectDebayerAlgorithm()
+{
+    //Do nothing while preview pics are rendered when importing
+    if( m_inOpeningProcess ) return;
+
+    //If no playback active change debayer to receipt settings
+    if( !ui->actionPlay->isChecked() )
+    {
+        switch( ui->comboBoxDebayer->currentIndex() )
+        {
+        case ReceiptSettings::None:
+            setMlvUseNoneDebayer( m_pMlvObject );
+            break;
+        case ReceiptSettings::Simple:
+            setMlvUseSimpleDebayer( m_pMlvObject );
+            break;
+        case ReceiptSettings::Bilinear:
+            setMlvDontAlwaysUseAmaze( m_pMlvObject );
+            break;
+        case ReceiptSettings::LMMSE:
+            setMlvUseLmmseDebayer( m_pMlvObject );
+            break;
+        case ReceiptSettings::IGV:
+            setMlvUseIgvDebayer( m_pMlvObject );
+            break;
+        case ReceiptSettings::AMaZE:
+            setMlvAlwaysUseAmaze( m_pMlvObject );
+            break;
+        default:
+            break;
+        }
+        disableMlvCaching( m_pMlvObject );
+    }
+    //Else change debayer to the selected one from preview menu
+    else
+    {
+        if( ui->actionUseNoneDebayer->isChecked() )
+        {
+            setMlvUseNoneDebayer( m_pMlvObject );
+            disableMlvCaching( m_pMlvObject );
+        }
+        else if( ui->actionUseSimpleDebayer->isChecked() )
+        {
+            setMlvUseSimpleDebayer( m_pMlvObject );
+            disableMlvCaching( m_pMlvObject );
+        }
+        else if( ui->actionUseBilinear->isChecked() )
+        {
+            setMlvDontAlwaysUseAmaze( m_pMlvObject );
+            disableMlvCaching( m_pMlvObject );
+        }
+        else if( ui->actionCaching->isChecked() )
+        {
+            setMlvAlwaysUseAmaze( m_pMlvObject );
+            enableMlvCaching( m_pMlvObject );
+        }
+        ///@todo: ADD HERE OTHER CACHED DEBAYERS! AND ADD SOME SPECIAL TRICK FOR CACHING
+    }
+    llrpResetFpmStatus(m_pMlvObject);
+    llrpResetBpmStatus(m_pMlvObject);
+    llrpComputeStripesOn(m_pMlvObject);
+    m_frameChanged = true;
 }

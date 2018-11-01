@@ -90,10 +90,13 @@ void llrpSetDualIsoAliasMapMode(mlvObject_t * video, int value);
 int llrpGetDualIsoFullResBlendingMode(mlvObject_t * video);
 void llrpSetDualIsoFullResBlendingMode(mlvObject_t * video, int value);
 
-int llrpIsDualIso(mlvObject_t * video);
+enum { DISO_INVALID, DISO_FORCED, DISO_VALID }; // Return values
+int llrpGetDualIsoValidity(mlvObject_t * video);
+void llrpSetDualIsoValidity(mlvObject_t * video, int diso_force);
+
 int llrpHQDualIso(mlvObject_t * video);
 
-void llrpResetDualIsoBWLevels(mlvObject_t * video);
+void llrpResetDngBWLevels(mlvObject_t * video);
 
 /* reset focus/bad pixel map status */
 void llrpResetFpmStatus(mlvObject_t * video);
