@@ -493,7 +493,7 @@ void apply_processing_object( processingObject_t * processing,
         uint16_t tableG[65535] = {0};
         for (uint16_t * pix = img; pix < img_end; pix += 3)
         {
-            uint16_t pix1 = processing->pre_calc_gamma[ LIMIT16(pm[3][pix[0]] + pm[4][pix[1]] + pm[5][pix[2]]) ];
+            uint16_t pix1 = LIMIT16( pm[4][pix[1]] );
             tableG[pix1]++;
         }
         /* search the brightest (the most right) peak (I made it equivalent to the number of lines to process in the image or more) */
@@ -515,7 +515,7 @@ void apply_processing_object( processingObject_t * processing,
             uint16_t tableGg[65535] = {0};
             for (uint16_t * pix = img; pix < img_end; pix += 3)
             {
-                uint16_t pix1 = processing->pre_calc_gamma_gradient[ LIMIT16(pmg[3][pix[0]] + pmg[4][pix[1]] + pmg[5][pix[2]]) ];
+                uint16_t pix1 = LIMIT16( pmg[4][pix[1]] );
                 tableGg[pix1]++;
             }
             for( uint16_t i = 65535; i >= 0; i-- )
