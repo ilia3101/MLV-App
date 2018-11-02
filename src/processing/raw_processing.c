@@ -1361,7 +1361,7 @@ void processingFindWhiteBalance(processingObject_t *processing, int imageX, int 
 
             double proper_wb_matrix_b[9] = {1,0,0,0,1,0,0,0,1};
             /* Check if doing proper white balance */
-            if( processing->use_cam_matrix )
+            if(processingGetUsesCamMatrix(processing))
             {
                 /* Get multipliers for this to undo what has been done, it was only done to do highlihgt reconstrucytion now */
                 double multiplierz[3] = {1,1,1};
