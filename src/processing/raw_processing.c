@@ -1358,7 +1358,7 @@ void processingFindWhiteBalance(processingObject_t *processing, int imageX, int 
             {
                 /* Get multipliers for this to undo what has been done, it was only done to do highlihgt reconstrucytion now */
                 double multiplierz[3] = {1,1,1};
-                get_kelvin_multipliers_rgb(temp, multiplierz);
+                get_kelvin_multipliers_rgb(processingGetWhiteBalanceKelvin(processing), multiplierz);
 
                 /* Now create a matrix, which will take us back to raw colour by undoing
                  * basic wb (which was useful for highlight reconstruction, also where tint was done) */
@@ -1371,14 +1371,14 @@ void processingFindWhiteBalance(processingObject_t *processing, int imageX, int 
                 double XYZ_white[3];
                 double XYZ_temp[3];
                 Kelvin_Daylight_to_XYZ(6500, XYZ_white);
-                Kelvin_Daylight_to_XYZ(temp, XYZ_temp);
+                Kelvin_Daylight_to_XYZ(processingGetWhiteBalanceKelvin(processing), XYZ_temp);
                 double XYZ_multipliers[3];
                 for (int i = 0; i < 3; ++i) XYZ_multipliers[i] = XYZ_white[i]/XYZ_temp[i];
 
                 double cam_to_xyz[9];
                 invertMatrix(processing->cam_matrix, cam_to_xyz);
 
-                multiplyMatrices(proper_wb_matrix_a, cam_to_xyz, proper_wb_matrix_b);
+                multiplyMatrices(cam_to_xyz, proper_wb_matrix_a, proper_wb_matrix_b);
 
                 /* Apply multipliers in XYZ */
                 for (int i = 0; i < 3; ++i)
@@ -1391,9 +1391,12 @@ void processingFindWhiteBalance(processingObject_t *processing, int imageX, int 
                 }
 
                 // /* Back to sRGB */
-                multiplyMatrices(proper_wb_matrix_b, xyz_to_rgb, proper_wb_matrix_a);
+                multiplyMatrices(xyz_to_rgb, proper_wb_matrix_b, proper_wb_matrix_a);
                 /* copy to b for ocnvenience */
                 memcpy(proper_wb_matrix_b, proper_wb_matrix_a, 9*sizeof(double));
+
+                /* Apply */
+                // for (uint16_t * pix = img; pix < img_end; pix += 3)
             }
 
             /* --- maybe this can also be exchanged by apply_processing_object, but here it is simplified and hopefully faster --- */
