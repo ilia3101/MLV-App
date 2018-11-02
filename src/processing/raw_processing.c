@@ -135,6 +135,7 @@ processingObject_t * initProcessingObject()
     processingSetTransformation(processing, TR_NONE);
     processingSetDenoiserStrength(processing, 0);
     processingSetDenoiserWindow(processing, 2);
+    processingUseCamMatrix(processing);
 
     /* Just in case (should be done tho already) */
     processing_update_matrices(processing);
@@ -434,7 +435,7 @@ void apply_processing_object( processingObject_t * processing,
 
     double proper_wb_matrix_b[9] = {1,0,0,0,1,0,0,0,1};
     /* Check if doing proper white balance */
-    if (1)
+    if( processing->use_cam_matrix )
     {
         /* Get multipliers for this to undo what has been done, it was only done to do highlihgt reconstrucytion now */
         double multiplierz[3] = {1,1,1};
@@ -459,7 +460,7 @@ void apply_processing_object( processingObject_t * processing,
         // get_kelvin_multipliers_rgb(processingGetWhiteBalanceKelvin(processing), XYZ_multipliers2);
         // for (int i = 0; i < 3; ++i) XYZ_multipliers[i] = XYZ_multipliers[i]*0.7+XYZ_multipliers2[i]*0.3;
 
-        printf("temp:%f\n", processingGetWhiteBalanceKelvin(processing));
+        //printf("temp:%f\n", processingGetWhiteBalanceKelvin(processing));
 
         double cam_to_xyz[9];
         invertMatrix(processing->cam_matrix, cam_to_xyz);
@@ -686,6 +687,8 @@ void apply_processing_object( processingObject_t * processing,
                 }*/
             }
         }
+
+        if( processing->use_cam_matrix )
         {
             /* WB correction */
             uint16_t pix0b = pix[0], pix1b = pix[1], pix2b = pix[2];
@@ -710,15 +713,25 @@ void apply_processing_object( processingObject_t * processing,
          || ( processing->gradient_contrast       < -0.01 || processing->gradient_contrast       > 0.01 ) ) )
         {
             /* WB correction gradient layer*/
-            uint16_t pix0b = pix0g, pix1b = pix1g, pix2b = pix2g;
-            double result[3];
-            result[0] = pix0b * proper_wb_matrix_b[0] + pix1b * proper_wb_matrix_b[1] + pix2b * proper_wb_matrix_b[2];
-            result[1] = pix0b * proper_wb_matrix_b[3] + pix1b * proper_wb_matrix_b[4] + pix2b * proper_wb_matrix_b[5];
-            result[2] = pix0b * proper_wb_matrix_b[6] + pix1b * proper_wb_matrix_b[7] + pix2b * proper_wb_matrix_b[8];
             uint16_t pixg[3];
-            pixg[0] = LIMIT16(result[0]);
-            pixg[1] = LIMIT16(result[1]);
-            pixg[2] = LIMIT16(result[2]);
+            if( processing->use_cam_matrix )
+            {
+                uint16_t pix0b = pix0g, pix1b = pix1g, pix2b = pix2g;
+                double result[3];
+                result[0] = pix0b * proper_wb_matrix_b[0] + pix1b * proper_wb_matrix_b[1] + pix2b * proper_wb_matrix_b[2];
+                result[1] = pix0b * proper_wb_matrix_b[3] + pix1b * proper_wb_matrix_b[4] + pix2b * proper_wb_matrix_b[5];
+                result[2] = pix0b * proper_wb_matrix_b[6] + pix1b * proper_wb_matrix_b[7] + pix2b * proper_wb_matrix_b[8];
+
+                pixg[0] = LIMIT16(result[0]);
+                pixg[1] = LIMIT16(result[1]);
+                pixg[2] = LIMIT16(result[2]);
+            }
+            else
+            {
+                pixg[0] = LIMIT16(pix0g);
+                pixg[1] = LIMIT16(pix1g);
+                pixg[2] = LIMIT16(pix2g);
+            }
 
             /* Gamma and expo correction (shadows&highlights, contrast, clarity) gradient layer*/
             for( int i = 0; i < 3; i++ )
@@ -1358,7 +1371,7 @@ void processingFindWhiteBalance(processingObject_t *processing, int imageX, int 
 
             double proper_wb_matrix_b[9] = {1,0,0,0,1,0,0,0,1};
             /* Check if doing proper white balance */
-            if (1)
+            if( processing->use_cam_matrix )
             {
                 /* Get multipliers for this to undo what has been done, it was only done to do highlihgt reconstrucytion now */
                 double multiplierz[3] = {1,1,1};
@@ -1413,6 +1426,7 @@ void processingFindWhiteBalance(processingObject_t *processing, int imageX, int 
             }
             /* --- */
 
+            if( processing->use_cam_matrix )
             {
                 uint16_t pix0b = pix0, pix1b = pix1, pix2b = pix2;
                 double result[3];

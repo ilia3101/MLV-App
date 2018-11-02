@@ -159,6 +159,9 @@ typedef struct {
     double     gradient_contrast_curve[65536];
     uint8_t    gradient_enable;
     uint16_t * gradient_mask; //same size like picture, alpha mask
+
+    /* Use Camera Matrix */
+    uint8_t    use_cam_matrix;
 } processingObject_t;
 
 #endif

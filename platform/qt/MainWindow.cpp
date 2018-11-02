@@ -2701,6 +2701,10 @@ void MainWindow::on_actionExportReceipt_triggered()
 //Read all receipt elements from xml
 void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings *receipt, int version)
 {
+    //Compatibility for Cam Matrix (files without the tag will disable it
+    receipt->setCamMatrixUsed( false );
+
+    //Read tags
     while( !Rxml->atEnd() && !Rxml->isEndElement() )
     {
         Rxml->readNext();
@@ -2826,6 +2830,11 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
         else if( Rxml->isStartElement() && Rxml->name() == "highlightReconstruction" )
         {
             receipt->setHighlightReconstruction( (bool)Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == "camMatrixUsed" )
+        {
+            receipt->setCamMatrixUsed( (bool)Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
         else if( Rxml->isStartElement() && Rxml->name() == "chromaSeparation" )
@@ -3040,6 +3049,7 @@ void MainWindow::writeXmlElementsToFile(QXmlStreamWriter *xmlWriter, ReceiptSett
     xmlWriter->writeTextElement( "sharpen",                 QString( "%1" ).arg( receipt->sharpen() ) );
     xmlWriter->writeTextElement( "chromaBlur",              QString( "%1" ).arg( receipt->chromaBlur() ) );
     xmlWriter->writeTextElement( "highlightReconstruction", QString( "%1" ).arg( receipt->isHighlightReconstruction() ) );
+    xmlWriter->writeTextElement( "camMatrixUsed",           QString( "%1" ).arg( receipt->isCamMatrixUsed() ) );
     xmlWriter->writeTextElement( "chromaSeparation",        QString( "%1" ).arg( receipt->isChromaSeparation() ) );
     xmlWriter->writeTextElement( "profile",                 QString( "%1" ).arg( receipt->profile() ) );
     xmlWriter->writeTextElement( "denoiserStrength",        QString( "%1" ).arg( receipt->denoiserStrength() ) );
@@ -3216,6 +3226,9 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     ui->checkBoxHighLightReconstruction->setChecked( receipt->isHighlightReconstruction() );
     on_checkBoxHighLightReconstruction_toggled( receipt->isHighlightReconstruction() );
 
+    ui->checkBoxUseCameraMatrix->setChecked( receipt->isCamMatrixUsed() );
+    on_checkBoxUseCameraMatrix_toggled( receipt->isCamMatrixUsed() );
+
     ui->checkBoxChromaSeparation->setChecked( receipt->isChromaSeparation() );
     on_checkBoxChromaSeparation_toggled( receipt->isChromaSeparation() );
 
@@ -3380,6 +3393,7 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     receipt->setSharpen( ui->horizontalSliderSharpen->value() );
     receipt->setChromaBlur( ui->horizontalSliderChromaBlur->value() );
     receipt->setHighlightReconstruction( ui->checkBoxHighLightReconstruction->isChecked() );
+    receipt->setCamMatrixUsed( ui->checkBoxUseCameraMatrix->isChecked() );
     receipt->setChromaSeparation( ui->checkBoxChromaSeparation->isChecked() );
     receipt->setProfile( ui->comboBoxProfile->currentIndex() );
     receipt->setDenoiserStrength( ui->horizontalSliderDenoiseStrength->value() );
@@ -3461,6 +3475,7 @@ void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings 
     if( paste && cdui->checkBoxSharpen->isChecked() )    receiptTarget->setSharpen( receiptSource->sharpen() );
     if( paste && cdui->checkBoxChromaBlur->isChecked() ) receiptTarget->setChromaBlur( receiptSource->chromaBlur() );
     if( paste && cdui->checkBoxHighlightReconstruction->isChecked() ) receiptTarget->setHighlightReconstruction( receiptSource->isHighlightReconstruction() );
+    if( paste ) receiptTarget->setCamMatrixUsed( receiptSource->isCamMatrixUsed() );
     if( paste && cdui->checkBoxChromaBlur->isChecked() ) receiptTarget->setChromaSeparation( receiptSource->isChromaSeparation() );
     if( paste && cdui->checkBoxProfile->isChecked() )    receiptTarget->setProfile( receiptSource->profile() );
     if( paste && cdui->checkBoxDenoise->isChecked() )    receiptTarget->setDenoiserStrength( receiptSource->denoiserStrength() );
@@ -3594,6 +3609,7 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     receipt->setSharpen( m_pSessionReceipts.at( row )->sharpen() );
     receipt->setChromaBlur( m_pSessionReceipts.at( row )->chromaBlur() );
     receipt->setHighlightReconstruction( m_pSessionReceipts.at( row )->isHighlightReconstruction() );
+    receipt->setCamMatrixUsed( m_pSessionReceipts.at( row )->isCamMatrixUsed() );
     receipt->setChromaSeparation( m_pSessionReceipts.at( row )->isChromaSeparation() );
     receipt->setProfile( m_pSessionReceipts.at( row )->profile() );
     receipt->setDenoiserStrength( m_pSessionReceipts.at( row )->denoiserStrength() );
@@ -4806,6 +4822,14 @@ void MainWindow::on_checkBoxHighLightReconstruction_toggled(bool checked)
     m_frameChanged = true;
 }
 
+//Enable / Disable the camera matrix calculation
+void MainWindow::on_checkBoxUseCameraMatrix_toggled(bool checked)
+{
+    if( checked ) processingUseCamMatrix( m_pProcessingObject );
+    else processingDontUseCamMatrix( m_pProcessingObject );
+    m_frameChanged = true;
+}
+
 //Enable / Disable chroma separation
 void MainWindow::on_checkBoxChromaSeparation_toggled(bool checked)
 {
@@ -5904,7 +5928,6 @@ void MainWindow::on_toolButtonDualIsoForce_toggled( bool checked )
 //DualISO changed
 void MainWindow::toolButtonDualIsoChanged( void )
 {
-    qDebug() << "Black = " << getMlvBlackLevel( m_pMlvObject ) << "White = " << getMlvWhiteLevel( m_pMlvObject ) << "File Loaded = " << m_fileLoaded;
     if(!m_fileLoaded) return;
 
     //In preview mode, the other dualIso options are grayed out

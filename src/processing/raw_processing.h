@@ -132,7 +132,9 @@ void processingSetGammaGradient(processingObject_t * processing, double gammaVal
 #define processingEnableHighlightReconstruction(processing) (processing)->highlight_reconstruction = 1
 #define processingDisableHighlightReconstruction(processing) (processing)->highlight_reconstruction = 0
 
-
+/* Use or not use camera matrix - compatibility mode */
+#define processingUseCamMatrix(processing) (processing)->use_cam_matrix = 1
+#define processingDontUseCamMatrix(processing) (processing)->use_cam_matrix = 0
 
 /* Set Camera RAW -> sRGB matrix */
 void processingSetCamMatrix(processingObject_t * processing, double * camMatrix);
@@ -192,7 +194,6 @@ void processingSetVibrance(processingObject_t * processing, double vibranceFacto
 /* Enable/disable tonemapping - DEPRECATED!!! (made private) */
 #define processingEnableTonemapping(processing) processing_enable_tonemapping(processing)
 #define processingDisableTonemapping(processing) processing_disable_tonemapping(processing)
-
 
 /* Set transformation */
 void processingSetTransformation(processingObject_t * processing, int transformation);

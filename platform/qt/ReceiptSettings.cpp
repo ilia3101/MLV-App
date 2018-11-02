@@ -40,6 +40,7 @@ ReceiptSettings::ReceiptSettings()
     m_denoiserWindow = 3;
     m_denoiserStrength = 0;
     m_highlightReconstruction = false;
+    m_useCamMatrix = true;
     m_chromaSeparation = false;
     m_rawFixesEnabled = true;
     m_vertical_stripes = 0;

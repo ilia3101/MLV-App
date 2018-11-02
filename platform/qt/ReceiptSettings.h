@@ -46,10 +46,11 @@ public:
     void setDenoiserWindow( int value ){m_denoiserWindow = value;}
     void setDenoiserStrength( int value ){m_denoiserStrength = value;}
     void setHighlightReconstruction( bool on ){m_highlightReconstruction = on;}
-    void setChromaSeparation( bool on ){m_chromaSeparation = on;}
-    void setProfile( uint8_t num )  {m_profile = num;}
-    void setRawWhite( int value ) {m_rawWhite = value;}
-    void setRawBlack( int value ) {m_rawBlack = value;}
+    void setCamMatrixUsed( bool on )          {m_useCamMatrix = on;}
+    void setChromaSeparation( bool on )       {m_chromaSeparation = on;}
+    void setProfile( uint8_t num )            {m_profile = num;}
+    void setRawWhite( int value )             {m_rawWhite = value;}
+    void setRawBlack( int value )             {m_rawBlack = value;}
     void setFileName( QString fileName )      {m_fileName = fileName;}
     void setExportFileName( QString fileName ){m_exportFileName = fileName;}
     void setRawFixesEnabled( bool on )        {m_rawFixesEnabled = on;}
@@ -116,6 +117,7 @@ public:
     int denoiserWindow( void ){return m_denoiserWindow;}
     int denoiserStrength( void ){return m_denoiserStrength;}
     bool isHighlightReconstruction( void ){return m_highlightReconstruction;}
+    bool isCamMatrixUsed( void ){return m_useCamMatrix;}
     bool isChromaSeparation( void ){return m_chromaSeparation;}
     bool rawFixesEnabled( void ){return m_rawFixesEnabled;}
     int verticalStripes( void ){return m_vertical_stripes;}
@@ -185,6 +187,7 @@ private:
     int m_denoiserWindow;
     int m_denoiserStrength;
     bool m_highlightReconstruction;
+    bool m_useCamMatrix;
     bool m_chromaSeparation;
     bool m_rawFixesEnabled; // Enable/Disable all raw fixes
     int m_vertical_stripes; // fix vertical stripes, 0 - do not fix", 1 - fix, 2 - calculate for every frame
