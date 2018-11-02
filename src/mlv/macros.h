@@ -39,6 +39,7 @@
 #define getMlvOriginalBlackLevel(video) (video)->original_black_level
 #define getMlvOriginalWhiteLevel(video) (video)->original_white_level
 #define getMlvIso(video) (video)->EXPO.isoValue
+#define getMlv2ndIso(video) (video)->DISO.isoValue
 #define getMlvFocalLength(video) (video)->LENS.focalLength
 #define getMlvShutter(video) (video)->EXPO.shutterValue
 #define getMlvAperture(video) (video)->LENS.aperture
