@@ -120,16 +120,6 @@ void get_kelvin_multipliers_rgb(double kelvin, double * multiplier_output)
     multiplier_output[2] = (  wb_blue[k] * weight1) + (  wb_blue[k+1] * weight2);
 }
 
-void get_kelvin_multipliers_xyz(double kelvin, double * multiplier_output)
-{
-    double xyz_wb[3];
-    double target[3];
-    get_kelvin_multipliers_rgb(8000.0, xyz_wb);
-    get_kelvin_multipliers_rgb(kelvin, target);
-    for (int i = 0; i < 3; ++i) multiplier_output[i] = target[i] / xyz_wb[i];
-    multiplier_output[1] *= 0.75;
-}
-
 /* Adds contrast(S-curve) to a value in a unique(or not) way */
 double add_contrast ( double pixel, /* Range 0.0 - 1.0 */
                       double dark_contrast_range, 
