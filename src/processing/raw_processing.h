@@ -135,6 +135,7 @@ void processingSetGammaGradient(processingObject_t * processing, double gammaVal
 /* Use or not use camera matrix - compatibility mode */
 #define processingUseCamMatrix(processing) (processing)->use_cam_matrix = 1
 #define processingDontUseCamMatrix(processing) (processing)->use_cam_matrix = 0
+#define processingGetUsesCamMatrix(processing) ((processing)->use_cam_matrix)
 
 /* Set Camera RAW -> sRGB matrix */
 void processingSetCamMatrix(processingObject_t * processing, double * camMatrix);
