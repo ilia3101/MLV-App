@@ -196,7 +196,7 @@ void processing_update_shadow_highlight_curve(processingObject_t * processing)
     double shadows_expo = processing->shadows_highlights.shadows;
     double highlight_expo = pow(2.0, processing->shadows_highlights.highlights*(-1.5));
     #pragma omp parallel for
-    for (int i = 0; i < 65536; ++i)
+    for (int i = 1; i < 65536; ++i)
     {
         double expo_factor;
         double value = pow(((double)i)/65536.0, 0.75);
@@ -212,6 +212,7 @@ void processing_update_shadow_highlight_curve(processingObject_t * processing)
 
         processing->shadows_highlights.shadow_highlight_curve[i] = expo_factor;
     }
+    processing->shadows_highlights.shadow_highlight_curve[0] = 1.0;
 }
 
 void processingSetSimpleContrast(processingObject_t * processing, double value)
@@ -225,7 +226,7 @@ void processing_update_contrast_curve(processingObject_t * processing)
     double shadows_expo = -processing->contrast;
     double highlight_expo = pow(2.0, processing->contrast*(-1.5));
     #pragma omp parallel for
-    for (int i = 0; i < 65536; ++i)
+    for (int i = 1; i < 65536; ++i)
     {
         double expo_factor;
         double value = pow(((double)i)/65536.0, 0.75);
@@ -241,6 +242,7 @@ void processing_update_contrast_curve(processingObject_t * processing)
 
         processing->contrast_curve[i] = expo_factor;
     }
+    processing->contrast_curve[0] = 1.0;
 }
 
 void processingSetSimpleContrastGradient(processingObject_t * processing, double value)
@@ -254,7 +256,7 @@ void processing_update_contrast_curve_gradient(processingObject_t * processing)
     double shadows_expo = -processing->gradient_contrast;
     double highlight_expo = pow(2.0, processing->gradient_contrast*(-1.5));
     #pragma omp parallel for
-    for (int i = 0; i < 65536; ++i)
+    for (int i = 1; i < 65536; ++i)
     {
         double expo_factor;
         double value = pow(((double)i)/65536.0, 0.75);
@@ -270,6 +272,7 @@ void processing_update_contrast_curve_gradient(processingObject_t * processing)
 
         processing->gradient_contrast_curve[i] = expo_factor;
     }
+    processing->gradient_contrast_curve[0] = 1.0;
 }
 
 void processingSetClarity(processingObject_t * processing, double value)
@@ -284,7 +287,7 @@ void processing_update_clarity_curve(processingObject_t * processing)
     double shadows_expo = -processing->clarity;
     double highlight_expo = pow(2.0, processing->clarity*(-1.5));
     #pragma omp parallel for
-    for (int i = 0; i < 65536; ++i)
+    for (int i = 1; i < 65536; ++i)
     {
         double expo_factor;
         double value = pow(((double)i)/65536.0, 0.75);
@@ -300,6 +303,7 @@ void processing_update_clarity_curve(processingObject_t * processing)
 
         processing->clarity_curve[i] = expo_factor;
     }
+    processing->clarity_curve[0] = 1.0;
 }
 
 /* applyProcessingObject but with one argument for pthreading  */
@@ -792,63 +796,6 @@ void apply_processing_object( processingObject_t * processing,
                 pix[0] = LIMIT16(pix0);
                 pix[1] = LIMIT16(pix1);
                 pix[2] = LIMIT16(pix2);
-            }
-        }
-
-        /* Shadow and Highlight (de)saturation */
-        if( 0 )
-        {
-            /* Now saturation for shadows and highlights */
-            for (uint16_t * pix = img; pix < img_end; pix += 3)
-            {
-                uint16_t luminance = LIMIT16(0.2126*pix[0] + 0.7152*pix[1] + 0.0722*pix[2]);
-
-                if( luminance < 7000 )
-                {
-                    /* Pixel brightness = 4/16 R, 11/16 G, 1/16 blue; Try swapping the channels, it will look worse */
-                    //int32_t Y1 = ((pix[0] << 2) + (pix[1] * 11) + pix[2]) >> 4;
-                    //int32_t Y2 = Y1 - 65536;
-
-                    /* Increase difference between channels and the saturation midpoint */
-                    int32_t pix0 = luminance;//processing->pre_calc_sat[pix[0] - Y2] + Y1;
-                    int32_t pix1 = luminance;//processing->pre_calc_sat[pix[1] - Y2] + Y1;
-                    int32_t pix2 = luminance;//processing->pre_calc_sat[pix[2] - Y2] + Y1;
-
-                    if( luminance > 5000 )
-                    {
-                        double intensity = ( luminance - 5000 ) / 2000.0;
-                        pix0 = pix0 * intensity + pix[0] * ( 1.0 - intensity );
-                        pix1 = pix1 * intensity + pix[1] * ( 1.0 - intensity );
-                        pix2 = pix2 * intensity + pix[2] * ( 1.0 - intensity );
-                    }
-
-                    pix[0] = LIMIT16(pix0);
-                    pix[1] = LIMIT16(pix1);
-                    pix[2] = LIMIT16(pix2);
-                }
-                else if( luminance > 65535-35000 )
-                {
-                    /* Pixel brightness = 4/16 R, 11/16 G, 1/16 blue; Try swapping the channels, it will look worse */
-                    int32_t Y1 = ((pix[0] << 2) + (pix[1] * 11) + pix[2]) >> 4;
-                    int32_t Y2 = Y1 - 65536;
-
-                    /* Increase difference between channels and the saturation midpoint */
-                    int32_t pix0 = processing->pre_calc_sat[pix[0] - Y2] + Y1;
-                    int32_t pix1 = processing->pre_calc_sat[pix[1] - Y2] + Y1;
-                    int32_t pix2 = processing->pre_calc_sat[pix[2] - Y2] + Y1;
-
-                    if( luminance < 65535-15000 )
-                    {
-                        double intensity = ( 65535 - luminance - 15000 ) / 20000.0;
-                        pix0 = pix0 * intensity + pix[0] * ( 1.0 - intensity );
-                        pix1 = pix1 * intensity + pix[1] * ( 1.0 - intensity );
-                        pix2 = pix2 * intensity + pix[2] * ( 1.0 - intensity );
-                    }
-
-                    //pix[0] = LIMIT16(pix0);
-                    //pix[1] = LIMIT16(pix1);
-                    //pix[2] = LIMIT16(pix2);
-                }
             }
         }
     }
