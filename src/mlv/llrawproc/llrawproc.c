@@ -262,7 +262,7 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
     }
 
     /* fix pattern noise */
-    if (video->llrawproc->pattern_noise)
+    if (!video->llrawproc->diso_validity && video->llrawproc->pattern_noise)
     {
 #ifndef STDOUT_SILENT
         printf("Fixing pattern noise... ");
@@ -273,8 +273,8 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
 #endif
     }
 
-    /* if valid dual iso */
-    if(video->llrawproc->diso_valid)
+    /* if dual iso valid/forced and processing is turned on */
+    if(video->llrawproc->diso_validity && video->llrawproc->dual_iso)
     {
         raw_info.width = video->RAWI.xRes;
         raw_info.height = video->RAWI.yRes;
@@ -283,22 +283,23 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
         raw_info.active_area.y1 = 0;
         raw_info.active_area.x2 = raw_info.width;
         raw_info.active_area.y2 = raw_info.height;
-#ifndef STDOUT_SILENT
-        printf("Proc_Black = %d, Proc_White = %d, Raw_Black = %d, Raw_White = %d <= BEFORE SCALING\n", video->processing->black_level, video->processing->white_level, raw_info.black_level, raw_info.white_level);
-#endif
         /* detect if lossless raw data is restricted to imaginary 8-12bit levels */
         int restricted_lossless = (video->MLVI.videoClass & MLV_VIDEO_CLASS_FLAG_LJ92) && video->lossless_bpp < 14;
         if(restricted_lossless)
         {
+#ifndef STDOUT_SILENT
+            printf("\nScaling raw data range...\n");
+            printf("Raw_Black = %d, Raw_White = %d <= BEFORE SCALING\n", raw_info.black_level, raw_info.white_level);
+#endif
             scale_restricted_range(&raw_info, raw_image_buff);
 #ifndef STDOUT_SILENT
-            printf("Proc_Black = %d, Proc_White = %d, Raw_Black = %d, Raw_White = %d <= AFTER SCALING\n", video->processing->black_level, video->processing->white_level, raw_info.black_level, raw_info.white_level);
-            printf("\n'20bit': changing processing B/W levels\n");
-            printf("Proc_Black = %d, Proc_White = %d, Raw_Black = %d, Raw_White = %d <= BEFORE SET PROC BW\n", video->processing->black_level, video->processing->white_level, raw_info.black_level, raw_info.white_level);
+            printf("Raw_Black = %d, Raw_White = %d <= AFTER SCALING\n", raw_info.black_level, raw_info.white_level);
+            printf("\nChanging processing B/W levels...\n");
+            printf("Proc_Black = %d, Proc_White = %d <= BEFORE CHANGING\n", video->processing->black_level, video->processing->white_level);
 #endif
             processingSetBlackAndWhiteLevel(video->processing, raw_info.black_level, raw_info.white_level, 14); // black and white levels are 14bit after scaling above
 #ifndef STDOUT_SILENT
-            printf("Proc_Black = %d, Proc_White = %d, Raw_Black = %d, Raw_White = %d <= AFTER SET PROC BW\n", video->processing->black_level, video->processing->white_level, raw_info.black_level, raw_info.white_level);
+            printf("Proc_Black = %d, Proc_White = %d <= AFTER CHANGING\n", video->processing->black_level, video->processing->white_level);
 #endif
         }
 
@@ -539,28 +540,28 @@ void llrpSetDualIsoFullResBlendingMode(mlvObject_t * video, int value)
 
 int llrpGetDualIsoValidity(mlvObject_t * video)
 {
-    return video->llrawproc->diso_valid;
+    return video->llrawproc->diso_validity;
 }
 
 void llrpSetDualIsoValidity(mlvObject_t * video, int diso_force)
 {
     if(diso_force)
     {
-        video->llrawproc->diso_valid = DISO_FORCED;
+        video->llrawproc->diso_validity = DISO_FORCED;
     }
     else if(video->DISO.blockType[0])
     {
-        video->llrawproc->diso_valid = DISO_VALID;
+        video->llrawproc->diso_validity = DISO_VALID;
     }
     else
     {
-        video->llrawproc->diso_valid = DISO_INVALID;
+        video->llrawproc->diso_validity = DISO_INVALID;
     }
 }
 
 int llrpHQDualIso(mlvObject_t * video)
 {
-    return (video->llrawproc->dual_iso == 1) && video->llrawproc->diso_valid && (llrpGetFixRawMode(video));
+    return (video->llrawproc->dual_iso == 1) && video->llrawproc->diso_validity && (llrpGetFixRawMode(video));
 }
 
 void llrpResetDngBWLevels(mlvObject_t * video)
