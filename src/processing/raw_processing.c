@@ -432,7 +432,6 @@ void apply_processing_object( processingObject_t * processing,
         img[i] = processing->pre_calc_levels[ img[i] ];
     }
 
-
     double proper_wb_matrix_b[9] = {1,0,0,0,1,0,0,0,1};
     /* Check if doing proper white balance */
     if( processing->use_cam_matrix )
@@ -456,12 +455,6 @@ void apply_processing_object( processingObject_t * processing,
         double XYZ_multipliers[3];
         for (int i = 0; i < 3; ++i) XYZ_multipliers[i] = XYZ_white[i]/XYZ_temp[i];
 
-        // double XYZ_multipliers2[3];
-        // get_kelvin_multipliers_rgb(processingGetWhiteBalanceKelvin(processing), XYZ_multipliers2);
-        // for (int i = 0; i < 3; ++i) XYZ_multipliers[i] = XYZ_multipliers[i]*0.7+XYZ_multipliers2[i]*0.3;
-
-        //printf("temp:%f\n", processingGetWhiteBalanceKelvin(processing));
-
         double cam_to_xyz[9];
         invertMatrix(processing->cam_matrix, cam_to_xyz);
 
@@ -481,9 +474,6 @@ void apply_processing_object( processingObject_t * processing,
         multiplyMatrices(xyz_to_rgb, proper_wb_matrix_b, proper_wb_matrix_a);
         /* copy to b for ocnvenience */
         memcpy(proper_wb_matrix_b, proper_wb_matrix_a, 9*sizeof(double));
-
-        /* Apply */
-        // for (uint16_t * pix = img; pix < img_end; pix += 3)
     }
 
     /* find highest green peak in actual picture for highlight reconstruction */
@@ -601,21 +591,18 @@ void apply_processing_object( processingObject_t * processing,
         int32_t tmp1 = (/* pm[3][pix[0]] + */ pm[4][pix[1]] /* + pm[5][pix[2]] */);
 
         /* Gradient variables and part 1 */
-        int32_t pix0g;
-        int32_t pix1g;
-        int32_t pix2g;
+        uint16_t pixg[3];
         if( processing->gradient_enable && gmpix[0] != 0 &&
           ( ( processing->gradient_exposure_stops < -0.01 || processing->gradient_exposure_stops > 0.01 )
          || ( processing->gradient_contrast       < -0.01 || processing->gradient_contrast       > 0.01 ) ) )
         {
             /* do the same for gradient as for the pic itself, but before the values are overwritten */
             /* white balance & exposure */
-            pix0g = (pmg[0][pix[0]] /* + pmg[1][pix[1]] + pmg[2][pix[2]] */) * expo_correction * expo_correction_gradient;
-            pix1g = (/* pmg[3][pix[0]] + */ pmg[4][pix[1]] /* + pmg[5][pix[2]] */) * expo_correction * expo_correction_gradient;
-            pix2g = (/* pmg[6][pix[0]] + pmg[7][pix[1]] */ + pmg[8][pix[2]]) * expo_correction * expo_correction_gradient;
-            uint32_t tmp1g = (/* pmg[3][pix[0]] + */ pmg[4][pix[1]] /* + pmg[5][pix[2]] */);
+            int32_t pix0g = (pmg[0][pix[0]] /* + pmg[1][pix[1]] + pmg[2][pix[2]] */) * expo_correction * expo_correction_gradient;
+            int32_t pix1g = (/* pmg[3][pix[0]] + */ pmg[4][pix[1]] /* + pmg[5][pix[2]] */) * expo_correction * expo_correction_gradient;
+            int32_t pix2g = (/* pmg[6][pix[0]] + pmg[7][pix[1]] */ + pmg[8][pix[2]]) * expo_correction * expo_correction_gradient;
+            int32_t tmp1g = (/* pmg[3][pix[0]] + */ pmg[4][pix[1]] /* + pmg[5][pix[2]] */);
 
-            uint16_t pixg[3];
             pixg[0] = LIMIT16(pix0g);
             pixg[1] = LIMIT16(pix1g);
             pixg[2] = LIMIT16(pix2g);
@@ -645,9 +632,6 @@ void apply_processing_object( processingObject_t * processing,
                     }
                 }
             }
-            pix0g = pixg[0];
-            pix1g = pixg[1];
-            pix2g = pixg[2];
         }
 
         pix[0] = LIMIT16(pix0);
@@ -713,24 +697,16 @@ void apply_processing_object( processingObject_t * processing,
          || ( processing->gradient_contrast       < -0.01 || processing->gradient_contrast       > 0.01 ) ) )
         {
             /* WB correction gradient layer*/
-            uint16_t pixg[3];
             if( processing->use_cam_matrix )
             {
-                uint16_t pix0b = pix0g, pix1b = pix1g, pix2b = pix2g;
+                uint16_t pix0b = pixg[0], pix1b = pixg[1], pix2b = pixg[2];
                 double result[3];
                 result[0] = pix0b * proper_wb_matrix_b[0] + pix1b * proper_wb_matrix_b[1] + pix2b * proper_wb_matrix_b[2];
                 result[1] = pix0b * proper_wb_matrix_b[3] + pix1b * proper_wb_matrix_b[4] + pix2b * proper_wb_matrix_b[5];
                 result[2] = pix0b * proper_wb_matrix_b[6] + pix1b * proper_wb_matrix_b[7] + pix2b * proper_wb_matrix_b[8];
-
                 pixg[0] = LIMIT16(result[0]);
                 pixg[1] = LIMIT16(result[1]);
                 pixg[2] = LIMIT16(result[2]);
-            }
-            else
-            {
-                pixg[0] = LIMIT16(pix0g);
-                pixg[1] = LIMIT16(pix1g);
-                pixg[2] = LIMIT16(pix2g);
             }
 
             /* Gamma and expo correction (shadows&highlights, contrast, clarity) gradient layer*/
