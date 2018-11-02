@@ -594,9 +594,10 @@ void apply_processing_object( processingObject_t * processing,
         }
 
         /* white balance & exposure */
-        int32_t pix0 = (pm[0][pix[0]] /* + pm[1][pix[1]] + pm[2][pix[2]] */);
-        int32_t pix1 = (/* pm[3][pix[0]] + */ pm[4][pix[1]] /* + pm[5][pix[2]] */);
-        int32_t pix2 = (/* pm[6][pix[0]] + pm[7][pix[1]] + */ pm[8][pix[2]]);
+        int32_t pix0 = (pm[0][pix[0]] /* + pm[1][pix[1]] + pm[2][pix[2]] */)*expo_correction;
+        int32_t pix1 = (/* pm[3][pix[0]] + */ pm[4][pix[1]] /* + pm[5][pix[2]] */)*expo_correction;
+        int32_t pix2 = (/* pm[6][pix[0]] + pm[7][pix[1]] + */ pm[8][pix[2]])*expo_correction;
+        int32_t tmp1 = (/* pm[3][pix[0]] + */ pm[4][pix[1]] /* + pm[5][pix[2]] */);
 
         /* Gradient variables and part 1 */
         int32_t pix0g;
@@ -608,14 +609,16 @@ void apply_processing_object( processingObject_t * processing,
         {
             /* do the same for gradient as for the pic itself, but before the values are overwritten */
             /* white balance & exposure */
-            pix0g = (pmg[0][pix[0]] /* + pmg[1][pix[1]] + pmg[2][pix[2]] */);
-            pix1g = (/* pmg[3][pix[0]] + */ pmg[4][pix[1]] /* + pmg[5][pix[2]] */);
-            pix2g = (/* pmg[6][pix[0]] + pmg[7][pix[1]] */ + pmg[8][pix[2]]);
+            pix0g = (pmg[0][pix[0]] /* + pmg[1][pix[1]] + pmg[2][pix[2]] */) * expo_correction * expo_correction_gradient;
+            pix1g = (/* pmg[3][pix[0]] + */ pmg[4][pix[1]] /* + pmg[5][pix[2]] */) * expo_correction * expo_correction_gradient;
+            pix2g = (/* pmg[6][pix[0]] + pmg[7][pix[1]] */ + pmg[8][pix[2]]) * expo_correction * expo_correction_gradient;
+            uint32_t tmp1g = (/* pmg[3][pix[0]] + */ pmg[4][pix[1]] /* + pmg[5][pix[2]] */);
 
             uint16_t pixg[3];
             pixg[0] = LIMIT16(pix0g);
             pixg[1] = LIMIT16(pix1g);
             pixg[2] = LIMIT16(pix2g);
+            tmp1g   = LIMIT16(tmp1g);
 
             /* Now highlight reconstruction for gradient layer*/
             if (processing->highlight_reconstruction)
@@ -624,7 +627,7 @@ void apply_processing_object( processingObject_t * processing,
                 {
                     /* Check if its the range of highest green value possible */
                     /* the range makes it cleaner against pink noise */
-                    if (pixg[1] >= LIMIT16( highest_green_gradient - 1000 ) && pixg[1] <= LIMIT16( highest_green_gradient + 1000 ))
+                    if (tmp1g >= LIMIT16( highest_green_gradient - 1000 ) && tmp1g <= LIMIT16( highest_green_gradient + 1000 ))
                     {
                         if( pixg[1] < 1.1*pixg[0] && pixg[1] < pixg[2] )
                         {
@@ -635,7 +638,7 @@ void apply_processing_object( processingObject_t * processing,
                 else
                 {
                     /* Check if its the highest green value possible */
-                    if (pixg[1] == processing->highest_green_gradient)
+                    if (tmp1g == processing->highest_green_gradient)
                     {
                         pixg[1] = (pixg[0] + pixg[2]) / 2;
                     }
@@ -649,6 +652,7 @@ void apply_processing_object( processingObject_t * processing,
         pix[0] = LIMIT16(pix0);
         pix[1] = LIMIT16(pix1);
         pix[2] = LIMIT16(pix2);
+        tmp1   = LIMIT16(tmp1);
 
         /* Now highlight reconstruction */
         if (processing->highlight_reconstruction)
@@ -657,7 +661,7 @@ void apply_processing_object( processingObject_t * processing,
             {
                 /* Check if its the range of highest green value possible */
                 /* the range makes it cleaner against pink noise */
-                if (pix[1] >= LIMIT16( highest_green - 1000 ) && pix[1] <= LIMIT16( highest_green + 1000 ))
+                if (tmp1 >= LIMIT16( highest_green - 1000 ) && tmp1 <= LIMIT16( highest_green + 1000 ))
                 {
                     if( pix[1] < 1.1*pix[0] && pix[1] < pix[2] )
                     {
@@ -668,7 +672,7 @@ void apply_processing_object( processingObject_t * processing,
             else
             {
                 /* Check if its the highest green value possible */
-                if (pix[1] == processing->highest_green)
+                if (tmp1 == processing->highest_green)
                 {
                     pix[1] = (pix[0] + pix[2]) / 2;
                 }
@@ -697,7 +701,7 @@ void apply_processing_object( processingObject_t * processing,
         /* Gamma and expo correction (shadows&highlights, contrast, clarity)*/
         for( int i = 0; i < 3; i++ )
         {
-            pix[i] = processing->pre_calc_gamma[ (uint16_t)LIMIT16( pix[i] * expo_correction ) ];
+            pix[i] = processing->pre_calc_gamma[ pix[i] ];
         }
 
         /* Gradient part 2 & blending */
@@ -719,7 +723,7 @@ void apply_processing_object( processingObject_t * processing,
             /* Gamma and expo correction (shadows&highlights, contrast, clarity) gradient layer*/
             for( int i = 0; i < 3; i++ )
             {
-                pixg[i] = processing->pre_calc_gamma_gradient[ (uint16_t)LIMIT16( pixg[i] * expo_correction * expo_correction_gradient ) ];
+                pixg[i] = processing->pre_calc_gamma_gradient[ pixg[i] ];
             }
 
             /* Blending using the mask */
@@ -1394,9 +1398,6 @@ void processingFindWhiteBalance(processingObject_t *processing, int imageX, int 
                 multiplyMatrices(xyz_to_rgb, proper_wb_matrix_b, proper_wb_matrix_a);
                 /* copy to b for ocnvenience */
                 memcpy(proper_wb_matrix_b, proper_wb_matrix_a, 9*sizeof(double));
-
-                /* Apply */
-                // for (uint16_t * pix = img; pix < img_end; pix += 3)
             }
 
             /* --- maybe this can also be exchanged by apply_processing_object, but here it is simplified and hopefully faster --- */
