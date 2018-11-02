@@ -998,6 +998,20 @@ void MainWindow::initGui( void )
     m_scopeGroup->addAction( ui->actionShowHistogram );
     m_scopeGroup->addAction( ui->actionShowParade );
 
+    //Session List options as group
+    m_sessionListGroup = new QActionGroup( this );
+    m_sessionListGroup->setExclusive( true );
+    m_sessionListGroup->addAction( ui->actionPreviewDisabled );
+    m_sessionListGroup->addAction( ui->actionPreviewList );
+    m_sessionListGroup->addAction( ui->actionPreviewPicture );
+    m_sessionListGroup->addAction( ui->actionPreviewPictureBottom );
+
+    //Playback element as group
+    m_playbackElementGroup = new QActionGroup( this );
+    m_playbackElementGroup->setExclusive( true );
+    m_playbackElementGroup->addAction( ui->actionTimecodePositionMiddle );
+    m_playbackElementGroup->addAction( ui->actionTimecodePositionRight );
+
 #ifdef Q_OS_LINUX
     //if not doing this, some elements are covered by the scrollbar on Linux only
     ui->dockWidgetEdit->setMinimumWidth( 240 );
@@ -1283,15 +1297,19 @@ void MainWindow::readSettings()
     switch( m_previewMode )
     {
     case 0:
+        ui->actionPreviewDisabled->setChecked( true );
         on_actionPreviewDisabled_triggered();
         break;
     case 1:
+        ui->actionPreviewList->setChecked( true );
         on_actionPreviewList_triggered();
         break;
     case 2:
+        ui->actionPreviewPicture->setChecked( true );
         on_actionPreviewPicture_triggered();
         break;
     default:
+        ui->actionPreviewPictureBottom->setChecked( true );
         on_actionPreviewPictureBottom_triggered();
         break;
     }
@@ -6841,10 +6859,6 @@ void MainWindow::on_spinBoxCutOut_valueChanged(int arg1)
 //Session Preview Disabled
 void MainWindow::on_actionPreviewDisabled_triggered()
 {
-    ui->actionPreviewDisabled->setChecked( true );
-    ui->actionPreviewList->setChecked( false );
-    ui->actionPreviewPicture->setChecked( false );
-    ui->actionPreviewPictureBottom->setChecked( false );
     m_previewMode = 0;
     setPreviewMode();
     addDockWidget( Qt::LeftDockWidgetArea, ui->dockWidgetSession );
@@ -6854,10 +6868,6 @@ void MainWindow::on_actionPreviewDisabled_triggered()
 //Session Preview  List
 void MainWindow::on_actionPreviewList_triggered()
 {
-    ui->actionPreviewDisabled->setChecked( false );
-    ui->actionPreviewList->setChecked( true );
-    ui->actionPreviewPicture->setChecked( false );
-    ui->actionPreviewPictureBottom->setChecked( false );
     m_previewMode = 1;
     setPreviewMode();
     addDockWidget( Qt::LeftDockWidgetArea, ui->dockWidgetSession );
@@ -6867,10 +6877,6 @@ void MainWindow::on_actionPreviewList_triggered()
 //Session Preview Picture Left
 void MainWindow::on_actionPreviewPicture_triggered()
 {
-    ui->actionPreviewDisabled->setChecked( false );
-    ui->actionPreviewList->setChecked( false );
-    ui->actionPreviewPicture->setChecked( true );
-    ui->actionPreviewPictureBottom->setChecked( false );
     m_previewMode = 2;
     setPreviewMode();
     addDockWidget( Qt::LeftDockWidgetArea, ui->dockWidgetSession );
@@ -6880,10 +6886,6 @@ void MainWindow::on_actionPreviewPicture_triggered()
 //Session Preview Picture Bottom
 void MainWindow::on_actionPreviewPictureBottom_triggered()
 {
-    ui->actionPreviewDisabled->setChecked( false );
-    ui->actionPreviewList->setChecked( false );
-    ui->actionPreviewPicture->setChecked( false );
-    ui->actionPreviewPictureBottom->setChecked( true );
     m_previewMode = 3;
     setPreviewMode();
     addDockWidget( Qt::BottomDockWidgetArea, ui->dockWidgetSession );
@@ -6929,7 +6931,6 @@ void MainWindow::on_actionTimecodePositionMiddle_triggered()
 {
     m_timeCodePosition = 1;
     QMessageBox::information( this, QString( "MLV App" ), tr( "Please restart MLV App." ) );
-    ui->actionTimecodePositionRight->setChecked( false );
 }
 
 //Move Timecode label right
@@ -6937,7 +6938,6 @@ void MainWindow::on_actionTimecodePositionRight_triggered()
 {
     m_timeCodePosition = 0;
     QMessageBox::information( this, QString( "MLV App" ), tr( "Please restart MLV App." ) );
-    ui->actionTimecodePositionMiddle->setChecked( false );
 }
 
 //TimeCode label doubleclicked

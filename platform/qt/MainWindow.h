@@ -310,6 +310,8 @@ private:
     QLabel *m_pFrameNumber;
     QActionGroup *m_darkFrameGroup;
     QActionGroup *m_previewDebayerGroup;
+    QActionGroup *m_sessionListGroup;
+    QActionGroup *m_playbackElementGroup;
     QActionGroup *m_scopeGroup;
     DoubleClickLabel *m_pTcLabel;
     bool m_tcModeDuration;
