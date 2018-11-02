@@ -410,6 +410,7 @@ private:
     int toolButtonPatternNoiseCurrentIndex( void );
     int toolButtonUpsideDownCurrentIndex( void );
     int toolButtonVerticalStripesCurrentIndex( void );
+    int toolButtonDualIsoForceCurrentIndex();
     int toolButtonDualIsoCurrentIndex( void );
     int toolButtonDualIsoInterpolationCurrentIndex( void );
     int toolButtonDualIsoAliasMapCurrentIndex( void );

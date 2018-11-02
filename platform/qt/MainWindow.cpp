@@ -4125,6 +4125,13 @@ int MainWindow::toolButtonVerticalStripesCurrentIndex()
     else return 2;
 }
 
+//Get toolbutton index of dual iso force
+int MainWindow::toolButtonDualIsoForceCurrentIndex()
+{
+    if( ui->toolButtonDualIsoForce->isChecked() ) return 0;
+    else return 1;
+}
+
 //Get toolbutton index of dual Iso
 int MainWindow::toolButtonDualIsoCurrentIndex()
 {
@@ -5883,14 +5890,20 @@ void MainWindow::on_toolButtonDualIsoForce_toggled( bool checked )
 {
     if( llrpGetDualIsoValidity( m_pMlvObject ) == DISO_VALID )
     {
+        ui->DualISOLabel->setEnabled( true );
         ui->toolButtonDualIsoOff->setEnabled( true );
+        ui->DualISOInterpolationLabel->setEnabled( true );
         ui->toolButtonDualIsoOn->setEnabled( true );
+        ui->DualISOAliasMapLabel->setEnabled( true );
         ui->toolButtonDualIsoPreview->setEnabled( true );
     }
     else
     {
+        ui->DualISOLabel->setEnabled( checked );
         ui->toolButtonDualIsoOff->setEnabled( checked );
+        ui->DualISOInterpolationLabel->setEnabled( checked );
         ui->toolButtonDualIsoOn->setEnabled( checked );
+        ui->DualISOAliasMapLabel->setEnabled( checked );
         ui->toolButtonDualIsoPreview->setEnabled( checked );
         llrpSetDualIsoValidity( m_pMlvObject, checked );
 
@@ -6010,10 +6023,10 @@ void MainWindow::on_checkBoxRawFixEnable_clicked(bool checked)
     ui->PatternNoiseLabel->setEnabled( checked );
     ui->VerticalStripesLabel->setEnabled( checked );
     ui->DeflickerTargetLabel->setEnabled( checked );
-    ui->DualISOLabel->setEnabled( checked );
-    ui->DualISOInterpolationLabel->setEnabled( checked );
-    ui->DualISOAliasMapLabel->setEnabled( checked );
-    ui->DualISOFullresBlendingLabel->setEnabled( checked );
+    ui->DualISOLabel->setEnabled( checked && ( toolButtonDualIsoForceCurrentIndex() == 0 ) );
+    ui->DualISOInterpolationLabel->setEnabled( checked && ( toolButtonDualIsoForceCurrentIndex() == 0 ) );
+    ui->DualISOAliasMapLabel->setEnabled( checked && ( toolButtonDualIsoForceCurrentIndex() == 0 ) );
+    ui->DualISOFullresBlendingLabel->setEnabled( checked && ( toolButtonDualIsoForceCurrentIndex() == 0 ) );
     ui->FocusPixelsInterpolationMethodLabel_2->setEnabled( checked );
 
     ui->toolButtonFocusDots->setEnabled( checked );
@@ -6024,6 +6037,7 @@ void MainWindow::on_checkBoxRawFixEnable_clicked(bool checked)
     ui->toolButtonPatternNoise->setEnabled( checked );
     ui->toolButtonVerticalStripes->setEnabled( checked );
     ui->toolButtonDualIso->setEnabled( checked );
+    ui->toolButtonDualIsoForce->setEnabled( checked );
     ui->toolButtonDualIsoInterpolation->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() == 1 ) );
     ui->toolButtonDualIsoAliasMap->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() == 1 ) );
     ui->toolButtonDualIsoFullresBlending->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() == 1 ) );
