@@ -64,7 +64,7 @@ A very first version of a kind of user manual can be found [here](https://github
 - OR download and doubleclick easy-to-use [compiler app](https://bitbucket.org/Dannephoto/mlv_app_compiler/downloads/mlv_app_compiler.dmg) from @dannephoto
 
 #### Qt App Windows
-- install Qt5 (minimum 5.6)
+- install Qt5 (minimum 5.6) with MinGW compiler
 - unpack ffmpegWin.zip in `platform/qt/FFmpeg` (and copy it later into build directory)
 - open `platform/qt/MLVApp.pro` in QtCreator
 - go to tab project, add command line argument -j4 (for quad core) 
