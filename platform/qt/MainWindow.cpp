@@ -5908,12 +5908,14 @@ void MainWindow::on_toolButtonDualIsoForce_toggled( bool checked )
 {
     if( llrpGetDualIsoValidity( m_pMlvObject ) == DISO_VALID )
     {
+        ui->DualISOLabel->setEnabled( true );
         ui->toolButtonDualIsoOff->setEnabled( true );
         ui->toolButtonDualIsoOn->setEnabled( true );
         ui->toolButtonDualIsoPreview->setEnabled( true );
     }
     else
     {
+        ui->DualISOLabel->setEnabled( checked );
         ui->toolButtonDualIsoOff->setEnabled( checked );
         ui->toolButtonDualIsoOn->setEnabled( checked );
         ui->toolButtonDualIsoPreview->setEnabled( checked );
@@ -6039,7 +6041,7 @@ void MainWindow::on_checkBoxRawFixEnable_clicked(bool checked)
     ui->PatternNoiseLabel->setEnabled( checked );
     ui->VerticalStripesLabel->setEnabled( checked );
     ui->DeflickerTargetLabel->setEnabled( checked );
-    ui->DualISOLabel->setEnabled( checked );
+    ui->DualISOLabel->setEnabled( checked && ( toolButtonDualIsoForceCurrentIndex() == 0 ) );
     ui->DualISOInterpolationLabel->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() == 1 ) );
     ui->DualISOAliasMapLabel->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() == 1 ) );
     ui->DualISOFullresBlendingLabel->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() == 1 ) );
