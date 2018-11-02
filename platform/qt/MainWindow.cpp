@@ -2719,6 +2719,9 @@ void MainWindow::on_actionExportReceipt_triggered()
 //Read all receipt elements from xml
 void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings *receipt, int version)
 {
+    //Compatibility for old saved dual iso projects
+    receipt->setDualIsoForced( DISO_FORCED );
+
     while( !Rxml->atEnd() && !Rxml->isEndElement() )
     {
         Rxml->readNext();
