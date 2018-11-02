@@ -1059,7 +1059,7 @@ void processingSetWhiteBalance(processingObject_t * processing, double WBKelvin,
     
     /* Calculate multipliers */
 
-    /*double XYZ_White[3], XYZ_Temp[3], I[3] = {1,1,1};
+    double XYZ_White[3], XYZ_Temp[3], I[3] = {1,1,1};
     Kelvin_Daylight_to_XYZ(6500, XYZ_White);
     Kelvin_Daylight_to_XYZ(WBKelvin, XYZ_Temp);
 
@@ -1070,9 +1070,9 @@ void processingSetWhiteBalance(processingObject_t * processing, double WBKelvin,
     for (int i = 0; i < 3; ++i)
     {
         processing->wb_multipliers[i] = XYZ_White[i]/(XYZ_Temp[i]*I[i]);
-    }*/
+    }
 
-    get_kelvin_multipliers_rgb(WBKelvin, processing->wb_multipliers);
+    // get_kelvin_multipliers_rgb(WBKelvin, processing->wb_multipliers);
 
     /* Do tint (green and red channel seem to be main ones) */
     processing->wb_multipliers[2] += (WBTint / 11.0);
