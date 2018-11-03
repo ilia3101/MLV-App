@@ -164,7 +164,13 @@ void Kelvin_Daylight_to_XYZ(double temperature, double * XYZ_out)
     /* Now that we know x for this temperature we can get correct y for D curve
      * https://en.wikipedia.org/wiki/Standard_illuminant#Illuminant_series_D */
     double y = 2.870*xyY[0] - 3.000*xyY[0]*xyY[0] - 0.275;
-    xyY[1] = y;
+
+    /* Blend between original y coordinate and D between 3800-4300, as D value
+     * is only valid above 4000 */
+    double blend_fac = ((temperature-3800.0)/500.0);
+    blend_fac = MAX(MIN(blend_fac, 1.0), 0.0);
+
+    xyY[1] = xyY[1]*(1.0-blend_fac) + y*blend_fac;
 
     /* Now convert back to XYZ */
     xyY_to_XYZ(xyY, XYZ);
