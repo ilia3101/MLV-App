@@ -308,6 +308,7 @@ private:
     QLabel *m_pCachingStatus;
     QLabel *m_pFpsStatus;
     QLabel *m_pFrameNumber;
+    QLabel *m_pChosenDebayer;
     QActionGroup *m_darkFrameGroup;
     QActionGroup *m_previewDebayerGroup;
     QActionGroup *m_sessionListGroup;

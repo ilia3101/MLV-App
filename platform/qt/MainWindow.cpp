@@ -1126,13 +1126,21 @@ void MainWindow::initGui( void )
     //m_pFpsStatus->setFrameStyle(QFrame::Panel | QFrame::Sunken);
     statusBar()->addWidget( m_pFpsStatus );
 
-    //Set up frame number label
+    //Set up frame number status label
     m_pFrameNumber = new QLabel( statusBar() );
     m_pFrameNumber->setMaximumWidth( 120 );
     m_pFrameNumber->setMinimumWidth( 120 );
     drawFrameNumberLabel();
     //m_pFpsStatus->setFrameStyle(QFrame::Panel | QFrame::Sunken);
     statusBar()->addWidget( m_pFrameNumber );
+
+    //Set up chosen debayer status label
+    m_pChosenDebayer = new QLabel( statusBar() );
+    m_pChosenDebayer->setMaximumWidth( 120 );
+    m_pChosenDebayer->setMinimumWidth( 120 );
+    m_pChosenDebayer->setText( tr( "AMaZE" ) );
+    m_pChosenDebayer->setToolTip( tr( "Current debayer algorithm." ) );
+    statusBar()->addWidget( m_pChosenDebayer );
 
     //Recent sessions menu
     m_pRecentFilesMenu = new QRecentFilesMenu(tr("Recent Sessions"), ui->menuFile);
@@ -7301,6 +7309,7 @@ void MainWindow::selectDebayerAlgorithm()
         default:
             break;
         }
+        m_pChosenDebayer->setText( ui->comboBoxDebayer->currentText() );
         disableMlvCaching( m_pMlvObject );
     }
     //Else change debayer to the selected one from preview menu
@@ -7310,21 +7319,25 @@ void MainWindow::selectDebayerAlgorithm()
         {
             setMlvUseNoneDebayer( m_pMlvObject );
             disableMlvCaching( m_pMlvObject );
+            m_pChosenDebayer->setText( tr( "None" ) );
         }
         else if( ui->actionUseSimpleDebayer->isChecked() )
         {
             setMlvUseSimpleDebayer( m_pMlvObject );
             disableMlvCaching( m_pMlvObject );
+            m_pChosenDebayer->setText( tr( "Simple" ) );
         }
         else if( ui->actionUseBilinear->isChecked() )
         {
             setMlvDontAlwaysUseAmaze( m_pMlvObject );
             disableMlvCaching( m_pMlvObject );
+            m_pChosenDebayer->setText( tr( "Bilinear" ) );
         }
         else if( ui->actionCaching->isChecked() )
         {
             setMlvAlwaysUseAmaze( m_pMlvObject );
             enableMlvCaching( m_pMlvObject );
+            m_pChosenDebayer->setText( tr( "AMaZE" ) );
         }
         ///@todo: ADD HERE OTHER CACHED DEBAYERS! AND ADD SOME SPECIAL TRICK FOR CACHING
     }
