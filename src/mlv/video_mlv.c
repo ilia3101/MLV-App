@@ -359,6 +359,8 @@ void setMlvProcessing(mlvObject_t * video, processingObject_t * processing)
     /* Get camera matrix */
     int32_t *cam_matrix_int = camidGetColorMatrix2(getMlvCameraModel(video));
     for (int i = 0; i < 9; ++i) processing->cam_matrix[i] = ((double)cam_matrix_int[i*2])/((double)cam_matrix_int[i*2+1]);
+    cam_matrix_int = camidGetColorMatrix1(getMlvCameraModel(video));
+    for (int i = 0; i < 9; ++i) processing->cam_matrix_A[i] = ((double)cam_matrix_int[i*2])/((double)cam_matrix_int[i*2+1]);
 }
 
 void getMlvRawFrameDebayered(mlvObject_t * video, uint64_t frameIndex, uint16_t * outputFrame)

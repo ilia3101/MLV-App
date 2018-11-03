@@ -50,8 +50,14 @@ typedef struct {
 
     /* Camera's matrix - will need to be set on opening clip, default set for 5D Mark II */
     double cam_matrix[9];
+    double cam_matrix_A[9]; /* A matrix better for temperature ~2856k (illuminant A) */
+
+    /* Where the proper WB matrix goes */
+    double proper_wb_matrix[9];
+
     /* Main matrix: combined white balance + exposure + whatever the cmaera matrix does */
     double final_matrix[9];
+
     /* Precalculated all matrix values 0-65535 */
     int32_t * pre_calc_matrix[9];
     int32_t * pre_calc_matrix_gradient[9];
