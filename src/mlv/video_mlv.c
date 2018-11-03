@@ -356,11 +356,17 @@ void setMlvProcessing(mlvObject_t * video, processingObject_t * processing)
         processingSetSharpeningBias(processing, -0.33);
     }
 
-    /* Get camera matrix */
-    int32_t *cam_matrix_int = camidGetColorMatrix2(getMlvCameraModel(video));
-    for (int i = 0; i < 9; ++i) processing->cam_matrix[i] = ((double)cam_matrix_int[i*2])/((double)cam_matrix_int[i*2+1]);
-    cam_matrix_int = camidGetColorMatrix1(getMlvCameraModel(video));
-    for (int i = 0; i < 9; ++i) processing->cam_matrix_A[i] = ((double)cam_matrix_int[i*2])/((double)cam_matrix_int[i*2+1]);
+    /* Get camera matrices, daylight and tungsten */
+    double cam_matrix_D[9], cam_matrix_A[9];
+    int32_t * cam_matrix_D_int = camidGetColorMatrix2(getMlvCameraModel(video));
+    int32_t * cam_matrix_A_int = camidGetColorMatrix1(getMlvCameraModel(video));
+    for (int i = 0; i < 9; ++i)
+    {
+        cam_matrix_D[i] = ((double)cam_matrix_D_int[i*2])/((double)cam_matrix_D_int[i*2+1]);
+        cam_matrix_A[i] = ((double)cam_matrix_A_int[i*2])/((double)cam_matrix_A_int[i*2+1]);
+    }
+
+    processingSetCamMatrix(processing, cam_matrix_D, cam_matrix_A);
 }
 
 void getMlvRawFrameDebayered(mlvObject_t * video, uint64_t frameIndex, uint16_t * outputFrame)
