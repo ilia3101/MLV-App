@@ -309,8 +309,11 @@ private:
     QLabel *m_pCachingStatus;
     QLabel *m_pFpsStatus;
     QLabel *m_pFrameNumber;
+    QLabel *m_pChosenDebayer;
     QActionGroup *m_darkFrameGroup;
     QActionGroup *m_previewDebayerGroup;
+    QActionGroup *m_sessionListGroup;
+    QActionGroup *m_playbackElementGroup;
     QActionGroup *m_scopeGroup;
     DoubleClickLabel *m_pTcLabel;
     bool m_tcModeDuration;
@@ -411,6 +414,7 @@ private:
     int toolButtonPatternNoiseCurrentIndex( void );
     int toolButtonUpsideDownCurrentIndex( void );
     int toolButtonVerticalStripesCurrentIndex( void );
+    int toolButtonDualIsoForceCurrentIndex();
     int toolButtonDualIsoCurrentIndex( void );
     int toolButtonDualIsoInterpolationCurrentIndex( void );
     int toolButtonDualIsoAliasMapCurrentIndex( void );

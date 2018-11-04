@@ -778,6 +778,10 @@ int MainWindow::openMlv( QString fileName )
     float shutterSpeed = 1000000.0f / (float)(getMlvShutter( m_pMlvObject ));
     float shutterAngle = getMlvFramerate( m_pMlvObject ) * 360.0f / shutterSpeed;
 
+    QString isoValue = QString( "%1" ).arg( (int)getMlvIso( m_pMlvObject ) );
+    if( llrpGetDualIsoValidity( m_pMlvObject ) == DISO_VALID )
+        isoValue = QString( "%1/%2, Dual Iso" ).arg( (int)getMlvIso( m_pMlvObject ) ).arg( (int)getMlv2ndIso( m_pMlvObject ) );
+
     //Set Clip Info to Dialog
     m_pInfoDialog->ui->tableWidget->item( 0, 1 )->setText( QString( "%1" ).arg( (char*)getMlvCamera( m_pMlvObject ) ) );
     m_pInfoDialog->ui->tableWidget->item( 1, 1 )->setText( QString( "%1" ).arg( (char*)getMlvLens( m_pMlvObject ) ) );
@@ -788,7 +792,7 @@ int MainWindow::openMlv( QString fileName )
     m_pInfoDialog->ui->tableWidget->item( 6, 1 )->setText( QString( "%1 mm" ).arg( getMlvFocalLength( m_pMlvObject ) ) );
     m_pInfoDialog->ui->tableWidget->item( 7, 1 )->setText( QString( "1/%1 s,  %2 deg,  %3 µs" ).arg( (uint16_t)(shutterSpeed + 0.5f) ).arg( (uint16_t)(shutterAngle + 0.5f) ).arg( getMlvShutter( m_pMlvObject )) );
     m_pInfoDialog->ui->tableWidget->item( 8, 1 )->setText( QString( "ƒ/%1" ).arg( getMlvAperture( m_pMlvObject ) / 100.0, 0, 'f', 1 ) );
-    m_pInfoDialog->ui->tableWidget->item( 9, 1 )->setText( QString( "%1" ).arg( (int)getMlvIso( m_pMlvObject ) ) );
+    m_pInfoDialog->ui->tableWidget->item( 9, 1 )->setText( isoValue );
     m_pInfoDialog->ui->tableWidget->item( 10, 1 )->setText( QString( "%1 bits,  %2" ).arg( getLosslessBpp( m_pMlvObject ) ).arg( getMlvCompression( m_pMlvObject ) ) );
     m_pInfoDialog->ui->tableWidget->item( 11, 1 )->setText( QString( "%1 black,  %2 white" ).arg( getMlvOriginalBlackLevel( m_pMlvObject ) ).arg( getMlvOriginalWhiteLevel( m_pMlvObject ) ) );
     m_pInfoDialog->ui->tableWidget->item( 12, 1 )->setText( QString( "%1-%2-%3 / %4:%5:%6" )
@@ -998,6 +1002,20 @@ void MainWindow::initGui( void )
     m_scopeGroup->addAction( ui->actionShowHistogram );
     m_scopeGroup->addAction( ui->actionShowParade );
 
+    //Session List options as group
+    m_sessionListGroup = new QActionGroup( this );
+    m_sessionListGroup->setExclusive( true );
+    m_sessionListGroup->addAction( ui->actionPreviewDisabled );
+    m_sessionListGroup->addAction( ui->actionPreviewList );
+    m_sessionListGroup->addAction( ui->actionPreviewPicture );
+    m_sessionListGroup->addAction( ui->actionPreviewPictureBottom );
+
+    //Playback element as group
+    m_playbackElementGroup = new QActionGroup( this );
+    m_playbackElementGroup->setExclusive( true );
+    m_playbackElementGroup->addAction( ui->actionTimecodePositionMiddle );
+    m_playbackElementGroup->addAction( ui->actionTimecodePositionRight );
+
 #ifdef Q_OS_LINUX
     //if not doing this, some elements are covered by the scrollbar on Linux only
     ui->dockWidgetEdit->setMinimumWidth( 240 );
@@ -1108,13 +1126,21 @@ void MainWindow::initGui( void )
     //m_pFpsStatus->setFrameStyle(QFrame::Panel | QFrame::Sunken);
     statusBar()->addWidget( m_pFpsStatus );
 
-    //Set up frame number label
+    //Set up frame number status label
     m_pFrameNumber = new QLabel( statusBar() );
     m_pFrameNumber->setMaximumWidth( 120 );
     m_pFrameNumber->setMinimumWidth( 120 );
     drawFrameNumberLabel();
     //m_pFpsStatus->setFrameStyle(QFrame::Panel | QFrame::Sunken);
     statusBar()->addWidget( m_pFrameNumber );
+
+    //Set up chosen debayer status label
+    m_pChosenDebayer = new QLabel( statusBar() );
+    m_pChosenDebayer->setMaximumWidth( 120 );
+    m_pChosenDebayer->setMinimumWidth( 120 );
+    m_pChosenDebayer->setText( tr( "AMaZE" ) );
+    m_pChosenDebayer->setToolTip( tr( "Current debayer algorithm." ) );
+    statusBar()->addWidget( m_pChosenDebayer );
 
     //Recent sessions menu
     m_pRecentFilesMenu = new QRecentFilesMenu(tr("Recent Sessions"), ui->menuFile);
@@ -1283,15 +1309,19 @@ void MainWindow::readSettings()
     switch( m_previewMode )
     {
     case 0:
+        ui->actionPreviewDisabled->setChecked( true );
         on_actionPreviewDisabled_triggered();
         break;
     case 1:
+        ui->actionPreviewList->setChecked( true );
         on_actionPreviewList_triggered();
         break;
     case 2:
+        ui->actionPreviewPicture->setChecked( true );
         on_actionPreviewPicture_triggered();
         break;
     default:
+        ui->actionPreviewPictureBottom->setChecked( true );
         on_actionPreviewPictureBottom_triggered();
         break;
     }
@@ -2703,6 +2733,9 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
 {
     //Compatibility for Cam Matrix (files without the tag will disable it
     receipt->setCamMatrixUsed( false );
+
+    //Compatibility for old saved dual iso projects
+    receipt->setDualIsoForced( DISO_FORCED );
 
     //Read tags
     while( !Rxml->atEnd() && !Rxml->isEndElement() )
@@ -4139,6 +4172,13 @@ int MainWindow::toolButtonVerticalStripesCurrentIndex()
     if( ui->toolButtonVerticalStripesOff->isChecked() ) return 0;
     else if( ui->toolButtonVerticalStripesNormal->isChecked() ) return 1;
     else return 2;
+}
+
+//Get toolbutton index of dual iso force
+int MainWindow::toolButtonDualIsoForceCurrentIndex()
+{
+    if( ui->toolButtonDualIsoForce->isChecked() ) return 0;
+    else return 1;
 }
 
 //Get toolbutton index of dual Iso
@@ -5907,12 +5947,14 @@ void MainWindow::on_toolButtonDualIsoForce_toggled( bool checked )
 {
     if( llrpGetDualIsoValidity( m_pMlvObject ) == DISO_VALID )
     {
+        ui->DualISOLabel->setEnabled( true );
         ui->toolButtonDualIsoOff->setEnabled( true );
         ui->toolButtonDualIsoOn->setEnabled( true );
         ui->toolButtonDualIsoPreview->setEnabled( true );
     }
     else
     {
+        ui->DualISOLabel->setEnabled( checked );
         ui->toolButtonDualIsoOff->setEnabled( checked );
         ui->toolButtonDualIsoOn->setEnabled( checked );
         ui->toolButtonDualIsoPreview->setEnabled( checked );
@@ -5936,12 +5978,16 @@ void MainWindow::toolButtonDualIsoChanged( void )
         ui->toolButtonDualIsoInterpolation->setEnabled( true );
         ui->toolButtonDualIsoAliasMap->setEnabled( true );
         ui->toolButtonDualIsoFullresBlending->setEnabled( true );
+        ui->DualISOInterpolationLabel->setEnabled( true );
+        ui->DualISOAliasMapLabel->setEnabled( true );
     }
     else
     {
         ui->toolButtonDualIsoInterpolation->setEnabled( false );
         ui->toolButtonDualIsoAliasMap->setEnabled( false );
         ui->toolButtonDualIsoFullresBlending->setEnabled( false );
+        ui->DualISOInterpolationLabel->setEnabled( false );
+        ui->DualISOAliasMapLabel->setEnabled( false );
     }
 
     //Set dualIso mode
@@ -6037,10 +6083,10 @@ void MainWindow::on_checkBoxRawFixEnable_clicked(bool checked)
     ui->PatternNoiseLabel->setEnabled( checked );
     ui->VerticalStripesLabel->setEnabled( checked );
     ui->DeflickerTargetLabel->setEnabled( checked );
-    ui->DualISOLabel->setEnabled( checked );
-    ui->DualISOInterpolationLabel->setEnabled( checked );
-    ui->DualISOAliasMapLabel->setEnabled( checked );
-    ui->DualISOFullresBlendingLabel->setEnabled( checked );
+    ui->DualISOLabel->setEnabled( checked && ( llrpGetDualIsoValidity( m_pMlvObject ) > 0 ) );
+    ui->DualISOInterpolationLabel->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() == 1 ) );
+    ui->DualISOAliasMapLabel->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() == 1 ) );
+    ui->DualISOFullresBlendingLabel->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() == 1 ) );
     ui->FocusPixelsInterpolationMethodLabel_2->setEnabled( checked );
 
     ui->toolButtonFocusDots->setEnabled( checked );
@@ -6051,6 +6097,7 @@ void MainWindow::on_checkBoxRawFixEnable_clicked(bool checked)
     ui->toolButtonPatternNoise->setEnabled( checked );
     ui->toolButtonVerticalStripes->setEnabled( checked );
     ui->toolButtonDualIso->setEnabled( checked );
+    ui->toolButtonDualIsoForce->setEnabled( checked );
     ui->toolButtonDualIsoInterpolation->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() == 1 ) );
     ui->toolButtonDualIsoAliasMap->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() == 1 ) );
     ui->toolButtonDualIsoFullresBlending->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() == 1 ) );
@@ -6854,10 +6901,6 @@ void MainWindow::on_spinBoxCutOut_valueChanged(int arg1)
 //Session Preview Disabled
 void MainWindow::on_actionPreviewDisabled_triggered()
 {
-    ui->actionPreviewDisabled->setChecked( true );
-    ui->actionPreviewList->setChecked( false );
-    ui->actionPreviewPicture->setChecked( false );
-    ui->actionPreviewPictureBottom->setChecked( false );
     m_previewMode = 0;
     setPreviewMode();
     addDockWidget( Qt::LeftDockWidgetArea, ui->dockWidgetSession );
@@ -6867,10 +6910,6 @@ void MainWindow::on_actionPreviewDisabled_triggered()
 //Session Preview  List
 void MainWindow::on_actionPreviewList_triggered()
 {
-    ui->actionPreviewDisabled->setChecked( false );
-    ui->actionPreviewList->setChecked( true );
-    ui->actionPreviewPicture->setChecked( false );
-    ui->actionPreviewPictureBottom->setChecked( false );
     m_previewMode = 1;
     setPreviewMode();
     addDockWidget( Qt::LeftDockWidgetArea, ui->dockWidgetSession );
@@ -6880,10 +6919,6 @@ void MainWindow::on_actionPreviewList_triggered()
 //Session Preview Picture Left
 void MainWindow::on_actionPreviewPicture_triggered()
 {
-    ui->actionPreviewDisabled->setChecked( false );
-    ui->actionPreviewList->setChecked( false );
-    ui->actionPreviewPicture->setChecked( true );
-    ui->actionPreviewPictureBottom->setChecked( false );
     m_previewMode = 2;
     setPreviewMode();
     addDockWidget( Qt::LeftDockWidgetArea, ui->dockWidgetSession );
@@ -6893,10 +6928,6 @@ void MainWindow::on_actionPreviewPicture_triggered()
 //Session Preview Picture Bottom
 void MainWindow::on_actionPreviewPictureBottom_triggered()
 {
-    ui->actionPreviewDisabled->setChecked( false );
-    ui->actionPreviewList->setChecked( false );
-    ui->actionPreviewPicture->setChecked( false );
-    ui->actionPreviewPictureBottom->setChecked( true );
     m_previewMode = 3;
     setPreviewMode();
     addDockWidget( Qt::BottomDockWidgetArea, ui->dockWidgetSession );
@@ -6942,7 +6973,6 @@ void MainWindow::on_actionTimecodePositionMiddle_triggered()
 {
     m_timeCodePosition = 1;
     QMessageBox::information( this, QString( "MLV App" ), tr( "Please restart MLV App." ) );
-    ui->actionTimecodePositionRight->setChecked( false );
 }
 
 //Move Timecode label right
@@ -6950,7 +6980,6 @@ void MainWindow::on_actionTimecodePositionRight_triggered()
 {
     m_timeCodePosition = 0;
     QMessageBox::information( this, QString( "MLV App" ), tr( "Please restart MLV App." ) );
-    ui->actionTimecodePositionMiddle->setChecked( false );
 }
 
 //TimeCode label doubleclicked
@@ -7307,6 +7336,7 @@ void MainWindow::selectDebayerAlgorithm()
         default:
             break;
         }
+        m_pChosenDebayer->setText( ui->comboBoxDebayer->currentText() );
         disableMlvCaching( m_pMlvObject );
     }
     //Else change debayer to the selected one from preview menu
@@ -7316,21 +7346,25 @@ void MainWindow::selectDebayerAlgorithm()
         {
             setMlvUseNoneDebayer( m_pMlvObject );
             disableMlvCaching( m_pMlvObject );
+            m_pChosenDebayer->setText( tr( "None" ) );
         }
         else if( ui->actionUseSimpleDebayer->isChecked() )
         {
             setMlvUseSimpleDebayer( m_pMlvObject );
             disableMlvCaching( m_pMlvObject );
+            m_pChosenDebayer->setText( tr( "Simple" ) );
         }
         else if( ui->actionUseBilinear->isChecked() )
         {
             setMlvDontAlwaysUseAmaze( m_pMlvObject );
             disableMlvCaching( m_pMlvObject );
+            m_pChosenDebayer->setText( tr( "Bilinear" ) );
         }
         else if( ui->actionCaching->isChecked() )
         {
             setMlvAlwaysUseAmaze( m_pMlvObject );
             enableMlvCaching( m_pMlvObject );
+            m_pChosenDebayer->setText( tr( "AMaZE" ) );
         }
         ///@todo: ADD HERE OTHER CACHED DEBAYERS! AND ADD SOME SPECIAL TRICK FOR CACHING
     }
