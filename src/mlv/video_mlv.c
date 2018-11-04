@@ -246,7 +246,6 @@ int getMlvRawFrameUint16(mlvObject_t * video, uint64_t frameIndex, uint16_t * un
                 DEBUG( printf("LJ92 decoder: Failed with error code (%d)\n", ret); )
                 free(raw_frame);
                 return 1;
-
             }
         }
         lj92_close(decoder_object);

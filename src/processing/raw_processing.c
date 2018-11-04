@@ -176,6 +176,7 @@ void processingSetCustomImageProfile(processingObject_t * processing, image_prof
 void processingSetCamMatrix(processingObject_t * processing, double * camMatrix, double * camMatrixA)
 {
     memcpy(processing->cam_matrix, camMatrix, sizeof(double) * 9);
+    memcpy(processing->cam_matrix_A, camMatrixA, sizeof(double) * 9);
     /* TO update matrices really argh so much confusion :( */
     processingSetWhiteBalance(processing, processingGetWhiteBalanceKelvin(processing), processingGetWhiteBalanceTint(processing));
     /* Calculates final main matrix */
