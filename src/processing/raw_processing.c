@@ -1079,8 +1079,8 @@ void processingSetWhiteBalance(processingObject_t * processing, double WBKelvin,
 
     double cam_to_xyz_final[9];
 
-    /* Blend the matrices between 2855.54 and 4855.54 Kelvin */
-    int mixfac = (WBKelvin-2855.54) / 2000.0;
+    /* Blend the matrices between 2900 and 3800 Kelvin */
+    int mixfac = (WBKelvin-2900) / 900.0;
     mixfac = MAX(MIN(1.0, mixfac), 0.0);
 
     for (int i = 0; i < 9; ++i)
