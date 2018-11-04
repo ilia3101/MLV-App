@@ -495,9 +495,9 @@ QGroupBox::indicator:checked:disabled {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>-255</y>
-            <width>245</width>
-            <height>3506</height>
+            <y>-1420</y>
+            <width>244</width>
+            <height>3694</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayoutScrollArea">
@@ -3873,6 +3873,18 @@ QGroupBox::indicator:checked:disabled {
                    </property>
                    <property name="text">
                     <string>Highlight Reconstruction</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QCheckBox" name="checkBoxUseCameraMatrix">
+                   <property name="font">
+                    <font>
+                     <pointsize>10</pointsize>
+                    </font>
+                   </property>
+                   <property name="text">
+                    <string>Use Camera Matrix</string>
                    </property>
                   </widget>
                  </item>

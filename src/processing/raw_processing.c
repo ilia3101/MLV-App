@@ -10,6 +10,7 @@
 #include "../mlv/video_mlv.h"
 #include "filter/filter.h"
 #include "denoiser/denoiser_2d_median.h"
+#include "../mlv/camid/camera_id.h"
 
 /* Matrix functions which are useful */
 #include "../matrix/matrix.h"
@@ -24,6 +25,8 @@
 #include "processing.c"
 /* Default image profiles */
 #include "image_profiles.c"
+/* White balance cr4p */
+#include "white_balance.c"
 
 #if defined(__linux)
 #include <alloca.h>
@@ -76,13 +79,13 @@ processingObject_t * initProcessingObject()
     }
 
     /* A nothing matrix */
-    processing->cam_to_sRGB_matrix[0] = 1.0;
-    processing->cam_to_sRGB_matrix[4] = 1.0;
-    processing->cam_to_sRGB_matrix[8] = 1.0;
-    /* Different matrix BTW */
-    processing->xyz_to_rgb_matrix[0] = 1.0;
-    processing->xyz_to_rgb_matrix[4] = 1.0;
-    processing->xyz_to_rgb_matrix[8] = 1.0;
+    // processing->cam_to_sRGB_matrix[0] = 1.0;
+    // processing->cam_to_sRGB_matrix[4] = 1.0;
+    // processing->cam_to_sRGB_matrix[8] = 1.0;
+    // /* Different matrix BTW */
+    // processing->xyz_to_rgb_matrix[0] = 1.0;
+    // processing->xyz_to_rgb_matrix[4] = 1.0;
+    // processing->xyz_to_rgb_matrix[8] = 1.0;
 
     /* Blur buffer images (may change size) */
     processing->shadows_highlights.blur_image = new_image_buffer();
@@ -132,6 +135,7 @@ processingObject_t * initProcessingObject()
     processingSetTransformation(processing, TR_NONE);
     processingSetDenoiserStrength(processing, 0);
     processingSetDenoiserWindow(processing, 2);
+    processingUseCamMatrix(processing);
 
     /* Just in case (should be done tho already) */
     processing_update_matrices(processing);
@@ -169,9 +173,12 @@ void processingSetCustomImageProfile(processingObject_t * processing, image_prof
 
 
 /* Takes those matrices I learned about on the forum */
-void processingCamTosRGBMatrix(processingObject_t * processing, double * camTosRGBMatrix)
+void processingSetCamMatrix(processingObject_t * processing, double * camMatrix, double * camMatrixA)
 {
-    memcpy(processing->cam_to_sRGB_matrix, camTosRGBMatrix, sizeof(double) * 9);
+    memcpy(processing->cam_matrix, camMatrix, sizeof(double) * 9);
+    memcpy(processing->cam_matrix_A, camMatrixA, sizeof(double) * 9);
+    /* TO update matrices really argh so much confusion :( */
+    processingSetWhiteBalance(processing, processingGetWhiteBalanceKelvin(processing), processingGetWhiteBalanceTint(processing));
     /* Calculates final main matrix */
     processing_update_matrices(processing);
     if( processing->gradient_enable != 0 ) processing_update_matrices_gradient(processing);
@@ -193,7 +200,7 @@ void processing_update_shadow_highlight_curve(processingObject_t * processing)
     double shadows_expo = processing->shadows_highlights.shadows;
     double highlight_expo = pow(2.0, processing->shadows_highlights.highlights*(-1.5));
     #pragma omp parallel for
-    for (int i = 0; i < 65536; ++i)
+    for (int i = 1; i < 65536; ++i)
     {
         double expo_factor;
         double value = pow(((double)i)/65536.0, 0.75);
@@ -209,6 +216,7 @@ void processing_update_shadow_highlight_curve(processingObject_t * processing)
 
         processing->shadows_highlights.shadow_highlight_curve[i] = expo_factor;
     }
+    processing->shadows_highlights.shadow_highlight_curve[0] = 1.0;
 }
 
 void processingSetSimpleContrast(processingObject_t * processing, double value)
@@ -222,7 +230,7 @@ void processing_update_contrast_curve(processingObject_t * processing)
     double shadows_expo = -processing->contrast;
     double highlight_expo = pow(2.0, processing->contrast*(-1.5));
     #pragma omp parallel for
-    for (int i = 0; i < 65536; ++i)
+    for (int i = 1; i < 65536; ++i)
     {
         double expo_factor;
         double value = pow(((double)i)/65536.0, 0.75);
@@ -238,6 +246,7 @@ void processing_update_contrast_curve(processingObject_t * processing)
 
         processing->contrast_curve[i] = expo_factor;
     }
+    processing->contrast_curve[0] = 1.0;
 }
 
 void processingSetSimpleContrastGradient(processingObject_t * processing, double value)
@@ -251,7 +260,7 @@ void processing_update_contrast_curve_gradient(processingObject_t * processing)
     double shadows_expo = -processing->gradient_contrast;
     double highlight_expo = pow(2.0, processing->gradient_contrast*(-1.5));
     #pragma omp parallel for
-    for (int i = 0; i < 65536; ++i)
+    for (int i = 1; i < 65536; ++i)
     {
         double expo_factor;
         double value = pow(((double)i)/65536.0, 0.75);
@@ -267,6 +276,7 @@ void processing_update_contrast_curve_gradient(processingObject_t * processing)
 
         processing->gradient_contrast_curve[i] = expo_factor;
     }
+    processing->gradient_contrast_curve[0] = 1.0;
 }
 
 void processingSetClarity(processingObject_t * processing, double value)
@@ -281,7 +291,7 @@ void processing_update_clarity_curve(processingObject_t * processing)
     double shadows_expo = -processing->clarity;
     double highlight_expo = pow(2.0, processing->clarity*(-1.5));
     #pragma omp parallel for
-    for (int i = 0; i < 65536; ++i)
+    for (int i = 1; i < 65536; ++i)
     {
         double expo_factor;
         double value = pow(((double)i)/65536.0, 0.75);
@@ -297,6 +307,7 @@ void processing_update_clarity_curve(processingObject_t * processing)
 
         processing->clarity_curve[i] = expo_factor;
     }
+    processing->clarity_curve[0] = 1.0;
 }
 
 /* applyProcessingObject but with one argument for pthreading  */
@@ -436,7 +447,7 @@ void apply_processing_object( processingObject_t * processing,
         uint16_t tableG[65535] = {0};
         for (uint16_t * pix = img; pix < img_end; pix += 3)
         {
-            uint16_t pix1 = processing->pre_calc_gamma[ LIMIT16(pm[3][pix[0]] + pm[4][pix[1]] + pm[5][pix[2]]) ];
+            uint16_t pix1 = LIMIT16( pm[4][pix[1]] );
             tableG[pix1]++;
         }
         /* search the brightest (the most right) peak (I made it equivalent to the number of lines to process in the image or more) */
@@ -458,7 +469,7 @@ void apply_processing_object( processingObject_t * processing,
             uint16_t tableGg[65535] = {0};
             for (uint16_t * pix = img; pix < img_end; pix += 3)
             {
-                uint16_t pix1 = processing->pre_calc_gamma_gradient[ LIMIT16(pmg[3][pix[0]] + pmg[4][pix[1]] + pmg[5][pix[2]]) ];
+                uint16_t pix1 = LIMIT16( pmg[4][pix[1]] );
                 tableGg[pix1]++;
             }
             for( uint16_t i = 65535; i >= 0; i-- )
@@ -487,9 +498,9 @@ void apply_processing_object( processingObject_t * processing,
          || ( processing->clarity                       <= -0.01 || processing->clarity                       >= 0.01 ) )
         {
             /* Blur pixLZ */
-            int32_t bval = ( ((pm[0][bpix[0]] + pm[1][bpix[1]] + pm[2][bpix[2]]) << 2)
-                           + ((pm[3][bpix[0]] + pm[4][bpix[1]] + pm[5][bpix[2]]) * 11)
-                           +  (pm[6][bpix[0]] + pm[7][bpix[1]] + pm[8][bpix[2]]) ) >> 4;
+            int32_t bval = ( ((pm[0][bpix[0]] /* + pm[1][bpix[1]] + pm[2][bpix[2]] */) << 2)
+                           + ((/* pm[3][bpix[0]] + */ pm[4][bpix[1]] /* + pm[5][bpix[2]] */) * 11)
+                           +  (/* pm[6][bpix[0]] + pm[7][bpix[1]] + */ pm[8][bpix[2]]) ) >> 4;
 
             if( processing->clarity <= -0.01 || processing->clarity >= 0.01 )
             {
@@ -510,9 +521,9 @@ void apply_processing_object( processingObject_t * processing,
          || ( processing->clarity           <= -0.01 || processing->clarity           >= 0.01 )
          || ( processing->gradient_contrast <= -0.01 || processing->gradient_contrast >= 0.01 ) )
         {
-            int32_t cval = ( ((pm[0][pix[0]] + pm[1][pix[1]] + pm[2][pix[2]]) << 2)
-                           + ((pm[3][pix[0]] + pm[4][pix[1]] + pm[5][pix[2]]) * 11)
-                           +  (pm[6][pix[0]] + pm[7][pix[1]] + pm[8][pix[2]]) ) >> 4;
+            int32_t cval = ( ((pm[0][pix[0]] /* + pm[1][pix[1]] + pm[2][pix[2]] */) << 2)
+                           + ((/* pm[3][pix[0]] + */ pm[4][pix[1]] /* + pm[5][pix[2]] */) * 11)
+                           +  (/* pm[6][pix[0]] + pm[7][pix[1]] + */ pm[8][pix[2]]) ) >> 4;
 
             if( processing->clarity <= -0.01 || processing->clarity >= 0.01 )
             {
@@ -532,40 +543,60 @@ void apply_processing_object( processingObject_t * processing,
             }
         }
 
+        /* white balance & exposure */
+        int32_t pix0 = (pm[0][pix[0]] /* + pm[1][pix[1]] + pm[2][pix[2]] */)*expo_correction;
+        int32_t pix1 = (/* pm[3][pix[0]] + */ pm[4][pix[1]] /* + pm[5][pix[2]] */)*expo_correction;
+        int32_t pix2 = (/* pm[6][pix[0]] + pm[7][pix[1]] + */ pm[8][pix[2]])*expo_correction;
+        int32_t tmp1 = (/* pm[3][pix[0]] + */ pm[4][pix[1]] /* + pm[5][pix[2]] */);
+
         /* Gradient variables and part 1 */
-        int32_t pix0g;
-        int32_t pix1g;
-        int32_t pix2g;
-        int32_t tmp1g;
+        uint16_t pixg[3];
         if( processing->gradient_enable && gmpix[0] != 0 &&
           ( ( processing->gradient_exposure_stops < -0.01 || processing->gradient_exposure_stops > 0.01 )
          || ( processing->gradient_contrast       < -0.01 || processing->gradient_contrast       > 0.01 ) ) )
         {
             /* do the same for gradient as for the pic itself, but before the values are overwritten */
-            /* white balance & exposure & highlights */
-            pix0g = (pmg[0][pix[0]] + pmg[1][pix[1]] + pmg[2][pix[2]])*expo_correction*expo_correction_gradient;
-            pix1g = (pmg[3][pix[0]] + pmg[4][pix[1]] + pmg[5][pix[2]])*expo_correction*expo_correction_gradient;
-            pix2g = (pmg[6][pix[0]] + pmg[7][pix[1]] + pmg[8][pix[2]])*expo_correction*expo_correction_gradient;
-            tmp1g = (pmg[3][pix[0]] + pmg[4][pix[1]] + pmg[5][pix[2]]);
-        }
+            /* white balance & exposure */
+            int32_t pix0g = (pmg[0][pix[0]] /* + pmg[1][pix[1]] + pmg[2][pix[2]] */) * expo_correction * expo_correction_gradient;
+            int32_t pix1g = (/* pmg[3][pix[0]] + */ pmg[4][pix[1]] /* + pmg[5][pix[2]] */) * expo_correction * expo_correction_gradient;
+            int32_t pix2g = (/* pmg[6][pix[0]] + pmg[7][pix[1]] */ + pmg[8][pix[2]]) * expo_correction * expo_correction_gradient;
+            int32_t tmp1g = (/* pmg[3][pix[0]] + */ pmg[4][pix[1]] /* + pmg[5][pix[2]] */);
 
-        /* white balance & exposure & highlights */
-        int32_t pix0 = (pm[0][pix[0]] + pm[1][pix[1]] + pm[2][pix[2]])*expo_correction;
-        int32_t pix1 = (pm[3][pix[0]] + pm[4][pix[1]] + pm[5][pix[2]])*expo_correction;
-        int32_t pix2 = (pm[6][pix[0]] + pm[7][pix[1]] + pm[8][pix[2]])*expo_correction;
-        int32_t tmp1 = (pm[3][pix[0]] + pm[4][pix[1]] + pm[5][pix[2]]);
+            pixg[0] = LIMIT16(pix0g);
+            pixg[1] = LIMIT16(pix1g);
+            pixg[2] = LIMIT16(pix2g);
+            tmp1g   = LIMIT16(tmp1g);
+
+            /* Now highlight reconstruction for gradient layer*/
+            if (processing->highlight_reconstruction)
+            {
+                if(*processing->dual_iso != 0)
+                {
+                    /* Check if its the range of highest green value possible */
+                    /* the range makes it cleaner against pink noise */
+                    if (tmp1g >= LIMIT16( highest_green_gradient - 1000 ) && tmp1g <= LIMIT16( highest_green_gradient + 1000 ))
+                    {
+                        if( pixg[1] < 1.1*pixg[0] && pixg[1] < pixg[2] )
+                        {
+                            pixg[1] = (pixg[0] + pixg[2]) / 2;
+                        }
+                    }
+                }
+                else
+                {
+                    /* Check if its the highest green value possible */
+                    if (tmp1g == processing->highest_green_gradient)
+                    {
+                        pixg[1] = (pixg[0] + pixg[2]) / 2;
+                    }
+                }
+            }
+        }
 
         pix[0] = LIMIT16(pix0);
         pix[1] = LIMIT16(pix1);
         pix[2] = LIMIT16(pix2);
-        uint16_t tmp1b = LIMIT16(tmp1);
-
-        /* Gamma */
-        for( int i = 0; i < 3; i++ )
-        {
-            pix[i] = processing->pre_calc_gamma[ pix[i] ];
-        }
-        tmp1b = processing->pre_calc_gamma[ tmp1b ];
+        tmp1   = LIMIT16(tmp1);
 
         /* Now highlight reconstruction */
         if (processing->highlight_reconstruction)
@@ -574,7 +605,7 @@ void apply_processing_object( processingObject_t * processing,
             {
                 /* Check if its the range of highest green value possible */
                 /* the range makes it cleaner against pink noise */
-                if (tmp1b >= LIMIT16( highest_green - 1000 ) && tmp1b <= LIMIT16( highest_green + 1000 ))
+                if (tmp1 >= LIMIT16( highest_green - 1000 ) && tmp1 <= LIMIT16( highest_green + 1000 ))
                 {
                     if( pix[1] < 1.1*pix[0] && pix[1] < pix[2] )
                     {
@@ -585,7 +616,7 @@ void apply_processing_object( processingObject_t * processing,
             else
             {
                 /* Check if its the highest green value possible */
-                if (tmp1b == processing->highest_green)
+                if (tmp1 == processing->highest_green)
                 {
                     pix[1] = (pix[0] + pix[2]) / 2;
                 }
@@ -600,54 +631,54 @@ void apply_processing_object( processingObject_t * processing,
             }
         }
 
+        /* I really don't like how this if is in a big loop :(( */
+        if( processing->use_cam_matrix )
+        {
+            /* WB correction */
+            uint16_t pix0b = pix[0], pix1b = pix[1], pix2b = pix[2];
+            double result[3];
+            result[0] = pix0b * processing->proper_wb_matrix[0] + pix1b * processing->proper_wb_matrix[1] + pix2b * processing->proper_wb_matrix[2];
+            result[1] = pix0b * processing->proper_wb_matrix[3] + pix1b * processing->proper_wb_matrix[4] + pix2b * processing->proper_wb_matrix[5];
+            result[2] = pix0b * processing->proper_wb_matrix[6] + pix1b * processing->proper_wb_matrix[7] + pix2b * processing->proper_wb_matrix[8];
+            pix[0] = LIMIT16(result[0]);
+            pix[1] = LIMIT16(result[1]);
+            pix[2] = LIMIT16(result[2]);
+        }
+
+        /* Gamma and expo correction (shadows&highlights, contrast, clarity)*/
+        for( int i = 0; i < 3; i++ )
+        {
+            pix[i] = processing->pre_calc_gamma[ pix[i] ];
+        }
+
         /* Gradient part 2 & blending */
         if( processing->gradient_enable && gmpix[0] != 0 &&
           ( ( processing->gradient_exposure_stops < -0.01 || processing->gradient_exposure_stops > 0.01 )
          || ( processing->gradient_contrast       < -0.01 || processing->gradient_contrast       > 0.01 ) ) )
         {
-            uint16_t pixg[3];
-            pixg[0] = LIMIT16(pix0g);
-            pixg[1] = LIMIT16(pix1g);
-            pixg[2] = LIMIT16(pix2g);
-            uint16_t tmp1gb = LIMIT16(tmp1g);
+            /* WB correction gradient layer*/
+            if( processing->use_cam_matrix )
+            {
+                uint16_t pix0b = pixg[0], pix1b = pixg[1], pix2b = pixg[2];
+                double result[3];
+                result[0] = pix0b * processing->proper_wb_matrix[0] + pix1b * processing->proper_wb_matrix[1] + pix2b * processing->proper_wb_matrix[2];
+                result[1] = pix0b * processing->proper_wb_matrix[3] + pix1b * processing->proper_wb_matrix[4] + pix2b * processing->proper_wb_matrix[5];
+                result[2] = pix0b * processing->proper_wb_matrix[6] + pix1b * processing->proper_wb_matrix[7] + pix2b * processing->proper_wb_matrix[8];
+                pixg[0] = LIMIT16(result[0]);
+                pixg[1] = LIMIT16(result[1]);
+                pixg[2] = LIMIT16(result[2]);
+            }
 
-            /* Gamma */
+            /* Gamma and expo correction (shadows&highlights, contrast, clarity) gradient layer*/
             for( int i = 0; i < 3; i++ )
             {
                 pixg[i] = processing->pre_calc_gamma_gradient[ pixg[i] ];
-            }
-            tmp1gb = processing->pre_calc_gamma_gradient[ tmp1gb ];
-
-            /* Now highlight reconstruction */
-            if (processing->highlight_reconstruction)
-            {
-                if(*processing->dual_iso != 0)
-                {
-                    /* Check if its the range of highest green value possible */
-                    /* the range makes it cleaner against pink noise */
-                    if (tmp1gb >= LIMIT16( highest_green_gradient - 1000 ) && tmp1gb <= LIMIT16( highest_green_gradient + 1000 ))
-                    {
-                        if( pixg[1] < 1.1*pixg[0] && pixg[1] < pixg[2] )
-                        {
-                            pixg[1] = (pixg[0] + pixg[2]) / 2;
-                        }
-                    }
-                }
-                else
-                {
-                    /* Check if its the highest green value possible */
-                    if (tmp1gb == processing->highest_green_gradient)
-                    {
-                        pixg[1] = (pixg[0] + pixg[2]) / 2;
-                    }
-                }
             }
 
             /* Blending using the mask */
             pix[0] = gmpix[0] / 65535.0 * pixg[0] + (65535 - gmpix[0]) / 65535.0 * pix[0];
             pix[1] = gmpix[0] / 65535.0 * pixg[1] + (65535 - gmpix[0]) / 65535.0 * pix[1];
             pix[2] = gmpix[0] / 65535.0 * pixg[2] + (65535 - gmpix[0]) / 65535.0 * pix[2];
-            tmp1b = gmpix[0] / 65535.0 * tmp1gb + (65535 - gmpix[0]) / 65535.0 * tmp1b;
         }
     }
 
@@ -718,63 +749,6 @@ void apply_processing_object( processingObject_t * processing,
                 pix[0] = LIMIT16(pix0);
                 pix[1] = LIMIT16(pix1);
                 pix[2] = LIMIT16(pix2);
-            }
-        }
-
-        /* Shadow and Highlight (de)saturation */
-        if( 0 )
-        {
-            /* Now saturation for shadows and highlights */
-            for (uint16_t * pix = img; pix < img_end; pix += 3)
-            {
-                uint16_t luminance = LIMIT16(0.2126*pix[0] + 0.7152*pix[1] + 0.0722*pix[2]);
-
-                if( luminance < 7000 )
-                {
-                    /* Pixel brightness = 4/16 R, 11/16 G, 1/16 blue; Try swapping the channels, it will look worse */
-                    //int32_t Y1 = ((pix[0] << 2) + (pix[1] * 11) + pix[2]) >> 4;
-                    //int32_t Y2 = Y1 - 65536;
-
-                    /* Increase difference between channels and the saturation midpoint */
-                    int32_t pix0 = luminance;//processing->pre_calc_sat[pix[0] - Y2] + Y1;
-                    int32_t pix1 = luminance;//processing->pre_calc_sat[pix[1] - Y2] + Y1;
-                    int32_t pix2 = luminance;//processing->pre_calc_sat[pix[2] - Y2] + Y1;
-
-                    if( luminance > 5000 )
-                    {
-                        double intensity = ( luminance - 5000 ) / 2000.0;
-                        pix0 = pix0 * intensity + pix[0] * ( 1.0 - intensity );
-                        pix1 = pix1 * intensity + pix[1] * ( 1.0 - intensity );
-                        pix2 = pix2 * intensity + pix[2] * ( 1.0 - intensity );
-                    }
-
-                    pix[0] = LIMIT16(pix0);
-                    pix[1] = LIMIT16(pix1);
-                    pix[2] = LIMIT16(pix2);
-                }
-                else if( luminance > 65535-35000 )
-                {
-                    /* Pixel brightness = 4/16 R, 11/16 G, 1/16 blue; Try swapping the channels, it will look worse */
-                    int32_t Y1 = ((pix[0] << 2) + (pix[1] * 11) + pix[2]) >> 4;
-                    int32_t Y2 = Y1 - 65536;
-
-                    /* Increase difference between channels and the saturation midpoint */
-                    int32_t pix0 = processing->pre_calc_sat[pix[0] - Y2] + Y1;
-                    int32_t pix1 = processing->pre_calc_sat[pix[1] - Y2] + Y1;
-                    int32_t pix2 = processing->pre_calc_sat[pix[2] - Y2] + Y1;
-
-                    if( luminance < 65535-15000 )
-                    {
-                        double intensity = ( 65535 - luminance - 15000 ) / 20000.0;
-                        pix0 = pix0 * intensity + pix[0] * ( 1.0 - intensity );
-                        pix1 = pix1 * intensity + pix[1] * ( 1.0 - intensity );
-                        pix2 = pix2 * intensity + pix[2] * ( 1.0 - intensity );
-                    }
-
-                    //pix[0] = LIMIT16(pix0);
-                    //pix[1] = LIMIT16(pix1);
-                    //pix[2] = LIMIT16(pix2);
-                }
             }
         }
     }
@@ -1043,7 +1017,21 @@ void processingSetWhiteBalance(processingObject_t * processing, double WBKelvin,
         processing->wb_tint = WBTint;
     }
     
-    /* Kalkulate channel (yes in cone space... soon) multipliers */
+    /* Calculate multipliers */
+
+    /* double XYZ_White[3], XYZ_Temp[3], I[3] = {1,1,1};
+    Kelvin_Daylight_to_XYZ(6500, XYZ_White);
+    Kelvin_Daylight_to_XYZ(WBKelvin, XYZ_Temp);
+
+    applyMatrix(XYZ_White, processing->cam_matrix);
+    applyMatrix(XYZ_Temp, processing->cam_matrix);
+    applyMatrix(I, processing->cam_matrix);
+
+    for (int i = 0; i < 3; ++i)
+    {
+        processing->wb_multipliers[i] = XYZ_White[i]/(XYZ_Temp[i]*I[i]);
+    } */
+
     get_kelvin_multipliers_rgb(WBKelvin, processing->wb_multipliers);
 
     /* Do tint (green and red channel seem to be main ones) */
@@ -1060,6 +1048,64 @@ void processingSetWhiteBalance(processingObject_t * processing, double WBKelvin,
     /* White balance is part of the matrix */
     processing_update_matrices(processing);
     if( processing->gradient_enable != 0 ) processing_update_matrices_gradient(processing);
+
+
+    /****************************** Now generate the matrix for scientific White Balance ******************************/
+
+    double proper_wb_matrix[9] = {1,0,0,0,1,0,0,0,1};
+
+    /* Get multipliers for this to undo what has been done, it was only done to do highlihgt reconstrucytion now */
+    double multiplierz[3] = {1,1,1};
+    get_kelvin_multipliers_rgb(WBKelvin, multiplierz); 
+
+    /* Now create a matrix, which will take us back to raw colour by undoing
+     * basic wb (which was useful for highlight reconstruction, also where tint was done) */
+    double proper_wb_matrix_a[9] = {
+        1.0/multiplierz[0], 0, 0,
+        0, 1.0/multiplierz[1], 0,
+        0, 0, 1.0/multiplierz[2]
+    };
+
+    double XYZ_white[3];
+    double XYZ_temp[3];
+    Kelvin_Daylight_to_XYZ(6500, XYZ_white);
+    Kelvin_Daylight_to_XYZ(WBKelvin, XYZ_temp);
+    double XYZ_multipliers[3];
+    for (int i = 0; i < 3; ++i) XYZ_multipliers[i] = XYZ_white[i]/XYZ_temp[i];
+
+    double cam_to_xyz_D[9]; /* For daylight */
+    double cam_to_xyz_A[9]; /* For tungsten (https://en.wikipedia.org/wiki/Standard_illuminant#Illuminant_A) */
+    invertMatrix(processing->cam_matrix, cam_to_xyz_D);
+    invertMatrix(processing->cam_matrix_A, cam_to_xyz_A);
+
+    double cam_to_xyz_final[9];
+
+    /* Blend the matrices between 2900 and 3800 Kelvin */
+    int mixfac = (WBKelvin-2900) / 900.0;
+    mixfac = MAX(MIN(1.0, mixfac), 0.0);
+
+    for (int i = 0; i < 9; ++i)
+    {
+        cam_to_xyz_final[i] = cam_to_xyz_A[i]*(1.0-mixfac) + cam_to_xyz_D[i]*mixfac;
+    }
+
+    multiplyMatrices(cam_to_xyz_final, proper_wb_matrix_a, proper_wb_matrix);
+
+    /* Apply multipliers in XYZ */
+    for (int i = 0; i < 3; ++i)
+    {
+        int pos = i * 3;
+        for (int j = 0; j < 3; ++j)
+        {
+            proper_wb_matrix[pos+j] = proper_wb_matrix[pos+j] * XYZ_multipliers[i];
+        }
+    }  
+
+    /* Back to sRGB (maybe something wider in future) */
+    multiplyMatrices(xyz_to_rgb, proper_wb_matrix, proper_wb_matrix_a);
+
+    /* copy to processing */
+    memcpy(processing->proper_wb_matrix, proper_wb_matrix_a, 9*sizeof(double));
 }
 
 /* WB just by kelvin */
@@ -1333,9 +1379,9 @@ void processingFindWhiteBalance(processingObject_t *processing, int imageX, int 
 
             /* --- maybe this can also be exchanged by apply_processing_object, but here it is simplified and hopefully faster --- */
             /* white balance & exposure */
-            int32_t pix0 = processing->pre_calc_gamma[ LIMIT16(pm[0][pixR] + pm[1][pixG] + pm[2][pixB]) ];
-            int32_t pix1 = processing->pre_calc_gamma[ LIMIT16(pm[3][pixR] + pm[4][pixG] + pm[5][pixB]) ];
-            int32_t pix2 = processing->pre_calc_gamma[ LIMIT16(pm[6][pixR] + pm[7][pixG] + pm[8][pixB]) ];
+            int32_t pix0 = LIMIT16(pm[0][pixR] /*+ pm[1][pixG] + pm[2][pixB]*/);
+            int32_t pix1 = LIMIT16(/*pm[3][pixR] +*/ pm[4][pixG] /*+ pm[5][pixB]*/);
+            int32_t pix2 = LIMIT16(/*pm[6][pixR] + pm[7][pixG] +*/ pm[8][pixB]);
 
             /* standard highlight reconstruction */
             if( processing->highlight_reconstruction && pix1 == processing->highest_green )
@@ -1343,6 +1389,21 @@ void processingFindWhiteBalance(processingObject_t *processing, int imageX, int 
                 pix1 = ( pix0 + pix2 ) / 2;
             }
             /* --- */
+
+            if( processing->use_cam_matrix )
+            {
+                uint16_t pix0b = pix0, pix1b = pix1, pix2b = pix2;
+                double result[3];
+                result[0] = pix0b * processing->proper_wb_matrix[0] + pix1b * processing->proper_wb_matrix[1] + pix2b * processing->proper_wb_matrix[2];
+                result[1] = pix0b * processing->proper_wb_matrix[3] + pix1b * processing->proper_wb_matrix[4] + pix2b * processing->proper_wb_matrix[5];
+                result[2] = pix0b * processing->proper_wb_matrix[6] + pix1b * processing->proper_wb_matrix[7] + pix2b * processing->proper_wb_matrix[8];
+                pix0 = LIMIT16(result[0]);
+                pix1 = LIMIT16(result[1]);
+                pix2 = LIMIT16(result[2]);
+            }
+            pix0 = processing->pre_calc_gamma[ pix0 ];
+            pix1 = processing->pre_calc_gamma[ pix1 ];
+            pix2 = processing->pre_calc_gamma[ pix2 ];
 
             /* for neutral grey all 3 are the same, so searching the min delta */
             uint32_t delta = abs( pix0 - pix1 ) + abs( pix1 - pix2 ) + abs( pix0 - pix2 );
