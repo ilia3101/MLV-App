@@ -28,7 +28,7 @@ static const double xyz_to_rgb[] = {
      0.0556434, -0.2040259,  1.0572252,
 };
 
-/* Cone space! */
+/* XYZ to Cone space (LMS) */
 static const double ciecam02[] = {
     0.7328,  0.4296, -0.1624,
    -0.7036,  1.6975,  0.0061,

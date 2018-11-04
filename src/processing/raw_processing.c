@@ -1060,18 +1060,21 @@ void processingSetWhiteBalance(processingObject_t * processing, double WBKelvin,
 
     /* Now create a matrix, which will take us back to raw colour by undoing
      * basic wb (which was useful for highlight reconstruction, also where tint was done) */
-    double proper_wb_matrix_a[9] = {
+    double undo_basic_wb_matrix[9] = {
         1.0/multiplierz[0], 0, 0,
         0, 1.0/multiplierz[1], 0,
         0, 0, 1.0/multiplierz[2]
     };
 
-    double XYZ_white[3];
-    double XYZ_temp[3];
-    Kelvin_Daylight_to_XYZ(6500, XYZ_white);
-    Kelvin_Daylight_to_XYZ(WBKelvin, XYZ_temp);
-    double XYZ_multipliers[3];
-    for (int i = 0; i < 3; ++i) XYZ_multipliers[i] = XYZ_white[i]/XYZ_temp[i];
+    /* Get white points and convert to LMS space */
+    double LMS_white[3];
+    double LMS_temp[3];
+    Kelvin_Daylight_to_XYZ(6500, LMS_white);
+    Kelvin_Daylight_to_XYZ(WBKelvin, LMS_temp);
+    applyMatrix(LMS_white, ciecam02);
+    applyMatrix(LMS_temp, ciecam02);
+    double LMS_multipliers[3];
+    for (int i = 0; i < 3; ++i) LMS_multipliers[i] = LMS_white[i]/LMS_temp[i];
 
     double cam_to_xyz_D[9]; /* For daylight */
     double cam_to_xyz_A[9]; /* For tungsten (https://en.wikipedia.org/wiki/Standard_illuminant#Illuminant_A) */
@@ -1083,29 +1086,34 @@ void processingSetWhiteBalance(processingObject_t * processing, double WBKelvin,
     /* Blend the matrices between 2900 and 3800 Kelvin */
     int mixfac = (WBKelvin-2900) / 900.0;
     mixfac = MAX(MIN(1.0, mixfac), 0.0);
-
     for (int i = 0; i < 9; ++i)
     {
         cam_to_xyz_final[i] = cam_to_xyz_A[i]*(1.0-mixfac) + cam_to_xyz_D[i]*mixfac;
     }
 
-    multiplyMatrices(cam_to_xyz_final, proper_wb_matrix_a, proper_wb_matrix);
+    multiplyMatrices(cam_to_xyz_final, undo_basic_wb_matrix, proper_wb_matrix);
+
+    /* Convert to LMS space */
+    double matrix_in_LMS[9];
+    multiplyMatrices(ciecam02, proper_wb_matrix, matrix_in_LMS);
 
     /* Apply multipliers in XYZ */
     for (int i = 0; i < 3; ++i)
     {
-        int pos = i * 3;
         for (int j = 0; j < 3; ++j)
         {
-            proper_wb_matrix[pos+j] = proper_wb_matrix[pos+j] * XYZ_multipliers[i];
+            matrix_in_LMS[i*3+j] = matrix_in_LMS[i*3+j] * LMS_multipliers[i];
         }
-    }  
+    }
+
+    /* Matrix back to XYZ from LMS */
+    double LMS_to_XYZ[9];
+    invertMatrix(ciecam02, LMS_to_XYZ);
+    double back_in_XYZ_matrix[9];
+    multiplyMatrices(LMS_to_XYZ, matrix_in_LMS, back_in_XYZ_matrix);
 
     /* Back to sRGB (maybe something wider in future) */
-    multiplyMatrices(xyz_to_rgb, proper_wb_matrix, proper_wb_matrix_a);
-
-    /* copy to processing */
-    memcpy(processing->proper_wb_matrix, proper_wb_matrix_a, 9*sizeof(double));
+    multiplyMatrices(xyz_to_rgb, back_in_XYZ_matrix, processing->proper_wb_matrix);
 }
 
 /* WB just by kelvin */
