@@ -33,6 +33,11 @@
 #include "darkframe.h"
 #include "../../processing/raw_processing.h"
 
+#define MIN(a,b) (((a)<(b))?(a):(b))
+#define MAX(a,b) (((a)>(b))?(a):(b))
+#define COERCE(x,lo,hi) MAX(MIN((x),(hi)),(lo))
+#define ABS(a) ((a) > 0 ? (a) : -(a))
+
 /* this is DNG feature only */
 static void deflicker(mlvObject_t * video, uint16_t * raw_image_buff, size_t raw_image_size)
 {
@@ -83,11 +88,9 @@ static void undo_14bit(uint16_t * raw_image_buff, size_t raw_image_size, uint32_
 static void scale_restricted_range(struct raw_info * raw_info, uint16_t * image_data)
 {
     uint32_t pixel_count = raw_info->width * raw_info->height;
-#if 0
     /* find min and max level values in the currecnt raw frame */
     int32_t min_level = image_data[0];
     int32_t max_level = image_data[0];
-
 #pragma omp parallel for
     for(uint32_t i = 1; i < pixel_count; ++i)
     {
@@ -99,7 +102,7 @@ static void scale_restricted_range(struct raw_info * raw_info, uint16_t * image_
 #endif
     raw_info->black_level = MAX(min_level, raw_info->black_level);
     raw_info->white_level = max_level;
-#endif
+
     int32_t scaled_white_level = 16200;
     double scale_ratio = (double)(scaled_white_level - raw_info->black_level) / (double)(raw_info->white_level - raw_info->black_level);
     raw_info->white_level = scaled_white_level;
@@ -107,7 +110,7 @@ static void scale_restricted_range(struct raw_info * raw_info, uint16_t * image_
 #pragma omp parallel for
     for(uint32_t i = 0; i < pixel_count; ++i)
     {
-        image_data[i] = (uint16_t)((double)((image_data[i] - raw_info->black_level) * scale_ratio + raw_info->black_level) + 0.5);
+        image_data[i] = MIN( (uint16_t)((double)((image_data[i] - raw_info->black_level) * scale_ratio + raw_info->black_level) + 0.5), 16383);
     }
 }
 
