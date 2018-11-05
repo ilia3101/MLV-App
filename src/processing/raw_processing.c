@@ -1456,13 +1456,19 @@ void analyse_frame_highest_green(processingObject_t *processing, int imageX, int
             else if (prevVal > curVal) { // (still) descending?
                 if (dir != 1) { // starts descending?
                     //printf( "peak at index %d %d %d %d \r\n", (i-1)<<8, prevVal, cnt, abrt );
+                    //This should be the highlight
                     if( prevVal > abrt )
                     {
                         processing->highest_green_diso = (i-1)<<8;
                         break;
                     }
                     dir = 1;
-                    //if( cnt == 25 ) break;
+                    //This should be already normal picture data... stop, there is no clipped highlight
+                    if( prevVal > abrt / 20 )
+                    {
+                        processing->highest_green_diso = 65535;
+                        break;
+                    }
                     cnt++;
                 }
             }
@@ -1493,14 +1499,19 @@ void analyse_frame_highest_green(processingObject_t *processing, int imageX, int
                 }
                 else if (prevVal > curVal) { // (still) descending?
                     if (dir != 1) { // starts descending?
-                        //printf( "peak at index %d %d %d %d \r\n", (i-1)<<8, prevVal, cnt, imageX * imageY );
+                        //This should be the highlight
                         if( prevVal > abrt )
                         {
                             processing->highest_green_gradient_diso = (i-1)<<8;
                             break;
                         }
                         dir = 1;
-                        //if( cnt == 25 ) break;
+                        //This should be already normal picture data... stop, there is no clipped highlight
+                        if( prevVal > abrt / 20 )
+                        {
+                            processing->highest_green_gradient_diso = 65535;
+                            break;
+                        }
                         cnt++;
                     }
                 }
