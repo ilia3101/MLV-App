@@ -41,6 +41,8 @@ typedef struct {
     int highlight_reconstruction;
     uint16_t highest_green; /* Used for reconstruction */
     uint16_t highest_green_gradient; /* Used for reconstruction */
+    uint16_t highest_green_diso; /* Used for reconstruction */
+    uint16_t highest_green_gradient_diso; /* Used for reconstruction */
 
     /* Do tonemapping? */
     int tone_mapping;

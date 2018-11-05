@@ -525,7 +525,7 @@ void apply_processing_object( processingObject_t * processing,
                 {
                     /* Check if its the range of highest green value possible */
                     /* the range makes it cleaner against pink noise */
-                    if (tmp1g >= LIMIT16( processing->highest_green_gradient - 1000 ) && tmp1g <= LIMIT16( processing->highest_green_gradient + 1000 ))
+                    if (tmp1g >= LIMIT16( processing->highest_green_gradient_diso - 1000 ) && tmp1g <= LIMIT16( processing->highest_green_gradient_diso + 1000 ))
                     {
                         if( pixg[1] < 1.1*pixg[0] && pixg[1] < pixg[2] )
                         {
@@ -556,7 +556,7 @@ void apply_processing_object( processingObject_t * processing,
             {
                 /* Check if its the range of highest green value possible */
                 /* the range makes it cleaner against pink noise */
-                if (tmp1 >= LIMIT16( processing->highest_green - 1000 ) && tmp1 <= LIMIT16( processing->highest_green + 1000 ))
+                if (tmp1 >= LIMIT16( processing->highest_green_diso - 1000 ) && tmp1 <= LIMIT16( processing->highest_green_diso + 1000 ))
                 {
                     if( pix[1] < 1.1*pix[0] && pix[1] < pix[2] )
                     {
@@ -1448,7 +1448,7 @@ void analyse_frame_highest_green(processingObject_t *processing, int imageX, int
             if( highest_value < tableG[i] )
             {
                 highest_value = tableG[i];
-                processing->highest_green = i;
+                processing->highest_green_diso = i;
                 if( highest_value > limitPixels ) break;
             }
         }
@@ -1468,7 +1468,7 @@ void analyse_frame_highest_green(processingObject_t *processing, int imageX, int
                 if( highest_value_gradient < tableGg[i] )
                 {
                     highest_value_gradient = tableGg[i];
-                    processing->highest_green_gradient = i;
+                    processing->highest_green_gradient_diso = i;
                     if( highest_value_gradient > limitPixels ) break;
                 }
             }
