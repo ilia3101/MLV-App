@@ -1438,7 +1438,7 @@ void analyse_frame_highest_green(processingObject_t *processing, int imageX, int
         uint16_t tableG[65535] = {0};
         for (uint16_t * pix = img; pix < img_end; pix += 3)
         {
-            uint16_t pix1 = LIMIT16( pm[4][pix[1]] );
+            uint16_t pix1 = LIMIT16( pm[4][processing->pre_calc_levels[pix[1]]] );
             tableG[pix1]++;
         }
         /* search the brightest (the most right) peak (I made it equivalent to the number of lines to process in the image or more) */
@@ -1448,7 +1448,7 @@ void analyse_frame_highest_green(processingObject_t *processing, int imageX, int
             if( highest_value < tableG[i] )
             {
                 highest_value = tableG[i];
-                processing->highest_green = processing->pre_calc_levels[ i ];
+                processing->highest_green = i;
                 if( highest_value > limitPixels ) break;
             }
         }
@@ -1460,7 +1460,7 @@ void analyse_frame_highest_green(processingObject_t *processing, int imageX, int
             uint16_t tableGg[65535] = {0};
             for (uint16_t * pix = img; pix < img_end; pix += 3)
             {
-                uint16_t pix1 = LIMIT16( pmg[4][pix[1]] );
+                uint16_t pix1 = LIMIT16( pmg[4][processing->pre_calc_levels[pix[1]]] );
                 tableGg[pix1]++;
             }
             for( uint16_t i = 65535; i >= 0; i-- )
@@ -1468,7 +1468,7 @@ void analyse_frame_highest_green(processingObject_t *processing, int imageX, int
                 if( highest_value_gradient < tableGg[i] )
                 {
                     highest_value_gradient = tableGg[i];
-                    processing->highest_green_gradient = processing->pre_calc_levels[ i ];
+                    processing->highest_green_gradient = i;
                     if( highest_value_gradient > limitPixels ) break;
                 }
             }
