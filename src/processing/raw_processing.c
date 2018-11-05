@@ -359,6 +359,9 @@ void applyProcessingObject( processingObject_t * processing,
         }
     }
 
+    /* Analyse dual iso frame to find highest green for highlight reconstruction */
+    analyse_frame_highest_green( processing, imageX, imageY, inputImage );
+
     /* If threads is 1, no threads are needed */
     if (threads == 1)
     {
@@ -434,58 +437,6 @@ void apply_processing_object( processingObject_t * processing,
         /* Black + white level */
         img[i] = processing->pre_calc_levels[ img[i] ];
     }
-
-    /* find highest green peak in actual picture for highlight reconstruction */
-    uint16_t highest_green = 0;
-    uint16_t highest_green_gradient = 0;
-    uint16_t highest_value = 0;
-    uint16_t highest_value_gradient = 0;
-    if ( *processing->dual_iso != 0 && processing->highlight_reconstruction )
-    {
-        /* for dual iso the highest green peak has to be searched */
-        /* build histogram for green channel */
-        uint16_t tableG[65535] = {0};
-        for (uint16_t * pix = img; pix < img_end; pix += 3)
-        {
-            uint16_t pix1 = LIMIT16( pm[4][pix[1]] );
-            tableG[pix1]++;
-        }
-        /* search the brightest (the most right) peak (I made it equivalent to the number of lines to process in the image or more) */
-        uint16_t limitPixels = imageY;
-        for( uint16_t i = 65535; i >= 0; i-- )
-        {
-            if( highest_value < tableG[i] )
-            {
-                highest_value = tableG[i];
-                highest_green = i;
-                if( highest_value > limitPixels ) break;
-            }
-        }
-
-        /* And now the same for the gradient part image */
-        if( processing->gradient_enable && ( ( processing->gradient_exposure_stops < -0.01 || processing->gradient_exposure_stops > 0.01 )
-                                          || ( processing->gradient_contrast < -0.01 || processing->gradient_contrast > 0.01 ) ) )
-        {
-            uint16_t tableGg[65535] = {0};
-            for (uint16_t * pix = img; pix < img_end; pix += 3)
-            {
-                uint16_t pix1 = LIMIT16( pmg[4][pix[1]] );
-                tableGg[pix1]++;
-            }
-            for( uint16_t i = 65535; i >= 0; i-- )
-            {
-                if( highest_value_gradient < tableGg[i] )
-                {
-                    highest_value_gradient = tableGg[i];
-                    highest_green_gradient = i;
-                    if( highest_value_gradient > limitPixels ) break;
-                }
-            }
-        }
-    }
-#ifndef STDOUT_SILENT
-    printf( "highest green: %d (from 16bit); %d pixels; %d processed lines\r\n", highest_green, highest_value, imageY );
-#endif
 
     /* white balance & exposure & highlights & gamma & highlight reconstruction */
     for (uint16_t * pix = img, * bpix = blurImage, *gmpix = gm; pix < img_end; pix += 3, bpix += 3, gmpix++)
@@ -574,7 +525,7 @@ void apply_processing_object( processingObject_t * processing,
                 {
                     /* Check if its the range of highest green value possible */
                     /* the range makes it cleaner against pink noise */
-                    if (tmp1g >= LIMIT16( highest_green_gradient - 1000 ) && tmp1g <= LIMIT16( highest_green_gradient + 1000 ))
+                    if (tmp1g >= LIMIT16( processing->highest_green_gradient - 1000 ) && tmp1g <= LIMIT16( processing->highest_green_gradient + 1000 ))
                     {
                         if( pixg[1] < 1.1*pixg[0] && pixg[1] < pixg[2] )
                         {
@@ -605,7 +556,7 @@ void apply_processing_object( processingObject_t * processing,
             {
                 /* Check if its the range of highest green value possible */
                 /* the range makes it cleaner against pink noise */
-                if (tmp1 >= LIMIT16( highest_green - 1000 ) && tmp1 <= LIMIT16( highest_green + 1000 ))
+                if (tmp1 >= LIMIT16( processing->highest_green - 1000 ) && tmp1 <= LIMIT16( processing->highest_green + 1000 ))
                 {
                     if( pix[1] < 1.1*pix[0] && pix[1] < pix[2] )
                     {
@@ -1464,4 +1415,66 @@ void processingSetGradientMask(processingObject_t *processing, uint16_t width, u
             }
         }
     }
+}
+
+/* Analyse dual iso frame to find highest green for highlight reconstruction */
+void analyse_frame_highest_green(processingObject_t *processing, int imageX, int imageY, uint16_t *inputImage)
+{
+    //if not dual iso, we don't need to do this
+    if ( *processing->dual_iso == 0 ) return;
+
+    uint16_t * img = inputImage;
+    int img_s = imageX * imageY * 3;
+    uint16_t * img_end = img + img_s;
+    int32_t ** pm = processing->pre_calc_matrix;
+    int32_t ** pmg = processing->pre_calc_matrix_gradient;
+
+    uint16_t highest_value = 0;
+    uint16_t highest_value_gradient = 0;
+    if ( processing->highlight_reconstruction )
+    {
+        /* for dual iso the highest green peak has to be searched */
+        /* build histogram for green channel */
+        uint16_t tableG[65535] = {0};
+        for (uint16_t * pix = img; pix < img_end; pix += 3)
+        {
+            uint16_t pix1 = LIMIT16( pm[4][pix[1]] );
+            tableG[pix1]++;
+        }
+        /* search the brightest (the most right) peak (I made it equivalent to the number of lines to process in the image or more) */
+        uint16_t limitPixels = imageY;
+        for( uint16_t i = 65535; i >= 0; i-- )
+        {
+            if( highest_value < tableG[i] )
+            {
+                highest_value = tableG[i];
+                processing->highest_green = processing->pre_calc_levels[ i ];
+                if( highest_value > limitPixels ) break;
+            }
+        }
+
+        /* And now the same for the gradient part image */
+        if( processing->gradient_enable && ( ( processing->gradient_exposure_stops < -0.01 || processing->gradient_exposure_stops > 0.01 )
+                                          || ( processing->gradient_contrast < -0.01 || processing->gradient_contrast > 0.01 ) ) )
+        {
+            uint16_t tableGg[65535] = {0};
+            for (uint16_t * pix = img; pix < img_end; pix += 3)
+            {
+                uint16_t pix1 = LIMIT16( pmg[4][pix[1]] );
+                tableGg[pix1]++;
+            }
+            for( uint16_t i = 65535; i >= 0; i-- )
+            {
+                if( highest_value_gradient < tableGg[i] )
+                {
+                    highest_value_gradient = tableGg[i];
+                    processing->highest_green_gradient = processing->pre_calc_levels[ i ];
+                    if( highest_value_gradient > limitPixels ) break;
+                }
+            }
+        }
+    }
+#ifndef STDOUT_SILENT
+    printf( "highest green: %d (from 16bit); %d pixels; %d processed lines\r\n", processing->highest_green, highest_value, imageY );
+#endif
 }

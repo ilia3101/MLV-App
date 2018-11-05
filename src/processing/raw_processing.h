@@ -266,6 +266,11 @@ void processing_update_highest_green_gradient(processingObject_t * processing);
 /* Precalculates curve with contrast and colour correction */
 void processing_update_curves(processingObject_t * processing);
 
+/* Analyse dual iso frame to find highest green for highlight reconstruction */
+void analyse_frame_highest_green(processingObject_t * processing,
+                                  int imageX, int imageY,
+                                  uint16_t * __restrict inputImage);
+
 /* Pretty good function */
 void hsv_to_rgb(double hue, double saturation, double value, double * rgb);
 
