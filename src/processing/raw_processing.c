@@ -525,7 +525,7 @@ void apply_processing_object( processingObject_t * processing,
                 {
                     /* Check if its the range of highest green value possible */
                     /* the range makes it cleaner against pink noise */
-                    if (tmp1g >= LIMIT16( processing->highest_green_gradient_diso - 1000 ) && tmp1g <= LIMIT16( processing->highest_green_gradient_diso + 1000 ))
+                    if (tmp1g >= LIMIT16( processing->highest_green_gradient_diso - 5000 ) && tmp1g <= LIMIT16( processing->highest_green_gradient_diso + 5000 ))
                     {
                         if( pixg[1] < 1.1*pixg[0] && pixg[1] < pixg[2] )
                         {
@@ -556,7 +556,7 @@ void apply_processing_object( processingObject_t * processing,
             {
                 /* Check if its the range of highest green value possible */
                 /* the range makes it cleaner against pink noise */
-                if (tmp1 >= LIMIT16( processing->highest_green_diso - 1000 ) && tmp1 <= LIMIT16( processing->highest_green_diso + 1000 ))
+                if (tmp1 >= LIMIT16( processing->highest_green_diso - 5000 ) && tmp1 <= LIMIT16( processing->highest_green_diso + 5000 ))
                 {
                     if( pix[1] < 1.1*pix[0] && pix[1] < pix[2] )
                     {
@@ -1429,48 +1429,83 @@ void analyse_frame_highest_green(processingObject_t *processing, int imageX, int
     int32_t ** pm = processing->pre_calc_matrix;
     int32_t ** pmg = processing->pre_calc_matrix_gradient;
 
-    uint16_t highest_value = 0;
-    uint16_t highest_value_gradient = 0;
-    if ( processing->highlight_reconstruction )
+    //printf( "start algo. \r\n" );
+
+    //if ( processing->highlight_reconstruction )
     {
         /* for dual iso the highest green peak has to be searched */
         /* build histogram for green channel */
-        uint16_t tableG[65535] = {0};
+        uint16_t tableG[256] = {0};
         for (uint16_t * pix = img; pix < img_end; pix += 3)
         {
-            uint16_t pix1 = LIMIT16( pm[4][processing->pre_calc_levels[pix[1]]] );
+            uint16_t pix1 = LIMIT16( pm[4][processing->pre_calc_levels[pix[1]]] )>>8;
+            if( pix1 > 255 ) pix1 = 255;
             tableG[pix1]++;
         }
         /* search the brightest (the most right) peak (I made it equivalent to the number of lines to process in the image or more) */
-        uint16_t limitPixels = imageY;
-        for( uint16_t i = 65535; i >= 0; i-- )
+        int prevVal = 0;
+        uint8_t dir = 0;
+        uint8_t cnt = 0;
+        int abrt = imageX * imageY / 200;
+        for( int32_t i = 255; i >= 0; i-- )
         {
-            if( highest_value < tableG[i] )
-            {
-                highest_value = tableG[i];
-                processing->highest_green_diso = i;
-                if( highest_value > limitPixels ) break;
+            int curVal = tableG[i];
+            if (prevVal < curVal) {  // (still) ascending?
+                dir = 0;
             }
+            else if (prevVal > curVal) { // (still) descending?
+                if (dir != 1) { // starts descending?
+                    //printf( "peak at index %d %d %d %d \r\n", (i-1)<<8, prevVal, cnt, abrt );
+                    if( prevVal > abrt )
+                    {
+                        processing->highest_green_diso = (i-1)<<8;
+                        break;
+                    }
+                    dir = 1;
+                    //if( cnt == 25 ) break;
+                    cnt++;
+                }
+            }
+            // prevVal == curVal is simply ignored...
+            prevVal = curVal;
         }
 
         /* And now the same for the gradient part image */
         if( processing->gradient_enable && ( ( processing->gradient_exposure_stops < -0.01 || processing->gradient_exposure_stops > 0.01 )
                                           || ( processing->gradient_contrast < -0.01 || processing->gradient_contrast > 0.01 ) ) )
         {
-            uint16_t tableGg[65535] = {0};
+            uint16_t tableGg[256] = {0};
             for (uint16_t * pix = img; pix < img_end; pix += 3)
             {
-                uint16_t pix1 = LIMIT16( pmg[4][processing->pre_calc_levels[pix[1]]] );
+                uint16_t pix1 = LIMIT16( pmg[4][processing->pre_calc_levels[pix[1]]] )>>8;
+                if( pix1 > 255 ) pix1 = 255;
                 tableGg[pix1]++;
             }
-            for( uint16_t i = 65535; i >= 0; i-- )
+            /* search the brightest (the most right) peak (I made it equivalent to the number of lines to process in the image or more) */
+            prevVal = 0;
+            dir = 0;
+            cnt = 0;
+            for( int32_t i = 255; i >= 0; i-- )
             {
-                if( highest_value_gradient < tableGg[i] )
-                {
-                    highest_value_gradient = tableGg[i];
-                    processing->highest_green_gradient_diso = i;
-                    if( highest_value_gradient > limitPixels ) break;
+                int curVal = tableGg[i];
+                if (prevVal < curVal) {  // (still) ascending?
+                    dir = 0;
                 }
+                else if (prevVal > curVal) { // (still) descending?
+                    if (dir != 1) { // starts descending?
+                        //printf( "peak at index %d %d %d %d \r\n", (i-1)<<8, prevVal, cnt, imageX * imageY );
+                        if( prevVal > abrt )
+                        {
+                            processing->highest_green_gradient_diso = (i-1)<<8;
+                            break;
+                        }
+                        dir = 1;
+                        //if( cnt == 25 ) break;
+                        cnt++;
+                    }
+                }
+                // prevVal == curVal is simply ignored...
+                prevVal = curVal;
             }
         }
     }
