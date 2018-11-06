@@ -1446,8 +1446,13 @@ void analyse_frame_highest_green(processingObject_t *processing, int imageX, int
         int prevVal = 0;
         uint8_t dir = 0;
         uint8_t cnt = 0;
-        int abrt = imageX * imageY / 200;
-        for( int32_t i = 255; i >= 0; i-- )
+        int lastPeak = 1;
+        //PARAMETERS
+        int abrtDelt = 5000;
+        int abrtPeak = imageX * imageY / 400;
+        int abrtSign = imageX * imageY / 4000;
+        // /////////
+        for( int32_t i = 255; i > 2; i-- ) //only down to 5, below we just have dark noise, but no highlight
         {
             int curVal = tableG[i];
             if (prevVal < curVal) {  // (still) ascending?
@@ -1455,16 +1460,18 @@ void analyse_frame_highest_green(processingObject_t *processing, int imageX, int
             }
             else if (prevVal > curVal) { // (still) descending?
                 if (dir != 1) { // starts descending?
-                    //printf( "peak at index %d %d %d %d \r\n", (i-1)<<8, prevVal, cnt, abrt );
+                    int delta = prevVal-lastPeak;
+                    //printf( "peak at index %d %d %d %d %d \r\n", (i-1)<<8, prevVal, cnt, abrtPeak, delta );
                     //This should be the highlight
-                    if( prevVal > abrt )
+                    if( prevVal > abrtPeak && delta > abrtDelt )
                     {
                         processing->highest_green_diso = (i-1)<<8;
                         break;
                     }
+                    lastPeak = prevVal;
                     dir = 1;
                     //This should be already normal picture data... stop, there is no clipped highlight
-                    if( prevVal > abrt / 20 )
+                    if( prevVal > abrtSign )
                     {
                         processing->highest_green_diso = 65535;
                         break;
@@ -1491,7 +1498,7 @@ void analyse_frame_highest_green(processingObject_t *processing, int imageX, int
             prevVal = 0;
             dir = 0;
             cnt = 0;
-            for( int32_t i = 255; i >= 0; i-- )
+            for( int32_t i = 255; i > 2; i-- )
             {
                 int curVal = tableGg[i];
                 if (prevVal < curVal) {  // (still) ascending?
@@ -1499,15 +1506,17 @@ void analyse_frame_highest_green(processingObject_t *processing, int imageX, int
                 }
                 else if (prevVal > curVal) { // (still) descending?
                     if (dir != 1) { // starts descending?
+                        int delta = prevVal-lastPeak;
                         //This should be the highlight
-                        if( prevVal > abrt )
+                        if( prevVal > abrtPeak && delta > abrtDelt )
                         {
                             processing->highest_green_gradient_diso = (i-1)<<8;
                             break;
                         }
+                        lastPeak = prevVal;
                         dir = 1;
                         //This should be already normal picture data... stop, there is no clipped highlight
-                        if( prevVal > abrt / 20 )
+                        if( prevVal > abrtSign )
                         {
                             processing->highest_green_gradient_diso = 65535;
                             break;
