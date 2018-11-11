@@ -179,3 +179,105 @@ void Kelvin_Daylight_to_XYZ(double temperature, double * XYZ_out)
     for (int i = 0; i < 3; ++ i) XYZ_out[i] = XYZ[i];
 }
 
+
+
+void rgb2hsv(double * rgb_in, double * hsv_out)
+{
+    double      min, max, delta;
+
+    min = rgb_in[0] < rgb_in[1] ? rgb_in[0] : rgb_in[1];
+    min = min  < rgb_in[2] ? min  : rgb_in[2];
+
+    max = rgb_in[0] > rgb_in[1] ? rgb_in[0] : rgb_in[1];
+    max = max  > rgb_in[2] ? max  : rgb_in[2];
+
+    hsv_out[2] = max;                                // v
+    delta = max - min;
+    if (delta < 0.00001)
+    {
+        hsv_out[1] = 0;
+        hsv_out[0] = 0; // undefined, maybe nan?
+        return;
+    }
+    if( max > 0.0 ) { // NOTE: if Max is == 0, this divide would cause a crash
+        hsv_out[1] = (delta / max);                  // s
+    } else {
+        // if max is 0, then r = g = b = 0              
+        // s = 0, h is undefined
+        hsv_out[1] = 0.0;
+        hsv_out[0] = NAN;                            // its now undefined
+        return;
+    }
+    if( rgb_in[0] >= max )                           // > is bogus, just keeps compilor happy
+        hsv_out[0] = ( rgb_in[1] - rgb_in[2] ) / delta;        // between yellow & magenta
+    else
+    if( rgb_in[1] >= max )
+        hsv_out[0] = 2.0 + ( rgb_in[2] - rgb_in[0] ) / delta;  // between cyan & yellow
+    else
+        hsv_out[0] = 4.0 + ( rgb_in[0] - rgb_in[1] ) / delta;  // between magenta & cyan
+
+    hsv_out[0] *= 60.0;                              // degrees
+
+    if( hsv_out[0] < 0.0 )
+        hsv_out[0] += 360.0;
+
+    return;
+}
+
+
+void hsv2rgb(double * hsv_in, double * out_rgb)
+{
+    double      hh, p, q, t, ff;
+    long        i;
+
+    if(hsv_in[1] <= 0.0000001) {       // < is bogus, just shuts up warnings
+        out_rgb[0] = hsv_in[2];
+        out_rgb[1] = hsv_in[2];
+        out_rgb[2] = hsv_in[2];
+        return;
+    }
+
+    hh = hsv_in[0];
+    if(hh >= 360.0) hh = 0.0;
+    hh /= 60.0;
+    i = (long)hh;
+    ff = hh - i;
+    p = hsv_in[2] * (1.0 - hsv_in[1]);
+    q = hsv_in[2] * (1.0 - (hsv_in[1] * ff));
+    t = hsv_in[2] * (1.0 - (hsv_in[1] * (1.0 - ff)));
+
+    switch(i) {
+    case 0:
+        out_rgb[0] = hsv_in[2];
+        out_rgb[1] = t;
+        out_rgb[2] = p;
+        break;
+    case 1:
+        out_rgb[0] = q;
+        out_rgb[1] = hsv_in[2];
+        out_rgb[2] = p;
+        break;
+    case 2:
+        out_rgb[0] = p;
+        out_rgb[1] = hsv_in[2];
+        out_rgb[2] = t;
+        break;
+
+    case 3:
+        out_rgb[0] = p;
+        out_rgb[1] = q;
+        out_rgb[2] = hsv_in[2];
+        break;
+    case 4:
+        out_rgb[0] = t;
+        out_rgb[1] = p;
+        out_rgb[2] = hsv_in[2];
+        break;
+    case 5:
+    default:
+        out_rgb[0] = hsv_in[2];
+        out_rgb[1] = p;
+        out_rgb[2] = q;
+        break;
+    }
+}
