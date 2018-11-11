@@ -592,66 +592,6 @@ void apply_processing_object( processingObject_t * processing,
             result[1] = pix0b * processing->proper_wb_matrix[3] + pix1b * processing->proper_wb_matrix[4] + pix2b * processing->proper_wb_matrix[5];
             result[2] = pix0b * processing->proper_wb_matrix[6] + pix1b * processing->proper_wb_matrix[7] + pix2b * processing->proper_wb_matrix[8];
 
-            /* Now do clipping correctly if the colour is not in the RGB space */
-            // if (result[0] > 65535.0 || result[0] < 0.0 || result[1] > 65535.0 || result[1] < 0.0 || result[2] > 65535.0 || result[2] < 0.0)
-            // {
-            //     /* Convert to 0-1 range */
-            //     for (int i = 0; i < 3; ++i) result[i] /= 65535.0;
-
-            //     double brightness = (result[0]*0.2126729 + result[1]*0.7151522 + result[2]*0.0721750);
-
-            //     /* We need 2 points, the actual colour (outside the RGB cube), and a grey point with
-            //      * the same brightness. We find where the line between them intersects the cube to clip accurately */
-
-            //     double origin = 0; /* This is a 3d point, all coordinats the same */
-            //     double gradient[3] = {result[0]-origin, result[1]-origin, result[1]-origin};
-
-            //     double t = 1.0;
-
-            //     double new_point[3] = {0,0,0};
-
-            //     /* Check x = 0 */
-            //     t = (0.0 - origin) / gradient[0];
-            //     for (int i = 0; i < 3; ++i) new_point[i] = origin + gradient[i]*t;
-            //     if (new_point[0] < 1.0 && new_point[0] > 0.0 && new_point[1] < 1.0 && new_point[1] > 0.0 && new_point[2] < 1.0 && new_point[2] > 0.0) {goto found_intersection; puts("found");};
-
-            //     /* Check x = 1 */
-            //     t = (1.0 - origin) / gradient[0];
-            //     for (int i = 0; i < 3; ++i) new_point[i] = origin + gradient[i]*t;
-            //     if (new_point[0] < 1.0 && new_point[0] > 0.0 && new_point[1] < 1.0 && new_point[1] > 0.0 && new_point[2] < 1.0 && new_point[2] > 0.0) {goto found_intersection; puts("found");};
-
-            //     /* Check y = 0 */
-            //     t = (0.0 - origin) / gradient[1];
-            //     for (int i = 0; i < 3; ++i) new_point[i] = origin + gradient[i]*t;
-            //     if (new_point[0] < 1.0 && new_point[0] > 0.0 && new_point[1] < 1.0 && new_point[1] > 0.0 && new_point[2] < 1.0 && new_point[2] > 0.0) {goto found_intersection; puts("found");};
-
-            //     /* Check y = 1 */
-            //     t = (1.0 + origin) / gradient[1];
-            //     for (int i = 0; i < 3; ++i) new_point[i] = origin + gradient[i]*t;
-            //     if (new_point[0] < 1.0 && new_point[0] > 0.0 && new_point[1] < 1.0 && new_point[1] > 0.0 && new_point[2] < 1.0 && new_point[2] > 0.0) {goto found_intersection; puts("found");};
-
-            //     /* Check z = 0 */
-            //     t = (0.0 - origin) / gradient[2];
-            //     for (int i = 0; i < 3; ++i) new_point[i] = origin + gradient[i]*t;
-            //     if (new_point[0] < 1.0 && new_point[0] > 0.0 && new_point[1] < 1.0 && new_point[1] > 0.0 && new_point[2] < 1.0 && new_point[2] > 0.0) {goto found_intersection; puts("found");};
-
-            //     /* Check z = 1 */
-            //     t = (1.0 - origin) / gradient[2];
-            //     for (int i = 0; i < 3; ++i) new_point[i] = origin + gradient[i]*t;
-            //     if (new_point[0] < 1.0 && new_point[0] > 0.0 && new_point[1] < 1.0 && new_point[1] > 0.0 && new_point[2] < 1.0 && new_point[2] > 0.0) {goto found_intersection; puts("found");};
-
-            //     found_intersection:
-
-            //     /* Back to normal range */
-            //     for (int i = 0; i < 3; ++i) result[i] =  new_point[i] * 65535.0;
-            // }
-            // if (result[0] > 65535.0 || result[0] < 0.0 || result[1] > 65535.0 || result[1] < 0.0 || result[2] > 65535.0 || result[2] < 0.0)
-            // {
-            //     result[0] = 0;
-            //     result[1] = 0;
-            //     result[2] = 0;
-            // }
-
             pix[0] = LIMIT16(result[0]);
             pix[1] = LIMIT16(result[1]);
             pix[2] = LIMIT16(result[2]);
