@@ -48,7 +48,6 @@ void buffer_set_size(processing_buffer_t * buffer, int width, int height)
         buffer->height = height;
         if (buffer->image != NULL) free(buffer->image);
         buffer->image = malloc(sizeof(uint16_t) * 3 * width * height);
-        //puts("\n\n\n\n\n\n\n\nhello\n\n\n\n\n");
     }
 }
 uint16_t * get_buffer(processing_buffer_t * buffer)
