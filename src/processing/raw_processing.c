@@ -10,7 +10,6 @@
 #include "../mlv/video_mlv.h"
 #include "filter/filter.h"
 #include "denoiser/denoiser_2d_median.h"
-#include "denoiser/libdenoising.h"
 #include "../mlv/camid/camera_id.h"
 
 /* Matrix functions which are useful */
