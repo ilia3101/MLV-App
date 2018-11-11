@@ -592,6 +592,15 @@ void apply_processing_object( processingObject_t * processing,
             result[1] = pix0b * processing->proper_wb_matrix[3] + pix1b * processing->proper_wb_matrix[4] + pix2b * processing->proper_wb_matrix[5];
             result[2] = pix0b * processing->proper_wb_matrix[6] + pix1b * processing->proper_wb_matrix[7] + pix2b * processing->proper_wb_matrix[8];
 
+            /* Now do clipping correctly if the colour is not in the RGB space */
+            if (result[0] > 65535.0 || result[0] < 0.0 || result[1] > 65535.0 || result[1] < 0.0 || result[2] > 65535.0 || result[2] < 0.0)
+            {
+                double hsv[3];
+                rgb2hsv(result, hsv);
+                hsv[1] = MIN(hsv[1], 1.0);
+                hsv2rgb(result, hsv);
+            }
+
             pix[0] = LIMIT16(result[0]);
             pix[1] = LIMIT16(result[1]);
             pix[2] = LIMIT16(result[2]);
