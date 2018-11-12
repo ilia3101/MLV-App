@@ -62,7 +62,7 @@ int * get_raw2ev(int black)
     
     memset(raw2ev, 0, EV_RESOLUTION * sizeof(int));
     int i;
-    //#pragma omp parallel for
+    #pragma omp parallel for
     for (i = 0; i < EV_RESOLUTION; i++)
     {
         raw2ev[i] = log2(MAX(1, i - black)) * EV_RESOLUTION;
@@ -77,7 +77,7 @@ int * get_ev2raw(int black)
     int* ev2raw = _ev2raw + 10*EV_RESOLUTION;
 
     int i;
-    //#pragma omp parallel for
+    #pragma omp parallel for
     for (i = -10*EV_RESOLUTION; i < 14*EV_RESOLUTION; i++)
     {
         ev2raw[i] = black + pow(2, (float)i / EV_RESOLUTION);
@@ -1137,7 +1137,7 @@ fpm_check:
                 printf("Using fpi method: 'MLVFS'\n");
             }
 #endif
-            //#pragma omp parallel for
+            #pragma omp parallel for
             for (size_t m = 0; m < focus_pixel_map->count; m++)
             {
                 int x = focus_pixel_map->pixels[m].x - cropX;
@@ -1342,7 +1342,7 @@ mem_err:
                 printf("Using bpi method: 'MLVFS'\n");
             }
 #endif
-            //#pragma omp parallel for
+            #pragma omp parallel for
             for (size_t m = 0; m < bad_pixel_map->count; m++)
             {
                 int x = bad_pixel_map->pixels[m].x - cropX;
