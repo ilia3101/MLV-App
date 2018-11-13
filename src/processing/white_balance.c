@@ -205,7 +205,7 @@ void rgb2hsv(double * rgb_in, double * hsv_out)
         // if max is 0, then r = g = b = 0              
         // s = 0, h is undefined
         hsv_out[1] = 0.0;
-        hsv_out[0] = NAN;                            // its now undefined
+        hsv_out[0] = 1;                            // its now undefined
         return;
     }
     if( rgb_in[0] >= max )                           // > is bogus, just keeps compilor happy
