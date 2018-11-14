@@ -46,6 +46,7 @@ float triLerp(float x, float y, float z, float q000, float q001, float q010, flo
 lut_t * init_lut( void )
 {
     lut_t *lut = calloc( 1, sizeof( lut_t ) );
+    lut->intensity = 100;
     return lut;
 }
 
@@ -223,8 +224,11 @@ float getLut3dPoint( lut_t *lut, uint16_t rIn, uint16_t gIn, uint16_t bIn, uint8
 void apply_lut(lut_t *lut, int width, int height, uint16_t *image)
 {
     if( lut->dimension <= 1 || !lut->cube ) return;
+    if( lut->intensity > 100 ) lut->intensity = 100;
 
     uint16_t * end = image + (width * height * 3);
+    float factor1 = (float)lut->intensity / 100.0f;
+    float factor2 = 1.0 - factor1;
 
     for (uint16_t * pix = image; pix < end; pix += 3)
     {
@@ -298,48 +302,39 @@ void apply_lut(lut_t *lut, int width, int height, uint16_t *image)
                 float q110 = getLut3dPoint( lut, r1, g1, b0, i );
                 float q111 = getLut3dPoint( lut, r1, g1, b1, i );
 
+                float out;
                 if( green >= blue && blue >= red ) //T1
                 {
-                    float out = ( (1.0 - green) * q000 ) + ( ( green - blue ) * q010 )
+                    out = ( (1.0 - green) * q000 ) + ( ( green - blue ) * q010 )
                                 + ( ( blue - red ) * q011 ) + ( red * q111 );
-                    //Output
-                    pix[i] = LIMIT16( out * 65535.0 );
                 }
                 else if( blue > red && red > green ) //T2
                 {
-                    float out = ( (1.0 - blue) * q000 ) + ( ( blue - red ) * q001 )
+                    out = ( (1.0 - blue) * q000 ) + ( ( blue - red ) * q001 )
                                 + ( ( red - green ) * q101 ) + ( green * q111 );
-                    //Output
-                    pix[i] = LIMIT16( out * 65535.0 );
                 }
                 else if( blue > green && green >= red ) //T3
                 {
-                    float out = ( (1.0 - blue) * q000 ) + ( ( blue - green ) * q001 )
+                    out = ( (1.0 - blue) * q000 ) + ( ( blue - green ) * q001 )
                                 + ( ( green - red ) * q011 ) + ( red * q111 );
-                    //Output
-                    pix[i] = LIMIT16( out * 65535.0 );
                 }
                 else if( red >= green && green > blue ) //T4
                 {
-                    float out = ( (1.0 - red) * q000 ) + ( ( red - green ) * q100 )
+                    out = ( (1.0 - red) * q000 ) + ( ( red - green ) * q100 )
                                 + ( ( green - blue ) * q110 ) + ( blue * q111 );
-                    //Output
-                    pix[i] = LIMIT16( out * 65535.0 );
                 }
                 else if( green > red && red >= blue ) //T5
                 {
-                    float out = ( (1.0 - green) * q000 ) + ( ( green - red ) * q010 )
+                    out = ( (1.0 - green) * q000 ) + ( ( green - red ) * q010 )
                                 + ( ( red - blue ) * q110 ) + ( blue * q111 );
-                    //Output
-                    pix[i] = LIMIT16( out * 65535.0 );
                 }
                 else //T6
                 {
-                    float out = ( (1.0 - red) * q000 ) + ( ( red - blue ) * q100 )
+                    out = ( (1.0 - red) * q000 ) + ( ( red - blue ) * q100 )
                                 + ( ( blue - green ) * q101 ) + ( green * q111 );
-                    //Output
-                    pix[i] = LIMIT16( out * 65535.0 );
                 }
+                //Output
+                pix[i] = pix[i] * factor2 + LIMIT16( out * 65535.0 ) * factor1;
             }
 #endif
         }

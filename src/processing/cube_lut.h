@@ -17,6 +17,7 @@ typedef struct {
     float domain_max[3];
     float *cube;
     int is3d;
+    uint8_t intensity;
 } lut_t;
 
 lut_t * init_lut( void );
