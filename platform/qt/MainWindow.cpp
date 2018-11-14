@@ -1356,6 +1356,7 @@ void MainWindow::readSettings()
     m_resizeWidth = set.value( "resizeWidth", 1920 ).toUInt();
     m_resizeHeight = set.value( "resizeHeight", 1080 ).toUInt();
     m_resizeFilterHeightLocked = set.value( "resizeLockHeight", false ).toBool();
+    m_resizeFilterAlgorithm = set.value( "resizeAlgorithm", 0 ).toUInt();
     m_smoothFilterSetting = set.value( "smoothEnabled", 0 ).toUInt();
     m_frameRate = set.value( "frameRate", 25 ).toDouble();
     m_audioExportEnabled = set.value( "audioExportEnabled", true ).toBool();
@@ -1416,6 +1417,7 @@ void MainWindow::writeSettings()
     set.setValue( "resizeWidth", m_resizeWidth );
     set.setValue( "resizeHeight", m_resizeHeight );
     set.setValue( "resizeLockHeight", m_resizeFilterHeightLocked );
+    set.setValue( "resizeAlgorithm", m_resizeFilterAlgorithm );
     set.setValue( "smoothEnabled", m_smoothFilterSetting );
     set.setValue( "frameRate", m_frameRate );
     set.setValue( "audioExportEnabled", m_audioExportEnabled );
@@ -1587,7 +1589,10 @@ void MainWindow::startExportPipe(QString fileName)
     }
 
     //Setup resize algorithm
-    QString resizeAlgorithm = QString( "sws_flags=%1" ).arg( "sinc" );
+    QString resizeAlgorithm = QString( "sws_flags=" );
+    if( m_resizeFilterAlgorithm == SCALE_BILINEAR ) resizeAlgorithm.append( "bilinear" );
+    else if( m_resizeFilterAlgorithm == SCALE_SINC ) resizeAlgorithm.append( "sinc" );
+    else resizeAlgorithm.append( "bicubic" ); //default
 
     //Resize Filter + colorspace conversion (for getting right colors)
     QString resizeFilter = QString( "" );
@@ -5141,7 +5146,8 @@ void MainWindow::on_actionExportSettings_triggered()
                                                                       m_frameRate,
                                                                       m_audioExportEnabled,
                                                                       m_resizeFilterHeightLocked,
-                                                                      m_smoothFilterSetting);
+                                                                      m_smoothFilterSetting,
+                                                                      m_resizeFilterAlgorithm );
     pExportSettings->exec();
     m_codecProfile = pExportSettings->encoderSetting();
     m_codecOption = pExportSettings->encoderOption();
@@ -5154,6 +5160,7 @@ void MainWindow::on_actionExportSettings_triggered()
     m_audioExportEnabled = pExportSettings->isExportAudioEnabled();
     m_resizeFilterHeightLocked = pExportSettings->isHeightLocked();
     m_smoothFilterSetting = pExportSettings->smoothSetting();
+    m_resizeFilterAlgorithm = pExportSettings->scaleAlgorithm();
     delete pExportSettings;
 
     if( m_fileLoaded )

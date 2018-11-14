@@ -339,6 +339,7 @@ private:
     int8_t m_countTimeDown;
     bool m_resizeFilterEnabled;
     bool m_resizeFilterHeightLocked;
+    uint8_t m_resizeFilterAlgorithm;
     uint8_t m_smoothFilterSetting;
     uint16_t m_resizeWidth;
     uint16_t m_resizeHeight;

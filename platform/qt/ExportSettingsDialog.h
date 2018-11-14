@@ -80,6 +80,10 @@
 #define SMOOTH_FILTER_3PASS_USM     3
 #define SMOOTH_FILTER_3PASS_USM_BB  4 //=last resort
 
+#define SCALE_BICUBIC               0
+#define SCALE_BILINEAR              1
+#define SCALE_SINC                  2
+
 namespace Ui {
 class ExportSettingsDialog;
 }
@@ -101,7 +105,8 @@ public:
                                   double fps = 25,
                                   bool exportAudio = true,
                                   bool heightLocked = false,
-                                  uint8_t smooth = 0);
+                                  uint8_t smooth = 0,
+                                  uint8_t scaleAlgo = 0);
     ~ExportSettingsDialog();
     uint8_t encoderSetting(void);
     uint8_t encoderOption(void);
@@ -114,6 +119,7 @@ public:
     bool isExportAudioEnabled(void);
     bool isHeightLocked(void);
     uint8_t smoothSetting(void);
+    uint8_t scaleAlgorithm(void);
 
 private slots:
     void on_pushButtonClose_clicked();

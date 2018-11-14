@@ -12,7 +12,7 @@
 #include <QStandardItem>
 
 //Constructor
-ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, Scripting *scripting, uint8_t currentCodecProfile, uint8_t currentCodecOption, uint8_t debayerMode, bool resize, uint16_t resizeWidth, uint16_t resizeHeight, bool fpsOverride, double fps, bool exportAudio, bool heightLocked, uint8_t smooth) :
+ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, Scripting *scripting, uint8_t currentCodecProfile, uint8_t currentCodecOption, uint8_t debayerMode, bool resize, uint16_t resizeWidth, uint16_t resizeHeight, bool fpsOverride, double fps, bool exportAudio, bool heightLocked, uint8_t smooth, uint8_t scaleAlgo) :
     QDialog(parent),
     ui(new Ui::ExportSettingsDialog)
 {
@@ -32,6 +32,7 @@ ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, Scripting *scripting
     ui->checkBoxExportAudio->setChecked( exportAudio );
     ui->toolButtonLockHeight->setChecked( heightLocked );
     ui->comboBoxSmoothing->setCurrentIndex( smooth );
+    ui->comboBoxScaleAlgorithm->setCurrentIndex( scaleAlgo );
 
     //Disable resize for AVFoundation
     if( ui->comboBoxOption->currentText() == QString( "Apple AVFoundation" ) )
@@ -124,6 +125,12 @@ bool ExportSettingsDialog::isHeightLocked()
 uint8_t ExportSettingsDialog::smoothSetting()
 {
     return ui->comboBoxSmoothing->currentIndex();
+}
+
+//Get the selected scaling algorithm
+uint8_t ExportSettingsDialog::scaleAlgorithm()
+{
+    return ui->comboBoxScaleAlgorithm->currentIndex();
 }
 
 //Close clicked
@@ -314,6 +321,7 @@ void ExportSettingsDialog::on_checkBoxResize_toggled(bool checked)
 {
     ui->toolButtonLockHeight->setEnabled( checked );
     ui->spinBoxWidth->setEnabled( checked );
+    ui->comboBoxScaleAlgorithm->setEnabled( checked );
 
     if( checked && !ui->toolButtonLockHeight->isChecked() ) ui->spinBoxHeight->setEnabled( true );
     else ui->spinBoxHeight->setEnabled( false );
