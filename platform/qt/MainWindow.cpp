@@ -1580,6 +1580,9 @@ void MainWindow::startExportPipe(QString fileName)
         }
     }
 
+    //Setup resize algorithm
+    QString resizeAlgorithm = QString( "sws_flags=%1" ).arg( "sinc" );
+
     //Resize Filter + colorspace conversion (for getting right colors)
     QString resizeFilter = QString( "" );
     if( m_resizeFilterEnabled )
@@ -1606,10 +1609,11 @@ void MainWindow::startExportPipe(QString fileName)
             m_resizeWidth += m_resizeWidth % 2;
             height += height % 2;
         }
-        resizeFilter = QString( "-vf %1scale=w=%2:h=%3:in_color_matrix=bt601:out_color_matrix=bt709 " )
+        resizeFilter = QString( "-vf %1scale=w=%2:h=%3:%4:in_color_matrix=bt601:out_color_matrix=bt709 " )
                 .arg( moireeFilter )
                 .arg( m_resizeWidth )
-                .arg( height );
+                .arg( height )
+                .arg( resizeAlgorithm );
     }
     else if( m_exportQueue.first()->stretchFactorX() != 1.0
           || m_exportQueue.first()->stretchFactorY() != 1.0 )
@@ -1623,10 +1627,11 @@ void MainWindow::startExportPipe(QString fileName)
             width += width % 2;
             height += height % 2;
         }
-        resizeFilter = QString( "-vf %1scale=w=%2:h=%3:in_color_matrix=bt601:out_color_matrix=bt709 " )
+        resizeFilter = QString( "-vf %1scale=w=%2:h=%3:%4:in_color_matrix=bt601:out_color_matrix=bt709 " )
                 .arg( moireeFilter )
                 .arg( width )
-                .arg( height );
+                .arg( height )
+                .arg( resizeAlgorithm );
     }
     else
     {
