@@ -66,6 +66,7 @@ ReceiptSettings::ReceiptSettings()
     m_upsideDown = false;
     m_lutEnabled = false;
     m_lutName = QString( "" );
+    m_lutStrength = 100;
     m_filterEnabled = false;
     m_filterIndex = 0;
     m_filterStrength = 100;

@@ -1091,6 +1091,12 @@ void MainWindow::initGui( void )
     //Set disabled select all and delete clip
     ui->actionDeleteSelectedClips->setEnabled( false );
     ui->actionSelectAllClips->setEnabled( false );
+    //disable lut as default
+    ui->toolButtonLoadLut->setEnabled( false );
+    ui->lineEditLutName->setEnabled( false );
+    ui->label_LutStrengthText->setEnabled( false );
+    ui->label_LutStrengthVal->setEnabled( false );
+    ui->horizontalSliderLutStrength->setEnabled( false );
     //disable filter as default
     ui->comboBoxFilterName->setEnabled( false );
     ui->label_FilterStrengthVal->setEnabled( false );
@@ -3032,6 +3038,11 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
             receipt->setLutName( Rxml->readElementText() );
             Rxml->readNext();
         }
+        else if( Rxml->isStartElement() && Rxml->name() == "lutStrength" )
+        {
+            receipt->setLutStrength( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
         else if( Rxml->isStartElement() && Rxml->name() == "filterEnabled" )
         {
             receipt->setFilterEnabled( (bool)Rxml->readElementText().toInt() );
@@ -3135,6 +3146,7 @@ void MainWindow::writeXmlElementsToFile(QXmlStreamWriter *xmlWriter, ReceiptSett
     xmlWriter->writeTextElement( "rawWhite",                QString( "%1" ).arg( receipt->rawWhite() ) );
     xmlWriter->writeTextElement( "lutEnabled",              QString( "%1" ).arg( receipt->lutEnabled() ) );
     xmlWriter->writeTextElement( "lutName",                 QString( "%1" ).arg( receipt->lutName() ) );
+    xmlWriter->writeTextElement( "lutStrength",             QString( "%1" ).arg( receipt->lutStrength() ) );
     xmlWriter->writeTextElement( "filterEnabled",           QString( "%1" ).arg( receipt->filterEnabled() ) );
     xmlWriter->writeTextElement( "filterIndex",             QString( "%1" ).arg( receipt->filterIndex() ) );
     xmlWriter->writeTextElement( "filterStrength",          QString( "%1" ).arg( receipt->filterStrength() ) );
@@ -3367,6 +3379,7 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     on_checkBoxLutEnable_clicked( receipt->lutEnabled() );
     ui->lineEditLutName->setText( receipt->lutName() );
     on_lineEditLutName_textChanged( receipt->lutName() );
+    ui->horizontalSliderLutStrength->setValue( receipt->lutStrength() );
 
     ui->checkBoxFilterEnable->setChecked( receipt->filterEnabled() );
     on_checkBoxFilterEnable_clicked( receipt->filterEnabled() );
@@ -3482,6 +3495,7 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
 
     receipt->setLutEnabled( ui->checkBoxLutEnable->isChecked() );
     receipt->setLutName( ui->lineEditLutName->text() );
+    receipt->setLutStrength( ui->horizontalSliderLutStrength->value() );
 
     receipt->setFilterEnabled( ui->checkBoxFilterEnable->isChecked() );
     receipt->setFilterIndex( ui->comboBoxFilterName->currentIndex() );
@@ -3567,6 +3581,7 @@ void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings 
     {
         receiptTarget->setLutEnabled( receiptSource->lutEnabled() );
         receiptTarget->setLutName( receiptSource->lutName() );
+        receiptTarget->setLutStrength( receiptSource->lutStrength() );
     }
 
     if( paste && cdui->checkBoxFilter->isChecked() )
@@ -3697,6 +3712,7 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
 
     receipt->setLutEnabled( m_pSessionReceipts.at( row )->lutEnabled() );
     receipt->setLutName( m_pSessionReceipts.at( row )->lutName() );
+    receipt->setLutStrength( m_pSessionReceipts.at( row )->lutStrength() );
 
     receipt->setFilterEnabled( m_pSessionReceipts.at( row )->filterEnabled() );
     receipt->setFilterIndex( m_pSessionReceipts.at( row )->filterIndex() );
@@ -4467,6 +4483,13 @@ void MainWindow::on_horizontalSliderDenoiseStrength_valueChanged(int position)
     m_frameChanged = true;
 }
 
+void MainWindow::on_horizontalSliderLutStrength_valueChanged(int position)
+{
+    processingSetLutStrength( m_pProcessingObject, position );
+    ui->label_LutStrengthVal->setText( QString("%1").arg( position ) );
+    m_frameChanged = true;
+}
+
 void MainWindow::on_horizontalSliderFilterStrength_valueChanged(int position)
 {
     filterObjectSetFilterStrength( m_pProcessingObject->filter, position / 100.0 );
@@ -4669,6 +4692,13 @@ void MainWindow::on_horizontalSliderDenoiseStrength_doubleClicked()
 {
     ReceiptSettings *sliders = new ReceiptSettings(); //default
     ui->horizontalSliderDenoiseStrength->setValue( sliders->denoiserStrength() );
+    delete sliders;
+}
+
+void MainWindow::on_horizontalSliderLutStrength_doubleClicked()
+{
+    ReceiptSettings *sliders = new ReceiptSettings(); //default
+    ui->horizontalSliderLutStrength->setValue( sliders->lutStrength() );
     delete sliders;
 }
 
@@ -5637,6 +5667,15 @@ void MainWindow::on_labelAudioTrack_sizeChanged()
     paintAudioTrack();
 }
 
+//DoubleClick on Lut Strength Label
+void MainWindow::on_label_LutStrengthVal_doubleClicked()
+{
+    EditSliderValueDialog editSlider;
+    editSlider.autoSetup( ui->horizontalSliderLutStrength, ui->label_LutStrengthVal, 1.0, 0, 1.0 );
+    editSlider.exec();
+    ui->horizontalSliderLutStrength->setValue( editSlider.getValue() );
+}
+
 //DoubleClick on Filter Strength Label
 void MainWindow::on_label_FilterStrengthVal_doubleClicked()
 {
@@ -6149,6 +6188,9 @@ void MainWindow::on_checkBoxLutEnable_clicked(bool checked)
 
     ui->toolButtonLoadLut->setEnabled( checked );
     ui->lineEditLutName->setEnabled( checked );
+    ui->label_LutStrengthText->setEnabled( checked );
+    ui->label_LutStrengthVal->setEnabled( checked );
+    ui->horizontalSliderLutStrength->setEnabled( checked );
 }
 
 //En-/disable all filter processing

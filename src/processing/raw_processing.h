@@ -50,6 +50,9 @@ void applyProcessingObject( processingObject_t * processing,
 #define processingEnableLut(processing) processing->lut_on = 1
 #define processingDisableLut(processing) processing->lut_on = 0
 
+/* Setup LUT strength */
+void processingSetLutStrength(processingObject_t *processing, uint8_t strength);
+
 /* Highlights/shadows, input: -1.0 to +1.0 (show as -100 to +100) */
 void processingSetHighlights(processingObject_t * processing, double value);
 void processingSetShadows(processingObject_t * processing, double value);

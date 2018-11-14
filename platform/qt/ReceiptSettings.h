@@ -77,6 +77,7 @@ public:
     void setUpsideDown( bool on )             {m_upsideDown = on;}
     void setLutEnabled( bool on )             {m_lutEnabled = on;}
     void setLutName( QString name )           {m_lutName = name;}
+    void setLutStrength( uint8_t value )      {m_lutStrength = value;}
     void setFilterEnabled( bool on )          {m_filterEnabled = on;}
     void setFilterIndex( uint8_t idx )        {m_filterIndex = idx;}
     void setFilterStrength( int value )       {m_filterStrength = value;}
@@ -143,6 +144,7 @@ public:
     bool upsideDown( void ){return m_upsideDown;}
     bool lutEnabled( void ){return m_lutEnabled;}
     QString lutName( void ){return m_lutName;}
+    uint8_t lutStrength( void ){return m_lutStrength;}
     bool filterEnabled( void ){return m_filterEnabled;}
     uint8_t filterIndex( void ){return m_filterIndex;}
     int filterStrength( void ){return m_filterStrength;}
@@ -213,6 +215,7 @@ private:
     bool m_upsideDown;
     bool m_lutEnabled;
     QString m_lutName;
+    uint8_t m_lutStrength;
     bool m_filterEnabled;
     uint8_t m_filterIndex;
     int m_filterStrength;
