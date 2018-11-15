@@ -83,6 +83,7 @@
 #define SCALE_BICUBIC               0
 #define SCALE_BILINEAR              1
 #define SCALE_SINC                  2
+#define SCALE_LANCZOS               3
 
 namespace Ui {
 class ExportSettingsDialog;

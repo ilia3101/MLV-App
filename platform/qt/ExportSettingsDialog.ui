@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>419</width>
-    <height>444</height>
+    <height>489</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -282,6 +282,11 @@
           <item>
            <property name="text">
             <string>Sinc</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Lanczos</string>
            </property>
           </item>
          </widget>

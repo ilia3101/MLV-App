@@ -1592,6 +1592,7 @@ void MainWindow::startExportPipe(QString fileName)
     QString resizeAlgorithm = QString( "sws_flags=" );
     if( m_resizeFilterAlgorithm == SCALE_BILINEAR ) resizeAlgorithm.append( "bilinear" );
     else if( m_resizeFilterAlgorithm == SCALE_SINC ) resizeAlgorithm.append( "sinc" );
+    else if( m_resizeFilterAlgorithm == SCALE_LANCZOS ) resizeAlgorithm.append( "lanczos" );
     else resizeAlgorithm.append( "bicubic" ); //default
 
     //Resize Filter + colorspace conversion (for getting right colors)
