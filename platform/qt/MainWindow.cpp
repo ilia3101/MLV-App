@@ -2695,6 +2695,7 @@ void MainWindow::on_actionImportReceipt_triggered()
 
     //Abort selected
     if( fileName.count() == 0 ) return;
+    m_lastReceiptFileName = fileName;
 
     //Open a XML stream for the file
     QXmlStreamReader Rxml;
@@ -2742,6 +2743,7 @@ void MainWindow::on_actionExportReceipt_triggered()
 
     //Abort selected
     if( fileName.count() == 0 ) return;
+    m_lastReceiptFileName = fileName;
 
     //Save slider receipt
     setReceipt( m_pSessionReceipts.at( m_lastActiveClipInSession ) );
