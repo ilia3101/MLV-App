@@ -3579,7 +3579,7 @@ void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings 
     if( paste && cdui->checkBoxDualIso->isChecked() )          receiptTarget->setDualIsoFrBlending( receiptSource->dualIsoFrBlending() );
     if( paste && cdui->checkBoxDualIso->isChecked() )          receiptTarget->setDualIsoWhite( receiptSource->dualIsoWhite() );
     if( paste && cdui->checkBoxDualIso->isChecked() )          receiptTarget->setDualIsoBlack( receiptSource->dualIsoBlack() );
-    if( m_pCopyMask->bitDepthSource() == getLosslessBpp( m_pMlvObject ) )
+    if( m_pCopyMask->bitDepthSource() == getMlvBitdepth( m_pMlvObject ) )
     {
         if( paste && cdui->checkBoxRawBlackLevel->isChecked() )    receiptTarget->setRawBlack( receiptSource->rawBlack() );
         if( paste && cdui->checkBoxRawWhiteLevel->isChecked() )    receiptTarget->setRawWhite( receiptSource->rawWhite() );
@@ -5211,7 +5211,7 @@ void MainWindow::on_actionResetReceipt_triggered()
 void MainWindow::on_actionCopyRecept_triggered()
 {
     m_pCopyMask->exec();
-    m_pCopyMask->setBitDepthSource( getLosslessBpp( m_pMlvObject ) );
+    m_pCopyMask->setBitDepthSource( getMlvBitdepth( m_pMlvObject ) );
 
     setReceipt( m_pReceiptClipboard );
     ui->actionPasteReceipt->setEnabled( true );
