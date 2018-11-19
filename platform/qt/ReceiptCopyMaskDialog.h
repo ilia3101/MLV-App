@@ -23,8 +23,6 @@ public:
     explicit ReceiptCopyMaskDialog(QWidget *parent = 0);
     ~ReceiptCopyMaskDialog();
     Ui::ReceiptCopyMaskDialog *ui;
-    void setBitDepthSource( uint8_t bitDepth );
-    uint8_t bitDepthSource( void );
 
 private slots:
     void checkBoxRawCorrectionState( void );
@@ -35,9 +33,6 @@ private slots:
     void on_checkBoxDetails_clicked(bool checked);
     void on_pushButtonAll_clicked();
     void on_pushButtonNone_clicked();
-
-private:
-    uint8_t m_bitDepth;
 };
 
 #endif // RECEIPTCOPYMASKDIALOG_H

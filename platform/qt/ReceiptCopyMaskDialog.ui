@@ -303,6 +303,14 @@
           </item>
           <item>
            <widget class="QCheckBox" name="checkBoxRawBlackLevel">
+            <property name="toolTip">
+             <string>Copying the RAW levels might screw up clips with different bit rate.</string>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">QCheckBox{
+color: rgb(255, 154, 50)
+}</string>
+            </property>
             <property name="text">
              <string>RAW Black Level</string>
             </property>
@@ -310,6 +318,14 @@
           </item>
           <item>
            <widget class="QCheckBox" name="checkBoxRawWhiteLevel">
+            <property name="toolTip">
+             <string>Copying the RAW levels might screw up clips with different bit rate.</string>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">QCheckBox{
+color: rgb(255, 154, 50)
+}</string>
+            </property>
             <property name="text">
              <string>RAW White Level</string>
             </property>

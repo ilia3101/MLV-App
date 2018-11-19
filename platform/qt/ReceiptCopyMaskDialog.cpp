@@ -43,22 +43,14 @@ ReceiptCopyMaskDialog::ReceiptCopyMaskDialog(QWidget *parent) :
     connect( ui->checkBoxDenoise, SIGNAL(clicked(bool)), this, SLOT(checkBoxDetailsState()) );
 
     on_pushButtonAll_clicked();
-    m_bitDepth = 14;
+    ui->checkBoxRawBlackLevel->setChecked( false );
+    ui->checkBoxRawWhiteLevel->setChecked( false );
+    checkBoxRawCorrectionState();
 }
 
 ReceiptCopyMaskDialog::~ReceiptCopyMaskDialog()
 {
     delete ui;
-}
-
-void ReceiptCopyMaskDialog::setBitDepthSource(uint8_t bitDepth)
-{
-    m_bitDepth = bitDepth;
-}
-
-uint8_t ReceiptCopyMaskDialog::bitDepthSource()
-{
-    return m_bitDepth;
 }
 
 void ReceiptCopyMaskDialog::checkBoxRawCorrectionState()
