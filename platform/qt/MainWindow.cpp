@@ -2298,8 +2298,8 @@ void MainWindow::startExportMlv(QString fileName)
     }
 
     //Allocate buffer for averaging
-    uint32_t * averagedImage = NULL;
-    if( m_codecOption == CODEC_MLV_AVERAGED ) averagedImage = (uint32_t *)calloc( m_pMlvObject->RAWI.xRes * m_pMlvObject->RAWI.yRes * sizeof( uint32_t ), 1 );
+    uint64_t * averagedImage = NULL;
+    if( m_codecOption == CODEC_MLV_AVERAGED ) averagedImage = (uint64_t *)calloc( m_pMlvObject->RAWI.xRes * m_pMlvObject->RAWI.yRes * sizeof( uint64_t ), 1 );
     //Check if MLV has audio and it is requested to be exported
     int exportAudio = (doesMlvHaveAudio( m_pMlvObject ) && m_audioExportEnabled);
     //Error message string passed from backend

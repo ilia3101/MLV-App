@@ -869,8 +869,8 @@ int saveMlvHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int
     output_mlvi.fileCount = 1;
     output_mlvi.videoFrameCount = (export_mode >= MLV_AVERAGED_FRAME) ? 1 : frame_end - frame_start + 1;
     output_mlvi.audioFrameCount = (!export_audio || export_mode >= MLV_AVERAGED_FRAME) ? 0 : 1;
-    if(export_mode == MLV_COMPRESSED && (!isMlvCompressed(video))) output_mlvi.videoClass |= MLV_VIDEO_CLASS_FLAG_LJ92;
-    if(export_mode >= MLV_AVERAGED_FRAME && isMlvCompressed(video)) output_mlvi.videoClass = 1;
+    if(export_mode == MLV_COMPRESS && (!isMlvCompressed(video))) output_mlvi.videoClass |= MLV_VIDEO_CLASS_FLAG_LJ92;
+    else if(export_mode >= MLV_DECOMPRESS && isMlvCompressed(video)) output_mlvi.videoClass  = 1;
     output_mlvi.audioClass = (!export_audio || export_mode >= MLV_AVERAGED_FRAME) ? 0 : 1;
     if(export_mode == MLV_DF_INT)
     {
@@ -1016,11 +1016,11 @@ int saveMlvHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int
 }
 
 /* Save video frame plus audio if available */
-int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int export_mode, uint32_t frame_start, uint32_t frame_end, uint32_t frame_index, uint32_t * avg_buf, char * error_message)
+int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int export_mode, uint32_t frame_start, uint32_t frame_end, uint32_t frame_index, uint64_t * avg_buf, char * error_message)
 {
     mlv_vidf_hdr_t vidf_hdr = { 0 };
 
-    int write_ok = (export_mode == 2) ? 0 : 1;
+    int write_ok = (export_mode == MLV_AVERAGED_FRAME) ? 0 : 1;
     uint32_t pixel_count = video->RAWI.xRes * video->RAWI.yRes;
     uint32_t frame_size_packed = (uint32_t)(pixel_count * video->RAWI.raw_info.bits_per_pixel / 8);
     uint32_t frame_size_unpacked = pixel_count * 2;
@@ -1141,7 +1141,7 @@ int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
 
         free(frame_buf_unpacked);
     }
-    else if((export_mode == MLV_COMPRESSED) && (!isMlvCompressed(video))) // compress MLV frame with LJ92 if specified
+    else if((export_mode == MLV_COMPRESS) && (!isMlvCompressed(video))) // compress MLV frame with LJ92 if specified
     {
         int ret = 0;
         size_t frame_size_compressed = 0;
@@ -1164,7 +1164,7 @@ int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
                 memcpy(block_buf, &vidf_hdr, sizeof(mlv_vidf_hdr_t));
                 memcpy((block_buf + sizeof(mlv_vidf_hdr_t)), (uint8_t*)frame_buf_compressed, frame_size_compressed);
             }
-            else // if compression error then save uncompressed raw
+            else // if compression error then save original uncompressed raw
             {
                 memcpy(block_buf, &vidf_hdr, sizeof(mlv_vidf_hdr_t));
                 memcpy((block_buf + sizeof(mlv_vidf_hdr_t)), frame_buf, frame_size);
@@ -1183,6 +1183,46 @@ int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
 
         if(frame_buf_unpacked) free(frame_buf_unpacked);
         if(frame_buf_compressed) free(frame_buf_compressed);
+    }
+    else if((export_mode == MLV_DECOMPRESS) && isMlvCompressed(video)) // decompress MLV frame with LJ92 if specified
+    {
+        int ret = 0;
+
+        uint16_t * frame_buf_unpacked = calloc(frame_size_unpacked, 1);
+        if(!frame_buf_unpacked)
+        {
+            DEBUG( printf("\nCould not allocate memory for frame decompressing\n"); )
+            ret = 1;
+        }
+
+        if(!ret)
+        {
+            int ret = dng_decompress_image(frame_buf_unpacked, (uint16_t*)frame_buf, frame_size, video->RAWI.xRes, video->RAWI.yRes, video->RAWI.raw_info.bits_per_pixel);
+            if(ret == LJ92_ERROR_NONE)
+            {
+                dng_pack_image_bits((uint16_t*)frame_buf, frame_buf_unpacked, video->RAWI.xRes, video->RAWI.yRes, video->RAWI.raw_info.bits_per_pixel, 0);
+                vidf_hdr.blockSize = sizeof(mlv_vidf_hdr_t) + frame_size_packed;
+                memcpy(block_buf, &vidf_hdr, sizeof(mlv_vidf_hdr_t));
+                memcpy((block_buf + sizeof(mlv_vidf_hdr_t)), frame_buf, frame_size_packed);
+            }
+            else // if decompression error then save original lossless raw
+            {
+                memcpy(block_buf, &vidf_hdr, sizeof(mlv_vidf_hdr_t));
+                memcpy((block_buf + sizeof(mlv_vidf_hdr_t)), frame_buf, frame_size);
+
+                /* patch MLVI header and set back videoClass to 0x21 (lossless) */
+                uint64_t current_pos = file_get_pos(output_mlv);
+                file_set_pos(output_mlv, 32, SEEK_SET);
+                uint16_t videoClass = 0x1 | MLV_VIDEO_CLASS_FLAG_LJ92;
+                if(fwrite(&videoClass, sizeof(uint16_t), 1, output_mlv) != 1)
+                {
+                    DEBUG( printf("\nCould not patch videoClass in MLV header\n"); )
+                }
+                file_set_pos(output_mlv, current_pos, SEEK_SET);
+            }
+        }
+
+        if(frame_buf_unpacked) free(frame_buf_unpacked);
     }
     else // pass through the original raw frame
     {

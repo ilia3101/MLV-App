@@ -59,9 +59,10 @@
 #define CODEC_FFVHUFF_OPTION16      2
 
 #define CODEC_MLV_FASTPASS          0
-#define CODEC_MLV_COMPRESSED        1
-#define CODEC_MLV_AVERAGED          2
-#define CODEC_MLV_EXTRACT_DF        3
+#define CODEC_MLV_COMPRESS          1
+#define CODEC_MLV_DECOMPRESS        2
+#define CODEC_MLV_AVERAGED          3
+#define CODEC_MLV_EXTRACT_DF        4
 
 #define CODEC_DNXHD_1080p_10bit     0
 #define CODEC_DNXHD_1080p_8bit      1
