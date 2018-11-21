@@ -827,6 +827,18 @@ int saveMlvHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int
         DEBUG( printf("\n%s\n", error_message); )
         return 1;
     }
+    else if((export_mode == MLV_COMPRESS) && isMlvCompressed(video))
+    {
+        sprintf(error_message, "MLV already compressed:  %s\nUse 'Fast Pass' instead", video->path);
+        DEBUG( printf("\n%s\n", error_message); )
+        return 1;
+    }
+    else if((export_mode == MLV_DECOMPRESS) && (!isMlvCompressed(video)))
+    {
+        sprintf(error_message, "MLV already uncompressed:  %s\nUse 'Fast Pass' instead", video->path);
+        DEBUG( printf("\n%s\n", error_message); )
+        return 1;
+    }
 
     /* construct version info */
     char version_info[32] = { 0 };
