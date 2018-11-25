@@ -26,6 +26,7 @@ ReceiptSettings::ReceiptSettings()
     m_lightening = 0;
     m_shadows = 0;
     m_highlights = 0;
+    m_gradationCurve = QString( "1e-5;1e-5;1;1;?1e-5;1e-5;1;1;?1e-5;1e-5;1;1;?1e-5;1e-5;1;1;" );
 
     m_isGradientEnabled = false;
     m_gradientExposure = 0;

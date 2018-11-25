@@ -11,6 +11,7 @@
 #include "filter/filter.h"
 #include "denoiser/denoiser_2d_median.h"
 #include "../mlv/camid/camera_id.h"
+#include "spline/spline_helper.h"
 
 /* Matrix functions which are useful */
 #include "../matrix/matrix.h"
@@ -135,6 +136,10 @@ processingObject_t * initProcessingObject()
     processingSetDenoiserStrength(processing, 0);
     processingSetDenoiserWindow(processing, 2);
     processingUseCamMatrix(processing);
+    processingSetGCurve(processing, 0, NULL, NULL, 0);
+    processingSetGCurve(processing, 0, NULL, NULL, 1);
+    processingSetGCurve(processing, 0, NULL, NULL, 2);
+    processingSetGCurve(processing, 0, NULL, NULL, 3);
 
     /* Just in case (should be done tho already) */
     processing_update_matrices(processing);
@@ -713,6 +718,17 @@ void apply_processing_object( processingObject_t * processing,
             pix[1] = processing->pre_calc_curve_r[ pix[1] ];
             pix[2] = processing->pre_calc_curve_r[ pix[2] ];
         }
+    }
+
+    //Gradation curve
+    for (uint16_t * pix = img; pix < img_end; pix += 3)
+    {
+        pix[0] = processing->gcurve_y[ pix[0] ];
+        pix[1] = processing->gcurve_y[ pix[1] ];
+        pix[2] = processing->gcurve_y[ pix[2] ];
+        pix[0] = processing->gcurve_r[ pix[0] ];
+        pix[1] = processing->gcurve_g[ pix[1] ];
+        pix[2] = processing->gcurve_b[ pix[2] ];
     }
 
     uint32_t sharp_skip = 1; /* Skip how many pixels when applying sharpening */
@@ -1538,4 +1554,53 @@ void analyse_frame_highest_green(processingObject_t *processing, int imageX, int
 void processingSetLutStrength(processingObject_t *processing, uint8_t strength)
 {
     processing->lut->intensity = strength;
+}
+
+//Set the gradation curve
+void processingSetGCurve(processingObject_t *processing, int num, float *pXin, float *pYin, uint8_t channel)
+{
+    uint16_t *curve;
+    if( channel == 1 ) curve = processing->gcurve_r;
+    else if( channel == 2 ) curve = processing->gcurve_g;
+    else if( channel == 3 ) curve = processing->gcurve_b;
+    else curve = processing->gcurve_y;
+
+    //Init
+    if( num < 2 )
+    {
+        for( int i = 0; i < 65536; i++ )
+        {
+            curve[i] = i;
+        }
+        return;
+    }
+
+    //Build output sets
+    float *pXout = (float*)malloc( sizeof(float) * 65536 );
+    float *pYout = (float*)malloc( sizeof(float) * 65536 );
+
+    int numOut = 65536;
+
+    //Data into x of output sets
+    for( int i = 0; i < numOut; i++ )
+    {
+        pXout[i] = i / (float)65536.0;
+    }
+
+    //Get the interpolated line
+    int ret = spline1dc( pXin , pYin , &num,
+                         pXout, pYout, &numOut );
+
+    if( ret == 0 )
+    {
+        for( int i = 0; i < 65536; i++ )
+        {
+            if( pYout[i] > 1.0 ) pYout[i] = 1.0;
+            else if( pYout[i] < 0.0001 ) pYout[i] = 0.0001;
+            curve[i] = pYout[i] * 65535.0;
+        }
+    }
+
+    free( pXout );
+    free( pYout );
 }

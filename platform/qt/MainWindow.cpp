@@ -913,6 +913,9 @@ int MainWindow::openMlv( QString fileName )
     //Set raw black level auto correct button
     ui->toolButtonRawBlackAutoCorrect->setEnabled( isRawBlackLevelWrong() );
 
+    //Give curves GUI a link to processing object
+    ui->labelCurves->setProcessingObject( m_pProcessingObject );
+
     m_frameChanged = true;
 
     return MLV_ERR_NONE;
@@ -1242,6 +1245,10 @@ void MainWindow::initGui( void )
     ui->labelColorWheelMidtones->paintElement();
     ui->labelColorWheelHighlights->paintElement();
     ui->groupBoxColorWheels->setVisible( false );
+
+    //CurvesElement
+    ui->labelCurves->setFrameChangedPointer( &m_frameChanged );
+    ui->labelCurves->paintElement();
 
     //Debayer in Receipt
     //ui->groupBoxDebayer->setVisible( false );
@@ -2854,6 +2861,11 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
             receipt->setHighlights( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
+        else if( Rxml->isStartElement() && Rxml->name() == "gradationCurve" )
+        {
+            receipt->setGradationCurve( Rxml->readElementText() );
+            Rxml->readNext();
+        }
         else if( Rxml->isStartElement() && Rxml->name() == "gradientEnabled" )
         {
             receipt->setGradientEnabled( (bool)Rxml->readElementText().toInt() );
@@ -3114,6 +3126,7 @@ void MainWindow::writeXmlElementsToFile(QXmlStreamWriter *xmlWriter, ReceiptSett
     xmlWriter->writeTextElement( "ls",                      QString( "%1" ).arg( receipt->ls() ) );
     xmlWriter->writeTextElement( "lr",                      QString( "%1" ).arg( receipt->lr() ) );
     xmlWriter->writeTextElement( "lightening",              QString( "%1" ).arg( receipt->lightening() ) );
+    xmlWriter->writeTextElement( "gradationCurve",          QString( "%1" ).arg( receipt->gradationCurve() ) );
     xmlWriter->writeTextElement( "shadows",                 QString( "%1" ).arg( receipt->shadows() ) );
     xmlWriter->writeTextElement( "highlights",              QString( "%1" ).arg( receipt->highlights() ) );
     xmlWriter->writeTextElement( "gradientEnabled",         QString( "%1" ).arg( receipt->isGradientEnabled() ) );
@@ -3290,6 +3303,8 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     ui->horizontalSliderShadows->setValue( receipt->shadows() );
     ui->horizontalSliderHighlights->setValue( receipt->highlights() );
 
+    ui->labelCurves->setConfiguration( receipt->gradationCurve() );
+
     ui->checkBoxGradientEnable->setChecked( receipt->isGradientEnabled() );
     ui->horizontalSliderExposureGradient->setValue( receipt->gradientExposure() );
     ui->horizontalSliderContrastGradient->setValue( receipt->gradientContrast() );
@@ -3460,6 +3475,7 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     receipt->setLightening( ui->horizontalSliderLighten->value() );
     receipt->setShadows( ui->horizontalSliderShadows->value() );
     receipt->setHighlights( ui->horizontalSliderHighlights->value() );
+    receipt->setGradationCurve( ui->labelCurves->configuration() );
 
     receipt->setGradientEnabled( ui->checkBoxGradientEnable->isChecked() );
     receipt->setGradientExposure( ui->horizontalSliderExposureGradient->value() );
@@ -3538,6 +3554,7 @@ void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings 
     if( paste && cdui->checkBoxCurve->isChecked() )      receiptTarget->setLs( receiptSource->ls() );
     if( paste && cdui->checkBoxCurve->isChecked() )      receiptTarget->setLr( receiptSource->lr() );
     if( paste && cdui->checkBoxCurve->isChecked() )      receiptTarget->setLightening( receiptSource->lightening() );
+    if( paste && cdui->checkBoxGradationCurve->isChecked() ) receiptTarget->setGradationCurve( receiptSource->gradationCurve() );
     if( paste && cdui->checkBoxShadows->isChecked() )    receiptTarget->setShadows( receiptSource->shadows() );
     if( paste && cdui->checkBoxHighlights->isChecked() ) receiptTarget->setHighlights( receiptSource->highlights() );
 
@@ -3679,6 +3696,7 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     receipt->setLightening( m_pSessionReceipts.at( row )->lightening() );
     receipt->setShadows( m_pSessionReceipts.at( row )->shadows() );
     receipt->setHighlights( m_pSessionReceipts.at( row )->highlights() );
+    receipt->setGradationCurve( m_pSessionReceipts.at( row )->gradationCurve() );
 
     receipt->setGradientEnabled( m_pSessionReceipts.at( row )->isGradientEnabled() );
     receipt->setGradientExposure( m_pSessionReceipts.at( row )->gradientExposure() );
@@ -4156,6 +4174,27 @@ void MainWindow::setToolButtonDarkFrameSubtraction(int index)
     if( actualize ) toolButtonDarkFrameSubtractionChanged( true );
 }
 
+//Set Toolbuttons gradation curve
+void MainWindow::setToolButtonGCurves(int index)
+{
+    bool actualize = false;
+    if( index == toolButtonGCurvesCurrentIndex() ) actualize = true;
+
+    switch( index )
+    {
+    case 0: ui->toolButtonGCurvesY->setChecked( true );
+        break;
+    case 1: ui->toolButtonGCurvesR->setChecked( true );
+        break;
+    case 2: ui->toolButtonGCurvesG->setChecked( true );
+        break;
+    case 3: ui->toolButtonGCurvesB->setChecked( true );
+        break;
+    default: break;
+    }
+    if( actualize ) toolButtonGCurvesChanged();
+}
+
 //Get toolbutton index of focus pixels
 int MainWindow::toolButtonFocusPixelsCurrentIndex()
 {
@@ -4268,6 +4307,15 @@ int MainWindow::toolButtonDarkFrameSubtractionCurrentIndex()
     else return 2;
 }
 
+//Get toolbutton inedx of gradation curves
+int MainWindow::toolButtonGCurvesCurrentIndex()
+{
+    if( ui->toolButtonGCurvesY->isChecked() ) return 0;
+    else if( ui->toolButtonGCurvesR->isChecked() ) return 1;
+    else if( ui->toolButtonGCurvesG->isChecked() ) return 2;
+    else return 3;
+}
+
 //About Window
 void MainWindow::on_actionAbout_triggered()
 {
@@ -4302,8 +4350,7 @@ void MainWindow::on_actionAbout_triggered()
                                  .arg( "http://www.doublejdesign.co.uk/" )
                                  .arg( "https://creativecommons.org/licenses/by/4.0/" )
                                  .arg( "https://github.com/VioletGiraffe/github-releases-autoupdater" )
-                                 .arg( "http://www.opensource.org/licenses/bsd-license.html" )
-                                 .arg( "https://github.com/mojocorp/QRecentFilesMenu/blob/master/LICENSE" ) );
+                                 .arg( "http://www.opensource.org/licenses/bsd-license.html" ) );
 }
 
 //Qt Infobox
@@ -6122,6 +6169,22 @@ void MainWindow::toolButtonDarkFrameSubtractionChanged( bool checked )
     resetMlvCache( m_pMlvObject );
     resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
+}
+
+//Selection of gradation curve
+void MainWindow::toolButtonGCurvesChanged( void )
+{
+    if( toolButtonGCurvesCurrentIndex() == 0 ) ui->labelCurves->setActiveLine( LINENR_W );
+    else if( toolButtonGCurvesCurrentIndex() == 1 ) ui->labelCurves->setActiveLine( LINENR_R );
+    else if( toolButtonGCurvesCurrentIndex() == 2 ) ui->labelCurves->setActiveLine( LINENR_G );
+    else ui->labelCurves->setActiveLine( LINENR_B );
+}
+
+//Reset the gradation curves
+void MainWindow::on_toolButtonGCurvesReset_clicked()
+{
+    ui->labelCurves->resetLines();
+    ui->labelCurves->paintElement();
 }
 
 //Goto next frame

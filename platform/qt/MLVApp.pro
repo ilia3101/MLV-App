@@ -129,7 +129,10 @@ SOURCES += \
     ReceiptCopyMaskDialog.cpp \
     UserManualDialog.cpp \
     QRecentFilesMenu.cpp \
-    SingleFrameExportDialog.cpp
+    SingleFrameExportDialog.cpp \
+    Curves.cpp \
+    ../../src/processing/spline/spline_helper.c \
+    ../../src/processing/spline/splineLib.c
 
 macx: SOURCES += ../cocoa/avf_lib/avf_lib.m
 
@@ -212,7 +215,10 @@ HEADERS += \
     QRecentFilesMenu.h \
     SingleFrameExportDialog.h \
     StretchFactors.h \
-    DarkStyleModern.h
+    DarkStyleModern.h \
+    Curves.h \
+    ../../src/processing/spline/spline_helper.h \
+    ../../src/processing/spline/splineLib.h
 
 macx: HEADERS += \
     ../cocoa/avf_lib/avencoder.h \

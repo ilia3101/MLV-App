@@ -44,6 +44,12 @@ typedef struct {
     uint16_t highest_green_diso; /* Used for reconstruction */
     uint16_t highest_green_gradient_diso; /* Used for reconstruction */
 
+    /* Gradation Curves */
+    uint16_t gcurve_y[65536];
+    uint16_t gcurve_r[65536];
+    uint16_t gcurve_g[65536];
+    uint16_t gcurve_b[65536];
+
     /* Do tonemapping? */
     int tone_mapping;
     /* Pick any tonemapping function */

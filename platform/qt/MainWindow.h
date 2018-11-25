@@ -216,6 +216,8 @@ private slots:
     void toolButtonDualIsoAliasMapChanged( void );
     void toolButtonDualIsoFullresBlendingChanged( void );
     void toolButtonDarkFrameSubtractionChanged( bool checked );
+    void toolButtonGCurvesChanged( void );
+    void on_toolButtonGCurvesReset_clicked();
     void on_actionNextFrame_triggered();
     void on_actionPreviousFrame_triggered();
     void on_checkBoxRawFixEnable_clicked(bool checked);
@@ -409,6 +411,7 @@ private:
     void setToolButtonDualIsoAliasMap( int index );
     void setToolButtonDualIsoFullresBlending( int index );
     void setToolButtonDarkFrameSubtraction( int index );
+    void setToolButtonGCurves( int index );
     int toolButtonFocusPixelsCurrentIndex( void );
     int toolButtonFocusPixelsIntMethodCurrentIndex( void );
     int toolButtonBadPixelsCurrentIndex( void );
@@ -424,6 +427,7 @@ private:
     int toolButtonDualIsoAliasMapCurrentIndex( void );
     int toolButtonDualIsoFullresBlendingCurrentIndex( void );
     int toolButtonDarkFrameSubtractionCurrentIndex( void );
+    int toolButtonGCurvesCurrentIndex( void );
     void initCutInOut( int frames );
     void initRawBlackAndWhite( void );
     double getHorizontalStretchFactor();

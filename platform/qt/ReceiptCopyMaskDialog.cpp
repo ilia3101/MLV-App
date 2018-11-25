@@ -35,6 +35,7 @@ ReceiptCopyMaskDialog::ReceiptCopyMaskDialog(QWidget *parent) :
     connect( ui->checkBoxCurve, SIGNAL(clicked(bool)), this, SLOT(checkBoxProcessingState()) );
     connect( ui->checkBoxHighlights, SIGNAL(clicked(bool)), this, SLOT(checkBoxProcessingState()) );
     connect( ui->checkBoxShadows, SIGNAL(clicked(bool)), this, SLOT(checkBoxProcessingState()) );
+    connect( ui->checkBoxGradationCurve, SIGNAL(clicked(bool)), this, SLOT(checkBoxProcessingState()) );
     connect( ui->checkBoxHighlightReconstruction, SIGNAL(clicked(bool)), this, SLOT(checkBoxProcessingState()) );
     connect( ui->checkBoxProfile, SIGNAL(clicked(bool)), this, SLOT(checkBoxProcessingState()) );
 
@@ -101,6 +102,7 @@ void ReceiptCopyMaskDialog::checkBoxProcessingState()
      && ui->checkBoxCurve->isChecked()
      && ui->checkBoxHighlights->isChecked()
      && ui->checkBoxShadows->isChecked()
+     && ui->checkBoxGradationCurve->isChecked()
      && ui->checkBoxHighlightReconstruction->isChecked()
      && ui->checkBoxProfile->isChecked() )
     {
@@ -181,6 +183,7 @@ void ReceiptCopyMaskDialog::on_checkBoxProcessing_clicked(bool checked)
     ui->checkBoxCurve->setChecked( checked );
     ui->checkBoxHighlights->setChecked( checked );
     ui->checkBoxShadows->setChecked( checked );
+    ui->checkBoxGradationCurve->setChecked( checked );
     ui->checkBoxHighlightReconstruction->setChecked( checked );
     ui->checkBoxProfile->setChecked( checked );
 }

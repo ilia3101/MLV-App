@@ -34,9 +34,6 @@
     <property name="bottomMargin">
      <number>5</number>
     </property>
-    <property name="spacing">
-     <number>-1</number>
-    </property>
     <item row="0" column="0">
      <widget class="GraphicsZoomView" name="graphicsView">
       <property name="baseSize">
@@ -498,9 +495,9 @@ QGroupBox::indicator:checked:disabled {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>-3141</y>
-            <width>244</width>
-            <height>3709</height>
+            <y>-1469</y>
+            <width>199</width>
+            <height>3780</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayoutScrollArea">
@@ -3868,6 +3865,208 @@ QGroupBox::indicator:checked:disabled {
                   </widget>
                  </item>
                  <item>
+                  <widget class="QLabel" name="label_gradationcurves">
+                   <property name="font">
+                    <font>
+                     <pointsize>10</pointsize>
+                    </font>
+                   </property>
+                   <property name="text">
+                    <string>Gradation Curves</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="Curves" name="labelCurves">
+                   <property name="text">
+                    <string>Place holder for curves</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QFrame" name="toolButtonGCurves">
+                   <layout class="QHBoxLayout" name="horizontalLayout_34">
+                    <property name="spacing">
+                     <number>0</number>
+                    </property>
+                    <property name="leftMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="topMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="rightMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="bottomMargin">
+                     <number>0</number>
+                    </property>
+                    <item>
+                     <widget class="ColorToolButton" name="toolButtonGCurvesY">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="font">
+                       <font>
+                        <pointsize>10</pointsize>
+                       </font>
+                      </property>
+                      <property name="text">
+                       <string>Y</string>
+                      </property>
+                      <property name="checkable">
+                       <bool>true</bool>
+                      </property>
+                      <property name="checked">
+                       <bool>true</bool>
+                      </property>
+                      <property name="autoExclusive">
+                       <bool>true</bool>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="ColorToolButton" name="toolButtonGCurvesR">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="font">
+                       <font>
+                        <pointsize>10</pointsize>
+                       </font>
+                      </property>
+                      <property name="styleSheet">
+                       <string notr="true">color: rgb(255, 0, 0);</string>
+                      </property>
+                      <property name="text">
+                       <string>R</string>
+                      </property>
+                      <property name="checkable">
+                       <bool>true</bool>
+                      </property>
+                      <property name="autoExclusive">
+                       <bool>true</bool>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="ColorToolButton" name="toolButtonGCurvesG">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="font">
+                       <font>
+                        <pointsize>10</pointsize>
+                       </font>
+                      </property>
+                      <property name="styleSheet">
+                       <string notr="true">color: rgb(0, 255, 0);</string>
+                      </property>
+                      <property name="text">
+                       <string>G</string>
+                      </property>
+                      <property name="checkable">
+                       <bool>true</bool>
+                      </property>
+                      <property name="autoExclusive">
+                       <bool>true</bool>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="ColorToolButton" name="toolButtonGCurvesB">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="font">
+                       <font>
+                        <pointsize>10</pointsize>
+                       </font>
+                      </property>
+                      <property name="styleSheet">
+                       <string notr="true">color: rgb(48, 152, 255);</string>
+                      </property>
+                      <property name="text">
+                       <string>B</string>
+                      </property>
+                      <property name="checkable">
+                       <bool>true</bool>
+                      </property>
+                      <property name="autoExclusive">
+                       <bool>true</bool>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <spacer name="horizontalSpacer_35">
+                      <property name="orientation">
+                       <enum>Qt::Horizontal</enum>
+                      </property>
+                      <property name="sizeHint" stdset="0">
+                       <size>
+                        <width>40</width>
+                        <height>20</height>
+                       </size>
+                      </property>
+                     </spacer>
+                    </item>
+                    <item>
+                     <widget class="QToolButton" name="toolButtonGCurvesReset">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="font">
+                       <font>
+                        <pointsize>10</pointsize>
+                       </font>
+                      </property>
+                      <property name="text">
+                       <string/>
+                      </property>
+                      <property name="icon">
+                       <iconset resource="ressources.qrc">
+                        <normaloff>:/RetinaIMG/RetinaIMG/Reload-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Reload-icon.png</iconset>
+                      </property>
+                      <property name="iconSize">
+                       <size>
+                        <width>12</width>
+                        <height>12</height>
+                       </size>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="Line" name="line_20">
+                   <property name="styleSheet">
+                    <string notr="true">background-color: rgb(115, 115, 115);</string>
+                   </property>
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
                   <widget class="QCheckBox" name="checkBoxHighLightReconstruction">
                    <property name="font">
                     <font>
@@ -7172,6 +7371,11 @@ QGroupBox::indicator:checked:disabled {
    <extends>QLabel</extends>
    <header>ColorWheel.h</header>
   </customwidget>
+  <customwidget>
+   <class>Curves</class>
+   <extends>QLabel</extends>
+   <header>Curves.h</header>
+  </customwidget>
  </customwidgets>
  <tabstops>
   <tabstop>listWidgetSession</tabstop>
@@ -7870,6 +8074,70 @@ QGroupBox::indicator:checked:disabled {
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>toolButtonGCurvesY</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>toolButtonGCurvesChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>1021</x>
+     <y>1843</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>599</x>
+     <y>349</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>toolButtonGCurvesR</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>toolButtonGCurvesChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>1064</x>
+     <y>1843</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>599</x>
+     <y>349</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>toolButtonGCurvesG</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>toolButtonGCurvesChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>1106</x>
+     <y>1843</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>599</x>
+     <y>349</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>toolButtonGCurvesB</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>toolButtonGCurvesChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>1149</x>
+     <y>1843</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>599</x>
+     <y>349</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>toolButtonFocusPixelsChanged()</slot>
@@ -7886,5 +8154,6 @@ QGroupBox::indicator:checked:disabled {
   <slot>toolButtonBadPixelsSearchMethodChanged()</slot>
   <slot>toolButtonDarkFrameSubtractionChanged(bool)</slot>
   <slot>toolButtonUpsideDownChanged()</slot>
+  <slot>toolButtonGCurvesChanged()</slot>
  </slots>
 </ui>

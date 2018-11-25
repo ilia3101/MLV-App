@@ -204,6 +204,8 @@ void processingSetVibrance(processingObject_t * processing, double vibranceFacto
 /* Set transformation */
 void processingSetTransformation(processingObject_t * processing, int transformation);
 
+/* Set gradation curve */
+void processingSetGCurve(processingObject_t * processing, int num, float * pXin, float * pYin, uint8_t channel);
 
 /*
  *******************************************************************************
