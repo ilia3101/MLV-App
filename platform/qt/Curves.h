@@ -50,6 +50,7 @@ private:
 
 protected:
     void mousePressEvent(QMouseEvent* mouse);
+    void mouseDoubleClickEvent(QMouseEvent* mouse);
     void mouseReleaseEvent(QMouseEvent*);
     void mouseMoveEvent(QMouseEvent* mouse);
     void paintLine(QVector<QPointF> line , QPainter *pPainter, QColor color, bool active, uint8_t channel);

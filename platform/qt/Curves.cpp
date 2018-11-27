@@ -230,6 +230,24 @@ void Curves::mousePressEvent(QMouseEvent *mouse)
     }
 }
 
+//Mouse doubleclicked -> delete point
+void Curves::mouseDoubleClickEvent(QMouseEvent *mouse)
+{
+    QVector<QPointF> *line = getActiveLinePointer();
+    for( int i = 1; i < line->count()-1; i++ )
+    {
+        if( ( mouse->localPos().x() ) < line->at(i).x() / 2 * (float)SIZE+10
+         && ( mouse->localPos().x() ) > line->at(i).x() / 2 * (float)SIZE-10
+         && ( HALFSIZE-mouse->localPos().y() ) < (line->at(i).y() / 2 * (float)SIZE+10)
+         && ( HALFSIZE-mouse->localPos().y() ) > (line->at(i).y() / 2 * (float)SIZE-10) )
+        {
+            line->removeAt( i );
+            paintElement();
+            break;
+        }
+    }
+}
+
 //Mouse released -> deselect point
 void Curves::mouseReleaseEvent(QMouseEvent *mouse)
 {
