@@ -12,8 +12,7 @@
 extern "C" {
 #endif
 
-int spline1dc( float *xi , float *yi , int *nin  ,
-               float *xo , float *yo , int *nout );
+extern int spline1dc( float *xi, float *yi, int *nin, float *xo, float *yo, int *nout );
 
 #ifdef __cplusplus
 }

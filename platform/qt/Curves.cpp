@@ -11,6 +11,7 @@
 #include <QMouseEvent>
 #include "../../src/processing/spline/spline_helper.h"
 
+
 #define SIZE                360
 #define HALFSIZE            (SIZE/2)
 #define QUARTERSIZE         (SIZE/4)
@@ -276,8 +277,7 @@ void Curves::paintLine(QVector<QPointF> line, QPainter *pPainter, QColor color, 
     }
 
     //Get the interpolated line
-    int ret = spline1dc( pXin , pYin , &numIn,
-                         pXout, pYout, &numOut );
+    int ret = spline1dc( pXin , pYin , &numIn, pXout, pYout, &numOut );
     //qDebug() << ret;
 
     //Draw the line

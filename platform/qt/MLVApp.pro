@@ -131,8 +131,7 @@ SOURCES += \
     QRecentFilesMenu.cpp \
     SingleFrameExportDialog.cpp \
     Curves.cpp \
-    ../../src/processing/spline/spline_helper.c \
-    ../../src/processing/spline/splineLib.c
+    ../../src/processing/spline/spline_helper.cpp
 
 macx: SOURCES += ../cocoa/avf_lib/avf_lib.m
 
@@ -218,7 +217,7 @@ HEADERS += \
     DarkStyleModern.h \
     Curves.h \
     ../../src/processing/spline/spline_helper.h \
-    ../../src/processing/spline/splineLib.h
+    ../../src/processing/spline/spline.h
 
 macx: HEADERS += \
     ../cocoa/avf_lib/avencoder.h \
