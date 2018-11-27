@@ -41,6 +41,8 @@
         <file>RetinaIMG/face.png</file>
         <file>RetinaIMG/Window-Enter-icon.png</file>
         <file>RetinaIMG/Window-Left-Panel-icon.png</file>
+        <file>RetinaIMG/Reload-icon-1.png</file>
+        <file>RetinaIMG/Reload-icon-2.png</file>
     </qresource>
     <qresource prefix="/AudioVideoIcons">
         <file>AudioVideoIcons/FirstFrame.png</file>

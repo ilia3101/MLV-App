@@ -6187,6 +6187,13 @@ void MainWindow::on_toolButtonGCurvesReset_clicked()
     ui->labelCurves->paintElement();
 }
 
+//Reset one gradation curve
+void MainWindow::on_toolButtonGCurvesResetOne_clicked()
+{
+    ui->labelCurves->resetCurrentLine();
+    ui->labelCurves->paintElement();
+}
+
 //Goto next frame
 void MainWindow::on_actionNextFrame_triggered()
 {

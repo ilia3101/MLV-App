@@ -130,6 +130,17 @@ void Curves::resetLines()
     }
 }
 
+//Reset the current line
+void Curves::resetCurrentLine()
+{
+    QVector<QPointF> *line = getActiveLinePointer();
+    initLine( line );
+    if( m_pProcessing != NULL )
+    {
+        processingSetGCurve( m_pProcessing, 0, NULL, NULL, m_activeLine );
+    }
+}
+
 //Load configuration string to settings
 void Curves::setConfiguration(QString config)
 {

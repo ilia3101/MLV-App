@@ -29,6 +29,7 @@ public:
     void setActiveLine( uint8_t lineNr );
     void setFrameChangedPointer( bool *pFrameChanged );
     void resetLines( void );
+    void resetCurrentLine( void );
     void setConfiguration(QString config );
     QString configuration( void );
 
