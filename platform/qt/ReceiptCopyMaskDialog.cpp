@@ -37,6 +37,7 @@ ReceiptCopyMaskDialog::ReceiptCopyMaskDialog(QWidget *parent) :
     connect( ui->checkBoxShadows, SIGNAL(clicked(bool)), this, SLOT(checkBoxProcessingState()) );
     connect( ui->checkBoxGradationCurve, SIGNAL(clicked(bool)), this, SLOT(checkBoxProcessingState()) );
     connect( ui->checkBoxHighlightReconstruction, SIGNAL(clicked(bool)), this, SLOT(checkBoxProcessingState()) );
+    connect( ui->checkBoxCameraMatrix, SIGNAL(clicked(bool)), this, SLOT(checkBoxProcessingState()) );
     connect( ui->checkBoxProfile, SIGNAL(clicked(bool)), this, SLOT(checkBoxProcessingState()) );
 
     connect( ui->checkBoxSharpen, SIGNAL(clicked(bool)), this, SLOT(checkBoxDetailsState()) );
@@ -104,22 +105,25 @@ void ReceiptCopyMaskDialog::checkBoxProcessingState()
      && ui->checkBoxShadows->isChecked()
      && ui->checkBoxGradationCurve->isChecked()
      && ui->checkBoxHighlightReconstruction->isChecked()
+     && ui->checkBoxCameraMatrix->isChecked()
      && ui->checkBoxProfile->isChecked() )
     {
         ui->checkBoxProcessing->setTristate( false );
         ui->checkBoxProcessing->setCheckState( Qt::Checked );
     }
-    else if( ui->checkBoxExposure->isChecked()
-          && ui->checkBoxContrast->isChecked()
-          && ui->checkBoxWb->isChecked()
-          && ui->checkBoxClarity->isChecked()
-          && ui->checkBoxVibrance->isChecked()
-          && ui->checkBoxSaturation->isChecked()
-          && ui->checkBoxCurve->isChecked()
-          && ui->checkBoxHighlights->isChecked()
-          && ui->checkBoxShadows->isChecked()
-          && ui->checkBoxHighlightReconstruction->isChecked()
-          && ui->checkBoxProfile->isChecked() )
+    else if( !ui->checkBoxExposure->isChecked()
+          && !ui->checkBoxContrast->isChecked()
+          && !ui->checkBoxWb->isChecked()
+          && !ui->checkBoxClarity->isChecked()
+          && !ui->checkBoxVibrance->isChecked()
+          && !ui->checkBoxSaturation->isChecked()
+          && !ui->checkBoxCurve->isChecked()
+          && !ui->checkBoxHighlights->isChecked()
+          && !ui->checkBoxShadows->isChecked()
+          && !ui->checkBoxGradationCurve->isChecked()
+          && !ui->checkBoxHighlightReconstruction->isChecked()
+          && !ui->checkBoxCameraMatrix->isChecked()
+          && !ui->checkBoxProfile->isChecked() )
     {
         ui->checkBoxProcessing->setTristate( false );
         ui->checkBoxProcessing->setCheckState( Qt::Unchecked );
@@ -185,6 +189,7 @@ void ReceiptCopyMaskDialog::on_checkBoxProcessing_clicked(bool checked)
     ui->checkBoxShadows->setChecked( checked );
     ui->checkBoxGradationCurve->setChecked( checked );
     ui->checkBoxHighlightReconstruction->setChecked( checked );
+    ui->checkBoxCameraMatrix->setChecked( checked );
     ui->checkBoxProfile->setChecked( checked );
 }
 
