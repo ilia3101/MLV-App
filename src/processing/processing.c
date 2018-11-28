@@ -35,6 +35,18 @@ static const double ciecam02[] = {
     0.0030,  0.0136,  0.9834
 };
 
+static const double XYZ_to_ACESRGB[] = {
+    1.0498110175, 0.0000000000, -0.0000974845,
+    -0.4959030231, 1.3733130458, 0.0982400361,
+    0.0000000000, 0.0000000000, 0.9912520182
+};
+
+static const double ACESRGB_TO_XYZ[] = {
+    0.9525523959, 0.0000000000, 0.0000936786,
+    0.3439664498, 0.7281660966, -0.0721325464,
+    0.0000000000, 0.0000000000, 1.0088251844
+};
+
 /* Tonemapping info from http://filmicworlds.com/blog/filmic-tonemapping-operators/ */
 
 /* Reinhard - most basic but just werks */

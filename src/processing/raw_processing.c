@@ -645,8 +645,8 @@ void apply_processing_object( processingObject_t * processing,
             /* Now vibrance, before saturation, because we need untouched colors (in terms of saturation) */
             for (uint16_t * pix = img; pix < img_end; pix += 3)
             {
-                /* Pixel brightness = 4/16 R, 11/16 G, 1/16 blue; Try swapping the channels, it will look worse */
-                int32_t Y1 = ((pix[0] << 2) + (pix[1] * 11) + pix[2]) >> 4;
+                /* Pixel brightness ACES */
+                int32_t Y1 = pix[0]*ACESRGB_TO_XYZ[0] + pix[1]*ACESRGB_TO_XYZ[1] + pix[2]*ACESRGB_TO_XYZ[2];
                 int32_t Y2 = Y1 - 65536;
 
                 /* Increase difference between channels and the saturation midpoint */
@@ -711,7 +711,7 @@ void apply_processing_object( processingObject_t * processing,
 
     if (processing->use_rgb_curves)
     {
-        /* Contrast Curve (OMG putting this after gamma made it 999x better) */
+        /* Contrast Curve */
         for (uint16_t * pix = img; pix < img_end; pix += 3)
         {
             pix[0] = processing->pre_calc_curve_r[ pix[0] ];
@@ -821,6 +821,23 @@ void apply_processing_object( processingObject_t * processing,
     if (processing->filter_on)
     {
         applyFilterObject(processing->filter, imageX, imageY, outputImage);
+    }
+
+    /* Back */
+    img_end = outputImage + imageX*imageY*3;
+    /* ACES to SRGB */
+    double ACES_to_sRGB[9];
+    multiplyMatrices(xyz_to_rgb, ACESRGB_TO_XYZ, ACES_to_sRGB);
+    for (uint16_t * pix = outputImage; pix < img_end; pix += 3)
+    {
+        double pix0b = pow(pix[0]/65535.0,2.2), pix1b = pow(pix[1]/65535.0,2.2), pix2b = pow(pix[2]/65535.0,2.2);
+        double result[3];
+        result[0] = pix0b * ACES_to_sRGB[0] + pix1b * ACES_to_sRGB[1] + pix2b * ACES_to_sRGB[2];
+        result[1] = pix0b * ACES_to_sRGB[3] + pix1b * ACES_to_sRGB[4] + pix2b * ACES_to_sRGB[5];
+        result[2] = pix0b * ACES_to_sRGB[6] + pix1b * ACES_to_sRGB[7] + pix2b * ACES_to_sRGB[8];
+        pix[0] = LIMIT16(pow(result[0],1/2.2)*65535.0);
+        pix[1] = LIMIT16(pow(result[1],1/2.2)*65535.0);
+        pix[2] = LIMIT16(pow(result[2],1/2.2)*65535.0);
     }
 }
 
@@ -1079,8 +1096,8 @@ void processingSetWhiteBalance(processingObject_t * processing, double WBKelvin,
     double back_in_XYZ_matrix[9];
     multiplyMatrices(LMS_to_XYZ, matrix_in_LMS, back_in_XYZ_matrix);
 
-    /* Back to sRGB (maybe something wider in future) */
-    multiplyMatrices(xyz_to_rgb, back_in_XYZ_matrix, processing->proper_wb_matrix);
+    /* To ACES RGB */
+    multiplyMatrices(XYZ_to_ACESRGB, back_in_XYZ_matrix, processing->proper_wb_matrix);
 }
 
 /* WB just by kelvin */

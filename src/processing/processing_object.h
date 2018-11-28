@@ -58,7 +58,7 @@ typedef struct {
 
     /* Camera's matrix - will need to be set on opening clip, default set for 5D Mark II */
     double cam_matrix[9];
-    double cam_matrix_A[9]; /* A matrix better for temperature ~2856k (illuminant A) */
+    double cam_matrix_A[9]; /* A matrix better for temperature tungsten ~2856k (illuminant A) */
 
     /* Where the proper WB matrix goes */
     double proper_wb_matrix[9];
