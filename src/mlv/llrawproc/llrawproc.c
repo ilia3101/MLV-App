@@ -551,7 +551,7 @@ void llrpSetDualIsoValidity(mlvObject_t * video, int diso_force)
     {
         video->llrawproc->diso_validity = DISO_FORCED;
     }
-    else if(video->DISO.blockType[0])
+    else if(video->DISO.blockType[0] && video->DISO.dualMode)
     {
         video->llrawproc->diso_validity = DISO_VALID;
     }
