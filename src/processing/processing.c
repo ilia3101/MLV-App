@@ -560,3 +560,95 @@ void convert_YCbCr_to_rgb(uint16_t * __restrict img, int32_t size, int32_t ** lu
         pix[2] = LIMIT16(pix_B);
     }
 }
+
+void rgb_to_hsl(uint16_t *rgb, float *hsl) {
+    for( int i = 0; i < 3; i++ )
+    {
+        hsl[i] = 0.0;
+    }
+
+    float r = (rgb[0] / 65535.0f);
+    float g = (rgb[1] / 65535.0f);
+    float b = (rgb[2] / 65535.0f);
+
+    float min = MIN(MIN(r, g), b);
+    float max = MAX(MAX(r, g), b);
+    float delta = max - min;
+
+    hsl[2] = (max + min) / 2;
+
+    if (delta == 0)
+    {
+        hsl[0] = 0.0f;
+        hsl[1] = 0.0f;
+    }
+    else
+    {
+        hsl[1] = (hsl[2] <= 0.5) ? (delta / (max + min)) : (delta / (2 - max - min));
+
+        float hue;
+
+        if (r == max)
+        {
+            hue = ((g - b) / 6) / delta;
+        }
+        else if (g == max)
+        {
+            hue = (1.0f / 3) + ((b - r) / 6) / delta;
+        }
+        else
+        {
+            hue = (2.0f / 3) + ((r - g) / 6) / delta;
+        }
+
+        if (hue < 0)
+            hue += 1;
+        if (hue > 1)
+            hue -= 1;
+
+        hsl[0] = (int)(hue * 360);
+    }
+}
+
+static float hue_to_rgb(float v1, float v2, float vH)
+{
+    if (vH < 0)
+        vH += 1;
+
+    if (vH > 1)
+        vH -= 1;
+
+    if ((6 * vH) < 1)
+        return (v1 + (v2 - v1) * 6 * vH);
+
+    if ((2 * vH) < 1)
+        return v2;
+
+    if ((3 * vH) < 2)
+        return (v1 + (v2 - v1) * ((2.0f / 3) - vH) * 6);
+
+    return v1;
+}
+
+void hsl_to_rgb(float *hsl, uint16_t *rgb) {
+    rgb[0] = 0;
+    rgb[1] = 0;
+    rgb[2] = 0;
+
+    if (hsl[1] == 0)
+    {
+        rgb[0] = rgb[1] = rgb[2] = (uint16_t)LIMIT16(hsl[2] * 65535);
+    }
+    else
+    {
+        float v1, v2;
+        float hue = (float)hsl[0] / 360.0;
+
+        v2 = (hsl[2] < 0.5) ? (hsl[2] * (1 + hsl[1])) : ((hsl[2] + hsl[1]) - (hsl[2] * hsl[1]));
+        v1 = 2 * hsl[2] - v2;
+
+        rgb[0] = (uint16_t)LIMIT16(65535 * hue_to_rgb(v1, v2, hue + (1.0f / 3)));
+        rgb[1] = (uint16_t)LIMIT16(65535 * hue_to_rgb(v1, v2, hue));
+        rgb[2] = (uint16_t)LIMIT16(65535 * hue_to_rgb(v1, v2, hue - (1.0f / 3)));
+    }
+}

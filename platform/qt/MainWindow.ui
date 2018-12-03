@@ -495,9 +495,9 @@ QGroupBox::indicator:checked:disabled {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>-1501</y>
+            <y>-1515</y>
             <width>271</width>
-            <height>3786</height>
+            <height>3836</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayoutScrollArea">
@@ -4126,6 +4126,68 @@ QGroupBox::indicator:checked:disabled {
                   </widget>
                  </item>
                  <item>
+                  <widget class="QLabel" name="label_hueVsSat">
+                   <property name="font">
+                    <font>
+                     <pointsize>10</pointsize>
+                    </font>
+                   </property>
+                   <property name="text">
+                    <string>Hue vs. Luma</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <layout class="QHBoxLayout" name="horizontalLayout_36">
+                   <item>
+                    <spacer name="horizontalSpacer_38">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>40</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                   <item>
+                    <widget class="HueVsSat" name="labelHueVsSat">
+                     <property name="text">
+                      <string>Place holder for curves</string>
+                     </property>
+                     <property name="alignment">
+                      <set>Qt::AlignCenter</set>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <spacer name="horizontalSpacer_39">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>40</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                  </layout>
+                 </item>
+                 <item>
+                  <widget class="Line" name="line_21">
+                   <property name="styleSheet">
+                    <string notr="true">background-color: rgb(115, 115, 115);</string>
+                   </property>
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
                   <widget class="QCheckBox" name="checkBoxHighLightReconstruction">
                    <property name="font">
                     <font>
@@ -7434,6 +7496,11 @@ QGroupBox::indicator:checked:disabled {
    <class>Curves</class>
    <extends>QLabel</extends>
    <header>Curves.h</header>
+  </customwidget>
+  <customwidget>
+   <class>HueVsSat</class>
+   <extends>QLabel</extends>
+   <header>HueVsSat.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>

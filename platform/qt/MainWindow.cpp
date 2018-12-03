@@ -1250,6 +1250,12 @@ void MainWindow::initGui( void )
     ui->labelCurves->setFrameChangedPointer( &m_frameChanged );
     ui->labelCurves->paintElement();
 
+    //HueVsSat
+    ui->labelHueVsSat->paintElement();
+    ui->labelHueVsSat->setVisible( false );
+    ui->line_21->setVisible( false );
+    ui->label_hueVsSat->setVisible( false );
+
     //Debayer in Receipt
     //ui->groupBoxDebayer->setVisible( false );
     ui->actionUseLmmseDebayer->setVisible( false );
