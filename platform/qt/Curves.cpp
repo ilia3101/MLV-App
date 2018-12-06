@@ -9,7 +9,7 @@
 #include <QPainter>
 #include <QDebug>
 #include <QMouseEvent>
-#include "../../src/processing/spline/spline_helper.h"
+#include "../../src/processing/interpolation/spline_helper.h"
 
 
 #define SIZE                360

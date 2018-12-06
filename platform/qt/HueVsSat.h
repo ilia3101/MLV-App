@@ -21,12 +21,10 @@ public:
     ~HueVsSat();
     void setProcessingObject( processingObject_t *processing );
     void paintElement(void);
-    /*void setActiveLine( uint8_t lineNr );
-    void setFrameChangedPointer( bool *pFrameChanged );*/
-    void resetLines( void );
-    /*void resetCurrentLine( void );
+    void setFrameChangedPointer( bool *pFrameChanged );
+    void resetLine( void );
     void setConfiguration(QString config );
-    QString configuration( void );*/
+    QString configuration( void );
 
 private:
     QImage *m_pImage;
@@ -45,13 +43,13 @@ private:
     processingObject_t *m_pProcessing;
 
 protected:
-    /*void mousePressEvent(QMouseEvent* mouse);
+    void mousePressEvent(QMouseEvent* mouse);
     void mouseDoubleClickEvent(QMouseEvent* mouse);
     void mouseReleaseEvent(QMouseEvent*);
-    void mouseMoveEvent(QMouseEvent* mouse);*/
+    void mouseMoveEvent(QMouseEvent* mouse);
     void paintLine(QVector<QPointF> line , QPainter *pPainter, QColor color, bool active, uint8_t channel);
     void initLine(QVector<QPointF> *line);
-    //void movePoint(qreal x, qreal y, bool release );
+    void movePoint(qreal x, qreal y, bool release );
     //QVector<QPointF> * getActiveLinePointer();
 };
 

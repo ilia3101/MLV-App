@@ -11,7 +11,8 @@
 #include "filter/filter.h"
 #include "denoiser/denoiser_2d_median.h"
 #include "../mlv/camid/camera_id.h"
-#include "spline/spline_helper.h"
+#include "interpolation/spline_helper.h"
+#include "interpolation/cosine_interpolation.h"
 
 /* Matrix functions which are useful */
 #include "../matrix/matrix.h"
@@ -140,6 +141,7 @@ processingObject_t * initProcessingObject()
     processingSetGCurve(processing, 0, NULL, NULL, 1);
     processingSetGCurve(processing, 0, NULL, NULL, 2);
     processingSetGCurve(processing, 0, NULL, NULL, 3);
+    processingSetHueVsLuma(processing, 0, NULL, NULL);
 
     /* Just in case (should be done tho already) */
     processing_update_matrices(processing);
@@ -635,6 +637,23 @@ void apply_processing_object( processingObject_t * processing,
             pix[0] = gmpix[0] / 65535.0 * pixg[0] + (65535 - gmpix[0]) / 65535.0 * pix[0];
             pix[1] = gmpix[0] / 65535.0 * pixg[1] + (65535 - gmpix[0]) / 65535.0 * pix[1];
             pix[2] = gmpix[0] / 65535.0 * pixg[2] + (65535 - gmpix[0]) / 65535.0 * pix[2];
+        }
+    }
+
+    //Testcode for HueVs...
+    if( processing->hue_vs_luma_used )
+    {
+        for (uint16_t * pix = img; pix < img_end; pix += 3)
+        {
+            float hsl[3];
+            rgb_to_hsl( pix, hsl );
+
+            uint16_t hue = (uint16_t)hsl[0];
+            hsl[2] += processing->hue_vs_luma[hue]*hsl[1]*2.0;
+            if( hsl[2] < 0.0 ) hsl[2] = 0.0;
+            if( hsl[2] > 1.0 ) hsl[2] = 1.0;
+
+            hsl_to_rgb( hsl, pix );
         }
     }
 
@@ -1598,6 +1617,53 @@ void processingSetGCurve(processingObject_t *processing, int num, float *pXin, f
             if( pYout[i] > 1.0 ) pYout[i] = 1.0;
             else if( pYout[i] < 0.0001 ) pYout[i] = 0.0001;
             curve[i] = pYout[i] * 65535.0;
+        }
+    }
+
+    free( pXout );
+    free( pYout );
+}
+
+//Set the hue vs luma curve
+void processingSetHueVsLuma(processingObject_t *processing, int num, float *pXin, float *pYin)
+{
+    float *curve = processing->hue_vs_luma;
+    //Init
+    if( num < 2 )
+    {
+        for( int i = 0; i < 360; i++ )
+        {
+            curve[i] = 0.0;
+            processing->hue_vs_luma_used = 0;
+        }
+        return;
+    }
+
+    //Build output sets
+    float *pXout = (float*)malloc( sizeof(float) * 360 );
+    float *pYout = (float*)malloc( sizeof(float) * 360 );
+
+    int numOut = 360;
+
+    //Data into x of output sets
+    for( int i = 0; i < numOut; i++ )
+    {
+        pXout[i] = i / (float)360.0;
+    }
+
+    //Get the interpolated line
+    int ret = cosine_interpolate( pXin , pYin , &num,
+                                  pXout, pYout, &numOut );
+
+    if( ret == 0 )
+    {
+        processing->hue_vs_luma_used = 0;
+        for( int i = 0; i < 360; i++ )
+        {
+            if( pYout[i] > 1.0 ) pYout[i] = 1.0;
+            else if( pYout[i] < -1.0 ) pYout[i] = -1.0;
+            curve[i] = pYout[i];
+            if( curve[i] != 0.0 ) processing->hue_vs_luma_used = 1;
         }
     }
 

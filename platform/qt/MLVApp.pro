@@ -131,8 +131,9 @@ SOURCES += \
     QRecentFilesMenu.cpp \
     SingleFrameExportDialog.cpp \
     Curves.cpp \
-    ../../src/processing/spline/spline_helper.cpp \
-    HueVsSat.cpp
+    ../../src/processing/interpolation/spline_helper.cpp \
+    HueVsSat.cpp \
+    ../../src/processing/interpolation/cosine_interpolation.c
 
 macx: SOURCES += ../cocoa/avf_lib/avf_lib.m
 
@@ -217,9 +218,10 @@ HEADERS += \
     StretchFactors.h \
     DarkStyleModern.h \
     Curves.h \
-    ../../src/processing/spline/spline_helper.h \
-    ../../src/processing/spline/spline.h \
-    HueVsSat.h
+    ../../src/processing/interpolation/spline_helper.h \
+    ../../src/processing/interpolation/spline.h \
+    HueVsSat.h \
+    ../../src/processing/interpolation/cosine_interpolation.h
 
 macx: HEADERS += \
     ../cocoa/avf_lib/avencoder.h \

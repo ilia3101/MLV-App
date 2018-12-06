@@ -50,6 +50,10 @@ typedef struct {
     uint16_t gcurve_g[65536];
     uint16_t gcurve_b[65536];
 
+    /* HSL parameters */
+    float hue_vs_luma[360];
+    uint8_t hue_vs_luma_used;
+
     /* Do tonemapping? */
     int tone_mapping;
     /* Pick any tonemapping function */

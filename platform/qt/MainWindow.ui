@@ -495,9 +495,9 @@ QGroupBox::indicator:checked:disabled {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>-1515</y>
+            <y>-1462</y>
             <width>271</width>
-            <height>3836</height>
+            <height>3860</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayoutScrollArea">
@@ -3865,16 +3865,93 @@ QGroupBox::indicator:checked:disabled {
                   </widget>
                  </item>
                  <item>
-                  <widget class="QLabel" name="label_gradationcurves">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
+                  <layout class="QHBoxLayout" name="horizontalLayout_37">
+                   <property name="spacing">
+                    <number>0</number>
                    </property>
-                   <property name="text">
-                    <string>Gradation Curves</string>
-                   </property>
-                  </widget>
+                   <item>
+                    <widget class="QLabel" name="label_gradationcurves">
+                     <property name="font">
+                      <font>
+                       <pointsize>10</pointsize>
+                      </font>
+                     </property>
+                     <property name="text">
+                      <string>Gradation Curves</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <spacer name="horizontalSpacer_40">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>40</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                   <item>
+                    <widget class="QToolButton" name="toolButtonGCurvesResetOne">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="toolTip">
+                      <string>Reset current curve</string>
+                     </property>
+                     <property name="text">
+                      <string/>
+                     </property>
+                     <property name="icon">
+                      <iconset resource="ressources.qrc">
+                       <normaloff>:/RetinaIMG/RetinaIMG/Reload-icon-2.png</normaloff>:/RetinaIMG/RetinaIMG/Reload-icon-2.png</iconset>
+                     </property>
+                     <property name="iconSize">
+                      <size>
+                       <width>12</width>
+                       <height>12</height>
+                      </size>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QToolButton" name="toolButtonGCurvesReset">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="font">
+                      <font>
+                       <pointsize>10</pointsize>
+                      </font>
+                     </property>
+                     <property name="toolTip">
+                      <string>Reset all curves</string>
+                     </property>
+                     <property name="text">
+                      <string/>
+                     </property>
+                     <property name="icon">
+                      <iconset resource="ressources.qrc">
+                       <normaloff>:/RetinaIMG/RetinaIMG/Reload-icon-1.png</normaloff>:/RetinaIMG/RetinaIMG/Reload-icon-1.png</iconset>
+                     </property>
+                     <property name="iconSize">
+                      <size>
+                       <width>12</width>
+                       <height>12</height>
+                      </size>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
                  </item>
                  <item>
                   <layout class="QHBoxLayout" name="horizontalLayout_35">
@@ -4055,63 +4132,6 @@ QGroupBox::indicator:checked:disabled {
                       </property>
                      </spacer>
                     </item>
-                    <item>
-                     <widget class="QToolButton" name="toolButtonGCurvesResetOne">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                        <horstretch>0</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                      <property name="toolTip">
-                       <string>Reset current curve</string>
-                      </property>
-                      <property name="text">
-                       <string/>
-                      </property>
-                      <property name="icon">
-                       <iconset resource="ressources.qrc">
-                        <normaloff>:/RetinaIMG/RetinaIMG/Reload-icon-2.png</normaloff>:/RetinaIMG/RetinaIMG/Reload-icon-2.png</iconset>
-                      </property>
-                      <property name="iconSize">
-                       <size>
-                        <width>12</width>
-                        <height>12</height>
-                       </size>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="QToolButton" name="toolButtonGCurvesReset">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                        <horstretch>0</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                      <property name="font">
-                       <font>
-                        <pointsize>10</pointsize>
-                       </font>
-                      </property>
-                      <property name="toolTip">
-                       <string>Reset all curves</string>
-                      </property>
-                      <property name="text">
-                       <string/>
-                      </property>
-                      <property name="icon">
-                       <iconset resource="ressources.qrc">
-                        <normaloff>:/RetinaIMG/RetinaIMG/Reload-icon-1.png</normaloff>:/RetinaIMG/RetinaIMG/Reload-icon-1.png</iconset>
-                      </property>
-                      <property name="iconSize">
-                       <size>
-                        <width>12</width>
-                        <height>12</height>
-                       </size>
-                      </property>
-                     </widget>
-                    </item>
                    </layout>
                   </widget>
                  </item>
@@ -4126,16 +4146,62 @@ QGroupBox::indicator:checked:disabled {
                   </widget>
                  </item>
                  <item>
-                  <widget class="QLabel" name="label_hueVsSat">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
+                  <layout class="QHBoxLayout" name="horizontalLayout_38">
+                   <property name="spacing">
+                    <number>0</number>
                    </property>
-                   <property name="text">
-                    <string>Hue vs. Luma</string>
-                   </property>
-                  </widget>
+                   <item>
+                    <widget class="QLabel" name="label_hueVsSat">
+                     <property name="font">
+                      <font>
+                       <pointsize>10</pointsize>
+                      </font>
+                     </property>
+                     <property name="text">
+                      <string>Hue vs. Luma</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <spacer name="horizontalSpacer_41">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>40</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                   <item>
+                    <widget class="QToolButton" name="toolButtonHueVsSatReset">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="toolTip">
+                      <string>Reset current curve</string>
+                     </property>
+                     <property name="text">
+                      <string/>
+                     </property>
+                     <property name="icon">
+                      <iconset resource="ressources.qrc">
+                       <normaloff>:/RetinaIMG/RetinaIMG/Reload-icon-2.png</normaloff>:/RetinaIMG/RetinaIMG/Reload-icon-2.png</iconset>
+                     </property>
+                     <property name="iconSize">
+                      <size>
+                       <width>12</width>
+                       <height>12</height>
+                      </size>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
                  </item>
                  <item>
                   <layout class="QHBoxLayout" name="horizontalLayout_36">

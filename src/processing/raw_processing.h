@@ -207,6 +207,9 @@ void processingSetTransformation(processingObject_t * processing, int transforma
 /* Set gradation curve */
 void processingSetGCurve(processingObject_t * processing, int num, float * pXin, float * pYin, uint8_t channel);
 
+/* Set Hue vs. Luma curve */
+void processingSetHueVsLuma(processingObject_t * processing, int num, float * pXin, float * pYin);
+
 /*
  *******************************************************************************
  * THE FOLLOWING FUNCTIONS ARE PRIVATE AND NO USE OUTSIDE OF raw_processing.c
