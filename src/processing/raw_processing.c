@@ -141,7 +141,9 @@ processingObject_t * initProcessingObject()
     processingSetGCurve(processing, 0, NULL, NULL, 1);
     processingSetGCurve(processing, 0, NULL, NULL, 2);
     processingSetGCurve(processing, 0, NULL, NULL, 3);
-    processingSetHueVsLuma(processing, 0, NULL, NULL);
+    processingSetHueVsCurves(processing, 0, NULL, NULL, 0);
+    processingSetHueVsCurves(processing, 0, NULL, NULL, 1);
+    processingSetHueVsCurves(processing, 0, NULL, NULL, 2);
 
     /* Just in case (should be done tho already) */
     processing_update_matrices(processing);
@@ -641,17 +643,41 @@ void apply_processing_object( processingObject_t * processing,
     }
 
     //Testcode for HueVs...
-    if( processing->hue_vs_luma_used )
+    if( processing->hue_vs_luma_used || processing->hue_vs_saturation_used )
     {
         for (uint16_t * pix = img; pix < img_end; pix += 3)
         {
             float hsl[3];
             rgb_to_hsl( pix, hsl );
 
-            uint16_t hue = (uint16_t)hsl[0];
-            hsl[2] += processing->hue_vs_luma[hue]*hsl[1]*2.0;
+            /* Calculate saturation value of untouched pixel (taken from vibrance, gives better results than from rgb_to_hsl) */
+            // ///////////////////////
+            double sat = 0;
+            if( !( pix[0] == 0 && pix[1] == 0 && pix[2] == 0 ) )
+            {
+                uint16_t biggest = 0;
+                uint16_t smallest = 65535;
+                for( int i = 0; i < 3; i++ )
+                {
+                    if( pix[i] > biggest ) biggest = pix[i];
+                    if( pix[i] < smallest ) smallest = pix[i];
+                }
+                sat = ((double)biggest - (double)smallest) / (double)biggest;
+            }
+            /* Some cheat factor to make the effect more visible */
+            sat = 2.0 * sat / ( sat * sat + 1 );
+            if( sat > 1.0 ) sat = 1.0;
+            // ///////////////////////
+
+            uint16_t hue = (uint16_t)(hsl[0] * 100.0);
+
+            hsl[2] *= 1.0 + (processing->hue_vs_luma[hue] * sat * 2);
             if( hsl[2] < 0.0 ) hsl[2] = 0.0;
             if( hsl[2] > 1.0 ) hsl[2] = 1.0;
+
+            hsl[1] *= 1.0 + (processing->hue_vs_saturation[hue] * 2);
+            if( hsl[1] < 0.0 ) hsl[1] = 0.0;
+            if( hsl[1] > 1.0 ) hsl[1] = 1.0;
 
             hsl_to_rgb( hsl, pix );
         }
@@ -1624,31 +1650,46 @@ void processingSetGCurve(processingObject_t *processing, int num, float *pXin, f
     free( pYout );
 }
 
-//Set the hue vs luma curve
-void processingSetHueVsLuma(processingObject_t *processing, int num, float *pXin, float *pYin)
+//Set the hue vs curves
+void processingSetHueVsCurves(processingObject_t *processing, int num, float *pXin, float *pYin, uint8_t channel)
 {
-    float *curve = processing->hue_vs_luma;
+    float *curve;
+    uint8_t *used;
+    /*if( channel == 0 )
+    {
+
+    }
+    else*/ if( channel == 1 )
+    {
+        curve = processing->hue_vs_saturation;
+        used = &processing->hue_vs_saturation_used;
+    }
+    else
+    {
+        curve = processing->hue_vs_luma;
+        used = &processing->hue_vs_luma_used;
+    }
     //Init
     if( num < 2 )
     {
-        for( int i = 0; i < 360; i++ )
+        for( int i = 0; i < 36000; i++ )
         {
             curve[i] = 0.0;
-            processing->hue_vs_luma_used = 0;
+            *used = 0;
         }
         return;
     }
 
     //Build output sets
-    float *pXout = (float*)malloc( sizeof(float) * 360 );
-    float *pYout = (float*)malloc( sizeof(float) * 360 );
+    float *pXout = (float*)malloc( sizeof(float) * 36000 );
+    float *pYout = (float*)malloc( sizeof(float) * 36000 );
 
-    int numOut = 360;
+    int numOut = 36000;
 
     //Data into x of output sets
     for( int i = 0; i < numOut; i++ )
     {
-        pXout[i] = i / (float)360.0;
+        pXout[i] = i / (float)36000.0;
     }
 
     //Get the interpolated line
@@ -1657,13 +1698,13 @@ void processingSetHueVsLuma(processingObject_t *processing, int num, float *pXin
 
     if( ret == 0 )
     {
-        processing->hue_vs_luma_used = 0;
-        for( int i = 0; i < 360; i++ )
+        *used = 0;
+        for( int i = 0; i < 36000; i++ )
         {
             if( pYout[i] > 1.0 ) pYout[i] = 1.0;
             else if( pYout[i] < -1.0 ) pYout[i] = -1.0;
             curve[i] = pYout[i];
-            if( curve[i] != 0.0 ) processing->hue_vs_luma_used = 1;
+            if( curve[i] != 0.0 ) *used = 1;
         }
     }
 

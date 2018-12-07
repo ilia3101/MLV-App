@@ -1,11 +1,11 @@
 /*!
- * \file HueVsSat.cpp
+ * \file HueVsDiagram.cpp
  * \author masc4ii
  * \copyright 2018
  * \brief The gradation HueVsSat element
  */
 
-#include "HueVsSat.h"
+#include "HueVsDiagram.h"
 #include <QPainter>
 #include <QDebug>
 #include <QMouseEvent>
@@ -17,7 +17,7 @@
 #define THREEQUARTERSIZE    (SIZE*3/4)
 
 //Constructor
-HueVsSat::HueVsSat(QWidget *parent)
+HueVsDiagram::HueVsDiagram(QWidget *parent)
     : QLabel(parent) {
     m_pImage = new QImage( SIZE, SIZE, QImage::Format_RGBA8888 );
     m_cursor = QPoint( 0, 0 );
@@ -25,29 +25,30 @@ HueVsSat::HueVsSat(QWidget *parent)
     m_pFrameChanged = NULL;
     m_pProcessing = NULL;
     m_LoadAll = false;
+    m_diagramType = HueVsLuminance;
     resetLine();
 }
 
 //Destructor
-HueVsSat::~HueVsSat()
+HueVsDiagram::~HueVsDiagram()
 {
     delete m_pImage;
 }
 
 //Set processing object to this class
-void HueVsSat::setProcessingObject(processingObject_t *processing)
+void HueVsDiagram::setProcessingObject(processingObject_t *processing)
 {
     m_pProcessing = processing;
 }
 
 //Set the flag for rendering the viewers picture
-void HueVsSat::setFrameChangedPointer(bool *pFrameChanged)
+void HueVsDiagram::setFrameChangedPointer(bool *pFrameChanged)
 {
     m_pFrameChanged = pFrameChanged;
 }
 
 //Draw the HueVsSat object on a label
-void HueVsSat::paintElement()
+void HueVsDiagram::paintElement()
 {
     m_pImage->fill( QColor( 0, 0, 0, 255 ) );
     QPainter painterTc( m_pImage );
@@ -66,19 +67,24 @@ void HueVsSat::paintElement()
     painterTc.drawRect( 0, 0, SIZE, SIZE );
 
     //HueVsSat
-    /*QLinearGradient gradient2( 0, 0, 0, SIZE );
-    gradient2.setColorAt( 0, QColor( 128, 128, 128, 0 ) );
-    gradient2.setColorAt( 1, QColor( 128, 128, 128, 255 ) );
-    painterTc.setBrush( gradient2 );
-    painterTc.drawRect( 0, 0, SIZE, SIZE );*/
-
+    if( m_diagramType == HueVsSaturation )
+    {
+        QLinearGradient gradient2( 0, 0, 0, SIZE );
+        gradient2.setColorAt( 0, QColor( 128, 128, 128, 0 ) );
+        gradient2.setColorAt( 1, QColor( 128, 128, 128, 255 ) );
+        painterTc.setBrush( gradient2 );
+        painterTc.drawRect( 0, 0, SIZE, SIZE );
+    }
     //HueVsLuminance
-    QLinearGradient gradient2( 0, 0, 0, SIZE );
-    gradient2.setColorAt( 0, QColor( 255, 255, 255, 255 ) );
-    gradient2.setColorAt( 0.5, QColor( 128, 128, 128, 0 ) );
-    gradient2.setColorAt( 1, QColor( 0, 0, 0, 255 ) );
-    painterTc.setBrush( gradient2 );
-    painterTc.drawRect( 0, 0, SIZE, SIZE );
+    else if( m_diagramType == HueVsLuminance )
+    {
+        QLinearGradient gradient2( 0, 0, 0, SIZE );
+        gradient2.setColorAt( 0, QColor( 255, 255, 255, 255 ) );
+        gradient2.setColorAt( 0.5, QColor( 128, 128, 128, 0 ) );
+        gradient2.setColorAt( 1, QColor( 0, 0, 0, 255 ) );
+        painterTc.setBrush( gradient2 );
+        painterTc.drawRect( 0, 0, SIZE, SIZE );
+    }
 
     //Lines
     painterTc.setPen( QColor( 100, 100, 100, 255 ) );
@@ -103,13 +109,13 @@ void HueVsSat::paintElement()
 }
 
 //Reset the lines
-void HueVsSat::resetLine()
+void HueVsDiagram::resetLine()
 {
     initLine( &m_whiteLine );
 }
 
 //Load configuration string to settings
-void HueVsSat::setConfiguration(QString config)
+void HueVsDiagram::setConfiguration(QString config)
 {
     if( config.count() <= 0 ) return;
     QVector<QPointF> *line;
@@ -133,7 +139,7 @@ void HueVsSat::setConfiguration(QString config)
 }
 
 //Get a configuration string to save settings
-QString HueVsSat::configuration()
+QString HueVsDiagram::configuration()
 {
     QString config;
     config.clear();
@@ -146,8 +152,14 @@ QString HueVsSat::configuration()
     return config;
 }
 
+//Change diagram type
+void HueVsDiagram::setDiagramType(HueVsDiagram::DiagramType type)
+{
+    m_diagramType = type;
+}
+
 //Paint line
-void HueVsSat::paintLine(QVector<QPointF> line, QPainter *pPainter, QColor color, bool active, uint8_t channel)
+void HueVsDiagram::paintLine(QVector<QPointF> line, QPainter *pPainter, QColor color, bool active, uint8_t channel)
 {
     //Make color a bit more grey, if line is not active
     if( !active )
@@ -209,7 +221,17 @@ void HueVsSat::paintLine(QVector<QPointF> line, QPainter *pPainter, QColor color
     //Set Procesing Element if available
     if( active || m_LoadAll )
     {
-        if( m_pProcessing != NULL ) processingSetHueVsLuma( m_pProcessing, numIn, pXin, pYin );
+        if( m_pProcessing != NULL )
+        {
+            if( m_diagramType == HueVsSaturation )
+            {
+                processingSetHueVsCurves( m_pProcessing, numIn, pXin, pYin, 1 );
+            }
+            else if( m_diagramType == HueVsLuminance )
+            {
+                processingSetHueVsCurves( m_pProcessing, numIn, pXin, pYin, 2 );
+            }
+        }
         if( m_pFrameChanged != NULL ) *m_pFrameChanged = true;
     }
 
@@ -221,7 +243,7 @@ void HueVsSat::paintLine(QVector<QPointF> line, QPainter *pPainter, QColor color
 }
 
 //Init / delete line
-void HueVsSat::initLine(QVector<QPointF> *line)
+void HueVsDiagram::initLine(QVector<QPointF> *line)
 {
     line->clear();
     line->append( QPointF( 0.0, 0.0 ) );
@@ -229,7 +251,7 @@ void HueVsSat::initLine(QVector<QPointF> *line)
 }
 
 //Mouse pressed -> select a point
-void HueVsSat::mousePressEvent(QMouseEvent *mouse)
+void HueVsDiagram::mousePressEvent(QMouseEvent *mouse)
 {
     QVector<QPointF> *line = &m_whiteLine;
 
@@ -269,7 +291,7 @@ void HueVsSat::mousePressEvent(QMouseEvent *mouse)
 }
 
 //Mouse doubleclicked -> delete point
-void HueVsSat::mouseDoubleClickEvent(QMouseEvent *mouse)
+void HueVsDiagram::mouseDoubleClickEvent(QMouseEvent *mouse)
 {
     QVector<QPointF> *line = &m_whiteLine;
     for( int i = 1; i < line->count()-1; i++ )
@@ -287,7 +309,7 @@ void HueVsSat::mouseDoubleClickEvent(QMouseEvent *mouse)
 }
 
 //Mouse released -> deselect point
-void HueVsSat::mouseReleaseEvent(QMouseEvent *mouse)
+void HueVsDiagram::mouseReleaseEvent(QMouseEvent *mouse)
 {
     movePoint( mouse->localPos().x(), mouse->localPos().y(), false );
     m_pointSelected = false;
@@ -296,13 +318,13 @@ void HueVsSat::mouseReleaseEvent(QMouseEvent *mouse)
 }
 
 //Mouse moved -> move marker
-void HueVsSat::mouseMoveEvent(QMouseEvent *mouse)
+void HueVsDiagram::mouseMoveEvent(QMouseEvent *mouse)
 {
     movePoint( mouse->localPos().x(), mouse->localPos().y(), true );
 }
 
 //Move a point around
-void HueVsSat::movePoint(qreal x, qreal y, bool release)
+void HueVsDiagram::movePoint(qreal x, qreal y, bool release)
 {
     QVector<QPointF> *line = &m_whiteLine;
     //move the marker

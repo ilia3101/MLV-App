@@ -220,6 +220,7 @@ private slots:
     void on_toolButtonGCurvesReset_clicked();
     void on_toolButtonGCurvesResetOne_clicked();
     void on_toolButtonHueVsSatReset_clicked();
+    void on_toolButtonHueVsLumaReset_clicked();
     void on_actionNextFrame_triggered();
     void on_actionPreviousFrame_triggered();
     void on_checkBoxRawFixEnable_clicked(bool checked);

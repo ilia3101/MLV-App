@@ -495,9 +495,9 @@ QGroupBox::indicator:checked:disabled {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>-1462</y>
-            <width>271</width>
-            <height>3860</height>
+            <y>0</y>
+            <width>268</width>
+            <height>3950</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayoutScrollArea">
@@ -4158,7 +4158,7 @@ QGroupBox::indicator:checked:disabled {
                       </font>
                      </property>
                      <property name="text">
-                      <string>Hue vs. Luma</string>
+                      <string>Hue vs. Saturation</string>
                      </property>
                     </widget>
                    </item>
@@ -4219,7 +4219,7 @@ QGroupBox::indicator:checked:disabled {
                     </spacer>
                    </item>
                    <item>
-                    <widget class="HueVsSat" name="labelHueVsSat">
+                    <widget class="HueVsDiagram" name="labelHueVsSat">
                      <property name="text">
                       <string>Place holder for curves</string>
                      </property>
@@ -4230,6 +4230,114 @@ QGroupBox::indicator:checked:disabled {
                    </item>
                    <item>
                     <spacer name="horizontalSpacer_39">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>40</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                  </layout>
+                 </item>
+                 <item>
+                  <widget class="Line" name="line_22">
+                   <property name="styleSheet">
+                    <string notr="true">background-color: rgb(115, 115, 115);</string>
+                   </property>
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <layout class="QHBoxLayout" name="horizontalLayout_39">
+                   <property name="spacing">
+                    <number>0</number>
+                   </property>
+                   <item>
+                    <widget class="QLabel" name="label_hueVsLuma">
+                     <property name="font">
+                      <font>
+                       <pointsize>10</pointsize>
+                      </font>
+                     </property>
+                     <property name="text">
+                      <string>Hue vs. Luma</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <spacer name="horizontalSpacer_42">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>40</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                   <item>
+                    <widget class="QToolButton" name="toolButtonHueVsLumaReset">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="toolTip">
+                      <string>Reset current curve</string>
+                     </property>
+                     <property name="text">
+                      <string/>
+                     </property>
+                     <property name="icon">
+                      <iconset resource="ressources.qrc">
+                       <normaloff>:/RetinaIMG/RetinaIMG/Reload-icon-2.png</normaloff>:/RetinaIMG/RetinaIMG/Reload-icon-2.png</iconset>
+                     </property>
+                     <property name="iconSize">
+                      <size>
+                       <width>12</width>
+                       <height>12</height>
+                      </size>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </item>
+                 <item>
+                  <layout class="QHBoxLayout" name="horizontalLayout_40">
+                   <item>
+                    <spacer name="horizontalSpacer_43">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>40</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                   <item>
+                    <widget class="HueVsDiagram" name="labelHueVsLuma">
+                     <property name="text">
+                      <string>Place holder for curves</string>
+                     </property>
+                     <property name="alignment">
+                      <set>Qt::AlignCenter</set>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <spacer name="horizontalSpacer_44">
                      <property name="orientation">
                       <enum>Qt::Horizontal</enum>
                      </property>
@@ -7564,9 +7672,9 @@ QGroupBox::indicator:checked:disabled {
    <header>Curves.h</header>
   </customwidget>
   <customwidget>
-   <class>HueVsSat</class>
+   <class>HueVsDiagram</class>
    <extends>QLabel</extends>
-   <header>HueVsSat.h</header>
+   <header>HueVsDiagram.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>

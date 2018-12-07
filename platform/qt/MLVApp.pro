@@ -132,8 +132,8 @@ SOURCES += \
     SingleFrameExportDialog.cpp \
     Curves.cpp \
     ../../src/processing/interpolation/spline_helper.cpp \
-    HueVsSat.cpp \
-    ../../src/processing/interpolation/cosine_interpolation.c
+    ../../src/processing/interpolation/cosine_interpolation.c \
+    HueVsDiagram.cpp
 
 macx: SOURCES += ../cocoa/avf_lib/avf_lib.m
 
@@ -220,8 +220,8 @@ HEADERS += \
     Curves.h \
     ../../src/processing/interpolation/spline_helper.h \
     ../../src/processing/interpolation/spline.h \
-    HueVsSat.h \
-    ../../src/processing/interpolation/cosine_interpolation.h
+    ../../src/processing/interpolation/cosine_interpolation.h \
+    HueVsDiagram.h
 
 macx: HEADERS += \
     ../cocoa/avf_lib/avencoder.h \

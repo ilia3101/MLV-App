@@ -916,6 +916,7 @@ int MainWindow::openMlv( QString fileName )
     //Give curves GUI a link to processing object
     ui->labelCurves->setProcessingObject( m_pProcessingObject );
     ui->labelHueVsSat->setProcessingObject( m_pProcessingObject );
+    ui->labelHueVsLuma->setProcessingObject( m_pProcessingObject );
 
     m_frameChanged = true;
 
@@ -1253,7 +1254,13 @@ void MainWindow::initGui( void )
 
     //HueVsSat
     ui->labelHueVsSat->setFrameChangedPointer( &m_frameChanged );
+    ui->labelHueVsSat->setDiagramType( HueVsDiagram::HueVsSaturation );
     ui->labelHueVsSat->paintElement();
+
+    //HueVsLuma
+    ui->labelHueVsLuma->setFrameChangedPointer( &m_frameChanged );
+    ui->labelHueVsLuma->setDiagramType( HueVsDiagram::HueVsLuminance );
+    ui->labelHueVsLuma->paintElement();
 
     //Debayer in Receipt
     //ui->groupBoxDebayer->setVisible( false );
@@ -6204,6 +6211,13 @@ void MainWindow::on_toolButtonHueVsSatReset_clicked()
 {
     ui->labelHueVsSat->resetLine();
     ui->labelHueVsSat->paintElement();
+}
+
+//Reset HueVsLuma curve
+void MainWindow::on_toolButtonHueVsLumaReset_clicked()
+{
+    ui->labelHueVsLuma->resetLine();
+    ui->labelHueVsLuma->paintElement();
 }
 
 //Goto next frame
