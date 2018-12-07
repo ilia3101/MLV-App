@@ -219,6 +219,7 @@ private slots:
     void toolButtonGCurvesChanged( void );
     void on_toolButtonGCurvesReset_clicked();
     void on_toolButtonGCurvesResetOne_clicked();
+    void on_toolButtonHueVsHueReset_clicked();
     void on_toolButtonHueVsSatReset_clicked();
     void on_toolButtonHueVsLumaReset_clicked();
     void on_actionNextFrame_triggered();

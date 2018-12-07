@@ -51,8 +51,10 @@ typedef struct {
     uint16_t gcurve_b[65536];
 
     /* HSL parameters */
+    float hue_vs_hue[36000];
     float hue_vs_saturation[36000];
     float hue_vs_luma[36000];
+    uint8_t hue_vs_hue_used;
     uint8_t hue_vs_saturation_used;
     uint8_t hue_vs_luma_used;
 

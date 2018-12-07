@@ -915,6 +915,7 @@ int MainWindow::openMlv( QString fileName )
 
     //Give curves GUI a link to processing object
     ui->labelCurves->setProcessingObject( m_pProcessingObject );
+    ui->labelHueVsHue->setProcessingObject( m_pProcessingObject );
     ui->labelHueVsSat->setProcessingObject( m_pProcessingObject );
     ui->labelHueVsLuma->setProcessingObject( m_pProcessingObject );
 
@@ -1251,6 +1252,11 @@ void MainWindow::initGui( void )
     //CurvesElement
     ui->labelCurves->setFrameChangedPointer( &m_frameChanged );
     ui->labelCurves->paintElement();
+
+    //HueVsHue
+    ui->labelHueVsHue->setFrameChangedPointer( &m_frameChanged );
+    ui->labelHueVsHue->setDiagramType( HueVsDiagram::HueVsHue );
+    ui->labelHueVsHue->paintElement();
 
     //HueVsSat
     ui->labelHueVsSat->setFrameChangedPointer( &m_frameChanged );
@@ -6204,6 +6210,13 @@ void MainWindow::on_toolButtonGCurvesResetOne_clicked()
 {
     ui->labelCurves->resetCurrentLine();
     ui->labelCurves->paintElement();
+}
+
+//Reset HueVsHue curve
+void MainWindow::on_toolButtonHueVsHueReset_clicked()
+{
+    ui->labelHueVsHue->resetLine();
+    ui->labelHueVsHue->paintElement();
 }
 
 //Reset HueVsSat curve

@@ -66,8 +66,25 @@ void HueVsDiagram::paintElement()
     painterTc.setBrush( gradient1 );
     painterTc.drawRect( 0, 0, SIZE, SIZE );
 
+    //HueVsHue
+    if( m_diagramType == HueVsHue )
+    {
+        for( int y = 0; y < SIZE; y++ )
+        {
+            for( int x = 0; x < SIZE; x++ )
+            {
+                if( y == HALFSIZE ) continue;
+                int getFrom = x - 60.0 / 360.0 * (y - HALFSIZE);
+                if( getFrom >= SIZE ) getFrom -= SIZE;
+                if( getFrom < 0 ) getFrom += SIZE;
+                QColor color = m_pImage->pixelColor( getFrom, HALFSIZE );
+                if( getFrom < 2 || getFrom > SIZE-2 ) color = QColor( 255, 0, 0, 255 );
+                m_pImage->setPixelColor( x, y, color );
+            }
+        }
+    }
     //HueVsSat
-    if( m_diagramType == HueVsSaturation )
+    else if( m_diagramType == HueVsSaturation )
     {
         QLinearGradient gradient2( 0, 0, 0, SIZE );
         gradient2.setColorAt( 0, QColor( 128, 128, 128, 0 ) );
@@ -100,7 +117,7 @@ void HueVsDiagram::paintElement()
         painterTc.drawLine( 0, (i*SIZE/4)  , SIZE, (i*SIZE/4)   );
     }
 
-    paintLine( m_whiteLine, &painterTc, QColor(255,255,255,255), true, 0 );
+    paintLine( m_whiteLine, &painterTc, QColor(255,255,255,255), true );
 
     //Paint to label
     QPixmap pic = QPixmap::fromImage( *m_pImage ).scaled( HALFSIZE * devicePixelRatio(), (HALFSIZE) * devicePixelRatio(), Qt::KeepAspectRatio, Qt::SmoothTransformation );
@@ -159,7 +176,7 @@ void HueVsDiagram::setDiagramType(HueVsDiagram::DiagramType type)
 }
 
 //Paint line
-void HueVsDiagram::paintLine(QVector<QPointF> line, QPainter *pPainter, QColor color, bool active, uint8_t channel)
+void HueVsDiagram::paintLine(QVector<QPointF> line, QPainter *pPainter, QColor color, bool active)
 {
     //Make color a bit more grey, if line is not active
     if( !active )
@@ -223,7 +240,11 @@ void HueVsDiagram::paintLine(QVector<QPointF> line, QPainter *pPainter, QColor c
     {
         if( m_pProcessing != NULL )
         {
-            if( m_diagramType == HueVsSaturation )
+            if( m_diagramType == HueVsHue )
+            {
+                processingSetHueVsCurves( m_pProcessing, numIn, pXin, pYin, 0 );
+            }
+            else if( m_diagramType == HueVsSaturation )
             {
                 processingSetHueVsCurves( m_pProcessing, numIn, pXin, pYin, 1 );
             }

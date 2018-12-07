@@ -643,7 +643,7 @@ void apply_processing_object( processingObject_t * processing,
     }
 
     //Testcode for HueVs...
-    if( processing->hue_vs_luma_used || processing->hue_vs_saturation_used )
+    if( processing->hue_vs_luma_used || processing->hue_vs_saturation_used || processing->hue_vs_hue_used )
     {
         for (uint16_t * pix = img; pix < img_end; pix += 3)
         {
@@ -678,6 +678,10 @@ void apply_processing_object( processingObject_t * processing,
             hsl[1] *= 1.0 + (processing->hue_vs_saturation[hue] * 2);
             if( hsl[1] < 0.0 ) hsl[1] = 0.0;
             if( hsl[1] > 1.0 ) hsl[1] = 1.0;
+
+            hsl[0] += 60 * processing->hue_vs_hue[hue];
+            if( hsl[0] < 0 ) hsl[0] += 360;
+            else if( hsl[0] >= 360 ) hsl[0] -= 360;
 
             hsl_to_rgb( hsl, pix );
         }
@@ -1655,11 +1659,12 @@ void processingSetHueVsCurves(processingObject_t *processing, int num, float *pX
 {
     float *curve;
     uint8_t *used;
-    /*if( channel == 0 )
+    if( channel == 0 )
     {
-
+        curve = processing->hue_vs_hue;
+        used = &processing->hue_vs_hue_used;
     }
-    else*/ if( channel == 1 )
+    else if( channel == 1 )
     {
         curve = processing->hue_vs_saturation;
         used = &processing->hue_vs_saturation_used;
