@@ -673,11 +673,11 @@ void apply_processing_object( processingObject_t * processing,
 
             hsl[2] *= 1.0 + (processing->hue_vs_luma[hue] * sat * 2);
             if( hsl[2] < 0.0 ) hsl[2] = 0.0;
-            if( hsl[2] > 1.0 ) hsl[2] = 1.0;
+            //if( hsl[2] > 1.0 ) hsl[2] = 1.0;
 
             hsl[1] *= 1.0 + (processing->hue_vs_saturation[hue] * 2);
             if( hsl[1] < 0.0 ) hsl[1] = 0.0;
-            if( hsl[1] > 1.0 ) hsl[1] = 1.0;
+            //if( hsl[1] > 1.0 ) hsl[1] = 1.0;
 
             hsl[0] += 60 * processing->hue_vs_hue[hue];
             if( hsl[0] < 0 ) hsl[0] += 360;
