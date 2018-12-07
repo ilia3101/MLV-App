@@ -23,6 +23,7 @@ HueVsSat::HueVsSat(QWidget *parent)
     m_cursor = QPoint( 0, 0 );
     m_pointSelected = false;
     m_pFrameChanged = NULL;
+    m_pProcessing = NULL;
     m_LoadAll = false;
     resetLine();
 }

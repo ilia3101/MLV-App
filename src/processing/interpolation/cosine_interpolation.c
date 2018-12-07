@@ -8,6 +8,10 @@
 #include "cosine_interpolation.h"
 #include "math.h"
 
+#if defined(__linux)
+#define M_PI		3.14159265358979323846	/* pi */
+#endif
+
 //Cosine interpolation function between 2 points
 float fCos(float x, float y, float t)
 {
