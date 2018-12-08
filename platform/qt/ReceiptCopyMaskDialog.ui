@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>712</width>
-    <height>402</height>
+    <height>423</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -212,6 +212,16 @@
            <widget class="QCheckBox" name="checkBoxGradationCurve">
             <property name="text">
              <string>Gradation Curve</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkBoxHslCurves">
+            <property name="toolTip">
+             <string>Hue, Saturation, Luminance Curves</string>
+            </property>
+            <property name="text">
+             <string>HSL Curves</string>
             </property>
            </widget>
           </item>
