@@ -351,31 +351,26 @@ void HueVsDiagram::movePoint(qreal x, qreal y, bool release)
     //move the marker
     if( m_pointSelected )
     {
-        if( ( 0.0001 > x * 2 / (float)SIZE )
-         || ( 1.0 < x * 2 / (float)SIZE )
-         || ( 0.0001 > 1.0-(y * 2 / (float)SIZE ) )
-         || ( 1.0 < 1.0-(y * 2 / (float)SIZE ) ) )
+        if ( 0.0001 > x * 2 / (float)SIZE ) x = 0.001 / 2.0 * (float)SIZE;
+        if ( 1.0 < x * 2 / (float)SIZE ) x = 0.99 / 2.0 * (float)SIZE;
+        if ( 0.0001 > 1.0-(y * 2 / (float)SIZE ) ) y = -( 0.0001 - 1.0 ) / 2.0 * (float) SIZE;
+        if ( 1.0 < 1.0-(y * 2 / (float)SIZE ) ) y = 0.0;
+
+        int i;
+        //Search the right position for the grabbed point
+        for( i = 0; i < line->count()-1; i++ )
         {
-            paintElement();
-        }
-        else
-        {
-            int i;
-            //Search the right position for the grabbed point
-            for( i = 0; i < line->count()-1; i++ )
+            if( line->at(i).x() > x * 2 / (float)SIZE )
             {
-                if( line->at(i).x() > x * 2 / (float)SIZE )
-                {
-                    break;
-                }
+                break;
             }
-            //insert it for drawing
-            line->insert( i, QPointF( x * 2 / (float)SIZE,
-                                      1.0-((y * 2 + HALFSIZE) / (float)SIZE )) );
-            paintElement();
-            //and grab it again
-            if( release ) line->removeAt( i );
         }
+        //insert it for drawing
+        line->insert( i, QPointF( x * 2 / (float)SIZE,
+                                  1.0-((y * 2 + HALFSIZE) / (float)SIZE )) );
+        paintElement();
+        //and grab it again
+        if( release ) line->removeAt( i );
     }
     //Drag first & last point up & down
     else if( m_firstPoint || m_lastPoint )
