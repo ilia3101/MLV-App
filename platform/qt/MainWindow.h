@@ -237,6 +237,7 @@ private slots:
     void on_groupBoxDebayer_toggled(bool arg1);
     void on_groupBoxProcessing_toggled(bool arg1);
     void on_groupBoxDetails_toggled(bool arg1);
+    void on_groupBoxHsl_toggled(bool arg1);
     void on_groupBoxColorWheels_toggled(bool arg1);
     void on_groupBoxLut_toggled(bool arg1);
     void on_groupBoxFilter_toggled(bool arg1);

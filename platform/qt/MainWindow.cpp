@@ -1390,6 +1390,7 @@ void MainWindow::readSettings()
     ui->groupBoxDebayer->setChecked( set.value( "expandedDebayer", true ).toBool() );
     ui->groupBoxProcessing->setChecked( set.value( "expandedProcessing", true ).toBool() );
     ui->groupBoxDetails->setChecked( set.value( "expandedDetails", false ).toBool() );
+    ui->groupBoxHsl->setChecked( set.value( "expandedHsl", false ).toBool() );
     ui->groupBoxColorWheels->setChecked( set.value( "expandedColorWheels", false ).toBool() );
     ui->groupBoxLut->setChecked( set.value( "expandedLut", false ).toBool() );
     ui->groupBoxFilter->setChecked( set.value( "expandedFilter", false ).toBool() );
@@ -1451,6 +1452,7 @@ void MainWindow::writeSettings()
     set.setValue( "expandedDebayer", ui->groupBoxDebayer->isChecked() );
     set.setValue( "expandedProcessing", ui->groupBoxProcessing->isChecked() );
     set.setValue( "expandedDetails", ui->groupBoxDetails->isChecked() );
+    set.setValue( "expandedHsl", ui->groupBoxHsl->isChecked() );
     set.setValue( "expandedColorWheels", ui->groupBoxColorWheels->isChecked() );
     set.setValue( "expandedLut", ui->groupBoxLut->isChecked() );
     set.setValue( "expandedFilter", ui->groupBoxFilter->isChecked() );
@@ -6505,6 +6507,14 @@ void MainWindow::on_groupBoxDetails_toggled(bool arg1)
     ui->frameDetails->setVisible( arg1 );
     if( !arg1 ) ui->groupBoxDetails->setMaximumHeight( 30 );
     else ui->groupBoxDetails->setMaximumHeight( 16777215 );
+}
+
+//Collapse & Expand HSL box
+void MainWindow::on_groupBoxHsl_toggled(bool arg1)
+{
+    ui->frameHsl->setVisible( arg1 );
+    if( !arg1 ) ui->groupBoxHsl->setMaximumHeight( 30 );
+    else ui->groupBoxHsl->setMaximumHeight( 16777215 );
 }
 
 //Collapse & Expand Color Wheels
