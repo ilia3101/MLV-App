@@ -377,8 +377,8 @@ void HueVsDiagram::movePoint(qreal x, qreal y, bool release)
     {
         float yNew = 1.0-((y * 2 + HALFSIZE) / (float)SIZE );
         QPointF point = line->takeFirst();
-        if( yNew > 1.0 ) yNew = 1.0;
-        else if( yNew < -1.0 ) yNew = -1.0;
+        if( yNew > 0.5 ) yNew = 0.5;
+        else if( yNew < -0.5 ) yNew = -0.5;
         point.setY( yNew );
         line->prepend( point );
         point = line->takeLast();
