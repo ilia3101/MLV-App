@@ -1530,7 +1530,7 @@ void MainWindow::startExportPipe(QString fileName)
     //StatusDialog
     m_pStatusDialog->ui->progressBar->setMaximum( m_exportQueue.first()->cutOut() - m_exportQueue.first()->cutIn() + 1 );
     m_pStatusDialog->ui->progressBar->setValue( 0 );
-    m_pStatusDialog->show();
+    m_pStatusDialog->open();
 
     //Audio Export
     QString wavFileName = QString( "%1.wav" ).arg( fileName.left( fileName.lastIndexOf( "." ) ) );
@@ -1558,7 +1558,7 @@ void MainWindow::startExportPipe(QString fileName)
         if( !doesMlvHaveAudio( m_pMlvObject ) )
         {
             //Hide Status Dialog
-            m_pStatusDialog->hide();
+            m_pStatusDialog->close();
             qApp->processEvents();
             //Then show error
             int ret = QMessageBox::critical( this,
@@ -2136,7 +2136,7 @@ void MainWindow::startExportCdng(QString fileName)
     //StatusDialog
     m_pStatusDialog->ui->progressBar->setMaximum( m_exportQueue.first()->cutOut() - m_exportQueue.first()->cutIn() + 1 );
     m_pStatusDialog->ui->progressBar->setValue( 0 );
-    m_pStatusDialog->show();
+    m_pStatusDialog->open();
     //Frames in the export queue?!
     int totalFrames = 0;
     for( int i = 0; i < m_exportQueue.count(); i++ )
@@ -2251,7 +2251,7 @@ void MainWindow::startExportCdng(QString fileName)
         if( saveDngFrame( m_pMlvObject, cinemaDng, frame, filePathNr.toLatin1().data() ) )
 #endif
         {
-            m_pStatusDialog->hide();
+            m_pStatusDialog->close();
             qApp->processEvents();
             int ret = QMessageBox::critical( this,
                                              tr( "MLV App - Export file error" ),
@@ -2299,7 +2299,7 @@ void MainWindow::startExportMlv(QString fileName)
     //StatusDialog
     m_pStatusDialog->ui->progressBar->setMaximum( m_exportQueue.first()->cutOut() - m_exportQueue.first()->cutIn() + 1 );
     m_pStatusDialog->ui->progressBar->setValue( 0 );
-    m_pStatusDialog->show();
+    m_pStatusDialog->open();
     //Frames in the export queue?!
     uint32_t totalFrames = 0;
     for( int i = 0; i < m_exportQueue.count(); i++ )
@@ -2431,7 +2431,7 @@ void MainWindow::startExportAVFoundation(QString fileName)
     //StatusDialog
     m_pStatusDialog->ui->progressBar->setMaximum( m_exportQueue.first()->cutOut() - m_exportQueue.first()->cutIn() + 1 );
     m_pStatusDialog->ui->progressBar->setValue( 0 );
-    m_pStatusDialog->show();
+    m_pStatusDialog->open();
     //Frames in the export queue?!
     int totalFrames = 0;
     for( int i = 0; i < m_exportQueue.count(); i++ )
@@ -3722,7 +3722,7 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
         m_pStatusDialog->ui->label->setText( "Preparing export..." );
         m_pStatusDialog->ui->labelEstimatedTime->setText( "" );
         m_pStatusDialog->ui->progressBar->setValue( 0 );
-        m_pStatusDialog->show();
+        m_pStatusDialog->open();
         if( showFileInEditor( row ) ) return; //Don't add to export queue when corrupted file
         qApp->processEvents();
         setReceipt( m_pSessionReceipts.at( row ) );
@@ -5939,7 +5939,7 @@ void MainWindow::exportHandler( void )
     else
     {
         //Hide Status Dialog
-        m_pStatusDialog->hide();
+        m_pStatusDialog->close();
         //Open last file which was opened before export
         openMlv( m_pSessionReceipts.at( m_lastClipBeforeExport )->fileName() );
         setSliders( m_pSessionReceipts.at( m_lastClipBeforeExport ), false );
