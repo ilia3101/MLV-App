@@ -8,7 +8,7 @@
 #include "cosine_interpolation.h"
 #include "math.h"
 
-#if defined(__linux)
+#ifndef __APPLE__
 #define M_PI		3.14159265358979323846	/* pi */
 #endif
 
