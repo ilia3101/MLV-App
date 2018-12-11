@@ -13,7 +13,7 @@
 
 
 #define SIZEW                (m_width * 2)
-#define SIZEH                360
+#define SIZEH                (m_width * 2)
 #define HALFSIZEW            (SIZEW/2)
 #define HALFSIZEH            (SIZEH/2)
 #define QUARTERSIZEW         (SIZEW/4)
@@ -112,7 +112,8 @@ void Curves::paintElement()
     pic.setDevicePixelRatio( devicePixelRatio() );
     setPixmap( pic );
 
-    setMinimumSize( 1, 180 ); //Otherwise window won't be smaller than picture
+    //setMinimumSize( 1, 180 ); //Otherwise window won't be smaller than picture
+    setMinimumWidth( 1 );
 }
 
 //Set active line
