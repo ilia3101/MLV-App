@@ -495,9 +495,9 @@ QGroupBox::indicator:checked:disabled {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>-1596</y>
+            <y>-1340</y>
             <width>271</width>
-            <height>4015</height>
+            <height>4011</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayoutScrollArea">
@@ -3956,40 +3956,17 @@ QGroupBox::indicator:checked:disabled {
                  <item>
                   <layout class="QHBoxLayout" name="horizontalLayout_35">
                    <item>
-                    <spacer name="horizontalSpacer_37">
-                     <property name="orientation">
-                      <enum>Qt::Horizontal</enum>
-                     </property>
-                     <property name="sizeHint" stdset="0">
-                      <size>
-                       <width>40</width>
-                       <height>20</height>
-                      </size>
-                     </property>
-                    </spacer>
-                   </item>
-                   <item>
                     <widget class="Curves" name="labelCurves">
                      <property name="text">
                       <string>Place holder for curves</string>
+                     </property>
+                     <property name="scaledContents">
+                      <bool>true</bool>
                      </property>
                      <property name="alignment">
                       <set>Qt::AlignCenter</set>
                      </property>
                     </widget>
-                   </item>
-                   <item>
-                    <spacer name="horizontalSpacer_36">
-                     <property name="orientation">
-                      <enum>Qt::Horizontal</enum>
-                     </property>
-                     <property name="sizeHint" stdset="0">
-                      <size>
-                       <width>40</width>
-                       <height>20</height>
-                      </size>
-                     </property>
-                    </spacer>
                    </item>
                   </layout>
                  </item>

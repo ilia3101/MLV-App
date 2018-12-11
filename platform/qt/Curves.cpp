@@ -12,15 +12,20 @@
 #include "../../src/processing/interpolation/spline_helper.h"
 
 
-#define SIZE                360
-#define HALFSIZE            (SIZE/2)
-#define QUARTERSIZE         (SIZE/4)
-#define THREEQUARTERSIZE    (SIZE*3/4)
+#define SIZEW                (m_width * 2)
+#define SIZEH                360
+#define HALFSIZEW            (SIZEW/2)
+#define HALFSIZEH            (SIZEH/2)
+#define QUARTERSIZEW         (SIZEW/4)
+#define QUARTERSIZEH         (SIZEH/4)
+#define THREEQUARTERSIZEW    (SIZEW*3/4)
+#define THREEQUARTERSIZEH    (SIZEH*3/4)
 
 //Constructor
 Curves::Curves(QWidget *parent)
     : QLabel(parent) {
-    m_pImage = new QImage( SIZE, SIZE, QImage::Format_RGBA8888 );
+    m_width = size().width();
+    m_pImage = new QImage( SIZEW, SIZEH, QImage::Format_RGBA8888 );
     m_cursor = QPoint( 0, 0 );
     m_pointSelected = false;
     m_activeLine = LINENR_W;
@@ -45,25 +50,32 @@ void Curves::setProcessingObject(processingObject_t *processing)
 //Draw the curves object on a label
 void Curves::paintElement()
 {
+    //If diagram is invisible, width is set to 0 what leads to crashes. So set some width...
+    if( m_width < 100 ) m_width = 100;
+
+    //Resize
+    delete m_pImage;
+    m_pImage = new QImage( SIZEW, SIZEH, QImage::Format_RGBA8888 );
+
     m_pImage->fill( QColor( 0, 0, 0, 255 ) );
     QPainter painterTc( m_pImage );
     painterTc.setRenderHint(QPainter::Antialiasing);
 
     //Lines
     painterTc.setPen( QColor( 100, 100, 100, 255 ) );
-    painterTc.drawLine( HALFSIZE-1, 0, HALFSIZE-1, SIZE );
-    painterTc.drawLine( HALFSIZE  , 0, HALFSIZE  , SIZE );
-    painterTc.drawLine( QUARTERSIZE-1, 0, QUARTERSIZE-1, SIZE );
-    painterTc.drawLine( QUARTERSIZE  , 0, QUARTERSIZE  , SIZE );
-    painterTc.drawLine( THREEQUARTERSIZE-1, 0, THREEQUARTERSIZE-1, SIZE );
-    painterTc.drawLine( THREEQUARTERSIZE  , 0, THREEQUARTERSIZE  , SIZE );
+    painterTc.drawLine( HALFSIZEW-1, 0, HALFSIZEW-1, SIZEH );
+    painterTc.drawLine( HALFSIZEW  , 0, HALFSIZEW  , SIZEH );
+    painterTc.drawLine( QUARTERSIZEW-1, 0, QUARTERSIZEW-1, SIZEH );
+    painterTc.drawLine( QUARTERSIZEW  , 0, QUARTERSIZEW  , SIZEH );
+    painterTc.drawLine( THREEQUARTERSIZEW-1, 0, THREEQUARTERSIZEW-1, SIZEH );
+    painterTc.drawLine( THREEQUARTERSIZEW  , 0, THREEQUARTERSIZEW  , SIZEH );
 
-    painterTc.drawLine( 0, HALFSIZE-1, SIZE, HALFSIZE-1 );
-    painterTc.drawLine( 0, HALFSIZE  , SIZE, HALFSIZE   );
-    painterTc.drawLine( 0, QUARTERSIZE-1, SIZE, QUARTERSIZE-1 );
-    painterTc.drawLine( 0, QUARTERSIZE  , SIZE, QUARTERSIZE   );
-    painterTc.drawLine( 0, THREEQUARTERSIZE-1, SIZE, THREEQUARTERSIZE-1 );
-    painterTc.drawLine( 0, THREEQUARTERSIZE  , SIZE, THREEQUARTERSIZE   );
+    painterTc.drawLine( 0, HALFSIZEH-1, SIZEW, HALFSIZEH-1 );
+    painterTc.drawLine( 0, HALFSIZEH  , SIZEW, HALFSIZEH   );
+    painterTc.drawLine( 0, QUARTERSIZEH-1, SIZEW, QUARTERSIZEH-1 );
+    painterTc.drawLine( 0, QUARTERSIZEH  , SIZEW, QUARTERSIZEH   );
+    painterTc.drawLine( 0, THREEQUARTERSIZEH-1, SIZEW, THREEQUARTERSIZEH-1 );
+    painterTc.drawLine( 0, THREEQUARTERSIZEH  , SIZEW, THREEQUARTERSIZEH   );
 
     //Paint line in right order
     if( m_activeLine == LINENR_W )
@@ -96,9 +108,11 @@ void Curves::paintElement()
     }
 
     //Paint to label
-    QPixmap pic = QPixmap::fromImage( *m_pImage ).scaled( HALFSIZE * devicePixelRatio(), (HALFSIZE) * devicePixelRatio(), Qt::KeepAspectRatio, Qt::SmoothTransformation );
+    QPixmap pic = QPixmap::fromImage( *m_pImage ).scaled( HALFSIZEW * devicePixelRatio(), (HALFSIZEH) * devicePixelRatio(), Qt::KeepAspectRatio, Qt::SmoothTransformation );
     pic.setDevicePixelRatio( devicePixelRatio() );
     setPixmap( pic );
+
+    setMinimumSize( 1, 180 ); //Otherwise window won't be smaller than picture
 }
 
 //Set active line
@@ -206,17 +220,17 @@ void Curves::mousePressEvent(QMouseEvent *mouse)
 {
     QVector<QPointF> *line = getActiveLinePointer();
 
-    if( ( mouse->localPos().x() ) < line->at(0).x() / 2 * (float)SIZE+10
-     && ( mouse->localPos().x() ) > line->at(0).x() / 2 * (float)SIZE-10
-     && ( HALFSIZE-mouse->localPos().y() ) < (line->at(0).y() / 2 * (float)SIZE+10)
-     && ( HALFSIZE-mouse->localPos().y() ) > (line->at(0).y() / 2 * (float)SIZE-10) )
+    if( ( mouse->localPos().x() ) < line->at(0).x() / 2 * (float)SIZEW+10
+     && ( mouse->localPos().x() ) > line->at(0).x() / 2 * (float)SIZEW-10
+     && ( HALFSIZEH-mouse->localPos().y() ) < (line->at(0).y() / 2 * (float)SIZEH+10)
+     && ( HALFSIZEH-mouse->localPos().y() ) > (line->at(0).y() / 2 * (float)SIZEH-10) )
     {
         m_firstPoint = true;
     }
-    else if( ( mouse->localPos().x() ) < line->at(line->count()-1).x() / 2 * (float)SIZE+10
-     && ( mouse->localPos().x() ) > line->at(line->count()-1).x() / 2 * (float)SIZE-10
-     && ( HALFSIZE-mouse->localPos().y() ) < (line->at(line->count()-1).y() / 2 * (float)SIZE+10)
-     && ( HALFSIZE-mouse->localPos().y() ) > (line->at(line->count()-1).y() / 2 * (float)SIZE-10) )
+    else if( ( mouse->localPos().x() ) < line->at(line->count()-1).x() / 2 * (float)SIZEW+10
+     && ( mouse->localPos().x() ) > line->at(line->count()-1).x() / 2 * (float)SIZEW-10
+     && ( HALFSIZEH-mouse->localPos().y() ) < (line->at(line->count()-1).y() / 2 * (float)SIZEH+10)
+     && ( HALFSIZEH-mouse->localPos().y() ) > (line->at(line->count()-1).y() / 2 * (float)SIZEH-10) )
     {
         m_lastPoint = true;
     }
@@ -227,10 +241,10 @@ void Curves::mousePressEvent(QMouseEvent *mouse)
             /*qDebug() << mouse->localPos().x() << mouse->localPos().y()
                      << m_whiteLine.at(i).x() / 2 * (float)SIZE
                      << m_whiteLine.at(i).y() / 2 * (float)SIZE;*/
-            if( ( mouse->localPos().x() ) < line->at(i).x() / 2 * (float)SIZE+10
-             && ( mouse->localPos().x() ) > line->at(i).x() / 2 * (float)SIZE-10
-             && ( HALFSIZE-mouse->localPos().y() ) < (line->at(i).y() / 2 * (float)SIZE+10)
-             && ( HALFSIZE-mouse->localPos().y() ) > (line->at(i).y() / 2 * (float)SIZE-10) )
+            if( ( mouse->localPos().x() ) < line->at(i).x() / 2 * (float)SIZEW+10
+             && ( mouse->localPos().x() ) > line->at(i).x() / 2 * (float)SIZEW-10
+             && ( HALFSIZEH-mouse->localPos().y() ) < (line->at(i).y() / 2 * (float)SIZEH+10)
+             && ( HALFSIZEH-mouse->localPos().y() ) > (line->at(i).y() / 2 * (float)SIZEH-10) )
             {
                 line->removeAt( i );
                 break;
@@ -247,10 +261,10 @@ void Curves::mouseDoubleClickEvent(QMouseEvent *mouse)
     QVector<QPointF> *line = getActiveLinePointer();
     for( int i = 1; i < line->count()-1; i++ )
     {
-        if( ( mouse->localPos().x() ) < line->at(i).x() / 2 * (float)SIZE+10
-         && ( mouse->localPos().x() ) > line->at(i).x() / 2 * (float)SIZE-10
-         && ( HALFSIZE-mouse->localPos().y() ) < (line->at(i).y() / 2 * (float)SIZE+10)
-         && ( HALFSIZE-mouse->localPos().y() ) > (line->at(i).y() / 2 * (float)SIZE-10) )
+        if( ( mouse->localPos().x() ) < line->at(i).x() / 2 * (float)SIZEW+10
+         && ( mouse->localPos().x() ) > line->at(i).x() / 2 * (float)SIZEW-10
+         && ( HALFSIZEH-mouse->localPos().y() ) < (line->at(i).y() / 2 * (float)SIZEH+10)
+         && ( HALFSIZEH-mouse->localPos().y() ) > (line->at(i).y() / 2 * (float)SIZEH-10) )
         {
             line->removeAt( i );
             paintElement();
@@ -274,6 +288,14 @@ void Curves::mouseMoveEvent(QMouseEvent *mouse)
     movePoint( mouse->localPos().x(), mouse->localPos().y(), true );
 }
 
+//Resize element
+void Curves::resizeEvent(QResizeEvent *event)
+{
+    m_width = size().width();
+    paintElement();
+    event->accept();
+}
+
 //Paint line
 void Curves::paintLine(QVector<QPointF> line, QPainter *pPainter, QColor color, bool active, uint8_t channel)
 {
@@ -293,16 +315,16 @@ void Curves::paintLine(QVector<QPointF> line, QPainter *pPainter, QColor color, 
         pYin[i] = line.at(i).y();
     }
     //Build output sets
-    float *pXout = (float*)malloc( sizeof(float) * SIZE );
-    float *pYout = (float*)malloc( sizeof(float) * SIZE );
+    float *pXout = (float*)malloc( sizeof(float) * SIZEW );
+    float *pYout = (float*)malloc( sizeof(float) * SIZEW );
 
     int numIn = line.count();
-    int numOut = SIZE;
+    int numOut = SIZEW;
 
     //Data into x of output sets
     for( int i = 0; i < numOut; i++ )
     {
-        pXout[i] = i / (float)SIZE;
+        pXout[i] = i / (float)SIZEW;
     }
 
     //Get the interpolated line
@@ -319,7 +341,7 @@ void Curves::paintLine(QVector<QPointF> line, QPainter *pPainter, QColor color, 
         {
             if( pYout[i] > 1.0 ) pYout[i] = 1.0;
             else if( pYout[i] < 0.0001 ) pYout[i] = 0.0001;
-            pPainter->drawLine( pXout[i-1]*SIZE, SIZE-(pYout[i-1]*SIZE), pXout[i]*SIZE, SIZE-(pYout[i]*SIZE) );
+            pPainter->drawLine( pXout[i-1]*SIZEW, SIZEH-(pYout[i-1]*SIZEH), pXout[i]*SIZEW, SIZEH-(pYout[i]*SIZEH) );
         }
     }
 
@@ -330,7 +352,7 @@ void Curves::paintLine(QVector<QPointF> line, QPainter *pPainter, QColor color, 
         pPainter->setBrush( color );
         for( int i = 0; i < line.count(); i++ )
         {
-            pPainter->drawEllipse( pXin[i]*SIZE-7, SIZE-(pYin[i]*SIZE)-7, 15, 15 );
+            pPainter->drawEllipse( pXin[i]*SIZEW-7, SIZEH-(pYin[i]*SIZEH)-7, 15, 15 );
         }
     }
 
@@ -363,23 +385,23 @@ void Curves::movePoint(qreal x, qreal y, bool release)
     //move the marker
     if( m_pointSelected )
     {
-        if ( 0.0001 > x * 2 / (float)SIZE ) x = 0.001 / 2.0 * (float)SIZE;
-        if ( 1.0 < x * 2 / (float)SIZE ) x = 0.99 / 2.0 * (float)SIZE;
-        if ( 0.0001 > 1.0-(y * 2 / (float)SIZE ) ) y = -( 0.0001 - 1.0 ) / 2.0 * (float) SIZE;
-        if ( 1.0 < 1.0-(y * 2 / (float)SIZE ) ) y = 0.0;
+        if ( 0.0001 > x * 2 / (float)SIZEW ) x = 0.001 / 2.0 * (float)SIZEW;
+        if ( 1.0 < x * 2 / (float)SIZEW ) x = 0.99 / 2.0 * (float)SIZEW;
+        if ( 0.0001 > 1.0 - ( y * 2 / (float)SIZEH ) ) y = -( 0.0001 - 1.0 ) / 2.0 * (float) SIZEH;
+        if ( 1.0 < 1.0 - ( y * 2 / (float)SIZEH ) ) y = 0.0;
 
         int i;
         //Search the right position for the grabbed point
         for( i = 0; i < line->count()-1; i++ )
         {
-            if( line->at(i).x() > x * 2 / (float)SIZE )
+            if( line->at(i).x() > x * 2 / (float)SIZEW )
             {
                 break;
             }
         }
         //insert it for drawing
-        line->insert( i, QPointF( x * 2 / (float)SIZE,
-                                  1.0-(y * 2 / (float)SIZE )) );
+        line->insert( i, QPointF( x * 2 / (float)SIZEW,
+                                  1.0 - ( y * 2 / (float)SIZEH ) ) );
         paintElement();
         //and grab it again
         if( release ) line->removeAt( i );
@@ -387,7 +409,7 @@ void Curves::movePoint(qreal x, qreal y, bool release)
     //Drag first point up & down
     else if( m_firstPoint )
     {
-        float yNew = 1.0-(y * 2 / (float)SIZE );
+        float yNew = 1.0 - ( y * 2 / (float)SIZEH );
         QPointF point = line->takeFirst();
         if( yNew > 1.0 ) yNew = 1.0;
         else if( yNew < 0.0001 ) yNew = 0.0001;
@@ -398,7 +420,7 @@ void Curves::movePoint(qreal x, qreal y, bool release)
     //Drag last point up & down
     else if( m_lastPoint )
     {
-        float yNew = 1.0-(y * 2 / (float)SIZE );
+        float yNew = 1.0 - ( y * 2 / (float)SIZEH );
         QPointF point = line->takeLast();
         if( yNew > 1.0 ) yNew = 1.0;
         else if( yNew < 0.0001 ) yNew = 0.0001;
