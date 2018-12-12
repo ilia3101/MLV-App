@@ -495,8 +495,8 @@ QGroupBox::indicator:checked:disabled {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>-1912</y>
-            <width>256</width>
+            <y>0</y>
+            <width>244</width>
             <height>4027</height>
            </rect>
           </property>
@@ -4810,7 +4810,7 @@ QGroupBox::indicator:checked:disabled {
                       </font>
                      </property>
                      <property name="text">
-                      <string>Hue vs. Luma</string>
+                      <string>Hue vs. Luminance</string>
                      </property>
                     </widget>
                    </item>
