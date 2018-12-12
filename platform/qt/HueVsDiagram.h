@@ -10,6 +10,7 @@
 
 #include <QLabel>
 #include <QPixmap>
+#include <QResizeEvent>
 #include <Qt>
 #include "../../src/mlv_include.h"
 
@@ -31,6 +32,7 @@ public:
 private:
     QImage *m_pImage;
     QPoint m_cursor;
+    uint16_t m_width;
     bool m_pointSelected;
     bool m_firstPoint;
     bool m_lastPoint;
@@ -50,6 +52,7 @@ protected:
     void paintLine(QVector<QPointF> line , QPainter *pPainter, QColor color, bool active);
     void initLine(QVector<QPointF> *line);
     void movePoint(qreal x, qreal y, bool release );
+    void resizeEvent( QResizeEvent *event );
 };
 
 #endif // HUEVSDIAGRAM_H

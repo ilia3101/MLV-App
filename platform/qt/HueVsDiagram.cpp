@@ -11,15 +11,20 @@
 #include <QMouseEvent>
 #include "../../src/processing/interpolation/cosine_interpolation.h"
 
-#define SIZE                360
-#define HALFSIZE            (SIZE/2)
-#define QUARTERSIZE         (SIZE/4)
-#define THREEQUARTERSIZE    (SIZE*3/4)
+#define SIZEW                (m_width * 2)
+#define SIZEH                360
+#define HALFSIZEW            (SIZEW/2)
+#define HALFSIZEH            (SIZEH/2)
+#define QUARTERSIZEW         (SIZEW/4)
+#define QUARTERSIZEH         (SIZEH/4)
+#define THREEQUARTERSIZEW    (SIZEW*3/4)
+#define THREEQUARTERSIZEH    (SIZEH*3/4)
 
 //Constructor
 HueVsDiagram::HueVsDiagram(QWidget *parent)
     : QLabel(parent) {
-    m_pImage = new QImage( SIZE, SIZE, QImage::Format_RGBA8888 );
+    m_width = size().width();
+    m_pImage = new QImage( SIZEW, SIZEH, QImage::Format_RGBA8888 );
     m_cursor = QPoint( 0, 0 );
     m_pointSelected = false;
     m_pFrameChanged = NULL;
@@ -50,12 +55,15 @@ void HueVsDiagram::setFrameChangedPointer(bool *pFrameChanged)
 //Draw the HueVsSat object on a label
 void HueVsDiagram::paintElement()
 {
+    delete m_pImage;
+    m_pImage = new QImage( SIZEW, SIZEH, QImage::Format_RGBA8888 );
+
     m_pImage->fill( QColor( 0, 0, 0, 255 ) );
     QPainter painterTc( m_pImage );
     painterTc.setRenderHint(QPainter::Antialiasing);
 
     //Color
-    QLinearGradient gradient1( 0, 0, SIZE, 0 );
+    QLinearGradient gradient1( 0, 0, SIZEW, 0 );
     gradient1.setColorAt( 0, QColor( 255, 0, 0, 255 ) );
     gradient1.setColorAt( 0.18, QColor( 255, 255, 0, 255 ) );
     gradient1.setColorAt( 0.375, QColor( 0, 255, 0, 255 ) );
@@ -64,21 +72,21 @@ void HueVsDiagram::paintElement()
     gradient1.setColorAt( 0.875, QColor( 255, 0, 255, 255 ) );
     gradient1.setColorAt( 1, QColor( 255, 0, 0, 255 ) );
     painterTc.setBrush( gradient1 );
-    painterTc.drawRect( 0, 0, SIZE, SIZE );
+    painterTc.drawRect( 0, 0, SIZEW, SIZEH );
 
     //HueVsHue
     if( m_diagramType == HueVsHue )
     {
-        for( int y = 0; y < SIZE; y++ )
+        for( int y = 0; y < SIZEH; y++ )
         {
-            for( int x = 0; x < SIZE; x++ )
+            for( int x = 0; x < SIZEW; x++ )
             {
-                if( y == HALFSIZE ) continue;
-                int getFrom = x - 60.0 / 360.0 * (y - HALFSIZE);
-                if( getFrom >= SIZE ) getFrom -= SIZE;
-                if( getFrom < 0 ) getFrom += SIZE;
-                QColor color = m_pImage->pixelColor( getFrom, HALFSIZE );
-                if( getFrom < 2 || getFrom > SIZE-2 ) color = QColor( 255, 0, 0, 255 );
+                if( y == HALFSIZEH ) continue;
+                int getFrom = x - 60.0 / 360.0 * (y - HALFSIZEH);
+                if( getFrom >= SIZEW ) getFrom -= SIZEW;
+                if( getFrom < 0 ) getFrom += SIZEW;
+                QColor color = m_pImage->pixelColor( getFrom, HALFSIZEH );
+                if( getFrom < 2 || getFrom > SIZEW-2 ) color = QColor( 255, 0, 0, 255 );
                 m_pImage->setPixelColor( x, y, color );
             }
         }
@@ -86,43 +94,45 @@ void HueVsDiagram::paintElement()
     //HueVsSat
     else if( m_diagramType == HueVsSaturation )
     {
-        QLinearGradient gradient2( 0, 0, 0, SIZE );
+        QLinearGradient gradient2( 0, 0, 0, SIZEH );
         gradient2.setColorAt( 0, QColor( 128, 128, 128, 0 ) );
         gradient2.setColorAt( 1, QColor( 128, 128, 128, 255 ) );
         painterTc.setBrush( gradient2 );
-        painterTc.drawRect( 0, 0, SIZE, SIZE );
+        painterTc.drawRect( 0, 0, SIZEW, SIZEH );
     }
     //HueVsLuminance
     else if( m_diagramType == HueVsLuminance )
     {
-        QLinearGradient gradient2( 0, 0, 0, SIZE );
+        QLinearGradient gradient2( 0, 0, 0, SIZEH );
         gradient2.setColorAt( 0, QColor( 255, 255, 255, 255 ) );
         gradient2.setColorAt( 0.5, QColor( 128, 128, 128, 0 ) );
         gradient2.setColorAt( 1, QColor( 0, 0, 0, 255 ) );
         painterTc.setBrush( gradient2 );
-        painterTc.drawRect( 0, 0, SIZE, SIZE );
+        painterTc.drawRect( 0, 0, SIZEW, SIZEH );
     }
 
     //Lines
     painterTc.setPen( QColor( 100, 100, 100, 255 ) );
     for( int i = 1; i < 3; i++ )
     {
-        painterTc.drawLine( (i*SIZE/3)-1, 0, (i*SIZE/3)-1, SIZE );
-        painterTc.drawLine( (i*SIZE/3)  , 0, (i*SIZE/3)  , SIZE );
+        painterTc.drawLine( (i*SIZEW/3)-1, 0, (i*SIZEW/3)-1, SIZEH );
+        painterTc.drawLine( (i*SIZEW/3)  , 0, (i*SIZEW/3)  , SIZEH );
     }
 
     for( int i = 1; i < 4; i++ )
     {
-        painterTc.drawLine( 0, (i*SIZE/4)-1, SIZE, (i*SIZE/4)-1 );
-        painterTc.drawLine( 0, (i*SIZE/4)  , SIZE, (i*SIZE/4)   );
+        painterTc.drawLine( 0, (i*SIZEH/4)-1, SIZEW, (i*SIZEH/4)-1 );
+        painterTc.drawLine( 0, (i*SIZEH/4)  , SIZEW, (i*SIZEH/4)   );
     }
 
     paintLine( m_whiteLine, &painterTc, QColor(255,255,255,255), true );
 
     //Paint to label
-    QPixmap pic = QPixmap::fromImage( *m_pImage ).scaled( HALFSIZE * devicePixelRatio(), (HALFSIZE) * devicePixelRatio(), Qt::KeepAspectRatio, Qt::SmoothTransformation );
+    QPixmap pic = QPixmap::fromImage( *m_pImage ).scaled( HALFSIZEW * devicePixelRatio(), (HALFSIZEH) * devicePixelRatio(), Qt::KeepAspectRatio, Qt::SmoothTransformation );
     pic.setDevicePixelRatio( devicePixelRatio() );
     setPixmap( pic );
+
+    setMinimumSize( 1, 180 ); //Otherwise window won't be smaller than picture
 }
 
 //Reset the lines
@@ -194,16 +204,16 @@ void HueVsDiagram::paintLine(QVector<QPointF> line, QPainter *pPainter, QColor c
         pYin[i] = line.at(i).y();
     }
     //Build output sets
-    float *pXout = (float*)malloc( sizeof(float) * SIZE );
-    float *pYout = (float*)malloc( sizeof(float) * SIZE );
+    float *pXout = (float*)malloc( sizeof(float) * SIZEW );
+    float *pYout = (float*)malloc( sizeof(float) * SIZEW );
 
     int numIn = line.count();
-    int numOut = SIZE;
+    int numOut = SIZEW;
 
     //Data into x of output sets
     for( int i = 0; i < numOut; i++ )
     {
-        pXout[i] = i / (float)SIZE;
+        pXout[i] = i / (float)SIZEW;
     }
 
     //Get the interpolated line
@@ -220,7 +230,7 @@ void HueVsDiagram::paintLine(QVector<QPointF> line, QPainter *pPainter, QColor c
         {
             if( pYout[i] > 1.0 ) pYout[i] = 1.0;
             else if( pYout[i] < -1.0 ) pYout[i] = -1.0;
-            pPainter->drawLine( pXout[i-1]*SIZE, HALFSIZE-(pYout[i-1]*SIZE), pXout[i]*SIZE, HALFSIZE-(pYout[i]*SIZE) );
+            pPainter->drawLine( pXout[i-1]*SIZEW, HALFSIZEH-(pYout[i-1]*SIZEH), pXout[i]*SIZEW, HALFSIZEH-(pYout[i]*SIZEH) );
         }
     }
 
@@ -231,7 +241,7 @@ void HueVsDiagram::paintLine(QVector<QPointF> line, QPainter *pPainter, QColor c
         pPainter->setBrush( color );
         for( int i = 0; i < line.count(); i++ )
         {
-            pPainter->drawEllipse( pXin[i]*SIZE-7, HALFSIZE-(pYin[i]*SIZE)-7, 15, 15 );
+            pPainter->drawEllipse( pXin[i]*SIZEW-7, HALFSIZEH-(pYin[i]*SIZEH)-7, 15, 15 );
         }
     }
 
@@ -276,17 +286,17 @@ void HueVsDiagram::mousePressEvent(QMouseEvent *mouse)
 {
     QVector<QPointF> *line = &m_whiteLine;
 
-    if( ( mouse->localPos().x() ) < line->at(0).x() / 2 * (float)SIZE+10
-     && ( mouse->localPos().x() ) > line->at(0).x() / 2 * (float)SIZE-10
-     && ( QUARTERSIZE-mouse->localPos().y() ) < (line->at(0).y() / 2 * (float)SIZE+10)
-     && ( QUARTERSIZE-mouse->localPos().y() ) > (line->at(0).y() / 2 * (float)SIZE-10) )
+    if( ( mouse->localPos().x() ) < line->at(0).x() / 2 * (float)SIZEW+10
+     && ( mouse->localPos().x() ) > line->at(0).x() / 2 * (float)SIZEW-10
+     && ( QUARTERSIZEH-mouse->localPos().y() ) < (line->at(0).y() / 2 * (float)SIZEH+10)
+     && ( QUARTERSIZEH-mouse->localPos().y() ) > (line->at(0).y() / 2 * (float)SIZEH-10) )
     {
         m_firstPoint = true;
     }
-    else if( ( mouse->localPos().x() ) < line->at(line->count()-1).x() / 2 * (float)SIZE+10
-     && ( mouse->localPos().x() ) > line->at(line->count()-1).x() / 2 * (float)SIZE-10
-     && ( QUARTERSIZE-mouse->localPos().y() ) < (line->at(line->count()-1).y() / 2 * (float)SIZE+10)
-     && ( QUARTERSIZE-mouse->localPos().y() ) > (line->at(line->count()-1).y() / 2 * (float)SIZE-10) )
+    else if( ( mouse->localPos().x() ) < line->at(line->count()-1).x() / 2 * (float)SIZEW+10
+     && ( mouse->localPos().x() ) > line->at(line->count()-1).x() / 2 * (float)SIZEW-10
+     && ( QUARTERSIZEH-mouse->localPos().y() ) < (line->at(line->count()-1).y() / 2 * (float)SIZEH+10)
+     && ( QUARTERSIZEH-mouse->localPos().y() ) > (line->at(line->count()-1).y() / 2 * (float)SIZEH-10) )
     {
         m_lastPoint = true;
     }
@@ -297,10 +307,10 @@ void HueVsDiagram::mousePressEvent(QMouseEvent *mouse)
             /*qDebug() << mouse->localPos().x() << mouse->localPos().y()
                      << m_whiteLine.at(i).x() / 2 * (float)SIZE
                      << m_whiteLine.at(i).y() / 2 * (float)SIZE;*/
-            if( ( mouse->localPos().x() ) < line->at(i).x() / 2 * (float)SIZE+10
-             && ( mouse->localPos().x() ) > line->at(i).x() / 2 * (float)SIZE-10
-             && ( QUARTERSIZE-mouse->localPos().y() ) < (line->at(i).y() / 2 * (float)SIZE+10)
-             && ( QUARTERSIZE-mouse->localPos().y() ) > (line->at(i).y() / 2 * (float)SIZE-10) )
+            if( ( mouse->localPos().x() ) < line->at(i).x() / 2 * (float)SIZEW+10
+             && ( mouse->localPos().x() ) > line->at(i).x() / 2 * (float)SIZEW-10
+             && ( QUARTERSIZEH-mouse->localPos().y() ) < (line->at(i).y() / 2 * (float)SIZEH+10)
+             && ( QUARTERSIZEH-mouse->localPos().y() ) > (line->at(i).y() / 2 * (float)SIZEH-10) )
             {
                 line->removeAt( i );
                 break;
@@ -317,10 +327,10 @@ void HueVsDiagram::mouseDoubleClickEvent(QMouseEvent *mouse)
     QVector<QPointF> *line = &m_whiteLine;
     for( int i = 1; i < line->count()-1; i++ )
     {
-        if( ( mouse->localPos().x() ) < line->at(i).x() / 2 * (float)SIZE+10
-         && ( mouse->localPos().x() ) > line->at(i).x() / 2 * (float)SIZE-10
-         && ( QUARTERSIZE-mouse->localPos().y() ) < (line->at(i).y() / 2 * (float)SIZE+10)
-         && ( QUARTERSIZE-mouse->localPos().y() ) > (line->at(i).y() / 2 * (float)SIZE-10) )
+        if( ( mouse->localPos().x() ) < line->at(i).x() / 2 * (float)SIZEW+10
+         && ( mouse->localPos().x() ) > line->at(i).x() / 2 * (float)SIZEW-10
+         && ( QUARTERSIZEH-mouse->localPos().y() ) < (line->at(i).y() / 2 * (float)SIZEH+10)
+         && ( QUARTERSIZEH-mouse->localPos().y() ) > (line->at(i).y() / 2 * (float)SIZEH-10) )
         {
             line->removeAt( i );
             paintElement();
@@ -351,23 +361,23 @@ void HueVsDiagram::movePoint(qreal x, qreal y, bool release)
     //move the marker
     if( m_pointSelected )
     {
-        if ( 0.0001 > x * 2 / (float)SIZE ) x = 0.001 / 2.0 * (float)SIZE;
-        if ( 1.0 < x * 2 / (float)SIZE ) x = 0.99 / 2.0 * (float)SIZE;
-        if ( 0.0001 > 1.0-(y * 2 / (float)SIZE ) ) y = -( 0.0001 - 1.0 ) / 2.0 * (float) SIZE;
-        if ( 1.0 < 1.0-(y * 2 / (float)SIZE ) ) y = 0.0;
+        if ( 0.0001 > x * 2 / (float)SIZEW ) x = 0.001 / 2.0 * (float)SIZEW;
+        if ( 1.0 < x * 2 / (float)SIZEW ) x = 0.99 / 2.0 * (float)SIZEW;
+        if ( 0.0001 > 1.0-(y * 2 / (float)SIZEH ) ) y = -( 0.0001 - 1.0 ) / 2.0 * (float) SIZEH;
+        if ( 1.0 < 1.0-(y * 2 / (float)SIZEH ) ) y = 0.0;
 
         int i;
         //Search the right position for the grabbed point
         for( i = 0; i < line->count()-1; i++ )
         {
-            if( line->at(i).x() > x * 2 / (float)SIZE )
+            if( line->at(i).x() > x * 2 / (float)SIZEW )
             {
                 break;
             }
         }
         //insert it for drawing
-        line->insert( i, QPointF( x * 2 / (float)SIZE,
-                                  1.0-((y * 2 + HALFSIZE) / (float)SIZE )) );
+        line->insert( i, QPointF( x * 2 / (float)SIZEW,
+                                  1.0-((y * 2 + HALFSIZEH) / (float)SIZEH )) );
         paintElement();
         //and grab it again
         if( release ) line->removeAt( i );
@@ -375,7 +385,7 @@ void HueVsDiagram::movePoint(qreal x, qreal y, bool release)
     //Drag first & last point up & down
     else if( m_firstPoint || m_lastPoint )
     {
-        float yNew = 1.0-((y * 2 + HALFSIZE) / (float)SIZE );
+        float yNew = 1.0-((y * 2 + HALFSIZEH) / (float)SIZEH );
         QPointF point = line->takeFirst();
         if( yNew > 0.5 ) yNew = 0.5;
         else if( yNew < -0.5 ) yNew = -0.5;
@@ -386,4 +396,11 @@ void HueVsDiagram::movePoint(qreal x, qreal y, bool release)
         line->append( point );
         paintElement();
     }
+}
+
+//Resize the diagram
+void HueVsDiagram::resizeEvent(QResizeEvent *event)
+{
+    m_width = size().width();
+    paintElement();
 }
