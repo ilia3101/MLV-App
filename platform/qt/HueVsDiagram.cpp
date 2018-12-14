@@ -403,4 +403,5 @@ void HueVsDiagram::resizeEvent(QResizeEvent *event)
 {
     m_width = size().width();
     paintElement();
+    event->accept();
 }
