@@ -419,7 +419,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
     on_actionPlay_triggered( false );
 
     //If user wants to be asked
-    if( ui->actionAskForSavingOnQuit->isChecked() )
+    if( ui->actionAskForSavingOnQuit->isChecked() && ui->listWidgetSession->count() != 0 )
     {
         //Ask before quit
         int ret = QMessageBox::warning( this, APPNAME, tr( "Do you really like to quit MLVApp? Do you like to save the session?" ),
@@ -5330,6 +5330,29 @@ void MainWindow::on_actionPasteReceipt_triggered()
 //New Session
 void MainWindow::on_actionNewSession_triggered()
 {
+    //Save last session?
+    if( ui->listWidgetSession->count() != 0 )
+    {
+        int ret = QMessageBox::warning( this, APPNAME, tr( "Do you like to save the current session?" ),
+                                        tr( "Cancel" ), tr( "Don't save" ), tr( "Save" ) );
+
+        //Aborted
+        if( ret == QMessageBox::Escape || ret == 0 )
+        {
+            return;
+        }
+        //Save and quit
+        else if( ret == 2 )
+        {
+            on_actionSaveSession_triggered();
+            //Saving was aborted -> abort quit
+            if( m_sessionFileName.count() == 0 )
+            {
+                return;
+            }
+        }
+    }
+
     deleteSession();
 }
 
