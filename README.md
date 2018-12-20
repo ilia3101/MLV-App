@@ -1,7 +1,7 @@
 # :fire::fire::fire: MLV App :fire::fire::fire:
 What is MLV App? Lightroom, but for Magic Lantern MLV Video (and open source and cross platform)
 
-![MLV App](https://user-images.githubusercontent.com/30245296/47175618-db301180-d313-11e8-9e55-acad188b6171.png)
+![MLV App](https://user-images.githubusercontent.com/30245296/50310781-66a85900-04a3-11e9-85b9-9256c837d1d6.png)
 
 Find the latest releases [here](https://ilia3101.github.io/MLV-App/). Download, unpack and start.
 
@@ -13,7 +13,7 @@ A very first version of a kind of user manual can be found [here](https://github
 - Support for lossless mlv
 - Support for any bit depth (…, 10, 12, 14bit)
 - Demosaic algorithms: None, Simple (fastest), bilinear, multithreaded AMaZE & LMMSE, or IGV
-- Processing with many parameters (exposure, contrast, white balance, clarity, vibrance, saturation, dark & light adjustments, highlights & shadows, sharpen,…)
+- Processing with many parameters (exposure, contrast, white balance, clarity, vibrance, saturation, dark & light adjustments, highlights & shadows, gradation curves, sharpen, hue vs. hue/saturation/luminance curves,…)
 - Processing filters for film emulation powered by neural networks :ghost:
 - Processing in sRGB or several LOG
 - RAW corrections (fix focus & bad pixels, chroma smoothing, pattern noise, vertical stripes, adjust RAW black & white level)
