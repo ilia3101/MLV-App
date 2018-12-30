@@ -18,6 +18,16 @@ GraphicsZoomView::GraphicsZoomView(QWidget *parent) :
     m_isZoomEnabled = false;
     m_isWbPickerActive = false;
     m_isMousePressed = false;
+
+    m_pZoomInSc = new QShortcut( QKeySequence( Qt::CTRL + Qt::Key_Plus ), this, SLOT( shortCutZoomIn() ) );
+    m_pZoomOutSc = new QShortcut( QKeySequence( Qt::CTRL + Qt::Key_Minus ), this, SLOT( shortCutZoomOut() ) );
+}
+
+//Destructor
+GraphicsZoomView::~GraphicsZoomView()
+{
+    delete m_pZoomInSc;
+    delete m_pZoomOutSc;
 }
 
 //En-/disable zoom on mouse wheel
@@ -56,6 +66,34 @@ void GraphicsZoomView::setCrossCursorActive(bool on)
 {
     if( on ) viewport()->setCursor( Qt::CrossCursor );
     else viewport()->setCursor( Qt::OpenHandCursor );
+}
+
+//Shortcut Zoom In
+void GraphicsZoomView::shortCutZoomIn()
+{
+    //If disabled, do nothing
+    if( !m_isZoomEnabled ) return;
+
+    //else zoom
+    setTransformationAnchor( QGraphicsView::AnchorUnderMouse) ;
+    // Scale the view / do the zoom
+    double scaleFactor = 1.05;
+    // Zoom in
+    scale( scaleFactor, scaleFactor );
+}
+
+//Shortcut Zoom Out
+void GraphicsZoomView::shortCutZoomOut()
+{
+    //If disabled, do nothing
+    if( !m_isZoomEnabled ) return;
+
+    //else zoom
+    setTransformationAnchor( QGraphicsView::AnchorUnderMouse );
+    // Scale the view / do the zoom
+    double scaleFactor = 1.05;
+    // Zoom in
+    scale( 1.0 / scaleFactor, 1.0 / scaleFactor );
 }
 
 //Methods for changing the cursor

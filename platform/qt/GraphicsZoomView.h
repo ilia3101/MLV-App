@@ -13,17 +13,23 @@
 #include <QWidget>
 #include <Qt>
 #include <QDebug>
+#include <QShortcut>
 
 class GraphicsZoomView : public QGraphicsView
 {
     Q_OBJECT
 public:
     explicit GraphicsZoomView(QWidget *parent = 0);
+    ~GraphicsZoomView();
     void setZoomEnabled(bool on);
     bool isZoomEnabled(void);
     void resetZoom(void);
     void setWbPickerActive(bool on);
     void setCrossCursorActive(bool on);
+
+public slots:
+    void shortCutZoomIn(void);
+    void shortCutZoomOut(void);
 
 signals:
     void wbPicked( int x, int y );
@@ -37,6 +43,8 @@ protected:
     bool m_isZoomEnabled;
     bool m_isWbPickerActive;
     bool m_isMousePressed;
+    QShortcut *m_pZoomInSc;
+    QShortcut *m_pZoomOutSc;
 };
 
 #endif // GRAPHICSZOOMVIEW_H
