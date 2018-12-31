@@ -19,8 +19,8 @@ GraphicsZoomView::GraphicsZoomView(QWidget *parent) :
     m_isWbPickerActive = false;
     m_isMousePressed = false;
 
-    m_pZoomInSc = new QShortcut( QKeySequence( Qt::CTRL + Qt::Key_Plus ), this, SLOT( shortCutZoomIn() ) );
-    m_pZoomOutSc = new QShortcut( QKeySequence( Qt::CTRL + Qt::Key_Minus ), this, SLOT( shortCutZoomOut() ) );
+    m_pZoomInSc = new QShortcut( QKeySequence::ZoomIn, this, SLOT( shortCutZoomIn() ) );
+    m_pZoomOutSc = new QShortcut( QKeySequence::ZoomOut, this, SLOT( shortCutZoomOut() ) );
 }
 
 //Destructor
@@ -77,7 +77,7 @@ void GraphicsZoomView::shortCutZoomIn()
     //else zoom
     setTransformationAnchor( QGraphicsView::AnchorUnderMouse) ;
     // Scale the view / do the zoom
-    double scaleFactor = 1.05;
+    double scaleFactor = 1.5;
     // Zoom in
     scale( scaleFactor, scaleFactor );
 }
@@ -91,7 +91,7 @@ void GraphicsZoomView::shortCutZoomOut()
     //else zoom
     setTransformationAnchor( QGraphicsView::AnchorUnderMouse );
     // Scale the view / do the zoom
-    double scaleFactor = 1.05;
+    double scaleFactor = 1.5;
     // Zoom in
     scale( 1.0 / scaleFactor, 1.0 / scaleFactor );
 }
