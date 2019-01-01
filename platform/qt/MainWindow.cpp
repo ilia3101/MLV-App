@@ -3471,6 +3471,7 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
         if( ratioV > 0.9 && ratioV < 1.1 ) ui->comboBoxVStretch->setCurrentIndex( 0 );
         else if( ratioV > 1.6 && ratioV < 1.7 ) ui->comboBoxVStretch->setCurrentIndex( 1 );
         else if( ratioV > 2.9 && ratioV < 3.1 ) ui->comboBoxVStretch->setCurrentIndex( 2 );
+        else if( ratioV > 4.9 && ratioV < 5.1 ) ui->comboBoxVStretch->setCurrentIndex( 4 );
         else ui->comboBoxVStretch->setCurrentIndex( 3 );
     }
     else if( receipt->stretchFactorY() == STRETCH_V_100 ) ui->comboBoxVStretch->setCurrentIndex( 0 );
