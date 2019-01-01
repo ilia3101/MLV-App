@@ -6700,6 +6700,11 @@ QGroupBox::indicator:checked:disabled {
                        <string>0.33x</string>
                       </property>
                      </item>
+                     <item>
+                      <property name="text">
+                       <string>5.0x</string>
+                      </property>
+                     </item>
                     </widget>
                    </item>
                    <item row="1" column="0">

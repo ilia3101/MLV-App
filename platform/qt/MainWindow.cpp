@@ -2219,6 +2219,10 @@ void MainWindow::startExportCdng(QString fileName)
     {
         picAR[2] = 1; picAR[3] = 3;
     }
+    else if(m_exportQueue.first()->stretchFactorY() == STRETCH_V_500)
+    {
+        picAR[2] = 5; picAR[3] = 1;
+    }
     else
     {
         picAR[2] = 1; picAR[3] = 1;
@@ -3472,7 +3476,8 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     else if( receipt->stretchFactorY() == STRETCH_V_100 ) ui->comboBoxVStretch->setCurrentIndex( 0 );
     else if( receipt->stretchFactorY() == STRETCH_V_167 ) ui->comboBoxVStretch->setCurrentIndex( 1 );
     else if( receipt->stretchFactorY() == STRETCH_V_300 ) ui->comboBoxVStretch->setCurrentIndex( 2 );
-    else ui->comboBoxVStretch->setCurrentIndex( 3 );
+    else if( receipt->stretchFactorY() == STRETCH_V_033 ) ui->comboBoxVStretch->setCurrentIndex( 3 );
+    else ui->comboBoxVStretch->setCurrentIndex( 4 );
     on_comboBoxVStretch_currentIndexChanged( ui->comboBoxVStretch->currentIndex() );
 
     if( !paste && !receipt->wasNeverLoaded() )
@@ -6963,7 +6968,8 @@ double MainWindow::getVerticalStretchFactor( void )
     if( ui->comboBoxVStretch->currentIndex() == 0 ) return STRETCH_V_100;
     else if( ui->comboBoxVStretch->currentIndex() == 1 ) return STRETCH_V_167;
     else if( ui->comboBoxVStretch->currentIndex() == 2 ) return STRETCH_V_300;
-    else  return STRETCH_V_033;
+    else if( ui->comboBoxVStretch->currentIndex() == 3 ) return STRETCH_V_033;
+    else return STRETCH_V_500;
 }
 
 //Read Whitebalance Info from MLV and setup slider
