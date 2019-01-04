@@ -1818,13 +1818,17 @@ void MainWindow::startExportPipe(QString fileName)
 
         switch( m_codecOption )
         {
-            case CODEC_AVI_OPTION_RAW:
+            case CODEC_AVI_OPTION_YUV420:
                 option3 = "rawvideo";
                 option4 = "yuv420p";
                 break;
             case CODEC_AVI_OPTION_V210:
                 option3 = "v210";
                 option4 = "yuv422p10le";
+                break;
+             case CODEC_AVI_OPTION_BGR24:
+                option3 = "rawvideo";
+                option4 = "bgr24";
                 break;
         }
 
