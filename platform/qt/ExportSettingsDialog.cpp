@@ -174,8 +174,9 @@ void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
         ui->labelDebayer->setEnabled( true );
         ui->comboBoxDebayer->setEnabled( true );
         ui->comboBoxOption->setEnabled( true );
-        ui->comboBoxOption->addItem( QString( "RAW 8bit" ) );
+        ui->comboBoxOption->addItem( QString( "YUV420 8bit" ) );
         ui->comboBoxOption->addItem( QString( "V210 10bit" ) );
+        ui->comboBoxOption->addItem( QString( "BGR24 8bit" ) );
     }
     else if( index == CODEC_CDNG
           || index == CODEC_CDNG_LOSSLESS

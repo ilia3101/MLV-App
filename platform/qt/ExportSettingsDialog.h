@@ -32,8 +32,9 @@
 #define CODEC_DNXHR                 18
 #define CODEC_AUDIO_ONLY            19
 
-#define CODEC_AVI_OPTION_RAW        0
+#define CODEC_AVI_OPTION_YUV420     0
 #define CODEC_AVI_OPTION_V210       1
+#define CODEC_AVI_OPTION_BGR24      2
 
 #define CODEC_PRORES_OPTION_KS      0
 #define CODEC_PRORES_OPTION_AW      1
