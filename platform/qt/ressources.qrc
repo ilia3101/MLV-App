@@ -43,6 +43,7 @@
         <file>RetinaIMG/Window-Left-Panel-icon.png</file>
         <file>RetinaIMG/Reload-icon-1.png</file>
         <file>RetinaIMG/Reload-icon-2.png</file>
+        <file>RetinaIMG/mapGo-icon.png</file>
     </qresource>
     <qresource prefix="/AudioVideoIcons">
         <file>AudioVideoIcons/FirstFrame.png</file>

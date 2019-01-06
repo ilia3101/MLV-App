@@ -7423,6 +7423,44 @@ void MainWindow::on_actionHelp_triggered()
     delete help;
 }
 
+//"one of the most important features": creating batch MAPP files
+void MainWindow::on_actionCreateAllMappFilesNow_triggered()
+{
+    //Save current clip, to get back to this clip when ready
+    int lastClip = m_lastActiveClipInSession;
+    bool mapp = ui->actionCreateMappFiles->isChecked();
+    ui->actionCreateMappFiles->setChecked( true );
+
+    //Block GUI
+    setEnabled( false );
+
+    m_pStatusDialog->setEnabled( true );
+    m_pStatusDialog->ui->label->setText( "Creating MAPP files..." );
+    m_pStatusDialog->ui->labelEstimatedTime->setText( "" );
+    m_pStatusDialog->ui->progressBar->setValue( 0 );
+    m_pStatusDialog->ui->pushButtonAbort->setVisible( false );
+    m_pStatusDialog->open();
+
+    //Open all clips
+    for( int i = 0; i < ui->listWidgetSession->count(); i++ )
+    {
+        qApp->processEvents();
+        showFileInEditor( i );
+        m_pStatusDialog->ui->progressBar->setValue( 100 * i / ui->listWidgetSession->count() );
+    }
+
+    //Hide Status Dialog
+    m_pStatusDialog->close();
+    m_pStatusDialog->ui->pushButtonAbort->setVisible( true );
+
+    //Go back to where we started
+    showFileInEditor( lastClip );
+    ui->actionCreateMappFiles->setChecked( mapp );
+
+    //Unblock GUI
+    setEnabled( true );
+}
+
 //Show selected file from session in OSX Finder
 void MainWindow::on_actionShowInFinder_triggered( void )
 {

@@ -142,6 +142,7 @@
     <addaction name="actionSaveAsSession"/>
     <addaction name="separator"/>
     <addaction name="actionCreateMappFiles"/>
+    <addaction name="actionCreateAllMappFilesNow"/>
     <addaction name="separator"/>
     <addaction name="actionOpen"/>
     <addaction name="actionFcpxmlImportAssistant"/>
@@ -7685,6 +7686,18 @@ QGroupBox::indicator:checked:disabled {
    </property>
    <property name="text">
     <string>DarkTheme Modern</string>
+   </property>
+  </action>
+  <action name="actionCreateAllMappFilesNow">
+   <property name="icon">
+    <iconset resource="ressources.qrc">
+     <normaloff>:/RetinaIMG/RetinaIMG/mapGo-icon.png</normaloff>:/RetinaIMG/RetinaIMG/mapGo-icon.png</iconset>
+   </property>
+   <property name="text">
+    <string>Create All MAPP Files Now</string>
+   </property>
+   <property name="toolTip">
+    <string>Create All MAPP Files Now</string>
    </property>
   </action>
  </widget>
