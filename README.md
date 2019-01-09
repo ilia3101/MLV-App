@@ -39,7 +39,7 @@ A very first version of a kind of user manual can be found [here](https://github
 - Audio only export
 - Clip trimming support (Cut In and Cut Out) for any export mode (ffmpeg, AVFoundation, cDNG, MLV) including audio syncing with correct timecode.
 - Frame rate override for export and playback
-- Aspect Ratio: stretch width (1.33x, 1.5x, 1.75x, 1.8x, 2.0x) and height (1.67x, auto detected for latest MLVs) for playback and (ffmpeg & DNG) export per clip in session. Manually changed AR is inserted to exported cDNG header.
+- Aspect Ratio: stretch width (1.33x, 1.5x, 1.75x, 1.8x, 2.0x) and height (0.3x, 1.67x, 3.0x, 5.0x auto detected for latest MLVs) for playback and (ffmpeg & DNG) export per clip in session. Manually changed AR is inserted to exported cDNG header.
 - Upside down transformation
 - Resize frame resolution for (batch) export
 - Clip batch export
