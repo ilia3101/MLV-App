@@ -7699,6 +7699,9 @@ QGroupBox::indicator:checked:disabled {
    <property name="toolTip">
     <string>Create All MAPP Files Now</string>
    </property>
+   <property name="shortcut">
+    <string>Alt+M</string>
+   </property>
   </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
