@@ -18,6 +18,5 @@
 #define STRETCH_V_167   1.6667
 #define STRETCH_V_300   3.0
 #define STRETCH_V_033   0.3333
-#define STRETCH_V_500   5.0
 
 #endif // STRETCHFACTORS_H
