@@ -436,8 +436,8 @@ private:
     int toolButtonGCurvesCurrentIndex( void );
     void initCutInOut( int frames );
     void initRawBlackAndWhite( void );
-    double getHorizontalStretchFactor();
-    double getVerticalStretchFactor();
+    double getHorizontalStretchFactor( bool downScale );
+    double getVerticalStretchFactor( bool downScale );
     void setWhiteBalanceFromMlv( ReceiptSettings *sliders );
     void setGradientMask( void );
     uint16_t autoCorrectRawBlackLevel( void );

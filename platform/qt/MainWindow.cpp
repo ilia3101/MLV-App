@@ -1659,6 +1659,12 @@ void MainWindow::startExportPipe(QString fileName)
     {
         uint16_t width = getMlvWidth( m_pMlvObject ) * m_exportQueue.first()->stretchFactorX();
         uint16_t height = getMlvHeight( m_pMlvObject ) * m_exportQueue.first()->stretchFactorY();
+        //Upscale only
+        if( m_exportQueue.first()->stretchFactorY() == STRETCH_V_033 )
+        {
+            width *= 3;
+            height *= 3;
+        }
         //H.264 & H.265 needs a size which can be divided by 2
         if( m_codecProfile == CODEC_H264
          || m_codecProfile == CODEC_H265 )
@@ -2221,7 +2227,7 @@ void MainWindow::startExportCdng(QString fileName)
     }
     else if(m_exportQueue.first()->stretchFactorY() == STRETCH_V_033)
     {
-        picAR[2] = 1; picAR[3] = 3;
+        picAR[2] = 1; picAR[3] = 1; picAR[0] *= 3; //Upscale only
     }
     else
     {
@@ -3573,8 +3579,8 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     receipt->setFilterIndex( ui->comboBoxFilterName->currentIndex() );
     receipt->setFilterStrength( ui->horizontalSliderFilterStrength->value() );
 
-    receipt->setStretchFactorX( getHorizontalStretchFactor() );
-    receipt->setStretchFactorY( getVerticalStretchFactor() );
+    receipt->setStretchFactorX( getHorizontalStretchFactor(true) );
+    receipt->setStretchFactorY( getVerticalStretchFactor(true) );
 
     receipt->setCutIn( ui->spinBoxCutIn->value() );
     receipt->setCutOut( ui->spinBoxCutOut->value() );
@@ -5009,8 +5015,8 @@ void MainWindow::on_actionExportCurrentFrame_triggered()
                                                                          m_pMlvObject,
                                                                          m_pSessionReceipts.at( m_lastActiveClipInSession )->fileName(),
                                                                          ui->horizontalSliderPosition->value(),
-                                                                         getHorizontalStretchFactor(),
-                                                                         getVerticalStretchFactor() );
+                                                                         getHorizontalStretchFactor(true),
+                                                                         getVerticalStretchFactor(true) );
     exportDialog->exec();
     delete exportDialog;
 }
@@ -6411,8 +6417,8 @@ void MainWindow::whiteBalancePicked( int x, int y )
     }
     else
     {
-        x /= getHorizontalStretchFactor();
-        y /= getVerticalStretchFactor();
+        x /= getHorizontalStretchFactor(false);
+        y /= getVerticalStretchFactor(false);
     }
 
     //Quit if click not in picture
@@ -6626,11 +6632,11 @@ void MainWindow::drawFrameReady()
             actHeight = ui->graphicsView->height();
         }
         int desWidth = actWidth;
-        int desHeight = actWidth * getMlvHeight(m_pMlvObject) / getMlvWidth(m_pMlvObject) * getVerticalStretchFactor() / getHorizontalStretchFactor();
+        int desHeight = actWidth * getMlvHeight(m_pMlvObject) / getMlvWidth(m_pMlvObject) * getVerticalStretchFactor(false) / getHorizontalStretchFactor(false);
         if( desHeight > actHeight )
         {
             desHeight = actHeight;
-            desWidth = actHeight * getMlvWidth(m_pMlvObject) / getMlvHeight(m_pMlvObject) / getVerticalStretchFactor() * getHorizontalStretchFactor();
+            desWidth = actHeight * getMlvWidth(m_pMlvObject) / getMlvHeight(m_pMlvObject) / getVerticalStretchFactor(false) * getHorizontalStretchFactor(false);
         }
 
         //Get Picture
@@ -6650,8 +6656,8 @@ void MainWindow::drawFrameReady()
     else
     {
         //Bring frame to GUI (100%)
-        if( getVerticalStretchFactor() == 1.0
-         && getHorizontalStretchFactor() == 1.0 ) //Fast mode for 1.0 stretch factor
+        if( getVerticalStretchFactor(false) == 1.0
+         && getHorizontalStretchFactor(false) == 1.0 ) //Fast mode for 1.0 stretch factor
         {
             m_pGraphicsItem->setPixmap( QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 ) ) );
             m_pScene->setSceneRect( 0, 0, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject) );
@@ -6659,10 +6665,10 @@ void MainWindow::drawFrameReady()
         else
         {
             m_pGraphicsItem->setPixmap( QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
-                                              .scaled( getMlvWidth(m_pMlvObject) * getHorizontalStretchFactor(),
-                                                       getMlvHeight(m_pMlvObject) * getVerticalStretchFactor(),
+                                              .scaled( getMlvWidth(m_pMlvObject) * getHorizontalStretchFactor(false),
+                                                       getMlvHeight(m_pMlvObject) * getVerticalStretchFactor(false),
                                                        Qt::IgnoreAspectRatio, mode) ) );
-            m_pScene->setSceneRect( 0, 0, getMlvWidth(m_pMlvObject) * getHorizontalStretchFactor(), getMlvHeight(m_pMlvObject) * getVerticalStretchFactor() );
+            m_pScene->setSceneRect( 0, 0, getMlvWidth(m_pMlvObject) * getHorizontalStretchFactor(false), getMlvHeight(m_pMlvObject) * getVerticalStretchFactor(false) );
         }
     }
 
@@ -6738,8 +6744,8 @@ void MainWindow::drawFrameReady()
     if( m_zoomTo100Center )
     {
         m_zoomTo100Center = false;
-        ui->graphicsView->horizontalScrollBar()->setValue( ( getMlvWidth(m_pMlvObject) * getHorizontalStretchFactor() - ui->graphicsView->width() ) / 2 );
-        ui->graphicsView->verticalScrollBar()->setValue( ( getMlvHeight(m_pMlvObject) * getVerticalStretchFactor() - ui->graphicsView->height() ) / 2 );
+        ui->graphicsView->horizontalScrollBar()->setValue( ( getMlvWidth(m_pMlvObject) * getHorizontalStretchFactor(false) - ui->graphicsView->width() ) / 2 );
+        ui->graphicsView->verticalScrollBar()->setValue( ( getMlvHeight(m_pMlvObject) * getVerticalStretchFactor(false) - ui->graphicsView->height() ) / 2 );
     }
 
     //If zoom mode changed, redraw gradient element to the new size
@@ -6951,23 +6957,34 @@ void MainWindow::initRawBlackAndWhite()
 }
 
 //Get the current horizontal stretch factor
-double MainWindow::getHorizontalStretchFactor()
+double MainWindow::getHorizontalStretchFactor( bool downScale )
 {
-    if( ui->comboBoxHStretch->currentIndex() == 0 ) return STRETCH_H_100;
-    else if( ui->comboBoxHStretch->currentIndex() == 1 ) return STRETCH_H_133;
-    else if( ui->comboBoxHStretch->currentIndex() == 2 ) return STRETCH_H_150;
-    else if( ui->comboBoxHStretch->currentIndex() == 3 ) return STRETCH_H_175;
-    else if( ui->comboBoxHStretch->currentIndex() == 4 ) return STRETCH_H_180;
-    else return STRETCH_H_200;
+    double factor = 1.0;
+    if( ui->comboBoxHStretch->currentIndex() == 0 ) factor = STRETCH_H_100;
+    else if( ui->comboBoxHStretch->currentIndex() == 1 ) factor = STRETCH_H_133;
+    else if( ui->comboBoxHStretch->currentIndex() == 2 ) factor = STRETCH_H_150;
+    else if( ui->comboBoxHStretch->currentIndex() == 3 ) factor = STRETCH_H_175;
+    else if( ui->comboBoxHStretch->currentIndex() == 4 ) factor = STRETCH_H_180;
+    else factor = STRETCH_H_200;
+
+    if( ui->comboBoxVStretch->currentIndex() == 3 && !downScale ) factor *= 3.0;
+
+    return factor;
 }
 
 //Get the current vertical stretch factor
-double MainWindow::getVerticalStretchFactor( void )
+double MainWindow::getVerticalStretchFactor( bool downScale )
 {
     if( ui->comboBoxVStretch->currentIndex() == 0 ) return STRETCH_V_100;
     else if( ui->comboBoxVStretch->currentIndex() == 1 ) return STRETCH_V_167;
     else if( ui->comboBoxVStretch->currentIndex() == 2 ) return STRETCH_V_300;
-    else return STRETCH_V_033;
+    else
+    {
+        if( downScale )
+            return STRETCH_V_033;
+        else
+            return STRETCH_V_100;
+    }
 }
 
 //Read Whitebalance Info from MLV and setup slider
@@ -7188,7 +7205,7 @@ void MainWindow::on_actionPreviewPictureBottom_triggered()
 void MainWindow::on_comboBoxHStretch_currentIndexChanged(int index)
 {
     Q_UNUSED( index );
-    m_pGradientElement->setStrechFactorX( getHorizontalStretchFactor() );
+    m_pGradientElement->setStrechFactorX( getHorizontalStretchFactor(false) );
     m_zoomModeChanged = true;
     m_frameChanged = true;
 }
@@ -7197,7 +7214,7 @@ void MainWindow::on_comboBoxHStretch_currentIndexChanged(int index)
 void MainWindow::on_comboBoxVStretch_currentIndexChanged(int index)
 {
     Q_UNUSED( index );
-    m_pGradientElement->setStrechFactorY( getVerticalStretchFactor() );
+    m_pGradientElement->setStrechFactorY( getVerticalStretchFactor(false) );
     m_zoomModeChanged = true;
     m_frameChanged = true;
 }

@@ -64,6 +64,14 @@ void SingleFrameExportDialog::on_pushButtonOk_clicked()
 //Qt export channel
 void SingleFrameExportDialog::exportViaQt()
 {
+    double stretchX = m_stretchX;
+    double stretchY = m_stretchY;
+    if( m_stretchY == STRETCH_V_033 ) //Upscale only
+    {
+        stretchY = 1.0;
+        stretchX *= 3.0;
+    }
+
     //File name proposal
     QString saveFileName = m_fileName;
     saveFileName = saveFileName.left( saveFileName.lastIndexOf( "." ) );
@@ -89,7 +97,7 @@ void SingleFrameExportDialog::exportViaQt()
     getMlvProcessedFrame8( m_pMlvObject, m_frameNr, pRawImage, 1 );
 
     QImage( ( unsigned char *) pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
-            .scaled( getMlvWidth(m_pMlvObject) * m_stretchX, getMlvHeight(m_pMlvObject) * m_stretchY,
+            .scaled( getMlvWidth(m_pMlvObject) * stretchX, getMlvHeight(m_pMlvObject) * stretchY,
                      Qt::IgnoreAspectRatio, Qt::SmoothTransformation )
             .save( fileName, "png", -1 );
 
@@ -154,7 +162,7 @@ void SingleFrameExportDialog::exportDng()
     }
     else if( m_stretchY == STRETCH_V_033)
     {
-        picAR[2] = 1; picAR[3] = 3;
+        picAR[2] = 1; picAR[3] = 1; picAR[0] *= 3; //Upscale only
     }
     else
     {
