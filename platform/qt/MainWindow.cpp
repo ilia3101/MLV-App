@@ -1634,7 +1634,7 @@ void MainWindow::startExportPipe(QString fileName)
             height = (double)m_resizeWidth / (double)getMlvWidth( m_pMlvObject )
                     / m_exportQueue.first()->stretchFactorX()
                     * m_exportQueue.first()->stretchFactorY()
-                    * (double)getMlvHeight( m_pMlvObject );
+                    * (double)getMlvHeight( m_pMlvObject ) + 0.5;
         }
         else
         {
@@ -1657,13 +1657,18 @@ void MainWindow::startExportPipe(QString fileName)
     else if( m_exportQueue.first()->stretchFactorX() != 1.0
           || m_exportQueue.first()->stretchFactorY() != 1.0 )
     {
-        uint16_t width = getMlvWidth( m_pMlvObject ) * m_exportQueue.first()->stretchFactorX();
-        uint16_t height = getMlvHeight( m_pMlvObject ) * m_exportQueue.first()->stretchFactorY();
+        uint16_t width;
+        uint16_t height;
         //Upscale only
         if( m_exportQueue.first()->stretchFactorY() == STRETCH_V_033 )
         {
-            width *= 3;
-            height *= 3;
+            width = getMlvWidth( m_pMlvObject ) * 3;
+            height = getMlvHeight( m_pMlvObject );
+        }
+        else
+        {
+            width = getMlvWidth( m_pMlvObject ) * m_exportQueue.first()->stretchFactorX();
+            height = getMlvHeight( m_pMlvObject ) * m_exportQueue.first()->stretchFactorY();
         }
         //H.264 & H.265 needs a size which can be divided by 2
         if( m_codecProfile == CODEC_H264
