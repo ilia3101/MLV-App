@@ -20,9 +20,14 @@
 #include <math.h>
 #include "sleefsseavx.c"
 #include "debayer.h"
+#include "../processing/raw_processing.h"
 
 #undef CLIP
 #define CLIP(x) x
+
+#define MIN1(X, Y) (((X) < (Y)) ? (X) : (Y))
+#define MAX1(X, Y) (((X) > (Y)) ? (X) : (Y))
+#define LIMIT16(X) MAX1(MIN1(X, 65535), 0)
 
 #ifndef WIN32
 #define MIN(a,b) \
@@ -258,73 +263,29 @@ void igv_demosaic( amazeinfo_t * inputdata )
     vdif  = (float (*))    calloc(width*height/2, sizeof *vdif);
     hdif  = (float (*))    calloc(width*height/2, sizeof *hdif);
 
-    /* "white balance" */
-    float wb_b, wb_g, wb_r; /* White balaance multipliers */
-    /* Generate mulipliers and apply to the image */
+    /* "white balance" and expo */
+    double wb_multipliers[3];
+    get_kelvin_multipliers_rgb(6500, wb_multipliers);
+    for( int i = 0; i < 3; i++ ) wb_multipliers[i] /= 10.0; //if not doing this, strange noise comes to highlights
     {
         int endx = tilex + tilew;
         int endy = tiley + tileh;
 
-        int t_r=0,t_g=0,t_b=0; /* Totals we have counted (R,G and B) */
-        float avg_r=0.0,avg_g=0.0,avg_b=0.0; /* Average values (RGB) */
-        for (int y = tiley; y < endy; y += 7) /* Skip amounts can be anything odd, lower = slower (and no point) */
-            for (int x = tilex; x < endx; x += 13)
-                switch (FC(y,x))
-                {
-                    case 0:
-                        avg_r += rawData[y][x]-inputdata->blacklevel;
-                        t_r++;
-                        break;
-                    case 1:
-                        avg_g += rawData[y][x]-inputdata->blacklevel;
-                        t_g++;
-                        break;
-                    case 2:
-                        avg_b += rawData[y][x]-inputdata->blacklevel;
-                        t_b++;
-                        break;
-                }
-
-        /* Divide by total to get average value (and make 0-1) */
-        avg_r /= (float)t_r;
-        avg_g /= (float)t_g;
-        avg_b /= (float)t_b;
-        // printf("\nAverages:\nred %i\ngreen: %i\nblue: %i\n\n", (int)avg_r, (int)avg_g, (int)avg_b);
-        avg_r = 1.0f/avg_r; /* inverty */
-        avg_g = 1.0f/avg_g;
-        avg_b = 1.0f/avg_b;
-
-        /* Create multipliers */
-        #define WB_POWER 2.3 /* Strengthen difference applied, seems to help */
-        wb_r = powf(avg_r/MAX(MAX(avg_r, avg_g), avg_b), WB_POWER) * 40000.0 / 65536.0;
-        wb_g = powf(avg_g/MAX(MAX(avg_r, avg_g), avg_b), WB_POWER) * 40000.0 / 65536.0;
-        wb_b = powf(avg_b/MAX(MAX(avg_r, avg_g), avg_b), WB_POWER) * 40000.0 / 65536.0;
-
-        // printf("\nWB Multipliers AMaZE\nred %f\ngreen: %f\nblue: %f\n\n", wb_r, wb_g, wb_b);
-
         /* Applying */
-#ifdef _OPENMP
-#pragma omp parallel for collapse(2)
-#endif
         for (int y = tiley; y < endy; ++y)
             for (int x = tilex; x < endx; ++x)
-            {
                 switch (FC(y,x))
                 {
                     case 0:
-                        rawData[y][x] *= wb_r;
-                        //No real idea why it has to be limited here - but this prevents defect highlight
-                        if( rawData[y][x] > 40000.0 ) rawData[y][x] = 40000.0;
+                        rawData[y][x] = LIMIT16( rawData[y][x] * wb_multipliers[0] );
                         break;
                     case 1:
-                        rawData[y][x] *= wb_g;
+                        rawData[y][x] = LIMIT16( rawData[y][x] * wb_multipliers[1] );
                         break;
                     case 2:
-                        rawData[y][x] *= wb_b;
-                        //No real idea why it has to be limited here - but this prevents defect highlight
-                        if( rawData[y][x] > 40000.0 ) rawData[y][x] = 40000.0;
+                        rawData[y][x] = LIMIT16( rawData[y][x] * wb_multipliers[2] );
                 }
-            }
+
     }
 
     //border_interpolate2(tilew,tileh,7,rawData,red,green,blue);
@@ -501,24 +462,20 @@ void igv_demosaic( amazeinfo_t * inputdata )
     free(vdif);
     free(hdif);
 
-    border_interpolate2(tilew,tileh,8,rawData,red,green,blue);
+    border_interpolate2(tilew,tileh,8,rawData,red,green,blue);    
 
-    /* "white balance" */
+    /* "white balance" and expo */
     {
-        /* Invert the multiplierds */
-        wb_r = 1.0 / wb_r;
-        wb_g = 1.0 / wb_g;
-        wb_b = 1.0 / wb_b;
         int endx = tilex + tilew;
         int endy = tiley + tileh;
-#ifdef _OPENMP
-#pragma omp parallel for collapse(2)
-#endif
+
+        /* Applying */
         for (int y = tiley; y < endy; ++y)
-            for (int x = tilex; x < endx; ++x){
-                red[y][x] *= wb_r;
-                green[y][x] *= wb_g;
-                blue[y][x] *= wb_b;
+            for (int x = tilex; x < endx; ++x)
+            {
+                red[y][x] /= wb_multipliers[0];
+                green[y][x] /= wb_multipliers[1];
+                blue[y][x] /= wb_multipliers[2];
             }
     }
 }

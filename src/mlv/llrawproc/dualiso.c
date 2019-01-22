@@ -1038,7 +1038,7 @@ static inline void amaze_interpolate(struct raw_info raw_info, uint32_t * raw_bu
     //IDK if AMaZE is actually thread safe, but I'm just going to assume not, rather than inspecting that huge mess of code
     LOCK(amaze_mutex)
     {
-        demosaic(& (amazeinfo_t) { rawData, red, green, blue, 0, 0, w, h, 0 });
+        demosaic(& (amazeinfo_t) { rawData, red, green, blue, 0, 0, w, h, 0, 0 });
     }
     UNLOCK(amaze_mutex)
     
