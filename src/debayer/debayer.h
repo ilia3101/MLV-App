@@ -11,6 +11,8 @@ void debayerAmaze(uint16_t * __restrict debayerto, float * __restrict bayerdata,
 void debayerLmmse(uint16_t * __restrict debayerto, float * __restrict bayerdata, int width, int height, int threads, int blacklevel);
 /* More useable IGV */
 void debayerIgv(uint16_t * __restrict debayerto, float * __restrict bayerdata, int width, int height, int blacklevel);
+/* AHD debayer */
+void debayerAhd(uint16_t *__restrict debayerto, float *__restrict bayerdata, int width, int height);
 
 /* None debayer structure for multithread */
 typedef struct {

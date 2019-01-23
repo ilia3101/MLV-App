@@ -319,6 +319,11 @@ void get_mlv_raw_frame_debayered( mlvObject_t * video,
         /* Debayer IGV */
         debayerIgv(output_frame, temp_memory, width, height, getMlvBlackLevel(video));
     }
+    else if (debayer_type == 6)
+    {
+        /* Debayer AHD */
+        debayerAhd(output_frame, temp_memory, width, height);
+    }
     else
     {
         /* Debayer quickly (bilinearly) */

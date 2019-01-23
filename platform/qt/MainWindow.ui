@@ -2546,6 +2546,11 @@ QGroupBox::indicator:checked:disabled {
                      <string>AMaZE</string>
                     </property>
                    </item>
+                   <item>
+                    <property name="text">
+                     <string>AHD</string>
+                    </property>
+                   </item>
                   </widget>
                  </item>
                 </layout>

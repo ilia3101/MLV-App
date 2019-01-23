@@ -1516,6 +1516,9 @@ void MainWindow::startExportPipe(QString fileName)
         case ReceiptSettings::AMaZE:
             setMlvAlwaysUseAmaze( m_pMlvObject );
             break;
+        case ReceiptSettings::AHD:
+            setMlvUseAhdDebayer( m_pMlvObject );
+            break;
         default:
             break;
         }
@@ -2431,6 +2434,9 @@ void MainWindow::startExportAVFoundation(QString fileName)
             break;
         case ReceiptSettings::AMaZE:
             setMlvAlwaysUseAmaze( m_pMlvObject );
+            break;
+        case ReceiptSettings::AHD:
+            setMlvUseAhdDebayer( m_pMlvObject );
             break;
         default:
             break;
@@ -7642,6 +7648,9 @@ void MainWindow::selectDebayerAlgorithm()
             break;
         case ReceiptSettings::AMaZE:
             setMlvAlwaysUseAmaze( m_pMlvObject );
+            break;
+        case ReceiptSettings::AHD:
+            setMlvUseAhdDebayer( m_pMlvObject );
             break;
         default:
             break;

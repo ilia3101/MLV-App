@@ -92,6 +92,7 @@ SOURCES += \
     ../../src/processing/denoiser/libdenoising.cpp \
     ../../src/processing/denoiser/mt19937ar.c \
     ../../src/debayer/igv_demosaic.c \
+    ../../src/debayer/ahd.c \
     ../../src/mlv/llrawproc/dualiso.c \
     ../../src/dng/dng.c \
     InfoDialog.cpp \
