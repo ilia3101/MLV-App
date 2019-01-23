@@ -101,7 +101,8 @@ void debayerAhd(uint16_t *__restrict debayerto, float *__restrict bayerdata, int
     /* "white balance" and expo */
     double wb_multipliers[3];
     get_kelvin_multipliers_rgb(6500, wb_multipliers);
-    for( int i = 0; i < 3; i++ ) wb_multipliers[i] /= 2.0;
+    double max_wb = MAX( wb_multipliers[0], MAX( wb_multipliers[1], wb_multipliers[2] ) );
+    for( int i = 0; i < 3; i++ ) wb_multipliers[i] /= max_wb;
 
     {
         /* Applying */
