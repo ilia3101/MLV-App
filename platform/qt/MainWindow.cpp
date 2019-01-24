@@ -3159,6 +3159,11 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
             receipt->setCutOut( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
+        else if( Rxml->isStartElement() && Rxml->name() == "debayer" )
+        {
+            receipt->setDebayer( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
         else if( Rxml->isStartElement() ) //future features
         {
             Rxml->readElementText();
@@ -3235,6 +3240,7 @@ void MainWindow::writeXmlElementsToFile(QXmlStreamWriter *xmlWriter, ReceiptSett
     xmlWriter->writeTextElement( "upsideDown",              QString( "%1" ).arg( receipt->upsideDown() ) );
     xmlWriter->writeTextElement( "cutIn",                   QString( "%1" ).arg( receipt->cutIn() ) );
     xmlWriter->writeTextElement( "cutOut",                  QString( "%1" ).arg( receipt->cutOut() ) );
+    xmlWriter->writeTextElement( "debayer",                 QString( "%1" ).arg( receipt->debayer() ) );
 }
 
 //Delete all clips from Session
