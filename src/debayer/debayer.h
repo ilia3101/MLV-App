@@ -1,6 +1,8 @@
 #ifndef _debayer_
 #define _debayer_
 
+#include <stdint.h>
+
 /* Easy debayer types */
 void debayerEasy(uint16_t * __restrict debayerto, float * __restrict bayerdata, int width, int height, int threads, int type);
 /* Quite quick bilinear debayer, floating point sadly; threads argument is unused */
