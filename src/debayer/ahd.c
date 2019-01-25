@@ -133,16 +133,16 @@ void debayerAhd(uint16_t *__restrict debayerto, float *__restrict bayerdata, int
     /* start - code from border_interpolate(int border) */
     {
         int border = 3;
-        unsigned row, col, y, x, f, c, sum[8];
+        unsigned y, x, f, c, sum[8];
 
         for (row=0; row < height; row++)
             for (col=0; col < width; col++) {
                 if (col==border && row >= border && row < height-border)
         col = width-border;
                 memset (sum, 0, sizeof sum);
-                for (y=row-1; y != row+2; y++)
-                    for (x=col-1; x != col+2; x++)
-                        if (y < height && x < width) {
+                for (y=row-1; y != (unsigned)row+2; y++)
+                    for (x=col-1; x != (unsigned)col+2; x++)
+                        if (y < (unsigned)height && x < (unsigned)width) {
                             f = FC(y,x);
                             sum[f] += debayerto[(y*width+x)*3 + f];           /* [SA] */
                             sum[f+4]++;
