@@ -70,12 +70,13 @@ void *ReallocWithErrorMessage(void *Ptr, size_t Size);
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
 
     /* Windows system: Use __intN types to define uint8_t, etc. */
-    typedef unsigned __int8 uint8_t;
+    /*typedef unsigned __int8 uint8_t;
     typedef unsigned __int16 uint16_t;
     typedef unsigned __int32 uint32_t;
     typedef __int8 int8_t;
     typedef __int16 int16_t;
-    typedef __int32 int32_t;
+    typedef __int32 int32_t;*/
+    #include <stdint.h>
     
 #else
 
