@@ -126,30 +126,86 @@ void ZhangWuDemosaic( lmmseinfo_t * inputdata )
 
     
     /* "white balance" and expo */
-    double wb_multipliers[3];
-    get_kelvin_multipliers_rgb(6500, wb_multipliers);
-    double max_wb = MAX( wb_multipliers[0], MAX( wb_multipliers[1], wb_multipliers[2] ) );
-    for( int i = 0; i < 3; i++ ) wb_multipliers[i] /= max_wb; //If not doing this, highlights get cyan
-    {
-        int endx = winx + winw;
-        int endy = winy + winh;
+    //double wb_multipliers[3];
+    //get_kelvin_multipliers_rgb(6500, wb_multipliers);
+    //double max_wb = MAX( wb_multipliers[0], MAX( wb_multipliers[1], wb_multipliers[2] ) );
+    //for( int i = 0; i < 3; i++ ) wb_multipliers[i] /= max_wb; //If not doing this, highlights get cyan
+    //{
+    //    int endx = winx + winw;
+    //    int endy = winy + winh;
+    //
+    //    /* Applying */
+    //    for (int y = winy; y < endy; ++y)
+    //        for (int x = winx; x < endx; ++x)
+    //            switch (FC(y,x))
+    //            {
+    //                case 0:
+    //                    Input[y*winw+x] = LIMIT16( Input[y*winw+x] * wb_multipliers[0] );
+    //                    break;
+    //                case 1:
+    //                    Input[y*winw+x] = LIMIT16( Input[y*winw+x] * wb_multipliers[1] );
+    //                    break;
+    //                case 2:
+    //                    Input[y*winw+x] = LIMIT16( Input[y*winw+x] * wb_multipliers[2] );
+    //            }
+    //
+    //}
+    /* "white balance" */
+        float wb_b, wb_g, wb_r; /* White balaance multipliers */
+        /* Generate mulipliers and apply to the image */
+        {
+            int t_r=0,t_g=0,t_b=0; /* Totals we have counted (R,G and B) */
+            float avg_r=0.0,avg_g=0.0,avg_b=0.0; /* Average values (RGB) */
+            for (int y = winy; y < endy; y += 7) /* Skip amounts can be anything odd, lower = slower (and no point) */
+                for (int x = winx; x < endx; x += 13)
+                    switch (FC(y,x))
+                    {
+                        case 0:
+                            avg_r += Input[y*winw+x]-inputdata->blacklevel;
+                            t_r++;
+                            break;
+                        case 1:
+                            avg_g += Input[y*winw+x]-inputdata->blacklevel;
+                            t_g++;
+                            break;
+                        case 2:
+                            avg_b += Input[y*winw+x]-inputdata->blacklevel;
+                            t_b++;
+                            break;
+                    }
 
-        /* Applying */
-        for (int y = winy; y < endy; ++y)
-            for (int x = winx; x < endx; ++x)
-                switch (FC(y,x))
-                {
-                    case 0:
-                        Input[y*winw+x] = LIMIT16( Input[y*winw+x] * wb_multipliers[0] );
-                        break;
-                    case 1:
-                        Input[y*winw+x] = LIMIT16( Input[y*winw+x] * wb_multipliers[1] );
-                        break;
-                    case 2:
-                        Input[y*winw+x] = LIMIT16( Input[y*winw+x] * wb_multipliers[2] );
-                }
+            /* Divide by total to get average value (and make 0-1) */
+            avg_r /= (float)t_r;
+            avg_g /= (float)t_g;
+            avg_b /= (float)t_b;
+            // printf("\nAverages:\nred %i\ngreen: %i\nblue: %i\n\n", (int)avg_r, (int)avg_g, (int)avg_b);
+            avg_r = 1.0f/avg_r; /* inverty */
+            avg_g = 1.0f/avg_g;
+            avg_b = 1.0f/avg_b;
 
-    }
+            /* Create multipliers */
+            #define WB_POWER 2.3 /* Strengthen difference applied, seems to help */
+            wb_r = powf(avg_r/MAX(MAX(avg_r, avg_g), avg_b), WB_POWER);
+            wb_g = powf(avg_g/MAX(MAX(avg_r, avg_g), avg_b), WB_POWER);
+            wb_b = powf(avg_b/MAX(MAX(avg_r, avg_g), avg_b), WB_POWER);
+
+            // printf("\nWB Multipliers AMaZE\nred %f\ngreen: %f\nblue: %f\n\n", wb_r, wb_g, wb_b);
+
+            /* Applying */
+            for (int y = winy; y < endy; ++y)
+                for (int x = winx; x < endx; ++x)
+                    switch (FC(y,x))
+                    {
+                        case 0:
+                            Input[y*winw+x] *= wb_r;
+                            break;
+                        case 1:
+                            Input[y*winw+x] *= wb_g;
+                            break;
+                        case 2:
+                            Input[y*winw+x] *= wb_b;
+                    }
+        }
 
     /* Allocate memory for workspace buffers */
     if(!(FilteredH = (float *)Malloc(sizeof(float)*NumPixels))
@@ -324,19 +380,35 @@ Catch: /* This label is used for error handling.  If something went wrong
     Free(FilteredH);
 
     /* "white balance" and expo */
+    //{
+    //    int endx = winx + winw;
+    //    int endy = winy + winh;
+    //
+    //    /* Applying */
+    //    for (int y = winy; y < endy; ++y)
+    //        for (int x = winx; x < endx; ++x)
+    //        {
+    //            OutputRed[y*winw+x] = LIMIT16( OutputRed[y*winw+x] / wb_multipliers[0] );
+    //            OutputGreen[y*winw+x] = LIMIT16( OutputGreen[y*winw+x] / wb_multipliers[1] );
+    //            OutputBlue[y*winw+x] = LIMIT16( OutputBlue[y*winw+x] / wb_multipliers[2] );
+    //        }
+    //
+    //}
+    /* "white balance" */
     {
-        int endx = winx + winw;
-        int endy = winy + winh;
-
-        /* Applying */
+        /* Invert the multipliers */
+        wb_r = 1.0 / wb_r;
+        wb_g = 1.0 / wb_g;
+        wb_b = 1.0 / wb_b;
         for (int y = winy; y < endy; ++y)
             for (int x = winx; x < endx; ++x)
-            {
-                OutputRed[y*winw+x] = LIMIT16( OutputRed[y*winw+x] / wb_multipliers[0] );
-                OutputGreen[y*winw+x] = LIMIT16( OutputGreen[y*winw+x] / wb_multipliers[1] );
-                OutputBlue[y*winw+x] = LIMIT16( OutputBlue[y*winw+x] / wb_multipliers[2] );
-            }
-
+                OutputRed[y*winw+x] *= wb_r;
+        for (int y = winy; y < endy; ++y)
+            for (int x = winx; x < endx; ++x)
+                OutputGreen[y*winw+x] *= wb_g;
+        for (int y = winy; y < endy; ++y)
+            for (int x = winx; x < endx; ++x)
+                OutputBlue[y*winw+x] *= wb_b;
     }
 
     return;// Success;
