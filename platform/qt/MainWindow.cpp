@@ -5104,6 +5104,15 @@ void MainWindow::on_comboBoxProfile_currentIndexChanged(int index)
     ui->label_lighten->setEnabled( enable );
     ui->label_vibrance->setEnabled( enable );
     ui->label_saturation->setEnabled( enable );
+    ui->groupBoxHsl->setEnabled( enable );
+    ui->label_gradationcurves->setEnabled( enable );
+    ui->toolButtonGCurvesY->setEnabled( enable );
+    ui->toolButtonGCurvesR->setEnabled( enable );
+    ui->toolButtonGCurvesG->setEnabled( enable );
+    ui->toolButtonGCurvesB->setEnabled( enable );
+    ui->toolButtonGCurvesReset->setEnabled( enable );
+    ui->toolButtonGCurvesResetOne->setEnabled( enable );
+    ui->labelCurves->setEnabled( enable );
 }
 
 //Chose filter

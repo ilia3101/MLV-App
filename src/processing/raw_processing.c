@@ -643,7 +643,7 @@ void apply_processing_object( processingObject_t * processing,
     }
 
     //Testcode for HueVs...
-    if( processing->hue_vs_luma_used || processing->hue_vs_saturation_used || processing->hue_vs_hue_used )
+    if( processing->use_rgb_curves && ( processing->hue_vs_luma_used || processing->hue_vs_saturation_used || processing->hue_vs_hue_used ) )
     {
         for (uint16_t * pix = img; pix < img_end; pix += 3)
         {
@@ -769,15 +769,18 @@ void apply_processing_object( processingObject_t * processing,
         }
     }
 
-    //Gradation curve
-    for (uint16_t * pix = img; pix < img_end; pix += 3)
+    if (processing->use_rgb_curves)
     {
-        pix[0] = processing->gcurve_y[ pix[0] ];
-        pix[1] = processing->gcurve_y[ pix[1] ];
-        pix[2] = processing->gcurve_y[ pix[2] ];
-        pix[0] = processing->gcurve_r[ pix[0] ];
-        pix[1] = processing->gcurve_g[ pix[1] ];
-        pix[2] = processing->gcurve_b[ pix[2] ];
+        //Gradation curve
+        for (uint16_t * pix = img; pix < img_end; pix += 3)
+        {
+            pix[0] = processing->gcurve_y[ pix[0] ];
+            pix[1] = processing->gcurve_y[ pix[1] ];
+            pix[2] = processing->gcurve_y[ pix[2] ];
+            pix[0] = processing->gcurve_r[ pix[0] ];
+            pix[1] = processing->gcurve_g[ pix[1] ];
+            pix[2] = processing->gcurve_b[ pix[2] ];
+        }
     }
 
     uint32_t sharp_skip = 1; /* Skip how many pixels when applying sharpening */
