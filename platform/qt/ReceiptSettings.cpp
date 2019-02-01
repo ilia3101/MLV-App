@@ -50,7 +50,7 @@ ReceiptSettings::ReceiptSettings()
     m_vertical_stripes = 0;
     m_focus_pixels = -1;
     m_fpi_method = 0;
-    m_bad_pixels = 1;
+    m_bad_pixels = 0;
     m_bps_method = 0;
     m_bpi_method = 0;
     m_chroma_smooth = 0;
