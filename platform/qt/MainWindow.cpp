@@ -2589,6 +2589,7 @@ void MainWindow::addFileToSession(QString fileName)
 //Open a session file
 void MainWindow::openSession(QString fileNameSession)
 {
+    bool abort = false;
     QXmlStreamReader Rxml;
     QFile file(fileNameSession);
     if( !file.open(QIODevice::ReadOnly | QFile::Text) )
@@ -2617,7 +2618,7 @@ void MainWindow::openSession(QString fileNameSession)
                 versionMasxml = Rxml.attributes().at(0).value().toInt();
             }
             //qDebug() << "StartElem";
-            while( !Rxml.atEnd() && !Rxml.isEndElement() )
+            while( !Rxml.atEnd() && !Rxml.isEndElement() && !abort )
             {
                 Rxml.readNext();
                 if( Rxml.isStartElement() && Rxml.name() == "clip" )
@@ -2651,19 +2652,26 @@ void MainWindow::openSession(QString fileNameSession)
                     }
                     else
                     {
-                        QMessageBox::critical( this, tr( "Open Session Error" ), tr( "File not found: \r\n%1" ).arg( fileName ) );
-                        //If file does not exist we just parse uninteresting data in the right way
-                        while( !Rxml.atEnd() && !Rxml.isEndElement() )
+                        if( QMessageBox::critical( this, tr( "Open Session Error" ), tr( "File not found: \r\n%1" ).arg( fileName ), tr( "Skip" ), tr( "Abort" ) ) )
                         {
-                            Rxml.readNext();
-                            if( Rxml.isStartElement() ) //future features
+                            //Abort
+                            abort = true;
+                        }
+                        else
+                        {
+                            //If file does not exist we just parse uninteresting data in the right way
+                            while( !Rxml.atEnd() && !Rxml.isEndElement() )
                             {
-                                Rxml.readElementText();
                                 Rxml.readNext();
+                                if( Rxml.isStartElement() ) //future features
+                                {
+                                    Rxml.readElementText();
+                                    Rxml.readNext();
+                                }
                             }
                         }
                     }
-                    Rxml.readNext();
+                    if( !abort ) Rxml.readNext();
                 }
                 else if( Rxml.isEndElement() )
                 {
