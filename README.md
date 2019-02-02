@@ -5,7 +5,7 @@ What is MLV App? Lightroom, but for Magic Lantern MLV Video (and open source and
 
 Find the latest releases [here](https://ilia3101.github.io/MLV-App/). Download, unpack and start.
 
-A very first version of a kind of user manual can be found [here](https://github.com/ilia3101/MLV-App/wiki). A nice russian tutorial video with subtitles can be found [here](https://www.youtube.com/watch?v=X17jzHjuHOo) (thanks to Maksim Danilov).
+A very first version of a kind of user manual can be found [here](https://github.com/ilia3101/MLV-App/wiki). A nice tutorial video with subtitles can be found [here](https://www.youtube.com/watch?v=X17jzHjuHOo) in russian and [here](https://www.youtube.com/watch?v=-mmnG5uBJok) in english (thanks to Maksim Danilov).
 
 ## Features :collision:
 - Import MLV files
