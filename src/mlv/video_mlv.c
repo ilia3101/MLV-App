@@ -107,8 +107,8 @@ static FILE **load_all_chunks(char *base_filename, int *entries)
     files[0] = fopen(filename, "rb");
     if(!files[0])
     {
-        free(filename);
-        free(files);
+        if(filename) free(filename);
+        if(files) free(files);
         return NULL;
     }
 
@@ -132,8 +132,8 @@ static FILE **load_all_chunks(char *base_filename, int *entries)
 
         if(!realloc_files)
         {
-            free(filename);
-            free(files);
+            if(filename) free(filename);
+            if(files) free(files);
             return NULL;
         }
 
