@@ -2590,6 +2590,7 @@ void MainWindow::addFileToSession(QString fileName)
 void MainWindow::openSession(QString fileNameSession)
 {
     bool abort = false;
+    bool skipAll = false;
     QXmlStreamReader Rxml;
     QFile file(fileNameSession);
     if( !file.open(QIODevice::ReadOnly | QFile::Text) )
@@ -2652,26 +2653,31 @@ void MainWindow::openSession(QString fileNameSession)
                     }
                     else
                     {
-                        if( QMessageBox::critical( this, tr( "Open Session Error" ), tr( "File not found: \r\n%1" ).arg( fileName ), tr( "Skip" ), tr( "Abort" ) ) )
+                        if( !skipAll )
                         {
-                            //Abort
-                            abort = true;
-                        }
-                        else
-                        {
-                            //If file does not exist we just parse uninteresting data in the right way
-                            while( !Rxml.atEnd() && !Rxml.isEndElement() )
+                            int ret = QMessageBox::critical( this, tr( "Open Session Error" ), tr( "File not found: \r\n%1" ).arg( fileName ), tr( "Skip" ), tr( "Skip all"), tr( "Abort" ) );
+                            if( ret == 1 )
                             {
+                                skipAll = true;
+                            }
+                            else if( ret == 2 )
+                            {
+                                abort = true;
+                            }
+                        }
+
+                        //If file does not exist we just parse uninteresting data in the right way
+                        while( !Rxml.atEnd() && !Rxml.isEndElement() )
+                        {
+                            Rxml.readNext();
+                            if( Rxml.isStartElement() ) //future features
+                            {
+                                Rxml.readElementText();
                                 Rxml.readNext();
-                                if( Rxml.isStartElement() ) //future features
-                                {
-                                    Rxml.readElementText();
-                                    Rxml.readNext();
-                                }
                             }
                         }
                     }
-                    if( !abort ) Rxml.readNext();
+                    Rxml.readNext();
                 }
                 else if( Rxml.isEndElement() )
                 {
