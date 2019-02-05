@@ -205,6 +205,14 @@ void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
         }
 #endif
     }
+    else if( index == CODEC_PNG )
+    {
+        ui->labelDebayer->setEnabled( true );
+        ui->comboBoxDebayer->setEnabled( true );
+        ui->comboBoxOption->setEnabled( true );
+        ui->comboBoxOption->addItem( QString( "16 bit" ) );
+        ui->comboBoxOption->addItem( QString( "8 bit" ) );
+    }
     else if( index == CODEC_JPG2K )
     {
         ui->labelDebayer->setEnabled( true );
@@ -356,8 +364,9 @@ void ExportSettingsDialog::on_comboBoxOption_currentIndexChanged(const QString &
         }
 
         //En-/disable fps override
-        if( ( ui->comboBoxCodec->currentIndex() == CODEC_JPG2K )
-         && arg1 != QString( "Movie (*.mov)" ) )
+        if( ( ( ui->comboBoxCodec->currentIndex() == CODEC_JPG2K )
+             && ( arg1 != QString( "Movie (*.mov)" ) ) )
+         || ( ui->comboBoxCodec->currentIndex() == CODEC_PNG ) )
         {
             ui->checkBoxFpsOverride->setEnabled( false );
             ui->checkBoxFpsOverride->setChecked( false );

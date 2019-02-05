@@ -52,6 +52,9 @@
 #define CODEC_H265_MP4              1
 #define CODEC_H265_MKV              2
 
+#define CODEC_PNG_16                0
+#define CODEC_PNG_8                 1
+
 #define CODEC_JPG2K_SEQ             0
 #define CODEC_JPG2K_MOV             1
 

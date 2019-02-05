@@ -1757,6 +1757,10 @@ void MainWindow::startExportPipe(QString fileName)
         QDir dir;
         dir.mkpath( folderName );
 
+        QString pngDepth;
+        if( m_codecOption == CODEC_PNG_16 ) pngDepth = "rgb48";
+        else pngDepth = "rgb24";
+
         //Now add the numbered filename
         output = folderName;
         output.append( "/" )
@@ -1766,7 +1770,7 @@ void MainWindow::startExportPipe(QString fileName)
         program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v png -pix_fmt %3 -start_number %4 -color_primaries bt709 -color_trc bt709 -colorspace bt709 %5\"%6\"" )
                     .arg( fps )
                     .arg( resolution )
-                    .arg( "rgb48" )
+                    .arg( pngDepth )
                     .arg( m_exportQueue.first()->cutIn() - 1 )
                     .arg( resizeFilter )
                     .arg( output ) );
