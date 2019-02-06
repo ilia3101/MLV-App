@@ -3007,6 +3007,11 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
             else receipt->setProfile( profile );
             Rxml->readNext();
         }
+        else if( Rxml->isStartElement() && Rxml->name() == "allowCreativeAdjustments" )
+        {
+            receipt->setAllowCreativeAdjustments( (bool)Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
         else if( Rxml->isStartElement() && Rxml->name() == "denoiserWindow" )
         {
             receipt->setDenoiserWindow( Rxml->readElementText().toInt() );
@@ -3224,6 +3229,7 @@ void MainWindow::writeXmlElementsToFile(QXmlStreamWriter *xmlWriter, ReceiptSett
     xmlWriter->writeTextElement( "camMatrixUsed",           QString( "%1" ).arg( receipt->isCamMatrixUsed() ) );
     xmlWriter->writeTextElement( "chromaSeparation",        QString( "%1" ).arg( receipt->isChromaSeparation() ) );
     xmlWriter->writeTextElement( "profile",                 QString( "%1" ).arg( receipt->profile() ) );
+    xmlWriter->writeTextElement( "allowCreativeAdjustments",QString( "%1" ).arg( receipt->allowCreativeAdjustments() ) );
     xmlWriter->writeTextElement( "denoiserStrength",        QString( "%1" ).arg( receipt->denoiserStrength() ) );
     xmlWriter->writeTextElement( "denoiserWindow",          QString( "%1" ).arg( receipt->denoiserWindow() ) );
     xmlWriter->writeTextElement( "rawFixesEnabled",         QString( "%1" ).arg( receipt->rawFixesEnabled() ) );
@@ -3414,6 +3420,9 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     ui->comboBoxProfile->setCurrentIndex( receipt->profile() );
     on_comboBoxProfile_currentIndexChanged( receipt->profile() );
 
+    ui->checkBoxCreativeAdjustments->setChecked( receipt->allowCreativeAdjustments() );
+    on_checkBoxCreativeAdjustments_toggled( receipt->allowCreativeAdjustments() );
+
     ui->horizontalSliderDenoiseStrength->setValue( receipt->denoiserStrength() );
     ui->comboBoxDenoiseWindow->setCurrentIndex( receipt->denoiserWindow() - 2 );
     on_comboBoxDenoiseWindow_currentIndexChanged( receipt->denoiserWindow() - 2 );
@@ -3580,6 +3589,7 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     receipt->setCamMatrixUsed( ui->checkBoxUseCameraMatrix->isChecked() );
     receipt->setChromaSeparation( ui->checkBoxChromaSeparation->isChecked() );
     receipt->setProfile( ui->comboBoxProfile->currentIndex() );
+    receipt->setAllowCreativeAdjustments( ui->checkBoxCreativeAdjustments->isChecked() );
     receipt->setDenoiserStrength( ui->horizontalSliderDenoiseStrength->value() );
     receipt->setDenoiserWindow( ui->comboBoxDenoiseWindow->currentIndex() + 2 );
 
@@ -3667,6 +3677,7 @@ void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings 
     if( paste && cdui->checkBoxCameraMatrix->isChecked() ) receiptTarget->setCamMatrixUsed( receiptSource->isCamMatrixUsed() );
     if( paste && cdui->checkBoxChromaBlur->isChecked() ) receiptTarget->setChromaSeparation( receiptSource->isChromaSeparation() );
     if( paste && cdui->checkBoxProfile->isChecked() )    receiptTarget->setProfile( receiptSource->profile() );
+    if( paste && cdui->checkBoxProfile->isChecked() )    receiptTarget->setAllowCreativeAdjustments( receiptSource->allowCreativeAdjustments() );
     if( paste && cdui->checkBoxDenoise->isChecked() )    receiptTarget->setDenoiserStrength( receiptSource->denoiserStrength() );
     if( paste && cdui->checkBoxDenoise->isChecked() )    receiptTarget->setDenoiserWindow( receiptSource->denoiserWindow() );
 
@@ -3807,6 +3818,7 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     receipt->setCamMatrixUsed( m_pSessionReceipts.at( row )->isCamMatrixUsed() );
     receipt->setChromaSeparation( m_pSessionReceipts.at( row )->isChromaSeparation() );
     receipt->setProfile( m_pSessionReceipts.at( row )->profile() );
+    receipt->setAllowCreativeAdjustments( m_pSessionReceipts.at( row )->allowCreativeAdjustments() );
     receipt->setDenoiserStrength( m_pSessionReceipts.at( row )->denoiserStrength() );
     receipt->setDenoiserWindow( m_pSessionReceipts.at( row )->denoiserWindow() );
 
@@ -5123,7 +5135,7 @@ void MainWindow::on_comboBoxProfile_currentIndexChanged(int index)
         ui->checkBoxCreativeAdjustments->setChecked( false );
     }
     ui->checkBoxCreativeAdjustments->setEnabled( !enable );
-    enableCreativeAdjustments( enable );
+    enableCreativeAdjustments( enable || ui->checkBoxCreativeAdjustments->isChecked() );
 }
 
 //Switch on/off all creative adjustment elements

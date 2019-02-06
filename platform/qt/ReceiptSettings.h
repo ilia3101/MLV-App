@@ -53,6 +53,7 @@ public:
     void setCamMatrixUsed( bool on )          {m_useCamMatrix = on;}
     void setChromaSeparation( bool on )       {m_chromaSeparation = on;}
     void setProfile( uint8_t num )            {m_profile = num;}
+    void setAllowCreativeAdjustments( bool on ){m_creativeAdjustments = on;}
     void setRawWhite( int value )             {m_rawWhite = value;}
     void setRawBlack( int value )             {m_rawBlack = value;}
     void setFileName( QString fileName )      {m_fileName = fileName;}
@@ -159,6 +160,7 @@ public:
     uint32_t cutIn( void ) {return m_cutIn;}
     uint32_t cutOut( void ){return m_cutOut;}
     uint8_t profile( void ){return m_profile;}
+    bool allowCreativeAdjustments( void ){return m_creativeAdjustments;}
     int rawWhite( void ) {return m_rawWhite;}
     int rawBlack( void ) {return m_rawBlack;}
     QString fileName( void ){return m_fileName;}
@@ -234,6 +236,7 @@ private:
     uint32_t m_cutIn;
     uint32_t m_cutOut;
     uint8_t m_profile;
+    bool m_creativeAdjustments;
     int m_rawWhite;
     int m_rawBlack;
     QString m_fileName;
