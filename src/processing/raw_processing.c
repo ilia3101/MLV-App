@@ -137,6 +137,7 @@ processingObject_t * initProcessingObject()
     processingSetDenoiserStrength(processing, 0);
     processingSetDenoiserWindow(processing, 2);
     processingUseCamMatrix(processing);
+    processingDontAllowCreativeAdjustments(processing);
     processingSetGCurve(processing, 0, NULL, NULL, 0);
     processingSetGCurve(processing, 0, NULL, NULL, 1);
     processingSetGCurve(processing, 0, NULL, NULL, 2);
@@ -642,8 +643,9 @@ void apply_processing_object( processingObject_t * processing,
         }
     }
 
-    //Testcode for HueVs...
-    if( processing->use_rgb_curves && ( processing->hue_vs_luma_used || processing->hue_vs_saturation_used || processing->hue_vs_hue_used ) )
+    //Code for HueVs...
+    if( ( processing->use_rgb_curves || processing->allow_creative_adjustments )
+     && ( processing->hue_vs_luma_used || processing->hue_vs_saturation_used || processing->hue_vs_hue_used ) )
     {
         for (uint16_t * pix = img; pix < img_end; pix += 3)
         {
@@ -687,7 +689,7 @@ void apply_processing_object( processingObject_t * processing,
         }
     }
 
-    if (processing->use_saturation)
+    if (processing->use_saturation || processing->allow_creative_adjustments)
     {
         if( processing->vibrance > 1.01 || processing->vibrance < 0.99 )
         {
@@ -758,7 +760,7 @@ void apply_processing_object( processingObject_t * processing,
         }
     }
 
-    if (processing->use_rgb_curves)
+    if (processing->use_rgb_curves || processing->allow_creative_adjustments)
     {
         /* Contrast Curve (OMG putting this after gamma made it 999x better) */
         for (uint16_t * pix = img; pix < img_end; pix += 3)
@@ -769,7 +771,7 @@ void apply_processing_object( processingObject_t * processing,
         }
     }
 
-    if (processing->use_rgb_curves)
+    if (processing->use_rgb_curves || processing->allow_creative_adjustments)
     {
         //Gradation curve
         for (uint16_t * pix = img; pix < img_end; pix += 3)

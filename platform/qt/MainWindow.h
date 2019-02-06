@@ -127,6 +127,7 @@ private slots:
     void on_actionExportCurrentFrame_triggered();
     void on_checkBoxHighLightReconstruction_toggled(bool checked);
     void on_checkBoxUseCameraMatrix_toggled(bool checked);
+    void on_checkBoxCreativeAdjustments_toggled(bool checked);
     void on_checkBoxChromaSeparation_toggled(bool checked);
     void on_comboBoxProfile_currentIndexChanged(int index);
     void on_comboBoxFilterName_currentIndexChanged(int index);
@@ -444,6 +445,7 @@ private:
     bool isRawBlackLevelWrong( void );
     QRecentFilesMenu *m_pRecentFilesMenu;
     void selectDebayerAlgorithm( void );
+    void enableCreativeAdjustments( bool enable );
 
 signals:
     void exportReady( void );

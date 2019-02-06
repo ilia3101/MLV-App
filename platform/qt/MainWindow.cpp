@@ -5072,6 +5072,23 @@ void MainWindow::on_checkBoxUseCameraMatrix_toggled(bool checked)
     m_frameChanged = true;
 }
 
+//Enable / Disable the creative adjustments (all sliders and curves if log profile selected)
+void MainWindow::on_checkBoxCreativeAdjustments_toggled(bool checked)
+{
+    if( checked )
+    {
+        ui->checkBoxCreativeAdjustments->setIcon( QIcon( ":/RetinaIMG/RetinaIMG/Status-dialog-warning-icon.png" ) );
+        processingAllowCreativeAdjustments( m_pProcessingObject );
+    }
+    else
+    {
+        ui->checkBoxCreativeAdjustments->setIcon( QIcon() );
+        processingDontAllowCreativeAdjustments( m_pProcessingObject );
+    }
+    if( ui->checkBoxCreativeAdjustments->isEnabled() ) enableCreativeAdjustments( checked );
+    m_frameChanged = true;
+}
+
 //Enable / Disable chroma separation
 void MainWindow::on_checkBoxChromaSeparation_toggled(bool checked)
 {
@@ -5101,6 +5118,17 @@ void MainWindow::on_comboBoxProfile_currentIndexChanged(int index)
     {
         enable = false;
     }
+    else
+    {
+        ui->checkBoxCreativeAdjustments->setChecked( false );
+    }
+    ui->checkBoxCreativeAdjustments->setEnabled( !enable );
+    enableCreativeAdjustments( enable );
+}
+
+//Switch on/off all creative adjustment elements
+void MainWindow::enableCreativeAdjustments( bool enable )
+{
     ui->horizontalSliderLS->setEnabled( enable );
     ui->horizontalSliderLR->setEnabled( enable );
     ui->horizontalSliderDS->setEnabled( enable );

@@ -135,7 +135,10 @@ void processingSetGammaGradient(processingObject_t * processing, double gammaVal
 #define processingEnableHighlightReconstruction(processing) (processing)->highlight_reconstruction = 1
 #define processingDisableHighlightReconstruction(processing) (processing)->highlight_reconstruction = 0
 
-
+/* Enable/disable creative adjustments when log active */
+#define processingAllowCreativeAdjustments(processing) (processing)->allow_creative_adjustments = 1
+#define processingDontAllowCreativeAdjustments(processing) (processing)->allow_creative_adjustments = 0
+#define processingGetAllowedCreativeAdjustments(processing) ((processing)->allow_creative_adjustments)
 
 /* Use or not use camera matrix - compatibility mode */
 #define processingUseCamMatrix(processing) (processing)->use_cam_matrix = 1

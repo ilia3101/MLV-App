@@ -184,6 +184,9 @@ typedef struct {
 
     /* Use Camera Matrix */
     uint8_t    use_cam_matrix;
+
+    /* Allow creative adjustments with log profile */
+    uint8_t    allow_creative_adjustments;
 } processingObject_t;
 
 #endif
