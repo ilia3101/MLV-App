@@ -5046,7 +5046,7 @@ QGroupBox::indicator:checked:disabled {
                       </font>
                      </property>
                      <property name="text">
-                      <string>Tone</string>
+                      <string>Hue</string>
                      </property>
                     </widget>
                    </item>
