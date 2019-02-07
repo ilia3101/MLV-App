@@ -36,7 +36,6 @@ ReceiptCopyMaskDialog::ReceiptCopyMaskDialog(QWidget *parent) :
     connect( ui->checkBoxHighlights, SIGNAL(clicked(bool)), this, SLOT(checkBoxProcessingState()) );
     connect( ui->checkBoxShadows, SIGNAL(clicked(bool)), this, SLOT(checkBoxProcessingState()) );
     connect( ui->checkBoxGradationCurve, SIGNAL(clicked(bool)), this, SLOT(checkBoxProcessingState()) );
-    connect( ui->checkBoxHslCurves, SIGNAL(clicked(bool)), this, SLOT(checkBoxProcessingState()) );
     connect( ui->checkBoxHighlightReconstruction, SIGNAL(clicked(bool)), this, SLOT(checkBoxProcessingState()) );
     connect( ui->checkBoxCameraMatrix, SIGNAL(clicked(bool)), this, SLOT(checkBoxProcessingState()) );
     connect( ui->checkBoxProfile, SIGNAL(clicked(bool)), this, SLOT(checkBoxProcessingState()) );
@@ -105,7 +104,6 @@ void ReceiptCopyMaskDialog::checkBoxProcessingState()
      && ui->checkBoxHighlights->isChecked()
      && ui->checkBoxShadows->isChecked()
      && ui->checkBoxGradationCurve->isChecked()
-     && ui->checkBoxHslCurves->isChecked()
      && ui->checkBoxHighlightReconstruction->isChecked()
      && ui->checkBoxCameraMatrix->isChecked()
      && ui->checkBoxProfile->isChecked() )
@@ -123,7 +121,6 @@ void ReceiptCopyMaskDialog::checkBoxProcessingState()
           && !ui->checkBoxHighlights->isChecked()
           && !ui->checkBoxShadows->isChecked()
           && !ui->checkBoxGradationCurve->isChecked()
-          && !ui->checkBoxHslCurves->isChecked()
           && !ui->checkBoxHighlightReconstruction->isChecked()
           && !ui->checkBoxCameraMatrix->isChecked()
           && !ui->checkBoxProfile->isChecked() )
@@ -191,7 +188,6 @@ void ReceiptCopyMaskDialog::on_checkBoxProcessing_clicked(bool checked)
     ui->checkBoxHighlights->setChecked( checked );
     ui->checkBoxShadows->setChecked( checked );
     ui->checkBoxGradationCurve->setChecked( checked );
-    ui->checkBoxHslCurves->setChecked( checked );
     ui->checkBoxHighlightReconstruction->setChecked( checked );
     ui->checkBoxCameraMatrix->setChecked( checked );
     ui->checkBoxProfile->setChecked( checked );
@@ -223,6 +219,8 @@ void ReceiptCopyMaskDialog::on_pushButtonAll_clicked()
     ui->checkBoxDetails->setChecked( true );
     on_checkBoxDetails_clicked( true );
     ui->checkBoxGradient->setChecked( true );
+    ui->checkBoxHslCurves->setChecked( true );
+    ui->checkBoxToning->setChecked( true );
     ui->checkBoxLut->setChecked( true );
     ui->checkBoxFilter->setChecked( true );
     ui->checkBoxTransformation->setChecked( true );
@@ -245,6 +243,8 @@ void ReceiptCopyMaskDialog::on_pushButtonNone_clicked()
     ui->checkBoxDetails->setChecked( false );
     on_checkBoxDetails_clicked( false );
     ui->checkBoxGradient->setChecked( false );
+    ui->checkBoxHslCurves->setChecked( false );
+    ui->checkBoxToning->setChecked( false );
     ui->checkBoxLut->setChecked( false );
     ui->checkBoxFilter->setChecked( false );
     ui->checkBoxTransformation->setChecked( false );

@@ -78,6 +78,8 @@ ReceiptSettings::ReceiptSettings()
     m_creativeAdjustments = 0;
     m_rawWhite = -1;
     m_rawBlack = -1;
+    m_tone = 0;
+    m_toningStrength = 0;
     m_cutIn = 1;
     m_cutOut = INT32_MAX;
 

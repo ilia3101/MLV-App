@@ -25,243 +25,7 @@
         <property name="verticalSpacing">
          <number>-1</number>
         </property>
-        <item row="0" column="4" colspan="2">
-         <widget class="QCheckBox" name="checkBoxDebayer">
-          <property name="text">
-           <string>Debayer Algorithm</string>
-          </property>
-         </widget>
-        </item>
-        <item row="7" column="4" colspan="2">
-         <widget class="QCheckBox" name="checkBoxTransformation">
-          <property name="text">
-           <string>Transformation</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="0" colspan="2">
-         <widget class="QCheckBox" name="checkBoxRawCorrection">
-          <property name="text">
-           <string>RAW Correction</string>
-          </property>
-          <property name="tristate">
-           <bool>false</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="6" column="4" colspan="2">
-         <widget class="QCheckBox" name="checkBoxFilter">
-          <property name="text">
-           <string>Filter</string>
-          </property>
-         </widget>
-        </item>
-        <item row="4" column="4" colspan="2">
-         <widget class="QCheckBox" name="checkBoxGradient">
-          <property name="text">
-           <string>Linear Gradient</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="4" colspan="2">
-         <widget class="QCheckBox" name="checkBoxDetails">
-          <property name="text">
-           <string>Details</string>
-          </property>
-          <property name="tristate">
-           <bool>false</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="8" column="4" colspan="2">
-         <spacer name="verticalSpacer_4">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>40</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item row="2" column="5" rowspan="2">
-         <layout class="QVBoxLayout" name="verticalLayout">
-          <property name="spacing">
-           <number>-1</number>
-          </property>
-          <property name="sizeConstraint">
-           <enum>QLayout::SetMinimumSize</enum>
-          </property>
-          <item>
-           <widget class="QCheckBox" name="checkBoxSharpen">
-            <property name="text">
-             <string>Sharpen</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="checkBoxChromaBlur">
-            <property name="text">
-             <string>Chroma Blur</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="checkBoxDenoise">
-            <property name="text">
-             <string>Denoise</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item row="5" column="4" colspan="2">
-         <widget class="QCheckBox" name="checkBoxLut">
-          <property name="text">
-           <string>LUT</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="2" colspan="2">
-         <widget class="QCheckBox" name="checkBoxProcessing">
-          <property name="text">
-           <string>Processing</string>
-          </property>
-          <property name="checked">
-           <bool>false</bool>
-          </property>
-          <property name="tristate">
-           <bool>false</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="3" rowspan="8">
-         <layout class="QVBoxLayout" name="verticalLayout_2">
-          <property name="spacing">
-           <number>-1</number>
-          </property>
-          <property name="sizeConstraint">
-           <enum>QLayout::SetMinimumSize</enum>
-          </property>
-          <item>
-           <widget class="QCheckBox" name="checkBoxExposure">
-            <property name="text">
-             <string>Exposure</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="checkBoxContrast">
-            <property name="text">
-             <string>Contrast</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="checkBoxWb">
-            <property name="text">
-             <string>White Balance</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="checkBoxClarity">
-            <property name="text">
-             <string>Clarity</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="checkBoxVibrance">
-            <property name="text">
-             <string>Vibrance</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="checkBoxSaturation">
-            <property name="text">
-             <string>Saturation</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="checkBoxCurve">
-            <property name="text">
-             <string>Curve</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="checkBoxHighlights">
-            <property name="text">
-             <string>Highlights</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="checkBoxShadows">
-            <property name="text">
-             <string>Shadows</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="checkBoxGradationCurve">
-            <property name="text">
-             <string>Gradation Curve</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="checkBoxHslCurves">
-            <property name="toolTip">
-             <string>Hue, Saturation, Luminance Curves</string>
-            </property>
-            <property name="text">
-             <string>HSL Curves</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="checkBoxHighlightReconstruction">
-            <property name="text">
-             <string>Highlight Reconstruction</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="checkBoxCameraMatrix">
-            <property name="text">
-             <string>Camera Matrix</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="checkBoxProfile">
-            <property name="text">
-             <string>Profile</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <spacer name="verticalSpacer_2">
-            <property name="orientation">
-             <enum>Qt::Vertical</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>20</width>
-              <height>40</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-         </layout>
-        </item>
-        <item row="1" column="1" rowspan="8">
+        <item row="1" column="1" rowspan="10">
          <layout class="QVBoxLayout" name="verticalLayout_3">
           <property name="spacing">
            <number>-1</number>
@@ -369,6 +133,249 @@ color: rgb(255, 154, 50)
            </spacer>
           </item>
          </layout>
+        </item>
+        <item row="1" column="3" rowspan="10">
+         <layout class="QVBoxLayout" name="verticalLayout_2">
+          <property name="spacing">
+           <number>-1</number>
+          </property>
+          <property name="sizeConstraint">
+           <enum>QLayout::SetMinimumSize</enum>
+          </property>
+          <item>
+           <widget class="QCheckBox" name="checkBoxExposure">
+            <property name="text">
+             <string>Exposure</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkBoxContrast">
+            <property name="text">
+             <string>Contrast</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkBoxWb">
+            <property name="text">
+             <string>White Balance</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkBoxClarity">
+            <property name="text">
+             <string>Clarity</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkBoxVibrance">
+            <property name="text">
+             <string>Vibrance</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkBoxSaturation">
+            <property name="text">
+             <string>Saturation</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkBoxCurve">
+            <property name="text">
+             <string>Curve</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkBoxHighlights">
+            <property name="text">
+             <string>Highlights</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkBoxShadows">
+            <property name="text">
+             <string>Shadows</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkBoxGradationCurve">
+            <property name="text">
+             <string>Gradation Curve</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkBoxHighlightReconstruction">
+            <property name="text">
+             <string>Highlight Reconstruction</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkBoxCameraMatrix">
+            <property name="text">
+             <string>Camera Matrix</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkBoxProfile">
+            <property name="text">
+             <string>Profile</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="verticalSpacer_2">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </item>
+        <item row="0" column="0" colspan="2">
+         <widget class="QCheckBox" name="checkBoxRawCorrection">
+          <property name="text">
+           <string>RAW Correction</string>
+          </property>
+          <property name="tristate">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="6" column="4" colspan="2">
+         <widget class="QCheckBox" name="checkBoxGradient">
+          <property name="text">
+           <string>Linear Gradient</string>
+          </property>
+         </widget>
+        </item>
+        <item row="8" column="4" colspan="2">
+         <widget class="QCheckBox" name="checkBoxFilter">
+          <property name="text">
+           <string>Filter</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="5" rowspan="2">
+         <layout class="QVBoxLayout" name="verticalLayout">
+          <property name="spacing">
+           <number>-1</number>
+          </property>
+          <property name="sizeConstraint">
+           <enum>QLayout::SetMinimumSize</enum>
+          </property>
+          <item>
+           <widget class="QCheckBox" name="checkBoxSharpen">
+            <property name="text">
+             <string>Sharpen</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkBoxChromaBlur">
+            <property name="text">
+             <string>Chroma Blur</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkBoxDenoise">
+            <property name="text">
+             <string>Denoise</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item row="9" column="4" colspan="2">
+         <widget class="QCheckBox" name="checkBoxTransformation">
+          <property name="text">
+           <string>Transformation</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="4" colspan="2">
+         <widget class="QCheckBox" name="checkBoxDebayer">
+          <property name="text">
+           <string>Debayer Algorithm</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="4" colspan="2">
+         <widget class="QCheckBox" name="checkBoxDetails">
+          <property name="text">
+           <string>Details</string>
+          </property>
+          <property name="tristate">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="10" column="4" colspan="2">
+         <spacer name="verticalSpacer_4">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="7" column="4" colspan="2">
+         <widget class="QCheckBox" name="checkBoxLut">
+          <property name="text">
+           <string>LUT</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="2" colspan="2">
+         <widget class="QCheckBox" name="checkBoxProcessing">
+          <property name="text">
+           <string>Processing</string>
+          </property>
+          <property name="checked">
+           <bool>false</bool>
+          </property>
+          <property name="tristate">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="4" colspan="2">
+         <widget class="QCheckBox" name="checkBoxHslCurves">
+          <property name="toolTip">
+           <string>Hue, Saturation, Luminance Curves</string>
+          </property>
+          <property name="text">
+           <string>HSL Curves</string>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="4" colspan="2">
+         <widget class="QCheckBox" name="checkBoxToning">
+          <property name="text">
+           <string>Toning</string>
+          </property>
+         </widget>
         </item>
        </layout>
       </item>

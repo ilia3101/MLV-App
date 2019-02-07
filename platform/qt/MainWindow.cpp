@@ -93,6 +93,9 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     //Init the lib
     initLib();
 
+    //Setup Toning (has to be done after initLib())
+    on_horizontalSliderTone_valueChanged( 0 );
+
     //Setup AudioPlayback
     m_pAudioPlayback = new AudioPlayback( this );
 
@@ -1391,6 +1394,7 @@ void MainWindow::readSettings()
     ui->groupBoxProcessing->setChecked( set.value( "expandedProcessing", true ).toBool() );
     ui->groupBoxDetails->setChecked( set.value( "expandedDetails", false ).toBool() );
     ui->groupBoxHsl->setChecked( set.value( "expandedHsl", false ).toBool() );
+    ui->groupBoxToning->setChecked( set.value( "expandedToning", false ).toBool() );
     ui->groupBoxColorWheels->setChecked( set.value( "expandedColorWheels", false ).toBool() );
     ui->groupBoxLut->setChecked( set.value( "expandedLut", false ).toBool() );
     ui->groupBoxFilter->setChecked( set.value( "expandedFilter", false ).toBool() );
@@ -1453,6 +1457,7 @@ void MainWindow::writeSettings()
     set.setValue( "expandedProcessing", ui->groupBoxProcessing->isChecked() );
     set.setValue( "expandedDetails", ui->groupBoxDetails->isChecked() );
     set.setValue( "expandedHsl", ui->groupBoxHsl->isChecked() );
+    set.setValue( "expandedToning", ui->groupBoxToning->isChecked() );
     set.setValue( "expandedColorWheels", ui->groupBoxColorWheels->isChecked() );
     set.setValue( "expandedLut", ui->groupBoxLut->isChecked() );
     set.setValue( "expandedFilter", ui->groupBoxFilter->isChecked() );
@@ -3127,6 +3132,16 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
             receipt->setRawWhite( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
+        else if( Rxml->isStartElement() && Rxml->name() == "tone" )
+        {
+            receipt->setTone( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == "toningStrength" )
+        {
+            receipt->setToningStrength( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
         else if( Rxml->isStartElement() && Rxml->name() == "lutEnabled" )
         {
             receipt->setLutEnabled( (bool)Rxml->readElementText().toInt() );
@@ -3253,6 +3268,8 @@ void MainWindow::writeXmlElementsToFile(QXmlStreamWriter *xmlWriter, ReceiptSett
     xmlWriter->writeTextElement( "darkFrameEnabled",        QString( "%1" ).arg( receipt->darkFrameEnabled() ) );
     xmlWriter->writeTextElement( "rawBlack",                QString( "%1" ).arg( receipt->rawBlack() ) );
     xmlWriter->writeTextElement( "rawWhite",                QString( "%1" ).arg( receipt->rawWhite() ) );
+    xmlWriter->writeTextElement( "tone",                    QString( "%1" ).arg( receipt->tone() ) );
+    xmlWriter->writeTextElement( "toningStrength",          QString( "%1" ).arg( receipt->toningStrength() ) );
     xmlWriter->writeTextElement( "lutEnabled",              QString( "%1" ).arg( receipt->lutEnabled() ) );
     xmlWriter->writeTextElement( "lutName",                 QString( "%1" ).arg( receipt->lutName() ) );
     xmlWriter->writeTextElement( "lutStrength",             QString( "%1" ).arg( receipt->lutStrength() ) );
@@ -3493,6 +3510,9 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
         setToolButtonDarkFrameSubtraction( receipt->darkFrameEnabled() );
     }
 
+    ui->horizontalSliderTone->setValue( receipt->tone() );
+    ui->horizontalSliderToningStrength->setValue( receipt->toningStrength() );
+
     ui->checkBoxLutEnable->setChecked( receipt->lutEnabled() );
     on_checkBoxLutEnable_clicked( receipt->lutEnabled() );
     ui->lineEditLutName->setText( receipt->lutName() );
@@ -3616,6 +3636,9 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     receipt->setRawBlack( ui->horizontalSliderRawBlack->value() );
     receipt->setRawWhite( ui->horizontalSliderRawWhite->value() );
 
+    receipt->setTone( ui->horizontalSliderTone->value() );
+    receipt->setToningStrength( ui->horizontalSliderToningStrength->value() );
+
     receipt->setLutEnabled( ui->checkBoxLutEnable->isChecked() );
     receipt->setLutName( ui->lineEditLutName->text() );
     receipt->setLutStrength( ui->horizontalSliderLutStrength->value() );
@@ -3705,6 +3728,12 @@ void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings 
     receiptTarget->setDeflickerTarget( receiptSource->deflickerTarget() );
 
     if( paste && cdui->checkBoxDebayer->isChecked() )          receiptTarget->setDebayer( receiptSource->debayer() );
+
+    if( paste )
+    {
+        receiptTarget->setTone( receiptSource->tone() );
+        receiptTarget->setToningStrength( receiptSource->toningStrength() );
+    }
 
     if( paste && cdui->checkBoxLut->isChecked() )
     {
@@ -3843,6 +3872,9 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     receipt->setDarkFrameEnabled( m_pSessionReceipts.at( row )->darkFrameEnabled() );
     receipt->setRawBlack( m_pSessionReceipts.at( row )->rawBlack() );
     receipt->setRawWhite( m_pSessionReceipts.at( row )->rawWhite() );
+
+    receipt->setTone( m_pSessionReceipts.at( row )->tone() );
+    receipt->setToningStrength( m_pSessionReceipts.at( row )->toningStrength() );
 
     receipt->setLutEnabled( m_pSessionReceipts.at( row )->lutEnabled() );
     receipt->setLutName( m_pSessionReceipts.at( row )->lutName() );
@@ -4724,6 +4756,31 @@ void MainWindow::on_horizontalSliderRawBlack_valueChanged(int position)
     m_frameChanged = true;
 }
 
+void MainWindow::on_horizontalSliderTone_valueChanged(int position)
+{
+    QColor color;
+    color.setHslF( position/255.0, 1.0, 0.5 );
+    QPixmap pixmap( 48, 18 );
+    pixmap.fill( color );
+    ui->label_ToningColor->setPixmap( pixmap );
+    processingSetToning( m_pProcessingObject,
+                         color.red(), color.green(), color.blue(),
+                         ui->horizontalSliderToningStrength->value() );
+    ui->label_ToneVal->setText( QString("%1").arg( position ) );
+    m_frameChanged = true;
+}
+
+void MainWindow::on_horizontalSliderToningStrength_valueChanged(int position)
+{
+    QColor color;
+    color.setHslF( ui->horizontalSliderTone->value() / 255.0, 1.0, 0.5 );
+    processingSetToning( m_pProcessingObject,
+                         color.red(), color.green(), color.blue(),
+                         position );
+    ui->label_ToningStrengthVal->setText( QString("%1").arg( position ) );
+    m_frameChanged = true;
+}
+
 void MainWindow::on_horizontalSliderExposure_doubleClicked()
 {
     ReceiptSettings *sliders = new ReceiptSettings(); //default
@@ -4880,6 +4937,20 @@ void MainWindow::on_horizontalSliderRawWhite_doubleClicked()
 void MainWindow::on_horizontalSliderRawBlack_doubleClicked()
 {
     ui->horizontalSliderRawBlack->setValue( getMlvOriginalBlackLevel( m_pMlvObject ) );
+}
+
+void MainWindow::on_horizontalSliderTone_doubleClicked()
+{
+    ReceiptSettings *sliders = new ReceiptSettings(); //default
+    ui->horizontalSliderTone->setValue( sliders->tone() );
+    delete sliders;
+}
+
+void MainWindow::on_horizontalSliderToningStrength_doubleClicked()
+{
+    ReceiptSettings *sliders = new ReceiptSettings(); //default
+    ui->horizontalSliderToningStrength->setValue( sliders->toningStrength() );
+    delete sliders;
 }
 
 //Jump to first frame
@@ -5926,6 +5997,22 @@ void MainWindow::on_label_RawBlackVal_doubleClicked()
     ui->horizontalSliderRawBlack->setValue( editSlider.getValue() );
 }
 
+void MainWindow::on_label_ToneVal_doubleClicked()
+{
+    EditSliderValueDialog editSlider;
+    editSlider.autoSetup( ui->horizontalSliderTone, ui->label_ToneVal, 1.0, 0, 1.0 );
+    editSlider.exec();
+    ui->horizontalSliderTone->setValue( editSlider.getValue() );
+}
+
+void MainWindow::on_label_ToningStrengthVal_doubleClicked()
+{
+    EditSliderValueDialog editSlider;
+    editSlider.autoSetup( ui->horizontalSliderToningStrength, ui->label_ToningStrengthVal, 1.0, 0, 1.0 );
+    editSlider.exec();
+    ui->horizontalSliderToningStrength->setValue( editSlider.getValue() );
+}
+
 //Fullscreen Mode
 void MainWindow::on_actionFullscreen_triggered( bool checked )
 {
@@ -6632,6 +6719,14 @@ void MainWindow::on_groupBoxHsl_toggled(bool arg1)
     ui->frameHsl->setVisible( arg1 );
     if( !arg1 ) ui->groupBoxHsl->setMaximumHeight( 30 );
     else ui->groupBoxHsl->setMaximumHeight( 16777215 );
+}
+
+//Collapse & Expand Toning
+void MainWindow::on_groupBoxToning_toggled(bool arg1)
+{
+    ui->frameToning->setVisible( arg1 );
+    if( !arg1 ) ui->groupBoxToning->setMaximumHeight( 30 );
+    else ui->groupBoxToning->setMaximumHeight( 16777215 );
 }
 
 //Collapse & Expand Color Wheels

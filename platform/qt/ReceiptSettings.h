@@ -56,6 +56,8 @@ public:
     void setAllowCreativeAdjustments( bool on ){m_creativeAdjustments = on;}
     void setRawWhite( int value )             {m_rawWhite = value;}
     void setRawBlack( int value )             {m_rawBlack = value;}
+    void setTone( uint8_t value )             {m_tone = value;}
+    void setToningStrength( uint8_t value )   {m_toningStrength = value;}
     void setFileName( QString fileName )      {m_fileName = fileName;}
     void setExportFileName( QString fileName ){m_exportFileName = fileName;}
     void setRawFixesEnabled( bool on )        {m_rawFixesEnabled = on;}
@@ -163,6 +165,8 @@ public:
     bool allowCreativeAdjustments( void ){return m_creativeAdjustments;}
     int rawWhite( void ) {return m_rawWhite;}
     int rawBlack( void ) {return m_rawBlack;}
+    uint8_t tone( void ) {return m_tone;}
+    uint8_t toningStrength( void ){return m_toningStrength;}
     QString fileName( void ){return m_fileName;}
     QString exportFileName( void ){return m_exportFileName;}
     uint32_t lastPlaybackPosition( void ){return m_lastPlaybackPosition;}
@@ -239,6 +243,8 @@ private:
     bool m_creativeAdjustments;
     int m_rawWhite;
     int m_rawBlack;
+    uint8_t m_tone;
+    uint8_t m_toningStrength;
     QString m_fileName;
     QString m_exportFileName;
     uint32_t m_lastPlaybackPosition;
