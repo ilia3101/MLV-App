@@ -151,6 +151,8 @@ processingObject_t * initProcessingObject()
     //processing_update_matrices_gradient(processing);
     processing_update_shadow_highlight_curve(processing);
 
+    processingSetToning(processing, 255, 192, 0, 0);
+
     return processing;
 }
 
@@ -756,6 +758,21 @@ void apply_processing_object( processingObject_t * processing,
                 pix[0] = LIMIT16(pix0);
                 pix[1] = LIMIT16(pix1);
                 pix[2] = LIMIT16(pix2);
+            }
+        }
+    }
+
+    /* Toning */
+    if (processing->use_rgb_curves || processing->allow_creative_adjustments)
+    {
+        if( processing->toning_dry < 99.8 )
+        {
+            for (uint16_t * pix = img; pix < img_end; pix += 3)
+            {
+                for( int i = 0; i < 3; i++ )
+                {
+                    pix[i] = pix[i] * processing->toning_dry + pix[i] * processing->toning_wet[i];
+                }
             }
         }
     }
@@ -1720,4 +1737,13 @@ void processingSetHueVsCurves(processingObject_t *processing, int num, float *pX
 
     free( pXout );
     free( pYout );
+}
+
+/* Toning */
+void processingSetToning(processingObject_t *processing, uint8_t r, uint8_t g, uint8_t b, uint8_t strength)
+{
+    processing->toning_dry = (100.0 - strength / 3.0) / 100.0;
+    processing->toning_wet[0] = (strength / 3.0 / 100.0) * (float)r / 255.0;
+    processing->toning_wet[1] = (strength / 3.0 / 100.0) * (float)g / 255.0;
+    processing->toning_wet[2] = (strength / 3.0 / 100.0) * (float)b / 255.0;
 }

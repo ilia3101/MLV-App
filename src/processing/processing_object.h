@@ -58,6 +58,10 @@ typedef struct {
     uint8_t hue_vs_saturation_used;
     uint8_t hue_vs_luma_used;
 
+    /* toning */
+    float toning_dry;
+    float toning_wet[3];
+
     /* Do tonemapping? */
     int tone_mapping;
     /* Pick any tonemapping function */

@@ -140,6 +140,9 @@ void processingSetGammaGradient(processingObject_t * processing, double gammaVal
 #define processingDontAllowCreativeAdjustments(processing) (processing)->allow_creative_adjustments = 0
 #define processingGetAllowedCreativeAdjustments(processing) ((processing)->allow_creative_adjustments)
 
+/* Toning */
+void processingSetToning(processingObject_t * processing, uint8_t r, uint8_t g, uint8_t b, uint8_t strength);
+
 /* Use or not use camera matrix - compatibility mode */
 #define processingUseCamMatrix(processing) (processing)->use_cam_matrix = 1
 #define processingDontUseCamMatrix(processing) (processing)->use_cam_matrix = 0
