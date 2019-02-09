@@ -2792,13 +2792,14 @@ void MainWindow::on_actionImportReceipt_triggered()
                 //qDebug() << "masxmlVersion" << Rxml.attributes().at(0).value().toInt();
                 versionReceipt = Rxml.attributes().at(0).value().toInt();
             }
-            readXmlElementsFromFile( &Rxml, m_pSessionReceipts.at( m_lastActiveClipInSession ), versionReceipt );
+            readXmlElementsFromFile( &Rxml, m_pReceiptClipboard, versionReceipt );
         }
     }
     file.close();
 
-    //Set the sliders
-    setSliders( m_pSessionReceipts.at( m_lastActiveClipInSession ), false );
+    m_pCopyMask->exec();
+    ui->actionPasteReceipt->setEnabled( true );
+    on_actionPasteReceipt_triggered();
 }
 
 //Exports the actual slider settings to a file
