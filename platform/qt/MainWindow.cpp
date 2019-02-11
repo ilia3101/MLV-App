@@ -5235,6 +5235,7 @@ void MainWindow::enableCreativeAdjustments( bool enable )
     ui->label_vibrance->setEnabled( enable );
     ui->label_saturation->setEnabled( enable );
     ui->groupBoxHsl->setEnabled( enable );
+    ui->groupBoxToning->setEnabled( enable );
     ui->label_gradationcurves->setEnabled( enable );
     ui->toolButtonGCurvesY->setEnabled( enable );
     ui->toolButtonGCurvesR->setEnabled( enable );
