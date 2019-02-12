@@ -5161,6 +5161,7 @@ void MainWindow::on_comboBoxUseCameraMatrix_currentIndexChanged(int index)
             break;
         default: break;
     }
+    if( index != 0 ) on_horizontalSliderTemperature_valueChanged( ui->horizontalSliderTemperature->value() );
     m_frameChanged = true;
 }
 
