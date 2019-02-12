@@ -3242,7 +3242,7 @@ void MainWindow::writeXmlElementsToFile(QXmlStreamWriter *xmlWriter, ReceiptSett
     xmlWriter->writeTextElement( "sharpen",                 QString( "%1" ).arg( receipt->sharpen() ) );
     xmlWriter->writeTextElement( "chromaBlur",              QString( "%1" ).arg( receipt->chromaBlur() ) );
     xmlWriter->writeTextElement( "highlightReconstruction", QString( "%1" ).arg( receipt->isHighlightReconstruction() ) );
-    xmlWriter->writeTextElement( "camMatrixUsed",           QString( "%1" ).arg( receipt->isCamMatrixUsed() ) );
+    xmlWriter->writeTextElement( "camMatrixUsed",           QString( "%1" ).arg( receipt->camMatrixUsed() ) );
     xmlWriter->writeTextElement( "chromaSeparation",        QString( "%1" ).arg( receipt->isChromaSeparation() ) );
     xmlWriter->writeTextElement( "profile",                 QString( "%1" ).arg( receipt->profile() ) );
     xmlWriter->writeTextElement( "allowCreativeAdjustments",QString( "%1" ).arg( receipt->allowCreativeAdjustments() ) );
@@ -3429,8 +3429,8 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     ui->checkBoxHighLightReconstruction->setChecked( receipt->isHighlightReconstruction() );
     on_checkBoxHighLightReconstruction_toggled( receipt->isHighlightReconstruction() );
 
-    ui->checkBoxUseCameraMatrix->setChecked( receipt->isCamMatrixUsed() );
-    on_checkBoxUseCameraMatrix_toggled( receipt->isCamMatrixUsed() );
+    ui->comboBoxUseCameraMatrix->setCurrentIndex( receipt->camMatrixUsed() );
+    on_comboBoxUseCameraMatrix_currentIndexChanged( receipt->camMatrixUsed() );
 
     ui->checkBoxChromaSeparation->setChecked( receipt->isChromaSeparation() );
     on_checkBoxChromaSeparation_toggled( receipt->isChromaSeparation() );
@@ -3607,7 +3607,7 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     receipt->setSharpen( ui->horizontalSliderSharpen->value() );
     receipt->setChromaBlur( ui->horizontalSliderChromaBlur->value() );
     receipt->setHighlightReconstruction( ui->checkBoxHighLightReconstruction->isChecked() );
-    receipt->setCamMatrixUsed( ui->checkBoxUseCameraMatrix->isChecked() );
+    receipt->setCamMatrixUsed( ui->comboBoxUseCameraMatrix->currentIndex() );
     receipt->setChromaSeparation( ui->checkBoxChromaSeparation->isChecked() );
     receipt->setProfile( ui->comboBoxProfile->currentIndex() );
     receipt->setAllowCreativeAdjustments( ui->checkBoxCreativeAdjustments->isChecked() );
@@ -3698,7 +3698,7 @@ void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings 
     if( paste && cdui->checkBoxSharpen->isChecked() )    receiptTarget->setSharpen( receiptSource->sharpen() );
     if( paste && cdui->checkBoxChromaBlur->isChecked() ) receiptTarget->setChromaBlur( receiptSource->chromaBlur() );
     if( paste && cdui->checkBoxHighlightReconstruction->isChecked() ) receiptTarget->setHighlightReconstruction( receiptSource->isHighlightReconstruction() );
-    if( paste && cdui->checkBoxCameraMatrix->isChecked() ) receiptTarget->setCamMatrixUsed( receiptSource->isCamMatrixUsed() );
+    if( paste && cdui->checkBoxCameraMatrix->isChecked() ) receiptTarget->setCamMatrixUsed( receiptSource->camMatrixUsed() );
     if( paste && cdui->checkBoxChromaBlur->isChecked() ) receiptTarget->setChromaSeparation( receiptSource->isChromaSeparation() );
     if( paste && cdui->checkBoxProfile->isChecked() )    receiptTarget->setProfile( receiptSource->profile() );
     if( paste && cdui->checkBoxProfile->isChecked() )    receiptTarget->setAllowCreativeAdjustments( receiptSource->allowCreativeAdjustments() );
@@ -3845,7 +3845,7 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     receipt->setSharpen( m_pSessionReceipts.at( row )->sharpen() );
     receipt->setChromaBlur( m_pSessionReceipts.at( row )->chromaBlur() );
     receipt->setHighlightReconstruction( m_pSessionReceipts.at( row )->isHighlightReconstruction() );
-    receipt->setCamMatrixUsed( m_pSessionReceipts.at( row )->isCamMatrixUsed() );
+    receipt->setCamMatrixUsed( m_pSessionReceipts.at( row )->camMatrixUsed() );
     receipt->setChromaSeparation( m_pSessionReceipts.at( row )->isChromaSeparation() );
     receipt->setProfile( m_pSessionReceipts.at( row )->profile() );
     receipt->setAllowCreativeAdjustments( m_pSessionReceipts.at( row )->allowCreativeAdjustments() );
@@ -5149,10 +5149,18 @@ void MainWindow::on_checkBoxHighLightReconstruction_toggled(bool checked)
 }
 
 //Enable / Disable the camera matrix calculation
-void MainWindow::on_checkBoxUseCameraMatrix_toggled(bool checked)
+void MainWindow::on_comboBoxUseCameraMatrix_currentIndexChanged(int index)
 {
-    if( checked ) processingUseCamMatrix( m_pProcessingObject );
-    else processingDontUseCamMatrix( m_pProcessingObject );
+    switch( index )
+    {
+        case 0: processingDontUseCamMatrix( m_pProcessingObject );
+            break;
+        case 1: processingUseCamMatrix( m_pProcessingObject );
+            break;
+        case 2: processingUseCamMatrixDanne( m_pProcessingObject );
+            break;
+        default: break;
+    }
     m_frameChanged = true;
 }
 

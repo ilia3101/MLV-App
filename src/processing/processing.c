@@ -35,6 +35,20 @@ static const double ciecam02[] = {
     0.0030,  0.0136,  0.9834
 };
 
+/* Danne temp fix version */
+static const double xyz_to_rgb_danne[] = {
+     3.2404542, -1.5371385, -0.4985314,
+    -0.9692660,  1.8760108,  0.0415560,
+     0.0030,  -0.0536,  0.9834
+};
+
+/* Danne temp fix XYZ to Cone space (LMS) */
+static const double ciecam02_danne[] = {
+    3.2404542, -1.5371385, -0.4985314,
+   -0.7036,  1.8760108,  0.0415560,
+    0.0030,  0.0536,  0.9834
+};
+
 /* Tonemapping info from http://filmicworlds.com/blog/filmic-tonemapping-operators/ */
 
 /* Reinhard - most basic but just werks */

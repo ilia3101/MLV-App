@@ -145,8 +145,9 @@ void processingSetToning(processingObject_t * processing, uint8_t r, uint8_t g, 
 
 /* Use or not use camera matrix - compatibility mode */
 #define processingUseCamMatrix(processing) (processing)->use_cam_matrix = 1
+#define processingUseCamMatrixDanne(processing) (processing)->use_cam_matrix = 2
 #define processingDontUseCamMatrix(processing) (processing)->use_cam_matrix = 0
-#define processingGetUsesCamMatrix(processing) ((processing)->use_cam_matrix)
+#define processingGetUsedCamMatrix(processing) ((processing)->use_cam_matrix)
 
 /* Set Camera RAW matrix (matrix A is for tungsten) */
 void processingSetCamMatrix(processingObject_t * processing, double * camMatrix, double * camMatrixA);

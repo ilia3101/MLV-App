@@ -594,7 +594,7 @@ void apply_processing_object( processingObject_t * processing,
         }
 
         /* I really don't like how this if is in a big loop :(( */
-        if( processing->use_cam_matrix )
+        if( processing->use_cam_matrix > 0 )
         {
             /* WB correction */
             uint16_t pix0b = pix[0], pix1b = pix[1], pix2b = pix[2];
@@ -620,7 +620,7 @@ void apply_processing_object( processingObject_t * processing,
          || ( processing->gradient_contrast       < -0.01 || processing->gradient_contrast       > 0.01 ) ) )
         {
             /* WB correction gradient layer*/
-            if( processing->use_cam_matrix )
+            if( processing->use_cam_matrix > 0 )
             {
                 uint16_t pix0b = pixg[0], pix1b = pixg[1], pix2b = pixg[2];
                 double result[3];
@@ -1109,8 +1109,16 @@ void processingSetWhiteBalance(processingObject_t * processing, double WBKelvin,
     double LMS_temp[3];
     Kelvin_Daylight_to_XYZ(6500, LMS_white);
     Kelvin_Daylight_to_XYZ(WBKelvin, LMS_temp);
-    applyMatrix(LMS_white, ciecam02);
-    applyMatrix(LMS_temp, ciecam02);
+    if( processing->use_cam_matrix == 1 )
+    {
+        applyMatrix(LMS_white, ciecam02);
+        applyMatrix(LMS_temp, ciecam02);
+    }
+    else
+    {
+        applyMatrix(LMS_white, ciecam02_danne);
+        applyMatrix(LMS_temp, ciecam02_danne);
+    }
     double LMS_multipliers[3];
     for (int i = 0; i < 3; ++i) LMS_multipliers[i] = LMS_white[i]/LMS_temp[i];
 
@@ -1133,7 +1141,14 @@ void processingSetWhiteBalance(processingObject_t * processing, double WBKelvin,
 
     /* Convert to LMS space */
     double matrix_in_LMS[9];
-    multiplyMatrices(ciecam02, proper_wb_matrix, matrix_in_LMS);
+    if( processing->use_cam_matrix == 1 )
+    {
+        multiplyMatrices(ciecam02, proper_wb_matrix, matrix_in_LMS);
+    }
+    else
+    {
+        multiplyMatrices(ciecam02_danne, proper_wb_matrix, matrix_in_LMS);
+    }
 
     /* Apply multipliers in XYZ */
     for (int i = 0; i < 3; ++i)
@@ -1146,12 +1161,26 @@ void processingSetWhiteBalance(processingObject_t * processing, double WBKelvin,
 
     /* Matrix back to XYZ from LMS */
     double LMS_to_XYZ[9];
-    invertMatrix(ciecam02, LMS_to_XYZ);
+    if( processing->use_cam_matrix == 1 )
+    {
+        invertMatrix(ciecam02, LMS_to_XYZ);
+    }
+    else
+    {
+        invertMatrix(ciecam02_danne, LMS_to_XYZ);
+    }
     double back_in_XYZ_matrix[9];
     multiplyMatrices(LMS_to_XYZ, matrix_in_LMS, back_in_XYZ_matrix);
 
     /* Back to sRGB (maybe something wider in future) */
-    multiplyMatrices(xyz_to_rgb, back_in_XYZ_matrix, processing->proper_wb_matrix);
+    if( processing->use_cam_matrix == 1 )
+    {
+        multiplyMatrices(xyz_to_rgb, back_in_XYZ_matrix, processing->proper_wb_matrix);
+    }
+    else
+    {
+        multiplyMatrices(xyz_to_rgb_danne, back_in_XYZ_matrix, processing->proper_wb_matrix);
+    }
 }
 
 /* WB just by kelvin */
@@ -1436,7 +1465,7 @@ void processingFindWhiteBalance(processingObject_t *processing, int imageX, int 
             }
             /* --- */
 
-            if( processing->use_cam_matrix )
+            if( processing->use_cam_matrix > 0 )
             {
                 uint16_t pix0b = pix0, pix1b = pix1, pix2b = pix2;
                 double result[3];

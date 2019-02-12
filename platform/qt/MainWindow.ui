@@ -499,9 +499,9 @@ QGroupBox::indicator:checked:disabled {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>0</y>
+            <y>-1574</y>
             <width>244</width>
-            <height>4148</height>
+            <height>4157</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayoutScrollArea">
@@ -4144,15 +4144,27 @@ QGroupBox::indicator:checked:disabled {
                   </widget>
                  </item>
                  <item>
-                  <widget class="QCheckBox" name="checkBoxUseCameraMatrix">
+                  <widget class="QComboBox" name="comboBoxUseCameraMatrix">
                    <property name="font">
                     <font>
                      <pointsize>10</pointsize>
                     </font>
                    </property>
-                   <property name="text">
-                    <string>Use Camera Matrix</string>
-                   </property>
+                   <item>
+                    <property name="text">
+                     <string>Don't Use Camera Matrix</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Use Camera Matrix</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Uncolorscience Fix</string>
+                    </property>
+                   </item>
                   </widget>
                  </item>
                  <item>
