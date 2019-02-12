@@ -129,7 +129,7 @@ public:
     int denoiserWindow( void ){return m_denoiserWindow;}
     int denoiserStrength( void ){return m_denoiserStrength;}
     bool isHighlightReconstruction( void ){return m_highlightReconstruction;}
-    bool camMatrixUsed( void ){return m_useCamMatrix;}
+    uint8_t camMatrixUsed( void ){return m_useCamMatrix;}
     bool isChromaSeparation( void ){return m_chromaSeparation;}
     bool rawFixesEnabled( void ){return m_rawFixesEnabled;}
     int verticalStripes( void ){return m_vertical_stripes;}

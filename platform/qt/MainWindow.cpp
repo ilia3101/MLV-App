@@ -2998,7 +2998,7 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
         }
         else if( Rxml->isStartElement() && Rxml->name() == "camMatrixUsed" )
         {
-            receipt->setCamMatrixUsed( (bool)Rxml->readElementText().toInt() );
+            receipt->setCamMatrixUsed( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
         else if( Rxml->isStartElement() && Rxml->name() == "chromaSeparation" )
@@ -3393,6 +3393,9 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
         //Init Temp read from the file when imported and loaded very first time completely
         setWhiteBalanceFromMlv( receipt );
     }
+    ui->comboBoxUseCameraMatrix->setCurrentIndex( receipt->camMatrixUsed() );
+    on_comboBoxUseCameraMatrix_currentIndexChanged( receipt->camMatrixUsed() );
+
     ui->horizontalSliderTemperature->setValue( receipt->temperature() );
     ui->horizontalSliderTint->setValue( receipt->tint() );
     on_horizontalSliderTint_valueChanged( receipt->tint() ); // Tint needs sometimes extra invitation
@@ -3428,9 +3431,6 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
 
     ui->checkBoxHighLightReconstruction->setChecked( receipt->isHighlightReconstruction() );
     on_checkBoxHighLightReconstruction_toggled( receipt->isHighlightReconstruction() );
-
-    ui->comboBoxUseCameraMatrix->setCurrentIndex( receipt->camMatrixUsed() );
-    on_comboBoxUseCameraMatrix_currentIndexChanged( receipt->camMatrixUsed() );
 
     ui->checkBoxChromaSeparation->setChecked( receipt->isChromaSeparation() );
     on_checkBoxChromaSeparation_toggled( receipt->isChromaSeparation() );
@@ -5161,7 +5161,7 @@ void MainWindow::on_comboBoxUseCameraMatrix_currentIndexChanged(int index)
             break;
         default: break;
     }
-    if( index != 0 ) on_horizontalSliderTemperature_valueChanged( ui->horizontalSliderTemperature->value() );
+    if( index != 0 && !m_inOpeningProcess ) on_horizontalSliderTemperature_valueChanged( ui->horizontalSliderTemperature->value() );
     m_frameChanged = true;
 }
 
