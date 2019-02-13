@@ -13,7 +13,7 @@ A very first version of a kind of user manual can be found [here](https://github
 - Support for lossless mlv
 - Support for any bit depth (…, 10, 12, 14bit)
 - Demosaic algorithms: None, Simple (fastest), bilinear, multithreaded AMaZE & LMMSE, AHD or IGV
-- Processing with many parameters (exposure, contrast, white balance, clarity, vibrance, saturation, dark & light adjustments, highlights & shadows, gradation curves, sharpen, hue vs. hue/saturation/luminance curves,…)
+- Processing with many parameters (exposure, contrast, white balance, clarity, vibrance, saturation, dark & light adjustments, highlights & shadows, gradation curves, sharpen, hue vs. hue/saturation/luminance curves, toning, …)
 - Processing filters for film emulation powered by neural networks :ghost:
 - Processing in sRGB or several LOG
 - RAW corrections (fix focus & bad pixels, chroma smoothing, pattern noise, vertical stripes, adjust RAW black & white level)
