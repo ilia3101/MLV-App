@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>712</width>
-    <height>423</height>
+    <height>454</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -25,7 +25,7 @@
         <property name="verticalSpacing">
          <number>-1</number>
         </property>
-        <item row="1" column="1" rowspan="10">
+        <item row="1" column="1" rowspan="11">
          <layout class="QVBoxLayout" name="verticalLayout_3">
           <property name="spacing">
            <number>-1</number>
@@ -134,7 +134,24 @@ color: rgb(255, 154, 50)
           </item>
          </layout>
         </item>
-        <item row="1" column="3" rowspan="10">
+        <item row="8" column="4" colspan="2">
+         <widget class="QCheckBox" name="checkBoxFilter">
+          <property name="text">
+           <string>Filter</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0" colspan="2">
+         <widget class="QCheckBox" name="checkBoxRawCorrection">
+          <property name="text">
+           <string>RAW Correction</string>
+          </property>
+          <property name="tristate">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="3" rowspan="11">
          <layout class="QVBoxLayout" name="verticalLayout_2">
           <property name="spacing">
            <number>-1</number>
@@ -248,16 +265,6 @@ color: rgb(255, 154, 50)
           </item>
          </layout>
         </item>
-        <item row="0" column="0" colspan="2">
-         <widget class="QCheckBox" name="checkBoxRawCorrection">
-          <property name="text">
-           <string>RAW Correction</string>
-          </property>
-          <property name="tristate">
-           <bool>false</bool>
-          </property>
-         </widget>
-        </item>
         <item row="6" column="4" colspan="2">
          <widget class="QCheckBox" name="checkBoxGradient">
           <property name="text">
@@ -265,10 +272,27 @@ color: rgb(255, 154, 50)
           </property>
          </widget>
         </item>
-        <item row="8" column="4" colspan="2">
-         <widget class="QCheckBox" name="checkBoxFilter">
+        <item row="10" column="4" colspan="2">
+         <widget class="QCheckBox" name="checkBoxTransformation">
           <property name="text">
-           <string>Filter</string>
+           <string>Transformation</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="4" colspan="2">
+         <widget class="QCheckBox" name="checkBoxDetails">
+          <property name="text">
+           <string>Details</string>
+          </property>
+          <property name="tristate">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="4" colspan="2">
+         <widget class="QCheckBox" name="checkBoxDebayer">
+          <property name="text">
+           <string>Debayer Algorithm</string>
           </property>
          </widget>
         </item>
@@ -303,31 +327,7 @@ color: rgb(255, 154, 50)
           </item>
          </layout>
         </item>
-        <item row="9" column="4" colspan="2">
-         <widget class="QCheckBox" name="checkBoxTransformation">
-          <property name="text">
-           <string>Transformation</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="4" colspan="2">
-         <widget class="QCheckBox" name="checkBoxDebayer">
-          <property name="text">
-           <string>Debayer Algorithm</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="4" colspan="2">
-         <widget class="QCheckBox" name="checkBoxDetails">
-          <property name="text">
-           <string>Details</string>
-          </property>
-          <property name="tristate">
-           <bool>false</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="10" column="4" colspan="2">
+        <item row="11" column="4" colspan="2">
          <spacer name="verticalSpacer_4">
           <property name="orientation">
            <enum>Qt::Vertical</enum>
@@ -340,10 +340,13 @@ color: rgb(255, 154, 50)
           </property>
          </spacer>
         </item>
-        <item row="7" column="4" colspan="2">
-         <widget class="QCheckBox" name="checkBoxLut">
+        <item row="4" column="4" colspan="2">
+         <widget class="QCheckBox" name="checkBoxHslCurves">
+          <property name="toolTip">
+           <string>Hue, Saturation, Luminance Curves</string>
+          </property>
           <property name="text">
-           <string>LUT</string>
+           <string>HSL Curves</string>
           </property>
          </widget>
         </item>
@@ -360,13 +363,10 @@ color: rgb(255, 154, 50)
           </property>
          </widget>
         </item>
-        <item row="4" column="4" colspan="2">
-         <widget class="QCheckBox" name="checkBoxHslCurves">
-          <property name="toolTip">
-           <string>Hue, Saturation, Luminance Curves</string>
-          </property>
+        <item row="7" column="4" colspan="2">
+         <widget class="QCheckBox" name="checkBoxLut">
           <property name="text">
-           <string>HSL Curves</string>
+           <string>LUT</string>
           </property>
          </widget>
         </item>
@@ -374,6 +374,13 @@ color: rgb(255, 154, 50)
          <widget class="QCheckBox" name="checkBoxToning">
           <property name="text">
            <string>Toning</string>
+          </property>
+         </widget>
+        </item>
+        <item row="9" column="4" colspan="2">
+         <widget class="QCheckBox" name="checkBoxVignette">
+          <property name="text">
+           <string>Vignette</string>
           </property>
          </widget>
         </item>

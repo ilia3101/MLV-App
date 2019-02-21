@@ -186,6 +186,11 @@ typedef struct {
     uint8_t    gradient_enable;
     uint16_t * gradient_mask; //same size like picture, alpha mask
 
+    /* Vignette */
+    int8_t     vignette_strength;
+    float    * vignette_mask; //same size like picture, alpha mask
+    float    * vignette_end;
+
     /* Use Camera Matrix */
     uint8_t    use_cam_matrix;
 

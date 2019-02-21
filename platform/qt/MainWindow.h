@@ -95,6 +95,8 @@ private slots:
     void on_horizontalSliderDenoiseStrength_valueChanged(int position);
     void on_horizontalSliderLutStrength_valueChanged(int position);
     void on_horizontalSliderFilterStrength_valueChanged(int position);
+    void on_horizontalSliderVignetteStrength_valueChanged(int position);
+    void on_horizontalSliderVignetteRadius_valueChanged(int position);
     void on_horizontalSliderRawWhite_valueChanged(int position);
     void on_horizontalSliderRawBlack_valueChanged(int position);
     void on_horizontalSliderTone_valueChanged(int position);
@@ -121,6 +123,8 @@ private slots:
     void on_horizontalSliderDenoiseStrength_doubleClicked();
     void on_horizontalSliderLutStrength_doubleClicked();
     void on_horizontalSliderFilterStrength_doubleClicked();
+    void on_horizontalSliderVignetteStrength_doubleClicked();
+    void on_horizontalSliderVignetteRadius_doubleClicked();
     void on_horizontalSliderRawWhite_doubleClicked();
     void on_horizontalSliderRawBlack_doubleClicked();
     void on_horizontalSliderTone_doubleClicked();
@@ -199,6 +203,8 @@ private slots:
     void on_labelAudioTrack_sizeChanged( void );
     void on_label_LutStrengthVal_doubleClicked( void );
     void on_label_FilterStrengthVal_doubleClicked( void );
+    void on_label_VignetteStrengthVal_doubleClicked( void );
+    void on_label_VignetteRadiusVal_doubleClicked( void );
     void on_label_RawWhiteVal_doubleClicked( void );
     void on_label_RawBlackVal_doubleClicked( void );
     void on_label_ToneVal_doubleClicked( void );
@@ -250,6 +256,7 @@ private slots:
     void on_groupBoxColorWheels_toggled(bool arg1);
     void on_groupBoxLut_toggled(bool arg1);
     void on_groupBoxFilter_toggled(bool arg1);
+    void on_groupBoxVignette_toggled(bool arg1);
     void on_groupBoxLinearGradient_toggled(bool arg1);
     void on_groupBoxTransformation_toggled(bool arg1);
     void exportAbort( void );
@@ -350,6 +357,7 @@ private:
     bool m_frameStillDrawing;
     bool m_fileLoaded;
     bool m_inOpeningProcess;
+    bool m_setSliders;
     int m_timerId;
     int m_timerCacheId;
     int8_t m_countTimeDown;

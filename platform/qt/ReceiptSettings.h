@@ -88,6 +88,8 @@ public:
     void setFilterEnabled( bool on )          {m_filterEnabled = on;}
     void setFilterIndex( uint8_t idx )        {m_filterIndex = idx;}
     void setFilterStrength( int value )       {m_filterStrength = value;}
+    void setVignetteStrength( int value )     {m_vignetteStrength = value;}
+    void setVignetteRadius( int value )       {m_vignetteRadius = value;}
     void setCutIn( uint32_t frame )           {m_cutIn = frame;}
     void setCutOut( uint32_t frame )          {m_cutOut = frame;}
 
@@ -159,6 +161,8 @@ public:
     bool filterEnabled( void ){return m_filterEnabled;}
     uint8_t filterIndex( void ){return m_filterIndex;}
     int filterStrength( void ){return m_filterStrength;}
+    int vignetteStrength( void ){return m_vignetteStrength;}
+    int vignetteRadius( void ){return m_vignetteRadius;}
     uint32_t cutIn( void ) {return m_cutIn;}
     uint32_t cutOut( void ){return m_cutOut;}
     uint8_t profile( void ){return m_profile;}
@@ -201,6 +205,9 @@ private:
     int m_gradientY1;
     int m_gradientLength;
     int m_gradientAngle;
+
+    int m_vignetteStrength;
+    int m_vignetteRadius;
 
     int m_sharpen;
     int m_chromaBlur;

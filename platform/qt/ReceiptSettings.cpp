@@ -74,6 +74,8 @@ ReceiptSettings::ReceiptSettings()
     m_filterEnabled = false;
     m_filterIndex = 0;
     m_filterStrength = 100;
+    m_vignetteStrength = 0;
+    m_vignetteRadius = 20;
     m_profile = 1;
     m_creativeAdjustments = 0;
     m_rawWhite = -1;

@@ -67,6 +67,7 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     m_fileLoaded = false;
     m_fpsOverride = false;
     m_inOpeningProcess = false;
+    m_setSliders = false;
     m_zoomTo100Center = false;
     m_zoomModeChanged = false;
     m_tryToSyncAudio = false;
@@ -1398,6 +1399,7 @@ void MainWindow::readSettings()
     ui->groupBoxColorWheels->setChecked( set.value( "expandedColorWheels", false ).toBool() );
     ui->groupBoxLut->setChecked( set.value( "expandedLut", false ).toBool() );
     ui->groupBoxFilter->setChecked( set.value( "expandedFilter", false ).toBool() );
+    ui->groupBoxVignette->setChecked( set.value( "expandedVignette", false ).toBool() );
     ui->groupBoxLinearGradient->setChecked( set.value( "expandedLinGradient", false ).toBool() );
     ui->groupBoxTransformation->setChecked( set.value( "expandedTransformation", false ).toBool() );
     ui->actionCreateMappFiles->setChecked( set.value( "createMappFiles", false ).toBool() );
@@ -1461,6 +1463,7 @@ void MainWindow::writeSettings()
     set.setValue( "expandedColorWheels", ui->groupBoxColorWheels->isChecked() );
     set.setValue( "expandedLut", ui->groupBoxLut->isChecked() );
     set.setValue( "expandedFilter", ui->groupBoxFilter->isChecked() );
+    set.setValue( "expandedVignette", ui->groupBoxVignette->isChecked() );
     set.setValue( "expandedLinGradient", ui->groupBoxLinearGradient->isChecked() );
     set.setValue( "expandedTransformation", ui->groupBoxTransformation->isChecked() );
     set.setValue( "createMappFiles", ui->actionCreateMappFiles->isChecked() );
@@ -3386,6 +3389,7 @@ bool MainWindow::isFileInSession(QString fileName)
 //Set the edit sliders to settings
 void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
 {
+    m_setSliders = true;
     ui->horizontalSliderExposure->setValue( receipt->exposure() );
     ui->horizontalSliderContrast->setValue( receipt->contrast() );
     if( receipt->temperature() == -1 )
@@ -3550,6 +3554,13 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     else ui->comboBoxVStretch->setCurrentIndex( 3 );
     on_comboBoxVStretch_currentIndexChanged( ui->comboBoxVStretch->currentIndex() );
 
+    //Vignette after stretching in order to use stretching once only
+    ui->horizontalSliderVignetteStrength->setValue( receipt->vignetteStrength() );
+    ui->horizontalSliderVignetteRadius->blockSignals( true );
+    ui->horizontalSliderVignetteRadius->setValue( receipt->vignetteRadius() );
+    ui->horizontalSliderVignetteRadius->blockSignals( false );
+    on_horizontalSliderVignetteRadius_valueChanged( receipt->vignetteRadius() );
+
     if( !paste && !receipt->wasNeverLoaded() )
     {
         ui->spinBoxCutIn->setValue( receipt->cutIn() );
@@ -3572,6 +3583,7 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     if( ui->actionPlaybackPosition->isChecked() ) ui->horizontalSliderPosition->setValue( receipt->lastPlaybackPosition() );
     ui->comboBoxDebayer->setCurrentIndex( receipt->debayer() );
     on_comboBoxDebayer_currentIndexChanged( receipt->debayer() );
+    m_setSliders = false;
 }
 
 //Set the receipt from sliders
@@ -3647,6 +3659,9 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     receipt->setFilterEnabled( ui->checkBoxFilterEnable->isChecked() );
     receipt->setFilterIndex( ui->comboBoxFilterName->currentIndex() );
     receipt->setFilterStrength( ui->horizontalSliderFilterStrength->value() );
+
+    receipt->setVignetteStrength( ui->horizontalSliderVignetteStrength->value() );
+    receipt->setVignetteRadius( ui->horizontalSliderVignetteRadius->value() );
 
     receipt->setStretchFactorX( getHorizontalStretchFactor(true) );
     receipt->setStretchFactorY( getVerticalStretchFactor(true) );
@@ -3748,6 +3763,11 @@ void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings 
         receiptTarget->setFilterEnabled( receiptSource->filterEnabled() );
         receiptTarget->setFilterIndex( receiptSource->filterIndex() );
         receiptTarget->setFilterStrength( receiptSource->filterStrength() );
+    }
+    if( paste && cdui->checkBoxVignette->isChecked() )
+    {
+        receiptTarget->setVignetteStrength( receiptSource->vignetteStrength() );
+        receiptTarget->setVignetteRadius( receiptSource->vignetteRadius() );
     }
 
     if( paste && cdui->checkBoxTransformation->isChecked() )
@@ -3884,6 +3904,9 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     receipt->setFilterEnabled( m_pSessionReceipts.at( row )->filterEnabled() );
     receipt->setFilterIndex( m_pSessionReceipts.at( row )->filterIndex() );
     receipt->setFilterStrength( m_pSessionReceipts.at( row )->filterStrength() );
+
+    receipt->setVignetteStrength( m_pSessionReceipts.at( row )->vignetteStrength() );
+    receipt->setVignetteRadius( m_pSessionReceipts.at( row )->vignetteRadius() );
 
     receipt->setStretchFactorX( m_pSessionReceipts.at( row )->stretchFactorX() );
     receipt->setStretchFactorY( m_pSessionReceipts.at( row )->stretchFactorY() );
@@ -4693,6 +4716,24 @@ void MainWindow::on_horizontalSliderFilterStrength_valueChanged(int position)
     m_frameChanged = true;
 }
 
+void MainWindow::on_horizontalSliderVignetteStrength_valueChanged(int position)
+{
+    processingSetVignetteStrength( m_pProcessingObject, position * 1.27 );
+    ui->label_VignetteStrengthVal->setText( QString("%1").arg( position ) );
+    m_frameChanged = true;
+}
+
+void MainWindow::on_horizontalSliderVignetteRadius_valueChanged(int position)
+{
+    processingSetVignetteMask( m_pProcessingObject,
+                               getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject),
+                               position / 100.0,
+                               getHorizontalStretchFactor(false),
+                               getVerticalStretchFactor(false) );
+    ui->label_VignetteRadiusVal->setText( QString("%1").arg( position ) );
+    m_frameChanged = true;
+}
+
 void MainWindow::on_horizontalSliderRawWhite_valueChanged(int position)
 {
     if( !m_fileLoaded ) return;
@@ -4927,6 +4968,20 @@ void MainWindow::on_horizontalSliderFilterStrength_doubleClicked()
 {
     ReceiptSettings *sliders = new ReceiptSettings(); //default
     ui->horizontalSliderFilterStrength->setValue( sliders->filterStrength() );
+    delete sliders;
+}
+
+void MainWindow::on_horizontalSliderVignetteStrength_doubleClicked()
+{
+    ReceiptSettings *sliders = new ReceiptSettings(); //default
+    ui->horizontalSliderVignetteStrength->setValue( sliders->vignetteStrength() );
+    delete sliders;
+}
+
+void MainWindow::on_horizontalSliderVignetteRadius_doubleClicked()
+{
+    ReceiptSettings *sliders = new ReceiptSettings(); //default
+    ui->horizontalSliderVignetteRadius->setValue( sliders->vignetteRadius() );
     delete sliders;
 }
 
@@ -5992,6 +6047,24 @@ void MainWindow::on_label_FilterStrengthVal_doubleClicked()
     ui->horizontalSliderFilterStrength->setValue( editSlider.getValue() );
 }
 
+//DoubleClick on Vignette Strength Label
+void MainWindow::on_label_VignetteStrengthVal_doubleClicked()
+{
+    EditSliderValueDialog editSlider;
+    editSlider.autoSetup( ui->horizontalSliderVignetteStrength, ui->label_VignetteStrengthVal, 1.0, 0, 1.0 );
+    editSlider.exec();
+    ui->horizontalSliderVignetteStrength->setValue( editSlider.getValue() );
+}
+
+//DoubleClick on Vignette Radius Label
+void MainWindow::on_label_VignetteRadiusVal_doubleClicked()
+{
+    EditSliderValueDialog editSlider;
+    editSlider.autoSetup( ui->horizontalSliderVignetteRadius, ui->label_VignetteRadiusVal, 1.0, 0, 1.0 );
+    editSlider.exec();
+    ui->horizontalSliderVignetteRadius->setValue( editSlider.getValue() );
+}
+
 void MainWindow::on_label_RawWhiteVal_doubleClicked()
 {
     EditSliderValueDialog editSlider;
@@ -6764,6 +6837,14 @@ void MainWindow::on_groupBoxFilter_toggled(bool arg1)
     else ui->groupBoxFilter->setMaximumHeight( 16777215 );
 }
 
+//Collapse & Expand Vignette
+void MainWindow::on_groupBoxVignette_toggled(bool arg1)
+{
+    ui->frameVignette->setVisible( arg1 );
+    if( !arg1 ) ui->groupBoxVignette->setMaximumHeight( 30 );
+    else ui->groupBoxVignette->setMaximumHeight( 16777215 );
+}
+
 //Collapse & Expand Linear Gradient
 void MainWindow::on_groupBoxLinearGradient_toggled(bool arg1)
 {
@@ -7396,6 +7477,7 @@ void MainWindow::on_comboBoxHStretch_currentIndexChanged(int index)
 {
     Q_UNUSED( index );
     m_pGradientElement->setStrechFactorX( getHorizontalStretchFactor(false) );
+    if( !m_inOpeningProcess && !m_setSliders ) on_horizontalSliderVignetteRadius_valueChanged( ui->horizontalSliderVignetteRadius->value() );
     m_zoomModeChanged = true;
     m_frameChanged = true;
 }
@@ -7405,6 +7487,7 @@ void MainWindow::on_comboBoxVStretch_currentIndexChanged(int index)
 {
     Q_UNUSED( index );
     m_pGradientElement->setStrechFactorY( getVerticalStretchFactor(false) );
+    if( !m_inOpeningProcess && !m_setSliders ) on_horizontalSliderVignetteRadius_valueChanged( ui->horizontalSliderVignetteRadius->value() );
     m_zoomModeChanged = true;
     m_frameChanged = true;
 }

@@ -223,6 +223,7 @@ void ReceiptCopyMaskDialog::on_pushButtonAll_clicked()
     ui->checkBoxToning->setChecked( true );
     ui->checkBoxLut->setChecked( true );
     ui->checkBoxFilter->setChecked( true );
+    ui->checkBoxVignette->setChecked( true );
     ui->checkBoxTransformation->setChecked( true );
 }
 
@@ -247,5 +248,6 @@ void ReceiptCopyMaskDialog::on_pushButtonNone_clicked()
     ui->checkBoxToning->setChecked( false );
     ui->checkBoxLut->setChecked( false );
     ui->checkBoxFilter->setChecked( false );
+    ui->checkBoxVignette->setChecked( false );
     ui->checkBoxTransformation->setChecked( false );
 }

@@ -325,6 +325,9 @@ void setMlvProcessing(mlvObject_t * video, processingObject_t * processing)
     /* explicitely switch whitebalance find flag off to get right matrix values */
     video->processing->wbFindActive = 0;
 
+    /* Vignette alloc */
+    video->processing->vignette_mask = realloc( video->processing->vignette_mask, getMlvWidth(video) * getMlvHeight(video) * sizeof( float ) );
+
     /* Gradient alloc */
     video->processing->gradient_mask = realloc( video->processing->gradient_mask, getMlvWidth(video) * getMlvHeight(video) * sizeof( uint16_t ) );
 

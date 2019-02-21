@@ -145,6 +145,7 @@ processingObject_t * initProcessingObject()
     processingSetHueVsCurves(processing, 0, NULL, NULL, 0);
     processingSetHueVsCurves(processing, 0, NULL, NULL, 1);
     processingSetHueVsCurves(processing, 0, NULL, NULL, 2);
+    processingSetVignetteStrength(processing, 0);
 
     /* Just in case (should be done tho already) */
     processing_update_matrices(processing);
@@ -329,7 +330,8 @@ void processing_object_thread(apply_processing_parameters_t * p)
                              p->inputImage, 
                              p->outputImage,
                              p->blurImage,
-                             p->gradientMask );
+                             p->gradientMask,
+                             p->vignetteMask );
 }
 
 /* Apply it with multiple threads */
@@ -376,7 +378,7 @@ void applyProcessingObject( processingObject_t * processing,
     /* If threads is 1, no threads are needed */
     if (threads == 1)
     {
-        apply_processing_object(processing, imageX, imageY, inputImage, outputImage, get_buffer(processing->shadows_highlights.blur_image), processing->gradient_mask);
+        apply_processing_object(processing, imageX, imageY, inputImage, outputImage, get_buffer(processing->shadows_highlights.blur_image), processing->gradient_mask, processing->vignette_mask);
     }
     else
     {
@@ -397,6 +399,7 @@ void applyProcessingObject( processingObject_t * processing,
             params[t].outputImage = outputImage + offset_chunk*t;
             params[t].blurImage = get_buffer(processing->shadows_highlights.blur_image) + offset_chunk*t;
             params[t].gradientMask = processing->gradient_mask + (imageX * chunk_size * t);
+            params[t].vignetteMask = processing->vignette_mask + (imageX * chunk_size * t);
         }
 
         /* To make sure bottom is processed */
@@ -429,7 +432,8 @@ void apply_processing_object( processingObject_t * processing,
                               uint16_t * __restrict inputImage, 
                               uint16_t * __restrict outputImage,
                               uint16_t * __restrict blurImage,
-                              uint16_t * __restrict gradientMask )
+                              uint16_t * __restrict gradientMask,
+                              float * __restrict vignetteMask )
 {
     /* Number of elements */
     int img_s = imageX * imageY * 3;
@@ -441,6 +445,8 @@ void apply_processing_object( processingObject_t * processing,
     uint16_t * img = inputImage;
     uint16_t * img_end = img + img_s;
     uint16_t * gm = gradientMask;
+    float * vm = vignetteMask;
+    float * vmpix = vm;
 
     /* Apply some precalcuolated settings */
     for (int i = 0; i < img_s; ++i)
@@ -454,6 +460,18 @@ void apply_processing_object( processingObject_t * processing,
     {
         double expo_correction = 1.0;
         double expo_correction_gradient = 1.0;
+
+        /* Vignette correction */
+        if( processing->vignette_strength != 0 )
+        {
+            vmpix++;
+            if( vmpix < processing->vignette_end )  /* just safety - sometimes parameters may change faster than processing */
+            {
+                expo_correction *= pow( 1.0 + ( vmpix[0] * processing->vignette_strength / 128.0 ), 4 );
+                expo_correction_gradient = expo_correction;
+            }
+        }
+
         /* shadows & highlights, clarity part 1 */
         if( ( processing->shadows_highlights.shadows    <= -0.01 || processing->shadows_highlights.shadows    >= 0.01 )
          || ( processing->shadows_highlights.highlights <= -0.01 || processing->shadows_highlights.highlights >= 0.01 )
@@ -1359,6 +1377,7 @@ void processingSetTransformation(processingObject_t * processing, int transforma
 void freeProcessingObject(processingObject_t * processing)
 {
     if(processing->gradient_mask) free(processing->gradient_mask);
+    if(processing->vignette_mask) free(processing->vignette_mask);
     freeFilterObject(processing->filter);
     free_lut(processing->lut);
     for (int i = 8; i >= 0; --i) free(processing->pre_calc_matrix[i]);
@@ -1492,6 +1511,49 @@ void processingFindWhiteBalance(processingObject_t *processing, int imageX, int 
     /* give the GUI what it wanted */
     *wbTemp = nearestTemp;
     *wbTint = nearestTint;
+}
+
+/* Vignette Mask Creation */
+void processingSetVignetteMask(processingObject_t *processing, uint16_t width, uint16_t height, float radius, float xStretch, float yStretch)
+{
+    double wHalf = width / 2.0;
+    double hHalf = height / 2.0;
+    double wHalfS = wHalf * xStretch;
+    double hHalfS = hHalf * yStretch;
+    double diagonal = sqrt( (wHalfS*wHalfS) + (hHalfS*hHalfS) );
+    double r = diagonal * radius;
+    double T = diagonal - r;
+    double cosTerm = 2.0*M_PI/T/4.0;
+
+    processing->vignette_end = processing->vignette_mask + (width*height);
+
+    for( uint16_t x = 0; x < wHalf; x++ )
+    {
+        #pragma omp parallel for
+        for( uint16_t y = 0; y < hHalf; y++ )
+        {
+            double w = fabs( (double)x * xStretch - wHalfS );
+            double h = fabs( (double)y * yStretch - hHalfS );
+            double d = sqrt( (w*w) + (h*h) );
+            float val = 0.0;
+            //only behind radius
+            if( d > r )
+            {
+                //cos curve
+                val = 0.5-0.5*cos(cosTerm*(d-r));
+            }
+            //4x faster...
+            processing->vignette_mask[y*width+x] = val;
+            processing->vignette_mask[(height-1-y)*width+x] = val;
+            processing->vignette_mask[y*width+(width-1-x)] = val;
+            processing->vignette_mask[(height-1-y)*width+(width-1-x)] = val;
+        }
+    }
+}
+
+void processingSetVignetteStrength(processingObject_t *processing, int8_t value)
+{
+    processing->vignette_strength = value;
 }
 
 /* Set and calculate the gradient alpha mask */

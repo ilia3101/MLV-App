@@ -113,6 +113,10 @@ void processingSet3WayCorrection( processingObject_t * processing,
 #define processingSetDenoiserStrength(processing, strength) (processing)->denoiserStrength = (strength)
 #define processingGetDenoiserStrength(processing) (processing)->denoiserStrength
 
+/* Vignette */
+void processingSetVignetteStrength(processingObject_t * processing, int8_t value);
+void processingSetVignetteMask(processingObject_t * processing, uint16_t width, uint16_t height, float radius , float xStretch, float yStretch);
+
 /* Gradient */
 void processingSetGradientMask(processingObject_t * processing, uint16_t width, uint16_t height, float x1, float y1, float x2, float y2 );
 void processingSetGradientExposure(processingObject_t * processing, double value);
@@ -224,12 +228,13 @@ void processingSetHueVsCurves(processingObject_t * processing, int num, float * 
  */
 
 /* Private function */
-void apply_processing_object( processingObject_t * processing, 
-                              int imageX, int imageY, 
-                              uint16_t * __restrict inputImage, 
+void apply_processing_object(processingObject_t * processing,
+                              int imageX, int imageY,
+                              uint16_t * __restrict inputImage,
                               uint16_t * __restrict outputImage,
                               uint16_t * __restrict blurImage,
-                              uint16_t * __restrict gradientMask );
+                              uint16_t * __restrict gradientMask,
+                              float *vignetteMask);
 
 /* Pass frame buffer and do the transform on it */
 void get_frame_transformed(processingObject_t * processing, uint16_t * frame_buf , uint16_t imageX, uint16_t imageY);
@@ -245,6 +250,7 @@ typedef struct {
     uint16_t * outputImage;
     uint16_t * blurImage;
     uint16_t * gradientMask;
+    float * vignetteMask;
 } apply_processing_parameters_t;
 
 /* applyProcessingObject but with one argument for pthreading  */
