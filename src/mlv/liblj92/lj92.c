@@ -424,6 +424,7 @@ static int parsePred6(ljp* self) {
     diff = nextdiff(self);
     Px = 1 << (self->bits-1);
     left = Px + diff;
+    left = (u16) (left%65536);
     if (self->linearize)
         linear = self->linearize[left];
     else
@@ -437,6 +438,7 @@ static int parsePred6(ljp* self) {
         diff = nextdiff(self);
         Px = left;
         left = Px + diff;
+        left = (u16) (left%65536);
         if (self->linearize)
             linear = self->linearize[left];
         else
@@ -460,6 +462,7 @@ static int parsePred6(ljp* self) {
         diff = nextdiff(self);
         Px = lastrow[col]; // Use value above for first pixel in row
         left = Px + diff;
+        left = (u16) (left%65536);
         if (self->linearize) {
             if (left>self->linlen) return LJ92_ERROR_CORRUPT;
             linear = self->linearize[left];
@@ -478,6 +481,7 @@ static int parsePred6(ljp* self) {
             diff = nextdiff(self);
             Px = lastrow[col] + ((left - lastrow[col-1])>>1);
             left = Px + diff;
+            left = (u16) (left%65536);
             //printf("%d %d %d %d %d %x\n",col,diff,left,lastrow[col],lastrow[col-1],&lastrow[col]);
             if (self->linearize) {
                 if (left>self->linlen) return LJ92_ERROR_CORRUPT;
@@ -563,6 +567,7 @@ static int parseScan(ljp* self) {
                 
                 diff = nextdiff(self);
                 left = Px + diff;
+                left = (u16) (left%65536);
                 //printf("%d %d %d\n",c,diff,left);
                 int linear;
                 if (self->linearize) {
@@ -714,12 +719,12 @@ typedef struct _lje {
     uint8_t* encoded;
     int encodedWritten;
     int encodedLength;
-    int hist[17]; // SSSS frequency histogram
-    int bits[17];
-    int huffval[17];
-    u16 huffenc[17];
-    u16 huffbits[17];
-    int huffsym[17];
+    int hist[18]; // SSSS frequency histogram
+    int bits[18];
+    int huffval[18];
+    u16 huffenc[18];
+    u16 huffbits[18];
+    int huffsym[18];
 } lje;
 
 int frequencyScan(lje* self) {
@@ -762,6 +767,7 @@ int frequencyScan(lje* self) {
         else
             Px = rows[0][col] + ((rows[1][col-1] - rows[0][col-1])>>1);
         diff = rows[1][col] - Px;
+        diff = diff%65536;
         int ssss = 32 - __builtin_clz(abs(diff));
         if (diff==0) ssss=0;
         self->hist[ssss]++;
@@ -857,9 +863,39 @@ void createEncodeTable(lje* self) {
         }
     }
 #ifdef DEBUG
-    for (int i=0;i<17;i++) {
+    for (int i=0;i<18;i++) {
         printf("bits:%d,%d,%d\n",i,bits[i],codesize[i]);
     }
+#endif
+    //adjust bits, this step is a must to remove a code with all ones
+    //and fix bug of overriding SSSS-0 category with the code with all ones.
+    int I = 17;
+    while(1) {
+        if(bits[I] > 0) {
+            int J = I - 1;
+            do {
+                J = J - 1;
+            } while(bits[J] <= 0);
+            bits[I] = bits[I] - 2;
+            bits[I - 1] = bits[I - 1] + 1; 
+            bits[J + 1] = bits[J + 1] + 2;
+            bits[J] = bits [J] - 1;
+        } else {
+            I = I - 1;
+            if(I != 16) {
+                continue;
+            }
+            while(bits[I] == 0) {
+                I = I - 1;
+            }
+            bits[I] = bits[I] - 1;
+            break;
+        }  
+    }
+#ifdef DEBUG
+for (int i=0;i<18;i++) {
+    printf("Adjusted bits:%d,%d,%d\n",i,bits[i],codesize[i]);
+}
 #endif
     int* huffval = self->huffval;
     int i=1;
@@ -877,7 +913,7 @@ void createEncodeTable(lje* self) {
         i++;
     }
 #ifdef DEBUG
-    for (i=0;i<17;i++) {
+    for (i=0;i<18;i++) {
         printf("i=%d,huffval[i]=%x\n",i,huffval[i]);
     }
 #endif
@@ -922,7 +958,7 @@ void createEncodeTable(lje* self) {
         i+= (1<<(maxbits-bitsused));
         rv = 1<<(maxbits-bitsused);
     }
-    for (i=0;i<17;i++) {
+    for (i=0;i<18;i++) {
         if (huffbits[i]>0) {
             huffsym[huffval[i]] = i;
         }
@@ -934,7 +970,7 @@ void createEncodeTable(lje* self) {
         }
     }
 #ifdef DEBUG
-    for (i=0;i<17;i++) {
+    for (i=0;i<18;i++) {
         printf("huffsym[%d]=%d\n",i,huffsym[i]);
     }
 #endif
@@ -1021,6 +1057,7 @@ int writeBody(lje* self) {
         else
             Px = rows[0][col] + ((rows[1][col-1] - rows[0][col-1])>>1);
         diff = rows[1][col] - Px;
+        diff = diff%65536;
         int ssss = 32 - __builtin_clz(abs(diff));
         if (diff==0) ssss=0;
         //printf("%d %d %d %d %d\n",col,row,Px,diff,ssss);
@@ -1070,6 +1107,11 @@ int writeBody(lje* self) {
             ssss -= usebits;
             diff &= (1<<ssss)-1;
             if (nextbits==0) {
+                if(w >= self->encodedLength - 1)
+                {
+                    free(rowcache);
+                    return LJ92_ERROR_ENCODER;
+                }
                 out[w++] = next;
                 if (next==0xff) out[w++] = 0x0;
                 next = 0;
@@ -1096,8 +1138,8 @@ int writeBody(lje* self) {
         if (next==0xff) out[w++] = 0x0;
     }
 #ifdef DEBUG
-    int sort[17];
-    for (int h=0;h<17;h++) {
+    int sort[18];
+    for (int h=0;h<18;h++) {
         sort[h] = h;
         printf("%d:%d\n",h,self->hist[h]);
     }
