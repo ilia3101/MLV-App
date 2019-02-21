@@ -23,6 +23,10 @@
 #define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
 #define LIMIT16(X) MAX(MIN(X, 65535), 0)
 
+#ifndef __APPLE__
+#define M_PI 3.14159265358979323846 /* pi */
+#endif
+
 /* Because why compile a whole .o just for this? */
 #include "processing.c"
 /* Default image profiles */
@@ -1527,10 +1531,11 @@ void processingSetVignetteMask(processingObject_t *processing, uint16_t width, u
 
     processing->vignette_end = processing->vignette_mask + (width*height);
 
-    for( uint16_t x = 0; x < wHalf; x++ )
+    //#pragma omp parallel for collapse(2)
+    for( uint16_t x = 0; x < (uint16_t)wHalf; x++ )
     {
         #pragma omp parallel for
-        for( uint16_t y = 0; y < hHalf; y++ )
+        for( uint16_t y = 0; y < (uint16_t)hHalf; y++ )
         {
             double w = fabs( (double)x * xStretch - wHalfS );
             double h = fabs( (double)y * yStretch - hHalfS );
