@@ -9,6 +9,7 @@
     <script>
         var LinkColour = "rgb(100,130,160)";
         var TotalDownloads = 0;
+        var TotalDownloadsSize = 0;
         var Releases;
         function DealWithResponse()
         {
@@ -28,7 +29,12 @@
                     release.style = "height: 390px;";
                     releaseFrame.appendChild(release);
                     release.appendChild(document.createElement("div"));
-                    
+
+                    let ImageBox = document.createElement("div");
+                    // ImageBox.style = "width: 50%;";
+                    ImageBox.style = "width: 47%; float:left;";
+                    release.appendChild(ImageBox);
+
                     /* Version title with link */
                     let ReleaseLink = document.createElement("a");
                     ReleaseLink.href = Releases[i].html_url;
@@ -36,8 +42,7 @@
                     Ver.innerHTML = Releases[i].tag_name;
                     Ver.style = "margin-top: 5px;";
                     ReleaseLink.appendChild(Ver);
-                    release.appendChild(ReleaseLink);
-
+                    ImageBox.appendChild(ReleaseLink);
 
                     let Time = document.createElement("h4");
                     let PublishDate = new Date(Releases[i].published_at);
@@ -46,12 +51,7 @@
                     Time.innerHTML = (TimePassed / (24*3600*1000)).toFixed(0).toString() + " days ago";
                     Time.style.color = "rgb(133,133,133)";
                     Time.style.lineHeight = "0";
-                    release.appendChild(Time);
-
-                    let ImageBox = document.createElement("div");
-                    // ImageBox.style = "width: 50%;";
-                    ImageBox.style = "width: 47%; position: relative; top: 17px; left: 0%;";
-                    release.appendChild(ImageBox);
+                    ImageBox.appendChild(Time);
 
 
                     let PicLink = document.createElement("a");
@@ -72,13 +72,15 @@
                     ImageBox.appendChild(PicLink);
                     // release.appendChild(document.createElement("hr"));
 
+                    let DownloadsBoxBox = document.createElement("div");
+                    DownloadsBoxBox.style = "width: 50%; float: right; margin: 0px; padding: 0px; height: 100%; /* background-color: #f55; */";
 
                     let DownloadsBox = document.createElement("div");
-                    DownloadsBox.align = "right";
-                    DownloadsBox.style = "width: 47%; position: relative; top: -254px; left: 51%;";
+                    // DownloadsBox.align = "right";
+                    DownloadsBox.style = "width: 100%; /* background-color: #ccc; */ display: inline-block; margin: 0 auto;";
                     let Downloads = document.createElement("h4");
                     Downloads.innerHTML = "Downloads";
-                    Downloads.style = "text-align: center;";
+                    Downloads.style = "text-align: center; padding-top: 15px;";
                     DownloadsBox.appendChild(Downloads);
                     let Table = document.createElement("table");
                     Table.align = "top";
@@ -103,16 +105,18 @@
                         DownloadCount.align = "right";
                         DownloadCount.style.verticalAlign = "bottom";
                         DownloadCount.style.color = "rgb(133,133,133)";
-                        DownloadCount.style.lineHeight = "3px";
+                        DownloadCount.style.lineHeight = "25px";
                         DownloadCount.style.paddingTop = "11px";
                         DownloadCount.innerHTML = Releases[i].assets[j].download_count.toString() + "&darr;";
                         DownloadCountCell.appendChild(DownloadCount);
                         TableRow.appendChild(DownloadCountCell);
                         Table.appendChild(TableRow);
                         TotalDownloads = TotalDownloads + Releases[i].assets[j].download_count;
+                        TotalDownloadsSize = TotalDownloadsSize + Releases[i].assets[j].size * Releases[i].assets[j].download_count;
                     }
                     DownloadsBox.appendChild(Table);
-                    release.appendChild(DownloadsBox);
+                    DownloadsBoxBox.appendChild(DownloadsBox);
+                    release.appendChild(DownloadsBoxBox);
 
                     /* Add it to approppriate column */
                     if (Releases[i].name.includes("[Qt]"))
@@ -130,7 +134,8 @@
             }
             
             console.log("Download count: " + TotalDownloads.toFixed(0).toString());
-            document.getElementById("TotalDownloadsLabel").innerHTML = TotalDownloads.toFixed(0).toString() + " total downloads";
+            console.log("Download GB: " + TotalDownloadsSize.toFixed(0).toString());
+            document.getElementById("TotalDownloadsLabel").innerHTML = TotalDownloads.toFixed(0).toString() + " total downloads (" + (TotalDownloadsSize/(1000000000)).toFixed(1).toString() + "GB)";
         }
     function test()
     {
