@@ -167,6 +167,21 @@ typedef struct {
 }  mlv_lens_hdr_t;
 
 typedef struct {
+    uint8_t     blockType[4];       /* ELNS - Extended LENS block with longer lens name and optional fields, depending on camera */
+    uint32_t    blockSize;
+    uint64_t    timestamp;
+    uint16_t    focalLengthMin;     /* shortest focal length in mm                       */
+    uint16_t    focalLengthMax;     /* longest focal length in mm                        */
+    uint16_t    apertureMin;        /* lowest f-number * 100                             */
+    uint16_t    apertureMax;        /* highest f-number * 100                            */
+    uint32_t    version;            /* lens internal version number, if available        */
+    uint8_t     extenderInfo;       /* extender information, if provided by camera       */
+    uint8_t     capabilities;       /* capability information, if provided by camera     */
+    uint8_t     chipped;            /* when not zero, lens is communicating with camera  */
+ /* uint8_t     lensName[variable];    full lens string, null terminated                 */
+}  mlv_elns_hdr_t;
+
+typedef struct {
     uint8_t     blockType[4];
     uint32_t    blockSize;    /* total frame size */
     uint64_t    timestamp;    /* hardware counter timestamp for this frame (relative to recording start) */

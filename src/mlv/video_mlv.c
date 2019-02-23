@@ -587,6 +587,7 @@ static int save_mapp(mlvObject_t * video)
                            sizeof(mlv_idnt_hdr_t) +
                            sizeof(mlv_expo_hdr_t) +
                            sizeof(mlv_lens_hdr_t) +
+                           sizeof(mlv_elns_hdr_t) +
                            sizeof(mlv_rtci_hdr_t) +
                            sizeof(mlv_wbal_hdr_t) +
                            sizeof(mlv_styl_hdr_t) +
@@ -614,7 +615,8 @@ static int save_mapp(mlvObject_t * video)
     memcpy(ptr += sizeof(mlv_rawc_hdr_t), (uint8_t*)&(video->IDNT), sizeof(mlv_idnt_hdr_t));
     memcpy(ptr += sizeof(mlv_idnt_hdr_t), (uint8_t*)&(video->EXPO), sizeof(mlv_expo_hdr_t));
     memcpy(ptr += sizeof(mlv_expo_hdr_t), (uint8_t*)&(video->LENS), sizeof(mlv_lens_hdr_t));
-    memcpy(ptr += sizeof(mlv_lens_hdr_t), (uint8_t*)&(video->RTCI), sizeof(mlv_rtci_hdr_t));
+    memcpy(ptr += sizeof(mlv_lens_hdr_t), (uint8_t*)&(video->ELNS), sizeof(mlv_elns_hdr_t));
+    memcpy(ptr += sizeof(mlv_elns_hdr_t), (uint8_t*)&(video->RTCI), sizeof(mlv_rtci_hdr_t));
     memcpy(ptr += sizeof(mlv_rtci_hdr_t), (uint8_t*)&(video->WBAL), sizeof(mlv_wbal_hdr_t));
     memcpy(ptr += sizeof(mlv_wbal_hdr_t), (uint8_t*)&(video->STYL), sizeof(mlv_styl_hdr_t));
     memcpy(ptr += sizeof(mlv_styl_hdr_t), (uint8_t*)&(video->WAVI), sizeof(mlv_wavi_hdr_t));
@@ -717,6 +719,7 @@ static int load_mapp(mlvObject_t * video)
     ret += fread(&(video->IDNT), sizeof(mlv_idnt_hdr_t), 1, mappf);
     ret += fread(&(video->EXPO), sizeof(mlv_expo_hdr_t), 1, mappf);
     ret += fread(&(video->LENS), sizeof(mlv_lens_hdr_t), 1, mappf);
+    ret += fread(&(video->ELNS), sizeof(mlv_elns_hdr_t), 1, mappf);
     ret += fread(&(video->RTCI), sizeof(mlv_rtci_hdr_t), 1, mappf);
     ret += fread(&(video->WBAL), sizeof(mlv_wbal_hdr_t), 1, mappf);
     ret += fread(&(video->STYL), sizeof(mlv_styl_hdr_t), 1, mappf);
@@ -851,8 +854,9 @@ int saveMlvHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int
 
     size_t mlv_headers_size = video->MLVI.blockSize + video->RAWI.blockSize +
                               video->IDNT.blockSize + video->EXPO.blockSize +
-                              video->LENS.blockSize + video->WBAL.blockSize +
-                              video->RTCI.blockSize + vers_block_size;
+                              video->LENS.blockSize + video->ELNS.blockSize +
+                              video->WBAL.blockSize + video->RTCI.blockSize +
+                              vers_block_size;
 
     if(video->RAWC.blockType[0]) mlv_headers_size += video->RAWC.blockSize;
     if(video->STYL.blockType[0]) mlv_headers_size += video->STYL.blockSize;
@@ -963,6 +967,9 @@ int saveMlvHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int
 
     memcpy(ptr, (uint8_t*)&(video->LENS), sizeof(mlv_lens_hdr_t));
     ptr += video->LENS.blockSize;
+
+    memcpy(ptr, (uint8_t*)&(video->ELNS), sizeof(mlv_elns_hdr_t));
+    ptr += video->ELNS.blockSize;
 
     memcpy(ptr, (uint8_t*)&(video->WBAL), sizeof(mlv_wbal_hdr_t));
     ptr += video->WBAL.blockSize;
@@ -1347,6 +1354,7 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode, char * error
     uint64_t audio_index_max = 0; /* initial size of audio index */
     int rtci_read = 0; /* Flips to 1 if 1st RTCI block was read */
     int lens_read = 0; /* Flips to 1 if 1st LENS block was read */
+    int elns_read = 0; /* Flips to 1 if 1st ELNS block was read */
     int wbal_read = 0; /* Flips to 1 if 1st WBAL block was read */
     int styl_read = 0; /* Flips to 1 if 1st STYL block was read */
     int fread_err = 1;
@@ -1513,6 +1521,14 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode, char * error
                 {
                     fread_err &= fread(&video->LENS, sizeof(mlv_lens_hdr_t), 1, video->file[i]);
                     lens_read = 1; //read only first one
+                }
+            }
+            else if ( memcmp(block_header.blockType, "ELNS", 4) == 0 )
+            {
+                if( !elns_read )
+                {
+                    fread_err &= fread(&video->ELNS, sizeof(mlv_elns_hdr_t), 1, video->file[i]);
+                    elns_read = 1; //read only first one
                 }
             }
             else if ( memcmp(block_header.blockType, "WBAL", 4) == 0 )

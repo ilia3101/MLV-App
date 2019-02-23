@@ -65,6 +65,7 @@ typedef struct {
     mlv_idnt_hdr_t    IDNT;
     mlv_expo_hdr_t    EXPO;
     mlv_lens_hdr_t    LENS;
+    mlv_elns_hdr_t    ELNS;
     mlv_rtci_hdr_t    RTCI;
     mlv_wbal_hdr_t    WBAL;
     mlv_wavi_hdr_t    WAVI;
