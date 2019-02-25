@@ -269,6 +269,7 @@ PACKAGE_FILES.files += bash_scripts/TIF_CLEAN.command
 PACKAGE_FILES.files += bash_scripts/PROXY_CLEANER.command
 PACKAGE_FILES.files += ../../src/mlv/llrawproc/pixelmaps/80000331_1872x1059.fpm
 PACKAGE_FILES.files += ../../src/mlv/llrawproc/pixelmaps/80000326_1808x3508.fpm
+PACKAGE_FILES.files += ../../src/mlv/llrawproc/pixelmaps/80000331_1872x1190.fpm
 PACKAGE_FILES.path = Contents/MacOS
 QMAKE_BUNDLE_DATA += PACKAGE_FILES
 #unpack & install ffmpeg on OSX
