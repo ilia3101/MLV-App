@@ -472,7 +472,6 @@ void apply_processing_object( processingObject_t * processing,
             if( vmpix < processing->vignette_end )  /* just safety - sometimes parameters may change faster than processing */
             {
                 expo_correction *= pow( 1.0 + ( vmpix[0] * processing->vignette_strength / 128.0 ), 4 );
-                expo_correction_gradient = expo_correction;
             }
         }
 
