@@ -726,7 +726,7 @@ static int load_mapp(mlvObject_t * video)
     ret += fread(&(video->WAVI), sizeof(mlv_wavi_hdr_t), 1, mappf);
     ret += fread(&(video->DISO), sizeof(mlv_diso_hdr_t), 1, mappf);
     ret += fread(&(video->DARK), sizeof(mlv_dark_hdr_t), 1, mappf);
-    if(ret != 12)
+    if(ret != 13)
     {
         DEBUG( printf("ret = %d, could not read metadata from %s\n", ret, mapp_filename); )
         goto mapp_error;
@@ -854,10 +854,10 @@ int saveMlvHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int
 
     size_t mlv_headers_size = video->MLVI.blockSize + video->RAWI.blockSize +
                               video->IDNT.blockSize + video->EXPO.blockSize +
-                              video->LENS.blockSize + video->ELNS.blockSize +
-                              video->WBAL.blockSize + video->RTCI.blockSize +
-                              vers_block_size;
+                              video->LENS.blockSize + video->WBAL.blockSize +
+                              video->RTCI.blockSize + vers_block_size;
 
+    if(video->ELNS.blockType[0]) mlv_headers_size += video->ELNS.blockSize;
     if(video->RAWC.blockType[0]) mlv_headers_size += video->RAWC.blockSize;
     if(video->STYL.blockType[0]) mlv_headers_size += video->STYL.blockSize;
     if(video->DISO.blockType[0]) mlv_headers_size += video->DISO.blockSize;
@@ -968,8 +968,11 @@ int saveMlvHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int
     memcpy(ptr, (uint8_t*)&(video->LENS), sizeof(mlv_lens_hdr_t));
     ptr += video->LENS.blockSize;
 
-    memcpy(ptr, (uint8_t*)&(video->ELNS), sizeof(mlv_elns_hdr_t));
-    ptr += video->ELNS.blockSize;
+    if(video->ELNS.blockType[0])
+    {
+        memcpy(ptr, (uint8_t*)&(video->ELNS), sizeof(mlv_elns_hdr_t));
+        ptr += video->ELNS.blockSize;
+    }
 
     memcpy(ptr, (uint8_t*)&(video->WBAL), sizeof(mlv_wbal_hdr_t));
     ptr += video->WBAL.blockSize;
