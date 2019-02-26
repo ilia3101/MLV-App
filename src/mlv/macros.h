@@ -29,7 +29,7 @@
 #define getMlvCamera(video) (video)->IDNT.cameraName
 #define getMlvCameraModel(video) (video)->IDNT.cameraModel
 #define getMlvCameraSerial(video) (video)->IDNT.cameraSerial
-#define getMlvLensSerial(video) (video)->LENS.lensName
+#define getMlvLensSerial(video) (video)->LENS.lensSerial
 #define getMlvCameraSerial(video) (video)->IDNT.cameraSerial
 #define getMlvVersion(video) (video)->MLVI.versionString
 #define getMlvBlackLevel(video) (video)->RAWI.raw_info.black_level
@@ -59,6 +59,10 @@
 #define getMlvWbMode(video)    (video)->WBAL.wb_mode
 #define getMlvWbKelvin(video)  (video)->WBAL.kelvin
 #define getLosslessBpp(video)  (video)->lossless_bpp
+#define getMlvFocalLengthMin(video) (video)->ELNS.focalLengthMin
+#define getMlvFocalLengthMax(video) (video)->ELNS.focalLengthMax
+#define getMlvApertureMin(video) (video)->ELNS.apertureMin
+#define getMlvApertureMax(video) (video)->ELNS.apertureMax
 
 /* Useful setting macros (functions) */
 
