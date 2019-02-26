@@ -500,8 +500,8 @@ QGroupBox::indicator:checked:disabled {
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>244</width>
-            <height>4290</height>
+            <width>245</width>
+            <height>4324</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayoutScrollArea">
@@ -6749,6 +6749,16 @@ QGroupBox::indicator:checked:disabled {
                    <item>
                     <property name="text">
                      <string>Sepia Tone</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Cinematic 1</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Cinematic 2</string>
                     </property>
                    </item>
                   </widget>

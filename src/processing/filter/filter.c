@@ -46,6 +46,14 @@ filterObject_t * initFilterObject()
     char filmprofile_sepia[] = FILM_SEPIA;
     filter->net_sepia = genann_read(filmprofile_sepia);
 
+    /* Cinematic 1 */
+    char filmprofile_cine1[] = FILM_CINE1;
+    filter->net_cine1 = genann_read(filmprofile_cine1);
+
+    /* Cinematic 2 */
+    char filmprofile_cine2[] = FILM_CINE2;
+    filter->net_cine2 = genann_read(filmprofile_cine2);
+
     filterObjectSetFilterStrength(filter, 1.0);
 
     return filter;
@@ -75,6 +83,10 @@ void applyFilterObject( filterObject_t * filter,
         net = genann_copy(filter->net_toyc);
     else if (filter->filter_option == FILTER_SEPIA)
         net = genann_copy(filter->net_sepia);
+    else if (filter->filter_option == FILTER_CINE1)
+        net = genann_copy(filter->net_cine1);
+    else if (filter->filter_option == FILTER_CINE2)
+        net = genann_copy(filter->net_cine2);
 
     for (uint16_t * pix = image; pix < end; pix += 3)
     {

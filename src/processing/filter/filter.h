@@ -13,6 +13,8 @@ typedef struct {
     genann * net_kodak_ektar;
     genann * net_toyc;
     genann * net_sepia;
+    genann * net_cine1;
+    genann * net_cine2;
     /* Strength lut */
     int32_t processed[65536];
     int32_t original[65536];
@@ -34,6 +36,8 @@ void filterObjectSetFilterStrength(filterObject_t * filter, double strength);
 #define FILTER_FILM_E100 3 /* Kodak Ektar 100 */
 #define FILTER_TOYC 4 /* Toy Camera */
 #define FILTER_SEPIA 5 /* Sepia Tone */
+#define FILTER_CINE1 6 /* Cinematic 1 */
+#define FILTER_CINE2 7 /* Cinematic 2 */
 void filterObjectSetFilter(filterObject_t * filter, int filterID);
 
 
