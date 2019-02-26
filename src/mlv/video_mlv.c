@@ -1524,6 +1524,11 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode, char * error
                 {
                     fread_err &= fread(&video->LENS, sizeof(mlv_lens_hdr_t), 1, video->file[i]);
                     lens_read = 1; //read only first one
+                    for( int n = 0; n < 32; n++ )
+                    {
+                        if( video->LENS.lensName[n] == '\0' ) break;
+                        if( n == 31 ) video->LENS.lensName[n] = '\0';
+                    }
                 }
             }
             else if ( memcmp(block_header.blockType, "ELNS", 4) == 0 )
