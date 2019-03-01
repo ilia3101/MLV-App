@@ -500,7 +500,7 @@ QGroupBox::indicator:checked:disabled {
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>245</width>
+            <width>244</width>
             <height>4324</height>
            </rect>
           </property>
@@ -6759,6 +6759,11 @@ QGroupBox::indicator:checked:disabled {
                    <item>
                     <property name="text">
                      <string>Cinematic 2</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Cinematic 3</string>
                     </property>
                    </item>
                   </widget>

@@ -54,6 +54,10 @@ filterObject_t * initFilterObject()
     char filmprofile_cine2[] = FILM_CINE2;
     filter->net_cine2 = genann_read(filmprofile_cine2);
 
+    /* Cinematic 3 */
+    char filmprofile_cine3[] = FILM_CINE3;
+    filter->net_cine3 = genann_read(filmprofile_cine3);
+
     filterObjectSetFilterStrength(filter, 1.0);
 
     return filter;
@@ -87,6 +91,8 @@ void applyFilterObject( filterObject_t * filter,
         net = genann_copy(filter->net_cine1);
     else if (filter->filter_option == FILTER_CINE2)
         net = genann_copy(filter->net_cine2);
+    else if (filter->filter_option == FILTER_CINE3)
+        net = genann_copy(filter->net_cine3);
 
     for (uint16_t * pix = image; pix < end; pix += 3)
     {

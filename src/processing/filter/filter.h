@@ -15,6 +15,7 @@ typedef struct {
     genann * net_sepia;
     genann * net_cine1;
     genann * net_cine2;
+    genann * net_cine3;
     /* Strength lut */
     int32_t processed[65536];
     int32_t original[65536];
@@ -38,6 +39,7 @@ void filterObjectSetFilterStrength(filterObject_t * filter, double strength);
 #define FILTER_SEPIA 5 /* Sepia Tone */
 #define FILTER_CINE1 6 /* Cinematic 1 */
 #define FILTER_CINE2 7 /* Cinematic 2 */
+#define FILTER_CINE3 8 /* Cinematic 3 */
 void filterObjectSetFilter(filterObject_t * filter, int filterID);
 
 
