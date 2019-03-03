@@ -89,8 +89,6 @@ SOURCES += \
     ../../src/processing/filter/genann/genann.c \
     ../../src/processing/image_profiles.c \
     ../../src/processing/cube_lut.c \
-    ../../src/processing/denoiser/libdenoising.cpp \
-    ../../src/processing/denoiser/mt19937ar.c \
     ../../src/debayer/igv_demosaic.c \
     ../../src/debayer/ahd.c \
     ../../src/mlv/llrawproc/dualiso.c \
@@ -173,8 +171,6 @@ HEADERS += \
     ../../src/processing/filter/genann/genann.h \
     ../../src/processing/image_profile.h \
     ../../src/processing/cube_lut.h \
-    ../../src/processing/denoiser/libdenoising.h \
-    ../../src/processing/denoiser/mt19937ar.h \
     ../../src/processing/denoiser/denoiser_2d_median.h \
     ../../src/processing/bmd_film.h \
     InfoDialog.h \
@@ -270,6 +266,8 @@ PACKAGE_FILES.files += bash_scripts/PROXY_CLEANER.command
 PACKAGE_FILES.files += ../../src/mlv/llrawproc/pixelmaps/80000331_1872x1059.fpm
 PACKAGE_FILES.files += ../../src/mlv/llrawproc/pixelmaps/80000326_1808x3508.fpm
 PACKAGE_FILES.files += ../../src/mlv/llrawproc/pixelmaps/80000331_1872x1190.fpm
+PACKAGE_FILES.files += ../../src/mlv/llrawproc/pixelmaps/80000331_1736x2181.fpm
+PACKAGE_FILES.files += ../../src/mlv/llrawproc/pixelmaps/80000331_1808x1951.fpm
 PACKAGE_FILES.path = Contents/MacOS
 QMAKE_BUNDLE_DATA += PACKAGE_FILES
 #unpack & install ffmpeg on OSX
