@@ -1614,16 +1614,19 @@ void MainWindow::startExportPipe(QString fileName)
         uint16_t * imgBuffer;
         imgBuffer = ( uint16_t* )malloc( frameSize * sizeof( uint16_t ) );
 
+        //Take 2 pics from the middle of the clip
+        uint8_t frameNum = getMlvFrames( m_pMlvObject ) / 2 - 1;
+
         //Get 1st picture, and lock render thread... there can only be one!
         m_pRenderThread->lock();
-        getMlvProcessedFrame16( m_pMlvObject, 0, imgBuffer, QThread::idealThreadCount() );
+        getMlvProcessedFrame16( m_pMlvObject, frameNum, imgBuffer, QThread::idealThreadCount() );
         m_pRenderThread->unlock();
         double average1 = 0;
         for( uint32_t i = 0; i < frameSize; i++ ) average1 += imgBuffer[i];
 
         //Get 2nd picture, and lock render thread... there can only be one!
         m_pRenderThread->lock();
-        getMlvProcessedFrame16( m_pMlvObject, 1, imgBuffer, QThread::idealThreadCount() );
+        getMlvProcessedFrame16( m_pMlvObject, frameNum+1, imgBuffer, QThread::idealThreadCount() );
         m_pRenderThread->unlock();
         double average2 = 0;
         for( uint32_t i = 0; i < frameSize; i++ ) average2 += imgBuffer[i];
