@@ -20,6 +20,7 @@ A very first version of a kind of user manual can be found [here](https://github
 - Autodetection for focus pixels and vertical stretching
 - MLV darkframe subtraction (with external / internal darkframe)
 - Support for dual ISO
+- Support for HDR (blending on ffmpeg export)
 - Whitebalance picker
 - Show clip information
 - Analysis: histogram (including markers for under-/overexposed), waveform monitor, RGB parade, vector scope
