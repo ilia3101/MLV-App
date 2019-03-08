@@ -1633,6 +1633,10 @@ void MainWindow::startExportPipe(QString fileName)
     else if( m_resizeFilterAlgorithm == SCALE_LANCZOS ) resizeAlgorithm.append( "lanczos" );
     else resizeAlgorithm.append( "bicubic" ); //default
 
+    //HDR
+    QString hdrString = QString( "" );
+    if( 0 /*m_hdrExport && isHdrClip*/ ) hdrString = QString( ",tblend=all_mode=average" );
+
     //Resize Filter + colorspace conversion (for getting right colors)
     QString resizeFilter = QString( "" );
     if( m_resizeFilterEnabled )
@@ -1659,11 +1663,12 @@ void MainWindow::startExportPipe(QString fileName)
             m_resizeWidth += m_resizeWidth % 2;
             height += height % 2;
         }
-        resizeFilter = QString( "-vf %1scale=w=%2:h=%3:%4:in_color_matrix=bt601:out_color_matrix=bt709 " )
+        resizeFilter = QString( "-vf %1scale=w=%2:h=%3:%4:in_color_matrix=bt601:out_color_matrix=bt709%5 " )
                 .arg( moireeFilter )
                 .arg( m_resizeWidth )
                 .arg( height )
-                .arg( resizeAlgorithm );
+                .arg( resizeAlgorithm )
+                .arg( hdrString );
     }
     else if( m_exportQueue.first()->stretchFactorX() != 1.0
           || m_exportQueue.first()->stretchFactorY() != 1.0 )
@@ -1688,17 +1693,19 @@ void MainWindow::startExportPipe(QString fileName)
             width += width % 2;
             height += height % 2;
         }
-        resizeFilter = QString( "-vf %1scale=w=%2:h=%3:%4:in_color_matrix=bt601:out_color_matrix=bt709 " )
+        resizeFilter = QString( "-vf %1scale=w=%2:h=%3:%4:in_color_matrix=bt601:out_color_matrix=bt709%5 " )
                 .arg( moireeFilter )
                 .arg( width )
                 .arg( height )
-                .arg( resizeAlgorithm );
+                .arg( resizeAlgorithm )
+                .arg( hdrString );
     }
     else
     {
         //a colorspace conversion is always needed to get right colors
-        resizeFilter = QString( "-vf %1scale=in_color_matrix=bt601:out_color_matrix=bt709 " )
-                .arg( moireeFilter );
+        resizeFilter = QString( "-vf %1scale=in_color_matrix=bt601:out_color_matrix=bt709%2 " )
+                .arg( moireeFilter )
+                .arg( hdrString );
     }
     //qDebug() << resizeFilter;
 
@@ -1977,50 +1984,50 @@ void MainWindow::startExportPipe(QString fileName)
         if( ( ( m_codecProfile == CODEC_DNXHD ) && ( m_codecOption == CODEC_DNXHD_1080p_10bit ) )
          || m_codecProfile == CODEC_DNXHR )
         {
-            if( getFramerate() == 25.0 )                option = QString( "-vf scale=w=1920:h=1080:in_color_matrix=bt601:out_color_matrix=bt709,fps=25,%1 -b:v 185M" ).arg( format );
-            else if( getFramerate() == 50.0 )           option = QString( "-vf scale=w=1920:h=1080:in_color_matrix=bt601:out_color_matrix=bt709,fps=50,%1 -b:v 365M" ).arg( format );
+            if( getFramerate() == 25.0 )                option = QString( "-vf scale=w=1920:h=1080:in_color_matrix=bt601:out_color_matrix=bt709,fps=25,%1%2 -b:v 185M" ).arg( format ).arg( hdrString );
+            else if( getFramerate() == 50.0 )           option = QString( "-vf scale=w=1920:h=1080:in_color_matrix=bt601:out_color_matrix=bt709,fps=50,%1%2 -b:v 365M" ).arg( format ).arg( hdrString );
             else if( fps == QString( "23.976" ) || fps == QString( "23,976" )
-                     || getFramerate() == 24000.0/1001.0 ) option = QString( "-vf scale=w=1920:h=1080:in_color_matrix=bt601:out_color_matrix=bt709,fps=24000/1001,%1 -b:v 175M" ).arg( format );
+                     || getFramerate() == 24000.0/1001.0 ) option = QString( "-vf scale=w=1920:h=1080:in_color_matrix=bt601:out_color_matrix=bt709,fps=24000/1001,%1%2 -b:v 175M" ).arg( format ).arg( hdrString );
             else if( fps == QString( "29.97" ) || fps == QString( "29,97" )
-                     || getFramerate() == 30000.0/1001.0 ) option = QString( "-vf scale=w=1920:h=1080:in_color_matrix=bt601:out_color_matrix=bt709,fps=30000/1001,%1 -b:v 220M" ).arg( format );
+                     || getFramerate() == 30000.0/1001.0 ) option = QString( "-vf scale=w=1920:h=1080:in_color_matrix=bt601:out_color_matrix=bt709,fps=30000/1001,%1%2 -b:v 220M" ).arg( format ).arg( hdrString );
             else if( fps == QString( "59.94" ) || fps == QString( "59,94" )
-                     || getFramerate() == 60000.0/1001.0 ) option = QString( "-vf scale=w=1920:h=1080:in_color_matrix=bt601:out_color_matrix=bt709,fps=60000/1001,%1 -b:v 440M" ).arg( format );
+                     || getFramerate() == 60000.0/1001.0 ) option = QString( "-vf scale=w=1920:h=1080:in_color_matrix=bt601:out_color_matrix=bt709,fps=60000/1001,%1%2 -b:v 440M" ).arg( format ).arg( hdrString );
             else error = true;
         }
         else if( m_codecOption == CODEC_DNXHD_1080p_8bit )
         {
-            if( getFramerate() == 25.0 )                option = "-vf scale=w=1920:h=1080:in_color_matrix=bt601:out_color_matrix=bt709,fps=25,format=yuv422p -b:v 185M";
-            else if( getFramerate() == 50.0 )           option = "-vf scale=w=1920:h=1080:in_color_matrix=bt601:out_color_matrix=bt709,fps=50,format=yuv422p -b:v 365M";
+            if( getFramerate() == 25.0 )                option = QString( "-vf scale=w=1920:h=1080:in_color_matrix=bt601:out_color_matrix=bt709,fps=25,format=yuv422p%1 -b:v 185M" ).arg( hdrString );
+            else if( getFramerate() == 50.0 )           option = QString( "-vf scale=w=1920:h=1080:in_color_matrix=bt601:out_color_matrix=bt709,fps=50,format=yuv422p%1 -b:v 365M" ).arg( hdrString );
             else if( fps == QString( "23.976" ) || fps == QString( "23,976" )
-                     || getFramerate() == 24000.0/1001.0 ) option = "-vf scale=w=1920:h=1080:in_color_matrix=bt601:out_color_matrix=bt709,fps=24000/1001,format=yuv422p -b:v 175M";
+                     || getFramerate() == 24000.0/1001.0 ) option = QString( "-vf scale=w=1920:h=1080:in_color_matrix=bt601:out_color_matrix=bt709,fps=24000/1001,format=yuv422p%1 -b:v 175M" ).arg( hdrString );
             else if( fps == QString( "29.97" ) || fps == QString( "29,97" )
-                     || getFramerate() == 30000.0/1001.0 ) option = "-vf scale=w=1920:h=1080:in_color_matrix=bt601:out_color_matrix=bt709,fps=30000/1001,format=yuv422p -b:v 220M";
+                     || getFramerate() == 30000.0/1001.0 ) option = QString( "-vf scale=w=1920:h=1080:in_color_matrix=bt601:out_color_matrix=bt709,fps=30000/1001,format=yuv422p%1 -b:v 220M" ).arg( hdrString );
             else if( fps == QString( "59.94" ) || fps == QString( "59,94" )
-                     || getFramerate() == 60000.0/1001.0 ) option = "-vf scale=w=1920:h=1080:in_color_matrix=bt601:out_color_matrix=bt709,fps=60000/1001,format=yuv422p -b:v 440M";
+                     || getFramerate() == 60000.0/1001.0 ) option = QString( "-vf scale=w=1920:h=1080:in_color_matrix=bt601:out_color_matrix=bt709,fps=60000/1001,format=yuv422p%1 -b:v 440M" ).arg( hdrString );
             else error = true;
         }
         else if( m_codecOption == CODEC_DNXHD_720p_10bit )
         {
-            if( getFramerate() == 25.0 )                option = "-vf scale=w=1280:h=720:in_color_matrix=bt601:out_color_matrix=bt709,fps=25,format=yuv422p10 -b:v 90M";
-            else if( getFramerate() == 50.0 )           option = "-vf scale=w=1280:h=720:in_color_matrix=bt601:out_color_matrix=bt709,fps=50,format=yuv422p10 -b:v 180M";
+            if( getFramerate() == 25.0 )                option = QString( "-vf scale=w=1280:h=720:in_color_matrix=bt601:out_color_matrix=bt709,fps=25,format=yuv422p10%1 -b:v 90M" ).arg( hdrString );
+            else if( getFramerate() == 50.0 )           option = QString( "-vf scale=w=1280:h=720:in_color_matrix=bt601:out_color_matrix=bt709,fps=50,format=yuv422p10%1 -b:v 180M" ).arg( hdrString );
             else if( fps == QString( "23.976" ) || fps == QString( "23,976" )
-                     || getFramerate() == 24000.0/1001.0 ) option = "-vf scale=w=1280:h=720:in_color_matrix=bt601:out_color_matrix=bt709,fps=24000/1001,format=yuv422p10 -b:v 90M";
+                     || getFramerate() == 24000.0/1001.0 ) option = QString( "-vf scale=w=1280:h=720:in_color_matrix=bt601:out_color_matrix=bt709,fps=24000/1001,format=yuv422p10%1 -b:v 90M" ).arg( hdrString );
             else if( fps == QString( "29.97" ) || fps == QString( "29,97" )
-                     || getFramerate() == 30000.0/1001.0 ) option = "-vf scale=w=1280:h=720:in_color_matrix=bt601:out_color_matrix=bt709,fps=30000/1001,format=yuv422p10 -b:v 110M";
+                     || getFramerate() == 30000.0/1001.0 ) option = QString( "-vf scale=w=1280:h=720:in_color_matrix=bt601:out_color_matrix=bt709,fps=30000/1001,format=yuv422p10%1 -b:v 110M" ).arg( hdrString );
             else if( fps == QString( "59.94" ) || fps == QString( "59,94" )
-                     || getFramerate() == 60000.0/1001.0 ) option = "-vf scale=w=1280:h=720:in_color_matrix=bt601:out_color_matrix=bt709,fps=60000/1001,format=yuv422p10 -b:v 220M";
+                     || getFramerate() == 60000.0/1001.0 ) option = QString( "-vf scale=w=1280:h=720:in_color_matrix=bt601:out_color_matrix=bt709,fps=60000/1001,format=yuv422p10%1 -b:v 220M" ).arg( hdrString );
             else error = true;
         }
         else //720p 8bit
         {
-            if( getFramerate() == 25.0 )                option = "-vf scale=w=1280:h=720:in_color_matrix=bt601:out_color_matrix=bt709,fps=25,format=yuv422p -b:v 90M";
-            else if( getFramerate() == 50.0 )           option = "-vf scale=w=1280:h=720:in_color_matrix=bt601:out_color_matrix=bt709,fps=50,format=yuv422p -b:v 180M";
+            if( getFramerate() == 25.0 )                option = QString( "-vf scale=w=1280:h=720:in_color_matrix=bt601:out_color_matrix=bt709,fps=25,format=yuv422p%1 -b:v 90M" ).arg( hdrString );
+            else if( getFramerate() == 50.0 )           option = QString( "-vf scale=w=1280:h=720:in_color_matrix=bt601:out_color_matrix=bt709,fps=50,format=yuv422p%1 -b:v 180M" ).arg( hdrString );
             else if( fps == QString( "23.976" ) || fps == QString( "23,976" )
-                     || getFramerate() == 24000.0/1001.0 ) option = "-vf scale=w=1280:h=720:in_color_matrix=bt601:out_color_matrix=bt709,fps=24000/1001,format=yuv422p -b:v 90M";
+                     || getFramerate() == 24000.0/1001.0 ) option = QString( "-vf scale=w=1280:h=720:in_color_matrix=bt601:out_color_matrix=bt709,fps=24000/1001,format=yuv422p%1 -b:v 90M" ).arg( hdrString );
             else if( fps == QString( "29.97" ) || fps == QString( "29,97" )
-                     || getFramerate() == 30000.0/1001.0 ) option = "-vf scale=w=1280:h=720:in_color_matrix=bt601:out_color_matrix=bt709,fps=30000/1001,format=yuv422p -b:v 110M";
+                     || getFramerate() == 30000.0/1001.0 ) option = QString( "-vf scale=w=1280:h=720:in_color_matrix=bt601:out_color_matrix=bt709,fps=30000/1001,format=yuv422p%1 -b:v 110M" ).arg( hdrString );
             else if( fps == QString( "59.94" ) || fps == QString( "59,94" )
-                     || getFramerate() == 60000.0/1001.0 ) option = "-vf scale=w=1280:h=720:in_color_matrix=bt601:out_color_matrix=bt709,fps=60000/1001,format=yuv422p -b:v 220M";
+                     || getFramerate() == 60000.0/1001.0 ) option = QString( "-vf scale=w=1280:h=720:in_color_matrix=bt601:out_color_matrix=bt709,fps=60000/1001,format=yuv422p%1 -b:v 220M" ).arg( hdrString );
             else error = true;
         }
 
