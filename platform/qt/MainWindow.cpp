@@ -1387,6 +1387,7 @@ void MainWindow::readSettings()
     m_resizeFilterHeightLocked = set.value( "resizeLockHeight", false ).toBool();
     m_resizeFilterAlgorithm = set.value( "resizeAlgorithm", 0 ).toUInt();
     m_smoothFilterSetting = set.value( "smoothEnabled", 0 ).toUInt();
+    m_hdrExport = set.value( "hdrExport", false ).toBool();
     m_frameRate = set.value( "frameRate", 25 ).toDouble();
     m_audioExportEnabled = set.value( "audioExportEnabled", true ).toBool();
     ui->groupBoxRawCorrection->setChecked( set.value( "expandedRawCorrection", false ).toBool() );
@@ -1451,6 +1452,7 @@ void MainWindow::writeSettings()
     set.setValue( "resizeLockHeight", m_resizeFilterHeightLocked );
     set.setValue( "resizeAlgorithm", m_resizeFilterAlgorithm );
     set.setValue( "smoothEnabled", m_smoothFilterSetting );
+    set.setValue( "hdrExport", m_hdrExport );
     set.setValue( "frameRate", m_frameRate );
     set.setValue( "audioExportEnabled", m_audioExportEnabled );
     set.setValue( "expandedRawCorrection", ui->groupBoxRawCorrection->isChecked() );
@@ -1635,7 +1637,7 @@ void MainWindow::startExportPipe(QString fileName)
 
     //HDR
     QString hdrString = QString( "" );
-    if( 0 /*m_hdrExport && isHdrClip*/ ) hdrString = QString( ",tblend=all_mode=average" );
+    if( m_hdrExport /*&& isHdrClip*/ ) hdrString = QString( ",tblend=all_mode=average" );
 
     //Resize Filter + colorspace conversion (for getting right colors)
     QString resizeFilter = QString( "" );
@@ -5486,7 +5488,8 @@ void MainWindow::on_actionExportSettings_triggered()
                                                                       m_audioExportEnabled,
                                                                       m_resizeFilterHeightLocked,
                                                                       m_smoothFilterSetting,
-                                                                      m_resizeFilterAlgorithm );
+                                                                      m_resizeFilterAlgorithm,
+                                                                      m_hdrExport );
     pExportSettings->exec();
     m_codecProfile = pExportSettings->encoderSetting();
     m_codecOption = pExportSettings->encoderOption();
@@ -5500,6 +5503,7 @@ void MainWindow::on_actionExportSettings_triggered()
     m_resizeFilterHeightLocked = pExportSettings->isHeightLocked();
     m_smoothFilterSetting = pExportSettings->smoothSetting();
     m_resizeFilterAlgorithm = pExportSettings->scaleAlgorithm();
+    m_hdrExport = pExportSettings->hdrBlending();
     delete pExportSettings;
 
     if( m_fileLoaded )

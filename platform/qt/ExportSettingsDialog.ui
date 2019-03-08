@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>419</width>
-    <height>489</height>
+    <height>472</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -198,6 +198,30 @@
       </item>
       <item>
        <layout class="QGridLayout" name="gridLayout">
+        <item row="1" column="1" colspan="4">
+         <widget class="QComboBox" name="comboBoxScaleAlgorithm">
+          <item>
+           <property name="text">
+            <string>Bicubic</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Bilinear</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Sinc</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Lanczos</string>
+           </property>
+          </item>
+         </widget>
+        </item>
         <item row="0" column="0">
          <widget class="QCheckBox" name="checkBoxResize">
           <property name="text">
@@ -267,45 +291,24 @@
           </property>
          </widget>
         </item>
-        <item row="1" column="1" colspan="4">
-         <widget class="QComboBox" name="comboBoxScaleAlgorithm">
-          <item>
-           <property name="text">
-            <string>Bicubic</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Bilinear</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Sinc</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Lanczos</string>
-           </property>
-          </item>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_3">
-        <property name="spacing">
-         <number>10</number>
-        </property>
-        <item>
+        <item row="2" column="0" colspan="2">
          <widget class="QCheckBox" name="checkBoxFpsOverride">
           <property name="text">
            <string>Framerate override</string>
           </property>
          </widget>
         </item>
-        <item>
+        <item row="3" column="0" colspan="5">
+         <widget class="QCheckBox" name="checkBoxHdrBlending">
+          <property name="toolTip">
+           <string>Requires HDR clips!</string>
+          </property>
+          <property name="text">
+           <string>HDR blending</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="2" colspan="3">
          <widget class="QDoubleSpinBox" name="doubleSpinBoxFps">
           <property name="enabled">
            <bool>false</bool>
@@ -478,8 +481,6 @@ This option is very slow and runs when export progressbar is at 100%!</string>
  </widget>
  <tabstops>
   <tabstop>comboBoxCodec</tabstop>
-  <tabstop>checkBoxFpsOverride</tabstop>
-  <tabstop>doubleSpinBoxFps</tabstop>
   <tabstop>checkBoxExportAudio</tabstop>
   <tabstop>pushButtonClose</tabstop>
  </tabstops>

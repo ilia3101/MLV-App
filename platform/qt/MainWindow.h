@@ -371,6 +371,7 @@ private:
     double m_frameRate;
     bool m_tryToSyncAudio;
     bool m_audioExportEnabled;
+    bool m_hdrExport;
     bool m_exportAbortPressed;
     bool m_zoomTo100Center;
     bool m_zoomModeChanged;

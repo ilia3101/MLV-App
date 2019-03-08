@@ -12,7 +12,7 @@
 #include <QStandardItem>
 
 //Constructor
-ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, Scripting *scripting, uint8_t currentCodecProfile, uint8_t currentCodecOption, uint8_t debayerMode, bool resize, uint16_t resizeWidth, uint16_t resizeHeight, bool fpsOverride, double fps, bool exportAudio, bool heightLocked, uint8_t smooth, uint8_t scaleAlgo) :
+ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, Scripting *scripting, uint8_t currentCodecProfile, uint8_t currentCodecOption, uint8_t debayerMode, bool resize, uint16_t resizeWidth, uint16_t resizeHeight, bool fpsOverride, double fps, bool exportAudio, bool heightLocked, uint8_t smooth, uint8_t scaleAlgo, bool hdrBlending) :
     QDialog(parent),
     ui(new Ui::ExportSettingsDialog)
 {
@@ -33,6 +33,7 @@ ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, Scripting *scripting
     ui->toolButtonLockHeight->setChecked( heightLocked );
     ui->comboBoxSmoothing->setCurrentIndex( smooth );
     ui->comboBoxScaleAlgorithm->setCurrentIndex( scaleAlgo );
+    ui->checkBoxHdrBlending->setChecked( hdrBlending );
 
     //Disable resize for AVFoundation
     if( ui->comboBoxOption->currentText() == QString( "Apple AVFoundation" ) )
@@ -131,6 +132,11 @@ uint8_t ExportSettingsDialog::smoothSetting()
 uint8_t ExportSettingsDialog::scaleAlgorithm()
 {
     return ui->comboBoxScaleAlgorithm->currentIndex();
+}
+
+bool ExportSettingsDialog::hdrBlending()
+{
+    return ui->checkBoxHdrBlending->isChecked();
 }
 
 //Close clicked
@@ -295,10 +301,12 @@ void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
     {
         ui->checkBoxResize->setChecked( false );
         ui->comboBoxSmoothing->setCurrentIndex( 0 );
+        ui->checkBoxHdrBlending->setChecked( false );
     }
     ui->checkBoxResize->setEnabled( enableResize );
     ui->comboBoxSmoothing->setEnabled( enableResize );
     ui->label_Smoothing->setEnabled( enableResize );
+    ui->checkBoxHdrBlending->setEnabled( enableResize );
 
     //En-/disable fps override
     if( ( index == CODEC_MLV ) || ( index == CODEC_TIFF ) || ( index == CODEC_PNG ) || ( index == CODEC_JPG2K ) || ( index == CODEC_AUDIO_ONLY ) )
@@ -347,6 +355,8 @@ void ExportSettingsDialog::on_comboBoxOption_currentIndexChanged(const QString &
         ui->comboBoxSmoothing->setCurrentIndex( 0 );
         ui->comboBoxSmoothing->setEnabled( false );
         ui->label_Smoothing->setEnabled( false );
+        ui->checkBoxHdrBlending->setChecked( false );
+        ui->checkBoxHdrBlending->setEnabled( false );
     }
     else
     {
@@ -361,6 +371,7 @@ void ExportSettingsDialog::on_comboBoxOption_currentIndexChanged(const QString &
             ui->checkBoxResize->setEnabled( true );
             ui->comboBoxSmoothing->setEnabled( true );
             ui->label_Smoothing->setEnabled( true );
+            ui->checkBoxHdrBlending->setEnabled( true );
         }
 
         //En-/disable fps override
