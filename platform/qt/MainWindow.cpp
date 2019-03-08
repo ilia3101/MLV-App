@@ -1605,6 +1605,38 @@ void MainWindow::startExportPipe(QString fileName)
         return;
     }
 
+    //HDR detection check
+    bool isHdrClip = false;
+    if( m_hdrExport && ( getMlvFrames( m_pMlvObject ) >= 2 ) )
+    {
+        //Buffer
+        uint32_t frameSize = getMlvWidth( m_pMlvObject ) * getMlvHeight( m_pMlvObject ) * 3;
+        uint16_t * imgBuffer;
+        imgBuffer = ( uint16_t* )malloc( frameSize * sizeof( uint16_t ) );
+
+        //Get 1st picture, and lock render thread... there can only be one!
+        m_pRenderThread->lock();
+        getMlvProcessedFrame16( m_pMlvObject, 0, imgBuffer, QThread::idealThreadCount() );
+        m_pRenderThread->unlock();
+        double average1 = 0;
+        for( uint32_t i = 0; i < frameSize; i++ ) average1 += imgBuffer[i];
+
+        //Get 2nd picture, and lock render thread... there can only be one!
+        m_pRenderThread->lock();
+        getMlvProcessedFrame16( m_pMlvObject, 1, imgBuffer, QThread::idealThreadCount() );
+        m_pRenderThread->unlock();
+        double average2 = 0;
+        for( uint32_t i = 0; i < frameSize; i++ ) average2 += imgBuffer[i];
+
+        //Compare pictures
+        if( average2 == 0 ) average2 = 1;
+        double quot = average1 / average2;
+        if( quot > 1.3 || quot < 0.7 ) isHdrClip = true;
+        //qDebug() << average1 << average2 << quot;
+
+        free( imgBuffer );
+    }
+
     //Solving the . and , problem at fps in the command
     QLocale locale = QLocale(QLocale::English, QLocale::UnitedKingdom);
     locale.setNumberOptions(QLocale::OmitGroupSeparator);
@@ -1637,7 +1669,7 @@ void MainWindow::startExportPipe(QString fileName)
 
     //HDR
     QString hdrString = QString( "" );
-    if( m_hdrExport /*&& isHdrClip*/ ) hdrString = QString( ",tblend=all_mode=average" );
+    if( m_hdrExport && isHdrClip ) hdrString = QString( ",tblend=all_mode=average" );
 
     //Resize Filter + colorspace conversion (for getting right colors)
     QString resizeFilter = QString( "" );
