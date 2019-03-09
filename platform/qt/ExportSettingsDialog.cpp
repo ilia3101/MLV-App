@@ -378,6 +378,7 @@ void ExportSettingsDialog::on_comboBoxOption_currentIndexChanged(const QString &
             ui->checkBoxHdrBlending->setEnabled( true );
             on_comboBoxSmoothing_currentIndexChanged( ui->comboBoxSmoothing->currentIndex() );
             on_checkBoxHdrBlending_toggled( ui->checkBoxHdrBlending->isChecked() );
+            on_checkBoxFpsOverride_toggled( ui->checkBoxFpsOverride->isChecked() );
         }
 
         //En-/disable fps override
