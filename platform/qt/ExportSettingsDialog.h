@@ -139,6 +139,10 @@ private slots:
 
     void on_comboBoxPostExportScript_currentIndexChanged(const QString &arg1);
 
+    void on_checkBoxHdrBlending_toggled(bool checked);
+
+    void on_comboBoxSmoothing_currentIndexChanged(int index);
+
 private:
     Ui::ExportSettingsDialog *ui;
     Scripting *m_pScripting;

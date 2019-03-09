@@ -301,12 +301,16 @@ void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
     {
         ui->checkBoxResize->setChecked( false );
         ui->comboBoxSmoothing->setCurrentIndex( 0 );
+        on_comboBoxSmoothing_currentIndexChanged( 0 );
         ui->checkBoxHdrBlending->setChecked( false );
+        on_checkBoxHdrBlending_toggled( false );
     }
     ui->checkBoxResize->setEnabled( enableResize );
     ui->comboBoxSmoothing->setEnabled( enableResize );
     ui->label_Smoothing->setEnabled( enableResize );
     ui->checkBoxHdrBlending->setEnabled( enableResize );
+    on_comboBoxSmoothing_currentIndexChanged( ui->comboBoxSmoothing->currentIndex() );
+    on_checkBoxHdrBlending_toggled( ui->checkBoxHdrBlending->isChecked() );
 
     //En-/disable fps override
     if( ( index == CODEC_MLV ) || ( index == CODEC_TIFF ) || ( index == CODEC_PNG ) || ( index == CODEC_JPG2K ) || ( index == CODEC_AUDIO_ONLY ) )
@@ -372,6 +376,8 @@ void ExportSettingsDialog::on_comboBoxOption_currentIndexChanged(const QString &
             ui->comboBoxSmoothing->setEnabled( true );
             ui->label_Smoothing->setEnabled( true );
             ui->checkBoxHdrBlending->setEnabled( true );
+            on_comboBoxSmoothing_currentIndexChanged( ui->comboBoxSmoothing->currentIndex() );
+            on_checkBoxHdrBlending_toggled( ui->checkBoxHdrBlending->isChecked() );
         }
 
         //En-/disable fps override
@@ -404,4 +410,29 @@ void ExportSettingsDialog::on_toolButtonLockHeight_toggled(bool checked)
 void ExportSettingsDialog::on_comboBoxPostExportScript_currentIndexChanged(const QString &arg1)
 {
     m_pScripting->setPostExportScript( arg1 );
+}
+
+//HDR toggled
+void ExportSettingsDialog::on_checkBoxHdrBlending_toggled(bool checked)
+{
+    if( checked )
+    {
+        ui->comboBoxSmoothing->setCurrentIndex( 0 );
+    }
+    ui->comboBoxSmoothing->setEnabled( !checked );
+    ui->label_Smoothing->setEnabled( !checked );
+}
+
+//Smooth aliasing changed
+void ExportSettingsDialog::on_comboBoxSmoothing_currentIndexChanged(int index)
+{
+    if( index == 0 )
+    {
+        ui->checkBoxHdrBlending->setEnabled( true );
+    }
+    else
+    {
+        ui->checkBoxHdrBlending->setEnabled( false );
+        ui->checkBoxHdrBlending->setChecked( false );
+    }
 }
