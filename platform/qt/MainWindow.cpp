@@ -826,6 +826,7 @@ int MainWindow::openMlv( QString fileName )
                                                             .arg( getMlvTmHour(m_pMlvObject), 2, 10, QChar('0') )
                                                             .arg( getMlvTmMin(m_pMlvObject), 2, 10, QChar('0') )
                                                             .arg( getMlvTmSec(m_pMlvObject), 2, 10, QChar('0') ) );
+    resultingResolution();
 
     if( doesMlvHaveAudio( m_pMlvObject ) )
     {
@@ -3377,6 +3378,8 @@ void MainWindow::deleteSession()
     m_pInfoDialog->ui->tableWidget->item( 12, 1 )->setText( "-" );
     m_pInfoDialog->ui->tableWidget->item( 13, 1 )->setText( "-" );
 
+    ui->label_resResolution->setText( "0 x 0 pixels" );
+
     //Adapt slider to clip and move to position 0
     ui->horizontalSliderPosition->setValue( 0 );
 
@@ -5352,6 +5355,15 @@ void MainWindow::enableCreativeAdjustments( bool enable )
     ui->toolButtonGCurvesReset->setEnabled( enable );
     ui->toolButtonGCurvesResetOne->setEnabled( enable );
     ui->labelCurves->setEnabled( enable );
+}
+
+//Calcukate and show resulting resolution after stretching
+void MainWindow::resultingResolution( void )
+{
+    if( !ui->listWidgetSession->count() ) return;
+    int x = getMlvWidth( m_pMlvObject ) * getHorizontalStretchFactor( false );
+    int y = getMlvHeight( m_pMlvObject ) * getVerticalStretchFactor( false );
+    ui->label_resResolution->setText( QString( "%1 x %2 pixels" ).arg(x).arg(y) );
 }
 
 //Chose filter
@@ -7524,6 +7536,7 @@ void MainWindow::on_comboBoxHStretch_currentIndexChanged(int index)
     Q_UNUSED( index );
     m_pGradientElement->setStrechFactorX( getHorizontalStretchFactor(false) );
     if( !m_inOpeningProcess && !m_setSliders ) on_horizontalSliderVignetteRadius_valueChanged( ui->horizontalSliderVignetteRadius->value() );
+    resultingResolution();
     m_zoomModeChanged = true;
     m_frameChanged = true;
 }
@@ -7534,6 +7547,7 @@ void MainWindow::on_comboBoxVStretch_currentIndexChanged(int index)
     Q_UNUSED( index );
     m_pGradientElement->setStrechFactorY( getVerticalStretchFactor(false) );
     if( !m_inOpeningProcess && !m_setSliders ) on_horizontalSliderVignetteRadius_valueChanged( ui->horizontalSliderVignetteRadius->value() );
+    resultingResolution();
     m_zoomModeChanged = true;
     m_frameChanged = true;
 }

@@ -462,6 +462,7 @@ private:
     QRecentFilesMenu *m_pRecentFilesMenu;
     void selectDebayerAlgorithm( void );
     void enableCreativeAdjustments( bool enable );
+    void resultingResolution( void );
 
 signals:
     void exportReady( void );
