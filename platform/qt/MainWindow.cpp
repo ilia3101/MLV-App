@@ -3076,6 +3076,11 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
             receipt->setDenoiserStrength( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
+        else if( Rxml->isStartElement() && Rxml->name() == "rbfDenoiserStrength" )
+        {
+            receipt->setRbfDenoiserStrength( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
         else if( Rxml->isStartElement() && Rxml->name() == "rawFixesEnabled" )
         {
             receipt->setRawFixesEnabled( (bool)Rxml->readElementText().toInt() );
@@ -3296,6 +3301,7 @@ void MainWindow::writeXmlElementsToFile(QXmlStreamWriter *xmlWriter, ReceiptSett
     xmlWriter->writeTextElement( "allowCreativeAdjustments",QString( "%1" ).arg( receipt->allowCreativeAdjustments() ) );
     xmlWriter->writeTextElement( "denoiserStrength",        QString( "%1" ).arg( receipt->denoiserStrength() ) );
     xmlWriter->writeTextElement( "denoiserWindow",          QString( "%1" ).arg( receipt->denoiserWindow() ) );
+    xmlWriter->writeTextElement( "rbfDenoiserStrength",        QString( "%1" ).arg( receipt->rbfDenoiserStrength() ) );
     xmlWriter->writeTextElement( "rawFixesEnabled",         QString( "%1" ).arg( receipt->rawFixesEnabled() ) );
     xmlWriter->writeTextElement( "verticalStripes",         QString( "%1" ).arg( receipt->verticalStripes() ) );
     xmlWriter->writeTextElement( "focusPixels",             QString( "%1" ).arg( receipt->focusPixels() ) );
@@ -3496,6 +3502,8 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     ui->comboBoxDenoiseWindow->setCurrentIndex( receipt->denoiserWindow() - 2 );
     on_comboBoxDenoiseWindow_currentIndexChanged( receipt->denoiserWindow() - 2 );
 
+    ui->horizontalSliderRbfDenoiseStrength->setValue( receipt->rbfDenoiserStrength() );
+
     ui->checkBoxRawFixEnable->setChecked( receipt->rawFixesEnabled() );
     on_checkBoxRawFixEnable_clicked( receipt->rawFixesEnabled() );
     if( receipt->focusPixels() == -1 )
@@ -3672,6 +3680,7 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     receipt->setAllowCreativeAdjustments( ui->checkBoxCreativeAdjustments->isChecked() );
     receipt->setDenoiserStrength( ui->horizontalSliderDenoiseStrength->value() );
     receipt->setDenoiserWindow( ui->comboBoxDenoiseWindow->currentIndex() + 2 );
+    receipt->setRbfDenoiserStrength( ui->horizontalSliderRbfDenoiseStrength->value() );
 
     receipt->setRawFixesEnabled( ui->checkBoxRawFixEnable->isChecked() );
     receipt->setVerticalStripes( toolButtonVerticalStripesCurrentIndex() );
@@ -3766,6 +3775,7 @@ void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings 
     if( paste && cdui->checkBoxProfile->isChecked() )    receiptTarget->setAllowCreativeAdjustments( receiptSource->allowCreativeAdjustments() );
     if( paste && cdui->checkBoxDenoise->isChecked() )    receiptTarget->setDenoiserStrength( receiptSource->denoiserStrength() );
     if( paste && cdui->checkBoxDenoise->isChecked() )    receiptTarget->setDenoiserWindow( receiptSource->denoiserWindow() );
+    if( paste && cdui->checkBoxDenoise->isChecked() )    receiptTarget->setRbfDenoiserStrength( receiptSource->rbfDenoiserStrength() );
 
     if( paste && cdui->checkBoxRawCorrectEnable->isChecked() ) receiptTarget->setRawFixesEnabled( receiptSource->rawFixesEnabled() );
     if( paste && cdui->checkBoxDarkFrameSubtraction->isChecked() ) receiptTarget->setDarkFrameFileName( receiptSource->darkFrameFileName() );
@@ -3918,6 +3928,7 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     receipt->setAllowCreativeAdjustments( m_pSessionReceipts.at( row )->allowCreativeAdjustments() );
     receipt->setDenoiserStrength( m_pSessionReceipts.at( row )->denoiserStrength() );
     receipt->setDenoiserWindow( m_pSessionReceipts.at( row )->denoiserWindow() );
+    receipt->setRbfDenoiserStrength( m_pSessionReceipts.at( row )->rbfDenoiserStrength() );
 
     receipt->setRawFixesEnabled( m_pSessionReceipts.at( row )->rawFixesEnabled() );
     receipt->setVerticalStripes( m_pSessionReceipts.at( row )->verticalStripes() );
@@ -4543,24 +4554,27 @@ void MainWindow::on_actionAbout_triggered()
                                   "<html>%1"
                                   "<body><h3>%2</h3>"
                                   " <p>%2 v%3</p>"
-                                  " <p>%7</p>"
-                                  " <p>See <a href='%8'>this site</a> for more information.</p>"
-                                  " <p>Darkstyle Copyright (c) 2017, <a href='%9'>Juergen Skrotzky</a> under MIT</p>"
-                                  " <p>Some icons by <a href='%10'>Double-J Design</a> under <a href='%11'>CC4.0</a></p>"
-                                  " <p>Autoupdater Copyright (c) 2016, <a href='%12'>Violet Giraffe</a> under MIT</p>"
-                                  " <p>Zhang-Wu LMMSE Image Demosaicking by Pascal Getreuer under <a href='%13'>BSD</a>.</p>"
-                                  " <p>QRecentFilesMenu Copyright (c) 2011 by Morgan Leborgne under <a href='%14'>MIT</a>.</p>"
+                                  " <p>%4</p>"
+                                  " <p>See <a href='%5'>this site</a> for more information.</p>"
+                                  " <p>Darkstyle Copyright (c) 2017, <a href='%6'>Juergen Skrotzky</a> under MIT</p>"
+                                  " <p>Some icons by <a href='%7'>Double-J Design</a> under <a href='%8'>CC4.0</a></p>"
+                                  " <p>Autoupdater Copyright (c) 2016, <a href='%9'>Violet Giraffe</a> under MIT</p>"
+                                  " <p>Zhang-Wu LMMSE Image Demosaicking by Pascal Getreuer under <a href='%10'>BSD</a>.</p>"
+                                  " <p>QRecentFilesMenu Copyright (c) 2011 by Morgan Leborgne under <a href='%11'>MIT</a>.</p>"
+                                  " <p>Recursive bilateral filtering developed by Qingxiong Yang under <a href='%12'>MIT</a>.</p>"
                                   " </body></html>" )
-                                 .arg( pic )
-                                 .arg( APPNAME )
-                                 .arg( VERSION )
-                                 .arg( "by Ilia3101, bouncyball, Danne & masc." )
-                                 .arg( "https://github.com/ilia3101/MLV-App" )
-                                 .arg( "https://github.com/Jorgen-VikingGod" )
-                                 .arg( "http://www.doublejdesign.co.uk/" )
-                                 .arg( "https://creativecommons.org/licenses/by/4.0/" )
-                                 .arg( "https://github.com/VioletGiraffe/github-releases-autoupdater" )
-                                 .arg( "http://www.opensource.org/licenses/bsd-license.html" ) );
+                                 .arg( pic ) //1
+                                 .arg( APPNAME ) //2
+                                 .arg( VERSION ) //3
+                                 .arg( "by Ilia3101, bouncyball, Danne & masc." ) //4
+                                 .arg( "https://github.com/ilia3101/MLV-App" ) //5
+                                 .arg( "https://github.com/Jorgen-VikingGod" ) //6
+                                 .arg( "http://www.doublejdesign.co.uk/" ) //7
+                                 .arg( "https://creativecommons.org/licenses/by/4.0/" ) //8
+                                 .arg( "https://github.com/VioletGiraffe/github-releases-autoupdater" ) //9
+                                 .arg( "http://www.opensource.org/licenses/bsd-license.html" ) //10
+                                 .arg( "https://github.com/mojocorp/QRecentFilesMenu/blob/master/LICENSE" ) //11
+                                 .arg( "https://github.com/ufoym/recursive-bf/blob/master/LICENSE" ) ); //12
 }
 
 //Qt Infobox
@@ -4746,6 +4760,13 @@ void MainWindow::on_horizontalSliderDenoiseStrength_valueChanged(int position)
 {
     processingSetDenoiserStrength( m_pProcessingObject, position );
     ui->label_DenoiseStrength->setText( QString("%1").arg( position ) );
+    m_frameChanged = true;
+}
+
+void MainWindow::on_horizontalSliderRbfDenoiseStrength_valueChanged(int position)
+{
+    processingSetRbfDenoiserStrength( m_pProcessingObject, position );
+    ui->label_RbfDenoiseStrength->setText( QString("%1").arg( position ) );
     m_frameChanged = true;
 }
 
@@ -5001,6 +5022,13 @@ void MainWindow::on_horizontalSliderDenoiseStrength_doubleClicked()
 {
     ReceiptSettings *sliders = new ReceiptSettings(); //default
     ui->horizontalSliderDenoiseStrength->setValue( sliders->denoiserStrength() );
+    delete sliders;
+}
+
+void MainWindow::on_horizontalSliderRbfDenoiseStrength_doubleClicked()
+{
+    ReceiptSettings *sliders = new ReceiptSettings(); //default
+    ui->horizontalSliderRbfDenoiseStrength->setValue( sliders->rbfDenoiserStrength() );
     delete sliders;
 }
 
@@ -6079,6 +6107,15 @@ void MainWindow::on_label_DenoiseStrength_doubleClicked()
     editSlider.autoSetup( ui->horizontalSliderDenoiseStrength, ui->label_DenoiseStrength, 1.0, 0, 1.0 );
     editSlider.exec();
     ui->horizontalSliderDenoiseStrength->setValue( editSlider.getValue() );
+}
+
+//DoubleClick on RbfDenoiseStrength Label
+void MainWindow::on_label_RbFDenoiseStrength_doubleClicked()
+{
+    EditSliderValueDialog editSlider;
+    editSlider.autoSetup( ui->horizontalSliderRbfDenoiseStrength, ui->label_RbfDenoiseStrength, 1.0, 0, 1.0 );
+    editSlider.exec();
+    ui->horizontalSliderRbfDenoiseStrength->setValue( editSlider.getValue() );
 }
 
 //Repaint audio if its size changed

@@ -179,6 +179,9 @@ typedef struct {
     uint8_t    denoiserWindow;
     uint8_t    denoiserStrength;
 
+    /* RBF Denoiser */
+    uint8_t    rbfDenoiserStrength;
+
     /* Gradient */
     double     gradient_exposure_stops;
     double     gradient_contrast;

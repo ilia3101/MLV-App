@@ -13,6 +13,7 @@
 #include "../mlv/camid/camera_id.h"
 #include "interpolation/spline_helper.h"
 #include "interpolation/cosine_interpolation.h"
+#include "rbfilter/rbf_wrapper.h"
 
 /* Matrix functions which are useful */
 #include "../matrix/matrix.h"
@@ -140,6 +141,7 @@ processingObject_t * initProcessingObject()
     processingSetTransformation(processing, TR_NONE);
     processingSetDenoiserStrength(processing, 0);
     processingSetDenoiserWindow(processing, 2);
+    processingSetRbfDenoiserStrength(processing, 0);
     processingUseCamMatrix(processing);
     processingDontAllowCreativeAdjustments(processing);
     processingSetGCurve(processing, 0, NULL, NULL, 0);
@@ -427,6 +429,26 @@ void applyProcessingObject( processingObject_t * processing,
     if( processing->denoiserStrength > 0 )
     {
         denoise_2D_median( outputImage, imageX, imageY, processing->denoiserWindow, processing->denoiserStrength );
+    }
+
+    /* Recursive bilateral filtering (developed by Qingxiong Yang) must render on complete image, because of border problems */
+    if( processing->rbfDenoiserStrength > 0 )
+    {
+        memcpy( inputImage, outputImage, imageX * imageY * 3 * sizeof(uint16_t) );
+        recursive_bf_wrap(
+                inputImage,
+                outputImage,
+                0.03f, processing->rbfDenoiserStrength/500.0, /*Use strength for sigma (intensity)*/
+                imageX, imageY, 3);
+
+        float out = processing->rbfDenoiserStrength/100.0;
+        float in = 1.0 - out;
+
+        /* Linear blend strength */
+        for( int i = 0; i < imageX * imageY * 3; i++ )
+        {
+            outputImage[i] = outputImage[i]*out + inputImage[i]*in;
+        }
     }
 }
 

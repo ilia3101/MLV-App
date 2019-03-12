@@ -132,6 +132,7 @@ SOURCES += \
     Curves.cpp \
     ../../src/processing/interpolation/spline_helper.cpp \
     ../../src/processing/interpolation/cosine_interpolation.c \
+    ../../src/processing/rbfilter/rbf_wrapper.cpp \
     HueVsDiagram.cpp
 
 macx: SOURCES += ../cocoa/avf_lib/avf_lib.m
@@ -218,7 +219,9 @@ HEADERS += \
     ../../src/processing/interpolation/spline_helper.h \
     ../../src/processing/interpolation/spline.h \
     ../../src/processing/interpolation/cosine_interpolation.h \
-    HueVsDiagram.h
+    HueVsDiagram.h \
+    ../../src/processing/rbfilter/rbf_wrapper.h \
+    ../../src/processing/rbfilter/rbf.h
 
 macx: HEADERS += \
     ../cocoa/avf_lib/avencoder.h \
