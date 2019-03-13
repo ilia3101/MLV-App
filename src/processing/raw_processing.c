@@ -438,7 +438,7 @@ void applyProcessingObject( processingObject_t * processing,
         recursive_bf_wrap(
                 inputImage,
                 outputImage,
-                0.03f, processing->rbfDenoiserStrength/500.0, /*Use strength for sigma (intensity)*/
+                0.03f, 0.1f,//processing->rbfDenoiserStrength/500.0, /*Use strength for sigma (intensity)*/
                 imageX, imageY, 3);
 
         float out = processing->rbfDenoiserStrength/100.0;
