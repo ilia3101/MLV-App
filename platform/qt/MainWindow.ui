@@ -501,7 +501,7 @@ QGroupBox::indicator:checked:disabled {
             <x>0</x>
             <y>0</y>
             <width>244</width>
-            <height>4366</height>
+            <height>4400</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayoutScrollArea">
@@ -4679,6 +4679,9 @@ QGroupBox::indicator:checked:disabled {
                       <font>
                        <pointsize>10</pointsize>
                       </font>
+                     </property>
+                     <property name="toolTip">
+                      <string>Recursive bilateral filtering</string>
                      </property>
                      <property name="text">
                       <string>RBF Denoise Strength</string>
