@@ -445,6 +445,7 @@ void applyProcessingObject( processingObject_t * processing,
         float in = 1.0 - out;
 
         /* Linear blend strength */
+#pragma omp parallel for
         for( int i = 0; i < imageX * imageY * 3; i++ )
         {
             outputImage[i] = outputImage[i]*out + inputImage[i]*in;

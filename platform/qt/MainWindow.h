@@ -202,7 +202,7 @@ private slots:
     void on_label_Sharpen_doubleClicked( void );
     void on_label_ChromaBlur_doubleClicked( void );
     void on_label_DenoiseStrength_doubleClicked( void );
-    void on_label_RbFDenoiseStrength_doubleClicked( void );
+    void on_label_RbfDenoiseStrength_doubleClicked( void );
     void on_labelAudioTrack_sizeChanged( void );
     void on_label_LutStrengthVal_doubleClicked( void );
     void on_label_FilterStrengthVal_doubleClicked( void );

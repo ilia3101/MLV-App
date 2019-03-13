@@ -6110,7 +6110,7 @@ void MainWindow::on_label_DenoiseStrength_doubleClicked()
 }
 
 //DoubleClick on RbfDenoiseStrength Label
-void MainWindow::on_label_RbFDenoiseStrength_doubleClicked()
+void MainWindow::on_label_RbfDenoiseStrength_doubleClicked()
 {
     EditSliderValueDialog editSlider;
     editSlider.autoSetup( ui->horizontalSliderRbfDenoiseStrength, ui->label_RbfDenoiseStrength, 1.0, 0, 1.0 );
