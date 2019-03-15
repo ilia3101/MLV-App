@@ -540,6 +540,43 @@ void blur_image( uint16_t * __restrict in,
     }
 }
 
+void convert_rgb_to_YCbCr_omp(uint16_t * __restrict img, int32_t size, int32_t ** lut)
+{
+    int32_t ** ry = lut;
+    uint16_t * end = img + size;
+
+#pragma omp parallel for
+    for (uint16_t * pix = img; pix < end; pix += 3)
+    {
+        /* RGB to YCbCr */
+        int32_t pix_Y  =         ry[0][pix[0]] + ry[1][pix[1]] + ry[2][pix[2]];
+        int32_t pix_Cb = 32768 + ry[3][pix[0]] + ry[4][pix[1]] + (pix[2] >> 1);
+        int32_t pix_Cr = 32768 + (pix[0] >> 1) + ry[5][pix[1]] + ry[6][pix[2]];
+
+        pix[0] = LIMIT16(pix_Y);
+        pix[1] = LIMIT16(pix_Cb);
+        pix[2] = LIMIT16(pix_Cr);
+    }
+}
+
+void convert_YCbCr_to_rgb_omp(uint16_t * __restrict img, int32_t size, int32_t ** lut)
+{
+    int32_t ** yr = lut;
+    uint16_t * end = img + size;
+
+#pragma omp parallel for
+    for (uint16_t * pix = img; pix < end; pix += 3)
+    {
+        int32_t pix_R = pix[0]                 + yr[0][pix[2]];
+        int32_t pix_G = pix[0] + yr[1][pix[1]] + yr[2][pix[2]];
+        int32_t pix_B = pix[0] + yr[3][pix[1]];
+
+        pix[0] = LIMIT16(pix_R);
+        pix[1] = LIMIT16(pix_G);
+        pix[2] = LIMIT16(pix_B);
+    }
+}
+
 void convert_rgb_to_YCbCr(uint16_t * __restrict img, int32_t size, int32_t ** lut)
 {
     int32_t ** ry = lut;

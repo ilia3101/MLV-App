@@ -93,7 +93,9 @@ private slots:
     void on_horizontalSliderSharpen_valueChanged(int position);
     void on_horizontalSliderChromaBlur_valueChanged(int position);
     void on_horizontalSliderDenoiseStrength_valueChanged(int position);
-    void on_horizontalSliderRbfDenoiseStrength_valueChanged(int position);
+    void on_horizontalSliderRbfDenoiseLuma_valueChanged(int position);
+    void on_horizontalSliderRbfDenoiseChroma_valueChanged(int position);
+    void on_horizontalSliderRbfDenoiseRange_valueChanged(int position);
     void on_horizontalSliderLutStrength_valueChanged(int position);
     void on_horizontalSliderFilterStrength_valueChanged(int position);
     void on_horizontalSliderVignetteStrength_valueChanged(int position);
@@ -122,7 +124,9 @@ private slots:
     void on_horizontalSliderSharpen_doubleClicked();
     void on_horizontalSliderChromaBlur_doubleClicked();
     void on_horizontalSliderDenoiseStrength_doubleClicked();
-    void on_horizontalSliderRbfDenoiseStrength_doubleClicked();
+    void on_horizontalSliderRbfDenoiseLuma_doubleClicked();
+    void on_horizontalSliderRbfDenoiseChroma_doubleClicked();
+    void on_horizontalSliderRbfDenoiseRange_doubleClicked();
     void on_horizontalSliderLutStrength_doubleClicked();
     void on_horizontalSliderFilterStrength_doubleClicked();
     void on_horizontalSliderVignetteStrength_doubleClicked();
@@ -202,7 +206,9 @@ private slots:
     void on_label_Sharpen_doubleClicked( void );
     void on_label_ChromaBlur_doubleClicked( void );
     void on_label_DenoiseStrength_doubleClicked( void );
-    void on_label_RbfDenoiseStrength_doubleClicked( void );
+    void on_label_RbfDenoiseLuma_doubleClicked( void );
+    void on_label_RbfDenoiseChroma_doubleClicked( void );
+    void on_label_RbfDenoiseRange_doubleClicked( void );
     void on_labelAudioTrack_sizeChanged( void );
     void on_label_LutStrengthVal_doubleClicked( void );
     void on_label_FilterStrengthVal_doubleClicked( void );

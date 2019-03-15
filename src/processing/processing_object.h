@@ -180,7 +180,9 @@ typedef struct {
     uint8_t    denoiserStrength;
 
     /* RBF Denoiser */
-    uint8_t    rbfDenoiserStrength;
+    uint8_t    rbfDenoiserLuma;
+    uint8_t    rbfDenoiserChroma;
+    uint8_t    rbfDenoiserRange;
 
     /* Gradient */
     double     gradient_exposure_stops;

@@ -49,7 +49,9 @@ public:
     void setChromaBlur( int value ) {m_chromaBlur = value;}
     void setDenoiserWindow( int value ){m_denoiserWindow = value;}
     void setDenoiserStrength( int value ){m_denoiserStrength = value;}
-    void setRbfDenoiserStrength( int value ){m_rbfDenoiserStrength = value;}
+    void setRbfDenoiserLuma( int value ){m_rbfDenoiserLuma = value;}
+    void setRbfDenoiserChroma( int value ){m_rbfDenoiserChroma = value;}
+    void setRbfDenoiserRange( int value ){m_rbfDenoiserRange = value;}
     void setHighlightReconstruction( bool on ){m_highlightReconstruction = on;}
     void setCamMatrixUsed( uint8_t val )      {m_useCamMatrix = val;}
     void setChromaSeparation( bool on )       {m_chromaSeparation = on;}
@@ -131,7 +133,9 @@ public:
     int chromaBlur( void ) {return m_chromaBlur;}
     int denoiserWindow( void ){return m_denoiserWindow;}
     int denoiserStrength( void ){return m_denoiserStrength;}
-    int rbfDenoiserStrength( void ){return m_rbfDenoiserStrength;}
+    int rbfDenoiserLuma( void ){return m_rbfDenoiserLuma;}
+    int rbfDenoiserChroma( void ){return m_rbfDenoiserChroma;}
+    int rbfDenoiserRange( void ){return m_rbfDenoiserRange;}
     bool isHighlightReconstruction( void ){return m_highlightReconstruction;}
     uint8_t camMatrixUsed( void ){return m_useCamMatrix;}
     bool isChromaSeparation( void ){return m_chromaSeparation;}
@@ -215,7 +219,9 @@ private:
     int m_chromaBlur;
     int m_denoiserWindow;
     int m_denoiserStrength;
-    int m_rbfDenoiserStrength;
+    int m_rbfDenoiserLuma;
+    int m_rbfDenoiserChroma;
+    int m_rbfDenoiserRange;
     bool m_highlightReconstruction;
     uint8_t m_useCamMatrix;
     bool m_chromaSeparation;

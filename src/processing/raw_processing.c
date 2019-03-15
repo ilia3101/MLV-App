@@ -141,7 +141,9 @@ processingObject_t * initProcessingObject()
     processingSetTransformation(processing, TR_NONE);
     processingSetDenoiserStrength(processing, 0);
     processingSetDenoiserWindow(processing, 2);
-    processingSetRbfDenoiserStrength(processing, 0);
+    processingSetRbfDenoiserLuma(processing, 0);
+    processingSetRbfDenoiserChroma(processing, 0);
+    processingSetRbfDenoiserRange(processing, 40);
     processingUseCamMatrix(processing);
     processingDontAllowCreativeAdjustments(processing);
     processingSetGCurve(processing, 0, NULL, NULL, 0);
@@ -432,24 +434,32 @@ void applyProcessingObject( processingObject_t * processing,
     }
 
     /* Recursive bilateral filtering (developed by Qingxiong Yang) must render on complete image, because of border problems */
-    if( processing->rbfDenoiserStrength > 0 )
+    if( processing->rbfDenoiserLuma > 0 || processing->rbfDenoiserChroma > 0 )
     {
-        memcpy( inputImage, outputImage, imageX * imageY * 3 * sizeof(uint16_t) );
+        int img_s = imageX * imageY * 3;
+        memcpy( inputImage, outputImage, img_s * sizeof(uint16_t) );
         recursive_bf_wrap(
                 inputImage,
                 outputImage,
-                0.03f, 0.1f,//processing->rbfDenoiserStrength/500.0, /*Use strength for sigma (intensity)*/
+                0.0025f, 0.075f+(((float)processing->rbfDenoiserRange-40.0f)/666.6f),
                 imageX, imageY, 3);
 
-        float out = processing->rbfDenoiserStrength/100.0;
-        float in = 1.0 - out;
+        float outL = processing->rbfDenoiserLuma/100.0;
+        float inL = 1.0 - outL;
+        float outC = processing->rbfDenoiserChroma/100.0;
+        float inC = 1.0 - outC;
 
-        /* Linear blend strength */
+        convert_rgb_to_YCbCr_omp(inputImage, img_s, processing->cs_zone.pre_calc_rgb_to_YCbCr);
+        convert_rgb_to_YCbCr_omp(outputImage, img_s, processing->cs_zone.pre_calc_rgb_to_YCbCr);
+        /* Linear blend strengths */
 #pragma omp parallel for
-        for( int i = 0; i < imageX * imageY * 3; i++ )
+        for( int i = 0; i < img_s; i+=3 )
         {
-            outputImage[i] = outputImage[i]*out + inputImage[i]*in;
+            outputImage[i+0] = outputImage[i+0]*outL + inputImage[i+0]*inL;
+            outputImage[i+1] = outputImage[i+1]*outC + inputImage[i+1]*inC;
+            outputImage[i+2] = outputImage[i+2]*outC + inputImage[i+2]*inC;
         }
+        convert_YCbCr_to_rgb_omp(outputImage, img_s, processing->cs_zone.pre_calc_YCbCr_to_rgb);
     }
 }
 
