@@ -41,8 +41,8 @@
 #include "SingleFrameExportDialog.h"
 
 #define APPNAME "MLV App"
-#define VERSION "1.5"
-#define GITVERSION "QTv1.5"
+#define VERSION "1.6"
+#define GITVERSION "QTv1.6"
 
 #define FACTOR_DS       22.5
 #define FACTOR_LS       11.2
