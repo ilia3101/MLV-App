@@ -210,6 +210,12 @@ void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
             ui->comboBoxOption->addItem( QString( "Apple AVFoundation" ) );
         }
 #endif
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 101300
+        if( index == CODEC_H265 )
+        {
+            ui->comboBoxOption->addItem( QString( "Apple AVFoundation" ) );
+        }
+#endif
     }
     else if( index == CODEC_PNG )
     {
