@@ -6370,7 +6370,11 @@ void MainWindow::exportHandler( void )
 #ifdef Q_OS_MACX
         else if( ( m_codecProfile == CODEC_PRORES422ST && m_codecOption == CODEC_PRORES_AVFOUNDATION )
               || ( m_codecProfile == CODEC_PRORES4444 && m_codecOption == CODEC_PRORES_AVFOUNDATION )
-              || ( m_codecProfile == CODEC_H264 && m_codecOption == CODEC_H264_AVFOUNDATION ) )
+              || ( m_codecProfile == CODEC_H264 && m_codecOption == CODEC_H264_AVFOUNDATION )
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 101300
+              || ( m_codecProfile == CODEC_H265 && m_codecOption == CODEC_H265_AVFOUNDATION )
+#endif
+               )
         {
             //AVFoundation
             startExportAVFoundation( m_exportQueue.first()->exportFileName() );
