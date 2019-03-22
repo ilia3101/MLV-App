@@ -1955,7 +1955,7 @@ void MainWindow::startExportPipe(QString fileName)
         else if( m_codecOption == CODEC_H264_MP4 ) output.append( QString( ".mp4" ) );
         else output.append( QString( ".mkv" ) );
 
-        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v libx264 -preset medium -crf 24 -pix_fmt %3 -color_primaries bt709 -color_trc bt709 -colorspace bt709 %4\"%5\"" )
+        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v libx264 -preset medium -crf 14 -pix_fmt %3 -color_primaries bt709 -color_trc bt709 -colorspace bt709 %4\"%5\"" )
                     .arg( fps )
                     .arg( resolution )
                     .arg( "yuv420p" )
@@ -1968,7 +1968,7 @@ void MainWindow::startExportPipe(QString fileName)
         else if( m_codecOption == CODEC_H265_MP4 ) output.append( QString( ".mp4" ) );
         else output.append( QString( ".mkv" ) );
 
-        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v libx265 -preset medium -crf 24 -pix_fmt %3 -color_primaries bt709 -color_trc bt709 -colorspace bt709 %4\"%5\"" )
+        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v libx265 -preset medium -crf 18 -pix_fmt %3 -color_primaries bt709 -color_trc bt709 -colorspace bt709 %4\"%5\"" )
                     .arg( fps )
                     .arg( resolution )
                     .arg( "yuv420p" )
