@@ -201,9 +201,12 @@ void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
         ui->labelDebayer->setEnabled( true );
         ui->comboBoxDebayer->setEnabled( true );
         ui->comboBoxOption->setEnabled( true );
-        ui->comboBoxOption->addItem( QString( "ffmpeg Movie (*.mov)" ) );
-        ui->comboBoxOption->addItem( QString( "ffmpeg MPEG-4 (*.mp4)" ) );
-        ui->comboBoxOption->addItem( QString( "ffmpeg Matroska (*.mkv)" ) );
+        ui->comboBoxOption->addItem( QString( "ffmpeg Movie (*.mov) High Quality" ) );
+        ui->comboBoxOption->addItem( QString( "ffmpeg MPEG-4 (*.mp4) High Quality" ) );
+        ui->comboBoxOption->addItem( QString( "ffmpeg Matroska (*.mkv) High Quality" ) );
+        ui->comboBoxOption->addItem( QString( "ffmpeg Movie (*.mov) Medium Quality" ) );
+        ui->comboBoxOption->addItem( QString( "ffmpeg MPEG-4 (*.mp4) Medium Quality" ) );
+        ui->comboBoxOption->addItem( QString( "ffmpeg Matroska (*.mkv) Medium Quality" ) );
 #ifdef Q_OS_MACX
         if( index == CODEC_H264 )
         {

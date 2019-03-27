@@ -43,14 +43,20 @@
 #define CODEC_CNDG_DEFAULT          0
 #define CODEC_CDNG_RESOLVE          1
 
-#define CODEC_H264_MOV              0
-#define CODEC_H264_MP4              1
-#define CODEC_H264_MKV              2
-#define CODEC_H264_AVFOUNDATION     3
+#define CODEC_H264_H_MOV            0
+#define CODEC_H264_H_MP4            1
+#define CODEC_H264_H_MKV            2
+#define CODEC_H264_M_MOV            3
+#define CODEC_H264_M_MP4            4
+#define CODEC_H264_M_MKV            5
+#define CODEC_H264_AVFOUNDATION     6
 
-#define CODEC_H265_MOV              0
-#define CODEC_H265_MP4              1
-#define CODEC_H265_MKV              2
+#define CODEC_H265_H_MOV            0
+#define CODEC_H265_H_MP4            1
+#define CODEC_H265_H_MKV            2
+#define CODEC_H265_M_MOV            0
+#define CODEC_H265_M_MP4            1
+#define CODEC_H265_M_MKV            2
 #define CODEC_H265_AVFOUNDATION     3
 
 #define CODEC_PNG_16                0

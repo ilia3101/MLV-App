@@ -1951,26 +1951,40 @@ void MainWindow::startExportPipe(QString fileName)
     }
     else if( m_codecProfile == CODEC_H264 )
     {
-        if( m_codecOption == CODEC_H264_MOV ) output.append( QString( ".mov" ) );
-        else if( m_codecOption == CODEC_H264_MP4 ) output.append( QString( ".mp4" ) );
+        if( m_codecOption == CODEC_H264_H_MOV || m_codecOption == CODEC_H264_M_MOV ) output.append( QString( ".mov" ) );
+        else if( m_codecOption == CODEC_H264_H_MP4 || m_codecOption == CODEC_H264_M_MP4 ) output.append( QString( ".mp4" ) );
         else output.append( QString( ".mkv" ) );
 
-        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v libx264 -preset medium -crf 14 -pix_fmt %3 -color_primaries bt709 -color_trc bt709 -colorspace bt709 %4\"%5\"" )
+        int quality;
+        if( m_codecOption == CODEC_H264_H_MOV || m_codecOption == CODEC_H264_H_MP4 || m_codecOption == CODEC_H264_H_MKV )
+            quality = 14;
+        else
+            quality = 24;
+
+        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v libx264 -preset medium -crf %3 -pix_fmt %4 -color_primaries bt709 -color_trc bt709 -colorspace bt709 %5\"%6\"" )
                     .arg( fps )
                     .arg( resolution )
+                    .arg( quality )
                     .arg( "yuv420p" )
                     .arg( resizeFilter )
                     .arg( output ) );
     }
     else if( m_codecProfile == CODEC_H265 )
     {
-        if( m_codecOption == CODEC_H265_MOV ) output.append( QString( ".mov" ) );
-        else if( m_codecOption == CODEC_H265_MP4 ) output.append( QString( ".mp4" ) );
+        if( m_codecOption == CODEC_H265_H_MOV || m_codecOption == CODEC_H265_M_MOV ) output.append( QString( ".mov" ) );
+        else if( m_codecOption == CODEC_H265_H_MP4 || m_codecOption == CODEC_H265_M_MP4 ) output.append( QString( ".mp4" ) );
         else output.append( QString( ".mkv" ) );
 
-        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v libx265 -preset medium -crf 18 -pix_fmt %3 -color_primaries bt709 -color_trc bt709 -colorspace bt709 %4\"%5\"" )
+        int quality;
+        if( m_codecOption == CODEC_H265_H_MOV || m_codecOption == CODEC_H265_H_MP4 || m_codecOption == CODEC_H265_H_MKV )
+            quality = 18;
+        else
+            quality = 24;
+
+        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v libx265 -preset medium -crf %3 -pix_fmt %4 -color_primaries bt709 -color_trc bt709 -colorspace bt709 %5\"%6\"" )
                     .arg( fps )
                     .arg( resolution )
+                    .arg( quality )
                     .arg( "yuv420p" )
                     .arg( resizeFilter )
                     .arg( output ) );
@@ -5224,14 +5238,16 @@ void MainWindow::on_actionExport_triggered()
     else
     {
         if( ( m_codecProfile == CODEC_H264 || m_codecProfile == CODEC_H265 )
-         && ( m_codecOption == CODEC_H264_MP4 || m_codecOption == CODEC_H265_MP4 ) )
+         && ( m_codecOption == CODEC_H264_H_MP4 || m_codecOption == CODEC_H265_H_MP4
+           || m_codecOption == CODEC_H264_M_MP4 || m_codecOption == CODEC_H265_M_MP4 ) )
         {
             saveFileName.append( ".mp4" );
             fileType = tr("MPEG-4 (*.mp4)");
             fileEnding = ".mp4";
         }
         else if( ( m_codecProfile == CODEC_H264 || m_codecProfile == CODEC_H265 )
-         && ( m_codecOption == CODEC_H264_MKV || m_codecOption == CODEC_H265_MKV ) )
+         && ( m_codecOption == CODEC_H264_H_MKV || m_codecOption == CODEC_H265_H_MKV
+           || m_codecOption == CODEC_H264_M_MKV || m_codecOption == CODEC_H265_M_MKV) )
         {
             saveFileName.append( ".mkv" );
             fileType = tr("Matroska (*.mkv)");
