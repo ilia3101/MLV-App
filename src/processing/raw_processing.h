@@ -38,7 +38,7 @@ void applyProcessingObject( processingObject_t * processing,
                             int imageX, int imageY, 
                             uint16_t * __restrict inputImage, 
                             uint16_t * __restrict outputImage,
-                            int threads, int imageChanged );
+                            int threads, int imageChanged, uint64_t frameIndex );
 
 
 

@@ -347,7 +347,7 @@ void applyProcessingObject( processingObject_t * processing,
                             int imageX, int imageY, 
                             uint16_t * __restrict inputImage, 
                             uint16_t * __restrict outputImage,
-                            int threads, int imageChanged )
+                            int threads, int imageChanged, uint64_t frameIndex )
 {
     /* Do transformation */
     get_frame_transformed(processing, inputImage, imageX, imageY);
@@ -467,6 +467,20 @@ void applyProcessingObject( processingObject_t * processing,
             outputImage[i+2] = outputImage[i+2]*outC + inputImage[i+2]*inC;
         }
         convert_YCbCr_to_rgb_omp(outputImage, img_s, processing->cs_zone.pre_calc_YCbCr_to_rgb);
+    }
+
+    /* Grain (simple monochrome noise) generator - must be applied after denoiser */
+    if( 0 ) //Switch on/off
+    {
+        srand( frameIndex ); //Noise shall not move for the same picture
+        int img_s = imageX * imageY * 3;
+        for( int i = 0; i < img_s; i+= 3 )
+        {
+            int grain = rand() % 3000; //change value for strength
+            outputImage[i+0] = LIMIT16( outputImage[i+0] + grain );
+            outputImage[i+1] = LIMIT16( outputImage[i+1] + grain );
+            outputImage[i+2] = LIMIT16( outputImage[i+2] + grain );
+        }
     }
 }
 

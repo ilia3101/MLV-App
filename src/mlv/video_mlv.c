@@ -444,7 +444,7 @@ void getMlvProcessedFrame16(mlvObject_t * video, uint64_t frameIndex, uint16_t *
                            width, height,
                            unprocessed_frame,
                            outputFrame,
-                           threads, 1 );
+                           threads, 1, frameIndex );
 
     free(unprocessed_frame);
 }
