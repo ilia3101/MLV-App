@@ -167,7 +167,7 @@ processingObject_t * initProcessingObject()
 
 void processingSetImageProfile(processingObject_t * processing, int imageProfile)
 {
-    if (imageProfile >= 0 && imageProfile <= 9)
+    if (imageProfile >= 0 && imageProfile <= (sizeof(default_image_profiles)/sizeof(default_image_profiles[0])))
     {
         processingSetCustomImageProfile(processing, &default_image_profiles[imageProfile]);
     }
@@ -178,17 +178,20 @@ void processingSetImageProfile(processingObject_t * processing, int imageProfile
 /* Image profile strruct needed */
 void processingSetCustomImageProfile(processingObject_t * processing, image_profile_t * imageProfile)
 {
+    processing->allow_creative_adjustments = imageProfile->allow_creative_adjustments;
     processing->image_profile = imageProfile;
-    processing->use_rgb_curves = imageProfile->disable_settings.curves;
-    processing->use_saturation = imageProfile->disable_settings.saturation;
     processingSetGamma(processing, imageProfile->gamma_power);
     if( processing->gradient_enable != 0 ) processingSetGammaGradient(processing, imageProfile->gamma_power);
-    if (imageProfile->disable_settings.tonemapping)
+    if (imageProfile->tone_mapping_function != NULL)
     {
         processing->tone_mapping_function = imageProfile->tone_mapping_function;
         processing_enable_tonemapping(processing);
     }
     else processing_disable_tonemapping(processing);
+
+    /* Set processing gamut */
+    processingSetProcessingGamut(processing, imageProfile->processing_gamut);
+    processingSetOutputGamut(processing, imageProfile->processing_output_gamut);
 }
 
 
@@ -721,7 +724,7 @@ void apply_processing_object( processingObject_t * processing,
     }
 
     //Code for HueVs...
-    if( ( processing->use_rgb_curves || processing->allow_creative_adjustments )
+    if( ( processing->allow_creative_adjustments )
      && ( processing->hue_vs_luma_used || processing->hue_vs_saturation_used || processing->hue_vs_hue_used ) )
     {
         for (uint16_t * pix = img; pix < img_end; pix += 3)
@@ -766,7 +769,7 @@ void apply_processing_object( processingObject_t * processing,
         }
     }
 
-    if (processing->use_saturation || processing->allow_creative_adjustments)
+    if (processing->allow_creative_adjustments)
     {
         if( processing->vibrance > 1.01 || processing->vibrance < 0.99 )
         {
@@ -838,7 +841,7 @@ void apply_processing_object( processingObject_t * processing,
     }
 
     /* Toning */
-    if (processing->use_rgb_curves || processing->allow_creative_adjustments)
+    if (processing->allow_creative_adjustments)
     {
         if( processing->toning_dry < 99.8 )
         {
@@ -852,7 +855,7 @@ void apply_processing_object( processingObject_t * processing,
         }
     }
 
-    if (processing->use_rgb_curves || processing->allow_creative_adjustments)
+    if (processing->allow_creative_adjustments)
     {
         /* Contrast Curve (OMG putting this after gamma made it 999x better) */
         for (uint16_t * pix = img; pix < img_end; pix += 3)
@@ -863,7 +866,7 @@ void apply_processing_object( processingObject_t * processing,
         }
     }
 
-    if (processing->use_rgb_curves || processing->allow_creative_adjustments)
+    if (processing->allow_creative_adjustments)
     {
         //Gradation curve
         for (uint16_t * pix = img; pix < img_end; pix += 3)
@@ -958,6 +961,12 @@ void apply_processing_object( processingObject_t * processing,
     {
         convert_YCbCr_to_rgb(outputImage, img_s, processing->cs_zone.pre_calc_YCbCr_to_rgb);
     }
+
+    /* Final colour space transform */
+    // if (processing->output_gamut != processing->processing_gamut)
+    // {
+    //     matrix_processing_to_
+    // }
 
     if (processing->lut_on)
     {
@@ -1239,8 +1248,10 @@ void processingSetWhiteBalance(processingObject_t * processing, double WBKelvin,
     double back_in_XYZ_matrix[9];
     multiplyMatrices(LMS_to_XYZ, matrix_in_LMS, back_in_XYZ_matrix);
 
-    /* Back to sRGB (maybe something wider in future) */
-    multiplyMatrices(p_xyz_to_rgb, back_in_XYZ_matrix, processing->proper_wb_matrix);
+    /* XYZ to RGB (processing RGB gamut) */
+
+    /* Concert to processing gamut  */
+    multiplyMatrices(get_matrix_xyz_to_rgb(processingGetProcessingGamut(processing)), back_in_XYZ_matrix, processing->proper_wb_matrix);
 }
 
 /* WB just by kelvin */
@@ -1880,4 +1891,27 @@ void processingSetToning(processingObject_t *processing, uint8_t r, uint8_t g, u
     processing->toning_wet[0] = (strength / 3.0 / 100.0) * (float)r / 255.0;
     processing->toning_wet[1] = (strength / 3.0 / 100.0) * (float)g / 255.0;
     processing->toning_wet[2] = (strength / 3.0 / 100.0) * (float)b / 255.0;
+}
+
+void processingSetProcessingGamut(processingObject_t * processing, int gamut)
+{
+    processing->processing_gamut = gamut;
+
+    /* So matrix gets updated... */
+    processingSetWhiteBalance(processing, processingGetWhiteBalanceKelvin(processing), processingGetWhiteBalanceTint(processing));
+}
+
+int processingGetProcessingGamut(processingObject_t * processing)
+{
+    return processing->processing_gamut;
+}
+
+void processingSetOutputGamut(processingObject_t * processing, int gamut)
+{
+    processing->output_gamut = gamut;
+}
+
+int processingGetOutputGamut(processingObject_t * processing)
+{
+    return processing->output_gamut;
 }

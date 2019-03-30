@@ -63,12 +63,12 @@ void invertMatrix(double * inputMatrix, double * outputMatrix)
 
 void printMatrix(double * matrix)
 {
-#ifndef STDOUT_SILENT
+// #ifndef STDOUT_SILENT
     for (int i = 0; i < 9; i += 3)
         printf("[ %.4f, %.4f, %.4f ]\n", matrix[i], matrix[i+1], matrix[i+2]);
-#else
-    (void)matrix; //hide warning
-#endif
+// #else
+//     (void)matrix; //hide warning
+// #endif
 }
 
 /* SLOW, V is vector, M is matrix */

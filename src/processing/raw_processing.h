@@ -18,7 +18,6 @@ void processingSetImageProfile(processingObject_t * processing, int imageProfile
 #define PROFILE_STANDARD    0   /* Gamma Corrected */
 #define PROFILE_TONEMAPPED  1   /* Gamma Corrected + Tonemapped */
 #define PROFILE_FILM        2   /* Gamma Corrected + inverse tangent tonemap */
-// #define PROFILE_CANON_LOG   2   /* Canon C-Log (commented out - not working) */
 #define PROFILE_ALEXA_LOG   3   /* Alexa log (A form of Log-C) */
 #define PROFILE_CINEON_LOG  4   /* Cineon Log */
 #define PROFILE_SONY_LOG_3  5   /* Sony S-Log 3 */
@@ -29,6 +28,30 @@ void processingSetImageProfile(processingObject_t * processing, int imageProfile
 
 /* Set a custom image profile using the image_profile struct */
 void processingSetCustomImageProfile(processingObject_t * processing, image_profile_t * imageProfile);
+
+
+
+
+/* Set internal processing gamut */
+void processingSetProcessingGamut(processingObject_t * processing, int gamut);
+int processingGetProcessingGamut(processingObject_t * processing);
+void processingSetOutputGamut(processingObject_t * processing, int gamut);
+int processingGetOutputGamut(processingObject_t * processing);
+#define GAMUT_Rec709 0 /* Rec709/sRGB */
+#define GAMUT_Rec2020 1
+#define GAMUT_ACES_AP0 2
+#define GAMUT_AdobeRGB 3
+#define GAMUT_ProPhotoRGB 4
+#define GAMUT_XYZ 5
+#define GAMUT_AlexaWideGamutRGB 6
+#define GAMUT_SonySGamut3 7
+
+
+
+
+
+/* Set output gamma, 1.0 for log, 2.2 for sRGB etc */
+void processingSetOutputGamma(processingObject_t * processing, double gamma);
 
 
 
@@ -265,6 +288,10 @@ void processing_object_thread(apply_processing_parameters_t * p);
 
 /* Calculate shadow/hiughlight exposure LUT */
 void processing_update_shadow_highlight_curve(processingObject_t * processing);
+
+/* Get matrix for a gamut */
+double * get_matrix_xyz_to_rgb(int gamut);
+void get_matrix_rgb_to_xyz(int gamut, double * out);
 
 /* Adds contrast to a single pixel in a S-curvey way, 
  * input pixel must be 0.0 - 1.0 and a double float */
