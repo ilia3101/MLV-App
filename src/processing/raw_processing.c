@@ -474,9 +474,9 @@ void applyProcessingObject( processingObject_t * processing,
     {
         srand( frameIndex ); //Noise shall not move for the same picture
         int img_s = imageX * imageY * 3;
+        int strength = 50 * processing->grainStrength;
         for( int i = 0; i < img_s; i+=3 )
         {
-            int strength = 50 * processing->grainStrength;
             int grain = ( rand() % strength ) - ( strength >> 2 ); //change value for strength
             outputImage[i+0] = LIMIT16( outputImage[i+0] + grain );
             outputImage[i+1] = LIMIT16( outputImage[i+1] + grain );
