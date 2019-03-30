@@ -3535,6 +3535,8 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     ui->horizontalSliderRbfDenoiseChroma->setValue( receipt->rbfDenoiserChroma() );
     ui->horizontalSliderRbfDenoiseRange->setValue( receipt->rbfDenoiserRange() );
 
+    ui->horizontalSliderGrainStrength->setValue( receipt->grainStrength() );
+
     ui->checkBoxRawFixEnable->setChecked( receipt->rawFixesEnabled() );
     on_checkBoxRawFixEnable_clicked( receipt->rawFixesEnabled() );
     if( receipt->focusPixels() == -1 )
@@ -3714,6 +3716,7 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     receipt->setRbfDenoiserLuma( ui->horizontalSliderRbfDenoiseLuma->value() );
     receipt->setRbfDenoiserChroma( ui->horizontalSliderRbfDenoiseChroma->value() );
     receipt->setRbfDenoiserRange( ui->horizontalSliderRbfDenoiseRange->value() );
+    receipt->setGrainStrength( ui->horizontalSliderGrainStrength->value() );
 
     receipt->setRawFixesEnabled( ui->checkBoxRawFixEnable->isChecked() );
     receipt->setVerticalStripes( toolButtonVerticalStripesCurrentIndex() );
@@ -3811,6 +3814,7 @@ void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings 
     if( paste && cdui->checkBoxDenoise->isChecked() )    receiptTarget->setRbfDenoiserLuma( receiptSource->rbfDenoiserLuma() );
     if( paste && cdui->checkBoxDenoise->isChecked() )    receiptTarget->setRbfDenoiserChroma( receiptSource->rbfDenoiserChroma() );
     if( paste && cdui->checkBoxDenoise->isChecked() )    receiptTarget->setRbfDenoiserRange( receiptSource->rbfDenoiserRange() );
+    if( paste && cdui->checkBoxGrain->isChecked() )      receiptTarget->setGrainStrength( receiptSource->grainStrength() );
 
     if( paste && cdui->checkBoxRawCorrectEnable->isChecked() ) receiptTarget->setRawFixesEnabled( receiptSource->rawFixesEnabled() );
     if( paste && cdui->checkBoxDarkFrameSubtraction->isChecked() ) receiptTarget->setDarkFrameFileName( receiptSource->darkFrameFileName() );
@@ -3966,6 +3970,7 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     receipt->setRbfDenoiserLuma( m_pSessionReceipts.at( row )->rbfDenoiserLuma() );
     receipt->setRbfDenoiserChroma( m_pSessionReceipts.at( row )->rbfDenoiserChroma() );
     receipt->setRbfDenoiserRange( m_pSessionReceipts.at( row )->rbfDenoiserRange() );
+    receipt->setGrainStrength( m_pSessionReceipts.at( row )->grainStrength() );
 
     receipt->setRawFixesEnabled( m_pSessionReceipts.at( row )->rawFixesEnabled() );
     receipt->setVerticalStripes( m_pSessionReceipts.at( row )->verticalStripes() );
@@ -4822,6 +4827,13 @@ void MainWindow::on_horizontalSliderRbfDenoiseRange_valueChanged(int position)
     m_frameChanged = true;
 }
 
+void MainWindow::on_horizontalSliderGrainStrength_valueChanged(int position)
+{
+    processingSetGrainStrength( m_pProcessingObject, position );
+    ui->label_GrainStrength->setText( QString("%1").arg( position ) );
+    m_frameChanged = true;
+}
+
 void MainWindow::on_horizontalSliderLutStrength_valueChanged(int position)
 {
     processingSetLutStrength( m_pProcessingObject, position );
@@ -5095,6 +5107,13 @@ void MainWindow::on_horizontalSliderRbfDenoiseRange_doubleClicked()
 {
     ReceiptSettings *sliders = new ReceiptSettings(); //default
     ui->horizontalSliderRbfDenoiseRange->setValue( sliders->rbfDenoiserRange() );
+    delete sliders;
+}
+
+void MainWindow::on_horizontalSliderGrainStrength_doubleClicked()
+{
+    ReceiptSettings *sliders = new ReceiptSettings(); //default
+    ui->horizontalSliderGrainStrength->setValue( sliders->grainStrength() );
     delete sliders;
 }
 
@@ -6202,6 +6221,15 @@ void MainWindow::on_label_RbfDenoiseRange_doubleClicked()
     editSlider.autoSetup( ui->horizontalSliderRbfDenoiseRange, ui->label_RbfDenoiseRange, 1.0, 0, 1.0 );
     editSlider.exec();
     ui->horizontalSliderRbfDenoiseRange->setValue( editSlider.getValue() );
+}
+
+//DoubleClick on GrainStrength Label
+void MainWindow::on_label_GrainStrength_doubleClicked()
+{
+    EditSliderValueDialog editSlider;
+    editSlider.autoSetup( ui->horizontalSliderGrainStrength, ui->label_GrainStrength, 1.0, 0, 1.0 );
+    editSlider.exec();
+    ui->horizontalSliderGrainStrength->setValue( editSlider.getValue() );
 }
 
 //Repaint audio if its size changed

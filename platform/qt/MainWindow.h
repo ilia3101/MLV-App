@@ -96,6 +96,7 @@ private slots:
     void on_horizontalSliderRbfDenoiseLuma_valueChanged(int position);
     void on_horizontalSliderRbfDenoiseChroma_valueChanged(int position);
     void on_horizontalSliderRbfDenoiseRange_valueChanged(int position);
+    void on_horizontalSliderGrainStrength_valueChanged(int position);
     void on_horizontalSliderLutStrength_valueChanged(int position);
     void on_horizontalSliderFilterStrength_valueChanged(int position);
     void on_horizontalSliderVignetteStrength_valueChanged(int position);
@@ -127,6 +128,7 @@ private slots:
     void on_horizontalSliderRbfDenoiseLuma_doubleClicked();
     void on_horizontalSliderRbfDenoiseChroma_doubleClicked();
     void on_horizontalSliderRbfDenoiseRange_doubleClicked();
+    void on_horizontalSliderGrainStrength_doubleClicked();
     void on_horizontalSliderLutStrength_doubleClicked();
     void on_horizontalSliderFilterStrength_doubleClicked();
     void on_horizontalSliderVignetteStrength_doubleClicked();
@@ -209,6 +211,7 @@ private slots:
     void on_label_RbfDenoiseLuma_doubleClicked( void );
     void on_label_RbfDenoiseChroma_doubleClicked( void );
     void on_label_RbfDenoiseRange_doubleClicked( void );
+    void on_label_GrainStrength_doubleClicked( void );
     void on_labelAudioTrack_sizeChanged( void );
     void on_label_LutStrengthVal_doubleClicked( void );
     void on_label_FilterStrengthVal_doubleClicked( void );

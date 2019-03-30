@@ -470,13 +470,14 @@ void applyProcessingObject( processingObject_t * processing,
     }
 
     /* Grain (simple monochrome noise) generator - must be applied after denoiser */
-    if( 0 ) //Switch on/off
+    if( processing->grainStrength > 0 ) //Switch on/off
     {
         srand( frameIndex ); //Noise shall not move for the same picture
         int img_s = imageX * imageY * 3;
-        for( int i = 0; i < img_s; i+= 3 )
+        for( int i = 0; i < img_s; i+=3 )
         {
-            int grain = rand() % 3000; //change value for strength
+            int strength = 50 * processing->grainStrength;
+            int grain = ( rand() % strength ) - ( strength >> 2 ); //change value for strength
             outputImage[i+0] = LIMIT16( outputImage[i+0] + grain );
             outputImage[i+1] = LIMIT16( outputImage[i+1] + grain );
             outputImage[i+2] = LIMIT16( outputImage[i+2] + grain );

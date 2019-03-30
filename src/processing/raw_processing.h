@@ -120,6 +120,9 @@ void processingSet3WayCorrection( processingObject_t * processing,
 #define processingSetRbfDenoiserRange(processing, strength) (processing)->rbfDenoiserRange = (strength)
 #define processingGetRbfDenoiserRange(processing) (processing)->rbfDenoiserRange
 
+/* Grain */
+#define processingSetGrainStrength(processing, strength) (processing)->grainStrength = (strength)
+
 /* Vignette */
 void processingSetVignetteStrength(processingObject_t * processing, int8_t value);
 void processingSetVignetteMask(processingObject_t * processing, uint16_t width, uint16_t height, float radius , float xStretch, float yStretch);

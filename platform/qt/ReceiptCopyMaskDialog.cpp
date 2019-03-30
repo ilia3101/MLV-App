@@ -43,6 +43,7 @@ ReceiptCopyMaskDialog::ReceiptCopyMaskDialog(QWidget *parent) :
     connect( ui->checkBoxSharpen, SIGNAL(clicked(bool)), this, SLOT(checkBoxDetailsState()) );
     connect( ui->checkBoxChromaBlur, SIGNAL(clicked(bool)), this, SLOT(checkBoxDetailsState()) );
     connect( ui->checkBoxDenoise, SIGNAL(clicked(bool)), this, SLOT(checkBoxDetailsState()) );
+    connect( ui->checkBoxGrain, SIGNAL(clicked(bool)), this, SLOT(checkBoxDetailsState()) );
 
     on_pushButtonAll_clicked();
     ui->checkBoxRawBlackLevel->setChecked( false );
@@ -139,14 +140,16 @@ void ReceiptCopyMaskDialog::checkBoxDetailsState()
 {
     if( ui->checkBoxSharpen->isChecked()
      && ui->checkBoxChromaBlur->isChecked()
-     && ui->checkBoxDenoise->isChecked() )
+     && ui->checkBoxDenoise->isChecked()
+     && ui->checkBoxGrain->isChecked() )
     {
         ui->checkBoxDetails->setTristate( false );
         ui->checkBoxDetails->setCheckState( Qt::Checked );
     }
     else if( !ui->checkBoxSharpen->isChecked()
           && !ui->checkBoxChromaBlur->isChecked()
-          && !ui->checkBoxDenoise->isChecked() )
+          && !ui->checkBoxDenoise->isChecked()
+          && !ui->checkBoxGrain->isChecked() )
     {
         ui->checkBoxDetails->setTristate( false );
         ui->checkBoxDetails->setCheckState( Qt::Unchecked );
@@ -200,6 +203,7 @@ void ReceiptCopyMaskDialog::on_checkBoxDetails_clicked(bool checked)
     ui->checkBoxSharpen->setChecked( checked );
     ui->checkBoxChromaBlur->setChecked( checked );
     ui->checkBoxDenoise->setChecked( checked );
+    ui->checkBoxGrain->setChecked( checked );
 }
 
 void ReceiptCopyMaskDialog::on_pushButtonAll_clicked()

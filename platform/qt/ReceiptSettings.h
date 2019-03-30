@@ -45,13 +45,14 @@ public:
     void setGradientLength( int value ){m_gradientLength = value;}
     void setGradientAngle( int value ){m_gradientAngle = value;}
 
-    void setSharpen( int value )    {m_sharpen = value;}
-    void setChromaBlur( int value ) {m_chromaBlur = value;}
-    void setDenoiserWindow( int value ){m_denoiserWindow = value;}
-    void setDenoiserStrength( int value ){m_denoiserStrength = value;}
-    void setRbfDenoiserLuma( int value ){m_rbfDenoiserLuma = value;}
-    void setRbfDenoiserChroma( int value ){m_rbfDenoiserChroma = value;}
-    void setRbfDenoiserRange( int value ){m_rbfDenoiserRange = value;}
+    void setSharpen( int value )              {m_sharpen = value;}
+    void setChromaBlur( int value )           {m_chromaBlur = value;}
+    void setDenoiserWindow( int value )       {m_denoiserWindow = value;}
+    void setDenoiserStrength( int value )     {m_denoiserStrength = value;}
+    void setRbfDenoiserLuma( int value )      {m_rbfDenoiserLuma = value;}
+    void setRbfDenoiserChroma( int value )    {m_rbfDenoiserChroma = value;}
+    void setRbfDenoiserRange( int value )     {m_rbfDenoiserRange = value;}
+    void setGrainStrength( int value )        {m_grainStrength = value;}
     void setHighlightReconstruction( bool on ){m_highlightReconstruction = on;}
     void setCamMatrixUsed( uint8_t val )      {m_useCamMatrix = val;}
     void setChromaSeparation( bool on )       {m_chromaSeparation = on;}
@@ -136,6 +137,7 @@ public:
     int rbfDenoiserLuma( void ){return m_rbfDenoiserLuma;}
     int rbfDenoiserChroma( void ){return m_rbfDenoiserChroma;}
     int rbfDenoiserRange( void ){return m_rbfDenoiserRange;}
+    int grainStrength( void ){return m_grainStrength;}
     bool isHighlightReconstruction( void ){return m_highlightReconstruction;}
     uint8_t camMatrixUsed( void ){return m_useCamMatrix;}
     bool isChromaSeparation( void ){return m_chromaSeparation;}
@@ -222,6 +224,7 @@ private:
     int m_rbfDenoiserLuma;
     int m_rbfDenoiserChroma;
     int m_rbfDenoiserRange;
+    int m_grainStrength;
     bool m_highlightReconstruction;
     uint8_t m_useCamMatrix;
     bool m_chromaSeparation;

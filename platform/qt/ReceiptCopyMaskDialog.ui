@@ -325,6 +325,13 @@ color: rgb(255, 154, 50)
             </property>
            </widget>
           </item>
+          <item>
+           <widget class="QCheckBox" name="checkBoxGrain">
+            <property name="text">
+             <string>Grain</string>
+            </property>
+           </widget>
+          </item>
          </layout>
         </item>
         <item row="11" column="4" colspan="2">

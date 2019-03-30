@@ -184,6 +184,9 @@ typedef struct {
     uint8_t    rbfDenoiserChroma;
     uint8_t    rbfDenoiserRange;
 
+    /* Grain Generator */
+    uint8_t    grainStrength;
+
     /* Gradient */
     double     gradient_exposure_stops;
     double     gradient_contrast;
