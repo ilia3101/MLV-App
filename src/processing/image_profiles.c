@@ -5,61 +5,71 @@ static image_profile_t default_image_profiles[] =
         .allow_creative_adjustments = 1,
         .tone_mapping_function = NULL,
         .gamma_power = STANDARD_GAMMA,
-        .processing_gamut = GAMUT_ProPhotoRGB
+        .processing_gamut = GAMUT_ProPhotoRGB,
+        .output_gamut = GAMUT_Rec709
     },
     { /* PROFILE_TONEMAPPED */
         .allow_creative_adjustments = 1,
         .tone_mapping_function = &ReinhardTonemap,
         .gamma_power = STANDARD_GAMMA,
-        .processing_gamut = GAMUT_ProPhotoRGB
+        .processing_gamut = GAMUT_ProPhotoRGB,
+        .output_gamut = GAMUT_Rec709
     },
     { /* PROFILE_FILM */
         .allow_creative_adjustments = 1,
         .tone_mapping_function = &TangentTonemap,
         .gamma_power = STANDARD_GAMMA*1.1,
-        .processing_gamut = GAMUT_ProPhotoRGB
+        .processing_gamut = GAMUT_ProPhotoRGB,
+        .output_gamut = GAMUT_Rec709
     },
     { /* PROFILE_ALEXA_LOG */
         .allow_creative_adjustments = 0,
         .tone_mapping_function = &AlexaLogCTonemap,
         .gamma_power = 1.0,
-        .processing_gamut = GAMUT_AlexaWideGamutRGB
+        .processing_gamut = GAMUT_AlexaWideGamutRGB,
+        .output_gamut = GAMUT_AlexaWideGamutRGB
     },
     { /* PROFILE_CINEON_LOG */
         .allow_creative_adjustments = 0,
         .tone_mapping_function = &CineonLogTonemap,
         .gamma_power = 1.0,
-        .processing_gamut = GAMUT_AlexaWideGamutRGB
+        .processing_gamut = GAMUT_AlexaWideGamutRGB,
+        .output_gamut = GAMUT_AlexaWideGamutRGB
     },
     { /* PROFILE_SONY_LOG_3 */
         .allow_creative_adjustments = 0,
         .tone_mapping_function = &SonySLogTonemap,
         .gamma_power = 1.0,
-        .processing_gamut = GAMUT_SonySGamut3
+        .processing_gamut = GAMUT_SonySGamut3,
+        .output_gamut = GAMUT_SonySGamut3
     },
     { /* PROFILE_LINEAR */
         .allow_creative_adjustments = 0,
         .tone_mapping_function = NULL,
         .gamma_power = 1.0,
-        .processing_gamut = GAMUT_AlexaWideGamutRGB
+        .processing_gamut = GAMUT_AlexaWideGamutRGB,
+        .output_gamut = GAMUT_AlexaWideGamutRGB
     },
     { /* PROFILE_SRGB */
         .allow_creative_adjustments = 0,
         .tone_mapping_function = &sRGBTonemap,
         .gamma_power = 1.0,
-        .processing_gamut = GAMUT_AlexaWideGamutRGB
+        .processing_gamut = GAMUT_AlexaWideGamutRGB,
+        .output_gamut = GAMUT_AlexaWideGamutRGB
     },
     { /* PROFILE_REC709 */
         .allow_creative_adjustments = 0,
         .tone_mapping_function = &Rec709Tonemap,
         .gamma_power = 1.0,
-        .processing_gamut = GAMUT_AlexaWideGamutRGB
+        .processing_gamut = GAMUT_AlexaWideGamutRGB,
+        .output_gamut = GAMUT_AlexaWideGamutRGB
     },
     { /* BMDFilm */
         .allow_creative_adjustments = 0,
         .tone_mapping_function = &BmdFilmTonemap,
         .gamma_power = 1.0,
-        .processing_gamut = GAMUT_AlexaWideGamutRGB
+        .processing_gamut = GAMUT_AlexaWideGamutRGB,
+        .output_gamut = GAMUT_AlexaWideGamutRGB
     }
 };
 

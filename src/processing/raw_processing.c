@@ -963,10 +963,33 @@ void apply_processing_object( processingObject_t * processing,
     }
 
     /* Final colour space transform */
-    // if (processing->output_gamut != processing->processing_gamut)
-    // {
-    //     matrix_processing_to_
-    // }
+    if (processing->output_gamut != processing->processing_gamut)
+    {
+        /* Convert processing space to output space */
+        double m_out[9];
+
+        double processing_to_xyz[9];
+        get_matrix_rgb_to_xyz(processingGetProcessingGamut(processing), processing_to_xyz);
+        double * xyz_to_output = get_matrix_xyz_to_rgb(processingGetOutputGamut(processing));
+
+        multiplyMatrices(xyz_to_output, processing_to_xyz, m_out);
+
+        uint16_t * end_out  = outputImage + img_s;
+        for (uint16_t * pix = outputImage; pix < end_out; pix += 3)
+        {
+            double R = pow(pix[0]/65535.0, 2.2)*65535.0;
+            double G = pow(pix[1]/65535.0, 2.2)*65535.0;
+            double B = pow(pix[2]/65535.0, 2.2)*65535.0;
+
+            double R2 = R*m_out[0] + G*m_out[1] + B*m_out[2];
+            double G2 = R*m_out[3] + G*m_out[4] + B*m_out[5];
+            double B2 = R*m_out[6] + G*m_out[7] + B*m_out[8];
+
+            pix[0] = LIMIT16(R2);
+            pix[1] = LIMIT16(G2);
+            pix[2] = LIMIT16(B2);
+        }
+    }
 
     if (processing->lut_on)
     {
