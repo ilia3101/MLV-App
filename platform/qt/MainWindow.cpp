@@ -4697,6 +4697,9 @@ void MainWindow::on_actionClip_Information_triggered()
 
 void MainWindow::on_horizontalSliderGamma_valueChanged(int position)
 {
+    ui->comboBoxProfile->blockSignals( true );
+    ui->comboBoxProfile->setCurrentIndex( PROFILE_CUSTOM );
+    ui->comboBoxProfile->blockSignals( false );
     double value = position / 10.0;
     processingSetOutputGamma( m_pProcessingObject, value );
     ui->label_GammaVal->setText( QString("%1").arg( value, 0, 'f', 1 ) );
@@ -5462,10 +5465,11 @@ void MainWindow::on_checkBoxChromaSeparation_toggled(bool checked)
 //Choose profile
 void MainWindow::on_comboBoxProfile_currentIndexChanged(int index)
 {
-    processingSetImageProfile(m_pProcessingObject, index);
+    if( index != PROFILE_CUSTOM ) processingSetImageProfile(m_pProcessingObject, index);
     m_frameChanged = true;
     //Disable parameters if log
     bool enable = true;
+    ui->checkBoxCreativeAdjustments->blockSignals( true );
     if( ( index == PROFILE_ALEXA_LOG )
      || ( index == PROFILE_CINEON_LOG )
      || ( index == PROFILE_SONY_LOG_3 )
@@ -5481,11 +5485,32 @@ void MainWindow::on_comboBoxProfile_currentIndexChanged(int index)
     }
     ui->checkBoxCreativeAdjustments->setEnabled( !enable );
     enableCreativeAdjustments( enable || ui->checkBoxCreativeAdjustments->isChecked() );
+    ui->checkBoxCreativeAdjustments->blockSignals( false );
+
+    if( index != PROFILE_CUSTOM )
+    {
+        ui->comboBoxTonemappingFct->blockSignals( true );
+        //ui->comboBoxTonemappingFct( processingGetTonemapping??? );
+        ui->comboBoxTonemappingFct->blockSignals( false );
+        ui->comboBoxProcessingGamut->blockSignals( true );
+        ui->comboBoxProcessingGamut->setCurrentIndex( processingGetProcessingGamut( m_pProcessingObject ) );
+        ui->comboBoxProcessingGamut->blockSignals( false );
+        ui->comboBoxOutputGamut->blockSignals( true );
+        ui->comboBoxOutputGamut->setCurrentIndex( processingGetOutputGamut( m_pProcessingObject ) );
+        ui->comboBoxOutputGamut->blockSignals( false );
+        ui->horizontalSliderGamma->blockSignals( true );
+        ui->horizontalSliderGamma->setValue( processingGetOutputGamma( m_pProcessingObject ) );
+        ui->horizontalSliderGamma->blockSignals( false );
+        ui->label_GammaVal->setText( QString("%1").arg( processingGetOutputGamma( m_pProcessingObject ), 0, 'f', 1 ) );
+    }
 }
 
 //Choose tonemapping function
 void MainWindow::on_comboBoxTonemappingFct_currentIndexChanged(int index)
 {
+    ui->comboBoxProfile->blockSignals( true );
+    ui->comboBoxProfile->setCurrentIndex( PROFILE_CUSTOM );
+    ui->comboBoxProfile->blockSignals( false );
     //..
     m_frameChanged = true;
 }
@@ -5493,6 +5518,9 @@ void MainWindow::on_comboBoxTonemappingFct_currentIndexChanged(int index)
 //Choose processing gamut
 void MainWindow::on_comboBoxProcessingGamut_currentIndexChanged(int index)
 {
+    ui->comboBoxProfile->blockSignals( true );
+    ui->comboBoxProfile->setCurrentIndex( PROFILE_CUSTOM );
+    ui->comboBoxProfile->blockSignals( false );
     processingSetProcessingGamut( m_pProcessingObject, index );
     m_frameChanged = true;
 }
@@ -5500,6 +5528,9 @@ void MainWindow::on_comboBoxProcessingGamut_currentIndexChanged(int index)
 //Choose output gamut
 void MainWindow::on_comboBoxOutputGamut_currentIndexChanged(int index)
 {
+    ui->comboBoxProfile->blockSignals( true );
+    ui->comboBoxProfile->setCurrentIndex( PROFILE_CUSTOM );
+    ui->comboBoxProfile->blockSignals( false );
     processingSetOutputGamut( m_pProcessingObject, index );
     m_frameChanged = true;
 }
@@ -5507,6 +5538,9 @@ void MainWindow::on_comboBoxOutputGamut_currentIndexChanged(int index)
 //Switch on/off all creative adjustment elements
 void MainWindow::enableCreativeAdjustments( bool enable )
 {
+    ui->comboBoxProfile->blockSignals( true );
+    //ui->comboBoxProfile->setCurrentIndex( PROFILE_CUSTOM );
+    ui->comboBoxProfile->blockSignals( false );
     ui->horizontalSliderLS->setEnabled( enable );
     ui->horizontalSliderLR->setEnabled( enable );
     ui->horizontalSliderDS->setEnabled( enable );
