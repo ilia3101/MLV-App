@@ -977,7 +977,7 @@ void apply_processing_object( processingObject_t * processing,
         uint16_t * end_out  = outputImage + img_s;
         for (uint16_t * pix = outputImage; pix < end_out; pix += 3)
         {
-            #define CONVERT_GAMMA 2.2
+            #define CONVERT_GAMMA 1.8
             double R = pow(pix[0]/65535.0, CONVERT_GAMMA);
             double G = pow(pix[1]/65535.0, CONVERT_GAMMA);
             double B = pow(pix[2]/65535.0, CONVERT_GAMMA);
@@ -1942,4 +1942,14 @@ void processingSetOutputGamut(processingObject_t * processing, int gamut)
 int processingGetOutputGamut(processingObject_t * processing)
 {
     return processing->output_gamut;
+}
+
+void processingSetOutputGamma(processingObject_t * processing, double gamma)
+{
+    processing->output_gamma = gamma;
+}
+
+double processingGetOutputGamma(processingObject_t * processing)
+{
+    return processing->output_gamma;
 }

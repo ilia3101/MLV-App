@@ -5,21 +5,21 @@ static image_profile_t default_image_profiles[] =
         .allow_creative_adjustments = 1,
         .tone_mapping_function = NULL,
         .gamma_power = STANDARD_GAMMA,
-        .processing_gamut = GAMUT_ProPhotoRGB,
+        .processing_gamut = GAMUT_Rec2020,
         .output_gamut = GAMUT_Rec709
     },
     { /* PROFILE_TONEMAPPED */
         .allow_creative_adjustments = 1,
         .tone_mapping_function = &ReinhardTonemap,
         .gamma_power = STANDARD_GAMMA,
-        .processing_gamut = GAMUT_ProPhotoRGB,
+        .processing_gamut = GAMUT_Rec2020,
         .output_gamut = GAMUT_Rec709
     },
     { /* PROFILE_FILM */
         .allow_creative_adjustments = 1,
         .tone_mapping_function = &TangentTonemap,
         .gamma_power = STANDARD_GAMMA*1.1,
-        .processing_gamut = GAMUT_ProPhotoRGB,
+        .processing_gamut = GAMUT_Rec2020,
         .output_gamut = GAMUT_Rec709
     },
     { /* PROFILE_ALEXA_LOG */

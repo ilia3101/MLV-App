@@ -32,6 +32,13 @@ void processingSetCustomImageProfile(processingObject_t * processing, image_prof
 
 
 
+/* Will be controlled by 'Gamma' slider */
+void processingSetOutputGamma(processingObject_t * processing, double gamma);
+double processingGetOutputGamma(processingObject_t * processing);
+
+
+
+
 /* Set internal processing gamut */
 void processingSetProcessingGamut(processingObject_t * processing, int gamut);
 int processingGetProcessingGamut(processingObject_t * processing);
