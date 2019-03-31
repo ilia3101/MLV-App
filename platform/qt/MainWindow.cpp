@@ -1394,6 +1394,7 @@ void MainWindow::readSettings()
     ui->groupBoxRawCorrection->setChecked( set.value( "expandedRawCorrection", false ).toBool() );
     ui->groupBoxCutInOut->setChecked( set.value( "expandedCutInOut", false ).toBool() );
     ui->groupBoxDebayer->setChecked( set.value( "expandedDebayer", true ).toBool() );
+    ui->groupBoxProfiles->setChecked( set.value( "expandedProfiles", true ).toBool() );
     ui->groupBoxProcessing->setChecked( set.value( "expandedProcessing", true ).toBool() );
     ui->groupBoxDetails->setChecked( set.value( "expandedDetails", false ).toBool() );
     ui->groupBoxHsl->setChecked( set.value( "expandedHsl", false ).toBool() );
@@ -1459,6 +1460,7 @@ void MainWindow::writeSettings()
     set.setValue( "expandedRawCorrection", ui->groupBoxRawCorrection->isChecked() );
     set.setValue( "expandedCutInOut", ui->groupBoxCutInOut->isChecked() );
     set.setValue( "expandedDebayer", ui->groupBoxDebayer->isChecked() );
+    set.setValue( "expandedProfiles", ui->groupBoxProfiles->isChecked() );
     set.setValue( "expandedProcessing", ui->groupBoxProcessing->isChecked() );
     set.setValue( "expandedDetails", ui->groupBoxDetails->isChecked() );
     set.setValue( "expandedHsl", ui->groupBoxHsl->isChecked() );
@@ -4644,6 +4646,14 @@ void MainWindow::on_actionClip_Information_triggered()
     else m_pInfoDialog->hide();
 }
 
+void MainWindow::on_horizontalSliderGamma_valueChanged(int position)
+{
+    double value = position / 10.0;
+    //processingSetOutputGamma( m_pProcessingObject, value );
+    ui->label_GammaVal->setText( QString("%1").arg( value, 0, 'f', 1 ) );
+    m_frameChanged = true;
+}
+
 void MainWindow::on_horizontalSliderExposure_valueChanged(int position)
 {
     double value = position / 100.0;
@@ -4941,6 +4951,14 @@ void MainWindow::on_horizontalSliderToningStrength_valueChanged(int position)
                          position );
     ui->label_ToningStrengthVal->setText( QString("%1").arg( position ) );
     m_frameChanged = true;
+}
+
+void MainWindow::on_horizontalSliderGamma_doubleClicked()
+{
+    ReceiptSettings *sliders = new ReceiptSettings(); //default
+    //ui->horizontalSliderGamma->setValue( sliders->gamma() );
+    ui->horizontalSliderGamma->setValue( 22 );
+    delete sliders;
 }
 
 void MainWindow::on_horizontalSliderExposure_doubleClicked()
@@ -5393,7 +5411,7 @@ void MainWindow::on_checkBoxChromaSeparation_toggled(bool checked)
     m_frameChanged = true;
 }
 
-//Chose profile
+//Choose profile
 void MainWindow::on_comboBoxProfile_currentIndexChanged(int index)
 {
     processingSetImageProfile(m_pProcessingObject, index);
@@ -5415,6 +5433,27 @@ void MainWindow::on_comboBoxProfile_currentIndexChanged(int index)
     }
     ui->checkBoxCreativeAdjustments->setEnabled( !enable );
     enableCreativeAdjustments( enable || ui->checkBoxCreativeAdjustments->isChecked() );
+}
+
+//Choose tonemapping function
+void MainWindow::on_comboBoxTonemappingFct_currentIndexChanged(int index)
+{
+    //..
+    m_frameChanged = true;
+}
+
+//Choose processing gamut
+void MainWindow::on_comboBoxProcessingGamut_currentIndexChanged(int index)
+{
+    processingSetProcessingGamut( m_pProcessingObject, index );
+    m_frameChanged = true;
+}
+
+//Choose output gamut
+void MainWindow::on_comboBoxOutputGamut_currentIndexChanged(int index)
+{
+    processingSetOutputGamut( m_pProcessingObject, index );
+    m_frameChanged = true;
 }
 
 //Switch on/off all creative adjustment elements
@@ -6002,6 +6041,15 @@ void MainWindow::on_labelHistogram_customContextMenuRequested(const QPoint &pos)
     myMenu.addAction( ui->actionShowVectorScope );
     // Show context menu at handling position
     myMenu.exec( globalPos );
+}
+
+//DoubleClick on Gamma Label
+void MainWindow::on_label_GammaVal_doubleClicked()
+{
+    EditSliderValueDialog editSlider;
+    editSlider.autoSetup( ui->horizontalSliderGamma, ui->label_ExposureVal, 0.1, 1, 10.0 );
+    editSlider.exec();
+    ui->horizontalSliderGamma->setValue( editSlider.getValue() );
 }
 
 //DoubleClick on Exposure Label
@@ -6956,6 +7004,14 @@ void MainWindow::on_groupBoxCutInOut_toggled(bool arg1)
     ui->frameCutInOut->setVisible( arg1 );
     if( !arg1 ) ui->groupBoxCutInOut->setMaximumHeight( 30 );
     else ui->groupBoxCutInOut->setMaximumHeight( 16777215 );
+}
+
+//Collapse & Expand Profiles
+void MainWindow::on_groupBoxProfiles_toggled(bool arg1)
+{
+    ui->frameProfiles->setVisible( arg1 );
+    if( !arg1 ) ui->groupBoxProfiles->setMaximumHeight( 30 );
+    else ui->groupBoxProfiles->setMaximumHeight( 16777215 );
 }
 
 //Collapse & Expand Debayer
