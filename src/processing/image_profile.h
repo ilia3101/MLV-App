@@ -19,9 +19,9 @@ typedef struct image_profile_t
     /* Output colour */
 
     /* Processing output gamut */
-    int processing_output_gamut;
+    int output_gamut;
     /* Processing output gamma */
-    int processing_output_gamma;
+    int output_gamma;
 
     /* Some links I added 2 years ago for some reason */
     /* https://ninedegreesbelow.com/photography/xyz-rgb.html

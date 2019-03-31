@@ -191,7 +191,7 @@ void processingSetCustomImageProfile(processingObject_t * processing, image_prof
 
     /* Set processing gamut */
     processingSetProcessingGamut(processing, imageProfile->processing_gamut);
-    processingSetOutputGamut(processing, imageProfile->processing_output_gamut);
+    processingSetOutputGamut(processing, imageProfile->output_gamut);
 }
 
 
@@ -977,13 +977,18 @@ void apply_processing_object( processingObject_t * processing,
         uint16_t * end_out  = outputImage + img_s;
         for (uint16_t * pix = outputImage; pix < end_out; pix += 3)
         {
-            double R = pow(pix[0]/65535.0, 2.2)*65535.0;
-            double G = pow(pix[1]/65535.0, 2.2)*65535.0;
-            double B = pow(pix[2]/65535.0, 2.2)*65535.0;
+            #define CONVERT_GAMMA 3
+            double R = pow(pix[0]/65535.0, CONVERT_GAMMA);
+            double G = pow(pix[1]/65535.0, CONVERT_GAMMA);
+            double B = pow(pix[2]/65535.0, CONVERT_GAMMA);
 
             double R2 = R*m_out[0] + G*m_out[1] + B*m_out[2];
             double G2 = R*m_out[3] + G*m_out[4] + B*m_out[5];
             double B2 = R*m_out[6] + G*m_out[7] + B*m_out[8];
+
+            R2 = pow(MAX(0,R2), 1.0/CONVERT_GAMMA)*65535.0;
+            G2 = pow(MAX(0,G2), 1.0/CONVERT_GAMMA)*65535.0;
+            B2 = pow(MAX(0,B2), 1.0/CONVERT_GAMMA)*65535.0;
 
             pix[0] = LIMIT16(R2);
             pix[1] = LIMIT16(G2);
