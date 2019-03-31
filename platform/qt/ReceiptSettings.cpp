@@ -80,6 +80,10 @@ ReceiptSettings::ReceiptSettings()
     m_vignetteStrength = 0;
     m_vignetteRadius = 20;
     m_profile = 1;
+    m_tonemappingFunction = 0;
+    m_processingGamut = 0;
+    m_outputGamut = 0;
+    m_gamma = 22;
     m_creativeAdjustments = 0;
     m_rawWhite = -1;
     m_rawBlack = -1;

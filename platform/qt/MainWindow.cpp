@@ -3080,6 +3080,26 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
             else receipt->setProfile( profile );
             Rxml->readNext();
         }
+        else if( Rxml->isStartElement() && Rxml->name() == "tonemappingFunction" )
+        {
+            receipt->setTonemappingFunction( (uint8_t)Rxml->readElementText().toUInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == "processingGamut" )
+        {
+            receipt->setProcessingGamut( (uint8_t)Rxml->readElementText().toUInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == "outputGamut" )
+        {
+            receipt->setOutputGamut( (uint8_t)Rxml->readElementText().toUInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == "gamma" )
+        {
+            receipt->setGamma( (int)Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
         else if( Rxml->isStartElement() && Rxml->name() == "allowCreativeAdjustments" )
         {
             receipt->setAllowCreativeAdjustments( (bool)Rxml->readElementText().toInt() );
@@ -3327,6 +3347,10 @@ void MainWindow::writeXmlElementsToFile(QXmlStreamWriter *xmlWriter, ReceiptSett
     xmlWriter->writeTextElement( "camMatrixUsed",           QString( "%1" ).arg( receipt->camMatrixUsed() ) );
     xmlWriter->writeTextElement( "chromaSeparation",        QString( "%1" ).arg( receipt->isChromaSeparation() ) );
     xmlWriter->writeTextElement( "profile",                 QString( "%1" ).arg( receipt->profile() ) );
+    xmlWriter->writeTextElement( "tonemappingFunction",     QString( "%1" ).arg( receipt->tonemappingFunction() ) );
+    xmlWriter->writeTextElement( "processingGamut",         QString( "%1" ).arg( receipt->processingGamut() ) );
+    xmlWriter->writeTextElement( "outputGamut",             QString( "%1" ).arg( receipt->outputGamut() ) );
+    xmlWriter->writeTextElement( "gamma",                   QString( "%1" ).arg( receipt->gamma() ) );
     xmlWriter->writeTextElement( "allowCreativeAdjustments",QString( "%1" ).arg( receipt->allowCreativeAdjustments() ) );
     xmlWriter->writeTextElement( "denoiserStrength",        QString( "%1" ).arg( receipt->denoiserStrength() ) );
     xmlWriter->writeTextElement( "denoiserWindow",          QString( "%1" ).arg( receipt->denoiserWindow() ) );
@@ -3525,6 +3549,16 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
 
     ui->comboBoxProfile->setCurrentIndex( receipt->profile() );
     on_comboBoxProfile_currentIndexChanged( receipt->profile() );
+    if( receipt->profile() == 8 ) //custom = 8 ?!
+    {
+        ui->comboBoxTonemappingFct->setCurrentIndex( receipt->tonemappingFunction() );
+        on_comboBoxTonemappingFct_currentIndexChanged( receipt->tonemappingFunction() );
+        ui->comboBoxProcessingGamut->setCurrentIndex( receipt->processingGamut() );
+        on_comboBoxProcessingGamut_currentIndexChanged( receipt->processingGamut() );
+        ui->comboBoxOutputGamut->setCurrentIndex( receipt->outputGamut() );
+        on_comboBoxOutputGamut_currentIndexChanged( receipt->outputGamut() );
+        ui->horizontalSliderGamma->setValue( receipt->gamma() );
+    }
 
     ui->checkBoxCreativeAdjustments->setChecked( receipt->allowCreativeAdjustments() );
     on_checkBoxCreativeAdjustments_toggled( receipt->allowCreativeAdjustments() );
@@ -3710,6 +3744,10 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     receipt->setCamMatrixUsed( ui->comboBoxUseCameraMatrix->currentIndex() );
     receipt->setChromaSeparation( ui->checkBoxChromaSeparation->isChecked() );
     receipt->setProfile( ui->comboBoxProfile->currentIndex() );
+    receipt->setTonemappingFunction( ui->comboBoxTonemappingFct->currentIndex() );
+    receipt->setProcessingGamut( ui->comboBoxProcessingGamut->currentIndex() );
+    receipt->setOutputGamut( ui->comboBoxOutputGamut->currentIndex() );
+    receipt->setGamma( ui->horizontalSliderGamma->value() );
     receipt->setAllowCreativeAdjustments( ui->checkBoxCreativeAdjustments->isChecked() );
     receipt->setDenoiserStrength( ui->horizontalSliderDenoiseStrength->value() );
     receipt->setDenoiserWindow( ui->comboBoxDenoiseWindow->currentIndex() + 2 );
@@ -3806,8 +3844,15 @@ void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings 
     if( paste && cdui->checkBoxHighlightReconstruction->isChecked() ) receiptTarget->setHighlightReconstruction( receiptSource->isHighlightReconstruction() );
     if( paste && cdui->checkBoxCameraMatrix->isChecked() ) receiptTarget->setCamMatrixUsed( receiptSource->camMatrixUsed() );
     if( paste && cdui->checkBoxChromaBlur->isChecked() ) receiptTarget->setChromaSeparation( receiptSource->isChromaSeparation() );
-    if( paste && cdui->checkBoxProfile->isChecked() )    receiptTarget->setProfile( receiptSource->profile() );
-    if( paste && cdui->checkBoxProfile->isChecked() )    receiptTarget->setAllowCreativeAdjustments( receiptSource->allowCreativeAdjustments() );
+    if( paste && cdui->checkBoxProfile->isChecked() )
+    {
+        receiptTarget->setProfile( receiptSource->profile() );
+        receiptTarget->setTonemappingFunction( receiptSource->tonemappingFunction() );
+        receiptTarget->setProcessingGamut( receiptSource->processingGamut() );
+        receiptTarget->setOutputGamut( receiptSource->outputGamut() );
+        receiptTarget->setGamma( receiptSource->gamma() );
+        receiptTarget->setAllowCreativeAdjustments( receiptSource->allowCreativeAdjustments() );
+    }
     if( paste && cdui->checkBoxDenoise->isChecked() )    receiptTarget->setDenoiserStrength( receiptSource->denoiserStrength() );
     if( paste && cdui->checkBoxDenoise->isChecked() )    receiptTarget->setDenoiserWindow( receiptSource->denoiserWindow() );
     if( paste && cdui->checkBoxDenoise->isChecked() )    receiptTarget->setRbfDenoiserLuma( receiptSource->rbfDenoiserLuma() );
@@ -3962,6 +4007,10 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     receipt->setCamMatrixUsed( m_pSessionReceipts.at( row )->camMatrixUsed() );
     receipt->setChromaSeparation( m_pSessionReceipts.at( row )->isChromaSeparation() );
     receipt->setProfile( m_pSessionReceipts.at( row )->profile() );
+    receipt->setTonemappingFunction( m_pSessionReceipts.at( row )->tonemappingFunction() );
+    receipt->setProcessingGamut( m_pSessionReceipts.at( row )->processingGamut() );
+    receipt->setOutputGamut( m_pSessionReceipts.at( row )->outputGamut() );
+    receipt->setGamma( m_pSessionReceipts.at( row )->gamma() );
     receipt->setAllowCreativeAdjustments( m_pSessionReceipts.at( row )->allowCreativeAdjustments() );
     receipt->setDenoiserStrength( m_pSessionReceipts.at( row )->denoiserStrength() );
     receipt->setDenoiserWindow( m_pSessionReceipts.at( row )->denoiserWindow() );
@@ -4956,8 +5005,7 @@ void MainWindow::on_horizontalSliderToningStrength_valueChanged(int position)
 void MainWindow::on_horizontalSliderGamma_doubleClicked()
 {
     ReceiptSettings *sliders = new ReceiptSettings(); //default
-    //ui->horizontalSliderGamma->setValue( sliders->gamma() );
-    ui->horizontalSliderGamma->setValue( 22 );
+    ui->horizontalSliderGamma->setValue( sliders->gamma() );
     delete sliders;
 }
 

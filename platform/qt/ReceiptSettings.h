@@ -56,6 +56,10 @@ public:
     void setCamMatrixUsed( uint8_t val )      {m_useCamMatrix = val;}
     void setChromaSeparation( bool on )       {m_chromaSeparation = on;}
     void setProfile( uint8_t num )            {m_profile = num;}
+    void setTonemappingFunction( uint8_t num ){m_tonemappingFunction = num;}
+    void setProcessingGamut( uint8_t num )    {m_processingGamut = num;}
+    void setOutputGamut( uint8_t num )        {m_outputGamut = num;}
+    void setGamma( int val )                  {m_gamma = val;}
     void setAllowCreativeAdjustments( bool on ){m_creativeAdjustments = on;}
     void setRawWhite( int value )             {m_rawWhite = value;}
     void setRawBlack( int value )             {m_rawBlack = value;}
@@ -172,6 +176,10 @@ public:
     uint32_t cutIn( void ) {return m_cutIn;}
     uint32_t cutOut( void ){return m_cutOut;}
     uint8_t profile( void ){return m_profile;}
+    uint8_t tonemappingFunction( void ){return m_tonemappingFunction;}
+    uint8_t processingGamut( void ){return m_processingGamut;}
+    uint8_t outputGamut( void ){return m_outputGamut;}
+    int gamma( void ){return m_gamma;}
     bool allowCreativeAdjustments( void ){return m_creativeAdjustments;}
     int rawWhite( void ) {return m_rawWhite;}
     int rawBlack( void ) {return m_rawBlack;}
@@ -256,6 +264,10 @@ private:
     uint32_t m_cutIn;
     uint32_t m_cutOut;
     uint8_t m_profile;
+    uint8_t m_tonemappingFunction;
+    uint8_t m_processingGamut;
+    uint8_t m_outputGamut;
+    int m_gamma;
     bool m_creativeAdjustments;
     int m_rawWhite;
     int m_rawBlack;
