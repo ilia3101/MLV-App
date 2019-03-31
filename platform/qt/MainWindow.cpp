@@ -5441,6 +5441,10 @@ void MainWindow::on_comboBoxUseCameraMatrix_currentIndexChanged(int index)
 //Enable / Disable the creative adjustments (all sliders and curves if log profile selected)
 void MainWindow::on_checkBoxCreativeAdjustments_toggled(bool checked)
 {
+    ui->comboBoxProfile->blockSignals( true );
+    //ui->comboBoxProfile->setCurrentIndex( PROFILE_CUSTOM );
+    ui->comboBoxProfile->blockSignals( false );
+
     if( checked )
     {
         ui->checkBoxCreativeAdjustments->setIcon( QIcon( ":/RetinaIMG/RetinaIMG/Status-dialog-warning-icon.png" ) );
@@ -5507,7 +5511,7 @@ void MainWindow::on_comboBoxProfile_currentIndexChanged(int index)
         ui->horizontalSliderGamma->blockSignals( true );
         ui->horizontalSliderGamma->setValue( processingGetOutputGamma( m_pProcessingObject ) );
         ui->horizontalSliderGamma->blockSignals( false );
-        //ui->label_GammaVal->setText( QString("%1").arg( processingGetOutputGamma( m_pProcessingObject ), 0, 'f', 1 ) );
+        ui->label_GammaVal->setText( QString("%1").arg( processingGetOutputGamma( m_pProcessingObject ), 0, 'f', 1 ) );
     }
 }
 
@@ -5544,9 +5548,6 @@ void MainWindow::on_comboBoxOutputGamut_currentIndexChanged(int index)
 //Switch on/off all creative adjustment elements
 void MainWindow::enableCreativeAdjustments( bool enable )
 {
-    ui->comboBoxProfile->blockSignals( true );
-    //ui->comboBoxProfile->setCurrentIndex( PROFILE_CUSTOM );
-    ui->comboBoxProfile->blockSignals( false );
     ui->horizontalSliderLS->setEnabled( enable );
     ui->horizontalSliderLR->setEnabled( enable );
     ui->horizontalSliderDS->setEnabled( enable );
