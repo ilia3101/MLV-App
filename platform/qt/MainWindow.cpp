@@ -3547,10 +3547,11 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     ui->checkBoxChromaSeparation->setChecked( receipt->isChromaSeparation() );
     on_checkBoxChromaSeparation_toggled( receipt->isChromaSeparation() );
 
-    ui->comboBoxProfile->setCurrentIndex( receipt->profile() );
-    on_comboBoxProfile_currentIndexChanged( receipt->profile() );
-    if( receipt->profile() == 8 ) //custom = 8 ?!
+    if( receipt->profile() == PROFILE_CUSTOM )
     {
+        ui->comboBoxProfile->blockSignals( true );
+        ui->comboBoxProfile->setCurrentIndex( receipt->profile() );
+        ui->comboBoxProfile->blockSignals( false );
         ui->comboBoxTonemappingFct->setCurrentIndex( receipt->tonemappingFunction() );
         on_comboBoxTonemappingFct_currentIndexChanged( receipt->tonemappingFunction() );
         ui->comboBoxProcessingGamut->setCurrentIndex( receipt->processingGamut() );
@@ -3558,6 +3559,11 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
         ui->comboBoxOutputGamut->setCurrentIndex( receipt->outputGamut() );
         on_comboBoxOutputGamut_currentIndexChanged( receipt->outputGamut() );
         ui->horizontalSliderGamma->setValue( receipt->gamma() );
+    }
+    else
+    {
+        ui->comboBoxProfile->setCurrentIndex( receipt->profile() );
+        on_comboBoxProfile_currentIndexChanged( receipt->profile() );
     }
 
     ui->checkBoxCreativeAdjustments->setChecked( receipt->allowCreativeAdjustments() );
@@ -5501,7 +5507,7 @@ void MainWindow::on_comboBoxProfile_currentIndexChanged(int index)
         ui->horizontalSliderGamma->blockSignals( true );
         ui->horizontalSliderGamma->setValue( processingGetOutputGamma( m_pProcessingObject ) );
         ui->horizontalSliderGamma->blockSignals( false );
-        ui->label_GammaVal->setText( QString("%1").arg( processingGetOutputGamma( m_pProcessingObject ), 0, 'f', 1 ) );
+        //ui->label_GammaVal->setText( QString("%1").arg( processingGetOutputGamma( m_pProcessingObject ), 0, 'f', 1 ) );
     }
 }
 
