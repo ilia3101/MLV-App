@@ -74,6 +74,7 @@ private slots:
     void on_actionAboutQt_triggered();
     void on_horizontalSliderPosition_valueChanged(int position);
     void on_actionClip_Information_triggered();
+    void on_horizontalSliderGamma_valueChanged(int position);
     void on_horizontalSliderExposure_valueChanged(int position);
     void on_horizontalSliderExposureGradient_valueChanged(int position);
     void on_horizontalSliderContrast_valueChanged(int position);
@@ -105,6 +106,7 @@ private slots:
     void on_horizontalSliderTone_valueChanged(int position);
     void on_horizontalSliderToningStrength_valueChanged(int position);
 
+    void on_horizontalSliderGamma_doubleClicked();
     void on_horizontalSliderExposure_doubleClicked();
     void on_horizontalSliderExposureGradient_doubleClicked();
     void on_horizontalSliderContrast_doubleClicked();
@@ -144,6 +146,9 @@ private slots:
     void on_checkBoxCreativeAdjustments_toggled(bool checked);
     void on_checkBoxChromaSeparation_toggled(bool checked);
     void on_comboBoxProfile_currentIndexChanged(int index);
+    void on_comboBoxTonemappingFct_currentIndexChanged(int index);
+    void on_comboBoxProcessingGamut_currentIndexChanged(int index);
+    void on_comboBoxOutputGamut_currentIndexChanged(int index);
     void on_comboBoxFilterName_currentIndexChanged(int index);
     void on_comboBoxDenoiseWindow_currentIndexChanged(int index);
     void on_actionZoomFit_triggered(bool on);
@@ -187,6 +192,7 @@ private slots:
     void selectAllFiles( void );
     void pictureCustomContextMenuRequested(const QPoint &pos);
     void on_labelHistogram_customContextMenuRequested(const QPoint &pos);
+    void on_label_GammaVal_doubleClicked( void );
     void on_label_ExposureVal_doubleClicked( void );
     void on_label_ExposureGradient_doubleClicked( void );
     void on_label_ContrastVal_doubleClicked( void );

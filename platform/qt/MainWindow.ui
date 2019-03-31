@@ -2668,7 +2668,7 @@ QGroupBox::indicator:checked:disabled {
                     </spacer>
                    </item>
                    <item row="0" column="2">
-                    <widget class="DoubleClickLabel" name="label_Gamma">
+                    <widget class="DoubleClickLabel" name="label_GammaVal">
                      <property name="font">
                       <font>
                        <pointsize>10</pointsize>
@@ -2828,12 +2828,17 @@ QGroupBox::indicator:checked:disabled {
                      </property>
                      <item>
                       <property name="text">
-                       <string>None</string>
+                       <string>Standard</string>
                       </property>
                      </item>
                      <item>
                       <property name="text">
                        <string>Reinhard</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>Film</string>
                       </property>
                      </item>
                     </widget>
