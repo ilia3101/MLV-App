@@ -4698,7 +4698,7 @@ void MainWindow::on_actionClip_Information_triggered()
 void MainWindow::on_horizontalSliderGamma_valueChanged(int position)
 {
     double value = position / 10.0;
-    //processingSetOutputGamma( m_pProcessingObject, value );
+    processingSetOutputGamma( m_pProcessingObject, value );
     ui->label_GammaVal->setText( QString("%1").arg( value, 0, 'f', 1 ) );
     m_frameChanged = true;
 }

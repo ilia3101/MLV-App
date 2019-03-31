@@ -25,6 +25,7 @@ void processingSetImageProfile(processingObject_t * processing, int imageProfile
 #define PROFILE_SRGB        7	/* sRGB */
 #define PROFILE_REC709      8	/* Rec. 709 (HDTV) */
 #define PROFILE_BMDFILM     9   /* BMDFilm */
+#define PROFILE_CUSTOM     10   /* Needed for GUI */
 
 /* Set a custom image profile using the image_profile struct */
 void processingSetCustomImageProfile(processingObject_t * processing, image_profile_t * imageProfile);
