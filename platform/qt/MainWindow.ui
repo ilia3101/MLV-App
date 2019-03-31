@@ -2584,7 +2584,7 @@ QGroupBox::indicator:checked:disabled {
                <number>5</number>
               </property>
               <item row="0" column="0">
-               <widget class="QFrame" name="frameCutInOut_2">
+               <widget class="QFrame" name="frameProfiles">
                 <layout class="QGridLayout" name="gridLayout_53">
                  <property name="leftMargin">
                   <number>0</number>
