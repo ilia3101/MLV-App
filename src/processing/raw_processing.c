@@ -972,7 +972,7 @@ void apply_processing_object( processingObject_t * processing,
         get_matrix_rgb_to_xyz(processingGetProcessingGamut(processing), processing_to_xyz);
         double * xyz_to_output = get_matrix_xyz_to_rgb(processingGetOutputGamut(processing));
 
-        multiplyMatrices(xyz_to_output, processing_to_xyz, m_out);
+        multiplyMatrices(processing_to_xyz,xyz_to_output, m_out);
 
         uint16_t * end_out  = outputImage + img_s;
         for (uint16_t * pix = outputImage; pix < end_out; pix += 3)
