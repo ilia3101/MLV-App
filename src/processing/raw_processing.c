@@ -972,12 +972,12 @@ void apply_processing_object( processingObject_t * processing,
         get_matrix_rgb_to_xyz(processingGetProcessingGamut(processing), processing_to_xyz);
         double * xyz_to_output = get_matrix_xyz_to_rgb(processingGetOutputGamut(processing));
 
-        multiplyMatrices(processing_to_xyz,xyz_to_output, m_out);
+        multiplyMatrices(processing_to_xyz, xyz_to_output, m_out);
 
         uint16_t * end_out  = outputImage + img_s;
         for (uint16_t * pix = outputImage; pix < end_out; pix += 3)
         {
-            #define CONVERT_GAMMA 3
+            #define CONVERT_GAMMA 2.2
             double R = pow(pix[0]/65535.0, CONVERT_GAMMA);
             double G = pow(pix[1]/65535.0, CONVERT_GAMMA);
             double B = pow(pix[2]/65535.0, CONVERT_GAMMA);
