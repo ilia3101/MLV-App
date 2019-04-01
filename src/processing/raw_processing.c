@@ -352,6 +352,12 @@ void applyProcessingObject( processingObject_t * processing,
     /* Do transformation */
     get_frame_transformed(processing, inputImage, imageX, imageY);
 
+    int img_s = imageX * imageY * 3;
+    uint32_t randomseed1 = ((uint32_t *)inputImage)[0] ^ ((uint32_t *)(inputImage+img_s))[-1] ^ frameIndex;
+    uint32_t randomseed2 = ((uint32_t *)inputImage)[1] ^ ((uint32_t *)(inputImage+img_s/2))[0] ^ frameIndex;
+    uint32_t randomseed3 = ((uint32_t *)inputImage)[2] ^ ((uint32_t *)(inputImage+img_s/3))[0] ^ frameIndex;
+    uint32_t randomseed4 = ((uint32_t *)inputImage)[3] ^ ((uint32_t *)(inputImage+img_s/4))[0] ^ frameIndex;
+
     /* Resize image buffer to make sure its right size */
     if (imageChanged) buffer_set_size(processing->shadows_highlights.blur_image, imageX, imageY);
 
@@ -472,12 +478,11 @@ void applyProcessingObject( processingObject_t * processing,
     /* Grain (simple monochrome noise) generator - must be applied after denoiser */
     if( processing->grainStrength > 0 ) //Switch on/off
     {
-        srand( frameIndex ); //Noise shall not move for the same picture
-        int img_s = imageX * imageY * 3;
         int strength = 50 * processing->grainStrength;
         for( int i = 0; i < img_s; i+=3 )
         {
-            int grain = ( rand() % strength ) - ( strength >> 2 ); //change value for strength
+            uint32_t randomval = randomseed1 ^ ((i*randomseed2) * (randomseed3-i) * (i+randomseed4));
+            int grain = ( randomval % strength ) - ( strength >> 2 ); //change value for strength
             outputImage[i+0] = LIMIT16( outputImage[i+0] + grain );
             outputImage[i+1] = LIMIT16( outputImage[i+1] + grain );
             outputImage[i+2] = LIMIT16( outputImage[i+2] + grain );
