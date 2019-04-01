@@ -353,6 +353,7 @@ void applyProcessingObject( processingObject_t * processing,
     get_frame_transformed(processing, inputImage, imageX, imageY);
 
     int img_s = imageX * imageY * 3;
+    //Noise shall not move for the same picture
     uint32_t randomseed1 = ((uint32_t *)inputImage)[0] ^ ((uint32_t *)(inputImage+img_s))[-1] ^ frameIndex;
     uint32_t randomseed2 = ((uint32_t *)inputImage)[1] ^ ((uint32_t *)(inputImage+img_s/2))[0] ^ frameIndex;
     uint32_t randomseed3 = ((uint32_t *)inputImage)[2] ^ ((uint32_t *)(inputImage+img_s/3))[0] ^ frameIndex;
