@@ -3547,10 +3547,11 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     ui->checkBoxChromaSeparation->setChecked( receipt->isChromaSeparation() );
     on_checkBoxChromaSeparation_toggled( receipt->isChromaSeparation() );
 
-    ui->comboBoxProfile->setCurrentIndex( receipt->profile() );
-    on_comboBoxProfile_currentIndexChanged( receipt->profile() );
-    if( receipt->profile() == 8 ) //custom = 8 ?!
+    if( receipt->profile() == PROFILE_CUSTOM )
     {
+        ui->comboBoxProfile->blockSignals( true );
+        ui->comboBoxProfile->setCurrentIndex( receipt->profile() );
+        ui->comboBoxProfile->blockSignals( false );
         ui->comboBoxTonemappingFct->setCurrentIndex( receipt->tonemappingFunction() );
         on_comboBoxTonemappingFct_currentIndexChanged( receipt->tonemappingFunction() );
         ui->comboBoxProcessingGamut->setCurrentIndex( receipt->processingGamut() );
@@ -3558,6 +3559,11 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
         ui->comboBoxOutputGamut->setCurrentIndex( receipt->outputGamut() );
         on_comboBoxOutputGamut_currentIndexChanged( receipt->outputGamut() );
         ui->horizontalSliderGamma->setValue( receipt->gamma() );
+    }
+    else
+    {
+        ui->comboBoxProfile->setCurrentIndex( receipt->profile() );
+        on_comboBoxProfile_currentIndexChanged( receipt->profile() );
     }
 
     ui->checkBoxCreativeAdjustments->setChecked( receipt->allowCreativeAdjustments() );
@@ -4697,8 +4703,11 @@ void MainWindow::on_actionClip_Information_triggered()
 
 void MainWindow::on_horizontalSliderGamma_valueChanged(int position)
 {
+    ui->comboBoxProfile->blockSignals( true );
+    ui->comboBoxProfile->setCurrentIndex( PROFILE_CUSTOM );
+    ui->comboBoxProfile->blockSignals( false );
     double value = position / 10.0;
-    //processingSetOutputGamma( m_pProcessingObject, value );
+    processingSetOutputGamma( m_pProcessingObject, value );
     ui->label_GammaVal->setText( QString("%1").arg( value, 0, 'f', 1 ) );
     m_frameChanged = true;
 }
@@ -5432,6 +5441,10 @@ void MainWindow::on_comboBoxUseCameraMatrix_currentIndexChanged(int index)
 //Enable / Disable the creative adjustments (all sliders and curves if log profile selected)
 void MainWindow::on_checkBoxCreativeAdjustments_toggled(bool checked)
 {
+    ui->comboBoxProfile->blockSignals( true );
+    //ui->comboBoxProfile->setCurrentIndex( PROFILE_CUSTOM );
+    ui->comboBoxProfile->blockSignals( false );
+
     if( checked )
     {
         ui->checkBoxCreativeAdjustments->setIcon( QIcon( ":/RetinaIMG/RetinaIMG/Status-dialog-warning-icon.png" ) );
@@ -5462,10 +5475,11 @@ void MainWindow::on_checkBoxChromaSeparation_toggled(bool checked)
 //Choose profile
 void MainWindow::on_comboBoxProfile_currentIndexChanged(int index)
 {
-    processingSetImageProfile(m_pProcessingObject, index);
+    if( index != PROFILE_CUSTOM ) processingSetImageProfile(m_pProcessingObject, index);
     m_frameChanged = true;
     //Disable parameters if log
     bool enable = true;
+    ui->checkBoxCreativeAdjustments->blockSignals( true );
     if( ( index == PROFILE_ALEXA_LOG )
      || ( index == PROFILE_CINEON_LOG )
      || ( index == PROFILE_SONY_LOG_3 )
@@ -5481,11 +5495,32 @@ void MainWindow::on_comboBoxProfile_currentIndexChanged(int index)
     }
     ui->checkBoxCreativeAdjustments->setEnabled( !enable );
     enableCreativeAdjustments( enable || ui->checkBoxCreativeAdjustments->isChecked() );
+    ui->checkBoxCreativeAdjustments->blockSignals( false );
+
+    if( index != PROFILE_CUSTOM )
+    {
+        ui->comboBoxTonemappingFct->blockSignals( true );
+        //ui->comboBoxTonemappingFct( processingGetTonemapping??? );
+        ui->comboBoxTonemappingFct->blockSignals( false );
+        ui->comboBoxProcessingGamut->blockSignals( true );
+        ui->comboBoxProcessingGamut->setCurrentIndex( processingGetProcessingGamut( m_pProcessingObject ) );
+        ui->comboBoxProcessingGamut->blockSignals( false );
+        ui->comboBoxOutputGamut->blockSignals( true );
+        ui->comboBoxOutputGamut->setCurrentIndex( processingGetOutputGamut( m_pProcessingObject ) );
+        ui->comboBoxOutputGamut->blockSignals( false );
+        ui->horizontalSliderGamma->blockSignals( true );
+        ui->horizontalSliderGamma->setValue( processingGetOutputGamma( m_pProcessingObject ) );
+        ui->horizontalSliderGamma->blockSignals( false );
+        ui->label_GammaVal->setText( QString("%1").arg( processingGetOutputGamma( m_pProcessingObject ), 0, 'f', 1 ) );
+    }
 }
 
 //Choose tonemapping function
 void MainWindow::on_comboBoxTonemappingFct_currentIndexChanged(int index)
 {
+    ui->comboBoxProfile->blockSignals( true );
+    ui->comboBoxProfile->setCurrentIndex( PROFILE_CUSTOM );
+    ui->comboBoxProfile->blockSignals( false );
     //..
     m_frameChanged = true;
 }
@@ -5493,6 +5528,9 @@ void MainWindow::on_comboBoxTonemappingFct_currentIndexChanged(int index)
 //Choose processing gamut
 void MainWindow::on_comboBoxProcessingGamut_currentIndexChanged(int index)
 {
+    ui->comboBoxProfile->blockSignals( true );
+    ui->comboBoxProfile->setCurrentIndex( PROFILE_CUSTOM );
+    ui->comboBoxProfile->blockSignals( false );
     processingSetProcessingGamut( m_pProcessingObject, index );
     m_frameChanged = true;
 }
@@ -5500,6 +5538,9 @@ void MainWindow::on_comboBoxProcessingGamut_currentIndexChanged(int index)
 //Choose output gamut
 void MainWindow::on_comboBoxOutputGamut_currentIndexChanged(int index)
 {
+    ui->comboBoxProfile->blockSignals( true );
+    ui->comboBoxProfile->setCurrentIndex( PROFILE_CUSTOM );
+    ui->comboBoxProfile->blockSignals( false );
     processingSetOutputGamut( m_pProcessingObject, index );
     m_frameChanged = true;
 }
