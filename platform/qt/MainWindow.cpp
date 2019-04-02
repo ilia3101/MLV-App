@@ -5480,20 +5480,21 @@ void MainWindow::on_comboBoxProfile_currentIndexChanged(int index)
     //Disable parameters if log
     bool enable = true;
     ui->checkBoxCreativeAdjustments->blockSignals( true );
-    if( ( index == PROFILE_ALEXA_LOG )
+    /*if( ( index == PROFILE_ALEXA_LOG )
      || ( index == PROFILE_CINEON_LOG )
      || ( index == PROFILE_SONY_LOG_3 )
      || ( index == PROFILE_SRGB )
      || ( index == PROFILE_REC709 )
-     || ( index == PROFILE_BMDFILM ) )
+     || ( index == PROFILE_BMDFILM )
+     || ( index == PROFILE_CUSTOM ) )
     {
         enable = false;
     }
     else
     {
         ui->checkBoxCreativeAdjustments->setChecked( false );
-    }
-    ui->checkBoxCreativeAdjustments->setEnabled( !enable );
+    }*/
+    ui->checkBoxCreativeAdjustments->setEnabled( enable );
     enableCreativeAdjustments( enable || ui->checkBoxCreativeAdjustments->isChecked() );
     ui->checkBoxCreativeAdjustments->blockSignals( false );
 
@@ -5512,6 +5513,9 @@ void MainWindow::on_comboBoxProfile_currentIndexChanged(int index)
         ui->horizontalSliderGamma->setValue( processingGetOutputGamma( m_pProcessingObject ) );
         ui->horizontalSliderGamma->blockSignals( false );
         ui->label_GammaVal->setText( QString("%1").arg( processingGetOutputGamma( m_pProcessingObject ), 0, 'f', 1 ) );
+        ui->checkBoxCreativeAdjustments->blockSignals( true );
+        ui->checkBoxCreativeAdjustments->setChecked( processingGetAllowedCreativeAdjustments( m_pProcessingObject ) );
+        ui->checkBoxCreativeAdjustments->blockSignals( false );
     }
 }
 
