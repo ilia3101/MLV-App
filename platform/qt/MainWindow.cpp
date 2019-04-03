@@ -5441,7 +5441,7 @@ void MainWindow::on_comboBoxUseCameraMatrix_currentIndexChanged(int index)
 void MainWindow::on_checkBoxCreativeAdjustments_toggled(bool checked)
 {
     ui->comboBoxProfile->blockSignals( true );
-    //ui->comboBoxProfile->setCurrentIndex( PROFILE_CUSTOM );
+    ui->comboBoxProfile->setCurrentIndex( PROFILE_CUSTOM );
     ui->comboBoxProfile->blockSignals( false );
 
     if( checked )
