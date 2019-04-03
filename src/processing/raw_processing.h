@@ -58,12 +58,16 @@ int processingGetOutputGamut(processingObject_t * processing);
 
 
 /* Set tonemapping function */
-// void processingSetTonemappingFunction(processingObject_t * processing, int function)
-// #define TONEMAPPING_NONE
-// #define TONEMAPPING_REINHARD
-// #define TONEMAPPING_TANGENT
-// #define TONEMAPPING_
-
+void processingSetTonemappingFunction(processingObject_t * processing, int function);
+int processingGetTonemappingFunction(processingObject_t * processing);
+#define TONEMAP_NONE 0
+#define TONEMAP_REINHARD 1
+#define TONEMAP_TANGENT 2
+#define TONEMAP_CANON_CLOG 3 
+#define TONEMAP_ALEXA_LOGC 4
+#define TONEMAP_CINEON_LOG 5
+#define TONEMAP_SONY_SLOG3 6
+#define TONEMAP_BMDFILM 7
 
 
 
@@ -310,6 +314,9 @@ void processing_update_shadow_highlight_curve(processingObject_t * processing);
 /* Get matrix for a gamut */
 double * get_matrix_xyz_to_rgb(int gamut);
 void get_matrix_rgb_to_xyz(int gamut, double * out);
+
+/* Get tonemapping function from number. Why I used void: https://stackoverflow.com/questions/10758811/c-syntax-for-functions-returning-function-pointers?answertab=votes#tab-top */
+void * get_tonemapping_function(int function);
 
 /* Adds contrast to a single pixel in a S-curvey way, 
  * input pixel must be 0.0 - 1.0 and a double float */
