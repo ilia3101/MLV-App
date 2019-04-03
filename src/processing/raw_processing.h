@@ -74,6 +74,8 @@ int processingGetTonemappingFunction(processingObject_t * processing);
 
 /* Set output gamma, 1.0 for log, 2.2 for sRGB etc */
 void processingSetOutputGamma(processingObject_t * processing, double gamma);
+double processingGetOutputGamma(processingObject_t * processing);
+
 
 
 
