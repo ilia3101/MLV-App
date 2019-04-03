@@ -206,6 +206,7 @@ typedef struct {
     int processing_gamut;
     int output_gamut;
     double output_gamma;
+    int tonemapping_function;
 
 } processingObject_t;
 

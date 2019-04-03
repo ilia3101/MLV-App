@@ -51,6 +51,8 @@ static const double ciecam02_danne[] = {
 
 /* Tonemapping info from http://filmicworlds.com/blog/filmic-tonemapping-operators/ */
 
+double NoTonemap(double x) {return x;}
+
 /* Reinhard - most basic but just werks */
 double ReinhardTonemap(double x) { return x / (1.0 + x); }
 float ReinhardTonemap_f(float x) { return x / (1.0f + x); }
@@ -94,6 +96,22 @@ double BmdFilmTonemap(double x)
     double pix01 = bmd_film[in+1][0];
 
     return interpol( input, in, in+1, pix00, pix01 );
+}
+
+void * get_tonemapping_function(int function)
+{
+    switch (function)
+    {
+        case TONEMAP_NONE: return NoTonemap; break;
+        case TONEMAP_REINHARD: return ReinhardTonemap; break;
+        case TONEMAP_TANGENT: return TangentTonemap; break;
+        case TONEMAP_CANON_CLOG: return CanonCLogTonemap; break;
+        case TONEMAP_ALEXA_LOGC: return AlexaLogCTonemap; break;
+        case TONEMAP_CINEON_LOG: return CineonLogTonemap; break;
+        case TONEMAP_SONY_SLOG3: return SonySLogTonemap; break;
+        case TONEMAP_BMDFILM: return BmdFilmTonemap; break;
+        default: return NoTonemap; break;
+    }
 }
 
 /* Returns multipliers for white balance by (linearly) interpolating measured 

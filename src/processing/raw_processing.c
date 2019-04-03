@@ -1953,3 +1953,17 @@ double processingGetOutputGamma(processingObject_t * processing)
 {
     return processing->output_gamma;
 }
+
+void processingSetTonemappingFunction(processingObject_t * processing, int function)
+{
+    processing->tonemapping_function = function;
+    processing->tone_mapping_function = get_tonemapping_function(function);
+
+    /* Maybe there needs to be a standard way of making the lookup tables update... */
+    processingSetExposureStops(processing, processing->exposure_stops);
+}
+
+int processingGetTonemappingFunction(processingObject_t * processing)
+{
+    return processing->tonemapping_function;
+}
