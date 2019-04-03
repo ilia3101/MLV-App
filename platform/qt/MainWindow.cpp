@@ -3559,15 +3559,14 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
         ui->comboBoxOutputGamut->setCurrentIndex( receipt->outputGamut() );
         on_comboBoxOutputGamut_currentIndexChanged( receipt->outputGamut() );
         ui->horizontalSliderGamma->setValue( receipt->gamma() );
+        ui->checkBoxCreativeAdjustments->setChecked( receipt->allowCreativeAdjustments() );
+        on_checkBoxCreativeAdjustments_toggled( receipt->allowCreativeAdjustments() );
     }
     else
     {
         ui->comboBoxProfile->setCurrentIndex( receipt->profile() );
         on_comboBoxProfile_currentIndexChanged( receipt->profile() );
     }
-
-    ui->checkBoxCreativeAdjustments->setChecked( receipt->allowCreativeAdjustments() );
-    on_checkBoxCreativeAdjustments_toggled( receipt->allowCreativeAdjustments() );
 
     ui->horizontalSliderDenoiseStrength->setValue( receipt->denoiserStrength() );
     ui->comboBoxDenoiseWindow->setCurrentIndex( receipt->denoiserWindow() - 2 );
