@@ -2797,6 +2797,7 @@ void MainWindow::saveSession(QString fileName)
 
     xmlWriter.writeStartElement( "mlv_files" );
     xmlWriter.writeAttribute( "version", "2" );
+    xmlWriter.writeAttribute( "mlvapp", VERSION );
     for( int i = 0; i < ui->listWidgetSession->count(); i++ )
     {
         xmlWriter.writeStartElement( "clip" );
