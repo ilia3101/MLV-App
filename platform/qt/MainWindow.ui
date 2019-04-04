@@ -499,7 +499,7 @@ QGroupBox::indicator:checked:disabled {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>0</y>
+            <y>-844</y>
             <width>244</width>
             <height>4708</height>
            </rect>
@@ -2868,7 +2868,7 @@ QGroupBox::indicator:checked:disabled {
                      </property>
                      <item>
                       <property name="text">
-                       <string>Standard</string>
+                       <string>None</string>
                       </property>
                      </item>
                      <item>
@@ -2878,7 +2878,12 @@ QGroupBox::indicator:checked:disabled {
                      </item>
                      <item>
                       <property name="text">
-                       <string>Film</string>
+                       <string>Tangent</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>Canon C Log</string>
                       </property>
                      </item>
                      <item>

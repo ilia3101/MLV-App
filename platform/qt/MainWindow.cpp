@@ -5479,20 +5479,6 @@ void MainWindow::on_comboBoxProfile_currentIndexChanged(int index)
     //Disable parameters if log
     bool enable = true;
     ui->checkBoxCreativeAdjustments->blockSignals( true );
-    /*if( ( index == PROFILE_ALEXA_LOG )
-     || ( index == PROFILE_CINEON_LOG )
-     || ( index == PROFILE_SONY_LOG_3 )
-     || ( index == PROFILE_SRGB )
-     || ( index == PROFILE_REC709 )
-     || ( index == PROFILE_BMDFILM )
-     || ( index == PROFILE_CUSTOM ) )
-    {
-        enable = false;
-    }
-    else
-    {
-        ui->checkBoxCreativeAdjustments->setChecked( false );
-    }*/
     ui->checkBoxCreativeAdjustments->setEnabled( enable );
     enableCreativeAdjustments( enable || ui->checkBoxCreativeAdjustments->isChecked() );
     ui->checkBoxCreativeAdjustments->blockSignals( false );
@@ -5500,7 +5486,7 @@ void MainWindow::on_comboBoxProfile_currentIndexChanged(int index)
     if( index != PROFILE_CUSTOM )
     {
         ui->comboBoxTonemappingFct->blockSignals( true );
-        //ui->comboBoxTonemappingFct( processingGetTonemapping??? );
+        ui->comboBoxTonemappingFct->setCurrentIndex( processingGetTonemappingFunction( m_pProcessingObject ) );
         ui->comboBoxTonemappingFct->blockSignals( false );
         ui->comboBoxProcessingGamut->blockSignals( true );
         ui->comboBoxProcessingGamut->setCurrentIndex( processingGetProcessingGamut( m_pProcessingObject ) );
@@ -5524,7 +5510,7 @@ void MainWindow::on_comboBoxTonemappingFct_currentIndexChanged(int index)
     ui->comboBoxProfile->blockSignals( true );
     ui->comboBoxProfile->setCurrentIndex( PROFILE_CUSTOM );
     ui->comboBoxProfile->blockSignals( false );
-    //..
+    processingSetTonemappingFunction( m_pProcessingObject, index );
     m_frameChanged = true;
 }
 
