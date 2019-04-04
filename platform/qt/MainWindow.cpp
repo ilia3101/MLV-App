@@ -2896,6 +2896,7 @@ void MainWindow::on_actionExportReceipt_triggered()
 
     xmlWriter.writeStartElement( "receipt" );
     xmlWriter.writeAttribute( "version", "2" );
+    xmlWriter.writeAttribute( "mlvapp", VERSION );
 
     writeXmlElementsToFile( &xmlWriter, m_pSessionReceipts.at( m_lastActiveClipInSession ) );
 
