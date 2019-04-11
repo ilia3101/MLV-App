@@ -1389,6 +1389,7 @@ void MainWindow::readSettings()
     m_resizeFilterAlgorithm = set.value( "resizeAlgorithm", 0 ).toUInt();
     m_smoothFilterSetting = set.value( "smoothEnabled", 0 ).toUInt();
     m_hdrExport = set.value( "hdrExport", false ).toBool();
+    m_fpsOverride = set.value( "fpsOverride", false ).toBool();
     m_frameRate = set.value( "frameRate", 25 ).toDouble();
     m_audioExportEnabled = set.value( "audioExportEnabled", true ).toBool();
     ui->groupBoxRawCorrection->setChecked( set.value( "expandedRawCorrection", false ).toBool() );
@@ -1454,6 +1455,7 @@ void MainWindow::writeSettings()
     set.setValue( "resizeAlgorithm", m_resizeFilterAlgorithm );
     set.setValue( "smoothEnabled", m_smoothFilterSetting );
     set.setValue( "hdrExport", m_hdrExport );
+    set.setValue( "fpsOverride", m_fpsOverride );
     set.setValue( "frameRate", m_frameRate );
     set.setValue( "audioExportEnabled", m_audioExportEnabled );
     set.setValue( "expandedRawCorrection", ui->groupBoxRawCorrection->isChecked() );
