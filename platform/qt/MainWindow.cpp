@@ -1154,6 +1154,7 @@ void MainWindow::initGui( void )
     m_pCachingStatus->setText( tr( "Caching: idle" ) );
     //m_pCachingStatus->setFrameStyle(QFrame::Panel | QFrame::Sunken);
     statusBar()->addWidget( m_pCachingStatus );
+    m_pCachingStatus->hide();
 
     //Set up fps status label
     m_pFpsStatus = new QLabel( statusBar() );
