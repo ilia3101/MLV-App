@@ -1679,7 +1679,7 @@ void MainWindow::startExportPipe(QString fileName)
     if( m_hdrExport && isHdrClip ) hdrString = QString( ",tblend=all_mode=average" );
 
     //Vidstab, 2nd pass
-    bool vidstab = false;
+    bool vidstab = true;
     QString vidstabString = QString( "" );
     QString vidstabFile = QString( "\"%1/tmp_transform_vectors.trf\"" ).arg( QCoreApplication::applicationDirPath() );
 #ifdef Q_OS_OSX
@@ -2267,6 +2267,13 @@ void MainWindow::startExportPipe(QString fileName)
 
     //Delete wav file
     QFile *file = new QFile( wavFileName );
+    if( file->exists() ) file->remove();
+    delete file;
+
+    //Delete tmp vidstab file
+    vidstabFile.replace( "\"", "" );
+    file = new QFile( vidstabFile );
+    qDebug() << "File:" << vidstab << vidstabFile << file->exists();
     if( file->exists() ) file->remove();
     delete file;
 
