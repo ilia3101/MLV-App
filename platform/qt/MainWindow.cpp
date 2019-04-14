@@ -1679,13 +1679,13 @@ void MainWindow::startExportPipe(QString fileName)
     if( m_hdrExport && isHdrClip ) hdrString = QString( ",tblend=all_mode=average" );
 
     //Vidstab, 2nd pass
-    bool vidstab = true;
+    bool vidstab = false;
     QString vidstabString = QString( "" );
     QString vidstabFile = QString( "\"%1/tmp_transform_vectors.trf\"" ).arg( QCoreApplication::applicationDirPath() );
 #ifdef Q_OS_OSX
     if( vidstab )
     {
-        vidstabString = QString( ",vidstabtransform=input=%1:zoom=5:smoothing=20,unsharp=5:5:0.8:3:3:0.4" ).arg( vidstabFile );
+        vidstabString = QString( ",vidstabtransform=input=%1:zoom=5:smoothing=10,unsharp=5:5:0.8:3:3:0.4" ).arg( vidstabFile );
     }
 #endif
 
