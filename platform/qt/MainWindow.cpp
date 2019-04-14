@@ -2273,7 +2273,6 @@ void MainWindow::startExportPipe(QString fileName)
     //Delete tmp vidstab file
     vidstabFile.replace( "\"", "" );
     file = new QFile( vidstabFile );
-    qDebug() << "File:" << vidstab << vidstabFile << file->exists();
     if( file->exists() ) file->remove();
     delete file;
 
