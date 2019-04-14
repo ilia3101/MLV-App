@@ -1154,7 +1154,7 @@ void MainWindow::initGui( void )
     m_pCachingStatus->setText( tr( "Caching: idle" ) );
     //m_pCachingStatus->setFrameStyle(QFrame::Panel | QFrame::Sunken);
     statusBar()->addWidget( m_pCachingStatus );
-    m_pCachingStatus->hide();
+    m_pCachingStatus->hide(); //delete this line, if caching is available again one day
 
     //Set up fps status label
     m_pFpsStatus = new QLabel( statusBar() );
@@ -1678,6 +1678,17 @@ void MainWindow::startExportPipe(QString fileName)
     QString hdrString = QString( "" );
     if( m_hdrExport && isHdrClip ) hdrString = QString( ",tblend=all_mode=average" );
 
+    //Vidstab, 2nd pass
+    bool vidstab = false;
+    QString vidstabString = QString( "" );
+    QString vidstabFile = QString( "\"%1/tmp_transform_vectors.trf\"" ).arg( QCoreApplication::applicationDirPath() );
+#ifdef Q_OS_OSX
+    if( vidstab )
+    {
+        vidstabString = QString( ",vidstabtransform=input=%1:zoom=5:smoothing=20,unsharp=5:5:0.8:3:3:0.4" ).arg( vidstabFile );
+    }
+#endif
+
     //Resize Filter + colorspace conversion (for getting right colors)
     QString resizeFilter = QString( "" );
     if( m_resizeFilterEnabled )
@@ -1704,12 +1715,13 @@ void MainWindow::startExportPipe(QString fileName)
             m_resizeWidth += m_resizeWidth % 2;
             height += height % 2;
         }
-        resizeFilter = QString( "-vf %1scale=w=%2:h=%3:%4:in_color_matrix=bt601:out_color_matrix=bt709%5 " )
+        resizeFilter = QString( "-vf %1scale=w=%2:h=%3:%4:in_color_matrix=bt601:out_color_matrix=bt709%5%6 " )
                 .arg( moireeFilter )
                 .arg( m_resizeWidth )
                 .arg( height )
                 .arg( resizeAlgorithm )
-                .arg( hdrString );
+                .arg( hdrString )
+                .arg( vidstabString );
     }
     else if( m_exportQueue.first()->stretchFactorX() != 1.0
           || m_exportQueue.first()->stretchFactorY() != 1.0 )
@@ -1734,19 +1746,21 @@ void MainWindow::startExportPipe(QString fileName)
             width += width % 2;
             height += height % 2;
         }
-        resizeFilter = QString( "-vf %1scale=w=%2:h=%3:%4:in_color_matrix=bt601:out_color_matrix=bt709%5 " )
+        resizeFilter = QString( "-vf %1scale=w=%2:h=%3:%4:in_color_matrix=bt601:out_color_matrix=bt709%5%6 " )
                 .arg( moireeFilter )
                 .arg( width )
                 .arg( height )
                 .arg( resizeAlgorithm )
-                .arg( hdrString );
+                .arg( hdrString )
+                .arg( vidstabString );
     }
     else
     {
         //a colorspace conversion is always needed to get right colors
-        resizeFilter = QString( "-vf %1scale=in_color_matrix=bt601:out_color_matrix=bt709%2 " )
+        resizeFilter = QString( "-vf %1scale=in_color_matrix=bt601:out_color_matrix=bt709%2%3 " )
                 .arg( moireeFilter )
-                .arg( hdrString );
+                .arg( hdrString )
+                .arg( vidstabString );
     }
     //qDebug() << resizeFilter;
 
@@ -1769,6 +1783,70 @@ void MainWindow::startExportPipe(QString fileName)
 
     QString output = fileName.left( fileName.lastIndexOf( "." ) );
     QString resolution = QString( "%1x%2" ).arg( getMlvWidth( m_pMlvObject ) ).arg( getMlvHeight( m_pMlvObject ) );
+
+    //VidStab: First pass
+#ifdef Q_OS_OSX
+    if( vidstab )
+    {
+        QString stabCmd = QString( "%1 -r %2 -y -f rawvideo -s %3 -pix_fmt rgb48 -i - -vf vidstabdetect=stepsize=32:shakiness=10:accuracy=10:result=%4 -f null -" )
+                .arg( program )
+                .arg( fps )
+                .arg( resolution )
+                .arg( vidstabFile );
+
+        //Try to open pipe
+        FILE *pPipeStab;
+        //qDebug() << "Call ffmpeg:" << stabCmd;
+    #ifdef Q_OS_UNIX
+        if( !( pPipeStab = popen( stabCmd.toUtf8().data(), "w" ) ) )
+    #else
+        if( !( pPipeStab = popen( stabCmd.toLatin1().data(), "wb" ) ) )
+    #endif
+        {
+            QMessageBox::critical( this, tr( "File export failed" ), tr( "Could not export with ffmpeg." ) );
+        }
+        else
+        {
+            //Buffer
+            uint32_t frameSize = getMlvWidth( m_pMlvObject ) * getMlvHeight( m_pMlvObject ) * 3;
+            uint16_t * imgBuffer;
+            imgBuffer = ( uint16_t* )malloc( frameSize * sizeof( uint16_t ) );
+
+            //Frames in the export queue?!
+            int totalFrames = 0;
+            for( int i = 0; i < m_exportQueue.count(); i++ )
+            {
+                totalFrames += m_exportQueue.at(i)->cutOut() - m_exportQueue.at(i)->cutIn() + 1;
+            }
+
+            //Get all pictures and send to pipe
+            for( uint32_t i = (m_exportQueue.first()->cutIn() - 1); i < m_exportQueue.first()->cutOut(); i++ )
+            {
+                //Get picture, and lock render thread... there can only be one!
+                m_pRenderThread->lock();
+                getMlvProcessedFrame16( m_pMlvObject, i, imgBuffer, QThread::idealThreadCount() );
+                m_pRenderThread->unlock();
+
+                //Write to pipe
+                fwrite(imgBuffer, sizeof( uint16_t ), frameSize, pPipeStab);
+                fflush(pPipeStab);
+
+                //Set Status
+                m_pStatusDialog->ui->progressBar->setValue( i - ( m_exportQueue.first()->cutIn() - 1 ) + 1 );
+                m_pStatusDialog->ui->progressBar->repaint();
+                m_pStatusDialog->drawTimeFromToDoFrames( totalFrames - i + ( m_exportQueue.first()->cutIn() - 1 ) - 1 );
+                qApp->processEvents();
+
+                //Abort pressed? -> End the loop
+                if( m_exportAbortPressed ) break;
+            }
+            //Close pipe
+            pclose( pPipeStab );
+            free( imgBuffer );
+        }
+    }
+#endif
+
     if( m_codecProfile == CODEC_TIFF )
     {
         //Creating a folder with the initial filename
