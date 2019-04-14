@@ -1685,7 +1685,7 @@ void MainWindow::startExportPipe(QString fileName)
 #ifdef Q_OS_OSX
     if( vidstab )
     {
-        vidstabString = QString( ",vidstabtransform=input=%1:zoom=5:smoothing=10,unsharp=5:5:0.8:3:3:0.4" ).arg( vidstabFile );
+        vidstabString = QString( ",vidstabtransform=input=%1:zoom=5:smoothing=20,unsharp=5:5:0.8:3:3:0.4" ).arg( vidstabFile );
     }
 #endif
 
