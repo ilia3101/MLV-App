@@ -253,6 +253,7 @@ private slots:
     void on_checkBoxRawFixEnable_clicked(bool checked);
     void on_checkBoxLutEnable_clicked(bool checked);
     void on_checkBoxFilterEnable_clicked(bool checked);
+    void on_checkBoxVidstabEnable_toggled(bool checked);
     void on_actionWhiteBalancePicker_toggled(bool checked);
     void whiteBalancePicked( int x, int y );
     void on_toolButtonWbMode_clicked();

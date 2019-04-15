@@ -72,6 +72,7 @@ ReceiptSettings::ReceiptSettings()
     m_stretchFactorX = 1.0;
     m_stretchFactorY = -1;
     m_upsideDown = false;
+    m_vidstabEnable = false;
     m_lutEnabled = false;
     m_lutName = QString( "" );
     m_lutStrength = 100;

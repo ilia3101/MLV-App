@@ -86,6 +86,7 @@ public:
     void setStretchFactorX( double factor )   {m_stretchFactorX = factor;}
     void setStretchFactorY( double factor )   {m_stretchFactorY = factor;}
     void setUpsideDown( bool on )             {m_upsideDown = on;}
+    void setVidstabEnabled( bool on )         {m_vidstabEnable = on;}
     void setLutEnabled( bool on )             {m_lutEnabled = on;}
     void setLutName( QString name )           {m_lutName = name;}
     void setLutStrength( uint8_t value )      {m_lutStrength = value;}
@@ -163,6 +164,7 @@ public:
     double stretchFactorX( void ){return m_stretchFactorX;}
     double stretchFactorY( void ){return m_stretchFactorY;}
     bool upsideDown( void ){return m_upsideDown;}
+    bool vidStabEnabled( void ){return m_vidstabEnable;}
     bool lutEnabled( void ){return m_lutEnabled;}
     QString lutName( void ){return m_lutName;}
     uint8_t lutStrength( void ){return m_lutStrength;}
@@ -250,6 +252,7 @@ private:
     double m_stretchFactorX;
     double m_stretchFactorY;
     bool m_upsideDown;
+    bool m_vidstabEnable;
     bool m_lutEnabled;
     QString m_lutName;
     uint8_t m_lutStrength;

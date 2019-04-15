@@ -1292,6 +1292,12 @@ void MainWindow::initGui( void )
     //DualIso Button by default invisible
     ui->toolButtonDualIsoForce->setVisible( false );
 
+    //Vidstab for OSX only
+#ifndef Q_OS_OSX
+   ui->checkBoxVidstabEnable->setVisible( false );
+   ui->line_25->setVisible( false );
+#endif
+
     //Reveal in Explorer
 #ifdef Q_OS_WIN
     ui->actionShowInFinder->setText( tr( "Reveal in Explorer" ) );
@@ -1679,11 +1685,10 @@ void MainWindow::startExportPipe(QString fileName)
     if( m_hdrExport && isHdrClip ) hdrString = QString( ",tblend=all_mode=average" );
 
     //Vidstab, 2nd pass
-    bool vidstab = false;
     QString vidstabString = QString( "" );
     QString vidstabFile = QString( "\"%1/tmp_transform_vectors.trf\"" ).arg( QCoreApplication::applicationDirPath() );
 #ifdef Q_OS_OSX
-    if( vidstab )
+    if( m_exportQueue.first()->vidStabEnabled() )
     {
         vidstabString = QString( ",vidstabtransform=input=%1:zoom=0:smoothing=10" ).arg( vidstabFile );
     }
@@ -1786,7 +1791,7 @@ void MainWindow::startExportPipe(QString fileName)
 
     //VidStab: First pass
 #ifdef Q_OS_OSX
-    if( vidstab )
+    if( m_exportQueue.first()->vidStabEnabled() )
     {
         QString stabCmd = QString( "%1 -r %2 -y -f rawvideo -s %3 -pix_fmt rgb48 -i - -c:v libx264 -preset ultrafast -crf 10 -f matroska - | %1 -i - -vf vidstabdetect=stepsize=32:shakiness=10:accuracy=10:result=%4 -f null -" )
                         .arg( program )
@@ -3372,6 +3377,11 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
             receipt->setUpsideDown( (bool)Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
+        else if( Rxml->isStartElement() && Rxml->name() == "vidstabEnable" )
+        {
+            receipt->setVidstabEnabled( (bool)Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
         else if( Rxml->isStartElement() && Rxml->name() == "cutIn" )
         {
             receipt->setCutIn( Rxml->readElementText().toInt() );
@@ -3470,6 +3480,7 @@ void MainWindow::writeXmlElementsToFile(QXmlStreamWriter *xmlWriter, ReceiptSett
     xmlWriter->writeTextElement( "stretchFactorX",          QString( "%1" ).arg( receipt->stretchFactorX() ) );
     xmlWriter->writeTextElement( "stretchFactorY",          QString( "%1" ).arg( receipt->stretchFactorY() ) );
     xmlWriter->writeTextElement( "upsideDown",              QString( "%1" ).arg( receipt->upsideDown() ) );
+    xmlWriter->writeTextElement( "vidstabEnable",           QString( "%1" ).arg( receipt->vidStabEnabled() ) );
     xmlWriter->writeTextElement( "cutIn",                   QString( "%1" ).arg( receipt->cutIn() ) );
     xmlWriter->writeTextElement( "cutOut",                  QString( "%1" ).arg( receipt->cutOut() ) );
     xmlWriter->writeTextElement( "debayer",                 QString( "%1" ).arg( receipt->debayer() ) );
@@ -3778,6 +3789,10 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     if( ui->actionPlaybackPosition->isChecked() ) ui->horizontalSliderPosition->setValue( receipt->lastPlaybackPosition() );
     ui->comboBoxDebayer->setCurrentIndex( receipt->debayer() );
     on_comboBoxDebayer_currentIndexChanged( receipt->debayer() );
+
+    ui->checkBoxVidstabEnable->setChecked( receipt->vidStabEnabled() );
+    on_checkBoxVidstabEnable_toggled( receipt->vidStabEnabled() );
+
     m_setSliders = false;
 }
 
@@ -3872,6 +3887,8 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     else receipt->setLastPlaybackPosition( 0 );
 
     receipt->setDebayer( ui->comboBoxDebayer->currentIndex() );
+
+    receipt->setVidstabEnabled( ui->checkBoxVidstabEnable->isChecked() );
 }
 
 //Replace receipt settings
@@ -3978,6 +3995,7 @@ void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings 
         receiptTarget->setStretchFactorX( receiptSource->stretchFactorX() );
         receiptTarget->setStretchFactorY( receiptSource->stretchFactorY() );
         receiptTarget->setUpsideDown( receiptSource->upsideDown() );
+        receiptTarget->setVidstabEnabled( receiptSource->vidStabEnabled() );
     }
 
     if( !paste )
@@ -4118,6 +4136,7 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     receipt->setStretchFactorX( m_pSessionReceipts.at( row )->stretchFactorX() );
     receipt->setStretchFactorY( m_pSessionReceipts.at( row )->stretchFactorY() );
     receipt->setUpsideDown( m_pSessionReceipts.at( row )->upsideDown() );
+    receipt->setVidstabEnabled( m_pSessionReceipts.at( row )->vidStabEnabled() );
 
     receipt->setDebayer( m_pSessionReceipts.at( row )->debayer() );
 
@@ -6964,6 +6983,13 @@ void MainWindow::on_checkBoxFilterEnable_clicked(bool checked)
     ui->label_FilterStrengthVal->setEnabled( checked );
     ui->label_FilterStrengthText->setEnabled( checked );
     ui->horizontalSliderFilterStrength->setEnabled( checked );
+}
+
+//En-/disable ffmpeg vidstab video stabilizer
+void MainWindow::on_checkBoxVidstabEnable_toggled(bool checked)
+{
+    Q_UNUSED( checked );
+    //Enable/Disable further UI elements, when integrated
 }
 
 //Activate & Deactivate wbPicker

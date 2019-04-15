@@ -501,7 +501,7 @@ QGroupBox::indicator:checked:disabled {
             <x>0</x>
             <y>0</y>
             <width>244</width>
-            <height>4516</height>
+            <height>4555</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayoutScrollArea">
@@ -7477,18 +7477,6 @@ QGroupBox::indicator:checked:disabled {
                  </property>
                  <item>
                   <layout class="QGridLayout" name="gridLayout_21">
-                   <item row="5" column="0">
-                    <widget class="QLabel" name="UpsideDownLabel">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
-                     <property name="text">
-                      <string>Upside Down</string>
-                     </property>
-                    </widget>
-                   </item>
                    <item row="0" column="0">
                     <widget class="QLabel" name="label_8">
                      <property name="font">
@@ -7498,6 +7486,18 @@ QGroupBox::indicator:checked:disabled {
                      </property>
                      <property name="text">
                       <string>Width Stretch</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="5" column="0">
+                    <widget class="QLabel" name="UpsideDownLabel">
+                     <property name="font">
+                      <font>
+                       <pointsize>10</pointsize>
+                      </font>
+                     </property>
+                     <property name="text">
+                      <string>Upside Down</string>
                      </property>
                     </widget>
                    </item>
@@ -7615,6 +7615,22 @@ QGroupBox::indicator:checked:disabled {
                      </property>
                     </widget>
                    </item>
+                   <item row="2" column="1">
+                    <widget class="QLabel" name="label_resResolution">
+                     <property name="enabled">
+                      <bool>false</bool>
+                     </property>
+                     <property name="font">
+                      <font>
+                       <pointsize>10</pointsize>
+                       <italic>true</italic>
+                      </font>
+                     </property>
+                     <property name="text">
+                      <string>0 x 0 pixels</string>
+                     </property>
+                    </widget>
+                   </item>
                    <item row="5" column="1">
                     <widget class="QFrame" name="toolButtonUpsideDown">
                      <layout class="QHBoxLayout" name="horizontalLayout_29">
@@ -7687,22 +7703,6 @@ QGroupBox::indicator:checked:disabled {
                      </layout>
                     </widget>
                    </item>
-                   <item row="2" column="1">
-                    <widget class="QLabel" name="label_resResolution">
-                     <property name="enabled">
-                      <bool>false</bool>
-                     </property>
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                       <italic>true</italic>
-                      </font>
-                     </property>
-                     <property name="text">
-                      <string>0 x 0 pixels</string>
-                     </property>
-                    </widget>
-                   </item>
                    <item row="2" column="0">
                     <widget class="QLabel" name="label_33">
                      <property name="enabled">
@@ -7718,6 +7718,31 @@ QGroupBox::indicator:checked:disabled {
                      </property>
                      <property name="alignment">
                       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="6" column="0" colspan="2">
+                    <widget class="Line" name="line_25">
+                     <property name="styleSheet">
+                      <string notr="true">background-color: rgb(115, 115, 115);</string>
+                     </property>
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="7" column="0" rowspan="2" colspan="2">
+                    <widget class="QCheckBox" name="checkBoxVidstabEnable">
+                     <property name="font">
+                      <font>
+                       <pointsize>10</pointsize>
+                      </font>
+                     </property>
+                     <property name="toolTip">
+                      <string>Visible only after ffmpeg export!</string>
+                     </property>
+                     <property name="text">
+                      <string>Enable ffmpeg vidstab</string>
                      </property>
                     </widget>
                    </item>
