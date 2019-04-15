@@ -1685,7 +1685,7 @@ void MainWindow::startExportPipe(QString fileName)
 #ifdef Q_OS_OSX
     if( vidstab )
     {
-        vidstabString = QString( ",vidstabtransform=input=%1:zoom=5:smoothing=20,unsharp=5:5:0.8:3:3:0.4" ).arg( vidstabFile );
+        vidstabString = QString( ",vidstabtransform=input=%1:zoom=0:smoothing=10" ).arg( vidstabFile );
     }
 #endif
 
@@ -1788,11 +1788,11 @@ void MainWindow::startExportPipe(QString fileName)
 #ifdef Q_OS_OSX
     if( vidstab )
     {
-        QString stabCmd = QString( "%1 -r %2 -y -f rawvideo -s %3 -pix_fmt rgb48 -i - -vf vidstabdetect=stepsize=32:shakiness=10:accuracy=10:result=%4 -f null -" )
-                .arg( program )
-                .arg( fps )
-                .arg( resolution )
-                .arg( vidstabFile );
+        QString stabCmd = QString( "%1 -r %2 -y -f rawvideo -s %3 -pix_fmt rgb48 -i - -c:v libx264 -preset ultrafast -crf 10 -f matroska - | %1 -i - -vf vidstabdetect=stepsize=32:shakiness=10:accuracy=10:result=%4 -f null -" )
+                        .arg( program )
+                        .arg( fps )
+                        .arg( resolution )
+                        .arg( vidstabFile );
 
         //Try to open pipe
         FILE *pPipeStab;
