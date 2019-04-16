@@ -174,9 +174,9 @@ void SingleFrameExportDialog::exportDng()
 
     //Save cDNG frame
 #ifdef Q_OS_UNIX
-    if( saveDngFrame( m_pMlvObject, cinemaDng, m_frameNr + 1, fileName.toUtf8().data() ) )
+    if( saveDngFrame( m_pMlvObject, cinemaDng, m_frameNr, fileName.toUtf8().data() ) )
 #else
-    if( saveDngFrame( m_pMlvObject, cinemaDng, m_frameNr + 1, fileName.toLatin1().data() ) )
+    if( saveDngFrame( m_pMlvObject, cinemaDng, m_frameNr, fileName.toLatin1().data() ) )
 #endif
     {
         QMessageBox::critical( this, tr( "MLV App - Export file error" ), tr( "Could not save: %1\n" ).arg( fileName ), tr( "Cancel" ), 0, 0);
