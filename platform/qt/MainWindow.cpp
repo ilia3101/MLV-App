@@ -1864,9 +1864,9 @@ void MainWindow::startExportPipe(QString fileName)
                 fflush(pPipeStab);
 
                 //Set Status
-                m_pStatusDialog->ui->progressBar->setValue( i - ( m_exportQueue.first()->cutIn() - 1 ) + 1 );
+                m_pStatusDialog->ui->progressBar->setValue( ( i - ( m_exportQueue.first()->cutIn() - 1 ) + 1 ) >> 1 );
                 m_pStatusDialog->ui->progressBar->repaint();
-                m_pStatusDialog->drawTimeFromToDoFrames( totalFrames - i + ( m_exportQueue.first()->cutIn() - 1 ) - 1 );
+                m_pStatusDialog->drawTimeFromToDoFrames( totalFrames - ( ( i - ( m_exportQueue.first()->cutIn() - 1 ) + 1 ) >> 1 ) );
                 qApp->processEvents();
 
                 //Abort pressed? -> End the loop
@@ -2284,9 +2284,18 @@ void MainWindow::startExportPipe(QString fileName)
             fflush(pPipe);
 
             //Set Status
-            m_pStatusDialog->ui->progressBar->setValue( i - ( m_exportQueue.first()->cutIn() - 1 ) + 1 );
-            m_pStatusDialog->ui->progressBar->repaint();
-            m_pStatusDialog->drawTimeFromToDoFrames( totalFrames - i + ( m_exportQueue.first()->cutIn() - 1 ) - 1 );
+            if( !m_exportQueue.first()->vidStabEnabled() )
+            {
+                m_pStatusDialog->ui->progressBar->setValue( i - ( m_exportQueue.first()->cutIn() - 1 ) + 1 );
+                m_pStatusDialog->ui->progressBar->repaint();
+                m_pStatusDialog->drawTimeFromToDoFrames( totalFrames - i + ( m_exportQueue.first()->cutIn() - 1 ) - 1 );
+            }
+            else
+            {
+                m_pStatusDialog->ui->progressBar->setValue( ( totalFrames + i - ( m_exportQueue.first()->cutIn() - 1 ) + 1 ) >> 1 );
+                m_pStatusDialog->ui->progressBar->repaint();
+                m_pStatusDialog->drawTimeFromToDoFrames( totalFrames - ( ( totalFrames + i - ( m_exportQueue.first()->cutIn() - 1 ) + 1 ) >> 1 ) );
+            }
             qApp->processEvents();
 
             //Abort pressed? -> End the loop
