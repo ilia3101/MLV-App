@@ -1297,6 +1297,7 @@ void MainWindow::initGui( void )
    ui->checkBoxVidstabEnable->setVisible( false );
    ui->line_25->setVisible( false );
 #endif
+   on_checkBoxVidstabEnable_toggled( false );
 
     //Reveal in Explorer
 #ifdef Q_OS_WIN
@@ -1690,7 +1691,18 @@ void MainWindow::startExportPipe(QString fileName)
 #ifdef Q_OS_OSX
     if( m_exportQueue.first()->vidStabEnabled() )
     {
-        vidstabString = QString( ",vidstabtransform=input=%1:zoom=0:smoothing=10" ).arg( vidstabFile );
+        if( m_exportQueue.first()->vidStabTripod() )
+        {
+            vidstabString = QString( ",vidstabtransform=input=%1:tripod=1" )
+                .arg( vidstabFile );
+        }
+        else
+        {
+            vidstabString = QString( ",vidstabtransform=input=%1:zoom=%2:smoothing=%3" )
+                .arg( vidstabFile )
+                .arg( m_exportQueue.first()->vidStabZoom() )
+                .arg( m_exportQueue.first()->vidStabSmoothing() );
+        }
     }
 #endif
 
@@ -1793,11 +1805,26 @@ void MainWindow::startExportPipe(QString fileName)
 #ifdef Q_OS_OSX
     if( m_exportQueue.first()->vidStabEnabled() )
     {
-        QString stabCmd = QString( "%1 -r %2 -y -f rawvideo -s %3 -pix_fmt rgb48 -i - -c:v libx264 -preset ultrafast -crf 10 -f matroska - | %1 -i - -vf vidstabdetect=stepsize=32:shakiness=10:accuracy=10:result=%4 -f null -" )
+        QString stabCmd;
+        if( m_exportQueue.first()->vidStabTripod() )
+        {
+            stabCmd = QString( "%1 -r %2 -y -f rawvideo -s %3 -pix_fmt rgb48 -i - -c:v libx264 -preset ultrafast -crf 10 -f matroska - | %1 -i - -vf vidstabdetect=tripod=1:result=%4 -f null -" )
                         .arg( program )
                         .arg( fps )
                         .arg( resolution )
                         .arg( vidstabFile );
+        }
+        else
+        {
+            stabCmd = QString( "%1 -r %2 -y -f rawvideo -s %3 -pix_fmt rgb48 -i - -c:v libx264 -preset ultrafast -crf 10 -f matroska - | %1 -i - -vf vidstabdetect=stepsize=%5:shakiness=%6:accuracy=%7:result=%4 -f null -" )
+                        .arg( program )
+                        .arg( fps )
+                        .arg( resolution )
+                        .arg( vidstabFile )
+                        .arg( m_exportQueue.first()->vidStabStepsize() )
+                        .arg( m_exportQueue.first()->vidStabShakiness() )
+                        .arg( m_exportQueue.first()->vidStabAccuracy() );
+        }
 
         //Try to open pipe
         FILE *pPipeStab;
@@ -3382,6 +3409,36 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
             receipt->setVidstabEnabled( (bool)Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
+        else if( Rxml->isStartElement() && Rxml->name() == "vidstabStepsize" )
+        {
+            receipt->setVidstabStepsize( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == "vidstabShakiness" )
+        {
+            receipt->setVidstabShakiness( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == "vidstabAccuracy" )
+        {
+            receipt->setVidstabAccuracy( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == "vidstabZoom" )
+        {
+            receipt->setVidstabZoom( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == "vidstabSmoothing" )
+        {
+            receipt->setVidstabSmoothing( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == "vidstabTripod" )
+        {
+            receipt->setVidstabTripod( (bool)Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
         else if( Rxml->isStartElement() && Rxml->name() == "cutIn" )
         {
             receipt->setCutIn( Rxml->readElementText().toInt() );
@@ -3481,6 +3538,12 @@ void MainWindow::writeXmlElementsToFile(QXmlStreamWriter *xmlWriter, ReceiptSett
     xmlWriter->writeTextElement( "stretchFactorY",          QString( "%1" ).arg( receipt->stretchFactorY() ) );
     xmlWriter->writeTextElement( "upsideDown",              QString( "%1" ).arg( receipt->upsideDown() ) );
     xmlWriter->writeTextElement( "vidstabEnable",           QString( "%1" ).arg( receipt->vidStabEnabled() ) );
+    xmlWriter->writeTextElement( "vidstabStepsize",         QString( "%1" ).arg( receipt->vidStabStepsize() ) );
+    xmlWriter->writeTextElement( "vidstabShakiness",        QString( "%1" ).arg( receipt->vidStabShakiness() ) );
+    xmlWriter->writeTextElement( "vidstabAccuracy",         QString( "%1" ).arg( receipt->vidStabAccuracy() ) );
+    xmlWriter->writeTextElement( "vidstabZoom",             QString( "%1" ).arg( receipt->vidStabZoom() ) );
+    xmlWriter->writeTextElement( "vidstabSmoothing",        QString( "%1" ).arg( receipt->vidStabSmoothing() ) );
+    xmlWriter->writeTextElement( "vidstabTripod",           QString( "%1" ).arg( receipt->vidStabTripod() ) );
     xmlWriter->writeTextElement( "cutIn",                   QString( "%1" ).arg( receipt->cutIn() ) );
     xmlWriter->writeTextElement( "cutOut",                  QString( "%1" ).arg( receipt->cutOut() ) );
     xmlWriter->writeTextElement( "debayer",                 QString( "%1" ).arg( receipt->debayer() ) );
@@ -3792,6 +3855,13 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
 
     ui->checkBoxVidstabEnable->setChecked( receipt->vidStabEnabled() );
     on_checkBoxVidstabEnable_toggled( receipt->vidStabEnabled() );
+    ui->horizontalSliderVidstabStepsize->setValue( receipt->vidStabStepsize() );
+    ui->horizontalSliderVidstabShakiness->setValue( receipt->vidStabShakiness() );
+    ui->horizontalSliderVidstabAccuracy->setValue( receipt->vidStabAccuracy() );
+    ui->horizontalSliderVidstabZoom->setValue( receipt->vidStabZoom() );
+    ui->horizontalSliderVidstabSmoothing->setValue( receipt->vidStabSmoothing() );
+    ui->checkBoxVidstabTripod->setChecked( receipt->vidStabTripod() );
+    on_checkBoxVidstabTripod_toggled( receipt->vidStabTripod() );
 
     m_setSliders = false;
 }
@@ -3889,6 +3959,12 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     receipt->setDebayer( ui->comboBoxDebayer->currentIndex() );
 
     receipt->setVidstabEnabled( ui->checkBoxVidstabEnable->isChecked() );
+    receipt->setVidstabStepsize( ui->horizontalSliderVidstabStepsize->value() );
+    receipt->setVidstabShakiness( ui->horizontalSliderVidstabShakiness->value() );
+    receipt->setVidstabAccuracy( ui->horizontalSliderVidstabAccuracy->value() );
+    receipt->setVidstabZoom( ui->horizontalSliderVidstabZoom->value() );
+    receipt->setVidstabSmoothing( ui->horizontalSliderVidstabSmoothing->value() );
+    receipt->setVidstabTripod( ui->checkBoxVidstabTripod->isChecked() );
 }
 
 //Replace receipt settings
@@ -3996,6 +4072,12 @@ void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings 
         receiptTarget->setStretchFactorY( receiptSource->stretchFactorY() );
         receiptTarget->setUpsideDown( receiptSource->upsideDown() );
         receiptTarget->setVidstabEnabled( receiptSource->vidStabEnabled() );
+        receiptTarget->setVidstabStepsize( receiptSource->vidStabStepsize() );
+        receiptTarget->setVidstabShakiness( receiptSource->vidStabShakiness() );
+        receiptTarget->setVidstabAccuracy( receiptSource->vidStabAccuracy() );
+        receiptTarget->setVidstabZoom( receiptSource->vidStabZoom() );
+        receiptTarget->setVidstabSmoothing( receiptSource->vidStabSmoothing() );
+        receiptTarget->setVidstabTripod( receiptSource->vidStabTripod() );
     }
 
     if( !paste )
@@ -4137,6 +4219,12 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     receipt->setStretchFactorY( m_pSessionReceipts.at( row )->stretchFactorY() );
     receipt->setUpsideDown( m_pSessionReceipts.at( row )->upsideDown() );
     receipt->setVidstabEnabled( m_pSessionReceipts.at( row )->vidStabEnabled() );
+    receipt->setVidstabStepsize( m_pSessionReceipts.at( row )->vidStabStepsize() );
+    receipt->setVidstabShakiness( m_pSessionReceipts.at( row )->vidStabShakiness() );
+    receipt->setVidstabAccuracy( m_pSessionReceipts.at( row )->vidStabAccuracy() );
+    receipt->setVidstabZoom( m_pSessionReceipts.at( row )->vidStabZoom() );
+    receipt->setVidstabSmoothing( m_pSessionReceipts.at( row )->vidStabSmoothing() );
+    receipt->setVidstabTripod( m_pSessionReceipts.at( row )->vidStabTripod() );
 
     receipt->setDebayer( m_pSessionReceipts.at( row )->debayer() );
 
@@ -5081,6 +5169,31 @@ void MainWindow::on_horizontalSliderToningStrength_valueChanged(int position)
     m_frameChanged = true;
 }
 
+void MainWindow::on_horizontalSliderVidstabStepsize_valueChanged(int position)
+{
+    ui->label_VidstabStepsizeVal->setText( QString("%1").arg( position ) );
+}
+
+void MainWindow::on_horizontalSliderVidstabShakiness_valueChanged(int position)
+{
+    ui->label_VidstabShakinessVal->setText( QString("%1").arg( position ) );
+}
+
+void MainWindow::on_horizontalSliderVidstabAccuracy_valueChanged(int position)
+{
+    ui->label_VidstabAccuracyVal->setText( QString("%1").arg( position ) );
+}
+
+void MainWindow::on_horizontalSliderVidstabZoom_valueChanged(int position)
+{
+    ui->label_VidstabZoomVal->setText( QString("%1").arg( position ) );
+}
+
+void MainWindow::on_horizontalSliderVidstabSmoothing_valueChanged(int position)
+{
+    ui->label_VidstabSmoothingVal->setText( QString("%1").arg( position ) );
+}
+
 void MainWindow::on_horizontalSliderExposure_doubleClicked()
 {
     ReceiptSettings *sliders = new ReceiptSettings(); //default
@@ -5292,6 +5405,41 @@ void MainWindow::on_horizontalSliderToningStrength_doubleClicked()
 {
     ReceiptSettings *sliders = new ReceiptSettings(); //default
     ui->horizontalSliderToningStrength->setValue( sliders->toningStrength() );
+    delete sliders;
+}
+
+void MainWindow::on_horizontalSliderVidstabStepsize_doubleClicked()
+{
+    ReceiptSettings *sliders = new ReceiptSettings(); //default
+    ui->horizontalSliderVidstabStepsize->setValue( sliders->vidStabStepsize() );
+    delete sliders;
+}
+
+void MainWindow::on_horizontalSliderVidstabShakiness_doubleClicked()
+{
+    ReceiptSettings *sliders = new ReceiptSettings(); //default
+    ui->horizontalSliderVidstabShakiness->setValue( sliders->vidStabShakiness() );
+    delete sliders;
+}
+
+void MainWindow::on_horizontalSliderVidstabAccuracy_doubleClicked()
+{
+    ReceiptSettings *sliders = new ReceiptSettings(); //default
+    ui->horizontalSliderVidstabAccuracy->setValue( sliders->vidStabAccuracy() );
+    delete sliders;
+}
+
+void MainWindow::on_horizontalSliderVidstabZoom_doubleClicked()
+{
+    ReceiptSettings *sliders = new ReceiptSettings(); //default
+    ui->horizontalSliderVidstabZoom->setValue( sliders->vidStabZoom() );
+    delete sliders;
+}
+
+void MainWindow::on_horizontalSliderVidstabSmoothing_doubleClicked()
+{
+    ReceiptSettings *sliders = new ReceiptSettings(); //default
+    ui->horizontalSliderVidstabSmoothing->setValue( sliders->vidStabSmoothing() );
     delete sliders;
 }
 
@@ -6432,6 +6580,46 @@ void MainWindow::on_label_ToningStrengthVal_doubleClicked()
     ui->horizontalSliderToningStrength->setValue( editSlider.getValue() );
 }
 
+void MainWindow::on_label_VidstabStepsizeVal_doubleClicked()
+{
+    EditSliderValueDialog editSlider;
+    editSlider.autoSetup( ui->horizontalSliderVidstabStepsize, ui->label_VidstabStepsizeVal, 1.0, 0, 1.0 );
+    editSlider.exec();
+    ui->horizontalSliderVidstabStepsize->setValue( editSlider.getValue() );
+}
+
+void MainWindow::on_label_VidstabShakinessVal_doubleClicked()
+{
+    EditSliderValueDialog editSlider;
+    editSlider.autoSetup( ui->horizontalSliderVidstabShakiness, ui->label_VidstabShakinessVal, 1.0, 0, 1.0 );
+    editSlider.exec();
+    ui->horizontalSliderVidstabShakiness->setValue( editSlider.getValue() );
+}
+
+void MainWindow::on_label_VidstabAccuracyVal_doubleClicked()
+{
+    EditSliderValueDialog editSlider;
+    editSlider.autoSetup( ui->horizontalSliderVidstabAccuracy, ui->label_VidstabAccuracyVal, 1.0, 0, 1.0 );
+    editSlider.exec();
+    ui->horizontalSliderVidstabAccuracy->setValue( editSlider.getValue() );
+}
+
+void MainWindow::on_label_VidstabZoomVal_doubleClicked()
+{
+    EditSliderValueDialog editSlider;
+    editSlider.autoSetup( ui->horizontalSliderVidstabZoom, ui->label_VidstabZoomVal, 1.0, 0, 1.0 );
+    editSlider.exec();
+    ui->horizontalSliderVidstabZoom->setValue( editSlider.getValue() );
+}
+
+void MainWindow::on_label_VidstabSmoothingVal_doubleClicked()
+{
+    EditSliderValueDialog editSlider;
+    editSlider.autoSetup( ui->horizontalSliderVidstabSmoothing, ui->label_VidstabSmoothingVal, 1.0, 0, 1.0 );
+    editSlider.exec();
+    ui->horizontalSliderVidstabSmoothing->setValue( editSlider.getValue() );
+}
+
 //Fullscreen Mode
 void MainWindow::on_actionFullscreen_triggered( bool checked )
 {
@@ -6988,8 +7176,46 @@ void MainWindow::on_checkBoxFilterEnable_clicked(bool checked)
 //En-/disable ffmpeg vidstab video stabilizer
 void MainWindow::on_checkBoxVidstabEnable_toggled(bool checked)
 {
-    Q_UNUSED( checked );
-    //Enable/Disable further UI elements, when integrated
+    ui->checkBoxVidstabTripod->setEnabled( checked );
+
+    //Enable/Disable UI elements
+    if( ui->checkBoxVidstabTripod->isChecked() ) checked = false;
+    ui->horizontalSliderVidstabStepsize->setEnabled( checked );
+    ui->horizontalSliderVidstabShakiness->setEnabled( checked );
+    ui->horizontalSliderVidstabAccuracy->setEnabled( checked );
+    ui->horizontalSliderVidstabZoom->setEnabled( checked );
+    ui->horizontalSliderVidstabSmoothing->setEnabled( checked );
+    ui->label_VidstabStepsizeText->setEnabled( checked );
+    ui->label_VidstabStepsizeVal->setEnabled( checked );
+    ui->label_VidstabShakinessText->setEnabled( checked );
+    ui->label_VidstabShakinessVal->setEnabled( checked );
+    ui->label_VidstabAccuracyText->setEnabled( checked );
+    ui->label_VidstabAccuracyVal->setEnabled( checked );
+    ui->label_VidstabZoomText->setEnabled( checked );
+    ui->label_VidstabZoomVal->setEnabled( checked );
+    ui->label_VidstabSmoothingText->setEnabled( checked );
+    ui->label_VidstabSmoothingVal->setEnabled( checked );
+}
+
+//En-/disable ffmpeg vidstab tripod mode
+void MainWindow::on_checkBoxVidstabTripod_toggled(bool checked)
+{
+    if( !ui->checkBoxVidstabEnable->isChecked() ) checked = true;
+    ui->horizontalSliderVidstabStepsize->setEnabled( !checked );
+    ui->horizontalSliderVidstabShakiness->setEnabled( !checked );
+    ui->horizontalSliderVidstabAccuracy->setEnabled( !checked );
+    ui->horizontalSliderVidstabZoom->setEnabled( !checked );
+    ui->horizontalSliderVidstabSmoothing->setEnabled( !checked );
+    ui->label_VidstabStepsizeText->setEnabled( !checked );
+    ui->label_VidstabStepsizeVal->setEnabled( !checked );
+    ui->label_VidstabShakinessText->setEnabled( !checked );
+    ui->label_VidstabShakinessVal->setEnabled( !checked );
+    ui->label_VidstabAccuracyText->setEnabled( !checked );
+    ui->label_VidstabAccuracyVal->setEnabled( !checked );
+    ui->label_VidstabZoomText->setEnabled( !checked );
+    ui->label_VidstabZoomVal->setEnabled( !checked );
+    ui->label_VidstabSmoothingText->setEnabled( !checked );
+    ui->label_VidstabSmoothingVal->setEnabled( !checked );
 }
 
 //Activate & Deactivate wbPicker

@@ -105,6 +105,11 @@ private slots:
     void on_horizontalSliderRawBlack_valueChanged(int position);
     void on_horizontalSliderTone_valueChanged(int position);
     void on_horizontalSliderToningStrength_valueChanged(int position);
+    void on_horizontalSliderVidstabStepsize_valueChanged(int position);
+    void on_horizontalSliderVidstabShakiness_valueChanged(int position);
+    void on_horizontalSliderVidstabAccuracy_valueChanged(int position);
+    void on_horizontalSliderVidstabZoom_valueChanged(int position);
+    void on_horizontalSliderVidstabSmoothing_valueChanged(int position);
 
     void on_horizontalSliderExposure_doubleClicked();
     void on_horizontalSliderExposureGradient_doubleClicked();
@@ -137,6 +142,11 @@ private slots:
     void on_horizontalSliderRawBlack_doubleClicked();
     void on_horizontalSliderTone_doubleClicked();
     void on_horizontalSliderToningStrength_doubleClicked();
+    void on_horizontalSliderVidstabStepsize_doubleClicked();
+    void on_horizontalSliderVidstabShakiness_doubleClicked();
+    void on_horizontalSliderVidstabAccuracy_doubleClicked();
+    void on_horizontalSliderVidstabZoom_doubleClicked();
+    void on_horizontalSliderVidstabSmoothing_doubleClicked();
 
     void on_actionGoto_First_Frame_triggered();
     void on_actionExport_triggered();
@@ -221,6 +231,11 @@ private slots:
     void on_label_RawBlackVal_doubleClicked( void );
     void on_label_ToneVal_doubleClicked( void );
     void on_label_ToningStrengthVal_doubleClicked( void );
+    void on_label_VidstabStepsizeVal_doubleClicked( void );
+    void on_label_VidstabShakinessVal_doubleClicked( void );
+    void on_label_VidstabAccuracyVal_doubleClicked( void );
+    void on_label_VidstabZoomVal_doubleClicked( void );
+    void on_label_VidstabSmoothingVal_doubleClicked( void );
     void on_actionFullscreen_triggered(bool checked);
     void exportHandler( void );
     void on_actionPlay_triggered(bool checked);
@@ -254,6 +269,7 @@ private slots:
     void on_checkBoxLutEnable_clicked(bool checked);
     void on_checkBoxFilterEnable_clicked(bool checked);
     void on_checkBoxVidstabEnable_toggled(bool checked);
+    void on_checkBoxVidstabTripod_toggled(bool checked);
     void on_actionWhiteBalancePicker_toggled(bool checked);
     void whiteBalancePicked( int x, int y );
     void on_toolButtonWbMode_clicked();

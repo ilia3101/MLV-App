@@ -87,6 +87,12 @@ public:
     void setStretchFactorY( double factor )   {m_stretchFactorY = factor;}
     void setUpsideDown( bool on )             {m_upsideDown = on;}
     void setVidstabEnabled( bool on )         {m_vidstabEnable = on;}
+    void setVidstabZoom( int8_t value )       {m_vidstabZoom = value;}
+    void setVidstabSmoothing( int8_t value )  {m_vidstabSmoothing = value;}
+    void setVidstabStepsize( int8_t value )   {m_vidstabStepsize = value;}
+    void setVidstabShakiness( int8_t value )  {m_vidstabShakiness = value;}
+    void setVidstabAccuracy( int8_t value )   {m_vidstabAccuracy = value;}
+    void setVidstabTripod( bool on )          {m_vidstabTripod = on;}
     void setLutEnabled( bool on )             {m_lutEnabled = on;}
     void setLutName( QString name )           {m_lutName = name;}
     void setLutStrength( uint8_t value )      {m_lutStrength = value;}
@@ -165,6 +171,12 @@ public:
     double stretchFactorY( void ){return m_stretchFactorY;}
     bool upsideDown( void ){return m_upsideDown;}
     bool vidStabEnabled( void ){return m_vidstabEnable;}
+    int8_t vidStabZoom( void ){return m_vidstabZoom;}
+    int8_t vidStabSmoothing( void ){return m_vidstabSmoothing;}
+    int8_t vidStabStepsize( void ){return m_vidstabStepsize;}
+    int8_t vidStabShakiness( void ){return m_vidstabShakiness;}
+    int8_t vidStabAccuracy( void ){return m_vidstabAccuracy;}
+    bool vidStabTripod( void ){return m_vidstabTripod;}
     bool lutEnabled( void ){return m_lutEnabled;}
     QString lutName( void ){return m_lutName;}
     uint8_t lutStrength( void ){return m_lutStrength;}
@@ -253,6 +265,12 @@ private:
     double m_stretchFactorY;
     bool m_upsideDown;
     bool m_vidstabEnable;
+    int8_t m_vidstabZoom;
+    int8_t m_vidstabSmoothing;
+    int8_t m_vidstabStepsize;
+    int8_t m_vidstabShakiness;
+    int8_t m_vidstabAccuracy;
+    bool m_vidstabTripod;
     bool m_lutEnabled;
     QString m_lutName;
     uint8_t m_lutStrength;
