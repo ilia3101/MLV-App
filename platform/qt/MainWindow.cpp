@@ -1293,7 +1293,7 @@ void MainWindow::initGui( void )
     ui->toolButtonDualIsoForce->setVisible( false );
 
     //Vidstab for OSX only
-#ifndef Q_OS_OSX
+#ifdef Q_OS_LINUX
    ui->checkBoxVidstabEnable->setVisible( false );
    ui->line_25->setVisible( false );
 #endif
@@ -1687,8 +1687,12 @@ void MainWindow::startExportPipe(QString fileName)
 
     //Vidstab, 2nd pass
     QString vidstabString = QString( "" );
+#ifdef Q_OS_WIN
+    QString vidstabFile = QString( "\"tmp_transform_vectors.trf\"" );
+#else
     QString vidstabFile = QString( "\"%1/tmp_transform_vectors.trf\"" ).arg( QCoreApplication::applicationDirPath() );
-#ifdef Q_OS_OSX
+#endif
+#ifndef Q_OS_LINUX
     if( m_exportQueue.first()->vidStabEnabled() )
     {
         if( m_exportQueue.first()->vidStabTripod() )
@@ -1802,7 +1806,7 @@ void MainWindow::startExportPipe(QString fileName)
     QString resolution = QString( "%1x%2" ).arg( getMlvWidth( m_pMlvObject ) ).arg( getMlvHeight( m_pMlvObject ) );
 
     //VidStab: First pass
-#ifdef Q_OS_OSX
+#ifndef Q_OS_LINUX
     if( m_exportQueue.first()->vidStabEnabled() )
     {
         QString stabCmd;
