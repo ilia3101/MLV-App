@@ -1292,11 +1292,7 @@ void MainWindow::initGui( void )
     //DualIso Button by default invisible
     ui->toolButtonDualIsoForce->setVisible( false );
 
-    //Vidstab for OSX only
-#ifdef Q_OS_LINUX
-   ui->checkBoxVidstabEnable->setVisible( false );
-   ui->line_25->setVisible( false );
-#endif
+    //Vidstab
    on_checkBoxVidstabEnable_toggled( false );
 
     //Reveal in Explorer
@@ -1692,7 +1688,6 @@ void MainWindow::startExportPipe(QString fileName)
 #else
     QString vidstabFile = QString( "\"%1/tmp_transform_vectors.trf\"" ).arg( QCoreApplication::applicationDirPath() );
 #endif
-#ifndef Q_OS_LINUX
     if( m_exportQueue.first()->vidStabEnabled() )
     {
         if( m_exportQueue.first()->vidStabTripod() )
@@ -1708,7 +1703,6 @@ void MainWindow::startExportPipe(QString fileName)
                 .arg( m_exportQueue.first()->vidStabSmoothing() );
         }
     }
-#endif
 
     //Resize Filter + colorspace conversion (for getting right colors)
     QString resizeFilter = QString( "" );
@@ -1806,7 +1800,6 @@ void MainWindow::startExportPipe(QString fileName)
     QString resolution = QString( "%1x%2" ).arg( getMlvWidth( m_pMlvObject ) ).arg( getMlvHeight( m_pMlvObject ) );
 
     //VidStab: First pass
-#ifndef Q_OS_LINUX
     if( m_exportQueue.first()->vidStabEnabled() )
     {
         QString stabCmd;
@@ -1881,7 +1874,6 @@ void MainWindow::startExportPipe(QString fileName)
             free( imgBuffer );
         }
     }
-#endif
 
     if( m_codecProfile == CODEC_TIFF )
     {
