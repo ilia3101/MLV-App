@@ -96,6 +96,7 @@
 #define SCALE_BILINEAR              1
 #define SCALE_SINC                  2
 #define SCALE_LANCZOS               3
+#define SCALE_BSPLINE               4
 
 namespace Ui {
 class ExportSettingsDialog;

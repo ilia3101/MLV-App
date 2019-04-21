@@ -1675,6 +1675,7 @@ void MainWindow::startExportPipe(QString fileName)
     if( m_resizeFilterAlgorithm == SCALE_BILINEAR ) resizeAlgorithm.append( "bilinear" );
     else if( m_resizeFilterAlgorithm == SCALE_SINC ) resizeAlgorithm.append( "sinc" );
     else if( m_resizeFilterAlgorithm == SCALE_LANCZOS ) resizeAlgorithm.append( "lanczos" );
+    else if( m_resizeFilterAlgorithm == SCALE_BSPLINE ) resizeAlgorithm.append( "spline" );
     else resizeAlgorithm.append( "bicubic" ); //default
 
     //HDR
