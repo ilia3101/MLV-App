@@ -39,6 +39,7 @@
 #include "UserManualDialog.h"
 #include "StretchFactors.h"
 #include "SingleFrameExportDialog.h"
+#include "FpmInstaller.h"
 
 #define APPNAME "MLV App"
 #define VERSION "1.6"
@@ -133,6 +134,11 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
         {
             if( m_pScripting->installScript( fileName ) )
                 QMessageBox::information( this, APPNAME, tr( "Installation of script %1 successful." ).arg( QFileInfo( fileName ).fileName() ) );
+        }
+        else if( QFile(fileName).exists() && fileName.endsWith( ".fpm", Qt::CaseInsensitive ) )
+        {
+            if( FpmInstaller::installFpm( fileName ) )
+                QMessageBox::information( this, APPNAME, tr( "Installation of focus pixel map %1 successful." ).arg( QFileInfo( fileName ).fileName() ) );
         }
     }
 
@@ -332,6 +338,11 @@ bool MainWindow::event(QEvent *event)
             if( m_pScripting->installScript( fileName ) )
                 QMessageBox::information( this, APPNAME, tr( "Installation of script %1 successful." ).arg( QFileInfo( fileName ).fileName() ) );
         }
+        else if( QFile(fileName).exists() && fileName.endsWith( ".fpm", Qt::CaseInsensitive ) )
+        {
+            if( FpmInstaller::installFpm( fileName ) )
+                QMessageBox::information( this, APPNAME, tr( "Installation of focus pixel map %1 successful." ).arg( QFileInfo( fileName ).fileName() ) );
+        }
         else return false;
     }
     return QMainWindow::event(event);
@@ -350,7 +361,9 @@ void MainWindow::dropEvent(QDropEvent *event)
     QStringList list;
     if( event->mimeData()->urls().count() > 0 )
     {
-        if( event->mimeData()->urls().at(0).path().endsWith( ".MLV", Qt::CaseInsensitive ) )
+        if( event->mimeData()->urls().at(0).path().endsWith( ".MLV", Qt::CaseInsensitive )
+         || event->mimeData()->urls().at(0).path().endsWith( ".FPM", Qt::CaseInsensitive )
+         || event->mimeData()->urls().at(0).path().endsWith( ".COMMAND", Qt::CaseInsensitive ) )
         {
             for( int i = 0; i < event->mimeData()->urls().count(); i++ )
             {
@@ -384,6 +397,13 @@ void MainWindow::openMlvSet( QStringList list )
         {
             if( m_pScripting->installScript( fileName ) )
                 QMessageBox::information( this, APPNAME, tr( "Installation of script %1 successful." ).arg( QFileInfo( fileName ).fileName() ) );
+            m_inOpeningProcess = false;
+            return;
+        }
+        else if( i == 0 && QFile(fileName).exists() && fileName.endsWith( ".fpm", Qt::CaseInsensitive ) )
+        {
+            if( FpmInstaller::installFpm( fileName ) )
+                QMessageBox::information( this, APPNAME, tr( "Installation of focus pixel map %1 successful." ).arg( QFileInfo( fileName ).fileName() ) );
             m_inOpeningProcess = false;
             return;
         }
