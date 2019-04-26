@@ -36,6 +36,12 @@ public:
           {
               QFile( newFileName ).remove();
           }
+          //Only install fpm files
+          if( !newFileName.endsWith( ".fpm" ) )
+          {
+              fileNameList->removeAt(i);
+              continue;
+          }
           //Copy new one to app
           bool ret = QFile::copy( fileName, newFileName );
           if( !ret ) fileNameList->removeAt(i);
