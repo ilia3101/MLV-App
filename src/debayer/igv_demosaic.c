@@ -273,6 +273,7 @@ void igv_demosaic( amazeinfo_t * inputdata )
         int endy = tiley + tileh;
 
         /* Applying */
+#pragma omp parallel for
         for (int y = tiley; y < endy; ++y)
             for (int x = tilex; x < endx; ++x)
                 switch (FC(y,x))
@@ -291,7 +292,7 @@ void igv_demosaic( amazeinfo_t * inputdata )
 
     //border_interpolate2(tilew,tileh,7,rawData,red,green,blue);
 //#ifdef _OPENMP
-//#pragma omp parallel default(none) shared(rgb,vdif,hdif,chr)
+#pragma omp parallel default(none) shared(rgb,vdif,hdif,chr,tilex)
 //#endif
     {
 
@@ -299,9 +300,10 @@ void igv_demosaic( amazeinfo_t * inputdata )
 
         int refcol = 1-(tilex%2);
 //#ifdef _OPENMP
-//#pragma omp for
+#pragma omp for
 //#endif
-        for (int row=0, row2=tiley; row<height-0; row++, row2++) {
+        for (int row=0; row<height-0; row++) {
+            int row2 = tiley + row;
             for (int col=0, col2=tilex, indx=row*width+col; col<width-0; col++, col2++, indx++) {
                 int c=FC(row,col);
                 float val = rawData[row2][col2];
@@ -315,9 +317,9 @@ void igv_demosaic( amazeinfo_t * inputdata )
 //#pragma omp single
 //#endif
 //#ifdef _OPENMP
-//#pragma omp for
+#pragma omp for
 //#endif
-        for (int row=5, row2=tiley+row; row<height-5; row++, row2++)
+        for (int row=5; row<height-5; row++)
             for (int col=5+(FC(row,refcol)&1), col2=tilex+col, indx=row*width+col, c=FC(row,col); col<width-5; col+=2, col2+=2, indx+=2) {
                 //N,E,W,S Gradients
                 ng=(eps+(fabsf(rgb[1][indx-v1]-rgb[1][indx-v3])+fabsf(rgb[c][indx]-rgb[c][indx-v2]))/65535.f);;
@@ -339,9 +341,9 @@ void igv_demosaic( amazeinfo_t * inputdata )
 //#pragma omp single
 //#endif
 //#ifdef _OPENMP
-//#pragma omp for
+#pragma omp for
 //#endif
-        for (int row=7, row2=tiley+row; row<height-7; row++, row2++)
+        for (int row=7; row<height-7; row++)
             for (int col=7+(FC(row,refcol)&1), col2=tilex+col, indx=row*width+col, c=FC(row,col), d=c/2; col<width-7; col+=2, col2+=2, indx+=2) {
                 //H&V integrated gaussian vector over variance on color differences
                 //Mod Jacques 3/2013
@@ -361,9 +363,9 @@ void igv_demosaic( amazeinfo_t * inputdata )
 //#pragma omp single
 //#endif
 //#ifdef _OPENMP
-//#pragma omp for
+#pragma omp for
 //#endif
-        for (int row=7, row2=tiley+row; row<height-7; row+=2, row2+=2)
+        for (int row=7; row<height-7; row+=2)
             for (int col=7+(FC(row,refcol)&1), col2=tilex+col, indx=row*width+col, c=1-FC(row,col)/2; col<width-7; col+=2, col2+=2, indx+=2) {
                 //NW,NE,SW,SE Gradients
                 nwg=1.0f/(eps+fabsf(chr[c][indx-v1-h1]-chr[c][indx-v3-h3])+fabsf(chr[c][indx+v1+h1]-chr[c][indx-v3-h3]));
@@ -382,9 +384,9 @@ void igv_demosaic( amazeinfo_t * inputdata )
 //#pragma omp single
 //#endif
 //#ifdef _OPENMP
-//#pragma omp for
+#pragma omp for
 //#endif
-        for (int row=8, row2=tiley+row; row<height-7; row+=2, row2+=2)
+        for (int row=8; row<height-7; row+=2)
             for (int col=7+(FC(row,refcol)&1), col2=tilex+col, indx=row*width+col, c=1-FC(row,col)/2; col<width-7; col+=2, col2+=2, indx+=2) {
                 //NW,NE,SW,SE Gradients
                 nwg=1.0f/(eps+fabsf(chr[c][indx-v1-h1]-chr[c][indx-v3-h3])+fabsf(chr[c][indx+v1+h1]-chr[c][indx-v3-h3]));
@@ -403,9 +405,9 @@ void igv_demosaic( amazeinfo_t * inputdata )
 //#pragma omp single
 //#endif
 //#ifdef _OPENMP
-//#pragma omp for
+#pragma omp for
 //#endif
-        for (int row=7, row2=tiley+row; row<height-7; row++, row2++)
+        for (int row=7; row<height-7; row++)
             for (int col=7+(FC(row,0)&1), col2=tilex+col, indx=row*width+col; col<width-7; col+=2, col2+=2, indx+=2) {
                 //N,E,W,S Gradients
                 ng=1.0f/(eps+fabsf(chr[0][indx-v1]-chr[0][indx-v3])+fabsf(chr[0][indx+v1]-chr[0][indx-v3]));
@@ -419,9 +421,9 @@ void igv_demosaic( amazeinfo_t * inputdata )
 //#pragma omp single
 //#endif
 //#ifdef _OPENMP
-//#pragma omp for
+#pragma omp for
 //#endif
-        for (int row=7, row2=tiley+row; row<height-7; row++, row2++)
+        for (int row=7; row<height-7; row++)
             for (int col=7+(FC(row,0)&1), col2=tilex+col, indx=row*width+col; col<width-7; col+=2, col2+=2, indx+=2) {
 
                 //N,E,W,S Gradients
@@ -446,9 +448,11 @@ void igv_demosaic( amazeinfo_t * inputdata )
                 blue [row][col] = rgb[indxc][2];
             }*/
 //#ifdef _OPENMP
-//#pragma omp for
+#pragma omp for
 //#endif
-        for(int row=7, row2=tiley+row; row<height-7; row++, row2++)
+        for(int row=7; row<height-7; row++)
+        {
+            int row2 = tiley + row;
             for(int col=7, col2=tilex+col, indx=row*width+col; col<width-7; col++, col2++, indx++) {
                 red  [row2][col2] = CLIP(rgb[1][indx]-65535.f*chr[0][indx]);
                 green[row2][col2] = CLIP(rgb[1][indx]);
@@ -456,6 +460,7 @@ void igv_demosaic( amazeinfo_t * inputdata )
                 //if( row<16 && col<16)
                 //std::cout<<"row,col="<<row<<","<<col<<"  red: "<<red  [row2][col2]<<std::endl;
             }
+        }
     }// End of parallelization
 
     free(chrarray);
