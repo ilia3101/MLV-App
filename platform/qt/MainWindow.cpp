@@ -402,8 +402,13 @@ void MainWindow::openMlvSet( QStringList list )
         }
         else if( i == 0 && QFile(fileName).exists() && fileName.endsWith( ".fpm", Qt::CaseInsensitive ) )
         {
-            if( FpmInstaller::installFpm( fileName ) )
-                QMessageBox::information( this, APPNAME, tr( "Installation of focus pixel map %1 successful." ).arg( QFileInfo( fileName ).fileName() ) );
+            FpmInstaller::installFpm( &list );
+            if( !list.empty() )
+            {
+                QString files;
+                for( int i = 0; i < list.count(); i++ ) files.append( QString( "\r\n%1" ).arg( QFileInfo( list.at(i) ).fileName() ) );
+                QMessageBox::information( this, APPNAME, tr( "Installation of focus pixel map(s) %1\r\nsuccessful." ).arg( files ) );
+            }
             m_inOpeningProcess = false;
             return;
         }
