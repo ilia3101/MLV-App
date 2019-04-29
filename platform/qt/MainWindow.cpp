@@ -392,6 +392,9 @@ void MainWindow::openMlvSet( QStringList list )
     for( int i = 0; i < list.count(); i++ )
     {
         QString fileName = list.at(i);
+#ifdef Q_OS_WIN //Qt Bug?
+        if( fileName.startsWith( "/" ) ) fileName.remove( 0, 1 );
+#endif
 
         if( i == 0 && QFile(fileName).exists() && fileName.endsWith( ".command", Qt::CaseInsensitive ) )
         {
@@ -421,9 +424,6 @@ void MainWindow::openMlvSet( QStringList list )
         {
             //Exit if not an MLV file or aborted
             if( fileName == QString( "" ) || !fileName.endsWith( ".mlv", Qt::CaseInsensitive ) ) continue;
-#ifdef WIN32
-            if( fileName.startsWith( "/" ) ) fileName.remove( 0, 1 );
-#endif
             importNewMlv( fileName );
         }
     }

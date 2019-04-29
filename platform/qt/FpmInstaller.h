@@ -29,6 +29,9 @@ public:
       for( int i = 0; i < fileNameList->count(); i++ )
       {
           QString fileName = fileNameList->at(i);
+#ifdef Q_OS_WIN //Qt Bug?
+          if( fileName.startsWith( "/" ) ) fileName.remove( 0, 1 );
+#endif
           //Where to install it?
           QString newFileName = QCoreApplication::applicationDirPath().append( "/" ).append( QFileInfo(fileName).fileName() );
           //Remove existing script
