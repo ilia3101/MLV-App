@@ -292,7 +292,7 @@ void igv_demosaic( amazeinfo_t * inputdata )
 
     //border_interpolate2(tilew,tileh,7,rawData,red,green,blue);
 //#ifdef _OPENMP
-#pragma omp parallel default(none) shared(rgb,vdif,hdif,chr,tilex)
+#pragma omp parallel default(none) shared(rgb,vdif,hdif,chr,tilex,tiley,rawData,red,green,blue)
 //#endif
     {
 
@@ -476,6 +476,7 @@ void igv_demosaic( amazeinfo_t * inputdata )
         int endy = tiley + tileh;
 
         /* Applying */
+#pragma omp parallel for
         for (int y = tiley; y < endy; ++y)
             for (int x = tilex; x < endx; ++x)
             {
