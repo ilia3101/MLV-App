@@ -315,6 +315,7 @@ void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
         on_checkBoxHdrBlending_toggled( false );
     }
     ui->checkBoxResize->setEnabled( enableResize );
+    ui->comboBoxScaleAlgorithm->setEnabled( enableResize );
     ui->comboBoxSmoothing->setEnabled( enableResize );
     ui->label_Smoothing->setEnabled( enableResize );
     ui->checkBoxHdrBlending->setEnabled( enableResize );
@@ -352,7 +353,6 @@ void ExportSettingsDialog::on_checkBoxResize_toggled(bool checked)
 {
     ui->toolButtonLockHeight->setEnabled( checked );
     ui->spinBoxWidth->setEnabled( checked );
-    ui->comboBoxScaleAlgorithm->setEnabled( checked );
 
     if( checked && !ui->toolButtonLockHeight->isChecked() ) ui->spinBoxHeight->setEnabled( true );
     else ui->spinBoxHeight->setEnabled( false );
