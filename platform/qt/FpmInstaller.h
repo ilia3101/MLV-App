@@ -1,3 +1,10 @@
+/*!
+ * \file FpmInstaller.h
+ * \author masc4ii
+ * \copyright 2019
+ * \brief Install .fpm files to application directory
+ */
+
 #ifndef FPMINSTALLER_H
 #define FPMINSTALLER_H
 
