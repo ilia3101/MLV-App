@@ -42,8 +42,8 @@
 #include "FpmInstaller.h"
 
 #define APPNAME "MLV App"
-#define VERSION "1.6"
-#define GITVERSION "QTv1.6"
+#define VERSION "1.7"
+#define GITVERSION "QTv1.7"
 
 #define FACTOR_DS       22.5
 #define FACTOR_LS       11.2
