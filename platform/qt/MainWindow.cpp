@@ -1710,7 +1710,7 @@ void MainWindow::startExportPipe(QString fileName)
     //Vidstab, 2nd pass
     QString vidstabString = QString( "" );
 #ifdef Q_OS_WIN
-    QString vidstabFile = QString( "\tmp_transform_vectors.trf\"" );
+    QString vidstabFile = QString( "\"tmp_transform_vectors.trf\"" );
 #elif defined( Q_OS_LINUX )
     QString vidstabFile = QString( "\"%1/tmp_transform_vectors.trf\"" )
             .arg( QFileInfo( m_exportQueue.first()->fileName() ).absolutePath() );
