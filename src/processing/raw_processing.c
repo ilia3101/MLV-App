@@ -1580,10 +1580,11 @@ void processingFindWhiteBalance(processingObject_t *processing, int imageX, int 
 /* Vignette Mask Creation */
 void processingSetVignetteMask(processingObject_t *processing, uint16_t width, uint16_t height, float radius, float xStretch, float yStretch)
 {
+    float shape = 0.0; // 0.0 = circle, 1.0 = oval
     double wHalf = width / 2.0;
     double hHalf = height / 2.0;
     double wHalfS = wHalf * xStretch;
-    double hHalfS = hHalf * yStretch;
+    double hHalfS = hHalf * yStretch * (1.0 + shape * 2.0);
     double diagonal = sqrt( (wHalfS*wHalfS) + (hHalfS*hHalfS) );
     double r = diagonal * radius;
     double T = diagonal - r;
