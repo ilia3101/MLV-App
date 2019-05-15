@@ -72,6 +72,7 @@ SOURCES += \
     ../../src/debayer/conv.c \
     ../../src/debayer/dmzhangwu.c \
     ../../src/debayer/basic.c \
+    ../../src/ca_correct/CA_correct_RT.c \
     ../../src/matrix/matrix.c \
     ../../src/mlv/frame_caching.c \
     ../../src/mlv/video_mlv.c \
@@ -145,6 +146,7 @@ HEADERS += \
     ../../src/debayer/conv.h \
     ../../src/debayer/dmzhangwu.h \
     ../../src/debayer/basic.h \
+    ../../src/ca_correct/CA_correct_RT.h \
     ../../src/matrix/matrix.h \
     ../../src/mlv/mlv.h \
     ../../src/mlv/mlv_object.h \

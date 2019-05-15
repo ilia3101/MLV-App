@@ -90,6 +90,10 @@
 /* Use the AHD debayer */
 #define setMlvUseAhdDebayer(video) (video)->use_amaze = 6; (video)->current_cached_frame_active = 0
 
+/* Set CA correction parameters */
+#define setMlvCaCorrectionRed(video, value) (video)->ca_red = (value)
+#define setMlvCaCorrectionBlue(video, value) (video)->ca_blue = (value)
+
 /* Reset the current cached frame. Needed if a raw correction parameter changed */
 #define resetMlvCachedFrame(video) (video)->current_cached_frame_active = 0
 

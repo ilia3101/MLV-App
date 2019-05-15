@@ -518,6 +518,11 @@ mlvObject_t * initMlvObject()
     /* Init low level raw processing object */
     video->llrawproc = initLLRawProcObject();
 
+    /* Init CA correction */
+    //video->ca_auto = 0;
+    video->ca_red = 0.0;
+    video->ca_blue = 0.0;
+
     /* Retun pointer */
     return video;
 }

@@ -123,6 +123,11 @@ typedef struct {
     /* Decides whether or not AMaZE *has* to be used or not, normally disabled for smooth playback */
     int use_amaze;
 
+    /* CA correction */
+    //uint8_t ca_auto; /* off=0, on=1 */
+    float ca_red;    /* Range -5..5 */
+    float ca_blue;   /* Range -5..5 */
+
     /* Basically how much we can cache(can be set by MB or frames or bytes) */
     uint64_t cache_limit_bytes;
     uint64_t cache_limit_frames;

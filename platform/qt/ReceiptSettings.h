@@ -101,6 +101,8 @@ public:
     void setFilterStrength( int value )       {m_filterStrength = value;}
     void setVignetteStrength( int value )     {m_vignetteStrength = value;}
     void setVignetteRadius( int value )       {m_vignetteRadius = value;}
+    void setCaRed( int value )                {m_caRed = value;}
+    void setCaBlue( int value )                {m_caBlue = value;}
     void setCutIn( uint32_t frame )           {m_cutIn = frame;}
     void setCutOut( uint32_t frame )          {m_cutOut = frame;}
 
@@ -185,6 +187,8 @@ public:
     int filterStrength( void ){return m_filterStrength;}
     int vignetteStrength( void ){return m_vignetteStrength;}
     int vignetteRadius( void ){return m_vignetteRadius;}
+    int caRed( void ){return m_caRed;}
+    int caBlue( void ){return m_caBlue;}
     uint32_t cutIn( void ) {return m_cutIn;}
     uint32_t cutOut( void ){return m_cutOut;}
     uint8_t profile( void ){return m_profile;}
@@ -230,6 +234,8 @@ private:
 
     int m_vignetteStrength;
     int m_vignetteRadius;
+    int m_caRed;
+    int m_caBlue;
 
     int m_sharpen;
     int m_chromaBlur;

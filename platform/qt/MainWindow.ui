@@ -499,9 +499,9 @@ QGroupBox::indicator:checked:disabled {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>-4292</y>
+            <y>0</y>
             <width>244</width>
-            <height>4841</height>
+            <height>4943</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayoutScrollArea">
@@ -7214,7 +7214,7 @@ QGroupBox::indicator:checked:disabled {
            <item>
             <widget class="QGroupBox" name="groupBoxVignette">
              <property name="title">
-              <string>Vignette</string>
+              <string>Lens Correction</string>
              </property>
              <property name="checkable">
               <bool>true</bool>
@@ -7263,7 +7263,7 @@ QGroupBox::indicator:checked:disabled {
                       </font>
                      </property>
                      <property name="text">
-                      <string>Strength</string>
+                      <string>Vignette Strength</string>
                      </property>
                     </widget>
                    </item>
@@ -7345,6 +7345,22 @@ QGroupBox::indicator:checked:disabled {
                    <property name="spacing">
                     <number>0</number>
                    </property>
+                   <item row="0" column="1">
+                    <spacer name="horizontalSpacer_43">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                     <property name="sizeType">
+                      <enum>QSizePolicy::Maximum</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>40</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
                    <item row="1" column="0" colspan="3">
                     <widget class="NoScrollSlider" name="horizontalSliderVignetteRadius">
                      <property name="sizePolicy">
@@ -7408,12 +7424,29 @@ QGroupBox::indicator:checked:disabled {
                       </font>
                      </property>
                      <property name="text">
-                      <string>Radius</string>
+                      <string>Vignette Radius</string>
                      </property>
                     </widget>
                    </item>
+                  </layout>
+                 </item>
+                 <item>
+                  <widget class="Line" name="line_26">
+                   <property name="styleSheet">
+                    <string notr="true">background-color: rgb(115, 115, 115);</string>
+                   </property>
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <layout class="QGridLayout" name="gridLayout_59">
+                   <property name="spacing">
+                    <number>0</number>
+                   </property>
                    <item row="0" column="1">
-                    <spacer name="horizontalSpacer_43">
+                    <spacer name="horizontalSpacer_55">
                      <property name="orientation">
                       <enum>Qt::Horizontal</enum>
                      </property>
@@ -7427,6 +7460,163 @@ QGroupBox::indicator:checked:disabled {
                       </size>
                      </property>
                     </spacer>
+                   </item>
+                   <item row="0" column="2">
+                    <widget class="DoubleClickLabel" name="label_CaRedVal">
+                     <property name="font">
+                      <font>
+                       <pointsize>10</pointsize>
+                      </font>
+                     </property>
+                     <property name="contextMenuPolicy">
+                      <enum>Qt::CustomContextMenu</enum>
+                     </property>
+                     <property name="layoutDirection">
+                      <enum>Qt::RightToLeft</enum>
+                     </property>
+                     <property name="text">
+                      <string>0.0</string>
+                     </property>
+                     <property name="alignment">
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="1" column="0" colspan="3">
+                    <widget class="NoScrollSlider" name="horizontalSliderCaRed">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="minimumSize">
+                      <size>
+                       <width>0</width>
+                       <height>0</height>
+                      </size>
+                     </property>
+                     <property name="maximumSize">
+                      <size>
+                       <width>16777215</width>
+                       <height>16777215</height>
+                      </size>
+                     </property>
+                     <property name="minimum">
+                      <number>-50</number>
+                     </property>
+                     <property name="maximum">
+                      <number>50</number>
+                     </property>
+                     <property name="value">
+                      <number>0</number>
+                     </property>
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="0" column="0">
+                    <widget class="QLabel" name="label_CaRedText">
+                     <property name="font">
+                      <font>
+                       <pointsize>10</pointsize>
+                      </font>
+                     </property>
+                     <property name="text">
+                      <string>CA Correction Red</string>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </item>
+                 <item>
+                  <layout class="QGridLayout" name="gridLayout_58">
+                   <property name="spacing">
+                    <number>0</number>
+                   </property>
+                   <item row="0" column="0">
+                    <widget class="QLabel" name="label_CaBlueText">
+                     <property name="font">
+                      <font>
+                       <pointsize>10</pointsize>
+                      </font>
+                     </property>
+                     <property name="text">
+                      <string>CA Correction Blue</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="0" column="1">
+                    <spacer name="horizontalSpacer_54">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                     <property name="sizeType">
+                      <enum>QSizePolicy::Maximum</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>40</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                   <item row="0" column="2">
+                    <widget class="DoubleClickLabel" name="label_CaBlueVal">
+                     <property name="font">
+                      <font>
+                       <pointsize>10</pointsize>
+                      </font>
+                     </property>
+                     <property name="contextMenuPolicy">
+                      <enum>Qt::CustomContextMenu</enum>
+                     </property>
+                     <property name="layoutDirection">
+                      <enum>Qt::RightToLeft</enum>
+                     </property>
+                     <property name="text">
+                      <string>0.0</string>
+                     </property>
+                     <property name="alignment">
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="1" column="0" colspan="3">
+                    <widget class="NoScrollSlider" name="horizontalSliderCaBlue">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="minimumSize">
+                      <size>
+                       <width>0</width>
+                       <height>0</height>
+                      </size>
+                     </property>
+                     <property name="maximumSize">
+                      <size>
+                       <width>16777215</width>
+                       <height>16777215</height>
+                      </size>
+                     </property>
+                     <property name="minimum">
+                      <number>-50</number>
+                     </property>
+                     <property name="maximum">
+                      <number>50</number>
+                     </property>
+                     <property name="value">
+                      <number>0</number>
+                     </property>
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                    </widget>
                    </item>
                   </layout>
                  </item>

@@ -367,7 +367,7 @@ color: rgb(255, 154, 50)
         <item row="9" column="4" colspan="2">
          <widget class="QCheckBox" name="checkBoxVignette">
           <property name="text">
-           <string>Vignette</string>
+           <string>Lens Correction</string>
           </property>
          </widget>
         </item>

@@ -3423,6 +3423,16 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
             receipt->setVignetteRadius( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
+        else if( Rxml->isStartElement() && Rxml->name() == "caRed" )
+        {
+            receipt->setCaRed( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == "caBlue" )
+        {
+            receipt->setCaBlue( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
         else if( Rxml->isStartElement() && Rxml->name() == "stretchFactorX" )
         {
             receipt->setStretchFactorX( Rxml->readElementText().toDouble() );
@@ -3568,6 +3578,8 @@ void MainWindow::writeXmlElementsToFile(QXmlStreamWriter *xmlWriter, ReceiptSett
     xmlWriter->writeTextElement( "filterStrength",          QString( "%1" ).arg( receipt->filterStrength() ) );
     xmlWriter->writeTextElement( "vignetteStrength",        QString( "%1" ).arg( receipt->vignetteStrength() ) );
     xmlWriter->writeTextElement( "vignetteRadius",          QString( "%1" ).arg( receipt->vignetteRadius() ) );
+    xmlWriter->writeTextElement( "caRed",                   QString( "%1" ).arg( receipt->caRed() ) );
+    xmlWriter->writeTextElement( "caBlue",                  QString( "%1" ).arg( receipt->caBlue() ) );
     xmlWriter->writeTextElement( "stretchFactorX",          QString( "%1" ).arg( receipt->stretchFactorX() ) );
     xmlWriter->writeTextElement( "stretchFactorY",          QString( "%1" ).arg( receipt->stretchFactorY() ) );
     xmlWriter->writeTextElement( "upsideDown",              QString( "%1" ).arg( receipt->upsideDown() ) );
@@ -3863,6 +3875,10 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     ui->horizontalSliderVignetteRadius->setValue( receipt->vignetteRadius() );
     ui->horizontalSliderVignetteRadius->blockSignals( false );
     on_horizontalSliderVignetteRadius_valueChanged( receipt->vignetteRadius() );
+    ui->horizontalSliderCaRed->setValue( receipt->caRed() );
+    on_horizontalSliderCaRed_valueChanged( receipt->caRed() );
+    ui->horizontalSliderCaBlue->setValue( receipt->caBlue() );
+    on_horizontalSliderCaBlue_valueChanged( receipt->caBlue() );
 
     if( !paste && !receipt->wasNeverLoaded() )
     {
@@ -3980,6 +3996,8 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
 
     receipt->setVignetteStrength( ui->horizontalSliderVignetteStrength->value() );
     receipt->setVignetteRadius( ui->horizontalSliderVignetteRadius->value() );
+    receipt->setCaRed( ui->horizontalSliderCaRed->value() );
+    receipt->setCaBlue( ui->horizontalSliderCaBlue->value() );
 
     receipt->setStretchFactorX( getHorizontalStretchFactor(true) );
     receipt->setStretchFactorY( getVerticalStretchFactor(true) );
@@ -4098,6 +4116,8 @@ void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings 
     {
         receiptTarget->setVignetteStrength( receiptSource->vignetteStrength() );
         receiptTarget->setVignetteRadius( receiptSource->vignetteRadius() );
+        receiptTarget->setCaRed( receiptSource->caRed() );
+        receiptTarget->setCaBlue( receiptSource->caBlue() );
     }
 
     if( paste && cdui->checkBoxTransformation->isChecked() )
@@ -4248,6 +4268,8 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
 
     receipt->setVignetteStrength( m_pSessionReceipts.at( row )->vignetteStrength() );
     receipt->setVignetteRadius( m_pSessionReceipts.at( row )->vignetteRadius() );
+    receipt->setCaRed( m_pSessionReceipts.at( row )->caRed() );
+    receipt->setCaBlue( m_pSessionReceipts.at( row )->caBlue() );
 
     receipt->setStretchFactorX( m_pSessionReceipts.at( row )->stretchFactorX() );
     receipt->setStretchFactorY( m_pSessionReceipts.at( row )->stretchFactorY() );
@@ -5114,6 +5136,26 @@ void MainWindow::on_horizontalSliderVignetteRadius_valueChanged(int position)
     m_frameChanged = true;
 }
 
+void MainWindow::on_horizontalSliderCaRed_valueChanged(int position)
+{
+    setMlvCaCorrectionRed( m_pMlvObject, (position / 10.0) );
+    ui->label_CaRedVal->setText( QString("%1").arg( position / 10.0, 0, 'f', 1 ) );
+
+    resetMlvCache( m_pMlvObject );
+    resetMlvCachedFrame( m_pMlvObject );
+    m_frameChanged = true;
+}
+
+void MainWindow::on_horizontalSliderCaBlue_valueChanged(int position)
+{
+    setMlvCaCorrectionBlue( m_pMlvObject, (position / 10.0) );
+    ui->label_CaBlueVal->setText( QString("%1").arg( position / 10.0, 0, 'f', 1 ) );
+
+    resetMlvCache( m_pMlvObject );
+    resetMlvCachedFrame( m_pMlvObject );
+    m_frameChanged = true;
+}
+
 void MainWindow::on_horizontalSliderRawWhite_valueChanged(int position)
 {
     if( !m_fileLoaded ) return;
@@ -5415,6 +5457,20 @@ void MainWindow::on_horizontalSliderVignetteRadius_doubleClicked()
 {
     ReceiptSettings *sliders = new ReceiptSettings(); //default
     ui->horizontalSliderVignetteRadius->setValue( sliders->vignetteRadius() );
+    delete sliders;
+}
+
+void MainWindow::on_horizontalSliderCaRed_doubleClicked()
+{
+    ReceiptSettings *sliders = new ReceiptSettings(); //default
+    ui->horizontalSliderCaRed->setValue( sliders->caRed() );
+    delete sliders;
+}
+
+void MainWindow::on_horizontalSliderCaBlue_doubleClicked()
+{
+    ReceiptSettings *sliders = new ReceiptSettings(); //default
+    ui->horizontalSliderCaBlue->setValue( sliders->caBlue() );
     delete sliders;
 }
 
@@ -6580,6 +6636,24 @@ void MainWindow::on_label_VignetteRadiusVal_doubleClicked()
     editSlider.autoSetup( ui->horizontalSliderVignetteRadius, ui->label_VignetteRadiusVal, 1.0, 0, 1.0 );
     editSlider.exec();
     ui->horizontalSliderVignetteRadius->setValue( editSlider.getValue() );
+}
+
+//DoubleClick on CA red Label
+void MainWindow::on_label_CaRedVal_doubleClicked()
+{
+    EditSliderValueDialog editSlider;
+    editSlider.autoSetup( ui->horizontalSliderCaRed, ui->label_CaRedVal, 10.0, 1, 10.0 );
+    editSlider.exec();
+    ui->horizontalSliderCaRed->setValue( editSlider.getValue() );
+}
+
+//DoubleClick on CA blue Label
+void MainWindow::on_label_CaBlueVal_doubleClicked()
+{
+    EditSliderValueDialog editSlider;
+    editSlider.autoSetup( ui->horizontalSliderCaBlue, ui->label_CaBlueVal, 10.0, 1, 10.0 );
+    editSlider.exec();
+    ui->horizontalSliderCaBlue->setValue( editSlider.getValue() );
 }
 
 void MainWindow::on_label_RawWhiteVal_doubleClicked()
