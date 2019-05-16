@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <stdint.h>
 #define SQR(X) (X*X)
 #define min(X, Y) (((X) < (Y)) ? (X) : (Y))
 #define max(X, Y) (((X) > (Y)) ? (X) : (Y))
@@ -261,8 +262,8 @@ void CA_correct_RT(float **rawData, int winx, int winy, int winw, int winh,
         int rr1 = bottom - top;
         int cc1 = right - left;
 
-        if( 0 && tilex < 10 && tiley < 10 )
-          ;/*std::cout<<"CA_correct_RT: left="<<left<<" top="<<top<<"    tilex="<<tilex<<" tiley="<<tiley<<"    tilew="<<tilew<<" tileh="<<tileh
+        if ( 0 && tilex < 10 && tiley < 10 ) {};
+        /*std::cout<<"CA_correct_RT: left="<<left<<" top="<<top<<"    tilex="<<tilex<<" tiley="<<tiley<<"    tilew="<<tilew<<" tileh="<<tileh
           <<"    border="<<border
           <<"    rr1="<<rr1<<" cc1="<<cc1<<std::endl;*/
 
@@ -561,16 +562,15 @@ void CA_correct_RT(float **rawData, int winx, int winy, int winw, int winh,
         // copy CA corrected results to temporary image matrix
         for (rr = border; rr < rr1 - border; rr++) {
           //c = FC(rr + top, left + border + FC(rr + top, 2) & 1);
-          c = FC(rr, left + FC(rr, 2) & 1);
+          c = FC(rr, (left + FC(rr, 2)) & 1);
 
           //for (row = rr + top, cc = border + (FC(rr, 2) & 1), indx = (row * width + cc + left) >> 1; cc < cc1 - border; cc += 2, indx++) {
           for (row = rr + top, cc = border + (FC(rr, 2) & 1), indx = ((row-tiley) * tilew + cc + left - tilex) >> 1; cc < cc1 - border; cc += 2, indx++) {
             col = cc + left;
-            if( indx >= RawDataTmp_sz )
-              ;//std::cout<<"CA_correct_RT: row="<<row<<"  cc="<<cc<<"  left="<<left<<"  indx="<<indx<<"  border="<<border<<std::endl;
+            if( (size_t)indx >= RawDataTmp_sz ) {};//std::cout<<"CA_correct_RT: row="<<row<<"  cc="<<cc<<"  left="<<left<<"  indx="<<indx<<"  border="<<border<<std::endl;
             RawDataTmp[indx] = 65535.0f * rgb[c][(rr) * TS + cc] + 0.5f;
-            if(0 && top==0&&left==0 && row<16)
-              ;//std::cout<<"(1) row="<<row<<" col="<<cc+left<<"  RawDataTmp["<<indx<<"]="<<RawDataTmp[indx]<<std::endl;
+            if(0 && top==0&&left==0 && row<16) {};
+            //std::cout<<"(1) row="<<row<<" col="<<cc+left<<"  RawDataTmp["<<indx<<"]="<<RawDataTmp[indx]<<std::endl;
             //image[indx][c] = CLIP((int)(65535.0*rgb[(rr)*TS+cc][c] + 0.5));//for dcraw implementation
           }
         }
@@ -587,8 +587,7 @@ void CA_correct_RT(float **rawData, int winx, int winy, int winw, int winh,
       for(col = 0 + (FC(row, 0) & 1), indx = (row * tilew + col) >> 1; col < tilew; col += 2, indx++) {
     //for(row = tiley; row < tiley+tileh; row++)
     //  for(col = tilex + (FC(row, 0) & 1), indx = (row * width + col) >> 1; col < tilex+tilew; col += 2, indx++) {
-        if(0 && tiley==8&&tilex==8 && row<16 && col<16)
-          ;//std::cout<<"(2) row="<<row<<" col="<<col<<"  RawDataTmp["<<indx<<"]="<<RawDataTmp[indx]<<std::endl;
+        if(0 && tiley==8&&tilex==8 && row<16 && col<16) {}; //std::cout<<"(2) row="<<row<<" col="<<col<<"  RawDataTmp["<<indx<<"]="<<RawDataTmp[indx]<<std::endl;
         rawData[row+tiley][col+tilex] = RawDataTmp[indx];
       }
 
