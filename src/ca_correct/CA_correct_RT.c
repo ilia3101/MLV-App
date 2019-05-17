@@ -57,6 +57,8 @@ static inline int FC(int row, int col)
 void CA_correct_RT(float **rawData, int winx, int winy, int winw, int winh,
     int tilex, int tiley, int tilew, int tileh, uint8_t autoCA, float cared, float cablue)
 {
+    (void) winx;
+    (void) winy;
   // multithreaded by Ingo Weyrich
 #define TS 128      // Tile size
 #define TSH 64      // Half Tile size
@@ -130,8 +132,6 @@ void CA_correct_RT(float **rawData, int winx, int winy, int winw, int winh,
     return;
   }
 
-
-
   //merror(buffer1,"CA_correct()");
   memset(buffer1, 0, vblsz * hblsz * (3 * 2 + 1)*sizeof(float));
   // block CA shifts
@@ -141,55 +141,35 @@ void CA_correct_RT(float **rawData, int winx, int winy, int winw, int winh,
   double fitparams[3][2][16];
 
   //order of 2d polynomial fit (polyord), and numpar=polyord^2
-  int polyord = 4, numpar = 16;
+  int polyord = 4;
 
   //#pragma omp parallel shared(Gtmp,width,height,blockave,blocksqave,blockdenom,blockvar,blockwt,blockshifts,fitparams,polyord,numpar)
   {
-    int progresscounter = 0;
-
     int rrmin, rrmax, ccmin, ccmax;
     int top, left, row, col;
-    int rr, cc, c, indx, indx1, i, j, k, m, n, dir;
-    //number of pixels in a tile contributing to the CA shift diagnostic
-    int areawt[2][3];
+    int rr, cc, c, indx, indx1, i, j;
     //direction of the CA shift in a tile
     int GRBdir[2][3];
-    //offset data of the plaquette where the optical R/B data are sampled
-    int offset[2][3];
     int shifthfloor[3], shiftvfloor[3], shifthceil[3], shiftvceil[3];
     //number of tiles in the image
     int vblock, hblock;
     //int verbose=1;
-    //flag indicating success or failure of polynomial fit
-    int res;
     //shifts to location of vertical and diagonal neighbors
-    const int v1 = TS, v2 = 2 * TS, v3 = 3 * TS, v4 = 4 * TS; //, p1=-TS+1, p2=-2*TS+2, p3=-3*TS+3, m1=TS+1, m2=2*TS+2, m3=3*TS+3;
+    const int v1 = TS, v2 = 2 * TS, v3 = 3 * TS; //, v4 = 4 * TS, p1=-TS+1, p2=-2*TS+2, p3=-3*TS+3, m1=TS+1, m2=2*TS+2, m3=3*TS+3;
 
-    float eps = 1e-5f, eps2 = 1e-10f; //tolerance to avoid dividing by zero
+    float eps = 1e-5f; //tolerance to avoid dividing by zero
 
     //adaptive weights for green interpolation
     float   wtu, wtd, wtl, wtr;
-    //local quadratic fit to shift data within a tile
-    float   coeff[2][3][3];
-    //measured CA shift parameters for a tile
-    float   CAshift[2][3];
     //polynomial fit coefficients
     //residual CA shift amount within a plaquette
     float   shifthfrac[3], shiftvfrac[3];
     //temporary storage for median filter
-    float   temp, p[9];
-    //temporary parameters for tile CA evaluation
-    float   gdiff, deltgrb;
+    float   p[9];
     //interpolated G at edge of plaquette
-    float   Ginthfloor, Ginthceil, Gint, RBint, gradwt;
+    float   Ginthfloor, Ginthceil, Gint, RBint;
     //interpolated color difference at edge of plaquette
     float   grbdiffinthfloor, grbdiffinthceil, grbdiffint, grbdiffold;
-    //per thread data for evaluation of block CA shift variance
-    float   blockavethr[2][3] = {{0, 0, 0}, {0, 0, 0}}, blocksqavethr[2][3] = {{0, 0, 0}, {0, 0, 0}}, blockdenomthr[2][3] = {{0, 0, 0}, {0, 0, 0}}; //, blockvarthr[2][3];
-
-    //low and high pass 1D filters of G in vertical/horizontal directions
-    float   glpfh, glpfv;
-
     //max allowed CA shift
     const float bslim = 3.99;
     //gaussians for low pass filtering of G and R/B
