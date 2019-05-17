@@ -10,7 +10,6 @@
 #include "debayer.h"
 #include "string.h"
 #include "math.h"
-#include "../processing/raw_processing.h"
 
 #define TS 256 /* Tile Size */
 #define DC1394_FALSE  0
@@ -96,30 +95,6 @@ void debayerAhd(uint16_t *__restrict debayerto, float *__restrict bayerdata, int
     }
 
     filters = 0x94949494;
-
-
-    /* "white balance" and expo */
-    double wb_multipliers[3];
-    get_kelvin_multipliers_rgb(6500, wb_multipliers);
-    double max_wb = MAX( wb_multipliers[0], MAX( wb_multipliers[1], wb_multipliers[2] ) );
-    for( int i = 0; i < 3; i++ ) wb_multipliers[i] /= max_wb;
-
-    {
-        /* Applying */
-        for (int y = 0; y < height; ++y)
-            for (int x = 0; x < width; ++x)
-                switch (FC(y,x))
-                {
-                    case 0:
-                        bayerdata[y*width+x] *= wb_multipliers[0];
-                        break;
-                    case 1:
-                        bayerdata[y*width+x] *= wb_multipliers[1];
-                        break;
-                    case 2:
-                        bayerdata[y*width+x] *= wb_multipliers[2];
-                }
-    }
 
     /* fill-in destination with known exact values */
     for (y = 0; y < height; y++) {
@@ -245,19 +220,6 @@ void debayerAhd(uint16_t *__restrict debayerto, float *__restrict bayerdata, int
             }
         }
     free (buffer);
-
-    /* "white balance" and expo */
-    {
-
-        /* Applying */
-        for (int y = 0; y < height; ++y)
-            for (int x = 0; x < width; ++x)
-            {
-                debayerto[(y*width+x)*3+0] /= wb_multipliers[0];
-                debayerto[(y*width+x)*3+1] /= wb_multipliers[1];
-                debayerto[(y*width+x)*3+2] /= wb_multipliers[2];
-            }
-    }
 
     return;
 }

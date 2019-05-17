@@ -8,6 +8,7 @@
 #include "video_mlv.h"
 #include "../debayer/debayer.h"
 #include "../ca_correct/CA_correct_RT.h"
+#include "../debayer/wb_conversion.h"
 
 #define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
 
@@ -286,22 +287,6 @@ void an_mlv_cache_thread(mlvObject_t * video)
     pthread_mutex_unlock( &video->g_mutexCount );
 }
 
-static inline int FC(int row, int col)
-{
-    register int row2 = row%2;
-    register int col2 = col%2;
-    if (row2 == 0 && col2 == 0)
-        return 0;  /* red */
-    else if (row2 == 1 && col2 == 1)
-        return 2;  /* blue */
-    else
-        return 1;  /* green */
-}
-
-#define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
-#define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
-#define LIMIT16(X) MAX(MIN(X, 65535), 0)
-
 /* Gets a freshly debayered frame every time ( temp memory should be Width * Height * sizeof(float) ) */
 void get_mlv_raw_frame_debayered( mlvObject_t * video, 
                                   uint64_t frame_index,
@@ -315,63 +300,24 @@ void get_mlv_raw_frame_debayered( mlvObject_t * video,
     /* Get the raw data in B&W */
     getMlvRawFrameFloat(video, frame_index, temp_memory);
 
-    /* CA correction, multithreaded */
-    if( video->ca_red <= -0.1 || video->ca_red >= 0.1
-     || video->ca_blue <= -0.1 || video->ca_blue >= 0.1 )
+    /* WB conversion for ideal debayer result, not for bilinear, easy and non debayer */
+    if( !( debayer_type == 0 || debayer_type == 2 || debayer_type == 3 ) )
     {
-        /* WB adaption, needed for correct operation */
-        double wb_multipliers[3];
-        get_kelvin_multipliers_rgb(6500, wb_multipliers);
-        double max_wb = MAX( wb_multipliers[0], MAX( wb_multipliers[1], wb_multipliers[2] ) );
-        for( int i = 0; i < 3; i++ ) wb_multipliers[i] /= max_wb;
+        wb_convert( temp_memory, width, height, getMlvBlackLevel(video) );
+
+        /* CA correction, multithreaded, not for bilinear, easy and non debayer because not visible and slow */
+        if( video->ca_red <= -0.1 || video->ca_red >= 0.1
+         || video->ca_blue <= -0.1 || video->ca_blue >= 0.1 )
         {
-#pragma omp for schedule(dynamic) collapse(2) nowait
-            for (int y = 0; y < height; ++y)
-                for (int x = 0; x < width; ++x)
-                {
-                    //temp_memory[y*width+x] -= getMlvBlackLevel(video);
-                    switch (FC(y,x))
-                    {
-                        case 0:
-                            temp_memory[y*width+x] = LIMIT16( temp_memory[y*width+x] * wb_multipliers[0] );
-                            break;
-                        case 1:
-                            temp_memory[y*width+x] = LIMIT16( temp_memory[y*width+x] * wb_multipliers[1] );
-                            break;
-                        case 2:
-                            temp_memory[y*width+x] = LIMIT16( temp_memory[y*width+x] * wb_multipliers[2] );
-                    }
-                }
+            /* 2d array for CA correction */
+            float ** __restrict imagefloat2d = (float **)malloc(height * sizeof(float *));
+            for (int y = 0; y < height; ++y) imagefloat2d[y] = (float *)(temp_memory+(y*width));
 
+            /* the magic CA correction function */
+            CA_correct_RT(imagefloat2d, 0, 0, width, height,
+                          0, 0, width, height,
+                          0, video->ca_red, video->ca_blue); /*auto, red, blue*/
         }
-
-        /* 2d array for CA correction */
-        float ** __restrict imagefloat2d = (float **)malloc(height * sizeof(float *));
-        for (int y = 0; y < height; ++y) imagefloat2d[y] = (float *)(temp_memory+(y*width));
-
-        /* the magic CA correction function */
-        CA_correct_RT(imagefloat2d, 0, 0, width, height,
-                      0, 0, width, height,
-                      0, video->ca_red, video->ca_blue); /*auto, red, blue*/
-
-//#pragma omp for schedule(dynamic) collapse(2) nowait
-        /* undo WB adaption */
-        for (int y = 0; y < height; ++y)
-            for (int x = 0; x < width; ++x)
-            {
-                switch (FC(y,x))
-                {
-                    case 0:
-                        temp_memory[y*width+x] = LIMIT16( temp_memory[y*width+x] / wb_multipliers[0] );
-                        break;
-                    case 1:
-                        temp_memory[y*width+x] = LIMIT16( temp_memory[y*width+x] / wb_multipliers[1] );
-                        break;
-                    case 2:
-                        temp_memory[y*width+x] = LIMIT16( temp_memory[y*width+x] / wb_multipliers[2] );
-                }
-                //temp_memory[y*width+x] += getMlvBlackLevel(video);
-            }
     }
 
     /* Debayer */
@@ -405,4 +351,8 @@ void get_mlv_raw_frame_debayered( mlvObject_t * video,
         /* Debayer quickly (bilinearly) */
         debayerBasic(output_frame, temp_memory, width, height, 1);
     }
+
+    /* WB conversion undo for ideal debayer result */
+    if( !( debayer_type == 0 || debayer_type == 2 || debayer_type == 3 ) )
+        wb_undo( output_frame, width, height, getMlvBlackLevel(video) );
 }

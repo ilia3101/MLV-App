@@ -20,7 +20,6 @@
 #include <math.h>
 #include "sleefsseavx.c"
 #include "debayer.h"
-#include "../processing/raw_processing.h"
 
 #undef CLIP
 #define CLIP(x) x
@@ -263,33 +262,6 @@ void igv_demosaic( amazeinfo_t * inputdata )
     vdif  = (float (*))    calloc(width*height/2, sizeof *vdif);
     hdif  = (float (*))    calloc(width*height/2, sizeof *hdif);
 
-    /* "white balance" and expo */
-    double wb_multipliers[3];
-    get_kelvin_multipliers_rgb(6500, wb_multipliers);
-    double max_wb = MAX( wb_multipliers[0], MAX( wb_multipliers[1], wb_multipliers[2] ) );
-    for( int i = 0; i < 3; i++ ) wb_multipliers[i] /= max_wb; //if not doing this, strange noise comes to highlights
-    {
-        int endx = tilex + tilew;
-        int endy = tiley + tileh;
-
-        /* Applying */
-#pragma omp parallel for
-        for (int y = tiley; y < endy; ++y)
-            for (int x = tilex; x < endx; ++x)
-                switch (FC(y,x))
-                {
-                    case 0:
-                        rawData[y][x] = LIMIT16( rawData[y][x] * wb_multipliers[0] );
-                        break;
-                    case 1:
-                        rawData[y][x] = LIMIT16( rawData[y][x] * wb_multipliers[1] );
-                        break;
-                    case 2:
-                        rawData[y][x] = LIMIT16( rawData[y][x] * wb_multipliers[2] );
-                }
-
-    }
-
     //border_interpolate2(tilew,tileh,7,rawData,red,green,blue);
 //#ifdef _OPENMP
 #pragma omp parallel default(none) shared(rgb,vdif,hdif,chr,tilex,tiley,rawData,red,green,blue)
@@ -469,21 +441,5 @@ void igv_demosaic( amazeinfo_t * inputdata )
     free(hdif);
 
     border_interpolate2(tilew,tileh,8,rawData,red,green,blue);    
-
-    /* "white balance" and expo */
-    {
-        int endx = tilex + tilew;
-        int endy = tiley + tileh;
-
-        /* Applying */
-#pragma omp parallel for
-        for (int y = tiley; y < endy; ++y)
-            for (int x = tilex; x < endx; ++x)
-            {
-                red[y][x] /= wb_multipliers[0];
-                green[y][x] /= wb_multipliers[1];
-                blue[y][x] /= wb_multipliers[2];
-            }
-    }
 }
 

@@ -135,7 +135,8 @@ SOURCES += \
     ../../src/processing/interpolation/cosine_interpolation.c \
     ../../src/processing/rbfilter/rbf_wrapper.cpp \
     HueVsDiagram.cpp \
-    ../../src/processing/rbfilter/RBFilterPlain.cpp
+    ../../src/processing/rbfilter/RBFilterPlain.cpp \
+    ../../src/debayer/wb_conversion.c
 
 macx: SOURCES += ../cocoa/avf_lib/avf_lib.m
 

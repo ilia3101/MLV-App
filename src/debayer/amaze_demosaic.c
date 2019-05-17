@@ -34,7 +34,6 @@
     #include <time.h>
     #include "debayer.h"
     #include "sleefsseavx.c"
-    #include "../processing/raw_processing.h"
 
     #define initialGain 1.0 /* IDK */
 
@@ -288,32 +287,6 @@
             if (FC(0,1)==0) {ey=0; ex=1;} else {ey=1; ex=0;}
         } else {//first pixel is R or B
             if (FC(0,0)==0) {ey=0; ex=0;} else {ey=1; ex=1;}
-        }
-
-        /* "white balance" and expo */
-        double wb_multipliers[3];
-        get_kelvin_multipliers_rgb(6500, wb_multipliers);
-        double max_wb = MAX( wb_multipliers[0], MAX( wb_multipliers[1], wb_multipliers[2] ) );
-        for( int i = 0; i < 3; i++ ) wb_multipliers[i] /= max_wb;
-
-        {
-            int endx = winx + winw;
-            int endy = winy + winh;
-
-            /* Applying */
-            for (int y = winy; y < endy; ++y)
-                for (int x = winx; x < endx; ++x)
-                    switch (FC(y,x))
-                    {
-                        case 0:
-                            rawData[y][x] *= wb_multipliers[0];
-                            break;
-                        case 1:
-                            rawData[y][x] *= wb_multipliers[1];
-                            break;
-                        case 2:
-                            rawData[y][x] *= wb_multipliers[2];
-                    }
         }
 
         // Main algorithm: Tile loop
@@ -1509,21 +1482,6 @@
 
         // clean up
         free(buffer);
-
-        /* "white balance" and expo */
-        {
-            int endx = winx + winw;
-            int endy = winy + winh;
-
-            /* Applying */
-            for (int y = winy; y < endy; ++y)
-                for (int x = winx; x < endx; ++x)
-                {
-                    red[y][x] /= wb_multipliers[0];
-                    green[y][x] /= wb_multipliers[1];
-                    blue[y][x] /= wb_multipliers[2];
-                }
-        }
     }
 
     // done
