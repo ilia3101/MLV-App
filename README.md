@@ -47,6 +47,7 @@ A very first version of a kind of user manual can be found [here](https://github
 - Smooth artifacts filter (minimizes moiree) for all ffmpeg export codecs, realized by ffmpeg filter combination
 - 2D median denoiser (don't expect wonders!)
 - Recursive bilateral filter (works as denoiser) with Luminance, Chroma and Range parameter
+- Vignette effect / correction and chromatic abberation correction
 - Post export scripting on macOS (thx @dannephoto)
 - Zoom: fit to screen, 100% and free zoom, scroll through picture
 - Zebras
