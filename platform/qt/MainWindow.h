@@ -101,6 +101,7 @@ private slots:
     void on_horizontalSliderFilterStrength_valueChanged(int position);
     void on_horizontalSliderVignetteStrength_valueChanged(int position);
     void on_horizontalSliderVignetteRadius_valueChanged(int position);
+    void on_horizontalSliderVignetteShape_valueChanged(int position);
     void on_horizontalSliderCaRed_valueChanged(int position);
     void on_horizontalSliderCaBlue_valueChanged(int position);
     void on_horizontalSliderRawWhite_valueChanged(int position);
@@ -140,6 +141,7 @@ private slots:
     void on_horizontalSliderFilterStrength_doubleClicked();
     void on_horizontalSliderVignetteStrength_doubleClicked();
     void on_horizontalSliderVignetteRadius_doubleClicked();
+    void on_horizontalSliderVignetteShape_doubleClicked();
     void on_horizontalSliderCaRed_doubleClicked();
     void on_horizontalSliderCaBlue_doubleClicked();
     void on_horizontalSliderRawWhite_doubleClicked();
@@ -231,6 +233,7 @@ private slots:
     void on_label_FilterStrengthVal_doubleClicked( void );
     void on_label_VignetteStrengthVal_doubleClicked( void );
     void on_label_VignetteRadiusVal_doubleClicked( void );
+    void on_label_VignetteShapeVal_doubleClicked( void );
     void on_label_CaRedVal_doubleClicked( void );
     void on_label_CaBlueVal_doubleClicked( void );
     void on_label_RawWhiteVal_doubleClicked( void );

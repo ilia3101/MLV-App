@@ -125,7 +125,7 @@ void processingSet3WayCorrection( processingObject_t * processing,
 
 /* Vignette */
 void processingSetVignetteStrength(processingObject_t * processing, int8_t value);
-void processingSetVignetteMask(processingObject_t * processing, uint16_t width, uint16_t height, float radius , float xStretch, float yStretch);
+void processingSetVignetteMask(processingObject_t * processing, uint16_t width, uint16_t height, float radius, float shape, float xStretch, float yStretch);
 
 /* Gradient */
 void processingSetGradientMask(processingObject_t * processing, uint16_t width, uint16_t height, float x1, float y1, float x2, float y2 );

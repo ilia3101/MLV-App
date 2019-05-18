@@ -87,6 +87,7 @@ ReceiptSettings::ReceiptSettings()
     m_filterStrength = 100;
     m_vignetteStrength = 0;
     m_vignetteRadius = 20;
+    m_vignetteShape = 0;
     m_caRed = 0;
     m_caBlue = 0;
     m_profile = 1;

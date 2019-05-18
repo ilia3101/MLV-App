@@ -3423,6 +3423,11 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
             receipt->setVignetteRadius( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
+        else if( Rxml->isStartElement() && Rxml->name() == "vignetteShape" )
+        {
+            receipt->setVignetteShape( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
         else if( Rxml->isStartElement() && Rxml->name() == "caRed" )
         {
             receipt->setCaRed( Rxml->readElementText().toInt() );
@@ -3578,6 +3583,7 @@ void MainWindow::writeXmlElementsToFile(QXmlStreamWriter *xmlWriter, ReceiptSett
     xmlWriter->writeTextElement( "filterStrength",          QString( "%1" ).arg( receipt->filterStrength() ) );
     xmlWriter->writeTextElement( "vignetteStrength",        QString( "%1" ).arg( receipt->vignetteStrength() ) );
     xmlWriter->writeTextElement( "vignetteRadius",          QString( "%1" ).arg( receipt->vignetteRadius() ) );
+    xmlWriter->writeTextElement( "vignetteShape",           QString( "%1" ).arg( receipt->vignetteShape() ) );
     xmlWriter->writeTextElement( "caRed",                   QString( "%1" ).arg( receipt->caRed() ) );
     xmlWriter->writeTextElement( "caBlue",                  QString( "%1" ).arg( receipt->caBlue() ) );
     xmlWriter->writeTextElement( "stretchFactorX",          QString( "%1" ).arg( receipt->stretchFactorX() ) );
@@ -3871,6 +3877,9 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
 
     //Vignette after stretching in order to use stretching once only
     ui->horizontalSliderVignetteStrength->setValue( receipt->vignetteStrength() );
+    ui->horizontalSliderVignetteShape->blockSignals( true );
+    ui->horizontalSliderVignetteShape->setValue( receipt->vignetteShape() );
+    ui->horizontalSliderVignetteShape->blockSignals( false );
     ui->horizontalSliderVignetteRadius->blockSignals( true );
     ui->horizontalSliderVignetteRadius->setValue( receipt->vignetteRadius() );
     ui->horizontalSliderVignetteRadius->blockSignals( false );
@@ -3996,6 +4005,7 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
 
     receipt->setVignetteStrength( ui->horizontalSliderVignetteStrength->value() );
     receipt->setVignetteRadius( ui->horizontalSliderVignetteRadius->value() );
+    receipt->setVignetteShape( ui->horizontalSliderVignetteShape->value() );
     receipt->setCaRed( ui->horizontalSliderCaRed->value() );
     receipt->setCaBlue( ui->horizontalSliderCaBlue->value() );
 
@@ -4116,6 +4126,7 @@ void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings 
     {
         receiptTarget->setVignetteStrength( receiptSource->vignetteStrength() );
         receiptTarget->setVignetteRadius( receiptSource->vignetteRadius() );
+        receiptTarget->setVignetteShape( receiptSource->vignetteShape() );
         receiptTarget->setCaRed( receiptSource->caRed() );
         receiptTarget->setCaBlue( receiptSource->caBlue() );
     }
@@ -4268,6 +4279,7 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
 
     receipt->setVignetteStrength( m_pSessionReceipts.at( row )->vignetteStrength() );
     receipt->setVignetteRadius( m_pSessionReceipts.at( row )->vignetteRadius() );
+    receipt->setVignetteShape( m_pSessionReceipts.at( row )->vignetteShape() );
     receipt->setCaRed( m_pSessionReceipts.at( row )->caRed() );
     receipt->setCaBlue( m_pSessionReceipts.at( row )->caBlue() );
 
@@ -5130,9 +5142,22 @@ void MainWindow::on_horizontalSliderVignetteRadius_valueChanged(int position)
     processingSetVignetteMask( m_pProcessingObject,
                                getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject),
                                position / 100.0,
+                               ui->horizontalSliderVignetteShape->value() / 100.0,
                                getHorizontalStretchFactor(false),
                                getVerticalStretchFactor(false) );
     ui->label_VignetteRadiusVal->setText( QString("%1").arg( position ) );
+    m_frameChanged = true;
+}
+
+void MainWindow::on_horizontalSliderVignetteShape_valueChanged(int position)
+{
+    processingSetVignetteMask( m_pProcessingObject,
+                               getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject),
+                               ui->horizontalSliderVignetteRadius->value() / 100.0,
+                               position / 100.0,
+                               getHorizontalStretchFactor(false),
+                               getVerticalStretchFactor(false) );
+    ui->label_VignetteShapeVal->setText( QString("%1").arg( position ) );
     m_frameChanged = true;
 }
 
@@ -5457,6 +5482,13 @@ void MainWindow::on_horizontalSliderVignetteRadius_doubleClicked()
 {
     ReceiptSettings *sliders = new ReceiptSettings(); //default
     ui->horizontalSliderVignetteRadius->setValue( sliders->vignetteRadius() );
+    delete sliders;
+}
+
+void MainWindow::on_horizontalSliderVignetteShape_doubleClicked()
+{
+    ReceiptSettings *sliders = new ReceiptSettings(); //default
+    ui->horizontalSliderVignetteShape->setValue( sliders->vignetteShape() );
     delete sliders;
 }
 
@@ -6636,6 +6668,15 @@ void MainWindow::on_label_VignetteRadiusVal_doubleClicked()
     editSlider.autoSetup( ui->horizontalSliderVignetteRadius, ui->label_VignetteRadiusVal, 1.0, 0, 1.0 );
     editSlider.exec();
     ui->horizontalSliderVignetteRadius->setValue( editSlider.getValue() );
+}
+
+//DoubleClick on Vignette Shape Label
+void MainWindow::on_label_VignetteShapeVal_doubleClicked()
+{
+    EditSliderValueDialog editSlider;
+    editSlider.autoSetup( ui->horizontalSliderVignetteShape, ui->label_VignetteShapeVal, 1.0, 0, 1.0 );
+    editSlider.exec();
+    ui->horizontalSliderVignetteShape->setValue( editSlider.getValue() );
 }
 
 //DoubleClick on CA red Label
