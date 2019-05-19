@@ -60,7 +60,6 @@ A very first version of a kind of user manual can be found [here](https://github
 #### Qt App macOS
 - install XCode depending on your OSX
 - install Qt5 (minimum 5.6)
-- unpack ffmpegOSX.zip in `platform/qt/FFmpeg`
 - open `platform/qt/MLVApp.pro` in QtCreator
 - go to tab project, add command line argument -j4 (for quad core) 
 - Build and Start
