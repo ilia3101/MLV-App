@@ -69,6 +69,12 @@ QDataStream& operator>>(QDataStream& in, ExportPreset& v) {
     in >> v.hdrBlending;
     return in;
 }
+
+// Compare two variants.
+bool exportPresetLessThan(const ExportPreset &v1, const ExportPreset &v2)
+{
+    return v1.name < v2.name;
+}
 //Until here for Preset Saving
 
 //Constructor
@@ -78,6 +84,7 @@ ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, Scripting *scripting
 {
     ui->setupUi(this);
     setWindowFlags( Qt::Dialog | Qt::WindowTitleHint | Qt::WindowCloseButtonHint );
+    m_blockOnce = true;
     ui->comboBoxCodec->setCurrentIndex( currentCodecProfile );
     on_comboBoxCodec_currentIndexChanged( currentCodecProfile );
     ui->comboBoxOption->setCurrentIndex( currentCodecOption );
@@ -117,12 +124,14 @@ ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, Scripting *scripting
     qRegisterMetaTypeStreamOperators<QList<ExportPreset> >("QList<ExportPreset>");
     QSettings set( QSettings::UserScope, "magiclantern.MLVApp", "MLVApp" );
     QList<ExportPreset> presetList = set.value( "ExportPresets" ).value<QList<ExportPreset> >();
+    ui->listWidget->blockSignals( true );
     for( int i = 0; i < presetList.count(); i++ )
     {
         QListWidgetItem *item = new QListWidgetItem( presetList.at(i).name );
         item->setFlags( item->flags() | Qt::ItemIsEditable );
         ui->listWidget->addItem( item );
     }
+    ui->listWidget->blockSignals( false );
 
     adjustSize();
 }
@@ -546,6 +555,7 @@ void ExportSettingsDialog::on_toolButtonAddPreset_clicked()
     preset.hdrBlending = ui->checkBoxHdrBlending->isChecked();
     //Save item + list
     presetList.append( preset );
+    std::sort( presetList.begin(), presetList.end(), exportPresetLessThan );
     set.setValue( "ExportPresets", QVariant::fromValue(presetList) );
 }
 
@@ -565,7 +575,7 @@ void ExportSettingsDialog::on_toolButtonDeletePreset_clicked()
     delete ui->listWidget->takeItem(currentItem);
 }
 
-//Rename double clicked export preset
+//Rename, double clicked export preset
 void ExportSettingsDialog::on_listWidget_itemChanged(QListWidgetItem *item)
 {
     qRegisterMetaTypeStreamOperators<QList<ExportPreset> >("QList<ExportPreset>");
@@ -579,6 +589,7 @@ void ExportSettingsDialog::on_listWidget_itemChanged(QListWidgetItem *item)
     ExportPreset preset = presetList.takeAt( currentItem );
     preset.name = item->text();
     presetList.insert( currentItem, preset );
+    std::sort( presetList.begin(), presetList.end(), exportPresetLessThan );
     set.setValue( "ExportPresets", QVariant::fromValue(presetList) );
 }
 
@@ -611,4 +622,16 @@ void ExportSettingsDialog::on_listWidget_itemClicked(QListWidgetItem *item)
     ui->comboBoxSmoothing->setCurrentIndex( presetList.at(currentItem).smooth );
     ui->comboBoxScaleAlgorithm->setCurrentIndex( presetList.at(currentItem).scaleAlgo );
     ui->checkBoxHdrBlending->setChecked( presetList.at(currentItem).hdrBlending );
+}
+
+//React also on arrow buttons
+void ExportSettingsDialog::on_listWidget_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous)
+{
+    if( m_blockOnce )
+    {
+        m_blockOnce = false;
+        return;
+    }
+    if( current == previous ) return;
+    on_listWidget_itemClicked( current );
 }

@@ -154,9 +154,12 @@ private slots:
     void on_listWidget_itemChanged(QListWidgetItem *item);
     void on_listWidget_itemClicked(QListWidgetItem *item);
 
+    void on_listWidget_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous);
+
 private:
     Ui::ExportSettingsDialog *ui;
     Scripting *m_pScripting;
+    bool m_blockOnce;
 };
 
 #endif // EXPORTSETTINGSDIALOG_H
