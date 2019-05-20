@@ -10,6 +10,7 @@
 
 #include <QDialog>
 #include <Scripting.h>
+#include <QListWidgetItem>
 
 #define CODEC_PRORES422PROXY        0
 #define CODEC_PRORES422LT           1
@@ -144,12 +145,14 @@ private slots:
     void on_checkBoxResize_toggled(bool checked);
     void on_comboBoxOption_currentIndexChanged(const QString &arg1);
     void on_toolButtonLockHeight_toggled(bool checked);
-
     void on_comboBoxPostExportScript_currentIndexChanged(const QString &arg1);
-
     void on_checkBoxHdrBlending_toggled(bool checked);
-
     void on_comboBoxSmoothing_currentIndexChanged(int index);
+
+    void on_toolButtonAddPreset_clicked();
+    void on_toolButtonDeletePreset_clicked();
+    void on_listWidget_itemChanged(QListWidgetItem *item);
+    void on_listWidget_itemClicked(QListWidgetItem *item);
 
 private:
     Ui::ExportSettingsDialog *ui;

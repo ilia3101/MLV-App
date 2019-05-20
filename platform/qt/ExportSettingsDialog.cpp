@@ -10,6 +10,66 @@
 #include <QMessageBox>
 #include <QStandardItemModel>
 #include <QStandardItem>
+#include <QSettings>
+#include <QList>
+#include <QDataStream>
+
+//From here for Preset Saving
+struct ExportPreset {
+    QString name;
+    uint8_t currentCodecProfile;
+    uint8_t currentCodecOption;
+    uint8_t debayerMode;
+    bool resize;
+    uint16_t resizeWidth;
+    uint16_t resizeHeight;
+    bool fpsOverride;
+    double fps;
+    bool exportAudio;
+    bool heightLocked;
+    uint8_t smooth;
+    uint8_t scaleAlgo;
+    bool hdrBlending;
+};
+
+Q_DECLARE_METATYPE(ExportPreset);
+
+QDataStream& operator<<(QDataStream& out, const ExportPreset& v) {
+    out << v.name
+        << v.currentCodecProfile
+        << v.currentCodecOption
+        << v.debayerMode
+        << v.resize
+        << v.resizeWidth
+        << v.resizeHeight
+        << v.fpsOverride
+        << v.fps
+        << v.exportAudio
+        << v.heightLocked
+        << v.smooth
+        << v.scaleAlgo
+        << v.hdrBlending;
+    return out;
+}
+
+QDataStream& operator>>(QDataStream& in, ExportPreset& v) {
+    in >> v.name;
+    in >> v.currentCodecProfile;
+    in >> v.currentCodecOption;
+    in >> v.debayerMode;
+    in >> v.resize;
+    in >> v.resizeWidth;
+    in >> v.resizeHeight;
+    in >> v.fpsOverride;
+    in >> v.fps;
+    in >> v.exportAudio;
+    in >> v.heightLocked;
+    in >> v.smooth;
+    in >> v.scaleAlgo;
+    in >> v.hdrBlending;
+    return in;
+}
+//Until here for Preset Saving
 
 //Constructor
 ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, Scripting *scripting, uint8_t currentCodecProfile, uint8_t currentCodecOption, uint8_t debayerMode, bool resize, uint16_t resizeWidth, uint16_t resizeHeight, bool fpsOverride, double fps, bool exportAudio, bool heightLocked, uint8_t smooth, uint8_t scaleAlgo, bool hdrBlending) :
@@ -52,6 +112,17 @@ ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, Scripting *scripting
     ui->comboBoxPostExportScript->setCurrentText( m_pScripting->postExportScriptName() );
     ui->comboBoxPostExportScript->blockSignals( false );
 #endif
+
+    //Preset list
+    qRegisterMetaTypeStreamOperators<QList<ExportPreset> >("QList<ExportPreset>");
+    QSettings set( QSettings::UserScope, "magiclantern.MLVApp", "MLVApp" );
+    QList<ExportPreset> presetList = set.value( "ExportPresets" ).value<QList<ExportPreset> >();
+    for( int i = 0; i < presetList.count(); i++ )
+    {
+        QListWidgetItem *item = new QListWidgetItem( presetList.at(i).name );
+        item->setFlags( item->flags() | Qt::ItemIsEditable );
+        ui->listWidget->addItem( item );
+    }
 
     adjustSize();
 }
@@ -445,4 +516,99 @@ void ExportSettingsDialog::on_comboBoxSmoothing_currentIndexChanged(int index)
         ui->checkBoxHdrBlending->setEnabled( false );
         ui->checkBoxHdrBlending->setChecked( false );
     }
+}
+
+//Add a new export preset
+void ExportSettingsDialog::on_toolButtonAddPreset_clicked()
+{
+    QListWidgetItem *newItem = new QListWidgetItem( "New Preset" );
+    newItem->setFlags( newItem->flags() | Qt::ItemIsEditable );
+    ui->listWidget->addItem( newItem );
+    qRegisterMetaTypeStreamOperators<QList<ExportPreset> >("QList<ExportPreset>");
+    //Get existing list
+    QSettings set( QSettings::UserScope, "magiclantern.MLVApp", "MLVApp" );
+    QList<ExportPreset> presetList = set.value( "ExportPresets" ).value<QList<ExportPreset> >();
+    //Build new item
+    ExportPreset preset;
+    preset.name = "New Preset";
+    preset.currentCodecProfile = ui->comboBoxCodec->currentIndex();
+    preset.currentCodecOption = ui->comboBoxOption->currentIndex();
+    preset.debayerMode = ui->comboBoxDebayer->currentIndex();
+    preset.resize = ui->checkBoxResize->isChecked();
+    preset.resizeWidth = ui->spinBoxWidth->value();
+    preset.resizeHeight = ui->spinBoxHeight->value();
+    preset.fpsOverride = ui->checkBoxFpsOverride->isChecked();
+    preset.fps = ui->doubleSpinBoxFps->value();
+    preset.exportAudio = ui->checkBoxExportAudio->isChecked();
+    preset.heightLocked = ui->toolButtonLockHeight->isChecked();
+    preset.smooth = ui->comboBoxSmoothing->currentIndex();
+    preset.scaleAlgo = ui->comboBoxScaleAlgorithm->currentIndex();
+    preset.hdrBlending = ui->checkBoxHdrBlending->isChecked();
+    //Save item + list
+    presetList.append( preset );
+    set.setValue( "ExportPresets", QVariant::fromValue(presetList) );
+}
+
+//Delete selected export preset
+void ExportSettingsDialog::on_toolButtonDeletePreset_clicked()
+{
+    qRegisterMetaTypeStreamOperators<QList<ExportPreset> >("QList<ExportPreset>");
+    //Get existing list
+    QSettings set( QSettings::UserScope, "magiclantern.MLVApp", "MLVApp" );
+    QList<ExportPreset> presetList = set.value( "ExportPresets" ).value<QList<ExportPreset> >();
+
+    int currentItem = ui->listWidget->currentRow();
+    if( currentItem > presetList.count() ) return;
+
+    presetList.removeAt( currentItem );
+    set.setValue( "ExportPresets", QVariant::fromValue(presetList) );
+    delete ui->listWidget->takeItem(currentItem);
+}
+
+//Rename double clicked export preset
+void ExportSettingsDialog::on_listWidget_itemChanged(QListWidgetItem *item)
+{
+    qRegisterMetaTypeStreamOperators<QList<ExportPreset> >("QList<ExportPreset>");
+    //Get existing list
+    QSettings set( QSettings::UserScope, "magiclantern.MLVApp", "MLVApp" );
+    QList<ExportPreset> presetList = set.value( "ExportPresets" ).value<QList<ExportPreset> >();
+
+    int currentItem = ui->listWidget->currentRow();
+    if( currentItem > presetList.count() ) return;
+
+    ExportPreset preset = presetList.takeAt( currentItem );
+    preset.name = item->text();
+    presetList.insert( currentItem, preset );
+    set.setValue( "ExportPresets", QVariant::fromValue(presetList) );
+}
+
+//Select export preset
+void ExportSettingsDialog::on_listWidget_itemClicked(QListWidgetItem *item)
+{
+    Q_UNUSED( item );
+
+    qRegisterMetaTypeStreamOperators<QList<ExportPreset> >("QList<ExportPreset>");
+    //Get existing list
+    QSettings set( QSettings::UserScope, "magiclantern.MLVApp", "MLVApp" );
+    QList<ExportPreset> presetList = set.value( "ExportPresets" ).value<QList<ExportPreset> >();
+
+    int currentItem = ui->listWidget->currentRow();
+    if( currentItem > presetList.count() ) return;
+
+    ui->comboBoxCodec->setCurrentIndex( presetList.at(currentItem).currentCodecProfile );
+    on_comboBoxCodec_currentIndexChanged( presetList.at(currentItem).currentCodecProfile );
+    ui->comboBoxOption->setCurrentIndex( presetList.at(currentItem).currentCodecOption );
+    ui->comboBoxDebayer->setCurrentIndex( presetList.at(currentItem).debayerMode );
+    ui->checkBoxResize->setChecked( presetList.at(currentItem).resize );
+    on_checkBoxResize_toggled( presetList.at(currentItem).resize );
+    ui->spinBoxWidth->setValue( presetList.at(currentItem).resizeWidth );
+    ui->spinBoxHeight->setValue( presetList.at(currentItem).resizeHeight );
+    ui->checkBoxFpsOverride->setChecked( presetList.at(currentItem).fpsOverride );
+    on_checkBoxFpsOverride_toggled( presetList.at(currentItem).fpsOverride );
+    ui->doubleSpinBoxFps->setValue( presetList.at(currentItem).fps );
+    ui->checkBoxExportAudio->setChecked( presetList.at(currentItem).exportAudio );
+    ui->toolButtonLockHeight->setChecked( presetList.at(currentItem).heightLocked );
+    ui->comboBoxSmoothing->setCurrentIndex( presetList.at(currentItem).smooth );
+    ui->comboBoxScaleAlgorithm->setCurrentIndex( presetList.at(currentItem).scaleAlgo );
+    ui->checkBoxHdrBlending->setChecked( presetList.at(currentItem).hdrBlending );
 }
