@@ -39,13 +39,13 @@ void wb_convert(float *rawData, int width, int height, int blacklevel)
                 switch (FC(y,x))
                 {
                     case 0:
-                        rawData[y*width+x] = LIMIT16( ( rawData[y*width+x] - blacklevel ) * wb_multipliers[0] );
+                        rawData[y*width+x] = LIMIT16( ( rawData[y*width+x] /*- blacklevel*/ ) * wb_multipliers[0] );
                         break;
                     case 1:
-                        rawData[y*width+x] = LIMIT16( ( rawData[y*width+x] - blacklevel ) * wb_multipliers[1] );
+                        rawData[y*width+x] = LIMIT16( ( rawData[y*width+x] /*- blacklevel*/ ) * wb_multipliers[1] );
                         break;
                     case 2:
-                        rawData[y*width+x] = LIMIT16( ( rawData[y*width+x] - blacklevel ) * wb_multipliers[2] );
+                        rawData[y*width+x] = LIMIT16( ( rawData[y*width+x] /*- blacklevel*/ ) * wb_multipliers[2] );
                         break;
                     default:
                         break;
@@ -67,9 +67,9 @@ void wb_undo(uint16_t *debayeredFrame, int width, int height, int blacklevel)
             for (int x = 0; x < width; ++x)
             {
                 int idx = (y*width+x)*3;
-                debayeredFrame[idx  ] = LIMIT16( ( debayeredFrame[idx  ] / wb_multipliers[0] ) + blacklevel );
-                debayeredFrame[idx+1] = LIMIT16( ( debayeredFrame[idx+1] / wb_multipliers[1] ) + blacklevel );
-                debayeredFrame[idx+2] = LIMIT16( ( debayeredFrame[idx+2] / wb_multipliers[2] ) + blacklevel );
+                debayeredFrame[idx  ] = LIMIT16( ( debayeredFrame[idx  ] / wb_multipliers[0] ) /*+ blacklevel*/ );
+                debayeredFrame[idx+1] = LIMIT16( ( debayeredFrame[idx+1] / wb_multipliers[1] ) /*+ blacklevel*/ );
+                debayeredFrame[idx+2] = LIMIT16( ( debayeredFrame[idx+2] / wb_multipliers[2] ) /*+ blacklevel*/ );
             }
     }
 }
