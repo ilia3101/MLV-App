@@ -36,7 +36,6 @@ void wb_convert(float *rawData, int width, int height, int blacklevel)
         for (int y = 0; y < height; ++y)
             for (int x = 0; x < width; ++x)
             {
-                //temp_memory[y*width+x] -= getMlvBlackLevel(video);
                 switch (FC(y,x))
                 {
                     case 0:
@@ -47,6 +46,9 @@ void wb_convert(float *rawData, int width, int height, int blacklevel)
                         break;
                     case 2:
                         rawData[y*width+x] = LIMIT16( ( rawData[y*width+x] - blacklevel ) * wb_multipliers[2] );
+                        break;
+                    default:
+                        break;
                 }
             }
 
