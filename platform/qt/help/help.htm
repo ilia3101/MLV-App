@@ -1,0 +1,429 @@
+<p>Welcome to the MLV-App wiki!</p>
+
+<p>Here we will try to write down a kind of user manual and how we realized the key features of MLV App.</p>
+
+<h1 id="1definitions">1. Definitions</h1>
+
+<h2 id="session">Session</h2>
+
+<p>A session consists of a set of MLV clips. For each clip one receipt is saved.</p>
+
+<h2 id="receipt">Receipt</h2>
+
+<p>A receipt contains all settings from edit area for one clip.</p>
+
+<h1 id="2menu">2. Menu</h1>
+
+<h2 id="21file">2.1 File</h2>
+
+<h3 id="newsession">New Session</h3>
+
+<p>Create a new empty session. If you are in a session, this session will be closed.</p>
+
+<h3 id="opensession">Open Session</h3>
+
+<p>Opens an existing session from disk.</p>
+
+<h3 id="savesession">Save Session</h3>
+
+<p>Saves the opened session to disk.</p>
+
+<h3 id="createmappfiles">Create MAPP Files</h3>
+
+<p>A MAPP file contains video frame index (absolute offsets to all video frames start in MLV). MAPP also includes audio frame index and all needed block header copies. Hence there is no need to open and scan MLV file second time at all. Audio index simplifies audio data access when this data is to be loaded. WAV file is not saved separately. So when MAPP is active and MLV does not contain audio, the second loading is lightning fast.</p>
+
+<h3 id="importmlv">Import MLV</h3>
+
+<p>This action imports (a) MLV file(s) to the session.</p>
+
+<h3 id="fcpxmlimportassistant">FCPXML Import Assistant</h3>
+
+<p>This opens a dialog, which helps opening all used clips from a FCPXML project file. The assistant trys to find a MLV equivalent to the clips from the FCPXML project.</p>
+
+<p><em>Example: as first step for a project all recorded MLV files were opened and all clips were exported as proxy. As second step, the project was cut in a NLE. As third step, all used clips shall be graded and exported with maximal quality. Here, this assistant helps opening only the used clips to the session.</em></p>
+
+<p><img src=":/help/help/fcpxml.png" alt="bildschirmfoto 2018-08-11 um 16 05 49" width=480 /></p>
+
+<h3 id="fcpxmlselectionassistant">FCPXML Selection Assistant</h3>
+
+<p>This opens a dialog, which helps selecting all used clips from a FCPXML project file. The assistant trys to find the equivalent clips in the session and selects them. The selection can be inverted.</p>
+
+<p><em>Example: as first step for a project all recorded MLV files were opened, some adjustments were made and all clips were exported as proxy. As second step, the project was cut in a NLE. As third step, all used clips shall be graded and exported with maximal quality. Here, this assistant helps removing the unused clips from the session. So the adjustments from step one don't get lost.</em></p>
+
+<h3 id="clipinformation">Clip Information</h3>
+
+<p>Open a dialog, which shows the metadata from the MLV file.</p>
+
+<h3 id="exportselectedclips">Export Selected Clips</h3>
+
+<p>This action exports the clips, which are selected in the Session List area, using the selected codec from Export Settings.</p>
+
+<h3 id="exportactualframe">Export Actual Frame</h3>
+
+<p>Export the frame shown in the viewer as PNG file.</p>
+
+<h3 id="exportsettings">Export Settings</h3>
+
+<p>Setup the export settings. They consist of the codec, codec option, debayer (demosaic algorithm), resolution (ffmpeg codecs only), framerate override (ffmpeg only &amp; AVFoundation), Smooth aliasing (ffmpeg only), HDR blending (ffmpeg only), audio, post export script (OSX only).</p>
+
+<p>CinemaDNG export only contains RAW Correction parameters and CutIn&amp;CutOut applied. All other parameters from edit area don't affect the exported file.</p>
+
+<p>MLV export only contains CutIn&amp;CutOut applied. All other parameters from edit area don't affect the exported file.</p>
+
+<p>Smooth aliasing smooths aliasing artifacts. This works best for clips with a very slight movement. </p>
+
+<p><em>Note: Smooth aliasing runs when progressbar is at 100% and needs a long time to render.</em></p>
+
+<h2 id="22edit">2.2 Edit</h2>
+
+<h3 id="copyreceipt">Copy Receipt</h3>
+
+<p>First, this opens a dialog where the user is able to select the settings only, which shall be copied to another/other clip(s) from the session. The selected settings from the opened clip will be copied to clipboard.</p>
+
+<h3 id="pastereceipt">Paste Receipt</h3>
+
+<p>The receipt settings copied to clipboard will be pasted to all selected clips in the session list, or to the opened clip.</p>
+
+<h3 id="exportreceipt">Export Receipt</h3>
+
+<p>This is the same like Copy Receipt, but the receipt is not copied to clipboard - it is saved to a file on disk.</p>
+
+<h3 id="importreceipt">Import Receipt</h3>
+
+<p>This pastes a receipt which was previously saved to disk to the opened clip.</p>
+
+<h3 id="resetreceipt">Reset Receipt</h3>
+
+<p>This resets all parameters from the receipt (in the edit area) to their default. <em>Note: a single parameter can be reset by doubleclicking on the slider handle.</em></p>
+
+<h2 id="23playback">2.3 Playback</h2>
+
+<h3 id="enableaudiooutput">Enable Audio Output</h3>
+
+<p>This enables/disables the audio output on playback.</p>
+
+<h3 id="rememberplaybackposition">Remember Playback Position</h3>
+
+<p>This saves the last playback position for each clip loaded in the session. If a clip in the session is selected again, this last playback position is reloaded.</p>
+
+<h3 id="dropframemode">Drop Frame Mode</h3>
+
+<p>There are two different playback modes: non drop frame mode, and drop frame mode. The first one shows all frames from the clip, when playing the clip. On slower computers this will look like slowmotion. In order to preview the clip in realtime (here: synced to real world time and synced to audio (if availlable)), drop frame mode can be used (all frames which can't be rendered and shown in time will be ignored).</p>
+
+<h3 id="debayerforpreview">Debayer for Preview</h3>
+
+<p>This changes the demosaicing algorithm used for the viewer. The demosaicing algorithm is one of the most time consuming parts in the processing pipeline, depending on the chosen algorithm. On the other side preview quality also depends the chosen algorithm. The fastest algorithm is "Simple" and the (mostly) best algorithm is "AMaZE". In order to be able to see the clip as fast as possible with best quality, there is the option "AMaZE cached". If this option is chosen, the user has to wait, if status bar lable tells "Caching: active". If status bar lable switches again to "Caching: idle" the clip is loaded to RAM (depending on the length of the clip, the clip may be larger as the reserved memory) and can be watched.</p>
+
+<h1 id="3demosaicingalgorithms">3. Demosaicing Algorithms</h1>
+
+<h3 id="none">None</h3>
+
+<p>No debayering will run. This just copies monochrome color information from RAW to shown picture. Depending on chosen WhiteBalance, the picture could be colored to one single color.</p>
+
+<h3 id="simple">Simple</h3>
+
+<p>This is a very fast but stupid demosaicing algorithm. It interprets a 2x2 pixel array (RGGB) to a color. This looks not very fine, consists of copying actions mostly. No interpolation is done at all.</p>
+
+<h3 id="bilinear">Bilinear</h3>
+
+<p>Is a very fast algorithm, and interpolates colors between the pixels. Looks better than "Simple".</p>
+
+<h3 id="lmmse">LMMSE</h3>
+
+<p>Zhang-Wu LMMSE Image Demosaicking - Color demosaicking via directional linear minimum mean square-error estimation.</p>
+
+<h3 id="igv">IGV</h3>
+
+<p>Bayer CFA Demosaicing using Integrated Gaussian Vector on Color Differences. Looks best on high ISO clips.</p>
+
+<h3 id="amaze">AMaZE</h3>
+
+<p>Aliasing Minimization and Zipper Elimination. Looks best mostly.</p>
+
+<h3 id="ahd">AHD</h3>
+
+<p>Adaptive Homogeneity-Directed interpolation is based on the work of Keigo Hirakawa, Thomas Parks, and Paul Lee.</p>
+
+<h1 id="4editarea">4. Edit Area</h1>
+
+<h2 id="41rawcorrection">4.1 RAW Correction</h2>
+
+<h3 id="enablerawcorrection">Enable RAW Correction</h3>
+
+<p>Switch the whole RAW Correction block on/off.</p>
+
+<h3 id="darkframesubtraction">Darkframe Subtraction</h3>
+
+<p>Use this to remove static noise from the clip.</p>
+
+<ul>
+<li>Record with identical settings and identical equipment a clip with lens cap mounted. Some seconds are enough.</li>
+
+<li>Import MLV into MLVApp.</li>
+
+<li>Export this file as MLV, Averaged Frame. Now you have your darkframe.</li>
+
+<li>Import your clip.</li>
+
+<li>Go to RAW Corrections, press darkframe folder icon and select your darkframe. Static noise will be removed now.</li>
+</ul>
+
+<h3 id="fixfocusdots">Fix Focus Dots</h3>
+
+<p>Cameras like EOS 100D, 700D,... have wrong colored focus dots in the image. These dots can be removed using this option. Via drap and drop to the MLVApp window, new focus pixel maps can be installed. Additionally installed focus pixel maps are located next to the MLVApp executable.</p>
+
+<p><img src=":/help/help/focusdots.png" alt="bildschirmfoto 2018-09-23 um 13 38 08" /></p>
+
+<h3 id="fixbadpixels">Fix Bad Pixels</h3>
+
+<p>Use this option to remove dead pixels from the clip.</p>
+
+<p><img src=":/help/help/badpixels.png" alt="bildschirmfoto 2018-09-23 um 13 40 08" /></p>
+
+<h3 id="chromasmooth">Chroma Smooth</h3>
+
+<p>Smoothes chroma on RAW data.</p>
+
+<h3 id="verticalstripes">Vertical Stripes</h3>
+
+<p>Some cameras record vertical stripes. Use this option to remove them.</p>
+
+<p><img src=":/help/help/virtstripes.png" alt="bildschirmfoto 2018-09-23 um 13 41 59" /></p>
+
+<h3 id="dualiso">Dual ISO</h3>
+
+<p>Use this "On" to switch Dual ISO processing on. <em>Note: the calculation is very time consuming!</em> "Preview" mode is by far faster, but only works on 14bit clips.</p>
+
+<h3 id="patternnoise">Pattern Noise</h3>
+
+<p>This is the pattern noise reduction algorithm by a1ex.</p>
+
+<h3 id="rawblacklevel">RAW Black Level</h3>
+
+<p>Adjust the RAW Black Level if it was not correct in the metadata (mostly it is). If this parameter is wrong, picture shadows get pink or green.</p>
+
+<h3 id="rawwhitelevel">RAW White Level</h3>
+
+<p>Adjust the RAW White Level if it was not correct in the metadata. If "Highlight Reconstruction" does not work, mostly RAW White Level is set wrong and has to be corrected (lowered).</p>
+
+<h2 id="42cutincutout">4.2 Cut In &amp; Cut Out</h2>
+
+<p>This range of the clip will be played back and exported only.</p>
+
+<h2 id="43processing">4.3 Processing</h2>
+
+<h3 id="exposurecontrast">Exposure &amp; Contrast</h3>
+
+<p>Correct the exposure in EV and adjust the contrast.</p>
+
+<h3 id="whitebalancetemperatureandtint">White Balance (Temperature and Tint)</h3>
+
+<p>The white balance can be adjusted manually using the two sliders, or using the picker. When using the picker, use the button in the right of the pipette button, to toggle between "grey" and "skin". Picking on grey adjusts the white balance on uncolored areas, picking on skin adjusts white balance on human skin.</p>
+
+<h3 id="clarity">Clarity</h3>
+
+<p>The Clarity slider is useful, when it comes to give your images extra punch and impact, or to give it a dreamy look.</p>
+
+<h3 id="saturation">Saturation</h3>
+
+<p>Adjust the saturation intensity of all colors.</p>
+
+<h3 id="vibrance">Vibrance</h3>
+
+<p>Adjust the saturation in dependency, how saturated colors are already.</p>
+
+<h3 id="curvedarklightstrengthrange">Curve (Dark/Light Strength/Range)</h3>
+
+<p>Adjust "how black black" and "how white white is".</p>
+
+<h3 id="lighten">Lighten</h3>
+
+<p>Lightens the picture, specially dark parts.</p>
+
+<h3 id="highlights">Highlights</h3>
+
+<p>Analyses and adjusts the highlights using a blurred mask.</p>
+
+<h3 id="shadows">Shadows</h3>
+
+<p>Analyses and adjusts the shadows using a blurred mask.</p>
+
+<h3 id="gradationcurves">Gradation Curves</h3>
+
+<p>Adjust gradation curves independently for Y, R, G, B.</p>
+
+<h3 id="highlightreconstruction">Highlight Reconstruction</h3>
+
+<p>Remove pink highlights. </p>
+
+<p><em>Note 1: if it does not work, mostly RAW White Level is set wrong.</em></p>
+
+<p><em>Note 2: for dual iso clips, pink highlights can not always be detected.</em></p>
+
+<h3 id="cameramatrix">Camera Matrix</h3>
+
+<ul>
+<li>Don't Use Camera Matrix: no scientific whitebalance calculation is applied</li>
+
+<li>Use Camera Matrix: scientific whitebalance calculation is applied</li>
+
+<li>Uncolorscience Fix: a tweaked whitebalance calculation which may look better than "Use Camera Matrix" option for temperatures below 4000K, on the cost of blue / green channel quality </li>
+</ul>
+
+<h3 id="profile">Profile</h3>
+
+<p>This adjusts the gamma to a defined profile. For some profiles some parameters are disabled, to be able to export correctly.</p>
+
+<h2 id="44details">4.4 Details</h2>
+
+<h3 id="chromaseparation">Chroma Separation</h3>
+
+<p>This enables also Chroma Blur Radius. If disabled, "Sharpen" will sharpen all channels. If enabled, "Sharpen" will sharpen luminance channel only.</p>
+
+<h3 id="sharpen">Sharpen</h3>
+
+<p>Sharpen the image. <em>Note: see also Chroma Separation.</em></p>
+
+<h3 id="chromablurradius">Chroma Blur Radius</h3>
+
+<p>Blur the chroma channels using the given pixel radius. This is useful to remove color noise, false color artifacts, ...</p>
+
+<h3 id="denoiser2dmedian">Denoiser (2D median)</h3>
+
+<p>This is a very simple 2D median denoiser. Window size and Strength can be adjusted.</p>
+
+<h3 id="denoiserrbf">Denoiser RBF</h3>
+
+<p>This is a denoiser which works via recursive bilateral filtering. MLVApp separates the filter to luma and chroma. The filter radius can be defined.</p>
+
+<h3 id="grain">Grain</h3>
+
+<p>Use the grain slider to add some very simple generated film grain.</p>
+
+<h2 id="45hslhuesaturationluminance">4.5 HSL (Hue Saturation Luminance)</h2>
+
+<h3 id="huevshue">Hue vs. Hue</h3>
+
+<p>Adjust the color in relation to color. For example: make yellow more green (+) or red (-).</p>
+
+<h3 id="huevssaturation">Hue vs. Saturation</h3>
+
+<p>Adjust saturation in relation to color. For example: make blue -> grey (-), but red -> red (+).</p>
+
+<h3 id="huevsluminance">Hue vs. Luminance</h3>
+
+<p>Adjust luminance in relation to color. For example: make blue darker (-), but red brighter (+).</p>
+
+<h2 id="46toning">4.6 Toning</h2>
+
+<p>Select a hue and a strength. This simulates a hardware color filter.</p>
+
+<h2 id="47lineargradient">4.7 Linear Gradient</h2>
+
+<p>This set of parameters offers a kind of graduated ND filter. Additionally to exposure, contrast can be adjusted as well. </p>
+
+<p>The position and length of the filter can be drawn on the picture using the pen button. Hovering on the lines on the picture, marks the lines yellow. Clicking an the marked lines makes it possible to adjust the position of the filter.</p>
+
+<p><img src=":/help/help/gradient.png" alt="bildschirmfoto 2018-08-29 um 12 45 19" width=480 /></p>
+
+<p>Hide the lines by collapsing the "Linear Gradient" group box.</p>
+
+<h2 id="48lut">4.8 LUT</h2>
+
+<p>Enable and select a 1D/3D .cube LookUpTable. </p>
+
+<h2 id="49filter">4.9 Filter</h2>
+
+<p>Enable, select, and adjust Strength of a predefined picture look.</p>
+
+<h2 id="410vignette">4.10 Vignette</h2>
+
+<p>Use strength slider to correct existing vignettes in your footage (-> positive strength) or as vignette effect (->negative strength). The radius slider defines the area starting from the middle, which rests untouched. The shape slider can be used to change the shape of the vignette between circle and oval.</p>
+
+<h2 id="411transformation">4.11 Transformation</h2>
+
+<h3 id="widthstretch">Width Stretch</h3>
+
+<p>When using anamorph lenses, the stretch factor can be adjusted here.</p>
+
+<h3 id="heightstretch">Height Stretch</h3>
+
+<p>Wrong height ratio can be corrected here, when using pixel binning and skipping.
+<em>Note: if metadata exists, MLV App adjusts this parameter automatically.</em></p>
+
+<h3 id="finalresolution">Final resolution</h3>
+
+<p>A grey label shows the resulting final resolution of your clip.</p>
+
+<h3 id="upsidedown">Upside Down</h3>
+
+<p>This option turns the picture by 180°.</p>
+
+<h3 id="ffmpegvidstab">ffmpeg vid.stab</h3>
+
+<p>Vid.stab can be used to stabilize shaky footage. Therefor the export codec must be H.264! The function of the parameters is described on ffmpeg and vid.stab pages.</p>
+
+<h1 id="5processingpipeline">5. Processing pipeline</h1>
+
+<p>Almost everything in processing is done through 65535-long lookup tables for more speed than using actual calculations (and quite badly organized in my opinion, all the arrays[65536] in the processing object are look up tables.</p>
+
+<p>This use of 16 bit integers only causes a huge amount of difficulties with not clipping things, and is why developing new features like highlights and shadows got difficult (also why I did it wrong - did not want to clip stuff - more on this later). However all the processing features I created never ever clipped anything [1], so it's the same result as if it was done in floats... just more difficult to program new features.</p>
+
+<ol>
+<li>well, almost - information could still be lost if no tonemapping enabled, exposure increased followed by saturation reduction. There are probably a few other minor ways to lose some information.</li>
+</ol>
+
+<p>The intention of these methods was to make it run quick, and I remember at the very start (back in early 2017), I could get one frame processed in 40ms on one thread. Not sure if it was ever that fast by the time it got a GUI.</p>
+
+<h2 id="processingaframe">Processing a frame</h2>
+
+<p>When changing the parameters exposure, temperature, dark/light strength/range, lighten and profile, in background some matrices were created and precalculated. So rendering the frame can be faster, because only the matrices have to be applied.</p>
+
+<h4 id="startofprocessing">start of processing</h4>
+
+<p><code>applyProcessingObject()</code></p>
+
+<ol>
+<li>shadows and highlights... (just remembered there is actually a big problem in the implementation)
+Done on debayered raw image before black/white level correction and exposure (this is the problem)</li>
+</ol>
+
+<p><code>applyProcessingObject()</code> calls <code>apply_processing_object()</code> split in to threads</p>
+
+<ol>
+<li>Black and white level correction (look up table)</li>
+
+<li>Matrix (does white balance, no camera matrix stuff) - there are some variables to realize contrast and clarity. This work exactly like highlights/shadows but:</li>
+</ol>
+
+<ul>
+<li>contrast: combines shadows(-)/highlights(+) with no blurred picture</li>
+
+<li>clarity: combines contrast(+) and shadows(+)/highlights(-)</li>
+</ul>
+
+<ol>
+<li>Gamma through lookup table, gamma look up table also has exposure and tonemap function applied in it all in one go (so highlight data won't get clipped before tonemapping)</li>
+
+<li>Highlight reconstruction done same time as the matrix. That works by reconstructing the green channel at the point where it was clipped.
+For dual iso clips, the information of highest_green (input for reconstruction) gets lost on dual iso stitching, and is different in each frame. In the end it seems like there is a gaussian curve around a peak (which may be there, may be not, sometimes it is small, sometimes it is high). That is why an algorithm was implemented, which trys to find this peak, if there is one.
+Starting from full 16bit (65535) and searching all local maxima, a maxima which is bigger than a limit is searched. If the maxima become bigger than a smaller limit, green signal was found (no peak found -> no clipped green). This algorithm has to run for each frame...</li>
+
+<li>For the linear gradient a second layer is calculated, using a modified copy of the matrices. Only the visible part is calculated, for speed reasons. Using a mask the gradient layer is applied on the main picture.</li>
+
+<li>Saturation using some weird algorithm Ilia came up with that seemed quick, also using strange lookup tables. Vibrance works exactly like saturation, but calculates RGB to (H)S(V) (S channel only) to be able to set saturation in dependency to saturation already being there. The less saturation there was before, the more saturation will be after applying vibrance.</li>
+
+<li>Contrast look up table</li>
+
+<li>if enabled, conversion to ycbcr through some lookup tables</li>
+
+<li>Sharpening, on all channels if rgb, or on just Y channel if ycbcr</li>
+
+<li>if chroma blur enabled and in ycbcr, cb and cr channels are blurred</li>
+
+<li>convert back to rgb from ycbcr</li>
+
+<li>LUT applied</li>
+
+<li>neural network filter applied</li>
+</ol>

@@ -62,5 +62,6 @@
         <file>help/focusdots.png</file>
         <file>help/gradient.png</file>
         <file>help/virtstripes.png</file>
+        <file>help/help.htm</file>
     </qresource>
 </RCC>
