@@ -9,6 +9,7 @@
 #define WB_CONVERSION_H
 
 #include "stdlib.h"
+#include "stdint.h"
 
 void wb_convert(float *rawData, int width, int height, int blacklevel );
 void wb_undo( uint16_t *debayeredFrame, int width, int height, int blacklevel );
