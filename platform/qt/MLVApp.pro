@@ -42,16 +42,16 @@ macx: LIBS += -framework CoreVideo \
               -framework CoreMedia
 
 #OpenMP on macOS: first install llvm via brew, setup llvm kit & compiler in Qt settings!
-#macx{
-#    QMAKE_CC = /usr/local/opt/llvm/bin/clang
-#    QMAKE_CXX = /usr/local/opt/llvm/bin/clang++
-#    QMAKE_LINK = /usr/local/opt/llvm/bin/clang++
-#    QMAKE_CFLAGS += -fopenmp
-#    QMAKE_CXXFLAGS += -fopenmp
-#    INCLUDEPATH += -I/usr/local/opt/llvm/include
-#    LIBS += -L/usr/local/opt/llvm/lib -lgomp
-#    QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.8
-#}
+macx{
+    QMAKE_CC = /usr/local/opt/llvm/bin/clang
+    QMAKE_CXX = /usr/local/opt/llvm/bin/clang++
+    QMAKE_LINK = /usr/local/opt/llvm/bin/clang++
+    QMAKE_CFLAGS += -fopenmp
+    QMAKE_CXXFLAGS += -fopenmp
+    INCLUDEPATH += -I/usr/local/opt/llvm/include
+    LIBS += -L/usr/local/opt/llvm/lib -lgomp
+    QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.8
+}
 
 # Windows
 win32: QMAKE_CFLAGS += -O2 -fopenmp -msse4.1 -mssse3 -msse3 -msse2 -msse -D_FILE_OFFSET_BITS=64 -std=c99
@@ -273,6 +273,8 @@ PACKAGE_FILES.files += bash_scripts/HDR_MOV.command
 PACKAGE_FILES.files += bash_scripts/TIF_CLEAN.command
 PACKAGE_FILES.files += bash_scripts/PROXY_CLEANER.command
 PACKAGE_FILES.files += ../../src/mlv/llrawproc/pixelmaps/80000331_1872x1059.fpm
+PACKAGE_FILES.files += ../../src/mlv/llrawproc/pixelmaps/80000331_1872x1060.fpm
+PACKAGE_FILES.files += ../../src/mlv/llrawproc/pixelmaps/80000331_1872x1951.fpm
 PACKAGE_FILES.files += ../../src/mlv/llrawproc/pixelmaps/80000326_1808x3508.fpm
 PACKAGE_FILES.files += ../../src/mlv/llrawproc/pixelmaps/80000331_1872x1190.fpm
 PACKAGE_FILES.files += ../../src/mlv/llrawproc/pixelmaps/80000331_1736x2181.fpm
