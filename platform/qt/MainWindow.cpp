@@ -4495,6 +4495,8 @@ void MainWindow::setToolButtonFocusPixelsIntMethod(int index)
         break;
     case 1: ui->toolButtonFocusDotMethod2->setChecked( true );
         break;
+    case 2: ui->toolButtonFocusDotMethod3->setChecked( true );
+        break;
     default: break;
     }
     if( actualize ) toolButtonFocusPixelsIntMethodChanged();
@@ -4547,6 +4549,8 @@ void MainWindow::setToolButtonBadPixelsIntMethod(int index)
     case 0: ui->toolButtonBadPixelsMethod1->setChecked( true );
         break;
     case 1: ui->toolButtonBadPixelsMethod2->setChecked( true );
+        break;
+    case 2: ui->toolButtonBadPixelsMethod3->setChecked( true );
         break;
     default: break;
     }
@@ -4752,7 +4756,8 @@ int MainWindow::toolButtonFocusPixelsCurrentIndex()
 int MainWindow::toolButtonFocusPixelsIntMethodCurrentIndex()
 {
     if( ui->toolButtonFocusDotMethod1->isChecked() ) return 0;
-    else return 1;
+    if( ui->toolButtonFocusDotMethod2->isChecked() ) return 1;
+    else return 2;
 }
 
 //Get toolbutton index of bad pixels
@@ -4774,7 +4779,8 @@ int MainWindow::toolButtonBadPixelsSearchMethodCurrentIndex()
 int MainWindow::toolButtonBadPixelsIntMethodCurrentIndex()
 {
     if( ui->toolButtonBadPixelsMethod1->isChecked() ) return 0;
-    else return 1;
+    if( ui->toolButtonBadPixelsMethod2->isChecked() ) return 1;
+    else return 2;
 }
 
 //Get toolbutton index of chroma smooth

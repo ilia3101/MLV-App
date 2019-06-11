@@ -150,6 +150,47 @@ static inline int FC(int row, int col)
     }
 }
 
+/* interpolation method from rewind */
+static inline void interpolate_rewind(uint16_t * image_data, int x, int y, int w, int h)
+{
+    if ((x < 3) || (x > (w - 4)) || (y < 3) || (y > (h - 4))) return;
+
+    // 1. Retrieve vectors from 7x7 kernel
+                // d[0] — vertical vector
+                // d[1] — horizontal vector
+                // index reference:
+                //        paper     -3 -2 -1 0 +1 +2 +3
+                //        actual     0  1  2    3  4  5
+    int d[2][6] = {
+        {image_data[x+((y-3)*w)], image_data[x+((y-2)*w)], image_data[x+((y-1)*w)], image_data[x+((y+1)*w)], image_data[x+((y+2)*w)], image_data[x+((y+3)*w)]},
+        {image_data[x-3+(y*w)],   image_data[x-2+(y*w)],   image_data[x-1+(y*w)],   image_data[x+1+(y*w)],   image_data[x+2+(y*w)],   image_data[x+3+(y*w)]}
+                    };
+
+    // 2,3 — We don't need these stepse because of diagonal af dots arrangement
+
+    // 4. Normalizing vectors
+    // vertical norm.
+    d[0][2] = d[0][1]+((d[0][2]-d[0][0])/2);
+    d[0][3] = d[0][4]+((d[0][3]-d[0][5])/2);
+    // horizontal norm.
+    d[1][2] = d[1][1]+((d[1][2]-d[1][0])/2);
+    d[1][3] = d[1][4]+((d[1][3]-d[1][5])/2);
+
+    // 5. Deltas and Weights
+    int dVert = ABS(d[0][2]-d[0][3]);
+    int dHoriz = ABS(d[1][2]-d[1][3]);
+    int Delta = dVert + dHoriz;
+
+    float wVert = 1-((float) dVert / Delta);
+    float wHoriz = 1-((float) dHoriz / Delta);
+
+    // 6. Calculating new pixel value
+    float newVal = wVert*((d[0][2]+d[0][3])/2) + wHoriz*((d[1][2]+d[1][3])/2);
+    if( newVal > 65535.0f ) newVal = 65535.0f;
+    if( newVal < 0.0f ) newVal = 0.0f;
+    image_data[x+(y*w)] = (uint16_t)newVal;
+}
+
 /* interpolation method from raw2dng */
 static inline void interpolate_pixel(uint16_t * image_data, int x, int y, int w, int h)
 {
@@ -1150,9 +1191,13 @@ fpm_check:
                     {
                         interpolate_horizontal(image_data, i, raw2ev, ev2raw);
                     }
-                    else if(average_method) // 1 = raw2dng
+                    else if(average_method == 1) // 1 = raw2dng
                     {
                         interpolate_pixel(image_data, x, y, w, h);
+                    }
+                    else if(average_method == 2) // 2 = method from @rewind
+                    {
+                        interpolate_rewind(image_data, x, y, w, h);
                     }
                     else // 0 = mlvfs
                     {
@@ -1355,9 +1400,13 @@ mem_err:
                     {
                         interpolate_horizontal(image_data, i, raw2ev, ev2raw);
                     }
-                    else if(average_method)
+                    else if(average_method == 1)
                     {
                         interpolate_pixel(image_data, x, y, w, h);
+                    }
+                    else if(average_method == 2)
+                    {
+                        interpolate_rewind(image_data, x, y, w, h);
                     }
                     else
                     {
