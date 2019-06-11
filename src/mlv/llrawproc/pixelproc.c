@@ -1169,9 +1169,13 @@ fpm_check:
             {
                 printf("Using fpi method for dualiso: 'HORIZONTAL'\n");
             }
-            else if(average_method)
+            else if(average_method == 1)
             {
                 printf("Using fpi method: 'RAW2DNG'\n");
+            }
+            else if(average_method == 2)
+            {
+                printf("Using fpi method: 'REWIND'\n");
             }
             else
             {
@@ -1378,9 +1382,13 @@ mem_err:
             {
                 printf("Using bpi method for dualiso: 'HORIZONTAL'\n");
             }
-            else if(average_method)
+            else if(average_method == 1)
             {
                 printf("Using bpi method: 'RAW2DNG'\n");
+            }
+            else if(average_method == 2)
+            {
+                printf("Using bpi method: 'REWIND'\n");
             }
             else
             {
