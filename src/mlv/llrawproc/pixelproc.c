@@ -177,18 +177,26 @@ static inline void interpolate_rewind(uint16_t * image_data, int x, int y, int w
     d[1][3] = d[1][4]+((d[1][3]-d[1][5])/2);
 
     // 5. Deltas and Weights
-    int dVert = ABS(d[0][2]-d[0][3]);
-    int dHoriz = ABS(d[1][2]-d[1][3]);
-    int Delta = dVert + dHoriz;
+    float dVert = ABS(d[0][2]-d[0][3]);
+    float dHoriz = ABS(d[1][2]-d[1][3]);
+    float Delta = dVert + dHoriz;
 
-    float wVert = 1-((float) dVert / Delta);
-    float wHoriz = 1-((float) dHoriz / Delta);
+    float wVert = 1.0f - (dVert / Delta);
+    float wHoriz = 1.0f - (dHoriz / Delta);
 
-    // 6. Calculating new pixel value
+    // 6. limit values to make it work for all footage (whyever this limits more than the code before)
+    wVert = COERCE( wVert, 0.0f, 1.0f );
+    wHoriz = COERCE( wHoriz, 0.0f, 1.0f );
+    float toMuch = (wVert + wHoriz - 1.0f) / 2.0f;
+    if( toMuch > 0.0f )
+    {
+        wVert -= toMuch;
+        wHoriz -= toMuch;
+    }
+
+    // 7. Calculating new pixel value
     float newVal = wVert*((d[0][2]+d[0][3])/2) + wHoriz*((d[1][2]+d[1][3])/2);
-    if( newVal > 65535.0f ) newVal = 65535.0f;
-    if( newVal < 0.0f ) newVal = 0.0f;
-    image_data[x+(y*w)] = (uint16_t)newVal;
+    image_data[x+(y*w)] = (uint16_t)COERCE(newVal, 0, 65535);
 }
 
 /* interpolation method from raw2dng */
