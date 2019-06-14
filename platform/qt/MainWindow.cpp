@@ -2343,12 +2343,12 @@ void MainWindow::startExportPipe(QString fileName)
     delete file;
 
     //Delete file if aborted
-    if( m_exportAbortPressed )
+    /*if( m_exportAbortPressed )
     {
         file = new QFile( fileName );
         if( file->exists() ) file->remove();
         delete file;
-    }
+    }*/
 
     //If we don't like amaze we switch it off again
     if( !ui->actionAlwaysUseAMaZE->isChecked() ) setMlvDontAlwaysUseAmaze( m_pMlvObject );
