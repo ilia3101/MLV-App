@@ -202,6 +202,7 @@ int getMlvRawFrameUint16(mlvObject_t * video, uint64_t frameIndex, uint16_t * un
     int chunk = video->video_index[frameIndex].chunk_num;
     uint32_t frame_size = video->video_index[frameIndex].frame_size;
     uint64_t frame_offset = video->video_index[frameIndex].frame_offset;
+    uint64_t frame_header_offset = video->video_index[frameIndex].block_offset;
 
     /* How many bytes is RAW frame */
     int raw_frame_size = (width * height * bitdepth) / 8;
@@ -213,8 +214,17 @@ int getMlvRawFrameUint16(mlvObject_t * video, uint64_t frameIndex, uint16_t * un
 
     /* Move to start of frame in file and read the RAW data */
     pthread_mutex_lock(video->main_file_mutex + chunk);
-    file_set_pos(file, frame_offset, SEEK_SET);
 
+    file_set_pos(file, frame_header_offset, SEEK_SET);
+    if(fread(&video->VIDF, sizeof(mlv_vidf_hdr_t), 1, file) != 1)
+    {
+        DEBUG( printf("Frame header read error\n"); )
+        free(raw_frame);
+        pthread_mutex_unlock(video->main_file_mutex + chunk);
+        return 1;
+    }
+
+    file_set_pos(file, frame_offset, SEEK_SET);
     if (video->MLVI.videoClass & MLV_VIDEO_CLASS_FLAG_LJ92)
     {
         if(fread(raw_frame, frame_size, 1, file) != 1)
@@ -599,7 +609,6 @@ static int save_mapp(mlvObject_t * video)
                            sizeof(mlv_wavi_hdr_t) +
                            sizeof(mlv_diso_hdr_t) +
                            sizeof(mlv_dark_hdr_t) +
-                           sizeof(mlv_vidf_hdr_t) +
                            video_index_size +
                            audio_index_size;
 
@@ -628,8 +637,7 @@ static int save_mapp(mlvObject_t * video)
     memcpy(ptr += sizeof(mlv_styl_hdr_t), (uint8_t*)&(video->WAVI), sizeof(mlv_wavi_hdr_t));
     memcpy(ptr += sizeof(mlv_wavi_hdr_t), (uint8_t*)&(video->DISO), sizeof(mlv_diso_hdr_t));
     memcpy(ptr += sizeof(mlv_diso_hdr_t), (uint8_t*)&(video->DARK), sizeof(mlv_dark_hdr_t));
-    memcpy(ptr += sizeof(mlv_dark_hdr_t), (uint8_t*)&(video->VIDF), sizeof(mlv_vidf_hdr_t));
-    ptr += sizeof(mlv_vidf_hdr_t);
+    ptr += sizeof(mlv_dark_hdr_t);
     if(video->video_index)
     {
         memcpy(ptr, (uint8_t*)video->video_index, video_index_size);
@@ -733,7 +741,6 @@ static int load_mapp(mlvObject_t * video)
     ret += fread(&(video->WAVI), sizeof(mlv_wavi_hdr_t), 1, mappf);
     ret += fread(&(video->DISO), sizeof(mlv_diso_hdr_t), 1, mappf);
     ret += fread(&(video->DARK), sizeof(mlv_dark_hdr_t), 1, mappf);
-    ret += fread(&(video->VIDF), sizeof(mlv_vidf_hdr_t), 1, mappf);
     if(ret != 13)
     {
         DEBUG( printf("ret = %d, could not read metadata from %s\n", ret, mapp_filename); )
