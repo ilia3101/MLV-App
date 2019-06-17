@@ -378,39 +378,17 @@
           <number>0</number>
          </property>
          <item>
-          <widget class="QFrame" name="frameHistogramBackgroundL">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="styleSheet">
-            <string notr="true">background:palette(base);</string>
-           </property>
-           <property name="frameShape">
-            <enum>QFrame::NoFrame</enum>
-           </property>
-           <property name="frameShadow">
-            <enum>QFrame::Plain</enum>
-           </property>
-           <property name="lineWidth">
-            <number>0</number>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLabel" name="labelHistogram">
+          <widget class="ScopesLabel" name="labelScope">
            <property name="minimumSize">
             <size>
              <width>212</width>
-             <height>70</height>
+             <height>0</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>212</width>
-             <height>70</height>
+             <width>16777215</width>
+             <height>16777215</height>
             </size>
            </property>
            <property name="contextMenuPolicy">
@@ -430,28 +408,6 @@
            </property>
            <property name="alignment">
             <set>Qt::AlignCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QFrame" name="frameHistogramBackgroundR">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="styleSheet">
-            <string notr="true">background:palette(base);</string>
-           </property>
-           <property name="frameShape">
-            <enum>QFrame::NoFrame</enum>
-           </property>
-           <property name="frameShadow">
-            <enum>QFrame::Plain</enum>
-           </property>
-           <property name="lineWidth">
-            <number>0</number>
            </property>
           </widget>
          </item>
@@ -499,9 +455,9 @@ QGroupBox::indicator:checked:disabled {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>-17</y>
+            <y>0</y>
             <width>244</width>
-            <height>4991</height>
+            <height>5025</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayoutScrollArea">
@@ -1327,7 +1283,7 @@ QGroupBox::indicator:checked:disabled {
                   </widget>
                  </item>
                  <item>
-                  <widget class="QLabel" name="ChromaSmoothLabel">
+                  <widget class="ScopesLabel" name="ChromaSmoothLabel">
                    <property name="font">
                     <font>
                      <pointsize>10</pointsize>
@@ -9468,6 +9424,11 @@ QGroupBox::indicator:checked:disabled {
    <class>HueVsDiagram</class>
    <extends>QLabel</extends>
    <header>HueVsDiagram.h</header>
+  </customwidget>
+  <customwidget>
+   <class>ScopesLabel</class>
+   <extends>QLabel</extends>
+   <header>ScopesLabel.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>

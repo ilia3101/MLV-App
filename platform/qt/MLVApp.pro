@@ -94,6 +94,7 @@ SOURCES += \
     ../../src/debayer/ahd.c \
     ../../src/mlv/llrawproc/dualiso.c \
     ../../src/dng/dng.c \
+    ScopesLabel.cpp \
     InfoDialog.cpp \
     StatusDialog.cpp \
     Histogram.cpp \
@@ -180,6 +181,7 @@ HEADERS += \
     ../../src/processing/bmd_film.h \
     InfoDialog.h \
     MyApplication.h \
+    ScopesLabel.h \
     StatusDialog.h \
     SystemMemory.h \
     Histogram.h \

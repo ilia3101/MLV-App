@@ -40,6 +40,7 @@
 #include "StretchFactors.h"
 #include "SingleFrameExportDialog.h"
 #include "FpmInstaller.h"
+#include "ScopesLabel.h"
 
 #define APPNAME "MLV App"
 #define VERSION "1.7"
@@ -173,9 +174,6 @@ MainWindow::~MainWindow()
     delete m_pCopyMask;
     delete m_pAudioPlayback;
     delete m_pAudioWave;
-    delete m_pVectorScope;
-    delete m_pWaveFormMonitor;
-    delete m_pHistogram;
     delete m_pGradientElement;
     delete m_pStatusDialog;
     delete m_pInfoDialog;
@@ -771,8 +769,6 @@ int MainWindow::openMlv( QString fileName )
     while( !m_pRenderThread->isIdle() ) {}
     //Waiting for frame ready because it works with m_pMlvObject
     while( m_frameStillDrawing ) {qApp->processEvents();}
-    delete m_pWaveFormMonitor;
-    delete m_pVectorScope;
 
     //Reset audio engine
     m_pAudioPlayback->resetAudioEngine();
@@ -870,11 +866,6 @@ int MainWindow::openMlv( QString fileName )
 
     //Restart timer
     m_timerId = startTimer( (int)( 1000.0 / getFramerate() ) );
-
-    //Load WaveFormMonitor
-    m_pWaveFormMonitor = new WaveFormMonitor( getMlvWidth( m_pMlvObject ) );
-    //Reinitialize VectorScope
-    m_pVectorScope = new VectorScope( ui->labelHistogram->width() * 2, ui->labelHistogram->height() * 2 );
 
     //Set selected debayer type
     if( ui->actionAlwaysUseAMaZE->isChecked() )
@@ -1088,10 +1079,7 @@ void MainWindow::initGui( void )
     m_pInfoDialog = new InfoDialog( this );
     m_pStatusDialog = new StatusDialog( this );
     m_pCopyMask = new ReceiptCopyMaskDialog( this );
-    m_pHistogram = new Histogram();
-    m_pVectorScope = new VectorScope( 420, 140 );
     ui->actionShowHistogram->setChecked( true );
-    m_pWaveFormMonitor = new WaveFormMonitor( 200 );
 
     //Export abort connection
     connect( m_pStatusDialog, SIGNAL(abortPressed()), this, SLOT(exportAbort()) );
@@ -3616,7 +3604,7 @@ void MainWindow::deleteSession()
     m_dontDraw = true;
 
     //Set Labels black
-    ui->labelHistogram->setPixmap( QPixmap( ":/IMG/IMG/Histogram.png" ) );
+    ui->labelScope->setScope( NULL, 0, 0, false, false, ScopesLabel::None );
     m_pGraphicsItem->setPixmap( QPixmap( ":/IMG/IMG/Histogram.png" ) );
     m_pScene->setSceneRect( 0, 0, 10, 10 );
 
@@ -6410,10 +6398,10 @@ void MainWindow::pictureCustomContextMenuRequested(const QPoint &pos)
 }
 
 //Contextmenu on scope
-void MainWindow::on_labelHistogram_customContextMenuRequested(const QPoint &pos)
+void MainWindow::on_labelScope_customContextMenuRequested(const QPoint &pos)
 {
     // Handle global position
-    QPoint globalPos = ui->labelHistogram->mapToGlobal( pos );
+    QPoint globalPos = ui->labelScope->mapToGlobal( pos );
 
     // Create menu and insert some actions
     QMenu myMenu;
@@ -7681,46 +7669,22 @@ void MainWindow::drawFrameReady()
     //GetHistogram
     if( ui->actionShowHistogram->isChecked() )
     {
-        QPixmap pic = QPixmap::fromImage( m_pHistogram->getHistogramFromRaw( m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), under, over )
-                                                          .scaled( ui->labelHistogram->width() * devicePixelRatio(),
-                                                                   ui->labelHistogram->height() * devicePixelRatio(),
-                                                                   Qt::IgnoreAspectRatio, Qt::SmoothTransformation) ); //alternative: Qt::FastTransformation
-        pic.setDevicePixelRatio( devicePixelRatio() );
-        ui->labelHistogram->setPixmap( pic );
-        ui->labelHistogram->setAlignment( Qt::AlignCenter ); //Always in the middle
+        ui->labelScope->setScope( m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), under, over, ScopesLabel::ScopeHistogram );
     }
     //Waveform
     else if( ui->actionShowWaveFormMonitor->isChecked() )
     {
-        QPixmap pic = QPixmap::fromImage( m_pWaveFormMonitor->getWaveFormMonitorFromRaw( m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject) )
-                                                          .scaled( ui->labelHistogram->width() * devicePixelRatio(),
-                                                                   ui->labelHistogram->height() * devicePixelRatio(),
-                                                                   Qt::IgnoreAspectRatio, Qt::SmoothTransformation) ); //alternative: Qt::FastTransformation
-        pic.setDevicePixelRatio( devicePixelRatio() );
-        ui->labelHistogram->setPixmap( pic );
-        ui->labelHistogram->setAlignment( Qt::AlignCenter ); //Always in the middle
+        ui->labelScope->setScope( m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), under, over, ScopesLabel::ScopeWaveForm );
     }
     //Parade
     else if( ui->actionShowParade->isChecked() )
     {
-        QPixmap pic = QPixmap::fromImage( m_pWaveFormMonitor->getParadeFromRaw( m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject) )
-                                                          .scaled( ui->labelHistogram->width() * devicePixelRatio(),
-                                                                   ui->labelHistogram->height() * devicePixelRatio(),
-                                                                   Qt::IgnoreAspectRatio, Qt::SmoothTransformation) ); //alternative: Qt::FastTransformation
-        pic.setDevicePixelRatio( devicePixelRatio() );
-        ui->labelHistogram->setPixmap( pic );
-        ui->labelHistogram->setAlignment( Qt::AlignCenter ); //Always in the middle
+        ui->labelScope->setScope( m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), under, over, ScopesLabel::ScopeRgbParade);
     }
     //VectorScope
     else if( ui->actionShowVectorScope->isChecked() )
     {
-        QPixmap pic = QPixmap::fromImage( m_pVectorScope->getVectorScopeFromRaw( m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject) )
-                                                          .scaled( ui->labelHistogram->width() * devicePixelRatio(),
-                                                                   ui->labelHistogram->height() * devicePixelRatio(),
-                                                                   Qt::KeepAspectRatio, Qt::SmoothTransformation) ); //alternative: Qt::FastTransformation
-        pic.setDevicePixelRatio( devicePixelRatio() );
-        ui->labelHistogram->setPixmap( pic );
-        ui->labelHistogram->setAlignment( Qt::AlignCenter ); //Always in the middle
+        ui->labelScope->setScope( m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), under, over, ScopesLabel::ScopeVectorScope );
     }
 
     //Drawing ready, next frame can be rendered

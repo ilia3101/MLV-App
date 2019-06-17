@@ -24,9 +24,6 @@
 #include "../../src/mlv_include.h"
 #include "InfoDialog.h"
 #include "StatusDialog.h"
-#include "Histogram.h"
-#include "WaveFormMonitor.h"
-#include "VectorScope.h"
 #include "AudioWave.h"
 #include "ReceiptSettings.h"
 #include "AudioPlayback.h"
@@ -204,7 +201,7 @@ private slots:
     void rightClickShowFile( void );
     void selectAllFiles( void );
     void pictureCustomContextMenuRequested(const QPoint &pos);
-    void on_labelHistogram_customContextMenuRequested(const QPoint &pos);
+    void on_labelScope_customContextMenuRequested(const QPoint &pos);
     void on_label_ExposureVal_doubleClicked( void );
     void on_label_ExposureGradient_doubleClicked( void );
     void on_label_ContrastVal_doubleClicked( void );
@@ -354,9 +351,6 @@ private:
     Ui::MainWindow *ui;
     InfoDialog *m_pInfoDialog;
     StatusDialog *m_pStatusDialog;
-    Histogram *m_pHistogram;
-    WaveFormMonitor *m_pWaveFormMonitor;
-    VectorScope *m_pVectorScope;
     AudioWave *m_pAudioWave;
     AudioPlayback *m_pAudioPlayback;
     RenderFrameThread *m_pRenderThread;
