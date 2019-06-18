@@ -455,7 +455,7 @@ QGroupBox::indicator:checked:disabled {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>0</y>
+            <y>-39</y>
             <width>244</width>
             <height>5025</height>
            </rect>
@@ -1283,7 +1283,7 @@ QGroupBox::indicator:checked:disabled {
                   </widget>
                  </item>
                  <item>
-                  <widget class="ScopesLabel" name="ChromaSmoothLabel">
+                  <widget class="QLabel" name="ChromaSmoothLabel">
                    <property name="font">
                     <font>
                      <pointsize>10</pointsize>
