@@ -44,6 +44,8 @@
         <file>RetinaIMG/Reload-icon-1.png</file>
         <file>RetinaIMG/Reload-icon-2.png</file>
         <file>RetinaIMG/mapGo-icon.png</file>
+        <file>RetinaIMG/plus.png</file>
+        <file>RetinaIMG/minus.png</file>
     </qresource>
     <qresource prefix="/AudioVideoIcons">
         <file>AudioVideoIcons/FirstFrame.png</file>
