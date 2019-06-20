@@ -13,6 +13,7 @@
 #include <QSettings>
 #include <QList>
 #include <QDataStream>
+#include <QDebug>
 
 //From here for Preset Saving
 struct ExportPreset {
@@ -568,7 +569,8 @@ void ExportSettingsDialog::on_toolButtonDeletePreset_clicked()
     QList<ExportPreset> presetList = set.value( "ExportPresets" ).value<QList<ExportPreset> >();
 
     int currentItem = ui->listWidget->currentRow();
-    if( currentItem > presetList.count() ) return;
+    if( currentItem >= presetList.count() ) return;
+    if( currentItem < 0 ) return;
 
     presetList.removeAt( currentItem );
     set.setValue( "ExportPresets", QVariant::fromValue(presetList) );
@@ -584,7 +586,8 @@ void ExportSettingsDialog::on_listWidget_itemChanged(QListWidgetItem *item)
     QList<ExportPreset> presetList = set.value( "ExportPresets" ).value<QList<ExportPreset> >();
 
     int currentItem = ui->listWidget->currentRow();
-    if( currentItem > presetList.count() ) return;
+    if( currentItem >= presetList.count() ) return;
+    if( currentItem < 0 ) return;
 
     ExportPreset preset = presetList.takeAt( currentItem );
     preset.name = item->text();
@@ -604,7 +607,8 @@ void ExportSettingsDialog::on_listWidget_itemClicked(QListWidgetItem *item)
     QList<ExportPreset> presetList = set.value( "ExportPresets" ).value<QList<ExportPreset> >();
 
     int currentItem = ui->listWidget->currentRow();
-    if( currentItem > presetList.count() ) return;
+    if( currentItem >= presetList.count() ) return;
+    if( currentItem < 0 ) return;
 
     ui->comboBoxCodec->setCurrentIndex( presetList.at(currentItem).currentCodecProfile );
     on_comboBoxCodec_currentIndexChanged( presetList.at(currentItem).currentCodecProfile );
