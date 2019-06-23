@@ -264,7 +264,7 @@ void igv_demosaic( amazeinfo_t * inputdata )
 
     //border_interpolate2(tilew,tileh,7,rawData,red,green,blue);
 //#ifdef _OPENMP
-#pragma omp parallel default(none) shared(rgb,vdif,hdif,chr,tilex,tiley,rawData,red,green,blue)
+#pragma omp parallel shared(rgb,vdif,hdif,chr,tilex,tiley,rawData,red,green,blue)
 //#endif
     {
 
