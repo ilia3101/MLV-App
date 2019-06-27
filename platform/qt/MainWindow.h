@@ -357,6 +357,7 @@ private:
     mlvObject_t *m_pMlvObject;
     processingObject_t *m_pProcessingObject;
     QGraphicsPixmapItem *m_pGraphicsItem;
+    QGraphicsPixmapItem *m_pGraphicsBadPixelItem;
     GradientElement *m_pGradientElement;
     GraphicsPickerScene* m_pScene;
     TimeCodeLabel* m_pTimeCodeImage;

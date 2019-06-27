@@ -5,6 +5,7 @@
         <file>IMG/Magic_Lantern_logo_b.png</file>
         <file>IMG/Histogram.png</file>
         <file>IMG/Grey-Ball-icon.png</file>
+        <file>IMG/PixelSelector.png</file>
     </qresource>
     <qresource prefix="/RetinaIMG">
         <file>RetinaIMG/Export-To-File-icon.png</file>

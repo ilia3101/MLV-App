@@ -1157,6 +1157,13 @@ void MainWindow::initGui( void )
     ui->checkBoxGradientEnable->setEnabled( false );
     ui->toolButtonGradientPaint->setEnabled( false );
 
+    //Layer for Bad Pixel visualization
+    QImage image2(":/IMG/IMG/PixelSelector.png");
+    m_pGraphicsBadPixelItem = new QGraphicsPixmapItem( QPixmap::fromImage( image2 ) );
+    m_pGraphicsBadPixelItem->moveBy( 100, 100 );
+    m_pScene->addItem( m_pGraphicsBadPixelItem );
+    m_pGraphicsBadPixelItem->hide();
+
     //Cut In & Out
     initCutInOut( -1 );
 
@@ -6111,7 +6118,12 @@ void MainWindow::on_actionPasteReceipt_triggered()
     for( int row = 0; row < ui->listWidgetSession->count(); row++ )
     {
         if( !ui->listWidgetSession->item( row )->isSelected() ) continue;
-        //Each selected clip gets the receipt
+        //Save current settings into receipt
+        if( row == m_lastActiveClipInSession )
+        {
+            setReceipt( m_pSessionReceipts.at(row) );
+        }
+        //Each selected clip gets the copied receipt
         replaceReceipt( m_pSessionReceipts.at(row), m_pReceiptClipboard, true );
         //If the actual is selected (may have changed since copy action), set sliders and get receipt
         if( row == m_lastActiveClipInSession )
