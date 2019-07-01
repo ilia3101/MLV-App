@@ -61,7 +61,7 @@ win32: LIBS += -llibgomp-1
 # Linux
 linux-g++*: QMAKE_CFLAGS += -O3 -fopenmp -msse4.1 -mssse3 -msse3 -msse2 -msse -std=c99
 linux-g++*: QMAKE_CXXFLAGS += -fopenmp
-linux-g++*: LIBS += -L/usr/lib/gcc/x86_64-linux-gnu/4.8 -lgomp
+linux-g++*: LIBS += -lgomp
 
 ##############
 SOURCES += \
