@@ -21,7 +21,7 @@
             /* Find latest Qt Release */
             for (var i = 0; i < Releases.length; i++)
             {
-                {
+                {   
                     console.log(Releases[i].name);
                     let releaseFrame = document.createElement("div");
                     releaseFrame.className = "frame";
@@ -139,7 +139,7 @@
             
             console.log("Download count: " + TotalDownloads.toFixed(0).toString());
             console.log("Download GB: " + TotalDownloadsSize.toFixed(0).toString());
-            document.getElementById("TotalDownloadsLabel").innerHTML = TotalDownloads.toFixed(0).toString() + " total downloads (" + (TotalDownloadsSize/(1000000000)).toFixed(1).toString() + "GB)";
+            document.getElementById("TotalDownloadsLabel").innerHTML = TotalDownloads.toFixed(0).toString() + " total downloads" /* + " (" + (TotalDownloadsSize/(1000000000)).toFixed(1).toString() + "GB)" */;
         }
     function test()
     {
