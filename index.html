@@ -1,11 +1,12 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <title>MLV App Downloads</title>
+        <title>Download MLV App, Grade Magic Lantern RAW video</title>
         <meta name="description" content="What is MLV App? A cross platform RAW conversion software that works natively with Magic Lantern MLV files. Features: Import MLV files, Support for spanned mlv (.m00, .m01, ...), Support for lossless mlv, Support for any bit depth (…, 10, 12, 14bit), Demosaic bilinear or multithreaded AMaZE, Processing with many parameters (exposure, white balance, saturation, dark & light adjustments, sharpen,…), Processing filters for film emulation powered by neural networks, Processing in sRGB or several LOG, RAW corrections, fix focus, fix bad pixels, chroma smoothing, pattern noise, vertical stripes, deflicker, MLV darkframe subtraction">
         <meta name="keywords" content="MLV, processing, RAW, grading, app, magic lantern, adobe, fastcinemadng, canon, 5D, video, movie, videotaping, MLV App, fast, free software">
     </head>
 <body onload="test()">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
         var LinkColour = "rgb(100,130,160)";
         var TotalDownloads = 0;
@@ -26,13 +27,13 @@
                     releaseFrame.className = "frame";
                     let release = document.createElement("div");
                     release.className = "release";
-                    release.style = "height: 390px;";
+                    release.style = "overflow: hidden;";
                     releaseFrame.appendChild(release);
                     release.appendChild(document.createElement("div"));
 
                     let ImageBox = document.createElement("div");
                     // ImageBox.style = "width: 50%;";
-                    ImageBox.style = "width: 47%; float:left;";
+                    ImageBox.style = "width: 47%; max-width: 47%; float:left;";
                     release.appendChild(ImageBox);
 
                     /* Version title with link */
@@ -51,25 +52,28 @@
                     Time.innerHTML = (TimePassed / (24*3600*1000)).toFixed(0).toString() + " days ago";
                     Time.style.color = "rgb(133,133,133)";
                     Time.style.lineHeight = "0";
+                    // Time.style.float = "0";
                     ImageBox.appendChild(Time);
 
 
-                    let PicLink = document.createElement("a");
-                    if (!findImg.test(Releases[i].body)) PicLink.href = "https://raw.githubusercontent.com/ilia3101/MLV-App/master/src/icon/icon.png";
-                    else {
-                        PicLink.href = Releases[i].body.match(findImg);
-                        if (PicLink.href.includes(".png")) {
-                            PicLink.href = PicLink.href.substring(0, PicLink.href.indexOf('.png')) + ".png";
-                        }
-                    }
-                    let Pic = document.createElement("img");
-                    Pic.onerror = function() {
-                        Pic.parentNode.removeChild(Pic);
-                    };
-                    Pic.className = "picture";
-                    Pic.src = PicLink.href;
-                    PicLink.appendChild(Pic);
-                    ImageBox.appendChild(PicLink);
+                    // let PicLink = document.createElement("a");
+                    // if (!findImg.test(Releases[i].body)) PicLink.href = "https://raw.githubusercontent.com/ilia3101/MLV-App/master/src/icon/icon.png";
+                    // else {
+                    //     PicLink.href = Releases[i].body.match(findImg);
+                    //     if (PicLink.href.includes(".png")) {
+                    //         PicLink.href = PicLink.href.substring(0, PicLink.href.indexOf('.png')) + ".png";
+                    //     }
+                    // }
+                    // let Pic = document.createElement("img");
+                    // Pic.onerror = function() {
+                    //     Pic.parentNode.removeChild(Pic);
+                    // };
+                    // Pic.className = "picture";
+                    // Pic.src = PicLink.href;
+                    // PicLink.appendChild(Pic);
+                    // ImageBox.appendChild(PicLink);
+
+                    ImageBox.innerHTML = ImageBox.innerHTML + marked(Releases[i].body);
                     // release.appendChild(document.createElement("hr"));
 
                     let DownloadsBoxBox = document.createElement("div");
@@ -93,7 +97,7 @@
                         let link = document.createElement("a");
                         link.href = Releases[i].assets[j].browser_download_url;
                         let text = document.createElement("h4");
-                        text.style.lineHeight = "3px";
+                        text.style.lineHeight = "3px";3
                         text.innerHTML = Releases[i].assets[j].name;
                         text.style.color = LinkColour;
                         link.appendChild(text);
@@ -157,9 +161,12 @@
     h1 { font-size: 55px; }
     h2 { font-size: 32px; }
     h3 { font-size: 25px; }
-    h1, h2, h2, h3, h4, h5, h6, p {
+    li, h1, h2, h2, h3, h4, h5, h6, p {
         font-family: "SF Pro Display", "SF Pro Icons", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
         color: #333;
+    }
+    img {
+        max-width: 100%;
     }
     body {
         background-color: #ffffff;
@@ -197,9 +204,6 @@
         max-width:95%;
         max-height:300px;
         transition: transform 0.16s ease;
-    }
-    .picture:hover {
-        /* transform: scale(1.01,1.01); */
     }
     div.time {
         position: fixed; left: 0px; top: 0px; right: 0px; width:100vw; height:30px;
