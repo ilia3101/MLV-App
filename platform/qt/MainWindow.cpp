@@ -5700,7 +5700,7 @@ void MainWindow::on_actionExport_triggered()
     else
     {
         //Folder Dialog
-        QString folderName = QFileDialog::getExistingDirectory(this, tr("Chose Export Folder"),
+        QString folderName = QFileDialog::getExistingDirectory(this, tr("Choose Export Folder"),
                                                           QFileInfo( saveFileName ).absolutePath(),
                                                           QFileDialog::ShowDirsOnly
                                                           | QFileDialog::DontResolveSymlinks);
