@@ -1712,7 +1712,7 @@ void MainWindow::startExportPipe(QString fileName)
 #else
     QString vidstabFile = QString( "\"%1/tmp_transform_vectors.trf\"" ).arg( QCoreApplication::applicationDirPath() );
 #endif
-    if( m_exportQueue.first()->vidStabEnabled() )
+    if( m_exportQueue.first()->vidStabEnabled() && m_codecProfile == CODEC_H264 )
     {
         if( m_exportQueue.first()->vidStabTripod() )
         {
@@ -1824,7 +1824,7 @@ void MainWindow::startExportPipe(QString fileName)
     QString resolution = QString( "%1x%2" ).arg( getMlvWidth( m_pMlvObject ) ).arg( getMlvHeight( m_pMlvObject ) );
 
     //VidStab: First pass
-    if( m_exportQueue.first()->vidStabEnabled() )
+    if( m_exportQueue.first()->vidStabEnabled() && m_codecProfile == CODEC_H264 )
     {
         QString stabCmd;
         if( m_exportQueue.first()->vidStabTripod() )
@@ -2304,7 +2304,7 @@ void MainWindow::startExportPipe(QString fileName)
             fflush(pPipe);
 
             //Set Status
-            if( !m_exportQueue.first()->vidStabEnabled() )
+            if( !( m_exportQueue.first()->vidStabEnabled() && m_codecProfile == CODEC_H264 ) )
             {
                 m_pStatusDialog->ui->progressBar->setValue( i - ( m_exportQueue.first()->cutIn() - 1 ) + 1 );
                 m_pStatusDialog->ui->progressBar->repaint();

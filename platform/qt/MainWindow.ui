@@ -455,9 +455,9 @@ QGroupBox::indicator:checked:disabled {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>-39</y>
+            <y>0</y>
             <width>244</width>
-            <height>5025</height>
+            <height>4991</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayoutScrollArea">
@@ -8294,7 +8294,7 @@ QGroupBox::indicator:checked:disabled {
                       </font>
                      </property>
                      <property name="toolTip">
-                      <string>Visible only after ffmpeg export!</string>
+                      <string>Visible only after ffmpeg H.264 export!</string>
                      </property>
                      <property name="text">
                       <string>Enable FFmpeg vid.stab</string>
