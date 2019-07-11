@@ -984,7 +984,7 @@ static int fpm_get_pattern(uint32_t camera_model)
             return PATTERN_EOSM;
 
         case 0x80000355:
-            return PATTERN_EOSM2;
+            return PATTERN_NONE;//PATTERN_EOSM2; //none, until fpm generation is implemented
 
         case 0x80000346:
             return PATTERN_100D;
