@@ -21,6 +21,7 @@ ScopesLabel::ScopesLabel(QWidget *parent)
     m_pWaveFormMonitor = new WaveFormMonitor( 200 );
     m_widthLabel = size().width();
     m_imageScope = QImage(1, 1, QImage::Format_RGB888);
+    m_imageScope.fill( Qt::black );
     m_pImageLabel = new QImage( SIZEW, SIZEH, QImage::Format_RGBA8888 );
     paintScope();
 }
