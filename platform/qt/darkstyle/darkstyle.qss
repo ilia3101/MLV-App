@@ -134,6 +134,7 @@ QDockWidget::title{
 QDockWidget{
   titlebar-close-icon:url(:/darkstyle/icon_close.png);
   titlebar-normal-icon:url(:/darkstyle/icon_window_restore.png);
+  font:8pt;
 }
 QDockWidget::close-button,QDockWidget::float-button{
   subcontrol-position:top right;
