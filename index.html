@@ -3,7 +3,7 @@
         <meta charset="utf-8">
         <title>Download MLV App, grade and convert Magic Lantern RAW video</title>
         <meta name="description" content="What is MLV App? A cross platform RAW color grading and mov conversion software that works natively with Magic Lantern MLV files. Features: Import MLV files, Support for spanned mlv (.m00, .m01, ...), Support for lossless mlv, Support for any bit depth (…, 10, 12, 14bit), Demosaic bilinear or multithreaded AMaZE, Processing with many parameters (exposure, white balance, saturation, dark & light adjustments, sharpen,…), Processing filters for film emulation powered by neural networks, Processing in sRGB or several LOG, RAW corrections, fix focus, fix bad pixels, chroma smoothing, pattern noise, vertical stripes, deflicker, MLV darkframe subtraction">
-        <meta name="keywords" content="MLV, processing, RAW, grading, app, magic lantern, adobe, fastcinemadng, canon, 5D, video, movie, videotaping, MLV App, fast, free software">
+        <meta name="keywords" content="MLV, processing, RAW, grading, app, magic lantern, adobe, fastcinemadng, canon, 5D, video, movie, videotaping, MLV App, fast, free software, film">
     </head>
 <body onload="test()">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -124,20 +124,10 @@
                     DownloadsBoxBox.appendChild(DownloadsBox);
                     release.appendChild(DownloadsBoxBox);
 
-                    let releasebox = document.getElementById("QtRelases");
+                    let releasebox = document.getElementById("Releases");
 
-                    /* Add it to approppriate column */
-                    if (Releases[i].name.includes("[Qt]"))
-                    {
-                        releasebox.appendChild(releaseFrame);
-                        releasebox.appendChild(document.createElement("br"));
-                    }
-                    /* Allow last couple of cocoa versions in to release list just for preservation */
-                    if (Releases[i].name.includes("[Cocoa]") && (Releases[i].tag_name.includes("22") || Releases[i].tag_name.includes("21") || Releases[i].tag_name.includes("20") || Releases[i].tag_name.includes("19")))
-                    {
-                        releasebox.appendChild(releaseFrame);
-                        releasebox.appendChild(document.createElement("br"));
-                    }
+                    releasebox.appendChild(releaseFrame);
+                    releasebox.appendChild(document.createElement("br"));
                 }
             }
             
@@ -223,9 +213,11 @@
     
     <div style="width:980px; margin: auto;">
         <br><br><br><br><br><br><br>
-        <div style="width: 978px; vertical-align: top;">
-            <div id="QtRelases">
-        </div>
+        <table>
+            <td style="width: 978px; vertical-align: top;">
+                <div id="Releases"></div>
+            </td>
+        </table>
     </div>
     
     
