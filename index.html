@@ -124,17 +124,19 @@
                     DownloadsBoxBox.appendChild(DownloadsBox);
                     release.appendChild(DownloadsBoxBox);
 
+                    let releasebox = document.getElementById("QtRelases");
+
                     /* Add it to approppriate column */
                     if (Releases[i].name.includes("[Qt]"))
                     {
-                        document.getElementById("QtRelases").appendChild(releaseFrame);
-                        document.getElementById("QtRelases").appendChild(document.createElement("br"));
+                        releasebox.appendChild(releaseFrame);
+                        releasebox.appendChild(document.createElement("br"));
                     }
                     /* Allow last couple of cocoa versions in to release list just for preservation */
                     if (Releases[i].name.includes("[Cocoa]") && (Releases[i].tag_name.includes("22") || Releases[i].tag_name.includes("21") || Releases[i].tag_name.includes("20") || Releases[i].tag_name.includes("19")))
                     {
-                        document.getElementById("QtRelases").appendChild(releaseFrame);
-                        document.getElementById("QtRelases").appendChild(document.createElement("br"));
+                        releasebox.appendChild(releaseFrame);
+                        releasebox.appendChild(document.createElement("br"));
                     }
                 }
             }
@@ -221,16 +223,9 @@
     
     <div style="width:980px; margin: auto;">
         <br><br><br><br><br><br><br>
-        <table>
-            <td style="width: 978px; vertical-align: top;">
-                <!-- <h2 align="center">Qt App</h2> -->
-                <div id="QtRelases">
-            </td>
-            <td style="width: 0px; vertical-align: top;">
-                <!-- <h2 align="center">Cocoa App</h2> -->
-                <div id="CocoaRelases">
-            </td>
-        </table>
+        <div style="width: 978px; vertical-align: top;">
+            <div id="QtRelases">
+        </div>
     </div>
     
     
