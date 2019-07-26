@@ -72,7 +72,7 @@ MLVBlenderGUI::MLVBlenderGUI()
 
     this->MLV_parameters->UpdateFromMLVBlender(blender);
 
-    this->set_title("MLV Blender");
+    this->set_title("MLV Stitcher");
     this->show_all();
 }
 
@@ -93,6 +93,10 @@ void MLVBlenderGUI::UpdateInterface()
     );
 
     image_view.set("output.bmp");
+
+    char gjkhkjh[256];
+    sprintf(gjkhkjh, "Result %ix%i", MLVBlenderGetOutputWidth(blender), MLVBlenderGetOutputHeight(blender));
+    header_bar.set_subtitle(gjkhkjh);
     // gdkpixbuffer;
 }
 
