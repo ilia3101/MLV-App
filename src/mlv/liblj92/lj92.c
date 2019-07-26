@@ -745,7 +745,7 @@ int frequencyScan(lje* self) {
     int maxval = (1 << self->bitdepth);
     while (pixcount--) {
         uint16_t p = *pixel;
-        if (self->delinearize) {
+        /* if (self->delinearize) {
             if (p>=self->delinearizeLength) {
                 free(rowcache);
                 return LJ92_ERROR_TOO_WIDE;
@@ -755,7 +755,7 @@ int frequencyScan(lje* self) {
         if (p>=maxval) {
             free(rowcache);
             return LJ92_ERROR_TOO_WIDE;
-        }
+        } */
         rows[1][col] = p;
 
         if ((row == 0)&&(col == 0))
