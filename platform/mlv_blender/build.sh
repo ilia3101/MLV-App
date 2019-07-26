@@ -37,22 +37,21 @@ SourceFilesCPP=(
     ../../src/processing/rbfilter/RBFilterPlain.cpp
 );
 
-# for i in "${SourceFiles[@]}"
-# do
-#    gcc -c -O3 $i
-#    # or do whatever with individual element of the array
-# done
+for i in "${SourceFiles[@]}"
+do
+   gcc -c -O3 $i
+   # or do whatever with individual element of the array
+done
 
-# for i in "${SourceFilesCPP[@]}"
-# do
-#    g++ -c -O3 $i
-#    # or do whatever with individual element of the array
-# done
+for i in "${SourceFilesCPP[@]}"
+do
+   g++ -c -O3 $i
+   # or do whatever with individual element of the array
+done
 
 g++ -c -O3 -std=c++17 main.cpp `pkg-config gtkmm-3.0 --cflags --libs`
 g++ -c -O3 -std=c++17 MLVBlenderParameterView.cpp `pkg-config gtkmm-3.0 --cflags --libs`
 gcc -c -O3 MLVBlender.c
-gcc -c -O3 ../../src/mlv/video_mlv.c
 
 g++ *.o `pkg-config gtkmm-3.0 --cflags --libs` -lm -lpthread -lgomp -o MLVBlender
 
