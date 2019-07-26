@@ -1757,9 +1757,6 @@ void analyse_frame_highest_green(processingObject_t *processing, int imageX, int
             }
         }
     }
-#ifndef STDOUT_SILENT
-    printf( "highest green: %d (from 16bit); %d pixels; %d processed lines\r\n", processing->highest_green, highest_value, imageY );
-#endif
 }
 
 //Set LUT strength factor

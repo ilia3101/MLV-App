@@ -485,7 +485,8 @@ void getMlvProcessedFrame8(mlvObject_t * video, uint64_t frameIndex, uint8_t * o
 mlvObject_t * initMlvObjectWithClip(char * mlvPath, int preview, int * err, char * error_message)
 {
     mlvObject_t * video = initMlvObject();
-    *err = openMlvClip(video, mlvPath, preview, error_message);
+    if (err != NULL && error_message != NULL)
+        *err = openMlvClip(video, mlvPath, preview, error_message);
     return video;
 }
 
