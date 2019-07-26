@@ -206,7 +206,6 @@ int getMlvRawFrameUint16(mlvObject_t * video, uint64_t frameIndex, uint16_t * un
 
     /* How many bytes is RAW frame */
     int raw_frame_size = (width * height * bitdepth) / 8;
-
     /* Memory buffer for original RAW data */
     uint8_t * raw_frame = (uint8_t *)malloc(raw_frame_size + 4); // additional 4 bytes for safety
 
@@ -485,8 +484,10 @@ void getMlvProcessedFrame8(mlvObject_t * video, uint64_t frameIndex, uint8_t * o
 mlvObject_t * initMlvObjectWithClip(char * mlvPath, int preview, int * err, char * error_message)
 {
     mlvObject_t * video = initMlvObject();
-    if (err != NULL && error_message != NULL)
-        *err = openMlvClip(video, mlvPath, preview, error_message);
+    char error_message_tmp[256];
+    int err_tmp =  openMlvClip(video, mlvPath, preview, error_message_tmp);
+    if (err != NULL) *err = err_tmp;
+    if (error_message != NULL) strcpy(error_message, error_message_tmp);
     return video;
 }
 
