@@ -14,7 +14,7 @@ int MLVBlenderGetOutputWidth(MLVBlender_t * Blender);
 int MLVBlenderGetOutputHeight(MLVBlender_t * Blender);
 
 /* Exports an mlv fil to OutputPath */
-void MLVBlenderExportMLV(MLVBlender_t * Blender, char * OutputPath);
+void MLVBlenderExportMLV(MLVBlender_t * Blender, const char * OutputPath);
 
 /* Add an MLV */
 void MLVBlenderAddMLV(MLVBlender_t * Blender, const char * MLVPath);
@@ -46,5 +46,20 @@ int MLVBlenderGetMLVCropLeft(MLVBlender_t * Blender, int MLVIndex);
 int MLVBlenderGetMLVCropRight(MLVBlender_t * Blender, int MLVIndex);
 int MLVBlenderGetMLVCropTop(MLVBlender_t * Blender, int MLVIndex);
 int MLVBlenderGetMLVCropBottom(MLVBlender_t * Blender, int MLVIndex);
+
+/* Set feathering */
+void MLVBlenderSetMLVFeatherLeft(MLVBlender_t * Blender, int MLVIndex, int Crop);
+void MLVBlenderSetMLVFeatherRight(MLVBlender_t * Blender, int MLVIndex, int Crop);
+void MLVBlenderSetMLVFeatherTop(MLVBlender_t * Blender, int MLVIndex, int Crop);
+void MLVBlenderSetMLVFeatherBottom(MLVBlender_t * Blender, int MLVIndex, int Crop);
+/* Get feathering */
+int MLVBlenderGetMLVFeatherLeft(MLVBlender_t * Blender, int MLVIndex);
+int MLVBlenderGetMLVFeatherRight(MLVBlender_t * Blender, int MLVIndex);
+int MLVBlenderGetMLVFeatherTop(MLVBlender_t * Blender, int MLVIndex);
+int MLVBlenderGetMLVFeatherBottom(MLVBlender_t * Blender, int MLVIndex);
+
+/* Set visible */
+void MLVBlenderSetMLVVisible(MLVBlender_t * Blender, int MLVIndex, int Visible);
+int MLVBlenderGetMLVVisible(MLVBlender_t * Blender, int MLVIndex);
 
 #endif

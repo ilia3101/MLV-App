@@ -18,6 +18,11 @@ typedef struct
     int crop_left, crop_right;
     int crop_top, crop_bottom;
 
+    int feather_left, feather_right;
+    int feather_top, feather_bottom;
+
+    int visible;
+
     float exposure;
 
 } MLVBlender_mlv_t;
