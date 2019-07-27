@@ -162,16 +162,16 @@ void MLVBlenderBlend(MLVBlender_t * Blender, uint64_t FrameIndex)
         /* Feather the bottom part */
         for (size_t y = mlv->crop_bottom; y < mlv->crop_bottom+mlv->feather_bottom; ++y)
         {
-            size_t index_src = mlv->width * y; /* Index for row Y */
+            size_t index_src = mlv->width * (mlv->height-1-y); /* Index for row Y */
             size_t index_dst = output_width * (y+mlv->offset_y-min_y) + mlv->offset_x-min_x; /* Index for row Y */
             float alpha = ((float)(y-mlv->crop_bottom)) / ((float)mlv->feather_bottom);
             float ialpha = 1.0f - alpha;
 
             for (size_t x = mlv->crop_left; x < mlv->crop_left+mlv->feather_left; ++x)
             {
-                float alpha2 = ((float)(x-mlv->crop_left)) / ((float)mlv->feather_left);
-                float ialpha2 = 1.0f - alpha*alpha2;
-                Blender->blended_output[index_dst+x] = frame_data[index_src+x]*exposure*alpha*alpha2 + Blender->blended_output[index_dst+x]*ialpha2;
+                float alpha2 = ((float)(x-mlv->crop_left)) / ((float)mlv->feather_left)*alpha;
+                float ialpha2 = 1.0f - alpha2;
+                Blender->blended_output[index_dst+x] = frame_data[index_src+x]*exposure*alpha2 + Blender->blended_output[index_dst+x]*ialpha2;
             }
             for (size_t x = mlv->crop_left+mlv->feather_left; x < mlv->width-mlv->crop_right-mlv->feather_right; ++x)
             {
@@ -179,15 +179,15 @@ void MLVBlenderBlend(MLVBlender_t * Blender, uint64_t FrameIndex)
             }
             for (size_t x = mlv->width-mlv->crop_right-mlv->feather_right; x < mlv->width-mlv->crop_right; ++x)
             {
-                float alpha2 = 1.0 - ((float)(x-(mlv->width-mlv->crop_right-mlv->feather_right))) / ((float)mlv->feather_right);
-                float ialpha2 = 1.0f - alpha*alpha2;
-                Blender->blended_output[index_dst+x] = frame_data[index_src+x]*exposure*alpha*alpha2 + Blender->blended_output[index_dst+x]*ialpha2;
+                float alpha2 = (1.0f - ((float)(x-(mlv->width-mlv->crop_right-mlv->feather_right))) / ((float)mlv->feather_right)) * alpha;
+                float ialpha2 = 1.0f - alpha2;
+                Blender->blended_output[index_dst+x] = frame_data[index_src+x]*exposure*alpha2 + Blender->blended_output[index_dst+x]*ialpha2;
             }
         }
 
         for (size_t y = mlv->crop_bottom+mlv->feather_bottom; y < mlv->height-mlv->crop_top-mlv->feather_top; ++y)
         {
-            size_t index_src = mlv->width * y; /* Index for row Y */
+            size_t index_src = mlv->width * (mlv->height-1-y); /* Index for row Y */
             size_t index_dst = output_width * (y+mlv->offset_y-min_y) + mlv->offset_x-min_x; /* Index for row Y */
 
             for (size_t x = mlv->crop_left; x < mlv->crop_left+mlv->feather_left; ++x)
@@ -208,29 +208,29 @@ void MLVBlenderBlend(MLVBlender_t * Blender, uint64_t FrameIndex)
             }
         }
 
-        /* Feather the bottom part */
+        /* Feather the top part */
         for (size_t y = mlv->height-mlv->crop_top-mlv->feather_top; y < mlv->height-mlv->crop_top; ++y)
         {
-            size_t index_src = mlv->width * y; /* Index for row Y */
+            size_t index_src = mlv->width * (mlv->height-1-y); /* Index for row Y */
             size_t index_dst = output_width * (y+mlv->offset_y-min_y) + mlv->offset_x-min_x; /* Index for row Y */
-            float alpha = ((float)(y-(mlv->height-mlv->crop_top-mlv->feather_top))) / ((float)mlv->feather_top);
+            float alpha = 1.0f - ((float)(y-(mlv->height-mlv->crop_top-mlv->feather_top))) / ((float)mlv->feather_top);
             float ialpha = 1.0f - alpha;
 
             for (size_t x = mlv->crop_left; x < mlv->crop_left+mlv->feather_left; ++x)
             {
-                float alpha2 = ((float)(x-mlv->crop_left)) / ((float)mlv->feather_left);
-                float ialpha2 = 1.0f - alpha*alpha2;
-                Blender->blended_output[index_dst+x] = frame_data[index_src+x]*exposure*alpha*alpha2 + Blender->blended_output[index_dst+x]*ialpha2;
+                float alpha2 = ((float)(x-mlv->crop_left)) / ((float)mlv->feather_left)*alpha;
+                float ialpha2 = 1.0f - alpha2;
+                Blender->blended_output[index_dst+x] = frame_data[index_src+x]*exposure*alpha2 + Blender->blended_output[index_dst+x]*ialpha2;
             }
-            for (size_t x = mlv->crop_left; x < mlv->width-mlv->crop_right; ++x)
+            for (size_t x = mlv->crop_left+mlv->feather_left; x < mlv->width-mlv->crop_right-mlv->feather_right; ++x)
             {
-                Blender->blended_output[index_dst+x] = frame_data[index_src+x]*exposure*ialpha + Blender->blended_output[index_dst+x]*alpha;
+                Blender->blended_output[index_dst+x] = frame_data[index_src+x]*exposure*alpha + Blender->blended_output[index_dst+x]*ialpha;
             }
             for (size_t x = mlv->width-mlv->crop_right-mlv->feather_right; x < mlv->width-mlv->crop_right; ++x)
             {
-                float alpha2 = 1.0 - ((float)(x-(mlv->width-mlv->crop_right-mlv->feather_right))) / ((float)mlv->feather_right);
-                float ialpha2 = 1.0f - alpha*alpha2;
-                Blender->blended_output[index_dst+x] = frame_data[index_src+x]*exposure*alpha*alpha2 + Blender->blended_output[index_dst+x]*ialpha2;
+                float alpha2 = (1.0f - ((float)(x-(mlv->width-mlv->crop_right-mlv->feather_right))) / ((float)mlv->feather_right)) * alpha;
+                float ialpha2 = 1.0f - alpha2;
+                Blender->blended_output[index_dst+x] = frame_data[index_src+x]*exposure*alpha2 + Blender->blended_output[index_dst+x]*ialpha2;
             }
         }
 
@@ -270,6 +270,13 @@ void MLVBlenderExportMLV(MLVBlender_t * Blender, const char * OutputPath)
 
     char error[256];
 
+    /* Round output width down to a multiple of 8, and height 2 */
+    size_t output_width = MLVBlenderGetOutputWidth(Blender);
+    size_t output_height = MLVBlenderGetOutputHeight(Blender);
+    size_t result_width = output_width - (output_width % 8);
+    size_t result_height = output_height - (output_height % 2);
+    size_t frame_size = output_width * output_height;
+
     /* Set fake dimensions inside MLV object and save headers */
     getMlvWidth(mlv_object) = MLVBlenderGetOutputWidth(Blender);
     getMlvHeight(mlv_object) = MLVBlenderGetOutputHeight(Blender);
@@ -288,7 +295,6 @@ void MLVBlenderExportMLV(MLVBlender_t * Blender, const char * OutputPath)
     saveMlvHeaders(mlv_object, mlv_output_file, 0, MLV_COMPRESS, 0, shortest_vid, "NOT MLV APP", error);
     // puts("hihio");
 
-    size_t frame_size = MLVBlenderGetOutputWidth(Blender) * MLVBlenderGetOutputHeight(Blender);
     uint16_t * buffer16 = malloc(sizeof(uint16_t) * frame_size);
     uint8_t * buffer_compressed = malloc(2 * frame_size * sizeof(uint16_t));
 
@@ -300,12 +306,20 @@ void MLVBlenderExportMLV(MLVBlender_t * Blender, const char * OutputPath)
         float black_level = getMlvBlackLevel(mlv_object);
         float maximum = pow(2.0, mlv_object->RAWI.raw_info.bits_per_pixel);
 
-        /* Map 0.0-1.0 --> BlackLevel-MaxValue */
-        for (size_t i = 0; i < frame_size; ++i) {
-            float result = Blender->blended_output[i] * maximum * ((maximum-black_level)/maximum) + black_level;
-            if (result > maximum) result = maximum;
-            if (result < 0) result = 0;
-            buffer16[i] = (uint16_t)result;
+        /* Flip to correct orientation + crop to valid mlv dimensions (result_height and result_width) */
+        for (size_t y = 0; y < result_height; ++y)
+        {
+            float * src_pix = Blender->blended_output + y * output_height;
+            uint16_t * dst_pix = buffer16 + (output_height-1-y) * result_height;
+
+            for (size_t x = 0; x < result_width; ++x)
+            {
+                /* Map 0.0-1.0 --> BlackLevel-MaxValue */
+                float result = src_pix[x] * maximum * ((maximum-black_level)/maximum) + black_level;
+                if (result > maximum) result = maximum;
+                if (result < 0) result = 0;
+                dst_pix[x] = (uint16_t)result;
+            }
         }
 
         size_t frame_size_compressed = 0;
