@@ -278,8 +278,8 @@ void MLVBlenderExportMLV(MLVBlender_t * Blender, const char * OutputPath)
     size_t frame_size = output_width * output_height;
 
     /* Set fake dimensions inside MLV object and save headers */
-    getMlvWidth(mlv_object) = MLVBlenderGetOutputWidth(Blender);
-    getMlvHeight(mlv_object) = MLVBlenderGetOutputHeight(Blender);
+    getMlvWidth(mlv_object) = result_width;
+    getMlvHeight(mlv_object) = result_height;
     /* Always 14 bit export */
     int bitdepth = 16;
     /* Use full range in 16 bit */
@@ -292,8 +292,12 @@ void MLVBlenderExportMLV(MLVBlender_t * Blender, const char * OutputPath)
         getMlvWhiteLevel(mlv_object) = 2 << bitdepth - 1;
     }
     getMlvBitdepth(mlv_object) = bitdepth;
-    saveMlvHeaders(mlv_object, mlv_output_file, 0, MLV_COMPRESS, 0, shortest_vid, "NOT MLV APP", error);
-    // puts("hihio");
+
+    /* Annoying */
+    if (isMlvCompressed(mlv_object))
+        saveMlvHeaders(mlv_object, mlv_output_file, 0, MLV_FAST_PASS, 0, shortest_vid, "NOT MLV APP", error);
+    else
+        saveMlvHeaders(mlv_object, mlv_output_file, 0, MLV_COMPRESS, 0, shortest_vid, "NOT MLV APP", error);
 
     uint16_t * buffer16 = malloc(sizeof(uint16_t) * frame_size);
     uint8_t * buffer_compressed = malloc(2 * frame_size * sizeof(uint16_t));
@@ -309,13 +313,13 @@ void MLVBlenderExportMLV(MLVBlender_t * Blender, const char * OutputPath)
         /* Flip to correct orientation + crop to valid mlv dimensions (result_height and result_width) */
         for (size_t y = 0; y < result_height; ++y)
         {
-            float * src_pix = Blender->blended_output + y * output_height;
-            uint16_t * dst_pix = buffer16 + (output_height-1-y) * result_height;
+            float * src_pix = Blender->blended_output + y * output_width;
+            uint16_t * dst_pix = buffer16 + (output_height-1-y) * result_width;
 
             for (size_t x = 0; x < result_width; ++x)
             {
                 /* Map 0.0-1.0 --> BlackLevel-MaxValue */
-                float result = src_pix[x] * maximum * ((maximum-black_level)/maximum) + black_level;
+                float result = src_pix[x] * (maximum-black_level) + black_level;
                 if (result > maximum) result = maximum;
                 if (result < 0) result = 0;
                 dst_pix[x] = (uint16_t)result;
@@ -323,7 +327,7 @@ void MLVBlenderExportMLV(MLVBlender_t * Blender, const char * OutputPath)
         }
 
         size_t frame_size_compressed = 0;
-        int ret = dng_compress_image(buffer_compressed, buffer16, &frame_size_compressed, mlv_object->RAWI.xRes, mlv_object->RAWI.yRes, bitdepth);
+        int ret = dng_compress_image(buffer_compressed, buffer16, &frame_size_compressed, result_width, result_height, bitdepth);
 
         /* Write frame */
         mlv_vidf_hdr_t vidf_hdr = { 0 };

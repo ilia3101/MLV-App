@@ -46,7 +46,7 @@ void main()
     if (pixel.r > 1.0)
         gl_FragColor = vec4(0.933,0.157,0.265,1.0);
     else
-        gl_FragColor = vec4(pixel.r*3/(1+pixel.r*3)*1.88);
+        gl_FragColor = vec4(pixel.r*3/(1+pixel.r*3)*1.33);
 }
 
 )glsl";
