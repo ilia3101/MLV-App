@@ -281,11 +281,11 @@ void MLVBlenderExportMLV(MLVBlender_t * Blender, const char * OutputPath)
     getMlvWidth(mlv_object) = result_width;
     getMlvHeight(mlv_object) = result_height;
     /* Always 14 bit export */
-    int bitdepth = 16;
+    int bitdepth = 14;
     /* Use full range in 16 bit */
     if (bitdepth == 16) {
-        getMlvBlackLevel(mlv_object) = 0;
-        getMlvWhiteLevel(mlv_object) = 65535;
+        getMlvBlackLevel(mlv_object) = 1;
+        getMlvWhiteLevel(mlv_object) = 65534;
     }
     else {
         getMlvBlackLevel(mlv_object) = (int) ( (float)getMlvBlackLevel(mlv_object) * pow(2.0, bitdepth-getMlvBitdepth(mlv_object)) );
