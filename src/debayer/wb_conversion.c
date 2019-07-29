@@ -30,17 +30,17 @@ static inline int FC(int row, int col)
 
 void wb_convert(wb_convert_info_t * wb_info, float * rawData, int width, int height, int blacklevel)
 {
+    // blacklevel = 0;
     /* Subtract black */
     int framesize = width*height;
     for (int i = 0; i < framesize; ++i)
     {
-        float pix = rawData[i]-(float)blacklevel;
+        float pix = rawData[i]-(float)(blacklevel);
         rawData[i] = MAX(MIN(pix, 65535), 0);
     }
 
     float ** __restrict imagefloat2d = (float **)alloca(height * sizeof(float *));
     for (int y = 0; y < height; ++y) imagefloat2d[y] = (float *)(rawData+(y*width));
-
 
     /* Stretch all channels to fill the whole range as much as possible */
     /* RED */
@@ -91,6 +91,7 @@ void wb_convert(wb_convert_info_t * wb_info, float * rawData, int width, int hei
         for (int x = 0; x < width; x += 2) {
             imagefloat2d[y][x] -= wb_info->min_r;
             imagefloat2d[y][x] *= 65535.0f / (wb_info->max_r - wb_info->min_r);
+            imagefloat2d[y][x] = LIMIT16(imagefloat2d[y][x]);
         }
     }
     /* GREEN 1 and 2 */
@@ -98,12 +99,14 @@ void wb_convert(wb_convert_info_t * wb_info, float * rawData, int width, int hei
         for (int x = 1; x < width; x += 2) {
             imagefloat2d[y][x] -= wb_info->min_g;
             imagefloat2d[y][x] *= 65535.0f / (wb_info->max_g - wb_info->min_g);
+            imagefloat2d[y][x] = LIMIT16(imagefloat2d[y][x]);
         }
     }
     for (int y = 1; y < height; y += 2) {
         for (int x = 0; x < width; x += 2) {
             imagefloat2d[y][x] -= wb_info->min_g;
             imagefloat2d[y][x] *= 65535.0f / (wb_info->max_g - wb_info->min_g);
+            imagefloat2d[y][x] = LIMIT16(imagefloat2d[y][x]);
         }
     }
     /* BLUE */
@@ -111,6 +114,7 @@ void wb_convert(wb_convert_info_t * wb_info, float * rawData, int width, int hei
         for (int x = 1; x < width; x += 2) {
             imagefloat2d[y][x] -= wb_info->min_b;
             imagefloat2d[y][x] *= 65535.0f / (wb_info->max_b - wb_info->min_b);
+            imagefloat2d[y][x] = LIMIT16(imagefloat2d[y][x]);
         }
     }
 
@@ -119,22 +123,16 @@ void wb_convert(wb_convert_info_t * wb_info, float * rawData, int width, int hei
 
 void wb_undo(const wb_convert_info_t * wb_info, uint16_t * debayeredFrame, int width, int height, int blacklevel)
 {
+    // blacklevel = 0;
     /* Unstretch channels */
     int framesize = width*height*3;
     for (int i = 0; i < framesize; i += 3)
     {
-        debayeredFrame[i] /= 65535.0f / (wb_info->max_r - wb_info->min_r);
-        debayeredFrame[i] += wb_info->min_r;
-        debayeredFrame[i+1] /= 65535.0f / (wb_info->max_g - wb_info->min_g);
-        debayeredFrame[i+1] += wb_info->min_g;
-        debayeredFrame[i+2] /= 65535.0f / (wb_info->max_b - wb_info->min_b);
-        debayeredFrame[i+2] += wb_info->min_b;
-    }
-
-    /* Add black */
-    for (int i = 0; i < framesize; ++i)
-    {
-        int pix = ((int)debayeredFrame[i]) + blacklevel;
-        debayeredFrame[i] = MAX(MIN(pix, 65535), 0);
+        float r = ((float)debayeredFrame[ i ]) / (65535.0f / (wb_info->max_r - wb_info->min_r)) + wb_info->min_r + blacklevel;
+        float g = ((float)debayeredFrame[i+1]) / (65535.0f / (wb_info->max_g - wb_info->min_g)) + wb_info->min_g + blacklevel;
+        float b = ((float)debayeredFrame[i+2]) / (65535.0f / (wb_info->max_b - wb_info->min_b)) + wb_info->min_b + blacklevel;
+        debayeredFrame[i] = LIMIT16(r);
+        debayeredFrame[i+1] = LIMIT16(g);
+        debayeredFrame[i+2] = LIMIT16(b);
     }
 }
