@@ -300,10 +300,12 @@ void get_mlv_raw_frame_debayered( mlvObject_t * video,
     /* Get the raw data in B&W */
     getMlvRawFrameFloat(video, frame_index, temp_memory);
 
+    wb_convert_info_t wb_info;
+
     /* WB conversion for ideal debayer result, not for bilinear, easy and non debayer */
     if( !( debayer_type == 0 || debayer_type == 2 || debayer_type == 3 ) )
     {
-        wb_convert( temp_memory, width, height, getMlvBlackLevel(video) );
+        wb_convert(&wb_info, temp_memory, width, height, getMlvBlackLevel(video));
 
         /* CA correction, multithreaded, not for bilinear, easy and non debayer because not visible and slow */
         if( video->ca_red <= -0.1 || video->ca_red >= 0.1
@@ -354,5 +356,5 @@ void get_mlv_raw_frame_debayered( mlvObject_t * video,
 
     /* WB conversion undo for ideal debayer result */
     if( !( debayer_type == 0 || debayer_type == 2 || debayer_type == 3 ) )
-        wb_undo( output_frame, width, height, getMlvBlackLevel(video) );
+        wb_undo(&wb_info, output_frame, width, height, getMlvBlackLevel(video));
 }

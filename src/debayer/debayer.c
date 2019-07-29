@@ -9,6 +9,11 @@
 
 #define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
 
+void convert_to_log(void * data)
+{
+    // float 
+}
+
 /* AmAZeMEmE debayer easier to use */
 void debayerAmaze(uint16_t * __restrict debayerto, float * __restrict bayerdata, int width, int height, int threads, int blacklevel)
 {

@@ -119,8 +119,6 @@
 
     void demosaic(amazeinfo_t * inputdata) /* All arguments in 1 struct for posix */
     {
-        //printf ("AMaZE interpolation ...\n");
-
         float ** restrict rawData = inputdata->rawData;    /* holds preprocessed pixel values, rawData[i][j] corresponds to the ith row and jth column */
         float ** restrict red = inputdata->red;        /* the interpolated red plane */
         float ** restrict green = inputdata->green;      /* the interpolated green plane */
