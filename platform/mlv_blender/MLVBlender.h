@@ -62,4 +62,8 @@ int MLVBlenderGetMLVFeatherBottom(MLVBlender_t * Blender, int MLVIndex);
 void MLVBlenderSetMLVVisible(MLVBlender_t * Blender, int MLVIndex, int Visible);
 int MLVBlenderGetMLVVisible(MLVBlender_t * Blender, int MLVIndex);
 
+/* Difference blending */
+void MLVBlenderSetMLVDifferenceBlending(MLVBlender_t * Blender, int MLVIndex, int UseDifference);
+int MLVBlenderGetMLVDifferenceBlending(MLVBlender_t * Blender, int MLVIndex);
+
 #endif

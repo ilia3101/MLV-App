@@ -33,13 +33,14 @@ private:
         public:
 
         ModelColumns()
-        { add(col_file_name); add(col_visible); add(col_offset_x); add(col_offset_y);
-        add(col_crop_left); add(col_crop_right); add(col_crop_bottom); add(col_crop_top);
-        add(col_feather_left); add(col_feather_right); add(col_feather_bottom);
+        { add(col_file_name); add(col_visible); add(col_difference_blend); add(col_offset_x);
+        add(col_offset_y); add(col_crop_left); add(col_crop_right); add(col_crop_bottom);
+        add(col_crop_top); add(col_feather_left); add(col_feather_right); add(col_feather_bottom);
         add(col_feather_top); add(col_exposure); }
 
         Gtk::TreeModelColumn<Glib::ustring> col_file_name;
         Gtk::TreeModelColumn<bool> col_visible;
+        Gtk::TreeModelColumn<bool> col_difference_blend;
         Gtk::TreeModelColumn<int> col_offset_x;
         Gtk::TreeModelColumn<int> col_offset_y;
         Gtk::TreeModelColumn<int> col_crop_left;

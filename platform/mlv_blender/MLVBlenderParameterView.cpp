@@ -15,6 +15,7 @@ MLVBlenderParameterView::MLVBlenderParameterView() : Gtk::TreeView()
     this->set_model(this->m_refTreeModel);
     this->append_column("file", this->columns.col_file_name);
     this->append_column_editable("Visible", this->columns.col_visible);
+    this->append_column_editable("Difference", this->columns.col_difference_blend);
     this->append_column_editable("Offset X", this->columns.col_offset_x);
     this->append_column_editable("Offset Y", this->columns.col_offset_y);
     this->append_column_editable("Crop left", this->columns.col_crop_left);
@@ -44,6 +45,7 @@ void MLVBlenderParameterView::MyChangedSignal(const Gtk::TreeModel::Path& path, 
     if (listen_to_change)
     {
         MLVBlenderSetMLVVisible(blender, i, (bool)row[columns.col_visible]);
+        MLVBlenderSetMLVDifferenceBlending(blender, i, (bool)row[columns.col_difference_blend]);
         MLVBlenderSetMLVOffsetX(blender, i, (int)row[columns.col_offset_x]);
         MLVBlenderSetMLVOffsetY(blender, i, (int)row[columns.col_offset_y]);
         MLVBlenderSetMLVCropLeft(blender, i, (int)row[columns.col_crop_left]);
@@ -73,6 +75,7 @@ void MLVBlenderParameterView::UpdateFromMLVBlender(MLVBlender_t * MLVBlender)
         Gtk::TreeModel::Row row = *(m_refTreeModel->append());
         row[columns.col_file_name] = MLVBlenderGetMLVFileName(MLVBlender, i);
         row[columns.col_visible] = (bool)MLVBlenderGetMLVVisible(MLVBlender, i);
+        row[columns.col_difference_blend] = (bool)MLVBlenderGetMLVDifferenceBlending(MLVBlender, i);
         row[columns.col_offset_x] = MLVBlenderGetMLVOffsetX(MLVBlender, i);
         row[columns.col_offset_y] = MLVBlenderGetMLVOffsetY(MLVBlender, i);
         row[columns.col_crop_left] = MLVBlenderGetMLVCropLeft(MLVBlender, i);

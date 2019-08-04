@@ -23,6 +23,8 @@ typedef struct
 
     int visible;
 
+    int difference_blending;
+
     float exposure;
 
 } MLVBlender_mlv_t;
