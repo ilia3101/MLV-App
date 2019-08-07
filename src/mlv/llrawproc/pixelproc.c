@@ -1475,6 +1475,7 @@ mem_err:
 
 void reset_fpm_status(pixel_map * focus_pixel_map, int * fpm_status)
 {
+    if( !focus_pixel_map ) return;
     *fpm_status = 0;
     focus_pixel_map->count = 0;
     focus_pixel_map->capacity = 0;
@@ -1487,6 +1488,7 @@ void reset_fpm_status(pixel_map * focus_pixel_map, int * fpm_status)
 
 void reset_bpm_status(pixel_map * bad_pixel_map, int * bpm_status)
 {
+    if( !bad_pixel_map ) return;
     *bpm_status = 0;
     bad_pixel_map->count = 0;
     bad_pixel_map->capacity = 0;

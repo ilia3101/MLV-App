@@ -8654,6 +8654,7 @@ void MainWindow::selectDebayerAlgorithm()
         }
         ///@todo: ADD HERE OTHER CACHED DEBAYERS! AND ADD SOME SPECIAL TRICK FOR CACHING
     }
+    while( !m_pRenderThread->isIdle() ) QThread::msleep(1);
     llrpResetFpmStatus(m_pMlvObject);
     llrpResetBpmStatus(m_pMlvObject);
     llrpComputeStripesOn(m_pMlvObject);
