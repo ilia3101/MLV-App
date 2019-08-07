@@ -229,7 +229,8 @@ HEADERS += \
     ../../src/processing/rbfilter/rbf_wrapper.h \
     ../../src/processing/rbfilter/rbf.h \
     ../../src/processing/rbfilter/RBFilterPlain.h \
-    FpmInstaller.h
+    FpmInstaller.h \
+    avir/avir.h
 
 macx: HEADERS += \
     ../cocoa/avf_lib/avencoder.h \

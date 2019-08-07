@@ -103,7 +103,7 @@ ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, Scripting *scripting
     ui->comboBoxScaleAlgorithm->setCurrentIndex( scaleAlgo );
     ui->checkBoxHdrBlending->setChecked( hdrBlending );
 
-    //Disable resize for AVFoundation
+    //Disable some options for AVFoundation
     if( ui->comboBoxOption->currentText() == QString( "Apple AVFoundation" ) )
     {
         on_comboBoxOption_currentIndexChanged( QString( "Apple AVFoundation" ) );
@@ -439,13 +439,11 @@ void ExportSettingsDialog::on_checkBoxResize_toggled(bool checked)
     else ui->spinBoxHeight->setEnabled( false );
 }
 
-//Disable audio & resize for AVFoundation
+//Disable some options for AVFoundation
 void ExportSettingsDialog::on_comboBoxOption_currentIndexChanged(const QString &arg1)
 {
     if( arg1 == QString( "Apple AVFoundation" ) )
     {
-        ui->checkBoxResize->setChecked( false );
-        ui->checkBoxResize->setEnabled( false );
         ui->comboBoxSmoothing->setCurrentIndex( 0 );
         ui->comboBoxSmoothing->setEnabled( false );
         ui->label_Smoothing->setEnabled( false );

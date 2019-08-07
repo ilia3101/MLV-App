@@ -13,6 +13,7 @@
 #include <QMessageBox>
 #include <QSettings>
 #include <QDebug>
+#include "avir/avir.h"
 
 //Constructor
 SingleFrameExportDialog::SingleFrameExportDialog(QWidget *parent,
@@ -96,9 +97,18 @@ void SingleFrameExportDialog::exportViaQt()
     uint8_t *pRawImage = (uint8_t*)malloc( 3 * getMlvWidth(m_pMlvObject) * getMlvHeight(m_pMlvObject) * sizeof( uint8_t ) );
     getMlvProcessedFrame8( m_pMlvObject, m_frameNr, pRawImage, 1 );
 
-    QImage( ( unsigned char *) pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
-            .scaled( getMlvWidth(m_pMlvObject) * stretchX, getMlvHeight(m_pMlvObject) * stretchY,
-                     Qt::IgnoreAspectRatio, Qt::SmoothTransformation )
+    uint8_t * imgBufferScaled8;
+    imgBufferScaled8 = ( uint8_t* )malloc( getMlvWidth(m_pMlvObject) * stretchX * getMlvHeight(m_pMlvObject) * stretchY * 3 * sizeof( uint8_t ) );
+    avir::CImageResizer<> ImageResizer( 8 );
+    ImageResizer.resizeImage( pRawImage,
+                          getMlvWidth(m_pMlvObject),
+                          getMlvHeight(m_pMlvObject), 0,
+                          imgBufferScaled8,
+                          getMlvWidth(m_pMlvObject) * stretchX,
+                          getMlvHeight(m_pMlvObject) * stretchY,
+                          3, 0 );
+
+    QImage( ( unsigned char *) imgBufferScaled8, getMlvWidth(m_pMlvObject) * stretchX, getMlvHeight(m_pMlvObject) * stretchY, QImage::Format_RGB888 )
             .save( fileName, "png", -1 );
 
     free( pRawImage );

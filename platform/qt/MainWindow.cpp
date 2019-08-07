@@ -41,6 +41,7 @@
 #include "SingleFrameExportDialog.h"
 #include "FpmInstaller.h"
 #include "ScopesLabel.h"
+#include "avir/avir.h"
 
 #define APPNAME "MLV App"
 #define VERSION "1.8"
@@ -2693,9 +2694,61 @@ void MainWindow::startExportAVFoundation(QString fileName)
 #endif
     else avfCodec = AVF_CODEC_PRORES_4444;
 
+    //Dimension & scaling
+    uint16_t width = getMlvWidth(m_pMlvObject);
+    uint16_t height = getMlvHeight(m_pMlvObject);
+    bool scaled = false;
+    if( m_resizeFilterEnabled )
+    {
+        //Autocalc height
+        if( m_resizeFilterHeightLocked )
+        {
+            height = (double)m_resizeWidth / (double)getMlvWidth( m_pMlvObject )
+                    / m_exportQueue.first()->stretchFactorX()
+                    * m_exportQueue.first()->stretchFactorY()
+                    * (double)getMlvHeight( m_pMlvObject ) + 0.5;
+        }
+        else
+        {
+            height = m_resizeHeight;
+        }
+        width = m_resizeWidth;
+        scaled = true;
+    }
+    else if( m_exportQueue.first()->stretchFactorX() != 1.0
+          || m_exportQueue.first()->stretchFactorY() != 1.0 )
+    {
+        //Upscale only
+        if( m_exportQueue.first()->stretchFactorY() == STRETCH_V_033 )
+        {
+            width = getMlvWidth( m_pMlvObject ) * 3;
+            height = getMlvHeight( m_pMlvObject );
+        }
+        else
+        {
+            width = getMlvWidth( m_pMlvObject ) * m_exportQueue.first()->stretchFactorX();
+            height = getMlvHeight( m_pMlvObject ) * m_exportQueue.first()->stretchFactorY();
+        }
+        scaled = true;
+    }
+    if( m_codecProfile == CODEC_H264
+     || m_codecProfile == CODEC_H265 )
+    {
+        if( width != width + (width % 2) )
+        {
+            width += width % 2;
+            scaled = true;
+        }
+        if( height != height + (height % 2) )
+        {
+            height += height % 2;
+            scaled = true;
+        }
+    }
+
     //Init Encoder
-    AVEncoder_t * encoder = initAVEncoder( getMlvWidth( m_pMlvObject ),
-                                           getMlvHeight( m_pMlvObject ),
+    AVEncoder_t * encoder = initAVEncoder( width,
+                                           height,
                                            avfCodec,
                                            AVF_COLOURSPACE_SRGB,
                                            getFramerate() );
@@ -2706,6 +2759,10 @@ void MainWindow::startExportAVFoundation(QString fileName)
     uint32_t frameSize = getMlvWidth( m_pMlvObject ) * getMlvHeight( m_pMlvObject ) * 3;
     uint16_t * imgBuffer;
     imgBuffer = ( uint16_t* )malloc( frameSize * sizeof( uint16_t ) );
+    uint16_t * imgBufferScaled;
+    uint8_t * imgBufferScaled8;
+    if( m_codecProfile != CODEC_H264 ) imgBufferScaled = ( uint16_t* )malloc( width * height * 3 * sizeof( uint16_t ) );
+    else imgBufferScaled8 = ( uint8_t* )malloc( width * height * 3 * sizeof( uint8_t ) );
 
     //Encoder frames
     for( uint64_t frame = ( m_exportQueue.first()->cutIn() - 1 ); frame < m_exportQueue.first()->cutOut(); frame++ )
@@ -2714,12 +2771,42 @@ void MainWindow::startExportAVFoundation(QString fileName)
         if( m_codecProfile == CODEC_H264 )
         {
             getMlvProcessedFrame8( m_pMlvObject, frame, m_pRawImage, QThread::idealThreadCount() );
-            addFrameToVideoFile8bit( encoder, m_pRawImage );
+            if( scaled )
+            {
+                avir::CImageResizer<> ImageResizer( 8 );
+                ImageResizer.resizeImage( m_pRawImage,
+                                      getMlvWidth(m_pMlvObject),
+                                      getMlvHeight(m_pMlvObject), 0,
+                                      imgBufferScaled8,
+                                      width,
+                                      height,
+                                      3, 0 );
+                addFrameToVideoFile8bit( encoder, imgBufferScaled8 );
+            }
+            else
+            {
+                addFrameToVideoFile8bit( encoder, m_pRawImage );
+            }
         }
         else
         {
             getMlvProcessedFrame16( m_pMlvObject, frame, imgBuffer, QThread::idealThreadCount() );
-            addFrameToVideoFile( encoder, imgBuffer );
+            if( scaled )
+            {
+                avir::CImageResizer<> ImageResizer( 16 );
+                ImageResizer.resizeImage( imgBuffer,
+                                      getMlvWidth(m_pMlvObject),
+                                      getMlvHeight(m_pMlvObject), 0,
+                                      imgBufferScaled,
+                                      width,
+                                      height,
+                                      3, 0 );
+                addFrameToVideoFile( encoder, imgBufferScaled );
+            }
+            else
+            {
+                addFrameToVideoFile( encoder, imgBuffer );
+            }
         }
 
         //Set Status
@@ -2733,6 +2820,8 @@ void MainWindow::startExportAVFoundation(QString fileName)
     }
 
     //Clean up
+    if( m_codecProfile != CODEC_H264 ) free( imgBufferScaled );
+    else free( imgBufferScaled8 );
     free( imgBuffer );
     endWritingVideoFile(encoder);
     freeAVEncoder(encoder);
@@ -4875,32 +4964,34 @@ void MainWindow::on_actionAbout_triggered()
         QString pic = QString("<img width='128' height='112' align='right' src=\"data:image/png;base64,") + byteArray.toBase64() + "\"/>";
 
         QMessageBox::about( this, QString( "About %1" ).arg( APPNAME ),
-                                QString(
-                                  "<html>%1"
-                                  "<body><h3>%2</h3>"
-                                  " <p>%2 v%3</p>"
-                                  " <p>%4</p>"
-                                  " <p>See <a href='%5'>this site</a> for more information.</p>"
-                                  " <p>Darkstyle Copyright (c) 2017, <a href='%6'>Juergen Skrotzky</a> under MIT</p>"
-                                  " <p>Some icons by <a href='%7'>Double-J Design</a> under <a href='%8'>CC4.0</a></p>"
-                                  " <p>Autoupdater Copyright (c) 2016, <a href='%9'>Violet Giraffe</a> under MIT</p>"
-                                  " <p>Zhang-Wu LMMSE Image Demosaicking by Pascal Getreuer under <a href='%10'>BSD</a>.</p>"
-                                  " <p>QRecentFilesMenu Copyright (c) 2011 by Morgan Leborgne under <a href='%11'>MIT</a>.</p>"
-                                  " <p>Recursive bilateral filtering developed by Qingxiong Yang under <a href='%12'>MIT</a> and Ming under <a href='%13'>MIT</a>.</p>"
-                                  " </body></html>" )
-                                 .arg( pic ) //1
-                                 .arg( APPNAME ) //2
-                                 .arg( VERSION ) //3
-                                 .arg( "by Ilia3101, bouncyball, Danne & masc." ) //4
-                                 .arg( "https://github.com/ilia3101/MLV-App" ) //5
-                                 .arg( "https://github.com/Jorgen-VikingGod" ) //6
-                                 .arg( "http://www.doublejdesign.co.uk/" ) //7
-                                 .arg( "https://creativecommons.org/licenses/by/4.0/" ) //8
-                                 .arg( "https://github.com/VioletGiraffe/github-releases-autoupdater" ) //9
-                                 .arg( "http://www.opensource.org/licenses/bsd-license.html" ) //10
-                                 .arg( "https://github.com/mojocorp/QRecentFilesMenu/blob/master/LICENSE" ) //11
-                                 .arg( "https://github.com/ufoym/recursive-bf/blob/master/LICENSE" ) //12
-                                 .arg( "https://github.com/Fig1024/OP_RBF/blob/master/LICENSE" ) ); //13
+                                  QString(
+                                    "<html>%1"
+                                    "<body><h3>%2</h3>"
+                                    " <p>%2 v%3</p>"
+                                    " <p>%4</p>"
+                                    " <p>See <a href='%5'>this site</a> for more information.</p>"
+                                    " <p>Darkstyle Copyright (c) 2017, <a href='%6'>Juergen Skrotzky</a> under MIT</p>"
+                                    " <p>Some icons by <a href='%7'>Double-J Design</a> under <a href='%8'>CC4.0</a></p>"
+                                    " <p>Autoupdater Copyright (c) 2016, <a href='%9'>Violet Giraffe</a> under MIT</p>"
+                                    " <p>Zhang-Wu LMMSE Image Demosaicking by Pascal Getreuer under <a href='%10'>BSD</a>.</p>"
+                                    " <p>QRecentFilesMenu Copyright (c) 2011 by Morgan Leborgne under <a href='%11'>MIT</a>.</p>"
+                                    " <p>Recursive bilateral filtering developed by Qingxiong Yang under <a href='%12'>MIT</a> and Ming under <a href='%13'>MIT</a>.</p>"
+                                    " <p>AVIR image resizing algorithm designed by Aleksey Vaneev under <a href='%11'>MIT</a>.</p>"
+                                    " </body></html>" )
+                                   .arg( pic ) //1
+                                   .arg( APPNAME ) //2
+                                   .arg( VERSION ) //3
+                                   .arg( "by Ilia3101, bouncyball, Danne & masc." ) //4
+                                   .arg( "https://github.com/ilia3101/MLV-App" ) //5
+                                   .arg( "https://github.com/Jorgen-VikingGod" ) //6
+                                   .arg( "http://www.doublejdesign.co.uk/" ) //7
+                                   .arg( "https://creativecommons.org/licenses/by/4.0/" ) //8
+                                   .arg( "https://github.com/VioletGiraffe/github-releases-autoupdater" ) //9
+                                   .arg( "http://www.opensource.org/licenses/bsd-license.html" ) //10
+                                   .arg( "https://github.com/mojocorp/QRecentFilesMenu/blob/master/LICENSE" ) //11
+                                   .arg( "https://github.com/ufoym/recursive-bf/blob/master/LICENSE" ) //12
+                                   .arg( "https://github.com/Fig1024/OP_RBF/blob/master/LICENSE" ) //13
+                                   .arg( "https://github.com/avaneev/avir/blob/master/LICENSE" ) ); //14
 }
 
 //Qt Infobox
@@ -7662,10 +7753,36 @@ void MainWindow::drawFrameReady()
         }
         else
         {
-            m_pGraphicsItem->setPixmap( QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
-                                              .scaled( getMlvWidth(m_pMlvObject) * getHorizontalStretchFactor(false),
-                                                       getMlvHeight(m_pMlvObject) * getVerticalStretchFactor(false),
-                                                       Qt::IgnoreAspectRatio, mode) ) );
+            QPixmap pixmap;
+            //Qvir resize
+            if( mode == Qt::SmoothTransformation && m_resizeFilterAlgorithm >= SCALE_SINC )
+            {
+                uint8_t *scaledPic = (uint8_t*)malloc( 3 * getMlvWidth(m_pMlvObject) * getHorizontalStretchFactor(false)
+                                                         * getMlvHeight(m_pMlvObject) * getVerticalStretchFactor(false)
+                                                         * sizeof( uint8_t ) );
+                avir::CImageResizer<> ImageResizer( 8 );
+                ImageResizer.resizeImage( m_pRawImage,
+                                          getMlvWidth(m_pMlvObject),
+                                          getMlvHeight(m_pMlvObject), 0,
+                                          scaledPic,
+                                          getMlvWidth(m_pMlvObject) * getHorizontalStretchFactor(false),
+                                          getMlvHeight(m_pMlvObject) * getVerticalStretchFactor(false),
+                                          3, 0 );
+                pixmap = QPixmap::fromImage( QImage( ( unsigned char *) scaledPic,
+                                                     getMlvWidth(m_pMlvObject) * getHorizontalStretchFactor(false),
+                                                     getMlvHeight(m_pMlvObject) * getVerticalStretchFactor(false),
+                                                     QImage::Format_RGB888 ) );
+                free( scaledPic );
+            }
+            //Qt resize
+            else
+            {
+                pixmap = QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
+                                             .scaled( getMlvWidth(m_pMlvObject) * getHorizontalStretchFactor(false),
+                                                      getMlvHeight(m_pMlvObject) * getVerticalStretchFactor(false),
+                                                      Qt::IgnoreAspectRatio, mode) );
+            }
+            m_pGraphicsItem->setPixmap( pixmap );
             m_pScene->setSceneRect( 0, 0, getMlvWidth(m_pMlvObject) * getHorizontalStretchFactor(false), getMlvHeight(m_pMlvObject) * getVerticalStretchFactor(false) );
         }
     }
