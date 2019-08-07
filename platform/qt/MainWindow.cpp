@@ -2841,13 +2841,13 @@ void MainWindow::startExportAVFoundation(QString fileName)
         ffmpegAudioCommand.prepend( QString( "\"" ) );
 
         //Renaming needs time :P
-        QThread::msleep( 200 );
+        QThread::msleep( 1000 );
 
 #ifdef STDOUT_SILENT
         ffmpegAudioCommand.append( QString( " -loglevel 0" ) );
 #endif
 
-        ffmpegAudioCommand.append( QString( " -i \"%1\" -i \"%2\" -map 0:0 -map 1:0 -c copy \"%3\"" )
+        ffmpegAudioCommand.append( QString( " -y -i \"%1\" -i \"%2\" -map 0:0 -map 1:0 -c copy \"%3\"" )
                 .arg( tempFileName ).arg( wavFileName ).arg( fileName ) );
 
         QProcess ffmpegProc;
