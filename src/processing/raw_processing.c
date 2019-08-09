@@ -14,6 +14,7 @@
 #include "interpolation/spline_helper.h"
 #include "interpolation/cosine_interpolation.h"
 #include "rbfilter/rbf_wrapper.h"
+#include "sobel/sobel.h"
 
 /* Matrix functions which are useful */
 #include "../matrix/matrix.h"
@@ -908,6 +909,14 @@ void apply_processing_object( processingObject_t * processing,
 
     if (processingGetSharpening(processing) > 0.005)
     {
+        uint8_t maskOn = 0;
+        uint16_t maskIntensity = 15000;
+        uint16_t *gray,
+             *sobel_h_res,
+             *sobel_v_res,
+             *contour_img;
+        if( maskOn ) sobelFilter( inputImage, &gray, &sobel_h_res, &sobel_v_res, &contour_img, imageX, imageY );
+
         /* Avoid gaps in pixels if skipping pixels during sharpen */
         if (sharp_skip != 1) memcpy(outputImage, inputImage, img_s * sizeof(uint16_t));
     
@@ -928,6 +937,7 @@ void apply_processing_object( processingObject_t * processing,
             uint16_t * row = img + (y * rl); /* current row */
             uint16_t * p_row = img + ((y-1) * rl); /* previous */
             uint16_t * n_row = img + ((y+1) * rl); /* next */
+            uint16_t * cont_row = contour_img + (y * imageX);
 
             for (uint32_t x = 3+sharp_start; x < x_max; x+=sharp_skip)
             {
@@ -937,7 +947,19 @@ void apply_processing_object( processingObject_t * processing,
                               - kx[row[x-3]]
                               - kx[row[x+3]];
 
-                out_row[x] = LIMIT16(sharp);
+                if( maskOn )
+                {
+                    uint32_t x1 = x / 3;
+                    if( cont_row[x1] > maskIntensity ) cont_row[x1] = maskIntensity;
+                    out_row[x] = ( cont_row[x1] / (float)maskIntensity) * LIMIT16(sharp)
+                               + ( ( maskIntensity - cont_row[x1] ) / (float)maskIntensity ) * row[x];
+                    //Show mask
+                    //out_row[x] = LIMIT16(cont_row[x1]/(float)maskIntensity*65535.0);
+                }
+                else
+                {
+                    out_row[x] = LIMIT16(sharp);
+                }
             }
 
             /* Edge pixels (basically don't do any changes to them) */

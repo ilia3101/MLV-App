@@ -2841,7 +2841,7 @@ void MainWindow::startExportAVFoundation(QString fileName)
         ffmpegAudioCommand.prepend( QString( "\"" ) );
 
         //Renaming needs time :P
-        QThread::msleep( 1000 );
+        QThread::msleep( 10000 );
 
 #ifdef STDOUT_SILENT
         ffmpegAudioCommand.append( QString( " -loglevel 0" ) );
@@ -4976,7 +4976,8 @@ void MainWindow::on_actionAbout_triggered()
                                     " <p>Zhang-Wu LMMSE Image Demosaicking by Pascal Getreuer under <a href='%10'>BSD</a>.</p>"
                                     " <p>QRecentFilesMenu Copyright (c) 2011 by Morgan Leborgne under <a href='%11'>MIT</a>.</p>"
                                     " <p>Recursive bilateral filtering developed by Qingxiong Yang under <a href='%12'>MIT</a> and Ming under <a href='%13'>MIT</a>.</p>"
-                                    " <p>AVIR image resizing algorithm designed by Aleksey Vaneev under <a href='%11'>MIT</a>.</p>"
+                                    " <p>AVIR image resizing algorithm designed by Aleksey Vaneev under <a href='%14'>MIT</a>.</p>"
+                                    " <p>Sobel filter Copyright 2018 Pedro Melgueira under <a href='%15'>Apache 2.0</a>.</p>"
                                     " </body></html>" )
                                    .arg( pic ) //1
                                    .arg( APPNAME ) //2
@@ -4991,7 +4992,8 @@ void MainWindow::on_actionAbout_triggered()
                                    .arg( "https://github.com/mojocorp/QRecentFilesMenu/blob/master/LICENSE" ) //11
                                    .arg( "https://github.com/ufoym/recursive-bf/blob/master/LICENSE" ) //12
                                    .arg( "https://github.com/Fig1024/OP_RBF/blob/master/LICENSE" ) //13
-                                   .arg( "https://github.com/avaneev/avir/blob/master/LICENSE" ) ); //14
+                                   .arg( "https://github.com/avaneev/avir/blob/master/LICENSE" ) //14
+                                   .arg( "https://github.com/petermlm/SobelFilter/blob/master/LICENSE" ) ); //15
 }
 
 //Qt Infobox

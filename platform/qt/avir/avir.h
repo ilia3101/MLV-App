@@ -2041,6 +2041,7 @@ public:
 
 	virtual void addWorkload( CWorkload* const Workload )
 	{
+        (void*)Workload;
 	}
 
 	/**
