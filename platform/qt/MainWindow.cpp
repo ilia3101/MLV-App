@@ -2841,7 +2841,7 @@ void MainWindow::startExportAVFoundation(QString fileName)
         ffmpegAudioCommand.prepend( QString( "\"" ) );
 
         //Renaming needs time :P
-        QThread::msleep( 10000 );
+        QThread::msleep( 1000 );
 
 #ifdef STDOUT_SILENT
         ffmpegAudioCommand.append( QString( " -loglevel 0" ) );
