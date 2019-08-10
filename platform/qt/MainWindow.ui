@@ -216,6 +216,7 @@
     <addaction name="actionDropFrameMode"/>
     <addaction name="actionPlaybackPosition"/>
     <addaction name="menuDemosaicForPlayback"/>
+    <addaction name="actionBetterResizer"/>
     <addaction name="separator"/>
     <addaction name="actionZoomFit"/>
     <addaction name="actionZoom100"/>
@@ -9453,6 +9454,14 @@ QGroupBox::indicator:checked:disabled {
    </property>
    <property name="shortcut">
     <string>Alt+M</string>
+   </property>
+  </action>
+  <action name="actionBetterResizer">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Better Resizer for Viewer</string>
    </property>
   </action>
  </widget>

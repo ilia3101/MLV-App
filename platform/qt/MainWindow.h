@@ -350,6 +350,8 @@ private slots:
 
     void on_comboBoxDebayer_currentIndexChanged( int index );
 
+    void on_actionBetterResizer_triggered();
+
 private:
     Ui::MainWindow *ui;
     InfoDialog *m_pInfoDialog;

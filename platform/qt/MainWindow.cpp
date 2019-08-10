@@ -1444,6 +1444,7 @@ void MainWindow::readSettings()
     resizeDocks({ui->dockWidgetSession}, {set.value( "dockSessionSize", 130 ).toInt()}, Qt::Vertical);
     m_pRecentFilesMenu->restoreState( set.value("recentSessions").toByteArray() );
     ui->actionAskForSavingOnQuit->setChecked( set.value( "askForSavingOnQuit", true ).toBool() );
+    ui->actionBetterResizer->setChecked( set.value( "betterResizerViewer", false ).toBool() );
     int themeId = set.value( "themeId", 0 ).toInt();
     if( themeId == 0 )
     {
@@ -1510,6 +1511,7 @@ void MainWindow::writeSettings()
     else set.setValue( "dockSessionSize", ui->dockWidgetSession->width() );
     set.setValue( "recentSessions", m_pRecentFilesMenu->saveState() );
     set.setValue( "askForSavingOnQuit", ui->actionAskForSavingOnQuit->isChecked() );
+    set.setValue( "betterResizerViewer", ui->actionBetterResizer->isChecked() );
     if( ui->actionDarkThemeStandard->isChecked() ) set.setValue( "themeId", 0 );
     else set.setValue( "themeId", 1 );
 }
@@ -6523,6 +6525,7 @@ void MainWindow::pictureCustomContextMenuRequested(const QPoint &pos)
     myMenu.addAction( ui->actionZoom100 );
     myMenu.addSeparator();
     myMenu.addMenu( ui->menuDemosaicForPlayback );
+    myMenu.addAction( ui->actionBetterResizer );
     myMenu.addSeparator();
     myMenu.addAction( ui->actionShowZebras );
     if( ui->actionFullscreen->isChecked() )
@@ -7804,7 +7807,7 @@ void MainWindow::drawFrameReady()
         {
             QPixmap pixmap;
             //Qvir resize
-            if( mode == Qt::SmoothTransformation && m_resizeFilterAlgorithm >= SCALE_SINC )
+            if( mode == Qt::SmoothTransformation && ui->actionBetterResizer->isChecked() )
             {
                 uint8_t *scaledPic = (uint8_t*)malloc( 3 * getMlvWidth(m_pMlvObject) * getHorizontalStretchFactor(false)
                                                          * getMlvHeight(m_pMlvObject) * getVerticalStretchFactor(false)
@@ -8824,5 +8827,11 @@ void MainWindow::selectDebayerAlgorithm()
     llrpResetFpmStatus(m_pMlvObject);
     llrpResetBpmStatus(m_pMlvObject);
     llrpComputeStripesOn(m_pMlvObject);
+    m_frameChanged = true;
+}
+
+//Enable/Disable AVIR resizer in viewer
+void MainWindow::on_actionBetterResizer_triggered()
+{
     m_frameChanged = true;
 }

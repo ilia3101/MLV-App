@@ -114,6 +114,10 @@
 
 <p>This changes the demosaicing algorithm used for the viewer. The demosaicing algorithm is one of the most time consuming parts in the processing pipeline, depending on the chosen algorithm. On the other side preview quality also depends the chosen algorithm. The fastest algorithm is "Simple" and the (mostly) best algorithm is "AMaZE". In order to be able to see the clip as fast as possible with best quality, there is the option "AMaZE cached". If this option is chosen, the user has to wait, if status bar lable tells "Caching: active". If status bar lable switches again to "Caching: idle" the clip is loaded to RAM (depending on the length of the clip, the clip may be larger as the reserved memory) and can be watched.</p>
 
+<h3 id="betterresizerforviewer">Better Resizer for Viewer</h3>
+
+<p>When enabled AVIR resizer is used for the viewer, when stretching is used in transformation groupbox. When disabled an algorithm with lower quality but higher speed is used.</p>
+
 <h1 id="3demosaicingalgorithms">3. Demosaicing Algorithms</h1>
 
 <h3 id="none">None</h3>
