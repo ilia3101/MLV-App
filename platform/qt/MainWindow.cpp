@@ -1316,6 +1316,11 @@ void MainWindow::initGui( void )
     //Vidstab
    on_checkBoxVidstabEnable_toggled( false );
 
+   //Sharpen Mask is disabled by default
+   ui->label_ShMasking->setEnabled( false );
+   ui->label_ShMaskingText->setEnabled( false );
+   ui->horizontalSliderShMasking->setEnabled( false );
+
     //Reveal in Explorer
 #ifdef Q_OS_WIN
     ui->actionShowInFinder->setText( tr( "Reveal in Explorer" ) );
@@ -5179,6 +5184,12 @@ void MainWindow::on_horizontalSliderSharpen_valueChanged(int position)
     processingSetSharpening( m_pProcessingObject, position / 100.0 );
     ui->label_Sharpen->setText( QString("%1").arg( position ) );
     m_frameChanged = true;
+
+    bool enable = true;
+    if( position == 0 ) enable = false;
+    ui->label_ShMasking->setEnabled( enable );
+    ui->label_ShMaskingText->setEnabled( enable );
+    ui->horizontalSliderShMasking->setEnabled( enable );
 }
 
 void MainWindow::on_horizontalSliderShMasking_valueChanged(int position)
