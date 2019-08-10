@@ -88,6 +88,7 @@ private slots:
     void on_horizontalSliderShadows_valueChanged(int position);
     void on_horizontalSliderHighlights_valueChanged(int position);
     void on_horizontalSliderSharpen_valueChanged(int position);
+    void on_horizontalSliderShMasking_valueChanged(int position);
     void on_horizontalSliderChromaBlur_valueChanged(int position);
     void on_horizontalSliderDenoiseStrength_valueChanged(int position);
     void on_horizontalSliderRbfDenoiseLuma_valueChanged(int position);
@@ -128,6 +129,7 @@ private slots:
     void on_horizontalSliderShadows_doubleClicked();
     void on_horizontalSliderHighlights_doubleClicked();
     void on_horizontalSliderSharpen_doubleClicked();
+    void on_horizontalSliderShMasking_doubleClicked();
     void on_horizontalSliderChromaBlur_doubleClicked();
     void on_horizontalSliderDenoiseStrength_doubleClicked();
     void on_horizontalSliderRbfDenoiseLuma_doubleClicked();
@@ -219,6 +221,7 @@ private slots:
     void on_label_ShadowsVal_doubleClicked( void );
     void on_label_HighlightsVal_doubleClicked( void );
     void on_label_Sharpen_doubleClicked( void );
+    void on_label_ShMasking_doubleClicked( void );
     void on_label_ChromaBlur_doubleClicked( void );
     void on_label_DenoiseStrength_doubleClicked( void );
     void on_label_RbfDenoiseLuma_doubleClicked( void );

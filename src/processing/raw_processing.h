@@ -87,7 +87,8 @@ void processingSetSharpening(processingObject_t * processing, double sharpen);
 /* Set direction bias... 0=equal, -1=horizontal, 1=vertical */
 void processingSetSharpeningBias(processingObject_t * processing, double bias);
 #define processingGetSharpeningBias(processing) (processing)->sharpen_bias
-
+/* Set sharpen masking, 0..100 */
+#define processingSetSharpenMasking(processing, value) (processing)->sh_masking = (value)
 
 
 /* 3-way correction, range of saturation and hue is 0.0-1.0 (Currently not doing anything) */

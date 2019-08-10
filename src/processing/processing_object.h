@@ -149,6 +149,7 @@ typedef struct {
     /* Sharpen: 0.0-1.0 range; default 0 */
     double     sharpen;
     double     sharpen_bias; /* 0=equal, -1=horizontal, 1=vertical */
+    uint8_t    sh_masking; /*0..100, no mask .. full mask*/
 
     /* For whitebalance */
     double     wb_multipliers[3];

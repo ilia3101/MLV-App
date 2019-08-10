@@ -3290,6 +3290,11 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
             receipt->setSharpen( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
+        else if( Rxml->isStartElement() && Rxml->name() == "sharpenMasking" )
+        {
+            receipt->setShMasking( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
         else if( Rxml->isStartElement() && Rxml->name() == "chromaBlur" )
         {
             receipt->setChromaBlur( Rxml->readElementText().toInt() );
@@ -3624,6 +3629,7 @@ void MainWindow::writeXmlElementsToFile(QXmlStreamWriter *xmlWriter, ReceiptSett
     xmlWriter->writeTextElement( "gradientLength",          QString( "%1" ).arg( receipt->gradientLength() ) );
     xmlWriter->writeTextElement( "gradientAngle",           QString( "%1" ).arg( receipt->gradientAngle() ) );
     xmlWriter->writeTextElement( "sharpen",                 QString( "%1" ).arg( receipt->sharpen() ) );
+    xmlWriter->writeTextElement( "sharpenMasking",          QString( "%1" ).arg( receipt->shMasking() ) );
     xmlWriter->writeTextElement( "chromaBlur",              QString( "%1" ).arg( receipt->chromaBlur() ) );
     xmlWriter->writeTextElement( "highlightReconstruction", QString( "%1" ).arg( receipt->isHighlightReconstruction() ) );
     xmlWriter->writeTextElement( "camMatrixUsed",           QString( "%1" ).arg( receipt->camMatrixUsed() ) );
@@ -3830,6 +3836,7 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     ui->spinBoxGradientLength->setValue( receipt->gradientLength() );
 
     ui->horizontalSliderSharpen->setValue( receipt->sharpen() );
+    ui->horizontalSliderShMasking->setValue( receipt->shMasking() );
     ui->horizontalSliderChromaBlur->setValue( receipt->chromaBlur() );
 
     ui->checkBoxHighLightReconstruction->setChecked( receipt->isHighlightReconstruction() );
@@ -4040,6 +4047,7 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     receipt->setGradientAngle( ui->dialGradientAngle->value() );
 
     receipt->setSharpen( ui->horizontalSliderSharpen->value() );
+    receipt->setShMasking( ui->horizontalSliderShMasking->value() );
     receipt->setChromaBlur( ui->horizontalSliderChromaBlur->value() );
     receipt->setHighlightReconstruction( ui->checkBoxHighLightReconstruction->isChecked() );
     receipt->setCamMatrixUsed( ui->comboBoxUseCameraMatrix->currentIndex() );
@@ -4148,7 +4156,11 @@ void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings 
         receiptTarget->setGradientAngle( receiptSource->gradientAngle() );
     }
 
-    if( paste && cdui->checkBoxSharpen->isChecked() )    receiptTarget->setSharpen( receiptSource->sharpen() );
+    if( paste && cdui->checkBoxSharpen->isChecked() )
+    {
+        receiptTarget->setSharpen( receiptSource->sharpen() );
+        receiptTarget->setShMasking( receiptSource->shMasking() );
+    }
     if( paste && cdui->checkBoxChromaBlur->isChecked() ) receiptTarget->setChromaBlur( receiptSource->chromaBlur() );
     if( paste && cdui->checkBoxHighlightReconstruction->isChecked() ) receiptTarget->setHighlightReconstruction( receiptSource->isHighlightReconstruction() );
     if( paste && cdui->checkBoxCameraMatrix->isChecked() ) receiptTarget->setCamMatrixUsed( receiptSource->camMatrixUsed() );
@@ -4315,6 +4327,7 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     receipt->setGradientAngle( m_pSessionReceipts.at( row )->gradientAngle() );
 
     receipt->setSharpen( m_pSessionReceipts.at( row )->sharpen() );
+    receipt->setShMasking( m_pSessionReceipts.at( row )->shMasking() );
     receipt->setChromaBlur( m_pSessionReceipts.at( row )->chromaBlur() );
     receipt->setHighlightReconstruction( m_pSessionReceipts.at( row )->isHighlightReconstruction() );
     receipt->setCamMatrixUsed( m_pSessionReceipts.at( row )->camMatrixUsed() );
@@ -5168,6 +5181,13 @@ void MainWindow::on_horizontalSliderSharpen_valueChanged(int position)
     m_frameChanged = true;
 }
 
+void MainWindow::on_horizontalSliderShMasking_valueChanged(int position)
+{
+    processingSetSharpenMasking( m_pProcessingObject, position );
+    ui->label_ShMasking->setText( QString("%1").arg( position ) );
+    m_frameChanged = true;
+}
+
 void MainWindow::on_horizontalSliderChromaBlur_valueChanged(int position)
 {
     processingSetChromaBlurRadius( m_pProcessingObject, position );
@@ -5506,6 +5526,13 @@ void MainWindow::on_horizontalSliderSharpen_doubleClicked()
 {
     ReceiptSettings *sliders = new ReceiptSettings(); //default
     ui->horizontalSliderSharpen->setValue( sliders->sharpen() );
+    delete sliders;
+}
+
+void MainWindow::on_horizontalSliderShMasking_doubleClicked()
+{
+    ReceiptSettings *sliders = new ReceiptSettings(); //default
+    ui->horizontalSliderShMasking->setValue( sliders->shMasking() );
     delete sliders;
 }
 
@@ -6671,6 +6698,15 @@ void MainWindow::on_label_Sharpen_doubleClicked()
     editSlider.autoSetup( ui->horizontalSliderSharpen, ui->label_Sharpen, 1.0, 0, 1.0 );
     editSlider.exec();
     ui->horizontalSliderSharpen->setValue( editSlider.getValue() );
+}
+
+//DoubleClick on Sharpen Masking Label
+void MainWindow::on_label_ShMasking_doubleClicked()
+{
+    EditSliderValueDialog editSlider;
+    editSlider.autoSetup( ui->horizontalSliderShMasking, ui->label_ShMasking, 1.0, 0, 1.0 );
+    editSlider.exec();
+    ui->horizontalSliderShMasking->setValue( editSlider.getValue() );
 }
 
 //DoubleClick on ChromaBlur Label

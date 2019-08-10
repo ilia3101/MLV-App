@@ -909,13 +909,12 @@ void apply_processing_object( processingObject_t * processing,
 
     if (processingGetSharpening(processing) > 0.005)
     {
-        uint8_t maskOn = 0;
-        uint16_t maskIntensity = 15000;
+        /* Use sobel filter to create a edge mask */
         uint16_t *gray,
              *sobel_h_res,
              *sobel_v_res,
              *contour_img;
-        if( maskOn ) sobelFilter( inputImage, &gray, &sobel_h_res, &sobel_v_res, &contour_img, imageX, imageY );
+        if( processing->sh_masking > 0 ) sobelFilter( inputImage, &gray, &sobel_h_res, &sobel_v_res, &contour_img, imageX, imageY );
 
         /* Avoid gaps in pixels if skipping pixels during sharpen */
         if (sharp_skip != 1) memcpy(outputImage, inputImage, img_s * sizeof(uint16_t));
@@ -947,15 +946,21 @@ void apply_processing_object( processingObject_t * processing,
                               - kx[row[x-3]]
                               - kx[row[x+3]];
 
-                if( maskOn )
+                /* use the edge mask for sharpening only edges */
+                if( processing->sh_masking > 0 )
                 {
                     uint32_t x1 = x / 3;
-                    if( cont_row[x1] > maskIntensity ) cont_row[x1] = maskIntensity;
-                    out_row[x] = ( cont_row[x1] / (float)maskIntensity) * LIMIT16(sharp)
-                               + ( ( maskIntensity - cont_row[x1] ) / (float)maskIntensity ) * row[x];
-                    //Show mask
-                    //out_row[x] = LIMIT16(cont_row[x1]/(float)maskIntensity*65535.0);
+                    /* more contrast & brightness for mask */
+                    uint32_t maskIntensity = 15000;
+                    uint32_t cont = cont_row[x1] + (100-(uint32_t)processing->sh_masking) * 150;
+                    if( cont > maskIntensity ) cont = maskIntensity;
+                    /* calc output in dependency to mask slider */
+                    out_row[x] = LIMIT16( ( cont / (float)maskIntensity) * LIMIT16(sharp)
+                                      + ( ( maskIntensity - cont ) / (float)maskIntensity ) * row[x] );
+                    /* Show mask */
+                    //out_row[x] = LIMIT16(cont/(float)maskIntensity*65535.0);
                 }
+                /* sharpen all */
                 else
                 {
                     out_row[x] = LIMIT16(sharp);

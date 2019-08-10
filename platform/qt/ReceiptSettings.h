@@ -46,6 +46,7 @@ public:
     void setGradientAngle( int value ){m_gradientAngle = value;}
 
     void setSharpen( int value )              {m_sharpen = value;}
+    void setShMasking( int value )            {m_shMasking = value;}
     void setChromaBlur( int value )           {m_chromaBlur = value;}
     void setDenoiserWindow( int value )       {m_denoiserWindow = value;}
     void setDenoiserStrength( int value )     {m_denoiserStrength = value;}
@@ -141,6 +142,7 @@ public:
     int gradientAngle( void ){return m_gradientAngle;}
 
     int sharpen( void )    {return m_sharpen;}
+    int shMasking( void )  {return m_shMasking;}
     int chromaBlur( void ) {return m_chromaBlur;}
     int denoiserWindow( void ){return m_denoiserWindow;}
     int denoiserStrength( void ){return m_denoiserStrength;}
@@ -241,6 +243,7 @@ private:
     int m_caBlue;
 
     int m_sharpen;
+    int m_shMasking;
     int m_chromaBlur;
     int m_denoiserWindow;
     int m_denoiserStrength;

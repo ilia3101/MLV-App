@@ -40,6 +40,7 @@ ReceiptSettings::ReceiptSettings()
     m_gradientAngle = 0;
 
     m_sharpen = 0;
+    m_shMasking = 0;
     m_chromaBlur = 0;
     m_denoiserWindow = 3;
     m_denoiserStrength = 0;
