@@ -42,6 +42,7 @@
 #include "FpmInstaller.h"
 #include "ScopesLabel.h"
 #include "avir/avir.h"
+#include "MoveToTrash.h"
 
 #define APPNAME "MLV App"
 #define VERSION "1.8"
@@ -6456,7 +6457,7 @@ void MainWindow::on_listWidgetSession_customContextMenuRequested(const QPoint &p
         else if( ui->listWidgetSession->selectedItems().size() > 1 )
         {
             myMenu.addAction( ui->actionPasteReceipt );
-            myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Delete-icon.png" ), "Delete Selected File from Session",  this, SLOT( deleteFileFromSession() ) );
+            myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Delete-icon.png" ), "Delete Selected Files from Session",  this, SLOT( deleteFileFromSession() ) );
             myMenu.addSeparator();
         }
     }
@@ -6470,10 +6471,20 @@ void MainWindow::deleteFileFromSession( void )
 {
     //Save slider receipt
     setReceipt( m_pSessionReceipts.at( m_lastActiveClipInSession ) );
+
+    //Ask for options
+    int delFile = QMessageBox::question( this, tr( "%1 - Remove clip" ).arg( APPNAME ), tr( "Remove clip from session, or delete clip from disk?" ), tr( "Remove" ), tr( "Delete from Disk" ), tr( "Abort" ) );
+    if( delFile == 2 ) return; //Abort
+
     //If multiple selection is on, we need to erase all selected items
     for( int i = ui->listWidgetSession->selectedItems().size(); i > 0; i-- )
     {
         int row = ui->listWidgetSession->row( ui->listWidgetSession->selectedItems().at( i - 1 ) );
+        //Delete file from disk when wanted
+        if( delFile == 1 )
+        {
+            if( MoveToTrash( m_pSessionReceipts.at(row)->fileName() ) ) QMessageBox::critical( this, tr( "%1 - Delete clip from disk" ).arg( APPNAME ), tr( "Delete clip failed!" ) );
+        }
         //Remove item from Session List
         delete ui->listWidgetSession->selectedItems().at( i - 1 );
         //Remove slider memory

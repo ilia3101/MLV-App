@@ -138,7 +138,8 @@ SOURCES += \
     HueVsDiagram.cpp \
     ../../src/processing/rbfilter/RBFilterPlain.cpp \
     ../../src/debayer/wb_conversion.c \
-    ../../src/processing/sobel/sobel.c
+    ../../src/processing/sobel/sobel.c \
+    MoveToTrash.cpp
 
 macx: SOURCES += ../cocoa/avf_lib/avf_lib.m
 
@@ -232,7 +233,8 @@ HEADERS += \
     ../../src/processing/rbfilter/RBFilterPlain.h \
     FpmInstaller.h \
     ../../src/processing/sobel/sobel.h \
-    avir/avir.h
+    avir/avir.h \
+    MoveToTrash.h
 
 macx: HEADERS += \
     ../cocoa/avf_lib/avencoder.h \
