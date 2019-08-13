@@ -139,7 +139,8 @@ SOURCES += \
     ../../src/processing/rbfilter/RBFilterPlain.cpp \
     ../../src/debayer/wb_conversion.c \
     ../../src/processing/sobel/sobel.c \
-    MoveToTrash.cpp
+    MoveToTrash.cpp \
+    OverwriteListDialog.cpp
 
 macx: SOURCES += ../cocoa/avf_lib/avf_lib.m
 
@@ -234,7 +235,8 @@ HEADERS += \
     FpmInstaller.h \
     ../../src/processing/sobel/sobel.h \
     avir/avir.h \
-    MoveToTrash.h
+    MoveToTrash.h \
+    OverwriteListDialog.h
 
 macx: HEADERS += \
     ../cocoa/avf_lib/avencoder.h \
@@ -252,7 +254,8 @@ FORMS += \
     FcpxmlSelectDialog.ui \
     ReceiptCopyMaskDialog.ui \
     UserManualDialog.ui \
-    SingleFrameExportDialog.ui
+    SingleFrameExportDialog.ui \
+    OverwriteListDialog.ui
 
 RESOURCES += \
     ressources.qrc \

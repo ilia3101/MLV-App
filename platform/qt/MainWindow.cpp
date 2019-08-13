@@ -43,6 +43,7 @@
 #include "ScopesLabel.h"
 #include "avir/avir.h"
 #include "MoveToTrash.h"
+#include "OverwriteListDialog.h"
 
 #define APPNAME "MLV App"
 #define VERSION "1.8"
@@ -5840,6 +5841,29 @@ void MainWindow::on_actionExport_triggered()
                                                           | QFileDialog::DontResolveSymlinks);
 
         if( folderName.length() == 0 ) return;
+
+        QStringList overwriteList;
+        for( int row = 0; row < ui->listWidgetSession->count(); row++ )
+        {
+            if( !ui->listWidgetSession->item( row )->isSelected() ) continue;
+            QString fileName = ui->listWidgetSession->item( row )->text().replace( ".mlv", fileEnding, Qt::CaseInsensitive );
+            fileName.prepend( "/" );
+            fileName.prepend( folderName );
+
+            if( QFileInfo( fileName ).exists() ) overwriteList.append( fileName );
+        }
+        if( !overwriteList.empty() )
+        {
+            //qDebug() << "Files will be overwritten:" << overwriteList;
+            OverwriteListDialog *listDialog = new OverwriteListDialog( this );
+            listDialog->ui->listWidget->addItems( overwriteList );
+            if( !listDialog->exec() )
+            {
+                delete listDialog;
+                return;
+            }
+            delete listDialog;
+        }
 
         //Save last path for next time
         m_lastExportPath = folderName;
