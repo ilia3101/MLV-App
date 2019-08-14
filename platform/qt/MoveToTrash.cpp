@@ -29,8 +29,6 @@ int MoveToTrash( QString fileName )
     int status = system( command.toLatin1().data() );
     //qDebug() << "Move file to trash status:" << status;
     return status;
-#else
-    return 1; //to be removed...
 #endif
 /*
     //########################## WINDOWS ##########################
@@ -56,79 +54,35 @@ int MoveToTrash( QString fileName )
     }
     return rv;
 #endif
-
+*/
     //########################## LINUX ##########################
 #ifdef Q_OS_LINUX
 #ifdef QT_GUI_LIB
-    static bool TrashInitialized = false;
-    static QString TrashPath;
-    static QString TrashPathInfo;
-    static QString TrashPathFiles;
-    if( !TrashInitialized ){
-        QStringList paths;
-        const char* xdg_data_home = getenv( "XDG_DATA_HOME" );
-        if( xdg_data_home ){
-            qDebug() << "XDG_DATA_HOME not yet tested";
-            QString xdgTrash( xdg_data_home );
-            paths.append( xdgTrash + "/Trash" );
-        }
-        QString home = QStandardPaths::writableLocation( QStandardPaths::HomeLocation );
-        paths.append( home + "/.local/share/Trash" );
-        paths.append( home + "/.trash" );
-        foreach( QString path, paths ){
-            if( TrashPath.isEmpty() ){
-                QDir dir( path );
-                if( dir.exists() ){
-                    TrashPath = path;
-                }
-            }
-        }
-        if( TrashPath.isEmpty() )
-            return 1;
-            //throw Exception( "Cant detect trash folder" );
-        TrashPathInfo = TrashPath + "/info";
-        TrashPathFiles = TrashPath + "/files";
-        if( !QDir( TrashPathInfo ).exists() || !QDir( TrashPathFiles ).exists() )
-            return 2;
-            //throw Exception( "Trash doesnt looks like FreeDesktop.org Trash specification" );
-        TrashInitialized = true;
-    }
-    QFileInfo original( fileName );
-    if( !original.exists() )
-        return 3;
-        //throw Exception( "File doesnt exists, cant move to trash" );
-    QString info;
-    info += "[Trash Info]\nPath=";
-    info += original.absoluteFilePath();
-    info += "\nDeletionDate=";
-    info += QDateTime::currentDateTime().toString("yyyy-MM-ddThh:mm:ss.zzzZ");
-    info += "\n";
-    QString trashname = original.fileName();
-    QString infopath = TrashPathInfo + "/" + trashname + ".trashinfo";
-    QString filepath = TrashPathFiles + "/" + trashname;
-    int nr = 1;
-    while( QFileInfo( infopath ).exists() || QFileInfo( filepath ).exists() ){
-        nr++;
-        trashname = original.baseName() + "." + QString::number( nr );
-        if( !original.completeSuffix().isEmpty() ){
-            trashname += QString( "." ) + original.completeSuffix();
-        }
-        infopath = TrashPathInfo + "/" + trashname + ".trashinfo";
-        filepath = TrashPathFiles + "/" + trashname;
-    }
-    QDir dir;
-    if( !dir.rename( original.absoluteFilePath(), filepath ) ){
-        return 4;
-        //throw Exception( "move to trash failed" );
-    }
-    File infofile;
-    infofile.createUtf8( infopath, info );
+    QFileInfo fileInfo = QFileInfo( fileName );
+
+    QDateTime currentTime(QDateTime::currentDateTime());    // save System time
+
+    QString trashFilePath=QDir::homePath()+"/.local/share/Trash/files/";    // trash file path contain delete files
+    QString trashInfoPath=QDir::homePath()+"/.local/share/Trash/info/";     // trash info path contain delete files information
+
+    // create file format for trash info file----- START
+    QFile infoFile(trashInfoPath+fileInfo.completeBaseName()+"."+fileInfo.completeSuffix()+".trashinfo");     //filename+extension+.trashinfo //  create file information file in /.local/share/Trash/info/ folder
+    infoFile.open(QIODevice::ReadWrite);
+    QTextStream stream(&infoFile);         // for write data on open file
+    stream<<"[Trash Info]"<<endl;
+    stream<<"Path="+QString(QUrl::toPercentEncoding(fileInfo.absoluteFilePath(),"~_-./"))<<endl;     // convert path string in percentage decoding scheme string
+    stream<<"DeletionDate="+currentTime.toString("yyyy-MM-dd")+"T"+currentTime.toString("hh:mm:ss")<<endl;      // get date and time format YYYY-MM-DDThh:mm:ss
+    infoFile.close();
+
+    // create info file format of trash file----- END
+    QDir file;
+    file.rename(fileInfo.absoluteFilePath(),trashFilePath+fileInfo.completeBaseName()+"."+fileInfo.completeSuffix());  // rename(file old path, file trash path)
+
     return 0;
 #else
     Q_UNUSED( fileName );
     //throw Exception( "Trash in server-mode not supported" );
-    return 5;
+    return 1;
 #endif
 #endif
-*/
 }
