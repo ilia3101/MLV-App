@@ -6507,7 +6507,16 @@ void MainWindow::deleteFileFromSession( void )
         //Delete file from disk when wanted
         if( delFile == 1 )
         {
+            //MLV
             if( MoveToTrash( m_pSessionReceipts.at(row)->fileName() ) ) QMessageBox::critical( this, tr( "%1 - Delete clip from disk" ).arg( APPNAME ), tr( "Delete clip failed!" ) );
+            //MAPP
+            QString mappName = m_pSessionReceipts.at(row)->fileName();
+            mappName.chop( 4 );
+            mappName.append( ".MAPP" );
+            if( QFileInfo( mappName ).exists() )
+            {
+                if( MoveToTrash( mappName ) ) QMessageBox::critical( this, tr( "%1 - Delete MAPP file from disk" ).arg( APPNAME ), tr( "Delete MAPP file failed!" ) );
+            }
         }
         //Remove item from Session List
         delete ui->listWidgetSession->selectedItems().at( i - 1 );
