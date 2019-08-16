@@ -30,9 +30,9 @@ int MoveToTrash( QString fileName )
     //qDebug() << "Move file to trash status:" << status;
     return status;
 #endif
-/*
+
     //########################## WINDOWS ##########################
-#ifdef !Q_OS_WIN
+#ifdef Q_OS_WIN
     QFileInfo fileinfo( fileName );
     if( !fileinfo.exists() )
         return 1;
@@ -49,12 +49,12 @@ int MoveToTrash( QString fileName )
     fileop.fFlags = FOF_ALLOWUNDO | FOF_NOCONFIRMATION | FOF_NOERRORUI | FOF_SILENT;
     int rv = SHFileOperation( &fileop );
     if( 0 != rv ){
-        qDebug() << rv << QString::number( rv ).toInt( 0, 8 );
+        qDebug() << "rv" << rv << QString::number( rv ).toInt( 0, 8 );
         //throw OdtCore::Exception( "move to trash failed" );
     }
     return rv;
 #endif
-*/
+
     //########################## LINUX ##########################
 #ifdef Q_OS_LINUX
 #ifdef QT_GUI_LIB
