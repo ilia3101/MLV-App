@@ -6508,6 +6508,12 @@ void MainWindow::deleteFileFromSession( void )
         if( delFile == 1 )
         {
             //MLV
+#ifdef Q_OS_WIN //On windows the file has to be closed before beeing able to move to trash
+            m_fileLoaded = false;
+            m_dontDraw = true;
+            freeMlvObject( m_pMlvObject );
+            m_pMlvObject = initMlvObject();
+#endif
             if( MoveToTrash( m_pSessionReceipts.at(row)->fileName() ) ) QMessageBox::critical( this, tr( "%1 - Delete clip from disk" ).arg( APPNAME ), tr( "Delete clip failed!" ) );
             //MAPP
             QString mappName = m_pSessionReceipts.at(row)->fileName();
