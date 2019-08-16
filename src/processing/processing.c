@@ -76,12 +76,12 @@ double SonySLogTonemap(double x) { return (x >= 0.01125000) ? (420.0 + log10((x 
 float SonySLogTonemap_f(float x) { return (x >= 0.01125000f) ? (420.0f + log10f((x + 0.01f) / (0.18f + 0.01f)) * 261.5f) / 1023.0f : (x * (171.2102946929f - 95.0f) / 0.01125000f + 95.0f) / 1023.0f; }
 
 /* sRGB */
-double sRGBTonemap(double x) { return x < 0.0031308 ? x * 12.92 : (1.055 * pow(x, 1.0 / 2.4)) -0.055; }
-float sRGBTonemap_f(float x) { return x < 0.0031308f ? x * 12.92f : (1.055f * powf(x, 1.0f / 2.4f)) -0.055f; }
+double sRGBTransferFunction(double x) { return x < 0.0031308 ? x * 12.92 : (1.055 * pow(x, 1.0 / 2.4)) -0.055; }
+float sRGBTransferFunction_f(float x) { return x < 0.0031308f ? x * 12.92f : (1.055f * powf(x, 1.0f / 2.4f)) -0.055f; }
 
 /* rec709 */
-double Rec709Tonemap(double x) { return x <= 0.018 ? (x * 4.5) : 1.099 * pow( x, (0.45) ) - 0.099; }
-float Rec709Tonemap_f(float x) { return x <= 0.018f ? (x * 4.5f) : 1.099f * powf( x, (0.45f) ) - 0.099f; }
+double Rec709TransferFunction(double x) { return x <= 0.018 ? (x * 4.5) : 1.099 * pow( x, (0.45) ) - 0.099; }
+float Rec709TransferFunction_f(float x) { return x <= 0.018f ? (x * 4.5f) : 1.099f * powf( x, (0.45f) ) - 0.099f; }
 
 /* BMDFilm via LUT */
 double BmdFilmTonemap(double x)

@@ -8,7 +8,7 @@ static image_profile_t default_image_profiles[] =
             .tonemapping = 0
         },
         .tone_mapping_function = NULL,
-        .gamma_power = STANDARD_GAMMA,
+        .gamma_power = 3.15,
         /* xy chromacity is unused right now so not filled in... */
         .xy_chromaticity = {
             .red = {0,0},
@@ -24,7 +24,7 @@ static image_profile_t default_image_profiles[] =
             .tonemapping = 1
         },
         .tone_mapping_function = &ReinhardTonemap,
-        .gamma_power = STANDARD_GAMMA,
+        .gamma_power = 3.15,
         .xy_chromaticity = {
             .red = {0,0},
             .green = {0,0},
@@ -39,7 +39,7 @@ static image_profile_t default_image_profiles[] =
             .tonemapping = 1
         },
         .tone_mapping_function = &TangentTonemap,
-        .gamma_power = STANDARD_GAMMA*1.1,
+        .gamma_power = 3.465,
         .xy_chromaticity = {
             .red = {0,0},
             .green = {0,0},
@@ -113,7 +113,7 @@ static image_profile_t default_image_profiles[] =
             .curves = 0,
             .tonemapping = 1
         },
-        .tone_mapping_function = &sRGBTonemap,
+        .tone_mapping_function = &sRGBTransferFunction,
         .gamma_power = 1.0,
         .xy_chromaticity = {
             .red = {0,0},
@@ -128,7 +128,7 @@ static image_profile_t default_image_profiles[] =
             .curves = 0,
             .tonemapping = 1
         },
-        .tone_mapping_function = &Rec709Tonemap,
+        .tone_mapping_function = &Rec709TransferFunction,
         .gamma_power = 1.0,
         .xy_chromaticity = {
             .red = {0,0},

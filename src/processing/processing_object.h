@@ -141,7 +141,7 @@ typedef struct {
     double     midtone_sat;
     double     shadow_sat;
 
-    /* Gamma should be ~2.2 technically, but highger values look ok too */
+    /* Gamma power, applied after "tonemapping" function */
     double     gamma_power;
     /* Limited to 0.0 - 0.6 range */
     double     lighten;
