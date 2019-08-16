@@ -10,7 +10,7 @@ processingObject_t * initProcessingObject();
 /* Opposite of the first fucntion */
 void freeProcessingObject(processingObject_t * processing);
 
-
+void processingSetGamut(processingObject_t * processing);
 
 /* Set one of default image profiles */
 void processingSetImageProfile(processingObject_t * processing, int imageProfile);
