@@ -146,7 +146,7 @@ processingObject_t * initProcessingObject()
     processingSetRbfDenoiserChroma(processing, 0);
     processingSetRbfDenoiserRange(processing, 40);
     processingUseCamMatrix(processing);
-    processingDontAllowCreativeAdjustments(processing);
+    processingAllowCreativeAdjustments(processing);
     processingSetGCurve(processing, 0, NULL, NULL, 0);
     processingSetGCurve(processing, 0, NULL, NULL, 1);
     processingSetGCurve(processing, 0, NULL, NULL, 2);
@@ -155,6 +155,14 @@ processingObject_t * initProcessingObject()
     processingSetHueVsCurves(processing, 0, NULL, NULL, 1);
     processingSetHueVsCurves(processing, 0, NULL, NULL, 2);
     processingSetVignetteStrength(processing, 0);
+
+    /* Colour default parameters */
+    processingSetGamut(processing, GAMUT_Rec709);
+    processingSetTonemappingFunction(processing, TONEMAP_Reinhard);
+    processingSetGamma(processing, 3.15);
+    processingSetGammaGradient(processing, 3.15);
+    processingUseCamMatrix(processing);
+    processingSetImageProfile(processing, PROFILE_TONEMAPPED);
 
     /* Just in case (should be done tho already) */
     processing_update_matrices(processing);
@@ -166,32 +174,44 @@ processingObject_t * initProcessingObject()
     return processing;
 }
 
+
+void processingSetGamut(processingObject_t * processing, int gamut)
+{
+    processing->colour_gamut = gamut;
+    /* This will update everything necessary to enable tonemapping */
+    processingSetGamma(processing, processing->gamma_power);
+    processingSetGammaGradient(processing, processing->gamma_power);
+    processing_update_matrices(processing);
+    processing_update_matrices_gradient(processing);
+}
+
+void processingSetTonemappingFunction(processingObject_t * processing, int function)
+{
+    processing->tonemap_function = function;
+    /* This will update everything necessary to enable tonemapping */
+    processingSetGamma(processing, processing->gamma_power);
+    processingSetGammaGradient(processing, processing->gamma_power);
+    processing_update_matrices(processing);
+    processing_update_matrices_gradient(processing);
+}
+
 void processingSetImageProfile(processingObject_t * processing, int imageProfile)
 {
-    if (imageProfile >= 0 && imageProfile <= 9)
-    {
-        processingSetCustomImageProfile(processing, &default_image_profiles[imageProfile]);
-    }
-    else return;
+    /* Yes, we still have compatibility with old profile system */
+    processingGetAllowedCreativeAdjustments(processing) = default_image_profiles[imageProfile].allow_creative_adjustments;
+    processingSetGamma(processing, default_image_profiles[imageProfile].gamma_power);
+    processingSetTonemappingFunction(processing, default_image_profiles[imageProfile].tonemap_function);
+    processingSetGamut(processing, default_image_profiles[imageProfile].colour_gamut);
+
+    /* This updates matrices, so new gamut will be put to use */
+    processingSetWhiteBalance(processing, processingGetWhiteBalanceKelvin(processing), processingGetWhiteBalanceTint(processing));
+
+    /* This will update everything necessary to enable tonemapping */
+    processingSetGamma(processing, processing->gamma_power);
+    processingSetGammaGradient(processing, processing->gamma_power);
+    processing_update_matrices(processing);
+    processing_update_matrices_gradient(processing);
 }
-
-
-/* Image profile strruct needed */
-void processingSetCustomImageProfile(processingObject_t * processing, image_profile_t * imageProfile)
-{
-    processing->image_profile = imageProfile;
-    processing->use_rgb_curves = imageProfile->disable_settings.curves;
-    processing->use_saturation = imageProfile->disable_settings.saturation;
-    processingSetGamma(processing, imageProfile->gamma_power);
-    if( processing->gradient_enable != 0 ) processingSetGammaGradient(processing, imageProfile->gamma_power);
-    if (imageProfile->disable_settings.tonemapping)
-    {
-        processing->tone_mapping_function = imageProfile->tone_mapping_function;
-        processing_enable_tonemapping(processing);
-    }
-    else processing_disable_tonemapping(processing);
-}
-
 
 /* Takes those matrices I learned about on the forum */
 void processingSetCamMatrix(processingObject_t * processing, double * camMatrix, double * camMatrixA)
@@ -729,7 +749,7 @@ void apply_processing_object( processingObject_t * processing,
     }
 
     //Code for HueVs...
-    if( ( processing->use_rgb_curves || processing->allow_creative_adjustments )
+    if( (processing->allow_creative_adjustments )
      && ( processing->hue_vs_luma_used || processing->hue_vs_saturation_used || processing->hue_vs_hue_used ) )
     {
         for (uint16_t * pix = img; pix < img_end; pix += 3)
@@ -774,7 +794,7 @@ void apply_processing_object( processingObject_t * processing,
         }
     }
 
-    if (processing->use_saturation || processing->allow_creative_adjustments)
+    if (processing->allow_creative_adjustments)
     {
         if( processing->vibrance > 1.01 || processing->vibrance < 0.99 )
         {
@@ -846,7 +866,7 @@ void apply_processing_object( processingObject_t * processing,
     }
 
     /* Toning */
-    if (processing->use_rgb_curves || processing->allow_creative_adjustments)
+    if (processing->allow_creative_adjustments)
     {
         if( processing->toning_dry < 99.8 )
         {
@@ -860,7 +880,7 @@ void apply_processing_object( processingObject_t * processing,
         }
     }
 
-    if (processing->use_rgb_curves || processing->allow_creative_adjustments)
+    if (processing->allow_creative_adjustments)
     {
         /* Contrast Curve (OMG putting this after gamma made it 999x better) */
         for (uint16_t * pix = img; pix < img_end; pix += 3)
@@ -871,7 +891,7 @@ void apply_processing_object( processingObject_t * processing,
         }
     }
 
-    if (processing->use_rgb_curves || processing->allow_creative_adjustments)
+    if (processing->allow_creative_adjustments)
     {
         //Gradation curve
         for (uint16_t * pix = img; pix < img_end; pix += 3)
@@ -1150,14 +1170,22 @@ void processingSetWhiteBalance(processingObject_t * processing, double WBKelvin,
 {
     double * p_xyz_to_rgb;
     double * p_ciecam02;
+
     if( processing->use_cam_matrix == 2 ) {
-        //Danne matrix fix
-        p_xyz_to_rgb = xyz_to_rgb_danne;
+        /* Danne matrix fix converts to "sRGB", so we will convert back to "XYZ",
+         * pretending Danne fix is real sRGB, and THEN convert to whatever RGB
+         * space we actually want. TODO: remove this as soon as possible */
+        p_xyz_to_rgb = alloca(9 * sizeof(double)); // I LOVE ALLOCA OMG
+        double sRGB_to_xyz[9];
+        invertMatrix(xyz_to_rgb, sRGB_to_xyz); // the xyz_to_rgb is for sRGB
+        double DanneEffectMatrix[9]; /* Applies the Danne effect to an image in XYZ space */
+        multiplyMatrices(sRGB_to_xyz, xyz_to_rgb_danne, DanneEffectMatrix);
+        multiplyMatrices(colour_gamuts[processing->colour_gamut], DanneEffectMatrix, p_xyz_to_rgb);
         p_ciecam02 = ciecam02_danne;
     }
     else {
         //scientific camera matrix
-        p_xyz_to_rgb = xyz_to_rgb;
+        p_xyz_to_rgb = colour_gamuts[processing->colour_gamut]/* alloca(9 * sizeof(double)) */;
         p_ciecam02 = ciecam02;
     }
 
@@ -1299,13 +1327,15 @@ void processingSetGamma(processingObject_t * processing, double gammaValue)
     /* Needs to be inverse */
     double gamma = 1.0 / gammaValue;
 
-    if (processing->exposure_stops < 0.0 || !processing->tone_mapping)
+    double (* tone_mapping_function)(double) = tonemap_functions[processing->tonemap_function];
+
+    if (processing->exposure_stops < 0.0 || processing->tonemap_function == 0)
     {
         /* Precalculate the exposure curve */
         for (int i = 0; i < 65536; ++i)
         {
             double pixel = (double)i/65535.0;
-            if (processing->tone_mapping) pixel = processing->tone_mapping_function(pixel);
+            pixel = tone_mapping_function(pixel);
             processing->pre_calc_gamma[i] = (uint16_t)(65535.0 * pow(pixel, gamma));
         }
     }
@@ -1320,7 +1350,7 @@ void processingSetGamma(processingObject_t * processing, double gammaValue)
             /* Tone mapping also (reinhard) */
             double pixel = (double)i/65535.0;
             pixel *= exposure_factor;
-            pixel = processing->tone_mapping_function(pixel);
+            pixel = tone_mapping_function(pixel);
             pixel = 65535.0 * pow(pixel, gamma);
             pixel = LIMIT16(pixel);
             processing->pre_calc_gamma[i] = pixel;
@@ -1338,13 +1368,15 @@ void processingSetGammaGradient(processingObject_t * processing, double gammaVal
     /* Needs to be inverse */
     double gamma = 1.0 / gammaValue;
 
-    if (processing->exposure_stops+processing->gradient_exposure_stops < 0.0 || !processing->tone_mapping)
+    double (* tone_mapping_function)(double) = tonemap_functions[processing->tonemap_function];
+
+    if (processing->exposure_stops+processing->gradient_exposure_stops < 0.0 || processing->tonemap_function == 0)
     {
         /* Precalculate the exposure curve */
         for (int i = 0; i < 65536; ++i)
         {
             double pixel = (double)i/65535.0;
-            if (processing->tone_mapping) pixel = processing->tone_mapping_function(pixel);
+            pixel = tone_mapping_function(pixel);
             processing->pre_calc_gamma_gradient[i] = (uint16_t)(65535.0 * pow(pixel, gamma));
         }
     }
@@ -1359,7 +1391,7 @@ void processingSetGammaGradient(processingObject_t * processing, double gammaVal
             /* Tone mapping also (reinhard) */
             double pixel = (double)i/65535.0;
             pixel *= exposure_factor;
-            pixel = processing->tone_mapping_function(pixel);
+            pixel = tone_mapping_function(pixel);
             pixel = 65535.0 * pow(pixel, gamma);
             pixel = LIMIT16(pixel);
             processing->pre_calc_gamma_gradient[i] = pixel;
@@ -1385,25 +1417,25 @@ void processingSet3WayCorrection( processingObject_t * processing,
     processing_update_curves(processing);
 }
 
-void processing_enable_tonemapping(processingObject_t * processing)
-{
-    (processing)->tone_mapping = 1;
-    /* This will update everything necessary to enable tonemapping */
-    processingSetGamma(processing, processing->gamma_power);
-    processingSetGammaGradient(processing, processing->gamma_power);
-    processing_update_matrices(processing);
-    processing_update_matrices_gradient(processing);
-}
+// void processing_enable_tonemapping(processingObject_t * processing)
+// {
+//     (processing)->tone_mapping = 1;
+//     /* This will update everything necessary to enable tonemapping */
+//     processingSetGamma(processing, processing->gamma_power);
+//     processingSetGammaGradient(processing, processing->gamma_power);
+//     processing_update_matrices(processing);
+//     processing_update_matrices_gradient(processing);
+// }
 
-void processing_disable_tonemapping(processingObject_t * processing) 
-{
-    (processing)->tone_mapping = 0;
-    /* This will update everything necessary to disable tonemapping */
-    processingSetGamma(processing, processing->gamma_power);
-    processingSetGammaGradient(processing, processing->gamma_power);
-    processing_update_matrices(processing);
-    processing_update_matrices_gradient(processing);
-}
+// void processing_disable_tonemapping(processingObject_t * processing) 
+// {
+//     (processing)->tone_mapping = 0;
+//     /* This will update everything necessary to disable tonemapping */
+//     processingSetGamma(processing, processing->gamma_power);
+//     processingSetGammaGradient(processing, processing->gamma_power);
+//     processing_update_matrices(processing);
+//     processing_update_matrices_gradient(processing);
+// }
 
 /* Set black and white level */
 void processingSetBlackAndWhiteLevel( processingObject_t * processing, 

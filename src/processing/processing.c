@@ -101,6 +101,10 @@ static double colour_gamuts[][9] = {
 
 /* Tonemapping info from http://filmicworlds.com/blog/filmic-tonemapping-operators/ */
 
+/* NO TRANSFER FUNCTION, EASIER TO CODE */
+double NoTonemap(double x) { return x; }
+float NoTonemap_f(float x) { return x; }
+
 /* Reinhard - most basic but just werks */
 double ReinhardTonemap(double x) { return x / (1.0 + x); }
 float ReinhardTonemap_f(float x) { return x / (1.0f + x); }
@@ -149,6 +153,21 @@ double BmdFilmTonemap(double x)
 
     return interpol( input, in, in+1, pix00, pix01 );
 }
+
+static void * tonemap_functions[] =
+{
+    (void *)&NoTonemap,
+    (void *)&ReinhardTonemap,
+    (void *)&TangentTonemap,
+    (void *)&CanonCLogTonemap,
+    (void *)&AlexaLogCTonemap,
+    (void *)&CineonLogTonemap,
+    (void *)&SonySLogTonemap,
+    (void *)&sRGBTransferFunction,
+    (void *)&Rec709TransferFunction,
+    (void *)&HLG_TransferFunction,
+    (void *)&BmdFilmTonemap
+};
 
 /* Returns multipliers for white balance by (linearly) interpolating measured 
  * Canon values... stupidly simple, also range limited to 2500-10000 (pls obey) */
@@ -378,7 +397,7 @@ void processing_update_matrices(processingObject_t * processing)
                       processing->final_matrix );
 
     /* Exposure, done here if smaller than 0, or no tonemapping - else done at gamma function */
-    if (processing->exposure_stops < 0.0 || !processing->tone_mapping)
+    if (processing->exposure_stops < 0.0 || processing->tonemap_function == 0)
     {
         double exposure_factor = pow(2.0, processing->exposure_stops);
         for (int i = 0; i < 9; ++i) processing->final_matrix[i] *= exposure_factor;
@@ -458,7 +477,7 @@ void processing_update_matrices_gradient(processingObject_t * processing)
                       final_matrix );
 
     /* Exposure, done here if smaller than 0, or no tonemapping - else done at gamma function */
-    if ((processing->exposure_stops + processing->gradient_exposure_stops) < 0.0 || !processing->tone_mapping)
+    if ((processing->exposure_stops + processing->gradient_exposure_stops) < 0.0 || processing->tonemap_function == 0)
     {
         double exposure_factor = pow(2.0, (processing->exposure_stops + processing->gradient_exposure_stops));
         for (int i = 0; i < 9; ++i) final_matrix[i] *= exposure_factor;
