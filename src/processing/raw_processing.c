@@ -557,54 +557,57 @@ void apply_processing_object( processingObject_t * processing,
             }
         }
 
-        /* shadows & highlights, clarity part 1 */
-        if( ( processing->shadows_highlights.shadows    <= -0.01 || processing->shadows_highlights.shadows    >= 0.01 )
-         || ( processing->shadows_highlights.highlights <= -0.01 || processing->shadows_highlights.highlights >= 0.01 )
-         || ( processing->clarity                       <= -0.01 || processing->clarity                       >= 0.01 ) )
+        if (processing->allow_creative_adjustments)
         {
-            /* Blur pixLZ */
-            int32_t bval = ( ((pm[0][bpix[0]] /* + pm[1][bpix[1]] + pm[2][bpix[2]] */) << 2)
-                           + ((/* pm[3][bpix[0]] + */ pm[4][bpix[1]] /* + pm[5][bpix[2]] */) * 11)
-                           +  (/* pm[6][bpix[0]] + pm[7][bpix[1]] + */ pm[8][bpix[2]]) ) >> 4;
+            /* shadows & highlights, clarity part 1 */
+            if( ( processing->shadows_highlights.shadows    <= -0.01 || processing->shadows_highlights.shadows    >= 0.01 )
+            || ( processing->shadows_highlights.highlights <= -0.01 || processing->shadows_highlights.highlights >= 0.01 )
+            || ( processing->clarity                       <= -0.01 || processing->clarity                       >= 0.01 ) )
+            {
+                /* Blur pixLZ */
+                int32_t bval = ( ((pm[0][bpix[0]] /* + pm[1][bpix[1]] + pm[2][bpix[2]] */) << 2)
+                            + ((/* pm[3][bpix[0]] + */ pm[4][bpix[1]] /* + pm[5][bpix[2]] */) * 11)
+                            +  (/* pm[6][bpix[0]] + pm[7][bpix[1]] + */ pm[8][bpix[2]]) ) >> 4;
 
-            if( processing->clarity <= -0.01 || processing->clarity >= 0.01 )
-            {
-                /* clarity part 1 */
-                double factor = processing->clarity_curve[LIMIT16(bval)];
-                expo_correction /= (factor * factor);
+                if( processing->clarity <= -0.01 || processing->clarity >= 0.01 )
+                {
+                    /* clarity part 1 */
+                    double factor = processing->clarity_curve[LIMIT16(bval)];
+                    expo_correction /= (factor * factor);
+                }
+                if( ( processing->shadows_highlights.shadows <= -0.01 || processing->shadows_highlights.shadows >= 0.01 )
+                || ( processing->shadows_highlights.highlights <= -0.01 || processing->shadows_highlights.highlights >= 0.01 ) )
+                {
+                    /* highlight exposure factor */
+                    expo_correction *= processing->shadows_highlights.shadow_highlight_curve[LIMIT16(bval)];
+                }
             }
-            if( ( processing->shadows_highlights.shadows <= -0.01 || processing->shadows_highlights.shadows >= 0.01 )
-             || ( processing->shadows_highlights.highlights <= -0.01 || processing->shadows_highlights.highlights >= 0.01 ) )
-            {
-                /* highlight exposure factor */
-                expo_correction *= processing->shadows_highlights.shadow_highlight_curve[LIMIT16(bval)];
-            }
-        }
 
-        /* Contrast on untouched pixel */
-        if( ( processing->contrast          <= -0.01 || processing->contrast          >= 0.01 )
-         || ( processing->clarity           <= -0.01 || processing->clarity           >= 0.01 )
-         || ( processing->gradient_contrast <= -0.01 || processing->gradient_contrast >= 0.01 ) )
-        {
-            int32_t cval = ( ((pm[0][pix[0]] /* + pm[1][pix[1]] + pm[2][pix[2]] */) << 2)
-                           + ((/* pm[3][pix[0]] + */ pm[4][pix[1]] /* + pm[5][pix[2]] */) * 11)
-                           +  (/* pm[6][pix[0]] + pm[7][pix[1]] + */ pm[8][pix[2]]) ) >> 4;
+            /* Contrast on untouched pixel */
+            if( ( processing->contrast          <= -0.01 || processing->contrast          >= 0.01 )
+            || ( processing->clarity           <= -0.01 || processing->clarity           >= 0.01 )
+            || ( processing->gradient_contrast <= -0.01 || processing->gradient_contrast >= 0.01 ) )
+            {
+                int32_t cval = ( ((pm[0][pix[0]] /* + pm[1][pix[1]] + pm[2][pix[2]] */) << 2)
+                            + ((/* pm[3][pix[0]] + */ pm[4][pix[1]] /* + pm[5][pix[2]] */) * 11)
+                            +  (/* pm[6][pix[0]] + pm[7][pix[1]] + */ pm[8][pix[2]]) ) >> 4;
 
-            if( processing->clarity <= -0.01 || processing->clarity >= 0.01 )
-            {
-                /* clarity part 2 */
-                double factor = processing->clarity_curve[LIMIT16(cval)];
-                expo_correction *= factor * factor;
-            }
-            if( processing->contrast <= -0.01 || processing->contrast >= 0.01 )
-            {
-                /* contrast factor */
-                expo_correction *= processing->contrast_curve[LIMIT16(cval)];
-            }
-            if( processing->gradient_contrast <= -0.01 || processing->gradient_contrast >= 0.01 )
-            {
-                /* gradient contrast factor */
-                expo_correction_gradient *= processing->gradient_contrast_curve[LIMIT16(cval)];
+                if( processing->clarity <= -0.01 || processing->clarity >= 0.01 )
+                {
+                    /* clarity part 2 */
+                    double factor = processing->clarity_curve[LIMIT16(cval)];
+                    expo_correction *= factor * factor;
+                }
+                if( processing->contrast <= -0.01 || processing->contrast >= 0.01 )
+                {
+                    /* contrast factor */
+                    expo_correction *= processing->contrast_curve[LIMIT16(cval)];
+                }
+                if( processing->gradient_contrast <= -0.01 || processing->gradient_contrast >= 0.01 )
+                {
+                    /* gradient contrast factor */
+                    expo_correction_gradient *= processing->gradient_contrast_curve[LIMIT16(cval)];
+                }
             }
         }
 
