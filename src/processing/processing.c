@@ -133,6 +133,10 @@ float sRGBTransferFunction_f(float x) { return x < 0.0031308f ? x * 12.92f : (1.
 double Rec709TransferFunction(double x) { return x <= 0.018 ? (x * 4.5) : 1.099 * pow( x, (0.45) ) - 0.099; }
 float Rec709TransferFunction_f(float x) { return x <= 0.018f ? (x * 4.5f) : 1.099f * powf( x, (0.45f) ) - 0.099f; }
 
+/* HLG (Hybrid Log Gamma) */
+double HLG_TransferFunction(double E) { return (E <= 1.0) ? (sqrt(E) * 0.5) : 0.17883277 * log(E - 0.28466892) + 0.55991073; }
+float HLG_TransferFunction_f(float E) { return (E <= 1.0f) ? (sqrtf(E) * 0.5f) : 0.17883277f * logf(E - 0.28466892f) + 0.55991073f; }
+
 /* BMDFilm via LUT */
 double BmdFilmTonemap(double x)
 {
