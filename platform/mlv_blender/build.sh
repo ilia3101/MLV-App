@@ -17,6 +17,7 @@ SourceFiles=(
     ../../src/mlv/camid/camera_id.c
     ../../src/processing/raw_processing.c
     ../../src/processing/filter/filter.c
+    ../../src/processing/sobel/sobel.c
     ../../src/processing/filter/genann/genann.c
     ../../src/processing/cube_lut.c
     ../../src/debayer/igv_demosaic.c
