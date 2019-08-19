@@ -5988,6 +5988,7 @@ void MainWindow::on_comboBoxProfile_currentIndexChanged(int index)
     {
         ui->checkBoxCreativeAdjustments->setChecked( false );
     }*/
+    ui->checkBoxCreativeAdjustments->setChecked( processingGetAllowedCreativeAdjustments( m_pProcessingObject ) );
     ui->checkBoxCreativeAdjustments->setEnabled( enable );
     enableCreativeAdjustments( enable || ui->checkBoxCreativeAdjustments->isChecked() );
     ui->checkBoxCreativeAdjustments->blockSignals( false );
