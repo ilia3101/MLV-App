@@ -5974,7 +5974,8 @@ void MainWindow::on_comboBoxProfile_currentIndexChanged(int index)
     m_frameChanged = true;
     //Disable parameters if log
     bool enable = true;
-    if( ( index == PROFILE_ALEXA_LOG )
+    ui->checkBoxCreativeAdjustments->blockSignals( true );
+    /*if( ( index == PROFILE_ALEXA_LOG )
      || ( index == PROFILE_CINEON_LOG )
      || ( index == PROFILE_SONY_LOG_3 )
      || ( index == PROFILE_SRGB )
@@ -5986,9 +5987,10 @@ void MainWindow::on_comboBoxProfile_currentIndexChanged(int index)
     else
     {
         ui->checkBoxCreativeAdjustments->setChecked( false );
-    }
-    ui->checkBoxCreativeAdjustments->setEnabled( !enable );
+    }*/
+    ui->checkBoxCreativeAdjustments->setEnabled( enable );
     enableCreativeAdjustments( enable || ui->checkBoxCreativeAdjustments->isChecked() );
+    ui->checkBoxCreativeAdjustments->blockSignals( false );
 }
 
 //Switch on/off all creative adjustment elements
@@ -6001,6 +6003,11 @@ void MainWindow::enableCreativeAdjustments( bool enable )
     ui->horizontalSliderLighten->setEnabled( enable );
     ui->horizontalSliderVibrance->setEnabled( enable );
     ui->horizontalSliderSaturation->setEnabled( enable );
+    ui->horizontalSliderContrast->setEnabled( enable );
+    ui->horizontalSliderClarity->setEnabled( enable );
+    ui->horizontalSliderHighlights->setEnabled( enable );
+    ui->horizontalSliderShadows->setEnabled( enable );
+    ui->horizontalSliderContrastGradient->setEnabled( enable );
     ui->label_LsVal->setEnabled( enable );
     ui->label_LrVal->setEnabled( enable );
     ui->label_DsVal->setEnabled( enable );
@@ -6008,6 +6015,11 @@ void MainWindow::enableCreativeAdjustments( bool enable )
     ui->label_LightenVal->setEnabled( enable );
     ui->label_VibranceVal->setEnabled( enable );
     ui->label_SaturationVal->setEnabled( enable );
+    ui->label_ContrastVal->setEnabled( enable );
+    ui->label_ClarityVal->setEnabled( enable );
+    ui->label_HighlightsVal->setEnabled( enable );
+    ui->label_ShadowsVal->setEnabled( enable );
+    ui->label_ContrastGradientVal->setEnabled( enable );
     ui->label_ls->setEnabled( enable );
     ui->label_lr->setEnabled( enable );
     ui->label_ds->setEnabled( enable );
@@ -6015,6 +6027,11 @@ void MainWindow::enableCreativeAdjustments( bool enable )
     ui->label_lighten->setEnabled( enable );
     ui->label_vibrance->setEnabled( enable );
     ui->label_saturation->setEnabled( enable );
+    ui->label_contrast->setEnabled( enable );
+    ui->label_clarity->setEnabled( enable );
+    ui->label_highlights->setEnabled( enable );
+    ui->label_shadows->setEnabled( enable );
+    ui->label_contrast_gradient->setEnabled( enable );
     ui->groupBoxHsl->setEnabled( enable );
     ui->groupBoxToning->setEnabled( enable );
     ui->label_gradationcurves->setEnabled( enable );

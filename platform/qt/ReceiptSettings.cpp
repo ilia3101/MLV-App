@@ -92,7 +92,7 @@ ReceiptSettings::ReceiptSettings()
     m_caRed = 0;
     m_caBlue = 0;
     m_profile = 1;
-    m_creativeAdjustments = 0;
+    m_creativeAdjustments = 1;
     m_rawWhite = -1;
     m_rawBlack = -1;
     m_tone = 0;
