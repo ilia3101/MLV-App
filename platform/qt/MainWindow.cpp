@@ -41,7 +41,7 @@
 #include "SingleFrameExportDialog.h"
 #include "FpmInstaller.h"
 #include "ScopesLabel.h"
-#include "avir/avir.h"
+#include "avir/avirthreadpool.h"
 #include "MoveToTrash.h"
 #include "OverwriteListDialog.h"
 
@@ -2782,14 +2782,17 @@ void MainWindow::startExportAVFoundation(QString fileName)
             getMlvProcessedFrame8( m_pMlvObject, frame, m_pRawImage, QThread::idealThreadCount() );
             if( scaled )
             {
-                avir::CImageResizer<> ImageResizer( 8 );
-                ImageResizer.resizeImage( m_pRawImage,
-                                      getMlvWidth(m_pMlvObject),
-                                      getMlvHeight(m_pMlvObject), 0,
-                                      imgBufferScaled8,
-                                      width,
-                                      height,
-                                      3, 0 );
+                avir_scale_thread_pool scaling_pool;
+                avir::CImageResizerVars vars; vars.ThreadPool = &scaling_pool;
+                avir::CImageResizerParamsUltra roptions;
+                avir::CImageResizer<> image_resizer( 8, 0, roptions );
+                image_resizer.resizeImage( m_pRawImage,
+                                           getMlvWidth(m_pMlvObject),
+                                           getMlvHeight(m_pMlvObject), 0,
+                                           imgBufferScaled8,
+                                           width,
+                                           height,
+                                           3, 0, &vars );
                 addFrameToVideoFile8bit( encoder, imgBufferScaled8 );
             }
             else
@@ -2802,14 +2805,17 @@ void MainWindow::startExportAVFoundation(QString fileName)
             getMlvProcessedFrame16( m_pMlvObject, frame, imgBuffer, QThread::idealThreadCount() );
             if( scaled )
             {
-                avir::CImageResizer<> ImageResizer( 16 );
-                ImageResizer.resizeImage( imgBuffer,
-                                      getMlvWidth(m_pMlvObject),
-                                      getMlvHeight(m_pMlvObject), 0,
-                                      imgBufferScaled,
-                                      width,
-                                      height,
-                                      3, 0 );
+                avir_scale_thread_pool scaling_pool;
+                avir::CImageResizerVars vars; vars.ThreadPool = &scaling_pool;
+                avir::CImageResizerParamsUltra roptions;
+                avir::CImageResizer<> image_resizer( 16, 0, roptions );
+                image_resizer.resizeImage( imgBuffer,
+                                           getMlvWidth(m_pMlvObject),
+                                           getMlvHeight(m_pMlvObject), 0,
+                                           imgBufferScaled,
+                                           width,
+                                           height,
+                                           3, 0, &vars );
                 addFrameToVideoFile( encoder, imgBufferScaled );
             }
             else
@@ -7862,14 +7868,17 @@ void MainWindow::drawFrameReady()
                 uint8_t *scaledPic = (uint8_t*)malloc( 3 * getMlvWidth(m_pMlvObject) * getHorizontalStretchFactor(false)
                                                          * getMlvHeight(m_pMlvObject) * getVerticalStretchFactor(false)
                                                          * sizeof( uint8_t ) );
-                avir::CImageResizer<> ImageResizer( 8 );
-                ImageResizer.resizeImage( m_pRawImage,
-                                          getMlvWidth(m_pMlvObject),
-                                          getMlvHeight(m_pMlvObject), 0,
-                                          scaledPic,
-                                          getMlvWidth(m_pMlvObject) * getHorizontalStretchFactor(false),
-                                          getMlvHeight(m_pMlvObject) * getVerticalStretchFactor(false),
-                                          3, 0 );
+                avir_scale_thread_pool scaling_pool;
+                avir::CImageResizerVars vars; vars.ThreadPool = &scaling_pool;
+                avir::CImageResizerParamsUltra roptions;
+                avir::CImageResizer<> image_resizer( 8, 0, roptions );
+                image_resizer.resizeImage( m_pRawImage,
+                                           getMlvWidth(m_pMlvObject),
+                                           getMlvHeight(m_pMlvObject), 0,
+                                           scaledPic,
+                                           getMlvWidth(m_pMlvObject) * getHorizontalStretchFactor(false),
+                                           getMlvHeight(m_pMlvObject) * getVerticalStretchFactor(false),
+                                           3, 0, &vars );
                 pixmap = QPixmap::fromImage( QImage( ( unsigned char *) scaledPic,
                                                      getMlvWidth(m_pMlvObject) * getHorizontalStretchFactor(false),
                                                      getMlvHeight(m_pMlvObject) * getVerticalStretchFactor(false),

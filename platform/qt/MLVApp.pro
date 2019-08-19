@@ -5,6 +5,7 @@
 #-------------------------------------------------
 
 QT       += core gui multimedia
+CONFIG   += c++14
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -236,7 +237,9 @@ HEADERS += \
     ../../src/processing/sobel/sobel.h \
     avir/avir.h \
     MoveToTrash.h \
-    OverwriteListDialog.h
+    OverwriteListDialog.h \
+    avir/avirthreadpool.h \
+    avir/ThreadPool.h
 
 macx: HEADERS += \
     ../cocoa/avf_lib/avencoder.h \

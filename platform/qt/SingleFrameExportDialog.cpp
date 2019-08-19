@@ -13,7 +13,7 @@
 #include <QMessageBox>
 #include <QSettings>
 #include <QDebug>
-#include "avir/avir.h"
+#include "avir/avirthreadpool.h"
 
 //Constructor
 SingleFrameExportDialog::SingleFrameExportDialog(QWidget *parent,
@@ -99,14 +99,18 @@ void SingleFrameExportDialog::exportViaQt()
 
     uint8_t * imgBufferScaled8;
     imgBufferScaled8 = ( uint8_t* )malloc( getMlvWidth(m_pMlvObject) * stretchX * getMlvHeight(m_pMlvObject) * stretchY * 3 * sizeof( uint8_t ) );
-    avir::CImageResizer<> ImageResizer( 8 );
-    ImageResizer.resizeImage( pRawImage,
-                          getMlvWidth(m_pMlvObject),
-                          getMlvHeight(m_pMlvObject), 0,
-                          imgBufferScaled8,
-                          getMlvWidth(m_pMlvObject) * stretchX,
-                          getMlvHeight(m_pMlvObject) * stretchY,
-                          3, 0 );
+
+    avir_scale_thread_pool scaling_pool;
+    avir::CImageResizerVars vars; vars.ThreadPool = &scaling_pool;
+    avir::CImageResizerParamsUltra roptions;
+    avir::CImageResizer<> image_resizer( 8, 0, roptions );
+    image_resizer.resizeImage( pRawImage,
+                                getMlvWidth(m_pMlvObject),
+                                getMlvHeight(m_pMlvObject), 0,
+                                imgBufferScaled8,
+                                getMlvWidth(m_pMlvObject) * stretchX,
+                                getMlvHeight(m_pMlvObject) * stretchY,
+                                3, 0, &vars );
 
     QImage( ( unsigned char *) imgBufferScaled8, getMlvWidth(m_pMlvObject) * stretchX, getMlvHeight(m_pMlvObject) * stretchY, QImage::Format_RGB888 )
             .save( fileName, "png", -1 );
