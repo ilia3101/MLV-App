@@ -179,6 +179,7 @@ void processingSetGamut(processingObject_t * processing, int gamut)
 {
     processing->colour_gamut = gamut;
     /* This will update everything necessary to enable tonemapping */
+    processingSetWhiteBalance(processing, processingGetWhiteBalanceKelvin(processing), processingGetWhiteBalanceTint(processing));
     processingSetGamma(processing, processing->gamma_power);
     processingSetGammaGradient(processing, processing->gamma_power);
     processing_update_matrices(processing);
