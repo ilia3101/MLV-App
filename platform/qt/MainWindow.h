@@ -292,6 +292,7 @@ private slots:
     void on_groupBoxRawCorrection_toggled(bool arg1);
     void on_groupBoxCutInOut_toggled(bool arg1);
     void on_groupBoxDebayer_toggled(bool arg1);
+    void on_groupBoxProfiles_toggled(bool arg1);
     void on_groupBoxProcessing_toggled(bool arg1);
     void on_groupBoxDetails_toggled(bool arg1);
     void on_groupBoxHsl_toggled(bool arg1);

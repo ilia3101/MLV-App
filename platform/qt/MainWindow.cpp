@@ -1427,6 +1427,7 @@ void MainWindow::readSettings()
     ui->groupBoxRawCorrection->setChecked( set.value( "expandedRawCorrection", false ).toBool() );
     ui->groupBoxCutInOut->setChecked( set.value( "expandedCutInOut", false ).toBool() );
     ui->groupBoxDebayer->setChecked( set.value( "expandedDebayer", true ).toBool() );
+    ui->groupBoxProfiles->setChecked( set.value( "expandedProfiles", true ).toBool() );
     ui->groupBoxProcessing->setChecked( set.value( "expandedProcessing", true ).toBool() );
     ui->groupBoxDetails->setChecked( set.value( "expandedDetails", false ).toBool() );
     ui->groupBoxHsl->setChecked( set.value( "expandedHsl", false ).toBool() );
@@ -1494,6 +1495,7 @@ void MainWindow::writeSettings()
     set.setValue( "expandedRawCorrection", ui->groupBoxRawCorrection->isChecked() );
     set.setValue( "expandedCutInOut", ui->groupBoxCutInOut->isChecked() );
     set.setValue( "expandedDebayer", ui->groupBoxDebayer->isChecked() );
+    set.setValue( "expandedProfiles", ui->groupBoxProfiles->isChecked() );
     set.setValue( "expandedProcessing", ui->groupBoxProcessing->isChecked() );
     set.setValue( "expandedDetails", ui->groupBoxDetails->isChecked() );
     set.setValue( "expandedHsl", ui->groupBoxHsl->isChecked() );
@@ -7742,6 +7744,13 @@ void MainWindow::on_groupBoxDebayer_toggled(bool arg1)
     ui->frameDebayer->setVisible( arg1 );
     if( !arg1 ) ui->groupBoxDebayer->setMaximumHeight( 30 );
     else ui->groupBoxDebayer->setMaximumHeight( 16777215 );
+}
+
+void MainWindow::on_groupBoxProfiles_toggled(bool arg1)
+{
+    ui->frameProfiles->setVisible( arg1 );
+    if( !arg1 ) ui->groupBoxProfiles->setMaximumHeight( 30 );
+    else ui->groupBoxProfiles->setMaximumHeight( 16777215 );
 }
 
 //Collapse & Expand Processing
