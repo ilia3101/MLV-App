@@ -5047,6 +5047,14 @@ void MainWindow::on_actionClip_Information_triggered()
     else m_pInfoDialog->hide();
 }
 
+void MainWindow::on_horizontalSliderGamma_valueChanged(int position)
+{
+    double value = position / 100.0;
+    processingSetGamma( m_pProcessingObject, value );
+    ui->label_GammaVal->setText( QString("%1").arg( value, 0, 'f', 2 ) );
+    m_frameChanged = true;
+}
+
 void MainWindow::on_horizontalSliderExposure_valueChanged(int position)
 {
     double value = position / 100.0;
@@ -5942,12 +5950,12 @@ void MainWindow::on_checkBoxCreativeAdjustments_toggled(bool checked)
 {
     if( checked )
     {
-        ui->checkBoxCreativeAdjustments->setIcon( QIcon( ":/RetinaIMG/RetinaIMG/Status-dialog-warning-icon.png" ) );
+        //ui->checkBoxCreativeAdjustments->setIcon( QIcon( ":/RetinaIMG/RetinaIMG/Status-dialog-warning-icon.png" ) );
         processingAllowCreativeAdjustments( m_pProcessingObject );
     }
     else
     {
-        ui->checkBoxCreativeAdjustments->setIcon( QIcon() );
+        //ui->checkBoxCreativeAdjustments->setIcon( QIcon() );
         processingDontAllowCreativeAdjustments( m_pProcessingObject );
     }
     if( ui->checkBoxCreativeAdjustments->isEnabled() ) enableCreativeAdjustments( checked );
@@ -5975,23 +5983,37 @@ void MainWindow::on_comboBoxProfile_currentIndexChanged(int index)
     //Disable parameters if log
     bool enable = true;
     ui->checkBoxCreativeAdjustments->blockSignals( true );
-    /*if( ( index == PROFILE_ALEXA_LOG )
-     || ( index == PROFILE_CINEON_LOG )
-     || ( index == PROFILE_SONY_LOG_3 )
-     || ( index == PROFILE_SRGB )
-     || ( index == PROFILE_REC709 )
-     || ( index == PROFILE_BMDFILM ) )
-    {
-        enable = false;
-    }
-    else
-    {
-        ui->checkBoxCreativeAdjustments->setChecked( false );
-    }*/
     ui->checkBoxCreativeAdjustments->setChecked( processingGetAllowedCreativeAdjustments( m_pProcessingObject ) );
     ui->checkBoxCreativeAdjustments->setEnabled( enable );
     enableCreativeAdjustments( enable || ui->checkBoxCreativeAdjustments->isChecked() );
     ui->checkBoxCreativeAdjustments->blockSignals( false );
+    ui->comboBoxTonemapFct->blockSignals( true );
+    ui->comboBoxTonemapFct->setCurrentIndex( processingGetTonemappingFunction( m_pProcessingObject ) );
+    ui->comboBoxTonemapFct->blockSignals( false );
+    ui->comboBoxProcessingGamut->blockSignals( true );
+    ui->comboBoxProcessingGamut->setCurrentIndex( processingGetGamut( m_pProcessingObject ) );
+    ui->comboBoxProcessingGamut->blockSignals( false );
+    ui->horizontalSliderGamma->setValue( processingGetGamma( m_pProcessingObject ) * 100 );
+}
+
+//Chose profile, without changing the index
+void MainWindow::on_comboBoxProfile_activated(int index)
+{
+    on_comboBoxProfile_currentIndexChanged( index );
+}
+
+//Choose Tonemapping Function
+void MainWindow::on_comboBoxTonemapFct_currentIndexChanged(int index)
+{
+    processingSetTonemappingFunction( m_pProcessingObject, index );
+    m_frameChanged = true;
+}
+
+//Choose Processing Gamut
+void MainWindow::on_comboBoxProcessingGamut_currentIndexChanged(int index)
+{
+    processingSetGamut( m_pProcessingObject, index );
+    m_frameChanged = true;
 }
 
 //Switch on/off all creative adjustment elements
@@ -6619,6 +6641,15 @@ void MainWindow::on_labelScope_customContextMenuRequested(const QPoint &pos)
     myMenu.addAction( ui->actionShowVectorScope );
     // Show context menu at handling position
     myMenu.exec( globalPos );
+}
+
+//DoubleClick on Gamma Label
+void MainWindow::on_label_GammaVal_doubleClicked()
+{
+    EditSliderValueDialog editSlider;
+    editSlider.autoSetup( ui->horizontalSliderGamma, ui->label_GammaVal, 0.01, 2, 100.0 );
+    editSlider.exec();
+    ui->horizontalSliderGamma->setValue( editSlider.getValue() );
 }
 
 //DoubleClick on Exposure Label
