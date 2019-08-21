@@ -13,6 +13,7 @@ void freeProcessingObject(processingObject_t * processing);
 
 /* Set processing gamut */
 void processingSetGamut(processingObject_t * processing, int gamut);
+int processingGetGamut(processingObject_t * processing);
 #define GAMUT_Rec709 0
 #define GAMUT_Rec2020 1
 #define GAMUT_ACES_AP0 2
@@ -27,6 +28,7 @@ void processingSetGamut(processingObject_t * processing, int gamut);
 /* Tonemapping function, really this can be a tonemapping function, a log
  * function or any other gamma or transfer function */
 void processingSetTonemappingFunction(processingObject_t * processing, int function);
+int processingGetTonemappingFunction(processingObject_t * processing);
 #define TONEMAP_None 0
 #define TONEMAP_Reinhard 1
 #define TONEMAP_Tangent 2

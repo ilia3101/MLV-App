@@ -185,6 +185,11 @@ void processingSetGamut(processingObject_t * processing, int gamut)
     processing_update_matrices_gradient(processing);
 }
 
+int processingGetGamut(processingObject_t * processing)
+{
+    return processing->colour_gamut;
+}
+
 void processingSetTonemappingFunction(processingObject_t * processing, int function)
 {
     processing->tonemap_function = function;
@@ -193,6 +198,11 @@ void processingSetTonemappingFunction(processingObject_t * processing, int funct
     processingSetGammaGradient(processing, processing->gamma_power);
     processing_update_matrices(processing);
     processing_update_matrices_gradient(processing);
+}
+
+int processingGetTonemappingFunction(processingObject_t * processing)
+{
+    return processing->tonemap_function;
 }
 
 void processingSetImageProfile(processingObject_t * processing, int imageProfile)
