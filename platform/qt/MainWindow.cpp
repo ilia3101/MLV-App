@@ -2855,9 +2855,6 @@ void MainWindow::startExportAVFoundation(QString fileName)
         ffmpegAudioCommand.append( QString( "/ffmpeg\"" ) );
         ffmpegAudioCommand.prepend( QString( "\"" ) );
 
-        //Renaming needs time :P
-        QThread::msleep( 1000 );
-
 #ifdef STDOUT_SILENT
         ffmpegAudioCommand.append( QString( " -loglevel 0" ) );
 #endif
@@ -2867,7 +2864,15 @@ void MainWindow::startExportAVFoundation(QString fileName)
 
         QProcess ffmpegProc;
         //qDebug() << ffmpegAudioCommand <<
-        ffmpegProc.execute( ffmpegAudioCommand );
+        while( !QFileInfo( fileName ).exists()  ) //AVFoundation file will be corrupted for a unknown time until we can add audio
+        {
+            ffmpegProc.execute( ffmpegAudioCommand );
+
+            qApp->processEvents();
+
+            //Abort pressed? -> End the loop
+            if( m_exportAbortPressed ) break;
+        }
 
         QFile( tempFileName ).remove();
         QFile( wavFileName ).remove();
