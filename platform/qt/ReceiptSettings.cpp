@@ -92,6 +92,9 @@ ReceiptSettings::ReceiptSettings()
     m_caRed = 0;
     m_caBlue = 0;
     m_profile = 1;
+    m_tonemap = -1;
+    m_gamut = -1;
+    m_gamma = 315;
     m_creativeAdjustments = 1;
     m_rawWhite = -1;
     m_rawBlack = -1;
