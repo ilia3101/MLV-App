@@ -7149,6 +7149,10 @@ void MainWindow::on_actionPlay_triggered(bool checked)
     }
     else
     {
+        //Last frame? Go to first frame!
+        if( ui->horizontalSliderPosition->maximum() == ui->horizontalSliderPosition->value() )
+            ui->horizontalSliderPosition->setValue( 0 );
+
         //Start Audio
         if( ui->actionAudioOutput->isChecked()
          && ui->actionDropFrameMode->isChecked() )
