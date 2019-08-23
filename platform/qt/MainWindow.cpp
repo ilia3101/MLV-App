@@ -7138,6 +7138,12 @@ void MainWindow::exportHandler( void )
 //Play button pressed
 void MainWindow::on_actionPlay_triggered(bool checked)
 {
+    //Last frame? Go to first frame!
+    if( checked && ui->horizontalSliderPosition->value()+1 >= ui->spinBoxCutOut->value() )
+    {
+        on_actionGoto_First_Frame_triggered();
+    }
+
     //If no audio, we have nothing to do here
     if( !doesMlvHaveAudio( m_pMlvObject ) ) return;
 
@@ -7149,10 +7155,6 @@ void MainWindow::on_actionPlay_triggered(bool checked)
     }
     else
     {
-        //Last frame? Go to first frame!
-        if( ui->horizontalSliderPosition->maximum() == ui->horizontalSliderPosition->value() )
-            ui->horizontalSliderPosition->setValue( 0 );
-
         //Start Audio
         if( ui->actionAudioOutput->isChecked()
          && ui->actionDropFrameMode->isChecked() )
