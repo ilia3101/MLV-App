@@ -32,14 +32,13 @@ int processingGetTonemappingFunction(processingObject_t * processing);
 #define TONEMAP_None 0
 #define TONEMAP_Reinhard 1
 #define TONEMAP_Tangent 2
-#define TONEMAP_CanonCLog 3
-#define TONEMAP_AlexaLogC 4
-#define TONEMAP_CineonLog 5
-#define TONEMAP_SonySLog 6
-#define TONEMAP_sRGB 7
-#define TONEMAP_Rec709 8
-#define TONEMAP_HLG 9
-#define TONEMAP_BMDFilm 10
+#define TONEMAP_AlexaLogC 3
+#define TONEMAP_CineonLog 4
+#define TONEMAP_SonySLog 5
+#define TONEMAP_sRGB 6
+#define TONEMAP_Rec709 7
+#define TONEMAP_HLG 8
+#define TONEMAP_BMDFilm 9
 
 
 
