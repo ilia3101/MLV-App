@@ -456,9 +456,9 @@ QGroupBox::indicator:checked:disabled {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>-808</y>
+            <y>0</y>
             <width>244</width>
-            <height>5235</height>
+            <height>5248</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayoutScrollArea">
@@ -2596,6 +2596,27 @@ QGroupBox::indicator:checked:disabled {
                  <property name="spacing">
                   <number>5</number>
                  </property>
+                 <item row="8" column="0">
+                  <widget class="QCheckBox" name="checkBoxCreativeAdjustments">
+                   <property name="enabled">
+                    <bool>true</bool>
+                   </property>
+                   <property name="font">
+                    <font>
+                     <pointsize>10</pointsize>
+                    </font>
+                   </property>
+                   <property name="toolTip">
+                    <string>Warning: Having creative adjustments and log profile enabled may not give logarithmic output!</string>
+                   </property>
+                   <property name="layoutDirection">
+                    <enum>Qt::LeftToRight</enum>
+                   </property>
+                   <property name="text">
+                    <string>Allow Creative Adjustments</string>
+                   </property>
+                  </widget>
+                 </item>
                  <item row="7" column="0">
                   <layout class="QGridLayout" name="gridLayout_64">
                    <property name="spacing">
@@ -2689,91 +2710,26 @@ QGroupBox::indicator:checked:disabled {
                    </property>
                   </widget>
                  </item>
-                 <item row="8" column="0">
-                  <widget class="QCheckBox" name="checkBoxCreativeAdjustments">
-                   <property name="enabled">
-                    <bool>true</bool>
-                   </property>
+                 <item row="11" column="0">
+                  <widget class="QComboBox" name="comboBoxUseCameraMatrix">
                    <property name="font">
                     <font>
                      <pointsize>10</pointsize>
                     </font>
                    </property>
-                   <property name="toolTip">
-                    <string>Warning: Having creative adjustments and log profile enabled may not give logarithmic output!</string>
-                   </property>
-                   <property name="layoutDirection">
-                    <enum>Qt::LeftToRight</enum>
-                   </property>
-                   <property name="text">
-                    <string>Allow Creative Adjustments</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="0">
-                  <widget class="QComboBox" name="comboBoxProfile">
-                   <property name="minimumSize">
-                    <size>
-                     <width>0</width>
-                     <height>0</height>
-                    </size>
-                   </property>
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-                   <property name="currentText">
-                    <string>Standard</string>
-                   </property>
                    <item>
                     <property name="text">
-                     <string>Standard</string>
+                     <string>Don't Use Camera Matrix</string>
                     </property>
                    </item>
                    <item>
                     <property name="text">
-                     <string>Tonemapped</string>
+                     <string>Use Camera Matrix</string>
                     </property>
                    </item>
                    <item>
                     <property name="text">
-                     <string>Film</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>Alexa Log-C</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>Cineon Log</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>Sony S-Log3</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>Linear</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>sRGB</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>Rec. 709</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>BMDFilm</string>
+                     <string>Uncolorscience Fix</string>
                     </property>
                    </item>
                   </widget>
@@ -2790,8 +2746,8 @@ QGroupBox::indicator:checked:disabled {
                    </property>
                   </widget>
                  </item>
-                 <item row="2" column="0">
-                  <widget class="Line" name="line_27">
+                 <item row="9" column="0">
+                  <widget class="Line" name="line_20">
                    <property name="styleSheet">
                     <string notr="true">background-color: rgb(115, 115, 115);</string>
                    </property>
@@ -2885,6 +2841,74 @@ QGroupBox::indicator:checked:disabled {
                    </item>
                   </widget>
                  </item>
+                 <item row="1" column="0">
+                  <widget class="QComboBox" name="comboBoxProfile">
+                   <property name="minimumSize">
+                    <size>
+                     <width>0</width>
+                     <height>0</height>
+                    </size>
+                   </property>
+                   <property name="font">
+                    <font>
+                     <pointsize>10</pointsize>
+                    </font>
+                   </property>
+                   <property name="currentText">
+                    <string>Standard</string>
+                   </property>
+                   <item>
+                    <property name="text">
+                     <string>Standard</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Tonemapped</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Film</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Alexa Log-C</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Cineon Log</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Sony S-Log3</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Linear</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>sRGB</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Rec. 709</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>BMDFilm</string>
+                    </property>
+                   </item>
+                  </widget>
+                 </item>
                  <item row="6" column="0">
                   <widget class="QComboBox" name="comboBoxProcessingGamut">
                    <property name="minimumSize">
@@ -2946,6 +2970,28 @@ QGroupBox::indicator:checked:disabled {
                      <string>BMDFilm</string>
                     </property>
                    </item>
+                  </widget>
+                 </item>
+                 <item row="2" column="0">
+                  <widget class="Line" name="line_27">
+                   <property name="styleSheet">
+                    <string notr="true">background-color: rgb(115, 115, 115);</string>
+                   </property>
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="10" column="0">
+                  <widget class="QLabel" name="label_39">
+                   <property name="font">
+                    <font>
+                     <pointsize>10</pointsize>
+                    </font>
+                   </property>
+                   <property name="text">
+                    <string>Camera Matrix</string>
+                   </property>
                   </widget>
                  </item>
                 </layout>
@@ -4091,45 +4137,35 @@ QGroupBox::indicator:checked:disabled {
                   </widget>
                  </item>
                  <item>
+                  <widget class="QCheckBox" name="checkBoxHighLightReconstruction">
+                   <property name="font">
+                    <font>
+                     <pointsize>10</pointsize>
+                    </font>
+                   </property>
+                   <property name="text">
+                    <string>Highlight Reconstruction</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
                   <layout class="QGridLayout" name="gridLayout_Highlights">
                    <property name="spacing">
                     <number>0</number>
                    </property>
-                   <item row="0" column="2">
-                    <spacer name="horizontalSpacer_16">
-                     <property name="orientation">
-                      <enum>Qt::Horizontal</enum>
-                     </property>
-                     <property name="sizeType">
-                      <enum>QSizePolicy::Maximum</enum>
-                     </property>
-                     <property name="sizeHint" stdset="0">
-                      <size>
-                       <width>40</width>
-                       <height>20</height>
-                      </size>
-                     </property>
-                    </spacer>
-                   </item>
-                   <item row="0" column="3">
-                    <widget class="DoubleClickLabel" name="label_HighlightsVal">
+                   <item row="1" column="0" colspan="2">
+                    <widget class="QLabel" name="label_highlights">
                      <property name="font">
                       <font>
                        <pointsize>10</pointsize>
                       </font>
                      </property>
-                     <property name="layoutDirection">
-                      <enum>Qt::RightToLeft</enum>
-                     </property>
                      <property name="text">
-                      <string>0</string>
-                     </property>
-                     <property name="alignment">
-                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                      <string>Highlights</string>
                      </property>
                     </widget>
                    </item>
-                   <item row="1" column="0" colspan="4">
+                   <item row="2" column="0" colspan="4">
                     <widget class="NoScrollSlider" name="horizontalSliderHighlights">
                      <property name="sizePolicy">
                       <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
@@ -4160,15 +4196,37 @@ QGroupBox::indicator:checked:disabled {
                      </property>
                     </widget>
                    </item>
-                   <item row="0" column="0" colspan="2">
-                    <widget class="QLabel" name="label_highlights">
+                   <item row="1" column="2">
+                    <spacer name="horizontalSpacer_16">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                     <property name="sizeType">
+                      <enum>QSizePolicy::Maximum</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>40</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                   <item row="1" column="3">
+                    <widget class="DoubleClickLabel" name="label_HighlightsVal">
                      <property name="font">
                       <font>
                        <pointsize>10</pointsize>
                       </font>
                      </property>
+                     <property name="layoutDirection">
+                      <enum>Qt::RightToLeft</enum>
+                     </property>
                      <property name="text">
-                      <string>Highlights</string>
+                      <string>0</string>
+                     </property>
+                     <property name="alignment">
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                      </property>
                     </widget>
                    </item>
@@ -4514,52 +4572,6 @@ QGroupBox::indicator:checked:disabled {
                      </spacer>
                     </item>
                    </layout>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="Line" name="line_20">
-                   <property name="styleSheet">
-                    <string notr="true">background-color: rgb(115, 115, 115);</string>
-                   </property>
-                   <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QCheckBox" name="checkBoxHighLightReconstruction">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-                   <property name="text">
-                    <string>Highlight Reconstruction</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QComboBox" name="comboBoxUseCameraMatrix">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-                   <item>
-                    <property name="text">
-                     <string>Don't Use Camera Matrix</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>Use Camera Matrix</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>Uncolorscience Fix</string>
-                    </property>
-                   </item>
                   </widget>
                  </item>
                 </layout>
