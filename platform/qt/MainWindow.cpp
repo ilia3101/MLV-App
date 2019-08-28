@@ -3044,7 +3044,7 @@ void MainWindow::saveSession(QString fileName)
     xmlWriter.writeStartDocument();
 
     xmlWriter.writeStartElement( "mlv_files" );
-    xmlWriter.writeAttribute( "version", "2" );
+    xmlWriter.writeAttribute( "version", "3" );
     xmlWriter.writeAttribute( "mlvapp", VERSION );
     for( int i = 0; i < ui->listWidgetSession->count(); i++ )
     {
@@ -3143,7 +3143,7 @@ void MainWindow::on_actionExportReceipt_triggered()
     xmlWriter.writeStartDocument();
 
     xmlWriter.writeStartElement( "receipt" );
-    xmlWriter.writeAttribute( "version", "2" );
+    xmlWriter.writeAttribute( "version", "3" );
     xmlWriter.writeAttribute( "mlvapp", VERSION );
 
     writeXmlElementsToFile( &xmlWriter, m_pSessionReceipts.at( m_lastActiveClipInSession ) );
@@ -3330,6 +3330,33 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
         {
             uint8_t profile = (uint8_t)Rxml->readElementText().toUInt();
             if( version < 2 && profile > 1 ) receipt->setProfile( profile + 1 );
+            else if( version == 2 )
+            {
+                receipt->setProfile( profile );
+                receipt->setGamut( GAMUT_Rec709 );
+                if( ( profile != PROFILE_ALEXA_LOG )
+                 && ( profile != PROFILE_CINEON_LOG )
+                 && ( profile != PROFILE_SONY_LOG_3 )
+                 && ( profile != PROFILE_SRGB )
+                 && ( profile != PROFILE_REC709 )
+                 && ( profile != PROFILE_BMDFILM ) )
+                {
+                    receipt->setAllowCreativeAdjustments( true );
+                }
+                switch( profile )
+                {
+                case PROFILE_STANDARD:
+                case PROFILE_TONEMAPPED:
+                    receipt->setGamma( 315 );
+                    break;
+                case PROFILE_FILM:
+                    receipt->setGamma( 346 );
+                    break;
+                default:
+                    receipt->setGamma( 100 );
+                    break;
+                }
+            }
             else receipt->setProfile( profile );
             Rxml->readNext();
         }
@@ -3351,6 +3378,19 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
         else if( Rxml->isStartElement() && Rxml->name() == "allowCreativeAdjustments" )
         {
             receipt->setAllowCreativeAdjustments( (bool)Rxml->readElementText().toInt() );
+            if( version == 2 )
+            {
+                int profile = receipt->profile();
+                if( ( profile != PROFILE_ALEXA_LOG )
+                 && ( profile != PROFILE_CINEON_LOG )
+                 && ( profile != PROFILE_SONY_LOG_3 )
+                 && ( profile != PROFILE_SRGB )
+                 && ( profile != PROFILE_REC709 )
+                 && ( profile != PROFILE_BMDFILM ) )
+                {
+                    receipt->setAllowCreativeAdjustments( true );
+                }
+            }
             Rxml->readNext();
         }
         else if( Rxml->isStartElement() && Rxml->name() == "denoiserWindow" )
