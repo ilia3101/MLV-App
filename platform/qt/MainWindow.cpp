@@ -1316,12 +1316,21 @@ void MainWindow::initGui( void )
     ui->toolButtonDualIsoForce->setVisible( false );
 
     //Vidstab
-   on_checkBoxVidstabEnable_toggled( false );
+    on_checkBoxVidstabEnable_toggled( false );
 
-   //Sharpen Mask is disabled by default
-   ui->label_ShMasking->setEnabled( false );
-   ui->label_ShMaskingText->setEnabled( false );
-   ui->horizontalSliderShMasking->setEnabled( false );
+    //Sharpen Mask is disabled by default
+    ui->label_ShMasking->setEnabled( false );
+    ui->label_ShMaskingText->setEnabled( false );
+    ui->horizontalSliderShMasking->setEnabled( false );
+
+    //Hide Canon Log
+    QListView* view = qobject_cast<QListView *>(ui->comboBoxTonemapFct->view());
+    Q_ASSERT(view != nullptr);
+    view->setRowHidden(TONEMAP_CanonCLog, true);
+    QStandardItemModel* model = qobject_cast<QStandardItemModel*>(ui->comboBoxTonemapFct->model());
+    Q_ASSERT(model != nullptr);
+    QStandardItem* item = model->item(TONEMAP_CanonCLog);
+    item->setFlags(item->flags() & ~Qt::ItemIsEnabled);
 
     //Reveal in Explorer
 #ifdef Q_OS_WIN
