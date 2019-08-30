@@ -151,7 +151,7 @@ int CRBFilterPlain::getDiffFactor(const uint16_t *color1, const uint16_t *color2
 	// find absolute difference between each component
 	for (int i = 0; i < m_reserve_channels; i++)
 	{
-        component_diff[i] = abs((int)color1[i] - (int)color2[i]);
+        component_diff[i] = fabs((int)color1[i] - (int)color2[i]);
 	}
 
     // based on number of components, produce a single difference value in the 0-QX_DEF_U16_MAX range

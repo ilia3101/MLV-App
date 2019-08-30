@@ -17,6 +17,7 @@
 // Adapted to PhotoFlow 08/2014
 // Adapted to MLVApp by masc 07/2018
 
+#include <stdlib.h>
 #include <math.h>
 #include "sleefsseavx.c"
 #include "debayer.h"

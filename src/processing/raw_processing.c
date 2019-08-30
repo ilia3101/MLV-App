@@ -6,6 +6,10 @@
 #include <pthread.h>
 #include "blur_threaded.h"
 
+#ifdef __SSE2__
+  #include <emmintrin.h>
+#endif
+
 #include "raw_processing.h"
 #include "../mlv/video_mlv.h"
 #include "filter/filter.h"
@@ -545,6 +549,9 @@ void apply_processing_object( processingObject_t * processing,
     float * vm = vignetteMask;
     float * vmpix = vm;
 
+    /* In case of camera matrix */
+    double (* tone_mapping_function)(double) = tonemap_functions[processing->tonemap_function];
+
     /* Apply some precalcuolated settings */
     for (int i = 0; i < img_s; ++i)
     {
@@ -600,8 +607,8 @@ void apply_processing_object( processingObject_t * processing,
             || ( processing->gradient_contrast <= -0.01 || processing->gradient_contrast >= 0.01 ) )
             {
                 int32_t cval = ( ((pm[0][pix[0]] /* + pm[1][pix[1]] + pm[2][pix[2]] */) << 2)
-                            + ((/* pm[3][pix[0]] + */ pm[4][pix[1]] /* + pm[5][pix[2]] */) * 11)
-                            +  (/* pm[6][pix[0]] + pm[7][pix[1]] + */ pm[8][pix[2]]) ) >> 4;
+                             + ((/* pm[3][pix[0]] + */ pm[4][pix[1]] /* + pm[5][pix[2]] */) * 11)
+                             +  (/* pm[6][pix[0]] + pm[7][pix[1]] + */ pm[8][pix[2]]) ) >> 4;
 
                 if( processing->clarity <= -0.01 || processing->clarity >= 0.01 )
                 {

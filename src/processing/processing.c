@@ -159,7 +159,7 @@ static void * tonemap_functions[] =
     (void *)&NoTonemap,
     (void *)&ReinhardTonemap,
     (void *)&TangentTonemap,
-    (void *)&CanonCLogTonemap,
+    //(void *)&CanonCLogTonemap,
     (void *)&AlexaLogCTonemap,
     (void *)&CineonLogTonemap,
     (void *)&SonySLogTonemap,
