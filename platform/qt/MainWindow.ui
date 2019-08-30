@@ -4381,11 +4381,6 @@ QGroupBox::indicator:checked:disabled {
                    </item>
                    <item>
                     <property name="text">
-                     <string>Canon C Log</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
                      <string>Alexa Log C</string>
                     </property>
                    </item>

@@ -1323,15 +1323,6 @@ void MainWindow::initGui( void )
     ui->label_ShMaskingText->setEnabled( false );
     ui->horizontalSliderShMasking->setEnabled( false );
 
-    //Hide Canon Log
-    QListView* view = qobject_cast<QListView *>(ui->comboBoxTonemapFct->view());
-    Q_ASSERT(view != nullptr);
-    view->setRowHidden(TONEMAP_CanonCLog, true);
-    QStandardItemModel* model = qobject_cast<QStandardItemModel*>(ui->comboBoxTonemapFct->model());
-    Q_ASSERT(model != nullptr);
-    QStandardItem* item = model->item(TONEMAP_CanonCLog);
-    item->setFlags(item->flags() & ~Qt::ItemIsEnabled);
-
     //Reveal in Explorer
 #ifdef Q_OS_WIN
     ui->actionShowInFinder->setText( tr( "Reveal in Explorer" ) );
