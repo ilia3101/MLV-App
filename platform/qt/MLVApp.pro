@@ -141,7 +141,8 @@ SOURCES += \
     ../../src/debayer/wb_conversion.c \
     ../../src/processing/sobel/sobel.c \
     MoveToTrash.cpp \
-    OverwriteListDialog.cpp
+    OverwriteListDialog.cpp \
+    PixelMapListDialog.cpp
 
 macx: SOURCES += ../cocoa/avf_lib/avf_lib.m
 
@@ -239,7 +240,8 @@ HEADERS += \
     MoveToTrash.h \
     OverwriteListDialog.h \
     avir/avirthreadpool.h \
-    avir/ThreadPool.h
+    avir/ThreadPool.h \
+    PixelMapListDialog.h
 
 macx: HEADERS += \
     ../cocoa/avf_lib/avencoder.h \
@@ -258,7 +260,8 @@ FORMS += \
     ReceiptCopyMaskDialog.ui \
     UserManualDialog.ui \
     SingleFrameExportDialog.ui \
-    OverwriteListDialog.ui
+    OverwriteListDialog.ui \
+    PixelMapListDialog.ui
 
 RESOURCES += \
     ressources.qrc \

@@ -44,6 +44,7 @@
 #include "avir/avirthreadpool.h"
 #include "MoveToTrash.h"
 #include "OverwriteListDialog.h"
+#include "PixelMapListDialog.h"
 
 #define APPNAME "MLV App"
 #define VERSION "1.8"
@@ -8904,4 +8905,11 @@ void MainWindow::selectDebayerAlgorithm()
 void MainWindow::on_actionBetterResizer_triggered()
 {
     m_frameChanged = true;
+}
+
+//Show a list of installed fpm files
+void MainWindow::on_actionShowInstalledFocusPixelMaps_triggered()
+{
+    PixelMapListDialog fpmDialog;
+    fpmDialog.exec();
 }
