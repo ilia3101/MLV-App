@@ -8911,5 +8911,9 @@ void MainWindow::on_actionBetterResizer_triggered()
 void MainWindow::on_actionShowInstalledFocusPixelMaps_triggered()
 {
     PixelMapListDialog fpmDialog;
+    if( m_fileLoaded )
+    {
+        fpmDialog.showFpm( m_pMlvObject );
+    }
     fpmDialog.exec();
 }

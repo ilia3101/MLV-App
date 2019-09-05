@@ -8,6 +8,7 @@
 #include "PixelMapListDialog.h"
 #include "ui_PixelMapListDialog.h"
 #include <QDir>
+#include <QDebug>
 #include <QTreeWidgetItem>
 
 PixelMapListDialog::PixelMapListDialog(QWidget *parent) :
@@ -87,4 +88,24 @@ PixelMapListDialog::PixelMapListDialog(QWidget *parent) :
 PixelMapListDialog::~PixelMapListDialog()
 {
     delete ui;
+}
+
+//Mark used fpm in tree structure
+void PixelMapListDialog::showFpm( mlvObject_t *pMlvObject )
+{
+    QString name = QString( "%1_%2x%3.fpm" ).arg( pMlvObject->IDNT.cameraModel, 0, 16 )
+                                            .arg( pMlvObject->RAWI.raw_info.width )
+                                            .arg( pMlvObject->RAWI.raw_info.height );
+
+    for( int i = 0; i < ui->treeWidget->topLevelItemCount(); i++ )
+    {
+        for( int j = 0; j < ui->treeWidget->topLevelItem( i )->childCount(); j++ )
+        {
+            if( ui->treeWidget->topLevelItem( i )->child( j )->text( 0 ) == name )
+            {
+                ui->treeWidget->expandItem( ui->treeWidget->topLevelItem( i ) );
+                ui->treeWidget->topLevelItem( i )->child( j )->setTextColor( 0, Qt::green );
+            }
+        }
+    }
 }

@@ -9,6 +9,7 @@
 #define PIXELMAPLISTDIALOG_H
 
 #include <QDialog>
+#include "../../src/mlv_include.h"
 
 namespace Ui {
 class PixelMapListDialog;
@@ -21,6 +22,7 @@ class PixelMapListDialog : public QDialog
 public:
     explicit PixelMapListDialog(QWidget *parent = 0);
     ~PixelMapListDialog();
+    void showFpm( mlvObject_t *pMlvObject );
 
 private:
     Ui::PixelMapListDialog *ui;
