@@ -4322,7 +4322,7 @@ QGroupBox::indicator:checked:disabled {
                     </font>
                    </property>
                    <property name="text">
-                    <string>Processing Profile</string>
+                    <string>Profile Preset</string>
                    </property>
                   </widget>
                  </item>
