@@ -91,7 +91,7 @@ ReceiptSettings::ReceiptSettings()
     m_vignetteShape = 0;
     m_caRed = 0;
     m_caBlue = 0;
-    m_profile = 1;
+    m_profile = 2;
     m_tonemap = -1;
     m_gamut = -1;
     m_gamma = 315;

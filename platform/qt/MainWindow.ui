@@ -4430,8 +4430,13 @@ QGroupBox::indicator:checked:disabled {
                     </font>
                    </property>
                    <property name="currentText">
-                    <string>Standard</string>
+                    <string>Select Preset...</string>
                    </property>
+                   <item>
+                    <property name="text">
+                     <string>Select Preset...</string>
+                    </property>
+                   </item>
                    <item>
                     <property name="text">
                      <string>Standard</string>

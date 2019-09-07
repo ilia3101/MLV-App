@@ -3329,10 +3329,10 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
         else if( Rxml->isStartElement() && Rxml->name() == "profile" )
         {
             uint8_t profile = (uint8_t)Rxml->readElementText().toUInt();
-            if( version < 2 && profile > 1 ) receipt->setProfile( profile + 1 );
+            if( version < 2 && profile > 1 ) receipt->setProfile( profile + 2 );
             else if( version == 2 )
             {
-                receipt->setProfile( profile );
+                receipt->setProfile( profile + 1 );
                 receipt->setGamut( GAMUT_Rec709 );
                 if( ( profile != PROFILE_ALEXA_LOG )
                  && ( profile != PROFILE_CINEON_LOG )
@@ -3357,7 +3357,7 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
                     break;
                 }
             }
-            else receipt->setProfile( profile );
+            //else receipt->setProfile( profile ); //never load for v3, because we now have single settings
             Rxml->readNext();
         }
         else if( Rxml->isStartElement() && Rxml->name() == "tonemap" )
@@ -6061,6 +6061,10 @@ void MainWindow::on_checkBoxChromaSeparation_toggled(bool checked)
 //Chose profile
 void MainWindow::on_comboBoxProfile_currentIndexChanged(int index)
 {
+    if( index == 0 ) return;
+    ui->comboBoxProfile->setCurrentIndex( 0 );
+    index--;
+
     processingSetImageProfile(m_pProcessingObject, index);
     m_frameChanged = true;
     //Disable parameters if log
