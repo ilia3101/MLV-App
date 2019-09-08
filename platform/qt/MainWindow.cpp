@@ -1317,12 +1317,12 @@ void MainWindow::initGui( void )
     ui->toolButtonDualIsoForce->setVisible( false );
 
     //Vidstab
-   on_checkBoxVidstabEnable_toggled( false );
+    on_checkBoxVidstabEnable_toggled( false );
 
-   //Sharpen Mask is disabled by default
-   ui->label_ShMasking->setEnabled( false );
-   ui->label_ShMaskingText->setEnabled( false );
-   ui->horizontalSliderShMasking->setEnabled( false );
+    //Sharpen Mask is disabled by default
+    ui->label_ShMasking->setEnabled( false );
+    ui->label_ShMaskingText->setEnabled( false );
+    ui->horizontalSliderShMasking->setEnabled( false );
 
     //Reveal in Explorer
 #ifdef Q_OS_WIN
@@ -1428,6 +1428,7 @@ void MainWindow::readSettings()
     ui->groupBoxRawCorrection->setChecked( set.value( "expandedRawCorrection", false ).toBool() );
     ui->groupBoxCutInOut->setChecked( set.value( "expandedCutInOut", false ).toBool() );
     ui->groupBoxDebayer->setChecked( set.value( "expandedDebayer", true ).toBool() );
+    ui->groupBoxProfiles->setChecked( set.value( "expandedProfiles", true ).toBool() );
     ui->groupBoxProcessing->setChecked( set.value( "expandedProcessing", true ).toBool() );
     ui->groupBoxDetails->setChecked( set.value( "expandedDetails", false ).toBool() );
     ui->groupBoxHsl->setChecked( set.value( "expandedHsl", false ).toBool() );
@@ -1495,6 +1496,7 @@ void MainWindow::writeSettings()
     set.setValue( "expandedRawCorrection", ui->groupBoxRawCorrection->isChecked() );
     set.setValue( "expandedCutInOut", ui->groupBoxCutInOut->isChecked() );
     set.setValue( "expandedDebayer", ui->groupBoxDebayer->isChecked() );
+    set.setValue( "expandedProfiles", ui->groupBoxProfiles->isChecked() );
     set.setValue( "expandedProcessing", ui->groupBoxProcessing->isChecked() );
     set.setValue( "expandedDetails", ui->groupBoxDetails->isChecked() );
     set.setValue( "expandedHsl", ui->groupBoxHsl->isChecked() );
@@ -3054,7 +3056,7 @@ void MainWindow::saveSession(QString fileName)
     xmlWriter.writeStartDocument();
 
     xmlWriter.writeStartElement( "mlv_files" );
-    xmlWriter.writeAttribute( "version", "2" );
+    xmlWriter.writeAttribute( "version", "3" );
     xmlWriter.writeAttribute( "mlvapp", VERSION );
     for( int i = 0; i < ui->listWidgetSession->count(); i++ )
     {
@@ -3153,7 +3155,7 @@ void MainWindow::on_actionExportReceipt_triggered()
     xmlWriter.writeStartDocument();
 
     xmlWriter.writeStartElement( "receipt" );
-    xmlWriter.writeAttribute( "version", "2" );
+    xmlWriter.writeAttribute( "version", "3" );
     xmlWriter.writeAttribute( "mlvapp", VERSION );
 
     writeXmlElementsToFile( &xmlWriter, m_pSessionReceipts.at( m_lastActiveClipInSession ) );
@@ -3339,13 +3341,68 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
         else if( Rxml->isStartElement() && Rxml->name() == "profile" )
         {
             uint8_t profile = (uint8_t)Rxml->readElementText().toUInt();
-            if( version < 2 && profile > 1 ) receipt->setProfile( profile + 1 );
-            else receipt->setProfile( profile );
+            if( version < 2 && profile > 1 ) receipt->setProfile( profile + 2 );
+            else if( version == 2 )
+            {
+                receipt->setProfile( profile + 1 );
+                receipt->setGamut( GAMUT_Rec709 );
+                if( ( profile != PROFILE_ALEXA_LOG )
+                 && ( profile != PROFILE_CINEON_LOG )
+                 && ( profile != PROFILE_SONY_LOG_3 )
+                 && ( profile != PROFILE_SRGB )
+                 && ( profile != PROFILE_REC709 )
+                 && ( profile != PROFILE_BMDFILM ) )
+                {
+                    receipt->setAllowCreativeAdjustments( true );
+                }
+                switch( profile )
+                {
+                case PROFILE_STANDARD:
+                case PROFILE_TONEMAPPED:
+                    receipt->setGamma( 315 );
+                    break;
+                case PROFILE_FILM:
+                    receipt->setGamma( 346 );
+                    break;
+                default:
+                    receipt->setGamma( 100 );
+                    break;
+                }
+            }
+            //else receipt->setProfile( profile ); //never load for v3, because we now have single settings
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == "tonemap" )
+        {
+            receipt->setTonemap( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == "gamut" )
+        {
+            receipt->setGamut( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == "gamma" )
+        {
+            receipt->setGamma( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
         else if( Rxml->isStartElement() && Rxml->name() == "allowCreativeAdjustments" )
         {
             receipt->setAllowCreativeAdjustments( (bool)Rxml->readElementText().toInt() );
+            if( version == 2 )
+            {
+                int profile = receipt->profile();
+                if( ( profile != PROFILE_ALEXA_LOG )
+                 && ( profile != PROFILE_CINEON_LOG )
+                 && ( profile != PROFILE_SONY_LOG_3 )
+                 && ( profile != PROFILE_SRGB )
+                 && ( profile != PROFILE_REC709 )
+                 && ( profile != PROFILE_BMDFILM ) )
+                {
+                    receipt->setAllowCreativeAdjustments( true );
+                }
+            }
             Rxml->readNext();
         }
         else if( Rxml->isStartElement() && Rxml->name() == "denoiserWindow" )
@@ -3655,7 +3712,10 @@ void MainWindow::writeXmlElementsToFile(QXmlStreamWriter *xmlWriter, ReceiptSett
     xmlWriter->writeTextElement( "highlightReconstruction", QString( "%1" ).arg( receipt->isHighlightReconstruction() ) );
     xmlWriter->writeTextElement( "camMatrixUsed",           QString( "%1" ).arg( receipt->camMatrixUsed() ) );
     xmlWriter->writeTextElement( "chromaSeparation",        QString( "%1" ).arg( receipt->isChromaSeparation() ) );
-    xmlWriter->writeTextElement( "profile",                 QString( "%1" ).arg( receipt->profile() ) );
+    //xmlWriter->writeTextElement( "profile",                 QString( "%1" ).arg( receipt->profile() ) );
+    xmlWriter->writeTextElement( "tonemap",                 QString( "%1" ).arg( receipt->tonemap() ) );
+    xmlWriter->writeTextElement( "gamut",                   QString( "%1" ).arg( receipt->gamut() ) );
+    xmlWriter->writeTextElement( "gamma",                   QString( "%1" ).arg( receipt->gamma() ) );
     xmlWriter->writeTextElement( "allowCreativeAdjustments",QString( "%1" ).arg( receipt->allowCreativeAdjustments() ) );
     xmlWriter->writeTextElement( "denoiserStrength",        QString( "%1" ).arg( receipt->denoiserStrength() ) );
     xmlWriter->writeTextElement( "denoiserWindow",          QString( "%1" ).arg( receipt->denoiserWindow() ) );
@@ -3868,6 +3928,17 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
 
     ui->comboBoxProfile->setCurrentIndex( receipt->profile() );
     on_comboBoxProfile_currentIndexChanged( receipt->profile() );
+    if( receipt->tonemap() != -1 )
+    {
+        ui->comboBoxTonemapFct->setCurrentIndex( receipt->tonemap() );
+        on_comboBoxTonemapFct_currentIndexChanged( receipt->tonemap() );
+    }
+    if( receipt->gamut() != -1 )
+    {
+        ui->comboBoxProcessingGamut->setCurrentIndex( receipt->gamut() );
+        on_comboBoxProcessingGamut_currentIndexChanged( receipt->gamut() );
+    }
+    ui->horizontalSliderGamma->setValue( receipt->gamma() );
 
     ui->checkBoxCreativeAdjustments->setChecked( receipt->allowCreativeAdjustments() );
     on_checkBoxCreativeAdjustments_toggled( receipt->allowCreativeAdjustments() );
@@ -4074,6 +4145,9 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     receipt->setCamMatrixUsed( ui->comboBoxUseCameraMatrix->currentIndex() );
     receipt->setChromaSeparation( ui->checkBoxChromaSeparation->isChecked() );
     receipt->setProfile( ui->comboBoxProfile->currentIndex() );
+    receipt->setTonemap( ui->comboBoxTonemapFct->currentIndex() );
+    receipt->setGamut( ui->comboBoxProcessingGamut->currentIndex() );
+    receipt->setGamma( ui->horizontalSliderGamma->value() );
     receipt->setAllowCreativeAdjustments( ui->checkBoxCreativeAdjustments->isChecked() );
     receipt->setDenoiserStrength( ui->horizontalSliderDenoiseStrength->value() );
     receipt->setDenoiserWindow( ui->comboBoxDenoiseWindow->currentIndex() + 2 );
@@ -4186,8 +4260,14 @@ void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings 
     if( paste && cdui->checkBoxHighlightReconstruction->isChecked() ) receiptTarget->setHighlightReconstruction( receiptSource->isHighlightReconstruction() );
     if( paste && cdui->checkBoxCameraMatrix->isChecked() ) receiptTarget->setCamMatrixUsed( receiptSource->camMatrixUsed() );
     if( paste && cdui->checkBoxChromaBlur->isChecked() ) receiptTarget->setChromaSeparation( receiptSource->isChromaSeparation() );
-    if( paste && cdui->checkBoxProfile->isChecked() )    receiptTarget->setProfile( receiptSource->profile() );
-    if( paste && cdui->checkBoxProfile->isChecked() )    receiptTarget->setAllowCreativeAdjustments( receiptSource->allowCreativeAdjustments() );
+    if( paste && cdui->checkBoxProfile->isChecked() )
+    {
+        receiptTarget->setProfile( receiptSource->profile() );
+        receiptTarget->setAllowCreativeAdjustments( receiptSource->allowCreativeAdjustments() );
+        receiptTarget->setTonemap( receiptSource->tonemap() );
+        receiptTarget->setGamut( receiptSource->gamut() );
+        receiptTarget->setGamma( receiptSource->gamma() );
+    }
     if( paste && cdui->checkBoxDenoise->isChecked() )    receiptTarget->setDenoiserStrength( receiptSource->denoiserStrength() );
     if( paste && cdui->checkBoxDenoise->isChecked() )    receiptTarget->setDenoiserWindow( receiptSource->denoiserWindow() );
     if( paste && cdui->checkBoxDenoise->isChecked() )    receiptTarget->setRbfDenoiserLuma( receiptSource->rbfDenoiserLuma() );
@@ -4355,6 +4435,9 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     receipt->setChromaSeparation( m_pSessionReceipts.at( row )->isChromaSeparation() );
     receipt->setProfile( m_pSessionReceipts.at( row )->profile() );
     receipt->setAllowCreativeAdjustments( m_pSessionReceipts.at( row )->allowCreativeAdjustments() );
+    receipt->setTonemap( m_pSessionReceipts.at( row )->tonemap() );
+    receipt->setGamut( m_pSessionReceipts.at( row )->gamut() );
+    receipt->setGamma( m_pSessionReceipts.at( row )->gamma() );
     receipt->setDenoiserStrength( m_pSessionReceipts.at( row )->denoiserStrength() );
     receipt->setDenoiserWindow( m_pSessionReceipts.at( row )->denoiserWindow() );
     receipt->setRbfDenoiserLuma( m_pSessionReceipts.at( row )->rbfDenoiserLuma() );
@@ -5057,6 +5140,14 @@ void MainWindow::on_actionClip_Information_triggered()
 {
     if( !m_pInfoDialog->isVisible() ) m_pInfoDialog->show();
     else m_pInfoDialog->hide();
+}
+
+void MainWindow::on_horizontalSliderGamma_valueChanged(int position)
+{
+    double value = position / 100.0;
+    processingSetGamma( m_pProcessingObject, value );
+    ui->label_GammaVal->setText( QString("%1").arg( value, 0, 'f', 2 ) );
+    m_frameChanged = true;
 }
 
 void MainWindow::on_horizontalSliderExposure_valueChanged(int position)
@@ -5954,12 +6045,12 @@ void MainWindow::on_checkBoxCreativeAdjustments_toggled(bool checked)
 {
     if( checked )
     {
-        ui->checkBoxCreativeAdjustments->setIcon( QIcon( ":/RetinaIMG/RetinaIMG/Status-dialog-warning-icon.png" ) );
+        //ui->checkBoxCreativeAdjustments->setIcon( QIcon( ":/RetinaIMG/RetinaIMG/Status-dialog-warning-icon.png" ) );
         processingAllowCreativeAdjustments( m_pProcessingObject );
     }
     else
     {
-        ui->checkBoxCreativeAdjustments->setIcon( QIcon() );
+        //ui->checkBoxCreativeAdjustments->setIcon( QIcon() );
         processingDontAllowCreativeAdjustments( m_pProcessingObject );
     }
     if( ui->checkBoxCreativeAdjustments->isEnabled() ) enableCreativeAdjustments( checked );
@@ -5982,25 +6073,45 @@ void MainWindow::on_checkBoxChromaSeparation_toggled(bool checked)
 //Chose profile
 void MainWindow::on_comboBoxProfile_currentIndexChanged(int index)
 {
+    if( index == 0 ) return;
+    ui->comboBoxProfile->setCurrentIndex( 0 );
+    index--;
+
     processingSetImageProfile(m_pProcessingObject, index);
     m_frameChanged = true;
     //Disable parameters if log
-    bool enable = true;
-    if( ( index == PROFILE_ALEXA_LOG )
-     || ( index == PROFILE_CINEON_LOG )
-     || ( index == PROFILE_SONY_LOG_3 )
-     || ( index == PROFILE_SRGB )
-     || ( index == PROFILE_REC709 )
-     || ( index == PROFILE_BMDFILM ) )
-    {
-        enable = false;
-    }
-    else
-    {
-        ui->checkBoxCreativeAdjustments->setChecked( false );
-    }
-    ui->checkBoxCreativeAdjustments->setEnabled( !enable );
-    enableCreativeAdjustments( enable || ui->checkBoxCreativeAdjustments->isChecked() );
+    ui->checkBoxCreativeAdjustments->blockSignals( true );
+    ui->checkBoxCreativeAdjustments->setChecked( processingGetAllowedCreativeAdjustments( m_pProcessingObject ) );
+    ui->checkBoxCreativeAdjustments->setEnabled( true );
+    enableCreativeAdjustments( processingGetAllowedCreativeAdjustments( m_pProcessingObject ) );
+    ui->checkBoxCreativeAdjustments->blockSignals( false );
+    ui->comboBoxTonemapFct->blockSignals( true );
+    ui->comboBoxTonemapFct->setCurrentIndex( processingGetTonemappingFunction( m_pProcessingObject ) );
+    ui->comboBoxTonemapFct->blockSignals( false );
+    ui->comboBoxProcessingGamut->blockSignals( true );
+    ui->comboBoxProcessingGamut->setCurrentIndex( processingGetGamut( m_pProcessingObject ) );
+    ui->comboBoxProcessingGamut->blockSignals( false );
+    ui->horizontalSliderGamma->setValue( processingGetGamma( m_pProcessingObject ) * 100 );
+}
+
+//Chose profile, without changing the index
+void MainWindow::on_comboBoxProfile_activated(int index)
+{
+    on_comboBoxProfile_currentIndexChanged( index );
+}
+
+//Choose Tonemapping Function
+void MainWindow::on_comboBoxTonemapFct_currentIndexChanged(int index)
+{
+    processingSetTonemappingFunction( m_pProcessingObject, index );
+    m_frameChanged = true;
+}
+
+//Choose Processing Gamut
+void MainWindow::on_comboBoxProcessingGamut_currentIndexChanged(int index)
+{
+    processingSetGamut( m_pProcessingObject, index );
+    m_frameChanged = true;
 }
 
 //Switch on/off all creative adjustment elements
@@ -6013,6 +6124,11 @@ void MainWindow::enableCreativeAdjustments( bool enable )
     ui->horizontalSliderLighten->setEnabled( enable );
     ui->horizontalSliderVibrance->setEnabled( enable );
     ui->horizontalSliderSaturation->setEnabled( enable );
+    ui->horizontalSliderContrast->setEnabled( enable );
+    ui->horizontalSliderClarity->setEnabled( enable );
+    ui->horizontalSliderHighlights->setEnabled( enable );
+    ui->horizontalSliderShadows->setEnabled( enable );
+    ui->horizontalSliderContrastGradient->setEnabled( enable );
     ui->label_LsVal->setEnabled( enable );
     ui->label_LrVal->setEnabled( enable );
     ui->label_DsVal->setEnabled( enable );
@@ -6020,6 +6136,11 @@ void MainWindow::enableCreativeAdjustments( bool enable )
     ui->label_LightenVal->setEnabled( enable );
     ui->label_VibranceVal->setEnabled( enable );
     ui->label_SaturationVal->setEnabled( enable );
+    ui->label_ContrastVal->setEnabled( enable );
+    ui->label_ClarityVal->setEnabled( enable );
+    ui->label_HighlightsVal->setEnabled( enable );
+    ui->label_ShadowsVal->setEnabled( enable );
+    ui->label_ContrastGradientVal->setEnabled( enable );
     ui->label_ls->setEnabled( enable );
     ui->label_lr->setEnabled( enable );
     ui->label_ds->setEnabled( enable );
@@ -6027,6 +6148,11 @@ void MainWindow::enableCreativeAdjustments( bool enable )
     ui->label_lighten->setEnabled( enable );
     ui->label_vibrance->setEnabled( enable );
     ui->label_saturation->setEnabled( enable );
+    ui->label_contrast->setEnabled( enable );
+    ui->label_clarity->setEnabled( enable );
+    ui->label_highlights->setEnabled( enable );
+    ui->label_shadows->setEnabled( enable );
+    ui->label_contrast_gradient->setEnabled( enable );
     ui->groupBoxHsl->setEnabled( enable );
     ui->groupBoxToning->setEnabled( enable );
     ui->label_gradationcurves->setEnabled( enable );
@@ -6619,6 +6745,15 @@ void MainWindow::on_labelScope_customContextMenuRequested(const QPoint &pos)
     myMenu.addAction( ui->actionShowVectorScope );
     // Show context menu at handling position
     myMenu.exec( globalPos );
+}
+
+//DoubleClick on Gamma Label
+void MainWindow::on_label_GammaVal_doubleClicked()
+{
+    EditSliderValueDialog editSlider;
+    editSlider.autoSetup( ui->horizontalSliderGamma, ui->label_GammaVal, 0.01, 2, 100.0 );
+    editSlider.exec();
+    ui->horizontalSliderGamma->setValue( editSlider.getValue() );
 }
 
 //DoubleClick on Exposure Label
@@ -7717,6 +7852,13 @@ void MainWindow::on_groupBoxDebayer_toggled(bool arg1)
     ui->frameDebayer->setVisible( arg1 );
     if( !arg1 ) ui->groupBoxDebayer->setMaximumHeight( 30 );
     else ui->groupBoxDebayer->setMaximumHeight( 16777215 );
+}
+
+void MainWindow::on_groupBoxProfiles_toggled(bool arg1)
+{
+    ui->frameProfiles->setVisible( arg1 );
+    if( !arg1 ) ui->groupBoxProfiles->setMaximumHeight( 30 );
+    else ui->groupBoxProfiles->setMaximumHeight( 16777215 );
 }
 
 //Collapse & Expand Processing

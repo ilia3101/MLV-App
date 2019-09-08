@@ -49,7 +49,61 @@ static const double ciecam02_danne[] = {
     0.0030,  0.0536,  0.9834
 };
 
+
+/* Matrices XYZ -> RGB */
+static double colour_gamuts[][9] = {
+    { /* GAMUT_Rec709 */
+         3.2404542, -1.5371385, -0.4985314,
+        -0.9692660,  1.8760108,  0.0415560,
+         0.0556434, -0.2040259,  1.0572252
+    },
+    { /* GAMUT_Rec2020 */
+         1.72466, -0.36222, -0.25442,
+        -0.66941,  1.62275,  0.01240,
+         0.01826, -0.04444,  0.94329
+    },
+    { /* GAMUT_ACES_AP0 */
+        1.0498110175, 0.0000000000, -0.0000974845,
+        -0.4959030231, 1.3733130458, 0.0982400361,
+        0.0000000000, 0.0000000000, 0.9912520182
+    },
+    { /* GAMUT_AdobeRGB */
+         2.0413690, -0.5649464, -0.3446944,
+        -0.9692660,  1.8760108,  0.0415560,
+         0.0134474, -0.1183897,  1.0154096
+    },
+    { /* GAMUT_ProPhotoRGB */
+         1.3459433, -0.2556075, -0.0511118,
+        -0.5445989,  1.5081673,  0.0205351,
+         0.0000000,  0.0000000,  1.2118128
+    },
+    { /* GAMUT_XYZ */
+         1, 0, 0, 0, 1, 0, 0, 0, 1
+    },
+    { /* GAMUT_AlexaWideGamutRGB */
+         1.789066, -0.482534, -0.200076,
+        -0.639849,  1.396400,  0.194432,
+        -0.041532,  0.082335,  0.878868
+    },
+    { /* GAMUT_SonySGamut3 */
+         1.8467789693, -0.5259861230, -0.2105452114,
+        -0.4441532629,  1.2594429028,  0.1493999729,
+         0.0408554212,  0.0156408893,  0.8682072487
+    },
+    { /* GAMUT_BmdFilm */
+         1.693614, -0.459157, -0.138632,
+        -0.489970,  1.344410,  0.111740,
+        -0.074796,  0.385269,  0.629528
+    }
+};
+
+// BMDFILM: http://www.bmcuser.com/archive/index.php/t-15819.html
+
 /* Tonemapping info from http://filmicworlds.com/blog/filmic-tonemapping-operators/ */
+
+/* NO TRANSFER FUNCTION, EASIER TO CODE */
+double NoTonemap(double x) { return x; }
+float NoTonemap_f(float x) { return x; }
 
 /* Reinhard - most basic but just werks */
 double ReinhardTonemap(double x) { return x / (1.0 + x); }
@@ -76,12 +130,16 @@ double SonySLogTonemap(double x) { return (x >= 0.01125000) ? (420.0 + log10((x 
 float SonySLogTonemap_f(float x) { return (x >= 0.01125000f) ? (420.0f + log10f((x + 0.01f) / (0.18f + 0.01f)) * 261.5f) / 1023.0f : (x * (171.2102946929f - 95.0f) / 0.01125000f + 95.0f) / 1023.0f; }
 
 /* sRGB */
-double sRGBTonemap(double x) { return x < 0.0031308 ? x * 12.92 : (1.055 * pow(x, 1.0 / 2.4)) -0.055; }
-float sRGBTonemap_f(float x) { return x < 0.0031308f ? x * 12.92f : (1.055f * powf(x, 1.0f / 2.4f)) -0.055f; }
+double sRGBTransferFunction(double x) { return x < 0.0031308 ? x * 12.92 : (1.055 * pow(x, 1.0 / 2.4)) -0.055; }
+float sRGBTransferFunction_f(float x) { return x < 0.0031308f ? x * 12.92f : (1.055f * powf(x, 1.0f / 2.4f)) -0.055f; }
 
 /* rec709 */
-double Rec709Tonemap(double x) { return x <= 0.018 ? (x * 4.5) : 1.099 * pow( x, (0.45) ) - 0.099; }
-float Rec709Tonemap_f(float x) { return x <= 0.018f ? (x * 4.5f) : 1.099f * powf( x, (0.45f) ) - 0.099f; }
+double Rec709TransferFunction(double x) { return x <= 0.018 ? (x * 4.5) : 1.099 * pow( x, (0.45) ) - 0.099; }
+float Rec709TransferFunction_f(float x) { return x <= 0.018f ? (x * 4.5f) : 1.099f * powf( x, (0.45f) ) - 0.099f; }
+
+/* HLG (Hybrid Log Gamma) */
+double HLG_TransferFunction(double E) { return (E <= 1.0) ? (sqrt(E) * 0.5) : 0.17883277 * log(E - 0.28466892) + 0.55991073; }
+float HLG_TransferFunction_f(float E) { return (E <= 1.0f) ? (sqrtf(E) * 0.5f) : 0.17883277f * logf(E - 0.28466892f) + 0.55991073f; }
 
 /* BMDFilm via LUT */
 double BmdFilmTonemap(double x)
@@ -95,6 +153,21 @@ double BmdFilmTonemap(double x)
 
     return interpol( input, in, in+1, pix00, pix01 );
 }
+
+static void * tonemap_functions[] =
+{
+    (void *)&NoTonemap,
+    (void *)&ReinhardTonemap,
+    (void *)&TangentTonemap,
+    //(void *)&CanonCLogTonemap,
+    (void *)&AlexaLogCTonemap,
+    (void *)&CineonLogTonemap,
+    (void *)&SonySLogTonemap,
+    (void *)&sRGBTransferFunction,
+    (void *)&Rec709TransferFunction,
+    (void *)&HLG_TransferFunction,
+    (void *)&BmdFilmTonemap
+};
 
 /* Returns multipliers for white balance by (linearly) interpolating measured 
  * Canon values... stupidly simple, also range limited to 2500-10000 (pls obey) */
@@ -324,7 +397,7 @@ void processing_update_matrices(processingObject_t * processing)
                       processing->final_matrix );
 
     /* Exposure, done here if smaller than 0, or no tonemapping - else done at gamma function */
-    if (processing->exposure_stops < 0.0 || !processing->tone_mapping)
+    if (processing->exposure_stops < 0.0 || processing->tonemap_function == 0)
     {
         double exposure_factor = pow(2.0, processing->exposure_stops);
         for (int i = 0; i < 9; ++i) processing->final_matrix[i] *= exposure_factor;
@@ -404,7 +477,7 @@ void processing_update_matrices_gradient(processingObject_t * processing)
                       final_matrix );
 
     /* Exposure, done here if smaller than 0, or no tonemapping - else done at gamma function */
-    if ((processing->exposure_stops + processing->gradient_exposure_stops) < 0.0 || !processing->tone_mapping)
+    if ((processing->exposure_stops + processing->gradient_exposure_stops) < 0.0 || processing->tonemap_function == 0)
     {
         double exposure_factor = pow(2.0, (processing->exposure_stops + processing->gradient_exposure_stops));
         for (int i = 0; i < 9; ++i) final_matrix[i] *= exposure_factor;
