@@ -6068,11 +6068,10 @@ void MainWindow::on_comboBoxProfile_currentIndexChanged(int index)
     processingSetImageProfile(m_pProcessingObject, index);
     m_frameChanged = true;
     //Disable parameters if log
-    bool enable = true;
     ui->checkBoxCreativeAdjustments->blockSignals( true );
     ui->checkBoxCreativeAdjustments->setChecked( processingGetAllowedCreativeAdjustments( m_pProcessingObject ) );
-    ui->checkBoxCreativeAdjustments->setEnabled( enable );
-    enableCreativeAdjustments( enable || ui->checkBoxCreativeAdjustments->isChecked() );
+    ui->checkBoxCreativeAdjustments->setEnabled( true );
+    enableCreativeAdjustments( processingGetAllowedCreativeAdjustments( m_pProcessingObject ) );
     ui->checkBoxCreativeAdjustments->blockSignals( false );
     ui->comboBoxTonemapFct->blockSignals( true );
     ui->comboBoxTonemapFct->setCurrentIndex( processingGetTonemappingFunction( m_pProcessingObject ) );
