@@ -178,8 +178,10 @@ private slots:
     void on_actionUseBilinear_triggered();
     void on_actionUseLmmseDebayer_triggered();
     void on_actionUseIgvDebayer_triggered();
+    void on_actionUseAhdDebayer_triggered();
     void on_actionAlwaysUseAMaZE_triggered();
     void on_actionCaching_triggered();
+    void on_actionDontSwitchDebayerForPlayback_triggered();
     void on_actionExportSettings_triggered();
     void on_actionResetReceipt_triggered();
     void on_actionCopyRecept_triggered();

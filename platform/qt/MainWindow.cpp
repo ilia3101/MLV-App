@@ -1041,9 +1041,12 @@ void MainWindow::initGui( void )
     m_previewDebayerGroup->addAction( ui->actionUseBilinear );
     m_previewDebayerGroup->addAction( ui->actionUseLmmseDebayer );
     m_previewDebayerGroup->addAction( ui->actionUseIgvDebayer );
+    m_previewDebayerGroup->addAction( ui->actionUseAhdDebayer );
     m_previewDebayerGroup->addAction( ui->actionAlwaysUseAMaZE );
     m_previewDebayerGroup->addAction( ui->actionCaching );
+    m_previewDebayerGroup->addAction( ui->actionDontSwitchDebayerForPlayback );
     ui->actionUseBilinear->setChecked( true );
+    ui->actionCaching->setVisible( false );
 
     //Scope menu as group
     m_scopeGroup = new QActionGroup( this );
@@ -1297,13 +1300,6 @@ void MainWindow::initGui( void )
     ui->labelHueVsLuma->setFrameChangedPointer( &m_frameChanged );
     ui->labelHueVsLuma->setDiagramType( HueVsDiagram::HueVsLuminance );
     ui->labelHueVsLuma->paintElement();
-
-    //Debayer in Receipt
-    //ui->groupBoxDebayer->setVisible( false );
-    ui->actionUseLmmseDebayer->setVisible( false );
-    ui->actionUseIgvDebayer->setVisible( false );
-    ui->actionAlwaysUseAMaZE->setVisible( false );
-    ui->actionCaching->setVisible( false );
 
     //Call temp sliders once for stylesheet
     on_horizontalSliderTemperature_valueChanged( ui->horizontalSliderTemperature->value() );
@@ -6276,43 +6272,29 @@ void MainWindow::on_actionUseBilinear_triggered()
 //Use LMMSE debayer
 void MainWindow::on_actionUseLmmseDebayer_triggered()
 {
-    /* Use LMMSE */
-    setMlvUseLmmseDebayer( m_pMlvObject );
-
-    disableMlvCaching( m_pMlvObject );
-
-    llrpResetFpmStatus(m_pMlvObject);
-    llrpResetBpmStatus(m_pMlvObject);
-    llrpComputeStripesOn(m_pMlvObject);
-    m_frameChanged = true;
+    selectDebayerAlgorithm();
+    return;
 }
 
 //Use IGV debayer
 void MainWindow::on_actionUseIgvDebayer_triggered()
 {
-    /* Use IGV */
-    setMlvUseIgvDebayer( m_pMlvObject );
+    selectDebayerAlgorithm();
+    return;
+}
 
-    disableMlvCaching( m_pMlvObject );
-
-    llrpResetFpmStatus(m_pMlvObject);
-    llrpResetBpmStatus(m_pMlvObject);
-    llrpComputeStripesOn(m_pMlvObject);
-    m_frameChanged = true;
+//Use AHD debayer
+void MainWindow::on_actionUseAhdDebayer_triggered()
+{
+    selectDebayerAlgorithm();
+    return;
 }
 
 //Use AMaZE or not
 void MainWindow::on_actionAlwaysUseAMaZE_triggered()
 {
-    /* Use AMaZE */
-    setMlvAlwaysUseAmaze( m_pMlvObject );
-
-    disableMlvCaching( m_pMlvObject );
-
-    llrpResetFpmStatus(m_pMlvObject);
-    llrpResetBpmStatus(m_pMlvObject);
-    llrpComputeStripesOn(m_pMlvObject);
-    m_frameChanged = true;
+    selectDebayerAlgorithm();
+    return;
 }
 
 //En-/Disable Caching
@@ -6327,6 +6309,13 @@ void MainWindow::on_actionCaching_triggered()
     llrpResetBpmStatus(m_pMlvObject);
     llrpComputeStripesOn(m_pMlvObject);
     m_frameChanged = true;
+}
+
+//Use same debayer for playback like in edit panel
+void MainWindow::on_actionDontSwitchDebayerForPlayback_triggered()
+{
+    selectDebayerAlgorithm();
+    return;
 }
 
 //Select the codec
@@ -8981,7 +8970,7 @@ void MainWindow::selectDebayerAlgorithm()
     if( m_inOpeningProcess ) return;
 
     //If no playback active change debayer to receipt settings
-    if( !ui->actionPlay->isChecked() )
+    if( !ui->actionPlay->isChecked() || ui->actionDontSwitchDebayerForPlayback->isChecked() )
     {
         switch( ui->comboBoxDebayer->currentIndex() )
         {
@@ -9032,6 +9021,30 @@ void MainWindow::selectDebayerAlgorithm()
             setMlvDontAlwaysUseAmaze( m_pMlvObject );
             disableMlvCaching( m_pMlvObject );
             m_pChosenDebayer->setText( tr( "Bilinear" ) );
+        }
+        else if( ui->actionUseLmmseDebayer->isChecked() )
+        {
+            setMlvUseLmmseDebayer( m_pMlvObject );
+            disableMlvCaching( m_pMlvObject );
+            m_pChosenDebayer->setText( tr( "LMMSE" ) );
+        }
+        else if( ui->actionUseIgvDebayer->isChecked() )
+        {
+            setMlvUseIgvDebayer( m_pMlvObject );
+            disableMlvCaching( m_pMlvObject );
+            m_pChosenDebayer->setText( tr( "IGV" ) );
+        }
+        else if( ui->actionUseAhdDebayer->isChecked() )
+        {
+            setMlvUseAhdDebayer( m_pMlvObject );
+            disableMlvCaching( m_pMlvObject );
+            m_pChosenDebayer->setText( tr( "AHD" ) );
+        }
+        else if( ui->actionAlwaysUseAMaZE->isChecked() )
+        {
+            setMlvAlwaysUseAmaze( m_pMlvObject );
+            disableMlvCaching( m_pMlvObject );
+            m_pChosenDebayer->setText( tr( "AMaZE" ) );
         }
         else if( ui->actionCaching->isChecked() )
         {

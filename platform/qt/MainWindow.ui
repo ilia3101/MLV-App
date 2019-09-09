@@ -200,7 +200,9 @@
      <addaction name="actionUseLmmseDebayer"/>
      <addaction name="actionUseIgvDebayer"/>
      <addaction name="actionAlwaysUseAMaZE"/>
+     <addaction name="actionUseAhdDebayer"/>
      <addaction name="actionCaching"/>
+     <addaction name="actionDontSwitchDebayerForPlayback"/>
     </widget>
     <addaction name="actionGoto_First_Frame"/>
     <addaction name="actionPreviousFrame"/>
@@ -9791,6 +9793,22 @@ QGroupBox::indicator:checked:disabled {
   <action name="actionShowInstalledFocusPixelMaps">
    <property name="text">
     <string>Show Installed Focus Pixel Maps</string>
+   </property>
+  </action>
+  <action name="actionUseAhdDebayer">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>AHD</string>
+   </property>
+  </action>
+  <action name="actionDontSwitchDebayerForPlayback">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Don't Switch Debayer for Playback</string>
    </property>
   </action>
  </widget>
