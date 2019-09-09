@@ -6036,7 +6036,12 @@ void MainWindow::on_comboBoxUseCameraMatrix_currentIndexChanged(int index)
             break;
         default: break;
     }
+
     if( index != 0 && !m_inOpeningProcess ) on_horizontalSliderTemperature_valueChanged( ui->horizontalSliderTemperature->value() );
+
+    ui->label_Gamut->setEnabled( (bool)index );
+    ui->comboBoxProcessingGamut->setEnabled( (bool)index );
+
     m_frameChanged = true;
 }
 
