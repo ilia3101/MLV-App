@@ -16,6 +16,7 @@ PixelMapListDialog::PixelMapListDialog(QWidget *parent) :
     ui(new Ui::PixelMapListDialog)
 {
     ui->setupUi(this);
+    setWindowFlags( Qt::Dialog | Qt::WindowTitleHint | Qt::WindowCloseButtonHint | Qt::WindowStaysOnTopHint );
 
     QDir directory( QCoreApplication::applicationDirPath() );
     QStringList fpms = directory.entryList( QStringList() << "*.fpm" << "*.FPM", QDir::Files );
