@@ -3351,6 +3351,10 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
                 {
                     receipt->setAllowCreativeAdjustments( true );
                 }
+                else
+                {
+                    receipt->setAllowCreativeAdjustments( false );
+                }
                 switch( profile )
                 {
                 case PROFILE_STANDARD:
