@@ -26,7 +26,7 @@ int MoveToTrash( QString fileName )
                       "-e 'end tell' "
                       ">/dev/null" ).arg( fileName );
 
-    int status = system( command.toLatin1().data() );
+    int status = system( command.toUtf8().data() );
     //qDebug() << "Move file to trash status:" << status;
     return status;
 #endif
