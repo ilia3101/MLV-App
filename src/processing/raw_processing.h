@@ -39,6 +39,7 @@ int processingGetTonemappingFunction(processingObject_t * processing);
 #define TONEMAP_Rec709 7
 #define TONEMAP_HLG 8
 #define TONEMAP_BMDFilm 9
+#define TONEMAP_Reinhard_3_5 10 /* Reinhard 3/5 */
 
 
 

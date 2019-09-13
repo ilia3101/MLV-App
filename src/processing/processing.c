@@ -109,6 +109,10 @@ float NoTonemap_f(float x) { return x; }
 double ReinhardTonemap(double x) { return x / (1.0 + x); }
 float ReinhardTonemap_f(float x) { return x / (1.0f + x); }
 
+/* Reinhard, but onnly applied to top 3/5 of the range, less darkening overall */
+double Reinhard_3_5_Tonemap(double x) { return (x < 0.4) ? x : (ReinhardTonemap((x-0.4)/0.6)*0.6+0.4); }
+float Reinhard_3_5_Tonemap_f(float x) { return (x < 0.4f) ? x : (ReinhardTonemap_f((x-0.4f)/0.6f)*0.6f+0.4f); }
+
 /* Interesting inverse tangent curve */
 double TangentTonemap(double x) { return atan(x) / atan(8.0); }
 float TangentTonemap_f(float x) { return atanf(x) / atanf(8.0f); }
@@ -166,7 +170,8 @@ static void * tonemap_functions[] =
     (void *)&sRGBTransferFunction,
     (void *)&Rec709TransferFunction,
     (void *)&HLG_TransferFunction,
-    (void *)&BmdFilmTonemap
+    (void *)&BmdFilmTonemap,
+    (void *)&Reinhard_3_5_Tonemap
 };
 
 /* Returns multipliers for white balance by (linearly) interpolating measured 
