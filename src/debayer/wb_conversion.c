@@ -229,7 +229,7 @@ void wb_convert(wb_convert_info_t * wb_info, float * rawData, int width, int hei
     double max_wb = MAX( wb_multipliers[0], MAX( wb_multipliers[1], wb_multipliers[2] ) );
     for( int i = 0; i < 3; i++ ) wb_multipliers[i] /= max_wb;
     {
-#pragma omp for schedule(dynamic) collapse(2) nowait
+#pragma omp parallel for collapse(2)
         for (int y = 0; y < height; ++y)
             for (int x = 0; x < width; ++x)
             {
@@ -313,7 +313,7 @@ void wb_undo(const wb_convert_info_t * wb_info, uint16_t * debayeredFrame, int w
     double max_wb = MAX( wb_multipliers[0], MAX( wb_multipliers[1], wb_multipliers[2] ) );
     for( int i = 0; i < 3; i++ ) wb_multipliers[i] /= max_wb;
     {
-#pragma omp for schedule(dynamic) collapse(2) nowait
+#pragma omp parallel for collapse(2)
         for (int y = 0; y < height; ++y)
             for (int x = 0; x < width; ++x)
             {
