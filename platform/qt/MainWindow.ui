@@ -4420,6 +4420,11 @@ QGroupBox::indicator:checked:disabled {
                      <string>BMDFilm</string>
                     </property>
                    </item>
+                   <item>
+                    <property name="text">
+                     <string>Reinhard 3/5</string>
+                    </property>
+                   </item>
                   </widget>
                  </item>
                  <item row="1" column="0">
