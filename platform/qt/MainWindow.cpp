@@ -4515,9 +4515,9 @@ void MainWindow::previewPicture( int row )
 
     //Display in SessionList
     QPixmap pic = QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
-                                      .scaled( getMlvWidth(m_pMlvObject) * devicePixelRatio() / 10.0,
-                                               getMlvHeight(m_pMlvObject) * devicePixelRatio() / 10.0,
-                                               Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation) );
+                                      .scaled( getMlvWidth(m_pMlvObject) * devicePixelRatio() / 10.0 * getHorizontalStretchFactor(true),
+                                               getMlvHeight(m_pMlvObject) * devicePixelRatio() / 10.0 * getVerticalStretchFactor(true),
+                                               Qt::IgnoreAspectRatio, Qt::SmoothTransformation) );
     pic.setDevicePixelRatio( devicePixelRatio() );
     //Take and insert item, so the scrollbar is set correctly to the size of the picture
     QListWidgetItem *item = ui->listWidgetSession->takeItem( row );
