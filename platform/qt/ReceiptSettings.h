@@ -36,6 +36,7 @@ public:
     void setHueVsHue( QString curve ){m_hueVsHue = curve;}
     void setHueVsSaturation( QString curve ){m_hueVsSat = curve;}
     void setHueVsLuminance( QString curve ){m_hueVsLuma = curve;}
+    void setLumaVsSaturation( QString curve ){m_lumaVsSat = curve;}
 
     void setGradientEnabled( bool on ){m_isGradientEnabled = on;}
     void setGradientExposure( int value ){m_gradientExposure = value;}
@@ -135,6 +136,7 @@ public:
     QString hueVsHue( void ){return m_hueVsHue;}
     QString hueVsSaturation( void ){return m_hueVsSat;}
     QString hueVsLuminance( void ){return m_hueVsLuma;}
+    QString lumaVsSaturation( void ){return m_lumaVsSat;}
 
     bool isGradientEnabled( void ){return m_isGradientEnabled;}
     int gradientExposure( void ){return m_gradientExposure;}
@@ -233,6 +235,7 @@ private:
     QString m_hueVsHue;
     QString m_hueVsSat;
     QString m_hueVsLuma;
+    QString m_lumaVsSat;
 
     bool m_isGradientEnabled;
     int m_gradientExposure;

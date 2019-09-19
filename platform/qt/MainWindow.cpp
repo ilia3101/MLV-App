@@ -943,6 +943,7 @@ int MainWindow::openMlv( QString fileName )
     ui->labelHueVsHue->setProcessingObject( m_pProcessingObject );
     ui->labelHueVsSat->setProcessingObject( m_pProcessingObject );
     ui->labelHueVsLuma->setProcessingObject( m_pProcessingObject );
+    ui->labelLumaVsSat->setProcessingObject( m_pProcessingObject );
 
     m_frameChanged = true;
 
@@ -1300,6 +1301,11 @@ void MainWindow::initGui( void )
     ui->labelHueVsLuma->setFrameChangedPointer( &m_frameChanged );
     ui->labelHueVsLuma->setDiagramType( HueVsDiagram::HueVsLuminance );
     ui->labelHueVsLuma->paintElement();
+
+    //LumaVsSat
+    ui->labelLumaVsSat->setFrameChangedPointer( &m_frameChanged );
+    ui->labelLumaVsSat->setDiagramType( HueVsDiagram::LuminanceVsSaturation );
+    ui->labelLumaVsSat->paintElement();
 
     //Call temp sliders once for stylesheet
     on_horizontalSliderTemperature_valueChanged( ui->horizontalSliderTemperature->value() );
@@ -3269,6 +3275,11 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
             receipt->setHueVsLuminance( Rxml->readElementText() );
             Rxml->readNext();
         }
+        else if( Rxml->isStartElement() && Rxml->name() == "lumaVsSaturation" )
+        {
+            receipt->setLumaVsSaturation( Rxml->readElementText() );
+            Rxml->readNext();
+        }
         else if( Rxml->isStartElement() && Rxml->name() == "gradientEnabled" )
         {
             receipt->setGradientEnabled( (bool)Rxml->readElementText().toInt() );
@@ -3697,6 +3708,7 @@ void MainWindow::writeXmlElementsToFile(QXmlStreamWriter *xmlWriter, ReceiptSett
     xmlWriter->writeTextElement( "hueVsHue",                QString( "%1" ).arg( receipt->hueVsHue() ) );
     xmlWriter->writeTextElement( "hueVsSaturation",         QString( "%1" ).arg( receipt->hueVsSaturation() ) );
     xmlWriter->writeTextElement( "hueVsLuminance",          QString( "%1" ).arg( receipt->hueVsLuminance() ) );
+    xmlWriter->writeTextElement( "lumaVsSaturation",        QString( "%1" ).arg( receipt->lumaVsSaturation() ) );
     xmlWriter->writeTextElement( "shadows",                 QString( "%1" ).arg( receipt->shadows() ) );
     xmlWriter->writeTextElement( "highlights",              QString( "%1" ).arg( receipt->highlights() ) );
     xmlWriter->writeTextElement( "gradientEnabled",         QString( "%1" ).arg( receipt->isGradientEnabled() ) );
@@ -3907,6 +3919,7 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     ui->labelHueVsHue->setConfiguration( receipt->hueVsHue() );
     ui->labelHueVsSat->setConfiguration( receipt->hueVsSaturation() );
     ui->labelHueVsLuma->setConfiguration( receipt->hueVsLuminance() );
+    ui->labelLumaVsSat->setConfiguration( receipt->lumaVsSaturation() );
 
     ui->checkBoxGradientEnable->setChecked( receipt->isGradientEnabled() );
     ui->horizontalSliderExposureGradient->setValue( receipt->gradientExposure() );
@@ -4129,6 +4142,7 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     receipt->setHueVsHue( ui->labelHueVsHue->configuration() );
     receipt->setHueVsSaturation( ui->labelHueVsSat->configuration() );
     receipt->setHueVsLuminance( ui->labelHueVsLuma->configuration() );
+    receipt->setLumaVsSaturation( ui->labelLumaVsSat->configuration() );
 
     receipt->setGradientEnabled( ui->checkBoxGradientEnable->isChecked() );
     receipt->setGradientExposure( ui->horizontalSliderExposureGradient->value() );
@@ -4237,6 +4251,7 @@ void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings 
     if( paste && cdui->checkBoxHslCurves->isChecked() )  receiptTarget->setHueVsHue( receiptSource->hueVsHue() );
     if( paste && cdui->checkBoxHslCurves->isChecked() )  receiptTarget->setHueVsSaturation( receiptSource->hueVsSaturation() );
     if( paste && cdui->checkBoxHslCurves->isChecked() )  receiptTarget->setHueVsLuminance( receiptSource->hueVsLuminance() );
+    if( paste && cdui->checkBoxHslCurves->isChecked() )  receiptTarget->setLumaVsSaturation( receiptSource->lumaVsSaturation() );
     if( paste && cdui->checkBoxShadows->isChecked() )    receiptTarget->setShadows( receiptSource->shadows() );
     if( paste && cdui->checkBoxHighlights->isChecked() ) receiptTarget->setHighlights( receiptSource->highlights() );
 
@@ -4418,6 +4433,7 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     receipt->setHueVsHue( m_pSessionReceipts.at( row )->hueVsHue() );
     receipt->setHueVsSaturation( m_pSessionReceipts.at( row )->hueVsSaturation() );
     receipt->setHueVsLuminance( m_pSessionReceipts.at( row )->hueVsLuminance() );
+    receipt->setLumaVsSaturation( m_pSessionReceipts.at( row )->lumaVsSaturation() );
 
     receipt->setGradientEnabled( m_pSessionReceipts.at( row )->isGradientEnabled() );
     receipt->setGradientExposure( m_pSessionReceipts.at( row )->gradientExposure() );
@@ -7577,6 +7593,13 @@ void MainWindow::on_toolButtonHueVsLumaReset_clicked()
 {
     ui->labelHueVsLuma->resetLine();
     ui->labelHueVsLuma->paintElement();
+}
+
+//Reset LumaVsSat curve
+void MainWindow::on_toolButtonLumaVsSatReset_clicked()
+{
+    ui->labelLumaVsSat->resetLine();
+    ui->labelLumaVsSat->paintElement();
 }
 
 //Goto next frame

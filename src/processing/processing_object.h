@@ -54,9 +54,11 @@ typedef struct {
     float hue_vs_hue[36000];
     float hue_vs_saturation[36000];
     float hue_vs_luma[36000];
+    float luma_vs_saturation[36000];
     uint8_t hue_vs_hue_used;
     uint8_t hue_vs_saturation_used;
     uint8_t hue_vs_luma_used;
+    uint8_t luma_vs_saturation_used;
 
     /* toning */
     float toning_dry;

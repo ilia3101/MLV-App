@@ -110,6 +110,23 @@ void HueVsDiagram::paintElement()
         painterTc.setBrush( gradient2 );
         painterTc.drawRect( 0, 0, SIZEW, SIZEH );
     }
+    //LuminanceVsSat
+    else if( m_diagramType == LuminanceVsSaturation )
+    {
+        QLinearGradient gradient2( SIZEW, 0, 0, 0 );
+        gradient2.setColorAt( 0, QColor( 255, 255, 255, 255 ) );
+        gradient2.setColorAt( 0.5, QColor( 128, 128, 128, 255 ) );
+        gradient2.setColorAt( 1, QColor( 0, 0, 0, 255 ) );
+        painterTc.setBrush( gradient2 );
+        painterTc.drawRect( 0, 0, SIZEW, SIZEH );
+
+        QLinearGradient gradient3( 0, 0, 0, SIZEH );
+        gradient3.setColorAt( 0.0, QColor( 50, 50, 50, 0 ) );
+        gradient3.setColorAt( 0.5, QColor( 50, 50, 50, 255 ) );
+        gradient3.setColorAt( 1.0, QColor( 50, 50, 50, 0 ) );
+        painterTc.setBrush( gradient3 );
+        painterTc.drawRect( 0, 0, SIZEW, SIZEH );
+    }
 
     //Lines
     painterTc.setPen( QColor( 100, 100, 100, 255 ) );
@@ -262,6 +279,10 @@ void HueVsDiagram::paintLine(QVector<QPointF> line, QPainter *pPainter, QColor c
             {
                 processingSetHueVsCurves( m_pProcessing, numIn, pXin, pYin, 2 );
             }
+            else if( m_diagramType == LuminanceVsSaturation )
+            {
+                processingSetHueVsCurves( m_pProcessing, numIn, pXin, pYin, 3 );
+            }
         }
         if( m_pFrameChanged != NULL ) *m_pFrameChanged = true;
     }
@@ -383,7 +404,7 @@ void HueVsDiagram::movePoint(qreal x, qreal y, bool release)
         if( release ) line->removeAt( i );
     }
     //Drag first & last point up & down
-    else if( m_firstPoint || m_lastPoint )
+    else if( ( m_firstPoint || m_lastPoint ) && ( m_diagramType != LuminanceVsSaturation ) )
     {
         float yNew = 1.0-((y * 2 + HALFSIZEH) / (float)SIZEH );
         QPointF point = line->takeFirst();
@@ -394,6 +415,27 @@ void HueVsDiagram::movePoint(qreal x, qreal y, bool release)
         point = line->takeLast();
         point.setY( yNew );
         line->append( point );
+        paintElement();
+    }
+    else if( m_diagramType == LuminanceVsSaturation )
+    {
+        float yNew = 1.0-((y * 2 + HALFSIZEH) / (float)SIZEH );
+        if( m_firstPoint )
+        {
+            QPointF point = line->takeFirst();
+            if( yNew > 0.5 ) yNew = 0.5;
+            else if( yNew < -0.5 ) yNew = -0.5;
+            point.setY( yNew );
+            line->prepend( point );
+        }
+        if( m_lastPoint )
+        {
+            QPointF point = line->takeLast();
+            if( yNew > 0.5 ) yNew = 0.5;
+            else if( yNew < -0.5 ) yNew = -0.5;
+            point.setY( yNew );
+            line->append( point );
+        }
         paintElement();
     }
 }

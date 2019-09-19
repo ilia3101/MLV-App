@@ -26,7 +26,7 @@ public:
     void resetLine( void );
     void setConfiguration(QString config );
     QString configuration( void );
-    enum DiagramType{ HueVsHue, HueVsSaturation, HueVsLuminance };
+    enum DiagramType{ HueVsHue, HueVsSaturation, HueVsLuminance, LuminanceVsSaturation };
     void setDiagramType( DiagramType type );
 
 private:

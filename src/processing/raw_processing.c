@@ -158,6 +158,7 @@ processingObject_t * initProcessingObject()
     processingSetHueVsCurves(processing, 0, NULL, NULL, 0);
     processingSetHueVsCurves(processing, 0, NULL, NULL, 1);
     processingSetHueVsCurves(processing, 0, NULL, NULL, 2);
+    processingSetHueVsCurves(processing, 0, NULL, NULL, 3);
     processingSetVignetteStrength(processing, 0);
 
     /* Colour default parameters */
@@ -771,7 +772,10 @@ void apply_processing_object( processingObject_t * processing,
 
     //Code for HueVs...
     if( (processing->allow_creative_adjustments )
-     && ( processing->hue_vs_luma_used || processing->hue_vs_saturation_used || processing->hue_vs_hue_used ) )
+     && ( processing->hue_vs_luma_used
+       || processing->hue_vs_saturation_used
+       || processing->hue_vs_hue_used
+       || processing->luma_vs_saturation_used ) )
     {
         for (uint16_t * pix = img; pix < img_end; pix += 3)
         {
@@ -810,6 +814,10 @@ void apply_processing_object( processingObject_t * processing,
             hsl[0] += 60 * processing->hue_vs_hue[hue];
             if( hsl[0] < 0 ) hsl[0] += 360;
             else if( hsl[0] >= 360 ) hsl[0] -= 360;
+
+            uint16_t luma = (uint16_t)((hsl[2]) * 36000.0);
+            hsl[1] *= 1.0 + (processing->luma_vs_saturation[luma] * 2);
+            if( hsl[1] < 0.0 ) hsl[1] = 0.0;
 
             hsl_to_rgb( hsl, pix );
         }
@@ -1909,10 +1917,15 @@ void processingSetHueVsCurves(processingObject_t *processing, int num, float *pX
         curve = processing->hue_vs_saturation;
         used = &processing->hue_vs_saturation_used;
     }
-    else
+    else if( channel == 2 )
     {
         curve = processing->hue_vs_luma;
         used = &processing->hue_vs_luma_used;
+    }
+    else
+    {
+        curve = processing->luma_vs_saturation;
+        used = &processing->luma_vs_saturation_used;
     }
     //Init
     if( num < 2 )
