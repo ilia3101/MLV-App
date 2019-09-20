@@ -985,7 +985,11 @@ void apply_processing_object( processingObject_t * processing,
             uint16_t * row = img + (y * rl); /* current row */
             uint16_t * p_row = img + ((y-1) * rl); /* previous */
             uint16_t * n_row = img + ((y+1) * rl); /* next */
-            uint16_t * cont_row = contour_img + (y * imageX);
+            uint16_t * cont_row;// = contour_img + (y * imageX);
+            if( processing->sh_masking > 0 )
+            {
+                cont_row = contour_img + (y * imageX);
+            }
 
             for (uint32_t x = 3+sharp_start; x < x_max; x+=sharp_skip)
             {
@@ -1030,6 +1034,14 @@ void apply_processing_object( processingObject_t * processing,
         /* Copy top and bottom row */
         memcpy(outputImage, inputImage, rl * sizeof(uint16_t));
         memcpy(outputImage + (rl*(imageY-1)), inputImage + (rl*(imageY-1)), rl * sizeof(uint16_t));
+
+        if( processing->sh_masking > 0 )
+        {
+            if( gray ) free( gray );
+            if( sobel_h_res ) free( sobel_h_res );
+            if( sobel_v_res ) free( sobel_v_res );
+            if( contour_img ) free( contour_img );
+        }
     }
     else
     {
