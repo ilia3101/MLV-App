@@ -985,7 +985,7 @@ void apply_processing_object( processingObject_t * processing,
             uint16_t * row = img + (y * rl); /* current row */
             uint16_t * p_row = img + ((y-1) * rl); /* previous */
             uint16_t * n_row = img + ((y+1) * rl); /* next */
-            uint16_t * cont_row;// = contour_img + (y * imageX);
+            uint16_t * cont_row;
             if( processing->sh_masking > 0 )
             {
                 cont_row = contour_img + (y * imageX);
