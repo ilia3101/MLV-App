@@ -61,7 +61,6 @@ A user manual can be found [here](https://github.com/ilia3101/MLV-App/wiki) and 
 - install XCode depending on your OSX
 - install Qt5 (minimum 5.6)
 - open `platform/qt/MLVApp.pro` in QtCreator
-- go to tab project, add command line argument -j4 (for quad core) 
 - Build and Start
 - OR download and doubleclick easy-to-use [compiler app](https://bitbucket.org/Dannephoto/mlv_app_compiler/downloads/mlv_app_compiler.dmg) from @dannephoto
 
@@ -69,7 +68,6 @@ A user manual can be found [here](https://github.com/ilia3101/MLV-App/wiki) and 
 - install Qt5 (minimum 5.6) with MinGW compiler
 - unpack ffmpegWin.zip in `platform/qt/FFmpeg` (and copy it later into build directory)
 - open `platform/qt/MLVApp.pro` in QtCreator
-- go to tab project, add command line argument -j4 (for quad core) 
 - Build and Start
 
 #### Qt App Linux (generally)
