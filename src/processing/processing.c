@@ -267,6 +267,7 @@ void fromRGBtoHSV(float rgb[], float hsv[])
          else
              hsv[0] = 4.0f + (rgb[0] - rgb[1]) / delta;
      }
+     hsv[0] *= 60.0f;
 }
 
 void fromHSVtoRGB(const float hsv[], float rgb[])
@@ -275,7 +276,7 @@ void fromHSVtoRGB(const float hsv[], float rgb[])
         rgb[0] = rgb[1] = rgb[2] = hsv[2];
     else
     {
-        const float h = hsv[0];
+        const float h = hsv[0] / 60.0f;
         const int i = (int)h;
         const float f = h - i;
         const float p = hsv[2] * (1.0f - hsv[1]);

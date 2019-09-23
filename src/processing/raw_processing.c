@@ -782,9 +782,8 @@ void apply_processing_object( processingObject_t * processing,
             float hsl[3];
             float rgb[3];
             for( int i = 0; i < 3; i++ ) rgb[i] = pix[i] / 65535.0f;
-            //rgb_to_hsl( pix, hsl );
             fromRGBtoHSV( rgb, hsl );
-            hsl[0] *= 60.0f;
+            //rgb_to_hsl( pix, hsl );
 
             /* Calculate saturation value of untouched pixel (taken from vibrance, gives better results than from rgb_to_hsl) */
             // ///////////////////////
@@ -824,7 +823,6 @@ void apply_processing_object( processingObject_t * processing,
             if( hsl[1] < 0.0 ) hsl[1] = 0.0;
 
             //hsl_to_rgb( hsl, pix );
-            hsl[0] /= 60.0f;
             fromHSVtoRGB( hsl, rgb );
             for( int i = 0; i < 3; i++ ) pix[i] = LIMIT16( rgb[i] * 65535.0f + 0.5f );
         }
