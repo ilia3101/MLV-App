@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <float.h>
 #include "processing_object.h"
 #include "bmd_film.h"
 
@@ -241,59 +242,85 @@ double add_contrast ( double pixel, /* Range 0.0 - 1.0 */
     return pixel;
 }
 
-void hsv_to_rgb(double hue, double saturation, double value, double * rgb)
+void fromRGBtoHSV(float rgb[], float hsv[])
 {
-    /* Red channel */
-    if (hue < (120.0/360.0) && hue > (240.0/360.0))
-    {
-        if (hue < (60.0/360.0) || hue > (300.0/360.0))
-        {
-            rgb[0] = 1.0;
-        }
-        else
-        {
-            rgb[0] = hue;
-            if (hue > (240.0/360.0)) rgb[0] = 1.0 - rgb[0];
-            rgb[0] -= 60.0/360.0;
-            rgb[0] *= 6.0;
-        }
-    }
-    /* Green channel */
-    if (hue < (240.0/360.0))
-    {
-        if (hue > (60.0/360.0) && hue < (180.0/360.0))
-        {
-            rgb[1] = 1.0;
-        }
-        else
-        {
-            rgb[1] = hue;
-            if (rgb[1] > (180.0/360.0)) rgb[1] = (240.0/360.0) - rgb[1];
-            rgb[1] *= 6.0;
-        }
-    }
-    /* Blue channel */
-    if (hue > (120.0/360.0))
-    {
-        if (hue > (180.0/360.0) && hue < (300.0/360.0))
-        {
-            rgb[2] = 1.0;
-        }
-        else
-        {
-            if (hue > (300.0/360.0)) rgb[2] = 1.0 - rgb[2];
-            else rgb[2] = hue - (120.0/360.0);
-            rgb[2] *= 6.0;
-        }
-    }
+//    for(int i=0; i<3; ++i)
+//        rgb[i] = max(0.0f, min(1.0f, rgb[i]));
 
-    /* Saturation + value */
-    for (int i = 0; i < 3; ++i)
+     hsv[0] = 0.0f;
+     hsv[2] = MAX(rgb[0], MAX(rgb[1], rgb[2]));
+     const float delta = hsv[2] - MIN(rgb[0], MIN(rgb[1], rgb[2]));
+
+     if (delta < FLT_MIN)
+         hsv[1] = 0.0f;
+     else
+     {
+         hsv[1] = delta / hsv[2];
+         if (rgb[0] >= hsv[2])
+         {
+             hsv[0] = (rgb[1] - rgb[2]) / delta;
+             if (hsv[0] < 0.0f)
+                 hsv[0] += 6.0f;
+         }
+         else if (rgb[1] >= hsv[2])
+             hsv[0] = 2.0f + (rgb[2] - rgb[0]) / delta;
+         else
+             hsv[0] = 4.0f + (rgb[0] - rgb[1]) / delta;
+     }
+}
+
+void fromHSVtoRGB(const float hsv[], float rgb[])
+{
+    if(hsv[1] < FLT_MIN)
+        rgb[0] = rgb[1] = rgb[2] = hsv[2];
+    else
     {
-        /* Desaturate */
-        rgb[i] = rgb[i] * saturation + (1.0 - saturation);
-        /* Value */
-        rgb[i] *= value;
+        const float h = hsv[0];
+        const int i = (int)h;
+        const float f = h - i;
+        const float p = hsv[2] * (1.0f - hsv[1]);
+
+        if (i & 1) {
+            const float q = hsv[2] * (1.0f - (hsv[1] * f));
+            switch(i) {
+            case 1:
+                rgb[0] = q;
+                rgb[1] = hsv[2];
+                rgb[2] = p;
+                break;
+            case 3:
+                rgb[0] = p;
+                rgb[1] = q;
+                rgb[2] = hsv[2];
+                break;
+            default:
+                rgb[0] = hsv[2];
+                rgb[1] = p;
+                rgb[2] = q;
+                break;
+            }
+        }
+        else
+        {
+            const float t = hsv[2] * (1.0f - (hsv[1] * (1.0f - f)));
+            switch(i) {
+            case 0:
+                rgb[0] = hsv[2];
+                rgb[1] = t;
+                rgb[2] = p;
+                break;
+            case 2:
+                rgb[0] = p;
+                rgb[1] = hsv[2];
+                rgb[2] = t;
+                break;
+            default:
+                rgb[0] = t;
+                rgb[1] = p;
+                rgb[2] = hsv[2];
+                break;
+            }
+        }
     }
 }
 
