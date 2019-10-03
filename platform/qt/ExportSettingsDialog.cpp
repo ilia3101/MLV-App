@@ -397,11 +397,11 @@ void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
     }
     ui->checkBoxResize->setEnabled( enableResize );
     ui->comboBoxScaleAlgorithm->setEnabled( enableResize );
+    on_comboBoxSmoothing_currentIndexChanged( ui->comboBoxSmoothing->currentIndex() );
+    on_checkBoxHdrBlending_toggled( ui->checkBoxHdrBlending->isChecked() );
     ui->comboBoxSmoothing->setEnabled( enableResize );
     ui->label_Smoothing->setEnabled( enableResize );
     ui->checkBoxHdrBlending->setEnabled( enableResize );
-    on_comboBoxSmoothing_currentIndexChanged( ui->comboBoxSmoothing->currentIndex() );
-    on_checkBoxHdrBlending_toggled( ui->checkBoxHdrBlending->isChecked() );
 
     //En-/disable fps override
     if( ( index == CODEC_MLV ) || ( index == CODEC_TIFF ) || ( index == CODEC_PNG ) || ( index == CODEC_JPG2K ) || ( index == CODEC_AUDIO_ONLY ) )
