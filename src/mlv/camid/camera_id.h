@@ -50,4 +50,7 @@ int32_t* camidGetHFocalResolution(uint32_t cameraModel);
 int32_t* camidGetVFocalResolution(uint32_t cameraModel);
 int32_t camidGetFocalUnit(uint32_t cameraModel);
 
+/* Check if a camera is known my camera_id */
+int camidCheckIfCameraKnown(uint32_t cameraModel)
+
 #endif

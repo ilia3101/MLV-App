@@ -355,6 +355,11 @@ static int camera_id_get_current_cam(uint32_t model_id)
 };
 
 
+int camidCheckIfCameraKnown(uint32_t cameraModel)
+{
+    return camera_id[camera_id_get_current_cam(cameraModel)].cameraModel ? 1:0;
+}
+
 const char* camidGetCameraName(uint32_t cameraModel, int camname_type)
 {
     return camera_id[camera_id_get_current_cam(cameraModel)].cameraName[camname_type];
