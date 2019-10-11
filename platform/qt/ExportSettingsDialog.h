@@ -121,7 +121,6 @@ public:
                                   bool exportAudio = true,
                                   bool heightLocked = false,
                                   uint8_t smooth = 0,
-                                  uint8_t scaleAlgo = 0,
                                   bool hdrBlending = false);
     ~ExportSettingsDialog();
     uint8_t encoderSetting(void);
@@ -135,7 +134,6 @@ public:
     bool isExportAudioEnabled(void);
     bool isHeightLocked(void);
     uint8_t smoothSetting(void);
-    uint8_t scaleAlgorithm(void);
     bool hdrBlending(void);
 
 private slots:

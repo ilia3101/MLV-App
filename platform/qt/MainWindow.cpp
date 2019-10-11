@@ -1421,7 +1421,6 @@ void MainWindow::readSettings()
     m_resizeWidth = set.value( "resizeWidth", 1920 ).toUInt();
     m_resizeHeight = set.value( "resizeHeight", 1080 ).toUInt();
     m_resizeFilterHeightLocked = set.value( "resizeLockHeight", false ).toBool();
-    m_resizeFilterAlgorithm = set.value( "resizeAlgorithm", 0 ).toUInt();
     m_smoothFilterSetting = set.value( "smoothEnabled", 0 ).toUInt();
     m_hdrExport = set.value( "hdrExport", false ).toBool();
     m_fpsOverride = set.value( "fpsOverride", false ).toBool();
@@ -1489,7 +1488,6 @@ void MainWindow::writeSettings()
     set.setValue( "resizeWidth", m_resizeWidth );
     set.setValue( "resizeHeight", m_resizeHeight );
     set.setValue( "resizeLockHeight", m_resizeFilterHeightLocked );
-    set.setValue( "resizeAlgorithm", m_resizeFilterAlgorithm );
     set.setValue( "smoothEnabled", m_smoothFilterSetting );
     set.setValue( "hdrExport", m_hdrExport );
     set.setValue( "fpsOverride", m_fpsOverride );
@@ -1705,14 +1703,6 @@ void MainWindow::startExportPipe(QString fileName)
         }
     }
 
-    //Setup resize algorithm
-    QString resizeAlgorithm = QString( "sws_flags=" );
-    if( m_resizeFilterAlgorithm == SCALE_BILINEAR ) resizeAlgorithm.append( "bilinear" );
-    else if( m_resizeFilterAlgorithm == SCALE_SINC ) resizeAlgorithm.append( "sinc" );
-    else if( m_resizeFilterAlgorithm == SCALE_LANCZOS ) resizeAlgorithm.append( "lanczos" );
-    else if( m_resizeFilterAlgorithm == SCALE_BSPLINE ) resizeAlgorithm.append( "spline" );
-    else resizeAlgorithm.append( "bicubic" ); //default
-
     //HDR
     QString hdrString = QString( "" );
     if( m_hdrExport && isHdrClip ) hdrString = QString( ",tblend=all_mode=average" );
@@ -1743,12 +1733,21 @@ void MainWindow::startExportPipe(QString fileName)
         }
     }
 
-    //Resize Filter + colorspace conversion (for getting right colors)
+    //Colorspace conversion (for getting right colors)
     QString resizeFilter = QString( "" );
+    //a colorspace conversion is always needed to get right colors
+    resizeFilter = QString( "-vf %1scale=in_color_matrix=bt601:out_color_matrix=bt709%2%3 " )
+            .arg( moireeFilter )
+            .arg( hdrString )
+            .arg( vidstabString );
+    //qDebug() << resizeFilter;
+
+    //Dimension & scaling
+    uint16_t width = getMlvWidth(m_pMlvObject);
+    uint16_t height = getMlvHeight(m_pMlvObject);
+    bool scaled = false;
     if( m_resizeFilterEnabled )
     {
-        uint16_t height;
-
         //Autocalc height
         if( m_resizeFilterHeightLocked )
         {
@@ -1761,27 +1760,12 @@ void MainWindow::startExportPipe(QString fileName)
         {
             height = m_resizeHeight;
         }
-
-        //H.264 & H.265 needs a size which can be divided by 2
-        if( m_codecProfile == CODEC_H264
-         || m_codecProfile == CODEC_H265 )
-        {
-            m_resizeWidth += m_resizeWidth % 2;
-            height += height % 2;
-        }
-        resizeFilter = QString( "-vf %1scale=w=%2:h=%3:%4:in_color_matrix=bt601:out_color_matrix=bt709%5%6 " )
-                .arg( moireeFilter )
-                .arg( m_resizeWidth )
-                .arg( height )
-                .arg( resizeAlgorithm )
-                .arg( hdrString )
-                .arg( vidstabString );
+        width = m_resizeWidth;
+        scaled = true;
     }
     else if( m_exportQueue.first()->stretchFactorX() != 1.0
           || m_exportQueue.first()->stretchFactorY() != 1.0 )
     {
-        uint16_t width;
-        uint16_t height;
         //Upscale only
         if( m_exportQueue.first()->stretchFactorY() == STRETCH_V_033 )
         {
@@ -1793,30 +1777,22 @@ void MainWindow::startExportPipe(QString fileName)
             width = getMlvWidth( m_pMlvObject ) * m_exportQueue.first()->stretchFactorX();
             height = getMlvHeight( m_pMlvObject ) * m_exportQueue.first()->stretchFactorY();
         }
-        //H.264 & H.265 needs a size which can be divided by 2
-        if( m_codecProfile == CODEC_H264
-         || m_codecProfile == CODEC_H265 )
+        scaled = true;
+    }
+    if( m_codecProfile == CODEC_H264
+     || m_codecProfile == CODEC_H265 )
+    {
+        if( width != width + (width % 2) )
         {
             width += width % 2;
-            height += height % 2;
+            scaled = true;
         }
-        resizeFilter = QString( "-vf %1scale=w=%2:h=%3:%4:in_color_matrix=bt601:out_color_matrix=bt709%5%6 " )
-                .arg( moireeFilter )
-                .arg( width )
-                .arg( height )
-                .arg( resizeAlgorithm )
-                .arg( hdrString )
-                .arg( vidstabString );
+        if( height != height + (height % 2) )
+        {
+            height += height % 2;
+            scaled = true;
+        }
     }
-    else
-    {
-        //a colorspace conversion is always needed to get right colors
-        resizeFilter = QString( "-vf %1scale=in_color_matrix=bt601:out_color_matrix=bt709%2%3 " )
-                .arg( moireeFilter )
-                .arg( hdrString )
-                .arg( vidstabString );
-    }
-    //qDebug() << resizeFilter;
 
     //FFMpeg export
 #if defined __linux__ && !defined APP_IMAGE
@@ -1832,11 +1808,12 @@ void MainWindow::startExportPipe(QString fileName)
 #ifdef STDOUT_SILENT
     program.append( QString( " -loglevel 0" ) );
 #endif
+
     //We need it later for multipass
     QString ffmpegCommand = program;
 
     QString output = fileName.left( fileName.lastIndexOf( "." ) );
-    QString resolution = QString( "%1x%2" ).arg( getMlvWidth( m_pMlvObject ) ).arg( getMlvHeight( m_pMlvObject ) );
+    QString resolution = QString( "%1x%2" ).arg( width ).arg( height );
 
     //VidStab: First pass
     if( m_exportQueue.first()->vidStabEnabled() && m_codecProfile == CODEC_H264 )
@@ -1887,17 +1864,47 @@ void MainWindow::startExportPipe(QString fileName)
                 totalFrames += m_exportQueue.at(i)->cutOut() - m_exportQueue.at(i)->cutIn() + 1;
             }
 
+            //Build buffer
+            uint16_t * imgBufferScaled;
+            imgBufferScaled = ( uint16_t* )malloc( width * height * 3 * sizeof( uint16_t ) );
+
             //Get all pictures and send to pipe
             for( uint32_t i = (m_exportQueue.first()->cutIn() - 1); i < m_exportQueue.first()->cutOut(); i++ )
             {
-                //Get picture, and lock render thread... there can only be one!
-                m_pRenderThread->lock();
-                getMlvProcessedFrame16( m_pMlvObject, i, imgBuffer, QThread::idealThreadCount() );
-                m_pRenderThread->unlock();
+                if( m_resizeFilterEnabled )
+                {
+                    //Get picture, and lock render thread... there can only be one!
+                    m_pRenderThread->lock();
+                    getMlvProcessedFrame16( m_pMlvObject, i, imgBuffer, QThread::idealThreadCount() );
+                    m_pRenderThread->unlock();
 
-                //Write to pipe
-                fwrite(imgBuffer, sizeof( uint16_t ), frameSize, pPipeStab);
-                fflush(pPipeStab);
+                    avir_scale_thread_pool scaling_pool;
+                    avir::CImageResizerVars vars; vars.ThreadPool = &scaling_pool;
+                    avir::CImageResizerParamsUltra roptions;
+                    avir::CImageResizer<> image_resizer( 16, 0, roptions );
+                    image_resizer.resizeImage( imgBuffer,
+                                               getMlvWidth(m_pMlvObject),
+                                               getMlvHeight(m_pMlvObject), 0,
+                                               imgBufferScaled,
+                                               width,
+                                               height,
+                                               3, 0, &vars );
+
+                    //Write to pipe
+                    fwrite(imgBufferScaled, sizeof( uint16_t ), width * height * 3, pPipeStab);
+                    fflush(pPipeStab);
+                }
+                else
+                {
+                    //Get picture, and lock render thread... there can only be one!
+                    m_pRenderThread->lock();
+                    getMlvProcessedFrame16( m_pMlvObject, i, imgBuffer, QThread::idealThreadCount() );
+                    m_pRenderThread->unlock();
+
+                    //Write to pipe
+                    fwrite(imgBuffer, sizeof( uint16_t ), frameSize, pPipeStab);
+                    fflush(pPipeStab);
+                }
 
                 //Set Status
                 m_pStatusDialog->ui->progressBar->setValue( ( i - ( m_exportQueue.first()->cutIn() - 1 ) + 1 ) >> 1 );
@@ -2306,17 +2313,47 @@ void MainWindow::startExportPipe(QString fileName)
             totalFrames += m_exportQueue.at(i)->cutOut() - m_exportQueue.at(i)->cutIn() + 1;
         }
 
+        //Build buffer
+        uint16_t * imgBufferScaled;
+        imgBufferScaled = ( uint16_t* )malloc( width * height * 3 * sizeof( uint16_t ) );
+
         //Get all pictures and send to pipe
         for( uint32_t i = (m_exportQueue.first()->cutIn() - 1); i < m_exportQueue.first()->cutOut(); i++ )
         {
-            //Get picture, and lock render thread... there can only be one!
-            m_pRenderThread->lock();
-            getMlvProcessedFrame16( m_pMlvObject, i, imgBuffer, QThread::idealThreadCount() );
-            m_pRenderThread->unlock();
+            if( m_resizeFilterEnabled )
+            {
+                //Get picture, and lock render thread... there can only be one!
+                m_pRenderThread->lock();
+                getMlvProcessedFrame16( m_pMlvObject, i, imgBuffer, QThread::idealThreadCount() );
+                m_pRenderThread->unlock();
 
-            //Write to pipe
-            fwrite(imgBuffer, sizeof( uint16_t ), frameSize, pPipe);
-            fflush(pPipe);
+                avir_scale_thread_pool scaling_pool;
+                avir::CImageResizerVars vars; vars.ThreadPool = &scaling_pool;
+                avir::CImageResizerParamsUltra roptions;
+                avir::CImageResizer<> image_resizer( 16, 0, roptions );
+                image_resizer.resizeImage( imgBuffer,
+                                           getMlvWidth(m_pMlvObject),
+                                           getMlvHeight(m_pMlvObject), 0,
+                                           imgBufferScaled,
+                                           width,
+                                           height,
+                                           3, 0, &vars );
+
+                //Write to pipe
+                fwrite(imgBufferScaled, sizeof( uint16_t ), width * height * 3, pPipe);
+                fflush(pPipe);
+            }
+            else
+            {
+                //Get picture, and lock render thread... there can only be one!
+                m_pRenderThread->lock();
+                getMlvProcessedFrame16( m_pMlvObject, i, imgBuffer, QThread::idealThreadCount() );
+                m_pRenderThread->unlock();
+
+                //Write to pipe
+                fwrite(imgBuffer, sizeof( uint16_t ), frameSize, pPipe);
+                fflush(pPipe);
+            }
 
             //Set Status
             if( !( m_exportQueue.first()->vidStabEnabled() && m_codecProfile == CODEC_H264 ) )
@@ -6357,7 +6394,6 @@ void MainWindow::on_actionExportSettings_triggered()
                                                                       m_audioExportEnabled,
                                                                       m_resizeFilterHeightLocked,
                                                                       m_smoothFilterSetting,
-                                                                      m_resizeFilterAlgorithm,
                                                                       m_hdrExport );
     pExportSettings->exec();
     m_codecProfile = pExportSettings->encoderSetting();
@@ -6371,7 +6407,6 @@ void MainWindow::on_actionExportSettings_triggered()
     m_audioExportEnabled = pExportSettings->isExportAudioEnabled();
     m_resizeFilterHeightLocked = pExportSettings->isHeightLocked();
     m_smoothFilterSetting = pExportSettings->smoothSetting();
-    m_resizeFilterAlgorithm = pExportSettings->scaleAlgorithm();
     m_hdrExport = pExportSettings->hdrBlending();
     delete pExportSettings;
 
