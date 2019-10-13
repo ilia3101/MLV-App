@@ -1490,6 +1490,7 @@ void processingSetBlackAndWhiteLevel( processingObject_t * processing,
     /* Convert levels to 16bit */
     int bits_shift = 16 - mlvBitDepth;
     if(mlvBlackLevel) processing->black_level = mlvBlackLevel << bits_shift;
+    else processing->black_level = 0;
     if(mlvWhiteLevel)
     {
         processing->white_level = mlvWhiteLevel << bits_shift;
