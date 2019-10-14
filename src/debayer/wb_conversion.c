@@ -223,6 +223,8 @@ void wb_convert(wb_convert_info_t * wb_info, float * rawData, int width, int hei
 
 //     return;
 
+    if(blacklevel < 1000) blacklevel = -1000; //TO BE REMOVED! But this fixes blue dots for clips with blacklevel=0
+
     /* WB adaption, needed for correct operation */
     double wb_multipliers[3];
     get_kelvin_multipliers_rgb(6500, wb_multipliers);
@@ -236,13 +238,13 @@ void wb_convert(wb_convert_info_t * wb_info, float * rawData, int width, int hei
                 switch (FC(y,x))
                 {
                     case 0:
-                        rawData[y*width+x] = LIMIT16( ( rawData[y*width+x] /*- blacklevel*/ ) * wb_multipliers[0] );
+                        rawData[y*width+x] = LIMIT16( ( rawData[y*width+x] - blacklevel ) * wb_multipliers[0] );
                         break;
                     case 1:
-                        rawData[y*width+x] = LIMIT16( ( rawData[y*width+x] /*- blacklevel*/ ) * wb_multipliers[1] );
+                        rawData[y*width+x] = LIMIT16( ( rawData[y*width+x] - blacklevel ) * wb_multipliers[1] );
                         break;
                     case 2:
-                        rawData[y*width+x] = LIMIT16( ( rawData[y*width+x] /*- blacklevel*/ ) * wb_multipliers[2] );
+                        rawData[y*width+x] = LIMIT16( ( rawData[y*width+x] - blacklevel ) * wb_multipliers[2] );
                         break;
                     default:
                         break;
@@ -308,6 +310,8 @@ void wb_undo(const wb_convert_info_t * wb_info, uint16_t * debayeredFrame, int w
 //     //     debayeredFrame[i+2] = LIMIT16(b);
 //     // }
 
+    if(blacklevel < 1000) blacklevel = -1000; //TO BE REMOVED! But this fixes blue dots for clips with blacklevel=0
+
     double wb_multipliers[3];
     get_kelvin_multipliers_rgb(6500, wb_multipliers);
     double max_wb = MAX( wb_multipliers[0], MAX( wb_multipliers[1], wb_multipliers[2] ) );
@@ -318,9 +322,9 @@ void wb_undo(const wb_convert_info_t * wb_info, uint16_t * debayeredFrame, int w
             for (int x = 0; x < width; ++x)
             {
                 int idx = (y*width+x)*3;
-                debayeredFrame[idx  ] = LIMIT16( ( debayeredFrame[idx  ] / wb_multipliers[0] ) /*+ blacklevel*/ );
-                debayeredFrame[idx+1] = LIMIT16( ( debayeredFrame[idx+1] / wb_multipliers[1] ) /*+ blacklevel*/ );
-                debayeredFrame[idx+2] = LIMIT16( ( debayeredFrame[idx+2] / wb_multipliers[2] ) /*+ blacklevel*/ );
+                debayeredFrame[idx  ] = LIMIT16( ( debayeredFrame[idx  ] / wb_multipliers[0] ) + blacklevel );
+                debayeredFrame[idx+1] = LIMIT16( ( debayeredFrame[idx+1] / wb_multipliers[1] ) + blacklevel );
+                debayeredFrame[idx+2] = LIMIT16( ( debayeredFrame[idx+2] / wb_multipliers[2] ) + blacklevel );
             }
     }
 }
