@@ -1871,7 +1871,7 @@ void MainWindow::startExportPipe(QString fileName)
             //Get all pictures and send to pipe
             for( uint32_t i = (m_exportQueue.first()->cutIn() - 1); i < m_exportQueue.first()->cutOut(); i++ )
             {
-                if( m_resizeFilterEnabled )
+                if( scaled )
                 {
                     //Get picture, and lock render thread... there can only be one!
                     m_pRenderThread->lock();
@@ -2320,7 +2320,7 @@ void MainWindow::startExportPipe(QString fileName)
         //Get all pictures and send to pipe
         for( uint32_t i = (m_exportQueue.first()->cutIn() - 1); i < m_exportQueue.first()->cutOut(); i++ )
         {
-            if( m_resizeFilterEnabled )
+            if( scaled )
             {
                 //Get picture, and lock render thread... there can only be one!
                 m_pRenderThread->lock();
