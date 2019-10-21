@@ -1917,6 +1917,7 @@ void MainWindow::startExportPipe(QString fileName)
             }
             //Close pipe
             pclose( pPipeStab );
+            free( imgBufferScaled );
             free( imgBuffer );
         }
     }
@@ -2375,6 +2376,7 @@ void MainWindow::startExportPipe(QString fileName)
         }
         //Close pipe
         pclose( pPipe );
+        free( imgBufferScaled );
         free( imgBuffer );
     }
 
