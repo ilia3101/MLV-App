@@ -465,20 +465,36 @@ This option is very slow and runs when export progressbar is at 100%!</string>
            <property name="text">
             <string>1 pass</string>
            </property>
+           <property name="icon">
+            <iconset resource="ressources.qrc">
+             <normaloff>:/RetinaIMG/RetinaIMG/Status-dialog-warning-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Status-dialog-warning-icon.png</iconset>
+           </property>
           </item>
           <item>
            <property name="text">
             <string>3 pass</string>
+           </property>
+           <property name="icon">
+            <iconset resource="ressources.qrc">
+             <normaloff>:/RetinaIMG/RetinaIMG/Status-dialog-warning-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Status-dialog-warning-icon.png</iconset>
            </property>
           </item>
           <item>
            <property name="text">
             <string>3 pass + unsharp mask</string>
            </property>
+           <property name="icon">
+            <iconset resource="ressources.qrc">
+             <normaloff>:/RetinaIMG/RetinaIMG/Status-dialog-warning-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Status-dialog-warning-icon.png</iconset>
+           </property>
           </item>
           <item>
            <property name="text">
             <string>last resort</string>
+           </property>
+           <property name="icon">
+            <iconset resource="ressources.qrc">
+             <normaloff>:/RetinaIMG/RetinaIMG/Status-dialog-warning-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Status-dialog-warning-icon.png</iconset>
            </property>
           </item>
          </widget>
