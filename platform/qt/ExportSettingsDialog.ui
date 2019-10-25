@@ -454,7 +454,8 @@
          <widget class="QComboBox" name="comboBoxSmoothing">
           <property name="toolTip">
            <string>Use this option to smooth aliasing / moiree artifacts.
-This option is very slow and runs when export progressbar is at 100%!</string>
+This option is very slow and runs when export progressbar is at 100%!
+It won't bring good results in shots with much movement and much detail.</string>
           </property>
           <item>
            <property name="text">
