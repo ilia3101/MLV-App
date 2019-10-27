@@ -1489,9 +1489,12 @@ void processingSetBlackAndWhiteLevel( processingObject_t * processing,
 {
     /* Convert levels to 16bit */
     int bits_shift = 16 - mlvBitDepth;
-    if(mlvBlackLevel) processing->black_level = mlvBlackLevel << bits_shift;
-    else processing->black_level = 0;
-    if(mlvWhiteLevel)
+    if( mlvBlackLevel >= 0 )
+    {
+        if(mlvBlackLevel) processing->black_level = mlvBlackLevel << bits_shift;
+        else processing->black_level = 0;
+    }
+    if( mlvWhiteLevel >= 0 )
     {
         processing->white_level = mlvWhiteLevel << bits_shift;
         /* Lowering white level a bit avoids pink grain in highlihgt reconstruction */
@@ -1526,13 +1529,13 @@ void processingSetBlackLevel(processingObject_t * processing, int mlvBlackLevel,
 {
     processingSetBlackAndWhiteLevel( processing,
                                      mlvBlackLevel,
-                                     0, // if zero leave value untouched
+                                     -1, // if -1 leave value untouched
                                      mlvBitDepth );
 }
 void processingSetWhiteLevel(processingObject_t * processing, int mlvWhiteLevel, int mlvBitDepth)
 {
     processingSetBlackAndWhiteLevel( processing,
-                                     0, // if zero leave value untouched
+                                     -1, // if -1 leave value untouched
                                      mlvWhiteLevel,
                                      mlvBitDepth );
 }
