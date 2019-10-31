@@ -19,6 +19,7 @@
 #include "interpolation/cosine_interpolation.h"
 #include "rbfilter/rbf_wrapper.h"
 #include "sobel/sobel.h"
+#include "cafilter/ColorAberrationCorrection.h"
 
 /* Matrix functions which are useful */
 #include "../matrix/matrix.h"
@@ -512,7 +513,13 @@ void applyProcessingObject( processingObject_t * processing,
         }
         convert_YCbCr_to_rgb_omp(outputImage, img_s, processing->cs_zone.pre_calc_YCbCr_to_rgb);
     }
-
+    /* RGB CA&ColorMoiree Removal */
+    if( 0 ) //Set to 1 and use LUT slider to control intensity (100=min, 1=max)
+    {
+        int img_s = imageX * imageY * 3;
+        memcpy( inputImage, outputImage, img_s * sizeof(uint16_t) );
+        CACorrection(imageX, imageY, inputImage, outputImage, (uint16_t)(processing->lut->intensity)<<9);
+    }
     /* Grain (simple monochrome noise) generator - must be applied after denoiser */
     if( processing->grainStrength > 0 ) //Switch on/off
     {
