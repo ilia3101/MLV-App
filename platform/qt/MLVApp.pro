@@ -142,7 +142,8 @@ SOURCES += \
     ../../src/processing/sobel/sobel.c \
     MoveToTrash.cpp \
     OverwriteListDialog.cpp \
-    PixelMapListDialog.cpp
+    PixelMapListDialog.cpp \
+    ../../src/processing/cafilter/ColorAberrationCorrection.c
 
 macx: SOURCES += ../cocoa/avf_lib/avf_lib.m
 
@@ -241,7 +242,8 @@ HEADERS += \
     OverwriteListDialog.h \
     avir/avirthreadpool.h \
     avir/ThreadPool.h \
-    PixelMapListDialog.h
+    PixelMapListDialog.h \
+    ../../src/processing/cafilter/ColorAberrationCorrection.h
 
 macx: HEADERS += \
     ../cocoa/avf_lib/avencoder.h \
