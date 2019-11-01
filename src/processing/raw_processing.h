@@ -261,6 +261,9 @@ void processingSetGCurve(processingObject_t * processing, int num, float * pXin,
 /* Set Hue vs. Luma curve */
 void processingSetHueVsCurves(processingObject_t * processing, int num, float * pXin, float * pYin, uint8_t channel);
 
+/* Set CA filter parameter */
+#define processingSetCaDesaturate(processing, value) (processing)->ca_desaturate = (value)
+
 /*
  *******************************************************************************
  * THE FOLLOWING FUNCTIONS ARE PRIVATE AND NO USE OUTSIDE OF raw_processing.c

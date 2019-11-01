@@ -203,6 +203,9 @@ typedef struct {
 
     /* Allow creative adjustments with log profile */
     uint8_t    allow_creative_adjustments;
+
+    /* CA filter */
+    uint8_t ca_desaturate; /* Range 0..100 */
 } processingObject_t;
 
 #endif

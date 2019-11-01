@@ -176,6 +176,7 @@ processingObject_t * initProcessingObject()
     processing_update_shadow_highlight_curve(processing);
 
     processingSetToning(processing, 255, 192, 0, 0);
+    processingSetCaDesaturate(processing, 0);
 
     return processing;
 }
@@ -514,11 +515,11 @@ void applyProcessingObject( processingObject_t * processing,
         convert_YCbCr_to_rgb_omp(outputImage, img_s, processing->cs_zone.pre_calc_YCbCr_to_rgb);
     }
     /* RGB CA&ColorMoiree Removal */
-    if( 0 ) //Set to 1 and use LUT slider to control intensity (100=min, 1=max)
+    if( processing->ca_desaturate > 0 ) //Set to 1 and use LUT slider to control intensity (100=min, 1=max)
     {
         int img_s = imageX * imageY * 3;
         memcpy( inputImage, outputImage, img_s * sizeof(uint16_t) );
-        CACorrection(imageX, imageY, inputImage, outputImage, (uint16_t)(processing->lut->intensity)<<9);
+        CACorrection(imageX, imageY, inputImage, outputImage, (uint16_t)(100-processing->ca_desaturate)<<9);
     }
     /* Grain (simple monochrome noise) generator - must be applied after denoiser */
     if( processing->grainStrength > 0 ) //Switch on/off

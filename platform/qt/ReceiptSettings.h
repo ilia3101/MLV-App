@@ -108,7 +108,8 @@ public:
     void setVignetteRadius( int value )       {m_vignetteRadius = value;}
     void setVignetteShape( int value )        {m_vignetteShape = value;}
     void setCaRed( int value )                {m_caRed = value;}
-    void setCaBlue( int value )                {m_caBlue = value;}
+    void setCaBlue( int value )               {m_caBlue = value;}
+    void setCaDesaturate( int value )         {m_caDesaturate = value;}
     void setCutIn( uint32_t frame )           {m_cutIn = frame;}
     void setCutOut( uint32_t frame )          {m_cutOut = frame;}
 
@@ -198,6 +199,7 @@ public:
     int vignetteShape( void ){return m_vignetteShape;}
     int caRed( void ){return m_caRed;}
     int caBlue( void ){return m_caBlue;}
+    int caDesaturate( void ){return m_caDesaturate;}
     uint32_t cutIn( void ) {return m_cutIn;}
     uint32_t cutOut( void ){return m_cutOut;}
     uint8_t profile( void ){return m_profile;}
@@ -250,6 +252,7 @@ private:
     int m_vignetteShape;
     int m_caRed;
     int m_caBlue;
+    int m_caDesaturate;
 
     int m_sharpen;
     int m_shMasking;

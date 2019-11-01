@@ -3655,6 +3655,11 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
             receipt->setCaBlue( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
+        else if( Rxml->isStartElement() && Rxml->name() == "caDesaturate" )
+        {
+            receipt->setCaDesaturate( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
         else if( Rxml->isStartElement() && Rxml->name() == "stretchFactorX" )
         {
             receipt->setStretchFactorX( Rxml->readElementText().toDouble() );
@@ -3808,6 +3813,7 @@ void MainWindow::writeXmlElementsToFile(QXmlStreamWriter *xmlWriter, ReceiptSett
     xmlWriter->writeTextElement( "vignetteShape",           QString( "%1" ).arg( receipt->vignetteShape() ) );
     xmlWriter->writeTextElement( "caRed",                   QString( "%1" ).arg( receipt->caRed() ) );
     xmlWriter->writeTextElement( "caBlue",                  QString( "%1" ).arg( receipt->caBlue() ) );
+    xmlWriter->writeTextElement( "caDesaturate",            QString( "%1" ).arg( receipt->caDesaturate() ) );
     xmlWriter->writeTextElement( "stretchFactorX",          QString( "%1" ).arg( receipt->stretchFactorX() ) );
     xmlWriter->writeTextElement( "stretchFactorY",          QString( "%1" ).arg( receipt->stretchFactorY() ) );
     xmlWriter->writeTextElement( "upsideDown",              QString( "%1" ).arg( receipt->upsideDown() ) );
@@ -4123,6 +4129,8 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     on_horizontalSliderCaRed_valueChanged( receipt->caRed() );
     ui->horizontalSliderCaBlue->setValue( receipt->caBlue() );
     on_horizontalSliderCaBlue_valueChanged( receipt->caBlue() );
+    ui->horizontalSliderCaDesaturate->setValue( receipt->caDesaturate() );
+    on_horizontalSliderCaDesaturate_valueChanged( receipt->caDesaturate() );
 
     if( !paste && !receipt->wasNeverLoaded() )
     {
@@ -4248,6 +4256,7 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     receipt->setVignetteShape( ui->horizontalSliderVignetteShape->value() );
     receipt->setCaRed( ui->horizontalSliderCaRed->value() );
     receipt->setCaBlue( ui->horizontalSliderCaBlue->value() );
+    receipt->setCaDesaturate( ui->horizontalSliderCaDesaturate->value() );
 
     receipt->setStretchFactorX( getHorizontalStretchFactor(true) );
     receipt->setStretchFactorY( getVerticalStretchFactor(true) );
@@ -4380,6 +4389,7 @@ void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings 
         receiptTarget->setVignetteShape( receiptSource->vignetteShape() );
         receiptTarget->setCaRed( receiptSource->caRed() );
         receiptTarget->setCaBlue( receiptSource->caBlue() );
+        receiptTarget->setCaDesaturate( receiptSource->caDesaturate() );
     }
 
     if( paste && cdui->checkBoxTransformation->isChecked() )
@@ -4538,6 +4548,7 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     receipt->setVignetteShape( m_pSessionReceipts.at( row )->vignetteShape() );
     receipt->setCaRed( m_pSessionReceipts.at( row )->caRed() );
     receipt->setCaBlue( m_pSessionReceipts.at( row )->caBlue() );
+    receipt->setCaDesaturate( m_pSessionReceipts.at( row )->caDesaturate() );
 
     receipt->setStretchFactorX( m_pSessionReceipts.at( row )->stretchFactorX() );
     receipt->setStretchFactorY( m_pSessionReceipts.at( row )->stretchFactorY() );
@@ -5468,6 +5479,13 @@ void MainWindow::on_horizontalSliderCaBlue_valueChanged(int position)
     m_frameChanged = true;
 }
 
+void MainWindow::on_horizontalSliderCaDesaturate_valueChanged(int position)
+{
+    processingSetCaDesaturate( m_pProcessingObject, position );
+    ui->label_CaDesaturateVal->setText( QString("%1").arg( position ) );
+    m_frameChanged = true;
+}
+
 void MainWindow::on_horizontalSliderRawWhite_valueChanged(int position)
 {
     if( !m_fileLoaded ) return;
@@ -5797,6 +5815,13 @@ void MainWindow::on_horizontalSliderCaBlue_doubleClicked()
 {
     ReceiptSettings *sliders = new ReceiptSettings(); //default
     ui->horizontalSliderCaBlue->setValue( sliders->caBlue() );
+    delete sliders;
+}
+
+void MainWindow::on_horizontalSliderCaDesaturate_doubleClicked()
+{
+    ReceiptSettings *sliders = new ReceiptSettings(); //default
+    ui->horizontalSliderCaDesaturate->setValue( sliders->caDesaturate() );
     delete sliders;
 }
 
@@ -7092,6 +7117,15 @@ void MainWindow::on_label_CaBlueVal_doubleClicked()
     editSlider.autoSetup( ui->horizontalSliderCaBlue, ui->label_CaBlueVal, 10.0, 1, 10.0 );
     editSlider.exec();
     ui->horizontalSliderCaBlue->setValue( editSlider.getValue() );
+}
+
+//DoubleClick on CA desaturate Label
+void MainWindow::on_label_CaDesaturateVal_doubleClicked()
+{
+    EditSliderValueDialog editSlider;
+    editSlider.autoSetup( ui->horizontalSliderCaDesaturate, ui->label_CaDesaturateVal, 1.0, 0, 1.0 );
+    editSlider.exec();
+    ui->horizontalSliderCaDesaturate->setValue( editSlider.getValue() );
 }
 
 void MainWindow::on_label_RawWhiteVal_doubleClicked()
