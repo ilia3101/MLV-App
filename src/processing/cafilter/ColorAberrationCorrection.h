@@ -1,6 +1,8 @@
 #ifndef COLORABBERATIONCORRECTION
 #define COLORABBERATIONCORRECTION
 
+#include <stdlib.h>
+
 extern void CACorrection(int imageX, int imageY,
                   uint16_t * __restrict inputImage,
                   uint16_t * __restrict outputImage,
