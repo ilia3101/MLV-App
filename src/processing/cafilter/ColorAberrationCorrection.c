@@ -6,7 +6,7 @@
 #define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
 #define LIMIT16(X) MAX(MIN(X, 65535), 0)
 
-void rmCA(uint16_t* rVec, uint16_t* gVec, uint16_t* bVec, int width, int height, int threshold)
+void rmCA(uint16_t* rVec, uint16_t* gVec, uint16_t* bVec, int width, int height, int threshold, int radius)
 {
 #pragma omp parallel for
     for (int i = 0; i < height; ++i)
@@ -33,8 +33,9 @@ void rmCA(uint16_t* rVec, uint16_t* gVec, uint16_t* bVec, int width, int height,
 					int ggrad = (gptr[lpos + 1] - gptr[lpos - 1])*sign;
 					int bgrad = (bptr[lpos + 1] - bptr[lpos - 1])*sign;
 					int rgrad = (rptr[lpos + 1] - rptr[lpos - 1])*sign;
+                    if ( j-lpos >= radius ) { break; }
                     if (MAX(MAX(bgrad, ggrad), rgrad) < threshold) { break; }
-				}
+                }
 				lpos -= 1;
                 for (; rpos < width - 2; ++rpos)
 				{
@@ -42,8 +43,9 @@ void rmCA(uint16_t* rVec, uint16_t* gVec, uint16_t* bVec, int width, int height,
 					int ggrad = (gptr[rpos + 1] - gptr[rpos - 1])*sign;
 					int bgrad = (bptr[rpos + 1] - bptr[rpos - 1])*sign;
 					int rgrad = (rptr[rpos + 1] - rptr[rpos - 1])*sign;
+                    if ( rpos-j >= radius ) { break; }
                     if (MAX(MAX(bgrad, ggrad), rgrad) < threshold) { break; }
-				}
+                }
 				rpos += 1;
 
 				//record the maximum and minimum color difference between R&G and B&G of range boundary
@@ -74,7 +76,7 @@ void rmCA(uint16_t* rVec, uint16_t* gVec, uint16_t* bVec, int width, int height,
 void CACorrection(int imageX, int imageY,
                   uint16_t * __restrict inputImage,
                   uint16_t * __restrict outputImage,
-                  uint16_t threshold)
+                  uint16_t threshold, uint8_t radius)
 {
     //getting working memory
     uint16_t *bVec = malloc( imageX * imageY * sizeof( uint16_t ) );
@@ -97,7 +99,7 @@ void CACorrection(int imageX, int imageY,
     if( threshold < 1 ) threshold = 1;
 
     //first run
-    rmCA(rVec, gVec, bVec, imageX, imageY, threshold);
+    rmCA(rVec, gVec, bVec, imageX, imageY, threshold, radius);
 
 	//transpose the R,G B channel image to correct chromatic aberration in vertical direction 
     memcpy( temp, rVec, imageX*imageY * sizeof(uint16_t) );
@@ -117,7 +119,7 @@ void CACorrection(int imageX, int imageY,
             bVec[x*imageY+y] = temp[y*imageX+x];
 
     //second run
-    rmCA(rVec, gVec, bVec, imageY, imageX, threshold);
+    rmCA(rVec, gVec, bVec, imageY, imageX, threshold, radius);
 
     //rotate the image back to original position
     memcpy( temp, rVec, imageX*imageY * sizeof(uint16_t) );

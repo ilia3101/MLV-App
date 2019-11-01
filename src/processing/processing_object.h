@@ -206,6 +206,7 @@ typedef struct {
 
     /* CA filter */
     uint8_t ca_desaturate; /* Range 0..100 */
+    uint8_t ca_radius; /* Range 0.. */
 } processingObject_t;
 
 #endif

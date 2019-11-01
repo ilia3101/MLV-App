@@ -263,6 +263,7 @@ void processingSetHueVsCurves(processingObject_t * processing, int num, float * 
 
 /* Set CA filter parameter */
 #define processingSetCaDesaturate(processing, value) (processing)->ca_desaturate = (value)
+#define processingSetCaRadius(processing, value) (processing)->ca_radius = (value)
 
 /*
  *******************************************************************************

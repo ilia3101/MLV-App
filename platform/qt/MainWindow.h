@@ -104,6 +104,7 @@ private slots:
     void on_horizontalSliderCaRed_valueChanged(int position);
     void on_horizontalSliderCaBlue_valueChanged(int position);
     void on_horizontalSliderCaDesaturate_valueChanged(int position);
+    void on_horizontalSliderCaRadius_valueChanged(int position);
     void on_horizontalSliderRawWhite_valueChanged(int position);
     void on_horizontalSliderRawBlack_valueChanged(int position);
     void on_horizontalSliderTone_valueChanged(int position);
@@ -146,6 +147,7 @@ private slots:
     void on_horizontalSliderCaRed_doubleClicked();
     void on_horizontalSliderCaBlue_doubleClicked();
     void on_horizontalSliderCaDesaturate_doubleClicked();
+    void on_horizontalSliderCaRadius_doubleClicked();
     void on_horizontalSliderRawWhite_doubleClicked();
     void on_horizontalSliderRawBlack_doubleClicked();
     void on_horizontalSliderTone_doubleClicked();
@@ -248,6 +250,7 @@ private slots:
     void on_label_CaRedVal_doubleClicked( void );
     void on_label_CaBlueVal_doubleClicked( void );
     void on_label_CaDesaturateVal_doubleClicked( void );
+    void on_label_CaRadiusVal_doubleClicked( void );
     void on_label_RawWhiteVal_doubleClicked( void );
     void on_label_RawBlackVal_doubleClicked( void );
     void on_label_ToneVal_doubleClicked( void );

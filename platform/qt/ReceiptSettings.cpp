@@ -93,6 +93,7 @@ ReceiptSettings::ReceiptSettings()
     m_caRed = 0;
     m_caBlue = 0;
     m_caDesaturate = 0;
+    m_caRadius = 1;
     m_profile = 2;
     m_tonemap = -1;
     m_gamut = -1;

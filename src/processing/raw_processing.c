@@ -177,6 +177,7 @@ processingObject_t * initProcessingObject()
 
     processingSetToning(processing, 255, 192, 0, 0);
     processingSetCaDesaturate(processing, 0);
+    processingSetCaRadius(processing, 1);
 
     return processing;
 }
@@ -519,7 +520,9 @@ void applyProcessingObject( processingObject_t * processing,
     {
         int img_s = imageX * imageY * 3;
         memcpy( inputImage, outputImage, img_s * sizeof(uint16_t) );
-        CACorrection(imageX, imageY, inputImage, outputImage, (uint16_t)(100-processing->ca_desaturate)<<9);
+        CACorrection(imageX, imageY, inputImage, outputImage,
+                     (uint16_t)(100-processing->ca_desaturate)<<9,
+                     processing->ca_radius);
     }
     /* Grain (simple monochrome noise) generator - must be applied after denoiser */
     if( processing->grainStrength > 0 ) //Switch on/off
