@@ -27,7 +27,7 @@ void rmCA(uint16_t* rVec, uint16_t* gVec, uint16_t* bVec, int width, int height,
 
 				//Searching the boundary for correction range
 				int lpos = j-1, rpos = j+1;
-				for (; lpos > 0; --lpos)
+                for (; lpos > 1; --lpos)
 				{
 					//make sure the gradient is the same sign with edge
 					int ggrad = (gptr[lpos + 1] - gptr[lpos - 1])*sign;
@@ -36,7 +36,7 @@ void rmCA(uint16_t* rVec, uint16_t* gVec, uint16_t* bVec, int width, int height,
                     if (MAX(MAX(bgrad, ggrad), rgrad) < threshold) { break; }
 				}
 				lpos -= 1;
-				for (; rpos < width - 1; ++rpos)
+                for (; rpos < width - 2; ++rpos)
 				{
 					//make sure the gradient is the same sign with edge
 					int ggrad = (gptr[rpos + 1] - gptr[rpos - 1])*sign;
