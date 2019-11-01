@@ -15,7 +15,7 @@ void rmCA(uint16_t* rVec, uint16_t* gVec, uint16_t* bVec, int width, int height,
         uint16_t *gptr = &gVec[i*width];
         uint16_t *rptr = &rVec[i*width];
 
-		for (int j = 1; j < width - 1; ++j)
+        for (int j = 2; j < width - 2; ++j)
 		{
 			//find the edge by finding green channel gradient bigger than threshold
 			if (abs(gptr[j + 1] - gptr[j - 1]) >= threshold)
@@ -76,6 +76,7 @@ void CACorrection(int imageX, int imageY,
                   uint16_t * __restrict outputImage,
                   uint16_t threshold)
 {
+    //getting working memory
     uint16_t *bVec = malloc( imageX * imageY * sizeof( uint16_t ) );
     uint16_t *gVec = malloc( imageX * imageY * sizeof( uint16_t ) );
     uint16_t *rVec = malloc( imageX * imageY * sizeof( uint16_t ) );
@@ -93,7 +94,9 @@ void CACorrection(int imageX, int imageY,
 
 	//setting threshold to find the edge and correction range(in g channel)
     //threshold = 7700;//30;
+    if( threshold < 1 ) threshold = 1;
 
+    //first run
     rmCA(rVec, gVec, bVec, imageX, imageY, threshold);
 
 	//transpose the R,G B channel image to correct chromatic aberration in vertical direction 
@@ -113,6 +116,7 @@ void CACorrection(int imageX, int imageY,
         for( int x = 0; x < imageX; x++ )
             bVec[x*imageY+y] = temp[y*imageX+x];
 
+    //second run
     rmCA(rVec, gVec, bVec, imageY, imageX, threshold);
 
     //rotate the image back to original position
@@ -132,6 +136,7 @@ void CACorrection(int imageX, int imageY,
         for( int x = 0; x < imageX; x++ )
             bVec[y*imageX+x] = temp[x*imageY+y];
 
+    //merge channels into final image
 #pragma omp parallel for
     for( int i = 0; i < imageX*imageY; i++ )
     {
@@ -140,4 +145,10 @@ void CACorrection(int imageX, int imageY,
         outputImage[j+1] = gVec[i];
         outputImage[j+2] = bVec[i];
     }
+
+    //clean up
+    free( bVec );
+    free( gVec );
+    free( rVec );
+    free( temp );
 }
