@@ -188,6 +188,8 @@ void addFrameToVideoFile(AVEncoder_t * encoder, uint16_t * frame)
         printf("error appending image %d times %d\n, with error.", encoder->frames_encoded, j);
     }
     encoder->frames_encoded++;
+
+    CVBufferRelease(buffer);
 }
 
 /* Append a frame in 8 bit */
