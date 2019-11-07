@@ -30,6 +30,8 @@ SourceFiles=(
     ../../src/processing/denoiser/denoiser_2d_median.c
     ../../src/processing/interpolation/cosine_interpolation.c
     ../../src/debayer/wb_conversion.c
+    ../../src/ca_correct/CA_correct_RT.c
+    ../../src/processing/cafilter/ColorAberrationCorrection.c
 );
 
 SourceFilesCPP=(
