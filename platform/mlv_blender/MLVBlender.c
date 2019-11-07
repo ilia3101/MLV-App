@@ -146,6 +146,14 @@ void MLVBlenderBlend(MLVBlender_t * Blender, uint64_t FrameIndex)
 
         size_t frame_size = mlv->width * mlv->height;
         uint16_t * frame_data = malloc(frame_size * sizeof(uint16_t));
+
+        /* If we are past the end of the MLV just keep using it's last frame */
+        uint64_t get_frame;
+        if (getMlvFrames(mlv->mlv) > FrameIndex) {
+            get_frame = FrameIndex;
+        } else {
+            get_frame = getMlvFrames(mlv->mlv)-1;
+        }
         getMlvRawFrameUint16(mlv->mlv, FrameIndex, frame_data);
 
         int32_t black_level = getMlvBlackLevel(mlv->mlv);
@@ -273,12 +281,12 @@ int MLVBlenderGetOutputHeight(MLVBlender_t * Blender)
 
 void MLVBlenderExportMLV(MLVBlender_t * Blender, const char * OutputPath)
 {
-    /* Limit length to shortest vid */
-    uint64_t shortest_vid = Blender->mlvs[0].num_frames;
+    /* Set length to longest vid */
+    uint64_t longest_vid = Blender->mlvs[0].num_frames;
     for (int i = 0; i < Blender->num_mlvs; ++i)
-        if (Blender->mlvs[0].num_frames < shortest_vid) shortest_vid = Blender->mlvs[0].num_frames;
+        if (Blender->mlvs[0].num_frames > longest_vid) longest_vid = Blender->mlvs[0].num_frames;
 
-    if (shortest_vid == 0) return;
+    if (longest_vid == 0) return;
 
     mlvObject_t * mlv_object = initMlvObjectWithClip(Blender->mlvs[0].file_name, MLV_OPEN_FULL, NULL, NULL);
 
@@ -313,15 +321,15 @@ void MLVBlenderExportMLV(MLVBlender_t * Blender, const char * OutputPath)
 
     /* Annoying */
     if (isMlvCompressed(mlv_object))
-        saveMlvHeaders(mlv_object, mlv_output_file, 0, MLV_FAST_PASS, 0, shortest_vid, "NOT MLV APP", error);
+        saveMlvHeaders(mlv_object, mlv_output_file, 0, MLV_FAST_PASS, 0, longest_vid, "NOT MLV APP", error);
     else
-        saveMlvHeaders(mlv_object, mlv_output_file, 0, MLV_COMPRESS, 0, shortest_vid, "NOT MLV APP", error);
+        saveMlvHeaders(mlv_object, mlv_output_file, 0, MLV_COMPRESS, 0, longest_vid, "NOT MLV APP", error);
 
     uint16_t * buffer16 = malloc(sizeof(uint16_t) * frame_size);
     uint8_t * buffer_compressed = malloc(2 * frame_size * sizeof(uint16_t));
 
 
-    for (uint64_t f = 0; f < shortest_vid; ++f)
+    for (uint64_t f = 0; f < longest_vid; ++f)
     {
         if (f != 0) MLVBlenderBlend(Blender, f);
 
