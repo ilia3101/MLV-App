@@ -453,7 +453,7 @@ QGroupBox::indicator:checked:disabled {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>-4441</y>
+            <y>0</y>
             <width>244</width>
             <height>5408</height>
            </rect>
@@ -2377,7 +2377,7 @@ QGroupBox::indicator:checked:disabled {
                   </widget>
                  </item>
                  <item row="0" column="1">
-                  <widget class="QSpinBox" name="spinBoxCutIn">
+                  <widget class="NoScrollSpinBox" name="spinBoxCutIn">
                    <property name="font">
                     <font>
                      <pointsize>10</pointsize>
@@ -2428,7 +2428,7 @@ QGroupBox::indicator:checked:disabled {
                   </widget>
                  </item>
                  <item row="1" column="1">
-                  <widget class="QSpinBox" name="spinBoxCutOut">
+                  <widget class="NoScrollSpinBox" name="spinBoxCutOut">
                    <property name="font">
                     <font>
                      <pointsize>10</pointsize>
@@ -6956,7 +6956,7 @@ QGroupBox::indicator:checked:disabled {
                     </widget>
                    </item>
                    <item>
-                    <widget class="QSpinBox" name="spinBoxGradientX">
+                    <widget class="NoScrollSpinBox" name="spinBoxGradientX">
                      <property name="sizePolicy">
                       <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                        <horstretch>0</horstretch>
@@ -6989,7 +6989,7 @@ QGroupBox::indicator:checked:disabled {
                     </widget>
                    </item>
                    <item>
-                    <widget class="QSpinBox" name="spinBoxGradientY">
+                    <widget class="NoScrollSpinBox" name="spinBoxGradientY">
                      <property name="sizePolicy">
                       <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                        <horstretch>0</horstretch>
@@ -7088,7 +7088,7 @@ QGroupBox::indicator:checked:disabled {
                     </widget>
                    </item>
                    <item>
-                    <widget class="QSpinBox" name="spinBoxGradientLength">
+                    <widget class="NoScrollSpinBox" name="spinBoxGradientLength">
                      <property name="sizePolicy">
                       <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                        <horstretch>0</horstretch>
@@ -10139,6 +10139,11 @@ QGroupBox::indicator:checked:disabled {
    <class>ScopesLabel</class>
    <extends>QLabel</extends>
    <header>ScopesLabel.h</header>
+  </customwidget>
+  <customwidget>
+   <class>NoScrollSpinBox</class>
+   <extends>QSpinBox</extends>
+   <header>NoScrollSpinBox.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>
