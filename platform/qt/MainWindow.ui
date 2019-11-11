@@ -2383,6 +2383,9 @@ QGroupBox::indicator:checked:disabled {
                      <pointsize>10</pointsize>
                     </font>
                    </property>
+                   <property name="focusPolicy">
+                    <enum>Qt::ClickFocus</enum>
+                   </property>
                    <property name="alignment">
                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                    </property>
@@ -2433,6 +2436,9 @@ QGroupBox::indicator:checked:disabled {
                     <font>
                      <pointsize>10</pointsize>
                     </font>
+                   </property>
+                   <property name="focusPolicy">
+                    <enum>Qt::ClickFocus</enum>
                    </property>
                    <property name="alignment">
                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -6968,6 +6974,9 @@ QGroupBox::indicator:checked:disabled {
                        <pointsize>10</pointsize>
                       </font>
                      </property>
+                     <property name="focusPolicy">
+                      <enum>Qt::ClickFocus</enum>
+                     </property>
                      <property name="alignment">
                       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                      </property>
@@ -7000,6 +7009,9 @@ QGroupBox::indicator:checked:disabled {
                       <font>
                        <pointsize>10</pointsize>
                       </font>
+                     </property>
+                     <property name="focusPolicy">
+                      <enum>Qt::ClickFocus</enum>
                      </property>
                      <property name="alignment">
                       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -7099,6 +7111,9 @@ QGroupBox::indicator:checked:disabled {
                       <font>
                        <pointsize>10</pointsize>
                       </font>
+                     </property>
+                     <property name="focusPolicy">
+                      <enum>Qt::ClickFocus</enum>
                      </property>
                      <property name="alignment">
                       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
