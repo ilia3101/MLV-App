@@ -144,7 +144,8 @@ SOURCES += \
     OverwriteListDialog.cpp \
     PixelMapListDialog.cpp \
     ../../src/processing/cafilter/ColorAberrationCorrection.c \
-    NoScrollSpinBox.cpp
+    NoScrollSpinBox.cpp \
+    NoScrollComboBox.cpp
 
 macx: SOURCES += ../cocoa/avf_lib/avf_lib.m
 
@@ -245,7 +246,8 @@ HEADERS += \
     avir/ThreadPool.h \
     PixelMapListDialog.h \
     ../../src/processing/cafilter/ColorAberrationCorrection.h \
-    NoScrollSpinBox.h
+    NoScrollSpinBox.h \
+    NoScrollComboBox.h
 
 macx: HEADERS += \
     ../cocoa/avf_lib/avencoder.h \

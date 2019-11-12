@@ -2508,7 +2508,7 @@ QGroupBox::indicator:checked:disabled {
                   <number>5</number>
                  </property>
                  <item row="0" column="0">
-                  <widget class="QComboBox" name="comboBoxDebayer">
+                  <widget class="NoScrollComboBox" name="comboBoxDebayer">
                    <property name="font">
                     <font>
                      <pointsize>10</pointsize>
@@ -4294,7 +4294,7 @@ QGroupBox::indicator:checked:disabled {
                   </widget>
                  </item>
                  <item row="11" column="0">
-                  <widget class="QComboBox" name="comboBoxUseCameraMatrix">
+                  <widget class="NoScrollComboBox" name="comboBoxUseCameraMatrix">
                    <property name="font">
                     <font>
                      <pointsize>10</pointsize>
@@ -4355,7 +4355,7 @@ QGroupBox::indicator:checked:disabled {
                   </widget>
                  </item>
                  <item row="4" column="0">
-                  <widget class="QComboBox" name="comboBoxTonemapFct">
+                  <widget class="NoScrollComboBox" name="comboBoxTonemapFct">
                    <property name="minimumSize">
                     <size>
                      <width>0</width>
@@ -4428,7 +4428,7 @@ QGroupBox::indicator:checked:disabled {
                   </widget>
                  </item>
                  <item row="1" column="0">
-                  <widget class="QComboBox" name="comboBoxProfile">
+                  <widget class="NoScrollComboBox" name="comboBoxProfile">
                    <property name="minimumSize">
                     <size>
                      <width>0</width>
@@ -4501,7 +4501,7 @@ QGroupBox::indicator:checked:disabled {
                   </widget>
                  </item>
                  <item row="6" column="0">
-                  <widget class="QComboBox" name="comboBoxProcessingGamut">
+                  <widget class="NoScrollComboBox" name="comboBoxProcessingGamut">
                    <property name="minimumSize">
                     <size>
                      <width>0</width>
@@ -4915,7 +4915,7 @@ QGroupBox::indicator:checked:disabled {
                     </widget>
                    </item>
                    <item>
-                    <widget class="QComboBox" name="comboBoxDenoiseWindow">
+                    <widget class="NoScrollComboBox" name="comboBoxDenoiseWindow">
                      <property name="font">
                       <font>
                        <pointsize>10</pointsize>
@@ -7559,7 +7559,7 @@ QGroupBox::indicator:checked:disabled {
                   </widget>
                  </item>
                  <item>
-                  <widget class="QComboBox" name="comboBoxFilterName">
+                  <widget class="NoScrollComboBox" name="comboBoxFilterName">
                    <property name="enabled">
                     <bool>true</bool>
                    </property>
@@ -8664,7 +8664,7 @@ QGroupBox::indicator:checked:disabled {
                     </layout>
                    </item>
                    <item row="0" column="1">
-                    <widget class="QComboBox" name="comboBoxHStretch">
+                    <widget class="NoScrollComboBox" name="comboBoxHStretch">
                      <property name="sizePolicy">
                       <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
                        <horstretch>0</horstretch>
@@ -8998,7 +8998,7 @@ QGroupBox::indicator:checked:disabled {
                     </widget>
                    </item>
                    <item row="1" column="1">
-                    <widget class="QComboBox" name="comboBoxVStretch">
+                    <widget class="NoScrollComboBox" name="comboBoxVStretch">
                      <property name="sizePolicy">
                       <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
                        <horstretch>0</horstretch>
@@ -10159,6 +10159,11 @@ QGroupBox::indicator:checked:disabled {
    <class>NoScrollSpinBox</class>
    <extends>QSpinBox</extends>
    <header>NoScrollSpinBox.h</header>
+  </customwidget>
+  <customwidget>
+   <class>NoScrollComboBox</class>
+   <extends>QComboBox</extends>
+   <header>NoScrollComboBox.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>
