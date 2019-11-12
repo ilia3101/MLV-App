@@ -60,19 +60,22 @@
 
 <h3 id="exportactualframe">Export Actual Frame</h3>
 
-<p>Export the frame shown in the viewer as PNG file.</p>
+<p>Export the frame shown in the viewer as PNG, uncompressed or lossless DNG file.</p>
 
 <h3 id="exportsettings">Export Settings</h3>
 
 <p>Setup the export settings. They consist of the codec, codec option, debayer (demosaic algorithm), resolution (ffmpeg codecs only), framerate override (ffmpeg only &amp; AVFoundation), Smooth aliasing (ffmpeg only), HDR blending (ffmpeg only), audio, post export script (OSX only).</p>
 
+<p>Audio can only be exported, if framerate override is not activated and if chosen codec supports audio export.</p>
+
 <p>CinemaDNG export only contains RAW Correction parameters and CutIn&amp;CutOut applied. All other parameters from edit area don't affect the exported file.</p>
 
 <p>MLV export only contains CutIn&amp;CutOut applied. All other parameters from edit area don't affect the exported file.</p>
 
-<p>Smooth aliasing smooths aliasing artifacts. This works best for clips with a very slight movement. </p>
+<p>Smooth aliasing smooths aliasing artifacts. This works best for clips with a very slight movement. 
+<em>Note: Smooth aliasing runs when progressbar is at 100% and needs a long time to render.</em></p>
 
-<p><em>Note: Smooth aliasing runs when progressbar is at 100% and needs a long time to render.</em></p>
+<p>Export setting presets can be saved and loaded. First setup a setting, then click "+" button. Rename a listed preset by doubleclicking. Load a preset by a single click. Delete a selected preset by clicking "-" button.</p>
 
 <h2 id="22edit">2.2 Edit</h2>
 
@@ -112,7 +115,7 @@
 
 <h3 id="debayerforpreview">Debayer for Preview</h3>
 
-<p>This changes the demosaicing algorithm used for the viewer. The demosaicing algorithm is one of the most time consuming parts in the processing pipeline, depending on the chosen algorithm. On the other side preview quality also depends the chosen algorithm. The fastest algorithm is "Simple" and the (mostly) best algorithm is "AMaZE". In order to be able to see the clip as fast as possible with best quality, there is the option "AMaZE cached". If this option is chosen, the user has to wait, if status bar lable tells "Caching: active". If status bar lable switches again to "Caching: idle" the clip is loaded to RAM (depending on the length of the clip, the clip may be larger as the reserved memory) and can be watched.</p>
+<p>This changes the demosaicing algorithm used for the viewer. The demosaicing algorithm is one of the most time consuming parts in the processing pipeline, depending on the chosen algorithm. On the other side preview quality also depends the chosen algorithm. The fastest algorithm is "Simple" and the (mostly) best algorithm is "AMaZE". </p>
 
 <h3 id="betterresizerforviewer">Better Resizer for Viewer</h3>
 
@@ -192,6 +195,18 @@
 <li>Canon EOS M2: <em>80000355</em></li>
 </ul>
 
+<p>Using a Linux AppImage (read only archive) do the following to be able to install focus pixel maps:</p>
+
+<ul>
+<li>extract with --appimage-extract option (it creates a directory called: "squashfs-root")</li>
+
+<li>copy "ffmpeg" executable in this newly crated directory</li>
+
+<li>use ./mlvapp to run application from same directory</li>
+
+<li>now use drag and drop feature to load latest focus pixel maps</li>
+</ul>
+
 <h3 id="fixbadpixels">Fix Bad Pixels</h3>
 
 <p>Use this option to remove dead pixels from the clip.</p>
@@ -258,6 +273,14 @@
 
 <p>Lightens the picture, specially dark parts.</p>
 
+<h3 id="highlightreconstruction">Highlight Reconstruction</h3>
+
+<p>Remove pink highlights. </p>
+
+<p><em>Note 1: if it does not work, mostly RAW White Level is set wrong.</em></p>
+
+<p><em>Note 2: for dual iso clips, pink highlights can not always be detected.</em></p>
+
 <h3 id="highlights">Highlights</h3>
 
 <p>Analyses and adjusts the highlights using a blurred mask.</p>
@@ -270,29 +293,39 @@
 
 <p>Adjust gradation curves independently for Y, R, G, B.</p>
 
-<h3 id="highlightreconstruction">Highlight Reconstruction</h3>
+<h2 id="44profile">4.4 Profile</h2>
 
-<p>Remove pink highlights. </p>
+<h3 id="profilepreset">Profile Preset</h3>
 
-<p><em>Note 1: if it does not work, mostly RAW White Level is set wrong.</em></p>
+<p>Quick setup for the following parameters.</p>
 
-<p><em>Note 2: for dual iso clips, pink highlights can not always be detected.</em></p>
+<h3 id="tonemapfunction">Tonemap Function</h3>
+
+<p>After the initial three stages of processing: white balance, gamut conversion and exposure, the data is still linear and unclipped, at this point MLV App applies the selected "tonemapping function". This could be any function you want, it could be an actual tonemapping function like Reinhard, which rolls off the highlights smoothly but still keeps a "linear" intention, it could be a transfer/gamma function such as those defined by Rec709 or sRGB, or it could even be a LOG transfer function. The tonemapping functions are offered as presets, but you could add anything you want in the source code of MLV App.</p>
+
+<h3 id="processinggamut">Processing Gamut</h3>
+
+<p>Defines, which colour gamut MLV App will convert camera data to. It is simply choosing an RGB colour space except without a transfer function (sometimes called gamma). Only the primaries. This parameter is disabled, if camera matrix is set to "Don't Use Camera Matrix".</p>
+
+<h3 id="gamma">Gamma</h3>
+
+<p>A numerical value defining gamma as a power. Applied to the image after the tonemapping function. If the tonemapping function already did "gamma", for example the rec709 function, gamma should be 1.0 if you want to stick to rec709 standard strictly. However I would not recommend anyone tries to follow the rec709 standard exactly, it clips really ugly. Much better to select Reinhard as tonemapping function, for smooth highlight rolloff, then approximate the rec709 transfer function on top of that, with a gamma value of 2.0.</p>
+
+<h3 id="allowcreativeadjustment">Allow Creative Adjustment</h3>
+
+<p>Disable this checkbox, to get a correct transformation. Enable this checkbox, to change the look of the footage with curve tools and other parameters.</p>
 
 <h3 id="cameramatrix">Camera Matrix</h3>
 
 <ul>
-<li>Don't Use Camera Matrix: no scientific whitebalance calculation is applied</li>
+<li>Don't Use Camera Matrix: camera's native RGB channels are interpreted as rec709 primaries, and white balance is done in those colour channels - it is not recommended for accuracy, also different cameras will not match.</li>
 
-<li>Use Camera Matrix: scientific whitebalance calculation is applied</li>
+<li>Use Camera Matrix: camera colours are converted to MLV App's processing gamut accurately using camera specific matrix, and white balance is done in LMS colour space (where the R, G and B channels imitate eye colour cells), which should preserve colour constancy better.</li>
 
-<li>Uncolorscience Fix: a tweaked whitebalance calculation which may look better than "Use Camera Matrix" option for temperatures below 4000K, on the cost of blue / green channel quality </li>
+<li>Uncolorscience Fix: Same as use camera matrix, except the white balance is not done in LMS gamut, instead it is one that @Danne came up with by tweaking matrix values, it helps reduce blue clipping at lower colour temperatures (2000-3000K), but should not be used if there aren't any clipping problems, as it can and will affect colour quality or accuracy. This mode will be removed when BetterProcessing branch is complete (it should fix the clipping issues). </li>
 </ul>
 
-<h3 id="profile">Profile</h3>
-
-<p>This adjusts the gamma to a defined profile. For some profiles some parameters are disabled, to be able to export correctly.</p>
-
-<h2 id="44details">4.4 Details</h2>
+<h2 id="45details">4.5 Details</h2>
 
 <h3 id="chromaseparation">Chroma Separation</h3>
 
@@ -318,7 +351,7 @@
 
 <p>Use the grain slider to add some very simple generated film grain.</p>
 
-<h2 id="45hslhuesaturationluminance">4.5 HSL (Hue Saturation Luminance)</h2>
+<h2 id="46hslhuesaturationluminance">4.6 HSL (Hue Saturation Luminance)</h2>
 
 <h3 id="huevshue">Hue vs. Hue</h3>
 
@@ -332,11 +365,15 @@
 
 <p>Adjust luminance in relation to color. For example: make blue darker (-), but red brighter (+).</p>
 
-<h2 id="46toning">4.6 Toning</h2>
+<h3 id="luminancevssaturation">Luminance vs. Saturation</h3>
+
+<p>Adjust saturation in relation to luminance. For example: desaturate shadows (- on the left).</p>
+
+<h2 id="47toning">4.7 Toning</h2>
 
 <p>Select a hue and a strength. This simulates a hardware color filter.</p>
 
-<h2 id="47lineargradient">4.7 Linear Gradient</h2>
+<h2 id="48lineargradient">4.8 Linear Gradient</h2>
 
 <p>This set of parameters offers a kind of graduated ND filter. Additionally to exposure, contrast can be adjusted as well. </p>
 
@@ -346,19 +383,29 @@
 
 <p>Hide the lines by collapsing the "Linear Gradient" group box.</p>
 
-<h2 id="48lut">4.8 LUT</h2>
+<h2 id="49lut">4.9 LUT</h2>
 
 <p>Enable and select a 1D/3D .cube LookUpTable. </p>
 
-<h2 id="49filter">4.9 Filter</h2>
+<h2 id="410filter">4.10 Filter</h2>
 
 <p>Enable, select, and adjust Strength of a predefined picture look.</p>
 
-<h2 id="410vignette">4.10 Vignette</h2>
+<h2 id="411lenscorrection">4.11 Lens Correction</h2>
+
+<h3 id="vignette">Vignette</h3>
 
 <p>Use strength slider to correct existing vignettes in your footage (-> positive strength) or as vignette effect (->negative strength). The radius slider defines the area starting from the middle, which rests untouched. The shape slider can be used to change the shape of the vignette between circle and oval.</p>
 
-<h2 id="411transformation">4.11 Transformation</h2>
+<h3 id="cacorrectionredblue">CA Correction Red / Blue</h3>
+
+<p>These two sliders shift the RAW channels with the goal to correct CAs. </p>
+
+<h3 id="cadesaturateradius">CA Desaturate / Radius</h3>
+
+<p>The CA threshold slider should be setup to the most possible left value where CAs disappear. This should happen mostly between 85..95, but might be different from clip to clip. Radius slider can be used for large CAs. Here values between 1..5 are mostly best. This feature works on debayered RGB data.</p>
+
+<h2 id="412transformation">4.12 Transformation</h2>
 
 <h3 id="widthstretch">Width Stretch</h3>
 
@@ -366,7 +413,7 @@
 
 <h3 id="heightstretch">Height Stretch</h3>
 
-<p>Wrong height ratio can be corrected here, when using pixel binning and skipping.
+<p>Wrong height ratio can be corrected here, when using pixel binning and skipping. 
 <em>Note: if metadata exists, MLV App adjusts this parameter automatically.</em></p>
 
 <h3 id="finalresolution">Final resolution</h3>
@@ -423,7 +470,7 @@ Done on debayered raw image before black/white level correction and exposure (th
 <ol>
 <li>Gamma through lookup table, gamma look up table also has exposure and tonemap function applied in it all in one go (so highlight data won't get clipped before tonemapping)</li>
 
-<li>Highlight reconstruction done same time as the matrix. That works by reconstructing the green channel at the point where it was clipped.
+<li>Highlight reconstruction done same time as the matrix. That works by reconstructing the green channel at the point where it was clipped. 
 For dual iso clips, the information of highest_green (input for reconstruction) gets lost on dual iso stitching, and is different in each frame. In the end it seems like there is a gaussian curve around a peak (which may be there, may be not, sometimes it is small, sometimes it is high). That is why an algorithm was implemented, which trys to find this peak, if there is one.
 Starting from full 16bit (65535) and searching all local maxima, a maxima which is bigger than a limit is searched. If the maxima become bigger than a smaller limit, green signal was found (no peak found -> no clipped green). This algorithm has to run for each frame...</li>
 
