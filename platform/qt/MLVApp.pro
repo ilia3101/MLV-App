@@ -145,7 +145,8 @@ SOURCES += \
     PixelMapListDialog.cpp \
     ../../src/processing/cafilter/ColorAberrationCorrection.c \
     NoScrollSpinBox.cpp \
-    NoScrollComboBox.cpp
+    NoScrollComboBox.cpp \
+    TranscodeDialog.cpp
 
 macx: SOURCES += ../cocoa/avf_lib/avf_lib.m
 
@@ -247,7 +248,8 @@ HEADERS += \
     PixelMapListDialog.h \
     ../../src/processing/cafilter/ColorAberrationCorrection.h \
     NoScrollSpinBox.h \
-    NoScrollComboBox.h
+    NoScrollComboBox.h \
+    TranscodeDialog.h
 
 macx: HEADERS += \
     ../cocoa/avf_lib/avencoder.h \
@@ -267,7 +269,8 @@ FORMS += \
     UserManualDialog.ui \
     SingleFrameExportDialog.ui \
     OverwriteListDialog.ui \
-    PixelMapListDialog.ui
+    PixelMapListDialog.ui \
+    TranscodeDialog.ui
 
 RESOURCES += \
     ressources.qrc \

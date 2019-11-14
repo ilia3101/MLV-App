@@ -45,6 +45,7 @@
 #include "MoveToTrash.h"
 #include "OverwriteListDialog.h"
 #include "PixelMapListDialog.h"
+#include "TranscodeDialog.h"
 
 #define APPNAME "MLV App"
 #define VERSION "1.9"
@@ -1338,6 +1339,10 @@ void MainWindow::initGui( void )
 
     //set CPU Usage
     m_countTimeDown = -1;   //Time in seconds for CPU countdown
+
+    //raw2mlv available?
+    if( !QFileInfo( QString( "%1/raw2mlv" ).arg( QCoreApplication::applicationDirPath() ) ).exists() )
+        ui->actionTranscodeAndImport->setVisible( false );
 }
 
 //Initialize the library
@@ -9208,4 +9213,14 @@ void MainWindow::on_actionShowInstalledFocusPixelMaps_triggered()
         fpmDialog.showFpm( m_pMlvObject );
     }
     fpmDialog.exec();
+}
+
+//Open a window which uses raw2mlv binary
+void MainWindow::on_actionTranscodeAndImport_triggered()
+{
+    TranscodeDialog *pTranscode = new TranscodeDialog( this );
+    pTranscode->exec();
+    QStringList list = pTranscode->importList();
+    openMlvSet( list );
+    delete pTranscode;
 }

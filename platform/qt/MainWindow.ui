@@ -139,6 +139,7 @@
     <addaction name="actionCreateAllMappFilesNow"/>
     <addaction name="separator"/>
     <addaction name="actionOpen"/>
+    <addaction name="actionTranscodeAndImport"/>
     <addaction name="actionFcpxmlImportAssistant"/>
     <addaction name="actionFcpxmlSelectionAssistant"/>
     <addaction name="actionClip_Information"/>
@@ -10100,6 +10101,15 @@ QGroupBox::indicator:checked:disabled {
    </property>
    <property name="text">
     <string>Don't Switch Debayer for Playback</string>
+   </property>
+  </action>
+  <action name="actionTranscodeAndImport">
+   <property name="icon">
+    <iconset resource="ressources.qrc">
+     <normaloff>:/RetinaIMG/RetinaIMG/Movie-import-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Movie-import-icon.png</iconset>
+   </property>
+   <property name="text">
+    <string>Transcode and Import</string>
    </property>
   </action>
  </widget>

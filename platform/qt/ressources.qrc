@@ -47,6 +47,7 @@
         <file>RetinaIMG/mapGo-icon.png</file>
         <file>RetinaIMG/plus.png</file>
         <file>RetinaIMG/minus.png</file>
+        <file>RetinaIMG/Movie-import-icon.png</file>
     </qresource>
     <qresource prefix="/AudioVideoIcons">
         <file>AudioVideoIcons/FirstFrame.png</file>
