@@ -26,8 +26,7 @@ public:
 private slots:
     void on_pushButtonAddPics_clicked();
     void on_pushButtonTranscode_clicked();
-
-    void on_pushButtonAddSequences_clicked();
+    void on_pushButtonAddSequence_clicked();
 
 private:
     Ui::TranscodeDialog *ui;

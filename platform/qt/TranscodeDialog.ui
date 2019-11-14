@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Transcode and Import RAW2MLV</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0">
@@ -24,9 +24,9 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="pushButtonAddSequences">
+      <widget class="QPushButton" name="pushButtonAddSequence">
        <property name="text">
-        <string>Add Sequences</string>
+        <string>Add Sequence Folder</string>
        </property>
       </widget>
      </item>
