@@ -125,8 +125,10 @@ void TranscodeDialog::on_pushButtonAddSequence_clicked()
     {
         ui->treeWidget->takeTopLevelItem( ui->treeWidget->topLevelItemCount() - 1 );
     }
-
-    ui->pushButtonTranscode->setEnabled( true );
+    else
+    {
+        ui->pushButtonTranscode->setEnabled( true );
+    }
 }
 
 //Check if fileName is a supported file type
