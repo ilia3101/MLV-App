@@ -18,15 +18,41 @@
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
       <widget class="QPushButton" name="pushButtonAddPics">
+       <property name="toolTip">
+        <string>Add Picture(s)</string>
+       </property>
        <property name="text">
-        <string>Add Pictures</string>
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="ressources.qrc">
+         <normaloff>:/RetinaIMG/RetinaIMG/Images-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Images-icon.png</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>24</width>
+         <height>24</height>
+        </size>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QPushButton" name="pushButtonAddSequence">
-       <property name="text">
+       <property name="toolTip">
         <string>Add Sequence Folder</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="ressources.qrc">
+         <normaloff>:/RetinaIMG/RetinaIMG/Pic-Folder-Open-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Pic-Folder-Open-icon.png</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>24</width>
+         <height>24</height>
+        </size>
        </property>
       </widget>
      </item>
@@ -99,6 +125,8 @@
   <tabstop>treeWidget</tabstop>
   <tabstop>pushButtonTranscode</tabstop>
  </tabstops>
- <resources/>
+ <resources>
+  <include location="ressources.qrc"/>
+ </resources>
  <connections/>
 </ui>
