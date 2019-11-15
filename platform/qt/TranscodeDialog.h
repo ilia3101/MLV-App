@@ -31,6 +31,8 @@ private slots:
 private:
     Ui::TranscodeDialog *ui;
     QStringList m_importList;
+    QString m_lastSourcePath;
+    QString m_lastTargetPath;
 };
 
 #endif // TRANSCODEDIALOG_H

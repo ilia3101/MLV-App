@@ -12,6 +12,7 @@
 #include <QFileDialog>
 #include <QDebug>
 #include <QProcess>
+#include <QSettings>
 
 //Constructor
 TranscodeDialog::TranscodeDialog(QWidget *parent) :
@@ -19,14 +20,25 @@ TranscodeDialog::TranscodeDialog(QWidget *parent) :
     ui(new Ui::TranscodeDialog)
 {
     ui->setupUi(this);
+    setWindowFlags( Qt::Dialog | Qt::WindowTitleHint | Qt::WindowCloseButtonHint );
+
     m_importList.clear();
     ui->treeWidget->hideColumn( 1 );
     ui->treeWidget->setColumnWidth( 0, 200 );
+
+    QSettings set( QSettings::UserScope, "magiclantern.MLVApp", "MLVApp" );
+    m_lastSourcePath = set.value( "lastTranscodeSourcePath", QDir::homePath() ).toString();
+    m_lastTargetPath = set.value( "lastTranscodeTargetPath", QDir::homePath() ).toString();
+
+    ui->pushButtonTranscode->setEnabled( false );
 }
 
 //Destructor
 TranscodeDialog::~TranscodeDialog()
 {
+    QSettings set( QSettings::UserScope, "magiclantern.MLVApp", "MLVApp" );
+    set.setValue( "lastTranscodeSourcePath", m_lastSourcePath );
+    set.setValue( "lastTranscodeTargetPath", m_lastTargetPath );
     delete ui;
 }
 
@@ -39,12 +51,13 @@ QStringList TranscodeDialog::importList()
 //Add single pictures for sinlge MLVs
 void TranscodeDialog::on_pushButtonAddPics_clicked()
 {
-    QString path = QDir::homePath();
     QStringList files = QFileDialog::getOpenFileNames( this, tr("Open one or more RAW files..."),
-                                                    path,
+                                                    m_lastSourcePath,
                                                     tr("RAW files (*.*)") );
 
     if( files.empty() ) return;
+    QString file = files.at( 0 );
+    m_lastSourcePath = file.left( file.lastIndexOf( "/" ) );
 
     foreach( QString file, files )
     {
@@ -56,18 +69,20 @@ void TranscodeDialog::on_pushButtonAddPics_clicked()
         fileName = fileName.left( fileName.lastIndexOf(".") ).append( ".MLV" );
         pItem->setText( 2, fileName );
     }
+
+    ui->pushButtonTranscode->setEnabled( true );
 }
 
 //Add folders with frames for single MLVs
 void TranscodeDialog::on_pushButtonAddSequence_clicked()
 {
-    QString pathStart = QDir::homePath();
     QString folder = QFileDialog::getExistingDirectory(this, tr("Open RAW Sequences"),
-                                                            pathStart,
+                                                            m_lastSourcePath,
                                                             QFileDialog::ShowDirsOnly
                                                             | QFileDialog::DontResolveSymlinks);
 
     if( !folder.count() ) return;
+    m_lastSourcePath = folder.left( folder.lastIndexOf( "/" ) );
 
     QString path = folder.right( folder.count() - folder.lastIndexOf( "/" ) - 1 );
 
@@ -85,18 +100,20 @@ void TranscodeDialog::on_pushButtonAddSequence_clicked()
         pChild->setText( 0, fileName );
         pChild->setText( 1, QString( "%1/%2" ).arg( folder ).arg( file ) );
     }
+
+    ui->pushButtonTranscode->setEnabled( true );
 }
 
 //Transcode via RAW2MLV
 void TranscodeDialog::on_pushButtonTranscode_clicked()
 {
-    QString path = QDir::homePath();
+
     QString folderName = QFileDialog::getExistingDirectory(this, tr("Choose Destination Folder"),
-                                                      path,
+                                                      m_lastTargetPath,
                                                       QFileDialog::ShowDirsOnly
                                                       | QFileDialog::DontResolveSymlinks);
     if( folderName.length() == 0 ) return;
-
+    m_lastTargetPath = folderName;
     m_importList.clear();
 
     //For all clips
