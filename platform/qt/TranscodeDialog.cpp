@@ -31,6 +31,24 @@ TranscodeDialog::TranscodeDialog(QWidget *parent) :
     m_lastTargetPath = set.value( "lastTranscodeTargetPath", QDir::homePath() ).toString();
 
     ui->pushButtonTranscode->setEnabled( false );
+
+    m_fileExt << ".cr2"
+              << ".cr3"
+              << ".crf"
+              << ".dng"
+              << ".nef"
+              << ".raw"
+              << ".sr2"
+              << ".srf"
+              << ".nrw";
+
+    m_filter = "RAW images (";
+    foreach( QString fext, m_fileExt )
+    {
+        m_filter.append( QString( "*%1 " ).arg( fext ) );
+    }
+    m_filter.chop( 1 );
+    m_filter.append( ")" );
 }
 
 //Destructor
@@ -53,7 +71,7 @@ void TranscodeDialog::on_pushButtonAddPics_clicked()
 {
     QStringList files = QFileDialog::getOpenFileNames( this, tr("Open one or more RAW files..."),
                                                     m_lastSourcePath,
-                                                    tr("RAW files (*.*)") );
+                                                    m_filter );
 
     if( files.empty() ) return;
     QString file = files.at( 0 );
@@ -93,15 +111,32 @@ void TranscodeDialog::on_pushButtonAddSequence_clicked()
     pItem->setText( 2, path );
 
     QStringList list = QDir( folder ).entryList( QStringList() << "*.*", QDir::Files );
+    int num = 0;
     foreach( QString file, list )
     {
+        if( !supportedFileType( file ) ) continue;
         QTreeWidgetItem *pChild = new QTreeWidgetItem( pItem );
         QString fileName = QFileInfo( file ).fileName();
         pChild->setText( 0, fileName );
         pChild->setText( 1, QString( "%1/%2" ).arg( folder ).arg( file ) );
+        num++;
+    }
+    if( !num )
+    {
+        ui->treeWidget->takeTopLevelItem( ui->treeWidget->topLevelItemCount() - 1 );
     }
 
     ui->pushButtonTranscode->setEnabled( true );
+}
+
+//Check if fileName is a supported file type
+bool TranscodeDialog::supportedFileType(QString fileName)
+{
+    foreach( QString fext, m_fileExt )
+    {
+        if( fileName.endsWith( fext, Qt::CaseInsensitive ) ) return true;
+    }
+    return false;
 }
 
 //Transcode via RAW2MLV

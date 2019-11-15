@@ -33,6 +33,9 @@ private:
     QStringList m_importList;
     QString m_lastSourcePath;
     QString m_lastTargetPath;
+    QStringList m_fileExt;
+    QString m_filter;
+    bool supportedFileType( QString fileName );
 };
 
 #endif // TRANSCODEDIALOG_H
