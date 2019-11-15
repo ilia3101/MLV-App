@@ -40,7 +40,8 @@ TranscodeDialog::TranscodeDialog(QWidget *parent) :
               << ".raw"
               << ".sr2"
               << ".srf"
-              << ".nrw";
+              << ".nrw"
+              << ".arw";
 
     m_filter = "RAW images (";
     foreach( QString fext, m_fileExt )
