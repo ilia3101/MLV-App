@@ -76,19 +76,29 @@ void SingleFrameExportDialog::exportViaQt()
     //File name proposal
     QString saveFileName = m_fileName;
     saveFileName = saveFileName.left( saveFileName.lastIndexOf( "." ) );
-    saveFileName.append( QString( "_frame_%1.png" ).arg( m_frameNr + 1 ) );
+    if( ui->comboBoxCodec->currentIndex() == 2 )
+        saveFileName.append( QString( "_frame_%1.png" ).arg( m_frameNr + 1 ) );
+    else
+        saveFileName.append( QString( "_frame_%1.jpg" ).arg( m_frameNr + 1 ) );
 
     //But take the folder from last export
     saveFileName = QString( "%1/%2" ).arg( m_lastPath ).arg( QFileInfo( saveFileName ).fileName() );
 
     //File Dialog
-    QString fileName = QFileDialog::getSaveFileName( this, tr("Export..."),
-                                                    saveFileName,
-                                                    "8bit PNG (*.png)" );
+    QString fileName;
+    if( ui->comboBoxCodec->currentIndex() == 2 )
+        fileName = QFileDialog::getSaveFileName( this, tr("Export..."),
+                                                 saveFileName,
+                                                 "8bit PNG (*.png)" );
+    else
+        fileName = QFileDialog::getSaveFileName( this, tr("Export..."),
+                                                 saveFileName,
+                                                 "8bit JPG (*.jpg)" );
 
     //Exit if not an PNG file or aborted
     if( fileName == QString( "" )
-            || !fileName.endsWith( ".png", Qt::CaseInsensitive ) ) return;
+            || !( fileName.endsWith( ".png", Qt::CaseInsensitive )
+               || fileName.endsWith( ".jpg", Qt::CaseInsensitive ) ) ) return;
 
     //Save last path for next time
     m_lastPath = QFileInfo( fileName ).absolutePath();
@@ -112,8 +122,12 @@ void SingleFrameExportDialog::exportViaQt()
                                 getMlvHeight(m_pMlvObject) * stretchY,
                                 3, 0, &vars );
 
-    QImage( ( unsigned char *) imgBufferScaled8, getMlvWidth(m_pMlvObject) * stretchX, getMlvHeight(m_pMlvObject) * stretchY, QImage::Format_RGB888 )
-            .save( fileName, "png", -1 );
+    if( ui->comboBoxCodec->currentIndex() == 2 )
+        QImage( ( unsigned char *) imgBufferScaled8, getMlvWidth(m_pMlvObject) * stretchX, getMlvHeight(m_pMlvObject) * stretchY, QImage::Format_RGB888 )
+                .save( fileName, "png", -1 );
+    else
+        QImage( ( unsigned char *) imgBufferScaled8, getMlvWidth(m_pMlvObject) * stretchX, getMlvHeight(m_pMlvObject) * stretchY, QImage::Format_RGB888 )
+                .save( fileName, "jpg", -1 );
 
     free( pRawImage );
 }
