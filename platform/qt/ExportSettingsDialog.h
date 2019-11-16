@@ -60,6 +60,9 @@
 #define CODEC_H265_M_MKV            5
 #define CODEC_H265_AVFOUNDATION     6
 
+#define CODEC_TIFF_SEQ              0
+#define CODEC_TIFF_AVG              1
+
 #define CODEC_PNG_16                0
 #define CODEC_PNG_8                 1
 

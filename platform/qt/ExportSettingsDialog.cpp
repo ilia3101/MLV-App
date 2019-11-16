@@ -294,6 +294,14 @@ void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
         }
 #endif
     }
+    else if( index == CODEC_TIFF )
+    {
+        ui->labelDebayer->setEnabled( true );
+        ui->comboBoxDebayer->setEnabled( true );
+        ui->comboBoxOption->setEnabled( true );
+        ui->comboBoxOption->addItem( QString( "Sequence" ) );
+        ui->comboBoxOption->addItem( QString( "Averaged" ) );
+    }
     else if( index == CODEC_PNG )
     {
         ui->labelDebayer->setEnabled( true );
@@ -464,6 +472,7 @@ void ExportSettingsDialog::on_comboBoxOption_currentIndexChanged(const QString &
         //En-/disable fps override
         if( ( ( ui->comboBoxCodec->currentIndex() == CODEC_JPG2K )
              && ( arg1 != QString( "Movie (*.mov)" ) ) )
+         || ( ui->comboBoxCodec->currentIndex() == CODEC_TIFF )
          || ( ui->comboBoxCodec->currentIndex() == CODEC_PNG ) )
         {
             ui->checkBoxFpsOverride->setEnabled( false );

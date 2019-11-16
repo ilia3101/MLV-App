@@ -1716,7 +1716,9 @@ void MainWindow::startExportPipe(QString fileName)
 
     //HDR
     QString hdrString = QString( "" );
-    if( m_hdrExport && isHdrClip ) hdrString = QString( ",tblend=all_mode=average" );
+    if( ( m_hdrExport && isHdrClip )
+     || ( m_codecProfile == CODEC_TIFF && m_codecOption == CODEC_TIFF_AVG ) )
+        hdrString = QString( ",tblend=all_mode=average" );
 
     //Vidstab, 2nd pass
     QString vidstabString = QString( "" );
@@ -1935,36 +1937,49 @@ void MainWindow::startExportPipe(QString fileName)
 
     if( m_codecProfile == CODEC_TIFF )
     {
-        //Creating a folder with the initial filename
-        QString folderName = QFileInfo( fileName ).path();
-        QString shortFileName = QFileInfo( fileName ).fileName();
-        folderName.append( "/" )
-                .append( shortFileName.left( shortFileName.lastIndexOf( "." ) ) );
-
-        QDir dir;
-        dir.mkpath( folderName );
-
-        //Now add the numbered filename
-        output = folderName;
-        output.append( "/" )
-                .append( shortFileName.left( shortFileName.lastIndexOf( "." ) ) )
-                .append( QString( "_%06d.tif" ) );
-
-        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v tiff -pix_fmt %3 -start_number %4 -color_primaries bt709 -color_trc bt709 -colorspace bt709 %5\"%6\"" )
-                    .arg( fps )
-                    .arg( resolution )
-                    .arg( "rgb48" )
-                    .arg( m_exportQueue.first()->cutIn() - 1 )
-                    .arg( resizeFilter )
-                    .arg( output ) );
-
-        //copy wav to the location, ffmpeg does not like to do it for us :-(
-        if( m_audioExportEnabled && doesMlvHaveAudio( m_pMlvObject ) )
+        if( m_codecOption == CODEC_TIFF_SEQ )
         {
-            QFile::copy( wavFileName, QString( "%1/%2.wav" ).arg( folderName ).arg( shortFileName.left( shortFileName.lastIndexOf( "." ) ) ) );
+            //Creating a folder with the initial filename
+            QString folderName = QFileInfo( fileName ).path();
+            QString shortFileName = QFileInfo( fileName ).fileName();
+            folderName.append( "/" )
+                    .append( shortFileName.left( shortFileName.lastIndexOf( "." ) ) );
+
+            QDir dir;
+            dir.mkpath( folderName );
+
+            //Now add the numbered filename
+            output = folderName;
+            output.append( "/" )
+                    .append( shortFileName.left( shortFileName.lastIndexOf( "." ) ) )
+                    .append( QString( "_%06d.tif" ) );
+
+            program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v tiff -pix_fmt %3 -start_number %4 -color_primaries bt709 -color_trc bt709 -colorspace bt709 %5\"%6\"" )
+                        .arg( fps )
+                        .arg( resolution )
+                        .arg( "rgb48" )
+                        .arg( m_exportQueue.first()->cutIn() - 1 )
+                        .arg( resizeFilter )
+                        .arg( output ) );
+
+            //copy wav to the location, ffmpeg does not like to do it for us :-(
+            if( m_audioExportEnabled && doesMlvHaveAudio( m_pMlvObject ) )
+            {
+                QFile::copy( wavFileName, QString( "%1/%2.wav" ).arg( folderName ).arg( shortFileName.left( shortFileName.lastIndexOf( "." ) ) ) );
+            }
+            //Setup for scripting
+            m_pScripting->setNextScriptInputTiff( getMlvFramerate( m_pMlvObject ), folderName );
         }
-        //Setup for scripting
-        m_pScripting->setNextScriptInputTiff( getMlvFramerate( m_pMlvObject ), folderName );
+        else
+        {
+            output.append( QString( ".tif" ) );
+            program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v tiff -pix_fmt %3 -color_primaries bt709 -color_trc bt709 -colorspace bt709 %4\"%5\"" )
+                        .arg( fps )
+                        .arg( resolution )
+                        .arg( "rgb48" )
+                        .arg( resizeFilter )
+                        .arg( output ) );
+        }
     }
     else if( m_codecProfile == CODEC_PNG )
     {
