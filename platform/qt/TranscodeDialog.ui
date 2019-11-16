@@ -57,6 +57,77 @@
       </widget>
      </item>
      <item>
+      <widget class="Line" name="line">
+       <property name="styleSheet">
+        <string notr="true">background-color: rgb(115, 115, 115);</string>
+       </property>
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="checkBoxCompress">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="toolTip">
+        <string>Lossless Compression</string>
+       </property>
+       <property name="text">
+        <string>Compress</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="Line" name="line_2">
+       <property name="styleSheet">
+        <string notr="true">background-color: rgb(115, 115, 115);</string>
+       </property>
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="comboBoxBitDepth">
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="currentText">
+        <string>Original Bitdepth</string>
+       </property>
+       <item>
+        <property name="text">
+         <string>Original Bitdepth</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>10 bit</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>12 bit</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>14 bit</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>16 bit</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item>
       <spacer name="horizontalSpacer">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>

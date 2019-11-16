@@ -182,6 +182,27 @@ void TranscodeDialog::on_pushButtonTranscode_clicked()
         //Output
         command.append( QString( " -o \"%1/%2\"" ).arg( folderName ).arg( ui->treeWidget->topLevelItem(i)->text(2) ) );
 
+        //Compress
+        if( ui->checkBoxCompress->isChecked() )
+        {
+            command.append( QString( " --compression 1" ) );
+        }
+
+        //Bitdepth
+        switch( ui->comboBoxBitDepth->currentIndex() )
+        {
+        case 1: command.append( QString( " -b 10" ) );
+            break;
+        case 2: command.append( QString( " -b 12" ) );
+            break;
+        case 3: command.append( QString( " -b 14" ) );
+            break;
+        case 4: command.append( QString( " -b 16" ) );
+            break;
+        default:
+            break;
+        }
+
         qDebug() << command;
         QProcess process;
         process.execute( command );
