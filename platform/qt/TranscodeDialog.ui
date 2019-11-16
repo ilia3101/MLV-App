@@ -57,38 +57,22 @@
       </widget>
      </item>
      <item>
-      <widget class="Line" name="line">
-       <property name="styleSheet">
-        <string notr="true">background-color: rgb(115, 115, 115);</string>
-       </property>
+      <spacer name="horizontalSpacer">
        <property name="orientation">
-        <enum>Qt::Vertical</enum>
+        <enum>Qt::Horizontal</enum>
        </property>
-      </widget>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
      </item>
-     <item>
-      <widget class="QCheckBox" name="checkBoxCompress">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="toolTip">
-        <string>Lossless Compression</string>
-       </property>
-       <property name="text">
-        <string>Compress</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="Line" name="line_2">
-       <property name="styleSheet">
-        <string notr="true">background-color: rgb(115, 115, 115);</string>
-       </property>
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
-       </property>
-      </widget>
-     </item>
+    </layout>
+   </item>
+   <item row="1" column="0">
+    <layout class="QHBoxLayout" name="horizontalLayout_3">
      <item>
       <widget class="QComboBox" name="comboBoxBitDepth">
        <property name="maximumSize">
@@ -96,6 +80,9 @@
          <width>16777215</width>
          <height>16777215</height>
         </size>
+       </property>
+       <property name="toolTip">
+        <string>Use this bitdepth</string>
        </property>
        <property name="currentText">
         <string>Original Bitdepth</string>
@@ -128,7 +115,69 @@
       </widget>
      </item>
      <item>
-      <spacer name="horizontalSpacer">
+      <widget class="QComboBox" name="comboBoxFps">
+       <item>
+        <property name="text">
+         <string>23.976 fps</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>24 fps</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>25 fps</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>29.97 fps</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>30 fps</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>48 fps</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>50 fps</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>59.94 fps</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>60 fps</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="checkBoxCompress">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="toolTip">
+        <string>Lossless Compression</string>
+       </property>
+       <property name="text">
+        <string>Compress</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_3">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
@@ -142,7 +191,7 @@
      </item>
     </layout>
    </item>
-   <item row="1" column="0">
+   <item row="2" column="0">
     <widget class="QTreeWidget" name="treeWidget">
      <attribute name="headerDefaultSectionSize">
       <number>200</number>
@@ -164,7 +213,7 @@
      </column>
     </widget>
    </item>
-   <item row="2" column="0">
+   <item row="3" column="0">
     <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
       <spacer name="horizontalSpacer_2">

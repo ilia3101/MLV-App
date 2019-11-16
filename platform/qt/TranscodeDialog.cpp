@@ -203,6 +203,31 @@ void TranscodeDialog::on_pushButtonTranscode_clicked()
             break;
         }
 
+        //Framerate
+        switch( ui->comboBoxFps->currentIndex() )
+        {
+        case 0: command.append( QString( " -f 24000 1001" ) );
+            break;
+        case 1: command.append( QString( " -f 24 1" ) );
+            break;
+        case 2: command.append( QString( " -f 25 1" ) );
+            break;
+        case 3: command.append( QString( " -f 30000 1001" ) );
+            break;
+        case 4: command.append( QString( " -f 30 1" ) );
+            break;
+        case 5: command.append( QString( " -f 48 1" ) );
+            break;
+        case 6: command.append( QString( " -f 50 1" ) );
+            break;
+        case 7: command.append( QString( " -f 60000 1001" ) );
+            break;
+        case 8: command.append( QString( " -f 60 1" ) );
+            break;
+        default:
+            break;
+        }
+
         qDebug() << command;
         QProcess process;
         process.execute( command );
