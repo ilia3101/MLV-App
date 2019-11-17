@@ -1341,13 +1341,14 @@ void MainWindow::initGui( void )
     m_countTimeDown = -1;   //Time in seconds for CPU countdown
 
     //raw2mlv available?
+    ui->actionTranscodeAndImport->setVisible( false );
 #ifdef Q_OS_WIN
-    if( !QFileInfo( QString( "%1/raw2mlv.exe" ).arg( QCoreApplication::applicationDirPath() ) ).exists() )
-        ui->actionTranscodeAndImport->setVisible( false );
+    if( QFileInfo( QString( "%1/raw2mlv.exe" ).arg( QCoreApplication::applicationDirPath() ) ).exists() )
+        ui->actionTranscodeAndImport->setVisible( true );
 #endif
 #ifdef Q_OS_UNIX
-    if( !QFileInfo( QString( "%1/raw2mlv" ).arg( QCoreApplication::applicationDirPath() ) ).exists() )
-        ui->actionTranscodeAndImport->setVisible( false );
+    if( QFileInfo( QString( "%1/raw2mlv" ).arg( QCoreApplication::applicationDirPath() ) ).exists() )
+        ui->actionTranscodeAndImport->setVisible( true );
 #endif
 }
 
