@@ -300,7 +300,7 @@ void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
         ui->comboBoxDebayer->setEnabled( true );
         ui->comboBoxOption->setEnabled( true );
         ui->comboBoxOption->addItem( QString( "Sequence" ) );
-        ui->comboBoxOption->addItem( QString( "Averaged Frame" ) );
+        ui->comboBoxOption->addItem( QString( "Averaged Frame (max. 128 frames)" ) );
     }
     else if( index == CODEC_PNG )
     {
