@@ -1721,9 +1721,7 @@ void MainWindow::startExportPipe(QString fileName)
 
     if( m_codecProfile == CODEC_TIFF && m_codecOption == CODEC_TIFF_AVG )
     {
-        hdrString.clear();
-        for( int i = 0; i < m_exportQueue.first()->cutOut() - m_exportQueue.first()->cutIn(); i++ )
-            hdrString.append( QString( ",tblend=all_mode=average" ) );
+        hdrString = QString( ",tmix=frames=%1" ).arg( m_exportQueue.first()->cutOut() - m_exportQueue.first()->cutIn() + 1 );
     }
 
     //Vidstab, 2nd pass
