@@ -1891,6 +1891,8 @@ void MainWindow::startExportPipe(QString fileName)
             //Get all pictures and send to pipe
             for( uint32_t i = (m_exportQueue.first()->cutIn() - 1); i < m_exportQueue.first()->cutOut(); i++ )
             {
+                if( m_codecProfile == CODEC_TIFF && m_codecOption == CODEC_TIFF_AVG && i > 128 ) break;
+
                 if( scaled )
                 {
                     //Get picture, and lock render thread... there can only be one!
@@ -2354,6 +2356,8 @@ void MainWindow::startExportPipe(QString fileName)
         //Get all pictures and send to pipe
         for( uint32_t i = (m_exportQueue.first()->cutIn() - 1); i < m_exportQueue.first()->cutOut(); i++ )
         {
+            if( m_codecProfile == CODEC_TIFF && m_codecOption == CODEC_TIFF_AVG && i > 128 ) break;
+
             if( scaled )
             {
                 //Get picture, and lock render thread... there can only be one!
