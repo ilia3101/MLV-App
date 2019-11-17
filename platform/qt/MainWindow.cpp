@@ -1825,7 +1825,7 @@ void MainWindow::startExportPipe(QString fileName)
 #endif
 
 #ifdef STDOUT_SILENT
-    //program.append( QString( " -loglevel 0" ) );
+    program.append( QString( " -loglevel 0" ) );
 #endif
 
     //We need it later for multipass
@@ -2323,7 +2323,7 @@ void MainWindow::startExportPipe(QString fileName)
 
     //Try to open pipe
     FILE *pPipe;
-    qDebug() << "Call ffmpeg:" << program;
+    //qDebug() << "Call ffmpeg:" << program;
 #ifdef Q_OS_UNIX
     if( !( pPipe = popen( program.toUtf8().data(), "w" ) ) )
 #else
