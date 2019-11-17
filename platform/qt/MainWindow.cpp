@@ -1722,7 +1722,9 @@ void MainWindow::startExportPipe(QString fileName)
 
     if( m_codecProfile == CODEC_TIFF && m_codecOption == CODEC_TIFF_AVG )
     {
-        hdrString = QString( ",tmix=frames=%1" ).arg( m_exportQueue.first()->cutOut() - m_exportQueue.first()->cutIn() + 1 );
+        int frames = m_exportQueue.first()->cutOut() - m_exportQueue.first()->cutIn() + 1;
+        if( frames > 128 ) frames = 128;
+        hdrString = QString( ",tmix=frames=%1" ).arg( frames );
     }
 
     //Vidstab, 2nd pass
