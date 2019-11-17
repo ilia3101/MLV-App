@@ -1714,11 +1714,17 @@ void MainWindow::startExportPipe(QString fileName)
         }
     }
 
-    //HDR
+    //HDR and blending
     QString hdrString = QString( "" );
-    if( ( m_hdrExport && isHdrClip )
-     || ( m_codecProfile == CODEC_TIFF && m_codecOption == CODEC_TIFF_AVG ) )
+    if( m_hdrExport && isHdrClip )
         hdrString = QString( ",tblend=all_mode=average" );
+
+    if( m_codecProfile == CODEC_TIFF && m_codecOption == CODEC_TIFF_AVG )
+    {
+        hdrString.clear();
+        for( int i = 0; i < m_exportQueue.first()->cutOut() - m_exportQueue.first()->cutIn(); i++ )
+            hdrString.append( QString( ",tblend=all_mode=average" ) );
+    }
 
     //Vidstab, 2nd pass
     QString vidstabString = QString( "" );
@@ -1819,7 +1825,7 @@ void MainWindow::startExportPipe(QString fileName)
 #endif
 
 #ifdef STDOUT_SILENT
-    program.append( QString( " -loglevel 0" ) );
+    //program.append( QString( " -loglevel 0" ) );
 #endif
 
     //We need it later for multipass
@@ -2317,7 +2323,7 @@ void MainWindow::startExportPipe(QString fileName)
 
     //Try to open pipe
     FILE *pPipe;
-    //qDebug() << "Call ffmpeg:" << program;
+    qDebug() << "Call ffmpeg:" << program;
 #ifdef Q_OS_UNIX
     if( !( pPipe = popen( program.toUtf8().data(), "w" ) ) )
 #else
