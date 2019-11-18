@@ -318,37 +318,39 @@ unix{
 }
 
 #for using the compiled version
-#linux-g++ {
-#    target.path = $$(HOME)/bin
-#    desktop.path = $$(HOME)/.local/share/applications
-#    desktop.files += mlvapp.desktop
-#    icon512.path = $$(HOME)/.local/share/icons/hicolor/512x512/apps
-#    icon512.files += RetinaIMG/MLVAPP.png
-#    INSTALLS += target desktop icon512
-#    QMAKE_POST_LINK += tar -C $$(HOME)/bin -xvJf $$_PRO_FILE_PWD_/FFmpeg/ffmpegLinux.tar.xz --strip-components=1 --wildcards */ffmpeg
-#}
+linux-g++ {
+    target.path = $$(HOME)/bin
+    desktop.path = $$(HOME)/.local/share/applications
+    desktop.files += mlvapp.desktop
+    icon512.path = $$(HOME)/.local/share/icons/hicolor/512x512/apps
+    icon512.files += RetinaIMG/MLVAPP.png
+
+    INSTALLS += target desktop icon512
+
+    QMAKE_POST_LINK += tar -C $$(HOME)/bin -xvJf $$_PRO_FILE_PWD_/FFmpeg/ffmpegLinux.tar.xz --strip-components=1 --wildcards */ffmpeg
+}
 
 #for using linuxdeployqt
 #->run "make INSTALL_ROOT=. -j$(nproc) install" (is possible via QtCreators Project tab, add build step (make))
 #->run via terminal "linuxdeployqt-continuous-x86_64.AppImage path/to/appdir/usr/share/applications/mlvapp.desktop -appimage -qmake=pathToQmake/qmake"
-linux-g++ {
-    DEFINES += APP_IMAGE
+#linux-g++ {
+#    DEFINES += APP_IMAGE
 
-    QMAKE_POST_LINK += tar -C ../qt/FFmpeg/ -xvJf ../qt/FFmpeg/ffmpegLinux.tar.xz --strip=1 --wildcards */ffmpeg $$escape_expand(\n\t)
-    QMAKE_POST_LINK += chmod a+x ../qt/FFmpeg/ffmpeg
+#    QMAKE_POST_LINK += tar -C ../qt/FFmpeg/ -xvJf ../qt/FFmpeg/ffmpegLinux.tar.xz --strip=1 --wildcards */ffmpeg $$escape_expand(\n\t)
+#    QMAKE_POST_LINK += chmod a+x ../qt/FFmpeg/ffmpeg
 
-    isEmpty(PREFIX) {
-        PREFIX = /usr
-    }
-    target.path = $$PREFIX/bin
-    ffmpegSt.path = $$PREFIX/bin
-    ffmpegSt.files += FFmpeg/ffmpeg
-    desktop.path = $$PREFIX/share/applications
-    desktop.files += mlvapp.desktop
-    icon512.path = $$PREFIX/share/icons/hicolor/512x512/apps
-    icon512.files += RetinaIMG/MLVAPP.png
-    INSTALLS += ffmpegSt
-    INSTALLS += icon512
-    INSTALLS += desktop
-    INSTALLS += target
-}
+#    isEmpty(PREFIX) {
+#        PREFIX = /usr
+#    }
+#    target.path = $$PREFIX/bin
+#    ffmpegSt.path = $$PREFIX/bin
+#    ffmpegSt.files += FFmpeg/ffmpeg
+#    desktop.path = $$PREFIX/share/applications
+#    desktop.files += mlvapp.desktop
+#    icon512.path = $$PREFIX/share/icons/hicolor/512x512/apps
+#    icon512.files += RetinaIMG/MLVAPP.png
+#    INSTALLS += ffmpegSt
+#    INSTALLS += icon512
+#    INSTALLS += desktop
+#    INSTALLS += target
+#}
