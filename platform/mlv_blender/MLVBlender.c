@@ -111,6 +111,7 @@ void MLVBlenderBlend(MLVBlender_t * Blender, uint64_t FrameIndex)
 
     for (int i = 0; i < Blender->num_mlvs; ++i)
     {
+        printf(" * Blending image from video %i\n", i);
         MLVBlender_mlv_t * mlv = Blender->mlvs + i;
 
         /* Left edge */
@@ -154,7 +155,15 @@ void MLVBlenderBlend(MLVBlender_t * Blender, uint64_t FrameIndex)
         } else {
             get_frame = getMlvFrames(mlv->mlv)-1;
         }
-        getMlvRawFrameUint16(mlv->mlv, FrameIndex, frame_data);
+        
+        /* Get frame from index B4 if it fails */
+        if (getMlvRawFrameUint16(mlv->mlv, FrameIndex, frame_data))
+        {
+            int64_t frame_i = FrameIndex;
+            while (--frame_i >= 0) {
+                if (!getMlvRawFrameUint16(mlv->mlv, frame_i, frame_data)) break;
+            }
+        }
 
         int32_t black_level = getMlvBlackLevel(mlv->mlv);
         for (size_t j = 0; j < frame_size; ++j)
@@ -284,7 +293,7 @@ void MLVBlenderExportMLV(MLVBlender_t * Blender, const char * OutputPath)
     /* Set length to longest vid */
     uint64_t longest_vid = Blender->mlvs[0].num_frames;
     for (int i = 0; i < Blender->num_mlvs; ++i)
-        if (Blender->mlvs[0].num_frames > longest_vid) longest_vid = Blender->mlvs[0].num_frames;
+        if (Blender->mlvs[i].num_frames > longest_vid) longest_vid = Blender->mlvs[i].num_frames;
 
     if (longest_vid == 0) return;
 
@@ -321,9 +330,9 @@ void MLVBlenderExportMLV(MLVBlender_t * Blender, const char * OutputPath)
 
     /* Annoying */
     if (isMlvCompressed(mlv_object))
-        saveMlvHeaders(mlv_object, mlv_output_file, 0, MLV_FAST_PASS, 0, longest_vid, "NOT MLV APP", error);
+        saveMlvHeaders(mlv_object, mlv_output_file, 0, MLV_FAST_PASS, 0, longest_vid, "MLVStitcher", error);
     else
-        saveMlvHeaders(mlv_object, mlv_output_file, 0, MLV_COMPRESS, 0, longest_vid, "NOT MLV APP", error);
+        saveMlvHeaders(mlv_object, mlv_output_file, 0, MLV_COMPRESS, 0, longest_vid, "MLVStitcher", error);
 
     uint16_t * buffer16 = malloc(sizeof(uint16_t) * frame_size);
     uint8_t * buffer_compressed = malloc(2 * frame_size * sizeof(uint16_t));
@@ -331,6 +340,7 @@ void MLVBlenderExportMLV(MLVBlender_t * Blender, const char * OutputPath)
 
     for (uint64_t f = 0; f < longest_vid; ++f)
     {
+        printf("Exporting frame %i/%i\n", f, longest_vid);
         if (f != 0) MLVBlenderBlend(Blender, f);
 
         float black_level = getMlvBlackLevel(mlv_object);
