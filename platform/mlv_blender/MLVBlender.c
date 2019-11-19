@@ -157,13 +157,7 @@ void MLVBlenderBlend(MLVBlender_t * Blender, uint64_t FrameIndex)
         }
         
         /* Get frame from index B4 if it fails */
-        if (getMlvRawFrameUint16(mlv->mlv, FrameIndex, frame_data))
-        {
-            int64_t frame_i = FrameIndex;
-            while (--frame_i >= 0) {
-                if (!getMlvRawFrameUint16(mlv->mlv, frame_i, frame_data)) break;
-            }
-        }
+        getMlvRawFrameUint16(mlv->mlv, get_frame, frame_data);
 
         int32_t black_level = getMlvBlackLevel(mlv->mlv);
         for (size_t j = 0; j < frame_size; ++j)
