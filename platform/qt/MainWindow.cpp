@@ -48,8 +48,8 @@
 #include "TranscodeDialog.h"
 
 #define APPNAME "MLV App"
-#define VERSION "1.9"
-#define GITVERSION "QTv1.9"
+#define VERSION "1.10"
+#define GITVERSION "QTv1.10"
 
 #define FACTOR_DS       22.5
 #define FACTOR_LS       11.2
@@ -1342,14 +1342,14 @@ void MainWindow::initGui( void )
 
     //raw2mlv available?
     ui->actionTranscodeAndImport->setVisible( false );
-#ifdef Q_OS_WIN
+/*#ifdef Q_OS_WIN
     if( QFileInfo( QString( "%1/raw2mlv.exe" ).arg( QCoreApplication::applicationDirPath() ) ).exists() )
         ui->actionTranscodeAndImport->setVisible( true );
 #endif
 #ifdef Q_OS_UNIX
     if( QFileInfo( QString( "%1/raw2mlv" ).arg( QCoreApplication::applicationDirPath() ) ).exists() )
         ui->actionTranscodeAndImport->setVisible( true );
-#endif
+#endif*/
 }
 
 //Initialize the library
