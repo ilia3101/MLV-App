@@ -1342,14 +1342,14 @@ void MainWindow::initGui( void )
 
     //raw2mlv available?
     ui->actionTranscodeAndImport->setVisible( false );
-/*#ifdef Q_OS_WIN
+#ifdef Q_OS_WIN
     if( QFileInfo( QString( "%1/raw2mlv.exe" ).arg( QCoreApplication::applicationDirPath() ) ).exists() )
         ui->actionTranscodeAndImport->setVisible( true );
 #endif
 #ifdef Q_OS_UNIX
     if( QFileInfo( QString( "%1/raw2mlv" ).arg( QCoreApplication::applicationDirPath() ) ).exists() )
         ui->actionTranscodeAndImport->setVisible( true );
-#endif*/
+#endif
 }
 
 //Initialize the library

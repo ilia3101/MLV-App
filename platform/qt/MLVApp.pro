@@ -310,8 +310,8 @@ QMAKE_BUNDLE_DATA += PACKAGE_FILES
 macx: QMAKE_POST_LINK += unzip -o ../qt/FFmpeg/ffmpegOSX.zip $$escape_expand(\n\t)
 macx: QMAKE_POST_LINK += "mv ffmpeg MLV\ App.app/Contents/MacOS/" $$escape_expand(\n\t)
 #unpack & install raw2mlv on OSX
-#macx: QMAKE_POST_LINK += unzip -o ../qt/raw2mlv/raw2mlvOSX.zip $$escape_expand(\n\t)
-#macx: QMAKE_POST_LINK += "mv raw2mlv MLV\ App.app/Contents/MacOS/" $$escape_expand(\n\t)
+macx: QMAKE_POST_LINK += unzip -o ../qt/raw2mlv/raw2mlvOSX.zip $$escape_expand(\n\t)
+macx: QMAKE_POST_LINK += "mv raw2mlv MLV\ App.app/Contents/MacOS/" $$escape_expand(\n\t)
 
 unix{
     OBJECTS_DIR = .obj
@@ -331,7 +331,7 @@ linux-g++ {
     INSTALLS += target desktop icon512
 
     QMAKE_POST_LINK += tar -C $$(HOME)/bin -xvJf $$_PRO_FILE_PWD_/FFmpeg/ffmpegLinux.tar.xz --strip-components=1 --wildcards */ffmpeg $$escape_expand(\n\t)
-    #QMAKE_POST_LINK += tar -C $$(HOME)/bin -xvJf $$_PRO_FILE_PWD_/raw2mlv/raw2mlvLinux.tar.xz --strip-components=1 --wildcards */raw2mlv $$escape_expand(\n\t)
+    QMAKE_POST_LINK += tar -C $$(HOME)/bin -xvJf $$_PRO_FILE_PWD_/raw2mlv/raw2mlvLinux.tar.xz --strip-components=1 --wildcards */raw2mlv $$escape_expand(\n\t)
 }
 
 #for using linuxdeployqt
@@ -343,8 +343,8 @@ linux-g++ {
 #    QMAKE_POST_LINK += tar -C ../qt/FFmpeg/ -xvJf ../qt/FFmpeg/ffmpegLinux.tar.xz --strip=1 --wildcards */ffmpeg $$escape_expand(\n\t)
 #    QMAKE_POST_LINK += chmod a+x ../qt/FFmpeg/ffmpeg $$escape_expand(\n\t)
 
-#    #QMAKE_POST_LINK += tar -C ../qt/raw2mlv/ -xvJf ../qt/raw2mlv/raw2mlvLinux.tar.xz --strip=1 --wildcards */raw2mlv $$escape_expand(\n\t)
-#    #QMAKE_POST_LINK += chmod a+x ../qt/raw2mlv/raw2mlv $$escape_expand(\n\t)
+#    QMAKE_POST_LINK += tar -C ../qt/raw2mlv/ -xvJf ../qt/raw2mlv/raw2mlvLinux.tar.xz --strip=1 --wildcards */raw2mlv $$escape_expand(\n\t)
+#    QMAKE_POST_LINK += chmod a+x ../qt/raw2mlv/raw2mlv $$escape_expand(\n\t)
 
 #    isEmpty(PREFIX) {
 #        PREFIX = /usr
@@ -352,7 +352,7 @@ linux-g++ {
 #    target.path = $$PREFIX/bin
 #    ffmpegSt.path = $$PREFIX/bin
 #    ffmpegSt.files += FFmpeg/ffmpeg
-#    #ffmpegSt.files += raw2mlv/raw2mlv
+#    ffmpegSt.files += raw2mlv/raw2mlv
 #    desktop.path = $$PREFIX/share/applications
 #    desktop.files += mlvapp.desktop
 #    icon512.path = $$PREFIX/share/icons/hicolor/512x512/apps
