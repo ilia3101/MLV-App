@@ -19,7 +19,7 @@
 /* Struct of index of video and audio frames for quick access */
 typedef struct
 {
-    uint16_t frame_type;     /* VIDF = 1, AUDF = 2 */
+    uint16_t frame_type;     /* VIDF = 1, AUDF = 2, VERS = 3 */
     uint16_t chunk_num;      /* MLV chunk number */
     uint32_t frame_number;   /* Unique frame number */
     uint32_t frame_size;     /* Size of frame data */
@@ -36,6 +36,7 @@ typedef struct {
     uint32_t    block_num;     /* total block count */
     uint32_t    video_frames;  /* total video frames */
     uint32_t    audio_frames;  /* total audio frames */
+    uint32_t    vers_blocks;   /* total VERS blocks */
     uint64_t    audio_size;    /* total size of audio data in bytes */
     uint64_t    df_offset;     /* offset to the dark frame location */
     uint64_t    reserved;      /* reserved for future use */
@@ -72,6 +73,7 @@ typedef struct {
     mlv_diso_hdr_t    DISO;
     mlv_info_hdr_t    INFO;
     mlv_styl_hdr_t    STYL;
+    mlv_vers_hdr_t    VERS;
     mlv_dark_hdr_t    DARK;
     mlv_vidf_hdr_t    VIDF; /* One of many VIDFs(don't know if they're different) */
     mlv_audf_hdr_t    AUDF; /* Last AUDF header read */
@@ -100,6 +102,10 @@ typedef struct {
     uint8_t * audio_data;        /* Audio buffer pointer */
     uint64_t  audio_size;        /* Aligned usable audio size */
     uint64_t  audio_buffer_size; /* Full audio buffer size to be freed */
+
+    /* Version info */
+    uint32_t    vers_blocks;     /* Number of audio blocks */
+    frame_index_t * vers_index;
 
     /* Image processing object pointer (it is to be made separately) */
     processingObject_t * processing;

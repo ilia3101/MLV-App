@@ -614,6 +614,7 @@ static int save_mapp(mlvObject_t * video)
 
     size_t video_index_size = video->frames * sizeof(frame_index_t);
     size_t audio_index_size = video->audios * sizeof(frame_index_t);
+    size_t vers_index_size = video->vers_blocks * sizeof(frame_index_t);
     size_t mapp_buf_size = sizeof(mapp_header_t) +
                            sizeof(mlv_file_hdr_t) +
                            sizeof(mlv_rawi_hdr_t) +
@@ -629,7 +630,8 @@ static int save_mapp(mlvObject_t * video)
                            sizeof(mlv_diso_hdr_t) +
                            sizeof(mlv_dark_hdr_t) +
                            video_index_size +
-                           audio_index_size;
+                           audio_index_size +
+                           vers_index_size;
 
     uint8_t * mapp_buf = malloc(mapp_buf_size);
     if(!mapp_buf)
@@ -666,6 +668,11 @@ static int save_mapp(mlvObject_t * video)
     {
         memcpy(ptr, (uint8_t*)video->audio_index, audio_index_size);
         ptr += audio_index_size;
+    }
+    if(video->vers_blocks)
+    {
+        memcpy(ptr, (uint8_t*)video->vers_index, vers_index_size);
+        ptr += vers_index_size;
     }
 
     /* open .MAPP file for writing */
@@ -807,6 +814,26 @@ static int load_mapp(mlvObject_t * video)
         DEBUG( printf("Audio index loaded from %s\n", mapp_filename); )
     }
 
+    /* Read vers index */
+    if(mapp_header.vers_blocks)
+    {
+        size_t vers_index_size = mapp_header.vers_blocks * sizeof(frame_index_t);
+
+        video->vers_index = malloc(vers_index_size);
+        if(!video->vers_index)
+        {
+            DEBUG( printf("Malloc error: VERS index\n"); )
+            goto mapp_error;
+        }
+
+        if ( fread(video->vers_index, vers_index_size, 1, mappf) != 1 )
+        {
+            DEBUG( printf("Could not read VERS index from %s\n", mapp_filename); )
+            goto mapp_error;
+        }
+        DEBUG( printf("VERS index loaded from %s\n", mapp_filename); )
+    }
+
     /* Read audio data */
     if(mapp_header.audio_size)
     {
@@ -879,17 +906,20 @@ int saveMlvHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int
     }
 
     /* construct version info */
-    char version_info[32] = { 0 };
-    memcpy(version_info, "MLV App version ", 16);
+    char version_info[64] = { "Exported by MLV App version " };
     strcat(version_info, version);
     size_t vers_info_size = strlen(version_info) + 1;
     size_t vers_block_size = sizeof(mlv_vers_hdr_t) + vers_info_size;
     mlv_vers_hdr_t VERS_HEADER = { "VERS", vers_block_size, 0xFFFFFFFFFFFFFFFF, vers_info_size };
 
-    size_t mlv_headers_size = video->MLVI.blockSize + video->RAWI.blockSize +
-                              video->IDNT.blockSize + video->EXPO.blockSize +
-                              video->LENS.blockSize + video->WBAL.blockSize +
-                              video->RTCI.blockSize + vers_block_size;
+    /* calculate space needed for original VERS blocks */
+    size_t orig_vers_blocks_size = 0;
+    for (uint32_t i = 0; i < video->vers_blocks; ++i)
+        orig_vers_blocks_size += sizeof(mlv_vers_hdr_t) + video->vers_index[i].frame_size;
+
+    size_t mlv_headers_size = video->MLVI.blockSize + video->RAWI.blockSize + video->IDNT.blockSize +
+                              video->EXPO.blockSize + video->LENS.blockSize + video->WBAL.blockSize +
+                              video->RTCI.blockSize + vers_block_size + orig_vers_blocks_size;
 
     if(video->ELNS.blockType[0]) mlv_headers_size += video->ELNS.blockSize;
     if(video->RAWC.blockType[0]) mlv_headers_size += video->RAWC.blockSize;
@@ -1034,11 +1064,6 @@ int saveMlvHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int
         ptr += video->DISO.blockSize;
     }
 
-    memcpy(ptr, &VERS_HEADER, sizeof(mlv_vers_hdr_t));
-    ptr += sizeof(mlv_vers_hdr_t);
-    memcpy(ptr, version_info, vers_info_size);
-    ptr += vers_info_size;
-
     if(video->WAVI.blockType[0] && export_audio && (export_mode < MLV_AVERAGED_FRAME))
     {
         memcpy(ptr, (uint8_t*)&(video->WAVI), sizeof(mlv_wavi_hdr_t));
@@ -1056,6 +1081,31 @@ int saveMlvHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int
         memcpy(ptr, df_packed, df_packed_size);
         ptr += df_packed_size;
         DEBUG( printf("\nDARK block inserted\n"); )
+    }
+
+    memcpy(ptr, &VERS_HEADER, sizeof(mlv_vers_hdr_t));
+    ptr += sizeof(mlv_vers_hdr_t);
+    memcpy(ptr, version_info, vers_info_size);
+    ptr += vers_info_size;
+
+    /* read all VERS block headers */
+    char orig_vers_block[1024] = { 0 };
+    for (uint32_t i = 0; i < video->vers_blocks; ++i)
+    {
+        int chunk = video->vers_index[i].chunk_num;
+        file_set_pos(video->file[chunk], video->vers_index[i].block_offset, SEEK_SET);
+        uint32_t orig_vers_block_size = sizeof(mlv_vers_hdr_t) + video->vers_index[i].frame_size;
+        if(fread(orig_vers_block, orig_vers_block_size, 1, video->file[chunk]) != 1)
+        {
+            sprintf(error_message, "Could not read VERS block header from:  %s", video->path);
+            DEBUG( printf("\n%s\n", error_message); )
+                    return 1;
+        }
+        else
+        {
+            memcpy(ptr, orig_vers_block, orig_vers_block_size);
+            ptr += orig_vers_block_size;
+        }
     }
 
     /* write mlv_headers_buf */
@@ -1387,8 +1437,10 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode, char * error
     mlv_hdr_t block_header; /* Basic MLV block header */
     uint64_t video_frames = 0; /* Number of frames in video */
     uint64_t audio_frames = 0; /* Number of audio blocks in video */
+    int vers_blocks = 0; /* Number of VERS blocks in MLV */
     uint64_t video_index_max = 0; /* initial size of frame index */
     uint64_t audio_index_max = 0; /* initial size of audio index */
+    int vers_index_max = 0; /* initial size of VERS index */
     int rtci_read = 0; /* Flips to 1 if 1st RTCI block was read */
     int lens_read = 0; /* Flips to 1 if 1st LENS block was read */
     int elns_read = 0; /* Flips to 1 if 1st ELNS block was read */
@@ -1631,8 +1683,40 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode, char * error
             }
             else if ( memcmp(block_header.blockType, "VERS", 4) == 0 )
             {
-                /* do nothing atm */
-                //fread(&video->VERS, sizeof(mlv_vers_hdr_t), 1, video->file[i]);
+                /* Find all VERS blocks and make index for them */
+                fread_err &= fread(&video->VERS, sizeof(mlv_vers_hdr_t), 1, video->file[i]);
+
+                DEBUG( printf("VERS blocknum %i | chunk %i | size %lu | offset %lu | time %lu\n",
+                               vers_blocks, i, video->VERS.blockSize - sizeof(mlv_vers_hdr_t),
+                               block_start, video->VERS.timestamp); )
+
+                /* Dynamically resize the index buffer */
+                if(!vers_index_max)
+                {
+                    vers_index_max = 128;
+                    video->vers_index = (frame_index_t *)calloc(vers_index_max, sizeof(frame_index_t));
+                }
+                else if(vers_blocks >= vers_index_max - 1)
+                {
+                    uint64_t vers_index_new_size = vers_index_max * 2;
+                    frame_index_t * vers_index_new = (frame_index_t *)calloc(vers_index_new_size, sizeof(frame_index_t));
+                    memcpy(vers_index_new, video->vers_index, vers_index_max * sizeof(frame_index_t));
+                    free(video->vers_index);
+                    video->vers_index = vers_index_new;
+                    vers_index_max = vers_index_new_size;
+                }
+
+                /* Fill frame index */
+                video->vers_index[vers_blocks].frame_type = 3;
+                video->vers_index[vers_blocks].chunk_num = i;
+                video->vers_index[vers_blocks].frame_size = video->VERS.blockSize - sizeof(mlv_vers_hdr_t);
+                video->vers_index[vers_blocks].frame_offset = file_get_pos(video->file[i]);
+                video->vers_index[vers_blocks].frame_number = vers_blocks;
+                video->vers_index[vers_blocks].frame_time = video->VERS.timestamp;
+                video->vers_index[vers_blocks].block_offset = block_start;
+
+                /* Count actual VERS blocks */
+                vers_blocks++;
             }
             else if ( memcmp(block_header.blockType, "DARK", 4) == 0 )
             {
@@ -1692,6 +1776,8 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode, char * error
     video->frames = video_frames;
     /* Set audio count in video object */
     video->audios = audio_frames;
+    /* Set vers_block count in video object */
+    video->vers_blocks = vers_blocks;
 
     /* Reads MLV audio into buffer (video->audio_data) and sync it,
      * set full audio buffer size (video->audio_buffer_size) and
