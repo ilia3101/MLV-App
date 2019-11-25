@@ -640,7 +640,7 @@ static int save_mapp(mlvObject_t * video)
     }
 
     /* init mapp header */
-    mapp_header_t mapp_header = { "MAPP", mapp_buf_size + video->audio_size, 2, video->block_num, video->frames, video->audios, video->audio_size, video->dark_frame_offset, 0 };
+    mapp_header_t mapp_header = { "MAPP", mapp_buf_size + video->audio_size, MAPP_VERSION, video->block_num, video->frames, video->audios, video->vers_blocks, video->audio_size, video->dark_frame_offset };
     /* copy pointer to mapp buffer */
     uint8_t * ptr = mapp_buf;
     /* fill mapp buffer */
@@ -669,7 +669,7 @@ static int save_mapp(mlvObject_t * video)
         memcpy(ptr, (uint8_t*)video->audio_index, audio_index_size);
         ptr += audio_index_size;
     }
-    if(video->vers_blocks)
+    if(video->vers_index)
     {
         memcpy(ptr, (uint8_t*)video->vers_index, vers_index_size);
         ptr += vers_index_size;
@@ -728,7 +728,7 @@ static int load_mapp(mlvObject_t * video)
     }
 
     /* Read .MAPP header */
-    mapp_header_t mapp_header;
+    mapp_header_t mapp_header = { 0 };
     if ( fread(&mapp_header, sizeof(mapp_header_t), 1, mappf) != 1 )
     {
         DEBUG( printf("Could not read header from %s\n", mapp_filename); )
@@ -736,12 +736,25 @@ static int load_mapp(mlvObject_t * video)
     }
     DEBUG( printf("Header loaded from %s\n", mapp_filename); )
 
+    DEBUG(
+        printf("Magic %s, Size %lu, Version %d, Total Blocks %d, Total VIDF %d, Total AUDF %d, Total VERS %d, Audio Size %lu, DF Offset %lu\n",
+        mapp_header.fileMagic, mapp_header.mapp_size, mapp_header.mapp_version, mapp_header.block_num, mapp_header.video_frames,
+        mapp_header.audio_frames, mapp_header.vers_blocks, mapp_header.audio_size, mapp_header.df_offset);
+    )
+
     /* Check MAPP validity */
     if( memcmp(mapp_header.fileMagic, "MAPP", 4) != 0 )
     {
-        DEBUG( printf("Not a valid MAPP: %s\n", mapp_filename); )
+        DEBUG( printf("Not a valid MAPP file: %s\n", mapp_filename); )
         goto mapp_error;
     }
+    /* Check MAPP version */
+    if( mapp_header.mapp_version != MAPP_VERSION )
+    {
+        DEBUG( printf("Wrong MAPP version: %d. Please rebuild all MAPPs\n", mapp_header.mapp_version); )
+        goto mapp_error;
+    }
+
     uint64_t mark_pos = file_get_pos(mappf);
     file_set_pos(mappf, 0, SEEK_END);
     uint64_t mapp_file_size = file_get_pos(mappf);
@@ -855,6 +868,7 @@ static int load_mapp(mlvObject_t * video)
     /* Set some required values */
     video->block_num = mapp_header.block_num;
     video->dark_frame_offset = mapp_header.df_offset;
+    video->vers_blocks = mapp_header.vers_blocks;
 
     DEBUG( printf("MAPP version %u loaded: %s\n", mapp_header.mapp_version, mapp_filename); )
 
@@ -872,6 +886,11 @@ mapp_error:
     {
         free(video->audio_index);
         video->audio_index = NULL;
+    }
+    if(video->audio_index)
+    {
+        free(video->vers_index);
+        video->vers_index = NULL;
     }
     if(video->audio_data)
     {
@@ -1427,20 +1446,20 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode, char * error
         pthread_mutex_init(video->main_file_mutex + i, NULL);
     }
 
-    /* In preview mode we don't need to waste time on audio loading from mapp v2*/
+    /* In preview mode we don't need to waste time on audio loading from MAPP */
     if(open_mode != MLV_OPEN_PREVIEW)
     {
         if(!load_mapp(video)) goto short_cut;
     }
 
-    int block_num = 0; /* Number of blocks in file */
+    uint64_t block_num = 0; /* Number of blocks in file */
     mlv_hdr_t block_header; /* Basic MLV block header */
     uint64_t video_frames = 0; /* Number of frames in video */
     uint64_t audio_frames = 0; /* Number of audio blocks in video */
-    int vers_blocks = 0; /* Number of VERS blocks in MLV */
+    uint32_t vers_blocks = 0; /* Number of VERS blocks in MLV */
     uint64_t video_index_max = 0; /* initial size of frame index */
     uint64_t audio_index_max = 0; /* initial size of audio index */
-    int vers_index_max = 0; /* initial size of VERS index */
+    uint32_t vers_index_max = 0; /* initial size of VERS index */
     int rtci_read = 0; /* Flips to 1 if 1st RTCI block was read */
     int lens_read = 0; /* Flips to 1 if 1st LENS block was read */
     int elns_read = 0; /* Flips to 1 if 1st ELNS block was read */
@@ -1776,7 +1795,7 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode, char * error
     video->frames = video_frames;
     /* Set audio count in video object */
     video->audios = audio_frames;
-    /* Set vers_block count in video object */
+    /* Set VERS block count in video object */
     video->vers_blocks = vers_blocks;
 
     /* Reads MLV audio into buffer (video->audio_data) and sync it,
@@ -1848,7 +1867,7 @@ void printMlvInfo(mlvObject_t * video)
 {
     printf("\nMLV Info\n\n");
     printf("      MLV Version: %s\n", video->MLVI.versionString);
-    printf("      File Blocks: %i\n", video->block_num);
+    printf("      File Blocks: %lu\n", video->block_num);
     printf("\nLens Info\n\n");
     printf("       Lens Model: %s\n", video->LENS.lensName);
     printf("    Serial Number: %s\n", video->LENS.lensSerial);

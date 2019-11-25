@@ -29,6 +29,7 @@ typedef struct
 } frame_index_t;
 
 /* MLV App map file header (.MAPP) */
+#define MAPP_VERSION 3
 typedef struct {
     uint8_t     fileMagic[4];  /* MAPP */
     uint64_t    mapp_size;     /* total MAPP file size */
@@ -39,7 +40,6 @@ typedef struct {
     uint32_t    vers_blocks;   /* total VERS blocks */
     uint64_t    audio_size;    /* total size of audio data in bytes */
     uint64_t    df_offset;     /* offset to the dark frame location */
-    uint64_t    reserved;      /* reserved for future use */
 } mapp_header_t;
 
 /* Struct for MLV handling */
@@ -47,7 +47,7 @@ typedef struct {
 
     /* Amount of MLV chunks (.MLV, .M00, .M01, ...) */
     int filenum;
-    int block_num; /* How many file blocks in MLV file */
+    uint64_t block_num; /* How many file blocks in MLV file */
 
     /* 0=no, 1=yes, mlv file open */
     int is_active;
