@@ -54,13 +54,16 @@ macx: LIBS += -framework CoreVideo \
 #    QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.8
 #}
 
-# Windows, standard use with standard Qt download. Else comment these lines!
+# Windows, standard use with standard Qt download.
+# Else comment these lines!
 win32{
     QMAKE_CFLAGS += -O2 -fopenmp -msse4.1 -mssse3 -msse3 -msse2 -msse -D_FILE_OFFSET_BITS=64 -std=c99
     QMAKE_CXXFLAGS += -fopenmp
     LIBS += -llibgomp-1
 }
-# Win64 static: first install msys64 (to c:\msys64) with mingw64, compile qt for static use. Else comment these lines!
+
+# Win64 static: install msys2 to the default location C:\msys64, install qt $ pacman -S mingw-w64-x86_64-qt5-static, then set up qt-creator accordingly.
+# Else comment these lines!
 #win32{
 #    INCLUDEPATH += \
 #        "C:\\msys64\\mingw64\\include\\c++\\9.2.0" \
