@@ -570,6 +570,7 @@ void freeMlvObject(mlvObject_t * video)
     /* Free all memory */
     if(video->video_index) free(video->video_index);
     if(video->audio_index) free(video->audio_index);
+    if(video->vers_index) free(video->vers_index);
 
     /* Free audio buffer */
     if(video->audio_data)
@@ -887,7 +888,7 @@ mapp_error:
         free(video->audio_index);
         video->audio_index = NULL;
     }
-    if(video->audio_index)
+    if(video->vers_index)
     {
         free(video->vers_index);
         video->vers_index = NULL;
