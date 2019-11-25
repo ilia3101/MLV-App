@@ -54,15 +54,37 @@ macx: LIBS += -framework CoreVideo \
 #    QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.8
 #}
 
-# Windows
-win32: QMAKE_CFLAGS += -O2 -fopenmp -msse4.1 -mssse3 -msse3 -msse2 -msse -D_FILE_OFFSET_BITS=64 -std=c99
-win32: QMAKE_CXXFLAGS += -fopenmp
-win32: LIBS += -llibgomp-1
+# Windows, standard use with standard Qt download. Else comment these lines!
+win32{
+    QMAKE_CFLAGS += -O2 -fopenmp -msse4.1 -mssse3 -msse3 -msse2 -msse -D_FILE_OFFSET_BITS=64 -std=c99
+    QMAKE_CXXFLAGS += -fopenmp
+    LIBS += -llibgomp-1
+}
+# Win64 static: first install msys64 (to c:\msys64) with mingw64, compile qt for static use. Else comment these lines!
+#win32{
+#    INCLUDEPATH += \
+#        "C:\\msys64\\mingw64\\include\\c++\\9.2.0" \
+#        "C:\\msys64\\mingw64\\include" \
+#        "C:\\msys64\\mingw64\\qt5-static\\include" \
+#        "C:\\msys64\\mingw64\\qt5-static\\lib" \
+#        "C:\\msys64\\mingw64" \
+#        "C:\\msys64\\mingw64\\lib" \
+#        "C:\\msys64\\mingw64\\x86_64-w64-mingw32\\include" \
+#        "C:\\msys64\\mingw64\\x86_64-w64-mingw32\\lib" \
+#        "C:\\msys64\\mingw64\\bin"
+#    QMAKE_CFLAGS += -O3 -fopenmp -msse4.1 -mssse3 -msse3 -msse2 -msse -D_FILE_OFFSET_BITS=64 -std=c99
+#    QMAKE_CXXFLAGS += -static -static-libgcc -static-libstdc++ -Wl,-Bstatic -lws2_32 -lshell32 -luser32 -lkernel32 -lmingw32 -fopenmp
+#    LIBS += -lgomp
+#    DEFINES += QT_NODLL
+#    CONFIG += STATIC
+#}
 
 # Linux
-linux-g++*: QMAKE_CFLAGS += -O3 -fopenmp -msse4.1 -mssse3 -msse3 -msse2 -msse -std=c99
-linux-g++*: QMAKE_CXXFLAGS += -fopenmp
-linux-g++*: LIBS += -lgomp
+linux-g++*{
+    QMAKE_CFLAGS += -O3 -fopenmp -msse4.1 -mssse3 -msse3 -msse2 -msse -std=c99
+    QMAKE_CXXFLAGS += -fopenmp
+    LIBS += -lgomp
+}
 
 ##############
 SOURCES += \
