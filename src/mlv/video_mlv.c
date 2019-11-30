@@ -5,6 +5,7 @@
 #include <strings.h>
 #include <pthread.h>
 #include <math.h>
+#include <time.h>
 #include <inttypes.h>
 #include "camid/camera_id.h"
 
@@ -926,8 +927,49 @@ int saveMlvHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int
     }
 
     /* construct version info */
-    char version_info[64] = { "Exported by MLV App version " };
-    strcat(version_info, version);
+    char version_info[1024] = { 0 };
+    char tms[64] = { 0 };
+    char export_mode_str[32] = { 0 };
+    char export_audio_str[8] = { 0 };
+    time_t rawtm = time(NULL);
+    struct tm *tm = localtime(&rawtm);
+    strftime(tms, sizeof(tms), "%H:%M:%S %b %e %Y", tm);
+
+    switch(export_mode)
+    {
+        case MLV_FAST_PASS:
+        {
+            strcat(export_mode_str, "MLV_FAST_PASS");
+            break;
+        }
+        case MLV_COMPRESS:
+        {
+            strcat(export_mode_str, "MLV_COMPRESS");
+            break;
+        }
+        case MLV_DECOMPRESS:
+        {
+            strcat(export_mode_str, "MLV_DECOMPRESS");
+            break;
+        }
+        case MLV_AVERAGED_FRAME:
+        {
+            strcat(export_mode_str, "MLV_AVERAGED_FRAME");
+            break;
+        }
+        case MLV_DF_INT:
+        {
+            strcat(export_mode_str, "MLV_DF_INT");
+            break;
+        }
+        default:
+            strcat(export_mode_str, "MLV_FAST_PASS");
+    }
+
+    if(video->WAVI.blockType[0] && export_audio && (export_mode < MLV_AVERAGED_FRAME)) strcat(export_audio_str, "ON");
+    else strcat(export_audio_str, "OFF");
+
+    sprintf(version_info, "exported by MLV App version %s on %s; export mode: %s (audio: %s) ", version, tms, export_mode_str, export_audio_str);
     size_t vers_info_size = strlen(version_info) + 1;
     size_t vers_block_size = sizeof(mlv_vers_hdr_t) + vers_info_size;
     mlv_vers_hdr_t VERS_HEADER = { "VERS", vers_block_size, 0xFFFFFFFFFFFFFFFF, vers_info_size };
