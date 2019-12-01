@@ -65,7 +65,7 @@ A user manual can be found [here](https://github.com/ilia3101/MLV-App/wiki) and 
 - OR download and doubleclick easy-to-use [compiler app](https://bitbucket.org/Dannephoto/mlv_app_compiler/downloads/mlv_app_compiler.dmg) from @dannephoto
 
 #### Qt App Windows
-- install Qt5 (minimum 5.6) with MinGW compiler
+- install Qt5 (Win32: minimum 5.6, Win64: minimum 5.13.2) with MinGW32/64 compiler
 - unpack ffmpegWin.zip in `platform/qt/FFmpeg` (and copy it later into build directory)
 - open `platform/qt/MLVApp.pro` in QtCreator
 - Build and Start
