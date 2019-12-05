@@ -205,7 +205,7 @@ void MLVBlenderBlend(MLVBlender_t * Blender, uint64_t FrameIndex)
                 {
                     Blender->blended_output[index_dst+x] = frame_data[index_src+x]*exposure*alpha + Blender->blended_output[index_dst+x]*ialpha;
                 }
-                for (size_t x = mlv->width-mlv->crop_right-mlv->feather_right; x < mlv->width```````````````-mlv->crop_right; ++x)
+                for (size_t x = mlv->width-mlv->crop_right-mlv->feather_right; x < mlv->width-mlv->crop_right; ++x)
                 {
                     float alpha2 = (1.0f - ((float)(x-(mlv->width-mlv->crop_right-mlv->feather_right))) / ((float)mlv->feather_right)) * alpha;
                     float ialpha2 = 1.0f - alpha2;
