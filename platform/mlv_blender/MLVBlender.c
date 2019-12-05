@@ -205,7 +205,7 @@ void MLVBlenderBlend(MLVBlender_t * Blender, uint64_t FrameIndex)
                 {
                     Blender->blended_output[index_dst+x] = frame_data[index_src+x]*exposure*alpha + Blender->blended_output[index_dst+x]*ialpha;
                 }
-                for (size_t x = mlv->width-mlv->crop_right-mlv->feather_right; x < mlv->width-mlv->crop_right; ++x)
+                for (size_t x = mlv->width-mlv->crop_right-mlv->feather_right; x < mlv->width```````````````-mlv->crop_right; ++x)
                 {
                     float alpha2 = (1.0f - ((float)(x-(mlv->width-mlv->crop_right-mlv->feather_right))) / ((float)mlv->feather_right)) * alpha;
                     float ialpha2 = 1.0f - alpha2;
@@ -286,12 +286,19 @@ void MLVBlenderExportMLV(MLVBlender_t * Blender, const char * OutputPath)
 {
     /* Set length to longest vid */
     uint64_t longest_vid = Blender->mlvs[0].num_frames;
+    int longest_vid_index = 0;
     for (int i = 0; i < Blender->num_mlvs; ++i)
-        if (Blender->mlvs[i].num_frames > longest_vid) longest_vid = Blender->mlvs[i].num_frames;
+    {
+        if (Blender->mlvs[i].num_frames > longest_vid)
+        {
+            longest_vid = Blender->mlvs[i].num_frames;
+            longest_vid_index = i;
+        }
+    }
 
     if (longest_vid == 0) return;
 
-    mlvObject_t * mlv_object = initMlvObjectWithClip(Blender->mlvs[0].file_name, MLV_OPEN_FULL, NULL, NULL);
+    mlvObject_t * mlv_object = initMlvObjectWithClip(Blender->mlvs[longest_vid_index].file_name, MLV_OPEN_FULL, NULL, NULL);
 
     FILE * mlv_output_file = fopen(OutputPath, "wb");
 
