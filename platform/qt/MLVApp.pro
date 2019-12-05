@@ -331,6 +331,11 @@ PACKAGE_FILES.files += ../../src/mlv/llrawproc/pixelmaps/80000331_1736x2181.fpm
 PACKAGE_FILES.files += ../../src/mlv/llrawproc/pixelmaps/80000331_1808x1951.fpm
 PACKAGE_FILES.path = Contents/MacOS
 QMAKE_BUNDLE_DATA += PACKAGE_FILES
+ICON_FILES.files += MLV.icns
+ICON_FILES.files += MASXML.icns
+ICON_FILES.files += MARXML.icns
+ICON_FILES.path = Contents/Resources
+QMAKE_BUNDLE_DATA += ICON_FILES
 #unpack & install ffmpeg on OSX
 macx: QMAKE_POST_LINK += unzip -o ../qt/FFmpeg/ffmpegOSX.zip $$escape_expand(\n\t)
 macx: QMAKE_POST_LINK += "mv ffmpeg MLV\ App.app/Contents/MacOS/" $$escape_expand(\n\t)

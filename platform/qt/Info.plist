@@ -1,31 +1,88 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>NSPrincipalClass</key>
-	<string>NSApplication</string>
-	<key>CFBundleIconFile</key>
-        <string>MLVAPP.icns</string>
-	<key>CFBundlePackageType</key>
-	<string>APPL</string>
-	<key>CFBundleGetInfoString</key>
-	<string>Created by Qt/QMake</string>
-	<key>CFBundleSignature</key>
-	<string>????</string>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>English</string>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>mlv</string>
+				<string>MLV</string>
+			</array>
+			<key>CFBundleTypeIconFile</key>
+			<string>MLV.icns</string>
+			<key>CFBundleTypeName</key>
+			<string>Magic Lantern Video</string>
+			<key>CFBundleTypeOSTypes</key>
+			<array>
+				<string>????</string>
+			</array>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>NSDocumentClass</key>
+			<string>MagicLanternVideo</string>
+			<key>NSPersistentStoreTypeKey</key>
+			<string>Video</string>
+		</dict>
+		<dict>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>masxml</string>
+				<string>MASXML</string>
+			</array>
+			<key>CFBundleTypeIconFile</key>
+			<string>MASXML.icns</string>
+			<key>CFBundleTypeName</key>
+			<string>Magic Lantern Video</string>
+			<key>CFBundleTypeOSTypes</key>
+			<array>
+				<string>????</string>
+			</array>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>NSDocumentClass</key>
+			<string>MagicLanternVideo</string>
+			<key>NSPersistentStoreTypeKey</key>
+			<string>Video</string>
+		</dict>
+		<dict>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>marxml</string>
+				<string>MARXML</string>
+			</array>
+			<key>CFBundleTypeIconFile</key>
+			<string>MARXML.icns</string>
+			<key>CFBundleTypeName</key>
+			<string>Magic Lantern Video</string>
+			<key>CFBundleTypeOSTypes</key>
+			<array>
+				<string>????</string>
+			</array>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>NSDocumentClass</key>
+			<string>MagicLanternVideo</string>
+			<key>NSPersistentStoreTypeKey</key>
+			<string>Video</string>
+		</dict>
+	</array>
 	<key>CFBundleExecutable</key>
 	<string>MLV App</string>
+	<key>CFBundleIconFile</key>
+	<string>MLVAPP.icns</string>
 	<key>CFBundleIdentifier</key>
-        <string>magiclantern.MLV App</string>
-        <key>CFBundleTypeExtensions</key>
-	<array>
-		<string>mlv</string>
-                <string>masxml</string>
-	</array>
-        <key>CFBundleTypeIconFile</key>
-        <string>MLVAPP.icns</string>
-	<key>CFBundleTypeRole</key>
-        <string>Viewer</string>
-	<key>CFBundleShortVersionString</key>
-        <string>1.10</string>
+	<string>magiclantern.MLV App</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>CFBundleVersion</key>
+	<string>1.10</string>
+	<key>NSPrincipalClass</key>
+	<string>NSApplication</string>
 </dict>
 </plist>
