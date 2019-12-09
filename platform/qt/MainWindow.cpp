@@ -48,8 +48,8 @@
 #include "TranscodeDialog.h"
 
 #define APPNAME "MLV App"
-#define VERSION "1.10"
-#define GITVERSION "QTv1.10"
+#define VERSION QString("%1.%2").arg(VERSION_MAJOR).arg(VERSION_MINOR)
+#define GITVERSION QString("QTv%1.%2").arg(VERSION_MAJOR).arg(VERSION_MINOR)
 
 #define FACTOR_DS       22.5
 #define FACTOR_LS       11.2
@@ -2660,7 +2660,11 @@ void MainWindow::startExportMlv(QString fileName)
     //Error message string passed from backend
     char errorMessage[256] = { 0 };
     //Save MLV block headers
-    int ret = saveMlvHeaders( m_pMlvObject, mlvOut, exportAudio, m_codecOption, m_exportQueue.first()->cutIn(), m_exportQueue.first()->cutOut(), VERSION, errorMessage );
+#ifdef Q_OS_UNIX
+    int ret = saveMlvHeaders( m_pMlvObject, mlvOut, exportAudio, m_codecOption, m_exportQueue.first()->cutIn(), m_exportQueue.first()->cutOut(), VERSION.toUtf8().data(), errorMessage );
+#else
+    int ret = saveMlvHeaders( m_pMlvObject, mlvOut, exportAudio, m_codecOption, m_exportQueue.first()->cutIn(), m_exportQueue.first()->cutOut(), VERSION.toLatin1().data(), errorMessage );
+#endif
     //Output frames loop
     for( uint32_t frame = m_exportQueue.first()->cutIn() - 1; frame < m_exportQueue.first()->cutOut(); frame++ )
     {

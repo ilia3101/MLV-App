@@ -308,17 +308,30 @@ DISTFILES += \
     darkstyle/darkstyleOSX.qss \
     mlvapp.desktop
 
-RC_ICONS = MLVAPP.ico
-#win32{
-#    RC_ICONS = MLVAPP.ico
-#    QMAKE_TARGET_COMPANY = magiclantern
-#    QMAKE_TARGET_DESCRIPTION = "Processing and converting tool for MLV files"
-#    QMAKE_TARGET_PRODUCT = MLVApp
-#    VERSION = 1.10.0
-#    RC_CODEPAGE = 1252
-#}
-macx: ICON = MLVAPP.icns
-QMAKE_INFO_PLIST = Info.plist
+#Application version
+VERSION_MAJOR = 1
+VERSION_MINOR = 10
+VERSION_PATCH = 0
+VERSION_BUILD = 0
+
+#Target version
+DEFINES += "VERSION_MAJOR=$$VERSION_MAJOR"\
+           "VERSION_MINOR=$$VERSION_MINOR"\
+           "VERSION_PATCH=$$VERSION_PATCH"\
+           "VERSION_BUILD=$$VERSION_BUILD"
+VERSION = $${VERSION_MAJOR}.$${VERSION_MINOR}.$${VERSION_PATCH}.$${VERSION_BUILD}
+
+win32{
+    RC_ICONS = MLVAPP.ico MLV.ico
+    QMAKE_TARGET_COMPANY = magiclantern
+    QMAKE_TARGET_DESCRIPTION = "Processing and converting tool for MLV files"
+    QMAKE_TARGET_PRODUCT = MLVApp
+    RC_CODEPAGE = 1252
+}
+macx{
+    ICON = MLVAPP.icns
+    QMAKE_INFO_PLIST = Info.plist
+}
 PACKAGE_FILES.files += bash_scripts/HDR_MOV.command
 PACKAGE_FILES.files += bash_scripts/TIF_CLEAN.command
 PACKAGE_FILES.files += bash_scripts/PROXY_CLEANER.command
@@ -348,6 +361,12 @@ unix{
     MOC_DIR = .moc
     UI_DIR = .ui
     RCC_DIR = .rcc
+}
+windows{
+    OBJECTS_DIR = obj
+    MOC_DIR = moc
+    UI_DIR = ui
+    RCC_DIR = rcc
 }
 
 #for using the compiled version
