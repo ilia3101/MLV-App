@@ -171,7 +171,8 @@ SOURCES += \
     ../../src/processing/cafilter/ColorAberrationCorrection.c \
     NoScrollSpinBox.cpp \
     NoScrollComboBox.cpp \
-    TranscodeDialog.cpp
+    TranscodeDialog.cpp \
+    BadPixelFileHandler.cpp
 
 macx: SOURCES += ../cocoa/avf_lib/avf_lib.m
 
@@ -274,7 +275,8 @@ HEADERS += \
     ../../src/processing/cafilter/ColorAberrationCorrection.h \
     NoScrollSpinBox.h \
     NoScrollComboBox.h \
-    TranscodeDialog.h
+    TranscodeDialog.h \
+    BadPixelFileHandler.h
 
 macx: HEADERS += \
     ../cocoa/avf_lib/avencoder.h \

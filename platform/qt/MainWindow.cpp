@@ -46,6 +46,7 @@
 #include "OverwriteListDialog.h"
 #include "PixelMapListDialog.h"
 #include "TranscodeDialog.h"
+#include "BadPixelFileHandler.h"
 
 #define APPNAME "MLV App"
 #define VERSION QString("%1.%2").arg(VERSION_MAJOR).arg(VERSION_MINOR)
@@ -492,6 +493,7 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
             graphicsViewReached = false;
             ui->toolButtonWb->setChecked( false );
             ui->actionWhiteBalancePicker->setChecked( false );
+            ui->toolButtonBadPixelsSearchMethodEdit->setChecked( false );
         }
     }
     else if( event->type() == QEvent::MouseButtonPress )
@@ -502,6 +504,7 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
         {
             ui->toolButtonWb->setChecked( false );
             ui->actionWhiteBalancePicker->setChecked( false );
+            ui->toolButtonBadPixelsSearchMethodEdit->setChecked( false );
         }
 
     }
@@ -1151,6 +1154,7 @@ void MainWindow::initGui( void )
     ui->graphicsView->show();
     connect( ui->graphicsView, SIGNAL( customContextMenuRequested(QPoint) ), this, SLOT( pictureCustomContextMenuRequested(QPoint) ) );
     connect( m_pScene, SIGNAL( wbPicked(int,int) ), this, SLOT( whiteBalancePicked(int,int) ) );
+    connect( m_pScene, SIGNAL( bpPicked(int,int) ), this, SLOT( badPixelPicked(int,int) ) );
     connect( m_pScene, SIGNAL( filesDropped(QStringList) ), this, SLOT( openMlvSet(QStringList) ) );
 
     //Prepare gradient elements
@@ -4835,6 +4839,8 @@ void MainWindow::setToolButtonBadPixels(int index)
         break;
     case 2: ui->toolButtonBadPixelsForce->setChecked( true );
         break;
+    case 3: ui->toolButtonBadPixelsMap->setChecked( true );
+        break;
     default: break;
     }
     if( actualize ) toolButtonBadPixelsChanged();
@@ -5084,7 +5090,8 @@ int MainWindow::toolButtonBadPixelsCurrentIndex()
 {
     if( ui->toolButtonBadPixelsOff->isChecked() ) return 0;
     else if( ui->toolButtonBadPixelsOn->isChecked() ) return 1;
-    else return 2;
+    else if( ui->toolButtonBadPixelsForce->isChecked() ) return 2;
+    else return 3;
 }
 
 //Get toolbutton index of bad pixels search method
@@ -7498,7 +7505,20 @@ void MainWindow::toolButtonFocusPixelsIntMethodChanged( void )
 //Bad Pixel changed
 void MainWindow::toolButtonBadPixelsChanged( void )
 {
-    llrpSetBadPixelMode( m_pMlvObject, toolButtonBadPixelsCurrentIndex() );
+    int index = toolButtonBadPixelsCurrentIndex();
+    if( index < 3 )
+    {
+        llrpSetBadPixelMode( m_pMlvObject, toolButtonBadPixelsCurrentIndex() );
+        ui->toolButtonBadPixelsSearchMethodNormal->setEnabled( ui->checkBoxRawFixEnable->isChecked() );
+        ui->toolButtonBadPixelsSearchMethodAggressive->setEnabled( ui->checkBoxRawFixEnable->isChecked() );
+        ui->toolButtonBadPixelsSearchMethodEdit->setEnabled( false );
+    }
+    else
+    {
+        ui->toolButtonBadPixelsSearchMethodNormal->setEnabled( false );
+        ui->toolButtonBadPixelsSearchMethodAggressive->setEnabled( false );
+        ui->toolButtonBadPixelsSearchMethodEdit->setEnabled( ui->checkBoxRawFixEnable->isChecked() );
+    }
     llrpResetBpmStatus(m_pMlvObject);
     resetMlvCache( m_pMlvObject );
     resetMlvCachedFrame( m_pMlvObject );
@@ -7797,8 +7817,9 @@ void MainWindow::on_checkBoxRawFixEnable_clicked(bool checked)
     ui->toolButtonDualIsoAliasMap->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() == 1 ) );
     ui->toolButtonDualIsoFullresBlending->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() == 1 ) );
     ui->spinBoxDeflickerTarget->setEnabled( checked );
-    ui->toolButtonBadPixelsSearchMethodNormal->setEnabled( checked );
-    ui->toolButtonBadPixelsSearchMethodAggressive->setEnabled( checked );
+    ui->toolButtonBadPixelsSearchMethodNormal->setEnabled( checked && ( toolButtonBadPixelsCurrentIndex() < 3 ) );
+    ui->toolButtonBadPixelsSearchMethodAggressive->setEnabled( checked && ( toolButtonBadPixelsCurrentIndex() < 3 ) );
+    ui->toolButtonBadPixelsSearchMethodEdit->setEnabled( checked && ( toolButtonBadPixelsCurrentIndex() >= 3 ) );
     ui->labelDarkFrameSubtraction->setEnabled( checked );
     ui->toolButtonDarkFrameSubtraction->setEnabled( checked );
     ui->toolButtonDarkFrameSubtractionFile->setEnabled( checked );
@@ -7886,6 +7907,55 @@ void MainWindow::on_checkBoxVidstabTripod_toggled(bool checked)
     ui->label_VidstabSmoothingVal->setEnabled( !checked );
 }
 
+//Activate & Deactivate Bad Pixel Picker
+void MainWindow::on_toolButtonBadPixelsSearchMethodEdit_toggled(bool checked)
+{
+    ui->graphicsView->setBpPickerActive( checked );
+    m_pScene->setBpPickerActive( checked );
+    m_pGradientElement->setMovable( !checked );
+
+    ui->toolButtonGradientPaint->setChecked( false );
+    ui->toolButtonWb->setChecked( false );
+    ui->actionWhiteBalancePicker->setChecked( false );
+}
+
+//bad pixel picking ready
+void MainWindow::badPixelPicked( int x, int y )
+{
+    on_toolButtonBadPixelsSearchMethodEdit_toggled( true ); //Click until deactivation
+
+    //Quit if no mlv loaded
+    if( !m_fileLoaded ) return;
+
+    //Some math if in stretch (fit) mode
+    if( ui->actionZoomFit->isChecked() )
+    {
+        x *= getMlvWidth( m_pMlvObject ) / m_pScene->width();
+        y *= getMlvHeight( m_pMlvObject ) / m_pScene->height();
+    }
+    else
+    {
+        x /= getHorizontalStretchFactor(false);
+        y /= getVerticalStretchFactor(false);
+    }
+
+    //Quit if click not in picture
+    if( x < 0 || y < 0 || x > getMlvWidth( m_pMlvObject ) || y > getMlvHeight( m_pMlvObject ) ) return;
+
+    //qDebug() << "Click in Scene:" << x << y;
+    //pixel in BPM available?
+    if( BadPixelFileHandler::isPixelIncluded( m_pMlvObject, x, y ) )
+        BadPixelFileHandler::removePixel( m_pMlvObject, x, y ); //remove it
+    else
+        BadPixelFileHandler::addPixel( m_pMlvObject, x, y ); //add it
+
+    //Refresh
+    llrpResetBpmStatus(m_pMlvObject);
+    resetMlvCache( m_pMlvObject );
+    resetMlvCachedFrame( m_pMlvObject );
+    m_frameChanged = true;
+}
+
 //Activate & Deactivate wbPicker
 void MainWindow::on_actionWhiteBalancePicker_toggled(bool checked)
 {
@@ -7893,6 +7963,7 @@ void MainWindow::on_actionWhiteBalancePicker_toggled(bool checked)
     m_pScene->setWbPickerActive( checked );
     m_pGradientElement->setMovable( !checked );
     ui->toolButtonGradientPaint->setChecked( false );
+    ui->toolButtonBadPixelsSearchMethodEdit->setChecked( false );
 }
 
 //wb picking ready
@@ -8305,6 +8376,7 @@ void MainWindow::on_toolButtonGradientPaint_toggled(bool checked)
     }
     else
     {
+        ui->toolButtonBadPixelsSearchMethodEdit->setChecked( false );
         m_pGradientElement->gradientGraphicsElement()->hide();
         ui->graphicsView->setDragMode( QGraphicsView::NoDrag );
         ui->graphicsView->setCrossCursorActive( true ); // has to be done last

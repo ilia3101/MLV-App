@@ -16,7 +16,7 @@ GraphicsZoomView::GraphicsZoomView(QWidget *parent) :
     setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
     setAcceptDrops( true );
     m_isZoomEnabled = false;
-    m_isWbPickerActive = false;
+    m_pickerState = NoPicker;
     m_isMousePressed = false;
 
     m_pZoomInSc = new QShortcut( QKeySequence::ZoomIn, this, SLOT( shortCutZoomIn() ) );
@@ -56,9 +56,31 @@ void GraphicsZoomView::resetZoom()
 //Set white balance picker active
 void GraphicsZoomView::setWbPickerActive(bool on)
 {
-    m_isWbPickerActive = on;
-    if( on ) setPipetteCursor();
-    else viewport()->setCursor( Qt::OpenHandCursor );
+    if( on )
+    {
+        m_pickerState = WbPicker;
+        setPipetteCursor();
+    }
+    else
+    {
+        m_pickerState = NoPicker;
+        viewport()->setCursor( Qt::OpenHandCursor );
+    }
+}
+
+//Set bad pixel picker active
+void GraphicsZoomView::setBpPickerActive(bool on)
+{
+    if( on )
+    {
+        m_pickerState = BpPicker;
+        viewport()->setCursor( Qt::CrossCursor );
+    }
+    else
+    {
+        m_pickerState = NoPicker;
+        viewport()->setCursor( Qt::OpenHandCursor );
+    }
 }
 
 //Set cross cursor active
@@ -109,11 +131,16 @@ void GraphicsZoomView::mousePressEvent(QMouseEvent *event)
     QGraphicsView::mousePressEvent(event);
     m_isMousePressed = true;
     //viewport()->setCursor(QCursor(m_cursorPixmap,0,31));
-    if( m_isWbPickerActive )
+    if( m_pickerState == WbPicker )
     {
-        //m_isWbPickerActive = false; //Needed for single click wb picking
+        //m_pickerState = false; //Needed for single click wb picking
         setPipetteCursor(); //Needed for wb picking until deactivation
         emit wbPicked( event->pos().x(), event->pos().y() );
+    }
+    else if( m_pickerState == BpPicker )
+    {
+        viewport()->setCursor( Qt::CrossCursor ); //Needed for bad pixel picking until deactivation
+        emit bpPicked( event->pos().x(), event->pos().y() );
     }
 }
 
@@ -125,9 +152,14 @@ void GraphicsZoomView::mouseReleaseEvent(QMouseEvent *event)
     //viewport()->setCursor(QCursor(m_cursorPixmap,0,31));
 
     //Needed for wb picking until deactivation
-    if( m_isWbPickerActive )
+    if( m_pickerState == WbPicker )
     {
         setPipetteCursor();
+    }
+    //Needed for bad pixel picking until deactivation
+    else if( m_pickerState == BpPicker )
+    {
+        viewport()->setCursor( Qt::CrossCursor );
     }
 }
 

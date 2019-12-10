@@ -1061,6 +1061,33 @@ QGroupBox::indicator:checked:disabled {
                       </property>
                      </widget>
                     </item>
+                    <item>
+                     <widget class="ColorToolButton" name="toolButtonBadPixelsMap">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="font">
+                       <font>
+                        <pointsize>10</pointsize>
+                       </font>
+                      </property>
+                      <property name="toolTip">
+                       <string>Use Bad Pixel Map</string>
+                      </property>
+                      <property name="text">
+                       <string>Map</string>
+                      </property>
+                      <property name="checkable">
+                       <bool>true</bool>
+                      </property>
+                      <property name="autoExclusive">
+                       <bool>true</bool>
+                      </property>
+                     </widget>
+                    </item>
                    </layout>
                   </widget>
                  </item>
@@ -1152,6 +1179,43 @@ QGroupBox::indicator:checked:disabled {
                          <bool>true</bool>
                         </property>
                         <property name="autoExclusive">
+                         <bool>true</bool>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="ColorToolButton" name="toolButtonBadPixelsSearchMethodEdit">
+                        <property name="enabled">
+                         <bool>false</bool>
+                        </property>
+                        <property name="sizePolicy">
+                         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                          <horstretch>0</horstretch>
+                          <verstretch>0</verstretch>
+                         </sizepolicy>
+                        </property>
+                        <property name="font">
+                         <font>
+                          <pointsize>10</pointsize>
+                         </font>
+                        </property>
+                        <property name="toolTip">
+                         <string>Select Bad Pixels</string>
+                        </property>
+                        <property name="text">
+                         <string/>
+                        </property>
+                        <property name="icon">
+                         <iconset resource="ressources.qrc">
+                          <normaloff>:/RetinaIMG/RetinaIMG/Pencil-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Pencil-icon.png</iconset>
+                        </property>
+                        <property name="iconSize">
+                         <size>
+                          <width>12</width>
+                          <height>12</height>
+                         </size>
+                        </property>
+                        <property name="checkable">
                          <bool>true</bool>
                         </property>
                        </widget>
@@ -10962,6 +11026,22 @@ QGroupBox::indicator:checked:disabled {
     <hint type="sourcelabel">
      <x>1148</x>
      <y>428</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>599</x>
+     <y>349</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>toolButtonBadPixelsMap</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>toolButtonBadPixelsChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>1139</x>
+     <y>388</y>
     </hint>
     <hint type="destinationlabel">
      <x>599</x>

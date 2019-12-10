@@ -20,15 +20,18 @@ class GraphicsPickerScene : public QGraphicsScene
 public:
     explicit GraphicsPickerScene(QObject *parent = 0);
     void setWbPickerActive(bool on);
+    void setBpPickerActive(bool on);
     void setGradientAdjustment(bool on);
 
 signals:
     void wbPicked(int x, int y);
+    void bpPicked(int x, int y);
     void gradientAnchor(int x, int y);
     void gradientFinalPos(int x, int y, bool finished);
     void filesDropped(QStringList list);
 
 protected:
+    enum PickerState{ NoPicker, WbPicker, BpPicker };
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
     void mouseMoveEvent(QGraphicsSceneMouseEvent* event);
@@ -36,7 +39,7 @@ protected:
     void dragMoveEvent(QGraphicsSceneDragDropEvent* event){(void)event;};
     void dragLeaveEvent(QGraphicsSceneDragDropEvent* event){(void)event;};
     void dropEvent(QGraphicsSceneDragDropEvent* event);
-    bool m_isWbPickerActive;
+    PickerState m_pickerState;
     bool m_isGradientAdjustment;
     bool m_isMousePressed;
 };

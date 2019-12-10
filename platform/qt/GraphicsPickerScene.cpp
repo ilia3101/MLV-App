@@ -14,15 +14,23 @@
 GraphicsPickerScene::GraphicsPickerScene(QObject *parent) :
     QGraphicsScene(parent)
 {
-    m_isWbPickerActive = false;
+    m_pickerState = NoPicker;
     m_isGradientAdjustment = false;
     m_isMousePressed = false;
 }
 
-//Set picker on/off
+//Set wb picker on/off
 void GraphicsPickerScene::setWbPickerActive(bool on)
 {
-    m_isWbPickerActive = on;
+    if( on ) m_pickerState = WbPicker;
+    else m_pickerState = NoPicker;
+}
+
+//Set bp picker on/off
+void GraphicsPickerScene::setBpPickerActive(bool on)
+{
+    if( on ) m_pickerState = BpPicker;
+    else m_pickerState = NoPicker;
 }
 
 //Enable / disable Gradient adjustment
@@ -37,10 +45,15 @@ void GraphicsPickerScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
     QGraphicsScene::mousePressEvent(event);
     m_isMousePressed = true;
-    if( m_isWbPickerActive )
+    if( m_pickerState == WbPicker )
     {
-        m_isWbPickerActive = false;
+        m_pickerState = NoPicker;
         emit wbPicked( event->scenePos().x(), event->scenePos().y() );
+    }
+    if( m_pickerState == BpPicker )
+    {
+        m_pickerState = NoPicker;
+        emit bpPicked( event->scenePos().x(), event->scenePos().y() );
     }
     if( m_isGradientAdjustment )
     {

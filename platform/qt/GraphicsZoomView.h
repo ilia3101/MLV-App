@@ -25,6 +25,7 @@ public:
     bool isZoomEnabled(void);
     void resetZoom(void);
     void setWbPickerActive(bool on);
+    void setBpPickerActive(bool on);
     void setCrossCursorActive(bool on);
 
 public slots:
@@ -33,15 +34,17 @@ public slots:
 
 signals:
     void wbPicked( int x, int y );
+    void bpPicked( int x, int y );
 
 protected:
+    enum PickerState{ NoPicker, WbPicker, BpPicker };
     void enterEvent(QEvent *event);
     void mousePressEvent(QMouseEvent *event);
     void mouseReleaseEvent(QMouseEvent *event);
     void wheelEvent(QWheelEvent *event);
     void setPipetteCursor();
     bool m_isZoomEnabled;
-    bool m_isWbPickerActive;
+    PickerState m_pickerState;
     bool m_isMousePressed;
     QShortcut *m_pZoomInSc;
     QShortcut *m_pZoomOutSc;
