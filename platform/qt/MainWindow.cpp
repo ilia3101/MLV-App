@@ -7506,9 +7506,9 @@ void MainWindow::toolButtonFocusPixelsIntMethodChanged( void )
 void MainWindow::toolButtonBadPixelsChanged( void )
 {
     int index = toolButtonBadPixelsCurrentIndex();
+    llrpSetBadPixelMode( m_pMlvObject, toolButtonBadPixelsCurrentIndex() );
     if( index < 3 )
     {
-        llrpSetBadPixelMode( m_pMlvObject, toolButtonBadPixelsCurrentIndex() );
         ui->toolButtonBadPixelsSearchMethodNormal->setEnabled( ui->checkBoxRawFixEnable->isChecked() );
         ui->toolButtonBadPixelsSearchMethodAggressive->setEnabled( ui->checkBoxRawFixEnable->isChecked() );
         ui->toolButtonBadPixelsSearchMethodEdit->setEnabled( false );

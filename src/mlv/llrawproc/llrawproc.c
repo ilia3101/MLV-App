@@ -255,7 +255,7 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
                        raw_info.width,
                        raw_info.height,
                        raw_info.black_level,
-                       (video->llrawproc->bad_pixels == 2),
+                       video->llrawproc->bad_pixels,
                        video->llrawproc->bps_method,
                        video->llrawproc->bpi_method,
                        (video->llrawproc->dual_iso),

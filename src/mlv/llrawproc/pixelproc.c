@@ -1262,8 +1262,8 @@ void fix_bad_pixels(pixel_map * bad_pixel_map,
                     int32_t raw_width,
                     int32_t raw_height,
                     int32_t black_level,
-                    int force,
-                    int aggressive,
+                    int bpm_mode,
+                    int search_method,
                     int average_method,
                     int dual_iso,
                     int * raw2ev,
@@ -1285,12 +1285,13 @@ void fix_bad_pixels(pixel_map * bad_pixel_map,
     }
 
 bpm_check:
-    // bpm_status: 0 = not loaded, 1 = not exists (search), 2 = loaded/found (interpolate), 3 = no bad pixels found
+    // bpm_status: 0 = not loaded, 1 = not exists (search), 2 = loaded/found/picked (interpolate), 3 = no bad pixels found
     switch(*bpm_status)
     {
         case 0: // load bpm
         {
-            if(load_pixel_map(bad_pixel_map, camera_id, raw_width, raw_height))
+            // if loaded and not forced or picker activated: go to interpolate; else if forced: search for every frame
+            if((load_pixel_map(bad_pixel_map, camera_id, raw_width, raw_height) && bpm_mode != 2) || bpm_mode == 3)
             {
                 *bpm_status = 2;
             }
@@ -1304,7 +1305,7 @@ bpm_check:
         {
 #ifndef STDOUT_SILENT
             const char * method = NULL;
-            if (aggressive)
+            if (search_method == 1)
             {
                 method = "AGGRESSIVE";
             }
@@ -1362,7 +1363,7 @@ bpm_check:
 #endif
                         if(!add_pixel_to_map(bad_pixel_map, x + cropX, y + cropY)) goto mem_err;
                     }
-                    else if (aggressive)
+                    else if (search_method == 2)
                     {
                         int max3 = kth_smallest_int(neighbours, k, 2);
 #ifndef STDOUT_SILENT
@@ -1458,7 +1459,7 @@ mem_err:
                 }
             }
 
-            if(force)
+            if(bpm_mode == 2)
             {
                 *bpm_status = 1;
                 bad_pixel_map->count = 0;
