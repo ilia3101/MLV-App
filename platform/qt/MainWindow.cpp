@@ -7914,6 +7914,11 @@ void MainWindow::on_checkBoxVidstabTripod_toggled(bool checked)
 void MainWindow::on_toolButtonDeleteBpm_clicked()
 {
     BadPixelFileHandler::deleteCurrentMap( m_pMlvObject );
+    //Refresh
+    llrpResetBpmStatus(m_pMlvObject);
+    resetMlvCache( m_pMlvObject );
+    resetMlvCachedFrame( m_pMlvObject );
+    m_frameChanged = true;
 }
 
 //Activate & Deactivate Bad Pixel Picker
