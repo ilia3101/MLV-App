@@ -296,6 +296,7 @@ private slots:
     void on_checkBoxFilterEnable_clicked(bool checked);
     void on_checkBoxVidstabEnable_toggled(bool checked);
     void on_checkBoxVidstabTripod_toggled(bool checked);
+    void on_toolButtonDeleteBpm_clicked( void );
     void on_toolButtonBadPixelsSearchMethodEdit_toggled(bool checked);
     void badPixelPicked( int x, int y );
     void on_actionWhiteBalancePicker_toggled(bool checked);

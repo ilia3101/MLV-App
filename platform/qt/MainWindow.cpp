@@ -7512,12 +7512,14 @@ void MainWindow::toolButtonBadPixelsChanged( void )
         ui->toolButtonBadPixelsSearchMethodNormal->setEnabled( ui->checkBoxRawFixEnable->isChecked() );
         ui->toolButtonBadPixelsSearchMethodAggressive->setEnabled( ui->checkBoxRawFixEnable->isChecked() );
         ui->toolButtonBadPixelsSearchMethodEdit->setEnabled( false );
+        ui->toolButtonDeleteBpm->setEnabled( false );
     }
     else
     {
         ui->toolButtonBadPixelsSearchMethodNormal->setEnabled( false );
         ui->toolButtonBadPixelsSearchMethodAggressive->setEnabled( false );
         ui->toolButtonBadPixelsSearchMethodEdit->setEnabled( ui->checkBoxRawFixEnable->isChecked() );
+        ui->toolButtonDeleteBpm->setEnabled( ui->checkBoxRawFixEnable->isChecked() );
     }
     llrpResetBpmStatus(m_pMlvObject);
     resetMlvCache( m_pMlvObject );
@@ -7820,6 +7822,7 @@ void MainWindow::on_checkBoxRawFixEnable_clicked(bool checked)
     ui->toolButtonBadPixelsSearchMethodNormal->setEnabled( checked && ( toolButtonBadPixelsCurrentIndex() < 3 ) );
     ui->toolButtonBadPixelsSearchMethodAggressive->setEnabled( checked && ( toolButtonBadPixelsCurrentIndex() < 3 ) );
     ui->toolButtonBadPixelsSearchMethodEdit->setEnabled( checked && ( toolButtonBadPixelsCurrentIndex() >= 3 ) );
+    ui->toolButtonDeleteBpm->setEnabled( checked && ( toolButtonBadPixelsCurrentIndex() >= 3 ) );
     ui->labelDarkFrameSubtraction->setEnabled( checked );
     ui->toolButtonDarkFrameSubtraction->setEnabled( checked );
     ui->toolButtonDarkFrameSubtractionFile->setEnabled( checked );
@@ -7905,6 +7908,12 @@ void MainWindow::on_checkBoxVidstabTripod_toggled(bool checked)
     ui->label_VidstabZoomVal->setEnabled( !checked );
     ui->label_VidstabSmoothingText->setEnabled( !checked );
     ui->label_VidstabSmoothingVal->setEnabled( !checked );
+}
+
+//Delete the current Bad Pixel Map
+void MainWindow::on_toolButtonDeleteBpm_clicked()
+{
+    BadPixelFileHandler::deleteCurrentMap( m_pMlvObject );
 }
 
 //Activate & Deactivate Bad Pixel Picker
