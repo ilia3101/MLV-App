@@ -7931,6 +7931,12 @@ void MainWindow::on_toolButtonBadPixelsSearchMethodEdit_toggled(bool checked)
     ui->toolButtonGradientPaint->setChecked( false );
     ui->toolButtonWb->setChecked( false );
     ui->actionWhiteBalancePicker->setChecked( false );
+
+    //Refresh
+    llrpResetBpmStatus(m_pMlvObject);
+    resetMlvCache( m_pMlvObject );
+    resetMlvCachedFrame( m_pMlvObject );
+    m_frameChanged = true;
 }
 
 //bad pixel picking ready
@@ -8218,6 +8224,9 @@ void MainWindow::drawFrameReady()
     {
         mode = Qt::SmoothTransformation;
     }
+
+    if( ui->toolButtonBadPixelsSearchMethodEdit->isChecked() )
+        BadPixelFileHandler::drawBadPixels( m_pMlvObject, m_pRawImage );
 
     if( ui->actionZoomFit->isChecked() )
     {
