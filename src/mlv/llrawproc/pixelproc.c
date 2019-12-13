@@ -1285,19 +1285,31 @@ void fix_bad_pixels(pixel_map * bad_pixel_map,
     }
 
 bpm_check:
-    // bpm_status: 0 = not loaded, 1 = not exists (search), 2 = loaded/found/picked (interpolate), 3 = no bad pixels found
+    // bpm_status: 0 = no bad pixel data (init), 1 = auto modes (search), 2 = loaded/found/picked (interpolate), 3 = no bad pixels found (bypass)
     switch(*bpm_status)
     {
-        case 0: // load bpm
+        case 0: // ckeck what to do
         {
-            // if loaded and not forced or picker activated: go to interpolate; else if forced: search for every frame
-            if((load_pixel_map(bad_pixel_map, camera_id, raw_width, raw_height) && bpm_mode != 2) || bpm_mode == 3)
+            switch(bpm_mode)
             {
-                *bpm_status = 2;
-            }
-            else
-            {
-                *bpm_status = 1;
+                case 1: // Auto mode
+                case 2: // Force mode
+                {
+                   *bpm_status = 1; // search for bad pixels
+                    break;
+                }
+                case 3: // Map mode
+                {
+                    // load .bpm
+                    load_pixel_map(bad_pixel_map, camera_id, raw_width, raw_height);
+                    *bpm_status = 2; // interpolate no matter map is loaded or not
+                    break;
+                }
+                default: // Off mode
+                {
+                    *bpm_status = 3; // bypass
+                    break;
+                }
             }
             goto bpm_check;
         }
