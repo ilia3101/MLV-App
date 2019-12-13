@@ -504,9 +504,12 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
         {
             ui->toolButtonWb->setChecked( false );
             ui->actionWhiteBalancePicker->setChecked( false );
+        }
+        else if( !ui->graphicsView->underMouse()
+              && !ui->toolButtonBadPixelsSearchMethodEdit->underMouse() )
+        {
             ui->toolButtonBadPixelsSearchMethodEdit->setChecked( false );
         }
-
     }
     else if( event->type() == QEvent::Resize
           && ( watched == ui->dockWidgetEdit || watched == ui->dockWidgetSession ) )
