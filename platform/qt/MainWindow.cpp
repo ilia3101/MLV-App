@@ -506,7 +506,8 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
             ui->actionWhiteBalancePicker->setChecked( false );
         }
         else if( !ui->graphicsView->underMouse()
-              && !ui->toolButtonBadPixelsSearchMethodEdit->underMouse() )
+              && !ui->toolButtonBadPixelsSearchMethodEdit->underMouse()
+              && !ui->toolButtonBadPixelsCrosshairEnable->underMouse() )
         {
             ui->toolButtonBadPixelsSearchMethodEdit->setChecked( false );
         }
@@ -7942,6 +7943,19 @@ void MainWindow::on_toolButtonBadPixelsSearchMethodEdit_toggled(bool checked)
     resetMlvCache( m_pMlvObject );
     resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
+}
+
+//Activate & Deactivate Crosshair for Bad Pixel Picker
+void MainWindow::on_toolButtonBadPixelsCrosshairEnable_toggled(bool checked)
+{
+    if( ui->toolButtonBadPixelsSearchMethodEdit->isChecked() )
+    {
+        //Refresh
+        llrpResetBpmStatus(m_pMlvObject);
+        resetMlvCache( m_pMlvObject );
+        resetMlvCachedFrame( m_pMlvObject );
+        m_frameChanged = true;
+    }
 }
 
 //bad pixel picking ready

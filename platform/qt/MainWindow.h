@@ -299,6 +299,7 @@ private slots:
     void on_checkBoxVidstabTripod_toggled(bool checked);
     void on_toolButtonDeleteBpm_clicked( void );
     void on_toolButtonBadPixelsSearchMethodEdit_toggled(bool checked);
+    void on_toolButtonBadPixelsCrosshairEnable_toggled(bool checked);
     void badPixelPicked( int x, int y );
     void on_actionWhiteBalancePicker_toggled(bool checked);
     void whiteBalancePicked( int x, int y );
