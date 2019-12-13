@@ -455,9 +455,9 @@ QGroupBox::indicator:checked:disabled {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>0</y>
-            <width>244</width>
-            <height>5420</height>
+            <y>-114</y>
+            <width>255</width>
+            <height>5418</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayoutScrollArea">
@@ -981,35 +981,6 @@ QGroupBox::indicator:checked:disabled {
                      </property>
                     </spacer>
                    </item>
-                   <item>
-                    <widget class="QToolButton" name="toolButtonDeleteBpm">
-                     <property name="enabled">
-                      <bool>false</bool>
-                     </property>
-                     <property name="sizePolicy">
-                      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                       <horstretch>0</horstretch>
-                       <verstretch>0</verstretch>
-                      </sizepolicy>
-                     </property>
-                     <property name="toolTip">
-                      <string>Delete Current Bad Pixel Map</string>
-                     </property>
-                     <property name="text">
-                      <string/>
-                     </property>
-                     <property name="icon">
-                      <iconset resource="ressources.qrc">
-                       <normaloff>:/RetinaIMG/RetinaIMG/Reload-icon-2.png</normaloff>:/RetinaIMG/RetinaIMG/Reload-icon-2.png</iconset>
-                     </property>
-                     <property name="iconSize">
-                      <size>
-                       <width>12</width>
-                       <height>12</height>
-                      </size>
-                     </property>
-                    </widget>
-                   </item>
                   </layout>
                  </item>
                  <item row="11" column="0">
@@ -1264,6 +1235,75 @@ QGroupBox::indicator:checked:disabled {
                         </property>
                         <property name="checkable">
                          <bool>true</bool>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="ColorToolButton" name="toolButtonBadPixelsCrosshairEnable">
+                        <property name="enabled">
+                         <bool>true</bool>
+                        </property>
+                        <property name="sizePolicy">
+                         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                          <horstretch>0</horstretch>
+                          <verstretch>0</verstretch>
+                         </sizepolicy>
+                        </property>
+                        <property name="font">
+                         <font>
+                          <pointsize>10</pointsize>
+                         </font>
+                        </property>
+                        <property name="toolTip">
+                         <string>Mark Bad Pixel in Edit Mode with Cross Hair</string>
+                        </property>
+                        <property name="text">
+                         <string/>
+                        </property>
+                        <property name="icon">
+                         <iconset resource="ressources.qrc">
+                          <normaloff>:/RetinaIMG/RetinaIMG/Crosshair.png</normaloff>:/RetinaIMG/RetinaIMG/Crosshair.png</iconset>
+                        </property>
+                        <property name="iconSize">
+                         <size>
+                          <width>12</width>
+                          <height>12</height>
+                         </size>
+                        </property>
+                        <property name="checkable">
+                         <bool>true</bool>
+                        </property>
+                        <property name="checked">
+                         <bool>false</bool>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QToolButton" name="toolButtonDeleteBpm">
+                        <property name="enabled">
+                         <bool>false</bool>
+                        </property>
+                        <property name="sizePolicy">
+                         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                          <horstretch>0</horstretch>
+                          <verstretch>0</verstretch>
+                         </sizepolicy>
+                        </property>
+                        <property name="toolTip">
+                         <string>Delete Current Bad Pixel Map</string>
+                        </property>
+                        <property name="text">
+                         <string/>
+                        </property>
+                        <property name="icon">
+                         <iconset resource="ressources.qrc">
+                          <normaloff>:/RetinaIMG/RetinaIMG/Reload-icon-2.png</normaloff>:/RetinaIMG/RetinaIMG/Reload-icon-2.png</iconset>
+                        </property>
+                        <property name="iconSize">
+                         <size>
+                          <width>12</width>
+                          <height>12</height>
+                         </size>
                         </property>
                        </widget>
                       </item>

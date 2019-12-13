@@ -1334,6 +1334,11 @@ void MainWindow::initGui( void )
     ui->label_ShMaskingText->setEnabled( false );
     ui->horizontalSliderShMasking->setEnabled( false );
 
+    //Hide Bad Pixel Map buttons on start
+    ui->toolButtonBadPixelsSearchMethodEdit->setVisible( false );
+    ui->toolButtonDeleteBpm->setVisible( false );
+    ui->toolButtonBadPixelsCrosshairEnable->setVisible( false );
+
     //Reveal in Explorer
 #ifdef Q_OS_WIN
     ui->actionShowInFinder->setText( tr( "Reveal in Explorer" ) );
@@ -7510,20 +7515,15 @@ void MainWindow::toolButtonBadPixelsChanged( void )
 {
     int index = toolButtonBadPixelsCurrentIndex();
     llrpSetBadPixelMode( m_pMlvObject, toolButtonBadPixelsCurrentIndex() );
-    if( index < 3 )
-    {
-        ui->toolButtonBadPixelsSearchMethodNormal->setEnabled( ui->checkBoxRawFixEnable->isChecked() );
-        ui->toolButtonBadPixelsSearchMethodAggressive->setEnabled( ui->checkBoxRawFixEnable->isChecked() );
-        ui->toolButtonBadPixelsSearchMethodEdit->setEnabled( false );
-        ui->toolButtonDeleteBpm->setEnabled( false );
-    }
-    else
-    {
-        ui->toolButtonBadPixelsSearchMethodNormal->setEnabled( false );
-        ui->toolButtonBadPixelsSearchMethodAggressive->setEnabled( false );
-        ui->toolButtonBadPixelsSearchMethodEdit->setEnabled( ui->checkBoxRawFixEnable->isChecked() );
-        ui->toolButtonDeleteBpm->setEnabled( ui->checkBoxRawFixEnable->isChecked() );
-    }
+    ui->toolButtonBadPixelsSearchMethodNormal->setEnabled( ui->checkBoxRawFixEnable->isChecked() );
+    ui->toolButtonBadPixelsSearchMethodAggressive->setEnabled( ui->checkBoxRawFixEnable->isChecked() );
+    ui->toolButtonBadPixelsSearchMethodEdit->setEnabled( ui->checkBoxRawFixEnable->isChecked() );
+    ui->toolButtonDeleteBpm->setEnabled( ui->checkBoxRawFixEnable->isChecked() );
+    ui->toolButtonBadPixelsSearchMethodEdit->setVisible( index >= 3 );
+    ui->toolButtonDeleteBpm->setVisible( index >= 3 );
+    ui->toolButtonBadPixelsCrosshairEnable->setVisible( index >= 3 );
+    ui->toolButtonBadPixelsSearchMethodNormal->setVisible( index < 3 );
+    ui->toolButtonBadPixelsSearchMethodAggressive->setVisible( index < 3 );
     llrpResetBpmStatus(m_pMlvObject);
     resetMlvCache( m_pMlvObject );
     resetMlvCachedFrame( m_pMlvObject );
@@ -7822,10 +7822,11 @@ void MainWindow::on_checkBoxRawFixEnable_clicked(bool checked)
     ui->toolButtonDualIsoAliasMap->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() == 1 ) );
     ui->toolButtonDualIsoFullresBlending->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() == 1 ) );
     ui->spinBoxDeflickerTarget->setEnabled( checked );
-    ui->toolButtonBadPixelsSearchMethodNormal->setEnabled( checked && ( toolButtonBadPixelsCurrentIndex() < 3 ) );
-    ui->toolButtonBadPixelsSearchMethodAggressive->setEnabled( checked && ( toolButtonBadPixelsCurrentIndex() < 3 ) );
-    ui->toolButtonBadPixelsSearchMethodEdit->setEnabled( checked && ( toolButtonBadPixelsCurrentIndex() >= 3 ) );
-    ui->toolButtonDeleteBpm->setEnabled( checked && ( toolButtonBadPixelsCurrentIndex() >= 3 ) );
+    ui->toolButtonBadPixelsSearchMethodNormal->setEnabled( checked );
+    ui->toolButtonBadPixelsSearchMethodAggressive->setEnabled( checked );
+    ui->toolButtonBadPixelsSearchMethodEdit->setEnabled( checked );
+    ui->toolButtonBadPixelsCrosshairEnable->setEnabled( checked );
+    ui->toolButtonDeleteBpm->setEnabled( checked );
     ui->labelDarkFrameSubtraction->setEnabled( checked );
     ui->toolButtonDarkFrameSubtraction->setEnabled( checked );
     ui->toolButtonDarkFrameSubtractionFile->setEnabled( checked );
@@ -7916,6 +7917,7 @@ void MainWindow::on_checkBoxVidstabTripod_toggled(bool checked)
 //Delete the current Bad Pixel Map
 void MainWindow::on_toolButtonDeleteBpm_clicked()
 {
+    if( !m_fileLoaded ) return;
     BadPixelFileHandler::deleteCurrentMap( m_pMlvObject );
     //Refresh
     llrpResetBpmStatus(m_pMlvObject);
@@ -8228,7 +8230,8 @@ void MainWindow::drawFrameReady()
         mode = Qt::SmoothTransformation;
     }
 
-    if( ui->toolButtonBadPixelsSearchMethodEdit->isChecked() )
+    if( ui->toolButtonBadPixelsSearchMethodEdit->isChecked()
+     && ui->toolButtonBadPixelsCrosshairEnable->isChecked() )
         BadPixelFileHandler::drawBadPixels( m_pMlvObject, m_pRawImage );
 
     if( ui->actionZoomFit->isChecked() )

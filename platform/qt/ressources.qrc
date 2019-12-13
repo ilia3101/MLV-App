@@ -50,6 +50,7 @@
         <file>RetinaIMG/Movie-import-icon.png</file>
         <file>RetinaIMG/Images-icon.png</file>
         <file>RetinaIMG/Pic-Folder-Open-icon.png</file>
+        <file>RetinaIMG/Crosshair.png</file>
     </qresource>
     <qresource prefix="/AudioVideoIcons">
         <file>AudioVideoIcons/FirstFrame.png</file>
