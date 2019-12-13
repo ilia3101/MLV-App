@@ -261,6 +261,7 @@
     <addaction name="actionShowVectorScope"/>
     <addaction name="actionShowZebras"/>
     <addaction name="actionShowInstalledFocusPixelMaps"/>
+    <addaction name="actionShowInstalledBadPixelMaps"/>
     <addaction name="separator"/>
     <addaction name="menuTheme"/>
     <addaction name="separator"/>
@@ -10220,6 +10221,11 @@ QGroupBox::indicator:checked:disabled {
    </property>
    <property name="text">
     <string>Transcode and Import</string>
+   </property>
+  </action>
+  <action name="actionShowInstalledBadPixelMaps">
+   <property name="text">
+    <string>Show Installed Bad Pixel Maps</string>
    </property>
   </action>
  </widget>

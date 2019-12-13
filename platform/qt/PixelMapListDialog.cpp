@@ -11,78 +11,70 @@
 #include <QDebug>
 #include <QTreeWidgetItem>
 
-PixelMapListDialog::PixelMapListDialog(QWidget *parent) :
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include <../../src/mlv/camid/camera_id.h>
+extern int camidCheckIfCameraKnown(uint32_t cameraModel);
+extern const char* camidGetCameraName(uint32_t cameraModel, int camname_type);
+
+#ifdef __cplusplus
+}
+#endif
+
+//Constructor
+PixelMapListDialog::PixelMapListDialog(QWidget *parent, MapType mapType) :
     QDialog(parent),
     ui(new Ui::PixelMapListDialog)
 {
     ui->setupUi(this);
     setWindowFlags( Qt::Dialog | Qt::WindowTitleHint | Qt::WindowCloseButtonHint | Qt::WindowStaysOnTopHint );
 
-    QDir directory( QCoreApplication::applicationDirPath() );
-    QStringList fpms = directory.entryList( QStringList() << "*.fpm" << "*.FPM", QDir::Files );
+    m_mapType = mapType;
 
-    QTreeWidgetItem *cams = new QTreeWidgetItem(ui->treeWidget);
-    cams->setText( 0, tr( "Canon EOS 650D / Rebel T4i / Kiss X6i" ) );
-    foreach( QString fpm, fpms )
+    QDir directory( QCoreApplication::applicationDirPath() );
+    QStringList fpms;
+    if( m_mapType == FPM )
     {
-        if( fpm.contains( "80000301" ) )
-        {
-            QTreeWidgetItem *fpmItem = new QTreeWidgetItem(cams);
-            fpmItem->setText(0, fpm);
-            fpms.removeAll( fpm );
-        }
+        fpms = directory.entryList( QStringList() << "*.fpm" << "*.FPM", QDir::Files );
+        setWindowTitle( "Installed Focus Pixel Maps" );
     }
-    cams = new QTreeWidgetItem(ui->treeWidget);
-    cams->setText( 0, tr( "Canon EOS 700D / Rebel T5i / Kiss X7i" ) );
-    foreach( QString fpm, fpms )
+    else
     {
-        if( fpm.contains( "80000326" ) )
-        {
-            QTreeWidgetItem *fpmItem = new QTreeWidgetItem(cams);
-            fpmItem->setText(0, fpm);
-            fpms.removeAll( fpm );
-        }
+        fpms = directory.entryList( QStringList() << "*.bpm" << "*.BPM", QDir::Files );
+        setWindowTitle( "Installed Bad Pixel Maps" );
     }
-    cams = new QTreeWidgetItem(ui->treeWidget);
-    cams->setText( 0, tr( "Canon EOS M" ) );
-    foreach( QString fpm, fpms )
+
+    //For all maps
+    while( fpms.count() > 0 )
     {
-        if( fpm.contains( "80000331" ) )
+        QString map = fpms.first();
+        bool ok;
+        uint32_t camId = map.left( 8 ).toUInt( &ok, 16 );
+        //Unknown cameras are not shown here
+        if( !ok || 0 == camidCheckIfCameraKnown( camId ) )
         {
-            QTreeWidgetItem *fpmItem = new QTreeWidgetItem(cams);
-            fpmItem->setText(0, fpm);
-            fpms.removeAll( fpm );
+            fpms.removeAll( map );
+            qDebug() << ok << camId << map.left( 8 );
+            continue;
         }
-    }
-    cams = new QTreeWidgetItem(ui->treeWidget);
-    cams->setText( 0, tr( "Canon 100D / Rebel SL1 / Kiss X7" ) );
-    foreach( QString fpm, fpms )
-    {
-        if( fpm.contains( "80000346" ) )
+        //Camera name
+        QTreeWidgetItem *cams = new QTreeWidgetItem(ui->treeWidget);
+        QString camName = QString( "%1" ).arg( camidGetCameraName( camId, 0 ) );
+        if( camidGetCameraName( camId, 1 ) != NULL ) camName.append( QString( " / %1" ).arg( camidGetCameraName( camId, 1 ) ) );
+        if( camidGetCameraName( camId, 2 ) != NULL ) camName.append( QString( " / %1" ).arg( camidGetCameraName( camId, 2 ) ) );
+        cams->setText( 0, camName );
+        //Maps
+        foreach( QString map2, fpms )
         {
-            QTreeWidgetItem *fpmItem = new QTreeWidgetItem(cams);
-            fpmItem->setText(0, fpm);
-            fpms.removeAll( fpm );
+            if( map2.contains( map.left( 8 ) ) )
+            {
+                QTreeWidgetItem *fpmItem = new QTreeWidgetItem( cams );
+                fpmItem->setText( 0, map2 );
+                fpms.removeAll( map2 );
+            }
         }
-    }
-    cams = new QTreeWidgetItem(ui->treeWidget);
-    cams->setText( 0, tr( "Canon EOS M2" ) );
-    foreach( QString fpm, fpms )
-    {
-        if( fpm.contains( "80000355" ) )
-        {
-            QTreeWidgetItem *fpmItem = new QTreeWidgetItem(cams);
-            fpmItem->setText(0, fpm);
-            fpms.removeAll( fpm );
-        }
-    }
-    cams = new QTreeWidgetItem(ui->treeWidget);
-    cams->setText( 0, tr( "Others" ) );
-    foreach( QString fpm, fpms )
-    {
-        QTreeWidgetItem *fpmItem = new QTreeWidgetItem(cams);
-        fpmItem->setText(0, fpm);
-        fpms.removeAll( fpm );
     }
 }
 
@@ -92,11 +84,16 @@ PixelMapListDialog::~PixelMapListDialog()
 }
 
 //Mark used fpm in tree structure
-void PixelMapListDialog::showFpm( mlvObject_t *pMlvObject )
+void PixelMapListDialog::showCurrentMap( mlvObject_t *pMlvObject )
 {
-    QString name = QString( "%1_%2x%3.fpm" ).arg( pMlvObject->IDNT.cameraModel, 0, 16 )
-                                            .arg( pMlvObject->RAWI.raw_info.width )
-                                            .arg( pMlvObject->RAWI.raw_info.height );
+    QString fileType;
+    if( m_mapType == FPM ) fileType = "fpm";
+    else fileType = "bpm";
+
+    QString name = QString( "%1_%2x%3.%4" ).arg( pMlvObject->IDNT.cameraModel, 0, 16 )
+                                           .arg( pMlvObject->RAWI.raw_info.width )
+                                           .arg( pMlvObject->RAWI.raw_info.height )
+                                           .arg( fileType );
 
     for( int i = 0; i < ui->treeWidget->topLevelItemCount(); i++ )
     {

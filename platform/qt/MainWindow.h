@@ -205,6 +205,7 @@ private slots:
     void on_actionCreateAllMappFilesNow_triggered();
     void on_actionBetterResizer_triggered();
     void on_actionShowInstalledFocusPixelMaps_triggered();
+    void on_actionShowInstalledBadPixelMaps_triggered();
     void on_listWidgetSession_activated(const QModelIndex &index);
     void on_dockWidgetSession_visibilityChanged(bool visible);
     void on_dockWidgetEdit_visibilityChanged(bool visible);

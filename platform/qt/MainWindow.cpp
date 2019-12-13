@@ -9338,12 +9338,25 @@ void MainWindow::on_actionBetterResizer_triggered()
 //Show a list of installed fpm files
 void MainWindow::on_actionShowInstalledFocusPixelMaps_triggered()
 {
-    PixelMapListDialog fpmDialog;
+    PixelMapListDialog *fpmDialog = new PixelMapListDialog( this, PixelMapListDialog::FPM );
     if( m_fileLoaded )
     {
-        fpmDialog.showFpm( m_pMlvObject );
+        fpmDialog->showCurrentMap( m_pMlvObject );
     }
-    fpmDialog.exec();
+    fpmDialog->exec();
+    delete fpmDialog;
+}
+
+//Show a list of installed bpm files
+void MainWindow::on_actionShowInstalledBadPixelMaps_triggered()
+{
+    PixelMapListDialog *bpmDialog = new PixelMapListDialog( this, PixelMapListDialog::BPM );
+    if( m_fileLoaded )
+    {
+        bpmDialog->showCurrentMap( m_pMlvObject );
+    }
+    bpmDialog->exec();
+    delete bpmDialog;
 }
 
 //Open a window which uses raw2mlv binary

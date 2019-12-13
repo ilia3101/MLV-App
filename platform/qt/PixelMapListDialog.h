@@ -20,12 +20,14 @@ class PixelMapListDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit PixelMapListDialog(QWidget *parent = 0);
+    enum MapType{FPM, BPM};
+    explicit PixelMapListDialog(QWidget *parent = 0, MapType mapType = FPM);
     ~PixelMapListDialog();
-    void showFpm( mlvObject_t *pMlvObject );
+    void showCurrentMap( mlvObject_t *pMlvObject );
 
 private:
     Ui::PixelMapListDialog *ui;
+    MapType m_mapType;
 };
 
 #endif // PIXELMAPLISTDIALOG_H
