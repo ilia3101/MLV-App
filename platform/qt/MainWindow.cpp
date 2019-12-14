@@ -7525,6 +7525,9 @@ void MainWindow::toolButtonBadPixelsChanged( void )
     ui->toolButtonBadPixelsCrosshairEnable->setVisible( index >= 3 );
     ui->toolButtonBadPixelsSearchMethodNormal->setVisible( index < 3 );
     ui->toolButtonBadPixelsSearchMethodAggressive->setVisible( index < 3 );
+    if( index < 3 ) ui->FocusPixelsInterpolationMethodLabel_2->setText( "Search Method" );
+    else ui->FocusPixelsInterpolationMethodLabel_2->setText( "Edit" );
+
     llrpResetBpmStatus(m_pMlvObject);
     resetMlvCache( m_pMlvObject );
     resetMlvCachedFrame( m_pMlvObject );
@@ -7937,25 +7940,18 @@ void MainWindow::on_toolButtonBadPixelsSearchMethodEdit_toggled(bool checked)
     ui->toolButtonGradientPaint->setChecked( false );
     ui->toolButtonWb->setChecked( false );
     ui->actionWhiteBalancePicker->setChecked( false );
+}
+
+//Activate & Deactivate Crosshair for Bad Pixel Picker
+void MainWindow::on_toolButtonBadPixelsCrosshairEnable_toggled(bool checked)
+{
+    Q_UNUSED( checked );
 
     //Refresh
     llrpResetBpmStatus(m_pMlvObject);
     resetMlvCache( m_pMlvObject );
     resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
-}
-
-//Activate & Deactivate Crosshair for Bad Pixel Picker
-void MainWindow::on_toolButtonBadPixelsCrosshairEnable_toggled(bool checked)
-{
-    if( ui->toolButtonBadPixelsSearchMethodEdit->isChecked() )
-    {
-        //Refresh
-        llrpResetBpmStatus(m_pMlvObject);
-        resetMlvCache( m_pMlvObject );
-        resetMlvCachedFrame( m_pMlvObject );
-        m_frameChanged = true;
-    }
 }
 
 //bad pixel picking ready
@@ -8244,8 +8240,7 @@ void MainWindow::drawFrameReady()
         mode = Qt::SmoothTransformation;
     }
 
-    if( ui->toolButtonBadPixelsSearchMethodEdit->isChecked()
-     && ui->toolButtonBadPixelsCrosshairEnable->isChecked() )
+    if( ui->toolButtonBadPixelsCrosshairEnable->isChecked() )
         BadPixelFileHandler::drawBadPixels( m_pMlvObject, m_pRawImage );
 
     if( ui->actionZoomFit->isChecked() )
