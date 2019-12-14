@@ -7922,6 +7922,8 @@ void MainWindow::on_checkBoxVidstabTripod_toggled(bool checked)
 void MainWindow::on_toolButtonDeleteBpm_clicked()
 {
     if( !m_fileLoaded ) return;
+    if( QMessageBox::warning( this, tr( "%1 - Remove bad pixel map" ).arg( APPNAME ), tr( "Delete bad pixel map from disk?" ), tr( "Delete from Disk" ), tr( "Abort" ) ) )
+        return;
     BadPixelFileHandler::deleteCurrentMap( m_pMlvObject );
     //Refresh
     llrpResetBpmStatus(m_pMlvObject);
