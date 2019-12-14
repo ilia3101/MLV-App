@@ -1375,7 +1375,7 @@ bpm_check:
 #endif
                         if(!add_pixel_to_map(bad_pixel_map, x + cropX, y + cropY)) goto mem_err;
                     }
-                    else if (search_method == 2)
+                    else if (search_method == 1)
                     {
                         int max3 = kth_smallest_int(neighbours, k, 2);
 #ifndef STDOUT_SILENT
