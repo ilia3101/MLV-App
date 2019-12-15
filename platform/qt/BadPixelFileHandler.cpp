@@ -57,10 +57,14 @@ void BadPixelFileHandler::removePixel(mlvObject_t *pMlvObject, uint32_t x, uint3
 }
 
 //Delete the current bad pixel map
-void BadPixelFileHandler::deleteCurrentMap(mlvObject_t *pMlvObject)
+int BadPixelFileHandler::deleteCurrentMap(mlvObject_t *pMlvObject)
 {
     QString fileName = getFileName( pMlvObject );
-    if( QFileInfo( fileName ).exists() ) MoveToTrash( QFileInfo( fileName ).absoluteFilePath() );
+    if( QFileInfo( fileName ).exists() )
+    {
+        return MoveToTrash( QFileInfo( fileName ).absoluteFilePath() );
+    }
+    return 1;
 }
 
 //Is pixel included in the bpm file?

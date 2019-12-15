@@ -7923,8 +7923,14 @@ void MainWindow::on_toolButtonDeleteBpm_clicked()
 {
     if( !m_fileLoaded ) return;
     if( QMessageBox::warning( this, tr( "%1 - Remove bad pixel map" ).arg( APPNAME ), tr( "Delete bad pixel map from disk?" ), tr( "Delete from Disk" ), tr( "Abort" ) ) )
+    {
         return;
-    BadPixelFileHandler::deleteCurrentMap( m_pMlvObject );
+    }
+    if( BadPixelFileHandler::deleteCurrentMap( m_pMlvObject ) )
+    {
+        QMessageBox::critical( this, tr( "%1 - Delete bad pixel map from disk" ).arg( APPNAME ), tr( "Delete bad pixel map failed!" ) );
+        return;
+    }
     //Refresh
     llrpResetBpmStatus(m_pMlvObject);
     resetMlvCache( m_pMlvObject );

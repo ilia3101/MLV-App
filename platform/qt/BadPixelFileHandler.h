@@ -17,7 +17,7 @@ public:
     BadPixelFileHandler();
     static void addPixel( mlvObject_t *pMlvObject, uint32_t x, uint32_t y );
     static void removePixel( mlvObject_t *pMlvObject, uint32_t x, uint32_t y );
-    static void deleteCurrentMap( mlvObject_t *pMlvObject );
+    static int deleteCurrentMap( mlvObject_t *pMlvObject );
     static bool isPixelIncluded( mlvObject_t *pMlvObject, uint32_t x, uint32_t y );
     static void drawBadPixels( mlvObject_t *pMlvObject, uint8_t *pRawImage );
 
