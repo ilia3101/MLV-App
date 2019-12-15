@@ -8248,7 +8248,9 @@ void MainWindow::drawFrameReady()
         mode = Qt::SmoothTransformation;
     }
 
-    if( ui->toolButtonBadPixelsCrosshairEnable->isChecked() )
+    if( ui->toolButtonBadPixelsCrosshairEnable->isChecked()
+     && toolButtonBadPixelsCurrentIndex() >= 3
+     && ui->checkBoxRawFixEnable->isChecked() )
         BadPixelFileHandler::drawBadPixels( m_pMlvObject, m_pRawImage );
 
     if( ui->actionZoomFit->isChecked() )
