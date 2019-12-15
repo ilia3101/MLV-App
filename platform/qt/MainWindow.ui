@@ -1249,6 +1249,12 @@ QGroupBox::indicator:checked:disabled {
                           <verstretch>0</verstretch>
                          </sizepolicy>
                         </property>
+                        <property name="minimumSize">
+                         <size>
+                          <width>0</width>
+                          <height>22</height>
+                         </size>
+                        </property>
                         <property name="font">
                          <font>
                           <pointsize>10</pointsize>
