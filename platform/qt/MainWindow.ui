@@ -123,7 +123,7 @@
      <x>0</x>
      <y>0</y>
      <width>1200</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -456,8 +456,8 @@ QGroupBox::indicator:checked:disabled {
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>253</width>
-            <height>5339</height>
+            <width>258</width>
+            <height>5418</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayoutScrollArea">
@@ -1240,8 +1240,8 @@ QGroupBox::indicator:checked:disabled {
                         </property>
                         <property name="iconSize">
                          <size>
-                          <width>13</width>
-                          <height>13</height>
+                          <width>12</width>
+                          <height>12</height>
                          </size>
                         </property>
                         <property name="checkable">
@@ -1283,8 +1283,8 @@ QGroupBox::indicator:checked:disabled {
                         </property>
                         <property name="iconSize">
                          <size>
-                          <width>13</width>
-                          <height>13</height>
+                          <width>12</width>
+                          <height>12</height>
                          </size>
                         </property>
                         <property name="checkable">
@@ -1329,8 +1329,8 @@ QGroupBox::indicator:checked:disabled {
                         </property>
                         <property name="iconSize">
                          <size>
-                          <width>13</width>
-                          <height>13</height>
+                          <width>12</width>
+                          <height>12</height>
                          </size>
                         </property>
                        </widget>
