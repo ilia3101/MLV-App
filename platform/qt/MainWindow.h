@@ -30,6 +30,7 @@
 #include "GraphicsPickerScene.h"
 #include "RenderFrameThread.h"
 #include "GradientElement.h"
+#include "CrossElement.h"
 #include "TimeCodeLabel.h"
 #include "DoubleClickLabel.h"
 #include "Scripting.h"
@@ -383,8 +384,8 @@ private:
     mlvObject_t *m_pMlvObject;
     processingObject_t *m_pProcessingObject;
     QGraphicsPixmapItem *m_pGraphicsItem;
-    QGraphicsPixmapItem *m_pGraphicsBadPixelItem;
     GradientElement *m_pGradientElement;
+    QVector<CrossElement*> m_pBadPixelCrosses;
     GraphicsPickerScene* m_pScene;
     TimeCodeLabel* m_pTimeCodeImage;
     ReceiptCopyMaskDialog *m_pCopyMask;

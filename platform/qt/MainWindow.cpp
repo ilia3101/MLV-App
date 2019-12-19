@@ -953,6 +953,9 @@ int MainWindow::openMlv( QString fileName )
     ui->labelHueVsLuma->setProcessingObject( m_pProcessingObject );
     ui->labelLumaVsSat->setProcessingObject( m_pProcessingObject );
 
+    //Prepare crosses for bad pixel map
+    BadPixelFileHandler::crossesPrepareAll( m_pMlvObject, &m_pBadPixelCrosses, m_pScene );
+
     m_frameChanged = true;
 
     return MLV_ERR_NONE;
@@ -1173,13 +1176,6 @@ void MainWindow::initGui( void )
     ui->checkBoxGradientEnable->setChecked( false );
     ui->checkBoxGradientEnable->setEnabled( false );
     ui->toolButtonGradientPaint->setEnabled( false );
-
-    //Layer for Bad Pixel visualization
-    QImage image2(":/IMG/IMG/PixelSelector.png");
-    m_pGraphicsBadPixelItem = new QGraphicsPixmapItem( QPixmap::fromImage( image2 ) );
-    m_pGraphicsBadPixelItem->moveBy( 100, 100 );
-    m_pScene->addItem( m_pGraphicsBadPixelItem );
-    m_pGraphicsBadPixelItem->hide();
 
     //Cut In & Out
     initCutInOut( -1 );
@@ -7931,6 +7927,8 @@ void MainWindow::on_toolButtonDeleteBpm_clicked()
         QMessageBox::critical( this, tr( "%1 - Delete bad pixel map from disk" ).arg( APPNAME ), tr( "Delete bad pixel map failed!" ) );
         return;
     }
+    //Prepare crosses for bad pixel map
+    BadPixelFileHandler::crossesPrepareAll( m_pMlvObject, &m_pBadPixelCrosses, m_pScene );
     //Refresh
     llrpResetBpmStatus(m_pMlvObject);
     resetMlvCache( m_pMlvObject );
@@ -7991,6 +7989,9 @@ void MainWindow::badPixelPicked( int x, int y )
         BadPixelFileHandler::removePixel( m_pMlvObject, x, y ); //remove it
     else
         BadPixelFileHandler::addPixel( m_pMlvObject, x, y ); //add it
+
+    //Prepare crosses for bad pixel map
+    BadPixelFileHandler::crossesPrepareAll( m_pMlvObject, &m_pBadPixelCrosses, m_pScene );
 
     //Refresh
     llrpResetBpmStatus(m_pMlvObject);
@@ -8248,11 +8249,6 @@ void MainWindow::drawFrameReady()
         mode = Qt::SmoothTransformation;
     }
 
-    if( ui->toolButtonBadPixelsCrosshairEnable->isChecked()
-     && toolButtonBadPixelsCurrentIndex() >= 3
-     && ui->checkBoxRawFixEnable->isChecked() )
-        BadPixelFileHandler::drawBadPixels( m_pMlvObject, m_pRawImage );
-
     if( ui->actionZoomFit->isChecked() )
     {
         //Some math to have the picture exactly in the frame
@@ -8398,6 +8394,19 @@ void MainWindow::drawFrameReady()
                                                    m_pScene->height(),
                                                    getMlvWidth( m_pMlvObject ),
                                                    getMlvHeight( m_pMlvObject ) );
+    }
+
+    //Bad Pixel crosses in viewer
+    if( ui->toolButtonBadPixelsCrosshairEnable->isChecked()
+     && toolButtonBadPixelsCurrentIndex() >= 3
+     && ui->checkBoxRawFixEnable->isChecked() )
+    {
+        BadPixelFileHandler::crossesRedrawAll( m_pMlvObject, &m_pBadPixelCrosses, m_pScene );
+        BadPixelFileHandler::crossesShowAll( &m_pBadPixelCrosses );
+    }
+    else
+    {
+        BadPixelFileHandler::crossesHideAll( &m_pBadPixelCrosses );
     }
 
     //One more frame if stopped

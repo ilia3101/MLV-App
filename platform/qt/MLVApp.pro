@@ -172,6 +172,7 @@ SOURCES += \
     NoScrollSpinBox.cpp \
     NoScrollComboBox.cpp \
     TranscodeDialog.cpp \
+    CrossElement.cpp \
     BadPixelFileHandler.cpp
 
 macx: SOURCES += ../cocoa/avf_lib/avf_lib.m
@@ -276,6 +277,7 @@ HEADERS += \
     NoScrollSpinBox.h \
     NoScrollComboBox.h \
     TranscodeDialog.h \
+    CrossElement.h \
     BadPixelFileHandler.h
 
 macx: HEADERS += \

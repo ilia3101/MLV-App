@@ -84,9 +84,16 @@ bool BadPixelFileHandler::isPixelIncluded(mlvObject_t *pMlvObject, uint32_t x, u
     return txt.contains( getPixelLine( xCor, yCor ) );
 }
 
-//Paint dots bad pixels from file as dots on image
-void BadPixelFileHandler::drawBadPixels(mlvObject_t *pMlvObject, uint8_t *pRawImage)
+//Prepare all crosses in GraphicsScene, to be able to show it...
+void BadPixelFileHandler::crossesPrepareAll(mlvObject_t *pMlvObject, QVector<CrossElement *> *pCrossVector, GraphicsPickerScene* pScene)
 {
+    for( int i = 0; i < pCrossVector->size(); i++ )
+    {
+        pCrossVector->at(i)->crossGraphicsElement()->hide();
+        pScene->removeItem( pCrossVector->at(i)->crossGraphicsElement() );
+    }
+    pCrossVector->clear();
+
     QString fileName = getFileName( pMlvObject );
     if( !QFileInfo( fileName ).exists() ) return;
 
@@ -108,7 +115,43 @@ void BadPixelFileHandler::drawBadPixels(mlvObject_t *pMlvObject, uint8_t *pRawIm
         if( !ok ) continue;
         x = getPicX( pMlvObject, x );
         y = getPicY( pMlvObject, y );
-        paintCross( pMlvObject, pRawImage, x, y );
+        //paintCross( pMlvObject, pRawImage, x, y );
+
+        QPolygon poly;
+        CrossElement *cross = new CrossElement( poly );
+        cross->setPosition( x, y );
+        pCrossVector->append( cross );
+        pScene->addItem( pCrossVector->last()->crossGraphicsElement() );
+    }
+}
+
+//Show all crosses in GraphicsScene
+void BadPixelFileHandler::crossesShowAll(QVector<CrossElement *> *pCrossVector)
+{
+    for( int i = 0; i < pCrossVector->size(); i++ )
+    {
+        pCrossVector->at(i)->crossGraphicsElement()->show();
+    }
+}
+
+//Hide all crosses in GraphicsScene
+void BadPixelFileHandler::crossesHideAll(QVector<CrossElement *> *pCrossVector)
+{
+    for( int i = 0; i < pCrossVector->size(); i++ )
+    {
+        pCrossVector->at(i)->crossGraphicsElement()->hide();
+    }
+}
+
+//Redraw all crosses into scene
+void BadPixelFileHandler::crossesRedrawAll(mlvObject_t *pMlvObject, QVector<CrossElement *> *pCrossVector, GraphicsPickerScene *pScene)
+{
+    for( int i = 0; i < pCrossVector->size(); i++ )
+    {
+        pCrossVector->at(i)->redrawCrossElement( pScene->width(),
+                                                 pScene->height(),
+                                                 getMlvWidth( pMlvObject ),
+                                                 getMlvHeight( pMlvObject ) );
     }
 }
 
