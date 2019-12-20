@@ -7951,13 +7951,15 @@ void MainWindow::on_toolButtonBadPixelsSearchMethodEdit_toggled(bool checked)
 //Activate & Deactivate Crosshair for Bad Pixel Picker
 void MainWindow::on_toolButtonBadPixelsCrosshairEnable_toggled(bool checked)
 {
-    Q_UNUSED( checked );
-
-    //Refresh
-    llrpResetBpmStatus(m_pMlvObject);
-    resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
-    m_frameChanged = true;
+    if( checked )
+    {
+        BadPixelFileHandler::crossesRedrawAll( m_pMlvObject, &m_pBadPixelCrosses, m_pScene );
+        BadPixelFileHandler::crossesShowAll( &m_pBadPixelCrosses );
+    }
+    else
+    {
+        BadPixelFileHandler::crossesHideAll( &m_pBadPixelCrosses );
+    }
 }
 
 //bad pixel picking ready
@@ -7992,6 +7994,9 @@ void MainWindow::badPixelPicked( int x, int y )
 
     //Prepare crosses for bad pixel map
     BadPixelFileHandler::crossesPrepareAll( m_pMlvObject, &m_pBadPixelCrosses, m_pScene );
+    BadPixelFileHandler::crossesRedrawAll( m_pMlvObject, &m_pBadPixelCrosses, m_pScene );
+    if( ui->toolButtonBadPixelsCrosshairEnable->isChecked() )
+        BadPixelFileHandler::crossesShowAll( &m_pBadPixelCrosses );
 
     //Refresh
     llrpResetBpmStatus(m_pMlvObject);
