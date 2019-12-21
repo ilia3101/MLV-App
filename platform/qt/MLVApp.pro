@@ -339,6 +339,7 @@ macx{
 PACKAGE_FILES.files += bash_scripts/HDR_MOV.command
 PACKAGE_FILES.files += bash_scripts/TIF_CLEAN.command
 PACKAGE_FILES.files += bash_scripts/PROXY_CLEANER.command
+PACKAGE_FILES.files += bash_scripts/enfuse_average.command
 PACKAGE_FILES.files += ../../src/mlv/llrawproc/pixelmaps/80000331_1872x1059.fpm
 PACKAGE_FILES.files += ../../src/mlv/llrawproc/pixelmaps/80000331_1872x1060.fpm
 PACKAGE_FILES.files += ../../src/mlv/llrawproc/pixelmaps/80000331_1872x1951.fpm
