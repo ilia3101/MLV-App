@@ -16,7 +16,6 @@
  # 51 Franklin Street, Fifth Floor,
  # Boston, MA  02110-1301, USA.
 
-
 #Scripts for testing purposes
 #alternative to tmix filter. Will enfuse/average the full content of a MLV file
 
@@ -118,13 +117,14 @@ sleep 2
 
 #actual script engine
 while grep 'MLV\|mlv' /tmp/mlvapp_path/file_names.txt; do
-
-  cd "$(cat /tmp/mlvapp_path/file_names.txt | head -1 | cut -d "." -f1)"
+#folder path
+  cd "$(cat /tmp/mlvapp_path/output_folder.txt | head -1)"
+#file name
+  cd "$(cat /tmp/mlvapp_path/file_names.txt | head -1 | cut -d "." -f1 | rev | cut -d "/" -f1 | rev)"
 #align images and rename
   rm fps
   /Applications/Hugin/Hugin.app/Contents/MacOS/align_image_stack -a aligned.tif *.tif
   /Applications/Hugin/tools_mac/enfuse -o ${PWD##*/}.tiff aligned.*
-  rm aligned.*
   mv ${PWD##*/}.tiff ../
   echo "$(tail -n +2 /tmp/mlvapp_path/file_names.txt)" > /tmp/mlvapp_path/file_names.txt
 
