@@ -11,9 +11,6 @@
 /* Usefull macros */
 #include "macros.h"
 
-/* mlvObject_t is (currently) single use only, as in it needs to be destoyed: freeMlvObject(), 
- * and another created: initMlvObjectWithClip(), if you want to work with another MLV video */
-
 /* All functions in one */
 mlvObject_t * initMlvObjectWithClip(char * mlvPath, int preview, int * err, char * error_message);
 
