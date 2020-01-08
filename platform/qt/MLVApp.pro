@@ -384,11 +384,9 @@ linux-g++ {
 
     INSTALLS += target desktop icon512
 
-    BIN_DIR = $$(HOME)/bin/
-    exists( $$BIN_DIR ) {
-        !exists( $$(HOME)/bin/ffmpeg ) QMAKE_POST_LINK += tar -C $$(HOME)/bin -xvJf $$_PRO_FILE_PWD_/FFmpeg/ffmpegLinux.tar.xz --strip-components=1 --wildcards */ffmpeg $$escape_expand(\n\t)
-        !exists( $$(HOME)/bin/raw2mlv ) QMAKE_POST_LINK += tar -C $$(HOME)/bin -xvJf $$_PRO_FILE_PWD_/raw2mlv/raw2mlvLinux.tar.xz --strip-components=1 --wildcards */raw2mlv $$escape_expand(\n\t)
-    }
+    QMAKE_PRE_LINK += mkdir -p $$(HOME)/bin
+    QMAKE_POST_LINK += tar -C $$(HOME)/bin -xvJf $$_PRO_FILE_PWD_/FFmpeg/ffmpegLinux.tar.xz --strip-components=1 --wildcards */ffmpeg $$escape_expand(\n\t)
+    QMAKE_POST_LINK += tar -C $$(HOME)/bin -xvJf $$_PRO_FILE_PWD_/raw2mlv/raw2mlvLinux.tar.xz --strip-components=1 --wildcards */raw2mlv $$escape_expand(\n\t)
 }
 
 #for using linuxdeployqt
