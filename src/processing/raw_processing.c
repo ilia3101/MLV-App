@@ -1293,10 +1293,10 @@ void processingSetWhiteBalance(processingObject_t * processing, double WBKelvin,
     }
     else /* Do different WB for highligh reconstruction to avoid blue highlights */
     {
-        #define ThresholdWB 5000
-        if (WBKelvin < ThresholdWB)
-            get_kelvin_multipliers_rgb((WBKelvin-ThresholdWB)*0.4+ThresholdWB, processing->wb_multipliers);
-        else
+        // #define ThresholdWB 5000
+        // if (WBKelvin < ThresholdWB)
+        //     get_kelvin_multipliers_rgb((WBKelvin-ThresholdWB)*0.4+ThresholdWB, processing->wb_multipliers);
+        // else
             get_kelvin_multipliers_rgb(WBKelvin, processing->wb_multipliers);
         // double XYZ_to_cam[9];
         // double CAM_temp[3];
@@ -1305,10 +1305,10 @@ void processingSetWhiteBalance(processingObject_t * processing, double WBKelvin,
         // applyMatrix(CAM_temp, XYZ_to_cam);
         // for (int i = 0; i < 3; ++i)
         //     processing->wb_multipliers[i] = 1.0 / CAM_temp[i];
-        // double lowestt = MIN( MIN( processing->wb_multipliers[0], 
-        //                            processing->wb_multipliers[1] ), 
-        //                            processing->wb_multipliers[2] );
-        // for (int i = 0; i < 3; ++i) processing->wb_multipliers[i] /= lowestt;
+        double lowestt = MIN( MIN( processing->wb_multipliers[0], 
+                                   processing->wb_multipliers[1] ), 
+                                   processing->wb_multipliers[2] );
+        for (int i = 0; i < 3; ++i) processing->wb_multipliers[i] /= lowestt;
         // printf("Science: %f %f %f\n", processing->wb_multipliers[0], processing->wb_multipliers[1], processing->wb_multipliers[2]);
         // get_kelvin_multipliers_rgb(WBKelvin, processing->wb_multipliers);
         // printf("Originl: %f %f %f\n", processing->wb_multipliers[0], processing->wb_multipliers[1], processing->wb_multipliers[2]);
