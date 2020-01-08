@@ -4085,7 +4085,13 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     setToolButtonChromaSmooth( receipt->chromaSmooth() );
     setToolButtonPatternNoise( receipt->patternNoise() );
     setToolButtonUpsideDown( receipt->upsideDown() );
-    setToolButtonVerticalStripes( receipt->verticalStripes() );
+    if( receipt->verticalStripes() == -1 )
+    {
+        //Enable by default for 5D3 clips on first load
+        if( getMlvCameraModel( m_pMlvObject ) == 0x80000285 ) setToolButtonVerticalStripes( 1 );
+        else setToolButtonVerticalStripes( 0 );
+    }
+    else setToolButtonVerticalStripes( receipt->verticalStripes() );
 
     //Init
     if( receipt->dualIsoForced() == -1 )
