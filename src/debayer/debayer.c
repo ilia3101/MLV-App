@@ -8,6 +8,8 @@
 #include "dmzhangwu.h"
 
 #define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
+#define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
+#define LIMIT16(X) MAX(MIN(X, 65535), 0)
 
 void convert_to_log(void * data)
 {
@@ -115,9 +117,9 @@ void debayerAmaze(uint16_t * __restrict debayerto, float * __restrict bayerdata,
     for (int i = 0; i < pixelsize; i++)
     {
         int j = i * 3;
-        debayerto[ j ] = MIN((uint32_t)red1d[i], 65535);
-        debayerto[j+1] = MIN((uint32_t)green1d[i], 65535);
-        debayerto[j+2] = MIN((uint32_t)blue1d[i], 65535);
+        debayerto[ j ] = LIMIT16((uint32_t)red1d[i]);
+        debayerto[j+1] = LIMIT16((uint32_t)green1d[i]);
+        debayerto[j+2] = LIMIT16((uint32_t)blue1d[i]);
     }
 
     free(red1d);
@@ -445,9 +447,9 @@ void debayerLmmse(uint16_t * __restrict debayerto, float * __restrict bayerdata,
     for (int i = 0; i < pixels; i++)
     {
         int j = i * 3;
-        debayerto[ j ] = MIN((uint32_t)output[i], 65535);
-        debayerto[j+1] = MIN((uint32_t)output[i+pixels], 65535);
-        debayerto[j+2] = MIN((uint32_t)output[i+(pixels<<1)], 65535);
+        debayerto[ j ] = LIMIT16((uint32_t)output[i]);
+        debayerto[j+1] = LIMIT16((uint32_t)output[i+pixels]);
+        debayerto[j+2] = LIMIT16((uint32_t)output[i+(pixels<<1)]);
     }
 
     free( output );
@@ -488,9 +490,9 @@ void debayerIgv(uint16_t * __restrict debayerto, float * __restrict bayerdata, i
     for (int i = 0; i < pixelsize; i++)
     {
         int j = i * 3;
-        debayerto[ j ] = MIN((uint32_t)red1d[i], 65535);
-        debayerto[j+1] = MIN((uint32_t)green1d[i], 65535);
-        debayerto[j+2] = MIN((uint32_t)blue1d[i], 65535);
+        debayerto[ j ] = LIMIT16((uint32_t)red1d[i]);
+        debayerto[j+1] = LIMIT16((uint32_t)green1d[i]);
+        debayerto[j+2] = LIMIT16((uint32_t)blue1d[i]);
     }
 
     free(red1d);
