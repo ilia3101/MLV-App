@@ -238,13 +238,13 @@ void wb_convert(wb_convert_info_t * wb_info, float * rawData, int width, int hei
                 switch (FC(y,x))
                 {
                     case 0:
-                        rawData[y*width+x] = LIMIT16( ( rawData[y*width+x] - blacklevel ) * wb_multipliers[0] );
+                        rawData[y*width+x] = /* LIMIT16 */( ( rawData[y*width+x] - blacklevel ) * wb_multipliers[0] );
                         break;
                     case 1:
-                        rawData[y*width+x] = LIMIT16( ( rawData[y*width+x] - blacklevel ) * wb_multipliers[1] );
+                        rawData[y*width+x] = /* LIMIT16 */( ( rawData[y*width+x] - blacklevel ) * wb_multipliers[1] );
                         break;
                     case 2:
-                        rawData[y*width+x] = LIMIT16( ( rawData[y*width+x] - blacklevel ) * wb_multipliers[2] );
+                        rawData[y*width+x] = /* LIMIT16 */( ( rawData[y*width+x] - blacklevel ) * wb_multipliers[2] );
                         break;
                     default:
                         break;
