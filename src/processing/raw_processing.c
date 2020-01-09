@@ -788,6 +788,8 @@ void apply_processing_object( processingObject_t * processing,
 
                 float desaturate_factor = (Y - MIN(MIN(result2[0],result2[1]),result2[2])) / (Y - min_channel);
 
+                if (Y <= 0.0f) desaturate_factor = 1;
+
                 /* Fade out to not do it above 5100K */
                 // int mixfac = (processing->kelvin-2900) / 2200.0;
                 // mixfac = MAX(MIN(1.0, mixfac), 0.0);
@@ -847,6 +849,7 @@ void apply_processing_object( processingObject_t * processing,
                         result2[i] = /* (result[i] - Y) * */ -(tonemapped * Y)+Y;
                     }
                     float desaturate_factor = (Y - MIN(MIN(result2[0],result2[1]),result2[2])) / (Y - min_channel);
+                    if (Y <= 0.0f) desaturate_factor = 1;
                     for (int i = 0; i < 3; ++i) result[i] = (result[i] - Y) * desaturate_factor + Y; 
                 }
                 pixg[0] = LIMIT16(result[0]);
@@ -1427,7 +1430,8 @@ void processingSetWhiteBalance(processingObject_t * processing, double WBKelvin,
     //     cam_to_xyz_final[i] = cam_to_xyz_A[i]*(1.0-mixfac) + cam_to_xyz_D[i]*mixfac;
     // }
     // if (WBKelvin > 5000)
-    /* TODO: ix this, only using daylight matrix right now as canon 50D colours went weird on luther samples */
+    /* TODO: fix this, only using daylight matrix right now as canon 50D colours went weird on luther samples
+          ... See page 79 of DNG spec 1.4.0.0 - "One or Two Color Calibrations" */
         for (int i = 0; i < 9; ++i)
         {
             cam_to_xyz_final[i] = cam_to_xyz_D[i];
