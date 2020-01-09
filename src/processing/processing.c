@@ -112,8 +112,8 @@ double NoTonemap(double x) { return x; }
 float NoTonemap_f(float x) { return x; }
 
 /* Reinhard - most basic but just werks */
-double ReinhardTonemap(double x) { return x / (1.0 + x); }
-float ReinhardTonemap_f(float x) { return x / (1.0f + x); }
+double ReinhardTonemap(double x) { return (x < 0.0) ? x : x / (1.0 + x); }
+float ReinhardTonemap_f(float x) { return (x < 0.0f) ? x : x / (1.0f + x); }
 
 /* Reinhard, but onnly applied to top 3/5 of the range, less darkening overall */
 double Reinhard_3_5_Tonemap(double x) { return (x < 0.4) ? x : (ReinhardTonemap((x-0.4)/0.6)*0.6+0.4); }

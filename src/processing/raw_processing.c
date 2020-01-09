@@ -539,6 +539,9 @@ void applyProcessingObject( processingObject_t * processing,
     }
 }
 
+/* Colour tonemap function for smooth gamut mapping */
+static float Reinhard_for_colour(float x) { return (x < 0.5f) ? x : (ReinhardTonemap_f((x-0.5f)/0.5f)*0.5f+0.5f); }
+
 /* A private part of the processing machine */
 void apply_processing_object( processingObject_t * processing,
                               int imageX, int imageY, 
@@ -560,6 +563,13 @@ void apply_processing_object( processingObject_t * processing,
     uint16_t * gm = gradientMask;
     float * vm = vignetteMask;
     float * vmpix = vm;
+
+    /* For Y calculation */
+    float rgb_to_Y[3]; {
+        double inversemat[9];
+        invertMatrix(colour_gamuts[processing->colour_gamut], inversemat);
+        for (int i = 0; i < 3; ++i) rgb_to_Y[i] = inversemat[3+i];
+    }
 
     /* In case of camera matrix */
     double (* tone_mapping_function)(double) = tonemap_functions[processing->tonemap_function];
@@ -642,23 +652,23 @@ void apply_processing_object( processingObject_t * processing,
         }
 
         /* white balance & exposure */
-        int32_t pix0 = (pm[0][pix[0]] /* + pm[1][pix[1]] + pm[2][pix[2]] */)*expo_correction;
-        int32_t pix1 = (/* pm[3][pix[0]] + */ pm[4][pix[1]] /* + pm[5][pix[2]] */)*expo_correction;
-        int32_t pix2 = (/* pm[6][pix[0]] + pm[7][pix[1]] + */ pm[8][pix[2]])*expo_correction;
-        int32_t tmp1 = (/* pm[3][pix[0]] + */ pm[4][pix[1]] /* + pm[5][pix[2]] */);
+        float pix0 = (pm[0][pix[0]] /* + pm[1][pix[1]] + pm[2][pix[2]] */)*expo_correction;
+        float pix1 = (/* pm[3][pix[0]] + */ pm[4][pix[1]] /* + pm[5][pix[2]] */)*expo_correction;
+        float pix2 = (/* pm[6][pix[0]] + pm[7][pix[1]] + */ pm[8][pix[2]])*expo_correction;
+        float tmp1 = (/* pm[3][pix[0]] + */ pm[4][pix[1]] /* + pm[5][pix[2]] */);
 
         /* Gradient variables and part 1 */
-        uint16_t pixg[3];
+        float pixg[3];
         if( processing->gradient_enable && gmpix[0] != 0 &&
           ( ( processing->gradient_exposure_stops < -0.01 || processing->gradient_exposure_stops > 0.01 )
          || ( processing->gradient_contrast       < -0.01 || processing->gradient_contrast       > 0.01 ) ) )
         {
             /* do the same for gradient as for the pic itself, but before the values are overwritten */
             /* white balance & exposure */
-            int32_t pix0g = (pmg[0][pix[0]] /* + pmg[1][pix[1]] + pmg[2][pix[2]] */) * expo_correction * expo_correction_gradient;
-            int32_t pix1g = (/* pmg[3][pix[0]] + */ pmg[4][pix[1]] /* + pmg[5][pix[2]] */) * expo_correction * expo_correction_gradient;
-            int32_t pix2g = (/* pmg[6][pix[0]] + pmg[7][pix[1]] */ + pmg[8][pix[2]]) * expo_correction * expo_correction_gradient;
-            int32_t tmp1g = (/* pmg[3][pix[0]] + */ pmg[4][pix[1]] /* + pmg[5][pix[2]] */);
+            float pix0g = (pmg[0][pix[0]] /* + pmg[1][pix[1]] + pmg[2][pix[2]] */) * expo_correction * expo_correction_gradient;
+            float pix1g = (/* pmg[3][pix[0]] + */ pmg[4][pix[1]] /* + pmg[5][pix[2]] */) * expo_correction * expo_correction_gradient;
+            float pix2g = (/* pmg[6][pix[0]] + pmg[7][pix[1]] */ + pmg[8][pix[2]]) * expo_correction * expo_correction_gradient;
+            float tmp1g = (/* pmg[3][pix[0]] + */ pmg[4][pix[1]] /* + pmg[5][pix[2]] */);
 
             pixg[0] = LIMIT16(pix0g);
             pixg[1] = LIMIT16(pix1g);
@@ -733,11 +743,65 @@ void apply_processing_object( processingObject_t * processing,
         if( processing->use_cam_matrix > 0 )
         {
             /* WB correction */
-            uint16_t pix0b = pix[0], pix1b = pix[1], pix2b = pix[2];
-            double result[3];
+            float pix0b = pix[0], pix1b = pix[1], pix2b = pix[2];
+            float result[3];
             result[0] = pix0b * processing->proper_wb_matrix[0] + pix1b * processing->proper_wb_matrix[1] + pix2b * processing->proper_wb_matrix[2];
             result[1] = pix0b * processing->proper_wb_matrix[3] + pix1b * processing->proper_wb_matrix[4] + pix2b * processing->proper_wb_matrix[5];
             result[2] = pix0b * processing->proper_wb_matrix[6] + pix1b * processing->proper_wb_matrix[7] + pix2b * processing->proper_wb_matrix[8];
+
+            // if (result[2] < 0 || result[0] < 0 || result[1] < 0)
+            // {
+            //     /* Bring the colour back in to gamut by desaturating it, this will preserve hue and avoid ugliest clipping */
+            //     float Y = rgb_to_Y[0] * result[0]
+            //             + rgb_to_Y[1] * result[1]
+            //             + rgb_to_Y[2] * result[2];
+
+            //     float min_channel = MIN(MIN(result[0],result[1]),result[2]);
+
+            //     float multiplier = Y / (Y - min_channel);
+
+            //     for (int i = 0; i < 3; ++i) result[i] = (result[i] - Y) * multiplier + Y; 
+            // }
+
+            {
+                /* Bring the colour back in to gamut by desaturating it, this will preserve hue and avoid ugliest clipping */
+                float Y = rgb_to_Y[0] * result[0]
+                        + rgb_to_Y[1] * result[1]
+                        + rgb_to_Y[2] * result[2];
+
+                float max_channel = MAX(MAX(result[0],result[1]),result[2]);
+                float min_channel = MIN(MIN(result[0],result[1]),result[2]);
+
+                float result2[3];
+                for (int i = 0; i < 3; ++i) {
+                    float Y_to_min_channel = (Y - result[i]) / Y;
+                    float tonemapped;
+                    if (i == 1)
+                        tonemapped = ReinhardTonemap_f(Y_to_min_channel);
+                    if (i == 0)
+                        tonemapped = Reinhard_for_colour(Y_to_min_channel);
+                    else
+                        tonemapped = Reinhard_for_colour(Y_to_min_channel);
+
+                    result2[i] = /* (result[i] - Y) * */ -(tonemapped * Y)+Y;
+                }
+
+                float desaturate_factor = (Y - MIN(MIN(result2[0],result2[1]),result2[2])) / (Y - min_channel);
+
+                /* Fade out to not do it above 5100K */
+                // int mixfac = (processing->kelvin-2900) / 2200.0;
+                // mixfac = MAX(MIN(1.0, mixfac), 0.0);
+                // desaturate_factor = desaturate_factor*(1.0f-mixfac) + mixfac;
+
+                for (int i = 0; i < 3; ++i) result[i] = (result[i] - Y) * desaturate_factor + Y; 
+            }
+
+            // if (result[2] < 0 || result[0] < 0 || result[1] < 0)
+            // {
+            //         result[0] = 600000;
+            //         result[1] = 600000;
+            //         result[2] = 600000;
+            // }
 
             pix[0] = LIMIT16(result[0]);
             pix[1] = LIMIT16(result[1]);
@@ -747,7 +811,7 @@ void apply_processing_object( processingObject_t * processing,
         /* Gamma and expo correction (shadows&highlights, contrast, clarity)*/
         for( int i = 0; i < 3; i++ )
         {
-            pix[i] = processing->pre_calc_gamma[ pix[i] ];
+            pix[i] = processing->pre_calc_gamma[ LIMIT16((uint32_t)pix[i]) ]; /* Not float-> int is done here */
         }
 
         /* Gradient part 2 & blending */
@@ -758,11 +822,33 @@ void apply_processing_object( processingObject_t * processing,
             /* WB correction gradient layer*/
             if( processing->use_cam_matrix > 0 )
             {
-                uint16_t pix0b = pixg[0], pix1b = pixg[1], pix2b = pixg[2];
+                float pix0b = pixg[0], pix1b = pixg[1], pix2b = pixg[2];
                 double result[3];
                 result[0] = pix0b * processing->proper_wb_matrix[0] + pix1b * processing->proper_wb_matrix[1] + pix2b * processing->proper_wb_matrix[2];
                 result[1] = pix0b * processing->proper_wb_matrix[3] + pix1b * processing->proper_wb_matrix[4] + pix2b * processing->proper_wb_matrix[5];
                 result[2] = pix0b * processing->proper_wb_matrix[6] + pix1b * processing->proper_wb_matrix[7] + pix2b * processing->proper_wb_matrix[8];
+                {
+                    /* Bring the colour back in to gamut by desaturating it, this will preserve hue and avoid ugliest clipping */
+                    float Y = rgb_to_Y[0] * result[0]
+                            + rgb_to_Y[1] * result[1]
+                            + rgb_to_Y[2] * result[2];
+                    float max_channel = MAX(MAX(result[0],result[1]),result[2]);
+                    float min_channel = MIN(MIN(result[0],result[1]),result[2]);
+                    float result2[3];
+                    for (int i = 0; i < 3; ++i) {
+                        float Y_to_min_channel = (Y - result[i]) / Y;
+                        float tonemapped;
+                        if (i == 1)
+                            tonemapped = ReinhardTonemap_f(Y_to_min_channel);
+                        if (i == 0)
+                            tonemapped = Reinhard_for_colour(Y_to_min_channel);
+                        else
+                            tonemapped = Reinhard_for_colour(Y_to_min_channel);
+                        result2[i] = /* (result[i] - Y) * */ -(tonemapped * Y)+Y;
+                    }
+                    float desaturate_factor = (Y - MIN(MIN(result2[0],result2[1]),result2[2])) / (Y - min_channel);
+                    for (int i = 0; i < 3; ++i) result[i] = (result[i] - Y) * desaturate_factor + Y; 
+                }
                 pixg[0] = LIMIT16(result[0]);
                 pixg[1] = LIMIT16(result[1]);
                 pixg[2] = LIMIT16(result[2]);
@@ -771,7 +857,7 @@ void apply_processing_object( processingObject_t * processing,
             /* Gamma and expo correction (shadows&highlights, contrast, clarity) gradient layer*/
             for( int i = 0; i < 3; i++ )
             {
-                pixg[i] = processing->pre_calc_gamma_gradient[ pixg[i] ];
+                pixg[i] = processing->pre_calc_gamma_gradient[ LIMIT16((uint32_t)pixg[i]) ];
             }
 
             /* Blending using the mask */
@@ -1225,25 +1311,6 @@ void processingSetSharpening(processingObject_t * processing, double sharpen)
 /* Set white balance by kelvin + tint value */
 void processingSetWhiteBalance(processingObject_t * processing, double WBKelvin, double WBTint)
 {
-    /************************* CALCULATE CAMERA MATRIX ************************/
-    double cam_to_xyz_D[9]; /* For daylight */
-    double cam_to_xyz_A[9]; /* For tungsten (https://en.wikipedia.org/wiki/Standard_illuminant#Illuminant_A) */
-    invertMatrix(processing->cam_matrix, cam_to_xyz_D);
-    invertMatrix(processing->cam_matrix_A, cam_to_xyz_A);
-
-    double cam_to_xyz_final[9];
-
-    /* Blend the matrices between 3000 and 3600 Kelvin */
-    int mixfac = (WBKelvin-3000) / 600.0;
-    mixfac = MAX(MIN(1.0, mixfac), 0.0);
-    for (int i = 0; i < 9; ++i)
-    {
-        cam_to_xyz_final[i] = cam_to_xyz_A[i]*(1.0-mixfac) + cam_to_xyz_D[i]*mixfac;
-    }
-
-
-
-    /******* Calculate xyz to rgb, possibly includeing the Danne effect *******/
     double * p_xyz_to_rgb;
     double * p_ciecam02;
 
@@ -1261,16 +1328,9 @@ void processingSetWhiteBalance(processingObject_t * processing, double WBKelvin,
     }
     else {
         //scientific camera matrix
-        p_xyz_to_rgb = colour_gamuts[processing->colour_gamut];
+        p_xyz_to_rgb = colour_gamuts[processing->colour_gamut]/* alloca(9 * sizeof(double)) */;
         p_ciecam02 = ciecam02;
     }
-
-
-    /********* RAW WHITE BALANCE (used in highlight reconstrucvtyion) *********/
-
-    /* Excluding tint (that is applied in raw  WB always, this is RAW WB
-     * without tint to be undone later before cam matrix) */
-    double raw_WB[3];
 
     processing->kelvin = WBKelvin;
 
@@ -1286,36 +1346,21 @@ void processingSetWhiteBalance(processingObject_t * processing, double WBKelvin,
 
         processing->wb_tint = WBTint;
     }
+    
+    /* Calculate multipliers */
 
-    if (!processing->use_cam_matrix)
+    /* double XYZ_White[3], XYZ_Temp[3], I[3] = {1,1,1};
+    Kelvin_Daylight_to_XYZ(6500, XYZ_White);
+    Kelvin_Daylight_to_XYZ(WBKelvin, XYZ_Temp);
+    applyMatrix(XYZ_White, processing->cam_matrix);
+    applyMatrix(XYZ_Temp, processing->cam_matrix);
+    applyMatrix(I, processing->cam_matrix);
+    for (int i = 0; i < 3; ++i)
     {
-        get_kelvin_multipliers_rgb(WBKelvin, processing->wb_multipliers);
-    }
-    else /* Do different WB for highligh reconstruction to avoid blue highlights */
-    {
-        #define ThresholdWB 5000
-        if (WBKelvin < ThresholdWB)
-            get_kelvin_multipliers_rgb((WBKelvin-ThresholdWB)*0.4+ThresholdWB, processing->wb_multipliers);
-        else
-            get_kelvin_multipliers_rgb(WBKelvin, processing->wb_multipliers);
-        // double XYZ_to_cam[9];
-        // double CAM_temp[3];
-        // Kelvin_Daylight_to_XYZ(WBKelvin, CAM_temp);
-        // invertMatrix(cam_to_xyz_final, XYZ_to_cam);
-        // applyMatrix(CAM_temp, XYZ_to_cam);
-        // for (int i = 0; i < 3; ++i)
-        //     processing->wb_multipliers[i] = 1.0 / CAM_temp[i];
-        // double lowestt = MIN( MIN( processing->wb_multipliers[0], 
-        //                            processing->wb_multipliers[1] ), 
-        //                            processing->wb_multipliers[2] );
-        // for (int i = 0; i < 3; ++i) processing->wb_multipliers[i] /= lowestt;
-        // printf("Science: %f %f %f\n", processing->wb_multipliers[0], processing->wb_multipliers[1], processing->wb_multipliers[2]);
-        // get_kelvin_multipliers_rgb(WBKelvin, processing->wb_multipliers);
-        // printf("Originl: %f %f %f\n", processing->wb_multipliers[0], processing->wb_multipliers[1], processing->wb_multipliers[2]);
-    }
+        processing->wb_multipliers[i] = XYZ_White[i]/(XYZ_Temp[i]*I[i]);
+    } */
 
-    /* Before tint, copy WB in to raw WB variable */
-    for (int i = 0; i < 3; ++i) raw_WB[i] = processing->wb_multipliers[i];
+    get_kelvin_multipliers_rgb(WBKelvin, processing->wb_multipliers);
 
     /* Do tint (green and red channel seem to be main ones) */
     processing->wb_multipliers[2] += (WBTint / 11.0);
@@ -1337,12 +1382,16 @@ void processingSetWhiteBalance(processingObject_t * processing, double WBKelvin,
 
     double proper_wb_matrix[9] = {1,0,0,0,1,0,0,0,1};
 
+    /* Get multipliers for this to undo what has been done, it was only done to do highlihgt reconstrucytion now */
+    double multiplierz[3];
+    get_kelvin_multipliers_rgb(WBKelvin, multiplierz); 
+
     /* Now create a matrix, which will take us back to raw colour by undoing
      * basic wb (which was useful for highlight reconstruction, also where tint was done) */
     double undo_basic_wb_matrix[9] = {
-        1.0/raw_WB[0], 0, 0,
-        0, 1.0/raw_WB[1], 0,
-        0, 0, 1.0/raw_WB[2]
+        1.0/multiplierz[0], 0, 0,
+        0, 1.0/multiplierz[1], 0,
+        0, 0, 1.0/multiplierz[2]
     };
 
     /* Get white points and convert to LMS space */
@@ -1354,7 +1403,40 @@ void processingSetWhiteBalance(processingObject_t * processing, double WBKelvin,
     applyMatrix(LMS_temp, p_ciecam02);
 
     double LMS_multipliers[3];
-    for (int i = 0; i < 3; ++i) LMS_multipliers[i] = LMS_white[i] / LMS_temp[i];
+    for (int i = 0; i < 3; ++i) LMS_multipliers[i] = LMS_white[i]/LMS_temp[i];
+
+    double cam_to_xyz_D[9]; /* For daylight */
+    double cam_to_xyz_A[9]; /* For tungsten (https://en.wikipedia.org/wiki/Standard_illuminant#Illuminant_A) */
+    invertMatrix(processing->cam_matrix, cam_to_xyz_D);
+    invertMatrix(processing->cam_matrix_A, cam_to_xyz_A);
+
+    double cam_to_xyz_final[9];
+
+    /* Blend the matrices between 3000 and 3600 Kelvin */
+    // int mixfac = (WBKelvin-3000) / 600.0;
+    // mixfac = MAX(MIN(1.0, mixfac), 0.0);
+    // for (int i = 0; i < 9; ++i)
+    // {
+    //     cam_to_xyz_final[i] = cam_to_xyz_A[i]*(1.0-mixfac) + cam_to_xyz_D[i]*mixfac;
+    // }
+    // int mixfac = (WBKelvin-3000) / 3000;
+    // mixfac = MAX(MIN(1.0, mixfac), 0.0);
+    // mixfac = pow(mixfac, 0.6);
+    // for (int i = 0; i < 9; ++i)
+    // {
+    //     cam_to_xyz_final[i] = cam_to_xyz_A[i]*(1.0-mixfac) + cam_to_xyz_D[i]*mixfac;
+    // }
+    // if (WBKelvin > 5000)
+    /* TODO: ix this, only using daylight matrix right now as canon 50D colours went weird on luther samples */
+        for (int i = 0; i < 9; ++i)
+        {
+            cam_to_xyz_final[i] = cam_to_xyz_D[i];
+        }
+    // else
+        // for (int i = 0; i < 9; ++i)
+        // {
+        //     cam_to_xyz_final[i] = cam_to_xyz_A[i];
+        // }
 
     multiplyMatrices(cam_to_xyz_final, undo_basic_wb_matrix, proper_wb_matrix);
 
