@@ -3208,6 +3208,12 @@ void MainWindow::resetReceiptWithDefault( ReceiptSettings *receipt )
         }
     }
     file.close();
+
+    //Never change RAW Black and White Level
+    receipt->setRawWhite( -1 );
+    receipt->setRawBlack( -1 );
+    receipt->setCutIn( 1 );
+    receipt->setCutOut( INT32_MAX );
 }
 
 //Imports and sets slider settings from a file to the sliders
