@@ -164,6 +164,8 @@
     <addaction name="actionImportReceipt"/>
     <addaction name="actionResetReceipt"/>
     <addaction name="separator"/>
+    <addaction name="actionUseDefaultReceipt"/>
+    <addaction name="separator"/>
     <addaction name="actionSelectAllClips"/>
     <addaction name="actionDeleteSelectedClips"/>
     <addaction name="separator"/>
@@ -10295,6 +10297,14 @@ QGroupBox::indicator:checked:disabled {
   <action name="actionShowInstalledBadPixelMaps">
    <property name="text">
     <string>Show Installed Bad Pixel Maps</string>
+   </property>
+  </action>
+  <action name="actionUseDefaultReceipt">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Use Default Receipt</string>
    </property>
   </action>
  </widget>

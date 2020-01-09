@@ -1471,6 +1471,8 @@ void MainWindow::readSettings()
     m_pRecentFilesMenu->restoreState( set.value("recentSessions").toByteArray() );
     ui->actionAskForSavingOnQuit->setChecked( set.value( "askForSavingOnQuit", true ).toBool() );
     ui->actionBetterResizer->setChecked( set.value( "betterResizerViewer", false ).toBool() );
+    m_defaultReceiptFileName = set.value( "defaultReceiptFileName", QDir::homePath() ).toString();
+    ui->actionUseDefaultReceipt->setChecked( set.value( "defaultReceiptEnabled", false ).toBool() );
     int themeId = set.value( "themeId", 0 ).toInt();
     if( themeId == 0 )
     {
@@ -1533,6 +1535,8 @@ void MainWindow::writeSettings()
     set.setValue( "autoUpdateCheck", ui->actionAutoCheckForUpdates->isChecked() );
     set.setValue( "rememberPlaybackPos", ui->actionPlaybackPosition->isChecked() );
     set.setValue( "dockEditSize", ui->dockWidgetEdit->width() );
+    set.setValue( "defaultReceiptFileName", m_defaultReceiptFileName );
+    set.setValue( "defaultReceiptEnabled", ui->actionUseDefaultReceipt->isChecked() );
     if( m_previewMode == 3 ) set.setValue( "dockSessionSize", ui->dockWidgetSession->height() );
     else set.setValue( "dockSessionSize", ui->dockWidgetSession->width() );
     set.setValue( "recentSessions", m_pRecentFilesMenu->saveState() );
@@ -3000,6 +3004,7 @@ void MainWindow::addFileToSession(QString fileName)
     ui->listWidgetSession->addItem( item );
     //Set sliders
     ReceiptSettings *sliders = new ReceiptSettings(); //default
+    if( ui->actionUseDefaultReceipt->isChecked() ) resetReceiptWithDefault( sliders );
     sliders->setFileName( fileName );
     m_pSessionReceipts.append( sliders );
     //Save index of active clip
@@ -3166,6 +3171,44 @@ void MainWindow::saveSession(QString fileName)
     m_pRecentFilesMenu->addRecentFile( QDir::toNativeSeparators( fileName ) );
 }
 
+//Reset this receipt with settings from the default receipt
+void MainWindow::resetReceiptWithDefault( ReceiptSettings *receipt )
+{
+    if( !QFileInfo( m_defaultReceiptFileName ).exists() )
+    {
+        ui->actionUseDefaultReceipt->setChecked( false ); //File doesn't exist, so uncheck the option
+        return;
+    }
+
+    //Open a XML stream for the file
+    QXmlStreamReader Rxml;
+    QFile file( m_defaultReceiptFileName );
+    if( !file.open(QIODevice::ReadOnly | QFile::Text) )
+    {
+        return;
+    }
+
+    //Version of settings (values may be interpreted differently)
+    int versionReceipt = 0;
+
+    //Parse
+    Rxml.setDevice(&file);
+    while( !Rxml.atEnd() )
+    {
+        Rxml.readNext();
+        if( Rxml.isStartElement() && Rxml.name() == "receipt" )
+        {
+            //Read version string, if there is one
+            if( Rxml.attributes().count() != 0 )
+            {
+                //qDebug() << "masxmlVersion" << Rxml.attributes().at(0).value().toInt();
+                versionReceipt = Rxml.attributes().at(0).value().toInt();
+            }
+            readXmlElementsFromFile( &Rxml, receipt, versionReceipt );
+        }
+    }
+    file.close();
+}
 
 //Imports and sets slider settings from a file to the sliders
 void MainWindow::on_actionImportReceipt_triggered()
@@ -6553,6 +6596,7 @@ void MainWindow::on_actionExportSettings_triggered()
 void MainWindow::on_actionResetReceipt_triggered()
 {
     ReceiptSettings *sliders = new ReceiptSettings(); //default
+    if( ui->actionUseDefaultReceipt->isChecked() ) resetReceiptWithDefault( sliders );
     sliders->setRawWhite( getMlvOriginalWhiteLevel( m_pMlvObject ) );
     sliders->setRawBlack( getMlvOriginalBlackLevel( m_pMlvObject ) );
     setSliders( sliders, false );
@@ -9412,4 +9456,21 @@ void MainWindow::on_actionTranscodeAndImport_triggered()
     QStringList list = pTranscode->importList();
     openMlvSet( list );
     delete pTranscode;
+}
+
+//Set/Reset default receipt
+void MainWindow::on_actionUseDefaultReceipt_triggered(bool checked)
+{
+    if( !checked ) return;
+
+    //Stop playback if active
+    ui->actionPlay->setChecked( false );
+
+    QString fileName = QFileDialog::getOpenFileName(this,
+                                           tr("Open MLV App Receipt Xml"), m_defaultReceiptFileName,
+                                           tr("MLV App Receipt Xml files (*.marxml)"));
+
+    //Abort selected
+    if( fileName.count() == 0 ) return;
+    m_defaultReceiptFileName = fileName;
 }
