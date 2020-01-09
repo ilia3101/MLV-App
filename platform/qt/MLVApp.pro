@@ -374,19 +374,18 @@ windows{
     RCC_DIR = rcc
 }
 
-#for using the compiled version
+#to deploy the project with QT Creators "Deploy [All|Project]" feature in Menu->Build.
+#in "Projects->Run Settings->Make->Make arguments" field put argument "install". Qt Creator deploy feature will get active.
 linux-g++ {
     target.path = $$(HOME)/bin
     desktop.path = $$(HOME)/.local/share/applications
     desktop.files += mlvapp.desktop
     icon512.path = $$(HOME)/.local/share/icons/hicolor/512x512/apps
     icon512.files += RetinaIMG/MLVAPP.png
+    tools.path = target.path
+    unix:tools.extra = mkdir -p $$(HOME)/bin; tar -C $$(HOME)/bin -xvJf $$_PRO_FILE_PWD_/FFmpeg/ffmpegLinux.tar.xz --strip-components=1 --wildcards */ffmpeg; tar -C $$(HOME)/bin -xvJf $$_PRO_FILE_PWD_/raw2mlv/raw2mlvLinux.tar.xz --strip-components=1 --wildcards */raw2mlv
 
-    INSTALLS += target desktop icon512
-
-    QMAKE_PRE_LINK += mkdir -p $$(HOME)/bin
-    QMAKE_POST_LINK += tar -C $$(HOME)/bin -xvJf $$_PRO_FILE_PWD_/FFmpeg/ffmpegLinux.tar.xz --strip-components=1 --wildcards */ffmpeg $$escape_expand(\n\t)
-    QMAKE_POST_LINK += tar -C $$(HOME)/bin -xvJf $$_PRO_FILE_PWD_/raw2mlv/raw2mlvLinux.tar.xz --strip-components=1 --wildcards */raw2mlv $$escape_expand(\n\t)
+    INSTALLS += target desktop icon512 tools
 }
 
 #for using linuxdeployqt

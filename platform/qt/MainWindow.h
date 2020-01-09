@@ -198,6 +198,7 @@ private slots:
     void on_actionSaveAsSession_triggered();
     void on_actionImportReceipt_triggered();
     void on_actionExportReceipt_triggered();
+    void on_actionUseDefaultReceipt_triggered(bool checked);
     void on_actionNext_Clip_triggered();
     void on_actionPrevious_Clip_triggered();
     void on_actionSelectAllClips_triggered();
@@ -374,6 +375,7 @@ private slots:
 
     void on_comboBoxDebayer_currentIndexChanged( int index );
 
+
 private:
     Ui::MainWindow *ui;
     InfoDialog *m_pInfoDialog;
@@ -443,6 +445,7 @@ private:
     QString m_lastLutFileName;
     QString m_externalApplicationName;
     QString m_sessionFileName;
+    QString m_defaultReceiptFileName;
     ReceiptSettings *m_pReceiptClipboard;
     QVector<ReceiptSettings*> m_pSessionReceipts;
     QVector<ReceiptSettings*> m_exportQueue;
@@ -471,6 +474,7 @@ private:
     void setSliders(ReceiptSettings *sliders , bool paste);
     void setReceipt( ReceiptSettings *sliders );
     void replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings *receiptSource , bool paste);
+    void resetReceiptWithDefault( ReceiptSettings *receipt );
     int showFileInEditor(int row);
     void addClipToExportQueue( int row, QString fileName );
     void previewPicture( int row );
