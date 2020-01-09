@@ -3209,7 +3209,7 @@ void MainWindow::resetReceiptWithDefault( ReceiptSettings *receipt )
     }
     file.close();
 
-    //Never change RAW Black and White Level
+    //Never change RAW Black and White Level, reset CutIn/Out
     receipt->setRawWhite( -1 );
     receipt->setRawBlack( -1 );
     receipt->setCutIn( 1 );
