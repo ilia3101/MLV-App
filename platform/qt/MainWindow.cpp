@@ -3271,6 +3271,9 @@ void MainWindow::on_actionImportReceipt_triggered()
 //Exports the actual slider settings to a file
 void MainWindow::on_actionExportReceipt_triggered()
 {
+    if( m_lastActiveClipInSession < 0 ) return;
+    if( m_lastActiveClipInSession >= m_pSessionReceipts.count() ) return;
+
     //Stop playback if active
     ui->actionPlay->setChecked( false );
 
