@@ -925,6 +925,7 @@ int MainWindow::openMlv( QString fileName )
 
     //If clip loaded, import receipt is enabled
     ui->actionImportReceipt->setEnabled( true );
+    ui->actionExportReceipt->setEnabled( true );
     //If clip loaded, enable session save
     ui->actionSaveSession->setEnabled( true );
     ui->actionSaveAsSession->setEnabled( true );
@@ -1125,6 +1126,7 @@ void MainWindow::initGui( void )
     ui->actionZoomFit->setChecked( true );
     //If no clip loaded, import receipt is disabled
     ui->actionImportReceipt->setEnabled( false );
+    ui->actionExportReceipt->setEnabled( false );
     //If no clip loaded, disable session save
     ui->actionSaveSession->setEnabled( false );
     ui->actionSaveAsSession->setEnabled( false );
@@ -3993,6 +3995,7 @@ void MainWindow::deleteSession()
 
     //If no clip loaded, import receipt is disabled
     ui->actionImportReceipt->setEnabled( false );
+    ui->actionExportReceipt->setEnabled( false );
     //If no clip loaded, disable session save
     ui->actionSaveSession->setEnabled( false );
     ui->actionSaveAsSession->setEnabled( false );
