@@ -3281,6 +3281,7 @@ void MainWindow::on_actionExportReceipt_triggered()
 
     //Abort selected
     if( fileName.count() == 0 ) return;
+    if( !fileName.endsWith( ".marxml", Qt::CaseInsensitive ) ) fileName.append( ".marxml" );
     m_lastReceiptFileName = fileName;
 
     //Save slider receipt
