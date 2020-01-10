@@ -177,8 +177,7 @@ SOURCES += \
 
 macx: SOURCES += ../cocoa/avf_lib/avf_lib.m
 
-HEADERS += \seescho
-        MainWindow.h \
+HEADERS += MainWindow.h \
     ../../src/debayer/debayer.h \
     ../../src/debayer/helpersse2.h \
     ../../src/debayer/conv.h \
