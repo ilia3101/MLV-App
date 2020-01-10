@@ -383,7 +383,7 @@ linux-g++ {
     icon512.path = $$(HOME)/.local/share/icons/hicolor/512x512/apps
     icon512.files += RetinaIMG/MLVAPP.png
     tools.path = target.path
-    unix:tools.extra = mkdir -p $$(HOME)/bin; tar -C $$(HOME)/bin -xvJf $$_PRO_FILE_PWD_/FFmpeg/ffmpegLinux.tar.xz --strip-components=1 --wildcards */ffmpeg; tar -C $$(HOME)/bin -xvJf $$_PRO_FILE_PWD_/raw2mlv/raw2mlvLinux.tar.xz --strip-components=1 --wildcards */raw2mlv
+    tools.extra = mkdir -p $$(HOME)/bin; tar -C $$(HOME)/bin -xvJf $$_PRO_FILE_PWD_/FFmpeg/ffmpegLinux.tar.xz --strip-components=1 --wildcards */ffmpeg; tar -C $$(HOME)/bin -xvJf $$_PRO_FILE_PWD_/raw2mlv/raw2mlvLinux.tar.xz --strip-components=1 --wildcards */raw2mlv
 
     INSTALLS += target desktop icon512 tools
 }
