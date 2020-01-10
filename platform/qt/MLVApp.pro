@@ -177,7 +177,7 @@ SOURCES += \
 
 macx: SOURCES += ../cocoa/avf_lib/avf_lib.m
 
-HEADERS += \
+HEADERS += \seescho
         MainWindow.h \
     ../../src/debayer/debayer.h \
     ../../src/debayer/helpersse2.h \
@@ -375,7 +375,7 @@ windows{
 }
 
 #to deploy the project with QT Creators "Deploy [All|Project]" feature in Menu->Build.
-#in "Projects->Run Settings->Make->Make arguments" field put argument "install". Qt Creator deploy feature will get active.
+#in "Projects->Run Settings->Add Deploy Step->Make->Make arguments" field put argument "install". Qt Creator deploy feature will get active.
 linux-g++ {
     target.path = $$(HOME)/bin
     desktop.path = $$(HOME)/.local/share/applications
