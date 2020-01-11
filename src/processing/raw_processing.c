@@ -849,7 +849,11 @@ void apply_processing_object( processingObject_t * processing,
                             tonemapped = Reinhard_for_blue(Y_to_min_channel);
                         result2[i] = /* (result[i] - Y) * */ -(tonemapped * Y)+Y;
                     }
+<<<<<<< HEAD
                     float desaturate_factor = (Y - MIN(MIN(result2[0],result2[1]),result2[2])) / (Y - min_channel) * MIN(Y * 20.0f, 1.0f);
+=======
+                    float desaturate_factor = (Y - MIN(MIN(result2[0],result2[1]),result2[2])) / (Y - min_channel);
+>>>>>>> b98ce4b661c84761f988469d962d89d51a5bf420
                     if (Y <= 0.0f) desaturate_factor = 1;
                     for (int i = 0; i < 3; ++i) result[i] = (result[i] - Y) * desaturate_factor + Y; 
                 }
@@ -1431,7 +1435,11 @@ void processingSetWhiteBalance(processingObject_t * processing, double WBKelvin,
     //     cam_to_xyz_final[i] = cam_to_xyz_A[i]*(1.0-mixfac) + cam_to_xyz_D[i]*mixfac;
     // }
     // if (WBKelvin > 5000)
+<<<<<<< HEAD
     /* TODO: ix this, only using daylight matrix right now as canon 50D colours went weird on luther samples
+=======
+    /* TODO: fix this, only using daylight matrix right now as canon 50D colours went weird on luther samples
+>>>>>>> b98ce4b661c84761f988469d962d89d51a5bf420
           ... See page 79 of DNG spec 1.4.0.0 - "One or Two Color Calibrations" */
         for (int i = 0; i < 9; ++i)
         {
@@ -1522,6 +1530,7 @@ void processingSetGamma(processingObject_t * processing, double gammaValue)
     }
     /* So highlight reconstruction works */
     processing_update_highest_green(processing);
+    processingSetGammaGradient(processing, gammaValue); /* Cool */
 }
 
 /* Set gamma for gradient image part (Log-ing / tonemapping done here) */

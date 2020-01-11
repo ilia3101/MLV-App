@@ -925,6 +925,7 @@ int MainWindow::openMlv( QString fileName )
 
     //If clip loaded, import receipt is enabled
     ui->actionImportReceipt->setEnabled( true );
+    ui->actionExportReceipt->setEnabled( true );
     //If clip loaded, enable session save
     ui->actionSaveSession->setEnabled( true );
     ui->actionSaveAsSession->setEnabled( true );
@@ -1125,6 +1126,7 @@ void MainWindow::initGui( void )
     ui->actionZoomFit->setChecked( true );
     //If no clip loaded, import receipt is disabled
     ui->actionImportReceipt->setEnabled( false );
+    ui->actionExportReceipt->setEnabled( false );
     //If no clip loaded, disable session save
     ui->actionSaveSession->setEnabled( false );
     ui->actionSaveAsSession->setEnabled( false );
@@ -3209,7 +3211,7 @@ void MainWindow::resetReceiptWithDefault( ReceiptSettings *receipt )
     }
     file.close();
 
-    //Never change RAW Black and White Level
+    //Never change RAW Black and White Level, reset CutIn/Out
     receipt->setRawWhite( -1 );
     receipt->setRawBlack( -1 );
     receipt->setCutIn( 1 );
@@ -3271,6 +3273,9 @@ void MainWindow::on_actionImportReceipt_triggered()
 //Exports the actual slider settings to a file
 void MainWindow::on_actionExportReceipt_triggered()
 {
+    if( m_lastActiveClipInSession < 0 ) return;
+    if( m_lastActiveClipInSession >= m_pSessionReceipts.count() ) return;
+
     //Stop playback if active
     ui->actionPlay->setChecked( false );
 
@@ -3281,6 +3286,7 @@ void MainWindow::on_actionExportReceipt_triggered()
 
     //Abort selected
     if( fileName.count() == 0 ) return;
+    if( !fileName.endsWith( ".marxml", Qt::CaseInsensitive ) ) fileName.append( ".marxml" );
     m_lastReceiptFileName = fileName;
 
     //Save slider receipt
@@ -3989,6 +3995,7 @@ void MainWindow::deleteSession()
 
     //If no clip loaded, import receipt is disabled
     ui->actionImportReceipt->setEnabled( false );
+    ui->actionExportReceipt->setEnabled( false );
     //If no clip loaded, disable session save
     ui->actionSaveSession->setEnabled( false );
     ui->actionSaveAsSession->setEnabled( false );

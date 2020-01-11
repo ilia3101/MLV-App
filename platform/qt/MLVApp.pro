@@ -177,8 +177,7 @@ SOURCES += \
 
 macx: SOURCES += ../cocoa/avf_lib/avf_lib.m
 
-HEADERS += \
-        MainWindow.h \
+HEADERS += MainWindow.h \
     ../../src/debayer/debayer.h \
     ../../src/debayer/helpersse2.h \
     ../../src/debayer/conv.h \
@@ -375,7 +374,7 @@ windows{
 }
 
 #to deploy the project with QT Creators "Deploy [All|Project]" feature in Menu->Build.
-#in "Projects->Run Settings->Make->Make arguments" field put argument "install". Qt Creator deploy feature will get active.
+#in "Projects->Run Settings->Add Deploy Step->Make->Make arguments" field put argument "install". Qt Creator deploy feature will get active.
 linux-g++ {
     target.path = $$(HOME)/bin
     desktop.path = $$(HOME)/.local/share/applications
@@ -383,7 +382,7 @@ linux-g++ {
     icon512.path = $$(HOME)/.local/share/icons/hicolor/512x512/apps
     icon512.files += RetinaIMG/MLVAPP.png
     tools.path = target.path
-    unix:tools.extra = mkdir -p $$(HOME)/bin; tar -C $$(HOME)/bin -xvJf $$_PRO_FILE_PWD_/FFmpeg/ffmpegLinux.tar.xz --strip-components=1 --wildcards */ffmpeg; tar -C $$(HOME)/bin -xvJf $$_PRO_FILE_PWD_/raw2mlv/raw2mlvLinux.tar.xz --strip-components=1 --wildcards */raw2mlv
+    tools.extra = mkdir -p $$(HOME)/bin; tar -C $$(HOME)/bin -xvJf $$_PRO_FILE_PWD_/FFmpeg/ffmpegLinux.tar.xz --strip-components=1 --wildcards */ffmpeg; tar -C $$(HOME)/bin -xvJf $$_PRO_FILE_PWD_/raw2mlv/raw2mlvLinux.tar.xz --strip-components=1 --wildcards */raw2mlv
 
     INSTALLS += target desktop icon512 tools
 }
