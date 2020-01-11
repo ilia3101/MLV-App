@@ -541,6 +541,7 @@ void applyProcessingObject( processingObject_t * processing,
 
 /* Colour tonemap function for smooth gamut mapping */
 static float Reinhard_for_colour(float x) { return (x < 0.5f) ? x : (ReinhardTonemap_f((x-0.5f)/0.5f)*0.5f+0.5f); }
+static float Reinhard_for_blue(float x) { return (x < 0.7f) ? x : (ReinhardTonemap_f((x-0.7f)/0.3f)*0.3f+0.7f); }
 
 /* A private part of the processing machine */
 void apply_processing_object( processingObject_t * processing,
@@ -781,12 +782,14 @@ void apply_processing_object( processingObject_t * processing,
                     if (i == 0)
                         tonemapped = Reinhard_for_colour(Y_to_min_channel);
                     else
-                        tonemapped = Reinhard_for_colour(Y_to_min_channel);
+                        tonemapped = Reinhard_for_blue(Y_to_min_channel);
 
                     result2[i] = /* (result[i] - Y) * */ -(tonemapped * Y)+Y;
                 }
 
                 float desaturate_factor = (Y - MIN(MIN(result2[0],result2[1]),result2[2])) / (Y - min_channel);
+
+                if (Y <= 0.0f) desaturate_factor = 1;
 
                 /* Fade out to not do it above 5100K */
                 // int mixfac = (processing->kelvin-2900) / 2200.0;
@@ -843,10 +846,11 @@ void apply_processing_object( processingObject_t * processing,
                         if (i == 0)
                             tonemapped = Reinhard_for_colour(Y_to_min_channel);
                         else
-                            tonemapped = Reinhard_for_colour(Y_to_min_channel);
+                            tonemapped = Reinhard_for_blue(Y_to_min_channel);
                         result2[i] = /* (result[i] - Y) * */ -(tonemapped * Y)+Y;
                     }
-                    float desaturate_factor = (Y - MIN(MIN(result2[0],result2[1]),result2[2])) / (Y - min_channel);
+                    float desaturate_factor = (Y - MIN(MIN(result2[0],result2[1]),result2[2])) / (Y - min_channel) * MIN(Y * 20.0f, 1.0f);
+                    if (Y <= 0.0f) desaturate_factor = 1;
                     for (int i = 0; i < 3; ++i) result[i] = (result[i] - Y) * desaturate_factor + Y; 
                 }
                 pixg[0] = LIMIT16(result[0]);
@@ -1427,7 +1431,8 @@ void processingSetWhiteBalance(processingObject_t * processing, double WBKelvin,
     //     cam_to_xyz_final[i] = cam_to_xyz_A[i]*(1.0-mixfac) + cam_to_xyz_D[i]*mixfac;
     // }
     // if (WBKelvin > 5000)
-    /* TODO: ix this, only using daylight matrix right now as canon 50D colours went weird on luther samples */
+    /* TODO: ix this, only using daylight matrix right now as canon 50D colours went weird on luther samples
+          ... See page 79 of DNG spec 1.4.0.0 - "One or Two Color Calibrations" */
         for (int i = 0; i < 9; ++i)
         {
             cam_to_xyz_final[i] = cam_to_xyz_D[i];
