@@ -1521,6 +1521,7 @@ void processingSetGamma(processingObject_t * processing, double gammaValue)
     }
     /* So highlight reconstruction works */
     processing_update_highest_green(processing);
+    processingSetGammaGradient(processing, gammaValue); /* Cool */
 }
 
 /* Set gamma for gradient image part (Log-ing / tonemapping done here) */
