@@ -6135,9 +6135,9 @@ void MainWindow::on_actionExport_triggered()
         }
     }
 
-    //If one file is selected, but not CDNG
+    //If one clip is selected, but is not a sequence
     if( ( ui->listWidgetSession->selectedItems().count() <= 1 )
-     && ( ( m_codecProfile != CODEC_CDNG ) && ( m_codecProfile != CODEC_CDNG_LOSSLESS ) && ( m_codecProfile != CODEC_CDNG_FAST ) ) )
+     && !isExportSequence() )
     {
         //File Dialog
         QString fileName = QFileDialog::getSaveFileName( this, tr("Export..."),
@@ -6154,7 +6154,7 @@ void MainWindow::on_actionExport_triggered()
         //Get receipt into queue
         addClipToExportQueue( m_lastActiveClipInSession, fileName );
     }
-    //if multiple files selected
+    //if multiple files selected or >= 1 sequence
     else
     {
         //Folder Dialog
@@ -6169,11 +6169,24 @@ void MainWindow::on_actionExport_triggered()
         for( int row = 0; row < ui->listWidgetSession->count(); row++ )
         {
             if( !ui->listWidgetSession->item( row )->isSelected() ) continue;
-            QString fileName = ui->listWidgetSession->item( row )->text().replace( ".mlv", fileEnding, Qt::CaseInsensitive );
-            fileName.prepend( "/" );
-            fileName.prepend( folderName );
+            //Sequences
+            if( isExportSequence() )
+            {
+                QString fileName = ui->listWidgetSession->item( row )->text().replace( ".mlv", "", Qt::CaseInsensitive );
+                fileName.prepend( "/" );
+                fileName.prepend( folderName );
 
-            if( QFileInfo( fileName ).exists() ) overwriteList.append( fileName );
+                if( QDir( fileName ).exists() ) overwriteList.append( fileName.append( "/..." ) );
+            }
+            //Clips
+            else
+            {
+                QString fileName = ui->listWidgetSession->item( row )->text().replace( ".mlv", fileEnding, Qt::CaseInsensitive );
+                fileName.prepend( "/" );
+                fileName.prepend( folderName );
+
+                if( QFileInfo( fileName ).exists() ) overwriteList.append( fileName );
+            }
         }
         if( !overwriteList.empty() )
         {
@@ -6397,6 +6410,18 @@ void MainWindow::resultingResolution( void )
     int x = getMlvWidth( m_pMlvObject ) * getHorizontalStretchFactor( false );
     int y = getMlvHeight( m_pMlvObject ) * getVerticalStretchFactor( false );
     ui->label_resResolution->setText( QString( "%1 x %2 pixels" ).arg(x).arg(y) );
+}
+
+//Is the current export setting set to sequnce?
+bool MainWindow::isExportSequence()
+{
+    if( ( m_codecProfile == CODEC_CDNG )
+     || ( m_codecProfile == CODEC_CDNG_LOSSLESS )
+     || ( m_codecProfile == CODEC_CDNG_FAST )
+     || ( m_codecProfile == CODEC_PNG )
+     || ( m_codecProfile == CODEC_JPG2K && m_codecOption == CODEC_JPG2K_SEQ )
+     || ( m_codecProfile == CODEC_TIFF && m_codecOption == CODEC_TIFF_SEQ ) ) return true;
+    else return false;
 }
 
 //Chose filter
