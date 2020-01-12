@@ -9509,6 +9509,10 @@ void MainWindow::on_actionUseDefaultReceipt_triggered(bool checked)
                                            tr("MLV App Receipt Xml files (*.marxml)"));
 
     //Abort selected
-    if( fileName.count() == 0 ) return;
+    if( fileName.count() == 0 )
+    {
+        ui->actionUseDefaultReceipt->setChecked( false );
+        return;
+    }
     m_defaultReceiptFileName = fileName;
 }
