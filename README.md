@@ -4,7 +4,7 @@ What is MLV App? Lightroom, but for Magic Lantern MLV Video (and open source and
 ![MLV App](https://user-images.githubusercontent.com/30245296/64981183-c8bfae80-d8bb-11e9-9b0c-cd1f8041953f.png)
 
 ## Useful links
-- [Find the latest official releases here](https://ilia3101.github.io/MLV-App/). Download, unpack and start
+- [Find the latest official releases here](https://mlv.app). Download, unpack and start
 - Find debian packages [here](http://phd-sid.ethz.ch/debian/mlv-app/) (thanks to @alexmyczko)
 - Ask questions on the [Magic Lantern forum thread](https://www.magiclantern.fm/forum/index.php?topic=20025.0)
 - Report bugs on the [issues page](https://github.com/ilia3101/MLV-App/issues)
