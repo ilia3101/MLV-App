@@ -4239,7 +4239,7 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     ui->horizontalSliderVignetteShape->blockSignals( true );
     ui->horizontalSliderVignetteShape->setValue( receipt->vignetteShape() );
     ui->horizontalSliderVignetteShape->blockSignals( false );
-    on_horizontalSliderVignetteShape_valueChanged( receipt->vignetteShape() );
+    ui->label_VignetteShapeVal->setText( QString("%1").arg( receipt->vignetteShape() ) ); //Just enter value, rendering through next parameter
     ui->horizontalSliderVignetteRadius->blockSignals( true );
     ui->horizontalSliderVignetteRadius->setValue( receipt->vignetteRadius() );
     ui->horizontalSliderVignetteRadius->blockSignals( false );
