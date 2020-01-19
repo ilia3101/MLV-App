@@ -4239,6 +4239,7 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     ui->horizontalSliderVignetteShape->blockSignals( true );
     ui->horizontalSliderVignetteShape->setValue( receipt->vignetteShape() );
     ui->horizontalSliderVignetteShape->blockSignals( false );
+    on_horizontalSliderVignetteShape_valueChanged( receipt->vignetteShape() );
     ui->horizontalSliderVignetteRadius->blockSignals( true );
     ui->horizontalSliderVignetteRadius->setValue( receipt->vignetteRadius() );
     ui->horizontalSliderVignetteRadius->blockSignals( false );
