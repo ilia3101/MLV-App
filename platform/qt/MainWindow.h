@@ -526,6 +526,7 @@ private:
     void selectDebayerAlgorithm( void );
     void enableCreativeAdjustments( bool enable );
     void resultingResolution( void );
+    bool isExportSequence( void );
 
 signals:
     void exportReady( void );
