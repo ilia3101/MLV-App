@@ -78,6 +78,8 @@ processingObject_t * initProcessingObject()
 {
     processingObject_t * processing = calloc( 1, sizeof(processingObject_t) );
 
+    processing->exr_mode = 0;
+
     processing->filter = initFilterObject();
 
     processing->lut = init_lut();
@@ -764,6 +766,7 @@ void apply_processing_object( processingObject_t * processing,
             //     for (int i = 0; i < 3; ++i) result[i] = (result[i] - Y) * multiplier + Y; 
             // }
 
+            if (!processing->exr_mode)
             {
                 /* Bring the colour back in to gamut by desaturating it, this will preserve hue and avoid ugliest clipping */
                 float Y = rgb_to_Y[0] * result[0]
@@ -796,7 +799,7 @@ void apply_processing_object( processingObject_t * processing,
                 // mixfac = MAX(MIN(1.0, mixfac), 0.0);
                 // desaturate_factor = desaturate_factor*(1.0f-mixfac) + mixfac;
 
-                for (int i = 0; i < 3; ++i) result[i] = (result[i] - Y) * desaturate_factor + Y; 
+                for (int i = 0; i < 3; ++i) result[i] = (result[i] - Y) * desaturate_factor + Y;
             }
 
             // if (result[2] < 0 || result[0] < 0 || result[1] < 0)
@@ -830,6 +833,7 @@ void apply_processing_object( processingObject_t * processing,
                 result[0] = pix0b * processing->proper_wb_matrix[0] + pix1b * processing->proper_wb_matrix[1] + pix2b * processing->proper_wb_matrix[2];
                 result[1] = pix0b * processing->proper_wb_matrix[3] + pix1b * processing->proper_wb_matrix[4] + pix2b * processing->proper_wb_matrix[5];
                 result[2] = pix0b * processing->proper_wb_matrix[6] + pix1b * processing->proper_wb_matrix[7] + pix2b * processing->proper_wb_matrix[8];
+                if (!processing->exr_mode)
                 {
                     /* Bring the colour back in to gamut by desaturating it, this will preserve hue and avoid ugliest clipping */
                     float Y = rgb_to_Y[0] * result[0]
