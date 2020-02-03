@@ -15,7 +15,6 @@ typedef struct {
 /* Processing settings structure (a mess) */
 typedef struct {
 
-    /* Is it in exrmode (internal flag enabled for getting EXR data) */
     int exr_mode;
 
     filterObject_t * filter;
