@@ -1133,6 +1133,9 @@ void MainWindow::initGui( void )
     //Set tooltips
     ui->toolButtonCutIn->setToolTip( tr( "Set Cut In    %1" ).arg( ui->toolButtonCutIn->shortcut().toString() ) );
     ui->toolButtonCutOut->setToolTip( tr( "Set Cut Out    %1" ).arg( ui->toolButtonCutOut->shortcut().toString() ) );
+    ui->toolButtonBadPixelsSearchMethodEdit->setToolTip( tr( "%1    %2" )
+                                                         .arg( ui->toolButtonBadPixelsSearchMethodEdit->toolTip() )
+                                                         .arg( ui->toolButtonBadPixelsSearchMethodEdit->shortcut().toString() ) );
     //Set disabled select all and delete clip
     ui->actionDeleteSelectedClips->setEnabled( false );
     ui->actionSelectAllClips->setEnabled( false );

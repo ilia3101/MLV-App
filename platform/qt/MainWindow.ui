@@ -1246,6 +1246,9 @@ QGroupBox::indicator:checked:disabled {
                           <height>12</height>
                          </size>
                         </property>
+                        <property name="shortcut">
+                         <string>M</string>
+                        </property>
                         <property name="checkable">
                          <bool>true</bool>
                         </property>
@@ -1274,7 +1277,7 @@ QGroupBox::indicator:checked:disabled {
                          </font>
                         </property>
                         <property name="toolTip">
-                         <string>Mark Bad Pixe with Cross</string>
+                         <string>Mark Bad Pixel with Cross</string>
                         </property>
                         <property name="text">
                          <string/>
