@@ -3157,7 +3157,7 @@ void MainWindow::saveSession(QString fileName)
     xmlWriter.writeStartDocument();
 
     xmlWriter.writeStartElement( "mlv_files" );
-    xmlWriter.writeAttribute( "version", "3" );
+    xmlWriter.writeAttribute( "version", "4" );
     xmlWriter.writeAttribute( "mlvapp", VERSION );
     for( int i = 0; i < ui->listWidgetSession->count(); i++ )
     {
@@ -3304,7 +3304,7 @@ void MainWindow::on_actionExportReceipt_triggered()
     xmlWriter.writeStartDocument();
 
     xmlWriter.writeStartElement( "receipt" );
-    xmlWriter.writeAttribute( "version", "3" );
+    xmlWriter.writeAttribute( "version", "4" );
     xmlWriter.writeAttribute( "mlvapp", VERSION );
 
     writeXmlElementsToFile( &xmlWriter, m_pSessionReceipts.at( m_lastActiveClipInSession ) );
@@ -3690,7 +3690,8 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
         }
         else if( Rxml->isStartElement() && Rxml->name() == "rawBlack" )
         {
-            receipt->setRawBlack( Rxml->readElementText().toInt() );
+            if( version < 4 ) receipt->setRawBlack( Rxml->readElementText().toInt() * 10 );
+            else  receipt->setRawBlack( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
         else if( Rxml->isStartElement() && Rxml->name() == "rawWhite" )
@@ -5635,9 +5636,9 @@ void MainWindow::on_horizontalSliderRawWhite_valueChanged(int position)
     {
         position = getMlvOriginalWhiteLevel( m_pMlvObject );
     }
-    else if( position <= ui->horizontalSliderRawBlack->value() + 1 )
+    else if( position <= ui->horizontalSliderRawBlack->value() / 10.0 + 1 )
     {
-        position = ui->horizontalSliderRawBlack->value() + 1;
+        position = ui->horizontalSliderRawBlack->value() / 10.0 + 1;
         ui->horizontalSliderRawWhite->setValue( position );
     }
 
@@ -5661,24 +5662,26 @@ void MainWindow::on_horizontalSliderRawBlack_valueChanged(int position)
     if( getMlvBitdepth( m_pMlvObject ) == 0 ) return;
     if( getMlvBitdepth( m_pMlvObject ) > 16 ) return;
 
-    ui->label_RawBlackVal->setText( QString("%1").arg( position ) );
+    double rawBlack = position / 10.0;
+
+    ui->label_RawBlackVal->setText( QString("%1").arg( rawBlack, 0, 'f', 1 ) );
 
     if( !ui->checkBoxRawFixEnable->isChecked() )
     {
-        position = getMlvOriginalBlackLevel( m_pMlvObject );
+        rawBlack = getMlvOriginalBlackLevel( m_pMlvObject );
     }
-    else if( position >= ui->horizontalSliderRawWhite->value() - 1 )
+    else if( rawBlack >= ui->horizontalSliderRawWhite->value() - 1 )
     {
-        position = ui->horizontalSliderRawWhite->value() - 1;
-        ui->horizontalSliderRawBlack->setValue( position );
+        rawBlack = ui->horizontalSliderRawWhite->value() - 1;
+        ui->horizontalSliderRawBlack->setValue( rawBlack * 10 );
     }
 
     while( !m_pRenderThread->isIdle() ) QThread::msleep(1);
 
     /* Set mlv raw white level to the slider value */
-    setMlvBlackLevel( m_pMlvObject, position );
+    setMlvBlackLevel( m_pMlvObject, rawBlack );
     /* Set processing white level with correction */
-    processingSetBlackLevel( m_pProcessingObject, position, getMlvBitdepth( m_pMlvObject ) );
+    processingSetBlackLevel( m_pProcessingObject, rawBlack, getMlvBitdepth( m_pMlvObject ) );
 
     llrpResetFpmStatus(m_pMlvObject);
     llrpResetBpmStatus(m_pMlvObject);
@@ -5976,7 +5979,7 @@ void MainWindow::on_horizontalSliderRawWhite_doubleClicked()
 
 void MainWindow::on_horizontalSliderRawBlack_doubleClicked()
 {
-    ui->horizontalSliderRawBlack->setValue( getMlvOriginalBlackLevel( m_pMlvObject ) );
+    ui->horizontalSliderRawBlack->setValue( getMlvOriginalBlackLevel( m_pMlvObject ) * 10 );
 }
 
 void MainWindow::on_horizontalSliderTone_doubleClicked()
@@ -6640,7 +6643,7 @@ void MainWindow::on_actionResetReceipt_triggered()
     ReceiptSettings *sliders = new ReceiptSettings(); //default
     if( ui->actionUseDefaultReceipt->isChecked() ) resetReceiptWithDefault( sliders );
     sliders->setRawWhite( getMlvOriginalWhiteLevel( m_pMlvObject ) );
-    sliders->setRawBlack( getMlvOriginalBlackLevel( m_pMlvObject ) );
+    sliders->setRawBlack( getMlvOriginalBlackLevel( m_pMlvObject ) * 10 );
     setSliders( sliders, false );
     delete sliders;
 }
@@ -7318,7 +7321,7 @@ void MainWindow::on_label_RawWhiteVal_doubleClicked()
 void MainWindow::on_label_RawBlackVal_doubleClicked()
 {
     EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderRawBlack, ui->label_RawBlackVal, 1.0, 0, 1.0 );
+    editSlider.autoSetup( ui->horizontalSliderRawBlack, ui->label_RawBlackVal, 10.0, 1, 10.0 );
     editSlider.exec();
     ui->horizontalSliderRawBlack->setValue( editSlider.getValue() );
 }
@@ -8693,14 +8696,14 @@ void MainWindow::initCutInOut(int frames)
 void MainWindow::initRawBlackAndWhite()
 {
     ui->horizontalSliderRawBlack->blockSignals( true );
-    ui->horizontalSliderRawBlack->setMaximum( ( 2 << ( getMlvBitdepth( m_pMlvObject ) - 1 ) ) - 1 );
+    ui->horizontalSliderRawBlack->setMaximum( ( ( 2 << ( getMlvBitdepth( m_pMlvObject ) - 1 ) ) - 1 ) * 10 );
     ui->horizontalSliderRawBlack->blockSignals( false );
     ui->horizontalSliderRawWhite->blockSignals( true );
     ui->horizontalSliderRawWhite->setMaximum( ( 2 << ( getMlvBitdepth( m_pMlvObject ) - 1 ) ) - 1 );
     ui->horizontalSliderRawWhite->setValue( ( 2 << ( getMlvBitdepth( m_pMlvObject ) - 1 ) ) - 1 ); //set value to max, because otherwise the new black value is blocked by old white value
     ui->horizontalSliderRawWhite->blockSignals( false );
-    ui->horizontalSliderRawBlack->setValue( getMlvOriginalBlackLevel( m_pMlvObject ) );
-    on_horizontalSliderRawBlack_valueChanged( getMlvOriginalBlackLevel( m_pMlvObject ) );
+    ui->horizontalSliderRawBlack->setValue( getMlvOriginalBlackLevel( m_pMlvObject ) * 10 );
+    on_horizontalSliderRawBlack_valueChanged( getMlvOriginalBlackLevel( m_pMlvObject ) * 10 );
     ui->horizontalSliderRawWhite->setValue( getMlvOriginalWhiteLevel( m_pMlvObject ) );
     on_horizontalSliderRawWhite_valueChanged( getMlvOriginalWhiteLevel( m_pMlvObject ) );
 }
@@ -9175,7 +9178,7 @@ void MainWindow::on_toolButtonRawBlackAutoCorrect_clicked()
 {
     int value = autoCorrectRawBlackLevel();
     if( value != getMlvOriginalBlackLevel( m_pMlvObject ) )
-        ui->horizontalSliderRawBlack->setValue( value );
+        ui->horizontalSliderRawBlack->setValue( value * 10 );
 }
 
 //Open UserManualDialog
