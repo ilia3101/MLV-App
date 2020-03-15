@@ -74,9 +74,9 @@ QImage AudioWave::getMonoWave(int16_t *pAudioTrack, uint64_t audioSize, uint16_t
                 y = pAudioTrack[ ( ( pointPackageSize * x ) + i ) ];
             }
             //negativ part (mirrored)
-            else if( pAudioTrack[ ( ( pointPackageSize * x ) + i ) ] < -y )
+            else if( -pAudioTrack[ ( ( pointPackageSize * x ) + i ) ] > y )
             {
-                y = -pAudioTrack[ ( ( pointPackageSize * x ) + i ) ];
+                y = -pAudioTrack[ ( ( pointPackageSize * x ) + i ) ] - 1;
             }
         }
 
