@@ -4117,6 +4117,9 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     ui->checkBoxCreativeAdjustments->setChecked( receipt->allowCreativeAdjustments() );
     on_checkBoxCreativeAdjustments_toggled( receipt->allowCreativeAdjustments() );
 
+    ui->checkBoxExrMode->setChecked(  receipt->exrMode() );
+    on_checkBoxExrMode_toggled( receipt->exrMode() );
+
     ui->horizontalSliderDenoiseStrength->setValue( receipt->denoiserStrength() );
     ui->comboBoxDenoiseWindow->setCurrentIndex( receipt->denoiserWindow() - 2 );
     on_comboBoxDenoiseWindow_currentIndexChanged( receipt->denoiserWindow() - 2 );
@@ -4335,6 +4338,7 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     receipt->setGamut( ui->comboBoxProcessingGamut->currentIndex() );
     receipt->setGamma( ui->horizontalSliderGamma->value() );
     receipt->setAllowCreativeAdjustments( ui->checkBoxCreativeAdjustments->isChecked() );
+    receipt->setExrMode( ui->checkBoxExrMode->isChecked() );
     receipt->setDenoiserStrength( ui->horizontalSliderDenoiseStrength->value() );
     receipt->setDenoiserWindow( ui->comboBoxDenoiseWindow->currentIndex() + 2 );
     receipt->setRbfDenoiserLuma( ui->horizontalSliderRbfDenoiseLuma->value() );
@@ -4453,6 +4457,7 @@ void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings 
     {
         receiptTarget->setProfile( receiptSource->profile() );
         receiptTarget->setAllowCreativeAdjustments( receiptSource->allowCreativeAdjustments() );
+        receiptTarget->setExrMode( receiptSource->exrMode() );
         receiptTarget->setTonemap( receiptSource->tonemap() );
         receiptTarget->setGamut( receiptSource->gamut() );
         receiptTarget->setGamma( receiptSource->gamma() );
@@ -4627,6 +4632,7 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     receipt->setChromaSeparation( m_pSessionReceipts.at( row )->isChromaSeparation() );
     receipt->setProfile( m_pSessionReceipts.at( row )->profile() );
     receipt->setAllowCreativeAdjustments( m_pSessionReceipts.at( row )->allowCreativeAdjustments() );
+    receipt->setExrMode( m_pSessionReceipts.at( row )->exrMode() );
     receipt->setTonemap( m_pSessionReceipts.at( row )->tonemap() );
     receipt->setGamut( m_pSessionReceipts.at( row )->gamut() );
     receipt->setGamma( m_pSessionReceipts.at( row )->gamma() );
@@ -6281,6 +6287,8 @@ void MainWindow::on_comboBoxUseCameraMatrix_currentIndexChanged(int index)
 
     ui->label_Gamut->setEnabled( (bool)index );
     ui->comboBoxProcessingGamut->setEnabled( (bool)index );
+    ui->checkBoxExrMode->setEnabled( index > 0 );
+    ui->checkBoxExrMode->setChecked( index > 0 );
 
     m_frameChanged = true;
 }
@@ -6299,6 +6307,20 @@ void MainWindow::on_checkBoxCreativeAdjustments_toggled(bool checked)
         processingDontAllowCreativeAdjustments( m_pProcessingObject );
     }
     if( ui->checkBoxCreativeAdjustments->isEnabled() ) enableCreativeAdjustments( checked );
+    m_frameChanged = true;
+}
+
+//EXR Mode changed
+void MainWindow::on_checkBoxExrMode_toggled(bool checked)
+{
+    if( !checked )
+    {
+        processingEnableExr( m_pProcessingObject );
+    }
+    else
+    {
+        processingDisableExr( m_pProcessingObject );
+    }
     m_frameChanged = true;
 }
 

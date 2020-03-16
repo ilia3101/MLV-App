@@ -193,6 +193,10 @@ void processingSetToning(processingObject_t * processing, uint8_t r, uint8_t g, 
 #define processingDontUseCamMatrix(processing) (processing)->use_cam_matrix = 0
 #define processingGetUsedCamMatrix(processing) ((processing)->use_cam_matrix)
 
+/* EXR mode */
+#define processingEnableExr(processing) (processing)->exr_mode = 1
+#define processingDisableExr(processing) (processing)->exr_mode = 0
+
 /* Set Camera RAW matrix (matrix A is for tungsten) */
 void processingSetCamMatrix(processingObject_t * processing, double * camMatrix, double * camMatrixA);
 
