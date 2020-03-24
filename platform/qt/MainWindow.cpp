@@ -3012,6 +3012,8 @@ void MainWindow::addFileToSession(QString fileName)
     if( ui->actionUseDefaultReceipt->isChecked() ) resetReceiptWithDefault( sliders );
     sliders->setFileName( fileName );
     m_pSessionReceipts.append( sliders );
+    //Remove color unloaded clip
+    ui->listWidgetSession->item( m_lastActiveClipInSession )->setBackgroundColor( QColor( 0, 0, 0, 0 ) );
     //Save index of active clip
     m_lastActiveClipInSession = ui->listWidgetSession->row( item );
     //Set this row to current row
