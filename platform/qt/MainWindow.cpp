@@ -4045,6 +4045,23 @@ bool MainWindow::isFileInSession(QString fileName)
     return false;
 }
 
+//paste the clipboard to the clip in row
+void MainWindow::pasteReceiptFromClipboardTo(int row)
+{
+    //Save current settings into receipt
+    if( row == m_lastActiveClipInSession )
+    {
+        setReceipt( m_pSessionReceipts.at(row) );
+    }
+    //Each selected clip gets the copied receipt
+    replaceReceipt( m_pSessionReceipts.at(row), m_pReceiptClipboard, true );
+    //If the actual is selected (may have changed since copy action), set sliders and get receipt
+    if( row == m_lastActiveClipInSession )
+    {
+        setSliders( m_pSessionReceipts.at(row), true );
+    }
+}
+
 //Set the edit sliders to settings
 void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
 {
@@ -4571,8 +4588,15 @@ int MainWindow::showFileInEditor(int row)
     m_pSessionReceipts.at( row )->setLoaded();
     //Set sliders to receipt
     setSliders( m_pSessionReceipts.at( row ), false );
+
+    //Remove color unloaded clip
+    ui->listWidgetSession->item( m_lastActiveClipInSession )->setBackgroundColor( QColor( 0, 0, 0, 0 ) );
+
     //Save new position in session
     m_lastActiveClipInSession = row;
+
+    //Set color loaded clip
+    ui->listWidgetSession->item( m_lastActiveClipInSession )->setBackgroundColor( QColor( 255, 200, 0, 128 ) );
 
     //Caching is in which state? Set it!
     if( ui->actionCaching->isChecked() ) on_actionCaching_triggered();
@@ -6682,21 +6706,17 @@ void MainWindow::on_actionCopyRecept_triggered()
 //Paste receipt from clipboard
 void MainWindow::on_actionPasteReceipt_triggered()
 {
-    for( int row = 0; row < ui->listWidgetSession->count(); row++ )
+    if( ui->listWidgetSession->selectedItems().count() )
     {
-        if( !ui->listWidgetSession->item( row )->isSelected() ) continue;
-        //Save current settings into receipt
-        if( row == m_lastActiveClipInSession )
+        for( int row = 0; row < ui->listWidgetSession->count(); row++ )
         {
-            setReceipt( m_pSessionReceipts.at(row) );
+            if( !ui->listWidgetSession->item( row )->isSelected() ) continue;
+            pasteReceiptFromClipboardTo( row );
         }
-        //Each selected clip gets the copied receipt
-        replaceReceipt( m_pSessionReceipts.at(row), m_pReceiptClipboard, true );
-        //If the actual is selected (may have changed since copy action), set sliders and get receipt
-        if( row == m_lastActiveClipInSession )
-        {
-            setSliders( m_pSessionReceipts.at(row), true );
-        }
+    }
+    else
+    {
+        pasteReceiptFromClipboardTo( m_lastActiveClipInSession );
     }
 }
 

@@ -472,6 +472,7 @@ private:
     void writeXmlElementsToFile( QXmlStreamWriter *xmlWriter, ReceiptSettings *receipt );
     void deleteSession( void );
     bool isFileInSession( QString fileName );
+    void pasteReceiptFromClipboardTo( int row );
     void setSliders(ReceiptSettings *sliders , bool paste);
     void setReceipt( ReceiptSettings *sliders );
     void replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings *receiptSource , bool paste);
