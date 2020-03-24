@@ -6698,8 +6698,14 @@ void MainWindow::on_actionResetReceipt_triggered()
 void MainWindow::on_actionCopyRecept_triggered()
 {
     m_pCopyMask->exec();
-
-    setReceipt( m_pReceiptClipboard );
+    if( ui->listWidgetSession->selectedItems().count() == 1 )
+    {
+        replaceReceipt( m_pReceiptClipboard, m_pSessionReceipts.at( ui->listWidgetSession->currentRow() ), true );
+    }
+    else
+    {
+        setReceipt( m_pReceiptClipboard );
+    }
     ui->actionPasteReceipt->setEnabled( true );
 }
 
