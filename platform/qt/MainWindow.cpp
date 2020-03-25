@@ -3013,7 +3013,7 @@ void MainWindow::addFileToSession(QString fileName)
     sliders->setFileName( fileName );
     m_pSessionReceipts.append( sliders );
     //Remove color unloaded clip
-    if( m_lastActiveClipInSession < ui->listWidgetSession->count() ) ui->listWidgetSession->item( m_lastActiveClipInSession )->setBackgroundColor( QColor( 0, 0, 0, 0 ) );
+    if( m_lastActiveClipInSession < ui->listWidgetSession->count() ) ui->listWidgetSession->item( m_lastActiveClipInSession )->setForeground( Qt::white );
     //Save index of active clip
     m_lastActiveClipInSession = ui->listWidgetSession->row( item );
     //Set this row to current row
@@ -4591,13 +4591,13 @@ int MainWindow::showFileInEditor(int row)
     setSliders( m_pSessionReceipts.at( row ), false );
 
     //Remove color unloaded clip
-    ui->listWidgetSession->item( m_lastActiveClipInSession )->setBackgroundColor( QColor( 0, 0, 0, 0 ) );
+    ui->listWidgetSession->item( m_lastActiveClipInSession )->setForeground( Qt::white );
 
     //Save new position in session
     m_lastActiveClipInSession = row;
 
     //Set color loaded clip
-    ui->listWidgetSession->item( m_lastActiveClipInSession )->setBackgroundColor( QColor( 255, 200, 0, 128 ) );
+    ui->listWidgetSession->item( m_lastActiveClipInSession )->setForeground( QColor( 255, 154, 50 ) );
 
     //Caching is in which state? Set it!
     if( ui->actionCaching->isChecked() ) on_actionCaching_triggered();
