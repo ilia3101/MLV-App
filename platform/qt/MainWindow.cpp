@@ -3278,8 +3278,7 @@ void MainWindow::on_actionImportReceipt_triggered()
 //Exports the actual slider settings to a file
 void MainWindow::on_actionExportReceipt_triggered()
 {
-    if( m_lastActiveClipInSession < 0 ) return;
-    if( m_lastActiveClipInSession >= m_pSessionReceipts.count() ) return;
+    if( ui->listWidgetSession->selectedItems().count() != 1 ) return;
 
     //Stop playback if active
     ui->actionPlay->setChecked( false );
@@ -3309,7 +3308,7 @@ void MainWindow::on_actionExportReceipt_triggered()
     xmlWriter.writeAttribute( "version", "4" );
     xmlWriter.writeAttribute( "mlvapp", VERSION );
 
-    writeXmlElementsToFile( &xmlWriter, m_pSessionReceipts.at( m_lastActiveClipInSession ) );
+    writeXmlElementsToFile( &xmlWriter, m_pSessionReceipts.at( ui->listWidgetSession->currentRow() ) );
 
     xmlWriter.writeEndElement();
     xmlWriter.writeEndDocument();
@@ -6699,16 +6698,16 @@ void MainWindow::on_actionResetReceipt_triggered()
 //Copy receipt to clipboard
 void MainWindow::on_actionCopyRecept_triggered()
 {
-    m_pCopyMask->exec();
     if( ui->listWidgetSession->selectedItems().count() == 1 )
     {
+        //Save slider receipt
+        setReceipt( m_pSessionReceipts.at( m_lastActiveClipInSession ) );
+        //Copy mask
+        m_pCopyMask->exec();
+        //Save selected to clipboard
         replaceReceipt( m_pReceiptClipboard, m_pSessionReceipts.at( ui->listWidgetSession->currentRow() ), true );
+        ui->actionPasteReceipt->setEnabled( true );
     }
-    else
-    {
-        setReceipt( m_pReceiptClipboard );
-    }
-    ui->actionPasteReceipt->setEnabled( true );
 }
 
 //Paste receipt from clipboard
