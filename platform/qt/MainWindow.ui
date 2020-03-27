@@ -170,6 +170,11 @@
     <addaction name="actionDeleteSelectedClips"/>
     <addaction name="separator"/>
     <addaction name="actionWhiteBalancePicker"/>
+    <addaction name="separator"/>
+    <addaction name="actionMarkRed"/>
+    <addaction name="actionMarkYellow"/>
+    <addaction name="actionMarkGreen"/>
+    <addaction name="actionUnmark"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -268,6 +273,11 @@
     <addaction name="menuTheme"/>
     <addaction name="separator"/>
     <addaction name="actionAskForSavingOnQuit"/>
+    <addaction name="separator"/>
+    <addaction name="actionShowRedClips"/>
+    <addaction name="actionShowYellowClips"/>
+    <addaction name="actionShowGreenClips"/>
+    <addaction name="actionShowUnmarkedClips"/>
    </widget>
    <widget class="QMenu" name="menuWindow">
     <property name="title">
@@ -457,7 +467,7 @@ QGroupBox::indicator:checked:disabled {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>-1724</y>
+            <y>0</y>
             <width>265</width>
             <height>5434</height>
            </rect>
@@ -10320,6 +10330,122 @@ QGroupBox::indicator:checked:disabled {
    </property>
    <property name="text">
     <string>Use Default Receipt</string>
+   </property>
+  </action>
+  <action name="actionMarkRed">
+   <property name="icon">
+    <iconset resource="ressources.qrc">
+     <normaloff>:/RetinaIMG/RetinaIMG/Actions-flag-red-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Actions-flag-red-icon.png</iconset>
+   </property>
+   <property name="text">
+    <string>Mark Clip Red</string>
+   </property>
+   <property name="toolTip">
+    <string>Mark Clip Red</string>
+   </property>
+   <property name="shortcut">
+    <string>1</string>
+   </property>
+  </action>
+  <action name="actionMarkYellow">
+   <property name="icon">
+    <iconset resource="ressources.qrc">
+     <normaloff>:/RetinaIMG/RetinaIMG/Actions-flag-yellow-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Actions-flag-yellow-icon.png</iconset>
+   </property>
+   <property name="text">
+    <string>Mark Clip Yellow</string>
+   </property>
+   <property name="toolTip">
+    <string>Mark Clip Yellow</string>
+   </property>
+   <property name="shortcut">
+    <string>2</string>
+   </property>
+  </action>
+  <action name="actionMarkGreen">
+   <property name="icon">
+    <iconset resource="ressources.qrc">
+     <normaloff>:/RetinaIMG/RetinaIMG/Actions-flag-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Actions-flag-icon.png</iconset>
+   </property>
+   <property name="text">
+    <string>Mark Clip Green</string>
+   </property>
+   <property name="toolTip">
+    <string>Mark Clip Green</string>
+   </property>
+   <property name="shortcut">
+    <string>3</string>
+   </property>
+  </action>
+  <action name="actionUnmark">
+   <property name="icon">
+    <iconset resource="ressources.qrc">
+     <normaloff>:/RetinaIMG/RetinaIMG/Actions-flag-black-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Actions-flag-black-icon.png</iconset>
+   </property>
+   <property name="text">
+    <string>Unmark Clip</string>
+   </property>
+   <property name="toolTip">
+    <string>Unmark Clip</string>
+   </property>
+   <property name="shortcut">
+    <string>0</string>
+   </property>
+  </action>
+  <action name="actionShowRedClips">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Red Clips</string>
+   </property>
+   <property name="shortcut">
+    <string>Alt+1</string>
+   </property>
+  </action>
+  <action name="actionShowGreenClips">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Green Clips</string>
+   </property>
+   <property name="shortcut">
+    <string>Alt+3</string>
+   </property>
+  </action>
+  <action name="actionShowYellowClips">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Yellow Clips</string>
+   </property>
+   <property name="shortcut">
+    <string>Alt+2</string>
+   </property>
+  </action>
+  <action name="actionShowUnmarkedClips">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Unmarked Clips</string>
+   </property>
+   <property name="shortcut">
+    <string>Alt+0</string>
    </property>
   </action>
  </widget>

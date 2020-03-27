@@ -3072,6 +3072,12 @@ void MainWindow::openSession(QString fileNameSession)
                             fileName = QDir( QFileInfo( fileNameSession ).path() ).filePath( relativeName );
                         }
                     }
+                    //Mark
+                    uint8_t mark = 0;
+                    if( Rxml.attributes().hasAttribute( "mark" ) )
+                    {
+                        mark = Rxml.attributes().value( "mark" ).toUShort();
+                    }
 
                     if( QFile( fileName ).exists() )
                     {
@@ -3082,10 +3088,12 @@ void MainWindow::openSession(QString fileNameSession)
                         //Open the file
                         openMlvForPreview( fileName );
                         m_pSessionReceipts.last()->setFileName( fileName );
+                        m_pSessionReceipts.last()->setMark( mark );
 
                         readXmlElementsFromFile( &Rxml, m_pSessionReceipts.last(), versionMasxml );
                         setSliders( m_pSessionReceipts.last(), false );
                         previewPicture( ui->listWidgetSession->count() - 1 );
+                        setMarkColor( ui->listWidgetSession->count() - 1, mark );
                         m_lastActiveClipInSession = ui->listWidgetSession->count() - 1;
                     }
                     else
@@ -3166,6 +3174,7 @@ void MainWindow::saveSession(QString fileName)
         xmlWriter.writeStartElement( "clip" );
         xmlWriter.writeAttribute( "file", ui->listWidgetSession->item(i)->toolTip() );
         xmlWriter.writeAttribute( "relative", QDir( QFileInfo( fileName ).path() ).relativeFilePath( ui->listWidgetSession->item(i)->toolTip() ) );
+        xmlWriter.writeAttribute( "mark", QString( "%1" ).arg( m_pSessionReceipts.at(i)->mark() ) );
         writeXmlElementsToFile( &xmlWriter, m_pSessionReceipts.at(i) );
         xmlWriter.writeEndElement();
     }
@@ -6820,8 +6829,16 @@ void MainWindow::on_actionNext_Clip_triggered()
 {
     if( ( ( m_lastActiveClipInSession + 1 ) < ui->listWidgetSession->count() ) && m_fileLoaded )
     {
-        ui->listWidgetSession->setCurrentRow( m_lastActiveClipInSession + 1 );
-        showFileInEditor( m_lastActiveClipInSession + 1 );
+        //Search the next visible clip, if any
+        for( int i = m_lastActiveClipInSession + 1; i < ui->listWidgetSession->count(); i++ )
+        {
+            if( !ui->listWidgetSession->item(i)->isHidden() )
+            {
+                ui->listWidgetSession->setCurrentRow( i );
+                showFileInEditor( i );
+                return;
+            }
+        }
     }
 }
 
@@ -6830,8 +6847,16 @@ void MainWindow::on_actionPrevious_Clip_triggered()
 {
     if( ( m_lastActiveClipInSession > 0 ) && m_fileLoaded )
     {
-        ui->listWidgetSession->setCurrentRow( m_lastActiveClipInSession - 1 );
-        showFileInEditor( m_lastActiveClipInSession - 1 );
+        //Search the previous visible clip, if any
+        for( int i = m_lastActiveClipInSession - 1; i >= 0; i-- )
+        {
+            if( !ui->listWidgetSession->item(i)->isHidden() )
+            {
+                ui->listWidgetSession->setCurrentRow( i );
+                showFileInEditor( i );
+                return;
+            }
+        }
     }
 }
 
@@ -6899,6 +6924,13 @@ void MainWindow::on_listWidgetSession_customContextMenuRequested(const QPoint &p
     // Handle global position
     QPoint globalPos = ui->listWidgetSession->mapToGlobal( pos );
 
+    // Create mark menu
+    QMenu markMenu;
+    markMenu.addAction( ui->actionMarkRed );
+    markMenu.addAction( ui->actionMarkYellow );
+    markMenu.addAction( ui->actionMarkGreen );
+    markMenu.addAction( ui->actionUnmark );
+
     // Create menu and insert some actions
     QMenu myMenu;
     if( ui->listWidgetSession->count() > 0 )
@@ -6908,6 +6940,8 @@ void MainWindow::on_listWidgetSession_customContextMenuRequested(const QPoint &p
             myMenu.addAction( ui->actionSelectAllClips );
             myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Image-icon.png" ), "Show in Editor",  this, SLOT( rightClickShowFile() ) );
             myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Delete-icon.png" ), "Delete Selected File from Session",  this, SLOT( deleteFileFromSession() ) );
+            markMenu.setTitle( "Mark Clip" );
+            myMenu.addMenu( &markMenu );
             myMenu.addSeparator();
             myMenu.addAction( ui->actionShowInFinder );
             myMenu.addAction( ui->actionOpenWithExternalApplication );
@@ -6918,6 +6952,8 @@ void MainWindow::on_listWidgetSession_customContextMenuRequested(const QPoint &p
         {
             myMenu.addAction( ui->actionPasteReceipt );
             myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Delete-icon.png" ), "Delete Selected Files from Session",  this, SLOT( deleteFileFromSession() ) );
+            markMenu.setTitle( "Mark Clips" );
+            myMenu.addMenu( &markMenu );
             myMenu.addSeparator();
         }
     }
@@ -9571,4 +9607,121 @@ void MainWindow::on_actionUseDefaultReceipt_triggered(bool checked)
         return;
     }
     m_defaultReceiptFileName = fileName;
+}
+
+//Mark selected clips Red
+void MainWindow::on_actionMarkRed_triggered()
+{
+    for( int i = 0; i < ui->listWidgetSession->count(); i++ )
+    {
+        if( ui->listWidgetSession->item(i)->isSelected() )
+        {
+            m_pSessionReceipts.at(i)->setMark( 1 );
+            setMarkColor( i, 1 );
+        }
+    }
+}
+
+//Mark selected clips Yellow
+void MainWindow::on_actionMarkYellow_triggered()
+{
+    for( int i = 0; i < ui->listWidgetSession->count(); i++ )
+    {
+        if( ui->listWidgetSession->item(i)->isSelected() )
+        {
+            m_pSessionReceipts.at(i)->setMark( 2 );
+            setMarkColor( i, 2 );
+        }
+    }
+}
+
+//Mark selected clips Green
+void MainWindow::on_actionMarkGreen_triggered()
+{
+    for( int i = 0; i < ui->listWidgetSession->count(); i++ )
+    {
+        if( ui->listWidgetSession->item(i)->isSelected() )
+        {
+            m_pSessionReceipts.at(i)->setMark( 3 );
+            setMarkColor( i, 3 );
+        }
+    }
+}
+
+//Unmark selected clips
+void MainWindow::on_actionUnmark_triggered()
+{
+    for( int i = 0; i < ui->listWidgetSession->count(); i++ )
+    {
+        if( ui->listWidgetSession->item(i)->isSelected() )
+        {
+            m_pSessionReceipts.at(i)->setMark( 0 );
+            setMarkColor( i, 0 );
+        }
+    }
+}
+
+//Show the red clips, or not
+void MainWindow::on_actionShowRedClips_toggled(bool arg1)
+{
+    for( int i = 0; i < ui->listWidgetSession->count(); i++ )
+    {
+        if( m_pSessionReceipts.at(i)->mark() == 1 )
+            ui->listWidgetSession->item(i)->setHidden( !arg1 );
+    }
+}
+
+//Show the yellow clips, or not
+void MainWindow::on_actionShowYellowClips_toggled(bool arg1)
+{
+    for( int i = 0; i < ui->listWidgetSession->count(); i++ )
+    {
+        if( m_pSessionReceipts.at(i)->mark() == 2 )
+            ui->listWidgetSession->item(i)->setHidden( !arg1 );
+    }
+}
+
+//Show the green clips, or not
+void MainWindow::on_actionShowGreenClips_toggled(bool arg1)
+{
+    for( int i = 0; i < ui->listWidgetSession->count(); i++ )
+    {
+        if( m_pSessionReceipts.at(i)->mark() == 3 )
+            ui->listWidgetSession->item(i)->setHidden( !arg1 );
+    }
+}
+
+//Show the unmarked clips, or not
+void MainWindow::on_actionShowUnmarkedClips_toggled(bool arg1)
+{
+    for( int i = 0; i < ui->listWidgetSession->count(); i++ )
+    {
+        if( m_pSessionReceipts.at(i)->mark() == 0 )
+            ui->listWidgetSession->item(i)->setHidden( !arg1 );
+    }
+}
+
+//Mark clipNr with color
+void MainWindow::setMarkColor(int clipNr, uint8_t mark)
+{
+    if( mark == 1 )
+    {
+        ui->listWidgetSession->item(clipNr)->setBackgroundColor( QColor( 255, 0, 0, 80 ) );
+        ui->listWidgetSession->item(clipNr)->setHidden( !ui->actionShowRedClips->isChecked() );
+    }
+    else if( mark == 2 )
+    {
+        ui->listWidgetSession->item(clipNr)->setBackgroundColor( QColor( 255, 255, 0, 80 ) );
+        ui->listWidgetSession->item(clipNr)->setHidden( !ui->actionShowYellowClips->isChecked() );
+    }
+    else if( mark == 3 )
+    {
+        ui->listWidgetSession->item(clipNr)->setBackgroundColor( QColor( 0, 255, 0, 80 ) );
+        ui->listWidgetSession->item(clipNr)->setHidden( !ui->actionShowGreenClips->isChecked() );
+    }
+    else
+    {
+        ui->listWidgetSession->item(clipNr)->setBackgroundColor( QColor( 0, 0, 0, 0 ) );
+        ui->listWidgetSession->item(clipNr)->setHidden( !ui->actionShowUnmarkedClips->isChecked() );
+    }
 }

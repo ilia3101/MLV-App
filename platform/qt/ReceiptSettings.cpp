@@ -106,8 +106,7 @@ ReceiptSettings::ReceiptSettings()
     m_toningStrength = 0;
     m_cutIn = 1;
     m_cutOut = INT32_MAX;
-
     m_lastPlaybackPosition = 0;
-
     m_debayer = AMaZE;
+    m_mark = 0;
 }

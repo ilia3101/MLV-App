@@ -114,10 +114,9 @@ public:
     void setCaRadius( int value )             {m_caRadius = value;}
     void setCutIn( uint32_t frame )           {m_cutIn = frame;}
     void setCutOut( uint32_t frame )          {m_cutOut = frame;}
-
     void setLastPlaybackPosition( uint32_t pos ){m_lastPlaybackPosition = pos;}
-
     void setDebayer( uint8_t algorithm )      {m_debayer = algorithm;}
+    void setMark( uint8_t mark )              {m_mark = mark;}
 
     bool wasNeverLoaded( void ){return m_neverLoaded;}
 
@@ -219,6 +218,7 @@ public:
     QString exportFileName( void ){return m_exportFileName;}
     uint32_t lastPlaybackPosition( void ){return m_lastPlaybackPosition;}
     uint8_t debayer( void ){return m_debayer;}
+    uint8_t mark( void ){return m_mark;}
 
 private:
     bool m_neverLoaded;
@@ -322,6 +322,7 @@ private:
     QString m_exportFileName;
     uint32_t m_lastPlaybackPosition;
     uint8_t m_debayer;
+    uint8_t m_mark;
 };
 
 #endif // RECEIPTSETTINGS_H

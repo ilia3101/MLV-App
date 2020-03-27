@@ -376,6 +376,15 @@ private slots:
 
     void on_comboBoxDebayer_currentIndexChanged( int index );
 
+    void on_actionMarkRed_triggered();
+    void on_actionMarkYellow_triggered();
+    void on_actionMarkGreen_triggered();
+    void on_actionUnmark_triggered();
+
+    void on_actionShowRedClips_toggled(bool arg1);
+    void on_actionShowYellowClips_toggled(bool arg1);
+    void on_actionShowGreenClips_toggled(bool arg1);
+    void on_actionShowUnmarkedClips_toggled(bool arg1);
 
 private:
     Ui::MainWindow *ui;
@@ -529,6 +538,7 @@ private:
     void enableCreativeAdjustments( bool enable );
     void resultingResolution( void );
     bool isExportSequence( void );
+    void setMarkColor(int clipNr , uint8_t mark);
 
 signals:
     void exportReady( void );
