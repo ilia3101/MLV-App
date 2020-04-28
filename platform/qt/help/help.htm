@@ -81,11 +81,11 @@
 
 <h3 id="copyreceipt">Copy Receipt</h3>
 
-<p>First, this opens a dialog where the user is able to select the settings only, which shall be copied to another/other clip(s) from the session. The selected settings from the opened clip will be copied to clipboard.</p>
+<p>First, this opens a dialog where the user is able to select the settings only, which shall be copied to another/other clip(s) from the session. The selected settings from the selected clip will be copied to clipboard.</p>
 
 <h3 id="pastereceipt">Paste Receipt</h3>
 
-<p>The receipt settings copied to clipboard will be pasted to all selected clips in the session list, or to the opened clip.</p>
+<p>The receipt settings copied to clipboard will be pasted to all selected clips in the session list, or to the opened clip in the case of no selection.</p>
 
 <h3 id="exportreceipt">Export Receipt</h3>
 
@@ -93,11 +93,15 @@
 
 <h3 id="importreceipt">Import Receipt</h3>
 
-<p>This pastes a receipt which was previously saved to disk to the opened clip.</p>
+<p>This pastes a receipt which was previously saved to disk to all selected clips, or to the opened clip in the case of no selection.</p>
 
 <h3 id="resetreceipt">Reset Receipt</h3>
 
 <p>This resets all parameters from the receipt (in the edit area) to their default. <em>Note: a single parameter can be reset by doubleclicking on the slider handle.</em></p>
+
+<h3 id="usedefaultreceipt">Use Default Receipt</h3>
+
+<p>Select a receipt and use it for all imported clips.</p>
 
 <h2 id="23playback">2.3 Playback</h2>
 
@@ -200,7 +204,7 @@
 <ul>
 <li>extract with --appimage-extract option (it creates a directory called: "squashfs-root")</li>
 
-<li>copy "ffmpeg" executable in this newly crated directory</li>
+<li>copy "ffmpeg" and "raw2mlv" executable in this newly created directory</li>
 
 <li>use ./mlvapp to run application from same directory</li>
 
@@ -324,6 +328,10 @@
 
 <li>Uncolorscience Fix: Same as use camera matrix, except the white balance is not done in LMS gamut, instead it is one that @Danne came up with by tweaking matrix values, it helps reduce blue clipping at lower colour temperatures (2000-3000K), but should not be used if there aren't any clipping problems, as it can and will affect colour quality or accuracy. This mode will be removed when BetterProcessing branch is complete (it should fix the clipping issues). </li>
 </ul>
+
+<h3 id="cyanhighlightfix">Cyan Highlight Fix</h3>
+
+<p>Use this, if the highlights are clipped and got cyan.</p>
 
 <h2 id="45details">4.5 Details</h2>
 

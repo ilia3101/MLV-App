@@ -51,6 +51,10 @@
         <file>RetinaIMG/Images-icon.png</file>
         <file>RetinaIMG/Pic-Folder-Open-icon.png</file>
         <file>RetinaIMG/Crosshair.png</file>
+        <file>RetinaIMG/Actions-flag-black-icon.png</file>
+        <file>RetinaIMG/Actions-flag-icon.png</file>
+        <file>RetinaIMG/Actions-flag-yellow-icon.png</file>
+        <file>RetinaIMG/Actions-flag-red-icon.png</file>
     </qresource>
     <qresource prefix="/AudioVideoIcons">
         <file>AudioVideoIcons/FirstFrame.png</file>

@@ -1133,6 +1133,9 @@ void MainWindow::initGui( void )
     //Set tooltips
     ui->toolButtonCutIn->setToolTip( tr( "Set Cut In    %1" ).arg( ui->toolButtonCutIn->shortcut().toString() ) );
     ui->toolButtonCutOut->setToolTip( tr( "Set Cut Out    %1" ).arg( ui->toolButtonCutOut->shortcut().toString() ) );
+    ui->toolButtonBadPixelsSearchMethodEdit->setToolTip( tr( "%1    %2" )
+                                                         .arg( ui->toolButtonBadPixelsSearchMethodEdit->toolTip() )
+                                                         .arg( ui->toolButtonBadPixelsSearchMethodEdit->shortcut().toString() ) );
     //Set disabled select all and delete clip
     ui->actionDeleteSelectedClips->setEnabled( false );
     ui->actionSelectAllClips->setEnabled( false );
@@ -3009,6 +3012,8 @@ void MainWindow::addFileToSession(QString fileName)
     if( ui->actionUseDefaultReceipt->isChecked() ) resetReceiptWithDefault( sliders );
     sliders->setFileName( fileName );
     m_pSessionReceipts.append( sliders );
+    //Remove color unloaded clip
+    if( m_lastActiveClipInSession < ui->listWidgetSession->count() ) ui->listWidgetSession->item( m_lastActiveClipInSession )->setForeground( Qt::white );
     //Save index of active clip
     m_lastActiveClipInSession = ui->listWidgetSession->row( item );
     //Set this row to current row
@@ -3067,6 +3072,12 @@ void MainWindow::openSession(QString fileNameSession)
                             fileName = QDir( QFileInfo( fileNameSession ).path() ).filePath( relativeName );
                         }
                     }
+                    //Mark
+                    uint8_t mark = 0;
+                    if( Rxml.attributes().hasAttribute( "mark" ) )
+                    {
+                        mark = Rxml.attributes().value( "mark" ).toUShort();
+                    }
 
                     if( QFile( fileName ).exists() )
                     {
@@ -3077,10 +3088,12 @@ void MainWindow::openSession(QString fileNameSession)
                         //Open the file
                         openMlvForPreview( fileName );
                         m_pSessionReceipts.last()->setFileName( fileName );
+                        m_pSessionReceipts.last()->setMark( mark );
 
                         readXmlElementsFromFile( &Rxml, m_pSessionReceipts.last(), versionMasxml );
                         setSliders( m_pSessionReceipts.last(), false );
                         previewPicture( ui->listWidgetSession->count() - 1 );
+                        setMarkColor( ui->listWidgetSession->count() - 1, mark );
                         m_lastActiveClipInSession = ui->listWidgetSession->count() - 1;
                     }
                     else
@@ -3154,13 +3167,14 @@ void MainWindow::saveSession(QString fileName)
     xmlWriter.writeStartDocument();
 
     xmlWriter.writeStartElement( "mlv_files" );
-    xmlWriter.writeAttribute( "version", "3" );
+    xmlWriter.writeAttribute( "version", "4" );
     xmlWriter.writeAttribute( "mlvapp", VERSION );
     for( int i = 0; i < ui->listWidgetSession->count(); i++ )
     {
         xmlWriter.writeStartElement( "clip" );
         xmlWriter.writeAttribute( "file", ui->listWidgetSession->item(i)->toolTip() );
         xmlWriter.writeAttribute( "relative", QDir( QFileInfo( fileName ).path() ).relativeFilePath( ui->listWidgetSession->item(i)->toolTip() ) );
+        xmlWriter.writeAttribute( "mark", QString( "%1" ).arg( m_pSessionReceipts.at(i)->mark() ) );
         writeXmlElementsToFile( &xmlWriter, m_pSessionReceipts.at(i) );
         xmlWriter.writeEndElement();
     }
@@ -3273,8 +3287,12 @@ void MainWindow::on_actionImportReceipt_triggered()
 //Exports the actual slider settings to a file
 void MainWindow::on_actionExportReceipt_triggered()
 {
-    if( m_lastActiveClipInSession < 0 ) return;
-    if( m_lastActiveClipInSession >= m_pSessionReceipts.count() ) return;
+    if( ui->listWidgetSession->count() <= 0 ) return;
+    if( ui->listWidgetSession->selectedItems().count() > 1 ) return;
+
+    int clipToExport;
+    if( ui->listWidgetSession->selectedItems().count() == 0 ) clipToExport = m_lastActiveClipInSession;
+    else clipToExport = ui->listWidgetSession->currentRow();
 
     //Stop playback if active
     ui->actionPlay->setChecked( false );
@@ -3301,10 +3319,10 @@ void MainWindow::on_actionExportReceipt_triggered()
     xmlWriter.writeStartDocument();
 
     xmlWriter.writeStartElement( "receipt" );
-    xmlWriter.writeAttribute( "version", "3" );
+    xmlWriter.writeAttribute( "version", "4" );
     xmlWriter.writeAttribute( "mlvapp", VERSION );
 
-    writeXmlElementsToFile( &xmlWriter, m_pSessionReceipts.at( m_lastActiveClipInSession ) );
+    writeXmlElementsToFile( &xmlWriter, m_pSessionReceipts.at( clipToExport ) );
 
     xmlWriter.writeEndElement();
     xmlWriter.writeEndDocument();
@@ -3687,7 +3705,8 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
         }
         else if( Rxml->isStartElement() && Rxml->name() == "rawBlack" )
         {
-            receipt->setRawBlack( Rxml->readElementText().toInt() );
+            if( version < 4 ) receipt->setRawBlack( Rxml->readElementText().toInt() * 10 );
+            else  receipt->setRawBlack( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
         else if( Rxml->isStartElement() && Rxml->name() == "rawWhite" )
@@ -4041,6 +4060,23 @@ bool MainWindow::isFileInSession(QString fileName)
     return false;
 }
 
+//paste the clipboard to the clip in row
+void MainWindow::pasteReceiptFromClipboardTo(int row)
+{
+    //Save current settings into receipt
+    if( row == m_lastActiveClipInSession )
+    {
+        setReceipt( m_pSessionReceipts.at(row) );
+    }
+    //Each selected clip gets the copied receipt
+    replaceReceipt( m_pSessionReceipts.at(row), m_pReceiptClipboard, true );
+    //If the actual is selected (may have changed since copy action), set sliders and get receipt
+    if( row == m_lastActiveClipInSession )
+    {
+        setSliders( m_pSessionReceipts.at(row), true );
+    }
+}
+
 //Set the edit sliders to settings
 void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
 {
@@ -4112,6 +4148,9 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
 
     ui->checkBoxCreativeAdjustments->setChecked( receipt->allowCreativeAdjustments() );
     on_checkBoxCreativeAdjustments_toggled( receipt->allowCreativeAdjustments() );
+
+    ui->checkBoxExrMode->setChecked(  receipt->exrMode() );
+    on_checkBoxExrMode_toggled( receipt->exrMode() );
 
     ui->horizontalSliderDenoiseStrength->setValue( receipt->denoiserStrength() );
     ui->comboBoxDenoiseWindow->setCurrentIndex( receipt->denoiserWindow() - 2 );
@@ -4331,6 +4370,7 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     receipt->setGamut( ui->comboBoxProcessingGamut->currentIndex() );
     receipt->setGamma( ui->horizontalSliderGamma->value() );
     receipt->setAllowCreativeAdjustments( ui->checkBoxCreativeAdjustments->isChecked() );
+    receipt->setExrMode( ui->checkBoxExrMode->isChecked() );
     receipt->setDenoiserStrength( ui->horizontalSliderDenoiseStrength->value() );
     receipt->setDenoiserWindow( ui->comboBoxDenoiseWindow->currentIndex() + 2 );
     receipt->setRbfDenoiserLuma( ui->horizontalSliderRbfDenoiseLuma->value() );
@@ -4449,6 +4489,7 @@ void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings 
     {
         receiptTarget->setProfile( receiptSource->profile() );
         receiptTarget->setAllowCreativeAdjustments( receiptSource->allowCreativeAdjustments() );
+        receiptTarget->setExrMode( receiptSource->exrMode() );
         receiptTarget->setTonemap( receiptSource->tonemap() );
         receiptTarget->setGamut( receiptSource->gamut() );
         receiptTarget->setGamma( receiptSource->gamma() );
@@ -4562,8 +4603,15 @@ int MainWindow::showFileInEditor(int row)
     m_pSessionReceipts.at( row )->setLoaded();
     //Set sliders to receipt
     setSliders( m_pSessionReceipts.at( row ), false );
+
+    //Remove color unloaded clip
+    ui->listWidgetSession->item( m_lastActiveClipInSession )->setForeground( Qt::white );
+
     //Save new position in session
     m_lastActiveClipInSession = row;
+
+    //Set color loaded clip
+    ui->listWidgetSession->item( m_lastActiveClipInSession )->setForeground( QColor( 255, 154, 50 ) );
 
     //Caching is in which state? Set it!
     if( ui->actionCaching->isChecked() ) on_actionCaching_triggered();
@@ -4623,6 +4671,7 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     receipt->setChromaSeparation( m_pSessionReceipts.at( row )->isChromaSeparation() );
     receipt->setProfile( m_pSessionReceipts.at( row )->profile() );
     receipt->setAllowCreativeAdjustments( m_pSessionReceipts.at( row )->allowCreativeAdjustments() );
+    receipt->setExrMode( m_pSessionReceipts.at( row )->exrMode() );
     receipt->setTonemap( m_pSessionReceipts.at( row )->tonemap() );
     receipt->setGamut( m_pSessionReceipts.at( row )->gamut() );
     receipt->setGamma( m_pSessionReceipts.at( row )->gamma() );
@@ -5632,9 +5681,9 @@ void MainWindow::on_horizontalSliderRawWhite_valueChanged(int position)
     {
         position = getMlvOriginalWhiteLevel( m_pMlvObject );
     }
-    else if( position <= ui->horizontalSliderRawBlack->value() + 1 )
+    else if( position <= ui->horizontalSliderRawBlack->value() / 10.0 + 1 )
     {
-        position = ui->horizontalSliderRawBlack->value() + 1;
+        position = ui->horizontalSliderRawBlack->value() / 10.0 + 1;
         ui->horizontalSliderRawWhite->setValue( position );
     }
 
@@ -5658,24 +5707,26 @@ void MainWindow::on_horizontalSliderRawBlack_valueChanged(int position)
     if( getMlvBitdepth( m_pMlvObject ) == 0 ) return;
     if( getMlvBitdepth( m_pMlvObject ) > 16 ) return;
 
-    ui->label_RawBlackVal->setText( QString("%1").arg( position ) );
+    double rawBlack = position / 10.0;
+
+    ui->label_RawBlackVal->setText( QString("%1").arg( rawBlack, 0, 'f', 1 ) );
 
     if( !ui->checkBoxRawFixEnable->isChecked() )
     {
-        position = getMlvOriginalBlackLevel( m_pMlvObject );
+        rawBlack = getMlvOriginalBlackLevel( m_pMlvObject );
     }
-    else if( position >= ui->horizontalSliderRawWhite->value() - 1 )
+    else if( rawBlack >= ui->horizontalSliderRawWhite->value() - 1 )
     {
-        position = ui->horizontalSliderRawWhite->value() - 1;
-        ui->horizontalSliderRawBlack->setValue( position );
+        rawBlack = ui->horizontalSliderRawWhite->value() - 1;
+        ui->horizontalSliderRawBlack->setValue( rawBlack * 10 );
     }
 
     while( !m_pRenderThread->isIdle() ) QThread::msleep(1);
 
     /* Set mlv raw white level to the slider value */
-    setMlvBlackLevel( m_pMlvObject, position );
+    setMlvBlackLevel( m_pMlvObject, rawBlack );
     /* Set processing white level with correction */
-    processingSetBlackLevel( m_pProcessingObject, position, getMlvBitdepth( m_pMlvObject ) );
+    processingSetBlackLevel( m_pProcessingObject, rawBlack, getMlvBitdepth( m_pMlvObject ) );
 
     llrpResetFpmStatus(m_pMlvObject);
     llrpResetBpmStatus(m_pMlvObject);
@@ -5973,7 +6024,7 @@ void MainWindow::on_horizontalSliderRawWhite_doubleClicked()
 
 void MainWindow::on_horizontalSliderRawBlack_doubleClicked()
 {
-    ui->horizontalSliderRawBlack->setValue( getMlvOriginalBlackLevel( m_pMlvObject ) );
+    ui->horizontalSliderRawBlack->setValue( getMlvOriginalBlackLevel( m_pMlvObject ) * 10 );
 }
 
 void MainWindow::on_horizontalSliderTone_doubleClicked()
@@ -6275,6 +6326,8 @@ void MainWindow::on_comboBoxUseCameraMatrix_currentIndexChanged(int index)
 
     ui->label_Gamut->setEnabled( (bool)index );
     ui->comboBoxProcessingGamut->setEnabled( (bool)index );
+    ui->checkBoxExrMode->setEnabled( index > 0 );
+    ui->checkBoxExrMode->setChecked( index > 0 );
 
     m_frameChanged = true;
 }
@@ -6293,6 +6346,20 @@ void MainWindow::on_checkBoxCreativeAdjustments_toggled(bool checked)
         processingDontAllowCreativeAdjustments( m_pProcessingObject );
     }
     if( ui->checkBoxCreativeAdjustments->isEnabled() ) enableCreativeAdjustments( checked );
+    m_frameChanged = true;
+}
+
+//EXR Mode changed
+void MainWindow::on_checkBoxExrMode_toggled(bool checked)
+{
+    if( !checked )
+    {
+        processingEnableExr( m_pProcessingObject );
+    }
+    else
+    {
+        processingDisableExr( m_pProcessingObject );
+    }
     m_frameChanged = true;
 }
 
@@ -6637,7 +6704,7 @@ void MainWindow::on_actionResetReceipt_triggered()
     ReceiptSettings *sliders = new ReceiptSettings(); //default
     if( ui->actionUseDefaultReceipt->isChecked() ) resetReceiptWithDefault( sliders );
     sliders->setRawWhite( getMlvOriginalWhiteLevel( m_pMlvObject ) );
-    sliders->setRawBlack( getMlvOriginalBlackLevel( m_pMlvObject ) );
+    sliders->setRawBlack( getMlvOriginalBlackLevel( m_pMlvObject ) * 10 );
     setSliders( sliders, false );
     delete sliders;
 }
@@ -6645,30 +6712,36 @@ void MainWindow::on_actionResetReceipt_triggered()
 //Copy receipt to clipboard
 void MainWindow::on_actionCopyRecept_triggered()
 {
-    m_pCopyMask->exec();
+    if( ui->listWidgetSession->count() <= 0 ) return;
+    if( ui->listWidgetSession->selectedItems().count() > 1 ) return;
 
-    setReceipt( m_pReceiptClipboard );
+    int clipToCopy;
+    if( ui->listWidgetSession->selectedItems().count() == 0 ) clipToCopy = m_lastActiveClipInSession;
+    else clipToCopy = ui->listWidgetSession->currentRow();
+
+    //Save slider receipt
+    setReceipt( m_pSessionReceipts.at( m_lastActiveClipInSession ) );
+    //Copy mask
+    m_pCopyMask->exec();
+    //Save selected to clipboard
+    replaceReceipt( m_pReceiptClipboard, m_pSessionReceipts.at( clipToCopy ), true );
     ui->actionPasteReceipt->setEnabled( true );
 }
 
 //Paste receipt from clipboard
 void MainWindow::on_actionPasteReceipt_triggered()
 {
-    for( int row = 0; row < ui->listWidgetSession->count(); row++ )
+    if( ui->listWidgetSession->selectedItems().count() )
     {
-        if( !ui->listWidgetSession->item( row )->isSelected() ) continue;
-        //Save current settings into receipt
-        if( row == m_lastActiveClipInSession )
+        for( int row = 0; row < ui->listWidgetSession->count(); row++ )
         {
-            setReceipt( m_pSessionReceipts.at(row) );
+            if( !ui->listWidgetSession->item( row )->isSelected() ) continue;
+            pasteReceiptFromClipboardTo( row );
         }
-        //Each selected clip gets the copied receipt
-        replaceReceipt( m_pSessionReceipts.at(row), m_pReceiptClipboard, true );
-        //If the actual is selected (may have changed since copy action), set sliders and get receipt
-        if( row == m_lastActiveClipInSession )
-        {
-            setSliders( m_pSessionReceipts.at(row), true );
-        }
+    }
+    else
+    {
+        pasteReceiptFromClipboardTo( m_lastActiveClipInSession );
     }
 }
 
@@ -6765,8 +6838,16 @@ void MainWindow::on_actionNext_Clip_triggered()
 {
     if( ( ( m_lastActiveClipInSession + 1 ) < ui->listWidgetSession->count() ) && m_fileLoaded )
     {
-        ui->listWidgetSession->setCurrentRow( m_lastActiveClipInSession + 1 );
-        showFileInEditor( m_lastActiveClipInSession + 1 );
+        //Search the next visible clip, if any
+        for( int i = m_lastActiveClipInSession + 1; i < ui->listWidgetSession->count(); i++ )
+        {
+            if( !ui->listWidgetSession->item(i)->isHidden() )
+            {
+                ui->listWidgetSession->setCurrentRow( i );
+                showFileInEditor( i );
+                return;
+            }
+        }
     }
 }
 
@@ -6775,8 +6856,16 @@ void MainWindow::on_actionPrevious_Clip_triggered()
 {
     if( ( m_lastActiveClipInSession > 0 ) && m_fileLoaded )
     {
-        ui->listWidgetSession->setCurrentRow( m_lastActiveClipInSession - 1 );
-        showFileInEditor( m_lastActiveClipInSession - 1 );
+        //Search the previous visible clip, if any
+        for( int i = m_lastActiveClipInSession - 1; i >= 0; i-- )
+        {
+            if( !ui->listWidgetSession->item(i)->isHidden() )
+            {
+                ui->listWidgetSession->setCurrentRow( i );
+                showFileInEditor( i );
+                return;
+            }
+        }
     }
 }
 
@@ -6844,6 +6933,13 @@ void MainWindow::on_listWidgetSession_customContextMenuRequested(const QPoint &p
     // Handle global position
     QPoint globalPos = ui->listWidgetSession->mapToGlobal( pos );
 
+    // Create mark menu
+    QMenu markMenu;
+    markMenu.addAction( ui->actionMarkRed );
+    markMenu.addAction( ui->actionMarkYellow );
+    markMenu.addAction( ui->actionMarkGreen );
+    markMenu.addAction( ui->actionUnmark );
+
     // Create menu and insert some actions
     QMenu myMenu;
     if( ui->listWidgetSession->count() > 0 )
@@ -6853,6 +6949,8 @@ void MainWindow::on_listWidgetSession_customContextMenuRequested(const QPoint &p
             myMenu.addAction( ui->actionSelectAllClips );
             myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Image-icon.png" ), "Show in Editor",  this, SLOT( rightClickShowFile() ) );
             myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Delete-icon.png" ), "Delete Selected File from Session",  this, SLOT( deleteFileFromSession() ) );
+            markMenu.setTitle( "Mark Clip" );
+            myMenu.addMenu( &markMenu );
             myMenu.addSeparator();
             myMenu.addAction( ui->actionShowInFinder );
             myMenu.addAction( ui->actionOpenWithExternalApplication );
@@ -6863,6 +6961,8 @@ void MainWindow::on_listWidgetSession_customContextMenuRequested(const QPoint &p
         {
             myMenu.addAction( ui->actionPasteReceipt );
             myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Delete-icon.png" ), "Delete Selected Files from Session",  this, SLOT( deleteFileFromSession() ) );
+            markMenu.setTitle( "Mark Clips" );
+            myMenu.addMenu( &markMenu );
             myMenu.addSeparator();
         }
     }
@@ -7315,7 +7415,7 @@ void MainWindow::on_label_RawWhiteVal_doubleClicked()
 void MainWindow::on_label_RawBlackVal_doubleClicked()
 {
     EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderRawBlack, ui->label_RawBlackVal, 1.0, 0, 1.0 );
+    editSlider.autoSetup( ui->horizontalSliderRawBlack, ui->label_RawBlackVal, 10.0, 1, 10.0 );
     editSlider.exec();
     ui->horizontalSliderRawBlack->setValue( editSlider.getValue() );
 }
@@ -8690,14 +8790,14 @@ void MainWindow::initCutInOut(int frames)
 void MainWindow::initRawBlackAndWhite()
 {
     ui->horizontalSliderRawBlack->blockSignals( true );
-    ui->horizontalSliderRawBlack->setMaximum( ( 2 << ( getMlvBitdepth( m_pMlvObject ) - 1 ) ) - 1 );
+    ui->horizontalSliderRawBlack->setMaximum( ( ( 2 << ( getMlvBitdepth( m_pMlvObject ) - 1 ) ) - 1 ) * 10 );
     ui->horizontalSliderRawBlack->blockSignals( false );
     ui->horizontalSliderRawWhite->blockSignals( true );
     ui->horizontalSliderRawWhite->setMaximum( ( 2 << ( getMlvBitdepth( m_pMlvObject ) - 1 ) ) - 1 );
     ui->horizontalSliderRawWhite->setValue( ( 2 << ( getMlvBitdepth( m_pMlvObject ) - 1 ) ) - 1 ); //set value to max, because otherwise the new black value is blocked by old white value
     ui->horizontalSliderRawWhite->blockSignals( false );
-    ui->horizontalSliderRawBlack->setValue( getMlvOriginalBlackLevel( m_pMlvObject ) );
-    on_horizontalSliderRawBlack_valueChanged( getMlvOriginalBlackLevel( m_pMlvObject ) );
+    ui->horizontalSliderRawBlack->setValue( getMlvOriginalBlackLevel( m_pMlvObject ) * 10 );
+    on_horizontalSliderRawBlack_valueChanged( getMlvOriginalBlackLevel( m_pMlvObject ) * 10 );
     ui->horizontalSliderRawWhite->setValue( getMlvOriginalWhiteLevel( m_pMlvObject ) );
     on_horizontalSliderRawWhite_valueChanged( getMlvOriginalWhiteLevel( m_pMlvObject ) );
 }
@@ -9172,7 +9272,7 @@ void MainWindow::on_toolButtonRawBlackAutoCorrect_clicked()
 {
     int value = autoCorrectRawBlackLevel();
     if( value != getMlvOriginalBlackLevel( m_pMlvObject ) )
-        ui->horizontalSliderRawBlack->setValue( value );
+        ui->horizontalSliderRawBlack->setValue( value * 10 );
 }
 
 //Open UserManualDialog
@@ -9516,4 +9616,121 @@ void MainWindow::on_actionUseDefaultReceipt_triggered(bool checked)
         return;
     }
     m_defaultReceiptFileName = fileName;
+}
+
+//Mark selected clips Red
+void MainWindow::on_actionMarkRed_triggered()
+{
+    for( int i = 0; i < ui->listWidgetSession->count(); i++ )
+    {
+        if( ui->listWidgetSession->item(i)->isSelected() )
+        {
+            m_pSessionReceipts.at(i)->setMark( 1 );
+            setMarkColor( i, 1 );
+        }
+    }
+}
+
+//Mark selected clips Yellow
+void MainWindow::on_actionMarkYellow_triggered()
+{
+    for( int i = 0; i < ui->listWidgetSession->count(); i++ )
+    {
+        if( ui->listWidgetSession->item(i)->isSelected() )
+        {
+            m_pSessionReceipts.at(i)->setMark( 2 );
+            setMarkColor( i, 2 );
+        }
+    }
+}
+
+//Mark selected clips Green
+void MainWindow::on_actionMarkGreen_triggered()
+{
+    for( int i = 0; i < ui->listWidgetSession->count(); i++ )
+    {
+        if( ui->listWidgetSession->item(i)->isSelected() )
+        {
+            m_pSessionReceipts.at(i)->setMark( 3 );
+            setMarkColor( i, 3 );
+        }
+    }
+}
+
+//Unmark selected clips
+void MainWindow::on_actionUnmark_triggered()
+{
+    for( int i = 0; i < ui->listWidgetSession->count(); i++ )
+    {
+        if( ui->listWidgetSession->item(i)->isSelected() )
+        {
+            m_pSessionReceipts.at(i)->setMark( 0 );
+            setMarkColor( i, 0 );
+        }
+    }
+}
+
+//Show the red clips, or not
+void MainWindow::on_actionShowRedClips_toggled(bool arg1)
+{
+    for( int i = 0; i < ui->listWidgetSession->count(); i++ )
+    {
+        if( m_pSessionReceipts.at(i)->mark() == 1 )
+            ui->listWidgetSession->item(i)->setHidden( !arg1 );
+    }
+}
+
+//Show the yellow clips, or not
+void MainWindow::on_actionShowYellowClips_toggled(bool arg1)
+{
+    for( int i = 0; i < ui->listWidgetSession->count(); i++ )
+    {
+        if( m_pSessionReceipts.at(i)->mark() == 2 )
+            ui->listWidgetSession->item(i)->setHidden( !arg1 );
+    }
+}
+
+//Show the green clips, or not
+void MainWindow::on_actionShowGreenClips_toggled(bool arg1)
+{
+    for( int i = 0; i < ui->listWidgetSession->count(); i++ )
+    {
+        if( m_pSessionReceipts.at(i)->mark() == 3 )
+            ui->listWidgetSession->item(i)->setHidden( !arg1 );
+    }
+}
+
+//Show the unmarked clips, or not
+void MainWindow::on_actionShowUnmarkedClips_toggled(bool arg1)
+{
+    for( int i = 0; i < ui->listWidgetSession->count(); i++ )
+    {
+        if( m_pSessionReceipts.at(i)->mark() == 0 )
+            ui->listWidgetSession->item(i)->setHidden( !arg1 );
+    }
+}
+
+//Mark clipNr with color
+void MainWindow::setMarkColor(int clipNr, uint8_t mark)
+{
+    if( mark == 1 )
+    {
+        ui->listWidgetSession->item(clipNr)->setBackgroundColor( QColor( 255, 0, 0, 80 ) );
+        ui->listWidgetSession->item(clipNr)->setHidden( !ui->actionShowRedClips->isChecked() );
+    }
+    else if( mark == 2 )
+    {
+        ui->listWidgetSession->item(clipNr)->setBackgroundColor( QColor( 255, 255, 0, 80 ) );
+        ui->listWidgetSession->item(clipNr)->setHidden( !ui->actionShowYellowClips->isChecked() );
+    }
+    else if( mark == 3 )
+    {
+        ui->listWidgetSession->item(clipNr)->setBackgroundColor( QColor( 0, 255, 0, 80 ) );
+        ui->listWidgetSession->item(clipNr)->setHidden( !ui->actionShowGreenClips->isChecked() );
+    }
+    else
+    {
+        ui->listWidgetSession->item(clipNr)->setBackgroundColor( QColor( 0, 0, 0, 0 ) );
+        ui->listWidgetSession->item(clipNr)->setHidden( !ui->actionShowUnmarkedClips->isChecked() );
+    }
 }

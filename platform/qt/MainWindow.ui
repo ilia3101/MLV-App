@@ -170,6 +170,11 @@
     <addaction name="actionDeleteSelectedClips"/>
     <addaction name="separator"/>
     <addaction name="actionWhiteBalancePicker"/>
+    <addaction name="separator"/>
+    <addaction name="actionMarkRed"/>
+    <addaction name="actionMarkYellow"/>
+    <addaction name="actionMarkGreen"/>
+    <addaction name="actionUnmark"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -268,6 +273,11 @@
     <addaction name="menuTheme"/>
     <addaction name="separator"/>
     <addaction name="actionAskForSavingOnQuit"/>
+    <addaction name="separator"/>
+    <addaction name="actionShowRedClips"/>
+    <addaction name="actionShowYellowClips"/>
+    <addaction name="actionShowGreenClips"/>
+    <addaction name="actionShowUnmarkedClips"/>
    </widget>
    <widget class="QMenu" name="menuWindow">
     <property name="title">
@@ -459,7 +469,7 @@ QGroupBox::indicator:checked:disabled {
             <x>0</x>
             <y>0</y>
             <width>265</width>
-            <height>5418</height>
+            <height>5434</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayoutScrollArea">
@@ -1246,6 +1256,9 @@ QGroupBox::indicator:checked:disabled {
                           <height>12</height>
                          </size>
                         </property>
+                        <property name="shortcut">
+                         <string>M</string>
+                        </property>
                         <property name="checkable">
                          <bool>true</bool>
                         </property>
@@ -1274,7 +1287,7 @@ QGroupBox::indicator:checked:disabled {
                          </font>
                         </property>
                         <property name="toolTip">
-                         <string>Mark Bad Pixe with Cross</string>
+                         <string>Mark Bad Pixel with Cross</string>
                         </property>
                         <property name="text">
                          <string/>
@@ -4362,27 +4375,6 @@ QGroupBox::indicator:checked:disabled {
                  <property name="spacing">
                   <number>5</number>
                  </property>
-                 <item row="8" column="0">
-                  <widget class="QCheckBox" name="checkBoxCreativeAdjustments">
-                   <property name="enabled">
-                    <bool>true</bool>
-                   </property>
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-                   <property name="toolTip">
-                    <string>Warning: Having creative adjustments and log profile enabled may not give logarithmic output!</string>
-                   </property>
-                   <property name="layoutDirection">
-                    <enum>Qt::LeftToRight</enum>
-                   </property>
-                   <property name="text">
-                    <string>Allow Creative Adjustments</string>
-                   </property>
-                  </widget>
-                 </item>
                  <item row="7" column="0">
                   <layout class="QGridLayout" name="gridLayout_64">
                    <property name="spacing">
@@ -4464,6 +4456,27 @@ QGroupBox::indicator:checked:disabled {
                    </item>
                   </layout>
                  </item>
+                 <item row="8" column="0">
+                  <widget class="QCheckBox" name="checkBoxCreativeAdjustments">
+                   <property name="enabled">
+                    <bool>true</bool>
+                   </property>
+                   <property name="font">
+                    <font>
+                     <pointsize>10</pointsize>
+                    </font>
+                   </property>
+                   <property name="toolTip">
+                    <string>Warning: Having creative adjustments and log profile enabled may not give logarithmic output!</string>
+                   </property>
+                   <property name="layoutDirection">
+                    <enum>Qt::LeftToRight</enum>
+                   </property>
+                   <property name="text">
+                    <string>Allow Creative Adjustments</string>
+                   </property>
+                  </widget>
+                 </item>
                  <item row="5" column="0">
                   <widget class="QLabel" name="label_Gamut">
                    <property name="font">
@@ -4473,6 +4486,103 @@ QGroupBox::indicator:checked:disabled {
                    </property>
                    <property name="text">
                     <string>Processing Gamut</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="0">
+                  <widget class="QLabel" name="label_ProcessingProfile">
+                   <property name="font">
+                    <font>
+                     <pointsize>10</pointsize>
+                    </font>
+                   </property>
+                   <property name="text">
+                    <string>Profile Preset</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="0">
+                  <widget class="NoScrollComboBox" name="comboBoxProfile">
+                   <property name="minimumSize">
+                    <size>
+                     <width>0</width>
+                     <height>0</height>
+                    </size>
+                   </property>
+                   <property name="font">
+                    <font>
+                     <pointsize>10</pointsize>
+                    </font>
+                   </property>
+                   <property name="currentText">
+                    <string>Select Preset...</string>
+                   </property>
+                   <item>
+                    <property name="text">
+                     <string>Select Preset...</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Standard</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Tonemapped</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Film</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Alexa Log-C</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Cineon Log</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Sony S-Log3</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Linear</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>sRGB</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Rec. 709</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>BMDFilm</string>
+                    </property>
+                   </item>
+                  </widget>
+                 </item>
+                 <item row="3" column="0">
+                  <widget class="QLabel" name="label_TonemappingFunction">
+                   <property name="font">
+                    <font>
+                     <pointsize>10</pointsize>
+                    </font>
+                   </property>
+                   <property name="text">
+                    <string>Tonemapping Function</string>
                    </property>
                   </widget>
                  </item>
@@ -4503,18 +4613,6 @@ QGroupBox::indicator:checked:disabled {
                    </item>
                   </widget>
                  </item>
-                 <item row="0" column="0">
-                  <widget class="QLabel" name="label_ProcessingProfile">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-                   <property name="text">
-                    <string>Profile Preset</string>
-                   </property>
-                  </widget>
-                 </item>
                  <item row="9" column="0">
                   <widget class="Line" name="line_20">
                    <property name="styleSheet">
@@ -4522,18 +4620,6 @@ QGroupBox::indicator:checked:disabled {
                    </property>
                    <property name="orientation">
                     <enum>Qt::Horizontal</enum>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="3" column="0">
-                  <widget class="QLabel" name="label_TonemappingFunction">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-                   <property name="text">
-                    <string>Tonemapping Function</string>
                    </property>
                   </widget>
                  </item>
@@ -4610,77 +4696,26 @@ QGroupBox::indicator:checked:disabled {
                    </item>
                   </widget>
                  </item>
-                 <item row="1" column="0">
-                  <widget class="NoScrollComboBox" name="comboBoxProfile">
-                   <property name="minimumSize">
-                    <size>
-                     <width>0</width>
-                     <height>0</height>
-                    </size>
-                   </property>
+                 <item row="10" column="0">
+                  <widget class="QLabel" name="label_39">
                    <property name="font">
                     <font>
                      <pointsize>10</pointsize>
                     </font>
                    </property>
-                   <property name="currentText">
-                    <string>Select Preset...</string>
+                   <property name="text">
+                    <string>Camera Matrix</string>
                    </property>
-                   <item>
-                    <property name="text">
-                     <string>Select Preset...</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>Standard</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>Tonemapped</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>Film</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>Alexa Log-C</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>Cineon Log</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>Sony S-Log3</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>Linear</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>sRGB</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>Rec. 709</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>BMDFilm</string>
-                    </property>
-                   </item>
+                  </widget>
+                 </item>
+                 <item row="2" column="0">
+                  <widget class="Line" name="line_27">
+                   <property name="styleSheet">
+                    <string notr="true">background-color: rgb(115, 115, 115);</string>
+                   </property>
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
                   </widget>
                  </item>
                  <item row="6" column="0">
@@ -4751,25 +4786,15 @@ QGroupBox::indicator:checked:disabled {
                    </item>
                   </widget>
                  </item>
-                 <item row="2" column="0">
-                  <widget class="Line" name="line_27">
-                   <property name="styleSheet">
-                    <string notr="true">background-color: rgb(115, 115, 115);</string>
-                   </property>
-                   <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="10" column="0">
-                  <widget class="QLabel" name="label_39">
+                 <item row="12" column="0">
+                  <widget class="QCheckBox" name="checkBoxExrMode">
                    <property name="font">
                     <font>
                      <pointsize>10</pointsize>
                     </font>
                    </property>
                    <property name="text">
-                    <string>Camera Matrix</string>
+                    <string>Cyan Highlight Fix</string>
                    </property>
                   </widget>
                  </item>
@@ -10305,6 +10330,122 @@ QGroupBox::indicator:checked:disabled {
    </property>
    <property name="text">
     <string>Use Default Receipt</string>
+   </property>
+  </action>
+  <action name="actionMarkRed">
+   <property name="icon">
+    <iconset resource="ressources.qrc">
+     <normaloff>:/RetinaIMG/RetinaIMG/Actions-flag-red-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Actions-flag-red-icon.png</iconset>
+   </property>
+   <property name="text">
+    <string>Mark Clip Red</string>
+   </property>
+   <property name="toolTip">
+    <string>Mark Clip Red</string>
+   </property>
+   <property name="shortcut">
+    <string>1</string>
+   </property>
+  </action>
+  <action name="actionMarkYellow">
+   <property name="icon">
+    <iconset resource="ressources.qrc">
+     <normaloff>:/RetinaIMG/RetinaIMG/Actions-flag-yellow-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Actions-flag-yellow-icon.png</iconset>
+   </property>
+   <property name="text">
+    <string>Mark Clip Yellow</string>
+   </property>
+   <property name="toolTip">
+    <string>Mark Clip Yellow</string>
+   </property>
+   <property name="shortcut">
+    <string>2</string>
+   </property>
+  </action>
+  <action name="actionMarkGreen">
+   <property name="icon">
+    <iconset resource="ressources.qrc">
+     <normaloff>:/RetinaIMG/RetinaIMG/Actions-flag-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Actions-flag-icon.png</iconset>
+   </property>
+   <property name="text">
+    <string>Mark Clip Green</string>
+   </property>
+   <property name="toolTip">
+    <string>Mark Clip Green</string>
+   </property>
+   <property name="shortcut">
+    <string>3</string>
+   </property>
+  </action>
+  <action name="actionUnmark">
+   <property name="icon">
+    <iconset resource="ressources.qrc">
+     <normaloff>:/RetinaIMG/RetinaIMG/Actions-flag-black-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Actions-flag-black-icon.png</iconset>
+   </property>
+   <property name="text">
+    <string>Unmark Clip</string>
+   </property>
+   <property name="toolTip">
+    <string>Unmark Clip</string>
+   </property>
+   <property name="shortcut">
+    <string>0</string>
+   </property>
+  </action>
+  <action name="actionShowRedClips">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Red Clips</string>
+   </property>
+   <property name="shortcut">
+    <string>Alt+1</string>
+   </property>
+  </action>
+  <action name="actionShowGreenClips">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Green Clips</string>
+   </property>
+   <property name="shortcut">
+    <string>Alt+3</string>
+   </property>
+  </action>
+  <action name="actionShowYellowClips">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Yellow Clips</string>
+   </property>
+   <property name="shortcut">
+    <string>Alt+2</string>
+   </property>
+  </action>
+  <action name="actionShowUnmarkedClips">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Unmarked Clips</string>
+   </property>
+   <property name="shortcut">
+    <string>Alt+0</string>
    </property>
   </action>
  </widget>

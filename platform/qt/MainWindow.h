@@ -166,6 +166,7 @@ private slots:
     void on_checkBoxHighLightReconstruction_toggled(bool checked);
     void on_comboBoxUseCameraMatrix_currentIndexChanged(int index);
     void on_checkBoxCreativeAdjustments_toggled(bool checked);
+    void on_checkBoxExrMode_toggled(bool checked);
     void on_checkBoxChromaSeparation_toggled(bool checked);
     void on_comboBoxProfile_currentIndexChanged(int index);
     void on_comboBoxProfile_activated(int index);
@@ -375,6 +376,15 @@ private slots:
 
     void on_comboBoxDebayer_currentIndexChanged( int index );
 
+    void on_actionMarkRed_triggered();
+    void on_actionMarkYellow_triggered();
+    void on_actionMarkGreen_triggered();
+    void on_actionUnmark_triggered();
+
+    void on_actionShowRedClips_toggled(bool arg1);
+    void on_actionShowYellowClips_toggled(bool arg1);
+    void on_actionShowGreenClips_toggled(bool arg1);
+    void on_actionShowUnmarkedClips_toggled(bool arg1);
 
 private:
     Ui::MainWindow *ui;
@@ -471,6 +481,7 @@ private:
     void writeXmlElementsToFile( QXmlStreamWriter *xmlWriter, ReceiptSettings *receipt );
     void deleteSession( void );
     bool isFileInSession( QString fileName );
+    void pasteReceiptFromClipboardTo( int row );
     void setSliders(ReceiptSettings *sliders , bool paste);
     void setReceipt( ReceiptSettings *sliders );
     void replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings *receiptSource , bool paste);
@@ -527,6 +538,7 @@ private:
     void enableCreativeAdjustments( bool enable );
     void resultingResolution( void );
     bool isExportSequence( void );
+    void setMarkColor(int clipNr , uint8_t mark);
 
 signals:
     void exportReady( void );

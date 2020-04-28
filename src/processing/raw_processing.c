@@ -1607,14 +1607,14 @@ void processingSet3WayCorrection( processingObject_t * processing,
 // }
 
 /* Set black and white level */
-void processingSetBlackAndWhiteLevel( processingObject_t * processing, 
-                                      int mlvBlackLevel, int mlvWhiteLevel, int mlvBitDepth )
+void processingSetBlackAndWhiteLevel(processingObject_t * processing,
+                                      float mlvBlackLevel, int mlvWhiteLevel, int mlvBitDepth )
 {
     /* Convert levels to 16bit */
     int bits_shift = 16 - mlvBitDepth;
     if( mlvBlackLevel >= 0 )
     {
-        if(mlvBlackLevel) processing->black_level = mlvBlackLevel << bits_shift;
+        if(mlvBlackLevel) processing->black_level = mlvBlackLevel * pow( 2, bits_shift );
         else processing->black_level = 0;
     }
     if( mlvWhiteLevel >= 0 )
@@ -1648,7 +1648,7 @@ void processingSetBlackAndWhiteLevel( processingObject_t * processing,
 }
 
 /* Cheat functions */
-void processingSetBlackLevel(processingObject_t * processing, int mlvBlackLevel, int mlvBitDepth)
+void processingSetBlackLevel(processingObject_t * processing, float mlvBlackLevel, int mlvBitDepth)
 {
     processingSetBlackAndWhiteLevel( processing,
                                      mlvBlackLevel,

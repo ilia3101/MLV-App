@@ -99,14 +99,14 @@ ReceiptSettings::ReceiptSettings()
     m_gamut = -1;
     m_gamma = 315;
     m_creativeAdjustments = 1;
+    m_exrMode = false;
     m_rawWhite = -1;
     m_rawBlack = -1;
     m_tone = 0;
     m_toningStrength = 0;
     m_cutIn = 1;
     m_cutOut = INT32_MAX;
-
     m_lastPlaybackPosition = 0;
-
     m_debayer = AMaZE;
+    m_mark = 0;
 }

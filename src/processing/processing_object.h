@@ -37,7 +37,8 @@ typedef struct {
     image_profile_t * image_profile; /* Affects following two parameters */
 
     /* (RAW) white and black levels */
-    int black_level, white_level;
+    float black_level;
+    int white_level;
 
     /* Do highlight reconstrucion? It's slow */
     int highlight_reconstruction;

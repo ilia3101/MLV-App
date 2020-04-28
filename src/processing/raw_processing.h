@@ -200,6 +200,10 @@ void processingSetToning(processingObject_t * processing, uint8_t r, uint8_t g, 
 #define processingDontUseCamMatrix(processing) (processing)->use_cam_matrix = 0
 #define processingGetUsedCamMatrix(processing) ((processing)->use_cam_matrix)
 
+/* EXR mode */
+#define processingEnableExr(processing) (processing)->exr_mode = 1
+#define processingDisableExr(processing) (processing)->exr_mode = 0
+
 /* Set Camera RAW matrix (matrix A is for tungsten) */
 void processingSetCamMatrix(processingObject_t * processing, double * camMatrix, double * camMatrixA);
 
@@ -236,10 +240,10 @@ void processingFindWhiteBalance(processingObject_t * processing,
 
 
 /* Black/white level set */
-void processingSetBlackLevel(processingObject_t * processing, int mlvBlackLevel, int mlvBitDepth);
+void processingSetBlackLevel(processingObject_t * processing, float mlvBlackLevel, int mlvBitDepth);
 void processingSetWhiteLevel(processingObject_t * processing, int mlvWhiteLevel, int mlvBitDepth);
-void processingSetBlackAndWhiteLevel( processingObject_t * processing,
-                                      int mlvBlackLevel, int mlvWhiteLevel, int mlvBitDepth );
+void processingSetBlackAndWhiteLevel(processingObject_t * processing,
+                                      float mlvBlackLevel, int mlvWhiteLevel, int mlvBitDepth );
 
 /* Get black/white level */
 #define processingGetBlackLevel(processing) (processing)->black_level
