@@ -6713,7 +6713,11 @@ void MainWindow::on_actionResetReceipt_triggered()
 void MainWindow::on_actionCopyRecept_triggered()
 {
     if( ui->listWidgetSession->count() <= 0 ) return;
-    if( ui->listWidgetSession->selectedItems().count() > 1 ) return;
+    if( ui->listWidgetSession->selectedItems().count() > 1 )
+    {
+        QMessageBox::warning( this, APPNAME, tr( "Please select just one clip to copy a receipt!" ) );
+        return;
+    }
 
     int clipToCopy;
     if( ui->listWidgetSession->selectedItems().count() == 0 ) clipToCopy = m_lastActiveClipInSession;
