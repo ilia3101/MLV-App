@@ -74,6 +74,13 @@ void applyProcessingObject( processingObject_t * processing,
                             uint16_t * __restrict outputImage,
                             int threads, int imageChanged, uint64_t frameIndex );
 
+/* This is for EXR output, works exactly the same as applyprocessing object,
+ * except output is float and ready for EXR export. */
+void processingGetFloatOutputForEXR( processingObject_t * processing, 
+                                     int imageX, int imageY, 
+                                     uint16_t * inputImage, 
+                                     float * outputImage,
+                                     int threads, int imageChanged, uint64_t frameIndex );
 
 
 /* Enable/disable the filter module (filter/filter.h) */
