@@ -231,9 +231,7 @@ void processingSetImageProfile(processingObject_t * processing, int imageProfile
     /* Yes, we still have compatibility with old profile system */
     processingGetAllowedCreativeAdjustments(processing) = default_image_profiles[imageProfile].allow_creative_adjustments;
     processingSetGamut(processing, default_image_profiles[imageProfile].colour_gamut);
-    int ret = processingSetTransferFunction(processing, default_image_profiles[imageProfile].transfer_function);
-    if (!ret) puts("success");
-    else puts("fail");
+    processingSetTransferFunction(processing, default_image_profiles[imageProfile].transfer_function);
 
     /* This updates matrices, so new gamut will be put to use */
     processingSetWhiteBalance(processing, processingGetWhiteBalanceKelvin(processing), processingGetWhiteBalanceTint(processing));
@@ -2132,7 +2130,6 @@ int processingSetTransferFunction(processingObject_t * processing, char * functi
             if (isdigit(*splitval_str))
             {
                 found_splitval = 1;
-                puts(splitval_str);
                 split_val = atof(splitval_str);
                 break;
             }
@@ -2166,10 +2163,8 @@ int processingSetTransferFunction(processingObject_t * processing, char * functi
     }
 
     te_variable * var = &processing->x_variable;
-    puts(function);
-    puts(function_string);
     te_expr * expression = te_compile(function_string, var, 1, NULL);
-    if (expression == NULL) {puts("compile failure"); free(function_string); return 1;}
+    if (expression == NULL) {free(function_string); return 1;}
 
     if (processing->transfer_function_string != NULL) free(processing->transfer_function_string);
     if (processing->transfer_function_string_formatted != NULL) free(processing->transfer_function_string_formatted);
