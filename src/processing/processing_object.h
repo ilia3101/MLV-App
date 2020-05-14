@@ -5,6 +5,8 @@
 #include "filter/filter.h"
 #include "cube_lut.h"
 
+#include "tinyexpr/tinyexpr.h"
+
 enum transform { TR_NONE, TR_ROT180 };
 
 typedef struct {
@@ -210,6 +212,16 @@ typedef struct {
     /* CA filter */
     uint8_t ca_desaturate; /* Range 0..100 */
     uint8_t ca_radius; /* Range 0.. */
+
+    /* Transfer function */
+    uint8_t transfer_split; /* Boolean */
+    double transfer_split_value;
+    char * transfer_function_string;
+    char * transfer_function_string_formatted; /* This is the default one */
+    double x_value;
+    te_variable x_variable;
+    te_expr * transfer_function;
+
 } processingObject_t;
 
 #endif

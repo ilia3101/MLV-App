@@ -116,6 +116,11 @@ void te_free(te_expr *n) {
     free(n);
 }
 
+static double split_func(double x, double split_val, double below, double above)
+{
+    if (x < split_val) return below;
+    else return above;
+}
 
 static double pi(void) {return 3.14159265358979323846;}
 static double e(void) {return 2.71828182845904523536;}
@@ -176,6 +181,7 @@ static const te_variable functions[] = {
     {"pow", pow,      TE_FUNCTION2 | TE_FLAG_PURE, 0},
     {"sin", sin,      TE_FUNCTION1 | TE_FLAG_PURE, 0},
     {"sinh", sinh,    TE_FUNCTION1 | TE_FLAG_PURE, 0},
+    {"split", split_func, TE_FUNCTION4 | TE_FLAG_PURE, 0},
     {"sqrt", sqrt,    TE_FUNCTION1 | TE_FLAG_PURE, 0},
     {"tan", tan,      TE_FUNCTION1 | TE_FLAG_PURE, 0},
     {"tanh", tanh,    TE_FUNCTION1 | TE_FLAG_PURE, 0},

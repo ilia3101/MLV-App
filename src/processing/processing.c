@@ -435,7 +435,7 @@ void processing_update_matrices(processingObject_t * processing)
                       processing->final_matrix );
 
     /* Exposure, done here if smaller than 0, or no tonemapping - else done at gamma function */
-    if (processing->exposure_stops < 0.0 || processing->tonemap_function == 0)
+    if (processing->exposure_stops < 0.0)
     {
         double exposure_factor = pow(2.0, processing->exposure_stops);
         for (int i = 0; i < 9; ++i) processing->final_matrix[i] *= exposure_factor;
