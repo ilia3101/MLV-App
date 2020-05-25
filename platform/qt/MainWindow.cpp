@@ -158,6 +158,15 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
         connect( m_pUpdateCheck, SIGNAL(updateAvailable(bool)), this, SLOT(updateCheckResponse(bool)) );
         m_pUpdateCheck->checkForUpdates();
     }
+
+    //Temp invisible
+    ui->label_GammaText->setVisible( false );
+    ui->label_GammaVal->setVisible( false );
+    ui->label_Gamut->setVisible( false );
+    ui->label_TonemappingFunction->setVisible( false );
+    ui->comboBoxProcessingGamut->setVisible( false );
+    ui->comboBoxTonemapFct->setVisible( false );
+    ui->horizontalSliderGamma->setVisible( false );
 }
 
 //Destructor
@@ -6398,6 +6407,8 @@ void MainWindow::on_comboBoxProfile_currentIndexChanged(int index)
     ui->comboBoxProcessingGamut->setCurrentIndex( processingGetGamut( m_pProcessingObject ) );
     ui->comboBoxProcessingGamut->blockSignals( false );
     ui->horizontalSliderGamma->setValue( processingGetGamma( m_pProcessingObject ) * 100 );
+
+    ui->lineEditTransferFunction->setText( processingGetTransferFunction( m_pProcessingObject ) );
 }
 
 //Chose profile, without changing the index
@@ -9737,4 +9748,17 @@ void MainWindow::setMarkColor(int clipNr, uint8_t mark)
         ui->listWidgetSession->item(clipNr)->setBackgroundColor( QColor( 0, 0, 0, 0 ) );
         ui->listWidgetSession->item(clipNr)->setHidden( !ui->actionShowUnmarkedClips->isChecked() );
     }
+}
+
+//Changed the transfer function text
+void MainWindow::on_lineEditTransferFunction_textChanged(const QString &arg1)
+{
+#ifdef Q_OS_UNIX
+    //qDebug() << "Set Transfer function!" <<
+    processingSetTransferFunction( m_pProcessingObject, arg1.toUtf8().data() );
+#else
+    //qDebug() << "Set Transfer function!" <<
+    processingSetTransferFunction( m_pProcessingObject, arg1.toLatin1().data() );
+#endif
+    m_frameChanged = true;
 }
