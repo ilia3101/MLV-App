@@ -162,11 +162,11 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     //Temp invisible
     ui->label_GammaText->setVisible( false );
     ui->label_GammaVal->setVisible( false );
-    ui->label_Gamut->setVisible( false );
-    ui->label_TonemappingFunction->setVisible( false );
-    ui->comboBoxProcessingGamut->setVisible( false );
-    ui->comboBoxTonemapFct->setVisible( false );
     ui->horizontalSliderGamma->setVisible( false );
+    //ui->label_Gamut->setVisible( false );
+    //ui->comboBoxProcessingGamut->setVisible( false );
+    ui->label_TonemappingFunction->setVisible( false );
+    ui->comboBoxTonemapFct->setVisible( false );
 }
 
 //Destructor
@@ -5398,6 +5398,7 @@ void MainWindow::on_horizontalSliderGamma_valueChanged(int position)
     double value = position / 100.0;
     processingSetGamma( m_pProcessingObject, value );
     ui->label_GammaVal->setText( QString("%1").arg( value, 0, 'f', 2 ) );
+    ui->lineEditTransferFunction->setText( processingGetTransferFunction( m_pProcessingObject ) );
     m_frameChanged = true;
 }
 
