@@ -2143,9 +2143,9 @@ int processingSetTransferFunction(processingObject_t * processing, char * functi
         for (int i = 0; ternary_left[i]; ++i) if (ternary_left[i] == ':') ternary_left[i] = 0;
 
         if (comparison_operator == '<')
-            sprintf(function_string, "split(x, %lf, %s, %s)", ternary_left, function + colon_pos + 1);
+            sprintf(function_string, "split(x, %lf, %s, %s)", split_val, ternary_left, function + colon_pos + 1);
         else if (comparison_operator == '>')
-            sprintf(function_string, "split(x, %lf, %s, %s)", function + colon_pos + 1, ternary_left);
+            sprintf(function_string, "split(x, %lf, %s, %s)", split_val, function + colon_pos + 1, ternary_left);
         else {
             free(ternary_left);
             return 1;
