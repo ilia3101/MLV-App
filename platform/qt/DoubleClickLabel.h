@@ -24,6 +24,8 @@ signals:
 
 protected:
     void mouseDoubleClickEvent(QMouseEvent*);
+    void enterEvent(QEvent *event);
+    void leaveEvent(QEvent *event);
 };
 
 #endif // DOUBLECLICKLABEL_H
