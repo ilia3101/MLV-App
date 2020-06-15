@@ -96,6 +96,7 @@ ReceiptSettings::ReceiptSettings()
     m_caRadius = 1;
     m_profile = 2;
     m_tonemap = -1;
+    m_transferFunction = QString( "" );
     m_gamut = -1;
     m_gamma = 315;
     m_creativeAdjustments = 1;

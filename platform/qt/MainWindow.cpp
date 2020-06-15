@@ -3559,6 +3559,11 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
             receipt->setTonemap( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
+        else if( Rxml->isStartElement() && Rxml->name() == "transferFunction" )
+        {
+            receipt->setTransferFunction( Rxml->readElementText() );
+            Rxml->readNext();
+        }
         else if( Rxml->isStartElement() && Rxml->name() == "gamut" )
         {
             receipt->setGamut( Rxml->readElementText().toInt() );
@@ -3908,6 +3913,7 @@ void MainWindow::writeXmlElementsToFile(QXmlStreamWriter *xmlWriter, ReceiptSett
     xmlWriter->writeTextElement( "chromaSeparation",        QString( "%1" ).arg( receipt->isChromaSeparation() ) );
     //xmlWriter->writeTextElement( "profile",                 QString( "%1" ).arg( receipt->profile() ) );
     xmlWriter->writeTextElement( "tonemap",                 QString( "%1" ).arg( receipt->tonemap() ) );
+    xmlWriter->writeTextElement( "transferFunction",        QString( "%1" ).arg( receipt->transferFunction() ) );
     xmlWriter->writeTextElement( "gamut",                   QString( "%1" ).arg( receipt->gamut() ) );
     xmlWriter->writeTextElement( "gamma",                   QString( "%1" ).arg( receipt->gamma() ) );
     xmlWriter->writeTextElement( "allowCreativeAdjustments",QString( "%1" ).arg( receipt->allowCreativeAdjustments() ) );
@@ -4153,6 +4159,10 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
         ui->comboBoxProcessingGamut->setCurrentIndex( receipt->gamut() );
         on_comboBoxProcessingGamut_currentIndexChanged( receipt->gamut() );
     }
+    if( receipt->transferFunction() != QString( "" ) )
+    {
+        ui->lineEditTransferFunction->setText( receipt->transferFunction() );
+    }
     ui->horizontalSliderGamma->setValue( receipt->gamma() );
 
     ui->checkBoxCreativeAdjustments->setChecked( receipt->allowCreativeAdjustments() );
@@ -4376,6 +4386,7 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     receipt->setChromaSeparation( ui->checkBoxChromaSeparation->isChecked() );
     receipt->setProfile( ui->comboBoxProfile->currentIndex() );
     receipt->setTonemap( ui->comboBoxTonemapFct->currentIndex() );
+    receipt->setTransferFunction( ui->lineEditTransferFunction->text() );
     receipt->setGamut( ui->comboBoxProcessingGamut->currentIndex() );
     receipt->setGamma( ui->horizontalSliderGamma->value() );
     receipt->setAllowCreativeAdjustments( ui->checkBoxCreativeAdjustments->isChecked() );
@@ -4500,6 +4511,7 @@ void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings 
         receiptTarget->setAllowCreativeAdjustments( receiptSource->allowCreativeAdjustments() );
         receiptTarget->setExrMode( receiptSource->exrMode() );
         receiptTarget->setTonemap( receiptSource->tonemap() );
+        receiptTarget->setTransferFunction( receiptSource->transferFunction() );
         receiptTarget->setGamut( receiptSource->gamut() );
         receiptTarget->setGamma( receiptSource->gamma() );
     }
@@ -4682,6 +4694,7 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     receipt->setAllowCreativeAdjustments( m_pSessionReceipts.at( row )->allowCreativeAdjustments() );
     receipt->setExrMode( m_pSessionReceipts.at( row )->exrMode() );
     receipt->setTonemap( m_pSessionReceipts.at( row )->tonemap() );
+    receipt->setTransferFunction( m_pSessionReceipts.at( row )->transferFunction() );
     receipt->setGamut( m_pSessionReceipts.at( row )->gamut() );
     receipt->setGamma( m_pSessionReceipts.at( row )->gamma() );
     receipt->setDenoiserStrength( m_pSessionReceipts.at( row )->denoiserStrength() );
