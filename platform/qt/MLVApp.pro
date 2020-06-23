@@ -173,7 +173,8 @@ SOURCES += \
     NoScrollComboBox.cpp \
     TranscodeDialog.cpp \
     CrossElement.cpp \
-    BadPixelFileHandler.cpp
+    BadPixelFileHandler.cpp \
+    ../../src/processing/tinyexpr/tinyexpr.c
 
 macx: SOURCES += ../cocoa/avf_lib/avf_lib.m
 
@@ -277,7 +278,8 @@ HEADERS += MainWindow.h \
     NoScrollComboBox.h \
     TranscodeDialog.h \
     CrossElement.h \
-    BadPixelFileHandler.h
+    BadPixelFileHandler.h \
+    ../../src/processing/tinyexpr/tinyexpr.h
 
 macx: HEADERS += \
     ../cocoa/avf_lib/avencoder.h \

@@ -158,6 +158,15 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
         connect( m_pUpdateCheck, SIGNAL(updateAvailable(bool)), this, SLOT(updateCheckResponse(bool)) );
         m_pUpdateCheck->checkForUpdates();
     }
+
+    //Temp invisible
+    ui->label_GammaText->setVisible( false );
+    ui->label_GammaVal->setVisible( false );
+    ui->horizontalSliderGamma->setVisible( false );
+    //ui->label_Gamut->setVisible( false );
+    //ui->comboBoxProcessingGamut->setVisible( false );
+    ui->label_TonemappingFunction->setVisible( false );
+    ui->comboBoxTonemapFct->setVisible( false );
 }
 
 //Destructor
@@ -3550,6 +3559,11 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
             receipt->setTonemap( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
+        else if( Rxml->isStartElement() && Rxml->name() == "transferFunction" )
+        {
+            receipt->setTransferFunction( Rxml->readElementText() );
+            Rxml->readNext();
+        }
         else if( Rxml->isStartElement() && Rxml->name() == "gamut" )
         {
             receipt->setGamut( Rxml->readElementText().toInt() );
@@ -3899,6 +3913,7 @@ void MainWindow::writeXmlElementsToFile(QXmlStreamWriter *xmlWriter, ReceiptSett
     xmlWriter->writeTextElement( "chromaSeparation",        QString( "%1" ).arg( receipt->isChromaSeparation() ) );
     //xmlWriter->writeTextElement( "profile",                 QString( "%1" ).arg( receipt->profile() ) );
     xmlWriter->writeTextElement( "tonemap",                 QString( "%1" ).arg( receipt->tonemap() ) );
+    xmlWriter->writeTextElement( "transferFunction",        QString( "%1" ).arg( receipt->transferFunction() ) );
     xmlWriter->writeTextElement( "gamut",                   QString( "%1" ).arg( receipt->gamut() ) );
     xmlWriter->writeTextElement( "gamma",                   QString( "%1" ).arg( receipt->gamma() ) );
     xmlWriter->writeTextElement( "allowCreativeAdjustments",QString( "%1" ).arg( receipt->allowCreativeAdjustments() ) );
@@ -4144,6 +4159,10 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
         ui->comboBoxProcessingGamut->setCurrentIndex( receipt->gamut() );
         on_comboBoxProcessingGamut_currentIndexChanged( receipt->gamut() );
     }
+    if( receipt->transferFunction() != QString( "" ) )
+    {
+        ui->lineEditTransferFunction->setText( receipt->transferFunction() );
+    }
     ui->horizontalSliderGamma->setValue( receipt->gamma() );
 
     ui->checkBoxCreativeAdjustments->setChecked( receipt->allowCreativeAdjustments() );
@@ -4367,6 +4386,7 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     receipt->setChromaSeparation( ui->checkBoxChromaSeparation->isChecked() );
     receipt->setProfile( ui->comboBoxProfile->currentIndex() );
     receipt->setTonemap( ui->comboBoxTonemapFct->currentIndex() );
+    receipt->setTransferFunction( ui->lineEditTransferFunction->text() );
     receipt->setGamut( ui->comboBoxProcessingGamut->currentIndex() );
     receipt->setGamma( ui->horizontalSliderGamma->value() );
     receipt->setAllowCreativeAdjustments( ui->checkBoxCreativeAdjustments->isChecked() );
@@ -4491,6 +4511,7 @@ void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings 
         receiptTarget->setAllowCreativeAdjustments( receiptSource->allowCreativeAdjustments() );
         receiptTarget->setExrMode( receiptSource->exrMode() );
         receiptTarget->setTonemap( receiptSource->tonemap() );
+        receiptTarget->setTransferFunction( receiptSource->transferFunction() );
         receiptTarget->setGamut( receiptSource->gamut() );
         receiptTarget->setGamma( receiptSource->gamma() );
     }
@@ -4673,6 +4694,7 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     receipt->setAllowCreativeAdjustments( m_pSessionReceipts.at( row )->allowCreativeAdjustments() );
     receipt->setExrMode( m_pSessionReceipts.at( row )->exrMode() );
     receipt->setTonemap( m_pSessionReceipts.at( row )->tonemap() );
+    receipt->setTransferFunction( m_pSessionReceipts.at( row )->transferFunction() );
     receipt->setGamut( m_pSessionReceipts.at( row )->gamut() );
     receipt->setGamma( m_pSessionReceipts.at( row )->gamma() );
     receipt->setDenoiserStrength( m_pSessionReceipts.at( row )->denoiserStrength() );
@@ -5389,6 +5411,7 @@ void MainWindow::on_horizontalSliderGamma_valueChanged(int position)
     double value = position / 100.0;
     processingSetGamma( m_pProcessingObject, value );
     ui->label_GammaVal->setText( QString("%1").arg( value, 0, 'f', 2 ) );
+    ui->lineEditTransferFunction->setText( processingGetTransferFunction( m_pProcessingObject ) );
     m_frameChanged = true;
 }
 
@@ -6398,6 +6421,8 @@ void MainWindow::on_comboBoxProfile_currentIndexChanged(int index)
     ui->comboBoxProcessingGamut->setCurrentIndex( processingGetGamut( m_pProcessingObject ) );
     ui->comboBoxProcessingGamut->blockSignals( false );
     ui->horizontalSliderGamma->setValue( processingGetGamma( m_pProcessingObject ) * 100 );
+
+    ui->lineEditTransferFunction->setText( processingGetTransferFunction( m_pProcessingObject ) );
 }
 
 //Chose profile, without changing the index
@@ -6713,7 +6738,11 @@ void MainWindow::on_actionResetReceipt_triggered()
 void MainWindow::on_actionCopyRecept_triggered()
 {
     if( ui->listWidgetSession->count() <= 0 ) return;
-    if( ui->listWidgetSession->selectedItems().count() > 1 ) return;
+    if( ui->listWidgetSession->selectedItems().count() > 1 )
+    {
+        QMessageBox::warning( this, APPNAME, tr( "Please select just one clip to copy a receipt!" ) );
+        return;
+    }
 
     int clipToCopy;
     if( ui->listWidgetSession->selectedItems().count() == 0 ) clipToCopy = m_lastActiveClipInSession;
@@ -9733,4 +9762,17 @@ void MainWindow::setMarkColor(int clipNr, uint8_t mark)
         ui->listWidgetSession->item(clipNr)->setBackgroundColor( QColor( 0, 0, 0, 0 ) );
         ui->listWidgetSession->item(clipNr)->setHidden( !ui->actionShowUnmarkedClips->isChecked() );
     }
+}
+
+//Changed the transfer function text
+void MainWindow::on_lineEditTransferFunction_textChanged(const QString &arg1)
+{
+#ifdef Q_OS_UNIX
+    //qDebug() << "Set Transfer function!" <<
+    processingSetTransferFunction( m_pProcessingObject, arg1.toUtf8().data() );
+#else
+    //qDebug() << "Set Transfer function!" <<
+    processingSetTransferFunction( m_pProcessingObject, arg1.toLatin1().data() );
+#endif
+    m_frameChanged = true;
 }

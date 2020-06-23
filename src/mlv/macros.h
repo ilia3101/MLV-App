@@ -58,6 +58,9 @@
 #define getMlvTmSec(video)     (video)->RTCI.tm_sec
 #define getMlvWbMode(video)    (video)->WBAL.wb_mode
 #define getMlvWbKelvin(video)  (video)->WBAL.kelvin
+#define getMlvWbRgain(video)   (video)->WBAL.wbgain_r
+#define getMlvWbGgain(video)   (video)->WBAL.wbgain_g
+#define getMlvWbBgain(video)   (video)->WBAL.wbgain_b
 #define getLosslessBpp(video)  (video)->lossless_bpp
 #define getMlvFocalLengthMin(video) (video)->ELNS.focalLengthMin
 #define getMlvFocalLengthMax(video) (video)->ELNS.focalLengthMax

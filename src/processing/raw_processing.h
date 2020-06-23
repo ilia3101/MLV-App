@@ -42,6 +42,10 @@ int processingGetTonemappingFunction(processingObject_t * processing);
 #define TONEMAP_Reinhard_3_5 10 /* Reinhard 3/5 */
 
 
+/* Transfer funciton, the correct version of "Gamma" or "Log" */
+int processingSetTransferFunction(processingObject_t * processing, char * function); /* Nonzero return value = Failure, transfer function unchanged */
+char * processingGetTransferFunction(processingObject_t * processing); /* Read */
+
 
 /* why does gradient have a gamma  */
 void processingSetGamma(processingObject_t * processing, double gammaValue);

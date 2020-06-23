@@ -60,6 +60,7 @@ public:
     void setChromaSeparation( bool on )       {m_chromaSeparation = on;}
     void setProfile( uint8_t num )            {m_profile = num;}
     void setTonemap( int8_t num )             {m_tonemap = num;}
+    void setTransferFunction( QString str )   {m_transferFunction = str;}
     void setGamut( int8_t num )               {m_gamut = num;}
     void setGamma( int value )                {m_gamma = value;}
     void setAllowCreativeAdjustments( bool on ){m_creativeAdjustments = on;}
@@ -206,6 +207,7 @@ public:
     uint32_t cutOut( void ){return m_cutOut;}
     uint8_t profile( void ){return m_profile;}
     int8_t tonemap( void ){return m_tonemap;}
+    QString transferFunction( void ){return m_transferFunction;}
     int8_t gamut( void ){return m_gamut;}
     int gamma( void ){return m_gamma;}
     bool allowCreativeAdjustments( void ){return m_creativeAdjustments;}
@@ -310,6 +312,7 @@ private:
     uint32_t m_cutOut;
     uint8_t m_profile;
     int8_t m_tonemap;
+    QString m_transferFunction;
     int8_t m_gamut;
     int m_gamma;
     bool m_creativeAdjustments;

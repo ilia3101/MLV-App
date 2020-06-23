@@ -386,6 +386,8 @@ private slots:
     void on_actionShowGreenClips_toggled(bool arg1);
     void on_actionShowUnmarkedClips_toggled(bool arg1);
 
+    void on_lineEditTransferFunction_textChanged(const QString &arg1);
+
 private:
     Ui::MainWindow *ui;
     InfoDialog *m_pInfoDialog;

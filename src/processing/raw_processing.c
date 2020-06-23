@@ -4,7 +4,9 @@
 #include <stdio.h>
 #include <math.h>
 #include <pthread.h>
+#include <ctype.h>
 #include "blur_threaded.h"
+#include "tinyexpr/tinyexpr.h"
 
 #ifdef __SSE2__
   #include <emmintrin.h>
@@ -129,6 +131,13 @@ processingObject_t * initProcessingObject()
         }
     }
 
+    /* Set null */
+    processing->transfer_function_string = NULL;
+    processing->transfer_function_string_formatted = NULL;
+    processing->x_variable.address = &processing->x_value;
+    processing->x_variable.name = "x";
+    processing->x_variable.context = 0;
+
     /* Gradient */
     processing->gradient_exposure_stops = 0.0;
 
@@ -136,6 +145,7 @@ processingObject_t * initProcessingObject()
     processingSetWhiteBalance(processing, 6000.0, 0.0);
     processingSetBlackAndWhiteLevel(processing, 2048, 15000, 14); /* 14 bit! */
     processingSetExposureStops(processing, 0.0);
+    processingSetTransferFunction(processing, "pow(x/(1+x), 1/3.15)");
     processingSetGamma(processing, STANDARD_GAMMA);
     processingSetGammaGradient(processing, STANDARD_GAMMA);
     processingSetVibrance(processing, 1.0);
@@ -220,16 +230,12 @@ void processingSetImageProfile(processingObject_t * processing, int imageProfile
 {
     /* Yes, we still have compatibility with old profile system */
     processingGetAllowedCreativeAdjustments(processing) = default_image_profiles[imageProfile].allow_creative_adjustments;
-    processingSetGamma(processing, default_image_profiles[imageProfile].gamma_power);
-    processingSetTonemappingFunction(processing, default_image_profiles[imageProfile].tonemap_function);
     processingSetGamut(processing, default_image_profiles[imageProfile].colour_gamut);
+    processingSetTransferFunction(processing, default_image_profiles[imageProfile].transfer_function);
 
     /* This updates matrices, so new gamut will be put to use */
     processingSetWhiteBalance(processing, processingGetWhiteBalanceKelvin(processing), processingGetWhiteBalanceTint(processing));
 
-    /* This will update everything necessary to enable tonemapping */
-    processingSetGamma(processing, processing->gamma_power);
-    processingSetGammaGradient(processing, processing->gamma_power);
     processing_update_matrices(processing);
     processing_update_matrices_gradient(processing);
 }
@@ -1495,35 +1501,21 @@ void processingSetGamma(processingObject_t * processing, double gammaValue)
     /* Needs to be inverse */
     double gamma = 1.0 / gammaValue;
 
-    double (* tone_mapping_function)(double) = tonemap_functions[processing->tonemap_function];
+    /* Exposure */
+    double exposure_factor = pow(2.0, processing->exposure_stops);
+    if (processing->exposure_stops < 0) exposure_factor = 1;
+    /* Precalculate the curve */
+    for (int i = 0; i < 65536; ++i)
+    {
+        /* Tone mapping also (reinhard) */
+        double pixel = (double)i/65535.0;
+        pixel *= exposure_factor;
+        processing->x_value = pixel;
+        pixel = te_eval(processing->transfer_function) * 65535.0;
+        pixel = LIMIT16(pixel);
+        processing->pre_calc_gamma[i] = pixel;
+    }
 
-    if (processing->exposure_stops < 0.0 || processing->tonemap_function == 0)
-    {
-        /* Precalculate the exposure curve */
-        for (int i = 0; i < 65536; ++i)
-        {
-            double pixel = (double)i/65535.0;
-            pixel = tone_mapping_function(pixel);
-            processing->pre_calc_gamma[i] = (uint16_t)(65535.0 * pow(pixel, gamma));
-        }
-    }
-    /* Else exposure done here if it is positive */
-    else
-    {
-        /* Exposure */
-        double exposure_factor = pow(2.0, processing->exposure_stops);
-        /* Precalculate the curve */
-        for (int i = 0; i < 65536; ++i)
-        {
-            /* Tone mapping also (reinhard) */
-            double pixel = (double)i/65535.0;
-            pixel *= exposure_factor;
-            pixel = tone_mapping_function(pixel);
-            pixel = 65535.0 * pow(pixel, gamma);
-            pixel = LIMIT16(pixel);
-            processing->pre_calc_gamma[i] = pixel;
-        }
-    }
     /* So highlight reconstruction works */
     processing_update_highest_green(processing);
     processingSetGammaGradient(processing, gammaValue); /* Cool */
@@ -1537,35 +1529,19 @@ void processingSetGammaGradient(processingObject_t * processing, double gammaVal
     /* Needs to be inverse */
     double gamma = 1.0 / gammaValue;
 
-    double (* tone_mapping_function)(double) = tonemap_functions[processing->tonemap_function];
+    /* Exposure */
+    double exposure_factor = pow(2.0, processing->exposure_stops+processing->gradient_exposure_stops);
+    if (processing->exposure_stops < 0) exposure_factor = 1;
+    /* Precalculate the curve */
+    for (int i = 0; i < 65536; ++i)
+    {
+        /* Tone mapping also (reinhard) */
+        double pixel = (double)i/65535.0;
+        pixel *= exposure_factor;
+        processing->x_value = pixel;
+        processing->pre_calc_gamma_gradient[i] = (uint16_t)LIMIT16(65535.0 * te_eval(processing->transfer_function));
+    }
 
-    if (processing->exposure_stops+processing->gradient_exposure_stops < 0.0 || processing->tonemap_function == 0)
-    {
-        /* Precalculate the exposure curve */
-        for (int i = 0; i < 65536; ++i)
-        {
-            double pixel = (double)i/65535.0;
-            pixel = tone_mapping_function(pixel);
-            processing->pre_calc_gamma_gradient[i] = (uint16_t)(65535.0 * pow(pixel, gamma));
-        }
-    }
-    /* Else exposure done here if it is positive */
-    else
-    {
-        /* Exposure */
-        double exposure_factor = pow(2.0, processing->exposure_stops+processing->gradient_exposure_stops);
-        /* Precalculate the curve */
-        for (int i = 0; i < 65536; ++i)
-        {
-            /* Tone mapping also (reinhard) */
-            double pixel = (double)i/65535.0;
-            pixel *= exposure_factor;
-            pixel = tone_mapping_function(pixel);
-            pixel = 65535.0 * pow(pixel, gamma);
-            pixel = LIMIT16(pixel);
-            processing->pre_calc_gamma_gradient[i] = pixel;
-        }
-    }
     /* So highlight reconstruction works */
     processing_update_highest_green_gradient(processing);
 }
@@ -1585,26 +1561,6 @@ void processingSet3WayCorrection( processingObject_t * processing,
 
     processing_update_curves(processing);
 }
-
-// void processing_enable_tonemapping(processingObject_t * processing)
-// {
-//     (processing)->tone_mapping = 1;
-//     /* This will update everything necessary to enable tonemapping */
-//     processingSetGamma(processing, processing->gamma_power);
-//     processingSetGammaGradient(processing, processing->gamma_power);
-//     processing_update_matrices(processing);
-//     processing_update_matrices_gradient(processing);
-// }
-
-// void processing_disable_tonemapping(processingObject_t * processing) 
-// {
-//     (processing)->tone_mapping = 0;
-//     /* This will update everything necessary to disable tonemapping */
-//     processingSetGamma(processing, processing->gamma_power);
-//     processingSetGammaGradient(processing, processing->gamma_power);
-//     processing_update_matrices(processing);
-//     processing_update_matrices_gradient(processing);
-// }
 
 /* Set black and white level */
 void processingSetBlackAndWhiteLevel(processingObject_t * processing,
@@ -2121,4 +2077,111 @@ void processingSetToning(processingObject_t *processing, uint8_t r, uint8_t g, u
     processing->toning_wet[0] = (strength / 3.0 / 100.0) * (float)r / 255.0;
     processing->toning_wet[1] = (strength / 3.0 / 100.0) * (float)g / 255.0;
     processing->toning_wet[2] = (strength / 3.0 / 100.0) * (float)b / 255.0;
+}
+
+
+/* Transfer funciton, the correct version of "Gamma" or "Log" */
+int processingSetTransferFunction(processingObject_t * processing, char * function)
+{
+    /* Unforutnately tinyexpr doesnt have ternary operators (no library I could find did anyway) */
+    int string_length = strlen(function);
+    /* Count amount of quesiton marks and colons, to make sure theres no mroe than of one each */
+    int question_mark_pos = -1, num_question_marks = 0;
+    int colon_pos = -1, num_colons = 0;
+    char comparison_operator = 0; /* This may be a '<' or a '>', if there is an '=' it is ignored */
+    int comparison_operator_loc = -1, num_comparisons = 0;
+
+    char * function_string = NULL;
+
+    for (int i = 0; i < string_length; ++i)
+    {
+        char current = function[i];
+        if (current == '?')
+        {
+            num_question_marks++;
+            question_mark_pos = i;
+        }
+        else if (current == ':')
+        {
+            num_colons++;
+            colon_pos = i;
+        }
+        else if (current == '<' || current == '>')
+        {
+            comparison_operator = current;
+            comparison_operator_loc = i;
+            num_comparisons++;
+        }
+    }
+
+    /* Must be equal for a valid ternary operation */
+    if (num_question_marks != num_colons || num_comparisons != num_colons) return 1;
+
+    if (num_question_marks == 1)
+    {
+        int found_splitval = 0;
+        double split_val = NAN;
+        function_string = malloc(100 + string_length);
+
+        char * splitval_str = function + comparison_operator_loc;
+
+        while (*splitval_str != '?' && *splitval_str != 0)
+        {
+            if (isdigit(*splitval_str))
+            {
+                found_splitval = 1;
+                split_val = atof(splitval_str);
+                break;
+            }
+            ++splitval_str;
+        }
+
+        if (!found_splitval) return 1;
+
+        char * ternary_left = malloc(string_length + 10);
+        strcpy(ternary_left, function + question_mark_pos + 1);
+        for (int i = 0; ternary_left[i]; ++i) if (ternary_left[i] == ':') ternary_left[i] = 0;
+
+        if (comparison_operator == '<')
+            sprintf(function_string, "split(x, %lf, %s, %s)", split_val, ternary_left, function + colon_pos + 1);
+        else if (comparison_operator == '>')
+            sprintf(function_string, "split(x, %lf, %s, %s)", split_val, function + colon_pos + 1, ternary_left);
+        else {
+            free(ternary_left);
+            return 1;
+        }
+        free(ternary_left);
+    }
+    else if (num_question_marks == 0)
+    {
+        function_string = malloc(string_length+1);
+        strcpy(function_string, function);
+    }
+    else
+    {
+        return 1;
+    }
+
+    te_variable * var = &processing->x_variable;
+    te_expr * expression = te_compile(function_string, var, 1, NULL);
+    if (expression == NULL) {free(function_string); return 1;}
+
+    if (processing->transfer_function_string != NULL) free(processing->transfer_function_string);
+    if (processing->transfer_function_string_formatted != NULL) free(processing->transfer_function_string_formatted);
+    te_free(processing->transfer_function);
+
+    processing->transfer_function_string = malloc(string_length+1);
+    strcpy(processing->transfer_function_string, function);
+    processing->transfer_function_string_formatted = function_string;
+    processing->transfer_function = expression;
+
+    /* This just updates the lookup tables now */
+    processingSetGamma(processing, 1);
+
+    return 0;
+}
+
+char * processingGetTransferFunction(processingObject_t * processing)
+{
+    return processing->transfer_function_string;
 }

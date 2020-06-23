@@ -7,6 +7,7 @@ typedef struct image_profile_t {
     uint8_t tonemap_function; /* Tonemap function macro */
     uint8_t allow_creative_adjustments; /* Disable saturation contrast curves etc */
     uint8_t colour_gamut; /* What colour gamut (macros in raw_processing.h) */
+    char * transfer_function; /* Transfer function */
 }  image_profile_t;
 
 #endif
