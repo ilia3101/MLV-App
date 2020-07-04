@@ -43,7 +43,7 @@
 #define getMlvFocalLength(video) (video)->LENS.focalLength
 #define getMlvShutter(video) (video)->EXPO.shutterValue
 #define getMlvAperture(video) (video)->LENS.aperture
-#define doesMlvHaveAudio(video) (((video)->MLVI.audioClass) && ((video)->audios))
+#define doesMlvHaveAudio(video) (((video)->MLVI.audioClass) && ((video)->audios) && ((video)->WAVI.channels != 0))
 #define getMlvSampleRate(video) (video)->WAVI.samplingRate
 #define getMlvAudioChannels(video) (video)->WAVI.channels
 #define getMlvAudioBytesPerSecond(video) (video)->WAVI.bytesPerSecond
