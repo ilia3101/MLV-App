@@ -140,7 +140,7 @@ double SonySLogTonemap(double x) { return (x >= 0.01125000) ? (420.0 + log10((x 
 float SonySLogTonemap_f(float x) { return (x >= 0.01125000f) ? (420.0f + log10f((x + 0.01f) / (0.18f + 0.01f)) * 261.5f) / 1023.0f : (x * (171.2102946929f - 95.0f) / 0.01125000f + 95.0f) / 1023.0f; }
 
 /* sRGB */
-double sRGBTransferFunction(double x) { return x < 0.0031308 ? x * 12.92 : (1.055 * pow(x, 1.0 / 2.4)) -0.055; }
+double sRGBTransferFunction(double x) { return (x < 0.0031308) ? x * 12.92 : (1.055 * pow(x, 1.0 / 2.4)) -0.055; }
 float sRGBTransferFunction_f(float x) { return x < 0.0031308f ? x * 12.92f : (1.055f * powf(x, 1.0f / 2.4f)) -0.055f; }
 
 /* rec709 */
@@ -150,6 +150,35 @@ float Rec709TransferFunction_f(float x) { return x <= 0.018f ? (x * 4.5f) : 1.09
 /* HLG (Hybrid Log Gamma) */
 double HLG_TransferFunction(double E) { return (E <= 1.0) ? (sqrt(E) * 0.5) : 0.17883277 * log(E - 0.28466892) + 0.55991073; }
 float HLG_TransferFunction_f(float E) { return (E <= 1.0f) ? (sqrtf(E) * 0.5f) : 0.17883277f * logf(E - 0.28466892f) + 0.55991073f; }
+
+typedef struct {
+    int id;
+    char * string;
+} tonemap_func_t;
+
+static tonemap_func_t tonemap_function_strings[] = {
+    { TONEMAP_None, "x" }
+    { TONEMAP_Reinhard, "(x < 0.0) ? x : x / (1.0 + x)" },
+    { TONEMAP_Tangent, "atan(x) / atan(8.0)" },
+    { TONEMAP_AlexaLogC, "(x > 0.010591) ? (0.247190 * log10(5.555556 * x + 0.052272) + 0.385537) : (5.367655 * x + 0.092809)" },
+    { TONEMAP_CineonLog, "((log10(x * (1.0 - 0.0108) + 0.0108)) * 300.0 + 685.0) / 1023.0" },
+    { TONEMAP_SonySLog, "(x >= 0.01125000) ? (420.0 + log10((x + 0.01) / (0.18 + 0.01)) * 261.5) / 1023.0 : (x * (171.2102946929 - 95.0) / 0.01125000 + 95.0) / 1023.0" },
+    { TONEMAP_sRGB, "(x < 0.0031308) ? x * 12.92 : (1.055 * pow(x, 1.0 / 2.4)) -0.055" },
+    { TONEMAP_Rec709, "(x <= 0.018) ? (x * 4.5) : 1.099 * pow( x, (0.45) ) - 0.099" },
+    { TONEMAP_HLG, "(x <= 1.0) ? (sqrt(x) * 0.5) : 0.17883277 * log(x - 0.28466892) + 0.55991073" },
+    /* { TONEMAP_BMDFilm, "x" }, */ /* Sort this out */
+    { TONEMAP_Reinhard_3_5, "(x < 0.4) ? x : (((x-0.4)/0.6) / (1.0 + ((x-0.4)/0.6)))*0.6 + 0.4" }
+}
+
+char * get_tonemap_func_string(int id)
+{
+    int index = 0;
+    for (int i = 0; i < sizeof(tonemap_function_strings)/sizeof(tonemap_function_strings[0]); ++i)
+    {
+        if (id == tonemap_function_strings[i].id) index = i;
+    }
+    return tonemap_function_strings[index].string;
+}
 
 /* BMDFilm via LUT */
 double BmdFilmTonemap(double x)

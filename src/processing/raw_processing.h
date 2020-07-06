@@ -25,10 +25,8 @@ int processingGetGamut(processingObject_t * processing);
 #define GAMUT_BmdFilm 8
 
 
-/* Tonemapping function, really this can be a tonemapping function, a log
- * function or any other gamma or transfer function */
-void processingSetTonemappingFunction(processingObject_t * processing, int function);
-int processingGetTonemappingFunction(processingObject_t * processing);
+/* Set transfer funtion in old way */
+void processingSetGammaAndTonemapping(processingObject_t * processing, double gamma, int tonemapping)
 #define TONEMAP_None 0
 #define TONEMAP_Reinhard 1
 #define TONEMAP_Tangent 2

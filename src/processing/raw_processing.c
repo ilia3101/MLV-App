@@ -2079,9 +2079,7 @@ void processingSetToning(processingObject_t *processing, uint8_t r, uint8_t g, u
     processing->toning_wet[2] = (strength / 3.0 / 100.0) * (float)b / 255.0;
 }
 
-
-/* Transfer funciton, the correct version of "Gamma" or "Log" */
-int processingSetTransferFunction(processingObject_t * processing, char * function)
+static char * compile_ternary(char * function)
 {
     /* Unforutnately tinyexpr doesnt have ternary operators (no library I could find did anyway) */
     int string_length = strlen(function);
@@ -2157,10 +2155,32 @@ int processingSetTransferFunction(processingObject_t * processing, char * functi
         function_string = malloc(string_length+1);
         strcpy(function_string, function);
     }
+
+    return function_string;
+}
+
+void processingSetGammaAndTonemapping(processingObject_t * processing, double gamma, int tonemapping)
+{
+    if (gamma < 1.00001 && gamma > 0.99999)
+    {
+        processingSetTransferFunction(processing, get_tonemap_func_string(tonemapping));
+    }
     else
     {
-        return 1;
+        char * compiled = compile_ternary(get_tonemap_func_string(tonemapping));
+        char * string = malloc(strlen(compiled)+100);
+        sprintf(string, "pow(%s, %lf)", compiled, gamma);
+        processingSetTransferFunction(string);
+        free(string);
+        free(compiled);
     }
+}
+
+/* Transfer funciton, the correct version of "Gamma" or "Log" */
+int processingSetTransferFunction(processingObject_t * processing, char * function)
+{
+    char * function_string = compile_ternary(function);
+    if (function_string == NULL) return 1;
 
     te_variable * var = &processing->x_variable;
     te_expr * expression = te_compile(function_string, var, 1, NULL);
@@ -2170,7 +2190,7 @@ int processingSetTransferFunction(processingObject_t * processing, char * functi
     if (processing->transfer_function_string_formatted != NULL) free(processing->transfer_function_string_formatted);
     te_free(processing->transfer_function);
 
-    processing->transfer_function_string = malloc(string_length+1);
+    processing->transfer_function_string = malloc(strlen(function)+1);
     strcpy(processing->transfer_function_string, function);
     processing->transfer_function_string_formatted = function_string;
     processing->transfer_function = expression;
