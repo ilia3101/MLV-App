@@ -47,6 +47,7 @@
 #include "PixelMapListDialog.h"
 #include "TranscodeDialog.h"
 #include "BadPixelFileHandler.h"
+#include "FocusPixelMapManager.h"
 
 #define APPNAME "MLV App"
 #define VERSION QString("%1.%2").arg(VERSION_MAJOR).arg(VERSION_MINOR)
@@ -4636,6 +4637,9 @@ int MainWindow::showFileInEditor(int row)
 
     //Caching is in which state? Set it!
     if( ui->actionCaching->isChecked() ) on_actionCaching_triggered();
+
+    //Focus Pixel Check
+    focusPixelCheckAndInstallation();
 
     return 0;
 }
@@ -9761,6 +9765,31 @@ void MainWindow::setMarkColor(int clipNr, uint8_t mark)
     {
         ui->listWidgetSession->item(clipNr)->setBackgroundColor( QColor( 0, 0, 0, 0 ) );
         ui->listWidgetSession->item(clipNr)->setHidden( !ui->actionShowUnmarkedClips->isChecked() );
+    }
+}
+
+//Check if a focus pixel map is needed and installed, if not download and install it
+void MainWindow::focusPixelCheckAndInstallation()
+{
+    if( !ui->toolButtonFocusDotsOff->isChecked() )
+    {
+        FocusPixelMapManager *fpmManager = new FocusPixelMapManager( this );
+        if( !fpmManager->isDownloaded( m_pMlvObject ) && fpmManager->isMapAvailable( m_pMlvObject ) )
+        {
+            if( !QMessageBox::question( this, APPNAME, tr( "Download and install focus pixel map for this clip?" ), tr( "Yes" ), tr( "No" ) ) )
+            {
+                if( fpmManager->downloadMap( m_pMlvObject ) )
+                {
+                    QMessageBox::information( this, APPNAME, tr( "Download and installation of focus pixel map successful." ) );
+                    showFileInEditor( m_lastActiveClipInSession );
+                }
+                else
+                {
+                    QMessageBox::critical( this, APPNAME, tr( "Download and installation of focus pixel map failed." ) );
+                }
+            }
+        }
+        delete fpmManager;
     }
 }
 
