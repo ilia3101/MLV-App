@@ -2170,7 +2170,7 @@ void processingSetGammaAndTonemapping(processingObject_t * processing, double ga
         char * compiled = compile_ternary(get_tonemap_func_string(tonemapping));
         char * string = malloc(strlen(compiled)+100);
         sprintf(string, "pow(%s, %lf)", compiled, gamma);
-        processingSetTransferFunction(string);
+        processingSetTransferFunction(processing, string);
         free(string);
         free(compiled);
     }

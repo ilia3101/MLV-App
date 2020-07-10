@@ -157,7 +157,7 @@ typedef struct {
 } tonemap_func_t;
 
 static tonemap_func_t tonemap_function_strings[] = {
-    { TONEMAP_None, "x" }
+    { TONEMAP_None, "x" },
     { TONEMAP_Reinhard, "(x < 0.0) ? x : x / (1.0 + x)" },
     { TONEMAP_Tangent, "atan(x) / atan(8.0)" },
     { TONEMAP_AlexaLogC, "(x > 0.010591) ? (0.247190 * log10(5.555556 * x + 0.052272) + 0.385537) : (5.367655 * x + 0.092809)" },
@@ -168,7 +168,7 @@ static tonemap_func_t tonemap_function_strings[] = {
     { TONEMAP_HLG, "(x <= 1.0) ? (sqrt(x) * 0.5) : 0.17883277 * log(x - 0.28466892) + 0.55991073" },
     /* { TONEMAP_BMDFilm, "x" }, */ /* Sort this out */
     { TONEMAP_Reinhard_3_5, "(x < 0.4) ? x : (((x-0.4)/0.6) / (1.0 + ((x-0.4)/0.6)))*0.6 + 0.4" }
-}
+};
 
 char * get_tonemap_func_string(int id)
 {
