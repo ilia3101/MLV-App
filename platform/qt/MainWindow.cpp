@@ -9794,7 +9794,7 @@ void MainWindow::focusPixelCheckAndInstallation()
             if( camidGetCameraName( camId, 1 ) != NULL ) camName.append( QString( " / %1" ).arg( camidGetCameraName( camId, 1 ) ) );
             if( camidGetCameraName( camId, 2 ) != NULL ) camName.append( QString( " / %1" ).arg( camidGetCameraName( camId, 2 ) ) );
 
-            int ret = QMessageBox::question( this, APPNAME, tr( "Download and install focus pixel map for this clip?\nOr do you like to install all focus pixel maps for %1" ).arg( camName ), tr( "Yes" ), tr( "No" ), tr( "All" ) );
+            int ret = QMessageBox::question( this, APPNAME, tr( "Download and install focus pixel map for this clip or install all focus pixel maps for %1" ).arg( camName ), tr( "Single Map" ), tr( "All Maps" ), tr( "None" ) );
             StatusFpmDialog *status = new StatusFpmDialog( this );
             if( ret == 0 )
             {
@@ -9811,7 +9811,7 @@ void MainWindow::focusPixelCheckAndInstallation()
                     QMessageBox::critical( this, APPNAME, tr( "Download and installation of focus pixel map failed." ) );
                 }
             }
-            else if( ret == 2 )
+            else if( ret == 1 )
             {
                 status->open();
                 if( fpmManager->downloadAllMaps( m_pMlvObject ) )
