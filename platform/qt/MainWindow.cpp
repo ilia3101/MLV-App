@@ -9783,7 +9783,7 @@ void MainWindow::setMarkColor(int clipNr, uint8_t mark)
 //Check if a focus pixel map is needed and installed, if not download and install it
 void MainWindow::focusPixelCheckAndInstallation()
 {
-    if( !ui->toolButtonFocusDotsOff->isChecked() )
+    if( llrpDetectFocusDotFixMode( m_pMlvObject ) != 0 )
     {
         FocusPixelMapManager *fpmManager = new FocusPixelMapManager( this );
         if( !fpmManager->isDownloaded( m_pMlvObject ) && fpmManager->isMapAvailable( m_pMlvObject ) )
