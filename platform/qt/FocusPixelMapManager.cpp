@@ -94,6 +94,44 @@ bool FocusPixelMapManager::downloadAllMaps(mlvObject_t *pMlvObject)
     return installed;
 }
 
+//Update all the downloaded maps
+bool FocusPixelMapManager::updateAllMaps()
+{
+    bool installed = false;
+    QJsonArray files = getMapList();
+    if( files.empty() )
+    {
+        return false;
+    }
+    foreach( QJsonValue entry, files )
+    {
+        QString fileName = entry.toObject().value( "name" ).toString();
+        QByteArray shaJson = entry.toObject().value( "sha" ).toString().toUtf8();
+        QByteArray shaFile;
+
+        QFile f( QString( "%1/%2" ).arg( QCoreApplication::applicationDirPath() ).arg( fileName ) );
+        if( f.open(QFile::ReadOnly ) )
+        {
+            shaFile = QCryptographicHash::hash( f.readAll(), QCryptographicHash::Sha1 ).toHex();
+            qDebug() << "File" << shaFile;
+            qDebug() << "Json" << shaJson;
+
+            /*if( shaFile != shaJson )
+            {
+                manager->doDownload( QUrl( entry.toObject().value( "download_url" ).toString() ) );
+                while( !manager->isDownloadReady() )
+                {
+                    qApp->processEvents();
+                }
+                if( manager->downloadSuccess() ) installed = true;
+                else return false;
+            }*/
+        }
+    }
+
+    return installed;
+}
+
 //Get map list online from repos
 QJsonArray FocusPixelMapManager::getMapList()
 {

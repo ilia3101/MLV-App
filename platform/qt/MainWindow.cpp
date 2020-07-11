@@ -180,6 +180,10 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     //ui->comboBoxProcessingGamut->setVisible( false );
     ui->label_TonemappingFunction->setVisible( false );
     ui->comboBoxTonemapFct->setVisible( false );
+
+    /*FocusPixelMapManager *manager = new FocusPixelMapManager( this );
+    manager->updateAllMaps();
+    delete manager;*/
 }
 
 //Destructor
@@ -9794,7 +9798,7 @@ void MainWindow::focusPixelCheckAndInstallation()
             if( camidGetCameraName( camId, 1 ) != NULL ) camName.append( QString( " / %1" ).arg( camidGetCameraName( camId, 1 ) ) );
             if( camidGetCameraName( camId, 2 ) != NULL ) camName.append( QString( " / %1" ).arg( camidGetCameraName( camId, 2 ) ) );
 
-            int ret = QMessageBox::question( this, APPNAME, tr( "Download and install focus pixel map for this clip or install all focus pixel maps for %1" ).arg( camName ), tr( "Single Map" ), tr( "All Maps" ), tr( "None" ) );
+            int ret = QMessageBox::question( this, APPNAME, tr( "Download and install focus pixel map for this clip or install all focus pixel maps for %1?" ).arg( camName ), tr( "Single Map" ), tr( "All Maps" ), tr( "None" ) );
             StatusFpmDialog *status = new StatusFpmDialog( this );
             if( ret == 0 )
             {
