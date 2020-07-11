@@ -176,7 +176,8 @@ SOURCES += \
     BadPixelFileHandler.cpp \
     ../../src/processing/tinyexpr/tinyexpr.c \
     FocusPixelMapManager.cpp \
-    DownloadManager.cpp
+    DownloadManager.cpp \
+    StatusFpmDialog.cpp
 
 macx: SOURCES += ../cocoa/avf_lib/avf_lib.m
 
@@ -283,7 +284,8 @@ HEADERS += MainWindow.h \
     BadPixelFileHandler.h \
     ../../src/processing/tinyexpr/tinyexpr.h \
     DownloadManager.h \
-    FocusPixelMapManager.h
+    FocusPixelMapManager.h \
+    StatusFpmDialog.h
 
 macx: HEADERS += \
     ../cocoa/avf_lib/avencoder.h \
@@ -304,7 +306,8 @@ FORMS += \
     SingleFrameExportDialog.ui \
     OverwriteListDialog.ui \
     PixelMapListDialog.ui \
-    TranscodeDialog.ui
+    TranscodeDialog.ui \
+    StatusFpmDialog.ui
 
 RESOURCES += \
     ressources.qrc \

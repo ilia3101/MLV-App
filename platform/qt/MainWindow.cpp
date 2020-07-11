@@ -48,6 +48,18 @@
 #include "TranscodeDialog.h"
 #include "BadPixelFileHandler.h"
 #include "FocusPixelMapManager.h"
+#include "StatusFpmDialog.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include <../../src/mlv/camid/camera_id.h>
+extern const char* camidGetCameraName(uint32_t cameraModel, int camname_type);
+
+#ifdef __cplusplus
+}
+#endif
 
 #define APPNAME "MLV App"
 #define VERSION QString("%1.%2").arg(VERSION_MAJOR).arg(VERSION_MINOR)
@@ -9776,18 +9788,45 @@ void MainWindow::focusPixelCheckAndInstallation()
         FocusPixelMapManager *fpmManager = new FocusPixelMapManager( this );
         if( !fpmManager->isDownloaded( m_pMlvObject ) && fpmManager->isMapAvailable( m_pMlvObject ) )
         {
-            if( !QMessageBox::question( this, APPNAME, tr( "Download and install focus pixel map for this clip?" ), tr( "Yes" ), tr( "No" ) ) )
+            //Camera name?
+            uint32_t camId = getMlvCameraModel( m_pMlvObject );
+            QString camName = QString( "%1" ).arg( camidGetCameraName( camId, 0 ) );
+            if( camidGetCameraName( camId, 1 ) != NULL ) camName.append( QString( " / %1" ).arg( camidGetCameraName( camId, 1 ) ) );
+            if( camidGetCameraName( camId, 2 ) != NULL ) camName.append( QString( " / %1" ).arg( camidGetCameraName( camId, 2 ) ) );
+
+            int ret = QMessageBox::question( this, APPNAME, tr( "Download and install focus pixel map for this clip?\nOr do you like to install all focus pixel maps for %1" ).arg( camName ), tr( "Yes" ), tr( "No" ), tr( "All" ) );
+            StatusFpmDialog *status = new StatusFpmDialog( this );
+            status->open();
+            if( ret == 0 )
             {
                 if( fpmManager->downloadMap( m_pMlvObject ) )
                 {
-                    QMessageBox::information( this, APPNAME, tr( "Download and installation of focus pixel map successful." ) );
+                    //QMessageBox::information( this, APPNAME, tr( "Download and installation of focus pixel map successful." ) );
+                    status->close();
                     showFileInEditor( m_lastActiveClipInSession );
                 }
                 else
                 {
+                    status->close();
                     QMessageBox::critical( this, APPNAME, tr( "Download and installation of focus pixel map failed." ) );
                 }
             }
+            else if( ret == 2 )
+            {
+                if( fpmManager->downloadAllMaps( m_pMlvObject ) )
+                {
+                    //QMessageBox::information( this, APPNAME, tr( "Download and installation of focus pixel maps successful." ) );
+                    status->close();
+                    showFileInEditor( m_lastActiveClipInSession );
+                }
+                else
+                {
+                    status->close();
+                    QMessageBox::critical( this, APPNAME, tr( "Download and installation of focus pixel maps failed." ) );
+                }
+            }
+            delete status;
+
         }
         delete fpmManager;
     }

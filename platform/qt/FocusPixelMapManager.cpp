@@ -67,6 +67,32 @@ bool FocusPixelMapManager::downloadMap(mlvObject_t *pMlvObject)
     return false;
 }
 
+//Download and install all fpm for current camera from repos in application
+bool FocusPixelMapManager::downloadAllMaps(mlvObject_t *pMlvObject)
+{
+    bool installed = false;
+    QString searchName = QString( "%1" ).arg( pMlvObject->IDNT.cameraModel, 0, 16 );
+    QJsonArray files = getMapList();
+    if( files.empty() )
+    {
+        return false;
+    }
+    foreach( QJsonValue entry, files )
+    {
+        if( entry.toObject().value( "name" ).toString().startsWith( searchName ) )
+        {
+            manager->doDownload( QUrl( entry.toObject().value( "download_url" ).toString() ) );
+            while( !manager->isDownloadReady() )
+            {
+                qApp->processEvents();
+            }
+            if( manager->downloadSuccess() ) installed = true;
+        }
+    }
+
+    return installed;
+}
+
 //Get map list online from repos
 QJsonArray FocusPixelMapManager::getMapList()
 {
