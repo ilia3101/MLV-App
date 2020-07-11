@@ -87,6 +87,7 @@ bool FocusPixelMapManager::downloadAllMaps(mlvObject_t *pMlvObject)
                 qApp->processEvents();
             }
             if( manager->downloadSuccess() ) installed = true;
+            else return false;
         }
     }
 
