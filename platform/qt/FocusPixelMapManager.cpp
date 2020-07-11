@@ -97,14 +97,14 @@ bool FocusPixelMapManager::downloadAllMaps(mlvObject_t *pMlvObject)
 //Get map list online from repos
 QJsonArray FocusPixelMapManager::getMapList()
 {
-    manager->doDownload( QUrl( "https://api.github.com/repos/ilia3101/MLV-App/contents/platform/qt/PixelMaps" ) );
+    manager->doDownload( QUrl( "https://api.github.com/repos/ilia3101/MLV-App/contents/pixel_maps" ) );
 
     while( !manager->isDownloadReady() )
     {
         qApp->processEvents();
     }
 
-    QString fileName = QString( "%1/PixelMaps" ).arg( QCoreApplication::applicationDirPath() );
+    QString fileName = QString( "%1/pixel_maps" ).arg( QCoreApplication::applicationDirPath() );
     QFile file( fileName );
     if( !file.open( QIODevice::ReadOnly | QIODevice::Text ) )
     {
