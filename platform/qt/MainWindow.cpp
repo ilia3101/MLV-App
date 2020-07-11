@@ -9796,9 +9796,9 @@ void MainWindow::focusPixelCheckAndInstallation()
 
             int ret = QMessageBox::question( this, APPNAME, tr( "Download and install focus pixel map for this clip?\nOr do you like to install all focus pixel maps for %1" ).arg( camName ), tr( "Yes" ), tr( "No" ), tr( "All" ) );
             StatusFpmDialog *status = new StatusFpmDialog( this );
-            status->open();
             if( ret == 0 )
             {
+                status->open();
                 if( fpmManager->downloadMap( m_pMlvObject ) )
                 {
                     //QMessageBox::information( this, APPNAME, tr( "Download and installation of focus pixel map successful." ) );
@@ -9813,6 +9813,7 @@ void MainWindow::focusPixelCheckAndInstallation()
             }
             else if( ret == 2 )
             {
+                status->open();
                 if( fpmManager->downloadAllMaps( m_pMlvObject ) )
                 {
                     //QMessageBox::information( this, APPNAME, tr( "Download and installation of focus pixel maps successful." ) );
