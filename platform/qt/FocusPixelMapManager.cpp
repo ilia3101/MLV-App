@@ -7,6 +7,7 @@
 
 #include "FocusPixelMapManager.h"
 #include <QMessageBox>
+#include <QByteArray>
 
 //Constructor
 FocusPixelMapManager::FocusPixelMapManager(QObject *parent) : QObject(parent)
@@ -95,13 +96,13 @@ bool FocusPixelMapManager::downloadAllMaps(mlvObject_t *pMlvObject)
 }
 
 //Update all the downloaded maps
-bool FocusPixelMapManager::updateAllMaps()
+int FocusPixelMapManager::updateAllMaps( bool justCheck )
 {
-    bool installed = false;
+    int installed = 0;
     QJsonArray files = getMapList();
     if( files.empty() )
     {
-        return false;
+        return 0;
     }
     foreach( QJsonValue entry, files )
     {
@@ -112,20 +113,32 @@ bool FocusPixelMapManager::updateAllMaps()
         QFile f( QString( "%1/%2" ).arg( QCoreApplication::applicationDirPath() ).arg( fileName ) );
         if( f.open(QFile::ReadOnly ) )
         {
-            shaFile = QCryptographicHash::hash( f.readAll(), QCryptographicHash::Sha1 ).toHex();
-            qDebug() << "File" << shaFile;
-            qDebug() << "Json" << shaJson;
+            QCryptographicHash hash(QCryptographicHash::Sha1);
+            QByteArray header = QString( "blob %1" ).arg( f.size() ).toUtf8();
+            hash.addData( header.data(), header.size() + 1 );
+            hash.addData( f.readAll() );
+            shaFile = hash.result().toHex();
 
-            /*if( shaFile != shaJson )
+            //qDebug() << "File" << shaFile;
+            //qDebug() << "Json" << shaJson;
+
+            if( shaFile != shaJson )
             {
-                manager->doDownload( QUrl( entry.toObject().value( "download_url" ).toString() ) );
-                while( !manager->isDownloadReady() )
+                if( justCheck )
                 {
-                    qApp->processEvents();
+                    installed++;
                 }
-                if( manager->downloadSuccess() ) installed = true;
-                else return false;
-            }*/
+                else
+                {
+                    manager->doDownload( QUrl( entry.toObject().value( "download_url" ).toString() ) );
+                    while( !manager->isDownloadReady() )
+                    {
+                        qApp->processEvents();
+                    }
+                    if( manager->downloadSuccess() ) installed++;
+                    else return installed;
+                }
+            }
         }
     }
 

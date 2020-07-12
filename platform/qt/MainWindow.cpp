@@ -180,10 +180,6 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     //ui->comboBoxProcessingGamut->setVisible( false );
     ui->label_TonemappingFunction->setVisible( false );
     ui->comboBoxTonemapFct->setVisible( false );
-
-    /*FocusPixelMapManager *manager = new FocusPixelMapManager( this );
-    manager->updateAllMaps();
-    delete manager;*/
 }
 
 //Destructor
@@ -9263,6 +9259,17 @@ void MainWindow::updateCheckResponse(bool arg)
 
     QSettings set( QSettings::UserScope, "magiclantern.MLVApp", "MLVApp" );
     set.setValue( "lastUpdateCheck", QDate::currentDate().toString() );
+
+    FocusPixelMapManager *manager = new FocusPixelMapManager( this );
+    int updateFpm = manager->updateAllMaps( true );
+    if( updateFpm > 0 )
+    {
+        if( !QMessageBox::information( this, APPNAME, tr( "Update available for %1 focus pixel map(s)." ).arg( updateFpm ), tr( "Update" ), tr( "Close" ) ) )
+        {
+            QMessageBox::information( this, APPNAME, tr( "Updated %1 focus pixel map(s)." ).arg( manager->updateAllMaps( false ) ) );
+        }
+    }
+    delete manager;
 }
 
 //Load Lut button pressed

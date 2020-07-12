@@ -28,7 +28,7 @@ public:
     bool isMapAvailable( mlvObject_t *pMlvObject );
     bool downloadMap( mlvObject_t *pMlvObject );
     bool downloadAllMaps( mlvObject_t *pMlvObject );
-    bool updateAllMaps( void );
+    int updateAllMaps( bool justCheck );
 
 private:
     DownloadManager *manager;
