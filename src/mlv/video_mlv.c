@@ -1503,6 +1503,7 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode, char * error
     uint64_t video_index_max = 0; /* initial size of frame index */
     uint64_t audio_index_max = 0; /* initial size of audio index */
     uint32_t vers_index_max = 0; /* initial size of VERS index */
+    int mlvi_read = 0; /* Flips to 1 if 1st chunk MLVI block was read */
     int rtci_read = 0; /* Flips to 1 if 1st RTCI block was read */
     int lens_read = 0; /* Flips to 1 if 1st LENS block was read */
     int elns_read = 0; /* Flips to 1 if 1st ELNS block was read */
@@ -1536,7 +1537,11 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode, char * error
 
         if ( memcmp(block_header.blockType, "MLVI", 4) == 0 )
         {
-            fread_err &= fread(&video->MLVI, sizeof(mlv_file_hdr_t), 1, video->file[i]);
+            if( !mlvi_read )
+            {
+                fread_err &= fread(&video->MLVI, sizeof(mlv_file_hdr_t), 1, video->file[i]);
+                mlvi_read = 1; // read MLVI only for first chunk
+            }
         }
         else
         {
