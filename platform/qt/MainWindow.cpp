@@ -9247,6 +9247,8 @@ void MainWindow::on_actionCheckForUpdates_triggered( void )
 
     QSettings set( QSettings::UserScope, "magiclantern.MLVApp", "MLVApp" );
     set.setValue( "lastUpdateCheck", QDate::currentDate().toString() );
+
+    checkFocusPixelUpdate();
 }
 
 //Autocheck for updates told there is an update
@@ -9260,16 +9262,7 @@ void MainWindow::updateCheckResponse(bool arg)
     QSettings set( QSettings::UserScope, "magiclantern.MLVApp", "MLVApp" );
     set.setValue( "lastUpdateCheck", QDate::currentDate().toString() );
 
-    FocusPixelMapManager *manager = new FocusPixelMapManager( this );
-    int updateFpm = manager->updateAllMaps( true );
-    if( updateFpm > 0 )
-    {
-        if( !QMessageBox::information( this, APPNAME, tr( "Update available for %1 focus pixel map(s)." ).arg( updateFpm ), tr( "Update" ), tr( "Close" ) ) )
-        {
-            QMessageBox::information( this, APPNAME, tr( "Updated %1 focus pixel map(s)." ).arg( manager->updateAllMaps( false ) ) );
-        }
-    }
-    delete manager;
+    checkFocusPixelUpdate();
 }
 
 //Load Lut button pressed
@@ -9842,6 +9835,25 @@ void MainWindow::focusPixelCheckAndInstallation()
         }
         delete fpmManager;
     }
+}
+
+//Trigger check for FPM update
+void MainWindow::checkFocusPixelUpdate()
+{
+    FocusPixelMapManager *manager = new FocusPixelMapManager( this );
+    int updateFpm = manager->updateAllMaps( true );
+    if( updateFpm > 0 )
+    {
+        if( !QMessageBox::information( this, APPNAME, tr( "Update available for %1 focus pixel map(s)." ).arg( updateFpm ), tr( "Update" ), tr( "Close" ) ) )
+        {
+            StatusFpmDialog *status = new StatusFpmDialog( this );
+            status->open();
+            int ret = manager->updateAllMaps( false );
+            status->close();
+            if( ret != updateFpm ) QMessageBox::critical( this, APPNAME, tr( "Update of focus pixel maps failed." ) );
+        }
+    }
+    delete manager;
 }
 
 //Changed the transfer function text

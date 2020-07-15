@@ -542,6 +542,7 @@ private:
     bool isExportSequence( void );
     void setMarkColor(int clipNr , uint8_t mark);
     void focusPixelCheckAndInstallation( void );
+    void checkFocusPixelUpdate( void );
 
 signals:
     void exportReady( void );
