@@ -3025,11 +3025,11 @@ void MainWindow::addFileToSession(QString fileName)
             setReceipt( m_pSessionReceipts.at( m_lastActiveClipInSession ) );
         }
     }
+    //Remove color unloaded clip
+    if( m_lastActiveClipInSession < ui->listWidgetSession->count() ) ui->listWidgetSession->item( m_lastActiveClipInSession )->setForeground( Qt::white );
     //Add to session list (empty Pixmap is just spacer)
     QListWidgetItem *item = new QListWidgetItem( QFileInfo(fileName).fileName() );
     item->setToolTip( fileName );
-    //Remove color unloaded clip
-    item->setForeground( QBrush( QColor( 255, 255, 255, 255 ) ) );
     ui->listWidgetSession->addItem( item );
     //Set sliders
     ReceiptSettings *sliders = new ReceiptSettings(); //default
