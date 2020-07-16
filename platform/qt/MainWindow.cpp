@@ -93,6 +93,7 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     m_zoomModeChanged = false;
     m_tryToSyncAudio = false;
     m_playbackStopped = false;
+    m_lastActiveClipInSession = 0;
 
 #ifdef STDOUT_SILENT
     //QtNetwork: shut up please!
