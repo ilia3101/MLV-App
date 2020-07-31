@@ -116,6 +116,9 @@
         </item>
         <item row="10" column="4" colspan="2">
          <widget class="QCheckBox" name="checkBoxTransformation">
+          <property name="toolTip">
+           <string>All parameters in group &quot;Transformation&quot;</string>
+          </property>
           <property name="text">
            <string>Transformation</string>
           </property>
@@ -302,6 +305,9 @@ color: rgb(255, 154, 50)
           </item>
           <item>
            <widget class="QCheckBox" name="checkBoxCurve">
+            <property name="toolTip">
+             <string>Light/Dark Strength/Range, Lighten</string>
+            </property>
             <property name="text">
              <string>Curve</string>
             </property>
@@ -366,6 +372,9 @@ color: rgb(255, 154, 50)
         </item>
         <item row="9" column="4" colspan="2">
          <widget class="QCheckBox" name="checkBoxVignette">
+          <property name="toolTip">
+           <string>All parameters in group &quot;Lens Correction&quot;</string>
+          </property>
           <property name="text">
            <string>Lens Correction</string>
           </property>
