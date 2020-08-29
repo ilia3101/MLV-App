@@ -21,6 +21,9 @@
 #include <QCloseEvent>
 #include <QXmlStreamWriter>
 #include <QActionGroup>
+#include <QSortFilterProxyModel>
+#include <QItemSelectionModel>
+#include "SessionModel.h"
 #include "../../src/mlv_include.h"
 #include "InfoDialog.h"
 #include "StatusDialog.h"
@@ -209,11 +212,13 @@ private slots:
     void on_actionBetterResizer_triggered();
     void on_actionShowInstalledFocusPixelMaps_triggered();
     void on_actionShowInstalledBadPixelMaps_triggered();
-    void on_listWidgetSession_activated(const QModelIndex &index);
+    void on_listViewSession_activated(const QModelIndex &index);
+    void on_tableViewSession_activated(const QModelIndex &index);
     void on_dockWidgetSession_visibilityChanged(bool visible);
     void on_dockWidgetEdit_visibilityChanged(bool visible);
     void on_actionShowAudioTrack_toggled(bool checked);
-    void on_listWidgetSession_customContextMenuRequested(const QPoint &pos);
+    void on_listViewSession_customContextMenuRequested(const QPoint &pos);
+    void on_tableViewSession_customContextMenuRequested(const QPoint &pos);
     void deleteFileFromSession( void );
     void on_actionShowInFinder_triggered( void );
     void on_actionOpenWithExternalApplication_triggered( void );
@@ -347,6 +352,7 @@ private slots:
     void on_actionPreviewList_triggered();
     void on_actionPreviewPicture_triggered();
     void on_actionPreviewPictureBottom_triggered();
+    void on_actionPreviewTableModeBottom_triggered();
 
     void on_comboBoxHStretch_currentIndexChanged(int index);
     void on_comboBoxVStretch_currentIndexChanged(int index);
@@ -459,9 +465,10 @@ private:
     QString m_sessionFileName;
     QString m_defaultReceiptFileName;
     ReceiptSettings *m_pReceiptClipboard;
-    QVector<ReceiptSettings*> m_pSessionReceipts;
     QVector<ReceiptSettings*> m_exportQueue;
-    int m_lastActiveClipInSession;
+    SessionModel* m_pModel;
+    QSortFilterProxyModel* m_pProxyModel;
+    QItemSelectionModel* m_pSelectionModel;
     int m_lastClipBeforeExport;
     void drawFrame( void );
     void importNewMlv(QString fileName);
@@ -543,6 +550,8 @@ private:
     void setMarkColor(int clipNr , uint8_t mark);
     void focusPixelCheckAndInstallation( void );
     void checkFocusPixelUpdate( void );
+    QModelIndexList selectedClipsList( void );
+    void listViewSessionUpdate( void );
 
 signals:
     void exportReady( void );

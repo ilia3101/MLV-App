@@ -14,19 +14,21 @@
 #include "ui_FcpxmlSelectDialog.h"
 
 //Constructor
-FcpxmlSelectDialog::FcpxmlSelectDialog(QWidget *parent, QListWidget *list) :
+FcpxmlSelectDialog::FcpxmlSelectDialog(QWidget *parent, SessionModel* pModel, QSortFilterProxyModel *pProxyModel, QItemSelectionModel *pSelectionModel) :
     QDialog(parent),
     ui(new Ui::FcpxmlSelectDialog)
 {
     ui->setupUi(this);
     setWindowFlags( Qt::Dialog | Qt::WindowTitleHint | Qt::WindowCloseButtonHint | Qt::WindowStaysOnTopHint );
-    m_list = list;
+    m_pModel = pModel;
+    m_pProxyModel = pProxyModel;
+    m_pSelectionModel = pSelectionModel;
     ui->checkBoxInvert->setChecked( false );
 
-    for( int i = 0; i < m_list->count(); i++ )
+    for( int i = 0; i < m_pModel->rowCount( QModelIndex() ); i++ )
     {
         ui->tableWidget->insertRow( i );
-        QTableWidgetItem *item1 = new QTableWidgetItem( m_list->item( i )->text() );
+        QTableWidgetItem *item1 = new QTableWidgetItem( m_pModel->clip( i )->getName() );
         item1->setCheckState( Qt::Unchecked );
         item1->setFlags( item1->flags() ^ Qt::ItemIsUserCheckable );
         ui->tableWidget->setItem( i, 0, item1 );
@@ -140,10 +142,10 @@ void FcpxmlSelectDialog::on_checkBoxInvert_clicked()
 //Select and quit
 void FcpxmlSelectDialog::on_pushButtonSelect_clicked()
 {
-    for( int i = 0; i < m_list->count(); i++ )
+    m_pSelectionModel->clearSelection();
+    for( int i = 0; i < m_pModel->rowCount( QModelIndex() ); i++ )
     {
-        if( ui->tableWidget->item( i, 0 )->checkState() == Qt::Unchecked ) m_list->item( i )->setSelected( false );
-        else m_list->item( i )->setSelected( true );
+        if( ui->tableWidget->item( i, 0 )->checkState() == Qt::Checked ) m_pSelectionModel->select( m_pProxyModel->mapFromSource( m_pModel->index( i, 0, QModelIndex() ) ), QItemSelectionModel::Select | QItemSelectionModel::Rows );
     }
     accept();
 }

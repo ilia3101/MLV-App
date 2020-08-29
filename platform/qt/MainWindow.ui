@@ -238,6 +238,7 @@
      <addaction name="actionPreviewList"/>
      <addaction name="actionPreviewPicture"/>
      <addaction name="actionPreviewPictureBottom"/>
+     <addaction name="actionPreviewTableModeBottom"/>
     </widget>
     <widget class="QMenu" name="menuPlayback_Elements">
      <property name="title">
@@ -467,9 +468,9 @@ QGroupBox::indicator:checked:disabled {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>-1688</y>
-            <width>265</width>
-            <height>5477</height>
+            <y>0</y>
+            <width>266</width>
+            <height>5523</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayoutScrollArea">
@@ -9447,7 +9448,7 @@ QGroupBox::indicator:checked:disabled {
    <property name="minimumSize">
     <size>
      <width>170</width>
-     <height>130</height>
+     <height>198</height>
     </size>
    </property>
    <property name="maximumSize">
@@ -9469,7 +9470,10 @@ QGroupBox::indicator:checked:disabled {
     <number>1</number>
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_2">
-    <layout class="QGridLayout" name="gridLayout_2">
+    <layout class="QVBoxLayout" name="verticalLayout">
+     <property name="spacing">
+      <number>0</number>
+     </property>
      <property name="leftMargin">
       <number>0</number>
      </property>
@@ -9482,8 +9486,8 @@ QGroupBox::indicator:checked:disabled {
      <property name="bottomMargin">
       <number>0</number>
      </property>
-     <item row="0" column="0">
-      <widget class="QListWidget" name="listWidgetSession">
+     <item>
+      <widget class="QListView" name="listViewSession">
        <property name="contextMenuPolicy">
         <enum>Qt::CustomContextMenu</enum>
        </property>
@@ -9508,9 +9512,34 @@ QGroupBox::indicator:checked:disabled {
        <property name="viewMode">
         <enum>QListView::ListMode</enum>
        </property>
-       <property name="sortingEnabled">
-        <bool>false</bool>
+      </widget>
+     </item>
+     <item>
+      <widget class="QTableView" name="tableViewSession">
+       <property name="contextMenuPolicy">
+        <enum>Qt::CustomContextMenu</enum>
        </property>
+       <property name="horizontalScrollBarPolicy">
+        <enum>Qt::ScrollBarAlwaysOn</enum>
+       </property>
+       <property name="editTriggers">
+        <set>QAbstractItemView::NoEditTriggers</set>
+       </property>
+       <property name="alternatingRowColors">
+        <bool>true</bool>
+       </property>
+       <property name="selectionMode">
+        <enum>QAbstractItemView::ExtendedSelection</enum>
+       </property>
+       <property name="selectionBehavior">
+        <enum>QAbstractItemView::SelectRows</enum>
+       </property>
+       <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
+        <bool>false</bool>
+       </attribute>
+       <attribute name="verticalHeaderVisible">
+        <bool>false</bool>
+       </attribute>
       </widget>
      </item>
     </layout>
@@ -10469,6 +10498,14 @@ QGroupBox::indicator:checked:disabled {
     <string>Alt+0</string>
    </property>
   </action>
+  <action name="actionPreviewTableModeBottom">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Table Mode Bottom</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
@@ -10534,7 +10571,7 @@ QGroupBox::indicator:checked:disabled {
   </customwidget>
  </customwidgets>
  <tabstops>
-  <tabstop>listWidgetSession</tabstop>
+  <tabstop>listViewSession</tabstop>
   <tabstop>graphicsView</tabstop>
   <tabstop>horizontalSliderPosition</tabstop>
  </tabstops>

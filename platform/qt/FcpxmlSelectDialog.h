@@ -9,7 +9,9 @@
 #define FcpxmlSelectDialog_H
 
 #include <QDialog>
-#include <QListWidget>
+#include <QItemSelectionModel>
+#include <QSortFilterProxyModel>
+#include "SessionModel.h"
 
 namespace Ui {
 class FcpxmlSelectDialog;
@@ -20,7 +22,7 @@ class FcpxmlSelectDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit FcpxmlSelectDialog(QWidget *parent = 0, QListWidget *list = 0);
+    explicit FcpxmlSelectDialog(QWidget *parent, SessionModel *pModel, QSortFilterProxyModel* pProxyModel, QItemSelectionModel* pSelectionModel);
     ~FcpxmlSelectDialog();
 
 private slots:
@@ -30,7 +32,9 @@ private slots:
 
 private:
     Ui::FcpxmlSelectDialog *ui;
-    QListWidget *m_list;
+    SessionModel *m_pModel;
+    QItemSelectionModel* m_pSelectionModel;
+    QSortFilterProxyModel* m_pProxyModel;
     void xmlParser( QString fileName );
     void counter();
 };

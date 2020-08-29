@@ -69,6 +69,16 @@ extern const char* camidGetCameraName(uint32_t cameraModel, int camname_type);
 #define FACTOR_LS       11.2
 #define FACTOR_LIGHTEN  0.6
 
+#define ACTIVE_RECEIPT               m_pModel->receipt(m_pModel->activeRow())
+#define GET_RECEIPT(index)           m_pModel->receipt(index)
+#define ACTIVE_CLIP                  m_pModel->activeClip()
+#define GET_CLIP(index)              m_pModel->clip(index)
+#define SESSION_CLIP_COUNT           m_pModel->rowCount(QModelIndex())
+#define SESSION_LAST_CLIP            m_pModel->receipt( SESSION_CLIP_COUNT - 1 )
+#define SESSION_ACTIVE_CLIP_ROW      m_pModel->activeRow()
+#define SET_ACTIVE_CLIP_IDX(index)   m_pModel->setActiveRow(index)
+#define SESSION_EMPTY                m_pModel->rowCount(QModelIndex())==0
+
 //Constructor
 MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     QMainWindow(parent),
@@ -93,7 +103,6 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     m_zoomModeChanged = false;
     m_tryToSyncAudio = false;
     m_playbackStopped = false;
-    m_lastActiveClipInSession = 0;
 
 #ifdef STDOUT_SILENT
     //QtNetwork: shut up please!
@@ -139,14 +148,14 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
         {
             importNewMlv( fileName );
             //Show last imported file
-            if( m_pSessionReceipts.count() ) showFileInEditor( m_pSessionReceipts.count() - 1 );
+            if( SESSION_CLIP_COUNT ) showFileInEditor( SESSION_CLIP_COUNT - 1 );
         }
         else if( QFile(fileName).exists() && fileName.endsWith( ".masxml", Qt::CaseInsensitive ) )
         {
             m_inOpeningProcess = true;
             openSession( fileName );
             //Show last imported file
-            if( m_pSessionReceipts.count() ) showFileInEditor( m_pSessionReceipts.count() - 1 );
+            if( SESSION_CLIP_COUNT ) showFileInEditor( SESSION_CLIP_COUNT - 1 );
             m_inOpeningProcess = false;
             m_sessionFileName = fileName;
             selectDebayerAlgorithm();
@@ -344,7 +353,7 @@ bool MainWindow::event(QEvent *event)
         {
             importNewMlv( fileName );
             //Show last imported file
-            if( m_pSessionReceipts.count() ) showFileInEditor( m_pSessionReceipts.count() - 1 );
+            if( SESSION_CLIP_COUNT ) showFileInEditor( SESSION_CLIP_COUNT - 1 );
             //Caching is in which state? Set it!
             if( ui->actionCaching->isChecked() ) on_actionCaching_triggered();
         }
@@ -353,7 +362,7 @@ bool MainWindow::event(QEvent *event)
             m_inOpeningProcess = true;
             openSession( fileName );
             //Show last imported file
-            if( m_pSessionReceipts.count() ) showFileInEditor( m_pSessionReceipts.count() - 1 );
+            if( SESSION_CLIP_COUNT ) showFileInEditor( SESSION_CLIP_COUNT - 1 );
             //Caching is in which state? Set it!
             if( ui->actionCaching->isChecked() ) on_actionCaching_triggered();
             m_sessionFileName = fileName;
@@ -403,7 +412,7 @@ void MainWindow::dropEvent(QDropEvent *event)
             m_inOpeningProcess = true;
             openSession( event->mimeData()->urls().at(0).path() );
             //Show last imported file
-            if( m_pSessionReceipts.count() ) showFileInEditor( m_pSessionReceipts.count() - 1 );
+            if( SESSION_CLIP_COUNT ) showFileInEditor( SESSION_CLIP_COUNT - 1 );
             m_inOpeningProcess = false;
             m_sessionFileName = event->mimeData()->urls().at(0).path();
             selectDebayerAlgorithm();
@@ -455,10 +464,10 @@ void MainWindow::openMlvSet( QStringList list )
         }
     }
 
-    if( m_pSessionReceipts.count() )
+    if( SESSION_CLIP_COUNT )
     {
         //Show last imported file
-        showFileInEditor( m_pSessionReceipts.count() - 1 );
+        showFileInEditor( SESSION_CLIP_COUNT - 1 );
     }
 
     //Caching is in which state? Set it!
@@ -475,7 +484,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
     on_actionPlay_triggered( false );
 
     //If user wants to be asked
-    if( ui->actionAskForSavingOnQuit->isChecked() && ui->listWidgetSession->count() != 0 )
+    if( ui->actionAskForSavingOnQuit->isChecked() && SESSION_CLIP_COUNT != 0 )
     {
         //Ask before quit
         int ret = QMessageBox::warning( this, APPNAME, tr( "Do you really like to quit MLVApp? Do you like to save the session?" ),
@@ -612,10 +621,10 @@ void MainWindow::importNewMlv(QString fileName)
             on_actionResetReceipt_triggered();
 
             //Set to "please load when info is there"
-            m_pSessionReceipts.last()->setFocusPixels( -1 );
-            m_pSessionReceipts.last()->setStretchFactorY( -1 );
+            SESSION_LAST_CLIP->setFocusPixels( -1 );
+            SESSION_LAST_CLIP->setStretchFactorY( -1 );
 
-            previewPicture( ui->listWidgetSession->count() - 1 );
+            previewPicture( SESSION_CLIP_COUNT - 1 );
         }
         else
         {
@@ -713,7 +722,7 @@ void MainWindow::on_actionOpen_triggered()
     }
 
     //Show last imported file
-    if( m_pSessionReceipts.count() ) showFileInEditor( m_pSessionReceipts.count() - 1 );
+    if( SESSION_CLIP_COUNT ) showFileInEditor( SESSION_CLIP_COUNT - 1 );
 
     //Caching is in which state? Set it!
     if( ui->actionCaching->isChecked() ) on_actionCaching_triggered();
@@ -752,7 +761,7 @@ void MainWindow::on_actionFcpxmlImportAssistant_triggered()
     }
 
     //Show last imported file
-    if( m_pSessionReceipts.count() ) showFileInEditor( m_pSessionReceipts.count() - 1 );
+    if( SESSION_CLIP_COUNT ) showFileInEditor( SESSION_CLIP_COUNT - 1 );
 
     //Caching is in which state? Set it!
     if( ui->actionCaching->isChecked() ) on_actionCaching_triggered();
@@ -764,7 +773,7 @@ void MainWindow::on_actionFcpxmlImportAssistant_triggered()
 //Open an assistant, which helps selection clips in session in dependency to clips which were used in FCPXML project
 void MainWindow::on_actionFcpxmlSelectionAssistant_triggered()
 {
-    FcpxmlSelectDialog *sd = new FcpxmlSelectDialog( this, ui->listWidgetSession );
+    FcpxmlSelectDialog *sd = new FcpxmlSelectDialog( this, m_pModel, m_pProxyModel, m_pSelectionModel );
     sd->exec();
     delete sd;
 }
@@ -862,38 +871,55 @@ int MainWindow::openMlv( QString fileName )
         }
     }
 
-    //Set Clip Info to Dialog
-    m_pInfoDialog->ui->tableWidget->item( 0, 1 )->setText( QString( "%1" ).arg( (char*)getMlvCamera( m_pMlvObject ) ) );
-    m_pInfoDialog->ui->tableWidget->item( 1, 1 )->setText( QString( "%1" ).arg( (char*)getMlvLens( m_pMlvObject ) ) );
-    m_pInfoDialog->ui->tableWidget->item( 2, 1 )->setText( QString( "%1 x %2 pixels" ).arg( (int)getMlvWidth( m_pMlvObject ) ).arg( (int)getMlvHeight( m_pMlvObject ) ) );
-    m_pInfoDialog->ui->tableWidget->item( 3, 1 )->setText( QString( "%1" ).arg( m_pTimeCodeImage->getTimeCodeFromFps( (int)getMlvFrames( m_pMlvObject ), getMlvFramerate( m_pMlvObject ) ) ) );
-    m_pInfoDialog->ui->tableWidget->item( 4, 1 )->setText( QString( "%1" ).arg( (int)getMlvFrames( m_pMlvObject ) ) );
-    m_pInfoDialog->ui->tableWidget->item( 5, 1 )->setText( QString( "%1 fps" ).arg( getMlvFramerate( m_pMlvObject ) ) );
-    m_pInfoDialog->ui->tableWidget->item( 6, 1 )->setText( QString( "%1 mm" ).arg( getMlvFocalLength( m_pMlvObject ) ) );
-    m_pInfoDialog->ui->tableWidget->item( 7, 1 )->setText( QString( "1/%1 s,  %2 deg,  %3 µs" ).arg( (uint16_t)(shutterSpeed + 0.5f) ).arg( (uint16_t)(shutterAngle + 0.5f) ).arg( getMlvShutter( m_pMlvObject )) );
-    m_pInfoDialog->ui->tableWidget->item( 8, 1 )->setText( QString( "ƒ/%1" ).arg( getMlvAperture( m_pMlvObject ) / 100.0, 0, 'f', 1 ) );
-    m_pInfoDialog->ui->tableWidget->item( 9, 1 )->setText( isoInfo );
-    m_pInfoDialog->ui->tableWidget->item( 10, 1 )->setText( QString( "%1 bits,  %2" ).arg( getLosslessBpp( m_pMlvObject ) ).arg( getMlvCompression( m_pMlvObject ) ) );
-    m_pInfoDialog->ui->tableWidget->item( 11, 1 )->setText( QString( "%1 black,  %2 white" ).arg( getMlvOriginalBlackLevel( m_pMlvObject ) ).arg( getMlvOriginalWhiteLevel( m_pMlvObject ) ) );
-    m_pInfoDialog->ui->tableWidget->item( 12, 1 )->setText( QString( "%1-%2-%3 / %4:%5:%6" )
-                                                            .arg( getMlvTmYear(m_pMlvObject) )
-                                                            .arg( getMlvTmMonth(m_pMlvObject), 2, 10, QChar('0') )
-                                                            .arg( getMlvTmDay(m_pMlvObject), 2, 10, QChar('0') )
-                                                            .arg( getMlvTmHour(m_pMlvObject), 2, 10, QChar('0') )
-                                                            .arg( getMlvTmMin(m_pMlvObject), 2, 10, QChar('0') )
-                                                            .arg( getMlvTmSec(m_pMlvObject), 2, 10, QChar('0') ) );
-    resultingResolution();
-
+    QString audioText;
     if( doesMlvHaveAudio( m_pMlvObject ) )
     {
-        m_pInfoDialog->ui->tableWidget->item( 13, 1 )->setText( QString( "%1 channel(s),  %2 kHz" )
-                                                                .arg( getMlvAudioChannels( m_pMlvObject ) )
-                                                                .arg( getMlvSampleRate( m_pMlvObject ) ) );
+        audioText = QString( "%1 channel(s),  %2 kHz" )
+                .arg( getMlvAudioChannels( m_pMlvObject ) )
+                .arg( getMlvSampleRate( m_pMlvObject ) );
     }
     else
     {
-        m_pInfoDialog->ui->tableWidget->item( 13, 1 )->setText( QString( "-" ) );
+        audioText = QString( "-" );
     }
+
+    ACTIVE_CLIP->updateMetadata( QString( "%1" ).arg( (char*)getMlvCamera( m_pMlvObject ) ),
+                                 QString( "%1" ).arg( (char*)getMlvLens( m_pMlvObject ) ),
+                                 QString( "%1 x %2 pixels" ).arg( (int)getMlvWidth( m_pMlvObject ) ).arg( (int)getMlvHeight( m_pMlvObject ) ),
+                                 QString( "%1" ).arg( m_pTimeCodeImage->getTimeCodeFromFps( (int)getMlvFrames( m_pMlvObject ), getMlvFramerate( m_pMlvObject ) ) ),
+                                 QString( "%1" ).arg( (int)getMlvFrames( m_pMlvObject ) ),
+                                 QString( "%1 fps" ).arg( getMlvFramerate( m_pMlvObject ) ),
+                                 QString( "%1 mm" ).arg( getMlvFocalLength( m_pMlvObject ) ),
+                                 QString( "1/%1 s,  %2 deg,  %3 µs" ).arg( (uint16_t)(shutterSpeed + 0.5f) ).arg( (uint16_t)(shutterAngle + 0.5f) ).arg( getMlvShutter( m_pMlvObject ) ),
+                                 QString( "ƒ/%1" ).arg( getMlvAperture( m_pMlvObject ) / 100.0, 0, 'f', 1 ),
+                                 isoInfo,
+                                 QString( "%1 bits,  %2" ).arg( getLosslessBpp( m_pMlvObject ) ).arg( getMlvCompression( m_pMlvObject ) ),
+                                 QString( "%1-%2-%3 / %4:%5:%6" )
+                                           .arg( getMlvTmYear(m_pMlvObject) )
+                                           .arg( getMlvTmMonth(m_pMlvObject), 2, 10, QChar('0') )
+                                           .arg( getMlvTmDay(m_pMlvObject), 2, 10, QChar('0') )
+                                           .arg( getMlvTmHour(m_pMlvObject), 2, 10, QChar('0') )
+                                           .arg( getMlvTmMin(m_pMlvObject), 2, 10, QChar('0') )
+                                           .arg( getMlvTmSec(m_pMlvObject), 2, 10, QChar('0') ),
+                                 audioText );
+
+    //Set Clip Info to Dialog
+    m_pInfoDialog->ui->tableWidget->item( 0, 1 )->setText( ACTIVE_CLIP->getElement( 2 ).toString() );
+    m_pInfoDialog->ui->tableWidget->item( 1, 1 )->setText( ACTIVE_CLIP->getElement( 3 ).toString() );
+    m_pInfoDialog->ui->tableWidget->item( 2, 1 )->setText( ACTIVE_CLIP->getElement( 4 ).toString() );
+    m_pInfoDialog->ui->tableWidget->item( 3, 1 )->setText( ACTIVE_CLIP->getElement( 5 ).toString() );
+    m_pInfoDialog->ui->tableWidget->item( 4, 1 )->setText( ACTIVE_CLIP->getElement( 6 ).toString() );
+    m_pInfoDialog->ui->tableWidget->item( 5, 1 )->setText( ACTIVE_CLIP->getElement( 7 ).toString() );
+    m_pInfoDialog->ui->tableWidget->item( 6, 1 )->setText( ACTIVE_CLIP->getElement( 8 ).toString() );
+    m_pInfoDialog->ui->tableWidget->item( 7, 1 )->setText( ACTIVE_CLIP->getElement( 9 ).toString() );
+    m_pInfoDialog->ui->tableWidget->item( 8, 1 )->setText( ACTIVE_CLIP->getElement( 10 ).toString() );
+    m_pInfoDialog->ui->tableWidget->item( 9, 1 )->setText( ACTIVE_CLIP->getElement( 11 ).toString() );
+    m_pInfoDialog->ui->tableWidget->item( 10, 1 )->setText( ACTIVE_CLIP->getElement( 12 ).toString() );
+    m_pInfoDialog->ui->tableWidget->item( 11, 1 )->setText( QString( "%1 black,  %2 white" ).arg( getMlvOriginalBlackLevel( m_pMlvObject ) ).arg( getMlvOriginalWhiteLevel( m_pMlvObject ) ) );
+    m_pInfoDialog->ui->tableWidget->item( 12, 1 )->setText( ACTIVE_CLIP->getElement( 13 ).toString() );
+    m_pInfoDialog->ui->tableWidget->item( 13, 1 )->setText( ACTIVE_CLIP->getElement( 14 ).toString() );
+
+    resultingResolution();
 
     //Adapt slider to clip and move to position 0
     ui->horizontalSliderPosition->setValue( 0 );
@@ -1099,6 +1125,7 @@ void MainWindow::initGui( void )
     m_sessionListGroup->addAction( ui->actionPreviewList );
     m_sessionListGroup->addAction( ui->actionPreviewPicture );
     m_sessionListGroup->addAction( ui->actionPreviewPictureBottom );
+    m_sessionListGroup->addAction( ui->actionPreviewTableModeBottom );
 
     //Playback element as group
     m_playbackElementGroup = new QActionGroup( this );
@@ -1255,7 +1282,15 @@ void MainWindow::initGui( void )
     m_pReceiptClipboard = new ReceiptSettings();
 
     //Init session settings
-    m_pSessionReceipts.clear();
+    m_pModel = new SessionModel( this );
+    m_pProxyModel = new QSortFilterProxyModel( this );
+    m_pProxyModel->setSourceModel( m_pModel );
+    ui->listViewSession->setModel( m_pProxyModel );
+    ui->tableViewSession->setModel( m_pProxyModel );
+    ui->tableViewSession->horizontalHeader()->setSectionResizeMode( QHeaderView::ResizeToContents );
+    ui->tableViewSession->setSortingEnabled( true );
+    ui->tableViewSession->sortByColumn(0, Qt::AscendingOrder);
+    m_pSelectionModel = ui->listViewSession->selectionModel();
 
     //Reset session name
     m_sessionFileName.clear();
@@ -1460,9 +1495,13 @@ void MainWindow::readSettings()
         ui->actionPreviewPicture->setChecked( true );
         on_actionPreviewPicture_triggered();
         break;
-    default:
+    case 3:
         ui->actionPreviewPictureBottom->setChecked( true );
         on_actionPreviewPictureBottom_triggered();
+        break;
+    default:
+        ui->actionPreviewTableModeBottom->setChecked( true );
+        on_actionPreviewTableModeBottom_triggered();
         break;
     }
     ui->actionCaching->setChecked( false );
@@ -1565,7 +1604,7 @@ void MainWindow::writeSettings()
     set.setValue( "dockEditSize", ui->dockWidgetEdit->width() );
     set.setValue( "defaultReceiptFileName", m_defaultReceiptFileName );
     set.setValue( "defaultReceiptEnabled", ui->actionUseDefaultReceipt->isChecked() );
-    if( m_previewMode == 3 ) set.setValue( "dockSessionSize", ui->dockWidgetSession->height() );
+    if( m_previewMode == 3 || m_previewMode == 4 ) set.setValue( "dockSessionSize", ui->dockWidgetSession->height() );
     else set.setValue( "dockSessionSize", ui->dockWidgetSession->width() );
     set.setValue( "recentSessions", m_pRecentFilesMenu->saveState() );
     set.setValue( "askForSavingOnQuit", ui->actionAskForSavingOnQuit->isChecked() );
@@ -3019,30 +3058,22 @@ void MainWindow::startExportAVFoundation(QString fileName)
 void MainWindow::addFileToSession(QString fileName)
 {
     //Save settings of actual clip (if there is one)
-    if( m_pSessionReceipts.count() > 0 )
+    if( SESSION_CLIP_COUNT > 0 )
     {
-        if( !m_pSessionReceipts.at( m_lastActiveClipInSession )->wasNeverLoaded() )
+        if( !ACTIVE_RECEIPT->wasNeverLoaded() )
         {
-            setReceipt( m_pSessionReceipts.at( m_lastActiveClipInSession ) );
+            setReceipt( ACTIVE_RECEIPT );
         }
     }
-    //Remove color unloaded clip
-    if( m_lastActiveClipInSession < ui->listWidgetSession->count() ) ui->listWidgetSession->item( m_lastActiveClipInSession )->setForeground( Qt::white );
+
     //Add to session list (empty Pixmap is just spacer)
-    QListWidgetItem *item = new QListWidgetItem( QFileInfo(fileName).fileName() );
-    item->setToolTip( fileName );
-    ui->listWidgetSession->addItem( item );
-    //Set sliders
-    ReceiptSettings *sliders = new ReceiptSettings(); //default
-    if( ui->actionUseDefaultReceipt->isChecked() ) resetReceiptWithDefault( sliders );
-    sliders->setFileName( fileName );
-    m_pSessionReceipts.append( sliders );
-    //Save index of active clip
-    m_lastActiveClipInSession = ui->listWidgetSession->row( item );
-    //Set this row to current row
-    ui->listWidgetSession->clearSelection();
-    ui->listWidgetSession->setCurrentItem( item );
+    ClipInformation *clipInfo = new ClipInformation( QFileInfo(fileName).fileName(), fileName );
+    m_pModel->append( clipInfo );
+    m_pModel->setActiveRow( SESSION_CLIP_COUNT - 1 );
+    if( ui->actionUseDefaultReceipt->isChecked() ) resetReceiptWithDefault( ACTIVE_RECEIPT );
+
     //Update App
+    listViewSessionUpdate();
     qApp->processEvents();
 }
 
@@ -3110,14 +3141,14 @@ void MainWindow::openSession(QString fileNameSession)
                         addFileToSession( fileName );
                         //Open the file
                         openMlvForPreview( fileName );
-                        m_pSessionReceipts.last()->setFileName( fileName );
-                        m_pSessionReceipts.last()->setMark( mark );
+                        SESSION_LAST_CLIP->setFileName( fileName );
+                        SESSION_LAST_CLIP->setMark( mark );
 
-                        readXmlElementsFromFile( &Rxml, m_pSessionReceipts.last(), versionMasxml );
-                        setSliders( m_pSessionReceipts.last(), false );
-                        previewPicture( ui->listWidgetSession->count() - 1 );
-                        setMarkColor( ui->listWidgetSession->count() - 1, mark );
-                        m_lastActiveClipInSession = ui->listWidgetSession->count() - 1;
+                        readXmlElementsFromFile( &Rxml, SESSION_LAST_CLIP, versionMasxml );
+                        setSliders( SESSION_LAST_CLIP, false );
+                        previewPicture( SESSION_CLIP_COUNT - 1 );
+                        setMarkColor( SESSION_CLIP_COUNT - 1, mark );
+                        m_pModel->setActiveRow( SESSION_CLIP_COUNT - 1 );
                     }
                     else
                     {
@@ -3180,7 +3211,7 @@ void MainWindow::openSession(QString fileNameSession)
 void MainWindow::saveSession(QString fileName)
 {
     //Save slider receipt
-    setReceipt( m_pSessionReceipts.at( m_lastActiveClipInSession ) );
+    setReceipt( ACTIVE_RECEIPT );
 
     QFile file(fileName);
     file.open(QIODevice::WriteOnly);
@@ -3192,13 +3223,13 @@ void MainWindow::saveSession(QString fileName)
     xmlWriter.writeStartElement( "mlv_files" );
     xmlWriter.writeAttribute( "version", "4" );
     xmlWriter.writeAttribute( "mlvapp", VERSION );
-    for( int i = 0; i < ui->listWidgetSession->count(); i++ )
+    for( int i = 0; i < SESSION_CLIP_COUNT; i++ )
     {
         xmlWriter.writeStartElement( "clip" );
-        xmlWriter.writeAttribute( "file", ui->listWidgetSession->item(i)->toolTip() );
-        xmlWriter.writeAttribute( "relative", QDir( QFileInfo( fileName ).path() ).relativeFilePath( ui->listWidgetSession->item(i)->toolTip() ) );
-        xmlWriter.writeAttribute( "mark", QString( "%1" ).arg( m_pSessionReceipts.at(i)->mark() ) );
-        writeXmlElementsToFile( &xmlWriter, m_pSessionReceipts.at(i) );
+        xmlWriter.writeAttribute( "file", GET_CLIP(i)->getPath() );
+        xmlWriter.writeAttribute( "relative", QDir( QFileInfo( fileName ).path() ).relativeFilePath( GET_CLIP(i)->getPath() ) );
+        xmlWriter.writeAttribute( "mark", QString( "%1" ).arg( GET_RECEIPT(i)->mark() ) );
+        writeXmlElementsToFile( &xmlWriter, GET_RECEIPT(i) );
         xmlWriter.writeEndElement();
     }
     xmlWriter.writeEndElement();
@@ -3262,7 +3293,7 @@ void MainWindow::on_actionImportReceipt_triggered()
     ui->actionPlay->setChecked( false );
 
     //If no clip loaded, abort
-    if( m_pSessionReceipts.empty() ) return;
+    if( SESSION_EMPTY ) return;
 
     QString path = QFileInfo( m_lastReceiptFileName ).absolutePath();
     QString fileName = QFileDialog::getOpenFileName(this,
@@ -3310,12 +3341,14 @@ void MainWindow::on_actionImportReceipt_triggered()
 //Exports the actual slider settings to a file
 void MainWindow::on_actionExportReceipt_triggered()
 {
-    if( ui->listWidgetSession->count() <= 0 ) return;
-    if( ui->listWidgetSession->selectedItems().count() > 1 ) return;
+    if( SESSION_CLIP_COUNT <= 0 ) return;
+
+    QModelIndexList list = selectedClipsList();
+    if( list.count() > 1 ) return;
 
     int clipToExport;
-    if( ui->listWidgetSession->selectedItems().count() == 0 ) clipToExport = m_lastActiveClipInSession;
-    else clipToExport = ui->listWidgetSession->currentRow();
+    if( list.count() == 0 ) clipToExport = SESSION_ACTIVE_CLIP_ROW;
+    else clipToExport = m_pProxyModel->mapToSource( list.first() ).row();
 
     //Stop playback if active
     ui->actionPlay->setChecked( false );
@@ -3331,7 +3364,7 @@ void MainWindow::on_actionExportReceipt_triggered()
     m_lastReceiptFileName = fileName;
 
     //Save slider receipt
-    setReceipt( m_pSessionReceipts.at( m_lastActiveClipInSession ) );
+    setReceipt( ACTIVE_RECEIPT );
 
     QFile file(fileName);
     file.open(QIODevice::WriteOnly);
@@ -3345,7 +3378,7 @@ void MainWindow::on_actionExportReceipt_triggered()
     xmlWriter.writeAttribute( "version", "4" );
     xmlWriter.writeAttribute( "mlvapp", VERSION );
 
-    writeXmlElementsToFile( &xmlWriter, m_pSessionReceipts.at( clipToExport ) );
+    writeXmlElementsToFile( &xmlWriter, GET_RECEIPT( clipToExport ) );
 
     xmlWriter.writeEndElement();
     xmlWriter.writeEndDocument();
@@ -3992,8 +4025,7 @@ void MainWindow::writeXmlElementsToFile(QXmlStreamWriter *xmlWriter, ReceiptSett
 void MainWindow::deleteSession()
 {
     //Clear the memory
-    m_pSessionReceipts.clear();
-    ui->listWidgetSession->clear();
+    m_pModel->clear();
 
     //Set window title to filename
     this->setWindowTitle( QString( "MLV App" ) );
@@ -4079,9 +4111,9 @@ void MainWindow::deleteSession()
 //returns true if file is already in session
 bool MainWindow::isFileInSession(QString fileName)
 {
-    for( int i = 0; i < ui->listWidgetSession->count(); i++ )
+    for( int i = 0; i < SESSION_CLIP_COUNT; i++ )
     {
-        if( ui->listWidgetSession->item( i )->toolTip() == fileName )
+        if( GET_CLIP(i)->getPath() == fileName )
         {
             return true;
         }
@@ -4093,16 +4125,16 @@ bool MainWindow::isFileInSession(QString fileName)
 void MainWindow::pasteReceiptFromClipboardTo(int row)
 {
     //Save current settings into receipt
-    if( row == m_lastActiveClipInSession )
+    if( row == SESSION_ACTIVE_CLIP_ROW )
     {
-        setReceipt( m_pSessionReceipts.at(row) );
+        setReceipt( GET_RECEIPT(row) );
     }
     //Each selected clip gets the copied receipt
-    replaceReceipt( m_pSessionReceipts.at(row), m_pReceiptClipboard, true );
+    replaceReceipt( GET_RECEIPT(row), m_pReceiptClipboard, true );
     //If the actual is selected (may have changed since copy action), set sliders and get receipt
-    if( row == m_lastActiveClipInSession )
+    if( row == SESSION_ACTIVE_CLIP_ROW )
     {
-        setSliders( m_pSessionReceipts.at(row), true );
+        setSliders( GET_RECEIPT(row), true );
     }
 }
 
@@ -4615,44 +4647,46 @@ void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings 
 //Show the file in
 int MainWindow::showFileInEditor(int row)
 {
-    if( m_pSessionReceipts.count() <= 0 ) return 1;
+    if( SESSION_CLIP_COUNT <= 0 ) return 1;
 
     //Stop Playback
     ui->actionPlay->setChecked( false );
     //Save slider receipt
-    if( !m_pSessionReceipts.at( m_lastActiveClipInSession )->wasNeverLoaded() ) setReceipt( m_pSessionReceipts.at( m_lastActiveClipInSession ) );
+    if( !ACTIVE_RECEIPT->wasNeverLoaded() ) setReceipt( ACTIVE_RECEIPT );
+    //Save new position in session
+    int oldActive = SESSION_ACTIVE_CLIP_ROW;
+    SET_ACTIVE_CLIP_IDX( row );
     //Open new MLV
-    if( openMlv( ui->listWidgetSession->item( row )->toolTip() ) )
+    if( openMlv( GET_CLIP( row )->getPath() ) )
     {
         //If one file is selected, reselect the last one, else do nothing (export)
         //And if there is another file we can switch to...
-        if( ui->listWidgetSession->selectedItems().count() <= 1
-         && ui->listWidgetSession->count() > 1)
+        if( selectedClipsList().count() <= 1
+         && SESSION_CLIP_COUNT > 1)
         {
-            ui->listWidgetSession->setCurrentRow( m_lastActiveClipInSession );
-            showFileInEditor( m_lastActiveClipInSession );
+            m_pSelectionModel->setCurrentIndex( m_pProxyModel->mapFromSource( m_pModel->index( oldActive, 0, QModelIndex() ) ), QItemSelectionModel::ClearAndSelect );
+            showFileInEditor( oldActive );
         }
         return 1;
     }
     //Now set it was loaded once
-    m_pSessionReceipts.at( row )->setLoaded();
+    GET_RECEIPT( row )->setLoaded();
     //Set sliders to receipt
-    setSliders( m_pSessionReceipts.at( row ), false );
+    setSliders( GET_RECEIPT( row ), false );
 
-    //Remove color unloaded clip
-    ui->listWidgetSession->item( m_lastActiveClipInSession )->setForeground( Qt::white );
-
-    //Save new position in session
-    m_lastActiveClipInSession = row;
-
-    //Set color loaded clip
-    ui->listWidgetSession->item( m_lastActiveClipInSession )->setForeground( QColor( 255, 154, 50 ) );
+    //Repaint the tables
+    ui->listViewSession->reset();
+    ui->tableViewSession->reset();
+    m_pSelectionModel->setCurrentIndex( m_pProxyModel->mapFromSource( m_pModel->index( row, 0, QModelIndex() ) ), QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows );
 
     //Caching is in which state? Set it!
     if( ui->actionCaching->isChecked() ) on_actionCaching_triggered();
 
     //Focus Pixel Check
     focusPixelCheckAndInstallation();
+
+    //Autoresize columns
+    ui->tableViewSession->horizontalHeader()->setSectionResizeMode( QHeaderView::ResizeToContents );
 
     return 0;
 }
@@ -4661,7 +4695,7 @@ int MainWindow::showFileInEditor(int row)
 void MainWindow::addClipToExportQueue(int row, QString fileName)
 {
     //A file must be opened once before being able to be exported
-    if( m_pSessionReceipts.at( row )->wasNeverLoaded() )
+    if( GET_RECEIPT( row )->wasNeverLoaded() )
     {
         m_pStatusDialog->ui->label->setText( "Preparing export..." );
         m_pStatusDialog->ui->labelEstimatedTime->setText( "" );
@@ -4669,115 +4703,115 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
         m_pStatusDialog->open();
         if( showFileInEditor( row ) ) return; //Don't add to export queue when corrupted file
         qApp->processEvents();
-        setReceipt( m_pSessionReceipts.at( row ) );
+        setReceipt( GET_RECEIPT( row ) );
     }
 
     ReceiptSettings *receipt = new ReceiptSettings();
-    receipt->setExposure( m_pSessionReceipts.at( row )->exposure() );
-    receipt->setContrast( m_pSessionReceipts.at( row )->contrast() );
-    receipt->setTemperature( m_pSessionReceipts.at( row )->temperature() );
-    receipt->setTint( m_pSessionReceipts.at( row )->tint() );
-    receipt->setClarity( m_pSessionReceipts.at( row )->clarity() );
-    receipt->setVibrance( m_pSessionReceipts.at( row )->vibrance() );
-    receipt->setSaturation( m_pSessionReceipts.at( row )->saturation() );
-    receipt->setDr( m_pSessionReceipts.at( row )->dr() );
-    receipt->setDs( m_pSessionReceipts.at( row )->ds() );
-    receipt->setLr( m_pSessionReceipts.at( row )->lr() );
-    receipt->setLs( m_pSessionReceipts.at( row )->ls() );
-    receipt->setLightening( m_pSessionReceipts.at( row )->lightening() );
-    receipt->setShadows( m_pSessionReceipts.at( row )->shadows() );
-    receipt->setHighlights( m_pSessionReceipts.at( row )->highlights() );
-    receipt->setGradationCurve( m_pSessionReceipts.at( row )->gradationCurve() );
-    receipt->setHueVsHue( m_pSessionReceipts.at( row )->hueVsHue() );
-    receipt->setHueVsSaturation( m_pSessionReceipts.at( row )->hueVsSaturation() );
-    receipt->setHueVsLuminance( m_pSessionReceipts.at( row )->hueVsLuminance() );
-    receipt->setLumaVsSaturation( m_pSessionReceipts.at( row )->lumaVsSaturation() );
+    receipt->setExposure( GET_RECEIPT( row )->exposure() );
+    receipt->setContrast( GET_RECEIPT( row )->contrast() );
+    receipt->setTemperature( GET_RECEIPT( row )->temperature() );
+    receipt->setTint( GET_RECEIPT( row )->tint() );
+    receipt->setClarity( GET_RECEIPT( row )->clarity() );
+    receipt->setVibrance( GET_RECEIPT( row )->vibrance() );
+    receipt->setSaturation( GET_RECEIPT( row )->saturation() );
+    receipt->setDr( GET_RECEIPT( row )->dr() );
+    receipt->setDs( GET_RECEIPT( row )->ds() );
+    receipt->setLr( GET_RECEIPT( row )->lr() );
+    receipt->setLs( GET_RECEIPT( row )->ls() );
+    receipt->setLightening( GET_RECEIPT( row )->lightening() );
+    receipt->setShadows( GET_RECEIPT( row )->shadows() );
+    receipt->setHighlights( GET_RECEIPT( row )->highlights() );
+    receipt->setGradationCurve( GET_RECEIPT( row )->gradationCurve() );
+    receipt->setHueVsHue( GET_RECEIPT( row )->hueVsHue() );
+    receipt->setHueVsSaturation( GET_RECEIPT( row )->hueVsSaturation() );
+    receipt->setHueVsLuminance( GET_RECEIPT( row )->hueVsLuminance() );
+    receipt->setLumaVsSaturation( GET_RECEIPT( row )->lumaVsSaturation() );
 
-    receipt->setGradientEnabled( m_pSessionReceipts.at( row )->isGradientEnabled() );
-    receipt->setGradientExposure( m_pSessionReceipts.at( row )->gradientExposure() );
-    receipt->setGradientContrast( m_pSessionReceipts.at( row )->gradientContrast() );
-    receipt->setGradientStartX( m_pSessionReceipts.at( row )->gradientStartX() );
-    receipt->setGradientStartY( m_pSessionReceipts.at( row )->gradientStartY() );
-    receipt->setGradientLength( m_pSessionReceipts.at( row )->gradientLength() );
-    receipt->setGradientAngle( m_pSessionReceipts.at( row )->gradientAngle() );
+    receipt->setGradientEnabled( GET_RECEIPT( row )->isGradientEnabled() );
+    receipt->setGradientExposure( GET_RECEIPT( row )->gradientExposure() );
+    receipt->setGradientContrast( GET_RECEIPT( row )->gradientContrast() );
+    receipt->setGradientStartX( GET_RECEIPT( row )->gradientStartX() );
+    receipt->setGradientStartY( GET_RECEIPT( row )->gradientStartY() );
+    receipt->setGradientLength( GET_RECEIPT( row )->gradientLength() );
+    receipt->setGradientAngle( GET_RECEIPT( row )->gradientAngle() );
 
-    receipt->setSharpen( m_pSessionReceipts.at( row )->sharpen() );
-    receipt->setShMasking( m_pSessionReceipts.at( row )->shMasking() );
-    receipt->setChromaBlur( m_pSessionReceipts.at( row )->chromaBlur() );
-    receipt->setHighlightReconstruction( m_pSessionReceipts.at( row )->isHighlightReconstruction() );
-    receipt->setCamMatrixUsed( m_pSessionReceipts.at( row )->camMatrixUsed() );
-    receipt->setChromaSeparation( m_pSessionReceipts.at( row )->isChromaSeparation() );
-    receipt->setProfile( m_pSessionReceipts.at( row )->profile() );
-    receipt->setAllowCreativeAdjustments( m_pSessionReceipts.at( row )->allowCreativeAdjustments() );
-    receipt->setExrMode( m_pSessionReceipts.at( row )->exrMode() );
-    receipt->setTonemap( m_pSessionReceipts.at( row )->tonemap() );
-    receipt->setTransferFunction( m_pSessionReceipts.at( row )->transferFunction() );
-    receipt->setGamut( m_pSessionReceipts.at( row )->gamut() );
-    receipt->setGamma( m_pSessionReceipts.at( row )->gamma() );
-    receipt->setDenoiserStrength( m_pSessionReceipts.at( row )->denoiserStrength() );
-    receipt->setDenoiserWindow( m_pSessionReceipts.at( row )->denoiserWindow() );
-    receipt->setRbfDenoiserLuma( m_pSessionReceipts.at( row )->rbfDenoiserLuma() );
-    receipt->setRbfDenoiserChroma( m_pSessionReceipts.at( row )->rbfDenoiserChroma() );
-    receipt->setRbfDenoiserRange( m_pSessionReceipts.at( row )->rbfDenoiserRange() );
-    receipt->setGrainStrength( m_pSessionReceipts.at( row )->grainStrength() );
+    receipt->setSharpen( GET_RECEIPT( row )->sharpen() );
+    receipt->setShMasking( GET_RECEIPT( row )->shMasking() );
+    receipt->setChromaBlur( GET_RECEIPT( row )->chromaBlur() );
+    receipt->setHighlightReconstruction( GET_RECEIPT( row )->isHighlightReconstruction() );
+    receipt->setCamMatrixUsed( GET_RECEIPT( row )->camMatrixUsed() );
+    receipt->setChromaSeparation( GET_RECEIPT( row )->isChromaSeparation() );
+    receipt->setProfile( GET_RECEIPT( row )->profile() );
+    receipt->setAllowCreativeAdjustments( GET_RECEIPT( row )->allowCreativeAdjustments() );
+    receipt->setExrMode( GET_RECEIPT( row )->exrMode() );
+    receipt->setTonemap( GET_RECEIPT( row )->tonemap() );
+    receipt->setTransferFunction( GET_RECEIPT( row )->transferFunction() );
+    receipt->setGamut( GET_RECEIPT( row )->gamut() );
+    receipt->setGamma( GET_RECEIPT( row )->gamma() );
+    receipt->setDenoiserStrength( GET_RECEIPT( row )->denoiserStrength() );
+    receipt->setDenoiserWindow( GET_RECEIPT( row )->denoiserWindow() );
+    receipt->setRbfDenoiserLuma( GET_RECEIPT( row )->rbfDenoiserLuma() );
+    receipt->setRbfDenoiserChroma( GET_RECEIPT( row )->rbfDenoiserChroma() );
+    receipt->setRbfDenoiserRange( GET_RECEIPT( row )->rbfDenoiserRange() );
+    receipt->setGrainStrength( GET_RECEIPT( row )->grainStrength() );
 
-    receipt->setRawFixesEnabled( m_pSessionReceipts.at( row )->rawFixesEnabled() );
-    receipt->setVerticalStripes( m_pSessionReceipts.at( row )->verticalStripes() );
-    receipt->setFocusPixels( m_pSessionReceipts.at( row )->focusPixels() );
-    receipt->setFpiMethod( m_pSessionReceipts.at( row )->fpiMethod() );
-    receipt->setBadPixels( m_pSessionReceipts.at( row )->badPixels() );
-    receipt->setBpsMethod( m_pSessionReceipts.at( row )->bpsMethod() );
-    receipt->setBpiMethod( m_pSessionReceipts.at( row )->bpiMethod() );
-    receipt->setChromaSmooth( m_pSessionReceipts.at( row )->chromaSmooth() );
-    receipt->setPatternNoise( m_pSessionReceipts.at( row )->patternNoise() );
-    receipt->setDeflickerTarget( m_pSessionReceipts.at( row )->deflickerTarget() );
-    receipt->setDualIsoForced( m_pSessionReceipts.at( row )->dualIsoForced() );
-    receipt->setDualIso( m_pSessionReceipts.at( row )->dualIso() );
-    receipt->setDualIsoInterpolation( m_pSessionReceipts.at( row )->dualIsoInterpolation() );
-    receipt->setDualIsoAliasMap( m_pSessionReceipts.at( row )->dualIsoAliasMap() );
-    receipt->setDualIsoFrBlending( m_pSessionReceipts.at( row )->dualIsoFrBlending() );
-    receipt->setDualIsoWhite( m_pSessionReceipts.at( row )->dualIsoWhite() );
-    receipt->setDualIsoBlack( m_pSessionReceipts.at( row )->dualIsoBlack() );
-    receipt->setDarkFrameFileName( m_pSessionReceipts.at( row )->darkFrameFileName() );
-    receipt->setDarkFrameEnabled( m_pSessionReceipts.at( row )->darkFrameEnabled() );
-    receipt->setRawBlack( m_pSessionReceipts.at( row )->rawBlack() );
-    receipt->setRawWhite( m_pSessionReceipts.at( row )->rawWhite() );
+    receipt->setRawFixesEnabled( GET_RECEIPT( row )->rawFixesEnabled() );
+    receipt->setVerticalStripes( GET_RECEIPT( row )->verticalStripes() );
+    receipt->setFocusPixels( GET_RECEIPT( row )->focusPixels() );
+    receipt->setFpiMethod( GET_RECEIPT( row )->fpiMethod() );
+    receipt->setBadPixels( GET_RECEIPT( row )->badPixels() );
+    receipt->setBpsMethod( GET_RECEIPT( row )->bpsMethod() );
+    receipt->setBpiMethod( GET_RECEIPT( row )->bpiMethod() );
+    receipt->setChromaSmooth( GET_RECEIPT( row )->chromaSmooth() );
+    receipt->setPatternNoise( GET_RECEIPT( row )->patternNoise() );
+    receipt->setDeflickerTarget( GET_RECEIPT( row )->deflickerTarget() );
+    receipt->setDualIsoForced( GET_RECEIPT( row )->dualIsoForced() );
+    receipt->setDualIso( GET_RECEIPT( row )->dualIso() );
+    receipt->setDualIsoInterpolation( GET_RECEIPT( row )->dualIsoInterpolation() );
+    receipt->setDualIsoAliasMap( GET_RECEIPT( row )->dualIsoAliasMap() );
+    receipt->setDualIsoFrBlending( GET_RECEIPT( row )->dualIsoFrBlending() );
+    receipt->setDualIsoWhite( GET_RECEIPT( row )->dualIsoWhite() );
+    receipt->setDualIsoBlack( GET_RECEIPT( row )->dualIsoBlack() );
+    receipt->setDarkFrameFileName( GET_RECEIPT( row )->darkFrameFileName() );
+    receipt->setDarkFrameEnabled( GET_RECEIPT( row )->darkFrameEnabled() );
+    receipt->setRawBlack( GET_RECEIPT( row )->rawBlack() );
+    receipt->setRawWhite( GET_RECEIPT( row )->rawWhite() );
 
-    receipt->setTone( m_pSessionReceipts.at( row )->tone() );
-    receipt->setToningStrength( m_pSessionReceipts.at( row )->toningStrength() );
+    receipt->setTone( GET_RECEIPT( row )->tone() );
+    receipt->setToningStrength( GET_RECEIPT( row )->toningStrength() );
 
-    receipt->setLutEnabled( m_pSessionReceipts.at( row )->lutEnabled() );
-    receipt->setLutName( m_pSessionReceipts.at( row )->lutName() );
-    receipt->setLutStrength( m_pSessionReceipts.at( row )->lutStrength() );
+    receipt->setLutEnabled( GET_RECEIPT( row )->lutEnabled() );
+    receipt->setLutName( GET_RECEIPT( row )->lutName() );
+    receipt->setLutStrength( GET_RECEIPT( row )->lutStrength() );
 
-    receipt->setFilterEnabled( m_pSessionReceipts.at( row )->filterEnabled() );
-    receipt->setFilterIndex( m_pSessionReceipts.at( row )->filterIndex() );
-    receipt->setFilterStrength( m_pSessionReceipts.at( row )->filterStrength() );
+    receipt->setFilterEnabled( GET_RECEIPT( row )->filterEnabled() );
+    receipt->setFilterIndex( GET_RECEIPT( row )->filterIndex() );
+    receipt->setFilterStrength( GET_RECEIPT( row )->filterStrength() );
 
-    receipt->setVignetteStrength( m_pSessionReceipts.at( row )->vignetteStrength() );
-    receipt->setVignetteRadius( m_pSessionReceipts.at( row )->vignetteRadius() );
-    receipt->setVignetteShape( m_pSessionReceipts.at( row )->vignetteShape() );
-    receipt->setCaRed( m_pSessionReceipts.at( row )->caRed() );
-    receipt->setCaBlue( m_pSessionReceipts.at( row )->caBlue() );
-    receipt->setCaDesaturate( m_pSessionReceipts.at( row )->caDesaturate() );
-    receipt->setCaRadius( m_pSessionReceipts.at( row )->caRadius() );
+    receipt->setVignetteStrength( GET_RECEIPT( row )->vignetteStrength() );
+    receipt->setVignetteRadius( GET_RECEIPT( row )->vignetteRadius() );
+    receipt->setVignetteShape( GET_RECEIPT( row )->vignetteShape() );
+    receipt->setCaRed( GET_RECEIPT( row )->caRed() );
+    receipt->setCaBlue( GET_RECEIPT( row )->caBlue() );
+    receipt->setCaDesaturate( GET_RECEIPT( row )->caDesaturate() );
+    receipt->setCaRadius( GET_RECEIPT( row )->caRadius() );
 
-    receipt->setStretchFactorX( m_pSessionReceipts.at( row )->stretchFactorX() );
-    receipt->setStretchFactorY( m_pSessionReceipts.at( row )->stretchFactorY() );
-    receipt->setUpsideDown( m_pSessionReceipts.at( row )->upsideDown() );
-    receipt->setVidstabEnabled( m_pSessionReceipts.at( row )->vidStabEnabled() );
-    receipt->setVidstabStepsize( m_pSessionReceipts.at( row )->vidStabStepsize() );
-    receipt->setVidstabShakiness( m_pSessionReceipts.at( row )->vidStabShakiness() );
-    receipt->setVidstabAccuracy( m_pSessionReceipts.at( row )->vidStabAccuracy() );
-    receipt->setVidstabZoom( m_pSessionReceipts.at( row )->vidStabZoom() );
-    receipt->setVidstabSmoothing( m_pSessionReceipts.at( row )->vidStabSmoothing() );
-    receipt->setVidstabTripod( m_pSessionReceipts.at( row )->vidStabTripod() );
+    receipt->setStretchFactorX( GET_RECEIPT( row )->stretchFactorX() );
+    receipt->setStretchFactorY( GET_RECEIPT( row )->stretchFactorY() );
+    receipt->setUpsideDown( GET_RECEIPT( row )->upsideDown() );
+    receipt->setVidstabEnabled( GET_RECEIPT( row )->vidStabEnabled() );
+    receipt->setVidstabStepsize( GET_RECEIPT( row )->vidStabStepsize() );
+    receipt->setVidstabShakiness( GET_RECEIPT( row )->vidStabShakiness() );
+    receipt->setVidstabAccuracy( GET_RECEIPT( row )->vidStabAccuracy() );
+    receipt->setVidstabZoom( GET_RECEIPT( row )->vidStabZoom() );
+    receipt->setVidstabSmoothing( GET_RECEIPT( row )->vidStabSmoothing() );
+    receipt->setVidstabTripod( GET_RECEIPT( row )->vidStabTripod() );
 
-    receipt->setDebayer( m_pSessionReceipts.at( row )->debayer() );
+    receipt->setDebayer( GET_RECEIPT( row )->debayer() );
 
-    receipt->setFileName( m_pSessionReceipts.at( row )->fileName() );
-    receipt->setCutIn( m_pSessionReceipts.at( row )->cutIn() );
-    receipt->setCutOut( m_pSessionReceipts.at( row )->cutOut() );
+    receipt->setFileName( GET_RECEIPT( row )->fileName() );
+    receipt->setCutIn( GET_RECEIPT( row )->cutIn() );
+    receipt->setCutOut( GET_RECEIPT( row )->cutOut() );
     receipt->setExportFileName( fileName );
     m_exportQueue.append( receipt );
 }
@@ -4797,47 +4831,65 @@ void MainWindow::previewPicture( int row )
                                                getMlvHeight(m_pMlvObject) * devicePixelRatio() / 10.0 * getVerticalStretchFactor(true),
                                                Qt::IgnoreAspectRatio, Qt::SmoothTransformation) );
     pic.setDevicePixelRatio( devicePixelRatio() );
-    //Take and insert item, so the scrollbar is set correctly to the size of the picture
-    QListWidgetItem *item = ui->listWidgetSession->takeItem( row );
-    item->setIcon( QIcon( pic ) );
-    ui->listWidgetSession->insertItem( row, item );
-    //And select it
-    ui->listWidgetSession->setCurrentRow( row );
+    m_pModel->setData( m_pModel->index( row, 0, QModelIndex() ), QIcon( pic ), Qt::DecorationRole );
+
     setPreviewMode();
 }
 
 //Sets the preview mode
 void MainWindow::setPreviewMode( void )
 {
-    if( m_previewMode == 1 )
+    if( m_previewMode == 0 )
     {
-        ui->listWidgetSession->setViewMode( QListView::ListMode );
-        ui->listWidgetSession->setIconSize( QSize( 50, 30 ) );
-        ui->listWidgetSession->setGridSize( QSize( -1, -1 ) );
-        ui->listWidgetSession->setAlternatingRowColors( true );
-        ui->listWidgetSession->setResizeMode( QListView::Fixed );
-        ui->listWidgetSession->setFlow( QListView::TopToBottom );
-        ui->listWidgetSession->setWrapping( false );
+        ui->listViewSession->setVisible( true );
+        ui->tableViewSession->setVisible( false );
+        m_pSelectionModel = ui->listViewSession->selectionModel();
+        ui->listViewSession->setViewMode( QListView::ListMode );
+        ui->listViewSession->setIconSize( QSize( 0, 0 ) );
+        ui->listViewSession->setGridSize( QSize( -1, -1 ) );
+        ui->listViewSession->setAlternatingRowColors( true );
+        ui->listViewSession->setResizeMode( QListView::Fixed );
+        ui->listViewSession->setFlow( QListView::TopToBottom );
+        ui->listViewSession->setWrapping( false );
+    }
+    else if( m_previewMode == 1 )
+    {
+        ui->listViewSession->setVisible( true );
+        ui->tableViewSession->setVisible( false );
+        m_pSelectionModel = ui->listViewSession->selectionModel();
+        ui->listViewSession->setViewMode( QListView::ListMode );
+        ui->listViewSession->setIconSize( QSize( 50, 30 ) );
+        ui->listViewSession->setGridSize( QSize( -1, -1 ) );
+        ui->listViewSession->setAlternatingRowColors( true );
+        ui->listViewSession->setResizeMode( QListView::Fixed );
+        ui->listViewSession->setFlow( QListView::TopToBottom );
+        ui->listViewSession->setWrapping( false );
     }
     else if( m_previewMode == 2 || m_previewMode == 3 )
     {
-        ui->listWidgetSession->setViewMode( QListView::IconMode );
-        ui->listWidgetSession->setIconSize( QSize( 130, 80 ) );
-        ui->listWidgetSession->setGridSize( QSize( 140, 100 ) );
-        ui->listWidgetSession->setAlternatingRowColors( false );
-        ui->listWidgetSession->setResizeMode( QListView::Adjust );
-        ui->listWidgetSession->setFlow( QListView::LeftToRight );
-        ui->listWidgetSession->setWrapping( true );
+        ui->listViewSession->setVisible( true );
+        ui->tableViewSession->setVisible( false );
+        m_pSelectionModel = ui->listViewSession->selectionModel();
+        ui->listViewSession->setViewMode( QListView::IconMode );
+        ui->listViewSession->setIconSize( QSize( 130, 80 ) );
+        ui->listViewSession->setGridSize( QSize( 140, 100 ) );
+        ui->listViewSession->setAlternatingRowColors( false );
+        ui->listViewSession->setResizeMode( QListView::Adjust );
+        ui->listViewSession->setFlow( QListView::LeftToRight );
+        ui->listViewSession->setWrapping( true );
     }
-    else
+    else //Table mode
     {
-        ui->listWidgetSession->setViewMode( QListView::ListMode );
-        ui->listWidgetSession->setIconSize( QSize( 0, 0 ) );
-        ui->listWidgetSession->setGridSize( QSize( -1, -1 ) );
-        ui->listWidgetSession->setAlternatingRowColors( true );
-        ui->listWidgetSession->setResizeMode( QListView::Fixed );
-        ui->listWidgetSession->setFlow( QListView::TopToBottom );
-        ui->listWidgetSession->setWrapping( false );
+        ui->listViewSession->setVisible( false );
+        ui->tableViewSession->setVisible( true );
+        m_pSelectionModel = ui->tableViewSession->selectionModel();
+        ui->listViewSession->setViewMode( QListView::ListMode );
+        ui->listViewSession->setIconSize( QSize( 0, 0 ) );
+        ui->listViewSession->setGridSize( QSize( -1, -1 ) );
+        ui->listViewSession->setAlternatingRowColors( true );
+        ui->listViewSession->setResizeMode( QListView::Fixed );
+        ui->listViewSession->setFlow( QListView::TopToBottom );
+        ui->listViewSession->setWrapping( false );
     }
 }
 
@@ -6148,13 +6200,13 @@ void MainWindow::on_actionExport_triggered()
     ui->actionPlay->setChecked( false );
 
     //Save slider receipt
-    setReceipt( m_pSessionReceipts.at( m_lastActiveClipInSession ) );
+    setReceipt( ACTIVE_RECEIPT );
 
     //Save last active clip before export
-    m_lastClipBeforeExport = m_lastActiveClipInSession;
+    m_lastClipBeforeExport = SESSION_ACTIVE_CLIP_ROW;
 
     //Filename proposal in dependency to actual file
-    QString saveFileName = m_pSessionReceipts.at( m_lastActiveClipInSession )->fileName();
+    QString saveFileName = ACTIVE_RECEIPT->fileName();
     //But take the folder from last export
     saveFileName = QString( "%1/%2" ).arg( m_lastExportPath ).arg( QFileInfo( saveFileName ).fileName() );
 
@@ -6228,7 +6280,7 @@ void MainWindow::on_actionExport_triggered()
     }
 
     //If one clip is selected, but is not a sequence
-    if( ( ui->listWidgetSession->selectedItems().count() <= 1 )
+    if( ( selectedClipsList().count() <= 1 )
      && !isExportSequence() )
     {
         //File Dialog
@@ -6244,7 +6296,7 @@ void MainWindow::on_actionExport_triggered()
         m_lastExportPath = QFileInfo( fileName ).absolutePath();
 
         //Get receipt into queue
-        addClipToExportQueue( m_lastActiveClipInSession, fileName );
+        addClipToExportQueue( SESSION_ACTIVE_CLIP_ROW, fileName );
     }
     //if multiple files selected or >= 1 sequence
     else
@@ -6258,13 +6310,15 @@ void MainWindow::on_actionExport_triggered()
         if( folderName.length() == 0 ) return;
 
         QStringList overwriteList;
-        for( int row = 0; row < ui->listWidgetSession->count(); row++ )
+        QModelIndexList selectedClips = selectedClipsList();
+
+        for( int i = 0; i < selectedClips.count(); i++ )
         {
-            if( !ui->listWidgetSession->item( row )->isSelected() ) continue;
+            int row = m_pProxyModel->mapToSource( selectedClips.at( i ) ).row();
             //Sequences
             if( isExportSequence() )
             {
-                QString fileName = ui->listWidgetSession->item( row )->text().replace( ".mlv", "", Qt::CaseInsensitive );
+                QString fileName = GET_CLIP( row )->getName().replace( ".mlv", "", Qt::CaseInsensitive );
                 fileName.prepend( "/" );
                 fileName.prepend( folderName );
 
@@ -6273,7 +6327,7 @@ void MainWindow::on_actionExport_triggered()
             //Clips
             else
             {
-                QString fileName = ui->listWidgetSession->item( row )->text().replace( ".mlv", fileEnding, Qt::CaseInsensitive );
+                QString fileName = GET_CLIP( row )->getName().replace( ".mlv", fileEnding, Qt::CaseInsensitive );
                 fileName.prepend( "/" );
                 fileName.prepend( folderName );
 
@@ -6297,12 +6351,12 @@ void MainWindow::on_actionExport_triggered()
         m_lastExportPath = folderName;
 
         //for all selected
-        for( int row = 0; row < ui->listWidgetSession->count(); row++ )
+        for( int i = 0; i < selectedClips.count(); i++ )
         {
-            if( !ui->listWidgetSession->item( row )->isSelected() ) continue;
+            int row = m_pProxyModel->mapToSource( selectedClips.at( i ) ).row();
 
             //Create Path+Name
-            QString fileName = ui->listWidgetSession->item( row )->text().replace( ".mlv", fileEnding, Qt::CaseInsensitive );
+            QString fileName = GET_CLIP( row )->getName().replace( ".mlv", fileEnding, Qt::CaseInsensitive );
             fileName.prepend( "/" );
             fileName.prepend( folderName );
 
@@ -6332,7 +6386,7 @@ void MainWindow::on_actionExportCurrentFrame_triggered()
 {
     SingleFrameExportDialog *exportDialog = new SingleFrameExportDialog( this,
                                                                          m_pMlvObject,
-                                                                         m_pSessionReceipts.at( m_lastActiveClipInSession )->fileName(),
+                                                                         ACTIVE_RECEIPT->fileName(),
                                                                          ui->horizontalSliderPosition->value(),
                                                                          getHorizontalStretchFactor(true),
                                                                          getVerticalStretchFactor(true) );
@@ -6516,7 +6570,7 @@ void MainWindow::enableCreativeAdjustments( bool enable )
 //Calcukate and show resulting resolution after stretching
 void MainWindow::resultingResolution( void )
 {
-    if( !ui->listWidgetSession->count() ) return;
+    if( !SESSION_CLIP_COUNT ) return;
     int x = getMlvWidth( m_pMlvObject ) * getHorizontalStretchFactor( false );
     int y = getMlvHeight( m_pMlvObject ) * getVerticalStretchFactor( false );
     ui->label_resResolution->setText( QString( "%1 x %2 pixels" ).arg(x).arg(y) );
@@ -6754,40 +6808,42 @@ void MainWindow::on_actionResetReceipt_triggered()
 //Copy receipt to clipboard
 void MainWindow::on_actionCopyRecept_triggered()
 {
-    if( ui->listWidgetSession->count() <= 0 ) return;
-    if( ui->listWidgetSession->selectedItems().count() > 1 )
+    if( SESSION_CLIP_COUNT <= 0 ) return;
+    QModelIndexList list = selectedClipsList();
+    if( list.count() > 1 )
     {
         QMessageBox::warning( this, APPNAME, tr( "Please select just one clip to copy a receipt!" ) );
         return;
     }
 
     int clipToCopy;
-    if( ui->listWidgetSession->selectedItems().count() == 0 ) clipToCopy = m_lastActiveClipInSession;
-    else clipToCopy = ui->listWidgetSession->currentRow();
+    if( list.count() == 0 ) clipToCopy = SESSION_ACTIVE_CLIP_ROW;
+    else clipToCopy = m_pProxyModel->mapToSource( list.first() ).row();
 
     //Save slider receipt
-    setReceipt( m_pSessionReceipts.at( m_lastActiveClipInSession ) );
+    setReceipt( ACTIVE_RECEIPT );
     //Copy mask
     m_pCopyMask->exec();
     //Save selected to clipboard
-    replaceReceipt( m_pReceiptClipboard, m_pSessionReceipts.at( clipToCopy ), true );
+    replaceReceipt( m_pReceiptClipboard, GET_RECEIPT( clipToCopy ), true );
     ui->actionPasteReceipt->setEnabled( true );
 }
 
 //Paste receipt from clipboard
 void MainWindow::on_actionPasteReceipt_triggered()
 {
-    if( ui->listWidgetSession->selectedItems().count() )
+    QModelIndexList list = selectedClipsList();
+    if( list.count() )
     {
-        for( int row = 0; row < ui->listWidgetSession->count(); row++ )
+        for( int i = 0; i < list.count(); i++ )
         {
-            if( !ui->listWidgetSession->item( row )->isSelected() ) continue;
+            int row = m_pProxyModel->mapToSource( list.at( i ) ).row();
             pasteReceiptFromClipboardTo( row );
         }
     }
     else
     {
-        pasteReceiptFromClipboardTo( m_lastActiveClipInSession );
+        pasteReceiptFromClipboardTo( SESSION_ACTIVE_CLIP_ROW );
     }
 }
 
@@ -6795,7 +6851,7 @@ void MainWindow::on_actionPasteReceipt_triggered()
 void MainWindow::on_actionNewSession_triggered()
 {
     //Save last session?
-    if( ui->listWidgetSession->count() != 0 )
+    if( SESSION_CLIP_COUNT != 0 )
     {
         int ret = QMessageBox::warning( this, APPNAME, tr( "Do you like to save the current session?" ),
                                         tr( "Cancel" ), tr( "Don't save" ), tr( "Save" ) );
@@ -6839,7 +6895,7 @@ void MainWindow::on_actionOpenSession_triggered()
     m_inOpeningProcess = true;
     openSession( fileName );
     //Show last imported file
-    showFileInEditor( m_pSessionReceipts.count() - 1 );
+    showFileInEditor( SESSION_CLIP_COUNT - 1 );
     m_sessionFileName = fileName;
     m_lastSessionFileName = fileName;
     m_inOpeningProcess = false;
@@ -6882,15 +6938,18 @@ void MainWindow::on_actionSaveAsSession_triggered()
 //Jump to next clip
 void MainWindow::on_actionNext_Clip_triggered()
 {
-    if( ( ( m_lastActiveClipInSession + 1 ) < ui->listWidgetSession->count() ) && m_fileLoaded )
+    //int currentRow = m_pSelectionModel->currentIndex().row();
+    int currentRow = m_pProxyModel->mapFromSource( m_pModel->index( SESSION_ACTIVE_CLIP_ROW, 0, QModelIndex() ) ).row();
+
+    if( ( ( currentRow + 1 ) < SESSION_CLIP_COUNT ) && m_fileLoaded )
     {
         //Search the next visible clip, if any
-        for( int i = m_lastActiveClipInSession + 1; i < ui->listWidgetSession->count(); i++ )
+        for( int i = currentRow + 1; i < SESSION_CLIP_COUNT; i++ )
         {
-            if( !ui->listWidgetSession->item(i)->isHidden() )
+            if( !ui->listViewSession->isRowHidden( i ) )
             {
-                ui->listWidgetSession->setCurrentRow( i );
-                showFileInEditor( i );
+                showFileInEditor( m_pProxyModel->index( i, 0, QModelIndex() ).data( ROLE_REALINDEX ).toInt() );
+                m_pSelectionModel->setCurrentIndex( m_pProxyModel->index( i, 0, QModelIndex() ), QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows );
                 return;
             }
         }
@@ -6900,15 +6959,18 @@ void MainWindow::on_actionNext_Clip_triggered()
 //Jump to previous clip
 void MainWindow::on_actionPrevious_Clip_triggered()
 {
-    if( ( m_lastActiveClipInSession > 0 ) && m_fileLoaded )
+    //int currentRow = m_pSelectionModel->currentIndex().row();
+    int currentRow = m_pProxyModel->mapFromSource( m_pModel->index( SESSION_ACTIVE_CLIP_ROW, 0, QModelIndex() ) ).row();
+
+    if( ( currentRow > 0 ) && m_fileLoaded )
     {
         //Search the previous visible clip, if any
-        for( int i = m_lastActiveClipInSession - 1; i >= 0; i-- )
+        for( int i = currentRow - 1; i >= 0; i-- )
         {
-            if( !ui->listWidgetSession->item(i)->isHidden() )
+            if( !ui->listViewSession->isRowHidden( i ) )
             {
-                ui->listWidgetSession->setCurrentRow( i );
-                showFileInEditor( i );
+                showFileInEditor( m_pProxyModel->index( i, 0, QModelIndex() ).data( ROLE_REALINDEX ).toInt() );
+                m_pSelectionModel->setCurrentIndex( m_pProxyModel->index( i, 0, QModelIndex() ), QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows );
                 return;
             }
         }
@@ -6918,7 +6980,7 @@ void MainWindow::on_actionPrevious_Clip_triggered()
 //Select all clips via action
 void MainWindow::on_actionSelectAllClips_triggered()
 {
-    if( ui->listWidgetSession->count() > 0 )
+    if( SESSION_CLIP_COUNT > 0 )
     {
         selectAllFiles();
     }
@@ -6927,7 +6989,7 @@ void MainWindow::on_actionSelectAllClips_triggered()
 //Delete clip from session via action
 void MainWindow::on_actionDeleteSelectedClips_triggered()
 {
-    if( ui->listWidgetSession->count() > 0 )
+    if( SESSION_CLIP_COUNT > 0 )
     {
         deleteFileFromSession();
         ui->actionDeleteSelectedClips->setEnabled( false );
@@ -6935,9 +6997,15 @@ void MainWindow::on_actionDeleteSelectedClips_triggered()
 }
 
 //FileName in SessionList doubleClicked
-void MainWindow::on_listWidgetSession_activated(const QModelIndex &index)
+void MainWindow::on_listViewSession_activated(const QModelIndex &index)
 {
-    showFileInEditor( index.row() );
+    showFileInEditor( index.data( ROLE_REALINDEX ).toInt() );
+}
+
+//FileName in SessionTable doubleClicked
+void MainWindow::on_tableViewSession_activated(const QModelIndex &index)
+{
+    showFileInEditor( index.data( ROLE_REALINDEX ).toInt() );
 }
 
 //Sessionlist visibility changed -> redraw picture
@@ -6971,13 +7039,10 @@ void MainWindow::on_actionShowAudioTrack_toggled(bool checked)
 }
 
 //Rightclick on SessionList
-void MainWindow::on_listWidgetSession_customContextMenuRequested(const QPoint &pos)
+void MainWindow::on_listViewSession_customContextMenuRequested(const QPoint &pos)
 {
-    //if( ui->listWidgetSession->count() <= 0 ) return;
-    //if( ui->listWidgetSession->selectedItems().size() <= 0 ) return;
-
     // Handle global position
-    QPoint globalPos = ui->listWidgetSession->mapToGlobal( pos );
+    QPoint globalPos = ui->listViewSession->mapToGlobal( pos );
 
     // Create mark menu
     QMenu markMenu;
@@ -6988,9 +7053,10 @@ void MainWindow::on_listWidgetSession_customContextMenuRequested(const QPoint &p
 
     // Create menu and insert some actions
     QMenu myMenu;
-    if( ui->listWidgetSession->count() > 0 )
+    QModelIndexList list = selectedClipsList();
+    if( SESSION_CLIP_COUNT > 0 )
     {
-        if( ui->listWidgetSession->selectedItems().size() == 1 )
+        if( list.count() == 1 )
         {
             myMenu.addAction( ui->actionSelectAllClips );
             myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Image-icon.png" ), "Show in Editor",  this, SLOT( rightClickShowFile() ) );
@@ -7003,7 +7069,52 @@ void MainWindow::on_listWidgetSession_customContextMenuRequested(const QPoint &p
             myMenu.addAction( ui->actionSelectExternalApplication );
             myMenu.addSeparator();
         }
-        else if( ui->listWidgetSession->selectedItems().size() > 1 )
+        else if( list.count() > 1 )
+        {
+            myMenu.addAction( ui->actionPasteReceipt );
+            myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Delete-icon.png" ), "Delete Selected Files from Session",  this, SLOT( deleteFileFromSession() ) );
+            markMenu.setTitle( "Mark Clips" );
+            myMenu.addMenu( &markMenu );
+            myMenu.addSeparator();
+        }
+    }
+    myMenu.addMenu( ui->menuSessionListPreview );
+    // Show context menu at handling position
+    myMenu.exec( globalPos );
+}
+
+//Rightclick on SessionTable
+void MainWindow::on_tableViewSession_customContextMenuRequested(const QPoint &pos)
+{
+    // Handle global position
+    QPoint globalPos = ui->listViewSession->mapToGlobal( pos );
+
+    // Create mark menu
+    QMenu markMenu;
+    markMenu.addAction( ui->actionMarkRed );
+    markMenu.addAction( ui->actionMarkYellow );
+    markMenu.addAction( ui->actionMarkGreen );
+    markMenu.addAction( ui->actionUnmark );
+
+    // Create menu and insert some actions
+    QMenu myMenu;
+    QModelIndexList list = selectedClipsList();
+    if( SESSION_CLIP_COUNT > 0 )
+    {
+        if( list.count() == 1 )
+        {
+            myMenu.addAction( ui->actionSelectAllClips );
+            myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Image-icon.png" ), "Show in Editor",  this, SLOT( rightClickShowFile() ) );
+            myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Delete-icon.png" ), "Delete Selected File from Session",  this, SLOT( deleteFileFromSession() ) );
+            markMenu.setTitle( "Mark Clip" );
+            myMenu.addMenu( &markMenu );
+            myMenu.addSeparator();
+            myMenu.addAction( ui->actionShowInFinder );
+            myMenu.addAction( ui->actionOpenWithExternalApplication );
+            myMenu.addAction( ui->actionSelectExternalApplication );
+            myMenu.addSeparator();
+        }
+        else if( list.count() > 1 )
         {
             myMenu.addAction( ui->actionPasteReceipt );
             myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Delete-icon.png" ), "Delete Selected Files from Session",  this, SLOT( deleteFileFromSession() ) );
@@ -7021,16 +7132,20 @@ void MainWindow::on_listWidgetSession_customContextMenuRequested(const QPoint &p
 void MainWindow::deleteFileFromSession( void )
 {
     //Save slider receipt
-    setReceipt( m_pSessionReceipts.at( m_lastActiveClipInSession ) );
+    setReceipt( ACTIVE_RECEIPT );
 
     //Ask for options
     int delFile = QMessageBox::question( this, tr( "%1 - Remove clip" ).arg( APPNAME ), tr( "Remove clip from session, or delete clip from disk?" ), tr( "Remove" ), tr( "Delete from Disk" ), tr( "Abort" ) );
     if( delFile == 2 ) return; //Abort
 
     //If multiple selection is on, we need to erase all selected items
-    for( int i = ui->listWidgetSession->selectedItems().size(); i > 0; i-- )
+    QModelIndexList list = selectedClipsList();
+    for( int i = list.count(); i > 0; i-- )
     {
-        int row = ui->listWidgetSession->row( ui->listWidgetSession->selectedItems().at( i - 1 ) );
+        //Do nothing for hidden clips
+        if( ui->tableViewSession->isRowHidden( list.at(i-1).row() ) ) continue;
+
+        int row = list.at( i - 1 ).data( ROLE_REALINDEX ).toInt();
         //Delete file from disk when wanted
         if( delFile == 1 )
         {
@@ -7041,9 +7156,9 @@ void MainWindow::deleteFileFromSession( void )
             freeMlvObject( m_pMlvObject );
             m_pMlvObject = initMlvObject();
 #endif
-            if( MoveToTrash( m_pSessionReceipts.at(row)->fileName() ) ) QMessageBox::critical( this, tr( "%1 - Delete clip from disk" ).arg( APPNAME ), tr( "Delete clip failed!" ) );
+            if( MoveToTrash( GET_RECEIPT(row)->fileName() ) ) QMessageBox::critical( this, tr( "%1 - Delete clip from disk" ).arg( APPNAME ), tr( "Delete clip failed!" ) );
             //MAPP
-            QString mappName = m_pSessionReceipts.at(row)->fileName();
+            QString mappName = GET_RECEIPT(row)->fileName();
             mappName.chop( 4 );
             mappName.append( ".MAPP" );
             if( QFileInfo( mappName ).exists() )
@@ -7051,22 +7166,21 @@ void MainWindow::deleteFileFromSession( void )
                 if( MoveToTrash( mappName ) ) QMessageBox::critical( this, tr( "%1 - Delete MAPP file from disk" ).arg( APPNAME ), tr( "Delete MAPP file failed!" ) );
             }
         }
-        //Remove item from Session List
-        delete ui->listWidgetSession->selectedItems().at( i - 1 );
-        //Remove slider memory
-        m_pSessionReceipts.removeAt( row );
+        //Remove item from Session List & Remove slider memory
+        m_pModel->removeRow( row, QModelIndex() );
         //influences actual loaded clip?
-        if( m_lastActiveClipInSession > row ) m_lastActiveClipInSession--;
-        if( m_lastActiveClipInSession < 0 ) m_lastActiveClipInSession = 0;
+        if( SESSION_ACTIVE_CLIP_ROW > row ) SET_ACTIVE_CLIP_IDX( SESSION_ACTIVE_CLIP_ROW - 1 );
+        if( SESSION_ACTIVE_CLIP_ROW < 0 ) SET_ACTIVE_CLIP_IDX( 0 );
     }
+
     //if there is at least one...
-    if( ui->listWidgetSession->count() > 0 )
+    if( SESSION_CLIP_COUNT > 0 )
     {
         //Open the nearest clip from last opened!
-        if( m_lastActiveClipInSession >= ui->listWidgetSession->count() ) m_lastActiveClipInSession = ui->listWidgetSession->count() - 1;
-        ui->listWidgetSession->setCurrentRow( m_lastActiveClipInSession );
-        openMlv( ui->listWidgetSession->item( m_lastActiveClipInSession )->toolTip() );
-        setSliders( m_pSessionReceipts.at( m_lastActiveClipInSession ), false );
+        if( SESSION_ACTIVE_CLIP_ROW >= SESSION_CLIP_COUNT ) SET_ACTIVE_CLIP_IDX( SESSION_CLIP_COUNT - 1 );
+        m_pSelectionModel->setCurrentIndex( m_pProxyModel->mapFromSource( m_pModel->index( SESSION_ACTIVE_CLIP_ROW, 0, QModelIndex() ) ), QItemSelectionModel::ClearAndSelect );
+        openMlv( ACTIVE_CLIP->getPath() );
+        setSliders( ACTIVE_RECEIPT, false );
 
         //Caching is in which state? Set it!
         if( ui->actionCaching->isChecked() ) on_actionCaching_triggered();
@@ -7081,13 +7195,14 @@ void MainWindow::deleteFileFromSession( void )
 //Shows the file, which is selected via contextmenu
 void MainWindow::rightClickShowFile( void )
 {
-    showFileInEditor( ui->listWidgetSession->currentRow() );
+    showFileInEditor( selectedClipsList().first().row() );
 }
 
 //Select all files in SessionList
 void MainWindow::selectAllFiles( void )
 {
-    ui->listWidgetSession->selectAll();
+    if( m_previewMode == 4 ) ui->tableViewSession->selectAll();
+    else ui->listViewSession->selectAll();
 }
 
 //Contextmenu on picture
@@ -7658,8 +7773,9 @@ void MainWindow::exportHandler( void )
         //Hide Status Dialog
         m_pStatusDialog->close();
         //Open last file which was opened before export
-        openMlv( m_pSessionReceipts.at( m_lastClipBeforeExport )->fileName() );
-        setSliders( m_pSessionReceipts.at( m_lastClipBeforeExport ), false );
+        openMlv( GET_RECEIPT( m_lastClipBeforeExport )->fileName() );
+        setSliders( GET_RECEIPT( m_lastClipBeforeExport ), false );
+        SET_ACTIVE_CLIP_IDX( m_lastClipBeforeExport );
         //Unblock GUI
         setEnabled( true );
         //Export is ready
@@ -9063,7 +9179,7 @@ void MainWindow::on_actionPreviewDisabled_triggered()
     m_previewMode = 0;
     setPreviewMode();
     addDockWidget( Qt::LeftDockWidgetArea, ui->dockWidgetSession );
-    ui->listWidgetSession->verticalScrollBar()->setSingleStep( 1 );
+    ui->listViewSession->verticalScrollBar()->setSingleStep( 1 );
 }
 
 //Session Preview  List
@@ -9072,7 +9188,7 @@ void MainWindow::on_actionPreviewList_triggered()
     m_previewMode = 1;
     setPreviewMode();
     addDockWidget( Qt::LeftDockWidgetArea, ui->dockWidgetSession );
-    ui->listWidgetSession->verticalScrollBar()->setSingleStep( 1 );
+    ui->listViewSession->verticalScrollBar()->setSingleStep( 1 );
 }
 
 //Session Preview Picture Left
@@ -9081,7 +9197,7 @@ void MainWindow::on_actionPreviewPicture_triggered()
     m_previewMode = 2;
     setPreviewMode();
     addDockWidget( Qt::LeftDockWidgetArea, ui->dockWidgetSession );
-    ui->listWidgetSession->verticalScrollBar()->setSingleStep( 82 );
+    ui->listViewSession->verticalScrollBar()->setSingleStep( 82 );
 }
 
 //Session Preview Picture Bottom
@@ -9090,7 +9206,15 @@ void MainWindow::on_actionPreviewPictureBottom_triggered()
     m_previewMode = 3;
     setPreviewMode();
     addDockWidget( Qt::BottomDockWidgetArea, ui->dockWidgetSession );
-    ui->listWidgetSession->verticalScrollBar()->setSingleStep( 82 );
+    ui->listViewSession->verticalScrollBar()->setSingleStep( 82 );
+}
+
+//Session Preview Picture Bottom
+void MainWindow::on_actionPreviewTableModeBottom_triggered()
+{
+    m_previewMode = 4;
+    setPreviewMode();
+    addDockWidget( Qt::BottomDockWidgetArea, ui->dockWidgetSession );
 }
 
 //Input of Stretch Width (horizontal) Factor
@@ -9337,7 +9461,7 @@ void MainWindow::on_actionHelp_triggered()
 void MainWindow::on_actionCreateAllMappFilesNow_triggered()
 {
     //Save current clip, to get back to this clip when ready
-    int lastClip = m_lastActiveClipInSession;
+    int lastClip = SESSION_ACTIVE_CLIP_ROW;
     bool mapp = ui->actionCreateMappFiles->isChecked();
     ui->actionCreateMappFiles->setChecked( true );
 
@@ -9352,11 +9476,11 @@ void MainWindow::on_actionCreateAllMappFilesNow_triggered()
     m_pStatusDialog->open();
 
     //Open all clips
-    for( int i = 0; i < ui->listWidgetSession->count(); i++ )
+    for( int i = 0; i < SESSION_CLIP_COUNT; i++ )
     {
         qApp->processEvents();
         showFileInEditor( i );
-        m_pStatusDialog->ui->progressBar->setValue( 100 * i / ui->listWidgetSession->count() );
+        m_pStatusDialog->ui->progressBar->setValue( 100 * i / SESSION_CLIP_COUNT );
     }
 
     //Hide Status Dialog
@@ -9374,9 +9498,9 @@ void MainWindow::on_actionCreateAllMappFilesNow_triggered()
 //Show selected file from session in OSX Finder
 void MainWindow::on_actionShowInFinder_triggered( void )
 {
-    if( ui->listWidgetSession->count() == 0 || m_pSessionReceipts.count() == 0 ) return;
+    if( SESSION_CLIP_COUNT == 0 ) return;
 
-    QString path = m_pSessionReceipts.at( ui->listWidgetSession->currentRow() )->fileName();
+    QString path = GET_RECEIPT( m_pProxyModel->mapToSource( m_pSelectionModel->currentIndex() ).row() )->fileName();
 
 #ifdef _WIN32    //Code for Windows
     QProcess::startDetached("explorer.exe", {"/select,", QDir::toNativeSeparators(path)});
@@ -9391,7 +9515,7 @@ void MainWindow::on_actionShowInFinder_triggered( void )
 //Show selected file with external application
 void MainWindow::on_actionOpenWithExternalApplication_triggered( void )
 {
-    if( ui->listWidgetSession->count() == 0 || m_pSessionReceipts.count() == 0 ) return;
+    if( SESSION_CLIP_COUNT == 0 ) return;
 
 #ifdef Q_OS_OSX     //Code for OSX
     //First check -> select app if fail
@@ -9410,14 +9534,14 @@ void MainWindow::on_actionOpenWithExternalApplication_triggered( void )
     if( path.endsWith( ".app" ) ) path = path.left( path.count() - 4 );
     QProcess::startDetached( QString( "open -a \"%1\" \"%2\"" )
                            .arg( path )
-                           .arg( m_pSessionReceipts.at( ui->listWidgetSession->currentRow() )->fileName() ) );
+                           .arg( GET_RECEIPT( m_pProxyModel->mapToSource( m_pSelectionModel->currentIndex() ).row() )->fileName() ) );
 #else    //Code for Windows & Linux
     //First check -> select app if fail
     if( !QFileInfo( m_externalApplicationName ).exists() ) on_actionSelectExternalApplication_triggered();
     //2nd check -> cancel if still fails
     if( !QFileInfo( m_externalApplicationName ).exists() ) return;
     //Now open
-    QProcess::execute( QString( "%1" ).arg( m_externalApplicationName ), {QString( "%1" ).arg( QDir::toNativeSeparators( m_pSessionReceipts.at( ui->listWidgetSession->currentRow() )->fileName() ) ) } );
+    QProcess::execute( QString( "%1" ).arg( m_externalApplicationName ), {QString( "%1" ).arg( QDir::toNativeSeparators( GET_RECEIPT( m_pProxyModel->mapToSource( m_pSelectionModel->currentIndex() ).row() )->fileName() ) ) } );
 #endif
 }
 
@@ -9453,7 +9577,7 @@ void MainWindow::on_actionSelectExternalApplication_triggered()
 void MainWindow::openRecentSession(QString fileName)
 {
     //Save actual session?
-    if( ui->listWidgetSession->count() > 0 )
+    if( SESSION_CLIP_COUNT > 0 )
     {
         int ret = QMessageBox::warning( this, APPNAME, tr( "Do you like to save the session before loading?" ),
                                                        QMessageBox::Yes, QMessageBox::No, QMessageBox::Cancel );
@@ -9483,7 +9607,7 @@ void MainWindow::openRecentSession(QString fileName)
     m_inOpeningProcess = true;
     openSession( fileName );
     //Show last imported file
-    showFileInEditor( m_pSessionReceipts.count() - 1 );
+    showFileInEditor( SESSION_CLIP_COUNT - 1 );
     m_sessionFileName = fileName;
     m_lastSessionFileName = fileName;
     m_inOpeningProcess = false;
@@ -9671,117 +9795,147 @@ void MainWindow::on_actionUseDefaultReceipt_triggered(bool checked)
 //Mark selected clips Red
 void MainWindow::on_actionMarkRed_triggered()
 {
-    for( int i = 0; i < ui->listWidgetSession->count(); i++ )
+    QModelIndexList list = selectedClipsList();
+    for( int i = 0; i < list.count(); i++ )
     {
-        if( ui->listWidgetSession->item(i)->isSelected() )
-        {
-            m_pSessionReceipts.at(i)->setMark( 1 );
-            setMarkColor( i, 1 );
-        }
+        //Do nothing for hidden clips
+        if( ui->tableViewSession->isRowHidden( list.at( i ).row() ) ) continue;
+
+        int row = list.at( i ).data( ROLE_REALINDEX ).toInt();
+        GET_RECEIPT( row )->setMark( 1 );
+        setMarkColor( row, 1 );
     }
 }
 
 //Mark selected clips Yellow
 void MainWindow::on_actionMarkYellow_triggered()
 {
-    for( int i = 0; i < ui->listWidgetSession->count(); i++ )
+    QModelIndexList list = selectedClipsList();
+    for( int i = 0; i < list.count(); i++ )
     {
-        if( ui->listWidgetSession->item(i)->isSelected() )
-        {
-            m_pSessionReceipts.at(i)->setMark( 2 );
-            setMarkColor( i, 2 );
-        }
+        //Do nothing for hidden clips
+        if( ui->tableViewSession->isRowHidden( list.at( i ).row() ) ) continue;
+
+        int row = list.at( i ).data( ROLE_REALINDEX ).toInt();
+        GET_RECEIPT( row )->setMark( 2 );
+        setMarkColor( row, 2 );
     }
 }
 
 //Mark selected clips Green
 void MainWindow::on_actionMarkGreen_triggered()
 {
-    for( int i = 0; i < ui->listWidgetSession->count(); i++ )
+    QModelIndexList list = selectedClipsList();
+    for( int i = 0; i < list.count(); i++ )
     {
-        if( ui->listWidgetSession->item(i)->isSelected() )
-        {
-            m_pSessionReceipts.at(i)->setMark( 3 );
-            setMarkColor( i, 3 );
-        }
+        //Do nothing for hidden clips
+        if( ui->tableViewSession->isRowHidden( list.at( i ).row() ) ) continue;
+
+        int row = list.at( i ).data( ROLE_REALINDEX ).toInt();
+        GET_RECEIPT( row )->setMark( 3 );
+        setMarkColor( row, 3 );
     }
 }
 
 //Unmark selected clips
 void MainWindow::on_actionUnmark_triggered()
 {
-    for( int i = 0; i < ui->listWidgetSession->count(); i++ )
+    QModelIndexList list = selectedClipsList();
+    for( int i = 0; i < list.count(); i++ )
     {
-        if( ui->listWidgetSession->item(i)->isSelected() )
-        {
-            m_pSessionReceipts.at(i)->setMark( 0 );
-            setMarkColor( i, 0 );
-        }
+        //Do nothing for hidden clips
+        if( ui->tableViewSession->isRowHidden( list.at( i ).row() ) ) continue;
+
+        int row = list.at( i ).data( ROLE_REALINDEX ).toInt();
+        GET_RECEIPT( row )->setMark( 0 );
+        setMarkColor( row, 0 );
     }
 }
 
 //Show the red clips, or not
 void MainWindow::on_actionShowRedClips_toggled(bool arg1)
 {
-    for( int i = 0; i < ui->listWidgetSession->count(); i++ )
+    for( int i = 0; i < SESSION_CLIP_COUNT; i++ )
     {
-        if( m_pSessionReceipts.at(i)->mark() == 1 )
-            ui->listWidgetSession->item(i)->setHidden( !arg1 );
+        int realIndex = m_pProxyModel->index( i, 0, QModelIndex() ).data( ROLE_REALINDEX ).toInt();
+        if( GET_RECEIPT( realIndex )->mark() == 1 )
+        {
+            ui->listViewSession->setRowHidden( i, !arg1 );
+            ui->tableViewSession->setRowHidden( i, !arg1 );
+        }
     }
 }
 
 //Show the yellow clips, or not
 void MainWindow::on_actionShowYellowClips_toggled(bool arg1)
 {
-    for( int i = 0; i < ui->listWidgetSession->count(); i++ )
+    for( int i = 0; i < SESSION_CLIP_COUNT; i++ )
     {
-        if( m_pSessionReceipts.at(i)->mark() == 2 )
-            ui->listWidgetSession->item(i)->setHidden( !arg1 );
+        int realIndex = m_pProxyModel->index( i, 0, QModelIndex() ).data( ROLE_REALINDEX ).toInt();
+        if( GET_RECEIPT( realIndex )->mark() == 2 )
+        {
+            ui->listViewSession->setRowHidden( i, !arg1 );
+            ui->tableViewSession->setRowHidden( i, !arg1 );
+        }
     }
 }
 
 //Show the green clips, or not
 void MainWindow::on_actionShowGreenClips_toggled(bool arg1)
 {
-    for( int i = 0; i < ui->listWidgetSession->count(); i++ )
+    for( int i = 0; i < SESSION_CLIP_COUNT; i++ )
     {
-        if( m_pSessionReceipts.at(i)->mark() == 3 )
-            ui->listWidgetSession->item(i)->setHidden( !arg1 );
+        int realIndex = m_pProxyModel->index( i, 0, QModelIndex() ).data( ROLE_REALINDEX ).toInt();
+        if( GET_RECEIPT( realIndex )->mark() == 3 )
+        {
+            ui->listViewSession->setRowHidden( i, !arg1 );
+            ui->tableViewSession->setRowHidden( i, !arg1 );
+        }
     }
 }
 
 //Show the unmarked clips, or not
 void MainWindow::on_actionShowUnmarkedClips_toggled(bool arg1)
 {
-    for( int i = 0; i < ui->listWidgetSession->count(); i++ )
+    for( int i = 0; i < SESSION_CLIP_COUNT; i++ )
     {
-        if( m_pSessionReceipts.at(i)->mark() == 0 )
-            ui->listWidgetSession->item(i)->setHidden( !arg1 );
+        int realIndex = m_pProxyModel->index( i, 0, QModelIndex() ).data( ROLE_REALINDEX ).toInt();
+        if( GET_RECEIPT( realIndex )->mark() == 0 )
+        {
+            ui->listViewSession->setRowHidden( i, !arg1 );
+            ui->tableViewSession->setRowHidden( i, !arg1 );
+        }
     }
 }
 
 //Mark clipNr with color
 void MainWindow::setMarkColor(int clipNr, uint8_t mark)
 {
+    int listOrTableRow = m_pProxyModel->mapFromSource( m_pModel->index( clipNr, 0, QModelIndex() ) ).row();
+
     if( mark == 1 )
     {
-        ui->listWidgetSession->item(clipNr)->setBackgroundColor( QColor( 255, 0, 0, 80 ) );
-        ui->listWidgetSession->item(clipNr)->setHidden( !ui->actionShowRedClips->isChecked() );
+        GET_CLIP(clipNr)->setBackgroundColor( QColor( 255, 0, 0, 80 ) );
+        ui->listViewSession->setRowHidden( listOrTableRow, !ui->actionShowRedClips->isChecked() );
+        ui->tableViewSession->setRowHidden( listOrTableRow, !ui->actionShowRedClips->isChecked() );
     }
     else if( mark == 2 )
     {
-        ui->listWidgetSession->item(clipNr)->setBackgroundColor( QColor( 255, 255, 0, 80 ) );
-        ui->listWidgetSession->item(clipNr)->setHidden( !ui->actionShowYellowClips->isChecked() );
+        GET_CLIP(clipNr)->setBackgroundColor( QColor( 255, 255, 0, 80 ) );
+        ui->listViewSession->setRowHidden( listOrTableRow, !ui->actionShowYellowClips->isChecked() );
+        ui->tableViewSession->setRowHidden( listOrTableRow, !ui->actionShowYellowClips->isChecked() );
     }
     else if( mark == 3 )
     {
-        ui->listWidgetSession->item(clipNr)->setBackgroundColor( QColor( 0, 255, 0, 80 ) );
-        ui->listWidgetSession->item(clipNr)->setHidden( !ui->actionShowGreenClips->isChecked() );
+        GET_CLIP(clipNr)->setBackgroundColor( QColor( 0, 255, 0, 80 ) );
+        ui->listViewSession->setRowHidden( listOrTableRow, !ui->actionShowGreenClips->isChecked() );
+        ui->tableViewSession->setRowHidden( listOrTableRow, !ui->actionShowGreenClips->isChecked() );
     }
     else
     {
-        ui->listWidgetSession->item(clipNr)->setBackgroundColor( QColor( 0, 0, 0, 0 ) );
-        ui->listWidgetSession->item(clipNr)->setHidden( !ui->actionShowUnmarkedClips->isChecked() );
+        GET_CLIP(clipNr)->setBackgroundColor( QColor( 0, 0, 0, 0 ) );
+        ui->listViewSession->setRowHidden( listOrTableRow, !ui->actionShowUnmarkedClips->isChecked() );
+        ui->tableViewSession->setRowHidden( listOrTableRow, !ui->actionShowUnmarkedClips->isChecked() );
     }
 }
 
@@ -9808,7 +9962,7 @@ void MainWindow::focusPixelCheckAndInstallation()
                 {
                     //QMessageBox::information( this, APPNAME, tr( "Download and installation of focus pixel map successful." ) );
                     status->close();
-                    showFileInEditor( m_lastActiveClipInSession );
+                    showFileInEditor( SESSION_ACTIVE_CLIP_ROW );
                 }
                 else
                 {
@@ -9823,7 +9977,7 @@ void MainWindow::focusPixelCheckAndInstallation()
                 {
                     //QMessageBox::information( this, APPNAME, tr( "Download and installation of focus pixel maps successful." ) );
                     status->close();
-                    showFileInEditor( m_lastActiveClipInSession );
+                    showFileInEditor( SESSION_ACTIVE_CLIP_ROW );
                 }
                 else
                 {
@@ -9855,6 +10009,27 @@ void MainWindow::checkFocusPixelUpdate()
         }
     }
     delete manager;
+}
+
+//Create a list of selected clips (items from first column)
+QModelIndexList MainWindow::selectedClipsList()
+{
+    QModelIndexList list;
+    for( int i = 0; i < m_pSelectionModel->selectedIndexes().count(); i++ )
+    {
+        if( m_pSelectionModel->selectedIndexes().at(i).column() != 0 ) continue;
+        list.append( m_pSelectionModel->selectedIndexes().at(i) );
+    }
+    return list;
+}
+
+//Stupid workaround, to make the listViewSession showing clips while importing
+void MainWindow::listViewSessionUpdate()
+{
+    if( !ui->listViewSession->isVisible() ) return;
+    ui->listViewSession->setVisible( false );
+    ui->listViewSession->update();
+    ui->listViewSession->setVisible( true );
 }
 
 //Changed the transfer function text

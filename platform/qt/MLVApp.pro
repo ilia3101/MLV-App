@@ -50,7 +50,7 @@ macx: LIBS += -framework CoreVideo \
 #    QMAKE_CFLAGS += -fopenmp
 #    QMAKE_CXXFLAGS += -fopenmp
 #    INCLUDEPATH += -I/usr/local/opt/llvm/include
-#    LIBS += -L/usr/local/opt/llvm/lib -lgomp
+#    LIBS += -L/usr/local/opt/llvm/lib -lomp
 #    QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.8
 #}
 
@@ -91,6 +91,8 @@ linux-g++*{
 
 ##############
 SOURCES += \
+    ClipInformation.cpp \
+    SessionModel.cpp \
         main.cpp \
         MainWindow.cpp \
     ../../src/debayer/amaze_demosaic.c \
@@ -218,9 +220,11 @@ HEADERS += MainWindow.h \
     ../../src/processing/cube_lut.h \
     ../../src/processing/denoiser/denoiser_2d_median.h \
     ../../src/processing/bmd_film.h \
+    ClipInformation.h \
     InfoDialog.h \
     MyApplication.h \
     ScopesLabel.h \
+    SessionModel.h \
     StatusDialog.h \
     SystemMemory.h \
     Histogram.h \
