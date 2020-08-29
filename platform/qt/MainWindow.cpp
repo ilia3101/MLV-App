@@ -6837,6 +6837,9 @@ void MainWindow::on_actionPasteReceipt_triggered()
     {
         for( int i = 0; i < list.count(); i++ )
         {
+            //Do nothing for hidden clips
+            if( ui->tableViewSession->isRowHidden( list.at( i ).row() ) ) continue;
+
             int row = m_pProxyModel->mapToSource( list.at( i ) ).row();
             pasteReceiptFromClipboardTo( row );
         }
