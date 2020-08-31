@@ -851,6 +851,7 @@ int MainWindow::openMlv( QString fileName )
     int isoVal = (int)getMlvIso( m_pMlvObject );
     int disoVal = (int)getMlv2ndIso( m_pMlvObject );
     QString isoInfo = QString( "%1" ).arg( isoVal );
+    QString dualIso = QString( "-" );
     if( llrpGetDualIsoValidity( m_pMlvObject ) == DISO_VALID )
     {
         //disoVal choises for first two checks: "-6 EV", "-5 EV", "-4 EV", "-3 EV", "-2 EV", "-1 EV", "+1 EV", "+2 EV", "+3 EV", "+4 EV", "+5 EV", "+6 EV", "100", "200", "400", "800", "1600", "3200", "6400", "12800", "25600"
@@ -858,16 +859,19 @@ int MainWindow::openMlv( QString fileName )
         {
             uint32_t recoveryIsoVal = isoVal * pow (2, disoVal);
             if(recoveryIsoVal < 100) recoveryIsoVal = 100;
-            isoInfo = QString( "%1/%2, Dual Iso" ).arg( getMlvIso( m_pMlvObject ) ).arg( recoveryIsoVal );
+            isoInfo = QString( "%1/%2" ).arg( getMlvIso( m_pMlvObject ) ).arg( recoveryIsoVal );
+            dualIso = QString( "DualISO" );
         }
         else if( disoVal && (disoVal < 100) ) //Menu index mode absolute ISO
         {
             uint32_t recoveryIsoVal = 100 * pow (2, disoVal);
-            isoInfo = QString( "%1/%2, Dual Iso" ).arg( getMlvIso( m_pMlvObject ) ).arg( recoveryIsoVal );
+            isoInfo = QString( "%1/%2" ).arg( getMlvIso( m_pMlvObject ) ).arg( recoveryIsoVal );
+            dualIso = QString( "DualISO" );
         }
         else if( (disoVal >= 100) && (disoVal <= 25600) ) //Valid iso mode
         {
-            isoInfo = QString( "%1/%2, Dual Iso" ).arg( getMlvIso( m_pMlvObject ) ).arg( disoVal );
+            isoInfo = QString( "%1/%2" ).arg( getMlvIso( m_pMlvObject ) ).arg( disoVal );
+            dualIso = QString( "DualISO" );
         }
     }
 
@@ -893,6 +897,7 @@ int MainWindow::openMlv( QString fileName )
                                  QString( "1/%1 s,  %2 deg,  %3 µs" ).arg( (uint16_t)(shutterSpeed + 0.5f) ).arg( (uint16_t)(shutterAngle + 0.5f) ).arg( getMlvShutter( m_pMlvObject ) ),
                                  QString( "ƒ/%1" ).arg( getMlvAperture( m_pMlvObject ) / 100.0, 0, 'f', 1 ),
                                  isoInfo,
+                                 dualIso,
                                  QString( "%1 bits,  %2" ).arg( getLosslessBpp( m_pMlvObject ) ).arg( getMlvCompression( m_pMlvObject ) ),
                                  QString( "%1-%2-%3 / %4:%5:%6" )
                                            .arg( getMlvTmYear(m_pMlvObject) )
@@ -913,11 +918,11 @@ int MainWindow::openMlv( QString fileName )
     m_pInfoDialog->ui->tableWidget->item( 6, 1 )->setText( ACTIVE_CLIP->getElement( 8 ).toString() );
     m_pInfoDialog->ui->tableWidget->item( 7, 1 )->setText( ACTIVE_CLIP->getElement( 9 ).toString() );
     m_pInfoDialog->ui->tableWidget->item( 8, 1 )->setText( ACTIVE_CLIP->getElement( 10 ).toString() );
-    m_pInfoDialog->ui->tableWidget->item( 9, 1 )->setText( ACTIVE_CLIP->getElement( 11 ).toString() );
-    m_pInfoDialog->ui->tableWidget->item( 10, 1 )->setText( ACTIVE_CLIP->getElement( 12 ).toString() );
+    m_pInfoDialog->ui->tableWidget->item( 9, 1 )->setText( QString( "%1, %2" ).arg( ACTIVE_CLIP->getElement( 11 ).toString() ).arg( ACTIVE_CLIP->getElement( 12 ).toString() ) );
+    m_pInfoDialog->ui->tableWidget->item( 10, 1 )->setText( ACTIVE_CLIP->getElement( 13 ).toString() );
     m_pInfoDialog->ui->tableWidget->item( 11, 1 )->setText( QString( "%1 black,  %2 white" ).arg( getMlvOriginalBlackLevel( m_pMlvObject ) ).arg( getMlvOriginalWhiteLevel( m_pMlvObject ) ) );
-    m_pInfoDialog->ui->tableWidget->item( 12, 1 )->setText( ACTIVE_CLIP->getElement( 13 ).toString() );
-    m_pInfoDialog->ui->tableWidget->item( 13, 1 )->setText( ACTIVE_CLIP->getElement( 14 ).toString() );
+    m_pInfoDialog->ui->tableWidget->item( 12, 1 )->setText( ACTIVE_CLIP->getElement( 14 ).toString() );
+    m_pInfoDialog->ui->tableWidget->item( 13, 1 )->setText( ACTIVE_CLIP->getElement( 15 ).toString() );
 
     resultingResolution();
 

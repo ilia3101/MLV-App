@@ -21,6 +21,7 @@ ClipInformation::ClipInformation(QString name,
                                  QString shutter,
                                  QString aperture,
                                  QString iso,
+                                 QString dualIso,
                                  QString bitDepth,
                                  QString dateTime,
                                  QString audio,
@@ -37,6 +38,7 @@ ClipInformation::ClipInformation(QString name,
     m_shutter( shutter ),
     m_aperture( aperture ),
     m_iso( iso ),
+    m_dualIso( dualIso ),
     m_bitDepth( bitDepth ),
     m_dateTime( dateTime ),
     m_audio( audio ),
@@ -64,6 +66,7 @@ ClipInformation::ClipInformation(QString name,
     m_shutter( "-" ),
     m_aperture( "-" ),
     m_iso( "-" ),
+    m_dualIso( "-" ),
     m_bitDepth( "-" ),
     m_dateTime( "-" ),
     m_audio( "-" ),
@@ -112,10 +115,12 @@ QVariant ClipInformation::getElement(int element) const
     case 11:
         return m_iso;
     case 12:
-        return m_bitDepth;
+        return m_dualIso;
     case 13:
-        return m_dateTime;
+        return m_bitDepth;
     case 14:
+        return m_dateTime;
+    case 15:
         return m_audio;
     default:
         return QVariant();
@@ -153,10 +158,12 @@ void ClipInformation::setElement(int element, QVariant value)
     case 11:
         m_iso = value.toString();
     case 12:
-        m_bitDepth = value.toString();
+        m_dualIso = value.toString();
     case 13:
-        m_dateTime = value.toString();
+        m_bitDepth = value.toString();
     case 14:
+        m_dateTime = value.toString();
+    case 15:
         m_audio = value.toString();
     default:
         break;
@@ -166,7 +173,7 @@ void ClipInformation::setElement(int element, QVariant value)
 //Update missing metadata to the class
 void ClipInformation::updateMetadata(QString camera, QString lens, QString resolution, QString duration,
                                      QString frames, QString frameRate, QString focalLength, QString shutter,
-                                     QString aperture, QString iso, QString bitDepth, QString dateTime,
+                                     QString aperture, QString iso, QString dualIso, QString bitDepth, QString dateTime,
                                      QString audio)
 {
     m_camera = camera;
@@ -179,6 +186,7 @@ void ClipInformation::updateMetadata(QString camera, QString lens, QString resol
     m_shutter = shutter;
     m_aperture = aperture;
     m_iso = iso;
+    m_dualIso = dualIso;
     m_bitDepth = bitDepth;
     m_dateTime = dateTime;
     m_audio = audio;
