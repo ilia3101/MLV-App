@@ -6323,6 +6323,9 @@ void MainWindow::on_actionExport_triggered()
 
         for( int i = 0; i < selectedClips.count(); i++ )
         {
+            //Do nothing for hidden clips
+            if( ui->tableViewSession->isRowHidden( selectedClips.at( i ).row() ) ) continue;
+
             int row = m_pProxyModel->mapToSource( selectedClips.at( i ) ).row();
             //Sequences
             if( isExportSequence() )
@@ -6362,6 +6365,9 @@ void MainWindow::on_actionExport_triggered()
         //for all selected
         for( int i = 0; i < selectedClips.count(); i++ )
         {
+            //Do nothing for hidden clips
+            if( ui->tableViewSession->isRowHidden( selectedClips.at( i ).row() ) ) continue;
+
             int row = m_pProxyModel->mapToSource( selectedClips.at( i ) ).row();
 
             //Create Path+Name
