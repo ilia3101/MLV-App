@@ -7156,6 +7156,9 @@ void MainWindow::deleteFileFromSession( void )
     int delFile = QMessageBox::question( this, tr( "%1 - Remove clip" ).arg( APPNAME ), tr( "Remove clip from session, or delete clip from disk?" ), tr( "Remove" ), tr( "Delete from Disk" ), tr( "Abort" ) );
     if( delFile == 2 ) return; //Abort
 
+    //Save the current active row for selection after deletion
+    int currentRow = m_pProxyModel->mapFromSource( m_pModel->index( SESSION_ACTIVE_CLIP_ROW, 0, QModelIndex() ) ).row();
+
     //If multiple selection is on, we need to erase all selected items
     QModelIndexList list = selectedClipsList();
     for( int i = list.count(); i > 0; i-- )
@@ -7184,21 +7187,25 @@ void MainWindow::deleteFileFromSession( void )
                 if( MoveToTrash( mappName ) ) QMessageBox::critical( this, tr( "%1 - Delete MAPP file from disk" ).arg( APPNAME ), tr( "Delete MAPP file failed!" ) );
             }
         }
+        int delrow = m_pProxyModel->mapFromSource( m_pModel->index( row, 0, QModelIndex() ) ).row();
         //Remove item from Session List & Remove slider memory
         m_pModel->removeRow( row, QModelIndex() );
         //influences actual loaded clip?
-        if( SESSION_ACTIVE_CLIP_ROW > row ) SET_ACTIVE_CLIP_IDX( SESSION_ACTIVE_CLIP_ROW - 1 );
-        if( SESSION_ACTIVE_CLIP_ROW < 0 ) SET_ACTIVE_CLIP_IDX( 0 );
+        if( currentRow > delrow ) currentRow--;
+        if( currentRow < 0 ) currentRow = 0;
     }
 
     //if there is at least one...
     if( SESSION_CLIP_COUNT > 0 )
     {
         //Open the nearest clip from last opened!
-        if( SESSION_ACTIVE_CLIP_ROW >= SESSION_CLIP_COUNT ) SET_ACTIVE_CLIP_IDX( SESSION_CLIP_COUNT - 1 );
-        m_pSelectionModel->setCurrentIndex( m_pProxyModel->mapFromSource( m_pModel->index( SESSION_ACTIVE_CLIP_ROW, 0, QModelIndex() ) ), QItemSelectionModel::ClearAndSelect );
-        openMlv( ACTIVE_CLIP->getPath() );
-        setSliders( ACTIVE_RECEIPT, false );
+        if( currentRow >= SESSION_CLIP_COUNT ) currentRow = SESSION_CLIP_COUNT - 1;
+        if( currentRow < 0 ) currentRow = 0;
+        SET_ACTIVE_CLIP_IDX( m_pProxyModel->index( currentRow, 0, QModelIndex() ).data( ROLE_REALINDEX ).toInt() );
+        showFileInEditor( m_pProxyModel->index( currentRow, 0, QModelIndex() ).data( ROLE_REALINDEX ).toInt() );
+        //m_pSelectionModel->setCurrentIndex( m_pProxyModel->mapFromSource( m_pModel->index( m_pProxyModel->index( currentRow, 0, QModelIndex() ).data( ROLE_REALINDEX ).toInt(), 0, QModelIndex() ) ), QItemSelectionModel::ClearAndSelect );
+        //openMlv( ACTIVE_CLIP->getPath() );
+        //setSliders( ACTIVE_RECEIPT, false );
 
         //Caching is in which state? Set it!
         if( ui->actionCaching->isChecked() ) on_actionCaching_triggered();
