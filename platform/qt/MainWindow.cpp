@@ -4685,6 +4685,10 @@ int MainWindow::showFileInEditor(int row)
 
     //Repaint the tables
     ui->listViewSession->reset();
+    on_actionShowRedClips_toggled( ui->actionShowRedClips->isChecked() );
+    on_actionShowYellowClips_toggled( ui->actionShowYellowClips->isChecked() );
+    on_actionShowGreenClips_toggled( ui->actionShowGreenClips->isChecked() );
+    on_actionShowUnmarkedClips_toggled( ui->actionShowUnmarkedClips->isChecked() );
     ui->tableViewSession->reset();
     m_pSelectionModel->setCurrentIndex( m_pProxyModel->mapFromSource( m_pModel->index( row, 0, QModelIndex() ) ), QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows );
 
