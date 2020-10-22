@@ -2378,6 +2378,19 @@ void MainWindow::startExportPipe(QString fileName)
                     .arg( option )
                     .arg( output ) );
     }
+    else if( m_codecProfile == CODEC_CINEFORM )
+    {
+        output.append( QString( ".mov" ) );
+        int quality = m_codecOption;
+
+        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v cfhd -quality %3 -pix_fmt %4 -color_primaries bt709 -color_trc bt709 -colorspace bt709 %5\"%6\"" )
+                    .arg( fps )
+                    .arg( resolution )
+                    .arg( quality )
+                    .arg( "gbrp12le" )
+                    .arg( resizeFilter )
+                    .arg( output ) );
+    }
     else
     {
         QString option;
@@ -6259,6 +6272,12 @@ void MainWindow::on_actionExport_triggered()
         saveFileName.append( ".jp2" );
         fileType = tr("JPEG2000 (*.jp2)");
         fileEnding = ".jp2";
+    }
+    else if( m_codecProfile == CODEC_CINEFORM )
+    {
+        saveFileName.append( ".mov" );
+        fileType = tr("Movie (*.mov)");
+        fileEnding = ".mov";
     }
     else if( m_codecProfile == CODEC_AUDIO_ONLY )
     {

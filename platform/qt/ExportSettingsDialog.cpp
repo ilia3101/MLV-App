@@ -371,6 +371,25 @@ void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
         ui->label_Info->setPixmap( pic );
         ui->label_Info->setToolTip( tr( "Note: DNxHR can only be exported @ 23.976, 25, 29.97, 50, 59.94 fps.\r\nPlease manually force to one of these, if your clips have diffent framerates!" ) );
     }
+    else if( index == CODEC_CINEFORM )
+    {
+        ui->labelDebayer->setEnabled( true );
+        ui->comboBoxDebayer->setEnabled( true );
+        ui->comboBoxOption->setEnabled( true );
+        ui->comboBoxOption->addItem( QString( "Film3+" ) );
+        ui->comboBoxOption->addItem( QString( "Film3" ) );
+        ui->comboBoxOption->addItem( QString( "Film2+" ) );
+        ui->comboBoxOption->addItem( QString( "Film2" ) );
+        ui->comboBoxOption->addItem( QString( "Film1.5" ) );
+        ui->comboBoxOption->addItem( QString( "Film1+" ) );
+        ui->comboBoxOption->addItem( QString( "Film1" ) );
+        ui->comboBoxOption->addItem( QString( "High+" ) );
+        ui->comboBoxOption->addItem( QString( "High" ) );
+        ui->comboBoxOption->addItem( QString( "Medium+" ) );
+        ui->comboBoxOption->addItem( QString( "Medium" ) );
+        ui->comboBoxOption->addItem( QString( "Low+" ) );
+        ui->comboBoxOption->addItem( QString( "Low" ) );
+    }
     else if( index == CODEC_AUDIO_ONLY )
     {
         ui->labelDebayer->setEnabled( false );
