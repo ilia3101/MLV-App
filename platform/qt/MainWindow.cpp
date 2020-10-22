@@ -2272,7 +2272,7 @@ void MainWindow::startExportPipe(QString fileName)
     else if( m_codecProfile == CODEC_DNXHD
           || m_codecProfile == CODEC_DNXHR )
     {
-        output.append( QString( ".mov" ) );
+        output.append( QString( ".avi" ) );
 
         QString option;
         QString option2;
@@ -2378,16 +2378,19 @@ void MainWindow::startExportPipe(QString fileName)
                     .arg( option )
                     .arg( output ) );
     }
-    else if( m_codecProfile == CODEC_CINEFORM )
+    else if( m_codecProfile == CODEC_CINEFORM_10 || m_codecProfile == CODEC_CINEFORM_12 )
     {
         output.append( QString( ".mov" ) );
         int quality = m_codecOption;
+        QString mode;
+        if( m_codecProfile == CODEC_CINEFORM_10 ) mode = "yuv422p10le"; //10bit
+        else mode = "gbrp12le"; //12bit
 
         program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v cfhd -quality %3 -pix_fmt %4 -color_primaries bt709 -color_trc bt709 -colorspace bt709 %5\"%6\"" )
                     .arg( fps )
                     .arg( resolution )
                     .arg( quality )
-                    .arg( "gbrp12le" )
+                    .arg( mode )
                     .arg( resizeFilter )
                     .arg( output ) );
     }
@@ -6273,7 +6276,7 @@ void MainWindow::on_actionExport_triggered()
         fileType = tr("JPEG2000 (*.jp2)");
         fileEnding = ".jp2";
     }
-    else if( m_codecProfile == CODEC_CINEFORM )
+    else if( m_codecProfile == CODEC_CINEFORM_10 || m_codecProfile == CODEC_CINEFORM_12 )
     {
         saveFileName.append( ".mov" );
         fileType = tr("Movie (*.mov)");

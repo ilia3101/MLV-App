@@ -251,6 +251,11 @@
           </item>
           <item>
            <property name="text">
+            <string>GoPro Cineform 10bit 4:2:2</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
             <string>GoPro Cineform 12bit 4:4:4</string>
            </property>
           </item>
