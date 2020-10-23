@@ -37,7 +37,7 @@ What is MLV App? Lightroom, but for Magic Lantern MLV Video (and open source and
 - Auto load white balance, if MLV was filmed at sunny, shade, cloudy, thungsten, fluorescent, flash or kelvin
 - 1D/3D LUT (.cube) support
 - Single frame (3x)8bit PNG and Cinema DNG (compressed/lossless) export
-- Clip export via ffmpeg 10bit ProRes 422 (Proxy, LT, Standard, HQ), ProRes 4444, RAW AVI, 8bit H.264 and H.265, 16bit TIFF sequence, DNxHD, DNxHR, JPEG2000, MotionJPEG, 10/12/16bit HuffYUV 4:4:4; all with or without audio
+- Clip export via ffmpeg 10bit ProRes 422 (Proxy, LT, Standard, HQ), ProRes 4444, RAW AVI, 8bit H.264 and H.265, 16bit TIFF sequence, DNxHD, DNxHR, JPEG2000, MotionJPEG, 10/12/16bit HuffYUV 4:4:4, 10bit 4:2:2 & 12bit 4:4:4 CineForm; all with or without audio
 - macOS only: Clip export via Apple AVFoundation 12bit ProRes 422, ProRes 4444 and 8bit H.264, all with or without audio
 - Clip export to (10/12/14/16bit for Dual ISO) Cinema DNG files (with default or Davinci Resolve naming). Exporting modes: uncompressed, lossless and fast pass (in the last one no RAW correction, processing or decompressing/compressing is done, raw data copied as is from MLV to DNG uncompressed or lossless).
 - MLV export (fast pass, compressed, averaged frame (for darkframe creation), extract internal darkframe)
