@@ -188,6 +188,7 @@ typedef struct {
 
     /* Grain Generator */
     uint8_t    grainStrength;
+    uint8_t    grainLumaWeight;
 
     /* Gradient */
     double     gradient_exposure_stops;

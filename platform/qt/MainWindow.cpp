@@ -3694,6 +3694,11 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
             receipt->setGrainStrength( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
+        else if( Rxml->isStartElement() && Rxml->name() == "grainLumaWeight" )
+        {
+            receipt->setGrainLumaWeight( (bool)Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
         else if( Rxml->isStartElement() && Rxml->name() == "rawFixesEnabled" )
         {
             receipt->setRawFixesEnabled( (bool)Rxml->readElementText().toInt() );
@@ -3995,6 +4000,7 @@ void MainWindow::writeXmlElementsToFile(QXmlStreamWriter *xmlWriter, ReceiptSett
     xmlWriter->writeTextElement( "rbfDenoiserChroma",       QString( "%1" ).arg( receipt->rbfDenoiserChroma() ) );
     xmlWriter->writeTextElement( "rbfDenoiserRange",        QString( "%1" ).arg( receipt->rbfDenoiserRange() ) );
     xmlWriter->writeTextElement( "grainStrength",           QString( "%1" ).arg( receipt->grainStrength() ) );
+    xmlWriter->writeTextElement( "grainLumaWeight",         QString( "%1" ).arg( receipt->grainLumaWeightEnabled() ) );
     xmlWriter->writeTextElement( "rawFixesEnabled",         QString( "%1" ).arg( receipt->rawFixesEnabled() ) );
     xmlWriter->writeTextElement( "verticalStripes",         QString( "%1" ).arg( receipt->verticalStripes() ) );
     xmlWriter->writeTextElement( "focusPixels",             QString( "%1" ).arg( receipt->focusPixels() ) );
@@ -4251,6 +4257,7 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     ui->horizontalSliderRbfDenoiseRange->setValue( receipt->rbfDenoiserRange() );
 
     ui->horizontalSliderGrainStrength->setValue( receipt->grainStrength() );
+    ui->checkBoxGrainLumaWeight->setChecked( receipt->grainLumaWeightEnabled() );
 
     ui->checkBoxRawFixEnable->setChecked( receipt->rawFixesEnabled() );
     on_checkBoxRawFixEnable_clicked( receipt->rawFixesEnabled() );
@@ -4468,6 +4475,7 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     receipt->setRbfDenoiserChroma( ui->horizontalSliderRbfDenoiseChroma->value() );
     receipt->setRbfDenoiserRange( ui->horizontalSliderRbfDenoiseRange->value() );
     receipt->setGrainStrength( ui->horizontalSliderGrainStrength->value() );
+    receipt->setGrainLumaWeight( ui->checkBoxGrainLumaWeight->isChecked() );
 
     receipt->setRawFixesEnabled( ui->checkBoxRawFixEnable->isChecked() );
     receipt->setVerticalStripes( toolButtonVerticalStripesCurrentIndex() );
@@ -4592,6 +4600,7 @@ void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings 
     if( paste && cdui->checkBoxDenoise->isChecked() )    receiptTarget->setRbfDenoiserChroma( receiptSource->rbfDenoiserChroma() );
     if( paste && cdui->checkBoxDenoise->isChecked() )    receiptTarget->setRbfDenoiserRange( receiptSource->rbfDenoiserRange() );
     if( paste && cdui->checkBoxGrain->isChecked() )      receiptTarget->setGrainStrength( receiptSource->grainStrength() );
+    if( paste && cdui->checkBoxGrain->isChecked() )      receiptTarget->setGrainLumaWeight( receiptSource->grainLumaWeightEnabled() );
 
     if( paste && cdui->checkBoxRawCorrectEnable->isChecked() ) receiptTarget->setRawFixesEnabled( receiptSource->rawFixesEnabled() );
     if( paste && cdui->checkBoxDarkFrameSubtraction->isChecked() ) receiptTarget->setDarkFrameFileName( receiptSource->darkFrameFileName() );
@@ -4783,6 +4792,7 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     receipt->setRbfDenoiserChroma( GET_RECEIPT( row )->rbfDenoiserChroma() );
     receipt->setRbfDenoiserRange( GET_RECEIPT( row )->rbfDenoiserRange() );
     receipt->setGrainStrength( GET_RECEIPT( row )->grainStrength() );
+    receipt->setGrainLumaWeight( GET_RECEIPT( row )->grainLumaWeightEnabled() );
 
     receipt->setRawFixesEnabled( GET_RECEIPT( row )->rawFixesEnabled() );
     receipt->setVerticalStripes( GET_RECEIPT( row )->verticalStripes() );
@@ -5508,6 +5518,7 @@ void MainWindow::on_horizontalSliderGamma_valueChanged(int position)
 {
     double value = position / 100.0;
     processingSetGamma( m_pProcessingObject, value );
+    //processingSetGammaAndTonemapping( m_pProcessingObject, value, processingGetTonemappingFunction( m_pProcessingObject ) );
     ui->label_GammaVal->setText( QString("%1").arg( value, 0, 'f', 2 ) );
     ui->lineEditTransferFunction->setText( processingGetTransferFunction( m_pProcessingObject ) );
     m_frameChanged = true;
@@ -6508,6 +6519,14 @@ void MainWindow::on_checkBoxChromaSeparation_toggled(bool checked)
 
     if( checked ) processingEnableChromaSeparation( m_pProcessingObject );
     else processingDisableChromaSeparation( m_pProcessingObject );
+    m_frameChanged = true;
+}
+
+//Enable / Disable grain luma weight
+void MainWindow::on_checkBoxGrainLumaWeight_toggled(bool checked)
+{
+    if( checked ) processingSetGrainLumaWeightEnable( m_pProcessingObject );
+    else processingSetGrainLumaWeightDisable( m_pProcessingObject );
     m_frameChanged = true;
 }
 

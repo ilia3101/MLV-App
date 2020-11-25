@@ -171,6 +171,7 @@ private slots:
     void on_checkBoxCreativeAdjustments_toggled(bool checked);
     void on_checkBoxExrMode_toggled(bool checked);
     void on_checkBoxChromaSeparation_toggled(bool checked);
+    void on_checkBoxGrainLumaWeight_toggled(bool checked);
     void on_comboBoxProfile_currentIndexChanged(int index);
     void on_comboBoxProfile_activated(int index);
     void on_comboBoxTonemapFct_currentIndexChanged(int index);

@@ -174,6 +174,9 @@ processingObject_t * initProcessingObject()
     processingSetHueVsCurves(processing, 0, NULL, NULL, 3);
     processingSetVignetteStrength(processing, 0);
 
+    processingSetGrainStrength(processing, 0);
+    processingSetGrainLumaWeightDisable(processing);
+
     /* Colour default parameters */
     processingSetGamut(processing, GAMUT_Rec709);
     processingSetTonemappingFunction(processing, TONEMAP_Reinhard);
@@ -536,10 +539,19 @@ void applyProcessingObject( processingObject_t * processing,
     if( processing->grainStrength > 0 ) //Switch on/off
     {
         int strength = 50 * processing->grainStrength;
+#pragma omp parallel for
         for( int i = 0; i < img_s; i+=3 )
         {
             uint32_t randomval = randomseed1 ^ ((i*randomseed2) * (randomseed3-i) * (i+randomseed4));
             int grain = ( randomval % strength ) - ( strength >> 2 ); //change value for strength
+
+            if( processing->grainLumaWeight )
+            {
+                uint32_t sumL = outputImage[i+0] + outputImage[i+1] + outputImage[i+2];
+                double weight = sumL / 1.5 / 65535.0;
+                grain *= weight;
+            }
+
             outputImage[i+0] = LIMIT16( outputImage[i+0] + grain );
             outputImage[i+1] = LIMIT16( outputImage[i+1] + grain );
             outputImage[i+2] = LIMIT16( outputImage[i+2] + grain );

@@ -468,9 +468,9 @@ QGroupBox::indicator:checked:disabled {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>0</y>
-            <width>266</width>
-            <height>5523</height>
+            <y>-2298</y>
+            <width>265</width>
+            <height>5491</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayoutScrollArea">
@@ -5534,6 +5534,36 @@ QGroupBox::indicator:checked:disabled {
                    <property name="spacing">
                     <number>0</number>
                    </property>
+                   <item row="0" column="2">
+                    <widget class="DoubleClickLabel" name="label_GrainStrength">
+                     <property name="font">
+                      <font>
+                       <pointsize>10</pointsize>
+                      </font>
+                     </property>
+                     <property name="text">
+                      <string>0</string>
+                     </property>
+                     <property name="alignment">
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="0" column="0">
+                    <widget class="QLabel" name="label_37">
+                     <property name="font">
+                      <font>
+                       <pointsize>10</pointsize>
+                      </font>
+                     </property>
+                     <property name="toolTip">
+                      <string>Recursive bilateral filtering</string>
+                     </property>
+                     <property name="text">
+                      <string>Grain Strength</string>
+                     </property>
+                    </widget>
+                   </item>
                    <item row="0" column="1">
                     <spacer name="horizontalSpacer_48">
                      <property name="orientation">
@@ -5578,33 +5608,15 @@ QGroupBox::indicator:checked:disabled {
                      </property>
                     </widget>
                    </item>
-                   <item row="0" column="0">
-                    <widget class="QLabel" name="label_37">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
-                     <property name="toolTip">
-                      <string>Recursive bilateral filtering</string>
-                     </property>
-                     <property name="text">
-                      <string>Grain Strength</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="0" column="2">
-                    <widget class="DoubleClickLabel" name="label_GrainStrength">
+                   <item row="2" column="0" colspan="3">
+                    <widget class="QCheckBox" name="checkBoxGrainLumaWeight">
                      <property name="font">
                       <font>
                        <pointsize>10</pointsize>
                       </font>
                      </property>
                      <property name="text">
-                      <string>0</string>
-                     </property>
-                     <property name="alignment">
-                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                      <string>Luma Weight</string>
                      </property>
                     </widget>
                    </item>
