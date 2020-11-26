@@ -175,7 +175,7 @@ processingObject_t * initProcessingObject()
     processingSetVignetteStrength(processing, 0);
 
     processingSetGrainStrength(processing, 0);
-    processingSetGrainLumaWeightDisable(processing);
+    processingSetGrainLumaWeight(processing, 0);
 
     /* Colour default parameters */
     processingSetGamut(processing, GAMUT_Rec709);
@@ -545,10 +545,11 @@ void applyProcessingObject( processingObject_t * processing,
             uint32_t randomval = randomseed1 ^ ((i*randomseed2) * (randomseed3-i) * (i+randomseed4));
             int grain = ( randomval % strength ) - ( strength >> 2 ); //change value for strength
 
-            if( processing->grainLumaWeight )
+            if( processing->grainLumaWeight > 0 )
             {
                 uint32_t sumL = outputImage[i+0] + outputImage[i+1] + outputImage[i+2];
                 double weight = sumL / 1.5 / 65535.0;
+                weight = ( weight * processing->grainLumaWeight / 100.0 ) + ( ( 100 - processing->grainLumaWeight ) / 100.0 );
                 grain *= weight;
             }
 

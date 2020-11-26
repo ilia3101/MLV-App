@@ -170,8 +170,7 @@ void processingSet3WayCorrection( processingObject_t * processing,
 
 /* Grain */
 #define processingSetGrainStrength(processing, strength) (processing)->grainStrength = (strength)
-#define processingSetGrainLumaWeightEnable(processing) (processing)->grainLumaWeight = 1
-#define processingSetGrainLumaWeightDisable(processing) (processing)->grainLumaWeight = 0
+#define processingSetGrainLumaWeight(processing, strength) (processing)->grainLumaWeight = (strength)
 
 /* Vignette */
 void processingSetVignetteStrength(processingObject_t * processing, int8_t value);

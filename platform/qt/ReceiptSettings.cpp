@@ -49,7 +49,7 @@ ReceiptSettings::ReceiptSettings()
     m_rbfDenoiserChroma = 0;
     m_rbfDenoiserRange = 40;
     m_grainStrength = 0;
-    m_grainLumaWeightEnable = false;
+    m_grainLumaWeight = 0;
     m_highlightReconstruction = false;
     m_useCamMatrix = 1;
     m_chromaSeparation = false;
