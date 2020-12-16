@@ -38,6 +38,14 @@ static uint64_t file_set_pos(FILE *stream, uint64_t offset, int whence)
 #endif
 }
 
+/* unload the darkframe mlv */
+static void df_unload(FILE ** files, int entries)
+{
+    for(int i = 0; i < entries; i++)
+        if(files[i]) fclose(files[i]);
+    if(files) free(files);
+}
+
 /* load dark frame from external averaged MLV file */
 static int df_load_ext(mlvObject_t * video, char * error_message)
 {
@@ -64,6 +72,8 @@ static int df_load_ext(mlvObject_t * video, char * error_message)
         printf("DF: %s\n", err_msg);
 #endif
         if(error_message != NULL) strcpy(error_message, err_msg);
+        /* Close darkframe MLV */
+        df_unload( df_mlv.file, df_mlv.filenum );
         return 1;
     }
     /* if resolution mismatch detected */
@@ -74,6 +84,8 @@ static int df_load_ext(mlvObject_t * video, char * error_message)
         printf("DF: %s\n", err_msg);
 #endif
         if(error_message != NULL) strcpy(error_message, err_msg);
+        /* Close darkframe MLV */
+        df_unload( df_mlv.file, df_mlv.filenum );
         return 1;
     }
     /* if MLV has more than one frame just show the warning */
@@ -95,6 +107,8 @@ static int df_load_ext(mlvObject_t * video, char * error_message)
         printf("DF: %s\n", err_msg);
 #endif
         if(error_message != NULL) strcpy(error_message, err_msg);
+        /* Close darkframe MLV */
+        df_unload( df_mlv.file, df_mlv.filenum );
         return 1;
     }
     /* Load dark frame data to the allocated buffer */
@@ -107,6 +121,8 @@ static int df_load_ext(mlvObject_t * video, char * error_message)
 #endif
         if(error_message != NULL) strcpy(error_message, err_msg);
         free(df_packed_buf);
+        /* Close darkframe MLV */
+        df_unload( df_mlv.file, df_mlv.filenum );
         return 1;
     }
     /* Free all data related to the dark frame if needed */
@@ -143,6 +159,10 @@ static int df_load_ext(mlvObject_t * video, char * error_message)
     printf("DF: initialized Ext mode\n");
 #endif
     free(df_packed_buf);
+
+    /* Close darkframe MLV */
+    df_unload( df_mlv.file, df_mlv.filenum );
+
     return 0;
 }
 
