@@ -206,7 +206,17 @@
           </item>
           <item>
            <property name="text">
-            <string>H.265</string>
+            <string>H.265 8bit 4:2:0</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>H.265 10bit 4:2:2</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>H.265 12bit 4:4:4</string>
            </property>
           </item>
           <item>

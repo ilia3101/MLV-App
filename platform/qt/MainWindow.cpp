@@ -1697,7 +1697,8 @@ void MainWindow::startExportPipe(QString fileName)
 #else
         writeMlvAudioToWaveCut( m_pMlvObject, wavFileName.toLatin1().data(), m_exportQueue.first()->cutIn(), m_exportQueue.first()->cutOut() );
 #endif
-        if( m_codecProfile == CODEC_H264 || m_codecProfile == CODEC_H265 ) ffmpegAudioCommand = QString( "-i \"%1\" -c:a aac " ).arg( wavFileName );
+        if( m_codecProfile == CODEC_H264 || m_codecProfile == CODEC_H265_8 || m_codecProfile == CODEC_H265_10 || m_codecProfile == CODEC_H265_12 )
+            ffmpegAudioCommand = QString( "-i \"%1\" -c:a aac " ).arg( wavFileName );
         else ffmpegAudioCommand = QString( "-i \"%1\" -c:a copy " ).arg( wavFileName );
     }
 
@@ -1889,7 +1890,7 @@ void MainWindow::startExportPipe(QString fileName)
         scaled = true;
     }
     if( m_codecProfile == CODEC_H264
-     || m_codecProfile == CODEC_H265 )
+     || m_codecProfile == CODEC_H265_8 || m_codecProfile == CODEC_H265_10 || m_codecProfile == CODEC_H265_12 )
     {
         if( width != width + (width % 2) )
         {
@@ -2249,8 +2250,13 @@ void MainWindow::startExportPipe(QString fileName)
                     .arg( resizeFilter )
                     .arg( output ) );
     }
-    else if( m_codecProfile == CODEC_H265 )
+    else if( m_codecProfile == CODEC_H265_8 || m_codecProfile == CODEC_H265_10 || m_codecProfile == CODEC_H265_12 )
     {
+        QString bitdepth;
+        if( m_codecProfile == CODEC_H265_8 ) bitdepth = QString( "yuv420p" );
+        else if( m_codecProfile == CODEC_H265_10 ) bitdepth = QString( "yuv422p10le" );
+        else bitdepth = QString( "yuv444p12le" );
+
         if( m_codecOption == CODEC_H265_H_MOV || m_codecOption == CODEC_H265_M_MOV ) output.append( QString( ".mov" ) );
         else if( m_codecOption == CODEC_H265_H_MP4 || m_codecOption == CODEC_H265_M_MP4 ) output.append( QString( ".mp4" ) );
         else output.append( QString( ".mkv" ) );
@@ -2265,7 +2271,7 @@ void MainWindow::startExportPipe(QString fileName)
                     .arg( fps )
                     .arg( resolution )
                     .arg( quality )
-                    .arg( "yuv420p" )
+                    .arg( bitdepth )
                     .arg( resizeFilter )
                     .arg( output ) );
     }
@@ -2931,7 +2937,9 @@ void MainWindow::startExportAVFoundation(QString fileName)
         scaled = true;
     }
     if( m_codecProfile == CODEC_H264
-     || m_codecProfile == CODEC_H265 )
+     || m_codecProfile == CODEC_H265_8
+     || m_codecProfile == CODEC_H265_10
+     || m_codecProfile == CODEC_H265_12 )
     {
         if( width != width + (width % 2) )
         {
@@ -6315,7 +6323,7 @@ void MainWindow::on_actionExport_triggered()
     }
     else
     {
-        if( ( m_codecProfile == CODEC_H264 || m_codecProfile == CODEC_H265 )
+        if( ( m_codecProfile == CODEC_H264 || m_codecProfile == CODEC_H265_8 || m_codecProfile == CODEC_H265_10 || m_codecProfile == CODEC_H265_12 )
          && ( m_codecOption == CODEC_H264_H_MP4 || m_codecOption == CODEC_H265_H_MP4
            || m_codecOption == CODEC_H264_M_MP4 || m_codecOption == CODEC_H265_M_MP4 ) )
         {
@@ -6323,7 +6331,7 @@ void MainWindow::on_actionExport_triggered()
             fileType = tr("MPEG-4 (*.mp4)");
             fileEnding = ".mp4";
         }
-        else if( ( m_codecProfile == CODEC_H264 || m_codecProfile == CODEC_H265 )
+        else if( ( m_codecProfile == CODEC_H264 || m_codecProfile == CODEC_H265_8 || m_codecProfile == CODEC_H265_10 || m_codecProfile == CODEC_H265_12 )
          && ( m_codecOption == CODEC_H264_H_MKV || m_codecOption == CODEC_H265_H_MKV
            || m_codecOption == CODEC_H264_M_MKV || m_codecOption == CODEC_H265_M_MKV) )
         {

@@ -270,7 +270,9 @@ void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
         enableResize = false;
     }
     else if( index == CODEC_H264
-          || index == CODEC_H265 )
+          || index == CODEC_H265_8
+          || index == CODEC_H265_10
+          || index == CODEC_H265_12 )
     {
         ui->labelDebayer->setEnabled( true );
         ui->comboBoxDebayer->setEnabled( true );
