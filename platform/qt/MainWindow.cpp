@@ -2254,7 +2254,7 @@ void MainWindow::startExportPipe(QString fileName)
     {
         QString bitdepth;
         if( m_codecProfile == CODEC_H265_8 ) bitdepth = QString( "yuv420p" );
-        else if( m_codecProfile == CODEC_H265_10 ) bitdepth = QString( "yuv422p10le" );
+        else if( m_codecProfile == CODEC_H265_10 ) bitdepth = QString( "yuv420p10le" );
         else bitdepth = QString( "yuv444p12le" );
 
         if( m_codecOption == CODEC_H265_H_MOV || m_codecOption == CODEC_H265_M_MOV ) output.append( QString( ".mov" ) );

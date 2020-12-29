@@ -211,7 +211,7 @@
           </item>
           <item>
            <property name="text">
-            <string>H.265 10bit 4:2:2</string>
+            <string>H.265 10bit 4:2:0</string>
            </property>
           </item>
           <item>
