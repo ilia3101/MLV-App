@@ -78,10 +78,12 @@ What is MLV App? Lightroom, but for Magic Lantern MLV Video (and open source and
 - install Qt5 (minimum 5.6) and ffmpeg (we use v3.3.2) 
 - `cd platform/qt/`
 - `qmake MLVApp.pro` or equivalent (depending on distro and version and...)
-- `make -j4` (for quad core)
+- `make -j$(nproc)`
 - `./mlvapp` and have fun
 
 A detailed guide for compiling MLV-App on Linux can be found [here](https://sternenkarten.com/tutorial-englisch/) (thanks to @seescho).
+
+If the qmake command fails, this helps on Ubuntu 20.04: `sudo apt install qtchooser qtmultimedia5-dev qt5-qmake`
 
 #### Cocoa App (very very deprecated)
 ```
@@ -100,7 +102,7 @@ Other stuff also in src/...
 Platform specific/GUI things in platform/...
 
 #### A note about code style
-You may notice a strange mixture of these styles: 
+You may notice a strange mixture of these styles:
 1. `thisNameStyle`
 2. `this_name_style`
 
