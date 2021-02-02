@@ -84,7 +84,11 @@ What is MLV App? Lightroom, but for Magic Lantern MLV Video (and open source and
 
 A detailed guide for compiling MLV-App on Linux can be found [here](https://sternenkarten.com/tutorial-englisch/) (thanks to @seescho).
 
-If the qmake command fails, this helps on Ubuntu 20.04: `sudo apt install qtchooser qtmultimedia5-dev qt5-qmake`
+If you have a Debian based distro, these packages will give you everything you need: 
+```
+sudo apt install qt5-default qtchooser qtmultimedia5-dev qt5-qmake
+```
+(tested on Ubuntu 20.04 and ChromeOS linnux)
 
 #### Cocoa App (very very deprecated)
 ```
