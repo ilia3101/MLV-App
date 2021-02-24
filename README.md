@@ -47,7 +47,7 @@ What is MLV App? Lightroom, but for Magic Lantern MLV Video (and open source and
 - Frame rate override for export and playback
 - Aspect Ratio: stretch width (1.33x, 1.5x, 1.75x, 1.8x, 2.0x) and height (0.3x, 1.67x, 3.0x, 5.0x auto detected for latest MLVs) for playback and export per clip in session. Manually changed AR is inserted to exported cDNG header.
 - Upside down transformation
-- Resize frame resolution for (batch) export using AVIR resizing algorithm
+- Resize frame resolution for (batch) export using [AVIR](https://github.com/avaneev/avir) resizing algorithm
 - Clip batch export
 - Smooth artifacts filter (minimizes moiree) for all ffmpeg export codecs, realized by ffmpeg filter combination
 - 2D median denoiser (don't expect wonders!)
