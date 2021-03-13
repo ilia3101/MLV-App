@@ -22,6 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 Fixed bugs and adapted to RGB64 by masc4ii (c) 2019
+Added dual threading by masc4ii (c) 2021
 */
 
 #include "RBFilterPlain.h"
