@@ -51,6 +51,11 @@ DownloadManager::DownloadManager()
 void DownloadManager::doDownload(const QUrl &url)
 {
     QNetworkRequest request(url);
+
+    QSslConfiguration conf = request.sslConfiguration();
+    conf.setPeerVerifyMode(QSslSocket::VerifyNone);
+    request.setSslConfiguration(conf);
+
     QNetworkReply *reply = manager.get(request);
 
     currentDownloads.append(reply);
@@ -128,9 +133,9 @@ void DownloadManager::downloadFinished(QNetworkReply *reply)
 {
     QUrl url = reply->url();
     if (reply->error()) {
-        /*fprintf(stderr, "Download of %s failed: %s\n",
+        fprintf(stderr, "Download of %s failed: %s\n",
                 url.toEncoded().constData(),
-                qPrintable(reply->errorString()));*/
+                qPrintable(reply->errorString()));
         m_downloadSucess = false;
     } else {
         QString filename = saveFileName(url);
