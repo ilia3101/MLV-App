@@ -768,6 +768,7 @@ int frequencyScan(lje* self) {
             Px = rows[0][col] + ((rows[1][col-1] - rows[0][col-1])>>1);
         diff = rows[1][col] - Px;
         diff = diff%65536;
+        diff = (int16_t)diff;
         int ssss = 32 - __builtin_clz(abs(diff));
         if (diff==0) ssss=0;
         self->hist[ssss]++;
@@ -1058,6 +1059,7 @@ int writeBody(lje* self) {
             Px = rows[0][col] + ((rows[1][col-1] - rows[0][col-1])>>1);
         diff = rows[1][col] - Px;
         diff = diff%65536;
+        diff = (int16_t)diff;
         int ssss = 32 - __builtin_clz(abs(diff));
         if (diff==0) ssss=0;
         //printf("%d %d %d %d %d\n",col,row,Px,diff,ssss);
