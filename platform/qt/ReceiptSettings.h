@@ -13,7 +13,7 @@
 class ReceiptSettings
 {
 public:
-    enum DebayerAlgorithm{ None = 0, Simple, Bilinear, LMMSE, IGV, AMaZE, AHD };
+    enum DebayerAlgorithm{ None = 0, Simple, Bilinear, LMMSE, IGV, AMaZE, AHD, RCD };
 
     ReceiptSettings();
     void setLoaded( void )          {m_neverLoaded = false;}

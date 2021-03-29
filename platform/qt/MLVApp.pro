@@ -100,6 +100,7 @@ SOURCES += \
     ../../src/debayer/conv.c \
     ../../src/debayer/dmzhangwu.c \
     ../../src/debayer/basic.c \
+    ../../src/debayer/rcd.c \
     ../../src/ca_correct/CA_correct_RT.c \
     ../../src/matrix/matrix.c \
     ../../src/mlv/frame_caching.c \

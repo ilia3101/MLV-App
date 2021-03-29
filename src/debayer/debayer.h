@@ -37,6 +37,15 @@ typedef struct {
     int blacklevel;
 } amazeinfo_t;
 
+/* RCD input as struct for posixz */
+typedef struct {
+    float ** __restrict rawData;    /* holds preprocessed pixel values, rawData[i][j] corresponds to the ith row and jth column */
+    float ** __restrict red;        /* the interpolated red plane */
+    float ** __restrict green;      /* the interpolated green plane */
+    float ** __restrict blue;       /* the interpolated blue plane */
+    int winw; int winh;
+} rcdinfo_t;
+
 /* LMMSE input as struct for posixz */
 typedef struct {
     float * __restrict Input;
@@ -59,5 +68,8 @@ demosaic(amazeinfo_t * inputdata);
 
 /* igv algo */
 void igv_demosaic(amazeinfo_t * inputdata);
+
+/*RCD algo*/
+void rcd_demosaic(rcdinfo_t * inputdata);
 
 #endif

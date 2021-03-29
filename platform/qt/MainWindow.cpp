@@ -1113,6 +1113,7 @@ void MainWindow::initGui( void )
     m_previewDebayerGroup->addAction( ui->actionUseLmmseDebayer );
     m_previewDebayerGroup->addAction( ui->actionUseIgvDebayer );
     m_previewDebayerGroup->addAction( ui->actionUseAhdDebayer );
+    m_previewDebayerGroup->addAction( ui->actionUseRcdDebayer );
     m_previewDebayerGroup->addAction( ui->actionAlwaysUseAMaZE );
     m_previewDebayerGroup->addAction( ui->actionCaching );
     m_previewDebayerGroup->addAction( ui->actionDontSwitchDebayerForPlayback );
@@ -6777,6 +6778,13 @@ void MainWindow::on_actionUseAhdDebayer_triggered()
     return;
 }
 
+//Use RCD debayer
+void MainWindow::on_actionUseRcdDebayer_triggered()
+{
+    selectDebayerAlgorithm();
+    return;
+}
+
 //Use AMaZE or not
 void MainWindow::on_actionAlwaysUseAMaZE_triggered()
 {
@@ -9758,6 +9766,9 @@ void MainWindow::selectDebayerAlgorithm()
         case ReceiptSettings::AHD:
             setMlvUseAhdDebayer( m_pMlvObject );
             break;
+        case ReceiptSettings::RCD:
+            setMlvUseRcdDebayer( m_pMlvObject );
+            break;
         default:
             break;
         }
@@ -9802,6 +9813,12 @@ void MainWindow::selectDebayerAlgorithm()
             setMlvUseAhdDebayer( m_pMlvObject );
             disableMlvCaching( m_pMlvObject );
             m_pChosenDebayer->setText( tr( "AHD" ) );
+        }
+        else if( ui->actionUseRcdDebayer->isChecked() )
+        {
+            setMlvUseRcdDebayer( m_pMlvObject );
+            disableMlvCaching( m_pMlvObject );
+            m_pChosenDebayer->setText( tr( "RCD" ) );
         }
         else if( ui->actionAlwaysUseAMaZE->isChecked() )
         {

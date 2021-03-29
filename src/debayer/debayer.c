@@ -131,6 +131,55 @@ void debayerAmaze(uint16_t * __restrict debayerto, float * __restrict bayerdata,
     free(imagefloat2d);
 }
 
+/* Rcd debayer easier to use */
+void debayerRcd(uint16_t * __restrict debayerto, float * __restrict bayerdata, int width, int height)
+{
+    int pixelsize = width * height;
+
+    /* AmAZeMEmE wants an image as floating points and 2d arrey as well */
+    float ** __restrict imagefloat2d = (float **)malloc(height * sizeof(float *));
+    for (int y = 0; y < height; ++y) imagefloat2d[y] = (float *)(bayerdata+(y*width));
+
+    /* AmAZe also wants to return floats, so heres memeory 4 it */
+    float  * __restrict red1d = (float *)malloc(pixelsize * sizeof(float));
+    float ** __restrict red2d = (float **)malloc(height * sizeof(float *));
+    for (int y = 0; y < height; ++y) red2d[y] = (float *)(red1d+(y*width));
+    float  * __restrict green1d = (float *)malloc(pixelsize * sizeof(float));
+    float ** __restrict green2d = (float **)malloc(height * sizeof(float *));
+    for (int y = 0; y < height; ++y) green2d[y] = (float *)(green1d+(y*width));
+    float  * __restrict blue1d = (float *)malloc(pixelsize * sizeof(float));
+    float ** __restrict blue2d = (float **)malloc(height * sizeof(float *));
+    for (int y = 0; y < height; ++y) blue2d[y] = (float *)(blue1d+(y*width));
+
+    /* Multithread by openMP */
+    if (1)
+    {
+        /* run the Amaze */
+        rcd_demosaic( & (rcdinfo_t) {
+                  imagefloat2d,
+                  red2d,
+                  green2d,
+                  blue2d,
+                  width, height} );
+    }
+
+    /* Giv back as RGB, not separate channels */
+    for (int i = 0; i < pixelsize; i++)
+    {
+        int j = i * 3;
+        debayerto[ j ] = LIMIT16((uint32_t)red1d[i]);
+        debayerto[j+1] = LIMIT16((uint32_t)green1d[i]);
+        debayerto[j+2] = LIMIT16((uint32_t)blue1d[i]);
+    }
+
+    free(red1d);
+    free(red2d);
+    free(green1d);
+    free(green2d);
+    free(blue1d);
+    free(blue2d);
+    free(imagefloat2d);
+}
 
 /* Quite quick bilinear debayer, floating point sadly; threads argument is unused */
 void debayerBasic(uint16_t * __restrict debayerto, float * __restrict bayerdata, int width, int height, int threads)

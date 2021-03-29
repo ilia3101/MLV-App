@@ -203,6 +203,7 @@
      <addaction name="actionUseIgvDebayer"/>
      <addaction name="actionAlwaysUseAMaZE"/>
      <addaction name="actionUseAhdDebayer"/>
+     <addaction name="actionUseRcdDebayer"/>
      <addaction name="actionCaching"/>
      <addaction name="actionDontSwitchDebayerForPlayback"/>
     </widget>
@@ -468,7 +469,7 @@ QGroupBox::indicator:checked:disabled {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>-2547</y>
+            <y>0</y>
             <width>266</width>
             <height>5571</height>
            </rect>
@@ -2712,7 +2713,7 @@ QGroupBox::indicator:checked:disabled {
                     </font>
                    </property>
                    <property name="currentIndex">
-                    <number>5</number>
+                    <number>0</number>
                    </property>
                    <item>
                     <property name="text">
@@ -2747,6 +2748,11 @@ QGroupBox::indicator:checked:disabled {
                    <item>
                     <property name="text">
                      <string>AHD</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>RCD</string>
                     </property>
                    </item>
                   </widget>
@@ -10579,6 +10585,17 @@ QGroupBox::indicator:checked:disabled {
    </property>
    <property name="text">
     <string>Table Mode Bottom</string>
+   </property>
+  </action>
+  <action name="actionUseRcdDebayer">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>RCD</string>
+   </property>
+   <property name="toolTip">
+    <string>RCD</string>
    </property>
   </action>
  </widget>

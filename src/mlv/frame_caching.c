@@ -348,6 +348,11 @@ void get_mlv_raw_frame_debayered( mlvObject_t * video,
         /* Debayer AHD */
         debayerAhd(output_frame, temp_memory, width, height);
     }
+    else if(debayer_type == 7)
+    {
+        /* Debayer RCD */
+        debayerRcd(output_frame, temp_memory, width, height);
+    }
     else
     {
         /* Debayer quickly (bilinearly) */
