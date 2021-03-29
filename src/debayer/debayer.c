@@ -132,7 +132,7 @@ void debayerAmaze(uint16_t * __restrict debayerto, float * __restrict bayerdata,
 }
 
 /* Rcd debayer easier to use */
-void debayerRcd(uint16_t * __restrict debayerto, float * __restrict bayerdata, int width, int height)
+void debayerRcd(uint16_t * __restrict debayerto, float * __restrict bayerdata, int width, int height, int threads)
 {
     int pixelsize = width * height;
 
@@ -160,7 +160,8 @@ void debayerRcd(uint16_t * __restrict debayerto, float * __restrict bayerdata, i
                   red2d,
                   green2d,
                   blue2d,
-                  width, height} );
+                  width, height,
+                  threads } );
     }
 
     /* Giv back as RGB, not separate channels */

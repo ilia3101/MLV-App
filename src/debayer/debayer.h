@@ -44,6 +44,7 @@ typedef struct {
     float ** __restrict green;      /* the interpolated green plane */
     float ** __restrict blue;       /* the interpolated blue plane */
     int winw; int winh;
+    int chunkSize;
 } rcdinfo_t;
 
 /* LMMSE input as struct for posixz */

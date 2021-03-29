@@ -232,6 +232,8 @@ void rcd_demosaic(rcdinfo_t *inputdata)
     float ** restrict blue = inputdata->blue;       /* the interpolated blue plane */
     int width = inputdata->winw; int height = inputdata->winh;
 
+    int chunkSize = inputdata->chunkSize; //default
+
     const unsigned cfarray[2][2] = {{0,1},{1,2}};
     
     static const int tileBorder = 9; // avoid tile-overlap errors
@@ -257,7 +259,7 @@ void rcd_demosaic(rcdinfo_t *inputdata)
 
     {
 #ifdef _OPENMP
-        #pragma omp for /*schedule(dynamic, chunkSize)*/ collapse(2) nowait
+        #pragma omp for schedule(dynamic, chunkSize) collapse(2) nowait
 #endif
         for(int tr = 0; tr < numTh; ++tr) {
             for(int tc = 0; tc < numTw; ++tc) {
