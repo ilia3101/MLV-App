@@ -17,7 +17,7 @@ What is MLV App? Lightroom, but for Magic Lantern MLV Video (and open source and
 - Support for spanned mlv (.m00, .m01, ...)
 - Support for lossless mlv
 - Support for any bit depth (…, 10, 12, 14bit)
-- Demosaic algorithms: None, Simple (fastest), bilinear, multithreaded AMaZE & LMMSE, AHD or IGV
+- Demosaic algorithms: None, Simple (fastest), bilinear, multithreaded AMaZE & LMMSE, AHD, RCD or IGV
 - Processing with many parameters (exposure, contrast, white balance, clarity, vibrance, saturation, dark & light adjustments, highlights & shadows, gradation curves, sharpen, hue vs. hue/saturation/luminance curves, toning, …)
 - Processing filters for film emulation powered by neural networks :ghost:
 - Processing in sRGB or several LOG
