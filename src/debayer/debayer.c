@@ -154,7 +154,7 @@ void debayerRcd(uint16_t * __restrict debayerto, float * __restrict bayerdata, i
     /* Multithread by openMP */
     if (1)
     {
-        /* run the Amaze */
+        /* run the rcd */
         rcd_demosaic( & (rcdinfo_t) {
                   imagefloat2d,
                   red2d,
