@@ -5,7 +5,6 @@
 #include <pthread.h>
 
 #include "debayer.h"
-#include "dmzhangwu.h"
 
 #define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
 #define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
@@ -13,7 +12,7 @@
 
 void convert_to_log(void * data)
 {
-    // float 
+    // float
 }
 
 /* AmAZeMEmE debayer easier to use */
@@ -57,7 +56,7 @@ void debayerAmaze(uint16_t * __restrict debayerto, float * __restrict bayerdata,
         int startchunk_y[threads];
         int endchunk_y[threads];
 
-        /* How big each thread's chunk is, multiple of 2 - or debayer 
+        /* How big each thread's chunk is, multiple of 2 - or debayer
          * would start on wrong pixel and magenta stripes appear */
         int chunk_height = height / threads;
         chunk_height -= chunk_height % 2;
@@ -89,7 +88,7 @@ void debayerAmaze(uint16_t * __restrict debayerto, float * __restrict bayerdata,
         {
             /* Amaze arguments */
             amaze_arguments[thread] = (amazeinfo_t) {
-                imagefloat2d, 
+                imagefloat2d,
                 red2d,
                 green2d,
                 blue2d,
@@ -131,56 +130,7 @@ void debayerAmaze(uint16_t * __restrict debayerto, float * __restrict bayerdata,
     free(imagefloat2d);
 }
 
-/* Rcd debayer easier to use */
-void debayerRcd(uint16_t * __restrict debayerto, float * __restrict bayerdata, int width, int height, int threads)
-{
-    int pixelsize = width * height;
 
-    /* AmAZeMEmE wants an image as floating points and 2d arrey as well */
-    float ** __restrict imagefloat2d = (float **)malloc(height * sizeof(float *));
-    for (int y = 0; y < height; ++y) imagefloat2d[y] = (float *)(bayerdata+(y*width));
-
-    /* AmAZe also wants to return floats, so heres memeory 4 it */
-    float  * __restrict red1d = (float *)malloc(pixelsize * sizeof(float));
-    float ** __restrict red2d = (float **)malloc(height * sizeof(float *));
-    for (int y = 0; y < height; ++y) red2d[y] = (float *)(red1d+(y*width));
-    float  * __restrict green1d = (float *)malloc(pixelsize * sizeof(float));
-    float ** __restrict green2d = (float **)malloc(height * sizeof(float *));
-    for (int y = 0; y < height; ++y) green2d[y] = (float *)(green1d+(y*width));
-    float  * __restrict blue1d = (float *)malloc(pixelsize * sizeof(float));
-    float ** __restrict blue2d = (float **)malloc(height * sizeof(float *));
-    for (int y = 0; y < height; ++y) blue2d[y] = (float *)(blue1d+(y*width));
-
-    /* Multithread by openMP */
-    if (1)
-    {
-        /* run the rcd */
-        rcd_demosaic( & (rcdinfo_t) {
-                  imagefloat2d,
-                  red2d,
-                  green2d,
-                  blue2d,
-                  width, height,
-                  threads } );
-    }
-
-    /* Giv back as RGB, not separate channels */
-    for (int i = 0; i < pixelsize; i++)
-    {
-        int j = i * 3;
-        debayerto[ j ] = LIMIT16((uint32_t)red1d[i]);
-        debayerto[j+1] = LIMIT16((uint32_t)green1d[i]);
-        debayerto[j+2] = LIMIT16((uint32_t)blue1d[i]);
-    }
-
-    free(red1d);
-    free(red2d);
-    free(green1d);
-    free(green2d);
-    free(blue1d);
-    free(blue2d);
-    free(imagefloat2d);
-}
 
 /* Quite quick bilinear debayer, floating point sadly; threads argument is unused */
 void debayerBasic(uint16_t * __restrict debayerto, float * __restrict bayerdata, int width, int height, int threads)
@@ -212,7 +162,7 @@ void debayerBasic(uint16_t * __restrict debayerto, float * __restrict bayerdata,
              * G (B)(G) B
              * R (G)(R) G
              * G  B  G  B
-             * 
+             *
              * Middle 4 are current pixels we are working on */
 
             int pix = Y + x; /* Current pixel(RED) */
@@ -427,94 +377,15 @@ void debayerEasy(uint16_t * __restrict debayerto, float * __restrict bayerdata, 
     }
 }
 
-/* Use LMMSE debayer */
-void debayerLmmse(uint16_t * __restrict debayerto, float * __restrict bayerdata, int width, int height, int threads, int blacklevel)
-{
-    (void)threads;
-
-    int datasize = width * height * 3;
-    int pixels = width * height;
-
-    float * __restrict output = (float *)malloc( datasize * sizeof( float ) );
-
-    if ( threads < 2)
-    {
-        /* run the Amaze */
-        ZhangWuDemosaic( & (lmmseinfo_t) {
-                  bayerdata,
-                  output,
-                  0, 0, /* crop window for demosaicing */
-                  width, height, width*height, blacklevel } );
-    }
-    else
-    {
-        int startchunk_y[threads];
-        int endchunk_y[threads];
-
-        /* How big each thread's chunk is, multiple of 2 - or debayer
-         * would start on wrong pixel and magenta stripes appear */
-        int chunk_height = height / threads;
-        chunk_height -= chunk_height % 2;
-
-        /* Calculate chunks of image for each thread */
-        for (int thread = 0; thread < threads; ++thread)
-        {
-            startchunk_y[thread] = chunk_height * thread;
-            endchunk_y[thread] = chunk_height * (thread + 1);
-        }
-
-        /* Last chunk must reach end of frame */
-        endchunk_y[threads-1] = height;
-
-        pthread_t thread_id[threads];
-        lmmseinfo_t lmmse_arguments[threads];
-
-        /* Create amaze pthreads */
-        for (int thread = 0; thread < threads; ++thread)
-        {
-            /* Amaze arguments */
-            lmmse_arguments[thread] = (lmmseinfo_t) {
-                bayerdata,
-                output,
-                /* Crop out a part for each thread */
-                0, startchunk_y[thread],    /* crop window for demosaicing */
-                width, (endchunk_y[thread] - startchunk_y[thread]),
-                width*height,
-                blacklevel};
-
-            /* Create pthread! */
-            pthread_create( &thread_id[thread], NULL, (void *)&ZhangWuDemosaic, (void *)&lmmse_arguments[thread] );
-        }
-
-        /* let all threads finish */
-        for (int thread = 0; thread < threads; ++thread)
-        {
-            pthread_join( thread_id[thread], NULL );
-        }
-    }
-
-    /* Give back as RGB, not separate channels */
-    for (int i = 0; i < pixels; i++)
-    {
-        int j = i * 3;
-        debayerto[ j ] = LIMIT16((uint32_t)output[i]);
-        debayerto[j+1] = LIMIT16((uint32_t)output[i+pixels]);
-        debayerto[j+2] = LIMIT16((uint32_t)output[i+(pixels<<1)]);
-    }
-
-    free( output );
-}
-
-/* IGV debayer easier to use */
-void debayerIgv(uint16_t * __restrict debayerto, float * __restrict bayerdata, int width, int height, int blacklevel)
+void debayerLibRtProcess(uint16_t *debayerto, float *bayerdata, int width, int height, int threads, int algorithm, double camMatrix[9])
 {
     int pixelsize = width * height;
 
-    /* IGV wants an image as floating points and 2d arrey as well */
+    /* lrtp wants an image as floating points and 2d arrey as well */
     float ** __restrict imagefloat2d = (float **)malloc(height * sizeof(float *));
     for (int y = 0; y < height; ++y) imagefloat2d[y] = (float *)(bayerdata+(y*width));
 
-    /* IGV also wants to return floats, so heres memeory 4 it */
+    /* lrtp also wants to return floats, so heres memeory 4 it */
     float  * __restrict red1d = (float *)malloc(pixelsize * sizeof(float));
     float ** __restrict red2d = (float **)malloc(height * sizeof(float *));
     for (int y = 0; y < height; ++y) red2d[y] = (float *)(red1d+(y*width));
@@ -525,14 +396,16 @@ void debayerIgv(uint16_t * __restrict debayerto, float * __restrict bayerdata, i
     float ** __restrict blue2d = (float **)malloc(height * sizeof(float *));
     for (int y = 0; y < height; ++y) blue2d[y] = (float *)(blue1d+(y*width));
 
-    igv_demosaic( & (amazeinfo_t) {
-                  imagefloat2d,
-                  red2d,
-                  green2d,
-                  blue2d,
-                  0, 0, /* crop window for demosaicing */
-                  width, height,
-                  0, blacklevel } );
+    if( algorithm == 4)
+        lrtpLmmseDemosaic( imagefloat2d, red2d, green2d, blue2d, width, height );
+    else if( algorithm == 5 )
+        lrtpIgvDemosaic( imagefloat2d, red2d, green2d, blue2d, width, height );
+    else if( algorithm == 6 )
+        lrtpAhdDemosaic( imagefloat2d, red2d, green2d, blue2d, width, height, camMatrix );
+    else if( algorithm == 7 )
+        lrtpRcdDemosaic( imagefloat2d, red2d, green2d, blue2d, width, height );
+    else //AMaZE
+        lrtpAmazeDemosaic( imagefloat2d, red2d, green2d, blue2d, width, height );
 
     //int rgb_pixels = pixelsize * 3;
 

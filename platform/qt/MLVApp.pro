@@ -47,8 +47,8 @@ macx: LIBS += -framework CoreVideo \
 #    QMAKE_CC = /usr/local/opt/llvm/bin/clang
 #    QMAKE_CXX = /usr/local/opt/llvm/bin/clang++
 #    QMAKE_LINK = /usr/local/opt/llvm/bin/clang++
-#    QMAKE_CFLAGS += -fopenmp
-#    QMAKE_CXXFLAGS += -fopenmp
+#    QMAKE_CFLAGS += -fopenmp -ftree-vectorize
+#    QMAKE_CXXFLAGS += -fopenmp -std=c++11 -ftree-vectorize
 #    INCLUDEPATH += -I/usr/local/opt/llvm/include
 #    LIBS += -L/usr/local/opt/llvm/lib -lomp
 #    QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.8
@@ -98,9 +98,7 @@ SOURCES += \
     ../../src/debayer/amaze_demosaic.c \
     ../../src/debayer/debayer.c \
     ../../src/debayer/conv.c \
-    ../../src/debayer/dmzhangwu.c \
     ../../src/debayer/basic.c \
-    ../../src/debayer/rcd.c \
     ../../src/ca_correct/CA_correct_RT.c \
     ../../src/matrix/matrix.c \
     ../../src/mlv/frame_caching.c \
@@ -119,8 +117,6 @@ SOURCES += \
     ../../src/processing/filter/genann/genann.c \
     ../../src/processing/image_profiles.c \
     ../../src/processing/cube_lut.c \
-    ../../src/debayer/igv_demosaic.c \
-    ../../src/debayer/ahd.c \
     ../../src/mlv/llrawproc/dualiso.c \
     ../../src/dng/dng.c \
     ScopesLabel.cpp \
@@ -180,7 +176,25 @@ SOURCES += \
     ../../src/processing/tinyexpr/tinyexpr.c \
     FocusPixelMapManager.cpp \
     DownloadManager.cpp \
-    StatusFpmDialog.cpp
+    StatusFpmDialog.cpp \
+    ../../src/librtprocess/src/demosaic/ahd.cc \
+    ../../src/librtprocess/src/demosaic/amaze.cc \
+    ../../src/librtprocess/src/demosaic/bayerfast.cc \
+    ../../src/librtprocess/src/demosaic/border.cc \
+    ../../src/librtprocess/src/demosaic/dcb.cc \
+    ../../src/librtprocess/src/demosaic/hphd.cc \
+    ../../src/librtprocess/src/demosaic/igv.cc \
+    ../../src/librtprocess/src/demosaic/lmmse.cc \
+    ../../src/librtprocess/src/demosaic/markesteijn.cc \
+    ../../src/librtprocess/src/demosaic/rcd.cc \
+    ../../src/librtprocess/src/demosaic/vng4.cc \
+    ../../src/librtprocess/src/demosaic/xtransfast.cc \
+    ../../src/librtprocess/src/postprocess/hilite_recon.cc \
+    ../../src/librtprocess/src/preprocess/CA_correct.cc \
+    ../../src/librtprocess/src/include/librtprocesswrapper.cpp \
+    ../../src/debayer/ahdOld.c
+
+INCLUDEPATH += ../../src/librtprocess/src/include/
 
 macx: SOURCES += ../cocoa/avf_lib/avf_lib.m
 
@@ -188,7 +202,6 @@ HEADERS += MainWindow.h \
     ../../src/debayer/debayer.h \
     ../../src/debayer/helpersse2.h \
     ../../src/debayer/conv.h \
-    ../../src/debayer/dmzhangwu.h \
     ../../src/debayer/basic.h \
     ../../src/ca_correct/CA_correct_RT.h \
     ../../src/matrix/matrix.h \
@@ -290,7 +303,24 @@ HEADERS += MainWindow.h \
     ../../src/processing/tinyexpr/tinyexpr.h \
     DownloadManager.h \
     FocusPixelMapManager.h \
-    StatusFpmDialog.h
+    StatusFpmDialog.h \
+    ../../src/librtprocess/src/include/array2D.h \
+    ../../src/librtprocess/src/include/bayerhelper.h \
+    ../../src/librtprocess/src/include/boxblur.h \
+    ../../src/librtprocess/src/include/gauss.h \
+    ../../src/librtprocess/src/include/helpersse2.h \
+    ../../src/librtprocess/src/include/jaggedarray.h \
+    ../../src/librtprocess/src/include/librtprocess.h \
+    ../../src/librtprocess/src/include/LUT.h \
+    ../../src/librtprocess/src/include/median.h \
+    ../../src/librtprocess/src/include/mytime.h \
+    ../../src/librtprocess/src/include/opthelper.h \
+    ../../src/librtprocess/src/include/rt_math.h \
+    ../../src/librtprocess/src/include/StopWatch.h \
+    ../../src/librtprocess/src/include/xtranshelper.h \
+    ../../src/librtprocess/src/include/librtprocesswrapper.h \
+    ../../src/librtprocess/src/include/sleef.h \
+    ../../src/librtprocess/src/include/sleefsseavx.h
 
 macx: HEADERS += \
     ../cocoa/avf_lib/avencoder.h \
