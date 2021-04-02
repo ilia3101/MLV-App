@@ -2905,7 +2905,7 @@ void MainWindow::startExportAVFoundation(QString fileName)
     if( m_codecProfile == CODEC_PRORES422ST ) avfCodec = AVF_CODEC_PRORES_422;
     else if( m_codecProfile == CODEC_H264 ) avfCodec = AVF_CODEC_H264;
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 101300
-    else if( m_codecProfile == CODEC_H265 ) avfCodec = AVF_CODEC_HEVC;
+    else if( m_codecProfile == CODEC_H265_8 ) avfCodec = AVF_CODEC_HEVC;
 #endif
     else avfCodec = AVF_CODEC_PRORES_4444;
 
@@ -2985,7 +2985,7 @@ void MainWindow::startExportAVFoundation(QString fileName)
     for( uint64_t frame = ( m_exportQueue.first()->cutIn() - 1 ); frame < m_exportQueue.first()->cutOut(); frame++ )
     {
         //Get&Encode
-        if( m_codecProfile == CODEC_H264 )
+        if( m_codecProfile == CODEC_H264 || m_codecProfile == CODEC_H265_8 )
         {
             getMlvProcessedFrame8( m_pMlvObject, frame, m_pRawImage, QThread::idealThreadCount() );
             if( scaled )
@@ -7864,7 +7864,7 @@ void MainWindow::exportHandler( void )
               || ( m_codecProfile == CODEC_PRORES4444 && m_codecOption == CODEC_PRORES_AVFOUNDATION )
               || ( m_codecProfile == CODEC_H264 && m_codecOption == CODEC_H264_AVFOUNDATION )
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 101300
-              || ( m_codecProfile == CODEC_H265 && m_codecOption == CODEC_H265_AVFOUNDATION )
+              || ( m_codecProfile == CODEC_H265_8 && m_codecOption == CODEC_H265_AVFOUNDATION )
 #endif
                )
         {
