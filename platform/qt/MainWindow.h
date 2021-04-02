@@ -192,6 +192,7 @@ private slots:
     void on_actionUseIgvDebayer_triggered();
     void on_actionUseAhdDebayer_triggered();
     void on_actionUseRcdDebayer_triggered();
+    void on_actionUseDcbDebayer_triggered();
     void on_actionAlwaysUseAMaZE_triggered();
     void on_actionCaching_triggered();
     void on_actionDontSwitchDebayerForPlayback_triggered();

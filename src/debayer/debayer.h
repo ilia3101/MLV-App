@@ -10,7 +10,7 @@ void debayerBasic(uint16_t * __restrict debayerto, float * __restrict bayerdata,
 /* More useable amaze, threads number should be the number of cores(or threads if >= i7) your cpu has */
 void debayerAmaze(uint16_t * __restrict debayerto, float * __restrict bayerdata, int width, int height, int threads, int blacklevel);
 /* via librtprocess */
-void debayerLibRtProcess(uint16_t *__restrict debayerto, float *__restrict bayerdata, int width, int height, int threads, int algorithm, double camMatrix[9]);
+void debayerLibRtProcess(uint16_t *__restrict debayerto, float *__restrict bayerdata, int width, int height, int algorithm, double camMatrix[9]);
 /* AHD debayer */
 void debayerAhd(uint16_t *__restrict debayerto, float *__restrict bayerdata, int width, int height);
 

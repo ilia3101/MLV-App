@@ -5,6 +5,7 @@
 #include <pthread.h>
 
 #include "debayer.h"
+#include "librtprocesswrapper.h"
 
 #define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
 #define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
@@ -377,7 +378,7 @@ void debayerEasy(uint16_t * __restrict debayerto, float * __restrict bayerdata, 
     }
 }
 
-void debayerLibRtProcess(uint16_t *debayerto, float *bayerdata, int width, int height, int threads, int algorithm, double camMatrix[9])
+void debayerLibRtProcess(uint16_t *debayerto, float *bayerdata, int width, int height, int algorithm, double camMatrix[9])
 {
     int pixelsize = width * height;
 
@@ -404,6 +405,8 @@ void debayerLibRtProcess(uint16_t *debayerto, float *bayerdata, int width, int h
         lrtpAhdDemosaic( imagefloat2d, red2d, green2d, blue2d, width, height, camMatrix );
     else if( algorithm == 7 )
         lrtpRcdDemosaic( imagefloat2d, red2d, green2d, blue2d, width, height );
+    else if( algorithm == 8 )
+        lrtpDcbDemosaic( imagefloat2d, red2d, green2d, blue2d, width, height );
     else //AMaZE
         lrtpAmazeDemosaic( imagefloat2d, red2d, green2d, blue2d, width, height );
 

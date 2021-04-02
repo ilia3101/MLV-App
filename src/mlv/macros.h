@@ -94,6 +94,8 @@
 #define setMlvUseAhdDebayer(video) (video)->use_amaze = 6; (video)->current_cached_frame_active = 0
 /* Use the RCD debayer */
 #define setMlvUseRcdDebayer(video) (video)->use_amaze = 7; (video)->current_cached_frame_active = 0
+/* Use the DCB debayer */
+#define setMlvUseDcbDebayer(video) (video)->use_amaze = 8; (video)->current_cached_frame_active = 0
 
 /* Set CA correction parameters */
 #define setMlvCaCorrectionRed(video, value) (video)->ca_red = (value)

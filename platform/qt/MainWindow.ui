@@ -204,8 +204,14 @@
      <addaction name="actionAlwaysUseAMaZE"/>
      <addaction name="actionUseAhdDebayer"/>
      <addaction name="actionUseRcdDebayer"/>
+     <addaction name="actionUseDcbDebayer"/>
      <addaction name="actionCaching"/>
      <addaction name="actionDontSwitchDebayerForPlayback"/>
+    </widget>
+    <widget class="QMenu" name="menuGeben_Sie_Text_ein">
+     <property name="title">
+      <string>Geben Sie Text ein</string>
+     </property>
     </widget>
     <addaction name="actionGoto_First_Frame"/>
     <addaction name="actionPreviousFrame"/>
@@ -226,6 +232,7 @@
     <addaction name="actionZoomFit"/>
     <addaction name="actionZoom100"/>
     <addaction name="actionFullscreen"/>
+    <addaction name="menuGeben_Sie_Text_ein"/>
    </widget>
    <widget class="QMenu" name="menuView">
     <property name="title">
@@ -470,8 +477,8 @@ QGroupBox::indicator:checked:disabled {
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>266</width>
-            <height>5571</height>
+            <width>265</width>
+            <height>5525</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayoutScrollArea">
@@ -2712,8 +2719,11 @@ QGroupBox::indicator:checked:disabled {
                      <pointsize>10</pointsize>
                     </font>
                    </property>
+                   <property name="currentText">
+                    <string>AMaZE</string>
+                   </property>
                    <property name="currentIndex">
-                    <number>0</number>
+                    <number>5</number>
                    </property>
                    <item>
                     <property name="text">
@@ -2753,6 +2763,11 @@ QGroupBox::indicator:checked:disabled {
                    <item>
                     <property name="text">
                      <string>RCD</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>DCB</string>
                     </property>
                    </item>
                   </widget>
@@ -10596,6 +10611,14 @@ QGroupBox::indicator:checked:disabled {
    </property>
    <property name="toolTip">
     <string>RCD</string>
+   </property>
+  </action>
+  <action name="actionUseDcbDebayer">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>DCB</string>
    </property>
   </action>
  </widget>

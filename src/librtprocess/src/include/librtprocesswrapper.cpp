@@ -52,6 +52,16 @@ void lrtpBayerfastDemosaic(float **rawData, float **red, float **green, float **
     bayerfast_demosaic( width, height, rawData, red, green, blue, cfa, sPC, 1.0 );
 }
 
+void lrtpDcbDemosaic(float **rawData, float **red, float **green, float **blue, int width, int height)
+{
+    dcb_demosaic( width, height, rawData, red, green, blue, cfa, sPC, 2, true );
+}
+
+void lrtpHphdDemosaic(float **rawData, float **red, float **green, float **blue, int width, int height)
+{
+    hphd_demosaic( width, height, rawData, red, green, blue, cfa, sPC );
+}
+
 void lrtpHLRecovery(float **red, float **green, float **blue, int width, int height, const float chmax[], const float clmax[])
 {
     HLRecovery_inpaint( width, height, red, green, blue, chmax, clmax, sPC );
