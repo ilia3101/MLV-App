@@ -254,7 +254,7 @@ void MainWindow::timerFrameEvent( void )
     {
         m_countTimeDown = 3; //3 secs
         int cores = QThread::idealThreadCount();
-        if( cores > 1 ) cores -= 1; // -1 for the processing
+        //if( cores > 1 ) cores -= 1; // -1 for the processing
         setMlvCpuCores( m_pMlvObject, cores );
     }
 
