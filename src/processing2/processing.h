@@ -23,6 +23,7 @@ int ProcessingGetResY(Processing_t * processing);
 void ProcessingSetInputImage(Processing_t * processing, float * Image);
 
 
+
 /* Main setters/getters */
 void ProcessingSetExposure(Processing_t * processing, double ExposureStops);
 double ProcessingGetExposure(Processing_t * processing);
