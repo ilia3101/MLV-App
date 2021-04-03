@@ -13,7 +13,7 @@ void delete_Processing(Processing_t * processing);
 /* Run processing */
 void ProcessingDoProcessing32(float * Out);
 void ProcessingDoProcessing16(uint16_t * Out);
-void ProcessingDoProcessing8(uint16_t * Out);
+void ProcessingDoProcessing8(uint8_t * Out);
 
 /* Get resolution */
 int ProcessingGetResX(Processing_t * processing);

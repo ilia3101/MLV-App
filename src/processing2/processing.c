@@ -53,7 +53,7 @@ void ProcessingDoProcessing16(uint16_t * Out)
     return;
 }
 
-void ProcessingDoProcessing8(uint16_t * Out)
+void ProcessingDoProcessing8(uint8_t * Out)
 {
     return;
 }
@@ -72,3 +72,22 @@ void ProcessingSetInputImage(Processing_t * processing, float * Image)
 {
     memcpy(processing->src_image, Image, PROCESSING_IMAGE_SIZE);
 }
+
+
+
+void ProcessingSetExposure(Processing_t * processing, double ExposureStops) {return;}
+double ProcessingGetExposure(Processing_t * processing) {return 0.0;}
+
+void ProcessingSetHighlightRolloff(Processing_t * processing, double Rolloff) {return;} /* -1 to +1, 0 default */
+double ProcessingGetHighlightRolloff(Processing_t * processing) {return 0.0;}
+
+void ProcessingSetWBKelvin(Processing_t * Processing, double Kelvin) {return;}
+double ProcessingGetWBKelvin(Processing_t * Processing) {return 5600.0;}
+
+void ProcessingSetWBTint(Processing_t * Processing, double Tint) {return;}
+double ProcessingGetWBTint(Processing_t * Processing) {return 0.0;}
+
+void ProcessingSetWBFromImage(Processing_t * Processing, int X, int Y, int Radius) {return;}
+
+void ProcessingSetSaturation(Processing_t * Processing, double Saturation) {return;} /* -1 to +1, 0 default */
+double ProcessingGetSaturation(Processing_t * Processing) {return 0.0;}
