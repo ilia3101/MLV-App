@@ -362,16 +362,11 @@ void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
         ui->labelDebayer->setEnabled( true );
         ui->comboBoxDebayer->setEnabled( true );
         ui->comboBoxOption->setEnabled( true );
-        ui->comboBoxOption->addItem( QString( "444 1080p 10bit" ) );
-        ui->comboBoxOption->addItem( QString( "HQX 1080p 10bit" ) );
-        ui->comboBoxOption->addItem( QString( "HQ 1080p 8bit" ) );
-        ui->comboBoxOption->addItem( QString( "SQ 1080p 8bit" ) );
-        ui->comboBoxOption->addItem( QString( "LB 1080p 8bit" ) );
-        enableResize = false;
-        QPixmap pic = QPixmap( ":/RetinaIMG/RetinaIMG/Status-dialog-warning-icon.png" ).scaled( 24 * devicePixelRatio(), 24 * devicePixelRatio() );
-        pic.setDevicePixelRatio( devicePixelRatio() );
-        ui->label_Info->setPixmap( pic );
-        ui->label_Info->setToolTip( tr( "Note: DNxHR can only be exported @ 23.976, 25, 29.97, 50, 59.94 fps.\r\nPlease manually force to one of these, if your clips have diffent framerates!" ) );
+        ui->comboBoxOption->addItem( QString( "444 10bit" ) );
+        ui->comboBoxOption->addItem( QString( "HQX 10bit" ) );
+        ui->comboBoxOption->addItem( QString( "HQ 8bit" ) );
+        ui->comboBoxOption->addItem( QString( "SQ 8bit" ) );
+        ui->comboBoxOption->addItem( QString( "LB 8bit" ) );
     }
     else if( index == CODEC_CINEFORM_10 || index == CODEC_CINEFORM_12 )
     {
@@ -477,8 +472,7 @@ void ExportSettingsDialog::on_comboBoxOption_currentIndexChanged(const QString &
          && ( ui->comboBoxCodec->currentIndex() != CODEC_CDNG )
          && ( ui->comboBoxCodec->currentIndex() != CODEC_CDNG_LOSSLESS )
          && ( ui->comboBoxCodec->currentIndex() != CODEC_CDNG_FAST )
-         && ( ui->comboBoxCodec->currentIndex() != CODEC_DNXHD )
-         && ( ui->comboBoxCodec->currentIndex() != CODEC_DNXHR ) )
+         && ( ui->comboBoxCodec->currentIndex() != CODEC_DNXHD ) )
         {
             ui->checkBoxExportAudio->setEnabled( true );
             ui->checkBoxResize->setEnabled( true );

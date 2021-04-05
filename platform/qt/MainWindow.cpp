@@ -2285,52 +2285,59 @@ void MainWindow::startExportPipe(QString fileName)
                     .arg( resizeFilter )
                     .arg( output ) );
     }
-    else if( m_codecProfile == CODEC_DNXHD
-          || m_codecProfile == CODEC_DNXHR )
+    else if( m_codecProfile == CODEC_DNXHR )
+    {
+        output.append( QString( ".avi" ) );
+
+        QString option;
+        QString format;
+
+        switch( m_codecOption )
+        {
+        case CODEC_DNXHR_444_1080p_10bit:
+            format = "-pix_fmt yuv444p10";
+            option = "-profile:v dnxhr_444 ";
+            break;
+        case CODEC_DNXHR_HQX_1080p_10bit:
+            format = "-pix_fmt yuv422p10";
+            option = "-profile:v dnxhr_hqx ";
+            break;
+        case CODEC_DNXHR_HQ_1080p_8bit:
+            format = "-pix_fmt yuv422p";
+            option = "-profile:v dnxhr_hq ";
+            break;
+        case CODEC_DNXHR_SQ_1080p_8bit:
+            format = "-pix_fmt yuv422p";
+            option = "-profile:v dnxhr_sq ";
+            break;
+        case CODEC_DNXHR_LB_1080p_8bit:
+        default:
+            format = "-pix_fmt yuv422p";
+            option = "-profile:v dnxhr_lb ";
+            break;
+        }
+
+        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v dnxhd %3%4 -color_primaries bt709 -color_trc bt709 -colorspace bt709 %5\"%6\"" )
+                    .arg( fps )
+                    .arg( resolution )
+                    .arg( option )
+                    .arg( format )
+                    .arg( resizeFilter )
+                    .arg( output ) );
+    }
+    else if( m_codecProfile == CODEC_DNXHD )
     {
         output.append( QString( ".avi" ) );
 
         QString option;
         QString option2;
         QString format;
-
-        if( m_codecProfile == CODEC_DNXHD )
-        {
-            format = "format=yuv422p10";
-            option2 = "";
-        }
-        else
-        {
-            switch( m_codecOption )
-            {
-            case CODEC_DNXHR_444_1080p_10bit:
-                format = "format=yuv444p10";
-                option2 = "-profile:v dnxhr_444 ";
-                break;
-            case CODEC_DNXHR_HQX_1080p_10bit:
-                format = "format=yuv422p10";
-                option2 = "-profile:v dnxhr_hqx ";
-                break;
-            case CODEC_DNXHR_HQ_1080p_8bit:
-                format = "format=yuv422p";
-                option2 = "-profile:v dnxhr_hq ";
-                break;
-            case CODEC_DNXHR_SQ_1080p_8bit:
-                format = "format=yuv422p";
-                option2 = "-profile:v dnxhr_sq ";
-                break;
-            case CODEC_DNXHR_LB_1080p_8bit:
-            default:
-                format = "format=yuv422p";
-                option2 = "-profile:v dnxhr_lb ";
-                break;
-            }
-        }
+        format = "format=yuv422p10";
+        option2 = "";
 
         bool error = false;
 
-        if( ( ( m_codecProfile == CODEC_DNXHD ) && ( m_codecOption == CODEC_DNXHD_1080p_10bit ) )
-         || m_codecProfile == CODEC_DNXHR )
+        if( ( m_codecProfile == CODEC_DNXHD ) && ( m_codecOption == CODEC_DNXHD_1080p_10bit ) )
         {
             if( getFramerate() == 25.0 )                option = QString( "-vf scale=w=1920:h=1080:in_color_matrix=bt601:out_color_matrix=bt709,fps=25,%1%2 -b:v 185M" ).arg( format ).arg( hdrString );
             else if( getFramerate() == 50.0 )           option = QString( "-vf scale=w=1920:h=1080:in_color_matrix=bt601:out_color_matrix=bt709,fps=50,%1%2 -b:v 365M" ).arg( format ).arg( hdrString );
@@ -2447,7 +2454,7 @@ void MainWindow::startExportPipe(QString fileName)
 
     //Try to open pipe
     FILE *pPipe;
-    //qDebug() << "Call ffmpeg:" << program;
+    qDebug() << "Call ffmpeg:" << program;
 #ifdef Q_OS_UNIX
     if( !( pPipe = popen( program.toUtf8().data(), "w" ) ) )
 #else
