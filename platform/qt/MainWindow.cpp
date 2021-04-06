@@ -2317,6 +2317,12 @@ void MainWindow::startExportPipe(QString fileName)
             break;
         }
 
+        QString optionFps = "";
+        if( fps == QString( "23.976" ) || fps == QString( "23,976" ) || getFramerate() == 24000.0/1001.0 ) optionFps = ",fps=24000/1001";
+        else if( fps == QString( "29.97" ) || fps == QString( "29,97" ) || getFramerate() == 30000.0/1001.0 ) optionFps = ",fps=30000/1001";
+        else if( fps == QString( "59.94" ) || fps == QString( "59,94" ) || getFramerate() == 60000.0/1001.0 ) optionFps = ",fps=60000/1001";
+        resizeFilter.insert( resizeFilter.indexOf( "=bt709" )+6, optionFps );
+
         program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v dnxhd %3%4 -color_primaries bt709 -color_trc bt709 -colorspace bt709 %5\"%6\"" )
                     .arg( fps )
                     .arg( resolution )
