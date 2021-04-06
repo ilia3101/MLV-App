@@ -2287,7 +2287,7 @@ void MainWindow::startExportPipe(QString fileName)
     }
     else if( m_codecProfile == CODEC_DNXHR )
     {
-        output.append( QString( ".avi" ) );
+        output.append( QString( ".mov" ) );
 
         QString option;
         QString format;
@@ -2327,7 +2327,7 @@ void MainWindow::startExportPipe(QString fileName)
     }
     else if( m_codecProfile == CODEC_DNXHD )
     {
-        output.append( QString( ".avi" ) );
+        output.append( QString( ".mov" ) );
 
         QString option;
         QString option2;
@@ -2337,7 +2337,7 @@ void MainWindow::startExportPipe(QString fileName)
 
         bool error = false;
 
-        if( ( m_codecProfile == CODEC_DNXHD ) && ( m_codecOption == CODEC_DNXHD_1080p_10bit ) )
+        if( m_codecOption == CODEC_DNXHD_1080p_10bit )
         {
             if( getFramerate() == 25.0 )                option = QString( "-vf scale=w=1920:h=1080:in_color_matrix=bt601:out_color_matrix=bt709,fps=25,%1%2 -b:v 185M" ).arg( format ).arg( hdrString );
             else if( getFramerate() == 50.0 )           option = QString( "-vf scale=w=1920:h=1080:in_color_matrix=bt601:out_color_matrix=bt709,fps=50,%1%2 -b:v 365M" ).arg( format ).arg( hdrString );
@@ -2394,10 +2394,9 @@ void MainWindow::startExportPipe(QString fileName)
             return;
         }
 
-        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v dnxhd %3%4 -color_primaries bt709 -color_trc bt709 -colorspace bt709 \"%5\"" )
+        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v dnxhd %3 -color_primaries bt709 -color_trc bt709 -colorspace bt709 \"%4\"" )
                     .arg( fps )
                     .arg( resolution )
-                    .arg( option2 )
                     .arg( option )
                     .arg( output ) );
     }
@@ -2454,7 +2453,7 @@ void MainWindow::startExportPipe(QString fileName)
 
     //Try to open pipe
     FILE *pPipe;
-    qDebug() << "Call ffmpeg:" << program;
+    //qDebug() << "Call ffmpeg:" << program;
 #ifdef Q_OS_UNIX
     if( !( pPipe = popen( program.toUtf8().data(), "w" ) ) )
 #else
