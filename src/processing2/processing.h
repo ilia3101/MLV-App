@@ -10,16 +10,24 @@ Processing_t * new_Processing(int ResX, int ResY);
 /* Delete */
 void delete_Processing(Processing_t * processing);
 
+/* Camera info, pass same matrix to both if only one matrix is known.
+ * MatrixDaylight is ColorMatrix2 and MatrixTungsten is ColorMatrix1 */
+void ProcessingSetCameraInfo( Processing_t * Processing,
+                              double BlackLevel,
+                              double WhiteLevel,
+                              double * MatrixDaylight, 
+                              double * MatrixTungsten );
+
 /* Run processing */
-void ProcessingDoProcessing32(float * Out);
-void ProcessingDoProcessing16(uint16_t * Out);
-void ProcessingDoProcessing8(uint8_t * Out);
+void ProcessingDoProcessing32(float * Out); /* 0-1 output */
+void ProcessingDoProcessing16(uint16_t * Out); /* 0-65535 */
+void ProcessingDoProcessing8(uint8_t * Out); /* 0-255 */
 
 /* Get resolution */
 int ProcessingGetResX(Processing_t * processing);
 int ProcessingGetResY(Processing_t * processing);
 
-/* Set input image, demosaiced, processing will make an internal copy */
+/* Set input image, demosaiced RGB, processing will make an internal copy */
 void ProcessingSetInputImage(Processing_t * processing, float * Image);
 
 

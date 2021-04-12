@@ -1,24 +1,52 @@
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #include "../matrix/matrix.h"
 
 #include "processing.h"
 
+/* YLUT Maps input Y value to a new value and a saturation factor to apply to the pixel */
+typedef struct {
+    float Y_fac;
+    float sat_fac;
+} YLUT_t;
+#define YLUT_size 2048
+
 struct Processing2
 {
-    struct {
-        double mat_1[9]; /* Tungsten */
-        double mat_2[9]; /* Daylight */
-    } camera_profile;
-
     int res_x;
     int res_y;
 
+    struct {
+        double black_level;
+        double white_level;
+        double mat_tungsten[9];
+        double mat_daylight[9];
+    } camera_info;
+
     float * src_image;
 
-    float * pre_processed_image; /* With highlight reconstruction */
-    float * blur_image; /* For highlights and stuff */
+    float * pre_processed_image; /* With WL/BL and highlight reconstruction */
+    float * blur_image; /* For highlights/shadows/clarity type stuff */
+
+    float result_matrix; /* Main processing matrix to output colour gamut */
+    YLUT_t result_YLUT[YLUT_size]; /* Y-based LUT up to Y=16 (index this using sqrt(Y)/4) */
+
+    float y_matrix; /* Matrix for getting Y value */
+
+    struct {
+        double highlight_rolloff;
+        double exposure;
+
+        double wb_kelvin;
+        double wb_tint;
+
+        double dark_strength;
+        double dark_range;
+        double light_strength;
+        double ligth_range;
+    } parameters;
 };
 
 #define PROCESSING_IMAGE_SIZE (sizeof(float)*3*processing->res_x*processing->res_y)
@@ -31,6 +59,7 @@ Processing_t * new_Processing(int ResX, int ResY)
 
     #define ALLOCATE_IMAGE malloc(PROCESSING_IMAGE_SIZE);
     processing->src_image = ALLOCATE_IMAGE;
+    processing->pre_processed_image = ALLOCATE_IMAGE;
     processing->blur_image = ALLOCATE_IMAGE;
     #undef ALLOCATE_IMAGE
 
@@ -42,6 +71,61 @@ void delete_Processing(Processing_t * processing)
     free(processing->src_image);
     free(processing->blur_image);
 }
+
+/* Should be vectorisable by compiler */
+static inline void process_pixel(
+    float CamR,
+    float CamG,
+    float CamB,
+    float * OutR,
+    float * OutG,
+    float * OutB,
+    float * restrict Matrix,
+    float * restrict Y_matrix,
+    YLUT_t * restrict YLUT,
+    int LengthYLUT
+) {
+    float Y = (CamR*Y_matrix[0]) + (CamG*Y_matrix[1]) + (CamB*Y_matrix[2]);
+
+    /* Already in output space */
+    float R = Matrix[0]*CamR + Matrix[1]*CamG + Matrix[2]*CamB;
+    float G = Matrix[3]*CamR + Matrix[4]*CamG + Matrix[5]*CamB;
+    float B = Matrix[6]*CamR + Matrix[7]*CamG + Matrix[8]*CamB;
+
+    /* Clamp negative values. TODO: do this in some wide colour gamut like prophotoRGB or alexa */
+    if (R < 0.0f) R = 0.0f;
+    if (G < 0.0f) G = 0.0f;
+    if (B < 0.0f) B = 0.0f;
+
+    /* Interpolate linearly */
+    if (Y > 3.99f) Y = 3.99f; /* Using 3.99 as max means no need to check end bounds */
+    if (Y < 0.0f) Y = 0.0f;
+
+    /* Get saturation and contrast values from Y-based lookup table */
+    float Y_index = (sqrtf(Y) / 4.0f) * (float)LengthYLUT;
+    int Y_i = (int)Y_index;
+    float fac1 = Y_index - Y_i;
+    float fac2 = 1.0f - fac1;
+
+    /* Factor for saturation and Y */
+    float Y_fac = YLUT[Y_i].Y_fac * fac2 + YLUT[Y_i+1].Y_fac * fac1;
+    float sat_fac = YLUT[Y_i].sat_fac * fac2 + YLUT[Y_i+1].sat_fac * fac1;
+
+    /* Add saturation and contrast in linear RGB space, yes, technically
+     * not the best, but... saturation result is exactly the same as using
+     * the perceprual Luv space in terms of hue linearity, so... actually
+     * better than LAB, just not quite as good as Jzazbz or IPT or Oklab */
+    R = ((R-Y) * sat_fac + Y) * Y_fac;
+    G = ((G-Y) * sat_fac + Y) * Y_fac;
+    B = ((B-Y) * sat_fac + Y) * Y_fac;
+
+    /* Apply LUT here */
+
+    *OutR = R;
+    *OutG = G;
+    *OutB = B;
+}
+
 
 void ProcessingDoProcessing32(float * Out)
 {
