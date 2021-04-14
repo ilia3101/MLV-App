@@ -9,7 +9,7 @@
  * This is the self-contained inclusion file for the "LANCIR" image resizer,
  * part of the AVIR library.
  *
- * AVIR Copyright (c) 2015-2020 Aleksey Vaneev
+ * AVIR Copyright (c) 2015-2021 Aleksey Vaneev
  *
  * @mainpage
  *
@@ -23,7 +23,7 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2015-2020 Aleksey Vaneev
+ * Copyright (c) 2015-2021 Aleksey Vaneev
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -151,7 +151,9 @@ public:
 
 		if( SrcWidth <= 0 || SrcHeight <= 0 )
 		{
-			memset( NewBuf, 0, (size_t) NewWidth * NewHeight * sizeof( T ));
+			memset( NewBuf, 0, (size_t) NewWidth * NewHeight * ElCount *
+				sizeof( T ));
+
 			return;
 		}
 
@@ -161,25 +163,14 @@ public:
 
 		if( kx0 == 0.0 )
 		{
-			if( NewWidth > SrcWidth )
-			{
-				kx = (double) ( SrcWidth - 1 ) / ( NewWidth - 1 );
-			}
-			else
-			{
-				kx = (double) SrcWidth / NewWidth;
-				ox += ( kx - 1.0 ) * 0.5;
-			}
+			kx = (double) SrcWidth / NewWidth;
+			ox += ( kx - 1.0 ) * 0.5;
 		}
 		else
 		if( kx0 > 0.0 )
 		{
 			kx = kx0;
-
-			if( kx0 > 1.0 )
-			{
-				ox += ( kx0 - 1.0 ) * 0.5;
-			}
+			ox += ( kx0 - 1.0 ) * 0.5;
 		}
 		else
 		{
@@ -188,25 +179,14 @@ public:
 
 		if( ky0 == 0.0 )
 		{
-			if( NewHeight > SrcHeight )
-			{
-				ky = (double) ( SrcHeight - 1 ) / ( NewHeight - 1 );
-			}
-			else
-			{
-				ky = (double) SrcHeight / NewHeight;
-				oy += ( ky - 1.0 ) * 0.5;
-			}
+			ky = (double) SrcHeight / NewHeight;
+			oy += ( ky - 1.0 ) * 0.5;
 		}
 		else
 		if( ky0 > 0.0 )
 		{
 			ky = ky0;
-
-			if( ky0 > 1.0 )
-			{
-				oy += ( ky0 - 1.0 ) * 0.5;
-			}
+			oy += ( ky0 - 1.0 ) * 0.5;
 		}
 		else
 		{
