@@ -1,6 +1,20 @@
 # :fire::fire::fire: MLV App :fire::fire::fire:
 What is MLV App? Lightroom, but for Magic Lantern MLV Video (and open source and cross platform)
 
+[![Lates Release](https://img.shields.io/github/v/release/ilia3101/MLV-App)](https://github.com/ilia3101/MLV-App/releases)
+
+[![Qt&5](https://img.shields.io/badge/Qt-5-brightgreen)](https://doc.qt.io/qt-5/)
+
+[![Commit Activity](https://img.shields.io/github/commit-activity/m/ilia3101/MLV-App)](https://github.com/ilia3101/MLV-App/pulse)
+[![Last Commit](https://img.shields.io/github/last-commit/ilia3101/MLV-App)](https://github.com/ilia3101/MLV-App/pulse)
+[![Contributors](https://img.shields.io/github/contributors/ilia3101/MLV-App)](https://github.com/ilia3101/MLV-App/graphs/contributors)
+
+[![Open Issues](https://img.shields.io/github/issues/ilia3101/MLV-App)](https://github.com/ilia3101/MLV-App/issues)
+[![Closed Issues](https://img.shields.io/github/issues-closed/ilia3101/MLV-App)](https://github.com/ilia3101/MLV-App/issues?q=is%3Aissue+is%3Aclosed)
+
+[![Open PRs](https://img.shields.io/github/issues-pr/ilia3101/MLV-App)](https://github.com/ilia3101/MLV-App/pulls)
+[![Closed PRs](https://img.shields.io/github/issues-pr-closed/ilia3101/MLV-App)](https://github.com/ilia3101/MLV-App/pulls?q=is%3Apr+is%3Aclosed)
+
 ![MLV App](https://user-images.githubusercontent.com/30245296/110171956-c4af8580-7dfc-11eb-81a9-769ddc2c879c.png)
 
 ## Useful links
