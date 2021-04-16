@@ -4,7 +4,8 @@
 #include "processing_object.h"
 #include "filter/filter.h"
 
-/* Set UseNewProcessing to 1 for new processing,  */
+/* Intitialises a 'processing object' which is a structure 
+ * that makes it easy to contol all the processing */
 processingObject_t * initProcessingObject();
 /* Opposite of the first fucntion */
 void freeProcessingObject(processingObject_t * processing);
