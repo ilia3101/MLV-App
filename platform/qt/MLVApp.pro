@@ -180,7 +180,8 @@ SOURCES += \
     ../../src/processing/tinyexpr/tinyexpr.c \
     FocusPixelMapManager.cpp \
     DownloadManager.cpp \
-    StatusFpmDialog.cpp
+    StatusFpmDialog.cpp \
+    ../../src/processing2/processing.c
 
 macx: SOURCES += ../cocoa/avf_lib/avf_lib.m
 
@@ -290,7 +291,8 @@ HEADERS += MainWindow.h \
     ../../src/processing/tinyexpr/tinyexpr.h \
     DownloadManager.h \
     FocusPixelMapManager.h \
-    StatusFpmDialog.h
+    StatusFpmDialog.h \
+    ../../src/processing2/processing.h
 
 macx: HEADERS += \
     ../cocoa/avf_lib/avencoder.h \
