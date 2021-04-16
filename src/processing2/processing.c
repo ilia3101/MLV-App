@@ -39,37 +39,40 @@ struct Processing2
         double highlight_rolloff;
         double exposure;
 
+        double saturation;
+
         double wb_kelvin;
         double wb_tint;
 
         double dark_strength;
         double dark_range;
         double light_strength;
-        double ligth_range;
+        double light_range;
+        double lighten;
     } parameters;
 };
 
-#define PROCESSING_IMAGE_SIZE (sizeof(float)*3*processing->res_x*processing->res_y)
+#define PROCESSING_IMAGE_SIZE (sizeof(float)*3*Processing->res_x*Processing->res_y)
 
 Processing_t * new_Processing(int ResX, int ResY)
 {
-    Processing_t * processing = malloc(sizeof(Processing_t));
-    processing->res_x = ResX;
-    processing->res_y = ResY;
+    Processing_t * Processing = malloc(sizeof(Processing_t));
+    Processing->res_x = ResX;
+    Processing->res_y = ResY;
 
     #define ALLOCATE_IMAGE malloc(PROCESSING_IMAGE_SIZE);
-    processing->src_image = ALLOCATE_IMAGE;
-    processing->pre_processed_image = ALLOCATE_IMAGE;
-    processing->blur_image = ALLOCATE_IMAGE;
+    Processing->src_image = ALLOCATE_IMAGE;
+    Processing->pre_processed_image = ALLOCATE_IMAGE;
+    Processing->blur_image = ALLOCATE_IMAGE;
     #undef ALLOCATE_IMAGE
 
-    return processing;
+    return Processing;
 }
 
-void delete_Processing(Processing_t * processing)
+void delete_Processing(Processing_t * Processing)
 {
-    free(processing->src_image);
-    free(processing->blur_image);
+    free(Processing->src_image);
+    free(Processing->blur_image);
 }
 
 /* Should be vectorisable by compiler */
@@ -127,43 +130,62 @@ static inline void process_pixel(
 }
 
 
-void ProcessingDoProcessing32(float * Out)
+void ProcessingDoProcessing32(Processing_t * Processing, float * Out)
 {
     return;
 }
 
-void ProcessingDoProcessing16(uint16_t * Out)
+void ProcessingDoProcessing16(Processing_t * Processing, uint16_t * Out)
 {
     return;
 }
 
-void ProcessingDoProcessing8(uint8_t * Out)
+void ProcessingDoProcessing8(Processing_t * Processing, uint8_t * Out)
 {
     return;
 }
 
-int ProcessingGetResX(Processing_t * processing)
+int ProcessingGetResX(Processing_t * Processing)
 {
-    return processing->res_x;
+    return Processing->res_x;
 }
 
-int ProcessingGetResY(Processing_t * processing)
+int ProcessingGetResY(Processing_t * Processing)
 {
-    return processing->res_y;
+    return Processing->res_y;
 }
 
-void ProcessingSetInputImage(Processing_t * processing, float * Image)
+void ProcessingSetInputImage(Processing_t * Processing, float * Image)
 {
-    memcpy(processing->src_image, Image, PROCESSING_IMAGE_SIZE);
+    memcpy(Processing->src_image, Image, PROCESSING_IMAGE_SIZE);
 }
 
+void ProcessingSetBlackLevel(Processing_t * Processing, double BlackLevel)
+{
+    Processing->camera_info.black_level = BlackLevel;
+}
 
+void ProcessingSetWhiteLevel(Processing_t * Processing, double WhiteLevel)
+{
+    Processing->camera_info.white_level = WhiteLevel;
+}
 
-void ProcessingSetExposure(Processing_t * processing, double ExposureStops) {return;}
-double ProcessingGetExposure(Processing_t * processing) {return 0.0;}
+void ProcessingSetCameraMatrix( Processing_t * Processing,
+                                double * MatrixDaylight, 
+                                double * MatrixTungsten )
+{
+    for (int i = 0; i < 9; ++i)
+    {
+        Processing->camera_info.mat_daylight[i] = MatrixDaylight[i];
+        Processing->camera_info.mat_tungsten[i] = MatrixTungsten[i];
+    }
+}
 
-void ProcessingSetHighlightRolloff(Processing_t * processing, double Rolloff) {return;} /* -1 to +1, 0 default */
-double ProcessingGetHighlightRolloff(Processing_t * processing) {return 0.0;}
+void ProcessingSetExposure(Processing_t * Processing, double ExposureStops) { Processing->parameters.exposure = ExposureStops; }
+double ProcessingGetExposure(Processing_t * Processing) {return 0.0;}
+
+void ProcessingSetHighlightRolloff(Processing_t * Processing, double Rolloff) {return;} /* -1 to +1, 0 default */
+double ProcessingGetHighlightRolloff(Processing_t * Processing) {return 0.0;}
 
 void ProcessingSetWBKelvin(Processing_t * Processing, double Kelvin) {return;}
 double ProcessingGetWBKelvin(Processing_t * Processing) {return 5600.0;}
@@ -173,5 +195,35 @@ double ProcessingGetWBTint(Processing_t * Processing) {return 0.0;}
 
 void ProcessingSetWBFromImage(Processing_t * Processing, int X, int Y, int Radius) {return;}
 
-void ProcessingSetSaturation(Processing_t * Processing, double Saturation) {return;} /* -1 to +1, 0 default */
+void ProcessingSetSaturation(Processing_t * Processing, double Saturation) { Processing->parameters.saturation = Saturation; }
 double ProcessingGetSaturation(Processing_t * Processing) {return 0.0;}
+
+void ProcessingSetContrast( Processing_t * Processing, 
+                            double DCRange,
+                            double DCFactor,
+                            double LCRange,
+                            double LCFactor,
+                            double Lighten )
+{
+    Processing->parameters.dark_range = DCRange;
+    Processing->parameters.dark_strength = DCFactor;
+    Processing->parameters.light_range = LCRange;
+    Processing->parameters.light_strength = LCFactor;
+    Processing->parameters.lighten = Lighten;
+}
+
+void ProcessingSetDCRange(Processing_t * Processing, double DCRange) {
+    Processing->parameters.dark_range = DCRange;
+}
+void ProcessingSetDCFactor(Processing_t * Processing, double DCFactor) {
+    Processing->parameters.dark_strength = DCFactor;
+}
+void ProcessingSetLCRange(Processing_t * Processing, double LCRange) {
+    Processing->parameters.light_range = LCRange;
+}
+void ProcessingSetLCFactor(Processing_t * Processing, double LCFactor) {
+    Processing->parameters.light_strength = LCFactor;
+}
+void ProcessingSetLightening(Processing_t * Processing, double Lighten) {
+    Processing->parameters.lighten = Lighten;
+}

@@ -84,7 +84,7 @@ processingObject_t * initProcessingObject()
     processingObject_t * processing = calloc( 1, sizeof(processingObject_t) );
 
     processing->use_new_processing = 0;
-    processing->new_processing = NULL;
+    processing->new_processing = new_Processing(100, 100);
 
     processing->exr_mode = 0;
 
@@ -258,6 +258,7 @@ void processingSetImageProfile(processingObject_t * processing, int imageProfile
 /* Takes those matrices I learned about on the forum */
 void processingSetCamMatrix(processingObject_t * processing, double * camMatrix, double * camMatrixA)
 {
+    ProcessingSetCameraMatrix(processing->new_processing, camMatrix, camMatrixA);
     memcpy(processing->cam_matrix, camMatrix, sizeof(double) * 9);
     memcpy(processing->cam_matrix_A, camMatrixA, sizeof(double) * 9);
     /* TO update matrices really argh so much confusion :( */
@@ -1272,6 +1273,7 @@ void processingSetLightening(processingObject_t * processing, double lighten)
 /* Have a guess what this does */
 void processingSetExposureStops(processingObject_t * processing, double exposureStops)
 {
+    ProcessingSetExposure(processing->new_processing, exposureStops);
     processing->exposure_stops = exposureStops;
 
     processingSetGamma(processing, processing->gamma_power);
@@ -1595,12 +1597,15 @@ void processingSetBlackAndWhiteLevel(processingObject_t * processing,
     int bits_shift = 16 - mlvBitDepth;
     if( mlvBlackLevel >= 0 )
     {
-        if(mlvBlackLevel) processing->black_level = mlvBlackLevel * pow( 2, bits_shift );
+        double bl = mlvBlackLevel * pow( 2, bits_shift );
+        ProcessingSetBlackLevel(processing->new_processing, bl);
+        if(mlvBlackLevel) processing->black_level = bl;
         else processing->black_level = 0;
     }
     if( mlvWhiteLevel >= 0 )
     {
-        processing->white_level = mlvWhiteLevel << bits_shift;
+        int wl = mlvWhiteLevel << bits_shift;
+        ProcessingSetWhiteLevel(processing->new_processing, wl);
         /* Lowering white level a bit avoids pink grain in highlihgt reconstruction */
         processing->white_level = (int)((double)(mlvWhiteLevel << bits_shift) * 0.993);
     }
