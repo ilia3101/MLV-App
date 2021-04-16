@@ -1,11 +1,15 @@
 #ifndef _processing_struct_
 #define _processing_struct_
 
+#include <stdint.h>
+
 #include "image_profile.h"
 #include "filter/filter.h"
 #include "cube_lut.h"
 
 #include "tinyexpr/tinyexpr.h"
+
+#include "../processing2/processing.h"
 
 enum transform { TR_NONE, TR_ROT180 };
 
@@ -16,6 +20,9 @@ typedef struct {
 
 /* Processing settings structure (a mess) */
 typedef struct {
+    /* New processing object, optionally enabled */
+    int use_new_processing;
+    Processing_t * new_processing;
 
     int exr_mode;
 

@@ -1,6 +1,8 @@
 #ifndef _matrix_h_
 #define _matrix_h_
 
+#include <stdint.h>
+
 /* Matrix functions for 3x3
  * Useless for most things */
 

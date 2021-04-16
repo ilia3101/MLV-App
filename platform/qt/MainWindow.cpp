@@ -1447,6 +1447,7 @@ void MainWindow::initLib( void )
     m_pMlvObject = initMlvObject();
     /* Intialise the processing settings object */
     m_pProcessingObject = initProcessingObject();
+    processingSetUseNewProcessing(m_pProcessingObject, 1);
     /* Set exposure to + 1.2 stops instead of correct 0.0, this is to give the impression
      * (to those that believe) that highlights are recoverable (shhh don't tell) */
     processingSetExposureStops( m_pProcessingObject, 1.2 );

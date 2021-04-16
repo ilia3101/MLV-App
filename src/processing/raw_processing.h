@@ -4,11 +4,14 @@
 #include "processing_object.h"
 #include "filter/filter.h"
 
-/* Intitialises a 'processing object' which is a structure 
- * that makes it easy to contol all the processing */
+/* Set UseNewProcessing to 1 for new processing,  */
 processingObject_t * initProcessingObject();
 /* Opposite of the first fucntion */
 void freeProcessingObject(processingObject_t * processing);
+
+
+/* enable NEW PROCESSING, 0 for no, 1 for yes */
+void processingSetUseNewProcessing(processingObject_t * processing, int enable);
 
 
 /* Set processing gamut */
@@ -75,7 +78,7 @@ void processingSetImageProfile(processingObject_t * processing, int imageProfile
 /* Process a RAW frame with settings from a processing object
  * - image must be debayered and RGB plz + thx! */
 void applyProcessingObject( processingObject_t * processing, 
-                            int imageX, int imageY, 
+                            int imageX, int imageY,
                             uint16_t * __restrict inputImage, 
                             uint16_t * __restrict outputImage,
                             int threads, int imageChanged, uint64_t frameIndex );

@@ -43,6 +43,9 @@
 /* White balance cr4p */
 #include "white_balance.c"
 
+/* Processing Mark II */
+#include "../processing2/processing.h"
+
 #if defined(__linux)
 #include <alloca.h>
 #endif
@@ -79,6 +82,9 @@ void free_image_buffer(processing_buffer_t * buffer)
 processingObject_t * initProcessingObject()
 {
     processingObject_t * processing = calloc( 1, sizeof(processingObject_t) );
+
+    processing->use_new_processing = 0;
+    processing->new_processing = NULL;
 
     processing->exr_mode = 0;
 
@@ -195,6 +201,12 @@ processingObject_t * initProcessingObject()
     processingSetCaRadius(processing, 1);
 
     return processing;
+}
+
+
+void processingSetUseNewProcessing(processingObject_t * processing, int enable)
+{
+    processing->use_new_processing = enable;
 }
 
 

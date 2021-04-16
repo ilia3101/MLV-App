@@ -112,6 +112,7 @@ SOURCES += \
     ../../src/mlv/llrawproc/chroma_smooth.c \
     ../../src/mlv/llrawproc/hist.c \
     ../../src/mlv/camid/camera_id.c \
+    ../../src/processing2/processing.c \
     ../../src/processing/processing.c \
     ../../src/processing/raw_processing.c \
     ../../src/processing/filter/filter.c \
