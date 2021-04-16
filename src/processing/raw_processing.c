@@ -1234,6 +1234,8 @@ void processingSetContrast( processingObject_t * processing,
                             double LCFactor, /* Light contrast strength */
                             double lighten   /* 0-1 (for good highlight rolloff) */ )
 {
+    ProcessingSetContrast(processing->new_processing, DCRange, DCFactor, LCRange, LCFactor, lighten);
+
     /* Basic things */
     processing->light_contrast_factor = LCFactor;
     processing->light_contrast_range = LCRange;
@@ -1246,26 +1248,31 @@ void processingSetContrast( processingObject_t * processing,
 
 void processingSetDCRange(processingObject_t * processing, double DCRange)
 {
+    ProcessingSetDCRange(processing->new_processing, DCRange);
     processing->dark_contrast_range = DCRange;
     processing_update_curves(processing);
 }
 void processingSetDCFactor(processingObject_t * processing, double DCFactor)
 {
+    ProcessingSetDCFactor(processing->new_processing, DCFactor);
     processing->dark_contrast_factor = DCFactor;
     processing_update_curves(processing);
 }
 void processingSetLCRange(processingObject_t * processing, double LCRange) 
 {
+    ProcessingSetLCRange(processing->new_processing, LCRange);
     processing->light_contrast_range = LCRange;
     processing_update_curves(processing);
 }
 void processingSetLCFactor(processingObject_t * processing, double LCFactor)
 {
+    ProcessingSetLCFactor(processing->new_processing, LCFactor);
     processing->light_contrast_factor = LCFactor;
     processing_update_curves(processing);
 }
 void processingSetLightening(processingObject_t * processing, double lighten)
 {
+    ProcessingSetLightening(processing->new_processing, lighten);
     processing->lighten = lighten;
     processing_update_curves(processing);
 }
