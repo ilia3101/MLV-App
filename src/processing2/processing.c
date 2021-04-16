@@ -182,16 +182,16 @@ void ProcessingSetCameraMatrix( Processing_t * Processing,
 }
 
 void ProcessingSetExposure(Processing_t * Processing, double ExposureStops) { Processing->parameters.exposure = ExposureStops; }
-double ProcessingGetExposure(Processing_t * Processing) {return 0.0;}
+double ProcessingGetExposure(Processing_t * Processing) { return Processing->parameters.exposure; }
 
-void ProcessingSetHighlightRolloff(Processing_t * Processing, double Rolloff) {return;} /* -1 to +1, 0 default */
-double ProcessingGetHighlightRolloff(Processing_t * Processing) {return 0.0;}
+void ProcessingSetHighlightRolloff(Processing_t * Processing, double Rolloff) { Processing->parameters.highlight_rolloff = Rolloff; }
+double ProcessingGetHighlightRolloff(Processing_t * Processing) { return Processing->parameters.highlight_rolloff; }
 
-void ProcessingSetWBKelvin(Processing_t * Processing, double Kelvin) {return;}
-double ProcessingGetWBKelvin(Processing_t * Processing) {return 5600.0;}
+void ProcessingSetWBKelvin(Processing_t * Processing, double Kelvin) { Processing->parameters.wb_kelvin = Kelvin; }
+double ProcessingGetWBKelvin(Processing_t * Processing) { return Processing->parameters.wb_kelvin; }
 
-void ProcessingSetWBTint(Processing_t * Processing, double Tint) {return;}
-double ProcessingGetWBTint(Processing_t * Processing) {return 0.0;}
+void ProcessingSetWBTint(Processing_t * Processing, double Tint) { Processing->parameters.wb_tint = Tint; }
+double ProcessingGetWBTint(Processing_t * Processing) { return Processing->parameters.wb_tint; }
 
 void ProcessingSetWBFromImage(Processing_t * Processing, int X, int Y, int Radius) {return;}
 

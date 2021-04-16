@@ -1296,6 +1296,7 @@ void processingSetGradientExposure(processingObject_t * processing, double value
 /* Sets and precalculaes saturation */
 void processingSetSaturation(processingObject_t * processing, double saturationFactor)
 {
+    ProcessingSetSaturation(processing->new_processing, saturationFactor);
     processing->saturation = saturationFactor;
 
     /* Precaluclate for the algorithm */
