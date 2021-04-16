@@ -1353,6 +1353,9 @@ void processingSetSharpening(processingObject_t * processing, double sharpen)
 /* Set white balance by kelvin + tint value */
 void processingSetWhiteBalance(processingObject_t * processing, double WBKelvin, double WBTint)
 {
+    ProcessingSetWBKelvin(processing->new_processing, WBKelvin);
+    ProcessingSetWBTint(processing->new_processing, WBTint);
+
     double * p_xyz_to_rgb;
     double * p_ciecam02;
 
