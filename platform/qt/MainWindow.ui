@@ -208,11 +208,6 @@
      <addaction name="actionCaching"/>
      <addaction name="actionDontSwitchDebayerForPlayback"/>
     </widget>
-    <widget class="QMenu" name="menuGeben_Sie_Text_ein">
-     <property name="title">
-      <string>Geben Sie Text ein</string>
-     </property>
-    </widget>
     <addaction name="actionGoto_First_Frame"/>
     <addaction name="actionPreviousFrame"/>
     <addaction name="actionPlay"/>
@@ -232,7 +227,6 @@
     <addaction name="actionZoomFit"/>
     <addaction name="actionZoom100"/>
     <addaction name="actionFullscreen"/>
-    <addaction name="menuGeben_Sie_Text_ein"/>
    </widget>
    <widget class="QMenu" name="menuView">
     <property name="title">
