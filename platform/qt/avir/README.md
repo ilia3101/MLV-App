@@ -95,6 +95,18 @@ bit resolution, which may be 10 or even 16):
     ImageResizer.resizeImage( InBuf, 640, 480, 0, OutBuf, 1024, 768, 3, 0 );
     (multi-threaded operation requires additional coding, see the documentation)
 
+If you are not too familiar with the low-level "packed interleaved" image
+storage format, the `InBuf` is expected to be `w*h*c` elements in size, where
+`w` and `h` is the width and the height of the image in pixels, respectively,
+and `c` is the number of color channels in the image. In the example above,
+the size of the `InBuf` is `640*480*3=921600` elements. If you are working
+with 8-bit images, the buffer and the elements should have the `uint8_t*`
+type; if you are working with 16-bit images, they should have the `uint16_t*`
+type. Note that when processing 16-bit images, the value of `16` should be
+used in resizer's constructor. AVIR's algorithm does not discern between
+channel packing order (`RGBA`, `ARGB`, `BGRA`, etc.), so if the `BGRA`
+ordered elements were passed to it, the result will be also `BGRA`.
+
 For low-ringing performance:
 
     avir :: CImageResizer<> ImageResizer( 8, 0, avir :: CImageResizerParamsLR() );
@@ -356,6 +368,14 @@ maintaining confidence in this library among the interested parties.
 [Become a patron on Patreon](https://patreon.com/aleksey_vaneev)
 
 ## Change log ##
+
+Version 2.9:
+
+* Removed a rarely-used half-band resizing step completely since it offers no
+practical performance nor quality benefits.
+* Optimized filter generation function (removed divisions by a constant) as
+filters are always post-normalized anyway. This may reduce overhead when
+creating thumbnail-sized images.
 
 Version 2.8:
 
