@@ -1635,6 +1635,25 @@ void MainWindow::writeSettings()
 //Start Export via Pipe
 void MainWindow::startExportPipe(QString fileName)
 {
+    //ffmpeg existing?
+    {
+#if defined __linux__ && !defined APP_IMAGE
+        QFile *file = new QFile( "ffmpeg" );
+#elif __WIN32__
+        QFile *file = new QFile( "ffmpeg.exe" );
+#else
+        QFile *file = new QFile( "ffmpeg" );
+#endif
+        if( !file->exists() )
+        {
+            QMessageBox::critical( this, APPNAME, tr( "Encoder ffmpeg missing in application path." ) );
+            exportAbort();
+            //Emit Ready-Signal
+            emit exportReady();
+            return;
+        }
+    }
+
     //Disable GUI drawing
     m_dontDraw = true;
 
