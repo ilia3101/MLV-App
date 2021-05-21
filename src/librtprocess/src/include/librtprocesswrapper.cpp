@@ -7,6 +7,10 @@
 
 #include "librtprocess.h"
 
+#if defined(__linux)
+#include <inttypes.h>
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
