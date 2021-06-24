@@ -1932,6 +1932,19 @@ void MainWindow::startExportPipe(QString fileName)
             scaled = true;
         }
     }
+    else if( m_codecProfile == CODEC_CINEFORM_10 || m_codecProfile == CODEC_CINEFORM_12 ) // resolution must be multiple of 16
+    {
+        if( width != width + (width % 16) )
+        {
+            width += width % 16;
+            scaled = true;
+        }
+        if( height != height + (height % 16) )
+        {
+            height += height % 16;
+            scaled = true;
+        }
+    }
 
     //FFMpeg export
 #if defined __linux__ && !defined APP_IMAGE
