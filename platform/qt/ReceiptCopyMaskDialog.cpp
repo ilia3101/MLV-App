@@ -28,6 +28,7 @@ ReceiptCopyMaskDialog::ReceiptCopyMaskDialog(QWidget *parent) :
 
     connect( ui->checkBoxExposure, SIGNAL(clicked(bool)), this, SLOT(checkBoxProcessingState()) );
     connect( ui->checkBoxContrast, SIGNAL(clicked(bool)), this, SLOT(checkBoxProcessingState()) );
+    connect( ui->checkBoxPivot, SIGNAL(clicked(bool)), this, SLOT(checkBoxProcessingState()) );
     connect( ui->checkBoxWb, SIGNAL(clicked(bool)), this, SLOT(checkBoxProcessingState()) );
     connect( ui->checkBoxClarity, SIGNAL(clicked(bool)), this, SLOT(checkBoxProcessingState()) );
     connect( ui->checkBoxVibrance, SIGNAL(clicked(bool)), this, SLOT(checkBoxProcessingState()) );
@@ -97,6 +98,7 @@ void ReceiptCopyMaskDialog::checkBoxProcessingState()
 {
     if( ui->checkBoxExposure->isChecked()
      && ui->checkBoxContrast->isChecked()
+     && ui->checkBoxPivot->isChecked()
      && ui->checkBoxWb->isChecked()
      && ui->checkBoxClarity->isChecked()
      && ui->checkBoxVibrance->isChecked()
@@ -114,6 +116,7 @@ void ReceiptCopyMaskDialog::checkBoxProcessingState()
     }
     else if( !ui->checkBoxExposure->isChecked()
           && !ui->checkBoxContrast->isChecked()
+          && !ui->checkBoxPivot->isChecked()
           && !ui->checkBoxWb->isChecked()
           && !ui->checkBoxClarity->isChecked()
           && !ui->checkBoxVibrance->isChecked()
@@ -183,6 +186,7 @@ void ReceiptCopyMaskDialog::on_checkBoxProcessing_clicked(bool checked)
 
     ui->checkBoxExposure->setChecked( checked );
     ui->checkBoxContrast->setChecked( checked );
+    ui->checkBoxPivot->setChecked( checked );
     ui->checkBoxWb->setChecked( checked );
     ui->checkBoxClarity->setChecked( checked );
     ui->checkBoxVibrance->setChecked( checked );
