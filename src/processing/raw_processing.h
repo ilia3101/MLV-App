@@ -224,6 +224,9 @@ void processingSetExposureStops(processingObject_t * processing, double exposure
 /* Set simple contrast */
 void processingSetSimpleContrast(processingObject_t * processing, double value);
 #define processingGetSimpleContrast(processing) (processing)->contrast
+/* Set pivot */
+void processingSetPivot(processingObject_t * processing, double value);
+#define processingGetPivot(processing) (processing)->pivot
 /* Calculate contrast exposure LUT */
 void processing_update_contrast_curve(processingObject_t * processing);
 
