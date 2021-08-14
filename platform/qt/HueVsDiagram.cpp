@@ -158,6 +158,18 @@ void HueVsDiagram::resetLine()
     initLine( &m_whiteLine );
 }
 
+//Default color points
+void HueVsDiagram::resetLineDefaultPoints()
+{
+    QVector<QPointF> *line = &m_whiteLine;
+    initLine(line);
+    line->insert( 1, QPointF( 1.0/6, 0.0 ) );
+    line->insert( 2, QPointF( 1.0/6*2, 0.0 ) );
+    line->insert( 3, QPointF( 1.0/6*3, 0.0 ) );
+    line->insert( 4, QPointF( 1.0/6*4, 0.0 ) );
+    line->insert( 5, QPointF( 1.0/6*5, 0.0 ) );
+}
+
 //Load configuration string to settings
 void HueVsDiagram::setConfiguration(QString config)
 {
