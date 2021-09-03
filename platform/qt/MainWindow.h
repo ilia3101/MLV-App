@@ -80,6 +80,7 @@ private slots:
     void on_horizontalSliderExposure_valueChanged(int position);
     void on_horizontalSliderExposureGradient_valueChanged(int position);
     void on_horizontalSliderContrast_valueChanged(int position);
+    void on_horizontalSliderPivot_valueChanged(int position);
     void on_horizontalSliderContrastGradient_valueChanged(int position);
     void on_horizontalSliderTemperature_valueChanged(int position);
     void on_horizontalSliderTint_valueChanged(int position);
@@ -124,6 +125,7 @@ private slots:
     void on_horizontalSliderExposure_doubleClicked();
     void on_horizontalSliderExposureGradient_doubleClicked();
     void on_horizontalSliderContrast_doubleClicked();
+    void on_horizontalSliderPivot_doubleClicked();
     void on_horizontalSliderContrastGradient_doubleClicked();
     void on_horizontalSliderTemperature_doubleClicked();
     void on_horizontalSliderTint_doubleClicked();
@@ -234,6 +236,7 @@ private slots:
     void on_label_ExposureVal_doubleClicked( void );
     void on_label_ExposureGradient_doubleClicked( void );
     void on_label_ContrastVal_doubleClicked( void );
+    void on_label_PivotVal_doubleClicked( void );
     void on_label_ContrastGradientVal_doubleClicked( void );
     void on_label_TemperatureVal_doubleClicked( void );
     void on_label_TintVal_doubleClicked( void );
@@ -300,8 +303,11 @@ private slots:
     void on_toolButtonGCurvesReset_clicked();
     void on_toolButtonGCurvesResetOne_clicked();
     void on_toolButtonHueVsHueReset_clicked();
+    void on_toolButtonHueVsHueResetDefaultPoints_clicked();
     void on_toolButtonHueVsSatReset_clicked();
+    void on_toolButtonHueVsSatResetDefaultPoints_clicked();
     void on_toolButtonHueVsLumaReset_clicked();
+    void on_toolButtonHueVsLumaResetDefaultPoints_clicked();
     void on_toolButtonLumaVsSatReset_clicked();
     void on_actionNextFrame_triggered();
     void on_actionPreviousFrame_triggered();

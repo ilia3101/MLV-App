@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>712</width>
-    <height>402</height>
+    <height>406</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -23,7 +23,7 @@
       <item row="0" column="0">
        <layout class="QGridLayout" name="gridLayout">
         <property name="verticalSpacing">
-         <number>-1</number>
+         <number>6</number>
         </property>
         <item row="0" column="0" colspan="2">
          <widget class="QCheckBox" name="checkBoxRawCorrection">
@@ -48,7 +48,7 @@
         <item row="2" column="5" rowspan="2">
          <layout class="QVBoxLayout" name="verticalLayout">
           <property name="spacing">
-           <number>-1</number>
+           <number>6</number>
           </property>
           <property name="sizeConstraint">
            <enum>QLayout::SetMinimumSize</enum>
@@ -147,7 +147,7 @@
         <item row="1" column="1" rowspan="11">
          <layout class="QVBoxLayout" name="verticalLayout_3">
           <property name="spacing">
-           <number>-1</number>
+           <number>6</number>
           </property>
           <property name="sizeConstraint">
            <enum>QLayout::SetMinimumSize</enum>
@@ -256,7 +256,7 @@ color: rgb(255, 154, 50)
         <item row="1" column="3" rowspan="11">
          <layout class="QVBoxLayout" name="verticalLayout_2">
           <property name="spacing">
-           <number>-1</number>
+           <number>6</number>
           </property>
           <property name="sizeConstraint">
            <enum>QLayout::SetMinimumSize</enum>
@@ -272,6 +272,13 @@ color: rgb(255, 154, 50)
            <widget class="QCheckBox" name="checkBoxContrast">
             <property name="text">
              <string>Contrast</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkBoxPivot">
+            <property name="text">
+             <string>Pivot</string>
             </property>
            </widget>
           </item>

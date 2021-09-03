@@ -20,6 +20,7 @@ public:
 
     void setExposure( int value )   {m_exposure = value;}
     void setContrast( int value )   {m_contrast = value;}
+    void setPivot( int value )   {m_pivot = value;}
     void setTemperature( int value ){m_temperature = value;}
     void setTint( int value )       {m_tint = value;}
     void setClarity( int value )    {m_clarity = value;}
@@ -124,6 +125,7 @@ public:
 
     int exposure( void )   {return m_exposure;}
     int contrast( void )   {return m_contrast;}
+    int pivot( void )   {return m_pivot;}
     int temperature( void ){return m_temperature;}
     int tint( void )       {return m_tint;}
     int clarity( void )    {return m_clarity;}
@@ -229,6 +231,7 @@ private:
 
     int m_exposure;
     int m_contrast;
+    int m_pivot;
     int m_temperature;
     int m_tint;
     int m_clarity;

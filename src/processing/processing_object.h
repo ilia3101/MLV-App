@@ -120,6 +120,7 @@ typedef struct {
     double     saturation; /* Slider from 0 to 2, to power of log(base2)of 3.5, so 1 stays in the middle, but max is 3.5 */
     double     vibrance; /* Slider from 0 to 2, to power of log(base2)of 3.5, so 1 stays in the middle, but max is 3.5 */
     double     contrast; /* Slider from -100 to 100 */
+    double     pivot; /* Slider from 0.00 to 1.00 */
     double     contrast_curve[65536]; /* Contrast precalculated exposure factors */
 
     /* Clarity */

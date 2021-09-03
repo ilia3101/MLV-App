@@ -24,6 +24,7 @@ public:
     void paintElement(void);
     void setFrameChangedPointer( bool *pFrameChanged );
     void resetLine( void );
+    void resetLineDefaultPoints(void);
     void setConfiguration(QString config );
     QString configuration( void );
     enum DiagramType{ HueVsHue, HueVsSaturation, HueVsLuminance, LuminanceVsSaturation };

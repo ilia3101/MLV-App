@@ -151,6 +151,7 @@ processingObject_t * initProcessingObject()
     processingSetVibrance(processing, 1.0);
     processingSetSaturation(processing, 1.0);
     processingSetContrast(processing, 0.73, 5.175, 0.5, 0.0, 0.0);
+    processingSetPivot(processing, 0.75);
     processingSetImageProfile(processing, PROFILE_TONEMAPPED);
     processingSetSharpening(processing, 0.0);
     processingSetHighlights(processing, 0.0);
@@ -296,6 +297,12 @@ void processingSetSimpleContrast(processingObject_t * processing, double value)
     processing_update_contrast_curve(processing);
 }
 
+void processingSetPivot(processingObject_t * processing, double value)
+{
+    processing->pivot = value;
+    processing_update_contrast_curve(processing);
+}
+
 void processing_update_contrast_curve(processingObject_t * processing)
 {
     double shadows_expo = -processing->contrast;
@@ -304,7 +311,7 @@ void processing_update_contrast_curve(processingObject_t * processing)
     for (int i = 1; i < 65536; ++i)
     {
         double expo_factor;
-        double value = pow(((double)i)/65536.0, 0.75);
+        double value = pow(((double)i)/65536.0, processing->pivot);
 
         double newvalue = add_contrast(value, 0.7, shadows_expo*0.5, 0.0, 0.0);
 

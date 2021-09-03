@@ -3496,6 +3496,11 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
             receipt->setContrast( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
+        else if( Rxml->isStartElement() && Rxml->name() == "pivot" )
+        {
+            receipt->setPivot( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
         else if( Rxml->isStartElement() && Rxml->name() == "temperature" )
         {
             receipt->setTemperature( Rxml->readElementText().toInt() );
@@ -4020,6 +4025,7 @@ void MainWindow::writeXmlElementsToFile(QXmlStreamWriter *xmlWriter, ReceiptSett
 {
     xmlWriter->writeTextElement( "exposure",                QString( "%1" ).arg( receipt->exposure() ) );
     xmlWriter->writeTextElement( "contrast",                QString( "%1" ).arg( receipt->contrast() ) );
+    xmlWriter->writeTextElement( "pivot",                   QString( "%1" ).arg( receipt->pivot() ) );
     xmlWriter->writeTextElement( "temperature",             QString( "%1" ).arg( receipt->temperature() ) );
     xmlWriter->writeTextElement( "tint",                    QString( "%1" ).arg( receipt->tint() ) );
     xmlWriter->writeTextElement( "clarity",                 QString( "%1" ).arg( receipt->clarity() ) );
@@ -4237,6 +4243,7 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     m_setSliders = true;
     ui->horizontalSliderExposure->setValue( receipt->exposure() );
     ui->horizontalSliderContrast->setValue( receipt->contrast() );
+    ui->horizontalSliderPivot->setValue( receipt->pivot() );
     if( receipt->temperature() == -1 )
     {
         //Init Temp read from the file when imported and loaded very first time completely
@@ -4492,6 +4499,7 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
 {
     receipt->setExposure( ui->horizontalSliderExposure->value() );
     receipt->setContrast( ui->horizontalSliderContrast->value() );
+    receipt->setPivot( ui->horizontalSliderPivot->value() );
     receipt->setTemperature( ui->horizontalSliderTemperature->value() );
     receipt->setTint( ui->horizontalSliderTint->value() );
     receipt->setClarity( ui->horizontalSliderClarity->value() );
@@ -4608,6 +4616,7 @@ void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings 
 
     if( paste && cdui->checkBoxExposure->isChecked() )   receiptTarget->setExposure( receiptSource->exposure() );
     if( paste && cdui->checkBoxContrast->isChecked() )   receiptTarget->setContrast( receiptSource->contrast() );
+    if( paste && cdui->checkBoxPivot->isChecked() )      receiptTarget->setPivot( receiptSource->pivot() );
     if( paste && cdui->checkBoxWb->isChecked() )         receiptTarget->setTemperature( receiptSource->temperature() );
     if( paste && cdui->checkBoxWb->isChecked() )         receiptTarget->setTint( receiptSource->tint() );
     if( paste && cdui->checkBoxClarity->isChecked() )    receiptTarget->setClarity( receiptSource->clarity() );
@@ -4809,6 +4818,7 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     ReceiptSettings *receipt = new ReceiptSettings();
     receipt->setExposure( GET_RECEIPT( row )->exposure() );
     receipt->setContrast( GET_RECEIPT( row )->contrast() );
+    receipt->setPivot( GET_RECEIPT( row )->pivot() );
     receipt->setTemperature( GET_RECEIPT( row )->temperature() );
     receipt->setTint( GET_RECEIPT( row )->tint() );
     receipt->setClarity( GET_RECEIPT( row )->clarity() );
@@ -5609,6 +5619,14 @@ void MainWindow::on_horizontalSliderContrast_valueChanged(int position)
     m_frameChanged = true;
 }
 
+void MainWindow::on_horizontalSliderPivot_valueChanged(int position)
+{
+    double value = position / 100.0;
+    processingSetPivot( m_pProcessingObject, value);
+    ui->label_PivotVal->setText( QString("%1").arg( value, 0, 'f', 2 ) );
+    m_frameChanged = true;
+}
+
 void MainWindow::on_horizontalSliderContrastGradient_valueChanged(int position)
 {
     processingSetSimpleContrastGradient( m_pProcessingObject, position / 100.0 );
@@ -6004,6 +6022,13 @@ void MainWindow::on_horizontalSliderContrast_doubleClicked()
 {
     ReceiptSettings *sliders = new ReceiptSettings(); //default
     ui->horizontalSliderContrast->setValue( sliders->contrast() );
+    delete sliders;
+}
+
+void MainWindow::on_horizontalSliderPivot_doubleClicked()
+{
+    ReceiptSettings *sliders = new ReceiptSettings(); //default
+    ui->horizontalSliderPivot->setValue( sliders->pivot() );
     delete sliders;
 }
 
@@ -6655,6 +6680,7 @@ void MainWindow::enableCreativeAdjustments( bool enable )
     ui->horizontalSliderVibrance->setEnabled( enable );
     ui->horizontalSliderSaturation->setEnabled( enable );
     ui->horizontalSliderContrast->setEnabled( enable );
+    ui->horizontalSliderPivot->setEnabled( enable );
     ui->horizontalSliderClarity->setEnabled( enable );
     ui->horizontalSliderHighlights->setEnabled( enable );
     ui->horizontalSliderShadows->setEnabled( enable );
@@ -6667,6 +6693,7 @@ void MainWindow::enableCreativeAdjustments( bool enable )
     ui->label_VibranceVal->setEnabled( enable );
     ui->label_SaturationVal->setEnabled( enable );
     ui->label_ContrastVal->setEnabled( enable );
+    ui->label_PivotVal->setEnabled( enable );
     ui->label_ClarityVal->setEnabled( enable );
     ui->label_HighlightsVal->setEnabled( enable );
     ui->label_ShadowsVal->setEnabled( enable );
@@ -6679,6 +6706,7 @@ void MainWindow::enableCreativeAdjustments( bool enable )
     ui->label_vibrance->setEnabled( enable );
     ui->label_saturation->setEnabled( enable );
     ui->label_contrast->setEnabled( enable );
+    ui->label_pivot->setEnabled( enable );
     ui->label_clarity->setEnabled( enable );
     ui->label_highlights->setEnabled( enable );
     ui->label_shadows->setEnabled( enable );
@@ -7437,6 +7465,15 @@ void MainWindow::on_label_ContrastVal_doubleClicked()
     editSlider.autoSetup( ui->horizontalSliderContrast, ui->label_ContrastVal, 1.0, 0, 1.0 );
     editSlider.exec();
     ui->horizontalSliderContrast->setValue( editSlider.getValue() );
+}
+
+//DoubleClick on Pivot Label
+void MainWindow::on_label_PivotVal_doubleClicked()
+{
+    EditSliderValueDialog editSlider;
+    editSlider.autoSetup( ui->horizontalSliderPivot, ui->label_PivotVal, 0.01, 2, 100.0 );
+    editSlider.exec();
+    ui->horizontalSliderPivot->setValue( editSlider.getValue() );
 }
 
 //DoubleClick on Contrast Gradient Label
@@ -8264,6 +8301,13 @@ void MainWindow::on_toolButtonHueVsHueReset_clicked()
     ui->labelHueVsHue->paintElement();
 }
 
+//Reset HueVsHue curve with default points
+void MainWindow::on_toolButtonHueVsHueResetDefaultPoints_clicked()
+{
+    ui->labelHueVsHue->resetLineDefaultPoints();
+    ui->labelHueVsHue->paintElement();
+}
+
 //Reset HueVsSat curve
 void MainWindow::on_toolButtonHueVsSatReset_clicked()
 {
@@ -8271,10 +8315,24 @@ void MainWindow::on_toolButtonHueVsSatReset_clicked()
     ui->labelHueVsSat->paintElement();
 }
 
+//Reset HueVsSat curve with default points
+void MainWindow::on_toolButtonHueVsSatResetDefaultPoints_clicked()
+{
+    ui->labelHueVsSat->resetLineDefaultPoints();
+    ui->labelHueVsSat->paintElement();
+}
+
 //Reset HueVsLuma curve
 void MainWindow::on_toolButtonHueVsLumaReset_clicked()
 {
     ui->labelHueVsLuma->resetLine();
+    ui->labelHueVsLuma->paintElement();
+}
+
+//Reset HueVsLuma curve with default points
+void MainWindow::on_toolButtonHueVsLumaResetDefaultPoints_clicked()
+{
+    ui->labelHueVsLuma->resetLineDefaultPoints();
     ui->labelHueVsLuma->paintElement();
 }
 
