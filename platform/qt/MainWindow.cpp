@@ -103,6 +103,7 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     m_zoomModeChanged = false;
     m_tryToSyncAudio = false;
     m_playbackStopped = false;
+    m_inClipDeleteProcess = false;
 
 #ifdef STDOUT_SILENT
     //QtNetwork: shut up please!
@@ -4757,7 +4758,7 @@ int MainWindow::showFileInEditor(int row)
     //Stop Playback
     ui->actionPlay->setChecked( false );
     //Save slider receipt
-    if( !ACTIVE_RECEIPT->wasNeverLoaded() ) setReceipt( ACTIVE_RECEIPT );
+    if( !ACTIVE_RECEIPT->wasNeverLoaded() && !m_inClipDeleteProcess ) setReceipt( ACTIVE_RECEIPT );
     //Save new position in session
     int oldActive = SESSION_ACTIVE_CLIP_ROW;
     SET_ACTIVE_CLIP_IDX( row );
@@ -7311,6 +7312,9 @@ void MainWindow::deleteFileFromSession( void )
     int delFile = QMessageBox::question( this, tr( "%1 - Remove clip" ).arg( APPNAME ), tr( "Remove clip from session, or delete clip from disk?" ), tr( "Remove" ), tr( "Delete from Disk" ), tr( "Abort" ) );
     if( delFile == 2 ) return; //Abort
 
+    //begin clip delete process
+    m_inClipDeleteProcess = true;
+
     //Save the current active row for selection after deletion
     int currentRow = m_pProxyModel->mapFromSource( m_pModel->index( SESSION_ACTIVE_CLIP_ROW, 0, QModelIndex() ) ).row();
 
@@ -7370,6 +7374,9 @@ void MainWindow::deleteFileFromSession( void )
         //All black
         deleteSession();
     }
+
+    //End clip delete process
+    m_inClipDeleteProcess = false;
 }
 
 //Shows the file, which is selected via contextmenu

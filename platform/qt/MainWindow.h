@@ -466,6 +466,7 @@ private:
     bool m_zoomTo100Center;
     bool m_zoomModeChanged;
     bool m_playbackStopped;
+    bool m_inClipDeleteProcess;
     QString m_lastExportPath;
     QString m_lastSessionFileName;
     QString m_lastMlvOpenFileName;
