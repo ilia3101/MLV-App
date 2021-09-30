@@ -42,17 +42,30 @@ macx: LIBS += -framework CoreVideo \
               -framework CoreFoundation \
               -framework CoreMedia
 
-#OpenMP on macOS: first install llvm via brew, setup llvm kit & compiler in Qt settings!
-#macx{
-#    QMAKE_CC = /usr/local/opt/llvm/bin/clang
-#    QMAKE_CXX = /usr/local/opt/llvm/bin/clang++
-#    QMAKE_LINK = /usr/local/opt/llvm/bin/clang++
-#    QMAKE_CFLAGS += -fopenmp -ftree-vectorize
-#    QMAKE_CXXFLAGS += -fopenmp -std=c++11 -ftree-vectorize
-#    INCLUDEPATH += -I/usr/local/opt/llvm/include
-#    LIBS += -L/usr/local/opt/llvm/lib -lomp
-#    QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.8
-#}
+macx{
+    #OpenMP on macOS: first install llvm via brew, setup llvm kit & compiler in Qt settings!
+#    {
+#        QMAKE_CC = /usr/local/opt/llvm/bin/clang
+#        QMAKE_CXX = /usr/local/opt/llvm/bin/clang++
+#        QMAKE_LINK = /usr/local/opt/llvm/bin/clang++
+#        QMAKE_CFLAGS += -fopenmp -ftree-vectorize
+#        QMAKE_CXXFLAGS += -fopenmp -std=c++11 -ftree-vectorize
+#        INCLUDEPATH += -I/usr/local/opt/llvm/include
+#        LIBS += -L/usr/local/opt/llvm/lib -lomp
+#        QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.8
+#    }
+    #Qt5 on Apple Silicon with openMP: install llvm@11 via brew, build Qt5 from source
+#    {
+#        QMAKE_CC = /opt/homebrew/opt/llvm@11/bin/clang
+#        QMAKE_CXX = /opt/homebrew/opt/llvm@11/bin/clang++
+#        QMAKE_LINK = /opt/homebrew/opt/llvm@11/bin/clang++
+#        QMAKE_CFLAGS += -fopenmp -ftree-vectorize
+#        QMAKE_CXXFLAGS += -fopenmp -std=c++11 -ftree-vectorize
+#        INCLUDEPATH += -I/opt/homebrew/opt/llvm@11/include
+#        LIBS += -L/opt/homebrew/opt/llvm@11/lib -lomp
+#        QMAKE_APPLE_DEVICE_ARCHS = arm64
+#    }
+}
 
 # Windows, standard use with standard Qt download.
 # Else comment these lines!
