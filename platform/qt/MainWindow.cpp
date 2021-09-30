@@ -7345,6 +7345,21 @@ void MainWindow::deleteFileFromSession( void )
             {
                 if( MoveToTrash( mappName ) ) QMessageBox::critical( this, tr( "%1 - Delete MAPP file from disk" ).arg( APPNAME ), tr( "Delete MAPP file failed!" ) );
             }
+            //M00..M99
+            mappName.chop( 1 );
+            for( int nr = 0; nr < 100; nr++ )
+            {
+                mappName.chop( 2 );
+                mappName.append( QString( "%1" ).arg( nr, 2, 10, QChar( '0' ) ) );
+                if( QFileInfo( mappName ).exists() )
+                {
+                    if( MoveToTrash( mappName ) ) QMessageBox::critical( this, tr( "%1 - Delete M%2 file from disk" ).arg( APPNAME ).arg( nr, 2, 10, QChar( '0' ) ), tr( "Delete M%1 file failed!" ).arg( nr, 2, 10, QChar( '0' ) ) );
+                }
+                else
+                {
+                    break;
+                }
+            }
         }
         int delrow = m_pProxyModel->mapFromSource( m_pModel->index( row, 0, QModelIndex() ) ).row();
         //Remove item from Session List & Remove slider memory
