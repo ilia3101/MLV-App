@@ -76,12 +76,25 @@ What is MLV App? Lightroom, but for Magic Lantern MLV Video (and open source and
 - Update checker
 
 ## Compiling :collision:
-#### Qt App macOS
+#### Qt App macOS (Intel based)
 - install XCode depending on your OSX
 - install Qt5 (minimum 5.6)
 - open `platform/qt/MLVApp.pro` in QtCreator
 - Build and Start
 - OR download and doubleclick easy-to-use [compiler app](https://bitbucket.org/Dannephoto/mlv_app_compiler-git/downloads/mlv_app_compiler.dmg) from @dannephoto
+
+#### Qt App macOS (Apple Silicon based)
+- install command line tools
+- install brew `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
+- install dependencies `brew install pcre2 harfbuzz freetype`
+- install compiler `brew install llvm@11`, add entries to PATH as written in terminal output
+- install QtCreator `brew install --cask qt-creator`
+- clone qt sources `git clone git://code.qt.io/qt/qt5.git` and `cd qt5` and `git checkout 5.15` and `./init-repository`
+- build qt `cd ..` and `mkdir qt5-5.15-macOS-release` and `cd qt5-5.15-macOS-release` and `../qt5/configure -release -prefix ./qtbase -nomake examples -nomake tests QMAKE_APPLE_DEVICE_ARCHS=arm64 -opensource -confirm-license' and 'make -j15`
+- configure QtCreator build kit with installed llvm@11 and compiled qt
+- open `platform/qt/MLVApp.pro` in QtCreator
+- uncomment section for Apple Silicon in `MLVApp.pro`
+- Build and Start
 
 #### Qt App Windows
 - install Qt5 (Win32: minimum 5.6, Win64: minimum 5.13.2) with MinGW32/64 compiler
