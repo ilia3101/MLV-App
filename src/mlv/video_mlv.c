@@ -9,11 +9,9 @@
 #include <inttypes.h>
 #include "camid/camera_id.h"
 
+#include <unistd.h>
 #if defined(__linux)
 #include <alloca.h>
-extern int usleep (__useconds_t __useconds);
-#else
-#include <unistd.h>
 #endif
 
 #include "video_mlv.h"
