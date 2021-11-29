@@ -123,7 +123,7 @@
      <x>0</x>
      <y>0</y>
      <width>1200</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -470,9 +470,9 @@ QGroupBox::indicator:checked:disabled {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>0</y>
-            <width>265</width>
-            <height>5525</height>
+            <y>-4147</y>
+            <width>264</width>
+            <height>5510</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayoutScrollArea">
@@ -7943,6 +7943,9 @@ QGroupBox::indicator:checked:disabled {
                  </item>
                  <item row="1" column="0">
                   <layout class="QHBoxLayout" name="horizontalLayout_30">
+                   <property name="spacing">
+                    <number>3</number>
+                   </property>
                    <item>
                     <widget class="QToolButton" name="toolButtonLoadLut">
                      <property name="enabled">
@@ -7974,6 +7977,12 @@ QGroupBox::indicator:checked:disabled {
                      <property name="enabled">
                       <bool>false</bool>
                      </property>
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
                      <property name="font">
                       <font>
                        <pointsize>10</pointsize>
@@ -7983,6 +7992,74 @@ QGroupBox::indicator:checked:disabled {
                       <bool>true</bool>
                      </property>
                     </widget>
+                   </item>
+                   <item>
+                    <layout class="QHBoxLayout" name="horizontalLayout_46">
+                     <property name="spacing">
+                      <number>1</number>
+                     </property>
+                     <item>
+                      <widget class="QToolButton" name="toolButtonPrevLut">
+                       <property name="enabled">
+                        <bool>false</bool>
+                       </property>
+                       <property name="sizePolicy">
+                        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                         <horstretch>0</horstretch>
+                         <verstretch>0</verstretch>
+                        </sizepolicy>
+                       </property>
+                       <property name="text">
+                        <string>Previous LUT</string>
+                       </property>
+                       <property name="icon">
+                        <iconset resource="ressources.qrc">
+                         <normaloff>:/RetinaIMG/RetinaIMG/previous.png</normaloff>:/RetinaIMG/RetinaIMG/previous.png</iconset>
+                       </property>
+                       <property name="iconSize">
+                        <size>
+                         <width>6</width>
+                         <height>12</height>
+                        </size>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QToolButton" name="toolButtonNextLut">
+                       <property name="enabled">
+                        <bool>false</bool>
+                       </property>
+                       <property name="sizePolicy">
+                        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                         <horstretch>0</horstretch>
+                         <verstretch>0</verstretch>
+                        </sizepolicy>
+                       </property>
+                       <property name="text">
+                        <string>Next LUT</string>
+                       </property>
+                       <property name="icon">
+                        <iconset resource="ressources.qrc">
+                         <normaloff>:/RetinaIMG/RetinaIMG/next.png</normaloff>:/RetinaIMG/RetinaIMG/next.png</iconset>
+                       </property>
+                       <property name="iconSize">
+                        <size>
+                         <width>6</width>
+                         <height>12</height>
+                        </size>
+                       </property>
+                       <property name="checkable">
+                        <bool>false</bool>
+                       </property>
+                       <property name="checked">
+                        <bool>false</bool>
+                       </property>
+                       <property name="autoRepeat">
+                        <bool>false</bool>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
                    </item>
                   </layout>
                  </item>
