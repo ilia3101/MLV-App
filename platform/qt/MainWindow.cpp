@@ -1211,6 +1211,8 @@ void MainWindow::initGui( void )
     ui->actionSelectAllClips->setEnabled( false );
     //disable lut as default
     ui->toolButtonLoadLut->setEnabled( false );
+    ui->toolButtonNextLut->setEnabled( false );
+    ui->toolButtonPrevLut->setEnabled( false );
     ui->lineEditLutName->setEnabled( false );
     ui->label_LutStrengthText->setEnabled( false );
     ui->label_LutStrengthVal->setEnabled( false );
@@ -8442,6 +8444,8 @@ void MainWindow::on_checkBoxLutEnable_clicked(bool checked)
     m_frameChanged = true;
 
     ui->toolButtonLoadLut->setEnabled( checked );
+    ui->toolButtonNextLut->setEnabled( checked );
+    ui->toolButtonPrevLut->setEnabled( checked );
     ui->lineEditLutName->setEnabled( checked );
     ui->label_LutStrengthText->setEnabled( checked );
     ui->label_LutStrengthVal->setEnabled( checked );
@@ -9647,6 +9651,73 @@ void MainWindow::on_toolButtonLoadLut_clicked()
     if( QFileInfo( fileName ).exists() && fileName.endsWith( ".cube", Qt::CaseInsensitive ) )
     {
         ui->lineEditLutName->setText( fileName );
+    }
+}
+
+//Next Lut button pressed
+void MainWindow::on_toolButtonNextLut_clicked()
+{
+    if( !m_fileLoaded || ui->lineEditLutName->text() == "" ) return;
+
+    // Get path of lut file
+    QString path = QFileInfo( ui->lineEditLutName->text() ).absolutePath();
+    // Create an iterator for cube files in the directory
+    QDirIterator lutFileIt(path, {"*.cube"}, QDir::Files);
+
+    // Get the first file (alphabetically)
+    QString firstFileName = lutFileIt.next();
+
+    // Move the iterator to the current lut file
+    QString fileName = firstFileName;
+    while (fileName != ui->lineEditLutName->text()) fileName = lutFileIt.next();
+
+    // Move the iterator to the next lut file
+    QString nextFileName;
+    if (lutFileIt.hasNext()) nextFileName = lutFileIt.next();
+    // If the current file is the last move back to the first file
+    else nextFileName = firstFileName;
+
+    if( QFileInfo( nextFileName ).exists() )
+    {
+        ui->lineEditLutName->setText( nextFileName );
+    }
+}
+
+//Previous Lut button pressed
+void MainWindow::on_toolButtonPrevLut_clicked()
+{
+    if( !m_fileLoaded || ui->lineEditLutName->text() == "" ) return;
+
+    // Get path of lut file
+    QString path = QFileInfo( ui->lineEditLutName->text() ).absolutePath();
+    // Create an iterator for cube files in the directory
+    QDirIterator lutFileIt(path, {"*.cube"}, QDir::Files);
+
+    // Get the first file (alphabetically)
+    QString firstFileName = lutFileIt.next();
+
+    // If the current file is the first move iterator to the last file
+    QString previousFileName;
+    if (ui->lineEditLutName->text() == firstFileName)
+    {
+        while (lutFileIt.hasNext()) lutFileIt.next();
+        previousFileName = lutFileIt.filePath();
+    }
+    else
+    {
+        // Move the iterator to the current lut file
+        QString fileName = firstFileName;
+        while (fileName != ui->lineEditLutName->text())
+        {
+            // Save the previous file name in a variable
+            previousFileName = fileName;
+            fileName = lutFileIt.next();
+        }
+    }
+
+    if( QFileInfo( previousFileName ).exists() )
+    {
+        ui->lineEditLutName->setText( previousFileName );
     }
 }
 
