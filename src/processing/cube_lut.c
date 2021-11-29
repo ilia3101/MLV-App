@@ -261,9 +261,9 @@ void apply_lut(lut_t *lut, int width, int height, uint16_t *image)
             float b = lerp( green, g0, g1, pix10, pix11 );
             float c = lerp( blue,  b0, b1, pix20, pix21 );
             //Output
-            pix[0] = LIMIT16( a * 65535.0 );
-            pix[1] = LIMIT16( b * 65535.0 );
-            pix[2] = LIMIT16( c * 65535.0 );
+            pix[0] = pix[0] * factor2 + LIMIT16( a * 65535.0 ) * factor1;
+            pix[1] = pix[1] * factor2 + LIMIT16( b * 65535.0 ) * factor1;
+            pix[2] = pix[2] * factor2 + LIMIT16( c * 65535.0 ) * factor1;
         }
         else
         {
