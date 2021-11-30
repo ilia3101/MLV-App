@@ -381,6 +381,8 @@ private slots:
     void updateCheckResponse( bool arg );
 
     void on_toolButtonLoadLut_clicked();
+    void on_toolButtonNextLut_clicked();
+    void on_toolButtonPrevLut_clicked();
     void on_lineEditLutName_textChanged(const QString &arg1);
 
     void on_toolButtonRawBlackAutoCorrect_clicked();
