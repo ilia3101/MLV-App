@@ -2723,6 +2723,13 @@ void MainWindow::startExportCdng(QString fileName)
     //Init DNG data struct
     dngObject_t * cinemaDng = initDngObject( m_pMlvObject, m_codecProfile - 6, getFramerate(), picAR);
 
+    //Render one single frame for raw correction init
+    uint32_t frameSize = getMlvWidth( m_pMlvObject ) * getMlvHeight( m_pMlvObject ) * 3;
+    uint16_t * imgBuffer;
+    imgBuffer = ( uint16_t* )malloc( frameSize * sizeof( uint16_t ) );
+    getMlvProcessedFrame16( m_pMlvObject, 0, imgBuffer, QThread::idealThreadCount() );
+    free( imgBuffer );
+    
     //Output frames loop
     for( uint32_t frame = m_exportQueue.first()->cutIn() - 1; frame < m_exportQueue.first()->cutOut(); frame++ )
     {
