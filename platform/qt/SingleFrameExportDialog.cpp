@@ -198,7 +198,7 @@ void SingleFrameExportDialog::exportDng()
     }
 
     //Init DNG data struct
-    dngObject_t * cinemaDng = initDngObject( m_pMlvObject, 0, ui->comboBoxCodec->currentIndex(), picAR ); // 2nd param: 0 = uncompresed, 1 = lossless
+    dngObject_t * cinemaDng = initDngObject( m_pMlvObject, ui->comboBoxCodec->currentIndex(), 1, picAR ); // 2nd param: 0 = uncompresed, 1 = lossless
 
     //Save cDNG frame
 #ifdef Q_OS_UNIX
