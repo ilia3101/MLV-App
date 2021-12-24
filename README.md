@@ -84,7 +84,7 @@ What is MLV App? Lightroom, but for Magic Lantern MLV Video (and open source and
 - OR download and doubleclick easy-to-use [compiler app](https://bitbucket.org/Dannephoto/mlv_app_compiler-git/downloads/mlv_app_compiler.dmg) from @dannephoto
 
 #### Qt App macOS (Apple Silicon based)
-- install command line tools
+- install command line tools (SDK 11.3 is known to work)
 - install brew `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
 - install dependencies `brew install pcre2 harfbuzz freetype`
 - install compiler `brew install llvm@11`, add entries to PATH as written in terminal output
