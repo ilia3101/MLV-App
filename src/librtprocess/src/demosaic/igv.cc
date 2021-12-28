@@ -453,10 +453,10 @@ rpError igv_demosaic(int winw, int winh, const float * const *rawData, float **r
     const int width = winw, height = winh;
     const int v1 = 1 * width, v2 = 2 * width, v3 = 3 * width, v4 = 4 * width, v5 = 5 * width, v6 = 6 * width;
 
-    float *rgbarray = (float (*)) malloc((width * height) * sizeof(float));
+    float (*rgbarray) = (float (*)) calloc((width * height * 3), sizeof(float));
     float *vdif = (float (*)) calloc(width * height / 2, sizeof * vdif);
     float *hdif = (float (*)) calloc(width * height / 2, sizeof * hdif);
-    float *chrarray = (float (*)) calloc(width * height, sizeof(float));
+    float (*chrarray) = (float (*)) calloc(width * height * 2, sizeof(float));
 
     if(!rgbarray || !vdif || !hdif || !chrarray) {
         if (rgbarray) {
@@ -474,14 +474,15 @@ rpError igv_demosaic(int winw, int winh, const float * const *rawData, float **r
         return RP_MEMORY_ERROR;
     }
 
-    float* rgb[2];
+    float* rgb[3];
     rgb[0] = rgbarray;
-    rgb[1] = rgbarray + (width * height) / 2;
+    rgb[1] = rgbarray + (width * height);
+    rgb[2] = rgbarray + 2*(width * height);
 
     float* chr[4];
 
     chr[0] = chrarray;
-    chr[1] = chrarray + (width * height) / 2;
+    chr[1] = chrarray + (width * height);
 
     // mapped chr[2] and chr[3] to hdif and hdif, because these are out of use, when chr[2] and chr[3] are used
     chr[2] = hdif;
