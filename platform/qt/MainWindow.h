@@ -566,6 +566,7 @@ private:
     void checkFocusPixelUpdate( void );
     QModelIndexList selectedClipsList( void );
     void listViewSessionUpdate( void );
+    void checkDiskFull( QString path );
 
 signals:
     void exportReady( void );

@@ -20,6 +20,7 @@
 #include <QDir>
 #include <QSpacerItem>
 #include <QDate>
+#include <QStorageInfo>
 #include <unistd.h>
 #include <math.h>
 
@@ -2069,6 +2070,8 @@ void MainWindow::startExportPipe(QString fileName)
                 m_pStatusDialog->drawTimeFromToDoFrames( totalFrames - ( ( i - ( m_exportQueue.first()->cutIn() - 1 ) + 1 ) >> 1 ) );
                 qApp->processEvents();
 
+                //Check diskspace
+                checkDiskFull( fileName );
                 //Abort pressed? -> End the loop
                 if( m_exportAbortPressed ) break;
             }
@@ -2576,6 +2579,8 @@ void MainWindow::startExportPipe(QString fileName)
             }
             qApp->processEvents();
 
+            //Check diskspace
+            checkDiskFull( fileName );
             //Abort pressed? -> End the loop
             if( m_exportAbortPressed ) break;
         }
@@ -2779,6 +2784,8 @@ void MainWindow::startExportCdng(QString fileName)
         m_pStatusDialog->drawTimeFromToDoFrames( totalFrames - frame + ( m_exportQueue.first()->cutIn() - 1 ) - 1 );
         qApp->processEvents();
 
+        //Check diskspace
+        checkDiskFull( fileName );
         //Abort pressed? -> End the loop
         if( m_exportAbortPressed ) break;
     }
@@ -3092,6 +3099,8 @@ void MainWindow::startExportAVFoundation(QString fileName)
         m_pStatusDialog->drawTimeFromToDoFrames( totalFrames - frame + ( m_exportQueue.first()->cutIn() - 1 ) - 1 );
         qApp->processEvents();
 
+        //Check diskspace
+        checkDiskFull( fileName );
         //Abort pressed? -> End the loop
         if( m_exportAbortPressed ) break;
     }
@@ -10367,6 +10376,18 @@ void MainWindow::listViewSessionUpdate()
     ui->listViewSession->setVisible( false );
     ui->listViewSession->update();
     ui->listViewSession->setVisible( true );
+}
+
+//Check if disk nearly full
+void MainWindow::checkDiskFull(QString path)
+{
+    QStorageInfo disk = QStorageInfo( QFileInfo( path ).path() );
+    //qDebug() << QFileInfo( path ).path() << "availableSize:" << disk.bytesAvailable()/1024/1024 << "MB";
+    if( 20 > disk.bytesAvailable()/1024/1024 )
+    {
+        QMessageBox::warning( this, APPNAME, tr( "Disk full. Export aborted." ) );
+        m_exportAbortPressed = true;
+    }
 }
 
 //Changed the transfer function text
