@@ -3750,6 +3750,10 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
             }
             Rxml->readNext();
         }
+        else if( Rxml->isStartElement() && Rxml->name() == "exrMode" )
+        {
+            receipt->setExrMode( (bool)Rxml->readElementText().toInt() );
+        }
         else if( Rxml->isStartElement() && Rxml->name() == "denoiserWindow" )
         {
             receipt->setDenoiserWindow( Rxml->readElementText().toInt() );
@@ -4081,6 +4085,7 @@ void MainWindow::writeXmlElementsToFile(QXmlStreamWriter *xmlWriter, ReceiptSett
     xmlWriter->writeTextElement( "gamut",                   QString( "%1" ).arg( receipt->gamut() ) );
     xmlWriter->writeTextElement( "gamma",                   QString( "%1" ).arg( receipt->gamma() ) );
     xmlWriter->writeTextElement( "allowCreativeAdjustments",QString( "%1" ).arg( receipt->allowCreativeAdjustments() ) );
+    xmlWriter->writeTextElement( "exrMode",                 QString( "%1" ).arg( receipt->exrMode() ) );
     xmlWriter->writeTextElement( "denoiserStrength",        QString( "%1" ).arg( receipt->denoiserStrength() ) );
     xmlWriter->writeTextElement( "denoiserWindow",          QString( "%1" ).arg( receipt->denoiserWindow() ) );
     xmlWriter->writeTextElement( "rbfDenoiserLuma",         QString( "%1" ).arg( receipt->rbfDenoiserLuma() ) );
