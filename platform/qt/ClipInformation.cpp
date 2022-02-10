@@ -85,6 +85,13 @@ ClipInformation::~ClipInformation()
     delete m_pReceipt;
 }
 
+//Set filename and path - use when file will be renamed
+void ClipInformation::setPathName(QString name, QString path)
+{
+    m_name = name;
+    m_path = path;
+}
+
 //Read saved metadata
 QVariant ClipInformation::getElement(int element) const
 {

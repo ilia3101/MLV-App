@@ -226,6 +226,7 @@ private slots:
     void on_listViewSession_customContextMenuRequested(const QPoint &pos);
     void on_tableViewSession_customContextMenuRequested(const QPoint &pos);
     void deleteFileFromSession( void );
+    void renameActiveClip( void );
     void on_actionShowInFinder_triggered( void );
     void on_actionOpenWithExternalApplication_triggered( void );
     void rightClickShowFile( void );

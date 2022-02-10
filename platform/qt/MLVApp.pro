@@ -105,6 +105,7 @@ linux-g++*{
 ##############
 SOURCES += \
     ClipInformation.cpp \
+    RenameDialog.cpp \
     SessionModel.cpp \
         main.cpp \
         MainWindow.cpp \
@@ -250,6 +251,7 @@ HEADERS += MainWindow.h \
     ClipInformation.h \
     InfoDialog.h \
     MyApplication.h \
+    RenameDialog.h \
     ScopesLabel.h \
     SessionModel.h \
     StatusDialog.h \
@@ -343,6 +345,7 @@ macx: HEADERS += \
 FORMS += \
         MainWindow.ui \
     InfoDialog.ui \
+    RenameDialog.ui \
     StatusDialog.ui \
     ExportSettingsDialog.ui \
     EditSliderValueDialog.ui \

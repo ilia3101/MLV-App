@@ -21,6 +21,8 @@ public:
 
     ~ClipInformation();
 
+    void setPathName( QString name, QString path );
+
     QVariant getElement( int element ) const;
 
     void setElement( int element, QVariant value );

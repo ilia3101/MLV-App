@@ -50,6 +50,7 @@
 #include "BadPixelFileHandler.h"
 #include "FocusPixelMapManager.h"
 #include "StatusFpmDialog.h"
+#include "RenameDialog.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -7303,6 +7304,7 @@ void MainWindow::on_tableViewSession_customContextMenuRequested(const QPoint &po
             myMenu.addAction( ui->actionSelectAllClips );
             myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Image-icon.png" ), "Show in Editor",  this, SLOT( rightClickShowFile() ) );
             myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Delete-icon.png" ), "Delete Selected File from Session",  this, SLOT( deleteFileFromSession() ) );
+            myMenu.addAction( "Rename", this, SLOT( renameActiveClip() ) );
             markMenu.setTitle( "Mark Clip" );
             myMenu.addMenu( &markMenu );
             myMenu.addSeparator();
@@ -7415,6 +7417,43 @@ void MainWindow::deleteFileFromSession( void )
 
     //End clip delete process
     m_inClipDeleteProcess = false;
+}
+
+//Rename the selected clip
+void MainWindow::renameActiveClip( void )
+{
+    //Save slider receipt
+    setReceipt( ACTIVE_RECEIPT );
+
+    //If multiple selection is on, we do nothing. We just rename one selected clip
+    QModelIndexList list = selectedClipsList();
+    if( list.count() > 1 ) return;
+
+    int row = list.first().data( ROLE_REALINDEX ).toInt();
+
+    RenameDialog *rd = new RenameDialog( this, m_pModel->clip( row )->getName() );
+    if( !rd->exec() )
+    {
+        delete rd;
+        return;
+    }
+    QString newFileName = rd->clipName();
+    delete rd;
+
+    if( m_pModel->clip( row )->getName() == newFileName ) return;
+
+    QString fileName = GET_RECEIPT(row)->fileName();
+    QString newFilePath = QFileInfo( fileName ).path() + "/" + newFileName;
+
+    if( QFile( fileName ).rename( newFilePath ) )
+    {
+        GET_RECEIPT(row)->setFileName( newFilePath );
+        m_pModel->clip( row )->setPathName( newFileName, newFilePath );
+    }
+    else
+    {
+        QMessageBox::critical( this, tr( "Renaming clip" ).arg( APPNAME ), tr( "Renaming clip failed!" ) );
+    }
 }
 
 //Shows the file, which is selected via contextmenu
