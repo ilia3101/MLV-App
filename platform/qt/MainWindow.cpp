@@ -7445,7 +7445,39 @@ void MainWindow::renameActiveClip( void )
     QString fileName = GET_RECEIPT(row)->fileName();
     QString newFilePath = QFileInfo( fileName ).path() + "/" + newFileName;
 
-    if( QFile( fileName ).rename( newFilePath ) )
+    //MLV
+    bool ok = QFile( fileName ).rename( newFilePath );
+    //MAPP
+    QString mappName = fileName;
+    mappName.chop( 4 );
+    mappName.append( ".MAPP" );
+    QString newMappPath = newFilePath;
+    newMappPath.chop( 4 );
+    newMappPath.append( ".MAPP" );
+    if( QFile( mappName ).exists() )
+    {
+        ok = ok && QFile( mappName ).rename( newMappPath );
+    }
+    //M00..M99
+    mappName.chop( 1 );
+    newMappPath.chop( 1 );
+    for( int nr = 0; nr < 100; nr++ )
+    {
+        mappName.chop( 2 );
+        newMappPath.chop( 2 );
+        mappName.append( QString( "%1" ).arg( nr, 2, 10, QChar( '0' ) ) );
+        newMappPath.append( QString( "%1" ).arg( nr, 2, 10, QChar( '0' ) ) );
+        if( QFileInfo( mappName ).exists() )
+        {
+            ok = ok && QFile( mappName ).rename( newMappPath );
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    if( ok )
     {
         GET_RECEIPT(row)->setFileName( newFilePath );
         m_pModel->clip( row )->setPathName( newFileName, newFilePath );
