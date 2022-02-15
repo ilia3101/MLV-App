@@ -2735,7 +2735,7 @@ void MainWindow::startExportCdng(QString fileName)
     imgBuffer = ( uint16_t* )malloc( frameSize * sizeof( uint16_t ) );
     getMlvProcessedFrame16( m_pMlvObject, 0, imgBuffer, QThread::idealThreadCount() );
     free( imgBuffer );
-    
+
     //Output frames loop
     for( uint32_t frame = m_exportQueue.first()->cutIn() - 1; frame < m_exportQueue.first()->cutOut(); frame++ )
     {
@@ -7259,6 +7259,7 @@ void MainWindow::on_listViewSession_customContextMenuRequested(const QPoint &pos
             myMenu.addAction( ui->actionSelectAllClips );
             myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Image-icon.png" ), "Show in Editor",  this, SLOT( rightClickShowFile() ) );
             myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Delete-icon.png" ), "Delete Selected File from Session",  this, SLOT( deleteFileFromSession() ) );
+            myMenu.addAction( "Rename", this, SLOT( renameActiveClip() ) );
             markMenu.setTitle( "Mark Clip" );
             myMenu.addMenu( &markMenu );
             myMenu.addSeparator();
@@ -7445,6 +7446,10 @@ void MainWindow::renameActiveClip( void )
     QString fileName = GET_RECEIPT(row)->fileName();
     QString newFilePath = QFileInfo( fileName ).path() + "/" + newFileName;
 
+    //Unload clip for Windows
+    freeMlvObject( m_pMlvObject );
+    m_pMlvObject = initMlvObject();
+
     //MLV
     bool ok = QFile( fileName ).rename( newFilePath );
     //MAPP
@@ -7486,6 +7491,9 @@ void MainWindow::renameActiveClip( void )
     {
         QMessageBox::critical( this, tr( "Renaming clip" ).arg( APPNAME ), tr( "Renaming clip failed!" ) );
     }
+
+    //Open the clip again
+    openMlv( GET_CLIP( row )->getPath() );
 }
 
 //Shows the file, which is selected via contextmenu
