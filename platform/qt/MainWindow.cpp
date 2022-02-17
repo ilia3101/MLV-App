@@ -7492,8 +7492,10 @@ void MainWindow::renameActiveClip( void )
         QMessageBox::critical( this, tr( "Renaming clip" ).arg( APPNAME ), tr( "Renaming clip failed!" ) );
     }
 
-    //Open the clip again
-    openMlv( GET_CLIP( row )->getPath() );
+    //Open the clip again without rendering
+    openMlv( ACTIVE_CLIP->getPath() );
+    m_frameChanged = false;
+    setSliders( ACTIVE_RECEIPT, false );
 }
 
 //Shows the file, which is selected via contextmenu
