@@ -218,6 +218,7 @@ private slots:
     void on_actionBetterResizer_triggered();
     void on_actionShowInstalledFocusPixelMaps_triggered();
     void on_actionShowInstalledBadPixelMaps_triggered();
+    void on_actionViewerBackgroundColor_triggered();
     void on_listViewSession_activated(const QModelIndex &index);
     void on_tableViewSession_activated(const QModelIndex &index);
     void on_dockWidgetSession_visibilityChanged(bool visible);

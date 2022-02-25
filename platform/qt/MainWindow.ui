@@ -123,7 +123,7 @@
      <x>0</x>
      <y>0</y>
      <width>1200</width>
-     <height>21</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -223,6 +223,7 @@
     <addaction name="actionPlaybackPosition"/>
     <addaction name="menuDemosaicForPlayback"/>
     <addaction name="actionBetterResizer"/>
+    <addaction name="actionViewerBackgroundColor"/>
     <addaction name="separator"/>
     <addaction name="actionZoomFit"/>
     <addaction name="actionZoom100"/>
@@ -340,9 +341,6 @@
    </property>
    <property name="floating">
     <bool>false</bool>
-   </property>
-   <property name="features">
-    <set>QDockWidget::AllDockWidgetFeatures</set>
    </property>
    <property name="allowedAreas">
     <set>Qt::RightDockWidgetArea</set>
@@ -470,9 +468,9 @@ QGroupBox::indicator:checked:disabled {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>-4147</y>
-            <width>264</width>
-            <height>5510</height>
+            <y>0</y>
+            <width>269</width>
+            <height>5756</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayoutScrollArea">
@@ -10855,6 +10853,11 @@ QGroupBox::indicator:checked:disabled {
    </property>
    <property name="text">
     <string>DCB</string>
+   </property>
+  </action>
+  <action name="actionViewerBackgroundColor">
+   <property name="text">
+    <string>Viewer Background Color</string>
    </property>
   </action>
  </widget>

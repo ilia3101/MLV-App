@@ -21,6 +21,7 @@
 #include <QSpacerItem>
 #include <QDate>
 #include <QStorageInfo>
+#include <QColorDialog>
 #include <unistd.h>
 #include <math.h>
 
@@ -1575,6 +1576,9 @@ void MainWindow::readSettings()
         ui->actionDarkThemeModern->setChecked( true );
         on_actionDarkThemeModern_triggered( true );
     }
+    ui->graphicsView->setBackgroundBrush( QBrush( QColor( set.value( "backgroundcolorR", 0 ).toUInt(),
+                                                          set.value( "backgroundcolorG", 0 ).toUInt(),
+                                                          set.value( "backgroundcolorB", 0 ).toUInt() ), Qt::SolidPattern ) );
 }
 
 //Save some settings to registry
@@ -1635,6 +1639,10 @@ void MainWindow::writeSettings()
     set.setValue( "betterResizerViewer", ui->actionBetterResizer->isChecked() );
     if( ui->actionDarkThemeStandard->isChecked() ) set.setValue( "themeId", 0 );
     else set.setValue( "themeId", 1 );
+    QColor backgroundColor = ui->graphicsView->backgroundBrush().color();
+    set.setValue( "backgroundcolorR", backgroundColor.red() );
+    set.setValue( "backgroundcolorG", backgroundColor.green() );
+    set.setValue( "backgroundcolorB", backgroundColor.blue() );
 }
 
 //Start Export via Pipe
@@ -4160,7 +4168,7 @@ void MainWindow::deleteSession()
 
     //Set Labels black
     ui->labelScope->setScope( NULL, 0, 0, false, false, ScopesLabel::None );
-    m_pGraphicsItem->setPixmap( QPixmap( ":/IMG/IMG/Histogram.png" ) );
+    m_pGraphicsItem->setPixmap( QPixmap( ":/IMG/IMG/TransDummy.png" ) );
     m_pScene->setSceneRect( 0, 0, 10, 10 );
 
     //Fake no audio track
@@ -7524,6 +7532,7 @@ void MainWindow::pictureCustomContextMenuRequested(const QPoint &pos)
     myMenu.addSeparator();
     myMenu.addMenu( ui->menuDemosaicForPlayback );
     myMenu.addAction( ui->actionBetterResizer );
+    myMenu.addAction( ui->actionViewerBackgroundColor );
     myMenu.addSeparator();
     myMenu.addAction( ui->actionShowZebras );
     if( ui->actionFullscreen->isChecked() )
@@ -10488,3 +10497,15 @@ void MainWindow::on_lineEditTransferFunction_textChanged(const QString &arg1)
 #endif
     m_frameChanged = true;
 }
+
+//Change viewer background color
+void MainWindow::on_actionViewerBackgroundColor_triggered()
+{
+    QColorDialog *dialog = new QColorDialog( ui->graphicsView->backgroundBrush().color() );
+    if( dialog->exec() )
+    {
+        ui->graphicsView->setBackgroundBrush( QBrush( dialog->selectedColor(), Qt::SolidPattern ) );
+    }
+    delete dialog;
+}
+
