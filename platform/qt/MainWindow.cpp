@@ -9780,13 +9780,17 @@ void MainWindow::on_toolButtonNextLut_clicked()
 
     // Move the iterator to the current lut file
     QString fileName = firstFileName;
-    while (fileName != ui->lineEditLutName->text()) fileName = lutFileIt.next();
+    while (fileName < ui->lineEditLutName->text() && lutFileIt.hasNext()) fileName = lutFileIt.next();
 
     // Move the iterator to the next lut file
     QString nextFileName;
-    if (lutFileIt.hasNext()) nextFileName = lutFileIt.next();
-    // If the current file is the last move back to the first file
-    else nextFileName = firstFileName;
+    if (fileName <= ui->lineEditLutName->text())
+    {
+        if (lutFileIt.hasNext()) nextFileName = lutFileIt.next();
+        // If the current file is the last move back to the first file
+        else nextFileName = firstFileName;
+    }
+    else nextFileName = fileName;
 
     if( QFileInfo( nextFileName ).exists() )
     {
@@ -9809,7 +9813,7 @@ void MainWindow::on_toolButtonPrevLut_clicked()
 
     // If the current file is the first move iterator to the last file
     QString previousFileName;
-    if (ui->lineEditLutName->text() == firstFileName)
+    if (ui->lineEditLutName->text() <= firstFileName)
     {
         while (lutFileIt.hasNext()) lutFileIt.next();
         previousFileName = lutFileIt.filePath();
@@ -9818,11 +9822,12 @@ void MainWindow::on_toolButtonPrevLut_clicked()
     {
         // Move the iterator to the current lut file
         QString fileName = firstFileName;
-        while (fileName != ui->lineEditLutName->text())
+        while (fileName < ui->lineEditLutName->text())
         {
             // Save the previous file name in a variable
             previousFileName = fileName;
-            fileName = lutFileIt.next();
+            if (lutFileIt.hasNext()) fileName = lutFileIt.next();
+            else break;
         }
     }
 
