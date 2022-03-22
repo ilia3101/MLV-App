@@ -123,7 +123,7 @@
      <x>0</x>
      <y>0</y>
      <width>1200</width>
-     <height>28</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -468,9 +468,9 @@ QGroupBox::indicator:checked:disabled {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>-1795</y>
-            <width>286</width>
-            <height>5649</height>
+            <y>-1858</y>
+            <width>269</width>
+            <height>5756</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayoutScrollArea">
@@ -4546,17 +4546,12 @@ QGroupBox::indicator:checked:disabled {
                    </item>
                    <item>
                     <property name="text">
-                     <string>BMDFilm</string>
+                     <string>Davinci Wide Gamut</string>
                     </property>
                    </item>
                    <item>
                     <property name="text">
                      <string>ACES AP1</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>Davinci Wide Gamut</string>
                     </property>
                    </item>
                   </widget>
@@ -4658,17 +4653,12 @@ QGroupBox::indicator:checked:disabled {
                    </item>
                    <item>
                     <property name="text">
-                     <string>BMDFilm</string>
+                     <string>Davinci Intermediate</string>
                     </property>
                    </item>
                    <item>
                     <property name="text">
                      <string>Reinhard 3/5</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>Davinci Intermediate</string>
                     </property>
                    </item>
                   </widget>
@@ -4786,11 +4776,6 @@ QGroupBox::indicator:checked:disabled {
                    <item>
                     <property name="text">
                      <string>Rec. 709</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>BMDFilm</string>
                     </property>
                    </item>
                    <item>
