@@ -7,7 +7,6 @@
 #include <string.h>
 #include <float.h>
 #include "processing_object.h"
-#include "bmd_film.h"
 #include "raw_processing.h"
 
 //Interpolation functions
@@ -92,20 +91,15 @@ static double colour_gamuts[][10] = {
         -0.4441532629,  1.2594429028,  0.1493999729,
          0.0408554212,  0.0156408893,  0.8682072487
     },
-    { /* GAMUT_BmdFilm */
-         1.693614, -0.459157, -0.138632,
-        -0.489970,  1.344410,  0.111740,
-        -0.074796,  0.385269,  0.629528
+    { /* GAMUT_DavinciWideGamut */
+        1.51667204, -0.28147805, -0.14696363,
+        -0.46491710, 1.25142378, 0.17488461,
+        0.06484905, 0.10913934, 0.76141462
     },
     { /* GAMUT_ACES_AP1 */
         1.6410233797, -0.3248032942, -0.2364246952,
         -0.6636628587, 1.6153315917, 0.0167563477,
         0.0117218943, -0.0082844420, 0.9883948585
-    },
-    { /* GAMUT_DavinciWideGamut */
-        1.51667204, -0.28147805, -0.14696363,
-        -0.46491710, 1.25142378, 0.17488461,
-        0.06484905, 0.10913934, 0.76141462
     }
 };
 
@@ -176,9 +170,8 @@ static tonemap_func_t tonemap_function_strings[] = {
     { TONEMAP_sRGB, "(x < 0.0031308) ? x * 12.92 : (1.055 * pow(x, 1.0 / 2.4)) -0.055" },
     { TONEMAP_Rec709, "(x <= 0.018) ? (x * 4.5) : 1.099 * pow( x, (0.45) ) - 0.099" },
     { TONEMAP_HLG, "(x <= 1.0) ? (sqrt(x) * 0.5) : 0.17883277 * log(x - 0.28466892) + 0.55991073" },
-    { TONEMAP_BMDFilm, "x" }, /* Sort this out */
-    { TONEMAP_Reinhard_3_5, "(x < 0.4) ? x : (((x-0.4)/0.6) / (1.0 + ((x-0.4)/0.6)))*0.6 + 0.4" },
-    { TONEMAP_DavinciIntermediate, "(x <= 0.00262409) ? (x * 10.44426855) : (log10(x + 0.0075) / log10(2) + 7.0) * 0.07329248" }
+    { TONEMAP_DavinciIntermediate, "(x <= 0.00262409) ? (x * 10.44426855) : (log10(x + 0.0075) / log10(2) + 7.0) * 0.07329248" },
+    { TONEMAP_Reinhard_3_5, "(x < 0.4) ? x : (((x-0.4)/0.6) / (1.0 + ((x-0.4)/0.6)))*0.6 + 0.4" }
 };
 
 char * get_tonemap_func_string(int id)
@@ -189,19 +182,6 @@ char * get_tonemap_func_string(int id)
         if (id == tonemap_function_strings[i].id) index = i;
     }
     return tonemap_function_strings[index].string;
-}
-
-/* BMDFilm via LUT */
-double BmdFilmTonemap(double x)
-{
-    double input = ( x * ( 4095.0 ) / pow(2.0, 1.2) / 5.7661304310 );
-    if( input >= 4095 ) input = 4095;
-    uint16_t in = (uint16_t) input;
-
-    double pix00 = bmd_film[in  ][0];
-    double pix01 = bmd_film[in+1][0];
-
-    return interpol( input, in, in+1, pix00, pix01 );
 }
 
 static void * tonemap_functions[] =
@@ -216,9 +196,8 @@ static void * tonemap_functions[] =
     (void *)&sRGBTransferFunction,
     (void *)&Rec709TransferFunction,
     (void *)&HLG_TransferFunction,
-    (void *)&BmdFilmTonemap,
-    (void *)&Reinhard_3_5_Tonemap,
-    (void *)&DavinciIntermediateTonemap
+    (void *)&DavinciIntermediateTonemap,
+    (void *)&Reinhard_3_5_Tonemap
 };
 
 /* Returns multipliers for white balance by (linearly) interpolating measured 

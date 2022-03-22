@@ -64,13 +64,6 @@ static image_profile_t default_image_profiles[] =
         .colour_gamut = GAMUT_Rec709,
         .transfer_function = "(x <= 0.018) ? (x * 4.5) : 1.099 * pow( x, (0.45) ) - 0.099"
     },
-    { /* BMDFilm */
-        .allow_creative_adjustments = 0,
-        .tonemap_function = TONEMAP_BMDFilm,
-        .gamma_power = 1.0,
-        .colour_gamut = GAMUT_BmdFilm,
-        .transfer_function = "x" /* TODO: SORT THIS OUT OR REMOVE */
-    },
     { /* Davinci Wide Gamut Intermediate */
         .allow_creative_adjustments = 0,
         .tonemap_function = TONEMAP_DavinciIntermediate,

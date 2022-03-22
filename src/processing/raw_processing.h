@@ -22,9 +22,8 @@ int processingGetGamut(processingObject_t * processing);
 #define GAMUT_XYZ 5
 #define GAMUT_AlexaWideGamutRGB 6
 #define GAMUT_SonySGamut3 7
-#define GAMUT_BmdFilm 8
+#define GAMUT_DavinciWideGamut 8
 #define GAMUT_ACES_AP1 9
-#define GAMUT_DavinciWideGamut 10
 
 
 /* Tonemapping function, really this can be a tonemapping function, a log
@@ -42,9 +41,8 @@ void processingSetGammaAndTonemapping(processingObject_t * processing, double ga
 #define TONEMAP_sRGB 6
 #define TONEMAP_Rec709 7
 #define TONEMAP_HLG 8
-#define TONEMAP_BMDFilm 9
+#define TONEMAP_DavinciIntermediate 9
 #define TONEMAP_Reinhard_3_5 10 /* Reinhard 3/5 */
-#define TONEMAP_DavinciIntermediate 11
 
 
 /* Transfer funciton, the correct version of "Gamma" or "Log" */
@@ -71,8 +69,7 @@ void processingSetImageProfile(processingObject_t * processing, int imageProfile
 #define PROFILE_LINEAR      6   /* Linear, idk who would want this */
 #define PROFILE_SRGB        7	/* sRGB */
 #define PROFILE_REC709      8	/* Rec. 709 (HDTV) */
-#define PROFILE_BMDFILM     9   /* BMDFilm */
-#define PROFILE_DWG_INT    10   /* Davinci Wide Gamut Intermediate */
+#define PROFILE_DWG_INT     9   /* Davinci Wide Gamut Intermediate */
 
 
 
