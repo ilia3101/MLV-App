@@ -3696,7 +3696,8 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
                  && ( profile != PROFILE_SONY_LOG_3 )
                  && ( profile != PROFILE_SRGB )
                  && ( profile != PROFILE_REC709 )
-                 && ( profile != PROFILE_BMDFILM ) )
+                 && ( profile != PROFILE_BMDFILM )
+                 && ( profile != PROFILE_DWG_INT ) )
                 {
                     receipt->setAllowCreativeAdjustments( true );
                 }
@@ -3752,7 +3753,8 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
                  && ( profile != PROFILE_SONY_LOG_3 )
                  && ( profile != PROFILE_SRGB )
                  && ( profile != PROFILE_REC709 )
-                 && ( profile != PROFILE_BMDFILM ) )
+                 && ( profile != PROFILE_BMDFILM )
+                 && ( profile != PROFILE_DWG_INT ) )
                 {
                     receipt->setAllowCreativeAdjustments( true );
                 }

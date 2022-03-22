@@ -69,6 +69,13 @@ static image_profile_t default_image_profiles[] =
         .tonemap_function = TONEMAP_BMDFilm,
         .gamma_power = 1.0,
         .colour_gamut = GAMUT_BmdFilm,
-        .transfer_function = "x" /* TODO: SORT THIS OUT */
+        .transfer_function = "x" /* TODO: SORT THIS OUT OR REMOVE */
+    },
+    { /* Davinci Wide Gamut Intermediate */
+        .allow_creative_adjustments = 0,
+        .tonemap_function = TONEMAP_DavinciIntermediate,
+        .gamma_power = 1.0,
+        .colour_gamut = GAMUT_DavinciWideGamut,
+        .transfer_function = "(x <= 0.00262409) ? (x * 10.44426855) : (log10(x + 0.0075) / log10(2) + 7.0) * 0.07329248"
     }
 };

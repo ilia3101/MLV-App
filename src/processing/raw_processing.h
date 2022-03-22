@@ -23,6 +23,8 @@ int processingGetGamut(processingObject_t * processing);
 #define GAMUT_AlexaWideGamutRGB 6
 #define GAMUT_SonySGamut3 7
 #define GAMUT_BmdFilm 8
+#define GAMUT_ACES_AP1 9
+#define GAMUT_DavinciWideGamut 10
 
 
 /* Tonemapping function, really this can be a tonemapping function, a log
@@ -42,6 +44,7 @@ void processingSetGammaAndTonemapping(processingObject_t * processing, double ga
 #define TONEMAP_HLG 8
 #define TONEMAP_BMDFilm 9
 #define TONEMAP_Reinhard_3_5 10 /* Reinhard 3/5 */
+#define TONEMAP_DavinciIntermediate 11
 
 
 /* Transfer funciton, the correct version of "Gamma" or "Log" */
@@ -69,6 +72,7 @@ void processingSetImageProfile(processingObject_t * processing, int imageProfile
 #define PROFILE_SRGB        7	/* sRGB */
 #define PROFILE_REC709      8	/* Rec. 709 (HDTV) */
 #define PROFILE_BMDFILM     9   /* BMDFilm */
+#define PROFILE_DWG_INT    10   /* Davinci Wide Gamut Intermediate */
 
 
 
@@ -398,6 +402,9 @@ float CineonLogTonemap_f(float x);
 /* Sony S-Log3, from here: https://www.sony.de/pro/support/attachment/1237494271390/1237494271406/technical-summary-for-s-gamut3-cine-s-log3-and-s-gamut3-s-log3.pdf */
 double SonySLogTonemap(double x);
 float SonySLogTonemap_f(float x);
+/* Davinci Intermediate Log, formula from here: https://documents.blackmagicdesign.com/InformationNotes/DaVinci_Resolve_17_Wide_Gamut_Intermediate.pdf?_v=1628751610000 */
+double DavinciIntermediateTonemap(double x);
+float DavinciIntermediateTonemap_f(float x);
 
 /* Little image buffer 'class' for storing stuff that takes long to compute,
  * like blur (unused so far) */

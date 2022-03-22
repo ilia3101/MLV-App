@@ -8,6 +8,7 @@
 #include <float.h>
 #include "processing_object.h"
 #include "bmd_film.h"
+#include "raw_processing.h"
 
 //Interpolation functions
 double interpol(double x, double x1, double x2, double q00, double q01) {
@@ -100,6 +101,11 @@ static double colour_gamuts[][10] = {
         1.6410233797, -0.3248032942, -0.2364246952,
         -0.6636628587, 1.6153315917, 0.0167563477,
         0.0117218943, -0.0082844420, 0.9883948585
+    },
+    { /* GAMUT_DavinciWideGamut */
+        1.51667204, -0.28147805, -0.14696363,
+        -0.46491710, 1.25142378, 0.17488461,
+        0.06484905, 0.10913934, 0.76141462
     }
 };
 
@@ -151,6 +157,10 @@ float Rec709TransferFunction_f(float x) { return x <= 0.018f ? (x * 4.5f) : 1.09
 double HLG_TransferFunction(double E) { return (E <= 1.0) ? (sqrt(E) * 0.5) : 0.17883277 * log(E - 0.28466892) + 0.55991073; }
 float HLG_TransferFunction_f(float E) { return (E <= 1.0f) ? (sqrtf(E) * 0.5f) : 0.17883277f * logf(E - 0.28466892f) + 0.55991073f; }
 
+/* Davinci Intermediate Log */
+double DavinciIntermediateTonemap(double E) { return (E <= 0.00262409) ? (E * 10.44426855) : (log2(E + 0.0075) + 7.0) * 0.07329248; }
+float DavinciIntermediateTonemap_f(float E) { return (E <= 0.00262409f) ? (E * 10.44426855f) : (log2f(E + 0.0075f) + 7.0f) * 0.07329248f; }
+
 typedef struct {
     int id;
     char * string;
@@ -166,8 +176,9 @@ static tonemap_func_t tonemap_function_strings[] = {
     { TONEMAP_sRGB, "(x < 0.0031308) ? x * 12.92 : (1.055 * pow(x, 1.0 / 2.4)) -0.055" },
     { TONEMAP_Rec709, "(x <= 0.018) ? (x * 4.5) : 1.099 * pow( x, (0.45) ) - 0.099" },
     { TONEMAP_HLG, "(x <= 1.0) ? (sqrt(x) * 0.5) : 0.17883277 * log(x - 0.28466892) + 0.55991073" },
-    /* { TONEMAP_BMDFilm, "x" }, */ /* Sort this out */
-    { TONEMAP_Reinhard_3_5, "(x < 0.4) ? x : (((x-0.4)/0.6) / (1.0 + ((x-0.4)/0.6)))*0.6 + 0.4" }
+    { TONEMAP_BMDFilm, "x" }, /* Sort this out */
+    { TONEMAP_Reinhard_3_5, "(x < 0.4) ? x : (((x-0.4)/0.6) / (1.0 + ((x-0.4)/0.6)))*0.6 + 0.4" },
+    { TONEMAP_DavinciIntermediate, "(x <= 0.00262409) ? (x * 10.44426855) : (log10(x + 0.0075) / log10(2) + 7.0) * 0.07329248" }
 };
 
 char * get_tonemap_func_string(int id)
@@ -206,7 +217,8 @@ static void * tonemap_functions[] =
     (void *)&Rec709TransferFunction,
     (void *)&HLG_TransferFunction,
     (void *)&BmdFilmTonemap,
-    (void *)&Reinhard_3_5_Tonemap
+    (void *)&Reinhard_3_5_Tonemap,
+    (void *)&DavinciIntermediateTonemap
 };
 
 /* Returns multipliers for white balance by (linearly) interpolating measured 
