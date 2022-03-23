@@ -207,6 +207,7 @@ typedef struct {
     uint8_t    use_cam_matrix;
     uint8_t    colour_gamut;
     uint8_t    tonemap_function;
+    uint8_t    colour_space_tag;
 
     /* Allow creative adjustments with log profile */
     uint8_t    allow_creative_adjustments;

@@ -236,6 +236,7 @@ void processingSetImageProfile(processingObject_t * processing, int imageProfile
     processingGetAllowedCreativeAdjustments(processing) = default_image_profiles[imageProfile].allow_creative_adjustments;
     processingSetGamut(processing, default_image_profiles[imageProfile].colour_gamut);
     processingSetTransferFunction(processing, default_image_profiles[imageProfile].transfer_function);
+    processingSetColorSpaceTag(processing, default_image_profiles[imageProfile].colour_space_tag);
 
     /* This updates matrices, so new gamut will be put to use */
     processingSetWhiteBalance(processing, processingGetWhiteBalanceKelvin(processing), processingGetWhiteBalanceTint(processing));
@@ -243,6 +244,17 @@ void processingSetImageProfile(processingObject_t * processing, int imageProfile
     processing_update_matrices(processing);
     processing_update_matrices_gradient(processing);
 }
+
+void processingSetColorSpaceTag(processingObject_t * processing, int spaceTag)
+{
+    processing->colour_space_tag = spaceTag;
+}
+
+int processingGetColorSpaceTag(processingObject_t * processing)
+{
+    return processing->colour_space_tag;
+}
+
 
 /* Takes those matrices I learned about on the forum */
 void processingSetCamMatrix(processingObject_t * processing, double * camMatrix, double * camMatrixA)

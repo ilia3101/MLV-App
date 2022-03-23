@@ -72,6 +72,13 @@ void processingSetImageProfile(processingObject_t * processing, int imageProfile
 #define PROFILE_DWG_INT     9   /* Davinci Wide Gamut Intermediate */
 
 
+/* Set or Get color space tag */
+void processingSetColorSpaceTag(processingObject_t * processing, int spaceTag);
+int processingGetColorSpaceTag(processingObject_t * processing);
+/* spaceTag argument options: ffmpeg color space tag number compliant */
+#define SPACETAG_REC709   1   /* rec709 color space */
+#define SPACETAG_UNKNOWN  2   /* No color space tag set */
+
 
 /* Process a RAW frame with settings from a processing object
  * - image must be debayered and RGB plz + thx! */
