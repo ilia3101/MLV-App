@@ -2457,17 +2457,20 @@ void MainWindow::startExportPipe(QString fileName)
     {
         output.append( QString( ".mov" ) );
         int quality = m_codecOption;
+        int colorTag = processingGetColorSpaceTag(m_pProcessingObject);
+        //qDebug() << "Color Tag:" << colorTag;
         QString mode;
         if( m_codecProfile == CODEC_CINEFORM_10 ) mode = "yuv422p10le"; //10bit
         else mode = "gbrp12le"; //12bit
 
-        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v cfhd -quality %3 -pix_fmt %4 -color_primaries bt709 -color_trc bt709 -colorspace bt709 %5\"%6\"" )
-                    .arg( fps )
-                    .arg( resolution )
-                    .arg( quality )
-                    .arg( mode )
-                    .arg( resizeFilter )
-                    .arg( output ) );
+        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v cfhd -quality %3 -pix_fmt %4 -color_primaries %5 -color_trc %5 -colorspace bt709 %6\"%7\"" )
+                           .arg( fps )
+                           .arg( resolution )
+                           .arg( quality )
+                           .arg( mode )
+                           .arg( colorTag )
+                           .arg( resizeFilter )
+                           .arg( output ) );
     }
     else
     {
