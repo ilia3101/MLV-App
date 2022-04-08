@@ -4808,7 +4808,7 @@ int MainWindow::showFileInEditor(int row)
          && SESSION_CLIP_COUNT > 1)
         {
             m_pSelectionModel->setCurrentIndex( m_pProxyModel->mapFromSource( m_pModel->index( oldActive, 0, QModelIndex() ) ), QItemSelectionModel::ClearAndSelect );
-            showFileInEditor( oldActive );
+            if( !GET_CLIP( oldActive )->getReceipt()->wasNeverLoaded() ) showFileInEditor( oldActive );
         }
         return 1;
     }
