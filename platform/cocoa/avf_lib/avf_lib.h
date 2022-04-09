@@ -1,10 +1,7 @@
 #ifndef _avlib_h_
 #define _avlib_h_
 
-/* AVFoundation */
-#import <AVFoundation/AVFoundation.h>
-/* The AVEncoder object */
-#include "avencoder.h"
+#include <stdint.h>
 
 /* This is a C wrapper for encoding ProRes and H.264 using macOS AVFoundation */
 
@@ -18,6 +15,8 @@
 //                                 /* Output Parameters */
 //                                 double * progress, /* Outputs progress here */
 //                                 int cancel /* Will alawys check this before continuing, true = cancel */ );
+
+typedef struct AVEncoder AVEncoder_t;
 
 /* codec options */
 #define AVF_CODEC_PRORES_422 0

@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <pthread.h>
 
+#include "avencoder.h"
 #include "avf_lib.h"
 
 /* Encode a video using AVFoundation */

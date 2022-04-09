@@ -3,7 +3,7 @@
 
 /* The AVEncoder object used by AVFoundation Lib */
 
-typedef struct
+typedef struct AVEncoder
 {
     int currently_writing; /* Currently writing?????? */
 
@@ -33,6 +33,6 @@ typedef struct
      * ProRes 422: https://developer.apple.com/documentation/avfoundation/avvideocodecappleprores422?language=objc
      * ProRes 4444: https://developer.apple.com/documentation/avfoundation/avvideocodecappleprores4444?language=objc */
 
-} AVEncoder_t;
+};
 
 #endif
