@@ -36,9 +36,9 @@ echo outputpath: "$(cat /tmp/mlvapp_path/output_folder.txt)" >> TIFCLEAN_LOG.txt
 echo applicationpath: "$(cat /tmp/mlvapp_path/app_path.txt)" >> TIFCLEAN_LOG.txt
 echo "" >> TIFCLEAN_LOG.txt
 echo "###Checking for dependencies###" >> TIFCLEAN_LOG.txt
-if [ -f "/usr/local/bin/brew" ]
+if which brew >/dev/null; 
 then
-echo "brew: /usr/local/bin/brew" >> TIFCLEAN_LOG.txt
+echo "brew: brew" >> TIFCLEAN_LOG.txt
 else
 echo "brew: MISSING!" >> TIFCLEAN_LOG.txt
 fi
@@ -48,9 +48,9 @@ echo "align_image_stack: /Applications/Hugin/Hugin.app/Contents/MacOS/align_imag
 else
 echo "align_image_stack: MISSING!" >> TIFCLEAN_LOG.txt
 fi
-if [ -f "/usr/local/bin/exiftool" ]
+if which exiftool >/dev/null; 
 then
-echo "exiftool: /usr/local/bin/exiftool" >> TIFCLEAN_LOG.txt
+echo "exiftool: exiftool" >> TIFCLEAN_LOG.txt
 else
 echo "exiftool: MISSING!" >> TIFCLEAN_LOG.txt
 fi
@@ -72,7 +72,7 @@ fi
 cat <<'EOF' > /tmp/TIF_CLEAN.command
 ###########dependencies############
 #homebrew
-if ! [ -f "/usr/local/bin/brew" ]
+if ! which brew >/dev/null; 
 then
 printf '\e[8;16;85t'
 printf '\e[3;410;100t'
@@ -86,8 +86,8 @@ case "$choice" in
 clear
 echo "Follow instructions in terminal window"
 sleep 2
-/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-if [ -f "/usr/local/bin/brew" ]
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+if which brew >/dev/null; 
 then
 clear && echo "brew is intalled and ready for use"
 else
@@ -123,7 +123,7 @@ case "$choice" in
 clear
 echo "Follow instructions in terminal window"
 sleep 2
-/usr/local/bin/brew cask install hugin
+brew cask install hugin
 if [ -f "/Applications/Hugin/Hugin.app/Contents/MacOS/align_image_stack" ]
 then
 clear && echo "hugin is intalled and ready for use"
@@ -144,7 +144,7 @@ esac
 fi
 
 #exiftool
-if ! [ -f "/usr/local/bin/exiftool" ]
+if ! which exiftool >/dev/null; 
 then
 printf '\e[8;16;85t'
 printf '\e[3;410;100t'
@@ -161,8 +161,8 @@ case "$choice" in
 clear
 echo "Follow instructions in terminal window"
 sleep 2
-/usr/local/bin/brew install exiftool
-if [ -f "/usr/local/bin/exiftool" ]
+brew install exiftool
+if which exiftool >/dev/null; 
 then
 clear && echo "exiftool is intalled and ready for use"
 else
@@ -429,7 +429,7 @@ acodec=$(printf "%s\n" -c:v copy -c:a aac)
 fi
 if ! [ x"$(ls *.mov)" = x ] || ! [ x"$(ls *.MOV)" = x ]
 then
-"$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg $wav -r $(/usr/local/bin/exiftool $(ls *.{MOV,mov,mp4,MP4,mkv,MKV,avi,AVI} | head -1) | grep 'Video Frame Rate' | cut -d ":" -f2) -i %06d.tiff $acodec -vcodec prores -pix_fmt yuv422p10le "$(cat /tmp/mlvapp_path/output_folder.txt)"/$(cat /tmp/TIFCLEAN | head -1 | cut -d '/' -f2 | cut -d "." -f1).mov
+"$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg $wav -r $(exiftool $(ls *.{MOV,mov,mp4,MP4,mkv,MKV,avi,AVI} | head -1) | grep 'Video Frame Rate' | cut -d ":" -f2) -i %06d.tiff $acodec -vcodec prores -pix_fmt yuv422p10le "$(cat /tmp/mlvapp_path/output_folder.txt)"/$(cat /tmp/TIFCLEAN | head -1 | cut -d '/' -f2 | cut -d "." -f1).mov
 else
 "$(cat /tmp/mlvapp_path/app_path.txt)"/ffmpeg $wav -r $(cat fps) -i "$(cat /tmp/TIFCLEAN | head -1 | cut -d '/' -f2 | cut -d "." -f1)"_%06d.tiff $acodec -vcodec prores -pix_fmt yuv422p10le "$(cat /tmp/mlvapp_path/output_folder.txt)"/$(cat /tmp/TIFCLEAN | head -1 | cut -d '/' -f2 | cut -d "." -f1).mov 
 fi
