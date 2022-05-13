@@ -8,7 +8,6 @@ typedef struct image_profile_t {
     uint8_t allow_creative_adjustments; /* Disable saturation contrast curves etc */
     uint8_t colour_gamut; /* What colour gamut (macros in raw_processing.h) */
     char * transfer_function; /* Transfer function */
-    uint8_t colour_space_tag; /* Colour space tag to fill into exported file header */
 }  image_profile_t;
 
 #endif
