@@ -9804,11 +9804,12 @@ void MainWindow::on_toolButtonNextLut_clicked()
     // Create an iterator for cube files in the directory
     QDirIterator lutFileIt(path, {"*.cube"}, QDir::Files);
 
+    //Sort
     QStringList lutFileList;
     while( lutFileIt.hasNext() ) lutFileList.append( lutFileIt.next() );
     lutFileList.sort();
 
-    // Move the iterator to the current lut file
+    // Find the next file from the currently chosen one
     QString fileName = lutFileList.first();
     for( int i = 0; i < lutFileList.count(); i++ )
     {
@@ -9819,6 +9820,7 @@ void MainWindow::on_toolButtonNextLut_clicked()
         }
     }
 
+    //Load
     if( QFileInfo( fileName ).exists() )
     {
         ui->lineEditLutName->setText( fileName );
@@ -9835,11 +9837,12 @@ void MainWindow::on_toolButtonPrevLut_clicked()
     // Create an iterator for cube files in the directory
     QDirIterator lutFileIt(path, {"*.cube"}, QDir::Files);
 
+    //Sort
     QStringList lutFileList;
     while( lutFileIt.hasNext() ) lutFileList.append( lutFileIt.next() );
     lutFileList.sort();
 
-    // Move the iterator to the current lut file
+    // Find the previous file from the currently chosen one
     QString fileName = lutFileList.last();
     for( int i = lutFileList.count() - 1; i >= 0; i-- )
     {
@@ -9850,6 +9853,7 @@ void MainWindow::on_toolButtonPrevLut_clicked()
         }
     }
 
+    //Load
     if( QFileInfo( fileName ).exists() )
     {
         ui->lineEditLutName->setText( fileName );
