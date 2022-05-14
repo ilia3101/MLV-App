@@ -14,6 +14,7 @@
 #include <QTime>
 #include <QSettings>
 #include <QDesktopWidget>
+#include <QStringList>
 #include <QScrollBar>
 #include <QScreen>
 #include <QMimeData>
@@ -9803,22 +9804,24 @@ void MainWindow::on_toolButtonNextLut_clicked()
     // Create an iterator for cube files in the directory
     QDirIterator lutFileIt(path, {"*.cube"}, QDir::Files);
 
-    // Get the first file (alphabetically)
-    QString firstFileName = lutFileIt.next();
+    QStringList lutFileList;
+    while( lutFileIt.hasNext() ) lutFileList.append( lutFileIt.next() );
+    lutFileList.sort();
 
     // Move the iterator to the current lut file
-    QString fileName = firstFileName;
-    while (fileName != ui->lineEditLutName->text() && lutFileIt.hasNext()) fileName = lutFileIt.next();
-
-    // Move the iterator to the next lut file
-    QString nextFileName;
-    if (lutFileIt.hasNext()) nextFileName = lutFileIt.next();
-    // If the current file is the last move back to the first file
-    else nextFileName = firstFileName;
-
-    if( QFileInfo( nextFileName ).exists() )
+    QString fileName = lutFileList.first();
+    for( int i = 0; i < lutFileList.count(); i++ )
     {
-        ui->lineEditLutName->setText( nextFileName );
+        if( lutFileList[i] > ui->lineEditLutName->text() )
+        {
+            fileName = lutFileList[i];
+            break;
+        }
+    }
+
+    if( QFileInfo( fileName ).exists() )
+    {
+        ui->lineEditLutName->setText( fileName );
     }
 }
 
@@ -9832,32 +9835,24 @@ void MainWindow::on_toolButtonPrevLut_clicked()
     // Create an iterator for cube files in the directory
     QDirIterator lutFileIt(path, {"*.cube"}, QDir::Files);
 
-    // Get the first file (alphabetically)
-    QString firstFileName = lutFileIt.next();
+    QStringList lutFileList;
+    while( lutFileIt.hasNext() ) lutFileList.append( lutFileIt.next() );
+    lutFileList.sort();
 
-    // If the current file is the first move iterator to the last file
-    QString previousFileName;
-    if (ui->lineEditLutName->text() == firstFileName)
+    // Move the iterator to the current lut file
+    QString fileName = lutFileList.last();
+    for( int i = lutFileList.count() - 1; i >= 0; i-- )
     {
-        while (lutFileIt.hasNext()) lutFileIt.next();
-        previousFileName = lutFileIt.filePath();
-    }
-    else
-    {
-        // Move the iterator to the current lut file
-        QString fileName = firstFileName;
-        while (fileName != ui->lineEditLutName->text())
+        if( lutFileList[i] < ui->lineEditLutName->text() )
         {
-            // Save the previous file name in a variable
-            previousFileName = fileName;
-            if (lutFileIt.hasNext()) fileName = lutFileIt.next();
-            else break;
+            fileName = lutFileList[i];
+            break;
         }
     }
 
-    if( QFileInfo( previousFileName ).exists() )
+    if( QFileInfo( fileName ).exists() )
     {
-        ui->lineEditLutName->setText( previousFileName );
+        ui->lineEditLutName->setText( fileName );
     }
 }
 
