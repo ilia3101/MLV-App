@@ -78,7 +78,7 @@ What is MLV App? Lightroom, but for Magic Lantern MLV Video (and open source and
 ## Compiling :collision:
 #### Qt App macOS (Intel based)
 - install XCode depending on your OSX
-- install Qt5 (minimum 5.6)
+- install Qt5 (5.6 .. 5.15.2)
 - open `platform/qt/MLVApp.pro` in QtCreator
 - Build and Start
 - OR download and doubleclick easy-to-use [compiler app](https://bitbucket.org/Dannephoto/mlv_app_compiler-git/downloads/mlv_app_compiler.dmg) from @dannephoto
@@ -97,13 +97,13 @@ What is MLV App? Lightroom, but for Magic Lantern MLV Video (and open source and
 - Build and Start
 
 #### Qt App Windows
-- install Qt5 (Win32: minimum 5.6, Win64: minimum 5.13.2) with MinGW32/64 compiler
+- install Qt5 (Win32: 5.6 .. 5.15.2, Win64: 5.13.2 .. 5.15.2) with MinGW32/64 compiler
 - unpack ffmpegWin.zip in `platform/qt/FFmpeg` (and copy it later into build directory)
 - open `platform/qt/MLVApp.pro` in QtCreator
 - Build and Start
 
 #### Qt App Linux (generally)
-- install Qt5 (minimum 5.6) and ffmpeg (we use v3.3.2) 
+- install Qt5 (5.6 .. 5.15.2) and ffmpeg (we use v3.3.2) 
 - `cd platform/qt/`
 - `qmake MLVApp.pro` or equivalent (depending on distro and version and...)
 - `make -j$(nproc)`
