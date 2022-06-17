@@ -169,6 +169,7 @@ void SessionModel::removeRow(int row, const QModelIndex &parent)
 //Delete the whole session
 void SessionModel::clear()
 {
+    if( m_dataBase.count() <= 0 ) return;
     beginRemoveRows( QModelIndex(), 0, m_dataBase.count() - 1 );
     m_dataBase.clear();
     endRemoveRows();
