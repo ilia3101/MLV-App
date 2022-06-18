@@ -387,6 +387,14 @@ void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
         ui->comboBoxOption->addItem( QString( "Low+" ) );
         ui->comboBoxOption->addItem( QString( "Low" ) );
     }
+    else if( index == CODEC_VP9 )
+    {
+        ui->labelDebayer->setEnabled( true );
+        ui->comboBoxDebayer->setEnabled( true );
+        ui->comboBoxOption->setEnabled( true );
+        ui->comboBoxOption->addItem( QString( "ffmpeg VP9 (*.webm) Lossless" ) );
+        ui->comboBoxOption->addItem( QString( "ffmpeg VP9 (*.webm) High Quality" ) );
+    }
     else if( index == CODEC_AUDIO_ONLY )
     {
         ui->labelDebayer->setEnabled( false );

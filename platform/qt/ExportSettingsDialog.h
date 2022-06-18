@@ -35,7 +35,8 @@
 #define CODEC_DNXHR                 20
 #define CODEC_CINEFORM_10           21
 #define CODEC_CINEFORM_12           22
-#define CODEC_AUDIO_ONLY            23
+#define CODEC_VP9                   23
+#define CODEC_AUDIO_ONLY            24
 
 #define CODEC_AVI_OPTION_YUV420     0
 #define CODEC_AVI_OPTION_V210       1
@@ -93,6 +94,9 @@
 #define CODEC_DNXHR_HQ_1080p_8bit   2
 #define CODEC_DNXHR_SQ_1080p_8bit   3
 #define CODEC_DNXHR_LB_1080p_8bit   4
+
+#define CODEC_VP9_LOSSLESS          0
+#define CODEC_VP9_HIGH              1
 
 #define SMOOTH_FILTER_OFF           0
 #define SMOOTH_FILTER_1PASS         1
