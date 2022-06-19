@@ -39,11 +39,45 @@ static uint64_t file_set_pos(FILE *stream, uint64_t offset, int whence)
 }
 
 /* unload the darkframe mlv */
-static void df_unload(FILE ** files, int entries)
+static void df_unload( mlvObject_t* df_mlv )
 {
+    /* Close all MLV file chunks */
+    FILE** files = df_mlv->file;
+    int entries = df_mlv->filenum;
     for(int i = 0; i < entries; i++)
         if(files[i]) fclose(files[i]);
     if(files) free(files);
+
+    /* Free all memory */
+    if(df_mlv->video_index) free(df_mlv->video_index);
+    if(df_mlv->audio_index) free(df_mlv->audio_index);
+    if(df_mlv->vers_index) free(df_mlv->vers_index);
+
+    /* Free audio buffer */
+    if(df_mlv->audio_data)
+    {
+        free(df_mlv->audio_data);
+        df_mlv->audio_data = NULL;
+    }
+
+    /* Now free these */
+    if(df_mlv->cached_frames)
+    {
+        free(df_mlv->cached_frames);
+        df_mlv->cached_frames = NULL;
+    }
+    if(df_mlv->rgb_raw_frames) free(df_mlv->rgb_raw_frames);
+    if(df_mlv->rgb_raw_current_frame) free(df_mlv->rgb_raw_current_frame);
+    if(df_mlv->cache_memory_block) free(df_mlv->cache_memory_block);
+    if(df_mlv->path) free(df_mlv->path);
+
+    /* Mutex things here... */
+    for (int i = 0; i < df_mlv->filenum; ++i)
+        if(df_mlv->main_file_mutex) pthread_mutex_destroy(df_mlv->main_file_mutex + i);
+    if(df_mlv->main_file_mutex) free(df_mlv->main_file_mutex);
+    pthread_mutex_destroy(&df_mlv->g_mutexFind);
+    pthread_mutex_destroy(&df_mlv->g_mutexCount);
+    pthread_mutex_destroy(&df_mlv->cache_mutex);
 }
 
 /* load dark frame from external averaged MLV file */
@@ -73,7 +107,7 @@ static int df_load_ext(mlvObject_t * video, char * error_message)
 #endif
         if(error_message != NULL) strcpy(error_message, err_msg);
         /* Close darkframe MLV */
-        df_unload( df_mlv.file, df_mlv.filenum );
+        df_unload( &df_mlv );
         return 1;
     }
     /* if resolution mismatch detected */
@@ -85,7 +119,7 @@ static int df_load_ext(mlvObject_t * video, char * error_message)
 #endif
         if(error_message != NULL) strcpy(error_message, err_msg);
         /* Close darkframe MLV */
-        df_unload( df_mlv.file, df_mlv.filenum );
+        df_unload( &df_mlv );
         return 1;
     }
     /* if MLV has more than one frame just show the warning */
@@ -108,7 +142,7 @@ static int df_load_ext(mlvObject_t * video, char * error_message)
 #endif
         if(error_message != NULL) strcpy(error_message, err_msg);
         /* Close darkframe MLV */
-        df_unload( df_mlv.file, df_mlv.filenum );
+        df_unload( &df_mlv );
         return 1;
     }
     /* Load dark frame data to the allocated buffer */
@@ -122,7 +156,7 @@ static int df_load_ext(mlvObject_t * video, char * error_message)
         if(error_message != NULL) strcpy(error_message, err_msg);
         free(df_packed_buf);
         /* Close darkframe MLV */
-        df_unload( df_mlv.file, df_mlv.filenum );
+        df_unload( &df_mlv );
         return 1;
     }
     /* Free all data related to the dark frame if needed */
@@ -161,7 +195,7 @@ static int df_load_ext(mlvObject_t * video, char * error_message)
     free(df_packed_buf);
 
     /* Close darkframe MLV */
-    df_unload( df_mlv.file, df_mlv.filenum );
+    df_unload( &df_mlv );
 
     return 0;
 }
