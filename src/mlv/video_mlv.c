@@ -500,7 +500,7 @@ void getMlvProcessedFrame8(mlvObject_t * video, uint64_t frameIndex, uint8_t * o
 mlvObject_t * initMlvObjectWithClip(char * mlvPath, int preview, int * err, char * error_message)
 {
     mlvObject_t * video = initMlvObject();
-    char error_message_tmp[256];
+    char error_message_tmp[256] = {0};
     int err_tmp =  openMlvClip(video, mlvPath, preview, error_message_tmp);
     if (err != NULL) *err = err_tmp;
     if (error_message != NULL) strcpy(error_message, error_message_tmp);
