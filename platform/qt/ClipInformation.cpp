@@ -144,34 +144,49 @@ void ClipInformation::setElement(int element, QVariant value)
         break;
     case 1:
         m_path = value.toString();
+        break;
     case 2:
         m_camera = value.toString();
+        break;
     case 3:
         m_lens = value.toString();
+        break;
     case 4:
         m_resolution = value.toString();
+        break;
     case 5:
         m_duration = value.toString();
+        break;
     case 6:
         m_frames = value.toString();
+        break;
     case 7:
         m_frameRate = value.toString();
+        break;
     case 8:
         m_focalLength = value.toString();
+        break;
     case 9:
         m_shutter = value.toString();
+        break;
     case 10:
         m_aperture = value.toString();
+        break;
     case 11:
         m_iso = value.toString();
+        break;
     case 12:
         m_dualIso = value.toString();
+        break;
     case 13:
         m_bitDepth = value.toString();
+        break;
     case 14:
         m_dateTime = value.toString();
+        break;
     case 15:
         m_audio = value.toString();
+        break;
     default:
         break;
     }
