@@ -601,7 +601,7 @@ void apply_processing_object( processingObject_t * processing,
     }
 
     /* In case of camera matrix */
-    double (* tone_mapping_function)(double) = tonemap_functions[processing->tonemap_function];
+    //double (* tone_mapping_function)(double) = tonemap_functions[processing->tonemap_function];
 
     /* Apply some precalcuolated settings */
     for (int i = 0; i < img_s; ++i)
@@ -799,7 +799,7 @@ void apply_processing_object( processingObject_t * processing,
                         + rgb_to_Y[1] * result[1]
                         + rgb_to_Y[2] * result[2];
 
-                float max_channel = MAX(MAX(result[0],result[1]),result[2]);
+                //float max_channel = MAX(MAX(result[0],result[1]),result[2]);
                 float min_channel = MIN(MIN(result[0],result[1]),result[2]);
 
                 float result2[3];
@@ -865,7 +865,7 @@ void apply_processing_object( processingObject_t * processing,
                     float Y = rgb_to_Y[0] * result[0]
                             + rgb_to_Y[1] * result[1]
                             + rgb_to_Y[2] * result[2];
-                    float max_channel = MAX(MAX(result[0],result[1]),result[2]);
+                    //float max_channel = MAX(MAX(result[0],result[1]),result[2]);
                     float min_channel = MIN(MIN(result[0],result[1]),result[2]);
                     float result2[3];
                     for (int i = 0; i < 3; ++i) {
@@ -1519,7 +1519,7 @@ void processingSetGamma(processingObject_t * processing, double gammaValue)
     processing->gamma_power = gammaValue;
 
     /* Needs to be inverse */
-    double gamma = 1.0 / gammaValue;
+    //double gamma = 1.0 / gammaValue;
 
     /* Exposure */
     double exposure_factor = pow(2.0, processing->exposure_stops);
@@ -1547,7 +1547,7 @@ void processingSetGammaGradient(processingObject_t * processing, double gammaVal
     processing->gamma_power = gammaValue;
 
     /* Needs to be inverse */
-    double gamma = 1.0 / gammaValue;
+    //double gamma = 1.0 / gammaValue;
 
     /* Exposure */
     double exposure_factor = pow(2.0, processing->exposure_stops+processing->gradient_exposure_stops);

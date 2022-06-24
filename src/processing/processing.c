@@ -177,7 +177,7 @@ static tonemap_func_t tonemap_function_strings[] = {
 char * get_tonemap_func_string(int id)
 {
     int index = 0;
-    for (int i = 0; i < sizeof(tonemap_function_strings)/sizeof(tonemap_function_strings[0]); ++i)
+    for (unsigned long i = 0; i < sizeof(tonemap_function_strings)/sizeof(tonemap_function_strings[0]); ++i)
     {
         if (id == tonemap_function_strings[i].id) index = i;
     }
@@ -350,7 +350,7 @@ void fromHSVtoRGB(const float hsv[], float rgb[])
     }
 }
 
-static double array_average(double * array, int length)
+/*static double array_average(double * array, int length)
 {
     double average = 0.0;
     for (int i = 0; i < length; ++i)
@@ -359,15 +359,15 @@ static double array_average(double * array, int length)
     }
     average /= (double)length;
     return average;
-}
+}*/
 
-void colour_correct_3_way( double * rgb,
-                           double h_hue, double h_sat,
-                           double m_hue, double m_sat,
-                           double s_hue, double s_sat )
-{
-    /* Not done :[ */
-}
+//void colour_correct_3_way( double * rgb,
+//                           double h_hue, double h_sat,
+//                           double m_hue, double m_sat,
+//                           double s_hue, double s_sat )
+//{
+//    /* Not done :[ */
+//}
 
 void processing_update_curves(processingObject_t * processing)
 {
@@ -424,7 +424,7 @@ void processing_update_matrices(processingObject_t * processing)
     /* Temporary working matrix */
     double temp_matrix_a[9];
     double temp_matrix_b[9];
-    double temp_matrix_c[9];
+    //double temp_matrix_c[9];
 
     /* (for shorter code) */
     int32_t ** pm = processing->pre_calc_matrix;
@@ -588,9 +588,9 @@ void blur_image( uint16_t * __restrict in,
     int rl = width * 3;
 
     int radius_x = radius*3;
-    int y_max = height + radius;
-    int x_max = (width + radius);
-    int x_lim = rl-3;
+    //int y_max = height + radius;
+    //int x_max = (width + radius);
+    //int x_lim = rl-3;
 
     int blur_diameter = radius*2+1;
 
