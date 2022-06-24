@@ -1913,7 +1913,7 @@ void printMlvInfo(mlvObject_t * video)
 {
     printf("\nMLV Info\n\n");
     printf("      MLV Version: %s\n", video->MLVI.versionString);
-    printf("      File Blocks: %llu\n", video->block_num);
+    printf("      File Blocks: %lu\n", video->block_num);
     printf("\nLens Info\n\n");
     printf("       Lens Model: %s\n", video->LENS.lensName);
     printf("    Serial Number: %s\n", video->LENS.lensSerial);
