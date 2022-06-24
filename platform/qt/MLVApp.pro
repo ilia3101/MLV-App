@@ -67,6 +67,15 @@ macx{
 #    }
 }
 
+#Debug
+macx{
+    #CONFIG += sanitizer sanitize_address
+    #use -fsanitize=leak without the CONFIG above!
+    #QMAKE_LINK += -fsanitize=leak
+    #QMAKE_CFLAGS += -fsanitize=leak
+    #QMAKE_CXXFLAGS += -fsanitize=leak
+}
+
 # Windows, standard use with standard Qt download.
 # Else comment these lines!
 win32{
