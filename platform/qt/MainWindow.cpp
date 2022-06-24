@@ -1746,6 +1746,7 @@ void MainWindow::startExportPipe(QString fileName)
 #endif
         if( m_codecProfile == CODEC_H264 || m_codecProfile == CODEC_H265_8 || m_codecProfile == CODEC_H265_10 || m_codecProfile == CODEC_H265_12 )
             ffmpegAudioCommand = QString( "-i \"%1\" -c:a aac " ).arg( wavFileName );
+        else if( m_codecProfile == CODEC_VP9 ) ffmpegAudioCommand = QString( "-i \"%1\" -c:a libopus " ).arg( wavFileName );
         else ffmpegAudioCommand = QString( "-i \"%1\" -c:a copy " ).arg( wavFileName );
     }
 
@@ -2494,6 +2495,25 @@ void MainWindow::startExportPipe(QString fileName)
                            .arg( colorTag )
                            .arg( resizeFilter )
                            .arg( output ) );
+    }
+    else if( m_codecProfile == CODEC_VP9 )
+    {
+        output.append( QString( ".webm" ) );
+
+        QString quality;
+        if( m_codecOption == CODEC_VP9_LOSSLESS )
+            quality = "-lossless 1";
+        else
+            quality = "-crf 18 -b:v 0";
+
+        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v libvpx-vp9 %3 -pix_fmt %4 -color_primaries %7 -color_trc %7 -colorspace bt709 %5\"%6\"" )
+                    .arg( fps )
+                    .arg( resolution )
+                    .arg( quality )
+                    .arg( "yuv420p" )
+                    .arg( resizeFilter )
+                    .arg( output )
+                    .arg( colorTag ) );
     }
     else
     {
