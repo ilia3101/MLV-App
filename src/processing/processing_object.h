@@ -18,6 +18,7 @@ typedef struct {
 typedef struct {
 
     int exr_mode;
+    int AgX;
 
     filterObject_t * filter;
     int filter_on;
