@@ -3812,6 +3812,11 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
             receipt->setExrMode( (bool)Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
+        else if( Rxml->isStartElement() && Rxml->name() == "agx" )
+        {
+            receipt->setAgx( (bool)Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
         else if( Rxml->isStartElement() && Rxml->name() == "denoiserWindow" )
         {
             receipt->setDenoiserWindow( Rxml->readElementText().toInt() );
@@ -4144,6 +4149,7 @@ void MainWindow::writeXmlElementsToFile(QXmlStreamWriter *xmlWriter, ReceiptSett
     xmlWriter->writeTextElement( "gamma",                   QString( "%1" ).arg( receipt->gamma() ) );
     xmlWriter->writeTextElement( "allowCreativeAdjustments",QString( "%1" ).arg( receipt->allowCreativeAdjustments() ) );
     xmlWriter->writeTextElement( "exrMode",                 QString( "%1" ).arg( receipt->exrMode() ) );
+    xmlWriter->writeTextElement( "agx",                     QString( "%1" ).arg( receipt->agx() ) );
     xmlWriter->writeTextElement( "denoiserStrength",        QString( "%1" ).arg( receipt->denoiserStrength() ) );
     xmlWriter->writeTextElement( "denoiserWindow",          QString( "%1" ).arg( receipt->denoiserWindow() ) );
     xmlWriter->writeTextElement( "rbfDenoiserLuma",         QString( "%1" ).arg( receipt->rbfDenoiserLuma() ) );
@@ -4399,6 +4405,9 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     ui->checkBoxExrMode->setChecked(  receipt->exrMode() );
     on_checkBoxExrMode_toggled( receipt->exrMode() );
 
+    ui->checkBoxAgX->setChecked(  receipt->agx() );
+    on_checkBoxAgX_toggled( receipt->agx() );
+
     ui->horizontalSliderDenoiseStrength->setValue( receipt->denoiserStrength() );
     ui->comboBoxDenoiseWindow->setCurrentIndex( receipt->denoiserWindow() - 2 );
     on_comboBoxDenoiseWindow_currentIndexChanged( receipt->denoiserWindow() - 2 );
@@ -4621,6 +4630,7 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     receipt->setGamma( ui->horizontalSliderGamma->value() );
     receipt->setAllowCreativeAdjustments( ui->checkBoxCreativeAdjustments->isChecked() );
     receipt->setExrMode( ui->checkBoxExrMode->isChecked() );
+    receipt->setAgx( ui->checkBoxAgX->isChecked() );
     receipt->setDenoiserStrength( ui->horizontalSliderDenoiseStrength->value() );
     receipt->setDenoiserWindow( ui->comboBoxDenoiseWindow->currentIndex() + 2 );
     receipt->setRbfDenoiserLuma( ui->horizontalSliderRbfDenoiseLuma->value() );
@@ -4742,6 +4752,7 @@ void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings 
         receiptTarget->setProfile( receiptSource->profile() );
         receiptTarget->setAllowCreativeAdjustments( receiptSource->allowCreativeAdjustments() );
         receiptTarget->setExrMode( receiptSource->exrMode() );
+        receiptTarget->setAgx( receiptSource->agx() );
         receiptTarget->setTonemap( receiptSource->tonemap() );
         receiptTarget->setTransferFunction( receiptSource->transferFunction() );
         receiptTarget->setGamut( receiptSource->gamut() );
@@ -4936,6 +4947,7 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     receipt->setProfile( GET_RECEIPT( row )->profile() );
     receipt->setAllowCreativeAdjustments( GET_RECEIPT( row )->allowCreativeAdjustments() );
     receipt->setExrMode( GET_RECEIPT( row )->exrMode() );
+    receipt->setAgx( GET_RECEIPT( row )->agx() );
     receipt->setTonemap( GET_RECEIPT( row )->tonemap() );
     receipt->setTransferFunction( GET_RECEIPT( row )->transferFunction() );
     receipt->setGamut( GET_RECEIPT( row )->gamut() );
@@ -6688,6 +6700,20 @@ void MainWindow::on_checkBoxExrMode_toggled(bool checked)
     else
     {
         processingDisableExr( m_pProcessingObject );
+    }
+    m_frameChanged = true;
+}
+
+//AgX checkbox changed
+void MainWindow::on_checkBoxAgX_toggled(bool checked)
+{
+    if( checked )
+    {
+        processingEnableAgX( m_pProcessingObject );
+    }
+    else
+    {
+        processingDisableAgX( m_pProcessingObject );
     }
     m_frameChanged = true;
 }

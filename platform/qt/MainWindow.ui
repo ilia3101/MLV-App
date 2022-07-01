@@ -468,9 +468,9 @@ QGroupBox::indicator:checked:disabled {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>-1858</y>
+            <y>-1969</y>
             <width>269</width>
-            <height>5756</height>
+            <height>5772</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayoutScrollArea">
@@ -4476,16 +4476,134 @@ QGroupBox::indicator:checked:disabled {
                  <property name="spacing">
                   <number>5</number>
                  </property>
-                 <item row="14" column="0">
-                  <widget class="QCheckBox" name="checkBoxExrMode">
+                 <item row="8" column="0">
+                  <widget class="QLabel" name="label_TransferFunction">
                    <property name="font">
                     <font>
                      <pointsize>10</pointsize>
                     </font>
                    </property>
                    <property name="text">
-                    <string>Cyan Highlight Fix</string>
+                    <string>Transfer Function</string>
                    </property>
+                  </widget>
+                 </item>
+                 <item row="10" column="0">
+                  <widget class="QCheckBox" name="checkBoxCreativeAdjustments">
+                   <property name="enabled">
+                    <bool>true</bool>
+                   </property>
+                   <property name="font">
+                    <font>
+                     <pointsize>10</pointsize>
+                    </font>
+                   </property>
+                   <property name="toolTip">
+                    <string>Warning: Having creative adjustments and log profile enabled may not give logarithmic output!</string>
+                   </property>
+                   <property name="layoutDirection">
+                    <enum>Qt::LeftToRight</enum>
+                   </property>
+                   <property name="text">
+                    <string>Allow Creative Adjustments</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="3" column="0">
+                  <widget class="QLabel" name="label_TonemappingFunction">
+                   <property name="font">
+                    <font>
+                     <pointsize>10</pointsize>
+                    </font>
+                   </property>
+                   <property name="text">
+                    <string>Tonemapping Function</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="5" column="0">
+                  <widget class="QLabel" name="label_Gamut">
+                   <property name="font">
+                    <font>
+                     <pointsize>10</pointsize>
+                    </font>
+                   </property>
+                   <property name="text">
+                    <string>Processing Gamut</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="0">
+                  <widget class="NoScrollComboBox" name="comboBoxProfile">
+                   <property name="minimumSize">
+                    <size>
+                     <width>0</width>
+                     <height>0</height>
+                    </size>
+                   </property>
+                   <property name="font">
+                    <font>
+                     <pointsize>10</pointsize>
+                    </font>
+                   </property>
+                   <property name="currentText">
+                    <string>Select Preset...</string>
+                   </property>
+                   <item>
+                    <property name="text">
+                     <string>Select Preset...</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Standard</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Tonemapped</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Film</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Alexa Log-C</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Cineon Log</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Sony S-Log3</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Linear</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>sRGB</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Rec. 709</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Davinci WG/Intermediate</string>
+                    </property>
+                   </item>
                   </widget>
                  </item>
                  <item row="6" column="0">
@@ -4556,17 +4674,86 @@ QGroupBox::indicator:checked:disabled {
                    </item>
                   </widget>
                  </item>
-                 <item row="8" column="0">
-                  <widget class="QLabel" name="label_TransferFunction">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
+                 <item row="7" column="0">
+                  <layout class="QGridLayout" name="gridLayout_64">
+                   <property name="spacing">
+                    <number>0</number>
                    </property>
-                   <property name="text">
-                    <string>Transfer Function</string>
-                   </property>
-                  </widget>
+                   <item row="0" column="0">
+                    <widget class="QLabel" name="label_GammaText">
+                     <property name="font">
+                      <font>
+                       <pointsize>10</pointsize>
+                      </font>
+                     </property>
+                     <property name="text">
+                      <string>Gamma</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="0" column="1">
+                    <spacer name="horizontalSpacer_Gamma">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                     <property name="sizeType">
+                      <enum>QSizePolicy::Maximum</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>40</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                   <item row="0" column="2">
+                    <widget class="DoubleClickLabel" name="label_GammaVal">
+                     <property name="font">
+                      <font>
+                       <pointsize>10</pointsize>
+                      </font>
+                     </property>
+                     <property name="text">
+                      <string>1.00</string>
+                     </property>
+                     <property name="alignment">
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="1" column="0" colspan="3">
+                    <widget class="NoScrollSlider" name="horizontalSliderGamma">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="maximumSize">
+                      <size>
+                       <width>16777215</width>
+                       <height>16777215</height>
+                      </size>
+                     </property>
+                     <property name="minimum">
+                      <number>1</number>
+                     </property>
+                     <property name="maximum">
+                      <number>400</number>
+                     </property>
+                     <property name="value">
+                      <number>100</number>
+                     </property>
+                     <property name="sliderPosition">
+                      <number>100</number>
+                     </property>
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
                  </item>
                  <item row="2" column="0">
                   <widget class="Line" name="line_27">
@@ -4587,6 +4774,54 @@ QGroupBox::indicator:checked:disabled {
                    </property>
                    <property name="text">
                     <string>Camera Matrix</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="13" column="0">
+                  <widget class="NoScrollComboBox" name="comboBoxUseCameraMatrix">
+                   <property name="font">
+                    <font>
+                     <pointsize>10</pointsize>
+                    </font>
+                   </property>
+                   <property name="currentIndex">
+                    <number>1</number>
+                   </property>
+                   <item>
+                    <property name="text">
+                     <string>Don't Use Camera Matrix</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Use Camera Matrix</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Uncolorscience Fix</string>
+                    </property>
+                   </item>
+                  </widget>
+                 </item>
+                 <item row="14" column="0">
+                  <widget class="QCheckBox" name="checkBoxExrMode">
+                   <property name="font">
+                    <font>
+                     <pointsize>10</pointsize>
+                    </font>
+                   </property>
+                   <property name="text">
+                    <string>Cyan Highlight Fix</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="9" column="0">
+                  <widget class="QLineEdit" name="lineEditTransferFunction">
+                   <property name="font">
+                    <font>
+                     <pointsize>10</pointsize>
+                    </font>
                    </property>
                   </widget>
                  </item>
@@ -4673,118 +4908,6 @@ QGroupBox::indicator:checked:disabled {
                    </property>
                   </widget>
                  </item>
-                 <item row="13" column="0">
-                  <widget class="NoScrollComboBox" name="comboBoxUseCameraMatrix">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-                   <property name="currentIndex">
-                    <number>1</number>
-                   </property>
-                   <item>
-                    <property name="text">
-                     <string>Don't Use Camera Matrix</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>Use Camera Matrix</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>Uncolorscience Fix</string>
-                    </property>
-                   </item>
-                  </widget>
-                 </item>
-                 <item row="3" column="0">
-                  <widget class="QLabel" name="label_TonemappingFunction">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-                   <property name="text">
-                    <string>Tonemapping Function</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="0">
-                  <widget class="NoScrollComboBox" name="comboBoxProfile">
-                   <property name="minimumSize">
-                    <size>
-                     <width>0</width>
-                     <height>0</height>
-                    </size>
-                   </property>
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-                   <property name="currentText">
-                    <string>Select Preset...</string>
-                   </property>
-                   <item>
-                    <property name="text">
-                     <string>Select Preset...</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>Standard</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>Tonemapped</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>Film</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>Alexa Log-C</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>Cineon Log</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>Sony S-Log3</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>Linear</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>sRGB</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>Rec. 709</string>
-                    </property>
-                   </item>
-                   <item>
-                    <property name="text">
-                     <string>Davinci WG/Intermediate</string>
-                    </property>
-                   </item>
-                  </widget>
-                 </item>
                  <item row="0" column="0">
                   <widget class="QLabel" name="label_ProcessingProfile">
                    <property name="font">
@@ -4797,126 +4920,15 @@ QGroupBox::indicator:checked:disabled {
                    </property>
                   </widget>
                  </item>
-                 <item row="5" column="0">
-                  <widget class="QLabel" name="label_Gamut">
+                 <item row="15" column="0">
+                  <widget class="QCheckBox" name="checkBoxAgX">
                    <property name="font">
                     <font>
                      <pointsize>10</pointsize>
                     </font>
                    </property>
                    <property name="text">
-                    <string>Processing Gamut</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="10" column="0">
-                  <widget class="QCheckBox" name="checkBoxCreativeAdjustments">
-                   <property name="enabled">
-                    <bool>true</bool>
-                   </property>
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-                   <property name="toolTip">
-                    <string>Warning: Having creative adjustments and log profile enabled may not give logarithmic output!</string>
-                   </property>
-                   <property name="layoutDirection">
-                    <enum>Qt::LeftToRight</enum>
-                   </property>
-                   <property name="text">
-                    <string>Allow Creative Adjustments</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="7" column="0">
-                  <layout class="QGridLayout" name="gridLayout_64">
-                   <property name="spacing">
-                    <number>0</number>
-                   </property>
-                   <item row="0" column="0">
-                    <widget class="QLabel" name="label_GammaText">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
-                     <property name="text">
-                      <string>Gamma</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="0" column="1">
-                    <spacer name="horizontalSpacer_Gamma">
-                     <property name="orientation">
-                      <enum>Qt::Horizontal</enum>
-                     </property>
-                     <property name="sizeType">
-                      <enum>QSizePolicy::Maximum</enum>
-                     </property>
-                     <property name="sizeHint" stdset="0">
-                      <size>
-                       <width>40</width>
-                       <height>20</height>
-                      </size>
-                     </property>
-                    </spacer>
-                   </item>
-                   <item row="0" column="2">
-                    <widget class="DoubleClickLabel" name="label_GammaVal">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
-                     <property name="text">
-                      <string>1.00</string>
-                     </property>
-                     <property name="alignment">
-                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="1" column="0" colspan="3">
-                    <widget class="NoScrollSlider" name="horizontalSliderGamma">
-                     <property name="sizePolicy">
-                      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                       <horstretch>0</horstretch>
-                       <verstretch>0</verstretch>
-                      </sizepolicy>
-                     </property>
-                     <property name="maximumSize">
-                      <size>
-                       <width>16777215</width>
-                       <height>16777215</height>
-                      </size>
-                     </property>
-                     <property name="minimum">
-                      <number>1</number>
-                     </property>
-                     <property name="maximum">
-                      <number>400</number>
-                     </property>
-                     <property name="value">
-                      <number>100</number>
-                     </property>
-                     <property name="sliderPosition">
-                      <number>100</number>
-                     </property>
-                     <property name="orientation">
-                      <enum>Qt::Horizontal</enum>
-                     </property>
-                    </widget>
-                   </item>
-                  </layout>
-                 </item>
-                 <item row="9" column="0">
-                  <widget class="QLineEdit" name="lineEditTransferFunction">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
+                    <string>AgX</string>
                    </property>
                   </widget>
                  </item>

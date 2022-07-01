@@ -174,6 +174,7 @@ private slots:
     void on_comboBoxUseCameraMatrix_currentIndexChanged(int index);
     void on_checkBoxCreativeAdjustments_toggled(bool checked);
     void on_checkBoxExrMode_toggled(bool checked);
+    void on_checkBoxAgX_toggled(bool checked);
     void on_checkBoxChromaSeparation_toggled(bool checked);
     void on_comboBoxProfile_currentIndexChanged(int index);
     void on_comboBoxProfile_activated(int index);

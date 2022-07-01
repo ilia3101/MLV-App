@@ -67,6 +67,7 @@ public:
     void setGamma( int value )                {m_gamma = value;}
     void setAllowCreativeAdjustments( bool on ){m_creativeAdjustments = on;}
     void setExrMode( bool on )                {m_exrMode = on;}
+    void setAgx( bool on )                    {m_agx = on;}
     void setRawWhite( int value )             {m_rawWhite = value;}
     void setRawBlack( int value )             {m_rawBlack = value;}
     void setTone( uint8_t value )             {m_tone = value;}
@@ -216,6 +217,7 @@ public:
     int gamma( void ){return m_gamma;}
     bool allowCreativeAdjustments( void ){return m_creativeAdjustments;}
     bool exrMode( void ){return m_exrMode;}
+    bool agx( void ){return m_agx;}
     int rawWhite( void ) {return m_rawWhite;}
     int rawBlack( void ) {return m_rawBlack;}
     uint8_t tone( void ) {return m_tone;}
@@ -323,6 +325,7 @@ private:
     int m_gamma;
     bool m_creativeAdjustments;
     bool m_exrMode;
+    bool m_agx;
     int m_rawWhite;
     int m_rawBlack;
     uint8_t m_tone;
