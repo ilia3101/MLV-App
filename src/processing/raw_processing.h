@@ -211,6 +211,10 @@ void processingSetToning(processingObject_t * processing, uint8_t r, uint8_t g, 
 #define processingEnableExr(processing) (processing)->exr_mode = 1
 #define processingDisableExr(processing) (processing)->exr_mode = 0
 
+/* AgX mode */
+#define processingEnableAgX(processing) (processing)->AgX = 1
+#define processingDisableAgX(processing) (processing)->AgX = 0
+
 /* Set Camera RAW matrix (matrix A is for tungsten) */
 void processingSetCamMatrix(processingObject_t * processing, double * camMatrix, double * camMatrixA);
 
@@ -256,8 +260,6 @@ void processingSetBlackAndWhiteLevel(processingObject_t * processing,
                                       float mlvBlackLevel, int mlvWhiteLevel, int mlvBitDepth );
 
 /* Get black/white level */
-#define processingGetBlackLevel(processing) (processing)->black_level
-#define processingGetWhiteLevel(processing) (processing)->white_level
 
 /* Saturation setting: 1.0 = no saturation added, 0.0 = black and white ... */
 void processingSetSaturation(processingObject_t * processing, double saturationFactor);
