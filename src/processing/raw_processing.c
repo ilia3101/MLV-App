@@ -910,15 +910,15 @@ void apply_processing_object( processingObject_t * processing,
                     for (int i = 0; i < 3; ++i) if (result[i] < 0.0) result[i] = 0.0;
                     // AgX compress chroma through matrix.
                     double * m = agx_compressed_matrix;
-                    pix[0] = LIMIT16(result[0]*m[0]+result[1]*m[1]+result[2]*m[2]);
-                    pix[1] = LIMIT16(result[0]*m[3]+result[1]*m[4]+result[2]*m[5]);
-                    pix[2] = LIMIT16(result[0]*m[6]+result[1]*m[7]+result[2]*m[8]);
+                    pixg[0] = LIMIT16(result[0]*m[0]+result[1]*m[1]+result[2]*m[2]);
+                    pixg[1] = LIMIT16(result[0]*m[3]+result[1]*m[4]+result[2]*m[5]);
+                    pixg[2] = LIMIT16(result[0]*m[6]+result[1]*m[7]+result[2]*m[8]);
                 }
                 else
                 {
-                    pix[0] = LIMIT16(result[0]);
-                    pix[1] = LIMIT16(result[1]);
-                    pix[2] = LIMIT16(result[2]);
+                    pixg[0] = LIMIT16(result[0]);
+                    pixg[1] = LIMIT16(result[1]);
+                    pixg[2] = LIMIT16(result[2]);
                 }
             }
 
