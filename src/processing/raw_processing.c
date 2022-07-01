@@ -32,6 +32,13 @@
 #define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
 #define LIMIT16(X) MAX(MIN(X, 65535), 0)
 
+/* Thank you to https://gist.github.com/MrLixm/946c1b59cce8b74e948e75618583ce8d */
+double agx_compressed_matrix[9] = {
+    0.84247906, 0.0784336, 0.07922375,
+    0.04232824, 0.87846864, 0.07916613,
+    0.04237565, 0.0784336, 0.87914297
+};
+
 #ifndef __APPLE__
 #define M_PI 3.14159265358979323846 /* pi */
 #endif
@@ -81,6 +88,7 @@ processingObject_t * initProcessingObject()
     processingObject_t * processing = calloc( 1, sizeof(processingObject_t) );
 
     processing->exr_mode = 0;
+    processing->AgX = 1;
 
     processing->filter = initFilterObject();
 
@@ -600,6 +608,9 @@ void apply_processing_object( processingObject_t * processing,
         for (int i = 0; i < 3; ++i) rgb_to_Y[i] = inversemat[3+i];
     }
 
+    double agx_inverse_matrix[9];
+    invertMatrix(agx_compressed_matrix, agx_inverse_matrix);
+
     /* In case of camera matrix */
     //double (* tone_mapping_function)(double) = tonemap_functions[processing->tonemap_function];
 
@@ -828,19 +839,26 @@ void apply_processing_object( processingObject_t * processing,
                 for (int i = 0; i < 3; ++i) result[i] = (result[i] - Y) * desaturate_factor + Y;
             }
 
-            // if (result[2] < 0 || result[0] < 0 || result[1] < 0)
-            // {
-            //         result[0] = 600000;
-            //         result[1] = 600000;
-            //         result[2] = 600000;
-            // }
 
-            pix[0] = LIMIT16(result[0]);
-            pix[1] = LIMIT16(result[1]);
-            pix[2] = LIMIT16(result[2]);
+            if (processing->AgX)
+            {
+                // Clip. Just in case other footprint compression did not happen.
+                for (int i = 0; i < 3; ++i) if (result[i] < 0.0) result[i] = 0.0;
+                // AgX compress chroma through matrix.
+                double * m = agx_compressed_matrix;
+                pix[0] = LIMIT16(result[0]*m[0]+result[1]*m[1]+result[2]*m[2]);
+                pix[1] = LIMIT16(result[0]*m[3]+result[1]*m[4]+result[2]*m[5]);
+                pix[2] = LIMIT16(result[0]*m[6]+result[1]*m[7]+result[2]*m[8]);
+            }
+            else
+            {
+                pix[0] = LIMIT16(result[0]);
+                pix[1] = LIMIT16(result[1]);
+                pix[2] = LIMIT16(result[2]);
+            }
         }
 
-        /* Gamma and expo correction (shadows&highlights, contrast, clarity)*/
+        /* Gamma and expo correction (shadows&highlights, contrast, clarity) */
         for( int i = 0; i < 3; i++ )
         {
             pix[i] = processing->pre_calc_gamma[ LIMIT16((uint32_t)pix[i]) ]; /* Not float-> int is done here */
@@ -883,9 +901,25 @@ void apply_processing_object( processingObject_t * processing,
                     if (Y <= 0.0f) desaturate_factor = 1;
                     for (int i = 0; i < 3; ++i) result[i] = (result[i] - Y) * desaturate_factor + Y; 
                 }
-                pixg[0] = LIMIT16(result[0]);
-                pixg[1] = LIMIT16(result[1]);
-                pixg[2] = LIMIT16(result[2]);
+
+
+                /* obligatory code duplication */
+                if (processing->AgX)
+                {
+                    // Clip. Just in case other footprint compression did not happen.
+                    for (int i = 0; i < 3; ++i) if (result[i] < 0.0) result[i] = 0.0;
+                    // AgX compress chroma through matrix.
+                    double * m = agx_compressed_matrix;
+                    pix[0] = LIMIT16(result[0]*m[0]+result[1]*m[1]+result[2]*m[2]);
+                    pix[1] = LIMIT16(result[0]*m[3]+result[1]*m[4]+result[2]*m[5]);
+                    pix[2] = LIMIT16(result[0]*m[6]+result[1]*m[7]+result[2]*m[8]);
+                }
+                else
+                {
+                    pix[0] = LIMIT16(result[0]);
+                    pix[1] = LIMIT16(result[1]);
+                    pix[2] = LIMIT16(result[2]);
+                }
             }
 
             /* Gamma and expo correction (shadows&highlights, contrast, clarity) gradient layer*/
@@ -1067,6 +1101,19 @@ void apply_processing_object( processingObject_t * processing,
             pix[0] = processing->gcurve_r[ pix[0] ];
             pix[1] = processing->gcurve_g[ pix[1] ];
             pix[2] = processing->gcurve_b[ pix[2] ];
+        }
+    }
+
+    if (processing->AgX)
+    {
+        //Gradation curve
+        for (uint16_t * pix = img; pix < img_end; pix += 3)
+        {
+            float as_float[3] = {pix[0], pix[1], pix[2]};
+            double * m = agx_inverse_matrix;
+            pix[0] = LIMIT16(as_float[0]*m[0]+as_float[1]*m[1]+as_float[2]*m[2]);
+            pix[1] = LIMIT16(as_float[0]*m[3]+as_float[1]*m[4]+as_float[2]*m[5]);
+            pix[2] = LIMIT16(as_float[0]*m[6]+as_float[1]*m[7]+as_float[2]*m[8]);
         }
     }
 
