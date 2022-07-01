@@ -260,6 +260,8 @@ void processingSetBlackAndWhiteLevel(processingObject_t * processing,
                                       float mlvBlackLevel, int mlvWhiteLevel, int mlvBitDepth );
 
 /* Get black/white level */
+#define processingGetBlackLevel(processing) (processing)->black_level
+#define processingGetWhiteLevel(processing) (processing)->white_level
 
 /* Saturation setting: 1.0 = no saturation added, 0.0 = black and white ... */
 void processingSetSaturation(processingObject_t * processing, double saturationFactor);
