@@ -79,7 +79,7 @@ macx{
 # Windows, standard use with standard Qt download.
 # Else comment these lines!
 win32{
-    QMAKE_CFLAGS += -O2 -fopenmp -msse4.1 -mssse3 -msse3 -msse2 -msse -D_FILE_OFFSET_BITS=64 -std=c99 -ftree-vectorize
+    QMAKE_CFLAGS += -O2 -fopenmp -mssse3 -msse3 -msse2 -msse -D_FILE_OFFSET_BITS=64 -std=c99 -ftree-vectorize
     QMAKE_CXXFLAGS += -fopenmp -std=c++11 -ftree-vectorize
     LIBS += -llibgomp-1
 }
