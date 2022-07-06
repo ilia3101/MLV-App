@@ -41,7 +41,7 @@ void CAutoUpdaterGithub::setUpdateStatusListener(UpdateStatusListener* listener)
 
 void CAutoUpdaterGithub::checkForUpdates()
 {
-	QNetworkReply * reply = _networkManager.get(QNetworkRequest(QUrl(_updatePageAddress)));
+    QNetworkReply * reply = _networkManager.get(QNetworkRequest(QUrl(_updatePageAddress)));
 	if (!reply)
 	{
 		if (_listener)
@@ -100,6 +100,7 @@ inline QString match(const QString& pattern, const QString& text, int from, int&
 void CAutoUpdaterGithub::updateCheckRequestFinished()
 {
 	QNetworkReply* reply = qobject_cast<QNetworkReply *>(sender());
+
 	if (!reply)
 		return;
 
@@ -121,15 +122,14 @@ void CAutoUpdaterGithub::updateCheckRequestFinished()
 	}
 
 	ChangeLog changelog;
-	static const QString changelogPattern = "<div class=\"markdown-body\">\n*</div>";
-	static const QString versionPattern = "/releases/tag/*\">";
-	static const QString releaseUrlPattern = "<a href=\"*\"";
-	
-	const auto releases = QString(reply->readAll()).split("release-header");
-	// Skipping the 0 item because anything before the first "release-header" is not a release
+    static const QString changelogPattern = "<div data-pjax=\"true\" data-test-selector=\"body-content\" data-view-component=\"true\" class=\"markdown-body my-3\">*</div>";
+    static const QString versionPattern = "/releases/tag/*\" data-view-component=\"true\" class=\"Link--primary\">";
+
+    const auto releases = QString(reply->readAll()).split("SelectMenu-header");
+    // Skipping the 0 item because anything before the first "SelectMenu-header" is not a release
 	for (int releaseIndex = 1, numItems = releases.size(); releaseIndex < numItems; ++releaseIndex)
-	{
-		const QString& releaseText = releases[releaseIndex];
+    {
+        const QString& releaseText = releases[releaseIndex];
 	
 		int offset = 0;
 		const QString updateVersion = match(versionPattern, releaseText, offset, offset);
