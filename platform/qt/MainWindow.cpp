@@ -2127,14 +2127,14 @@ void MainWindow::startExportPipe(QString fileName)
                     .append( shortFileName.left( shortFileName.lastIndexOf( "." ) ) )
                     .append( QString( "_%06d.tif" ) );
 
-            program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v tiff -pix_fmt %3 -start_number %4 -color_primaries %7 -color_trc %7 -colorspace bt709 %5\"%6\"" )
+            program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v tiff -pix_fmt %3 -start_number %4 -color_primaries %5 -color_trc %5 -colorspace bt709 %6\"%7\"" )
                         .arg( fps )
                         .arg( resolution )
                         .arg( "rgb48" )
                         .arg( m_exportQueue.first()->cutIn() - 1 )
+                        .arg( colorTag )
                         .arg( resizeFilter )
-                        .arg( output )
-                        .arg( colorTag ) );
+                        .arg( output ) );
 
             //copy wav to the location, ffmpeg does not like to do it for us :-(
             if( m_audioExportEnabled && doesMlvHaveAudio( m_pMlvObject ) )
@@ -2147,13 +2147,13 @@ void MainWindow::startExportPipe(QString fileName)
         else
         {
             output.append( QString( ".tif" ) );
-            program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v tiff -pix_fmt %3 -color_primaries %6 -color_trc %6 -colorspace bt709 %4\"%5\"" )
+            program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v tiff -pix_fmt %3 -color_primaries %4 -color_trc %4 -colorspace bt709 %5\"%6\"" )
                         .arg( fps )
                         .arg( resolution )
                         .arg( "rgb48" )
+                        .arg( colorTag )
                         .arg( resizeFilter )
-                        .arg( output )
-                        .arg( colorTag ) );
+                        .arg( output ) );
         }
     }
     else if( m_codecProfile == CODEC_PNG )
@@ -2177,14 +2177,14 @@ void MainWindow::startExportPipe(QString fileName)
                 .append( shortFileName.left( shortFileName.lastIndexOf( "." ) ) )
                 .append( QString( "_%06d.png" ) );
 
-        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v png -pix_fmt %3 -start_number %4 -color_primaries %7 -color_trc %7 -colorspace bt709 %5\"%6\"" )
+        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v png -pix_fmt %3 -start_number %4 -color_primaries %5 -color_trc %5 -colorspace bt709 %6\"%7\"" )
                     .arg( fps )
                     .arg( resolution )
                     .arg( pngDepth )
                     .arg( m_exportQueue.first()->cutIn() - 1 )
+                    .arg( colorTag )
                     .arg( resizeFilter )
-                    .arg( output )
-                    .arg( colorTag ) );
+                    .arg( output ) );
 
         //copy wav to the location, ffmpeg does not like to do it for us :-(
         if( m_audioExportEnabled && doesMlvHaveAudio( m_pMlvObject ) )
@@ -2211,14 +2211,14 @@ void MainWindow::startExportPipe(QString fileName)
                 .append( shortFileName.left( shortFileName.lastIndexOf( "." ) ) )
                 .append( QString( "_%06d.jp2" ) );
 
-        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v jpeg2000 -pix_fmt %3 -start_number %4 -color_primaries %7 -color_trc %7 -colorspace bt709 %5\"%6\"" )
+        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v jpeg2000 -pix_fmt %3 -start_number %4 -color_primaries %5 -color_trc %5 -colorspace bt709 %6\"%7\"" )
                     .arg( fps )
                     .arg( resolution )
                     .arg( "yuv444p" )
                     .arg( m_exportQueue.first()->cutIn() - 1 )
+                    .arg( colorTag )
                     .arg( resizeFilter )
-                    .arg( output )
-                    .arg( colorTag ) );
+                    .arg( output ) );
 
         //copy wav to the location, ffmpeg does not like to do it for us :-(
         if( m_audioExportEnabled && doesMlvHaveAudio( m_pMlvObject ) )
@@ -2232,13 +2232,13 @@ void MainWindow::startExportPipe(QString fileName)
     {
         output.append( QString( ".mov" ) );
 
-        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v jpeg2000 -pix_fmt %3 -color_primaries %6 -color_trc %6 -colorspace bt709 %4\"%5\"" )
+        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v jpeg2000 -pix_fmt %3 -color_primaries %4 -color_trc %4 -colorspace bt709 %5\"%6\"" )
                     .arg( fps )
                     .arg( resolution )
                     .arg( "yuv444p" )
+                    .arg( colorTag )
                     .arg( resizeFilter )
-                    .arg( output )
-                    .arg( colorTag ) );
+                    .arg( output ) );
     }
     else if( m_codecProfile == CODEC_AVI )
     {
@@ -2321,14 +2321,14 @@ void MainWindow::startExportPipe(QString fileName)
         else
             quality = 24;
 
-        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v libx264 -preset medium -crf %3 -pix_fmt %4 -color_primaries %7 -color_trc %7 -colorspace bt709 %5\"%6\"" )
+        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v libx264 -preset medium -crf %3 -pix_fmt %4 -color_primaries %5 -color_trc %5 -colorspace bt709 %6\"%7\"" )
                     .arg( fps )
                     .arg( resolution )
                     .arg( quality )
                     .arg( "yuv420p" )
+                    .arg( colorTag )
                     .arg( resizeFilter )
-                    .arg( output )
-                    .arg( colorTag ) );
+                    .arg( output ) );
     }
     else if( m_codecProfile == CODEC_H265_8 || m_codecProfile == CODEC_H265_10 || m_codecProfile == CODEC_H265_12 )
     {
@@ -2347,14 +2347,14 @@ void MainWindow::startExportPipe(QString fileName)
         else
             quality = 24;
 
-        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v libx265 -preset medium -crf %3 -tag:v hvc1 -pix_fmt %4 -color_primaries %7 -color_trc %7 -colorspace bt709 %5\"%6\"" )
+        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v libx265 -preset medium -crf %3 -tag:v hvc1 -pix_fmt %4 -color_primaries %5 -color_trc %5 -colorspace bt709 %6\"%7\"" )
                     .arg( fps )
                     .arg( resolution )
                     .arg( quality )
                     .arg( bitdepth )
+                    .arg( colorTag )
                     .arg( resizeFilter )
-                    .arg( output )
-                    .arg( colorTag ) );
+                    .arg( output ) );
     }
     else if( m_codecProfile == CODEC_DNXHR )
     {
@@ -2394,14 +2394,14 @@ void MainWindow::startExportPipe(QString fileName)
         else if( fps == QString( "59.94" ) || fps == QString( "59,94" ) || getFramerate() == 60000.0/1001.0 ) optionFps = ",fps=60000/1001";
         resizeFilter.insert( resizeFilter.indexOf( "=bt709" )+6, optionFps );
 
-        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v dnxhd %3%4 -color_primaries %7 -color_trc %7 -colorspace bt709 %5\"%6\"" )
+        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v dnxhd %3%4 -color_primaries %5 -color_trc %5 -colorspace bt709 %6\"%7\"" )
                     .arg( fps )
                     .arg( resolution )
                     .arg( option )
                     .arg( format )
+                    .arg( colorTag )
                     .arg( resizeFilter )
-                    .arg( output )
-                    .arg( colorTag ) );
+                    .arg( output ) );
     }
     else if( m_codecProfile == CODEC_DNXHD )
     {
@@ -2472,12 +2472,12 @@ void MainWindow::startExportPipe(QString fileName)
             return;
         }
 
-        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v dnxhd %3 -color_primaries %5 -color_trc %5 -colorspace bt709 \"%4\"" )
+        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v dnxhd %3 -color_primaries %4 -color_trc %4 -colorspace bt709 \"%5\"" )
                     .arg( fps )
                     .arg( resolution )
                     .arg( option )
-                    .arg( output )
-                    .arg( colorTag ) );
+                    .arg( colorTag )
+                    .arg( output ) );
     }
     else if( m_codecProfile == CODEC_CINEFORM_10 || m_codecProfile == CODEC_CINEFORM_12 )
     {
@@ -2506,14 +2506,14 @@ void MainWindow::startExportPipe(QString fileName)
         else
             quality = "-crf 18 -b:v 0";
 
-        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v libvpx-vp9 %3 -pix_fmt %4 -color_primaries %7 -color_trc %7 -colorspace bt709 %5\"%6\"" )
+        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v libvpx-vp9 %3 -pix_fmt %4 -color_primaries %5 -color_trc %5 -colorspace bt709 %6\"%7\"" )
                     .arg( fps )
                     .arg( resolution )
                     .arg( quality )
                     .arg( "yuv420p" )
+                    .arg( colorTag )
                     .arg( resizeFilter )
-                    .arg( output )
-                    .arg( colorTag ) );
+                    .arg( output ) );
     }
     else
     {
@@ -2525,15 +2525,15 @@ void MainWindow::startExportPipe(QString fileName)
         else pixFmt = QString( "yuv444p10" );
 
         output.append( QString( ".mov" ) );
-        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v %3 -profile:v %4 -pix_fmt %5 -color_primaries %8 -color_trc %8 -colorspace bt709 %6\"%7\"" )
+        program.append( QString( " -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v %3 -profile:v %4 -pix_fmt %5 -color_primaries %6 -color_trc %6 -colorspace bt709 %7\"%8\"" )
                     .arg( fps )
                     .arg( resolution )
                     .arg( option )
                     .arg( m_codecProfile )
                     .arg( pixFmt )
+                    .arg( colorTag )
                     .arg( resizeFilter )
-                    .arg( output )
-                    .arg( colorTag ) );
+                    .arg( output ) );
     }
     //There is a %5 in the string, so another arg is not possible - so do that:
     program.insert( program.indexOf( "-c:v" ), ffmpegAudioCommand );
