@@ -116,6 +116,7 @@ SOURCES += \
     ClipInformation.cpp \
     RenameDialog.cpp \
     SessionModel.cpp \
+    Updater/Updater.cpp \
         main.cpp \
         MainWindow.cpp \
     ../../src/debayer/amaze_demosaic.c \
@@ -168,8 +169,6 @@ SOURCES += \
     ColorWheel.cpp \
     ../../src/mlv/audio_mlv.c \
     Updater/updaterUI/cupdaterdialog.cpp \
-    Updater/cautoupdatergithub.cpp \
-    Updater/updaterUI/CUpdater.cpp \
     ../../src/processing/blur_threaded.c \
     Scripting.cpp \
     FcpxmlAssistantDialog.cpp \
@@ -265,6 +264,7 @@ HEADERS += MainWindow.h \
     StatusDialog.h \
     SystemMemory.h \
     Histogram.h \
+    Updater/Updater.h \
     WaveFormMonitor.h \
     ExportSettingsDialog.h \
     ReceiptSettings.h \
@@ -289,8 +289,6 @@ HEADERS += MainWindow.h \
     ../../src/mlv/audio_mlv.h \
     ../../src/mlv/macros.h \
     Updater/updaterUI/cupdaterdialog.h \
-    Updater/cautoupdatergithub.h \
-    Updater/updaterUI/CUpdater.h \
     ../../src/processing/blur_threaded.h \
     Scripting.h \
     FcpxmlAssistantDialog.h \

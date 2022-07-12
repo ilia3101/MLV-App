@@ -37,6 +37,7 @@
 #include "DarkStyle.h"
 #include "DarkStyleModern.h"
 #include "Updater/updaterUI/cupdaterdialog.h"
+#include "Updater/Updater.h"
 #include "FcpxmlAssistantDialog.h"
 #include "FcpxmlSelectDialog.h"
 #include "UserManualDialog.h"
@@ -186,9 +187,7 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     QString date = set.value( "lastUpdateCheck", QString( "" ) ).toString();
     if( ui->actionAutoCheckForUpdates->isChecked() && date != QDate::currentDate().toString() )
     {
-        m_pUpdateCheck = new CUpdater( this, QString( "https://github.com/ilia3101/MLV-App" ), GITVERSION );
-        connect( m_pUpdateCheck, SIGNAL(updateAvailable(bool)), this, SLOT(updateCheckResponse(bool)) );
-        m_pUpdateCheck->checkForUpdates();
+        QTimer::singleShot( 1000, this, SLOT( updateCheck() ) );
     }
 
     //Temp invisible
@@ -5627,12 +5626,12 @@ void MainWindow::on_actionAbout_triggered()
                                     " <p>See <a href='%5'>this site</a> for more information.</p>"
                                     " <p>Darkstyle Copyright (c) 2017, <a href='%6'>Juergen Skrotzky</a> under MIT</p>"
                                     " <p>Some icons by <a href='%7'>Double-J Design</a> under <a href='%8'>CC4.0</a></p>"
-                                    " <p>Autoupdater Copyright (c) 2016, <a href='%9'>Violet Giraffe</a> under MIT</p>"
-                                    " <p>Zhang-Wu LMMSE Image Demosaicking by Pascal Getreuer under <a href='%10'>BSD</a>.</p>"
-                                    " <p>QRecentFilesMenu Copyright (c) 2011 by Morgan Leborgne under <a href='%11'>MIT</a>.</p>"
-                                    " <p>Recursive bilateral filtering developed by Qingxiong Yang under <a href='%12'>MIT</a> and Ming under <a href='%13'>MIT</a>.</p>"
-                                    " <p>AVIR image resizing algorithm designed by Aleksey Vaneev under <a href='%14'>MIT</a>.</p>"
-                                    " <p>Sobel filter Copyright 2018 Pedro Melgueira under <a href='%15'>Apache 2.0</a>.</p>"
+                                    " <p>Zhang-Wu LMMSE Image Demosaicking by Pascal Getreuer under <a href='%9'>BSD</a>.</p>"
+                                    " <p>QRecentFilesMenu Copyright (c) 2011 by Morgan Leborgne under <a href='%10'>MIT</a>.</p>"
+                                    " <p>Recursive bilateral filtering developed by Qingxiong Yang under <a href='%11'>MIT</a> and Ming under <a href='%12'>MIT</a>.</p>"
+                                    " <p>AVIR image resizing algorithm designed by Aleksey Vaneev under <a href='%13'>MIT</a>.</p>"
+                                    " <p>Sobel filter Copyright 2018 Pedro Melgueira under <a href='%14'>Apache 2.0</a>.</p>"
+                                    " <p>maddy Markdown to HTML library under <a href='%15'>MIT</a>.</p>"
                                     " </body></html>" )
                                    .arg( pic ) //1
                                    .arg( APPNAME ) //2
@@ -5642,13 +5641,13 @@ void MainWindow::on_actionAbout_triggered()
                                    .arg( "https://github.com/Jorgen-VikingGod" ) //6
                                    .arg( "http://www.doublejdesign.co.uk/" ) //7
                                    .arg( "https://creativecommons.org/licenses/by/4.0/" ) //8
-                                   .arg( "https://github.com/VioletGiraffe/github-releases-autoupdater" ) //9
-                                   .arg( "http://www.opensource.org/licenses/bsd-license.html" ) //10
-                                   .arg( "https://github.com/mojocorp/QRecentFilesMenu/blob/master/LICENSE" ) //11
-                                   .arg( "https://github.com/ufoym/recursive-bf/blob/master/LICENSE" ) //12
-                                   .arg( "https://github.com/Fig1024/OP_RBF/blob/master/LICENSE" ) //13
-                                   .arg( "https://github.com/avaneev/avir/blob/master/LICENSE" ) //14
-                                   .arg( "https://github.com/petermlm/SobelFilter/blob/master/LICENSE" ) ); //15
+                                   .arg( "http://www.opensource.org/licenses/bsd-license.html" ) //9
+                                   .arg( "https://github.com/mojocorp/QRecentFilesMenu/blob/master/LICENSE" ) //10
+                                   .arg( "https://github.com/ufoym/recursive-bf/blob/master/LICENSE" ) //11
+                                   .arg( "https://github.com/Fig1024/OP_RBF/blob/master/LICENSE" ) //12
+                                   .arg( "https://github.com/avaneev/avir/blob/master/LICENSE" ) //13
+                                   .arg( "https://github.com/petermlm/SobelFilter/blob/master/LICENSE" ) //14
+                                   .arg( "https://github.com/progsource/maddy/blob/master/LICENSE" ) ); //15
 }
 
 //Qt Infobox
@@ -9798,7 +9797,7 @@ void MainWindow::on_lineEditDarkFrameFile_textChanged(const QString &arg1)
 //Check if there is an update availlable
 void MainWindow::on_actionCheckForUpdates_triggered( void )
 {
-    CUpdaterDialog dialog( this, QString( "https://github.com/ilia3101/MLV-App" ), GITVERSION, false );
+    CUpdaterDialog dialog( this, QString( "https://api.github.com/repos/ilia3101/MLV-App/releases" ), GITVERSION, false );
     dialog.exec();
 
     QSettings set( QSettings::UserScope, "magiclantern.MLVApp", "MLVApp" );
@@ -9808,17 +9807,15 @@ void MainWindow::on_actionCheckForUpdates_triggered( void )
 }
 
 //Autocheck for updates told there is an update
-void MainWindow::updateCheckResponse(bool arg)
+void MainWindow::updateCheck(void)
 {
-    if( arg ) on_actionCheckForUpdates_triggered();
-
-    disconnect( m_pUpdateCheck, SIGNAL(updateAvailable(bool)), this, SLOT(updateCheckResponse(bool)) );
-    delete m_pUpdateCheck;
+    Updater *pUpdater = new Updater(this, QString( "https://api.github.com/repos/ilia3101/MLV-App/releases" ), GITVERSION);
+    if( pUpdater->isUpdateAvailable() ) on_actionCheckForUpdates_triggered();
+    else checkFocusPixelUpdate();
+    delete pUpdater;
 
     QSettings set( QSettings::UserScope, "magiclantern.MLVApp", "MLVApp" );
     set.setValue( "lastUpdateCheck", QDate::currentDate().toString() );
-
-    checkFocusPixelUpdate();
 }
 
 //Load Lut button pressed
