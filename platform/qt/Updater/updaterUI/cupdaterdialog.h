@@ -1,38 +1,30 @@
 #ifndef CUPDATERDIALOG_H
 #define CUPDATERDIALOG_H
 
-#include "../cautoupdatergithub.h"
+#include "../Updater.h"
 #include <QDialog>
+#include <QTimer>
 
 namespace Ui {
 	class CUpdaterDialog;
 }
 
-class CAutoUpdaterGithub;
-
-class CUpdaterDialog : public QDialog, private CAutoUpdaterGithub::UpdateStatusListener
+class CUpdaterDialog : public QDialog
 {
 public:
 	explicit CUpdaterDialog(QWidget *parent, const QString& githubRepoAddress, const QString& versionString, bool silentCheck = false);
 	~CUpdaterDialog();
 
-private:
-	void applyUpdate();
-
-private:
-	// If no updates are found, the changelog is empty
-	void onUpdateAvailable(CAutoUpdaterGithub::ChangeLog changelog) override;
-	// percentageDownloaded >= 100.0f means the download has finished
-	void onUpdateDownloadProgress(float percentageDownloaded) override;
-	void onUpdateDownloadFinished() override;
-	void onUpdateError(QString errorMessage) override;
+private slots:
+    void checkUpdate( void );
 
 private:
 	Ui::CUpdaterDialog *ui;
-	const bool _silent;
+    void applyUpdate();
 
+    const bool _silent;
 	QString _latestUpdateUrl;
-	CAutoUpdaterGithub _updater;
+    Updater _updater;
 };
 
 #endif // CUPDATERDIALOG_H

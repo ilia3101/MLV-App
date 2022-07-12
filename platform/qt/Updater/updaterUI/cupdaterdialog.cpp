@@ -8,12 +8,15 @@
 #include <QPushButton>
 #include <QStringBuilder>
 #include <QScrollBar>
+#include "maddy/parser.h"
+#include <memory>
+#include <string>
 
 CUpdaterDialog::CUpdaterDialog(QWidget *parent, const QString& githubRepoAddress, const QString& versionString, bool silentCheck) :
 	QDialog(parent),
 	ui(new Ui::CUpdaterDialog),
 	_silent(silentCheck),
-	_updater(githubRepoAddress, versionString)
+    _updater(this, QUrl(githubRepoAddress), versionString)
 {
 	ui->setupUi(this);
     setWindowFlags( Qt::Dialog | Qt::WindowTitleHint | Qt::WindowCloseButtonHint | Qt::WindowStaysOnTopHint );
@@ -30,57 +33,49 @@ CUpdaterDialog::CUpdaterDialog(QWidget *parent, const QString& githubRepoAddress
 	ui->progressBar->setValue(0);
 	ui->lblPercentage->setVisible(false);
 
-	_updater.setUpdateStatusListener(this);
-	_updater.checkForUpdates();
+    QTimer::singleShot( 1, this, &CUpdaterDialog::checkUpdate );
 }
 
 CUpdaterDialog::~CUpdaterDialog()
 {
-	delete ui;
+    delete ui;
+}
+
+void CUpdaterDialog::checkUpdate( void )
+{
+    if( !_updater.isUpdateAvailable() )
+    {
+        accept();
+        if (!_silent)
+            QMessageBox::information(this, tr("No update available"), tr("You already have the latest version of MLV App."));
+        return;
+    }
+
+    ui->stackedWidget->setCurrentIndex(1);
+    QString text;
+    for (const auto& changelogItem: _updater.getUpdateChangelog())
+    {
+        text.append("<b>" % changelogItem.versionString % "</b>" % "\r\n\r\n" % changelogItem.versionChanges % "<p></p>" % "\r\n\r\n" );
+    }
+    //ui->changeLogViewer->setMarkdown( text ); //Just for Qt5.14+
+    // ////
+    //Use Maddy parser Markdown->Html
+    std::shared_ptr<maddy::ParserConfig> config = std::make_shared<maddy::ParserConfig>();
+    config->isEmphasizedParserEnabled = true; // default
+    config->isHTMLWrappedInParagraph = true; // default
+    std::shared_ptr<maddy::Parser> parser = std::make_shared<maddy::Parser>(config);
+    std::stringstream markdownInput( text.toStdString() );
+    std::string htmlOutput = parser->Parse( markdownInput );
+    // ////
+    ui->changeLogViewer->setText( QString::fromStdString( htmlOutput ) );
+
+    _latestUpdateUrl = _updater.getUpdateChangelog().front().versionUpdateUrl;
+    QScrollBar *scrollbar = ui->changeLogViewer->verticalScrollBar();
+    scrollbar->setSliderPosition(0);
+    show();
 }
 
 void CUpdaterDialog::applyUpdate()
 {
     QDesktopServices::openUrl(QUrl(_latestUpdateUrl));
-}
-
-// If no updates are found, the changelog is empty
-void CUpdaterDialog::onUpdateAvailable(CAutoUpdaterGithub::ChangeLog changelog)
-{
-	if (!changelog.empty())
-	{
-		ui->stackedWidget->setCurrentIndex(1);
-		for (const auto& changelogItem: changelog)
-			ui->changeLogViewer->append("<b>" % changelogItem.versionString % "</b>" % '\n' % changelogItem.versionChanges % "<p></p>");
-
-		_latestUpdateUrl = changelog.front().versionUpdateUrl;
-        QScrollBar *scrollbar = ui->changeLogViewer->verticalScrollBar();
-        scrollbar->setSliderPosition(0);
-		show();
-	}
-	else
-	{
-		accept();
-		if (!_silent)
-            QMessageBox::information(this, tr("No update available"), tr("You already have the latest version of MLV App."));
-	}
-}
-
-// percentageDownloaded >= 100.0f means the download has finished
-void CUpdaterDialog::onUpdateDownloadProgress(float percentageDownloaded)
-{
-	ui->progressBar->setValue((int)percentageDownloaded);
-	ui->lblPercentage->setText(QString::number(percentageDownloaded, 'f', 2) + " %");
-}
-
-void CUpdaterDialog::onUpdateDownloadFinished()
-{
-	accept();
-}
-
-void CUpdaterDialog::onUpdateError(QString errorMessage)
-{
-	reject();
-	if (!_silent)
-		QMessageBox::critical(this, tr("Error checking for updates"), tr(errorMessage.toUtf8().data()));
 }

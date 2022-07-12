@@ -37,7 +37,6 @@
 #include "TimeCodeLabel.h"
 #include "DoubleClickLabel.h"
 #include "Scripting.h"
-#include "Updater/updaterUI/CUpdater.h"
 #include "ReceiptCopyMaskDialog.h"
 #include "QRecentFilesMenu.h"
 
@@ -381,7 +380,7 @@ private slots:
     void on_lineEditDarkFrameFile_textChanged(const QString &arg1);
 
     void on_actionCheckForUpdates_triggered(void);
-    void updateCheckResponse( bool arg );
+    void updateCheck(void);
 
     void on_toolButtonLoadLut_clicked();
     void on_toolButtonNextLut_clicked();
@@ -426,7 +425,6 @@ private:
     TimeCodeLabel* m_pTimeCodeImage;
     ReceiptCopyMaskDialog *m_pCopyMask;
     Scripting* m_pScripting;
-    CUpdater* m_pUpdateCheck;
     uint8_t m_timeCodePosition;
     QLabel *m_pCachingStatus;
     QLabel *m_pFpsStatus;
