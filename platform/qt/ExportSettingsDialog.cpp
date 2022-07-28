@@ -547,6 +547,7 @@ void ExportSettingsDialog::on_comboBoxSmoothing_currentIndexChanged(int index)
     {
         ui->checkBoxHdrBlending->setEnabled( false );
         ui->checkBoxHdrBlending->setChecked( false );
+        QMessageBox::warning( this, "MLVApp", tr( "This option is very slow and runs when export progressbar is at 100%!\nIt won't bring good results in shots with much movement and much detail." ) );
     }
 }
 
