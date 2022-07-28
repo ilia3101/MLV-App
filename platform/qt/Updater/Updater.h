@@ -32,6 +32,7 @@ public:
 
     bool isUpdateAvailable( void );
     ChangeLog getUpdateChangelog( void ){ return m_changelog; }
+    QString getDownloadUrl( void ){ return m_downloadUrl; }
 
 private:
     DownloadManager *m_manager;
@@ -39,6 +40,7 @@ private:
     ChangeLog m_changelog;
     QUrl m_url;
     QString m_version;
+    QString m_downloadUrl;
 };
 
 #endif // UPDATER_H

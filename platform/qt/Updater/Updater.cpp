@@ -22,6 +22,7 @@ Updater::Updater(QObject *parent, QUrl url, QString version)
     m_manager = new DownloadManager();
     m_url = url;
     m_version = version;
+    m_downloadUrl = "";
 }
 
 Updater::~Updater()
@@ -51,6 +52,7 @@ bool Updater::isUpdateAvailable( void )
 
         if( !naturalSortQstringComparator( m_version, releaseTag ) ) continue;
         if( !releaseTag.startsWith( m_version.at(0) ) ) continue;
+        if( !available ) m_downloadUrl = entry.toObject().value( "html_url" ).toString();
         available = true;
         m_changelog.push_back({ releaseTag,
                               entry.toObject().value( "body" ).toString(),
