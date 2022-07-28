@@ -77,5 +77,5 @@ void CUpdaterDialog::checkUpdate( void )
 
 void CUpdaterDialog::applyUpdate()
 {
-    QDesktopServices::openUrl(QUrl(_latestUpdateUrl));
+    QDesktopServices::openUrl(QUrl(_updater.getDownloadUrl()));
 }
