@@ -1663,7 +1663,7 @@ void MainWindow::startExportPipe(QString fileName)
 #endif
         if( !file->exists() )
         {
-            QMessageBox::critical( this, APPNAME, tr( "Encoder ffmpeg missing in application path." ) );
+            QMessageBox::critical( this, APPNAME, tr( "Can't access encoder ffmpeg from MLVApp application path." ) );
             exportAbort();
             //Emit Ready-Signal
             emit exportReady();
