@@ -2840,7 +2840,7 @@ void MainWindow::startExportCdng(QString fileName)
         qApp->processEvents();
 
         //Check diskspace
-        checkDiskFull( fileName );
+        checkDiskFull( filePathNr );
         //Abort pressed? -> End the loop
         if( m_exportAbortPressed ) break;
     }
