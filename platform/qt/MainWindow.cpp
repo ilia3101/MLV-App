@@ -2746,6 +2746,10 @@ void MainWindow::startExportCdng(QString fileName)
     {
         picAR[0] = 3; picAR[1] = 2;
     }
+    else if( m_exportQueue.first()->stretchFactorX() == STRETCH_H_167 )
+    {
+        picAR[0] = 5; picAR[1] = 3;
+    }
     else if( m_exportQueue.first()->stretchFactorX() == STRETCH_H_175 )
     {
         picAR[0] = 7; picAR[1] = 4;
@@ -4508,8 +4512,9 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     if( receipt->stretchFactorX() == STRETCH_H_100 ) ui->comboBoxHStretch->setCurrentIndex( 0 );
     else if( receipt->stretchFactorX() == STRETCH_H_133 ) ui->comboBoxHStretch->setCurrentIndex( 1 );
     else if( receipt->stretchFactorX() == STRETCH_H_150 ) ui->comboBoxHStretch->setCurrentIndex( 2 );
-    else if( receipt->stretchFactorX() == STRETCH_H_175 ) ui->comboBoxHStretch->setCurrentIndex( 3 );
-    else if( receipt->stretchFactorX() == STRETCH_H_180 ) ui->comboBoxHStretch->setCurrentIndex( 4 );
+    else if( receipt->stretchFactorX() == STRETCH_H_167 ) ui->comboBoxHStretch->setCurrentIndex( 3 );
+    else if( receipt->stretchFactorX() == STRETCH_H_175 ) ui->comboBoxHStretch->setCurrentIndex( 4 );
+    else if( receipt->stretchFactorX() == STRETCH_H_180 ) ui->comboBoxHStretch->setCurrentIndex( 5 );
     else ui->comboBoxHStretch->setCurrentIndex( 5 );
     on_comboBoxHStretch_currentIndexChanged( ui->comboBoxHStretch->currentIndex() );
 
@@ -9401,8 +9406,9 @@ double MainWindow::getHorizontalStretchFactor( bool downScale )
     if( ui->comboBoxHStretch->currentIndex() == 0 ) factor = STRETCH_H_100;
     else if( ui->comboBoxHStretch->currentIndex() == 1 ) factor = STRETCH_H_133;
     else if( ui->comboBoxHStretch->currentIndex() == 2 ) factor = STRETCH_H_150;
-    else if( ui->comboBoxHStretch->currentIndex() == 3 ) factor = STRETCH_H_175;
-    else if( ui->comboBoxHStretch->currentIndex() == 4 ) factor = STRETCH_H_180;
+    else if( ui->comboBoxHStretch->currentIndex() == 3 ) factor = STRETCH_H_167;
+    else if( ui->comboBoxHStretch->currentIndex() == 4 ) factor = STRETCH_H_175;
+    else if( ui->comboBoxHStretch->currentIndex() == 5 ) factor = STRETCH_H_180;
     else factor = STRETCH_H_200;
 
     if( ui->comboBoxVStretch->currentIndex() == 3 && !downScale ) factor *= 3.0;

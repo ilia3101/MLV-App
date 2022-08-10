@@ -163,6 +163,10 @@ void SingleFrameExportDialog::exportDng()
     {
         picAR[0] = 3; picAR[1] = 2;
     }
+    else if( m_stretchX == STRETCH_H_167 )
+    {
+        picAR[0] = 5; picAR[1] = 3;
+    }
     else if( m_stretchX == STRETCH_H_175 )
     {
         picAR[0] = 7; picAR[1] = 4;

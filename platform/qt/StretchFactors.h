@@ -11,6 +11,7 @@
 #define STRETCH_H_100   1.0
 #define STRETCH_H_133   1.3333
 #define STRETCH_H_150   1.5
+#define STRETCH_H_167   1.6667
 #define STRETCH_H_175   1.75
 #define STRETCH_H_180   1.8
 #define STRETCH_H_200   2.0
