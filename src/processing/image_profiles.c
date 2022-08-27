@@ -70,5 +70,12 @@ static image_profile_t default_image_profiles[] =
         .gamma_power = 1.0,
         .colour_gamut = GAMUT_DavinciWideGamut,
         .transfer_function = "(x <= 0.00262409) ? (x * 10.44426855) : (log10(x + 0.0075) / log10(2) + 7.0) * 0.07329248"
+    },
+    { /* PROFILE_FUJI_FLOG */
+        .allow_creative_adjustments = 0,
+        .tonemap_function = TONEMAP_None,
+        .gamma_power = 1.0,
+        .colour_gamut = GAMUT_Rec2020,
+        .transfer_function = "(x < 0.00089) ? (8.735631 * x + 0.092864) : (0.344676 * log10(0.555556 * x + 0.009468) + 0.790453)"
     }
 };
