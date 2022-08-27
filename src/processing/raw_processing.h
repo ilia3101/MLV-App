@@ -70,6 +70,7 @@ void processingSetImageProfile(processingObject_t * processing, int imageProfile
 #define PROFILE_SRGB        7	/* sRGB */
 #define PROFILE_REC709      8	/* Rec. 709 (HDTV) */
 #define PROFILE_DWG_INT     9   /* Davinci Wide Gamut Intermediate */
+#define PROFILE_FUJI_FLOG   10   /* Fujifilm F-log */
 
 
 /* Process a RAW frame with settings from a processing object
