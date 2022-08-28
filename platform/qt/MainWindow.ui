@@ -4606,7 +4606,7 @@ QGroupBox::indicator:checked:disabled {
                    </item>
                    <item>
                     <property name="text">
-                     <string>F-Log</string>
+                     <string>Fuji F-Log</string>
                     </property>
                    </item>
                   </widget>
