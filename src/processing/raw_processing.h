@@ -1,6 +1,8 @@
 #ifndef _raw_processing_
 #define _raw_processing_
 
+#include <stdint.h>
+
 #include "processing_object.h"
 #include "filter/filter.h"
 
