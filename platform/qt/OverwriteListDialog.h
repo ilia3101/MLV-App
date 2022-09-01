@@ -24,6 +24,10 @@ public:
     Ui::OverwriteListDialog *ui;
     ~OverwriteListDialog();
 
+private slots:
+    void on_pushButtonAbort_clicked();
+    void on_pushButtonOverwrite_clicked();
+    void on_pushButtonSkip_clicked();
 };
 
 #endif // OVERWRITELISTDIALOG_H

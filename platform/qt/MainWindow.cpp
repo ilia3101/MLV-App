@@ -6582,15 +6582,24 @@ void MainWindow::on_actionExport_triggered()
                 if( QFileInfo( fileName ).exists() ) overwriteList.append( fileName );
             }
         }
+        bool skip = false;
         if( !overwriteList.empty() )
         {
             //qDebug() << "Files will be overwritten:" << overwriteList;
             OverwriteListDialog *listDialog = new OverwriteListDialog( this );
             listDialog->ui->listWidget->addItems( overwriteList );
-            if( !listDialog->exec() )
+            int ret = listDialog->exec();
+            if( 0 == ret ) //Abort
             {
                 delete listDialog;
                 return;
+            }
+            else if( 1 == ret ) //Overwrite
+            {
+            }
+            else //Skip
+            {
+                skip = true;
             }
             delete listDialog;
         }
@@ -6601,6 +6610,8 @@ void MainWindow::on_actionExport_triggered()
         //for all selected
         for( int i = 0; i < selectedClips.count(); i++ )
         {
+            bool skipFile = false;
+
             //Do nothing for hidden clips
             if( ui->tableViewSession->isRowHidden( selectedClips.at( i ).row() ) ) continue;
 
@@ -6611,8 +6622,24 @@ void MainWindow::on_actionExport_triggered()
             fileName.prepend( "/" );
             fileName.prepend( folderName );
 
+            //Skip if wanted
+            foreach( QString fileOverwriteName, overwriteList )
+            {
+                //qDebug() << skip << fileOverwriteName << fileName;
+                if( skip == true && fileOverwriteName == fileName )
+                {
+                    skipFile = true;
+                    continue;
+                }
+            }
+
             //Get receipt into queue
-            addClipToExportQueue( row, fileName );
+            if( !skipFile ) addClipToExportQueue( row, fileName );
+        }
+        if( m_exportQueue.isEmpty() )
+        {
+            QMessageBox::information( this, APPNAME, tr( "Skipped all files." ) );
+            return;
         }
     }
     //Block GUI
