@@ -7,6 +7,7 @@
 
 #include "ClipInformation.h"
 #include <QVariant>
+#include <QFileInfo>
 
 //Constructor
 ClipInformation::ClipInformation(QString name,
@@ -58,7 +59,7 @@ ClipInformation::ClipInformation(QString name,
     m_path( path ),
     m_camera( "-" ),
     m_lens( "-" ),
-    m_resolution( "-"),
+    m_resolution( "-" ),
     m_duration( "-" ),
     m_frames( "-" ),
     m_frameRate( "-" ),
@@ -129,6 +130,11 @@ QVariant ClipInformation::getElement(int element) const
         return m_dateTime;
     case 15:
         return m_audio;
+    case 16: //size
+        return QString( "%1 MB" ).arg( clipSize() / 1024 / 1024 );
+    case 17: //datarate
+        if( m_frames == "-" || m_frameRate == "-" || 0.0 == m_frames.toDouble() || 0.0 == m_frameRate.chopped(4).toDouble() ) return QString( "-" );
+        else return QString( "%1 MB/s" ).arg( (double)clipSize() / ( m_frames.toDouble() / m_frameRate.chopped(4).toDouble() ) / 1024 / 1024, 0, 'f', 2 );
     default:
         return QVariant();
     }
@@ -212,4 +218,26 @@ void ClipInformation::updateMetadata(QString camera, QString lens, QString resol
     m_bitDepth = bitDepth;
     m_dateTime = dateTime;
     m_audio = audio;
+}
+
+//Calc the clip size
+quint64 ClipInformation::clipSize() const
+{
+    quint64 calcSize = 0;
+    QString mName = m_path;
+    calcSize += QFileInfo( mName ).size();
+    for( int nr = 0; nr < 100; nr++ )
+    {
+        mName.chop( 2 );
+        mName.append( QString( "%1" ).arg( nr, 2, 10, QChar( '0' ) ) );
+        if( QFileInfo( mName ).exists() )
+        {
+            calcSize += QFileInfo( mName ).size();
+        }
+        else
+        {
+            break;
+        }
+    }
+    return calcSize;
 }

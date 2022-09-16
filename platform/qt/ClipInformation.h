@@ -58,6 +58,8 @@ public:
     void updateMetadata(QString camera, QString lens, QString resolution, QString duration, QString frames, QString frameRate, QString focalLength, QString shutter, QString aperture, QString iso, QString dualIso, QString bitDepth, QString dateTime, QString audio);
 
 private:
+    quint64 clipSize() const;
+
     QString m_name;
     QString m_path;
     QString m_camera;

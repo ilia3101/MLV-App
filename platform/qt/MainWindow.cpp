@@ -935,6 +935,7 @@ int MainWindow::openMlv( QString fileName )
     m_pInfoDialog->ui->tableWidget->item( 11, 1 )->setText( QString( "%1 black,  %2 white" ).arg( getMlvOriginalBlackLevel( m_pMlvObject ) ).arg( getMlvOriginalWhiteLevel( m_pMlvObject ) ) );
     m_pInfoDialog->ui->tableWidget->item( 12, 1 )->setText( ACTIVE_CLIP->getElement( 14 ).toString() );
     m_pInfoDialog->ui->tableWidget->item( 13, 1 )->setText( ACTIVE_CLIP->getElement( 15 ).toString() );
+    m_pInfoDialog->ui->tableWidget->item( 14, 1 )->setText( ACTIVE_CLIP->getElement( 16 ).toString() + ",  " + ACTIVE_CLIP->getElement( 17 ).toString() );
 
     resultingResolution();
 
@@ -1238,6 +1239,7 @@ void MainWindow::initGui( void )
 
     //Set up image in GUI
     QImage image(":/IMG/IMG/histogram.png");
+    ui->labelScope->setScope( NULL, 0, 0, false, false, ScopesLabel::None );
     m_pGraphicsItem = new QGraphicsPixmapItem( QPixmap::fromImage(image) );
     m_pScene = new GraphicsPickerScene( this );
     m_pScene->addItem( m_pGraphicsItem );
