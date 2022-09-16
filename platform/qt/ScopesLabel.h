@@ -33,10 +33,12 @@ private:
     Histogram *m_pHistogram;
     WaveFormMonitor *m_pWaveFormMonitor;
     VectorScope *m_pVectorScope;
+    ScopeType m_type;
 
 protected:
     void resizeEvent(QResizeEvent* event);
     void paintScope( void );
+    void drawLines( QPixmap *pic );
 };
 
 #endif // SCOPESLABEL_H

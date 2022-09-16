@@ -6,6 +6,7 @@
  */
 
 #include "ScopesLabel.h"
+#include <QPainter>
 
 #define SIZEW                (m_widthLabel * devicePixelRatio())
 #define SIZEH                (SIZEW * 160 / 511)
@@ -23,6 +24,7 @@ ScopesLabel::ScopesLabel(QWidget *parent)
     m_imageScope = QImage(1, 1, QImage::Format_RGB888);
     m_imageScope.fill( Qt::black );
     m_pImageLabel = new QImage( SIZEW, SIZEH, QImage::Format_RGBA8888 );
+    m_type = ScopeHistogram;
     paintScope();
 }
 
@@ -40,6 +42,7 @@ void ScopesLabel::setScope(uint8_t *pPicture, uint16_t width, uint16_t height, b
 {
     static int w = -1;
     static int h = -1;
+    m_type = type;
 
     if( w != width || h != height )
     {
@@ -87,12 +90,42 @@ void ScopesLabel::paintScope()
     //Resize
     delete m_pImageLabel;
     m_pImageLabel = new QImage( m_imageScope.scaled( SIZEW, SIZEH, Qt::IgnoreAspectRatio, Qt::SmoothTransformation ) );
-
     //Paint to label
     QPixmap pic = QPixmap::fromImage( *m_pImageLabel );
     pic.setDevicePixelRatio( devicePixelRatio() );
+
+    drawLines( &pic );
+
     setPixmap( pic );
 
     //setMinimumSize( 1, 180 ); //Otherwise window won't be smaller than picture
     setMinimumWidth( 1 );
+}
+
+//Draw the grid lines onto the scopes
+void ScopesLabel::drawLines( QPixmap *pic )
+{
+    QPainter pe( pic );
+    QPen pen;  // creates a default pen
+    pen.setStyle(Qt::DotLine);
+    pen.setWidth(1);
+    pen.setBrush( QColor( 200, 200, 200, 96 ) );
+    pe.setPen( pen );
+
+    if( m_type == ScopeType::ScopeHistogram )
+    {
+        pe.drawLine( m_widthLabel*0.1,  0, m_widthLabel*0.1, this->height()-1 );
+        pe.drawLine( m_widthLabel*0.25, 0, m_widthLabel*0.25, this->height()-1 );
+        pe.drawLine( m_widthLabel*0.5,  0, m_widthLabel*0.5, this->height()-1 );
+        pe.drawLine( m_widthLabel*0.75, 0, m_widthLabel*0.75, this->height()-1 );
+        pe.drawLine( m_widthLabel*0.9,  0, m_widthLabel*0.9, this->height()-1 );
+    }
+    else if( m_type == ScopeType::ScopeWaveForm || m_type == ScopeType::ScopeRgbParade )
+    {
+        pe.drawLine( 0, this->height()*0.1,  m_widthLabel, this->height()*0.1 );
+        pe.drawLine( 0, this->height()*0.25, m_widthLabel, this->height()*0.25 );
+        pe.drawLine( 0, this->height()*0.5,  m_widthLabel, this->height()*0.5 );
+        pe.drawLine( 0, this->height()*0.75, m_widthLabel, this->height()*0.75 );
+        pe.drawLine( 0, this->height()*0.9,  m_widthLabel, this->height()*0.9 );
+    }
 }
