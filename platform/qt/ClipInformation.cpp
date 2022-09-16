@@ -96,6 +96,9 @@ void ClipInformation::setPathName(QString name, QString path)
 //Read saved metadata
 QVariant ClipInformation::getElement(int element) const
 {
+    QString frameRate = m_frameRate;
+    frameRate.chop(4);
+
     switch( element )
     {
     case 0:
@@ -133,8 +136,8 @@ QVariant ClipInformation::getElement(int element) const
     case 16: //size
         return QString( "%1 MB" ).arg( clipSize() / 1024 / 1024 );
     case 17: //datarate
-        if( m_frames == "-" || m_frameRate == "-" || 0.0 == m_frames.toDouble() || 0.0 == m_frameRate.chopped(4).toDouble() ) return QString( "-" );
-        else return QString( "%1 MB/s" ).arg( (double)clipSize() / ( m_frames.toDouble() / m_frameRate.chopped(4).toDouble() ) / 1024 / 1024, 0, 'f', 2 );
+        if( m_frames == "-" || m_frameRate == "-" || 0.0 == m_frames.toDouble() || 0.0 == frameRate.toDouble() ) return QString( "-" );
+        else return QString( "%1 MB/s" ).arg( (double)clipSize() / ( m_frames.toDouble() / frameRate.toDouble() ) / 1024 / 1024, 0, 'f', 2 );
     default:
         return QVariant();
     }
