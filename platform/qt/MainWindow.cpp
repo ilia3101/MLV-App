@@ -13,7 +13,11 @@
 #include <QThread>
 #include <QTime>
 #include <QSettings>
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 #include <QDesktopWidget>
+#else
+#include <QWidget>
+#endif
 #include <QStringList>
 #include <QScrollBar>
 #include <QScreen>
@@ -3268,7 +3272,7 @@ void MainWindow::openSession(QString fileNameSession)
     {
         Rxml.readNext();
         //qDebug() << "InWhile";
-        if( Rxml.isStartElement() && Rxml.name() == "mlv_files" )
+        if( Rxml.isStartElement() && Rxml.name() == QString( "mlv_files" ) )
         {
             //Read version string, if there is one
             if( Rxml.attributes().count() != 0 )
@@ -3280,7 +3284,7 @@ void MainWindow::openSession(QString fileNameSession)
             while( !Rxml.atEnd() && !Rxml.isEndElement() && !abort )
             {
                 Rxml.readNext();
-                if( Rxml.isStartElement() && Rxml.name() == "clip" )
+                if( Rxml.isStartElement() && Rxml.name() == QString( "clip" ) )
                 {
                     //qDebug() << "Clip!" << Rxml.attributes().at(0).name() << Rxml.attributes().at(0).value();
                     QString fileName = Rxml.attributes().at(0).value().toString();
@@ -3433,7 +3437,7 @@ void MainWindow::resetReceiptWithDefault( ReceiptSettings *receipt )
     while( !Rxml.atEnd() )
     {
         Rxml.readNext();
-        if( Rxml.isStartElement() && Rxml.name() == "receipt" )
+        if( Rxml.isStartElement() && Rxml.name() == QString( "receipt" ) )
         {
             //Read version string, if there is one
             if( Rxml.attributes().count() != 0 )
@@ -3487,7 +3491,7 @@ void MainWindow::on_actionImportReceipt_triggered()
     while( !Rxml.atEnd() )
     {
         Rxml.readNext();
-        if( Rxml.isStartElement() && Rxml.name() == "receipt" )
+        if( Rxml.isStartElement() && Rxml.name() == QString( "receipt" ) )
         {
             //Read version string, if there is one
             if( Rxml.attributes().count() != 0 )
@@ -3567,176 +3571,176 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
     {
         Rxml->readNext();
 
-        if( Rxml->isStartElement() && Rxml->name() == "exposure" )
+        if( Rxml->isStartElement() && Rxml->name() == QString( "exposure" ) )
         {
             receipt->setExposure( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "contrast" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "contrast" ) )
         {
             receipt->setContrast( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "pivot" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "pivot" ) )
         {
             receipt->setPivot( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "temperature" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "temperature" ) )
         {
             receipt->setTemperature( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "tint" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "tint" ) )
         {
             receipt->setTint( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "clarity" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "clarity" ) )
         {
             receipt->setClarity( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "vibrance" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "vibrance" ) )
         {
             receipt->setVibrance( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "saturation" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "saturation" ) )
         {
             if( version < 2 ) receipt->setSaturation( ( Rxml->readElementText().toInt() * 2.0 ) - 100.0 );
             else receipt->setSaturation( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "ls" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "ls" ) )
         {
             if( version < 2 ) receipt->setLs( Rxml->readElementText().toInt() * 10.0 / FACTOR_LS );
             else receipt->setLs( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "lr" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "lr" ) )
         {
             receipt->setLr( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "ds" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "ds" ) )
         {
             if( version < 2 ) receipt->setDs( Rxml->readElementText().toInt() * 10.0 / FACTOR_DS );
             else receipt->setDs( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "dr" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "dr" ) )
         {
             receipt->setDr( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "lightening" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "lightening" ) )
         {
             if( version < 2 ) receipt->setLightening( Rxml->readElementText().toInt() / FACTOR_LIGHTEN );
             else receipt->setLightening( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "shadows" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "shadows" ) )
         {
             receipt->setShadows( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "highlights" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "highlights" ) )
         {
             receipt->setHighlights( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "gradationCurve" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "gradationCurve" ) )
         {
             receipt->setGradationCurve( Rxml->readElementText() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "hueVsHue" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "hueVsHue" ) )
         {
             receipt->setHueVsHue( Rxml->readElementText() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "hueVsSaturation" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "hueVsSaturation" ) )
         {
             receipt->setHueVsSaturation( Rxml->readElementText() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "hueVsLuminance" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "hueVsLuminance" ) )
         {
             receipt->setHueVsLuminance( Rxml->readElementText() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "lumaVsSaturation" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "lumaVsSaturation" ) )
         {
             receipt->setLumaVsSaturation( Rxml->readElementText() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "gradientEnabled" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "gradientEnabled" ) )
         {
             receipt->setGradientEnabled( (bool)Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "gradientExposure" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "gradientExposure" ) )
         {
             receipt->setGradientExposure( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "gradientContrast" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "gradientContrast" ) )
         {
             receipt->setGradientContrast( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "gradientStartX" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "gradientStartX" ) )
         {
             receipt->setGradientStartX( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "gradientStartY" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "gradientStartY" ) )
         {
             receipt->setGradientStartY( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "gradientLength" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "gradientLength" ) )
         {
             receipt->setGradientLength( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "gradientAngle" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "gradientAngle" ) )
         {
             receipt->setGradientAngle( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "sharpen" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "sharpen" ) )
         {
             receipt->setSharpen( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "sharpenMasking" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "sharpenMasking" ) )
         {
             receipt->setShMasking( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "chromaBlur" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "chromaBlur" ) )
         {
             receipt->setChromaBlur( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "highlightReconstruction" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "highlightReconstruction" ) )
         {
             receipt->setHighlightReconstruction( (bool)Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "camMatrixUsed" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "camMatrixUsed" ) )
         {
             receipt->setCamMatrixUsed( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "chromaSeparation" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "chromaSeparation" ) )
         {
             receipt->setChromaSeparation( (bool)Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "profile" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "profile" ) )
         {
             uint8_t profile = (uint8_t)Rxml->readElementText().toUInt();
             if( version < 2 && profile > 1 ) receipt->setProfile( profile + 2 );
@@ -3774,27 +3778,27 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
             //else receipt->setProfile( profile ); //never load for v3, because we now have single settings
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "tonemap" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "tonemap" ) )
         {
             receipt->setTonemap( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "transferFunction" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "transferFunction" ) )
         {
             receipt->setTransferFunction( Rxml->readElementText() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "gamut" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "gamut" ) )
         {
             receipt->setGamut( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "gamma" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "gamma" ) )
         {
             receipt->setGamma( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "allowCreativeAdjustments" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "allowCreativeAdjustments" ) )
         {
             receipt->setAllowCreativeAdjustments( (bool)Rxml->readElementText().toInt() );
             if( version == 2 )
@@ -3812,293 +3816,293 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
             }
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "exrMode" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "exrMode" ) )
         {
             receipt->setExrMode( (bool)Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "agx" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "agx" ) )
         {
             receipt->setAgx( (bool)Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "denoiserWindow" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "denoiserWindow" ) )
         {
             receipt->setDenoiserWindow( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "denoiserStrength" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "denoiserStrength" ) )
         {
             receipt->setDenoiserStrength( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "rbfDenoiserLuma" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "rbfDenoiserLuma" ) )
         {
             receipt->setRbfDenoiserLuma( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "rbfDenoiserChroma" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "rbfDenoiserChroma" ) )
         {
             receipt->setRbfDenoiserChroma( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "rbfDenoiserRange" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "rbfDenoiserRange" ) )
         {
             receipt->setRbfDenoiserRange( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "grainStrength" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "grainStrength" ) )
         {
             receipt->setGrainStrength( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "grainLumaWeight" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "grainLumaWeight" ) )
         {
             receipt->setGrainLumaWeight( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "rawFixesEnabled" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "rawFixesEnabled" ) )
         {
             receipt->setRawFixesEnabled( (bool)Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "verticalStripes" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "verticalStripes" ) )
         {
             receipt->setVerticalStripes( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "focusPixels" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "focusPixels" ) )
         {
             receipt->setFocusPixels( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "fpiMethod" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "fpiMethod" ) )
         {
             receipt->setFpiMethod( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "badPixels" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "badPixels" ) )
         {
             receipt->setBadPixels( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "bpsMethod" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "bpsMethod" ) )
         {
             receipt->setBpsMethod( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "bpiMethod" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "bpiMethod" ) )
         {
             receipt->setBpiMethod( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "chromaSmooth" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "chromaSmooth" ) )
         {
             receipt->setChromaSmooth( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "patternNoise" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "patternNoise" ) )
         {
             receipt->setPatternNoise( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "deflickerTarget" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "deflickerTarget" ) )
         {
             receipt->setDeflickerTarget( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "dualIsoForced" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "dualIsoForced" ) )
         {
             receipt->setDualIsoForced( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "dualIso" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "dualIso" ) )
         {
             receipt->setDualIso( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "dualIsoInterpolation" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "dualIsoInterpolation" ) )
         {
             receipt->setDualIsoInterpolation( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "dualIsoAliasMap" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "dualIsoAliasMap" ) )
         {
             receipt->setDualIsoAliasMap( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "dualIsoFrBlending" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "dualIsoFrBlending" ) )
         {
             receipt->setDualIsoFrBlending( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "dualIsoWhite" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "dualIsoWhite" ) )
         {
             receipt->setDualIsoWhite( Rxml->readElementText().toUInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "dualIsoBlack" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "dualIsoBlack" ) )
         {
             receipt->setDualIsoBlack( Rxml->readElementText().toUInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "darkFrameFileName" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "darkFrameFileName" ) )
         {
             receipt->setDarkFrameFileName( Rxml->readElementText() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "darkFrameEnabled" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "darkFrameEnabled" ) )
         {
             receipt->setDarkFrameEnabled( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "rawBlack" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "rawBlack" ) )
         {
             if( version < 4 ) receipt->setRawBlack( Rxml->readElementText().toInt() * 10 );
             else  receipt->setRawBlack( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "rawWhite" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "rawWhite" ) )
         {
             receipt->setRawWhite( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "tone" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "tone" ) )
         {
             receipt->setTone( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "toningStrength" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "toningStrength" ) )
         {
             receipt->setToningStrength( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "lutEnabled" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "lutEnabled" ) )
         {
             receipt->setLutEnabled( (bool)Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "lutName" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "lutName" ) )
         {
             receipt->setLutName( Rxml->readElementText() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "lutStrength" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "lutStrength" ) )
         {
             receipt->setLutStrength( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "filterEnabled" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "filterEnabled" ) )
         {
             receipt->setFilterEnabled( (bool)Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "filterIndex" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "filterIndex" ) )
         {
             receipt->setFilterIndex( Rxml->readElementText().toUInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "filterStrength" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "filterStrength" ) )
         {
             receipt->setFilterStrength( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "vignetteStrength" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "vignetteStrength" ) )
         {
             receipt->setVignetteStrength( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "vignetteRadius" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "vignetteRadius" ) )
         {
             receipt->setVignetteRadius( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "vignetteShape" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "vignetteShape" ) )
         {
             receipt->setVignetteShape( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "caRed" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "caRed" ) )
         {
             receipt->setCaRed( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "caBlue" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "caBlue" ) )
         {
             receipt->setCaBlue( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "caDesaturate" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "caDesaturate" ) )
         {
             receipt->setCaDesaturate( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "caRadius" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "caRadius" ) )
         {
             receipt->setCaRadius( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "stretchFactorX" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "stretchFactorX" ) )
         {
             receipt->setStretchFactorX( Rxml->readElementText().toDouble() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "stretchFactorY" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "stretchFactorY" ) )
         {
             receipt->setStretchFactorY( Rxml->readElementText().toDouble() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "upsideDown" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "upsideDown" ) )
         {
             receipt->setUpsideDown( (bool)Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "vidstabEnable" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "vidstabEnable" ) )
         {
             receipt->setVidstabEnabled( (bool)Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "vidstabStepsize" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "vidstabStepsize" ) )
         {
             receipt->setVidstabStepsize( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "vidstabShakiness" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "vidstabShakiness" ) )
         {
             receipt->setVidstabShakiness( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "vidstabAccuracy" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "vidstabAccuracy" ) )
         {
             receipt->setVidstabAccuracy( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "vidstabZoom" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "vidstabZoom" ) )
         {
             receipt->setVidstabZoom( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "vidstabSmoothing" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "vidstabSmoothing" ) )
         {
             receipt->setVidstabSmoothing( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "vidstabTripod" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "vidstabTripod" ) )
         {
             receipt->setVidstabTripod( (bool)Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "cutIn" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "cutIn" ) )
         {
             receipt->setCutIn( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "cutOut" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "cutOut" ) )
         {
             receipt->setCutOut( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == "debayer" )
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "debayer" ) )
         {
             receipt->setDebayer( Rxml->readElementText().toInt() );
             Rxml->readNext();

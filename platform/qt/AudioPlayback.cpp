@@ -6,6 +6,10 @@
  */
 
 #include "AudioPlayback.h"
+#include <QtGlobal>
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+#include <QAudioFormat>
+#endif
 #include <QDebug>
 
 //Constructor
@@ -39,11 +43,16 @@ void AudioPlayback::initAudioEngine( mlvObject_t *pMlvObject )
     QAudioFormat format;
     format.setSampleRate( m_audioSampleRate );
     format.setChannelCount( m_audioChannels );
+ #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     format.setSampleSize( 16 );
     format.setCodec( "audio/pcm" );
     format.setByteOrder( QAudioFormat::LittleEndian );
     format.setSampleType( QAudioFormat::SignedInt );
     m_pAudioOutput = new QAudioOutput( format, this );
+#else
+    format.setSampleFormat( QAudioFormat::Int16 );
+    m_pAudioOutput = new QAudioSink(format, (QObject*)this );
+#endif
 
     m_pByteArrayAudio = new QByteArray();
     m_pAudioStream = new QDataStream(m_pByteArrayAudio, QIODevice::ReadWrite);

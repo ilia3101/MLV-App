@@ -38,7 +38,11 @@ signals:
 
 protected:
     enum PickerState{ NoPicker, WbPicker, BpPicker };
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     void enterEvent(QEvent *event);
+#else
+    void enterEvent(QEnterEvent *event);
+#endif
     void mousePressEvent(QMouseEvent *event);
     void mouseReleaseEvent(QMouseEvent *event);
     void wheelEvent(QWheelEvent *event);

@@ -102,7 +102,11 @@ void PixelMapListDialog::showCurrentMap( mlvObject_t *pMlvObject )
             if( ui->treeWidget->topLevelItem( i )->child( j )->text( 0 ) == name )
             {
                 ui->treeWidget->expandItem( ui->treeWidget->topLevelItem( i ) );
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
                 ui->treeWidget->topLevelItem( i )->child( j )->setTextColor( 0, Qt::green );
+#else
+                ui->treeWidget->topLevelItem( i )->child( j )->setForeground( 0, Qt::green );
+#endif
             }
         }
     }

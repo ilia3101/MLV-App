@@ -73,7 +73,7 @@ void FcpxmlAssistantDialog::xmlParser(QString fileName)
     while( !Rxml.atEnd() )
     {
         Rxml.readNext();
-        if( Rxml.isStartElement() && ( Rxml.name() == "clip" || Rxml.name() == "asset-clip" || Rxml.name() == "asset" ) )
+        if( Rxml.isStartElement() && ( Rxml.name() == QString( "clip" ) || Rxml.name() == QString( "asset-clip" ) || Rxml.name() == QString( "asset" ) ) )
         {
             //Read clipname
             if( Rxml.attributes().count() != 0 )

@@ -104,11 +104,19 @@ void BadPixelFileHandler::crossesPrepareAll(mlvObject_t *pMlvObject, QVector<Cro
 
     txt.replace( "\r", "" );
     txt.replace( "\t", "" );
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     QStringList pixels = txt.split( "\n", QString::SkipEmptyParts );
+#else
+    QStringList pixels = txt.split( "\n", Qt::SkipEmptyParts );
+#endif
     foreach( QString pixel, pixels )
     {
         bool ok;
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
         QStringList xy = pixel.split( " ", QString::SkipEmptyParts );
+#else
+        QStringList xy = pixel.split( " ", Qt::SkipEmptyParts );
+#endif
         uint32_t x = xy.at( 0 ).toUInt( &ok );
         if( !ok ) continue;
         uint32_t y = xy.at( 1 ).toUInt( &ok );

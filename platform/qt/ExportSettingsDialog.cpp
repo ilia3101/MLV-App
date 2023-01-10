@@ -121,7 +121,9 @@ ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, Scripting *scripting
 #endif
 
     //Preset list
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     qRegisterMetaTypeStreamOperators<QList<ExportPreset> >("QList<ExportPreset>");
+#endif
     QSettings set( QSettings::UserScope, "magiclantern.MLVApp", "MLVApp" );
     QList<ExportPreset> presetList = set.value( "ExportPresets" ).value<QList<ExportPreset> >();
     ui->listWidget->blockSignals( true );
@@ -557,7 +559,9 @@ void ExportSettingsDialog::on_toolButtonAddPreset_clicked()
     QListWidgetItem *newItem = new QListWidgetItem( "New Preset" );
     newItem->setFlags( newItem->flags() | Qt::ItemIsEditable );
     ui->listWidget->addItem( newItem );
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     qRegisterMetaTypeStreamOperators<QList<ExportPreset> >("QList<ExportPreset>");
+#endif
     //Get existing list
     QSettings set( QSettings::UserScope, "magiclantern.MLVApp", "MLVApp" );
     QList<ExportPreset> presetList = set.value( "ExportPresets" ).value<QList<ExportPreset> >();
@@ -586,7 +590,9 @@ void ExportSettingsDialog::on_toolButtonAddPreset_clicked()
 //Delete selected export preset
 void ExportSettingsDialog::on_toolButtonDeletePreset_clicked()
 {
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     qRegisterMetaTypeStreamOperators<QList<ExportPreset> >("QList<ExportPreset>");
+#endif
     //Get existing list
     QSettings set( QSettings::UserScope, "magiclantern.MLVApp", "MLVApp" );
     QList<ExportPreset> presetList = set.value( "ExportPresets" ).value<QList<ExportPreset> >();
@@ -603,7 +609,9 @@ void ExportSettingsDialog::on_toolButtonDeletePreset_clicked()
 //Rename, double clicked export preset
 void ExportSettingsDialog::on_listWidget_itemChanged(QListWidgetItem *item)
 {
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     qRegisterMetaTypeStreamOperators<QList<ExportPreset> >("QList<ExportPreset>");
+#endif
     //Get existing list
     QSettings set( QSettings::UserScope, "magiclantern.MLVApp", "MLVApp" );
     QList<ExportPreset> presetList = set.value( "ExportPresets" ).value<QList<ExportPreset> >();
@@ -624,7 +632,9 @@ void ExportSettingsDialog::on_listWidget_itemClicked(QListWidgetItem *item)
 {
     Q_UNUSED( item );
 
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     qRegisterMetaTypeStreamOperators<QList<ExportPreset> >("QList<ExportPreset>");
+#endif
     //Get existing list
     QSettings set( QSettings::UserScope, "magiclantern.MLVApp", "MLVApp" );
     QList<ExportPreset> presetList = set.value( "ExportPresets" ).value<QList<ExportPreset> >();

@@ -8,7 +8,12 @@
 #ifndef AUDIOPLAYBACK_H
 #define AUDIOPLAYBACK_H
 
+#include <QtGlobal>
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 #include <QAudioOutput>
+#else
+#include <QAudioSink>
+#endif
 #include <QByteArray>
 #include <QDataStream>
 #include <Qt>
@@ -37,7 +42,11 @@ private:
 
     QByteArray *m_pByteArrayAudio;
     QDataStream *m_pAudioStream;
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     QAudioOutput *m_pAudioOutput;
+#else
+    QAudioSink *m_pAudioOutput;
+#endif
 
     double m_mlvFrameRate;
 };

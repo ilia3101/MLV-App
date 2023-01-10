@@ -119,7 +119,11 @@ void GraphicsZoomView::shortCutZoomOut()
 }
 
 //Methods for changing the cursor
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 void GraphicsZoomView::enterEvent(QEvent *event)
+#else
+void GraphicsZoomView::enterEvent(QEnterEvent *event)
+#endif
 {
     QGraphicsView::enterEvent(event);
     //viewport()->setCursor(QCursor(m_cursorPixmap,0,31));
