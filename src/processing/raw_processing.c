@@ -2157,6 +2157,7 @@ static char * compile_ternary(char * function)
     int comparison_operator_loc = -1, num_comparisons = 0;
 
     char * function_string = NULL;
+    char * invalid_output = NULL;
 
     for (int i = 0; i < string_length; ++i)
     {
@@ -2180,7 +2181,7 @@ static char * compile_ternary(char * function)
     }
 
     /* Must be equal for a valid ternary operation */
-    if (num_question_marks != num_colons || num_comparisons != num_colons) return 1;
+    if (num_question_marks != num_colons || num_comparisons != num_colons) return invalid_output;
 
     if (num_question_marks == 1)
     {
@@ -2201,7 +2202,7 @@ static char * compile_ternary(char * function)
             ++splitval_str;
         }
 
-        if (!found_splitval) return 1;
+        if (!found_splitval) return invalid_output;
 
         char * ternary_left = malloc(string_length + 10);
         strcpy(ternary_left, function + question_mark_pos + 1);
@@ -2213,7 +2214,7 @@ static char * compile_ternary(char * function)
             sprintf(function_string, "split(x, %lf, %s, %s)", split_val, function + colon_pos + 1, ternary_left);
         else {
             free(ternary_left);
-            return 1;
+            return invalid_output;
         }
         free(ternary_left);
     }
