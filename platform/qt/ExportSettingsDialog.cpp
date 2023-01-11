@@ -105,7 +105,7 @@ ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, Scripting *scripting
     //Disable some options for AVFoundation
     if( ui->comboBoxOption->currentText() == QString( "Apple AVFoundation" ) )
     {
-        on_comboBoxOption_currentIndexChanged( QString( "Apple AVFoundation" ) );
+        on_comboBoxOption_currentTextChanged( QString( "Apple AVFoundation" ) );
     }
 
 #ifndef Q_OS_OSX
@@ -123,6 +123,8 @@ ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, Scripting *scripting
     //Preset list
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     qRegisterMetaTypeStreamOperators<QList<ExportPreset> >("QList<ExportPreset>");
+#else
+    QVariant::fromValue<QList<ExportPreset>>(QList<ExportPreset>{}); // Dummy call for Qt6 https://stackoverflow.com/questions/70974383/qvariantvaluet-fails-to-convert-unless-qvariantfromvaluet-has-been-c
 #endif
     QSettings set( QSettings::UserScope, "magiclantern.MLVApp", "MLVApp" );
     QList<ExportPreset> presetList = set.value( "ExportPresets" ).value<QList<ExportPreset> >();
@@ -466,7 +468,7 @@ void ExportSettingsDialog::on_checkBoxResize_toggled(bool checked)
 }
 
 //Disable some options for AVFoundation
-void ExportSettingsDialog::on_comboBoxOption_currentIndexChanged(const QString &arg1)
+void ExportSettingsDialog::on_comboBoxOption_currentTextChanged(const QString &arg1)
 {
     if( arg1 == QString( "Apple AVFoundation" ) )
     {
@@ -522,7 +524,7 @@ void ExportSettingsDialog::on_toolButtonLockHeight_toggled(bool checked)
 }
 
 //Post export script chosen
-void ExportSettingsDialog::on_comboBoxPostExportScript_currentIndexChanged(const QString &arg1)
+void ExportSettingsDialog::on_comboBoxPostExportScript_currentTextChanged(const QString &arg1)
 {
     m_pScripting->setPostExportScript( arg1 );
 }

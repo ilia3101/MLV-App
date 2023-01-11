@@ -152,9 +152,9 @@ private slots:
     void on_comboBoxCodec_currentIndexChanged(int index);
     void on_checkBoxFpsOverride_toggled(bool checked);
     void on_checkBoxResize_toggled(bool checked);
-    void on_comboBoxOption_currentIndexChanged(const QString &arg1);
+    void on_comboBoxOption_currentTextChanged(const QString &arg1);
     void on_toolButtonLockHeight_toggled(bool checked);
-    void on_comboBoxPostExportScript_currentIndexChanged(const QString &arg1);
+    void on_comboBoxPostExportScript_currentTextChanged(const QString &arg1);
     void on_checkBoxHdrBlending_toggled(bool checked);
     void on_comboBoxSmoothing_currentIndexChanged(int index);
 
