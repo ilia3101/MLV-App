@@ -77,13 +77,13 @@ What is MLV App? Lightroom, but for Magic Lantern MLV Video (and open source and
 
 ## Compiling :collision:
 #### Qt App macOS (Intel based)
-- install XCode depending on your OSX
-- install Qt5 (5.6 .. 5.15.2)
+- install XCode depending on your OSX, or llvm via brew for multithreading
+- install Qt5 (5.6 .. 5.15.2) or Qt6 (6.4 or later)
 - open `platform/qt/MLVApp.pro` in QtCreator
 - Build and Start
 - OR download and doubleclick easy-to-use [compiler app](https://bitbucket.org/Dannephoto/mlv_app_compiler-git/downloads/mlv_app_compiler.dmg) from @dannephoto
 
-#### Qt App macOS (Apple Silicon based)
+#### Qt App macOS (Apple Silicon based, with Qt5)
 - install command line tools (SDK 11.3 is known to work)
 - install brew `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
 - install dependencies `brew install pcre2 harfbuzz freetype`
@@ -96,14 +96,17 @@ What is MLV App? Lightroom, but for Magic Lantern MLV Video (and open source and
 - uncomment section for Apple Silicon in `MLVApp.pro`
 - Build and Start
 
+#### Qt App macOS (Apple Silicon based, with Qt6)
+- same as Qt App macOS (Intel based)
+
 #### Qt App Windows
-- install Qt5 (Win32: 5.6 .. 5.15.2, Win64: 5.13.2 .. 5.15.2) with MinGW32/64 compiler
+- install Qt5 (Win32: 5.6 .. 5.15.2, Win64: 5.13.2 .. 5.15.2) or Qt6 (6.4 or later) with MinGW32/64 compiler
 - unpack ffmpegWin.zip in `platform/qt/FFmpeg` (and copy it later into build directory)
 - open `platform/qt/MLVApp.pro` in QtCreator
 - Build and Start
 
 #### Qt App Linux (generally)
-- install Qt5 (5.6 .. 5.15.2) and ffmpeg (we use v3.3.2) 
+- install Qt5 (5.6 .. 5.15.2) or Qt6 (6.4 or later) and ffmpeg (we use v3.3.2) 
 - `cd platform/qt/`
 - `qmake MLVApp.pro` or equivalent (depending on distro and version and...)
 - `make -j$(nproc)`
