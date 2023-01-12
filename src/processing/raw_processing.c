@@ -2157,7 +2157,7 @@ static char * compile_ternary(char * function)
     int comparison_operator_loc = -1, num_comparisons = 0;
 
     char * function_string = NULL;
-    char * invalid_output = NULL;
+    char * invalid_output = ((char*)(intptr_t)(1));
 
     for (int i = 0; i < string_length; ++i)
     {
