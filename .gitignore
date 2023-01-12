@@ -269,3 +269,4 @@ platform/build-MLVApp-Desktop_Qt_5_15_3_clangOMP_64bit-Release/MLV App.app/Conte
 platform/build-MLVApp-Desktop_Qt_5_15_3_clangOMP_64bit-Release/MLV App.app/Contents/MacOS/80000331_1808x1951.fpm
 platform/build-MLVApp-Desktop_Qt_5_15_3_clangOMP_64bit-Release/MLV App.app/Contents/MacOS/80000331_1512x1864.fpm
 platform/build-MLVApp-Desktop_Qt_5_15_3_clangOMP_64bit-Release/MLV App.app/Contents/MacOS/80000326_1808x1189.fpm
+platform/build-MLVApp-Desktop_Qt_5_15_3_llvm15OMP_64bit-Release/*
