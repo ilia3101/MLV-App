@@ -1107,7 +1107,7 @@ int writeBody(lje* self) {
         }
         // Write the rest of the bits for the value
         if (ssss == 16) {
-            // Diff values (always -32678) for SSSS=16 are encoded with 0 bits
+            // Diff values (always 32678) for SSSS=16 are encoded with 0 bits
             ssss = 0;
         }
         while (ssss>0) {
