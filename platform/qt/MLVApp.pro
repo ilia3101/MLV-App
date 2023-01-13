@@ -5,7 +5,12 @@
 #-------------------------------------------------
 
 QT       += core gui multimedia
-CONFIG   += c++14
+
+win32{
+    greaterThan(QT_MAJOR_VERSION, 5): CONFIG   += c++17
+    else: CONFIG += c++14
+}
+else: CONFIG += c++15
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -49,7 +54,7 @@ macx{
 #        QMAKE_CXX = /usr/local/opt/llvm/bin/clang++
 #        QMAKE_LINK = /usr/local/opt/llvm/bin/clang++
 #        QMAKE_CFLAGS += -fopenmp -ftree-vectorize
-#        QMAKE_CXXFLAGS += -fopenmp -std=c++11 -ftree-vectorize
+#        QMAKE_CXXFLAGS += -fopenmp -std=c++15 -ftree-vectorize
 #        INCLUDEPATH += -I/usr/local/opt/llvm/include
 #        LIBS += -L/usr/local/opt/llvm/lib -lomp
 #        QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.8
@@ -80,8 +85,14 @@ macx{
 # Else comment these lines!
 win32{
     QMAKE_CFLAGS += -O2 -fopenmp -mssse3 -msse3 -msse2 -msse -D_FILE_OFFSET_BITS=64 -std=c99 -ftree-vectorize
-    QMAKE_CXXFLAGS += -fopenmp -std=c++11 -ftree-vectorize
     LIBS += -llibgomp-1
+    greaterThan(QT_MAJOR_VERSION, 5){
+        QMAKE_CXXFLAGS += -fopenmp -std=c++17 -ftree-vectorize
+    }
+    else
+    {
+        QMAKE_CXXFLAGS += -fopenmp -std=c++14 -ftree-vectorize
+    }
 }
 
 # Win64 static: install msys2 to the default location C:\msys64, install qt $ pacman -S mingw-w64-x86_64-qt5-static, then set up qt-creator accordingly.
