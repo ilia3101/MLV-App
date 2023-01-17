@@ -101,7 +101,7 @@ What is MLV App? Lightroom, but for Magic Lantern MLV Video (and open source and
 - same as Qt App macOS (Intel based)
 
 #### Qt App Windows
-- install Qt5 (Win32: 5.6 .. 5.15.2, Win64: 5.13.2 .. 5.15.2) or Qt6 (6.4 or later) with MinGW32/64 compiler
+- install Qt5 (Win32: 5.6 .. 5.15.2, Win64: 5.13.2 .. 5.15.2) or Qt6 (6.5 or later) with MinGW32/64 compiler
 - unpack ffmpegWin.zip in `platform/qt/FFmpeg` (and copy it later into build directory)
 - open `platform/qt/MLVApp.pro` in QtCreator
 - Build and Start
