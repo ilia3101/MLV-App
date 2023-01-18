@@ -10,7 +10,10 @@ win32{
     greaterThan(QT_MAJOR_VERSION, 5): CONFIG   += c++17
     else: CONFIG += c++14
 }
-else: CONFIG += c++15
+else{
+    greaterThan(QT_MAJOR_VERSION, 5): CONFIG   += c++15
+    else: CONFIG += c++14
+}
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 

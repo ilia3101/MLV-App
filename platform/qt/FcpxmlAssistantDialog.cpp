@@ -46,7 +46,7 @@ void FcpxmlAssistantDialog::on_pushButtonFcpxml_clicked()
                                            tr("FCPXML files (*.fcpxml)"));
 
     //Abort selected
-    if( fileName.count() == 0 ) return;
+    if( fileName.size() == 0 ) return;
     //Show filename
     ui->lineEditFcpxml->setText( fileName );
     xmlParser( fileName );
@@ -76,10 +76,10 @@ void FcpxmlAssistantDialog::xmlParser(QString fileName)
         if( Rxml.isStartElement() && ( Rxml.name() == QString( "clip" ) || Rxml.name() == QString( "asset-clip" ) || Rxml.name() == QString( "asset" ) ) )
         {
             //Read clipname
-            if( Rxml.attributes().count() != 0 )
+            if( Rxml.attributes().size() != 0 )
             {
                 QString clip;
-                for( int i = 0; i < Rxml.attributes().count(); i++ )
+                for( int i = 0; i < Rxml.attributes().size(); i++ )
                 {
                     if( Rxml.attributes().at(i).name() == QString( "name" ) )
                     {
@@ -123,8 +123,8 @@ void FcpxmlAssistantDialog::searchMlvs()
     ui->labelStatus->setText( "" );
     ui->pushButtonImport->setEnabled( false );
     if( ui->tableWidget->rowCount() == 0 ) return;
-    if( ui->lineEditFcpxml->text().count() == 0 ) return;
-    if( ui->lineEditMlvFolder->text().count() == 0 ) return;
+    if( ui->lineEditFcpxml->text().size() == 0 ) return;
+    if( ui->lineEditMlvFolder->text().size() == 0 ) return;
 
     m_fileList.clear();
 
@@ -159,8 +159,8 @@ void FcpxmlAssistantDialog::searchMlvs()
 
 
     //Status
-    ui->labelStatus->setText( tr( "Found %1 MLV file(s)" ).arg( m_fileList.count() ) );
-    if( m_fileList.count() > 0 ) ui->pushButtonImport->setEnabled( true );
+    ui->labelStatus->setText( tr( "Found %1 MLV file(s)" ).arg( m_fileList.size() ) );
+    if( m_fileList.size() > 0 ) ui->pushButtonImport->setEnabled( true );
     else ui->pushButtonImport->setEnabled( false );
 }
 

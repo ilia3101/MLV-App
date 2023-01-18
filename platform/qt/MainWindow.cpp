@@ -407,13 +407,13 @@ void MainWindow::dragEnterEvent(QDragEnterEvent *event)
 void MainWindow::dropEvent(QDropEvent *event)
 {
     QStringList list;
-    if( event->mimeData()->urls().count() > 0 )
+    if( event->mimeData()->urls().size() > 0 )
     {
         if( event->mimeData()->urls().at(0).path().endsWith( ".MLV", Qt::CaseInsensitive )
          || event->mimeData()->urls().at(0).path().endsWith( ".FPM", Qt::CaseInsensitive )
          || event->mimeData()->urls().at(0).path().endsWith( ".COMMAND", Qt::CaseInsensitive ) )
         {
-            for( int i = 0; i < event->mimeData()->urls().count(); i++ )
+            for( int i = 0; i < event->mimeData()->urls().size(); i++ )
             {
                 list.append( event->mimeData()->urls().at(i).path() );
             }
@@ -437,7 +437,7 @@ void MainWindow::dropEvent(QDropEvent *event)
 void MainWindow::openMlvSet( QStringList list )
 {
     m_inOpeningProcess = true;
-    for( int i = 0; i < list.count(); i++ )
+    for( int i = 0; i < list.size(); i++ )
     {
         QString fileName = list.at(i);
 #ifdef Q_OS_WIN //Qt Bug?
@@ -457,7 +457,7 @@ void MainWindow::openMlvSet( QStringList list )
             if( !list.empty() )
             {
                 QString files;
-                for( int i = 0; i < list.count(); i++ ) files.append( QString( "\r\n%1" ).arg( QFileInfo( list.at(i) ).fileName() ) );
+                for( int i = 0; i < list.size(); i++ ) files.append( QString( "\r\n%1" ).arg( QFileInfo( list.at(i) ).fileName() ) );
                 QMessageBox::information( this, APPNAME, tr( "Installation of focus pixel map(s) %1\r\nsuccessful." ).arg( files ) );
             }
             m_inOpeningProcess = false;
@@ -512,7 +512,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
         {
             on_actionSaveSession_triggered();
             //Saving was aborted -> abort quit
-            if( m_sessionFileName.count() == 0 )
+            if( m_sessionFileName.size() == 0 )
             {
                 event->ignore();
                 return;
@@ -723,7 +723,7 @@ void MainWindow::on_actionOpen_triggered()
 
     m_inOpeningProcess = true;
 
-    for( int i = 0; i < files.count(); i++ )
+    for( int i = 0; i < files.size(); i++ )
     {
         QString fileName = files.at(i);
 
@@ -762,7 +762,7 @@ void MainWindow::on_actionFcpxmlImportAssistant_triggered()
     //Open files
     m_inOpeningProcess = true;
 
-    for( int i = 0; i < files.count(); i++ )
+    for( int i = 0; i < files.size(); i++ )
     {
         QString fileName = files.at(i);
 
@@ -2046,7 +2046,7 @@ void MainWindow::startExportPipe(QString fileName)
 
             //Frames in the export queue?!
             int totalFrames = 0;
-            for( int i = 0; i < m_exportQueue.count(); i++ )
+            for( int i = 0; i < m_exportQueue.size(); i++ )
             {
                 totalFrames += m_exportQueue.at(i)->cutOut() - m_exportQueue.at(i)->cutIn() + 1;
             }
@@ -2576,7 +2576,7 @@ void MainWindow::startExportPipe(QString fileName)
 
         //Frames in the export queue?!
         int totalFrames = 0;
-        for( int i = 0; i < m_exportQueue.count(); i++ )
+        for( int i = 0; i < m_exportQueue.size(); i++ )
         {
             totalFrames += m_exportQueue.at(i)->cutOut() - m_exportQueue.at(i)->cutIn() + 1;
         }
@@ -2701,7 +2701,7 @@ void MainWindow::startExportCdng(QString fileName)
     m_pStatusDialog->open();
     //Frames in the export queue?!
     int totalFrames = 0;
-    for( int i = 0; i < m_exportQueue.count(); i++ )
+    for( int i = 0; i < m_exportQueue.size(); i++ )
     {
         totalFrames += m_exportQueue.at(i)->cutOut() - m_exportQueue.at(i)->cutIn() + 1;
     }
@@ -2877,7 +2877,7 @@ void MainWindow::startExportMlv(QString fileName)
     m_pStatusDialog->open();
     //Frames in the export queue?!
     uint32_t totalFrames = 0;
-    for( int i = 0; i < m_exportQueue.count(); i++ )
+    for( int i = 0; i < m_exportQueue.size(); i++ )
     {
         totalFrames += m_exportQueue.at(i)->cutOut() - m_exportQueue.at(i)->cutIn() + 1;
     }
@@ -3016,7 +3016,7 @@ void MainWindow::startExportAVFoundation(QString fileName)
     m_pStatusDialog->open();
     //Frames in the export queue?!
     int totalFrames = 0;
-    for( int i = 0; i < m_exportQueue.count(); i++ )
+    for( int i = 0; i < m_exportQueue.size(); i++ )
     {
         totalFrames += m_exportQueue.at(i)->cutOut() - m_exportQueue.at(i)->cutIn() + 1;
     }
@@ -3198,17 +3198,9 @@ void MainWindow::startExportAVFoundation(QString fileName)
         ffmpegAudioCommand.append( QString( " -y -i \"%1\" -i \"%2\" -map 0:0 -map 1:0 -c copy \"%3\"" )
                 .arg( tempFileName ).arg( wavFileName ).arg( fileName ) );
 
-        QProcess ffmpegProc;
-        //qDebug() << ffmpegAudioCommand <<
-        while( !QFileInfo( fileName ).exists()  ) //AVFoundation file will be corrupted for a unknown time until we can add audio
-        {
-            ffmpegProc.execute( ffmpegAudioCommand );
 
-            qApp->processEvents();
-
-            //Abort pressed? -> End the loop
-            if( m_exportAbortPressed ) break;
-        }
+        FILE *pPipe = popen( ffmpegAudioCommand.toUtf8().data(), "w" );
+        pclose( pPipe );
 
         QFile( tempFileName ).remove();
         QFile( wavFileName ).remove();
@@ -3275,7 +3267,7 @@ void MainWindow::openSession(QString fileNameSession)
         if( Rxml.isStartElement() && Rxml.name() == QString( "mlv_files" ) )
         {
             //Read version string, if there is one
-            if( Rxml.attributes().count() != 0 )
+            if( Rxml.attributes().size() != 0 )
             {
                 //qDebug() << "masxmlVersion" << Rxml.attributes().at(0).value().toInt();
                 versionMasxml = Rxml.attributes().at(0).value().toInt();
@@ -3291,7 +3283,7 @@ void MainWindow::openSession(QString fileNameSession)
                     //If file is not there, search at alternative relative path for file
                     if( !QFile( fileName ).exists() )
                     {
-                        if( Rxml.attributes().count() > 1 )
+                        if( Rxml.attributes().size() > 1 )
                         {
                             QString relativeName = Rxml.attributes().at(1).value().toString();
                             fileName = QDir( QFileInfo( fileNameSession ).path() ).filePath( relativeName );
@@ -3440,7 +3432,7 @@ void MainWindow::resetReceiptWithDefault( ReceiptSettings *receipt )
         if( Rxml.isStartElement() && Rxml.name() == QString( "receipt" ) )
         {
             //Read version string, if there is one
-            if( Rxml.attributes().count() != 0 )
+            if( Rxml.attributes().size() != 0 )
             {
                 //qDebug() << "masxmlVersion" << Rxml.attributes().at(0).value().toInt();
                 versionReceipt = Rxml.attributes().at(0).value().toInt();
@@ -3472,7 +3464,7 @@ void MainWindow::on_actionImportReceipt_triggered()
                                            tr("MLV App Receipt Xml files (*.marxml)"));
 
     //Abort selected
-    if( fileName.count() == 0 ) return;
+    if( fileName.size() == 0 ) return;
     m_lastReceiptFileName = fileName;
 
     //Open a XML stream for the file
@@ -3494,7 +3486,7 @@ void MainWindow::on_actionImportReceipt_triggered()
         if( Rxml.isStartElement() && Rxml.name() == QString( "receipt" ) )
         {
             //Read version string, if there is one
-            if( Rxml.attributes().count() != 0 )
+            if( Rxml.attributes().size() != 0 )
             {
                 //qDebug() << "masxmlVersion" << Rxml.attributes().at(0).value().toInt();
                 versionReceipt = Rxml.attributes().at(0).value().toInt();
@@ -3515,10 +3507,10 @@ void MainWindow::on_actionExportReceipt_triggered()
     if( SESSION_CLIP_COUNT <= 0 ) return;
 
     QModelIndexList list = selectedClipsList();
-    if( list.count() > 1 ) return;
+    if( list.size() > 1 ) return;
 
     int clipToExport;
-    if( list.count() == 0 ) clipToExport = SESSION_ACTIVE_CLIP_ROW;
+    if( list.size() == 0 ) clipToExport = SESSION_ACTIVE_CLIP_ROW;
     else clipToExport = m_pProxyModel->mapToSource( list.first() ).row();
 
     //Stop playback if active
@@ -3530,7 +3522,7 @@ void MainWindow::on_actionExportReceipt_triggered()
                                            tr("MLV App Receipt Xml files (*.marxml)"));
 
     //Abort selected
-    if( fileName.count() == 0 ) return;
+    if( fileName.size() == 0 ) return;
     if( !fileName.endsWith( ".marxml", Qt::CaseInsensitive ) ) fileName.append( ".marxml" );
     m_lastReceiptFileName = fileName;
 
@@ -4869,7 +4861,7 @@ int MainWindow::showFileInEditor(int row)
     {
         //If one file is selected, reselect the last one, else do nothing (export)
         //And if there is another file we can switch to...
-        if( selectedClipsList().count() <= 1
+        if( selectedClipsList().size() <= 1
          && SESSION_CLIP_COUNT > 1)
         {
             m_pSelectionModel->setCurrentIndex( m_pProxyModel->mapFromSource( m_pModel->index( oldActive, 0, QModelIndex() ) ), QItemSelectionModel::ClearAndSelect );
@@ -6531,7 +6523,7 @@ void MainWindow::on_actionExport_triggered()
     }
 
     //If one clip is selected, but is not a sequence
-    if( ( selectedClipsList().count() <= 1 )
+    if( ( selectedClipsList().size() <= 1 )
      && !isExportSequence() )
     {
         //File Dialog
@@ -6563,7 +6555,7 @@ void MainWindow::on_actionExport_triggered()
         QStringList overwriteList;
         QModelIndexList selectedClips = selectedClipsList();
 
-        for( int i = 0; i < selectedClips.count(); i++ )
+        for( int i = 0; i < selectedClips.size(); i++ )
         {
             //Do nothing for hidden clips
             if( ui->tableViewSession->isRowHidden( selectedClips.at( i ).row() ) ) continue;
@@ -6614,7 +6606,7 @@ void MainWindow::on_actionExport_triggered()
         m_lastExportPath = folderName;
 
         //for all selected
-        for( int i = 0; i < selectedClips.count(); i++ )
+        for( int i = 0; i < selectedClips.size(); i++ )
         {
             bool skipFile = false;
 
@@ -6655,7 +6647,7 @@ void MainWindow::on_actionExport_triggered()
     //Scripting class wants to know the export folder
     m_pScripting->setExportDir( QFileInfo( m_exportQueue.first()->exportFileName() ).absolutePath() );
     QStringList fileNames;
-    for( int i = 0; i < m_exportQueue.count(); i++ )
+    for( int i = 0; i < m_exportQueue.size(); i++ )
     {
         fileNames.append( m_exportQueue.at( i )->fileName() );
     }
@@ -7125,14 +7117,14 @@ void MainWindow::on_actionCopyRecept_triggered()
 {
     if( SESSION_CLIP_COUNT <= 0 ) return;
     QModelIndexList list = selectedClipsList();
-    if( list.count() > 1 )
+    if( list.size() > 1 )
     {
         QMessageBox::warning( this, APPNAME, tr( "Please select just one clip to copy a receipt!" ) );
         return;
     }
 
     int clipToCopy;
-    if( list.count() == 0 ) clipToCopy = SESSION_ACTIVE_CLIP_ROW;
+    if( list.size() == 0 ) clipToCopy = SESSION_ACTIVE_CLIP_ROW;
     else clipToCopy = m_pProxyModel->mapToSource( list.first() ).row();
 
     //Save slider receipt
@@ -7148,9 +7140,9 @@ void MainWindow::on_actionCopyRecept_triggered()
 void MainWindow::on_actionPasteReceipt_triggered()
 {
     QModelIndexList list = selectedClipsList();
-    if( list.count() )
+    if( list.size() )
     {
-        for( int i = 0; i < list.count(); i++ )
+        for( int i = 0; i < list.size(); i++ )
         {
             //Do nothing for hidden clips
             if( ui->tableViewSession->isRowHidden( list.at( i ).row() ) ) continue;
@@ -7184,7 +7176,7 @@ void MainWindow::on_actionNewSession_triggered()
         {
             on_actionSaveSession_triggered();
             //Saving was aborted -> abort quit
-            if( m_sessionFileName.count() == 0 )
+            if( m_sessionFileName.size() == 0 )
             {
                 return;
             }
@@ -7208,7 +7200,7 @@ void MainWindow::on_actionOpenSession_triggered()
                                            tr("MLV App Session Xml files (*.masxml)"));
 
     //Abort selected
-    if( fileName.count() == 0 ) return;
+    if( fileName.size() == 0 ) return;
 
     m_inOpeningProcess = true;
     openSession( fileName );
@@ -7226,7 +7218,7 @@ void MainWindow::on_actionSaveSession_triggered()
     //Stop playback if active
     ui->actionPlay->setChecked( false );
 
-    if( m_sessionFileName.count() == 0 ) on_actionSaveAsSession_triggered();
+    if( m_sessionFileName.size() == 0 ) on_actionSaveAsSession_triggered();
     else saveSession( m_sessionFileName );
 }
 
@@ -7242,7 +7234,7 @@ void MainWindow::on_actionSaveAsSession_triggered()
                                            tr("MLV App Session Xml files (*.masxml)"));
 
     //Abort selected
-    if( fileName.count() == 0 ) return;
+    if( fileName.size() == 0 ) return;
 
     //Add ending, if it got lost using some OS...
     if( !fileName.endsWith( ".masxml" ) ) fileName.append( ".masxml" );
@@ -7374,7 +7366,7 @@ void MainWindow::on_listViewSession_customContextMenuRequested(const QPoint &pos
     QModelIndexList list = selectedClipsList();
     if( SESSION_CLIP_COUNT > 0 )
     {
-        if( list.count() == 1 )
+        if( list.size() == 1 )
         {
             myMenu.addAction( ui->actionSelectAllClips );
             myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Image-icon.png" ), "Show in Editor",  this, SLOT( rightClickShowFile() ) );
@@ -7388,7 +7380,7 @@ void MainWindow::on_listViewSession_customContextMenuRequested(const QPoint &pos
             myMenu.addAction( ui->actionSelectExternalApplication );
             myMenu.addSeparator();
         }
-        else if( list.count() > 1 )
+        else if( list.size() > 1 )
         {
             myMenu.addAction( ui->actionPasteReceipt );
             myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Delete-icon.png" ), "Delete Selected Files from Session",  this, SLOT( deleteFileFromSession() ) );
@@ -7420,7 +7412,7 @@ void MainWindow::on_tableViewSession_customContextMenuRequested(const QPoint &po
     QModelIndexList list = selectedClipsList();
     if( SESSION_CLIP_COUNT > 0 )
     {
-        if( list.count() == 1 )
+        if( list.size() == 1 )
         {
             myMenu.addAction( ui->actionSelectAllClips );
             myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Image-icon.png" ), "Show in Editor",  this, SLOT( rightClickShowFile() ) );
@@ -7434,7 +7426,7 @@ void MainWindow::on_tableViewSession_customContextMenuRequested(const QPoint &po
             myMenu.addAction( ui->actionSelectExternalApplication );
             myMenu.addSeparator();
         }
-        else if( list.count() > 1 )
+        else if( list.size() > 1 )
         {
             myMenu.addAction( ui->actionPasteReceipt );
             myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Delete-icon.png" ), "Delete Selected Files from Session",  this, SLOT( deleteFileFromSession() ) );
@@ -7466,7 +7458,7 @@ void MainWindow::deleteFileFromSession( void )
 
     //If multiple selection is on, we need to erase all selected items
     QModelIndexList list = selectedClipsList();
-    for( int i = list.count(); i > 0; i-- )
+    for( int i = list.size(); i > 0; i-- )
     {
         //Do nothing for hidden clips
         if( ui->tableViewSession->isRowHidden( list.at(i-1).row() ) ) continue;
@@ -7548,7 +7540,7 @@ void MainWindow::renameActiveClip( void )
 
     //If multiple selection is on, we do nothing. We just rename one selected clip
     QModelIndexList list = selectedClipsList();
-    if( list.count() > 1 ) return;
+    if( list.size() > 1 ) return;
 
     int row = list.first().data( ROLE_REALINDEX ).toInt();
 
@@ -8147,7 +8139,7 @@ void MainWindow::exportHandler( void )
     else
     {
         //If not running save number of jobs
-        numberOfJobs = m_exportQueue.count();
+        numberOfJobs = m_exportQueue.size();
         m_exportAbortPressed = false;
         jobNumber = 0;
         int totalFrames = 0;
@@ -9893,7 +9885,7 @@ void MainWindow::on_toolButtonNextLut_clicked()
 
     // Find the next file from the currently chosen one
     QString fileName = lutFileList.first();
-    for( int i = 0; i < lutFileList.count(); i++ )
+    for( int i = 0; i < lutFileList.size(); i++ )
     {
         if( lutFileList[i] > ui->lineEditLutName->text() )
         {
@@ -9926,7 +9918,7 @@ void MainWindow::on_toolButtonPrevLut_clicked()
 
     // Find the previous file from the currently chosen one
     QString fileName = lutFileList.last();
-    for( int i = lutFileList.count() - 1; i >= 0; i-- )
+    for( int i = lutFileList.size() - 1; i >= 0; i-- )
     {
         if( lutFileList[i] < ui->lineEditLutName->text() )
         {
@@ -10052,7 +10044,7 @@ void MainWindow::on_actionOpenWithExternalApplication_triggered( void )
 
 #ifdef Q_OS_OSX     //Code for OSX
     //First check -> select app if fail
-    if( !QDir( m_externalApplicationName ).exists() || m_externalApplicationName.count() == 0 )
+    if( !QDir( m_externalApplicationName ).exists() || m_externalApplicationName.size() == 0 )
     {
         on_actionSelectExternalApplication_triggered();
     }
@@ -10064,7 +10056,7 @@ void MainWindow::on_actionOpenWithExternalApplication_triggered( void )
     //Now open
     QFileInfo info( m_externalApplicationName );
     QString path = info.fileName();
-    if( path.endsWith( ".app" ) ) path = path.left( path.count() - 4 );
+    if( path.endsWith( ".app" ) ) path = path.left( path.size() - 4 );
     QProcess::startDetached( QString( "open -a \"%1\" \"%2\"" )
                            .arg( path )
                            .arg( GET_RECEIPT( m_pProxyModel->mapToSource( m_pSelectionModel->currentIndex() ).row() )->fileName() ) );
@@ -10087,21 +10079,21 @@ void MainWindow::on_actionSelectExternalApplication_triggered()
     path = QFileDialog::getOpenFileName( this,
                  tr("Select external application"), path,
                  tr("Executable (*.exe)") );
-    if( path.count() == 0 ) return;
+    if( path.size() == 0 ) return;
 #endif
 #ifdef Q_OS_LINUX
     path = "/";
     path = QFileDialog::getOpenFileName( this,
                  tr("Select external application"), path,
                  tr("Application (*)") );
-    if( path.count() == 0 ) return;
+    if( path.size() == 0 ) return;
 #endif
 #ifdef Q_OS_OSX
     path = "/Applications/";
     path = QFileDialog::getOpenFileName( this,
                  tr("Select external application"), path,
                  tr("Application (*.app)") );
-    if( path.count() == 0 ) return;
+    if( path.size() == 0 ) return;
 #endif
     m_externalApplicationName = path;
 }
@@ -10119,7 +10111,7 @@ void MainWindow::openRecentSession(QString fileName)
         {
             on_actionSaveSession_triggered();
             //Saving was aborted -> abort quit
-            if( m_sessionFileName.count() == 0 )
+            if( m_sessionFileName.size() == 0 )
             {
                 return;
             }
@@ -10335,7 +10327,7 @@ void MainWindow::on_actionUseDefaultReceipt_triggered(bool checked)
                                            tr("MLV App Receipt Xml files (*.marxml)"));
 
     //Abort selected
-    if( fileName.count() == 0 )
+    if( fileName.size() == 0 )
     {
         ui->actionUseDefaultReceipt->setChecked( false );
         return;
@@ -10347,7 +10339,7 @@ void MainWindow::on_actionUseDefaultReceipt_triggered(bool checked)
 void MainWindow::on_actionMarkRed_triggered()
 {
     QModelIndexList list = selectedClipsList();
-    for( int i = 0; i < list.count(); i++ )
+    for( int i = 0; i < list.size(); i++ )
     {
         //Do nothing for hidden clips
         if( ui->tableViewSession->isRowHidden( list.at( i ).row() ) ) continue;
@@ -10362,7 +10354,7 @@ void MainWindow::on_actionMarkRed_triggered()
 void MainWindow::on_actionMarkYellow_triggered()
 {
     QModelIndexList list = selectedClipsList();
-    for( int i = 0; i < list.count(); i++ )
+    for( int i = 0; i < list.size(); i++ )
     {
         //Do nothing for hidden clips
         if( ui->tableViewSession->isRowHidden( list.at( i ).row() ) ) continue;
@@ -10377,7 +10369,7 @@ void MainWindow::on_actionMarkYellow_triggered()
 void MainWindow::on_actionMarkGreen_triggered()
 {
     QModelIndexList list = selectedClipsList();
-    for( int i = 0; i < list.count(); i++ )
+    for( int i = 0; i < list.size(); i++ )
     {
         //Do nothing for hidden clips
         if( ui->tableViewSession->isRowHidden( list.at( i ).row() ) ) continue;
@@ -10392,7 +10384,7 @@ void MainWindow::on_actionMarkGreen_triggered()
 void MainWindow::on_actionUnmark_triggered()
 {
     QModelIndexList list = selectedClipsList();
-    for( int i = 0; i < list.count(); i++ )
+    for( int i = 0; i < list.size(); i++ )
     {
         //Do nothing for hidden clips
         if( ui->tableViewSession->isRowHidden( list.at( i ).row() ) ) continue;
@@ -10566,7 +10558,7 @@ void MainWindow::checkFocusPixelUpdate()
 QModelIndexList MainWindow::selectedClipsList()
 {
     QModelIndexList list;
-    for( int i = 0; i < m_pSelectionModel->selectedIndexes().count(); i++ )
+    for( int i = 0; i < m_pSelectionModel->selectedIndexes().size(); i++ )
     {
         if( m_pSelectionModel->selectedIndexes().at(i).column() != 0 ) continue;
         list.append( m_pSelectionModel->selectedIndexes().at(i) );

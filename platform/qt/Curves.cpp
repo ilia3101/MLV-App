@@ -162,7 +162,7 @@ void Curves::setConfiguration(QString config)
     //qDebug() << "Load gradation curve:" << config;
     for( int i = 0; i < 4; i++ )
     {
-        if( config.count() <= 0 ) return;
+        if( config.size() <= 0 ) return;
         QVector<QPointF> *line;
         if( i == 0 ) line = &m_whiteLine;
         else if( i == 1 ) line = &m_redLine;
@@ -170,7 +170,7 @@ void Curves::setConfiguration(QString config)
         else line = &m_blueLine;
 
         line->clear();
-        while( config.count() > 0 && !config.startsWith( "?" ) )
+        while( config.size() > 0 && !config.startsWith( "?" ) )
         {
             QString val = config.left( config.indexOf( ";" ) );
             config.remove( 0, config.indexOf( ";" )+1 );
@@ -193,22 +193,22 @@ QString Curves::configuration()
     QString config;
     config.clear();
 
-    for( int i = 0; i < m_whiteLine.count(); i++ )
+    for( int i = 0; i < m_whiteLine.size(); i++ )
     {
         config.append( QString( "%1;%2;" ).arg( m_whiteLine.at(i).x() ).arg( m_whiteLine.at(i).y() ) );
     }
     config.append( QString( "?" ) );
-    for( int i = 0; i < m_redLine.count(); i++ )
+    for( int i = 0; i < m_redLine.size(); i++ )
     {
         config.append( QString( "%1;%2;" ).arg( m_redLine.at(i).x() ).arg( m_redLine.at(i).y() ) );
     }
     config.append( QString( "?" ) );
-    for( int i = 0; i < m_greenLine.count(); i++ )
+    for( int i = 0; i < m_greenLine.size(); i++ )
     {
         config.append( QString( "%1;%2;" ).arg( m_greenLine.at(i).x() ).arg( m_greenLine.at(i).y() ) );
     }
     config.append( QString( "?" ) );
-    for( int i = 0; i < m_blueLine.count(); i++ )
+    for( int i = 0; i < m_blueLine.size(); i++ )
     {
         config.append( QString( "%1;%2;" ).arg( m_blueLine.at(i).x() ).arg( m_blueLine.at(i).y() ) );
     }
@@ -307,10 +307,10 @@ void Curves::paintLine(QVector<QPointF> line, QPainter *pPainter, QColor color, 
     }
 
     //Build input sets
-    float *pXin = (float*)malloc( sizeof(float) * line.count() );
-    float *pYin = (float*)malloc( sizeof(float) * line.count() );
+    float *pXin = (float*)malloc( sizeof(float) * line.size() );
+    float *pYin = (float*)malloc( sizeof(float) * line.size() );
     //Data into input sets
-    for( int i = 0; i < line.count(); i++ )
+    for( int i = 0; i < line.size(); i++ )
     {
         pXin[i] = line.at(i).x();
         pYin[i] = line.at(i).y();
@@ -319,7 +319,7 @@ void Curves::paintLine(QVector<QPointF> line, QPainter *pPainter, QColor color, 
     float *pXout = (float*)malloc( sizeof(float) * SIZEW );
     float *pYout = (float*)malloc( sizeof(float) * SIZEW );
 
-    int numIn = line.count();
+    int numIn = line.size();
     int numOut = SIZEW;
 
     //Data into x of output sets
@@ -351,7 +351,7 @@ void Curves::paintLine(QVector<QPointF> line, QPainter *pPainter, QColor color, 
     {
         pPainter->setPen( QPen( QBrush( color ), 1 ) );
         pPainter->setBrush( color );
-        for( int i = 0; i < line.count(); i++ )
+        for( int i = 0; i < line.size(); i++ )
         {
             pPainter->drawEllipse( pXin[i]*SIZEW-7, SIZEH-(pYin[i]*SIZEH)-7, 15, 15 );
         }

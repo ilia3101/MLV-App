@@ -173,12 +173,12 @@ void HueVsDiagram::resetLineDefaultPoints()
 //Load configuration string to settings
 void HueVsDiagram::setConfiguration(QString config)
 {
-    if( config.count() <= 0 ) return;
+    if( config.size() <= 0 ) return;
     QVector<QPointF> *line;
     line = &m_whiteLine;
 
     line->clear();
-    while( config.count() > 0 && !config.startsWith( "?" ) )
+    while( config.size() > 0 && !config.startsWith( "?" ) )
     {
         QString val = config.left( config.indexOf( ";" ) );
         config.remove( 0, config.indexOf( ";" )+1 );
@@ -200,7 +200,7 @@ QString HueVsDiagram::configuration()
     QString config;
     config.clear();
 
-    for( int i = 0; i < m_whiteLine.count(); i++ )
+    for( int i = 0; i < m_whiteLine.size(); i++ )
     {
         config.append( QString( "%1;%2;" ).arg( m_whiteLine.at(i).x() ).arg( m_whiteLine.at(i).y() ) );
     }
@@ -224,10 +224,10 @@ void HueVsDiagram::paintLine(QVector<QPointF> line, QPainter *pPainter, QColor c
     }
 
     //Build input sets
-    float *pXin = (float*)malloc( sizeof(float) * line.count() );
-    float *pYin = (float*)malloc( sizeof(float) * line.count() );
+    float *pXin = (float*)malloc( sizeof(float) * line.size() );
+    float *pYin = (float*)malloc( sizeof(float) * line.size() );
     //Data into input sets
-    for( int i = 0; i < line.count(); i++ )
+    for( int i = 0; i < line.size(); i++ )
     {
         pXin[i] = line.at(i).x();
         pYin[i] = line.at(i).y();
@@ -236,7 +236,7 @@ void HueVsDiagram::paintLine(QVector<QPointF> line, QPainter *pPainter, QColor c
     float *pXout = (float*)malloc( sizeof(float) * SIZEW );
     float *pYout = (float*)malloc( sizeof(float) * SIZEW );
 
-    int numIn = line.count();
+    int numIn = line.size();
     int numOut = SIZEW;
 
     //Data into x of output sets
@@ -268,7 +268,7 @@ void HueVsDiagram::paintLine(QVector<QPointF> line, QPainter *pPainter, QColor c
     {
         pPainter->setPen( QPen( QBrush( color ), 1 ) );
         pPainter->setBrush( color );
-        for( int i = 0; i < line.count(); i++ )
+        for( int i = 0; i < line.size(); i++ )
         {
             pPainter->drawEllipse( pXin[i]*SIZEW-7, HALFSIZEH-(pYin[i]*SIZEH)-7, 15, 15 );
         }

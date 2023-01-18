@@ -100,10 +100,10 @@ void TranscodeDialog::on_pushButtonAddSequence_clicked()
                                                             QFileDialog::ShowDirsOnly
                                                             | QFileDialog::DontResolveSymlinks);
 
-    if( !folder.count() ) return;
+    if( !folder.size() ) return;
     m_lastSourcePath = folder.left( folder.lastIndexOf( "/" ) );
 
-    QString path = folder.right( folder.count() - folder.lastIndexOf( "/" ) - 1 );
+    QString path = folder.right( folder.size() - folder.lastIndexOf( "/" ) - 1 );
 
     QTreeWidgetItem *pItem = new QTreeWidgetItem( ui->treeWidget );
     pItem->setText( 0, path );
