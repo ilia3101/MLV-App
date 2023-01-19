@@ -10,7 +10,6 @@
 #include <QCoreApplication>
 #include <QDebug>
 #include <QProcess>
-#include <QMessageBox>
 
 //Constructur
 Scripting::Scripting(QObject *parent) :

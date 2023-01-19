@@ -499,16 +499,16 @@ void MainWindow::closeEvent(QCloseEvent *event)
     if( ui->actionAskForSavingOnQuit->isChecked() && SESSION_CLIP_COUNT != 0 )
     {
         //Ask before quit
-        int ret = QMessageBox::warning( this, APPNAME, tr( "Do you really like to quit MLVApp? Do you like to save the session?" ),
-                                        tr( "Cancel" ), tr( "Quit without saving" ), tr( "Save and quit" ) );
+        QMessageBox::StandardButton ret = QMessageBox::warning( this, APPNAME, tr( "Do you really like to quit MLVApp? Do you like to save the session?" ),
+                                                                QMessageBox::Cancel | QMessageBox::Close | QMessageBox::Save, QMessageBox::Cancel );
         //Aborted
-        if( ret == QMessageBox::Escape || ret == 0 )
+        if( ret == QMessageBox::Escape || ret == QMessageBox::Cancel )
         {
             event->ignore();
             return;
         }
         //Save and quit
-        else if( ret == 2 )
+        else if( ret == QMessageBox::Save )
         {
             on_actionSaveSession_triggered();
             //Saving was aborted -> abort quit
@@ -658,7 +658,7 @@ int MainWindow::openMlvForPreview(QString fileName)
 #endif
     if( mlvErr )
     {
-        QMessageBox::critical( this, tr( "MLV Error" ), tr( "%1" ).arg( mlvErrMsg ), tr("Cancel") );
+        QMessageBox::critical( this, tr( "MLV Error" ), tr( "%1" ).arg( mlvErrMsg ), QMessageBox::Cancel, QMessageBox::Cancel );
         freeMlvObject( new_MlvObject );
         return mlvErr;
     }
@@ -807,7 +807,7 @@ int MainWindow::openMlv( QString fileName )
 #endif
     if( mlvErr )
     {
-        QMessageBox::critical( this, tr( "MLV Error" ), tr( "%1" ).arg( mlvErrMsg ), tr("Cancel") );
+        QMessageBox::critical( this, tr( "MLV Error" ), tr( "%1" ).arg( mlvErrMsg ), QMessageBox::Cancel, QMessageBox::Cancel );
         freeMlvObject( new_MlvObject );
         return mlvErr;
     }
@@ -7163,23 +7163,30 @@ void MainWindow::on_actionNewSession_triggered()
     //Save last session?
     if( SESSION_CLIP_COUNT != 0 )
     {
-        int ret = QMessageBox::warning( this, APPNAME, tr( "Do you like to save the current session?" ),
-                                        tr( "Cancel" ), tr( "Don't save" ), tr( "Save" ) );
-
-        //Aborted
-        if( ret == QMessageBox::Escape || ret == 0 )
+        switch( QMessageBox::warning( this,
+                                      APPNAME,
+                                      tr( "Do you like to save the current session?" ),
+                                      QMessageBox::Save | QMessageBox::No | QMessageBox::Cancel,
+                                      QMessageBox::Cancel ) )
         {
-            return;
-        }
+        //Don't save
+        case QMessageBox::No:
+            break;
         //Save and quit
-        else if( ret == 2 )
-        {
+        case QMessageBox::Save:
             on_actionSaveSession_triggered();
             //Saving was aborted -> abort quit
             if( m_sessionFileName.size() == 0 )
             {
                 return;
             }
+            break;
+        //Aborted
+        case QMessageBox::Escape:
+        case QMessageBox::Cancel:
+        default:
+            return;
+            break;
         }
     }
 
@@ -9804,13 +9811,13 @@ void MainWindow::on_lineEditDarkFrameFile_textChanged(const QString &arg1)
         int ret = llrpValidateExtDarkFrame(m_pMlvObject, darkFrameFileName.data(), errorMessage);
         if( ret )
         {
-            QMessageBox::critical( this, tr( "Error" ), tr( "%1" ).arg( errorMessage ), tr("Cancel") );
+            QMessageBox::critical( this, tr( "Error" ), tr( "%1" ).arg( errorMessage ), QMessageBox::Cancel, QMessageBox::Cancel );
             ui->lineEditDarkFrameFile->setText( "No file selected" );
             return;
         }
         else if( !ret && errorMessage[0] )
         {
-            QMessageBox::warning( this, tr( "Warning" ), tr( "%1" ).arg( errorMessage ), tr("Ok") );
+            QMessageBox::warning( this, tr( "Warning" ), tr( "%1" ).arg( errorMessage ), QMessageBox::Ok , QMessageBox::Ok );
         }
 
         llrpInitDarkFrameExtFileName(m_pMlvObject, darkFrameFileName.data());
@@ -9950,7 +9957,7 @@ void MainWindow::on_lineEditLutName_textChanged(const QString &arg1)
         int ret = load_lut( m_pProcessingObject->lut, lutName.data(), errorMessage );
         if( ret < 0 )
         {
-            QMessageBox::critical( this, tr( "Error" ), tr( "%1" ).arg( errorMessage ), tr("Cancel") );
+            QMessageBox::critical( this, tr( "Error" ), tr( "%1" ).arg( errorMessage ), QMessageBox::Cancel, QMessageBox::Cancel );
             ui->lineEditLutName->setText( "" );
             unload_lut( m_pProcessingObject->lut );
             return;
@@ -10104,22 +10111,30 @@ void MainWindow::openRecentSession(QString fileName)
     //Save actual session?
     if( SESSION_CLIP_COUNT > 0 )
     {
-        int ret = QMessageBox::warning( this, APPNAME, tr( "Do you like to save the session before loading?" ),
-                                                       QMessageBox::Yes, QMessageBox::No, QMessageBox::Cancel );
-        //Save
-        if( ret == QMessageBox::Yes )
+        switch( QMessageBox::warning( this,
+                                      APPNAME,
+                                      tr( "Do you like to save the session before loading?" ),
+                                      QMessageBox::Save | QMessageBox::No | QMessageBox::Cancel,
+                                      QMessageBox::Cancel ) )
         {
+        //Save
+        case QMessageBox::Save:
             on_actionSaveSession_triggered();
             //Saving was aborted -> abort quit
             if( m_sessionFileName.size() == 0 )
             {
                 return;
             }
-        }
+            break;
+        //No
+        case QMessageBox::No:
+            break;
         //Cancel
-        else if( ret == QMessageBox::Escape || ret == QMessageBox::Cancel )
-        {
+        case QMessageBox::Escape:
+        case QMessageBox::Cancel:
+        default:
             return;
+            break;
         }
     }
 
@@ -10542,7 +10557,7 @@ void MainWindow::checkFocusPixelUpdate()
     int updateFpm = manager->updateAllMaps( true );
     if( updateFpm > 0 )
     {
-        if( !QMessageBox::information( this, APPNAME, tr( "Update available for %1 focus pixel map(s)." ).arg( updateFpm ), tr( "Update" ), tr( "Close" ) ) )
+        if( QMessageBox::Yes == QMessageBox::information( this, APPNAME, tr( "Update available for %1 focus pixel map(s).\nDownload and install?" ).arg( updateFpm ), QMessageBox::Yes | QMessageBox::Cancel, QMessageBox::Cancel ) )
         {
             StatusFpmDialog *status = new StatusFpmDialog( this );
             status->open();

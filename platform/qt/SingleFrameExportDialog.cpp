@@ -211,7 +211,7 @@ void SingleFrameExportDialog::exportDng()
     if( saveDngFrame( m_pMlvObject, cinemaDng, m_frameNr, fileName.toLatin1().data() ) )
 #endif
     {
-        QMessageBox::critical( this, tr( "MLV App - Export file error" ), tr( "Could not save: %1\n" ).arg( fileName ), tr( "Cancel" ), 0, 0);
+        QMessageBox::critical( this, tr( "MLV App - Export file error" ), tr( "Could not save: %1\n" ).arg( fileName ), QMessageBox::Cancel, QMessageBox::Cancel );
     }
 
     //Free DNG data struct

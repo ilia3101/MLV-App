@@ -6,7 +6,6 @@
  */
 
 #include "FocusPixelMapManager.h"
-#include <QMessageBox>
 #include <QByteArray>
 
 //Constructor

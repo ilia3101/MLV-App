@@ -10,7 +10,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <QString>
-#include <QMessageBox>
 #ifdef Q_OS_WIN
 #include "windows.h"
 #endif

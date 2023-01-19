@@ -13,7 +13,6 @@
 #include <QDir>
 #include <QCoreApplication>
 #include <QDebug>
-#include <QMessageBox>
 
 class FpmInstaller
 {

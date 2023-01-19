@@ -59,7 +59,7 @@ macx{
 #        QMAKE_CFLAGS += -fopenmp -ftree-vectorize
 #        QMAKE_CXXFLAGS += -fopenmp -std=c++15 -ftree-vectorize
 #        INCLUDEPATH += -I/usr/local/opt/llvm/include
-#        LIBS += -L/usr/local/opt/llvm/lib -lomp
+#        LIBS += -L/usr/local/opt/llvm/lib -lomp -L/usr/local/opt/openssl/lib -lssl
 #        QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.8
 #    }
     #Qt5 on Apple Silicon with openMP: install llvm via brew, build Qt5 from source
@@ -70,7 +70,7 @@ macx{
 #        QMAKE_CFLAGS += -fopenmp -ftree-vectorize
 #        QMAKE_CXXFLAGS += -fopenmp -std=c++15 -ftree-vectorize
 #        INCLUDEPATH += -I/opt/homebrew/opt/llvm/include
-#        LIBS += -L/opt/homebrew/opt/llvm/lib -lomp
+#        LIBS += -L/opt/homebrew/opt/llvm/lib -lomp -L/opt/homebrew/opt/openssl/lib -lssl
 #        QMAKE_APPLE_DEVICE_ARCHS = arm64
 #    }
 }
