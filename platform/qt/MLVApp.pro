@@ -51,7 +51,7 @@ macx: LIBS += -framework CoreVideo \
               -framework CoreMedia
 
 macx{
-    #OpenMP on macOS: first install llvm via brew, setup llvm kit & compiler in Qt settings!
+    #OpenMP on macOS: first install llvm and openssl via brew, setup llvm kit & compiler in Qt settings!
 #    {
 #        QMAKE_CC = /usr/local/opt/llvm/bin/clang
 #        QMAKE_CXX = /usr/local/opt/llvm/bin/clang++
@@ -62,7 +62,7 @@ macx{
 #        LIBS += -L/usr/local/opt/llvm/lib -lomp -L/usr/local/opt/openssl/lib -lssl
 #        QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.8
 #    }
-    #Qt5 on Apple Silicon with openMP: install llvm via brew, build Qt5 from source
+    #Qt5 on Apple Silicon with openMP: install llvm and openssl via brew, build Qt5 from source
 #    {
 #        QMAKE_CC = /opt/homebrew/opt/llvm/bin/clang
 #        QMAKE_CXX = /opt/homebrew/opt/llvm/bin/clang++
