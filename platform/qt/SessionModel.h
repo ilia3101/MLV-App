@@ -35,6 +35,7 @@ public:
     void removeRow(int row, const QModelIndex &parent);
     void clear( void );
     ReceiptSettings *receipt(int row);
+    void writeMetadataToCsv( QString fileName );
 
 private:
     QStringList m_headers;

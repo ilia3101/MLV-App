@@ -8,6 +8,7 @@
 #include "SessionModel.h"
 #include <QColor>
 #include <QDebug>
+#include <QFile>
 
 //Constructor
 SessionModel::SessionModel(QObject *parent) : QAbstractItemModel(parent), m_activeRow( -1 )
@@ -179,4 +180,34 @@ void SessionModel::clear()
 ReceiptSettings *SessionModel::receipt(int row)
 {
     return m_dataBase.at( row )->getReceipt();
+}
+
+//Export a csv table of session clips metadata
+void SessionModel::writeMetadataToCsv(QString fileName)
+{
+    //Write file
+    QFile data( fileName );
+    if( data.open( QFile::WriteOnly | QFile::Truncate ) )
+    {
+        QTextStream out(&data);
+
+        //Header
+        for( int j = 0; j < columnCount( QModelIndex() ); j++ )
+        {
+            if( j ) out << "\t";
+            out << headerData( j, Qt::Horizontal, Qt::DisplayRole ).toString();
+        }
+        out << '\n';
+        //Data
+        for( int i = 0; i < rowCount( QModelIndex() ); i++ )
+        {
+            for( int j = 0; j < columnCount( QModelIndex() ); j++ )
+            {
+                if( j ) out << "\t";
+                out << clip( i )->getElement( j ).toString();
+            }
+            out << '\n';
+        }
+        data.close();
+    }
 }

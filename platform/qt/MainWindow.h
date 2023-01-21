@@ -206,6 +206,7 @@ private slots:
     void on_actionOpenSession_triggered();
     void on_actionSaveSession_triggered();
     void on_actionSaveAsSession_triggered();
+    void on_actionSaveSessionMetadata_triggered();
     void on_actionImportReceipt_triggered();
     void on_actionExportReceipt_triggered();
     void on_actionUseDefaultReceipt_triggered(bool checked);

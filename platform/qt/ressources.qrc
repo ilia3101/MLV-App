@@ -59,6 +59,7 @@
         <file>RetinaIMG/Actions-flag-red-icon.png</file>
         <file>RetinaIMG/next.png</file>
         <file>RetinaIMG/previous.png</file>
+        <file>RetinaIMG/Database-Table-icon.png</file>
     </qresource>
     <qresource prefix="/AudioVideoIcons">
         <file>AudioVideoIcons/FirstFrame.png</file>
