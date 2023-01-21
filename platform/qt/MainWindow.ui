@@ -129,6 +129,7 @@
     </property>
     <addaction name="actionNewSession"/>
     <addaction name="actionOpenSession"/>
+    <addaction name="actionFastOpen"/>
     <addaction name="actionSaveSession"/>
     <addaction name="actionSaveAsSession"/>
     <addaction name="actionSaveSessionMetadata"/>
@@ -10887,6 +10888,20 @@ QGroupBox::indicator:checked:disabled {
    </property>
    <property name="text">
     <string>Save Session Metadata</string>
+   </property>
+  </action>
+  <action name="actionFastOpen">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Fast Open and Import</string>
+   </property>
+   <property name="toolTip">
+    <string>If checked, clips are imported with reduced metadata on first read.</string>
    </property>
   </action>
  </widget>

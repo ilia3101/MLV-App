@@ -625,7 +625,11 @@ void MainWindow::importNewMlv(QString fileName)
         addFileToSession( fileName );
 
         //Open MLV
-        if( !openMlvForPreview( fileName ) )
+        int ret;
+        if( ui->actionFastOpen->isChecked() ) ret = openMlvForPreview( fileName );
+        else ret = openMlv( fileName );
+
+        if( !ret )
         {
             //Save last file name
             m_lastMlvOpenFileName = fileName;
@@ -1507,6 +1511,7 @@ void MainWindow::readSettings()
     if( set.value( "dragFrameMode", true ).toBool() ) ui->actionDropFrameMode->setChecked( true );
     if( set.value( "audioOutput", true ).toBool() ) ui->actionAudioOutput->setChecked( true );
     if( set.value( "zebras", false ).toBool() ) ui->actionShowZebras->setChecked( true );
+    ui->actionFastOpen->setChecked( set.value( "fastOpen", true ).toBool() );
     m_lastExportPath = set.value( "lastExportPath", QDir::homePath() ).toString();
     m_lastMlvOpenFileName = set.value( "lastMlvFileName", QDir::homePath() ).toString();
     m_lastSessionFileName = set.value( "lastSessionFileName", QDir::homePath() ).toString();
@@ -1602,6 +1607,7 @@ void MainWindow::writeSettings()
     set.setValue( "dragFrameMode", ui->actionDropFrameMode->isChecked() );
     set.setValue( "audioOutput", ui->actionAudioOutput->isChecked() );
     set.setValue( "zebras", ui->actionShowZebras->isChecked() );
+    set.setValue( "fastOpen", ui->actionFastOpen->isChecked() );
     set.setValue( "lastExportPath", m_lastExportPath );
     set.setValue( "lastMlvFileName", m_lastMlvOpenFileName );
     set.setValue( "lastSessionFileName", m_lastSessionFileName );
@@ -3305,7 +3311,8 @@ void MainWindow::openSession(QString fileNameSession)
                         //Add file to Sessionlist
                         addFileToSession( fileName );
                         //Open the file
-                        openMlvForPreview( fileName );
+                        if( ui->actionFastOpen->isChecked() ) openMlvForPreview( fileName );
+                        else openMlv( fileName );
                         SESSION_LAST_CLIP->setFileName( fileName );
                         SESSION_LAST_CLIP->setMark( mark );
 
