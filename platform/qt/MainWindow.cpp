@@ -3207,8 +3207,10 @@ void MainWindow::startExportAVFoundation(QString fileName)
                 .arg( tempFileName ).arg( wavFileName ).arg( fileName ) );
 
 
-        FILE *pPipe = popen( ffmpegAudioCommand.toUtf8().data(), "w" );
-        pclose( pPipe );
+        //FILE *pPipe = popen( ffmpegAudioCommand.toUtf8().data(), "w" );
+        //pclose( pPipe );
+        QProcess ffmpegProc;
+        ffmpegProc.execute( ffmpegAudioCommand );
 
         QFile( tempFileName ).remove();
         QFile( wavFileName ).remove();
