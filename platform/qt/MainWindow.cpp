@@ -3112,8 +3112,8 @@ void MainWindow::startExportAVFoundation(QString fileName)
     imgBuffer = ( uint16_t* )malloc( frameSize * sizeof( uint16_t ) );
     uint16_t * imgBufferScaled;
     uint8_t * imgBufferScaled8;
-    if( m_codecProfile != CODEC_H264 ) imgBufferScaled = ( uint16_t* )malloc( width * height * 3 * sizeof( uint16_t ) );
-    else imgBufferScaled8 = ( uint8_t* )malloc( width * height * 3 * sizeof( uint8_t ) );
+    if( m_codecProfile == CODEC_H264 || m_codecProfile == CODEC_H265_8 ) imgBufferScaled8 = ( uint8_t* )malloc( width * height * 3 * sizeof( uint8_t ) );
+    else imgBufferScaled = ( uint16_t* )malloc( width * height * 3 * sizeof( uint16_t ) );
 
     //Encoder frames
     for( uint64_t frame = ( m_exportQueue.first()->cutIn() - 1 ); frame < m_exportQueue.first()->cutOut(); frame++ )
@@ -3179,8 +3179,8 @@ void MainWindow::startExportAVFoundation(QString fileName)
     }
 
     //Clean up
-    if( m_codecProfile != CODEC_H264 ) free( imgBufferScaled );
-    else free( imgBufferScaled8 );
+    if( m_codecProfile == CODEC_H264 || m_codecProfile == CODEC_H265_8 ) free( imgBufferScaled8 );
+    else free( imgBufferScaled );
     free( imgBuffer );
     endWritingVideoFile(encoder);
     freeAVEncoder(encoder);
