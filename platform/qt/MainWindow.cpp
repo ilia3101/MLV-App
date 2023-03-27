@@ -3240,7 +3240,8 @@ void MainWindow::startExportAVFoundation(QString fileName)
     m_dontDraw = false;
 
     //Emit Ready-Signal
-    emit exportReady();
+    ////emit exportReady(); //Audio export needs ended function chain for temp&wav file delete with freeing disk - so signal/slot not working --> singleShot
+    QTimer::singleShot( 1, this, SLOT( exportHandler() ) );
 }
 #endif
 
