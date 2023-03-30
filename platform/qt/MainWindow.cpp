@@ -3215,18 +3215,21 @@ void MainWindow::startExportAVFoundation(QString fileName)
                                     << QString( "copy" )
                                     << QString( "%1" ).arg( fileName );
 
-        QProcess ffmpegProc;
+        QProcess *ffmpegProc = new QProcess( this );
         int i = 0;
         //Try 3x with delay. AVFoundation lib maybe isn't ready yet.
-        while( ffmpegProc.execute( ffmpegAudioCommand, ffmpegAudioCommandArguments ) != 0 && i < 3 )
+        while( ffmpegProc->execute( ffmpegAudioCommand, ffmpegAudioCommandArguments ) != 0 && i < 3 )
         {
             i++;
             QThread::msleep( 500 );
             //Abort pressed? -> End the loop
             if( m_exportAbortPressed ) break;
         }
+        delete ffmpegProc;
         if( i < 3 && !m_exportAbortPressed )
         {
+            QFile( tempFileName ).open( QIODevice::WriteOnly ); //AVFoundation seems to block the file - so we make it a 0Byte file -> free disk memory
+            QFile( tempFileName ).close();
             QFile( tempFileName ).remove();
             QFile( wavFileName ).remove();
         }
