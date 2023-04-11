@@ -14,7 +14,7 @@
    <string>Installed Focus Pixel Maps</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="0" column="0" colspan="2">
+   <item row="0" column="0" colspan="4">
     <widget class="QTreeWidget" name="treeWidget">
      <column>
       <property name="text">
@@ -23,7 +23,21 @@
      </column>
     </widget>
    </item>
-   <item row="1" column="0">
+   <item row="1" column="3">
+    <widget class="QPushButton" name="pushButton">
+     <property name="text">
+      <string>Close</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1">
+    <widget class="QLabel" name="labelMissing">
+     <property name="text">
+      <string>TextLabel</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="2">
     <spacer name="horizontalSpacer">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
@@ -35,13 +49,6 @@
       </size>
      </property>
     </spacer>
-   </item>
-   <item row="1" column="1">
-    <widget class="QPushButton" name="pushButton">
-     <property name="text">
-      <string>Close</string>
-     </property>
-    </widget>
    </item>
   </layout>
  </widget>

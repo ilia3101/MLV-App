@@ -32,6 +32,7 @@ PixelMapListDialog::PixelMapListDialog(QWidget *parent, MapType mapType) :
     setWindowFlags( Qt::Dialog | Qt::WindowTitleHint | Qt::WindowCloseButtonHint | Qt::WindowStaysOnTopHint );
 
     m_mapType = mapType;
+    ui->labelMissing->setVisible( false );
 
     QDir directory( QCoreApplication::applicationDirPath() );
     QStringList fpms;
@@ -95,6 +96,7 @@ void PixelMapListDialog::showCurrentMap( mlvObject_t *pMlvObject )
                                            .arg( pMlvObject->RAWI.raw_info.height )
                                            .arg( fileType );
 
+    bool foundMap = false;
     for( int i = 0; i < ui->treeWidget->topLevelItemCount(); i++ )
     {
         for( int j = 0; j < ui->treeWidget->topLevelItem( i )->childCount(); j++ )
@@ -102,6 +104,7 @@ void PixelMapListDialog::showCurrentMap( mlvObject_t *pMlvObject )
             if( ui->treeWidget->topLevelItem( i )->child( j )->text( 0 ) == name )
             {
                 ui->treeWidget->expandItem( ui->treeWidget->topLevelItem( i ) );
+                foundMap = true;
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
                 ui->treeWidget->topLevelItem( i )->child( j )->setTextColor( 0, Qt::green );
 #else
@@ -110,4 +113,6 @@ void PixelMapListDialog::showCurrentMap( mlvObject_t *pMlvObject )
             }
         }
     }
+    ui->labelMissing->setVisible( !foundMap );
+    if( !foundMap ) ui->labelMissing->setText( QString( "Map missing: %1" ).arg( name ) );
 }
