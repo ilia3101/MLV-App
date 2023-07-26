@@ -3040,6 +3040,9 @@ void MainWindow::startExportAVFoundation(QString fileName)
     else if( m_codecProfile == CODEC_H264 ) avfCodec = AVF_CODEC_H264;
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 101300
     else if( m_codecProfile == CODEC_H265_8 ) avfCodec = AVF_CODEC_HEVC;
+    else if( m_codecProfile == CODEC_PRORES422PROXY ) avfCodec = AVF_CODEC_PRORES_422_PROXY;
+    else if( m_codecProfile == CODEC_PRORES422LT ) avfCodec = AVF_CODEC_PRORES_422_LT;
+    else if( m_codecProfile == CODEC_PRORES422HQ ) avfCodec = AVF_CODEC_PRORES_422_HQ;
 #endif
     else avfCodec = AVF_CODEC_PRORES_4444;
 
