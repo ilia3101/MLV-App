@@ -241,10 +241,14 @@ void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
         ui->comboBoxOption->addItem( QString( "ffmpeg Kostya" ) );
         ui->comboBoxOption->addItem( QString( "ffmpeg Anatolyi" ) );
 #ifdef Q_OS_MACX
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 101300
         if( index == CODEC_PRORES422ST || index == CODEC_PRORES4444 )
         {
+#endif
             ui->comboBoxOption->addItem( QString( "Apple AVFoundation" ) );
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 101300
         }
+#endif
 #endif
         if( index == CODEC_PRORES4444 )
         {
