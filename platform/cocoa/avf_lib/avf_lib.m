@@ -22,6 +22,7 @@ AVEncoder_t * initAVEncoder(int width, int height, int codec, int colourSpace, d
 
     switch (codec)
     {
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 101300
         case AVF_CODEC_PRORES_422:
             encoder->codec = AVVideoCodecAppleProRes422;
             break;
@@ -31,14 +32,40 @@ AVEncoder_t * initAVEncoder(int width, int height, int codec, int colourSpace, d
         case AVF_CODEC_H264:
             encoder->codec = AVVideoCodecH264;
             break;
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= 101300
+/*#if MAC_OS_X_VERSION_MIN_REQUIRED >= 101300
         case AVF_CODEC_HEVC:
             encoder->codec = AVVideoCodecHEVC;
             break;
-#endif
+#endif*/
         default:
             encoder->codec = AVVideoCodecAppleProRes422;
             break;
+#else
+        case AVF_CODEC_PRORES_422:
+            encoder->codec = AVVideoCodecTypeAppleProRes422;
+            break;
+        case AVF_CODEC_PRORES_422_PROXY:
+            encoder->codec = AVVideoCodecTypeAppleProRes422HQ;
+            break;
+        case AVF_CODEC_PRORES_422_LT:
+            encoder->codec = AVVideoCodecTypeAppleProRes422LT;
+            break;
+        case AVF_CODEC_PRORES_422_HQ:
+            encoder->codec = AVVideoCodecTypeAppleProRes422Proxy;
+            break;
+        case AVF_CODEC_PRORES_4444:
+            encoder->codec = AVVideoCodecTypeAppleProRes4444;
+            break;
+        case AVF_CODEC_H264:
+            encoder->codec = AVVideoCodecTypeH264;
+            break;
+        case AVF_CODEC_HEVC:
+            encoder->codec = AVVideoCodecHEVC;
+            break;
+        default:
+            encoder->codec = AVVideoCodecTypeAppleProRes422;
+            break;
+#endif
     }
 
     CFStringRef colour_space_name;

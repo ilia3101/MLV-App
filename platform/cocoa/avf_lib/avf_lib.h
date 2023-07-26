@@ -23,6 +23,9 @@ typedef struct AVEncoder AVEncoder_t;
 #define AVF_CODEC_PRORES_4444 1
 #define AVF_CODEC_H264 2
 #define AVF_CODEC_HEVC 3 /* H.265 */
+#define AVF_CODEC_PRORES_422_PROXY 4
+#define AVF_CODEC_PRORES_422_LT 5
+#define AVF_CODEC_PRORES_422_HQ 6
 
 #define AVF_COLOURSPACE_SRGB 10
 #define AVF_COLOURSPACE_DCIP3 11
