@@ -10556,7 +10556,7 @@ void MainWindow::focusPixelCheckAndInstallation()
             QMessageBox msg;
             msg.setIcon( QMessageBox::Question );
             msg.setText( tr( "Download and install focus pixel map for this clip or install all focus pixel maps for %1?" ).arg( camName ) );
-            QPushButton *singleButton = msg.addButton(tr("Single Map"), QMessageBox::YesRole);
+            QPushButton *singleButton = msg.addButton(tr("Single Map"), QMessageBox::ApplyRole);
             QPushButton *allButton = msg.addButton(tr("All Maps"), QMessageBox::ActionRole);
             msg.addButton(tr("None"), QMessageBox::RejectRole);
             msg.exec();
