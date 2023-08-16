@@ -63,16 +63,16 @@ macx{
 #        QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.8
 #    }
     #Qt5 on Apple Silicon with openMP: install llvm and openssl via brew, build Qt5 from source
-    {
-        QMAKE_CC = /opt/homebrew/opt/llvm/bin/clang
-        QMAKE_CXX = /opt/homebrew/opt/llvm/bin/clang++
-        QMAKE_LINK = /opt/homebrew/opt/llvm/bin/clang++
-        QMAKE_CFLAGS += -fopenmp -ftree-vectorize
-        QMAKE_CXXFLAGS += -fopenmp -std=c++15 -ftree-vectorize
-        INCLUDEPATH += -I/opt/homebrew/opt/llvm/include
-        LIBS += -L/opt/homebrew/opt/llvm/lib -lomp -L/opt/homebrew/opt/openssl/lib -lssl
-        QMAKE_APPLE_DEVICE_ARCHS = arm64
-    }
+#    {
+#        QMAKE_CC = /opt/homebrew/opt/llvm/bin/clang
+#        QMAKE_CXX = /opt/homebrew/opt/llvm/bin/clang++
+#        QMAKE_LINK = /opt/homebrew/opt/llvm/bin/clang++
+#        QMAKE_CFLAGS += -fopenmp -ftree-vectorize
+#        QMAKE_CXXFLAGS += -fopenmp -std=c++15 -ftree-vectorize
+#        INCLUDEPATH += -I/opt/homebrew/opt/llvm/include
+#        LIBS += -L/opt/homebrew/opt/llvm/lib -lomp -L/opt/homebrew/opt/openssl/lib -lssl
+#        QMAKE_APPLE_DEVICE_ARCHS = arm64
+#    }
 }
 
 #Debug
