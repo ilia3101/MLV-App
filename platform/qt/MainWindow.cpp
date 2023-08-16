@@ -7489,8 +7489,15 @@ void MainWindow::deleteFileFromSession( void )
     setReceipt( ACTIVE_RECEIPT );
 
     //Ask for options
-    int delFile = QMessageBox::question( this, tr( "%1 - Remove clip" ).arg( APPNAME ), tr( "Remove clip from session, or delete clip from disk?" ), tr( "Remove" ), tr( "Delete from Disk" ), tr( "Abort" ) );
-    if( delFile == 2 ) return; //Abort
+    QMessageBox msg;
+    msg.setIcon( QMessageBox::Question );
+    msg.setWindowTitle( tr( "%1 - Remove clip" ).arg( APPNAME ) );
+    msg.setText( tr( "Remove clip from session, or delete clip from disk?" ) );
+    msg.addButton(tr("Remove"), QMessageBox::ApplyRole);
+    QPushButton *deleteButton = msg.addButton(tr("Delete from Disk"), QMessageBox::ActionRole);
+    QPushButton *abortButton = msg.addButton(tr("Abort"), QMessageBox::RejectRole);
+    msg.exec();
+    if( msg.clickedButton() == abortButton ) return;
 
     //begin clip delete process
     m_inClipDeleteProcess = true;
@@ -7507,7 +7514,7 @@ void MainWindow::deleteFileFromSession( void )
 
         int row = list.at( i - 1 ).data( ROLE_REALINDEX ).toInt();
         //Delete file from disk when wanted
-        if( delFile == 1 )
+        if( msg.clickedButton() == deleteButton )
         {
             //MLV
 #ifdef Q_OS_WIN //On windows the file has to be closed before beeing able to move to trash
@@ -10547,6 +10554,7 @@ void MainWindow::focusPixelCheckAndInstallation()
             if( camidGetCameraName( camId, 2 ) != NULL ) camName.append( QString( " / %1" ).arg( camidGetCameraName( camId, 2 ) ) );
 
             QMessageBox msg;
+            msg.setIcon( QMessageBox::Question );
             msg.setText( tr( "Download and install focus pixel map for this clip or install all focus pixel maps for %1?" ).arg( camName ) );
             QPushButton *singleButton = msg.addButton(tr("Single Map"), QMessageBox::YesRole);
             QPushButton *allButton = msg.addButton(tr("All Maps"), QMessageBox::ActionRole);
