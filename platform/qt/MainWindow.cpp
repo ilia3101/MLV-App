@@ -10546,9 +10546,15 @@ void MainWindow::focusPixelCheckAndInstallation()
             if( camidGetCameraName( camId, 1 ) != NULL ) camName.append( QString( " / %1" ).arg( camidGetCameraName( camId, 1 ) ) );
             if( camidGetCameraName( camId, 2 ) != NULL ) camName.append( QString( " / %1" ).arg( camidGetCameraName( camId, 2 ) ) );
 
-            int ret = QMessageBox::question( this, APPNAME, tr( "Download and install focus pixel map for this clip or install all focus pixel maps for %1?" ).arg( camName ), tr( "Single Map" ), tr( "All Maps" ), tr( "None" ) );
+            QMessageBox msg;
+            msg.setText( tr( "Download and install focus pixel map for this clip or install all focus pixel maps for %1?" ).arg( camName ) );
+            QPushButton *singleButton = msg.addButton(tr("Single Map"), QMessageBox::YesRole);
+            QPushButton *allButton = msg.addButton(tr("All Maps"), QMessageBox::ActionRole);
+            msg.addButton(tr("None"), QMessageBox::RejectRole);
+            msg.exec();
+
             StatusFpmDialog *status = new StatusFpmDialog( this );
-            if( ret == 0 )
+            if( msg.clickedButton() == singleButton )
             {
                 status->open();
                 if( fpmManager->downloadMap( m_pMlvObject ) )
@@ -10563,7 +10569,7 @@ void MainWindow::focusPixelCheckAndInstallation()
                     QMessageBox::critical( this, APPNAME, tr( "Download and installation of focus pixel map failed." ) );
                 }
             }
-            else if( ret == 1 )
+            else if( msg.clickedButton() == allButton )
             {
                 status->open();
                 if( fpmManager->downloadAllMaps( m_pMlvObject ) )
