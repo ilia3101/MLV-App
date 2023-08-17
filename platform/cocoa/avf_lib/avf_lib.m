@@ -45,13 +45,13 @@ AVEncoder_t * initAVEncoder(int width, int height, int codec, int colourSpace, d
             encoder->codec = AVVideoCodecTypeAppleProRes422;
             break;
         case AVF_CODEC_PRORES_422_PROXY:
-            encoder->codec = AVVideoCodecTypeAppleProRes422HQ;
+            encoder->codec = AVVideoCodecTypeAppleProRes422Proxy;
             break;
         case AVF_CODEC_PRORES_422_LT:
             encoder->codec = AVVideoCodecTypeAppleProRes422LT;
             break;
         case AVF_CODEC_PRORES_422_HQ:
-            encoder->codec = AVVideoCodecTypeAppleProRes422Proxy;
+            encoder->codec = AVVideoCodecTypeAppleProRes422HQ;
             break;
         case AVF_CODEC_PRORES_4444:
             encoder->codec = AVVideoCodecTypeAppleProRes4444;
