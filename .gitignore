@@ -44,4 +44,5 @@ osx_installer/create-dmg-master/builder/create-dmg.builder
 80000285_2080x1318.bpm
 80000218_2040x1268.bpm
 platform/build-MLVApp-Desktop_Qt_5_15_3_clangOMP_64bit-Release/*
-platform/build-MLVApp-Desktop_Qt_5_15_3_llvm15OMP_64bit-Release/*
+platform/build-MLVApp-Desktop_Qt_5_15_3_llvm16OMP_64bit-Release/*
+platform/build-MLVApp-Desktop_Qt_5_15_10_llvm16OMP_64bit-Release/*

@@ -100,6 +100,12 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     //Change working directory for C part
     chdir( QCoreApplication::applicationDirPath().toLatin1().data() );
 
+    //Enable color management for macOS
+    auto format = QSurfaceFormat::defaultFormat();
+    format.setSwapInterval(0);
+    format.setColorSpace( QSurfaceFormat::sRGBColorSpace );
+    QSurfaceFormat::setDefaultFormat(format);
+
     ui->setupUi(this);
     setAcceptDrops(true);
     qApp->installEventFilter( this );
