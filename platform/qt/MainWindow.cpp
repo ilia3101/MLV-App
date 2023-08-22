@@ -7502,6 +7502,7 @@ void MainWindow::deleteFileFromSession( void )
     msg.addButton(tr("Remove"), QMessageBox::ApplyRole);
     QPushButton *deleteButton = msg.addButton(tr("Delete from Disk"), QMessageBox::ActionRole);
     QPushButton *abortButton = msg.addButton(tr("Abort"), QMessageBox::RejectRole);
+    msg.setDefaultButton( abortButton );
     msg.exec();
     if( msg.clickedButton() == abortButton ) return;
 
@@ -10564,6 +10565,7 @@ void MainWindow::focusPixelCheckAndInstallation()
             QPushButton *singleButton = msg.addButton(tr("Single Map"), QMessageBox::ApplyRole);
             QPushButton *allButton = msg.addButton(tr("All Maps"), QMessageBox::ActionRole);
             msg.addButton(tr("None"), QMessageBox::RejectRole);
+            msg.setDefaultButton( singleButton );
             msg.exec();
 
             StatusFpmDialog *status = new StatusFpmDialog( this );
