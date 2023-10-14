@@ -1763,7 +1763,7 @@ void MainWindow::startExportPipe(QString fileName)
 #else
         writeMlvAudioToWaveCut( m_pMlvObject, wavFileName.toLatin1().data(), m_exportQueue.first()->cutIn(), m_exportQueue.first()->cutOut() );
 #endif
-        if( m_codecProfile == CODEC_H264 || m_codecProfile == CODEC_H265_8 || m_codecProfile == CODEC_H265_10 || m_codecProfile == CODEC_H265_12 )
+        if( m_codecProfile == CODEC_H264 || m_codecProfile == CODEC_H264_VAAPI || m_codecProfile == CODEC_H265_8 || m_codecProfile == CODEC_H265_10 || m_codecProfile == CODEC_H265_12 )
             ffmpegAudioCommand = QString( "-i \"%1\" -c:a aac " ).arg( wavFileName );
         else if( m_codecProfile == CODEC_VP9 ) ffmpegAudioCommand = QString( "-i \"%1\" -c:a libopus " ).arg( wavFileName );
         else ffmpegAudioCommand = QString( "-i \"%1\" -c:a copy " ).arg( wavFileName );
@@ -1910,13 +1910,19 @@ void MainWindow::startExportPipe(QString fileName)
         }
     }
 
+    QString hwuploadString = QString( "" );
+    if (m_codecProfile == CODEC_H264_VAAPI) {
+        hwuploadString = QString( ",format=nv12,hwupload," );
+    }
+
     //Colorspace conversion (for getting right colors)
     QString resizeFilter = QString( "" );
     //a colorspace conversion is always needed to get right colors
-    resizeFilter = QString( "-vf %1scale=in_color_matrix=bt601:out_color_matrix=bt709%2%3 " )
+    resizeFilter = QString( "-vf %1scale=in_color_matrix=bt601:out_color_matrix=bt709%2%3%4 " )
             .arg( moireeFilter )
             .arg( hdrString )
-            .arg( vidstabString );
+            .arg( vidstabString )
+            .arg( hwuploadString );
     //qDebug() << resizeFilter;
 
     //Color tag
@@ -2345,6 +2351,26 @@ void MainWindow::startExportPipe(QString fileName)
                     .arg( resolution )
                     .arg( quality )
                     .arg( "yuv420p" )
+                    .arg( colorTag )
+                    .arg( resizeFilter )
+                    .arg( output ) );
+    }
+    else if( m_codecProfile == CODEC_H264_VAAPI )
+    {
+        if( m_codecOption == CODEC_H264_VAAPI_H_MOV || m_codecOption == CODEC_H264_VAAPI_M_MOV ) output.append( QString( ".mov" ) );
+        else if( m_codecOption == CODEC_H264_VAAPI_H_MP4 || m_codecOption == CODEC_H264_VAAPI_M_MP4 ) output.append( QString( ".mp4" ) );
+        else output.append( QString( ".mkv" ) );
+
+        int quality;
+        if( m_codecOption == CODEC_H264_VAAPI_H_MOV || m_codecOption == CODEC_H264_VAAPI_H_MP4 || m_codecOption == CODEC_H264_VAAPI_H_MKV )
+            quality = 17;
+        else
+            quality = 22;
+
+        program.append( QString( " -init_hw_device vaapi=vaapi0: -filter_hw_device vaapi0 -r %1 -y -f rawvideo -s %2 -pix_fmt rgb48 -i - -c:v h264_vaapi -global_quality %3 -color_primaries %5 -color_trc %5 -colorspace bt709 %6 \"%7\"" )
+                    .arg( fps )
+                    .arg( resolution )
+                    .arg( quality )
                     .arg( colorTag )
                     .arg( resizeFilter )
                     .arg( output ) );
@@ -6539,8 +6565,9 @@ void MainWindow::on_actionExport_triggered()
     }
     else
     {
-        if( ( m_codecProfile == CODEC_H264 || m_codecProfile == CODEC_H265_8 || m_codecProfile == CODEC_H265_10 || m_codecProfile == CODEC_H265_12 )
-         && ( m_codecOption == CODEC_H264_H_MP4 || m_codecOption == CODEC_H265_H_MP4
+        if( ( m_codecProfile == CODEC_H264 || m_codecProfile == CODEC_H264_VAAPI || m_codecProfile == CODEC_H265_8 || m_codecProfile == CODEC_H265_10 || m_codecProfile == CODEC_H265_12 )
+         && ( m_codecOption == CODEC_H264_VAAPI_H_MP4 || m_codecOption == CODEC_H264_VAAPI_M_MP4
+           || m_codecOption == CODEC_H264_H_MP4 || m_codecOption == CODEC_H265_H_MP4
            || m_codecOption == CODEC_H264_M_MP4 || m_codecOption == CODEC_H265_M_MP4 ) )
         {
             saveFileName.append( ".mp4" );
@@ -6548,7 +6575,8 @@ void MainWindow::on_actionExport_triggered()
             fileEnding = ".mp4";
         }
         else if( ( m_codecProfile == CODEC_H264 || m_codecProfile == CODEC_H265_8 || m_codecProfile == CODEC_H265_10 || m_codecProfile == CODEC_H265_12 )
-         && ( m_codecOption == CODEC_H264_H_MKV || m_codecOption == CODEC_H265_H_MKV
+         && ( m_codecOption == CODEC_H264_VAAPI_H_MKV || m_codecOption == CODEC_H264_VAAPI_M_MP4
+           || m_codecOption == CODEC_H264_H_MKV || m_codecOption == CODEC_H265_H_MKV
            || m_codecOption == CODEC_H264_M_MKV || m_codecOption == CODEC_H265_M_MKV) )
         {
             saveFileName.append( ".mkv" );

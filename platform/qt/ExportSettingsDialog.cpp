@@ -278,6 +278,7 @@ void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
         enableResize = false;
     }
     else if( index == CODEC_H264
+          || index == CODEC_H264_VAAPI
           || index == CODEC_H265_8
           || index == CODEC_H265_10
           || index == CODEC_H265_12 )

@@ -22,21 +22,22 @@
 #define CODEC_CDNG_LOSSLESS         7
 #define CODEC_CDNG_FAST             8
 #define CODEC_H264                  9
-#define CODEC_H265_8                10
-#define CODEC_H265_10               11
-#define CODEC_H265_12               12
-#define CODEC_TIFF                  13
-#define CODEC_PNG                   14
-#define CODEC_JPG2K                 15
-#define CODEC_MJPEG                 16
-#define CODEC_FFVHUFF               17
-#define CODEC_MLV                   18
-#define CODEC_DNXHD                 19
-#define CODEC_DNXHR                 20
-#define CODEC_CINEFORM_10           21
-#define CODEC_CINEFORM_12           22
-#define CODEC_VP9                   23
-#define CODEC_AUDIO_ONLY            24
+#define CODEC_H264_VAAPI            10
+#define CODEC_H265_8                11
+#define CODEC_H265_10               12
+#define CODEC_H265_12               13
+#define CODEC_TIFF                  14
+#define CODEC_PNG                   15
+#define CODEC_JPG2K                 16
+#define CODEC_MJPEG                 17
+#define CODEC_FFVHUFF               18
+#define CODEC_MLV                   19
+#define CODEC_DNXHD                 20
+#define CODEC_DNXHR                 21
+#define CODEC_CINEFORM_10           22
+#define CODEC_CINEFORM_12           23
+#define CODEC_VP9                   24
+#define CODEC_AUDIO_ONLY            25
 
 #define CODEC_AVI_OPTION_YUV420     0
 #define CODEC_AVI_OPTION_V210       1
@@ -56,6 +57,13 @@
 #define CODEC_H264_M_MP4            4
 #define CODEC_H264_M_MKV            5
 #define CODEC_H264_AVFOUNDATION     6
+
+#define CODEC_H264_VAAPI_H_MOV      0
+#define CODEC_H264_VAAPI_H_MP4      1
+#define CODEC_H264_VAAPI_H_MKV      2
+#define CODEC_H264_VAAPI_M_MOV      3
+#define CODEC_H264_VAAPI_M_MP4      4
+#define CODEC_H264_VAAPI_M_MKV      5
 
 #define CODEC_H265_H_MOV            0
 #define CODEC_H265_H_MP4            1

@@ -46,3 +46,13 @@ osx_installer/create-dmg-master/builder/create-dmg.builder
 platform/build-MLVApp-Desktop_Qt_5_15_3_clangOMP_64bit-Release/*
 platform/build-MLVApp-Desktop_Qt_5_15_3_llvm16OMP_64bit-Release/*
 platform/build-MLVApp-Desktop_Qt_5_15_10_llvm16OMP_64bit-Release/*
+platform/qt/.moc/
+platform/qt/.obj/
+platform/qt/.qmake.stash
+platform/qt/.rcc/
+platform/qt/.ui/
+platform/qt/*.fpm
+platform/qt/Makefile
+platform/qt/ffmpeg
+platform/qt/pixel_maps
+platform/qt/releases
