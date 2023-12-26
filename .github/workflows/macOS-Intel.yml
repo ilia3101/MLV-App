@@ -27,7 +27,7 @@ jobs:
       run:  mkdir ${{ env.SOURCE_DIR }}/build
 
     - name: Build
-      working-directory: ${{ env.SOURCE_DIR }}/build
+      working-directory: ${{ env.SOURCE_DIR }}
       run:  |
             /usr/local/Cellar/qt@5/5.15.11/bin/qmake -r ${{ env.SOURCE_DIR }}/MLVApp.pro
             make
@@ -35,13 +35,13 @@ jobs:
             /usr/local/Cellar/qt@5/5.15.11/bin/macdeployqt MLV\ App.app
 
     - name: Zip build
-      working-directory: ${{ env.SOURCE_DIR }}/build
+      working-directory: ${{ env.SOURCE_DIR }}
       run:  |
-            7z a ${{ env.ARTIFACT }} ${{ env.SOURCE_DIR }}/build/MLV\ App.app -r
+            7z a ${{ env.ARTIFACT }} ${{ env.SOURCE_DIR }}/MLV\ App.app -r
             ls -al
 
     - name: Save build artifact
       uses: actions/upload-artifact@master
       with:
         name: ${{ env.ARTIFACT }}
-        path: ${{ env.SOURCE_DIR }}/build/${{ env.ARTIFACT }}
+        path: ${{ env.SOURCE_DIR }}/${{ env.ARTIFACT }}
