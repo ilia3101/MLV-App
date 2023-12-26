@@ -1,0 +1,47 @@
+name: macOS Intel Release
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+env:
+  SOURCE_DIR:   ${{ github.workspace }}
+  ARTIFACT:     MLVApp.zip
+
+jobs:
+  build:
+
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install Qt
+      uses: ConorMacBride/install-package@v1.1.0
+      with:
+        brew: qt5
+              
+    - name: Create build directory
+      run:  mkdir ${{ env.SOURCE_DIR }}/build
+
+    - name: Build
+      working-directory: ${{ env.SOURCE_DIR }}/build
+      run:  |
+            /usr/local/Cellar/qt@5/5.15.11/bin/qmake -r ${{ env.SOURCE_DIR }}/platform/qt/MLVApp.pro
+            make
+            ls -al
+            /usr/local/Cellar/qt@5/5.15.11/bin/macdeployqt MLV\ App.app
+
+    - name: Zip build
+      working-directory: ${{ env.SOURCE_DIR }}/build
+      run:  |
+            7z a ${{ env.ARTIFACT }} ${{ env.SOURCE_DIR }}/build/MLV\ App.app -r
+            ls -al
+
+    - name: Save build artifact
+      uses: actions/upload-artifact@master
+      with:
+        name: ${{ env.ARTIFACT }}
+        path: ${{ env.SOURCE_DIR }}/build/${{ env.ARTIFACT }}
