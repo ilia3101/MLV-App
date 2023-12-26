@@ -1,4 +1,4 @@
-name: macOS Intel Release
+name: macOS AppleSilicon Release
 
 on:
   push:
