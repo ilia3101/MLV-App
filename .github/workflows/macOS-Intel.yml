@@ -18,10 +18,10 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Install Qt
+    - name: Install llvm & Qt
       uses: ConorMacBride/install-package@v1.1.0
       with:
-        brew: qt5
+        brew: llvm qt5
               
     - name: Create build directory
       run:  mkdir ${{ env.SOURCE_DIR }}/build
