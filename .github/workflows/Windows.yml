@@ -8,7 +8,7 @@ on:
 
 env:
   SOURCE_DIR:   ${{ github.workspace }}\platform
-  ARTIFACT:     ${{ github.workspace }}\platform\build\release\MLVApp.exe
+  ARTIFACT:     ${{ runner.temp }}\MLVApp.Win64.zip
 
 jobs:
   build:
@@ -23,10 +23,10 @@ jobs:
            choco install qt5-default
               
     - name: Create build directory
-      run:  mkdir ${{ env.SOURCE_DIR }}/build
+      run:  mkdir ${{ env.SOURCE_DIR }}\build
 
     - name: Build
-      working-directory: ${{ env.SOURCE_DIR }}/build
+      working-directory: ${{ env.SOURCE_DIR }}\build
       run:  |
             C:\Qt\5.15.2\mingw81_64\bin\qmake.exe -r ${{ env.SOURCE_DIR }}/qt/MLVApp.pro
             make.exe
@@ -34,6 +34,11 @@ jobs:
             cd release
             C:\Qt\5.15.2\mingw81_64\bin\windeployqt MLVApp.exe
             dir
+
+    - name: Zip build
+      working-directory: ${{ runner.temp }}
+      run:  |
+            7z a MLVApp.Win64.zip ${{ env.SOURCE_DIR }}\build\release* -r
 
     - name: Save build artifact
       uses: actions/upload-artifact@master
