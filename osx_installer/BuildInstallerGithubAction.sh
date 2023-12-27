@@ -4,7 +4,7 @@
 test -f "MLVApp.OSX.dmg" && rm "MLVApp.OSX.dmg"
 create-dmg \
 --volname "MLVApp Installer" \
---volicon "app/MLV App.app/Contents/Resources/MLVAPP.icns" \
+--volicon "MLVAPP.icns" \
 --background "dmg-background.png" \
 --window-pos 200 120 \
 --window-size 660 400 \
