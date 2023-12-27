@@ -8,7 +8,7 @@ on:
 
 env:
   SOURCE_DIR:   ${{ github.workspace }}\platform
-  ARTIFACT:     ${{ runner.temp }}\MLVApp.Win64.zip
+  ARTIFACT:     ${{ github.workspace }}\platform\build\release\MLVApp.Win64.zip
 
 jobs:
   build:
@@ -36,7 +36,7 @@ jobs:
             dir
 
     - name: Zip build
-      working-directory: ${{ runner.temp }}
+      working-directory: ${{ env.SOURCE_DIR }}\build\release
       run:  |
             7z a MLVApp.Win64.zip ${{ env.SOURCE_DIR }}\build\release* -r
 
