@@ -38,7 +38,7 @@ jobs:
     - name: create DMG
       working-directory: ${{ env.SOURCE_DIR }}/../osx_installer
       run: |
-           cp app/MLV App.app/Contents/Resources/MLVAPP.icns .
+           cp app/MLV\ App.app/Contents/Resources/MLVAPP.icns .
            ./BuildInstallerGithubAction.sh
 
     - name: Save build artifact
