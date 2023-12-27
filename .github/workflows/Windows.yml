@@ -19,8 +19,8 @@ jobs:
     - uses: actions/checkout@v3
 
     - name: Install Qt
-        run: |
-          choco install qt5-default
+      run: |
+           choco install qt5-default
               
     - name: Create build directory
       run:  mkdir ${{ env.SOURCE_DIR }}/build
