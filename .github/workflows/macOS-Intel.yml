@@ -8,7 +8,7 @@ on:
 
 env:
   SOURCE_DIR:   ${{ github.workspace }}/platform
-  ARTIFACT:     ${{ github.workspace }}/osx_installer/app/MLVApp.OSX.dmg
+  ARTIFACT:     ${{ github.workspace }}/osx_installer/MLVApp.OSX.dmg
 
 jobs:
   build:
@@ -38,6 +38,7 @@ jobs:
     - name: create DMG
       working-directory: ${{ env.SOURCE_DIR }}/../osx_installer
       run: |
+           cp app/MLV App.app/Contents/Resources/MLVAPP.icns .
            ./BuildInstallerGithubAction.sh
 
     - name: Save build artifact
