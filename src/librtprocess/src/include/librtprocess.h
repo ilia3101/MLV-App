@@ -22,7 +22,9 @@
 
 #include <functional>
 
-#if defined(__linux) || defined(_WIN32) || defined(_WIN64)
+#if defined(__linux)
+#include <stddef.h>
+#elif defined(_WIN32)
 #include <stddef.h>
 #endif
 

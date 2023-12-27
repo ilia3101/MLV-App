@@ -12,7 +12,7 @@
 extern "C" {
 #endif
 
-#if defined(_WIN32) || defined(_WIN64)
+#if defined(_WIN32)
 #include <cstdint>
 #else
 #include <stdint.h>
