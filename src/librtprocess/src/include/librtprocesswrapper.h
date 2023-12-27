@@ -12,7 +12,11 @@
 extern "C" {
 #endif
 
+#if defined(_WIN32) || defined(_WIN64)
+#include <cstdint>
+#else
 #include <stdint.h>
+#endif
 
 void lrtpLmmseDemosaic( float ** restrict rawData, float ** restrict red, float ** restrict green, float ** restrict blue, int width, int height );
 void lrtpIgvDemosaic( float ** restrict rawData, float ** restrict red, float ** restrict green, float ** restrict blue, int width, int height );
