@@ -34,14 +34,11 @@ jobs:
             ls -al
             /usr/local/Cellar/qt@5/5.15.11/bin/macdeployqt MLV\ App.app
             mv MLV\ App.app ../../osx_installer/app/
-            cd ../../osx_installer
-            ./BuildInstaller.sh
 
-    - name: Zip build
-      working-directory: ${{ env.SOURCE_DIR }}/build
-      run:  |
-            7z a ${{ env.ARTIFACT }} ${{ env.SOURCE_DIR }}/build/MLV\ App.app -r
-            ls -al
+    - name: create DMG
+      working-directory: ${{ env.SOURCE_DIR }}/../osx_installer
+      run: |
+           ./BuildInstaller.sh
 
     - name: Save build artifact
       uses: actions/upload-artifact@master
