@@ -8,7 +8,7 @@ on:
 
 env:
   SOURCE_DIR:   ${{ github.workspace }}/platform
-  ARTIFACT:     ${{ github.workspace }}/osx_installer/MLVApp.OSX.dmg
+  ARTIFACT:     ${{ github.workspace }}/platform/build/MLV\ App.dmg
 
 jobs:
   build:
@@ -32,14 +32,7 @@ jobs:
             /usr/local/Cellar/qt@5/5.15.11/bin/qmake -r ${{ env.SOURCE_DIR }}/qt/MLVApp.pro
             make -j8
             ls -al
-            /usr/local/Cellar/qt@5/5.15.11/bin/macdeployqt MLV\ App.app
-            mv MLV\ App.app ../../osx_installer/app/
-
-    - name: create DMG
-      working-directory: ${{ env.SOURCE_DIR }}/../osx_installer
-      run: |
-           cp ../platform/qt/MLVAPP.icns .
-           ./BuildInstallerGithubAction.sh
+            /usr/local/Cellar/qt@5/5.15.11/bin/macdeployqt -dmg MLV\ App.app
 
     - name: Save build artifact
       uses: actions/upload-artifact@master
