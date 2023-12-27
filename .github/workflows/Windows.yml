@@ -1,0 +1,41 @@
+name: macOS Intel Release
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+env:
+  SOURCE_DIR:   ${{ github.workspace }}\platform
+  ARTIFACT:     ${{ github.workspace }}\platform\build\MLVApp.exe
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install Qt
+        run: |
+          choco install qt5-default
+              
+    - name: Create build directory
+      run:  mkdir ${{ env.SOURCE_DIR }}/build
+
+    - name: Build
+      working-directory: ${{ env.SOURCE_DIR }}/build
+      run:  |
+            C:\Qt\5.15.2\mingw81_64\bin\qmake.exe -r ${{ env.SOURCE_DIR }}/qt/MLVApp.pro
+            make.exe
+            dir
+            C:\Qt\5.15.2\mingw81_64\bin\windeployqt MLVApp.exe
+            dir
+
+    - name: Save build artifact
+      uses: actions/upload-artifact@master
+      with:
+        name: MLVApp Windows
+        path: ${{ env.ARTIFACT }}
