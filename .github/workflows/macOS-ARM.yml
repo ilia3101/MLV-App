@@ -1,4 +1,4 @@
-name: macOS Intel Release
+name: macOS AppleSilicon Release
 
 on:
   push:
@@ -8,12 +8,12 @@ on:
 
 env:
   SOURCE_DIR:   ${{ github.workspace }}/platform
-  ARTIFACT:     ${{ github.workspace }}/osx_installer/app/MLVApp.v1.14.OSX.dmg
+  ARTIFACT:     MLVApp.zip
 
 jobs:
   build:
 
-    runs-on: macos-latest
+    runs-on: macos-latest-xlarge
 
     steps:
     - uses: actions/checkout@v3
@@ -33,15 +33,15 @@ jobs:
             make -j8
             ls -al
             /usr/local/Cellar/qt@5/5.15.11/bin/macdeployqt MLV\ App.app
-            mv MLV\ App.app ../../osx_installer/app/
 
-    - name: create DMG
-      working-directory: ${{ env.SOURCE_DIR }}/../osx_installer
-      run: |
-           ./BuildInstaller.sh
+    - name: Zip build
+      working-directory: ${{ env.SOURCE_DIR }}/build
+      run:  |
+            7z a ${{ env.ARTIFACT }} ${{ env.SOURCE_DIR }}/build/MLV\ App.app -r
+            ls -al
 
     - name: Save build artifact
       uses: actions/upload-artifact@master
       with:
-        name: MLVApp macOS Intel
-        path: ${{ env.ARTIFACT }}
+        name: ${{ env.ARTIFACT }}
+        path: ${{ env.SOURCE_DIR }}/build/${{ env.ARTIFACT }}
