@@ -8,7 +8,7 @@ on:
 
 env:
   SOURCE_DIR:   ${{ github.workspace }}/platform
-  ARTIFACT:     MLVApp.zip
+  ARTIFACT:     ${{ github.workspace }}/osx_installer/app/MLVApp.v1.14.OSX.dmg
 
 jobs:
   build:
@@ -33,6 +33,9 @@ jobs:
             make -j8
             ls -al
             /usr/local/Cellar/qt@5/5.15.11/bin/macdeployqt MLV\ App.app
+            mv MLV\ App.app ../../osx_installer/app/
+            cd ../../osx_installer
+            ./BuildInstaller.sh
 
     - name: Zip build
       working-directory: ${{ env.SOURCE_DIR }}/build
@@ -43,5 +46,5 @@ jobs:
     - name: Save build artifact
       uses: actions/upload-artifact@master
       with:
-        name: ${{ env.ARTIFACT }}
-        path: ${{ env.SOURCE_DIR }}/build/${{ env.ARTIFACT }}
+        name: MLVApp macOS Intel
+        path: ${{ env.ARTIFACT }}
