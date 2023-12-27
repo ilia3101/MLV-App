@@ -8,7 +8,7 @@ on:
 
 env:
   SOURCE_DIR:   ${{ github.workspace }}\platform
-  ARTIFACT:     ${{ github.workspace }}\platform\build\MLVApp.exe
+  ARTIFACT:     ${{ github.workspace }}\platform\build\release\MLVApp.exe
 
 jobs:
   build:
@@ -31,6 +31,7 @@ jobs:
             C:\Qt\5.15.2\mingw81_64\bin\qmake.exe -r ${{ env.SOURCE_DIR }}/qt/MLVApp.pro
             make.exe
             dir
+            cd release
             C:\Qt\5.15.2\mingw81_64\bin\windeployqt MLVApp.exe
             dir
 
