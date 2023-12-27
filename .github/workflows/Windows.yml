@@ -1,4 +1,4 @@
-name: macOS Intel Release
+name: Windows Release
 
 on:
   push:
