@@ -8,7 +8,7 @@ on:
 
 env:
   SOURCE_DIR:   ${{ github.workspace }}\platform
-  ARTIFACT:     ${{ github.workspace }}\platform\build\release\MLVApp.Win64.zip
+  ARTIFACT:     ${{ github.workspace }}\platform\build\MLVApp\MLVApp.Win64.zip
 
 jobs:
   build:
@@ -28,16 +28,14 @@ jobs:
     - name: Build
       working-directory: ${{ env.SOURCE_DIR }}\build
       run:  |
-            C:\Qt\5.15.2\mingw81_64\bin\qmake.exe -r ${{ env.SOURCE_DIR }}/qt/MLVApp.pro
+            C:\Qt\5.15.2\mingw81_64\bin\qmake.exe -r ${{ env.SOURCE_DIR }}\qt\MLVApp.pro
             make.exe
             dir
             cd release
             C:\Qt\5.15.2\mingw81_64\bin\windeployqt MLVApp.exe
             dir
-            dir C:\Qt
-            dir C:\Qt\5.15.2\mingw81_64\
-            dir C:\Qt\5.15.2\mingw81_64\lib
-            dir C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\lib
+            dir C:\Qt\5.15.2\mingw81_64\bin
+            dir C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\bin
 
     - name: Decompress FFMPEG
       working-directory: ${{ env.SOURCE_DIR }}\qt\FFmpeg
@@ -48,11 +46,18 @@ jobs:
       working-directory: ${{ env.SOURCE_DIR }}\qt\raw2mlv
       run:  |
             7z x raw2mlvWin64.zip -o${{ env.SOURCE_DIR }}\build\release
+            move /y ${{ env.SOURCE_DIR }}\build\release\Windows64\* ${{ env.SOURCE_DIR }}\build\release\
+            rmdir ${{ env.SOURCE_DIR }}\build\release\Windows64 /s
+
+    - name: Rename release folder
+      working-directory: ${{ env.SOURCE_DIR }}\build
+      run: |
+           ren release MLVApp
 
     - name: Zip build
-      working-directory: ${{ env.SOURCE_DIR }}\build\release
+      working-directory: ${{ env.SOURCE_DIR }}\build\MLVApp
       run:  |
-            7z a MLVApp.Win64.zip ${{ env.SOURCE_DIR }}\build\release* -r
+            7z a MLVApp.Win64.zip ${{ env.SOURCE_DIR }}\build\MLVApp* -r
 
     - name: Save build artifact
       uses: actions/upload-artifact@master
