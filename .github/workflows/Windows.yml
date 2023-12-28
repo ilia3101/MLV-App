@@ -34,16 +34,20 @@ jobs:
             cd release
             C:\Qt\5.15.2\mingw81_64\bin\windeployqt MLVApp.exe
             dir
+            dir C:\Qt
+            dir C:\Qt\5.15.2\mingw81_64\
+            dir C:\Qt\5.15.2\mingw81_64\lib
+            dir C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\lib
 
     - name: Decompress FFMPEG
-      uses: TonyBogdanov/zip@1.0
-      with:
-        args: unzip -qq ${{ env.SOURCE_DIR }}\qt\FFmpeg\ffmpegWin64.zip -d ${{ env.SOURCE_DIR }}\build\release
+      working-directory: ${{ env.SOURCE_DIR }}\qt\FFmpeg
+      run:  |
+            7z x ffmpegWin64.zip -o${{ env.SOURCE_DIR }}\build\release
 
     - name: Decompress RAW2MLV
-      uses: TonyBogdanov/zip@1.0
-      with:
-        args: unzip -qq ${{ env.SOURCE_DIR }}\qt\raw2mlv\raw2mlvWin64.zip -d ${{ env.SOURCE_DIR }}\build\release
+      working-directory: ${{ env.SOURCE_DIR }}\qt\raw2mlv
+      run:  |
+            7z x raw2mlvWin64.zip -o${{ env.SOURCE_DIR }}\build\release
 
     - name: Zip build
       working-directory: ${{ env.SOURCE_DIR }}\build\release
