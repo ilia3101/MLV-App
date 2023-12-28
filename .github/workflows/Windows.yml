@@ -27,7 +27,10 @@ jobs:
     - name: Install OpenSSL
       run: |
            choco install openssl
-           dir C:\ProgramData\chocolatey\lib\
+           dir C:\ProgramData\chocolatey\lib\openssl
+           dir C:\ProgramData\chocolatey\lib\openssl\bin
+           dir "C:\Program Files\OpenSSL\"
+           dir "C:\Program Files\OpenSSL\bin"
               
     - name: Create build directory
       run:  mkdir ${{ env.SOURCE_DIR }}\build
@@ -62,13 +65,8 @@ jobs:
            ren release MLVApp
            dir
 
-    - name: Zip build
-      working-directory: ${{ env.SOURCE_DIR }}\build\MLVApp
-      run:  |
-            7z a MLVApp.Win64.zip ${{ env.SOURCE_DIR }}\build\MLVApp -r
-
     - name: Save build artifact
       uses: actions/upload-artifact@master
       with:
-        name: MLVApp Windows
+        name: MLVApp Windows 64bit
         path: ${{ env.SOURCE_DIR }}\build\MLVApp
