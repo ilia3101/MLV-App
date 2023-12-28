@@ -18,20 +18,18 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
+    - name: Install OpenSSL
+      run: |
+           choco install openssl
+           dir "C:\Program Files\OpenSSL\"
+           dir "C:\Program Files\OpenSSL\bin"
+              
     - name: Install Qt
       run: |
            choco install qt5-default
            dir C:\Qt\5.15.2\mingw81_64\bin
            dir C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\bin
 
-    - name: Install OpenSSL
-      run: |
-           choco install openssl
-           dir C:\ProgramData\chocolatey\lib\openssl
-           dir C:\ProgramData\chocolatey\lib\openssl\bin
-           dir "C:\Program Files\OpenSSL\"
-           dir "C:\Program Files\OpenSSL\bin"
-              
     - name: Create build directory
       run:  mkdir ${{ env.SOURCE_DIR }}\build
 
@@ -43,7 +41,9 @@ jobs:
             dir
             cd release
             C:\Qt\5.15.2\mingw81_64\bin\windeployqt MLVApp.exe
-            copy C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\bin\libgomp-1.dll        
+            copy C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\bin\libgomp-1.dll .
+            copy "C:\Program Files\OpenSSL\bin\libcrypto-3-x64.dll" .
+            copy "C:\Program Files\OpenSSL\bin\libssl-3-x64.dll" .
             dir
 
     - name: Decompress FFMPEG
