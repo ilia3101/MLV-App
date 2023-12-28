@@ -32,7 +32,6 @@ jobs:
             /usr/local/Cellar/qt@5/5.15.11/bin/qmake -r ${{ env.SOURCE_DIR }}/qt/MLVApp.pro
             make -j8
             ls -al
-            sudo codesign --force --deep --sign - MLV\ App.app/Contents/MacOS/MLV\ App
             /usr/local/Cellar/qt@5/5.15.11/bin/macdeployqt MLV\ App.app -dmg
 
     - name: Save build artifact
