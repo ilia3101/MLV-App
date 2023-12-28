@@ -23,6 +23,11 @@ jobs:
            choco install qt5-default
            dir C:\Qt\5.15.2\mingw81_64\bin
            dir C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\bin
+
+    - name: Install OpenSSL
+      run: |
+           choco install openssl
+           dir C:\ProgramData\chocolatey\lib\
               
     - name: Create build directory
       run:  mkdir ${{ env.SOURCE_DIR }}\build
@@ -66,4 +71,4 @@ jobs:
       uses: actions/upload-artifact@master
       with:
         name: MLVApp Windows
-        path: ${{ env.ARTIFACT }}
+        path: ${{ env.SOURCE_DIR }}\build\MLVApp
