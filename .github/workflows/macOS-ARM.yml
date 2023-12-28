@@ -29,10 +29,10 @@ jobs:
     - name: Build
       working-directory: ${{ env.SOURCE_DIR }}/build
       run:  |
-            /usr/local/Cellar/qt@6/6.6.1/bin/qmake -r ${{ env.SOURCE_DIR }}/qt/MLVApp.pro
+            /usr/local/Cellar/qt/6.6.1/bin/qmake -r ${{ env.SOURCE_DIR }}/qt/MLVApp.pro
             make -j8
             ls -al
-            /usr/local/Cellar/qt@6/6.6.1/bin/macdeployqt MLV\ App.app -dmg
+            /usr/local/Cellar/qt/6.6.1/bin/macdeployqt MLV\ App.app -dmg
 
     - name: Save build artifact
       uses: actions/upload-artifact@master
