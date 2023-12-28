@@ -1,4 +1,4 @@
-name: macOS AppleSilicon Release
+name: macOS Universal Release
 
 on:
   push:
@@ -8,12 +8,12 @@ on:
 
 env:
   SOURCE_DIR:   ${{ github.workspace }}/platform
-  ARTIFACT:     MLVApp.zip
+  ARTIFACT:     ${{ github.workspace }}/platform/build/MLV\ App.dmg
 
 jobs:
   build:
 
-    runs-on: macos-latest-xlarge
+    runs-on: macos-latest
 
     steps:
     - uses: actions/checkout@v3
@@ -21,7 +21,7 @@ jobs:
     - name: Install llvm & Qt
       uses: ConorMacBride/install-package@v1.1.0
       with:
-        brew: llvm qt5
+        brew: llvm qt
               
     - name: Create build directory
       run:  mkdir ${{ env.SOURCE_DIR }}/build
@@ -29,19 +29,13 @@ jobs:
     - name: Build
       working-directory: ${{ env.SOURCE_DIR }}/build
       run:  |
-            /usr/local/Cellar/qt@5/5.15.11/bin/qmake -r ${{ env.SOURCE_DIR }}/qt/MLVApp.pro
+            /usr/local/Cellar/qt@6/6.6.1/bin/qmake -r ${{ env.SOURCE_DIR }}/qt/MLVApp.pro
             make -j8
             ls -al
-            /usr/local/Cellar/qt@5/5.15.11/bin/macdeployqt MLV\ App.app
-
-    - name: Zip build
-      working-directory: ${{ env.SOURCE_DIR }}/build
-      run:  |
-            7z a ${{ env.ARTIFACT }} ${{ env.SOURCE_DIR }}/build/MLV\ App.app -r
-            ls -al
+            /usr/local/Cellar/qt@6/6.6.1/bin/macdeployqt MLV\ App.app -dmg
 
     - name: Save build artifact
       uses: actions/upload-artifact@master
       with:
-        name: ${{ env.ARTIFACT }}
-        path: ${{ env.SOURCE_DIR }}/build/${{ env.ARTIFACT }}
+        name: MLVApp macOS Intel
+        path: ${{ env.ARTIFACT }}
