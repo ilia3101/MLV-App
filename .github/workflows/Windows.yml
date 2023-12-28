@@ -33,6 +33,7 @@ jobs:
             dir
             cd release
             C:\Qt\5.15.2\mingw81_64\bin\windeployqt MLVApp.exe
+            copy C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\bin\libgomp-1.dll        
             dir
             dir C:\Qt\5.15.2\mingw81_64\bin
             dir C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\bin
@@ -46,7 +47,7 @@ jobs:
       working-directory: ${{ env.SOURCE_DIR }}\qt\raw2mlv
       run:  |
             7z x raw2mlvWin64.zip -o${{ env.SOURCE_DIR }}\build\release
-            move /y ${{ env.SOURCE_DIR }}\build\release\Windows64\* ${{ env.SOURCE_DIR }}\build\release\
+            move ${{ env.SOURCE_DIR }}\build\release\Windows64\* ${{ env.SOURCE_DIR }}\build\release
             rmdir ${{ env.SOURCE_DIR }}\build\release\Windows64 /s
 
     - name: Rename release folder
