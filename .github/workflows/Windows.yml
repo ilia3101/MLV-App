@@ -21,6 +21,8 @@ jobs:
     - name: Install Qt
       run: |
            choco install qt5-default
+           dir C:\Qt\5.15.2\mingw81_64\bin
+           dir C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\bin
               
     - name: Create build directory
       run:  mkdir ${{ env.SOURCE_DIR }}\build
@@ -35,8 +37,6 @@ jobs:
             C:\Qt\5.15.2\mingw81_64\bin\windeployqt MLVApp.exe
             copy C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\bin\libgomp-1.dll        
             dir
-            dir C:\Qt\5.15.2\mingw81_64\bin
-            dir C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\bin
 
     - name: Decompress FFMPEG
       working-directory: ${{ env.SOURCE_DIR }}\qt\FFmpeg
@@ -48,7 +48,8 @@ jobs:
       run:  |
             7z x raw2mlvWin64.zip -o${{ env.SOURCE_DIR }}\build\release
             move ${{ env.SOURCE_DIR }}\build\release\Windows64\* ${{ env.SOURCE_DIR }}\build\release
-            rmdir ${{ env.SOURCE_DIR }}\build\release\Windows64 /s
+            rmdir ${{ env.SOURCE_DIR }}\build\release\Windows64
+            dir
 
     - name: Rename release folder
       working-directory: ${{ env.SOURCE_DIR }}\build
