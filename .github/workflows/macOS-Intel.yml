@@ -29,15 +29,7 @@ jobs:
     - name: Build
       working-directory: ${{ env.SOURCE_DIR }}/build
       run:  |
-            /usr/local/Cellar/qt@5/5.15.11/bin/qmake -r ${{ env.SOURCE_DIR }}/qt/MLVApp.pro \
-            QMAKE_CC=/usr/local/opt/llvm/bin/clang \
-            QMAKE_CXX=/usr/local/opt/llvm/bin/clang++ \
-            QMAKE_LINK=/usr/local/opt/llvm/bin/clang++ \
-            QMAKE_CFLAGS+=-fopenmp -ftree-vectorize \
-            QMAKE_CXXFLAGS+=-fopenmp -std=c++15 -ftree-vectorize \
-            INCLUDEPATH+=-I/usr/local/opt/llvm/include \
-            LIBS+=-L/usr/local/opt/llvm/lib LIBS+=-lomp \
-            LIBS+=-L/usr/local/opt/openssl/lib LIBS+=-lssl
+            /usr/local/Cellar/qt@5/5.15.11/bin/qmake -r ${{ env.SOURCE_DIR }}/qt/MLVApp.pro
             make -j8
             ls -al
             /usr/local/Cellar/qt@5/5.15.11/bin/macdeployqt MLV\ App.app -dmg
