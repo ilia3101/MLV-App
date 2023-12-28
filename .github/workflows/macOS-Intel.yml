@@ -18,10 +18,10 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Install llvm & Qt
+    - name: Install llvm & Qt & OpenSSL
       uses: ConorMacBride/install-package@v1.1.0
       with:
-        brew: llvm qt5
+        brew: llvm qt5 openssl
               
     - name: Create build directory
       run:  mkdir ${{ env.SOURCE_DIR }}/build
@@ -29,7 +29,15 @@ jobs:
     - name: Build
       working-directory: ${{ env.SOURCE_DIR }}/build
       run:  |
-            /usr/local/Cellar/qt@5/5.15.11/bin/qmake -r ${{ env.SOURCE_DIR }}/qt/MLVApp.pro
+            /usr/local/Cellar/qt@5/5.15.11/bin/qmake -r ${{ env.SOURCE_DIR }}/qt/MLVApp.pro \
+            QMAKE_CC=/usr/local/opt/llvm/bin/clang \
+            QMAKE_CXX=/usr/local/opt/llvm/bin/clang++ \
+            QMAKE_LINK=/usr/local/opt/llvm/bin/clang++ \
+            QMAKE_CFLAGS+=-fopenmp -ftree-vectorize \
+            QMAKE_CXXFLAGS+=-fopenmp -std=c++15 -ftree-vectorize \
+            INCLUDEPATH+=-I/usr/local/opt/llvm/include \
+            LIBS+=-L/usr/local/opt/llvm/lib LIBS+=-lomp \
+            LIBS+=-L/usr/local/opt/openssl/lib LIBS+=-lssl
             make -j8
             ls -al
             /usr/local/Cellar/qt@5/5.15.11/bin/macdeployqt MLV\ App.app -dmg
