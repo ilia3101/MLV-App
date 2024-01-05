@@ -1,9 +1,7 @@
 name: macOS Intel Release
 
 on:
-  push:
-    branches: [ "master" ]
-  pull_request:
+  workflow_dispatch:
     branches: [ "master" ]
 
 env:
