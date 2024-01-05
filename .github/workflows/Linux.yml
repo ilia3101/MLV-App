@@ -18,7 +18,7 @@ jobs:
 
     - name: Install compiler & Qt
       run: |
-           sudo apt-get install --no-install-recommends make g++ qt5-qmake qtbase5-dev qtmultimedia5-dev libqt5opengl5-dev libqt5designer5 libqt5svg5-dev libfuse2 libxkbcommon-x11-0 appstream
+           sudo apt-get install --no-install-recommends make g++ qt5-qmake qtbase5-dev qtmultimedia5-dev libqt5multimedia5 libqt5opengl5-dev libqt5designer5 libqt5svg5-dev libfuse2 libxkbcommon-x11-0 appstream
            
     - name: Create build directory
       run:  mkdir ${{ env.SOURCE_DIR }}/build
@@ -44,6 +44,7 @@ jobs:
             tar -C ${{ env.SOURCE_DIR }}/qt/raw2mlv/ -xvJf ${{ env.SOURCE_DIR }}/qt/raw2mlv/raw2mlvLinux.tar.xz --strip=1 --wildcards */raw2mlv
             chmod a+x ${{ env.SOURCE_DIR }}/qt/raw2mlv/raw2mlv
             mv ${{ env.SOURCE_DIR }}/qt/raw2mlv/raw2mlv .
+            ls -al
 
     - name: Install LinuxDeploy
       uses: miurahr/install-linuxdeploy-action@v1.7.0
