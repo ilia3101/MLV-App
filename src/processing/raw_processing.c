@@ -1162,12 +1162,18 @@ void apply_processing_object( processingObject_t * processing,
         /* Row length elements */
         uint32_t rl = imageX * 3;
 
-        for (uint32_t y = 1; y < y_max; ++y)
+        for (uint32_t y = 0; y < y_max+1; ++y)
         {
             uint16_t * out_row = out_img + (y * rl); /* current row ouptut */
             uint16_t * row = img + (y * rl); /* current row */
-            uint16_t * p_row = img + ((y-1) * rl); /* previous */
-            uint16_t * n_row = img + ((y+1) * rl); /* next */
+            uint16_t * p_row;
+            if( y == 0 ) p_row = row;        /* minimize border artifact */
+            else p_row = img + ((y-1) * rl); /* previous */
+
+            uint16_t * n_row;
+            if( y == y_max ) p_row = row;    /* minimize border artifact */
+            else n_row = img + ((y+1) * rl); /* next */
+
             uint16_t * cont_row;
             if( processing->sh_masking > 0 )
             {
@@ -1176,7 +1182,7 @@ void apply_processing_object( processingObject_t * processing,
 
             for (uint32_t x = 3+sharp_start; x < x_max; x+=sharp_skip)
             {
-                int32_t sharp = ka[row[x]] 
+                int32_t sharp = ka[row[x]]
                               - ky[p_row[x]]
                               - ky[n_row[x]]
                               - kx[row[x-3]]
@@ -1215,8 +1221,8 @@ void apply_processing_object( processingObject_t * processing,
         }
 
         /* Copy top and bottom row */
-        memcpy(outputImage, inputImage, rl * sizeof(uint16_t));
-        memcpy(outputImage + (rl*(imageY-1)), inputImage + (rl*(imageY-1)), rl * sizeof(uint16_t));
+        //memcpy(outputImage, inputImage, rl * sizeof(uint16_t));
+        //memcpy(outputImage + (rl*(imageY-1)), inputImage + (rl*(imageY-1)), rl * sizeof(uint16_t));
 
         if( processing->sh_masking > 0 )
         {
