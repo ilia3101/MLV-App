@@ -550,6 +550,137 @@ void applyProcessingObject( processingObject_t * processing,
                      (uint16_t)(100-processing->ca_desaturate)<<9,
                      processing->ca_radius);
     }
+
+
+    uint32_t sharp_skip = 1; /* Skip how many pixels when applying sharpening */
+    uint32_t sharp_start = 0; /* How many pixels offset to start at */
+    memcpy( inputImage, outputImage, img_s * sizeof(uint16_t) );
+    uint8_t doChromaSeperation = processingUsesChromaSeparation(processing);
+
+    /* enter YCbCr world - https://en.wikipedia.org/wiki/YCbCr (I used the 'JPEG Transform') */
+    if (doChromaSeperation)
+    {
+        convert_rgb_to_YCbCr_omp(inputImage, img_s, processing->cs_zone.pre_calc_rgb_to_YCbCr);
+
+        sharp_start = 0; /* Start at 0 - Luma/Y channel */
+        sharp_skip = 3; /* Only sharpen every third (Y/luma) pixel */
+    }
+
+    /* Basic box blur */
+    if (processingGetChromaBlurRadius(processing) > 0 && doChromaSeperation)
+    {
+        memcpy(outputImage, inputImage, img_s * sizeof(uint16_t));
+        blur_image( inputImage, outputImage,
+                    imageX, imageY, processingGetChromaBlurRadius(processing),
+                    0,1,1,
+                    0,0 );
+    }
+
+    if (processingGetSharpening(processing) > 0.005)
+    {
+        /* Use sobel filter to create a edge mask */
+        uint16_t *gray,
+             *sobel_h_res,
+             *sobel_v_res,
+             *contour_img;
+        if( processing->sh_masking > 0 ) sobelFilter( inputImage, &gray, &sobel_h_res, &sobel_v_res, &contour_img, imageX, imageY );
+
+        /* Avoid gaps in pixels if skipping pixels during sharpen */
+        if (sharp_skip != 1) memcpy(outputImage, inputImage, img_s * sizeof(uint16_t));
+
+        uint32_t y_max = imageY - 1;
+        uint32_t x_max = (imageX - 1) * 3; /* X in multiples of 3 for RGB */
+
+        /* Center and outter lut */
+        uint32_t * ka = processing->pre_calc_sharp_a;
+        uint16_t * kx = processing->pre_calc_sharp_x;
+        uint16_t * ky = processing->pre_calc_sharp_y;
+
+        /* Row length elements */
+        uint32_t rl = imageX * 3;
+
+#pragma omp parallel for collapse(2)
+        for (uint32_t y = 0; y < y_max+1; ++y)
+        {
+            uint16_t * out_row = outputImage + (y * rl); /* current row ouptut */
+            uint16_t * row = inputImage + (y * rl); /* current row */
+            uint16_t * p_row;
+            if( y == 0 ) p_row = row;        /* minimize border artifact */
+            else p_row = inputImage + ((y-1) * rl); /* previous */
+
+            uint16_t * n_row;
+            if( y == y_max ) p_row = row;    /* minimize border artifact */
+            else n_row = inputImage + ((y+1) * rl); /* next */
+
+            uint16_t * cont_row;
+            if( processing->sh_masking > 0 )
+            {
+                cont_row = contour_img + (y * imageX);
+            }
+
+            for (uint32_t x = 3+sharp_start; x < x_max; x+=sharp_skip)
+            {
+                int32_t sharp = ka[row[x]]
+                              - ky[p_row[x]]
+                              - ky[n_row[x]]
+                              - kx[row[x-3]]
+                              - kx[row[x+3]];
+
+                /* use the edge mask for sharpening only edges */
+                if( processing->sh_masking > 0 )
+                {
+                    uint32_t x1 = x / 3;
+                    /* more contrast & brightness for mask */
+                    uint32_t maskIntensity = 15000;
+                    uint32_t cont = cont_row[x1] + (100-(uint32_t)processing->sh_masking) * 150;
+                    if( cont > maskIntensity ) cont = maskIntensity;
+                    /* calc output in dependency to mask slider */
+                    out_row[x] = LIMIT16( ( cont / (float)maskIntensity) * LIMIT16(sharp)
+                                      + ( ( maskIntensity - cont ) / (float)maskIntensity ) * row[x] );
+                    /* Show mask */
+                    //out_row[x] = LIMIT16(cont/(float)maskIntensity*65535.0);
+                }
+                /* sharpen all */
+                else
+                {
+                    out_row[x] = LIMIT16(sharp);
+                }
+            }
+
+            /* Edge pixels (basically don't do any changes to them) */
+            out_row[0] = row[0];
+            out_row[1] = row[1];
+            out_row[2] = row[2];
+            out_row += rl;
+            row += rl;
+            out_row[-3] = row[-3];
+            out_row[-2] = row[-2];
+            out_row[-1] = row[-1];
+        }
+
+        /* Copy top and bottom row */
+        //memcpy(outputImage, inputImage, rl * sizeof(uint16_t));
+        //memcpy(outputImage + (rl*(imageY-1)), inputImage + (rl*(imageY-1)), rl * sizeof(uint16_t));
+
+        if( processing->sh_masking > 0 )
+        {
+            if( gray ) free( gray );
+            if( sobel_h_res ) free( sobel_h_res );
+            if( sobel_v_res ) free( sobel_v_res );
+            if( contour_img ) free( contour_img );
+        }
+    }
+    else
+    {
+        memcpy(outputImage, inputImage, img_s * sizeof(uint16_t));
+    }
+
+    /* Leave Y-Cb-Cr world */
+    if (doChromaSeperation)
+    {
+        convert_YCbCr_to_rgb_omp(outputImage, img_s, processing->cs_zone.pre_calc_YCbCr_to_rgb);
+    }
+
     /* Grain (simple monochrome noise) generator - must be applied after denoiser */
     if( processing->grainStrength > 0 ) //Switch on/off
     {
@@ -1117,131 +1248,7 @@ void apply_processing_object( processingObject_t * processing,
         }
     }
 
-    uint32_t sharp_skip = 1; /* Skip how many pixels when applying sharpening */
-    uint32_t sharp_start = 0; /* How many pixels offset to start at */
-
-    /* enter YCbCr world - https://en.wikipedia.org/wiki/YCbCr (I used the 'JPEG Transform') */
-    if (processingUsesChromaSeparation(processing))
-    {
-        convert_rgb_to_YCbCr(img, img_s, processing->cs_zone.pre_calc_rgb_to_YCbCr);
-
-        sharp_start = 0; /* Start at 0 - Luma/Y channel */
-        sharp_skip = 3; /* Only sharpen every third (Y/luma) pixel */
-    }
-
-    /* Basic box blur */
-    if (processingGetChromaBlurRadius(processing) > 0 && processingUsesChromaSeparation(processing))
-    {
-        memcpy(out_img, img, img_s * sizeof(uint16_t));
-        blur_image( img, out_img,
-                    imageX, imageY, processingGetChromaBlurRadius(processing),
-                    0,1,1,
-                    0,0 );
-    }
-
-    if (processingGetSharpening(processing) > 0.005)
-    {
-        /* Use sobel filter to create a edge mask */
-        uint16_t *gray,
-             *sobel_h_res,
-             *sobel_v_res,
-             *contour_img;
-        if( processing->sh_masking > 0 ) sobelFilter( inputImage, &gray, &sobel_h_res, &sobel_v_res, &contour_img, imageX, imageY );
-
-        /* Avoid gaps in pixels if skipping pixels during sharpen */
-        if (sharp_skip != 1) memcpy(outputImage, inputImage, img_s * sizeof(uint16_t));
-    
-        uint32_t y_max = imageY - 1;
-        uint32_t x_max = (imageX - 1) * 3; /* X in multiples of 3 for RGB */
-
-        /* Center and outter lut */
-        uint32_t * ka = processing->pre_calc_sharp_a;
-        uint16_t * kx = processing->pre_calc_sharp_x;
-        uint16_t * ky = processing->pre_calc_sharp_y;
-        
-        /* Row length elements */
-        uint32_t rl = imageX * 3;
-
-        for (uint32_t y = 0; y < y_max+1; ++y)
-        {
-            uint16_t * out_row = out_img + (y * rl); /* current row ouptut */
-            uint16_t * row = img + (y * rl); /* current row */
-            uint16_t * p_row;
-            if( y == 0 ) p_row = row;        /* minimize border artifact */
-            else p_row = img + ((y-1) * rl); /* previous */
-
-            uint16_t * n_row;
-            if( y == y_max ) p_row = row;    /* minimize border artifact */
-            else n_row = img + ((y+1) * rl); /* next */
-
-            uint16_t * cont_row;
-            if( processing->sh_masking > 0 )
-            {
-                cont_row = contour_img + (y * imageX);
-            }
-
-            for (uint32_t x = 3+sharp_start; x < x_max; x+=sharp_skip)
-            {
-                int32_t sharp = ka[row[x]]
-                              - ky[p_row[x]]
-                              - ky[n_row[x]]
-                              - kx[row[x-3]]
-                              - kx[row[x+3]];
-
-                /* use the edge mask for sharpening only edges */
-                if( processing->sh_masking > 0 )
-                {
-                    uint32_t x1 = x / 3;
-                    /* more contrast & brightness for mask */
-                    uint32_t maskIntensity = 15000;
-                    uint32_t cont = cont_row[x1] + (100-(uint32_t)processing->sh_masking) * 150;
-                    if( cont > maskIntensity ) cont = maskIntensity;
-                    /* calc output in dependency to mask slider */
-                    out_row[x] = LIMIT16( ( cont / (float)maskIntensity) * LIMIT16(sharp)
-                                      + ( ( maskIntensity - cont ) / (float)maskIntensity ) * row[x] );
-                    /* Show mask */
-                    //out_row[x] = LIMIT16(cont/(float)maskIntensity*65535.0);
-                }
-                /* sharpen all */
-                else
-                {
-                    out_row[x] = LIMIT16(sharp);
-                }
-            }
-
-            /* Edge pixels (basically don't do any changes to them) */
-            out_row[0] = row[0];
-            out_row[1] = row[1];
-            out_row[2] = row[2];
-            out_row += rl;
-            row += rl;
-            out_row[-3] = row[-3];
-            out_row[-2] = row[-2];
-            out_row[-1] = row[-1];
-        }
-
-        /* Copy top and bottom row */
-        //memcpy(outputImage, inputImage, rl * sizeof(uint16_t));
-        //memcpy(outputImage + (rl*(imageY-1)), inputImage + (rl*(imageY-1)), rl * sizeof(uint16_t));
-
-        if( processing->sh_masking > 0 )
-        {
-            if( gray ) free( gray );
-            if( sobel_h_res ) free( sobel_h_res );
-            if( sobel_v_res ) free( sobel_v_res );
-            if( contour_img ) free( contour_img );
-        }
-    }
-    else
-    {
-        memcpy(outputImage, inputImage, img_s * sizeof(uint16_t));
-    }
-
-    /* Leave Y-Cb-Cr world */
-    if (processingUsesChromaSeparation(processing))
-    {
-        convert_YCbCr_to_rgb(outputImage, img_s, processing->cs_zone.pre_calc_YCbCr_to_rgb);
-    }
+    memcpy(outputImage, inputImage, img_s * sizeof(uint16_t));
 
     if (processing->lut_on)
     {

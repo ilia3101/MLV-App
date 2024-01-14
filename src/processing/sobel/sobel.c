@@ -99,6 +99,7 @@ void itConv(uint16_t *buffer, int buffer_size, int width, int *op, uint16_t **re
     memset(op_mem, 0, SOBEL_OP_SIZE);
 
     // Make convolution for every pixel
+#pragma omp parallel for
     for(int i=0; i<buffer_size; i++) {
         // Make op_mem
         makeOpMem(buffer, buffer_size, width, i, op_mem);
@@ -124,6 +125,7 @@ void contour(uint16_t *sobel_h, uint16_t *sobel_v, int gray_size, uint16_t **con
     *contour_img = malloc(sizeof(uint16_t) * gray_size);
 
     // Iterate through every pixel to calculate the contour image
+#pragma omp parallel for
     for(int i=0; i<gray_size; i++) {
         int res = sqrt(pow(sobel_h[i], 2) + pow(sobel_v[i], 2));
         if( res > 65535 ) res = 65535;

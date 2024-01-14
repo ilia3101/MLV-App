@@ -598,6 +598,7 @@ void blur_image( uint16_t * __restrict in,
 
     /* Offset - do twice on channel '1' and '2' (Cb and Cr) */
     int limit_x = (width-radius-1)*3;
+#pragma omp parallel for
     for (int offset =0; offset < 3; ++offset)
     {
         if (channels[offset]) /* if this channel was requested */
