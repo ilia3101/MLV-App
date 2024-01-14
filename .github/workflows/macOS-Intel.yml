@@ -6,6 +6,7 @@ on:
 
 env:
   SOURCE_DIR:   ${{ github.workspace }}/platform
+  QTDIR:        /usr/local/Cellar/qt@5/5.15.12/bin
   ARTIFACT:     ${{ github.workspace }}/platform/build/MLV\ App.dmg
 
 jobs:
@@ -27,10 +28,10 @@ jobs:
     - name: Build
       working-directory: ${{ env.SOURCE_DIR }}/build
       run:  |
-            /usr/local/Cellar/qt@5/5.15.11/bin/qmake -r ${{ env.SOURCE_DIR }}/qt/MLVApp.pro
+            ${{ env.QTDIR }}/qmake -r ${{ env.SOURCE_DIR }}/qt/MLVApp.pro
             make -j8
             ls -al
-            /usr/local/Cellar/qt@5/5.15.11/bin/macdeployqt MLV\ App.app -dmg
+            ${{ env.QTDIR }}/bin/macdeployqt MLV\ App.app -dmg
 
     - name: Save build artifact
       uses: actions/upload-artifact@master
