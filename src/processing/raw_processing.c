@@ -725,7 +725,6 @@ void apply_processing_object( processingObject_t * processing,
     /* (for shorter code) */
     int32_t ** pm = processing->pre_calc_matrix;
     int32_t ** pmg = processing->pre_calc_matrix_gradient;
-    uint16_t * out_img = outputImage;
     uint16_t * img = inputImage;
     uint16_t * img_end = img + img_s;
     uint16_t * gm = gradientMask;

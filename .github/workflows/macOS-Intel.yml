@@ -31,7 +31,7 @@ jobs:
             ${{ env.QTDIR }}/qmake -r ${{ env.SOURCE_DIR }}/qt/MLVApp.pro
             make -j8
             ls -al
-            ${{ env.QTDIR }}/bin/macdeployqt MLV\ App.app -dmg
+            ${{ env.QTDIR }}/macdeployqt MLV\ App.app -dmg
 
     - name: Save build artifact
       uses: actions/upload-artifact@master
