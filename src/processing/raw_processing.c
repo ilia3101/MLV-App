@@ -599,7 +599,7 @@ void applyProcessingObject( processingObject_t * processing,
         /* Row length elements */
         uint32_t rl = imageX * 3;
 
-#pragma omp parallel for collapse(2)
+#pragma omp parallel for
         for (uint32_t y = 0; y < y_max+1; ++y)
         {
             uint16_t * out_row = outputImage + (y * rl); /* current row ouptut */
