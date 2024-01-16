@@ -76,9 +76,9 @@ int MoveToTrash( QString fileName )
     QFile infoFile(trashInfoPath+fileInfo.completeBaseName()+"."+fileNum+fileInfo.completeSuffix()+".trashinfo");     //filename+extension+.trashinfo //  create file information file in /.local/share/Trash/info/ folder
     infoFile.open(QIODevice::ReadWrite);
     QTextStream stream(&infoFile);         // for write data on open file
-    stream<<"[Trash Info]"<<endl;
-    stream<<"Path="+QString(QUrl::toPercentEncoding(fileInfo.absoluteFilePath(),"~_-./"))<<endl;     // convert path string in percentage decoding scheme string
-    stream<<"DeletionDate="+currentTime.toString("yyyy-MM-dd")+"T"+currentTime.toString("hh:mm:ss")<<endl;      // get date and time format YYYY-MM-DDThh:mm:ss
+    stream<<"[Trash Info]\n";
+    stream<<"Path="+QString(QUrl::toPercentEncoding(fileInfo.absoluteFilePath(),"~_-./")) + "\n";     // convert path string in percentage decoding scheme string
+    stream<<"DeletionDate="+currentTime.toString("yyyy-MM-dd")+"T"+currentTime.toString("hh:mm:ss") + "\n";      // get date and time format YYYY-MM-DDThh:mm:ss
     infoFile.close();
     // create info file format of trash file----- END
 
