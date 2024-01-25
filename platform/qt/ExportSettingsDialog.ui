@@ -206,6 +206,11 @@
           </item>
           <item>
            <property name="text">
+            <string>H.264 VAAPI (Intel/AMD GPU)</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
             <string>H.265 8bit 4:2:0</string>
            </property>
           </item>
