@@ -3328,6 +3328,46 @@ void MainWindow::openSession(QString fileNameSession)
                             fileName = QDir( QFileInfo( fileNameSession ).path() ).filePath( relativeName );
                         }
                     }
+
+                    while( !QFile( fileName ).exists() && !skipAll )
+                    {
+                        if( !skipAll )
+                        {
+                            int ret = QMessageBox::critical( this,
+                                                            tr( "Open Session Error" ),
+                                                            tr( "File not found: \r\n%1" ).arg( fileName ),
+                                                            tr( "Skip" ),
+                                                            tr( "Skip all"),
+                                                            tr( "Search" )/*,
+                                                            tr( "Abort" ) */);
+                            if( ret == 1 )
+                            {
+                                skipAll = true;
+                                break;
+                            }
+                            else if( ret == 2 )
+                            {
+                                QString fn = QFileDialog::getOpenFileName( this,
+                                                                       tr("Search MLV path"),
+                                                                       fileName,
+                                                                       QFileInfo( fileName ).fileName() );
+                                if( QFile( fn ).exists() )
+                                {
+                                    fileName = fn;
+                                }
+                            }
+                            /*else if( ret == 3 )
+                            {
+                                abort = true;
+                                break;
+                            }*/
+                            else
+                            {
+                                break;
+                            }
+                        }
+                    }
+
                     //Mark
                     uint8_t mark = 0;
                     if( Rxml.attributes().hasAttribute( "mark" ) )
@@ -3355,19 +3395,6 @@ void MainWindow::openSession(QString fileNameSession)
                     }
                     else
                     {
-                        if( !skipAll )
-                        {
-                            int ret = QMessageBox::critical( this, tr( "Open Session Error" ), tr( "File not found: \r\n%1" ).arg( fileName ), tr( "Skip" ), tr( "Skip all"), tr( "Abort" ) );
-                            if( ret == 1 )
-                            {
-                                skipAll = true;
-                            }
-                            else if( ret == 2 )
-                            {
-                                abort = true;
-                            }
-                        }
-
                         //If file does not exist we just parse uninteresting data in the right way
                         while( !Rxml.atEnd() && !Rxml.isEndElement() )
                         {
