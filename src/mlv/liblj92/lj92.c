@@ -49,7 +49,7 @@ typedef struct _ljp {
     int skiplen; // Skip this many values after each row
     u16* linearize; // Linearization table
     int linlen;
-    int sssshist[16];
+    int sssshist[17];
 
     // Huffman table - only one supported, and probably needed
 #ifdef SLOW_HUFF
