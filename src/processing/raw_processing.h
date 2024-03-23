@@ -203,6 +203,8 @@ void processing_update_contrast_curve_gradient(processingObject_t * processing);
 
 /* Toning */
 void processingSetToning(processingObject_t * processing, uint8_t r, uint8_t g, uint8_t b, uint8_t strength);
+void processingSetToningStrength(processingObject_t * processing, uint8_t strength);
+void processingSetToningColor(processingObject_t * processing, uint8_t r, uint8_t g, uint8_t b);
 
 /* Use or not use camera matrix - compatibility mode */
 #define processingUseCamMatrix(processing) (processing)->use_cam_matrix = 1
