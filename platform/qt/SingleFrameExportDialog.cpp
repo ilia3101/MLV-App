@@ -129,6 +129,7 @@ void SingleFrameExportDialog::exportViaQt()
         QImage( ( unsigned char *) imgBufferScaled8, getMlvWidth(m_pMlvObject) * stretchX, getMlvHeight(m_pMlvObject) * stretchY, QImage::Format_RGB888 )
                 .save( fileName, "jpg", -1 );
 
+    free( imgBufferScaled8 );
     free( pRawImage );
 }
 
