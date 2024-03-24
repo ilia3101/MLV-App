@@ -2152,20 +2152,10 @@ void processingSetHueVsCurves(processingObject_t *processing, int num, float *pX
 /* Toning */
 void processingSetToning(processingObject_t *processing, uint8_t r, uint8_t g, uint8_t b, uint8_t strength)
 {
-    processingSetToningStrength(processing, strength);
-    processingSetToningColor(processing, r, g, b);
-}
-
-void processingSetToningStrength(processingObject_t *processing, uint8_t strength)
-{
     processing->toning_dry = (100.0 - strength / 3.0) / 100.0;
-}
-
-void processingSetToningColor(processingObject_t * processing, uint8_t r, uint8_t g, uint8_t b)
-{
-    processing->toning_wet[0] = (1.0 - processing->toning_dry) * (float)r / 255.0;
-    processing->toning_wet[1] = (1.0 - processing->toning_dry) * (float)g / 255.0;
-    processing->toning_wet[2] = (1.0 - processing->toning_dry) * (float)b / 255.0;
+    processing->toning_wet[0] = (strength / 3.0 / 100.0) * (float)r / 255.0;
+    processing->toning_wet[1] = (strength / 3.0 / 100.0) * (float)g / 255.0;
+    processing->toning_wet[2] = (strength / 3.0 / 100.0) * (float)b / 255.0;
 }
 
 static char * compile_ternary(char * function)
