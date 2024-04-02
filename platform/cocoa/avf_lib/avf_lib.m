@@ -100,6 +100,11 @@ AVEncoder_t * initAVEncoder(int width, int height, int codec, int colourSpace, d
 
 void freeAVEncoder(AVEncoder_t * encoder)
 {
+    // Wait for encoding completed
+    while(encoder->video_writer.status == AVAssetWriterStatusWriting){
+      [NSThread sleepForTimeInterval:0.1];
+    }
+
     CGColorSpaceRelease(encoder->colour_space);
     CFRelease(encoder->colour_profile_data);
     free(encoder->encode_buffer);
