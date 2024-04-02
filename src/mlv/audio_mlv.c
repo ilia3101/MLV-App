@@ -185,6 +185,7 @@ void writeMlvAudioToWaveCut(mlvObject_t * video, char * path, uint32_t cut_in, u
     wave_header_t wave_header = generateMlvAudioToWaveHeader(video, wave_data_size, cut_in - 1);
 
     FILE * wave_file = fopen(path, "wb");
+    if( !wave_file ) return;
     /* Write header */
     fwrite(&wave_header, sizeof(wave_header_t), 1, wave_file);
     /* Write data, shift buffer by in_offset_aligned */
@@ -202,6 +203,7 @@ void writeMlvAudioToWave(mlvObject_t * video, char * path)
     wave_header_t wave_header = generateMlvAudioToWaveHeader(video, video->audio_size, 0);
 
     FILE * wave_file = fopen(path, "wb");
+    if( !wave_file ) return;
     /* Write header */
     fwrite(&wave_header, sizeof(wave_header_t), 1, wave_file);
     /* Write data */
