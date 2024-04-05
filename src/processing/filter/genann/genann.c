@@ -32,7 +32,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#if defined(__linux)
+#if defined(__linux) || defined(__APPLE__)
 #include <locale.h>
 #endif
 
@@ -135,7 +135,7 @@ genann *genann_read(char *in) {
 
     genann *ann = genann_init(inputs, hidden_layers, hidden, outputs);
 
-#if defined(__linux)
+#if defined(__linux) || defined(__APPLE__)
     setlocale( LC_NUMERIC, "C" );
 #endif
     for (int i = 0; i < ann->total_weights; ++i)

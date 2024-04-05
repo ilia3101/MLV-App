@@ -7,6 +7,9 @@
 #include <ctype.h>
 #include "blur_threaded.h"
 #include "tinyexpr/tinyexpr.h"
+#if defined(__linux) || defined(__APPLE__)
+#include <locale.h>
+#endif
 
 #ifdef __SSE2__
   #include <emmintrin.h>
@@ -2259,6 +2262,9 @@ void processingSetGammaAndTonemapping(processingObject_t * processing, double ga
 /* Transfer funciton, the correct version of "Gamma" or "Log" */
 int processingSetTransferFunction(processingObject_t * processing, char * function)
 {
+#if defined(__linux) || defined(__APPLE__)
+    setlocale(LC_NUMERIC, "C");
+#endif
     char * function_string = compile_ternary(function);
     if (function_string == NULL) return 1;
 
