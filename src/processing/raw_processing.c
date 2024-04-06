@@ -185,6 +185,10 @@ processingObject_t * initProcessingObject()
     processingSetHueVsCurves(processing, 0, NULL, NULL, 2);
     processingSetHueVsCurves(processing, 0, NULL, NULL, 3);
     processingSetVignetteStrength(processing, 0);
+    processingSetDCFactor(processing, 4.5);
+    processingSetDCRange(processing, 0.7);
+    processingSetLCFactor(processing, 0);
+    processingSetLCRange(processing, 0.5);
 
     processingSetGrainStrength(processing, 0);
     processingSetGrainLumaWeight(processing, 0);
