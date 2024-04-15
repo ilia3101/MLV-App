@@ -10,6 +10,7 @@
 /* I guess this has to happen for pthread_t */
 #include "pthread.h"
 
+#include "camid/camera_id.h"
 
 /* cache states */
 #define MLV_FRAME_NOT_CACHED 0
@@ -79,6 +80,9 @@ typedef struct {
     mlv_audf_hdr_t    AUDF; /* Last AUDF header read */
 
     char INFO_STRING[256]; /* String stored in INFO block */
+
+    /* camid for cameras not listed in database */
+    camera_id_t       camid;
 
     /* Dark frame info */
     uint64_t dark_frame_offset;

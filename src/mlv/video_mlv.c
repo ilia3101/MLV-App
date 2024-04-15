@@ -20,6 +20,7 @@
 #include "raw.h"
 #include "mlv.h"
 #include "llrawproc/llrawproc.h"
+#include "mcraw/mcraw.h"
 
 /* Debayering module */
 #include "../debayer/debayer.h"
@@ -214,18 +215,22 @@ int getMlvRawFrameUint16(mlvObject_t * video, uint64_t frameIndex, uint16_t * un
     pthread_mutex_lock(video->main_file_mutex + chunk);
 
     file_set_pos(file, frame_header_offset, SEEK_SET);
-    if(fread(&video->VIDF, sizeof(mlv_vidf_hdr_t), 1, file) != 1)
-    {
-        DEBUG( printf("Frame header read error\n"); )
-        free(raw_frame);
-        pthread_mutex_unlock(video->main_file_mutex + chunk);
-        return 1;
-    }
 
-    file_set_pos(file, frame_offset, SEEK_SET);
-    if (video->MLVI.videoClass & MLV_VIDEO_CLASS_FLAG_LJ92)
+    if (isMcrawLoaded(video))
     {
-        if(fread(raw_frame, frame_size, 1, file) != 1)
+        mr_item_t item = {};
+
+        if (fread(&item, sizeof(mr_item_t), 1, file) != 1)
+        {
+            DEBUG( printf("Frame header read error\n"); )
+            free(raw_frame);
+            pthread_mutex_unlock(video->main_file_mutex + chunk);
+            return 1;
+        }
+
+        frame_size = item.size;
+
+        if (fread(raw_frame, frame_size, 1, file) != 1)
         {
             DEBUG( printf("Frame data read error\n"); )
             free(raw_frame);
@@ -235,50 +240,84 @@ int getMlvRawFrameUint16(mlvObject_t * video, uint64_t frameIndex, uint16_t * un
 
         pthread_mutex_unlock(video->main_file_mutex + chunk);
 
-        int components = 1;
-        lj92 decoder_object;
-        int ret = lj92_open(&decoder_object, raw_frame, frame_size, &width, &height, &bitdepth, &components);
-        if(ret != LJ92_ERROR_NONE)
+        int64_t ret = mr_decode_video_frame((uint8_t*)unpackedFrame, raw_frame, frame_size, width, height);
+
+        if (ret <= 0)
         {
-            DEBUG( printf("LJ92 decoder: Failed with error code (%d)\n", ret); )
+            DEBUG( printf("mcraw decoder: Failed with error code (%d)\n", ret); )
             free(raw_frame);
             return 1;
         }
-        else
+    }
+    else
+    {
+        if (fread(&video->VIDF, sizeof(mlv_vidf_hdr_t), 1, file) != 1)
         {
-            ret = lj92_decode(decoder_object, unpackedFrame, width * height * components, 0, NULL, 0);
+            DEBUG( printf("Frame header read error\n"); )
+            free(raw_frame);
+            pthread_mutex_unlock(video->main_file_mutex + chunk);
+            return 1;
+        }
+
+        file_set_pos(file, frame_offset, SEEK_SET);
+
+        if (video->MLVI.videoClass & MLV_VIDEO_CLASS_FLAG_LJ92)
+        {
+            if(fread(raw_frame, frame_size, 1, file) != 1)
+            {
+                DEBUG( printf("Frame data read error\n"); )
+                free(raw_frame);
+                pthread_mutex_unlock(video->main_file_mutex + chunk);
+                return 1;
+            }
+
+            pthread_mutex_unlock(video->main_file_mutex + chunk);
+
+            int components = 1;
+            lj92 decoder_object;
+            int ret = lj92_open(&decoder_object, raw_frame, frame_size, &width, &height, &bitdepth, &components);
             if(ret != LJ92_ERROR_NONE)
             {
                 DEBUG( printf("LJ92 decoder: Failed with error code (%d)\n", ret); )
                 free(raw_frame);
                 return 1;
             }
+            else
+            {
+                ret = lj92_decode(decoder_object, unpackedFrame, width * height * components, 0, NULL, 0);
+                if(ret != LJ92_ERROR_NONE)
+                {
+                    DEBUG( printf("LJ92 decoder: Failed with error code (%d)\n", ret); )
+                    free(raw_frame);
+                    return 1;
+                }
+            }
+            lj92_close(decoder_object);
         }
-        lj92_close(decoder_object);
-    }
-    else /* If not compressed just unpack to 16bit */
-    {
-        if(fread(raw_frame, raw_frame_size, 1, file) != 1)
+        else /* If not compressed just unpack to 16bit */
         {
-            DEBUG( printf("Frame data read error\n"); )
-            free(raw_frame);
+            if(fread(raw_frame, raw_frame_size, 1, file) != 1)
+            {
+                DEBUG( printf("Frame data read error\n"); )
+                free(raw_frame);
+                pthread_mutex_unlock(video->main_file_mutex + chunk);
+                return 1;
+            }
+
             pthread_mutex_unlock(video->main_file_mutex + chunk);
-            return 1;
-        }
 
-        pthread_mutex_unlock(video->main_file_mutex + chunk);
-
-        uint32_t mask = (1 << bitdepth) - 1;
-        #pragma omp parallel for
-        for (int i = 0; i < pixels_count; ++i)
-        {
-            uint32_t bits_offset = i * bitdepth;
-            uint32_t bits_address = bits_offset / 16;
-            uint32_t bits_shift = bits_offset % 16;
-            uint32_t rotate_value = 16 + ((32 - bitdepth) - bits_shift);
-            uint32_t uncorrected_data = *((uint32_t *)&((uint16_t *)raw_frame)[bits_address]);
-            uint32_t data = ROR32(uncorrected_data, rotate_value);
-            unpackedFrame[i] = ((uint16_t)(data & mask));
+            uint32_t mask = (1 << bitdepth) - 1;
+            #pragma omp parallel for
+            for (int i = 0; i < pixels_count; ++i)
+            {
+                uint32_t bits_offset = i * bitdepth;
+                uint32_t bits_address = bits_offset / 16;
+                uint32_t bits_shift = bits_offset % 16;
+                uint32_t rotate_value = 16 + ((32 - bitdepth) - bits_shift);
+                uint32_t uncorrected_data = *((uint32_t *)&((uint16_t *)raw_frame)[bits_address]);
+                uint32_t data = ROR32(uncorrected_data, rotate_value);
+                unpackedFrame[i] = ((uint16_t)(data & mask));
+            }
         }
     }
 
@@ -507,6 +546,18 @@ mlvObject_t * initMlvObjectWithClip(char * mlvPath, int preview, int * err, char
     return video;
 }
 
+/* To initialise mlv object with a clip
+ * Two functions in one */
+mlvObject_t * initMlvObjectWithMcrawClip(char * mlvPath, int preview, int * err, char * error_message)
+{
+    mlvObject_t * video = initMlvObject();
+    char error_message_tmp[256] = {0};
+    int err_tmp =  openMcrawClip(video, mlvPath, preview, error_message_tmp);
+    if (err != NULL) *err = err_tmp;
+    if (error_message != NULL) strcpy(error_message, error_message_tmp);
+    return video;
+}
+
 /* Allocates a tiny bit of memory for everything in the structure
  * so we can always be sure there is memory, and when we need to 
  * resize it, simply do free followed by malloc */
@@ -550,6 +601,10 @@ mlvObject_t * initMlvObject()
     //video->ca_auto = 0;
     video->ca_red = 0.0;
     video->ca_blue = 0.0;
+
+    /* Use default camid as fallback */
+    camera_id_t *camid = camidGet(0);
+    memcpy(&video->camid, camid, sizeof(camera_id_t));
 
     /* Retun pointer */
     return video;
@@ -629,6 +684,7 @@ static int save_mapp(mlvObject_t * video)
                            sizeof(mlv_wavi_hdr_t) +
                            sizeof(mlv_diso_hdr_t) +
                            sizeof(mlv_dark_hdr_t) +
+                           sizeof(camera_id_t) +
                            video_index_size +
                            audio_index_size +
                            vers_index_size;
@@ -658,7 +714,8 @@ static int save_mapp(mlvObject_t * video)
     memcpy(ptr += sizeof(mlv_styl_hdr_t), (uint8_t*)&(video->WAVI), sizeof(mlv_wavi_hdr_t));
     memcpy(ptr += sizeof(mlv_wavi_hdr_t), (uint8_t*)&(video->DISO), sizeof(mlv_diso_hdr_t));
     memcpy(ptr += sizeof(mlv_diso_hdr_t), (uint8_t*)&(video->DARK), sizeof(mlv_dark_hdr_t));
-    ptr += sizeof(mlv_dark_hdr_t);
+    memcpy(ptr += sizeof(mlv_dark_hdr_t), (uint8_t*)&(video->camid), sizeof(camera_id_t));
+    ptr += sizeof(camera_id_t);
     if(video->video_index)
     {
         memcpy(ptr, (uint8_t*)video->video_index, video_index_size);
@@ -780,7 +837,8 @@ static int load_mapp(mlvObject_t * video)
     ret += fread(&(video->WAVI), sizeof(mlv_wavi_hdr_t), 1, mappf);
     ret += fread(&(video->DISO), sizeof(mlv_diso_hdr_t), 1, mappf);
     ret += fread(&(video->DARK), sizeof(mlv_dark_hdr_t), 1, mappf);
-    if(ret != 13)
+    ret += fread(&(video->camid), sizeof(camera_id_t), 1, mappf);
+    if(ret != 14)
     {
         DEBUG( printf("ret = %d, could not read metadata from %s\n", ret, mapp_filename); )
         goto mapp_error;
@@ -1462,6 +1520,233 @@ int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
     free(block_buf);
     DEBUG( if( (export_mode == MLV_FAST_PASS) && (!isMlvCompressed(video)) ) printf("Saved video frame #%u\n", frame_index); )
     return 0;
+}
+
+/* Reads a mcraw file in to a mlv object(mlvObject_t struct)
+ * only puts metadata in to the mlvObject_t, no debayering or bit unpacking
+ */
+int openMcrawClip(mlvObject_t * video, char * mcrawPath, int open_mode, char * error_message)
+{    
+    video->path = malloc( strlen(mcrawPath) + 1 );
+    memcpy(video->path, mcrawPath, strlen(mcrawPath));
+    video->path[strlen(mcrawPath)] = 0x0;
+
+    mr_ctx_t *ctx = mr_decoder_new(0);
+
+    int res = mr_decoder_open(ctx, mcrawPath);
+
+    if (res == 0) {
+        res = mr_decoder_parse(ctx);
+    }
+
+    if (res != 0)
+    {
+        sprintf(error_message, "Could not open file:  %s", video->path);
+        DEBUG( printf("\n%s\n", error_message); )
+        return MLV_ERR_OPEN; // can not open file
+    }
+
+    FILE **files = malloc(sizeof(FILE*));
+    files[0] = mr_get_file_handle(ctx);
+    video->file = files;
+
+
+    /* Mutexes for every file */
+    video->main_file_mutex = calloc(sizeof(pthread_mutex_t), 1);
+    pthread_mutex_init(video->main_file_mutex, NULL);
+
+    /* In preview mode we don't need to waste time on audio loading from MAPP */
+    if (open_mode != MLV_OPEN_PREVIEW)
+    {
+        // DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG
+        //if (!load_mapp(video)) {
+        //    goto short_cut;
+        //}
+    }
+
+    int64_t video_index_max = mr_get_frame_count(ctx);
+
+    if (open_mode == MLV_OPEN_PREVIEW) {
+       video_index_max = 1;
+    }
+
+    video->frames      = video_index_max;
+    video->video_index = (frame_index_t *)calloc(video->frames, sizeof(frame_index_t));
+
+    video->audios      = mr_get_audio_packet_count(ctx);
+    video->audio_index = (frame_index_t *)calloc(video->audios, sizeof(frame_index_t));
+
+    mr_buffer_offset_t *offsets = mr_get_index(ctx);
+
+    for (int64_t i = 0; i < video->frames; i++)
+    {
+        video->video_index[i].frame_type   = 1;
+        video->video_index[i].chunk_num    = 0;
+        video->video_index[i].frame_size   = 0;
+        video->video_index[i].frame_offset = offsets[i].offset + sizeof(mr_item_t);
+        video->video_index[i].frame_number = i;
+        video->video_index[i].frame_time   = offsets[i].timestamp / 1000000;   // ns to ms
+        video->video_index[i].block_offset = offsets[i].offset;
+    }
+
+    mr_buffer_offset_t *audio_offsets = mr_get_audio_index(ctx);
+
+    for (int64_t i = 0; i < video->audios; i++)
+    {
+        video->audio_index[i].frame_type   = 1;
+        video->audio_index[i].chunk_num    = 0;
+        video->audio_index[i].frame_size   = 0;
+        video->audio_index[i].frame_offset = audio_offsets[i].offset + sizeof(mr_item_t);
+        video->audio_index[i].frame_number = i;
+        video->audio_index[i].frame_time   = audio_offsets[i].timestamp / 1000000;
+        video->audio_index[i].block_offset = audio_offsets[i].offset;
+    }
+
+    memcpy(&video->WAVI.blockType, "WAVI", 4);
+    video->WAVI.blockSize                 = sizeof(mlv_wavi_hdr_t);
+    video->WAVI.format                    = 1;    // 1=Integer PCM, 6=alaw, 7=mulaw
+    video->WAVI.bitsPerSample             = 16;
+    video->WAVI.channels                  = mr_get_audio_channels(ctx);
+    video->WAVI.samplingRate              = mr_get_audio_sample_rate(ctx);
+    video->WAVI.bytesPerSecond            = video->WAVI.samplingRate * video->WAVI.channels * (video->WAVI.bitsPerSample / 8);
+    video->WAVI.blockAlign                = video->WAVI.channels * (video->WAVI.bitsPerSample / 8);
+
+
+    memcpy(&video->RAWI.blockType, "RAWI", 4);
+    video->RAWI.blockSize                 = sizeof(mlv_rawi_hdr_t);
+    video->RAWI.xRes                      = mr_get_width(ctx);
+    video->RAWI.yRes                      = mr_get_height(ctx);
+    video->RAWI.raw_info.active_area.x1   = 0;
+    video->RAWI.raw_info.active_area.x2   = video->RAWI.xRes;
+    video->RAWI.raw_info.active_area.y1   = 0;
+    video->RAWI.raw_info.active_area.y2   = video->RAWI.yRes;
+
+    video->RAWI.raw_info.bits_per_pixel   = 16;   // mcraw_get_bits_per_pixel(dec);
+    video->RAWI.raw_info.black_level      = mr_get_black_level(ctx);
+    video->RAWI.raw_info.white_level      = mr_get_white_level(ctx);
+
+    video->RAWI.raw_info.exposure_bias[0] = 0;
+    video->RAWI.raw_info.exposure_bias[1] = 0;
+
+
+    double *matrix = mr_get_color_matrix1(ctx);
+    for (int i = 0; i < 9; i++)
+    {
+        video->camid.ColorMatrix1[i * 2]     = (int)(matrix[i] * 10000.);
+        video->camid.ColorMatrix1[i * 2 + 1] = 10000;
+    }
+    memcpy(video->RAWI.raw_info.color_matrix1, video->camid.ColorMatrix1, 18 * sizeof(int32_t));
+
+    matrix = mr_get_color_matrix2(ctx);
+    for (int i = 0; i < 9; i++)
+    {
+        video->camid.ColorMatrix2[i * 2]     = (int)(matrix[i] * 10000.);
+        video->camid.ColorMatrix2[i * 2 + 1] = 10000;
+    }
+
+    matrix = mr_get_forward_matrix1(ctx);
+    for (int i = 0; i < 9; i++)
+    {
+        video->camid.ForwardMatrix1[i * 2]     = (int)(matrix[i] * 10000.);
+        video->camid.ForwardMatrix1[i * 2 + 1] = 10000;
+    }
+
+    matrix = mr_get_forward_matrix2(ctx);
+    for (int i = 0; i < 9; i++)
+    {
+        video->camid.ForwardMatrix2[i * 2]     = (int)(matrix[i] * 10000.);
+        video->camid.ForwardMatrix2[i * 2 + 1] = 10000;
+    }
+
+    video->MLVI.blockSize        = sizeof(mlv_file_hdr_t);
+    video->MLVI.videoClass       = MLV_VIDEO_CLASS_FLAG_MCRAW;
+    video->MLVI.videoFrameCount  = video_index_max;    // number of video frames in this file. set to 0 on start, updated when finished.
+
+    mr_get_frame_rate(ctx, &video->MLVI.sourceFpsNom, &video->MLVI.sourceFpsDenom);
+    video->MLVI.audioClass       = 1;                  // 0=none, 1=WAV
+    video->MLVI.audioFrameCount  = 0;                  // number of audio frames in this file. set to 0 on start, updated when finished.
+
+    memcpy(&video->WBAL.blockType, "WBAL", 4);
+    video->WBAL.blockSize        = sizeof(mlv_wbal_hdr_t);
+    video->WBAL.wb_mode          = 6;     // CUSTOM
+    video->WBAL.timestamp        = 0;
+    video->WBAL.kelvin           = 0;
+
+    double *wb = mr_get_as_shot_neutral(ctx);
+    video->WBAL.wbgain_r         = wb[0] * 1024;
+    video->WBAL.wbgain_g         = wb[1] * 1024;
+    video->WBAL.wbgain_b         = wb[2] * 1024;
+
+    memcpy(&video->IDNT.blockType, "IDNT", 4);
+    video->IDNT.blockSize        = sizeof(mlv_idnt_hdr_t);
+    snprintf(video->IDNT.cameraName, 31, "%s %s", mr_get_manufacturer(ctx), mr_get_model(ctx));
+
+    memcpy(&video->LENS.blockType, "LENS", 4);
+    video->LENS.blockSize        = sizeof(mlv_lens_hdr_t);
+    video->LENS.focalLength      = mr_get_focal_length(ctx);       // in mm
+    video->LENS.aperture         = mr_get_aperture(ctx) * 100;     // f-number * 100
+
+    memcpy(&video->EXPO.blockType, "EXPO", 4);
+    video->EXPO.blockSize        = sizeof(mlv_lens_hdr_t);
+    video->EXPO.isoValue         = mr_get_iso(ctx);
+    video->EXPO.shutterValue     = mr_get_exposure_time(ctx) / 1000;
+
+    time_t t = mr_get_timestamp(ctx) / 1000;
+    struct tm tm = *localtime(&t);
+
+    memcpy(&video->RTCI.blockType, "RTCI", 4);
+    video->RTCI.blockSize        = sizeof(mlv_rtci_hdr_t);
+    video->RTCI.tm_year          = tm.tm_year;
+    video->RTCI.tm_mon           = tm.tm_mon;
+    video->RTCI.tm_mday          = tm.tm_mday;
+    video->RTCI.tm_hour          = tm.tm_hour;
+    video->RTCI.tm_sec           = tm.tm_sec;
+
+
+    /* Reads MLV audio into buffer (video->audio_data) and sync it,
+     * set full audio buffer size (video->audio_buffer_size) and
+     * aligned usable audio data size (video->audio_size) */
+    readMlvAudioData(video);
+
+    /* Save mapp file if this feature is on */
+    if (open_mode == MLV_OPEN_MAPP)  {
+       save_mapp(video);
+    }
+
+short_cut:
+
+    /* Set imaginary lossless bit depth */
+    setMlvLosslessBpp(video);
+
+    video->llrawproc->diso_validity = DISO_INVALID;
+
+
+    /* NON compressed frame size */
+    video->frame_size = (getMlvHeight(video) * getMlvWidth(video) * getMlvBitdepth(video)) / 8;
+
+    /* Calculate framerate */
+    video->frame_rate = getMlvFramerateOrig(video);
+
+    /* Make sure frame cache number is up to date by rerunniinitLLRawProcObjectng thiz */
+    setMlvRawCacheLimitMegaBytes(video, getMlvRawCacheLimitMegaBytes(video));
+
+    /* For frame cache */
+    video->rgb_raw_frames = (uint16_t **)malloc( sizeof(uint16_t *) * video->frames );
+    video->rgb_raw_current_frame = (uint16_t *)malloc( getMlvWidth(video) * getMlvHeight(video) * 3 * sizeof(uint16_t) );
+    video->cached_frames = (uint8_t *)calloc( sizeof(uint8_t), video->frames );
+
+    isMlvActive(video) = 5;
+
+    /* Start caching unless it was disabled already */
+    if (!video->stop_caching && (open_mode != MLV_OPEN_PREVIEW))
+    {
+        for (int i = 0; i < video->cpu_cores; ++i)
+        {
+            add_mlv_cache_thread(video);
+        }
+    }
+
+    return MLV_ERR_NONE;
 }
 
 /* Reads an MLV file in to a mlv object(mlvObject_t struct) 

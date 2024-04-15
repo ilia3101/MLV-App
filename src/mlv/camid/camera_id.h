@@ -53,4 +53,6 @@ int32_t camidGetFocalUnit(uint32_t cameraModel);
 /* Check if a camera is known my camera_id */
 int camidCheckIfCameraKnown(uint32_t cameraModel);
 
+camera_id_t* camidGet(uint32_t cameraModel);
+
 #endif
