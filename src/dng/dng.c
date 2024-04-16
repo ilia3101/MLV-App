@@ -592,6 +592,11 @@ static void dng_fill_header(mlvObject_t * mlv_data, dngObject_t * dng_data, uint
         int32_t wbal[6];
         get_white_balance(mlv_data->WBAL, wbal, mlv_data->IDNT.cameraModel);
 
+        uint32_t cfa_pattern = mlv_data->RAWI.raw_info.cfa_pattern;
+        if (cfa_pattern == 0) {
+            cfa_pattern = 0x02010100;   // RGGB
+        }
+
         /* tcReelName */
         #ifdef _WIN32
         char * reel_name = strrchr(mlv_data->path, '\\');
@@ -623,7 +628,7 @@ static void dng_fill_header(mlvObject_t * mlv_data, dngObject_t * dng_data, uint
             {tcSoftware,                    ttAscii,    STRING_ENTRY(SOFTWARE_NAME, header, &data_offset)},
             {tcDateTime,                    ttAscii,    STRING_ENTRY(format_datetime(datetime, mlv_data), header, &data_offset)},
             {tcCFARepeatPatternDim,         ttShort,    2,      0x00020002}, //2x2
-            {tcCFAPattern,                  ttByte,     4,      0x02010100}, //RGGB
+            {tcCFAPattern,                  ttByte,     4,      cfa_pattern},
             {tcExifIFD,                     ttLong,     1,      exif_ifd_offset},
             {tcDNGVersion,                  ttByte,     4,      0x00000401}, //1.4.0.0 in little endian
             {tcUniqueCameraModel,           ttAscii,    STRING_ENTRY(unique_model, header, &data_offset)},

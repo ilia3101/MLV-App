@@ -248,6 +248,55 @@ int getMlvRawFrameUint16(mlvObject_t * video, uint64_t frameIndex, uint16_t * un
             free(raw_frame);
             return 1;
         }
+
+        if (video->RAWI.raw_info.cfa_pattern == 0x01000201)   // gbrg
+        {
+            // gb  ->  rg
+            // rg      gb
+
+            // discard first row
+            memmove(unpackedFrame, &unpackedFrame[width], width * (height - 1) * 2);
+
+            // copy row n-2 to row n
+            memcpy(&unpackedFrame[width * (height - 1)], &unpackedFrame[width * (height - 3)], width * 2);
+        }
+        else if (video->RAWI.raw_info.cfa_pattern == 0x00010102)   // bggr
+        {
+            // bg  ->  rg
+            // gr      gb
+
+            // !!untested!!
+
+            // discard first row, discard first col
+            memmove(unpackedFrame, &unpackedFrame[width + 1], (width * (height - 1) * 2) - 2);
+
+            // copy row n-2 to row n
+            memcpy(&unpackedFrame[width * (height - 1)], &unpackedFrame[width * (height - 3)], width * 2);
+
+            // copy col n-2 to col n
+            for (int i = 0; i < height; i++)
+            {
+                int pos = ((i + 1) * width) - 1;
+                unpackedFrame[pos] = unpackedFrame[pos - 2];
+            }
+        }
+        else if (video->RAWI.raw_info.cfa_pattern == 0x01020001)   // grbg
+        {
+            // gr  ->  rg
+            // bg      gb
+
+            // !!untested!!
+
+            // discard first col
+            memmove(unpackedFrame, &unpackedFrame[1], (width * height * 2) - 2);
+
+            // copy col n-2 to col n
+            for (int i = 0; i < height; i++)
+            {
+                int pos = ((i + 1) * width) - 1;
+                unpackedFrame[pos] = unpackedFrame[pos - 2];
+            }
+        }
     }
     else
     {
@@ -1621,10 +1670,10 @@ int openMcrawClip(mlvObject_t * video, char * mcrawPath, int open_mode, char * e
     video->RAWI.raw_info.active_area.y1   = 0;
     video->RAWI.raw_info.active_area.y2   = video->RAWI.yRes;
 
-    video->RAWI.raw_info.bits_per_pixel   = 16;   // mcraw_get_bits_per_pixel(dec);
+    video->RAWI.raw_info.bits_per_pixel   = mr_get_bits_per_pixel(ctx);
     video->RAWI.raw_info.black_level      = mr_get_black_level(ctx);
     video->RAWI.raw_info.white_level      = mr_get_white_level(ctx);
-
+    video->RAWI.raw_info.cfa_pattern      = mr_get_cfa_pattern(ctx);
     video->RAWI.raw_info.exposure_bias[0] = 0;
     video->RAWI.raw_info.exposure_bias[1] = 0;
 

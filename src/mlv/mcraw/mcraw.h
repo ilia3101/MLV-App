@@ -170,6 +170,7 @@ double* mr_get_as_shot_neutral(mr_ctx_t *ctx);
 int64_t mr_get_timestamp(mr_ctx_t *ctx);
 const char* mr_get_manufacturer(mr_ctx_t *ctx);
 const char* mr_get_model(mr_ctx_t *ctx);
+uint32_t mr_get_cfa_pattern(mr_ctx_t *ctx);
 
 int32_t mr_get_audio_sample_rate(mr_ctx_t *ctx);
 int32_t mr_get_audio_channels(mr_ctx_t *ctx);

@@ -55,7 +55,7 @@ struct mr_ctx_s
     int16_t               white_level;
     int16_t               black_level;
 
-    char                  sensor_arrangment[5];
+    uint32_t              cfa_pattern;   // color filter array
 
     double                aperture;
     double                focal_length;
@@ -157,6 +157,24 @@ void cpy_string(char *dst, int max_len, const char *js, jsmntok_t *tok)
 {
     int tok_len = tok->end - tok->start;
     strncpy(dst, js + tok->start, tok_len < max_len ? tok_len : max_len);
+}
+
+// Color filter array (CFA) geometric pattern
+// Red   = 0
+// Green = 1
+// Blue  = 2
+//    rggb -> 0x02010100
+//    gbrg -> 0x01000201
+//-----------------------------------------------------------------------------
+void parse_sensor_arrangment(uint32_t *cfa_pattern, const char *js, jsmntok_t *tok)
+{
+    const char *p =  js + tok->start;
+
+    for (int i = 0; i < 4; i++, p++)
+    {
+        uint32_t n = *p == 'g' ? 1 : *p == 'b' ? 2 : 0;
+        *cfa_pattern |= (n << (i * 8));
+    }
 }
 
 // Copy int and double values
@@ -320,7 +338,7 @@ static int mr_read_file_metadata(mr_ctx_t *ctx)
                         cpy_string(ctx->color_illuminant2, MR_MAX_STRING, js, &tokens[++i]);
                     }
                     else if (STRING_EQ(js, t, len, "sensorArrangment") == 0) {
-                        cpy_string(ctx->sensor_arrangment, 4, js, &tokens[++i]);
+                        parse_sensor_arrangment(&ctx->cfa_pattern, js, &tokens[++i]);
                     }
                     break;
 
@@ -991,6 +1009,12 @@ int32_t mr_get_audio_sample_rate(mr_ctx_t *ctx)
 int32_t mr_get_audio_channels(mr_ctx_t *ctx)
 {
     return ctx->audio_channels;
+}
+
+//-----------------------------------------------------------------------------
+uint32_t mr_get_cfa_pattern(mr_ctx_t *ctx)
+{
+    return ctx->cfa_pattern;
 }
 
 //-----------------------------------------------------------------------------
