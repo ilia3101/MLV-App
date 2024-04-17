@@ -786,7 +786,7 @@ int mr_read_frame_metadata(FILE *fd, mr_frame_data_t *frame_data)
                             char buf[6] = "";
                             cpy_string(buf, 5, js, &tokens[++i]);
                             if (strncmp(buf, "raw16", 5) == 0) {
-                                frame_data->bits_per_pixel = 16;
+                                frame_data->stored_pixel_format = 16;
                             }
                         }
                         break;
@@ -902,9 +902,15 @@ int32_t mr_get_height(mr_ctx_t *ctx)
 }
 
 //-----------------------------------------------------------------------------
+int32_t mr_get_stored_format(mr_ctx_t *ctx)
+{
+    return ctx->frame_data.stored_pixel_format;
+}
+
+//-----------------------------------------------------------------------------
 int32_t mr_get_bits_per_pixel(mr_ctx_t *ctx)
 {
-    return ctx->frame_data.bits_per_pixel;
+    return 10;
 }
 
 //-----------------------------------------------------------------------------

@@ -115,7 +115,7 @@ typedef struct
     int        height;
     int        original_width;
     int        original_height;
-    int        bits_per_pixel;
+    int        stored_pixel_format;
 
     int        iso;
     int64_t    exposure_time;
@@ -155,6 +155,7 @@ mr_buffer_offset_t* mr_get_audio_index(mr_ctx_t *ctx);
 int32_t mr_get_width(mr_ctx_t *ctx);
 int32_t mr_get_height(mr_ctx_t *ctx);
 int32_t mr_get_bits_per_pixel(mr_ctx_t *ctx);
+int32_t mr_get_stored_format(mr_ctx_t *ctx);
 int16_t mr_get_black_level(mr_ctx_t *ctx);
 int16_t mr_get_white_level(mr_ctx_t *ctx);
 double* mr_get_color_matrix1(mr_ctx_t *ctx);
