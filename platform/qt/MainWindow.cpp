@@ -76,7 +76,7 @@ extern const char* camidGetCameraName(uint32_t cameraModel, int camname_type);
 }
 #endif
 
-#define APPNAME "MLV App"
+#define APPNAME "MLV-MCRAW App"
 #define VERSION QString("%1.%2").arg(VERSION_MAJOR).arg(VERSION_MINOR)
 #define GITVERSION QString("QTv%1.%2").arg(VERSION_MAJOR).arg(VERSION_MINOR)
 
@@ -862,7 +862,7 @@ int MainWindow::openMlv( QString fileName )
     }
 
     //Set window title to filename
-    this->setWindowTitle( QString( "MLV App | %1" ).arg( fileName ) );
+    this->setWindowTitle( QString( "MLV-MCRAW App | %1" ).arg( fileName ) );
 
     m_fileLoaded = false;
 
@@ -4322,7 +4322,7 @@ void MainWindow::deleteSession()
     m_pModel->clear();
 
     //Set window title to filename
-    this->setWindowTitle( QString( "MLV App" ) );
+    this->setWindowTitle( QString( "MLV-MCRAW App" ) );
 
     //disable drawing and kill old timer and old WaveFormMonitor
     m_fileLoaded = false;
@@ -5737,6 +5737,9 @@ void MainWindow::on_actionAbout_triggered()
                                     " <p>%2 v%3</p>"
                                     " <p>%4</p>"
                                     " <p>See <a href='%5'>this site</a> for more information.</p>"
+                                    " <p>-</p>"
+                                    " <p>This is a test version to try out mcraw support</p>"
+                                    " <p>-</p>"
                                     " <p>Darkstyle Copyright (c) 2017, <a href='%6'>Juergen Skrotzky</a> under MIT</p>"
                                     " <p>Some icons by <a href='%7'>Double-J Design</a> under <a href='%8'>CC4.0</a></p>"
                                     " <p>Zhang-Wu LMMSE Image Demosaicking by Pascal Getreuer under <a href='%9'>BSD</a>.</p>"
