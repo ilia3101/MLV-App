@@ -20,34 +20,111 @@
 #include <cstdint>
 #include <vector>
 #include <cstring>
+#include <immintrin.h>
 
 namespace motioncam {
     namespace raw {
-    
+
     namespace {
     const int ENCODING_BLOCK = 64;
     const int HEADER_LENGTH = 2;
     const int METADATA_OFFSET = 16;
-    
-    constexpr int ENCODING_BLOCK_LENGTH[] = {
-        0,
-        8,
-        16,
-        24,
-        32,
-        40,
-        48,
-        64,
-        64,
-        80,
-        80,
-        128,
-        128,
-        128,
-        128,
-        128,
-        128
-    };
+
+        constexpr int ENCODING_BLOCK_LENGTH[] = {
+                0,
+                8,
+                16,
+                24,
+                32,
+                40,
+                48,
+                64,
+                64,
+                80,
+                80,
+                128,
+                128,
+                128,
+                128,
+                128,
+                128
+        };
+
+// Original push request
+// https://github.com/mirsadm/motioncam-decoder/commit/15fd711525e0701205b3805b4777c63b6184782d?diff=split&w=0
+// Code from hanatos
+
+#if 1
+            struct UInt16x8
+            {
+                __m128i d;
+                UInt16x8(
+                        const uint16_t p0,
+                        const uint16_t p1,
+                        const uint16_t p2,
+                        const uint16_t p3,
+                        const uint16_t p4,
+                        const uint16_t p5,
+                        const uint16_t p6,
+                        const uint16_t p7)
+                {
+                    d = _mm_set_epi16(p7, p6, p5, p4, p3, p2, p1, p0);
+                }
+
+                UInt16x8(const __m128i other)
+                {
+                    d = other;
+                }
+
+                UInt16x8(const UInt16x8& src)
+                {
+                    d = src.d;
+                }
+
+                UInt16x8(const uint16_t val)
+                {
+                    d = _mm_set1_epi16(val);
+                }
+
+                inline
+                UInt16x8 operator&(const UInt16x8& rhs) const {
+                    return UInt16x8(_mm_and_si128(d, rhs.d));
+                }
+
+                inline
+                UInt16x8 operator|(const UInt16x8& rhs) const {
+                    return UInt16x8(_mm_or_si128(d, rhs.d));
+                }
+
+                inline
+                UInt16x8 operator<<(const int n) const {
+                    return UInt16x8(_mm_slli_epi16(d, n));
+                }
+
+                inline
+                UInt16x8 operator>>(const int n) const {
+                    return UInt16x8(_mm_srli_epi16(d, n));
+                }
+            };
+            inline
+            UInt16x8 Load(const uint8_t* src) {
+                // return UInt16x8(_mm_loadu_si128((__m128i *)src)); // this would be wrong, we expand 8 bit to 16 here
+                return UInt16x8(
+                        src[0],
+                        src[1],
+                        src[2],
+                        src[3],
+                        src[4],
+                        src[5],
+                        src[6],
+                        src[7]);
+            }
+
+            inline
+            void Store(uint16_t* dst, const UInt16x8& src) {
+                _mm_storeu_si128((__m128i *)dst, src.d);
+            }
+#else
 
     struct UInt16x8 {
         const uint16_t d[8];
@@ -146,6 +223,7 @@ namespace motioncam {
             dst[i] = src.d[i];
     }
 
+#endif
 
     inline
     void DecodeHeader(uint8_t& bits, uint16_t& reference, const uint8_t* input) {

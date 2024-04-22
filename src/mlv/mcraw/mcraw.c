@@ -910,7 +910,7 @@ int32_t mr_get_stored_format(mr_ctx_t *ctx)
 //-----------------------------------------------------------------------------
 int32_t mr_get_bits_per_pixel(mr_ctx_t *ctx)
 {
-    return 10;
+    return ctx->white_level <= 0x3FF ? 10 : ctx->white_level <= 0xFFF ? 12 : 14;
 }
 
 //-----------------------------------------------------------------------------
