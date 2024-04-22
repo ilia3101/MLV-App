@@ -396,7 +396,7 @@ DISTFILES += \
 #Application version
 VERSION_MAJOR = 1
 VERSION_MINOR = 15
-VERSION_PATCH = 1
+VERSION_PATCH = 2
 VERSION_BUILD = 1
 
 #Target version

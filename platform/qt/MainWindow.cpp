@@ -77,7 +77,7 @@ extern const char* camidGetCameraName(uint32_t cameraModel, int camname_type);
 #endif
 
 #define APPNAME "MLV-MCRAW App"
-#define VERSION QString("%1.%2").arg(VERSION_MAJOR).arg(VERSION_MINOR)
+#define VERSION QString("%1.%2.%3").arg(VERSION_MAJOR).arg(VERSION_MINOR).arg(VERSION_PATCH)
 #define GITVERSION QString("QTv%1.%2").arg(VERSION_MAJOR).arg(VERSION_MINOR)
 
 #define FACTOR_DS       22.5
