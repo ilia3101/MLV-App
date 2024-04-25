@@ -483,6 +483,31 @@ static int mr_read_audio_offset(mr_ctx_t *ctx)
 }
 
 //-----------------------------------------------------------------------------
+static void sort_offsets(mr_buffer_offset_t *offsets, uint32_t nb_offsets)
+{
+    uint32_t n = nb_offsets;
+
+    do
+    {
+        uint32_t new_n = 1;
+
+        for (uint32_t i = 0; i < n-1; ++i)
+        {
+            if (offsets[i].timestamp > offsets[i+1].timestamp)
+            {
+                mr_buffer_offset_t tmp = offsets[i+1];
+                offsets[i+1] = offsets[i];
+                offsets[i] = tmp;
+                new_n = i + 1;
+            }
+        }
+
+        n = new_n;
+
+    } while (n > 1);
+}
+
+//-----------------------------------------------------------------------------
 static int mr_read_index(mr_ctx_t *ctx)
 {
     uint64_t fread_err = 1;
@@ -523,7 +548,7 @@ static int mr_read_index(mr_ctx_t *ctx)
         return mr_set_error(ctx, kMrErrorRead, "File read error");
     }
 
-    qsort(ctx->offsets, index.numOffsets, sizeof(mr_buffer_offset_t), sort_index);
+    sort_offsets(ctx->offsets, index.numOffsets);
 
     if (ctx->verbose)
     {

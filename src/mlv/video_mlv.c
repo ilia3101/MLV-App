@@ -1751,6 +1751,14 @@ int openMcrawClip(mlvObject_t * video, char * mcrawPath, int open_mode, char * e
     video->RTCI.tm_hour          = tm.tm_hour;
     video->RTCI.tm_sec           = tm.tm_sec;
 
+    /* Sort video and audio frames by time stamp */
+    if (video->frames) {
+        frame_index_sort(video->video_index, video->frames);
+    }
+
+    if (video->audios) {
+        frame_index_sort(video->audio_index, video->audios);
+    }
 
     /* Reads MLV audio into buffer (video->audio_data) and sync it,
      * set full audio buffer size (video->audio_buffer_size) and
