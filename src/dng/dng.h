@@ -45,6 +45,7 @@ typedef struct
 
     uint8_t * header_buf;           // pointer to header buffer
     uint16_t * image_buf;           // pointer to image buffer
+    uint16_t * image_buf2;          // pointer to image buffer for temporary decompression
     uint16_t * image_buf_unpacked;  // pointer to bit packed image buffer
 
 } dngObject_t;
