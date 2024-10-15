@@ -9234,33 +9234,36 @@ void MainWindow::drawFrameReady()
 
     //Add zebras on the image
     uint8_t underOver = drawZebras();
-    //Bring over/under to histogram
-    bool under = false;
-    bool over = false;
-    if( ( underOver & 0x01 ) == 0x01 ) under = true;
-    if( ( underOver & 0x02 ) == 0x02 ) over = true;
+    
+	if( ui->actionShowEditArea->isChecked() )
+	{	
+		//Bring over/under to histogram
+		bool under = false;
+		bool over = false;
+		if( ( underOver & 0x01 ) == 0x01 ) under = true;
+		if( ( underOver & 0x02 ) == 0x02 ) over = true;
 
-    //GetHistogram
-    if( ui->actionShowHistogram->isChecked() )
-    {
-        ui->labelScope->setScope( m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), under, over, ScopesLabel::ScopeHistogram );
-    }
-    //Waveform
-    else if( ui->actionShowWaveFormMonitor->isChecked() )
-    {
-        ui->labelScope->setScope( m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), under, over, ScopesLabel::ScopeWaveForm );
-    }
-    //Parade
-    else if( ui->actionShowParade->isChecked() )
-    {
-        ui->labelScope->setScope( m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), under, over, ScopesLabel::ScopeRgbParade);
-    }
-    //VectorScope
-    else if( ui->actionShowVectorScope->isChecked() )
-    {
-        ui->labelScope->setScope( m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), under, over, ScopesLabel::ScopeVectorScope );
-    }
-
+		//GetHistogram
+		if( ui->actionShowHistogram->isChecked() )
+		{
+			ui->labelScope->setScope( m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), under, over, ScopesLabel::ScopeHistogram );
+		}
+		//Waveform
+		else if( ui->actionShowWaveFormMonitor->isChecked() )
+		{
+			ui->labelScope->setScope( m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), under, over, ScopesLabel::ScopeWaveForm );
+		}
+		//Parade
+		else if( ui->actionShowParade->isChecked() )
+		{
+			ui->labelScope->setScope( m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), under, over, ScopesLabel::ScopeRgbParade);
+		}
+		//VectorScope
+		else if( ui->actionShowVectorScope->isChecked() )
+		{
+			ui->labelScope->setScope( m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), under, over, ScopesLabel::ScopeVectorScope );
+		}
+	}
     //Drawing ready, next frame can be rendered
     m_frameStillDrawing = false;
 
