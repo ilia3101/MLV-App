@@ -452,8 +452,60 @@ static size_t dng_get_image_size(mlvObject_t * mlv_data, int size_mode, uint64_t
     }
 }
 
+int loadDngPropertiesString(char *props_buffer, char *key, char *value, int max_size)
+{
+    if (props_buffer == NULL) {
+        return -1;
+    }
+
+    char *p = strstr(props_buffer, key);
+    char *d = value;
+
+    int len = 0;
+
+    if (p != NULL)
+    {
+        p += strlen(key) + 2;
+
+        while (*p != 0 && *p != '\n' && *p != '\r' && len < max_size - 1)
+        {
+            *d++ = *p++;
+            len++;
+        }
+    }
+
+    *d = 0;
+
+    return len;
+}
+
+int loadDngPropertiesInt(char *props_buffer, char *key, int *value)
+{
+    if (props_buffer == NULL) {
+        return -1;
+    }
+
+    int res = 0;
+
+    char *p = strstr(props_buffer, key);
+    char *d = value;
+
+    int len = 0;
+
+    if (p != NULL)
+    {
+        p += strlen(key) + 2;
+
+        res = atoi(p);
+    }
+
+    *value = res;
+
+    return res;
+}
+
 /* generates the CDNG header. The result is written into dng_data struct */
-static void dng_fill_header(mlvObject_t * mlv_data, dngObject_t * dng_data, uint32_t frame_index)
+static void dng_fill_header(mlvObject_t * mlv_data, dngObject_t * dng_data, uint32_t frame_index, const char *props_filename)
 {
     uint8_t * header = dng_data->header_buf;
     size_t position = 0;
@@ -473,6 +525,24 @@ static void dng_fill_header(mlvObject_t * mlv_data, dngObject_t * dng_data, uint
             camid = &mlv_data->camid;
         }
 
+        char *props_buffer = NULL;
+
+        if (props_filename != NULL)
+        {
+            FILE *fd = fopen(props_filename, "rb");
+
+            if (fd != NULL)
+            {
+                fseek(fd, 0, SEEK_END);
+                long file_size = ftell(fd);
+                fseek(fd, 0, SEEK_SET);
+
+                props_buffer = (char*)malloc(file_size + 1);
+                fread(props_buffer, file_size, 1, fd);
+                fclose(fd);
+            }
+        }
+
         /* 'Make' Tag */
         char make[33] = { 0 };
         memcpy(make, mlv_data->IDNT.cameraName, 32);
@@ -489,6 +559,18 @@ static void dng_fill_header(mlvObject_t * mlv_data, dngObject_t * dng_data, uint
         
         /* 'Unique Camera Model' Tag */
         char * unique_model = camid->cameraName[UNIQ];
+
+        char unique_model2[64] = "";
+        if (loadDngPropertiesString(props_buffer, "UniqueCameraModel", unique_model2, 64) > 0) {
+            unique_model = unique_model2;
+        }
+
+        int black_level = mlv_data->llrawproc->dng_black_level;
+        loadDngPropertiesInt(props_buffer, "BlackLevel", &black_level);
+
+        int white_level = mlv_data->llrawproc->dng_white_level;
+        loadDngPropertiesInt(props_buffer, "WhiteLevel", &white_level);
+
 
         /* Focal resolution stuff */
         int32_t * focal_resolution_x = camid->focal_resolution_x;
@@ -607,6 +689,7 @@ static void dng_fill_header(mlvObject_t * mlv_data, dngObject_t * dng_data, uint
         char * ext_dot = strrchr(reel_name, '.');
         if(ext_dot) *ext_dot = '\000';
 
+
         /* Fill up IFD structs */
         struct directory_entry IFD0[IFD0_COUNT] =
         {
@@ -632,8 +715,8 @@ static void dng_fill_header(mlvObject_t * mlv_data, dngObject_t * dng_data, uint
             {tcExifIFD,                     ttLong,     1,      exif_ifd_offset},
             {tcDNGVersion,                  ttByte,     4,      0x00000401}, //1.4.0.0 in little endian
             {tcUniqueCameraModel,           ttAscii,    STRING_ENTRY(unique_model, header, &data_offset)},
-            {tcBlackLevel,                  ttLong,     1,      mlv_data->llrawproc->dng_black_level},
-            {tcWhiteLevel,                  ttLong,     1,      mlv_data->llrawproc->dng_white_level},
+            {tcBlackLevel,                  ttLong,     1,      black_level},
+            {tcWhiteLevel,                  ttLong,     1,      white_level},
             {tcDefaultScale,                ttRational, RATIONAL_ENTRY(par, header, &data_offset, 4)},
             {tcDefaultCropOrigin,           ttShort,    2,      PACK(mlv_data->RAWI.raw_info.crop.origin)},
             {tcDefaultCropSize,             ttShort,    2,      PACK2((mlv_data->RAWI.raw_info.active_area.x2 - mlv_data->RAWI.raw_info.active_area.x1), (mlv_data->RAWI.raw_info.active_area.y2 - mlv_data->RAWI.raw_info.active_area.y1))},
@@ -677,6 +760,10 @@ static void dng_fill_header(mlvObject_t * mlv_data, dngObject_t * dng_data, uint
         
         /* set real header size */
         dng_data->header_size = data_offset;
+
+        if (props_buffer != NULL) {
+            free(props_buffer);
+        }
     }
 }
 
@@ -823,7 +910,7 @@ static void dng_reverse_byte_order(uint16_t * input_buffer, size_t buf_size)
 }
 
 /* build whole DNG frame (header + image), process image if needed and put to the dng struct ready to save */
-static int dng_get_frame(mlvObject_t * mlv_data, dngObject_t * dng_data, uint32_t frame_index)
+static int dng_get_frame(mlvObject_t * mlv_data, dngObject_t * dng_data, uint32_t frame_index, const char *prop_filename)
 {
     int ret = 0;
 
@@ -1010,7 +1097,7 @@ static int dng_get_frame(mlvObject_t * mlv_data, dngObject_t * dng_data, uint32_
         }
     }
 
-    dng_fill_header(mlv_data, dng_data, frame_index);
+    dng_fill_header(mlv_data, dng_data, frame_index, prop_filename);
     return ret;
 }
 
@@ -1039,7 +1126,7 @@ dngObject_t * initDngObject(mlvObject_t * mlv_data, int raw_state, double fps, i
 }
 
 /* save DNG file */
-int saveDngFrame(mlvObject_t * mlv_data, dngObject_t * dng_data, uint32_t frame_index, char * dng_filename)
+int saveDngFrame(mlvObject_t * mlv_data, dngObject_t * dng_data, uint32_t frame_index, char * dng_filename, const char *prop_filename)
 {
     FILE* dngf = fopen(dng_filename, "wb");
     if (!dngf)
@@ -1048,7 +1135,7 @@ int saveDngFrame(mlvObject_t * mlv_data, dngObject_t * dng_data, uint32_t frame_
     }
 
     /* get filled dng_data struct */
-    if(dng_get_frame(mlv_data, dng_data, frame_index) != 0)
+    if(dng_get_frame(mlv_data, dng_data, frame_index, prop_filename) != 0)
     {
         fclose(dngf);
         return 1;
