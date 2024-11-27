@@ -120,7 +120,12 @@ win32{
 
 # Linux
 linux-g++*{
-    QMAKE_CFLAGS += -O3 -fopenmp -msse4.1 -mssse3 -msse3 -msse2 -msse -std=c99 -ftree-vectorize
+    gcc {
+        QMAKE_CFLAGS += -std=gnu99
+    } else {
+        QMAKE_CFLAGS += -std=c99
+    }
+    QMAKE_CFLAGS += -O3 -fopenmp -msse4.1 -mssse3 -msse3 -msse2 -msse -ftree-vectorize
     QMAKE_CXXFLAGS += -fopenmp -std=c++11 -ftree-vectorize
     LIBS += -lgomp
 }
