@@ -399,3 +399,9 @@ int32_t camidGetFocalUnit(uint32_t cameraModel)
 {
     return camera_id[camera_id_get_current_cam(cameraModel)].focal_unit;
 }
+
+camera_id_t* camidGet(uint32_t cameraModel)
+{
+    return &camera_id[camera_id_get_current_cam(cameraModel)];
+}
+

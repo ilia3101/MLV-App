@@ -45,6 +45,7 @@ typedef struct
 
     uint8_t * header_buf;           // pointer to header buffer
     uint16_t * image_buf;           // pointer to image buffer
+    uint16_t * image_buf2;          // pointer to image buffer for temporary decompression
     uint16_t * image_buf_unpacked;  // pointer to bit packed image buffer
 
 } dngObject_t;
@@ -57,7 +58,7 @@ int dng_decompress_image(uint16_t * output_buffer, uint16_t * input_buffer, size
 
 /* routines to initialize, save and free DNG exporting struct */
 dngObject_t * initDngObject(mlvObject_t * mlv_data, int raw_state, double fps, int32_t par[4]);
-int saveDngFrame(mlvObject_t * mlv_data, dngObject_t * dng_data, uint32_t frame_index, char * dng_filename);
+int saveDngFrame(mlvObject_t * mlv_data, dngObject_t * dng_data, uint32_t frame_index, char * dng_filename, const char *props_filename);
 void freeDngObject(dngObject_t * dng_data);
 
 #endif

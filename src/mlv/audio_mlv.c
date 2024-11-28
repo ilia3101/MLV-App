@@ -9,6 +9,8 @@
 #include "audio_mlv.h"
 #include "video_mlv.h"
 
+#include "mcraw/mcraw.h"
+
 /* Usefull macros */
 #include "macros.h"
 
@@ -218,9 +220,11 @@ void readMlvAudioData(mlvObject_t * video)
 
     int fread_err = 1;
     uint64_t mlv_audio_buffer_offset = 0;
-    uint64_t mlv_audio_size = initMlvAudioSize(video);
-    uint8_t * mlv_audio_buffer = malloc(mlv_audio_size);
-    if(!mlv_audio_buffer)
+    uint64_t allocated_size = initMlvAudioSize(video);
+    uint8_t * mlv_audio_buffer = allocated_size ? malloc(allocated_size) : NULL;
+    uint64_t mlv_audio_size = allocated_size;
+
+    if (mlv_audio_size && !mlv_audio_buffer)
     {
 #ifndef STDOUT_SILENT
     printf("Audio frame buffer allocation error");
@@ -228,16 +232,65 @@ void readMlvAudioData(mlvObject_t * video)
         return;
     }
 
-    for (uint32_t i = 0; i < video->audios; ++i)
+    if (isMcrawLoaded(video))
     {
-        pthread_mutex_lock(video->main_file_mutex + video->audio_index[i].chunk_num);
-        /* Go to audio block position */
-        file_set_pos(video->file[video->audio_index[i].chunk_num], video->audio_index[i].frame_offset, SEEK_SET);
-        /* Read to location of audio */
-        fread_err &= fread(mlv_audio_buffer + mlv_audio_buffer_offset, video->audio_index[i].frame_size, 1, video->file[video->audio_index[i].chunk_num]);
-        pthread_mutex_unlock(video->main_file_mutex + video->audio_index[i].chunk_num);
-        /* New audio position */
-        mlv_audio_buffer_offset += video->audio_index[i].frame_size;
+        mr_item_t hdr_item = {};
+
+        mlv_audio_size = 0;
+
+        for (uint32_t i = 0; i < video->audios; ++i)
+        {
+            pthread_mutex_lock(video->main_file_mutex + video->audio_index[i].chunk_num);
+
+            /* Go to audio block position */
+            file_set_pos(video->file[0], video->audio_index[i].block_offset, SEEK_SET);
+
+            /* Read data header */
+            fread_err &= fread(&hdr_item, sizeof(mr_item_t), 1, video->file[0]);
+
+            if (mlv_audio_size + hdr_item.size > allocated_size)
+            {
+                allocated_size = mlv_audio_size + hdr_item.size + (video->audios - i) * hdr_item.size;
+                mlv_audio_buffer = realloc(mlv_audio_buffer, allocated_size);
+            }
+
+            /* Read to location of audio */
+            fread_err &= fread(mlv_audio_buffer + mlv_audio_size, hdr_item.size, 1, video->file[0]);
+
+            if (i == 0)
+            {
+                mr_audio_metadata_t metadata = {};
+                if (fread(&metadata, sizeof(mr_audio_metadata_t), 1, video->file[0]) == 1)
+                {
+                    if (metadata.item.type == AUDIO_DATA_METADATA) {
+                        video->audio_index[i].frame_time = metadata.timestampNs / 1000000;
+                    }
+                }
+            }
+
+            pthread_mutex_unlock(video->main_file_mutex + video->audio_index[i].chunk_num);
+
+            /* New audio position */
+            mlv_audio_size += hdr_item.size;
+        }
+
+        if (video->audio_index[0].frame_time == 0) {
+            video->audio_index[0].frame_time = video->video_index[0].frame_time;
+        }
+    }
+    else
+    {
+        for (uint32_t i = 0; i < video->audios; ++i)
+        {
+            pthread_mutex_lock(video->main_file_mutex + video->audio_index[i].chunk_num);
+            /* Go to audio block position */
+            file_set_pos(video->file[video->audio_index[i].chunk_num], video->audio_index[i].frame_offset, SEEK_SET);
+            /* Read to location of audio */
+            fread_err &= fread(mlv_audio_buffer + mlv_audio_buffer_offset, video->audio_index[i].frame_size, 1, video->file[video->audio_index[i].chunk_num]);
+            pthread_mutex_unlock(video->main_file_mutex + video->audio_index[i].chunk_num);
+            /* New audio position */
+            mlv_audio_buffer_offset += video->audio_index[i].frame_size;
+        }
     }
 
     if(!fread_err)
