@@ -107,5 +107,6 @@
 /* This is pretty much private */
 #define doesMlvAlwaysUseAmaze(video) (video)->use_amaze
 #define getMlvVideoClass(video) (video)->MLVI.videoClass
+#define isMcrawLoaded(video) (video)->MLVI.videoClass & MLV_VIDEO_CLASS_FLAG_MCRAW ? 1 : 0
 
 #endif

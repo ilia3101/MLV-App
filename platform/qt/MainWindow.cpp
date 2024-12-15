@@ -29,6 +29,8 @@
 #include <QColorDialog>
 #include <unistd.h>
 #include <math.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #ifdef Q_OS_MACX
 #include "AvfLibWrapper.h"
@@ -74,8 +76,8 @@ extern const char* camidGetCameraName(uint32_t cameraModel, int camname_type);
 }
 #endif
 
-#define APPNAME "MLV App"
-#define VERSION QString("%1.%2").arg(VERSION_MAJOR).arg(VERSION_MINOR)
+#define APPNAME "MLV-MCRAW App"
+#define VERSION QString("%1.%2.%3").arg(VERSION_MAJOR).arg(VERSION_MINOR).arg(VERSION_PATCH)
 #define GITVERSION QString("QTv%1.%2").arg(VERSION_MAJOR).arg(VERSION_MINOR)
 
 #define FACTOR_DS       22.5
@@ -416,6 +418,7 @@ void MainWindow::dropEvent(QDropEvent *event)
     if( event->mimeData()->urls().size() > 0 )
     {
         if( event->mimeData()->urls().at(0).path().endsWith( ".MLV", Qt::CaseInsensitive )
+         || event->mimeData()->urls().at(0).path().endsWith( ".MCRAW", Qt::CaseInsensitive )
          || event->mimeData()->urls().at(0).path().endsWith( ".FPM", Qt::CaseInsensitive )
          || event->mimeData()->urls().at(0).path().endsWith( ".COMMAND", Qt::CaseInsensitive ) )
         {
@@ -477,7 +480,7 @@ void MainWindow::openMlvSet( QStringList list )
         else
         {
             //Exit if not an MLV file or aborted
-            if( fileName == QString( "" ) || !fileName.endsWith( ".mlv", Qt::CaseInsensitive ) ) continue;
+            if( fileName == QString( "" ) && !(fileName.endsWith( ".mlv", Qt::CaseInsensitive ) || fileName.endsWith( ".mcraw", Qt::CaseInsensitive )) ) continue;
             importNewMlv( fileName );
         }
     }
@@ -661,11 +664,28 @@ int MainWindow::openMlvForPreview(QString fileName)
 {
     int mlvErr = MLV_ERR_NONE;
     char mlvErrMsg[256] = { 0 };
+
+    mlvObject_t * new_MlvObject;
+
+    if (fileName.endsWith( ".mcraw", Qt::CaseInsensitive))
+    {
 #ifdef Q_OS_UNIX
-    mlvObject_t * new_MlvObject = initMlvObjectWithClip( fileName.toUtf8().data(), MLV_OPEN_PREVIEW, &mlvErr, mlvErrMsg );
+        new_MlvObject = initMlvObjectWithMcrawClip( fileName.toUtf8().data(), MLV_OPEN_PREVIEW, &mlvErr, mlvErrMsg );
 #else
-    mlvObject_t * new_MlvObject = initMlvObjectWithClip( fileName.toLatin1().data(), MLV_OPEN_PREVIEW, &mlvErr, mlvErrMsg );
+        new_MlvObject = initMlvObjectWithMcrawClip( fileName.toLatin1().data(), MLV_OPEN_PREVIEW, &mlvErr, mlvErrMsg );
 #endif
+        ui->comboBoxUseCameraMatrix->setCurrentIndex(0);
+        on_comboBoxUseCameraMatrix_currentIndexChanged(0);
+    }
+    else
+    {
+#ifdef Q_OS_UNIX
+        new_MlvObject = initMlvObjectWithClip( fileName.toUtf8().data(), MLV_OPEN_PREVIEW, &mlvErr, mlvErrMsg );
+#else
+        new_MlvObject = initMlvObjectWithClip( fileName.toLatin1().data(), MLV_OPEN_PREVIEW, &mlvErr, mlvErrMsg );
+#endif
+    }
+
     if( mlvErr )
     {
         QMessageBox::critical( this, tr( "MLV Error" ), tr( "%1" ).arg( mlvErrMsg ), QMessageBox::Cancel, QMessageBox::Cancel );
@@ -727,7 +747,7 @@ void MainWindow::on_actionOpen_triggered()
     //Open File Dialog
     QStringList files = QFileDialog::getOpenFileNames( this, tr("Open one or more MLV..."),
                                                     path,
-                                                    tr("Magic Lantern Video (*.mlv *.MLV)") );
+                                                    tr("Video (*.mlv *.MLV *.mcraw *.MCRAW)") );
 
     if( files.empty() ) return;
 
@@ -738,7 +758,9 @@ void MainWindow::on_actionOpen_triggered()
         QString fileName = files.at(i);
 
         //Exit if not an MLV file or aborted
-        if( fileName == QString( "" ) || !fileName.endsWith( ".mlv", Qt::CaseInsensitive ) ) continue;
+        if( fileName == QString( "" ) ||
+            (!fileName.endsWith( ".mlv", Qt::CaseInsensitive ) &&
+             !fileName.endsWith( ".mcraw", Qt::CaseInsensitive )) ) continue;
 
         importNewMlv( fileName );
     }
@@ -810,11 +832,28 @@ int MainWindow::openMlv( QString fileName )
 
     int mlvErr = MLV_ERR_NONE;
     char mlvErrMsg[256] = { 0 };
+
+    mlvObject_t * new_MlvObject;
+
+    if (fileName.endsWith( ".mcraw", Qt::CaseInsensitive))
+    {
 #ifdef Q_OS_UNIX
-    mlvObject_t * new_MlvObject = initMlvObjectWithClip( fileName.toUtf8().data(), mlvOpenMode, &mlvErr, mlvErrMsg );
+        new_MlvObject = initMlvObjectWithMcrawClip( fileName.toUtf8().data(), mlvOpenMode, &mlvErr, mlvErrMsg );
 #else
-    mlvObject_t * new_MlvObject = initMlvObjectWithClip( fileName.toLatin1().data(), mlvOpenMode, &mlvErr, mlvErrMsg );
+        new_MlvObject = initMlvObjectWithMcrawClip( fileName.toLatin1().data(), mlvOpenMode, &mlvErr, mlvErrMsg );
 #endif
+        ui->comboBoxUseCameraMatrix->setCurrentIndex(0);
+        on_comboBoxUseCameraMatrix_currentIndexChanged(0);
+    }
+    else
+    {
+#ifdef Q_OS_UNIX
+        new_MlvObject = initMlvObjectWithClip( fileName.toUtf8().data(), mlvOpenMode, &mlvErr, mlvErrMsg );
+#else
+        new_MlvObject = initMlvObjectWithClip( fileName.toLatin1().data(), mlvOpenMode, &mlvErr, mlvErrMsg );
+#endif
+    }
+
     if( mlvErr )
     {
         QMessageBox::critical( this, tr( "MLV Error" ), tr( "%1" ).arg( mlvErrMsg ), QMessageBox::Cancel, QMessageBox::Cancel );
@@ -823,7 +862,7 @@ int MainWindow::openMlv( QString fileName )
     }
 
     //Set window title to filename
-    this->setWindowTitle( QString( "MLV App | %1" ).arg( fileName ) );
+    this->setWindowTitle( QString( "MLV-MCRAW App | %1" ).arg( fileName ) );
 
     m_fileLoaded = false;
 
@@ -2833,9 +2872,13 @@ void MainWindow::startExportCdng(QString fileName)
 
         //Save cDNG frame
 #ifdef Q_OS_UNIX
-        if( saveDngFrame( m_pMlvObject, cinemaDng, frame, filePathNr.toUtf8().data() ) )
+        QString properties_fn = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+        properties_fn.append("/mlv-dng-params.txt");
+        if( saveDngFrame( m_pMlvObject, cinemaDng, frame, filePathNr.toUtf8().data(), properties_fn.toUtf8().data() ) )
 #else
-        if( saveDngFrame( m_pMlvObject, cinemaDng, frame, filePathNr.toLatin1().data() ) )
+        QString properties_fn = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+        properties_fn.append("\\mlv-dng-params.txt");
+        if( saveDngFrame( m_pMlvObject, cinemaDng, frame, filePathNr.toLatin1().data(), properties_fn.toLatin1().data() ) )
 #endif
         {
             m_pStatusDialog->close();
@@ -4283,7 +4326,7 @@ void MainWindow::deleteSession()
     m_pModel->clear();
 
     //Set window title to filename
-    this->setWindowTitle( QString( "MLV App" ) );
+    this->setWindowTitle( QString( "MLV-MCRAW App" ) );
 
     //disable drawing and kill old timer and old WaveFormMonitor
     m_fileLoaded = false;
@@ -4405,6 +4448,9 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     {
         //Init Temp read from the file when imported and loaded very first time completely
         setWhiteBalanceFromMlv( receipt );
+    }
+    if (isMcrawLoaded(m_pMlvObject)) {
+        receipt->setCamMatrixUsed(0);
     }
     ui->comboBoxUseCameraMatrix->setCurrentIndex( receipt->camMatrixUsed() );
     on_comboBoxUseCameraMatrix_currentIndexChanged( receipt->camMatrixUsed() );
@@ -5695,6 +5741,9 @@ void MainWindow::on_actionAbout_triggered()
                                     " <p>%2 v%3</p>"
                                     " <p>%4</p>"
                                     " <p>See <a href='%5'>this site</a> for more information.</p>"
+                                    " <p>-</p>"
+                                    " <p>This is a test version to try out mcraw support</p>"
+                                    " <p>-</p>"
                                     " <p>Darkstyle Copyright (c) 2017, <a href='%6'>Juergen Skrotzky</a> under MIT</p>"
                                     " <p>Some icons by <a href='%7'>Double-J Design</a> under <a href='%8'>CC4.0</a></p>"
                                     " <p>Zhang-Wu LMMSE Image Demosaicking by Pascal Getreuer under <a href='%9'>BSD</a>.</p>"

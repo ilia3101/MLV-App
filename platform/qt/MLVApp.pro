@@ -153,7 +153,9 @@ SOURCES += \
     ../../src/mlv/llrawproc/patternnoise.c \
     ../../src/mlv/llrawproc/chroma_smooth.c \
     ../../src/mlv/llrawproc/hist.c \
-    ../../src/mlv/camid/camera_id.c \
+    ../../src/mlv/camid/camera_id.c \   
+    ../../src/mlv/mcraw/mcraw.c \
+    ../../src/mlv/mcraw/RawData.cpp \
     ../../src/processing/processing.c \
     ../../src/processing/raw_processing.c \
     ../../src/processing/filter/filter.c \
@@ -398,9 +400,9 @@ DISTFILES += \
 
 #Application version
 VERSION_MAJOR = 1
-VERSION_MINOR = 14
-VERSION_PATCH = 0
-VERSION_BUILD = 0
+VERSION_MINOR = 15
+VERSION_PATCH = 3
+VERSION_BUILD = 1
 
 #Target version
 DEFINES += "VERSION_MAJOR=$$VERSION_MAJOR"\
