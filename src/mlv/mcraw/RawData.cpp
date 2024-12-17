@@ -20,7 +20,9 @@
 #include <cstdint>
 #include <vector>
 #include <cstring>
+#ifndef __arm64
 #include <immintrin.h>
+#endif
 
 namespace motioncam {
     namespace raw {
@@ -54,7 +56,7 @@ namespace motioncam {
 // https://github.com/mirsadm/motioncam-decoder/commit/15fd711525e0701205b3805b4777c63b6184782d?diff=split&w=0
 // Code from hanatos
 
-#if 1
+#ifndef __arm64
             struct UInt16x8
             {
                 __m128i d;
