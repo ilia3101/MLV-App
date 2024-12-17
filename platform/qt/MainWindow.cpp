@@ -5756,7 +5756,7 @@ void MainWindow::on_actionAbout_triggered()
                                    .arg( pic ) //1
                                    .arg( APPNAME ) //2
                                    .arg( VERSION ) //3
-                                   .arg( "by Ilia3101, bouncyball, Danne, dfort, orfeas-a & masc." ) //4
+                                   .arg( "by Ilia3101, bouncyball, Danne, dfort, orfeas-a, tlenke & masc." ) //4
                                    .arg( "https://github.com/ilia3101/MLV-App" ) //5
                                    .arg( "https://github.com/Jorgen-VikingGod" ) //6
                                    .arg( "http://www.doublejdesign.co.uk/" ) //7
