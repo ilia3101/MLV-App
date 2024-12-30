@@ -128,6 +128,11 @@ cd MLV-App/platform/cocoa
 make app -j4
 ```
 
+## Install MLVApp on mobile systems
+#### Android (via Wine)
+- install winlator app
+- install Win64 MLVApp release version into winlator app
+
 ## The Code
 All the MLV stuff is in src/mlv
 
