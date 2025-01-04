@@ -65,8 +65,12 @@ jobs:
     - name: Copy Qt multimedia plugins
       working-directory: ${{ env.SOURCE_DIR }}/build
       run: |
-           mkdir -p image/usr/plugins/multimedia
-           cp -r /usr/lib/x86_64-linux-gnu/qt5/plugins/multimedia/* image/usr/plugins/multimedia/
+           mkdir -p image/usr/plugins/audio
+           mkdir -p image/usr/plugins/mediaservice
+           mkdir -p image/usr/plugins/playlistformats
+           cp -r /usr/lib/x86_64-linux-gnu/qt5/plugins/audio/* image/usr/plugins/audio/ || true
+           cp -r /usr/lib/x86_64-linux-gnu/qt5/plugins/mediaservice/* image/usr/plugins/mediaservice/ || true
+           cp -r /usr/lib/x86_64-linux-gnu/qt5/plugins/playlistformats/* image/usr/plugins/playlistformats/ || true
 
     - name: Install LinuxDeploy
       uses: miurahr/install-linuxdeploy-action@v1.7.0
