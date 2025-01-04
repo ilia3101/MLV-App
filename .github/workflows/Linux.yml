@@ -11,10 +11,19 @@ env:
 jobs:
   build:
 
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-20.04
 
     steps:
     - uses: actions/checkout@master
+
+    - name: Fix APT sources
+      run: |
+           sudo mv /etc/apt/sources.list /etc/apt/sources.list.backup
+           echo "deb http://archive.ubuntu.com/ubuntu focal main restricted universe multiverse" | sudo tee /etc/apt/sources.list
+           echo "deb http://archive.ubuntu.com/ubuntu focal-updates main restricted universe multiverse" | sudo tee -a /etc/apt/sources.list
+           echo "deb http://archive.ubuntu.com/ubuntu focal-security main restricted universe multiverse" | sudo tee -a /etc/apt/sources.list
+           echo "deb http://archive.ubuntu.com/ubuntu focal-backports main restricted universe multiverse" | sudo tee -a /etc/apt/sources.list
+           sudo apt-get update
 
     - name: Install compiler & Qt
       run: |
