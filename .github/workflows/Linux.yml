@@ -56,8 +56,7 @@ jobs:
     - name: Create Appimage
       working-directory: ${{ env.SOURCE_DIR }}/build
       run: |
-           # Install lib for linuxdeploy, /usr/local/qwt-6.2.0/lib/libqwt.so.6.2
-           linuxdeploy-x86_64.AppImage --desktop-file=image/mlvapp.desktop --executable=mlvapp --appdir=image --plugin=qt --output=appimage --verbosity=3 --icon-file=image/MLVAPP.png
+           linuxdeploy-x86_64.AppImage --desktop-file=image/mlvapp.desktop --executable=mlvapp --appdir=image --plugin=qt --qt-plugin=multimedia --output=appimage --verbosity=3 --icon-file=image/MLVAPP.png
            cp MLVApp-*.AppImage ${{ env.ARTIFACT }}
 
     - name: Save build artifact
