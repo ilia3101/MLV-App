@@ -65,7 +65,8 @@ jobs:
     - name: Create Appimage
       working-directory: ${{ env.SOURCE_DIR }}/build
       run: |
-           linuxdeploy-x86_64.AppImage --desktop-file=image/mlvapp.desktop --executable=mlvapp --appdir=image --plugin=qt --qt-plugin=multimedia --output=appimage --verbosity=3 --icon-file=image/MLVAPP.png
+           export QT_PLUGIN_PATH=/usr/lib/x86_64-linux-gnu/qt5/plugins
+           linuxdeploy-x86_64.AppImage --desktop-file=image/mlvapp.desktop --executable=mlvapp --appdir=image --plugin=qt --output=appimage --verbosity=3 --icon-file=image/MLVAPP.png
            cp MLVApp-*.AppImage ${{ env.ARTIFACT }}
 
     - name: Save build artifact
