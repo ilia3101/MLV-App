@@ -28,8 +28,13 @@ jobs:
     - name: Install compiler & Qt
       run: |
            sudo apt-get install --fix-missing --no-install-recommends make g++ qt5-qmake qtbase5-dev qtmultimedia5-dev libqt5multimedia5 libqt5multimedia5-plugins libqt5opengl5-dev libqt5designer5 libqt5svg5-dev libfuse2 libxkbcommon-x11-0 appstream
-           cd /usr/lib/x86_64-linux-gnu/qt5/plugins/
-           ls -al
+
+    - name: Inspect Qt plugin directories
+      run: |
+           ls -l /usr/lib/x86_64-linux-gnu/qt5/plugins/
+           ls -l /usr/lib/x86_64-linux-gnu/qt5/plugins/audio
+           ls -l /usr/lib/x86_64-linux-gnu/qt5/plugins/mediaservice
+           ls -l /usr/lib/x86_64-linux-gnu/qt5/plugins/playlistformats
            
     - name: Create build directory
       run:  mkdir ${{ env.SOURCE_DIR }}/build
