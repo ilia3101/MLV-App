@@ -57,6 +57,12 @@ jobs:
             mv ${{ env.SOURCE_DIR }}/qt/raw2mlv/raw2mlv .
             ls -al
 
+    - name: Copy Qt multimedia plugins
+      working-directory: ${{ env.SOURCE_DIR }}/build
+      run: |
+           mkdir -p image/usr/plugins/multimedia
+           cp -r /usr/lib/x86_64-linux-gnu/qt5/plugins/multimedia/* image/usr/plugins/multimedia/
+
     - name: Install LinuxDeploy
       uses: miurahr/install-linuxdeploy-action@v1.7.0
       with:
