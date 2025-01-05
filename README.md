@@ -107,19 +107,16 @@ What is MLV App? Lightroom, but for Magic Lantern MLV Video (and open source and
 - Build and Start
 
 #### Qt App Linux (generally)
-- install Qt5 (5.6 .. 5.15.2) or Qt6 (6.4 or later) and ffmpeg (we use v3.3.2) 
+- install Qt5 (5.6 .. 5.15.2) or Qt6 (6.4 or later), ffmpeg (we use v3.3.2) and other needed packages. We install this in the github Linux runner:
+  ```
+  sudo apt-get install --no-install-recommends make g++ qt5-qmake qtbase5-dev qtmultimedia5-dev libqt5multimedia5 libqt5multimedia5-plugins libqt5opengl5-dev libqt5designer5 libqt5svg5-dev libfuse2 libxkbcommon-x11-0 appstream
+  ```
 - `cd platform/qt/`
 - `qmake MLVApp.pro` or equivalent (depending on distro and version and...)
 - `make -j$(nproc)`
 - `./mlvapp` and have fun
 
 A detailed guide for compiling MLV-App on Linux can be found [here](https://sternenkarten.com/tutorial-englisch/) (thanks to @seescho).
-
-If you have a Debian based distro, these packages will give you everything you need: 
-```
-sudo apt install qt5-default qtchooser qtmultimedia5-dev qt5-qmake
-```
-(tested on Ubuntu 20.04 and ChromeOS linnux)
 
 #### Cocoa App (very very deprecated)
 ```
