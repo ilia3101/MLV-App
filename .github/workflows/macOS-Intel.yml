@@ -31,7 +31,7 @@ jobs:
       working-directory: ${{ env.SOURCE_DIR }}/build
       run:  |
             ${{ env.QTDIR }}/qmake -r ${{ env.SOURCE_DIR }}/qt/MLVApp.pro
-            ${{ env.LLVM }} -j8
+            ${{ env.LLVM }}
             ls -al
             ${{ env.QTDIR }}/macdeployqt MLV\ App.app -dmg
 
