@@ -6,7 +6,8 @@ on:
 
 env:
   SOURCE_DIR:   ${{ github.workspace }}/platform
-  QTDIR:        /usr/local/Cellar/qt@5/5.15.13/bin
+  QTDIR:        /usr/local/opt/qt@5/bin
+  LLVM:         /usr/local/opt/llvm/bin/clang++
   ARTIFACT:     ${{ github.workspace }}/platform/build/MLV\ App.dmg
 
 jobs:
@@ -30,7 +31,7 @@ jobs:
       working-directory: ${{ env.SOURCE_DIR }}/build
       run:  |
             ${{ env.QTDIR }}/qmake -r ${{ env.SOURCE_DIR }}/qt/MLVApp.pro
-            make -j8
+            ${{ env.LLVM }} -j8
             ls -al
             ${{ env.QTDIR }}/macdeployqt MLV\ App.app -dmg
 
