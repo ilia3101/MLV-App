@@ -1,0 +1,41 @@
+name: macOS Arm64 Release
+
+on:
+  workflow_dispatch:
+    branches: [ "master" ]
+
+env:
+  SOURCE_DIR:   ${{ github.workspace }}/platform
+  QTDIR:        /opt/homebrew/opt/qt@5/bin
+  ARTIFACT:     ${{ github.workspace }}/platform/build/MLV\ App.dmg
+
+jobs:
+  build:
+
+    runs-on: macos-14
+
+    steps:
+    - uses: actions/checkout@master
+
+    - name: Install llvm & Qt & OpenSSL
+      continue-on-error: true
+      uses: ConorMacBride/install-package@v1.1.0
+      with:
+        brew: llvm qt5 openssl
+              
+    - name: Create build directory
+      run:  mkdir ${{ env.SOURCE_DIR }}/build
+
+    - name: Build
+      working-directory: ${{ env.SOURCE_DIR }}/build
+      run:  |
+            ${{ env.QTDIR }}/qmake -r ${{ env.SOURCE_DIR }}/qt/MLVApp.pro
+            make -j8
+            ls -al
+            ${{ env.QTDIR }}/macdeployqt MLV\ App.app -dmg
+
+    - name: Save build artifact
+      uses: actions/upload-artifact@master
+      with:
+        name: MLVApp macOS Arm64
+        path: ${{ env.ARTIFACT }}
