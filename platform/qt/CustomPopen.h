@@ -1,11 +1,13 @@
 #ifndef CUSTOMPOPEN_H
 #define CUSTOMPOPEN_H
 
+#include <qglobal.h>
+
 #ifdef Q_OS_WIN
 #include <windows.h>
 #include <cstdio>
 
-FILE* myPopen(const char* command, const char* mode) {
+FILE* CustomPopen(const char* command, const char* mode) {
     SECURITY_ATTRIBUTES sa;
     HANDLE hChildStdinRd, hChildStdinWr;
 
