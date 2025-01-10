@@ -37,14 +37,22 @@ FILE* CustomPopen(const char* command, const char* mode) {
     si.wShowWindow = SW_HIDE;
 
     // Befehl vorbereiten
-    char commandLine[1024];
-    snprintf(commandLine, sizeof(commandLine), "cmd.exe /C %s", command);
+    size_t commandLength = strlen(command) + 1;
+    wchar_t* wideCommandLine = new wchar_t[commandLength];
+    mbstowcs(wideCommandLine, command, commandLength);
+
+    // Füge 'cmd.exe /C' zum Befehl hinzu
+    size_t commandLineLength = wcslen(L"cmd.exe /C ") + wcslen(wideCommandLine) + 1;
+    wchar_t* fullCommandLine = new wchar_t[commandLineLength];
+    swprintf(fullCommandLine, commandLineLength, L"cmd.exe /C %s", wideCommandLine);
 
     // Erstelle den Prozess
     if (!CreateProcess(
-            NULL, commandLine, NULL, NULL, TRUE, DETACHED_PROCESS, NULL, NULL, &si, &pi)) {
+            NULL, fullCommandLine, NULL, NULL, TRUE, DETACHED_PROCESS, NULL, NULL, &si, &pi)) {
         CloseHandle(hChildStdinRd);
         CloseHandle(hChildStdinWr);
+        delete[] wideCommandLine;
+        delete[] fullCommandLine;
         return nullptr;
     }
 
@@ -55,6 +63,8 @@ FILE* CustomPopen(const char* command, const char* mode) {
 
     // Konvertiere den Schreibhandle in einen FILE*-Pointer
     int fd = _open_osfhandle((intptr_t)hChildStdinWr, _O_WRONLY);
+    delete[] wideCommandLine;
+    delete[] fullCommandLine;
     return _fdopen(fd, mode);
 }
 #endif
