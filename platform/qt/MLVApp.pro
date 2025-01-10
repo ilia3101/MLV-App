@@ -278,6 +278,7 @@ HEADERS += MainWindow.h \
     ../../src/processing/cube_lut.h \
     ../../src/processing/denoiser/denoiser_2d_median.h \
     ClipInformation.h \
+    CustomPopen.h \
     InfoDialog.h \
     MyApplication.h \
     RenameDialog.h \

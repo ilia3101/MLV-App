@@ -60,6 +60,7 @@
 #include "FocusPixelMapManager.h"
 #include "StatusFpmDialog.h"
 #include "RenameDialog.h"
+#include "CustomPopen.h"
 
 /* spaceTag argument options: ffmpeg color space tag number compliant */
 #define SPACETAG_REC709   1   /* rec709 color space */
@@ -2085,7 +2086,7 @@ void MainWindow::startExportPipe(QString fileName)
     #ifdef Q_OS_UNIX
         if( !( pPipeStab = popen( stabCmd.toUtf8().data(), "w" ) ) )
     #else
-        if( !( pPipeStab = popen( stabCmd.toLatin1().data(), "wb" ) ) )
+        if( !( pPipeStab = CustomPopen( stabCmd.toLatin1().data(), "wb" ) ) )
     #endif
         {
             QMessageBox::critical( this, tr( "File export failed" ), tr( "Could not export with ffmpeg." ) );
@@ -2615,7 +2616,7 @@ void MainWindow::startExportPipe(QString fileName)
 #ifdef Q_OS_UNIX
     if( !( pPipe = popen( program.toUtf8().data(), "w" ) ) )
 #else
-    if( !( pPipe = popen( program.toLatin1().data(), "wb" ) ) )
+    if( !( pPipe = CustomPopen( program.toLatin1().data(), "wb" ) ) )
 #endif
     {
         QMessageBox::critical( this, tr( "File export failed" ), tr( "Could not export with ffmpeg." ) );

@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MLV-MCRAW App</string>
+   <string>MLV App</string>
   </property>
   <property name="windowIcon">
    <iconset resource="ressources.qrc">
@@ -120,7 +120,7 @@
      <x>0</x>
      <y>0</y>
      <width>1200</width>
-     <height>26</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -468,8 +468,8 @@ QGroupBox::indicator:checked:disabled {
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>337</width>
-            <height>5979</height>
+            <width>269</width>
+            <height>5772</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayoutScrollArea">
