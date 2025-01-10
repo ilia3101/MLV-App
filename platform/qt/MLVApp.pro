@@ -70,7 +70,7 @@ macx{
         QMAKE_CFLAGS += -fopenmp -ftree-vectorize
         QMAKE_CXXFLAGS += -fopenmp -std=c++15 -ftree-vectorize
         INCLUDEPATH += -I/opt/homebrew/opt/llvm/include
-        LIBS += -L/opt/homebrew/opt/llvm/lib -lomp -L/opt/homebrew/opt/openssl/lib -lssl -L/opt/homebrew/opt/llvm/lib/c++ -lc++
+        LIBS += -L/opt/homebrew/opt/llvm/lib -lomp -L/opt/homebrew/opt/openssl/lib -lssl -L/opt/homebrew/opt/llvm/lib/c++ -lc++ -lc++abi
         QMAKE_MACOSX_DEPLOYMENT_TARGET = 11.7
         QMAKE_APPLE_DEVICE_ARCHS = arm64
     }
