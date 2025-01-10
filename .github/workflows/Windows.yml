@@ -53,8 +53,6 @@ jobs:
       working-directory: ${{ env.SOURCE_DIR }}\qt\raw2mlv
       run:  |
             7z x raw2mlvWin64.zip -o${{ env.SOURCE_DIR }}\build\release
-            move ${{ env.SOURCE_DIR }}\build\release\Windows64\* ${{ env.SOURCE_DIR }}\build\release
-            rmdir ${{ env.SOURCE_DIR }}\build\release\Windows64
             dir ${{ env.SOURCE_DIR }}\build\release
 
     - name: Rename release folder
