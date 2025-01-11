@@ -45,6 +45,7 @@ void processingSetGammaAndTonemapping(processingObject_t * processing, double ga
 #define TONEMAP_HLG 8
 #define TONEMAP_DavinciIntermediate 9
 #define TONEMAP_Reinhard_3_5 10 /* Reinhard 3/5 */
+#define TONEMAP_CanonLog 11
 
 
 /* Transfer funciton, the correct version of "Gamma" or "Log" */
@@ -73,6 +74,7 @@ void processingSetImageProfile(processingObject_t * processing, int imageProfile
 #define PROFILE_REC709      8	/* Rec. 709 (HDTV) */
 #define PROFILE_DWG_INT     9   /* Davinci Wide Gamut Intermediate */
 #define PROFILE_FUJI_FLOG   10   /* Fujifilm F-log */
+#define PROFILE_CANON_LOG   11   /* Canon Log */
 
 
 /* Process a RAW frame with settings from a processing object

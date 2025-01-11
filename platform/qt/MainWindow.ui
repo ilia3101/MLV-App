@@ -467,7 +467,7 @@ QGroupBox::indicator:checked:disabled {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>0</y>
+            <y>-1841</y>
             <width>269</width>
             <height>5772</height>
            </rect>
@@ -4606,6 +4606,11 @@ QGroupBox::indicator:checked:disabled {
                    <item>
                     <property name="text">
                      <string>Fuji F-Log</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Canon Log</string>
                     </property>
                    </item>
                   </widget>
