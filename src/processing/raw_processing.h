@@ -26,6 +26,7 @@ int processingGetGamut(processingObject_t * processing);
 #define GAMUT_SonySGamut3 7
 #define GAMUT_DavinciWideGamut 8
 #define GAMUT_ACES_AP1 9
+#define GAMUT_Canon_Cinema 10
 
 
 /* Tonemapping function, really this can be a tonemapping function, a log

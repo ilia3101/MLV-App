@@ -467,7 +467,7 @@ QGroupBox::indicator:checked:disabled {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>-1841</y>
+            <y>-1752</y>
             <width>269</width>
             <height>5772</height>
            </rect>
@@ -4679,6 +4679,11 @@ QGroupBox::indicator:checked:disabled {
                    <item>
                     <property name="text">
                      <string>ACES AP1</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Canon Cinema</string>
                     </property>
                    </item>
                   </widget>

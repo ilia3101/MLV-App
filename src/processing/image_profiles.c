@@ -82,7 +82,7 @@ static image_profile_t default_image_profiles[] =
         .allow_creative_adjustments = 0,
         .tonemap_function = TONEMAP_CanonLog,
         .gamma_power = 1.0,
-        .colour_gamut = GAMUT_AlexaWideGamutRGB,
+        .colour_gamut = GAMUT_Canon_Cinema,
         .transfer_function = "(0.529136 * (log10 ( 10.1596 * x + 1 ))) + 0.0730597"
     }
 };
