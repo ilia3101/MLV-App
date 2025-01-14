@@ -2161,7 +2161,11 @@ void MainWindow::startExportPipe(QString fileName)
                 if( m_exportAbortPressed ) break;
             }
             //Close pipe
+#ifdef Q_OS_UNIX
             pclose( pPipeStab );
+#else
+            fclose( pPipeStab );
+#endif
             free( imgBufferScaled );
             free( imgBuffer );
         }
@@ -2700,7 +2704,11 @@ void MainWindow::startExportPipe(QString fileName)
             if( m_exportAbortPressed ) break;
         }
         //Close pipe
+#ifdef Q_OS_UNIX
         pclose( pPipe );
+#else
+        fclose( pPipe );
+#endif
         free( imgBufferScaled );
         free( imgBuffer );
     }
