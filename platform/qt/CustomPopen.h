@@ -87,6 +87,7 @@ FILE* CustomPopen(const char* command, const char* mode) {
         return nullptr;
     }
 
+#ifndef STDOUT_SILENT
     // Ausgabe von ffmpeg in einer seperaten Pipe lesen
     std::thread([hChildStdoutRd, pi](){
         char buffer[4096];
@@ -109,6 +110,9 @@ FILE* CustomPopen(const char* command, const char* mode) {
         WaitForSingleObject(pi.hProcess, INFINITE);
         CloseHandle(hChildStdoutRd);
     }).detach();
+#else
+    CloseHandle(hChildStdoutRd);
+#endif
 
     return _fdopen(fd, mode);
 }
