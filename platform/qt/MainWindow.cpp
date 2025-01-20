@@ -2160,7 +2160,10 @@ void MainWindow::startExportPipe(QString fileName)
                 if( m_exportAbortPressed ) break;
             }
             //Close pipe
-            pclose( pPipeStab );
+            if( pclose( pPipeStab ) != 0 )
+            {
+                QMessageBox::critical( this, tr( "File export failed" ), tr( "FFmpeg closed unexpectedly during stabilization.\n\nFile %1 was not exported." ).arg( fileName ) );
+            }
             free( imgBufferScaled );
             free( imgBuffer );
         }
@@ -2699,7 +2702,10 @@ void MainWindow::startExportPipe(QString fileName)
             if( m_exportAbortPressed ) break;
         }
         //Close pipe
-        pclose( pPipe );
+        if( pclose( pPipe ) != 0 )
+        {
+            QMessageBox::critical( this, tr( "File export failed" ), tr( "FFmpeg closed unexpectedly during export.\n\nFile %1 was not exported." ).arg( fileName ) );
+        }
         free( imgBufferScaled );
         free( imgBuffer );
     }
