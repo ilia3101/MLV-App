@@ -2713,7 +2713,7 @@ void MainWindow::startExportPipe(QString fileName)
         free( imgBufferScaled );
         free( imgBuffer );
     }
-	}
+    }
 
     //Delete wav file
     QFile *file = new QFile( wavFileName );
