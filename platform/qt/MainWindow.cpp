@@ -2614,105 +2614,105 @@ void MainWindow::startExportPipe(QString fileName)
         program.insert( program.indexOf( "-c:v" ), pass3 );
     }
 
-	if( ( m_exportQueue.first()->vidStabEnabled() && staberr == false ) || !m_exportQueue.first()->vidStabEnabled() )
+    if( ( m_exportQueue.first()->vidStabEnabled() && staberr == false ) || !m_exportQueue.first()->vidStabEnabled() )
     {
-    //Try to open pipe
-    FILE *pPipe;
-    //qDebug() << "Call ffmpeg:" << program;
+        //Try to open pipe
+        FILE *pPipe;
+        //qDebug() << "Call ffmpeg:" << program;
 #ifdef Q_OS_UNIX
-    if( !( pPipe = popen( program.toUtf8().data(), "w" ) ) )
+        if( !( pPipe = popen( program.toUtf8().data(), "w" ) ) )
 #else
     if( !( pPipe = popen( program.toLatin1().data(), "wb" ) ) )
 #endif
-    {
-        QMessageBox::critical( this, tr( "File export failed" ), tr( "Could not export with ffmpeg." ) );
-    }
-    else
-    {
-        //Buffer
-        uint32_t frameSize = getMlvWidth( m_pMlvObject ) * getMlvHeight( m_pMlvObject ) * 3;
-        uint16_t * imgBuffer;
-        imgBuffer = ( uint16_t* )malloc( frameSize * sizeof( uint16_t ) );
-
-        //Frames in the export queue?!
-        int totalFrames = 0;
-        for( int i = 0; i < m_exportQueue.size(); i++ )
         {
-            totalFrames += m_exportQueue.at(i)->cutOut() - m_exportQueue.at(i)->cutIn() + 1;
+            QMessageBox::critical( this, tr( "File export failed" ), tr( "Could not export with ffmpeg." ) );
         }
-
-        //Build buffer
-        uint16_t * imgBufferScaled;
-        imgBufferScaled = ( uint16_t* )malloc( width * height * 3 * sizeof( uint16_t ) );
-
-        //Get all pictures and send to pipe
-        for( uint32_t i = (m_exportQueue.first()->cutIn() - 1); i < m_exportQueue.first()->cutOut(); i++ )
+        else
         {
-            if( m_codecProfile == CODEC_TIFF && m_codecOption == CODEC_TIFF_AVG && i > 128 ) break;
+            //Buffer
+            uint32_t frameSize = getMlvWidth( m_pMlvObject ) * getMlvHeight( m_pMlvObject ) * 3;
+            uint16_t * imgBuffer;
+            imgBuffer = ( uint16_t* )malloc( frameSize * sizeof( uint16_t ) );
 
-            if( scaled )
+            //Frames in the export queue?!
+            int totalFrames = 0;
+            for( int i = 0; i < m_exportQueue.size(); i++ )
             {
-                //Get picture, and lock render thread... there can only be one!
-                m_pRenderThread->lock();
-                getMlvProcessedFrame16( m_pMlvObject, i, imgBuffer, QThread::idealThreadCount() );
-                m_pRenderThread->unlock();
-
-                avir_scale_thread_pool scaling_pool;
-                avir::CImageResizerVars vars; vars.ThreadPool = &scaling_pool;
-                avir::CImageResizerParamsUltra roptions;
-                avir::CImageResizer<> image_resizer( 16, 0, roptions );
-                image_resizer.resizeImage( imgBuffer,
-                                           getMlvWidth(m_pMlvObject),
-                                           getMlvHeight(m_pMlvObject), 0,
-                                           imgBufferScaled,
-                                           width,
-                                           height,
-                                           3, 0, &vars );
-
-                //Write to pipe
-                fwrite(imgBufferScaled, sizeof( uint16_t ), width * height * 3, pPipe);
-                fflush(pPipe);
-            }
-            else
-            {
-                //Get picture, and lock render thread... there can only be one!
-                m_pRenderThread->lock();
-                getMlvProcessedFrame16( m_pMlvObject, i, imgBuffer, QThread::idealThreadCount() );
-                m_pRenderThread->unlock();
-
-                //Write to pipe
-                fwrite(imgBuffer, sizeof( uint16_t ), frameSize, pPipe);
-                fflush(pPipe);
+                totalFrames += m_exportQueue.at(i)->cutOut() - m_exportQueue.at(i)->cutIn() + 1;
             }
 
-            //Set Status
-            if( !( m_exportQueue.first()->vidStabEnabled() && m_codecProfile == CODEC_H264 ) )
-            {
-                m_pStatusDialog->ui->progressBar->setValue( i - ( m_exportQueue.first()->cutIn() - 1 ) + 1 );
-                m_pStatusDialog->ui->progressBar->repaint();
-                m_pStatusDialog->drawTimeFromToDoFrames( totalFrames - i + ( m_exportQueue.first()->cutIn() - 1 ) - 1 );
-            }
-            else
-            {
-                m_pStatusDialog->ui->progressBar->setValue( ( totalFrames + i - ( m_exportQueue.first()->cutIn() - 1 ) + 1 ) >> 1 );
-                m_pStatusDialog->ui->progressBar->repaint();
-                m_pStatusDialog->drawTimeFromToDoFrames( totalFrames - ( ( totalFrames + i - ( m_exportQueue.first()->cutIn() - 1 ) + 1 ) >> 1 ) );
-            }
-            qApp->processEvents();
+            //Build buffer
+            uint16_t * imgBufferScaled;
+            imgBufferScaled = ( uint16_t* )malloc( width * height * 3 * sizeof( uint16_t ) );
 
-            //Check diskspace
-            checkDiskFull( fileName );
-            //Abort pressed? -> End the loop
-            if( m_exportAbortPressed ) break;
+            //Get all pictures and send to pipe
+            for( uint32_t i = (m_exportQueue.first()->cutIn() - 1); i < m_exportQueue.first()->cutOut(); i++ )
+            {
+                if( m_codecProfile == CODEC_TIFF && m_codecOption == CODEC_TIFF_AVG && i > 128 ) break;
+
+                if( scaled )
+                {
+                    //Get picture, and lock render thread... there can only be one!
+                    m_pRenderThread->lock();
+                    getMlvProcessedFrame16( m_pMlvObject, i, imgBuffer, QThread::idealThreadCount() );
+                    m_pRenderThread->unlock();
+
+                    avir_scale_thread_pool scaling_pool;
+                    avir::CImageResizerVars vars; vars.ThreadPool = &scaling_pool;
+                    avir::CImageResizerParamsUltra roptions;
+                    avir::CImageResizer<> image_resizer( 16, 0, roptions );
+                    image_resizer.resizeImage( imgBuffer,
+                                               getMlvWidth(m_pMlvObject),
+                                               getMlvHeight(m_pMlvObject), 0,
+                                               imgBufferScaled,
+                                               width,
+                                               height,
+                                               3, 0, &vars );
+
+                    //Write to pipe
+                    fwrite(imgBufferScaled, sizeof( uint16_t ), width * height * 3, pPipe);
+                    fflush(pPipe);
+                }
+                else
+                {
+                    //Get picture, and lock render thread... there can only be one!
+                    m_pRenderThread->lock();
+                    getMlvProcessedFrame16( m_pMlvObject, i, imgBuffer, QThread::idealThreadCount() );
+                    m_pRenderThread->unlock();
+
+                    //Write to pipe
+                    fwrite(imgBuffer, sizeof( uint16_t ), frameSize, pPipe);
+                    fflush(pPipe);
+                }
+
+                //Set Status
+                if( !( m_exportQueue.first()->vidStabEnabled() && m_codecProfile == CODEC_H264 ) )
+                {
+                    m_pStatusDialog->ui->progressBar->setValue( i - ( m_exportQueue.first()->cutIn() - 1 ) + 1 );
+                    m_pStatusDialog->ui->progressBar->repaint();
+                    m_pStatusDialog->drawTimeFromToDoFrames( totalFrames - i + ( m_exportQueue.first()->cutIn() - 1 ) - 1 );
+                }
+                else
+                {
+                    m_pStatusDialog->ui->progressBar->setValue( ( totalFrames + i - ( m_exportQueue.first()->cutIn() - 1 ) + 1 ) >> 1 );
+                    m_pStatusDialog->ui->progressBar->repaint();
+                    m_pStatusDialog->drawTimeFromToDoFrames( totalFrames - ( ( totalFrames + i - ( m_exportQueue.first()->cutIn() - 1 ) + 1 ) >> 1 ) );
+                }
+                qApp->processEvents();
+
+                //Check diskspace
+                checkDiskFull( fileName );
+                //Abort pressed? -> End the loop
+                if( m_exportAbortPressed ) break;
+            }
+            //Close pipe
+            if( pclose( pPipe ) != 0 )
+            {
+                QMessageBox::critical( this, tr( "File export failed" ), tr( "FFmpeg closed unexpectedly during export.\n\nFile %1 was not exported completely." ).arg( fileName ) );
+            }
+            free( imgBufferScaled );
+            free( imgBuffer );
         }
-        //Close pipe
-        if( pclose( pPipe ) != 0 )
-        {
-            QMessageBox::critical( this, tr( "File export failed" ), tr( "FFmpeg closed unexpectedly during export.\n\nFile %1 was not exported completely." ).arg( fileName ) );
-        }
-        free( imgBufferScaled );
-        free( imgBuffer );
-    }
     }
 
     //Delete wav file
