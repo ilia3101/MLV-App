@@ -52,7 +52,7 @@ static const double ciecam02_danne[] = {
 
 
 /* Matrices XYZ -> RGB */
-static double colour_gamuts[][11] = {
+static double colour_gamuts[][12] = {
     { /* GAMUT_Rec709 */
          3.2404542, -1.5371385, -0.4985314,
         -0.9692660,  1.8760108,  0.0415560,
