@@ -27,6 +27,7 @@ int processingGetGamut(processingObject_t * processing);
 #define GAMUT_DavinciWideGamut 8
 #define GAMUT_ACES_AP1 9
 #define GAMUT_Canon_Cinema 10
+#define GAMUT_PanasonivV 11
 
 
 /* Tonemapping function, really this can be a tonemapping function, a log
@@ -47,6 +48,7 @@ void processingSetGammaAndTonemapping(processingObject_t * processing, double ga
 #define TONEMAP_DavinciIntermediate 9
 #define TONEMAP_Reinhard_3_5 10 /* Reinhard 3/5 */
 #define TONEMAP_CanonLog 11
+#define TONEMAP_PanasonicVLog 12
 
 
 /* Transfer funciton, the correct version of "Gamma" or "Log" */
