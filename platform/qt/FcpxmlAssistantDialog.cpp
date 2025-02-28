@@ -9,6 +9,7 @@
 #include "QFile"
 #include "QXmlStreamReader"
 #include "QDirIterator"
+#include "QDebug"
 
 #include "FcpxmlAssistantDialog.h"
 #include "ui_FcpxmlAssistantDialog.h"
@@ -43,7 +44,7 @@ void FcpxmlAssistantDialog::on_pushButtonFcpxml_clicked()
     QString path = QDir::homePath();
     QString fileName = QFileDialog::getOpenFileName(this,
                                            tr("Open FCPXML..."), path,
-                                           tr("FCPXML files (*.fcpxml)"));
+                                           tr("FCPXML files (*.fcpxml *.xml)"));
 
     //Abort selected
     if( fileName.size() == 0 ) return;
@@ -110,6 +111,46 @@ void FcpxmlAssistantDialog::xmlParser(QString fileName)
                     ui->tableWidget->setItem( row, 0, item1 );
                     QTableWidgetItem *item2 = new QTableWidgetItem( "" );
                     ui->tableWidget->setItem( row, 1, item2 );
+                }
+            }
+        }
+        if( Rxml.isStartElement() && ( Rxml.name() == QString( "clipitem" ) ) )
+        {
+            while( !(Rxml.isEndElement() && ( Rxml.name() == QString( "clipitem" ) ) ) )
+            {
+                Rxml.readNext();
+                if( Rxml.isStartElement() && ( Rxml.name() == QString( "name" ) ) )
+                {
+                    QString clip = Rxml.readElementText();
+                    if( clip.isEmpty() ) continue;
+
+                    //Clean the davinci resolve naming to a correct real name
+                    if( clip.contains( ".[" ) ) clip = clip.left( clip.indexOf( ".[" ) );
+                    if( clip.right(5).contains( "." ) ) clip = clip.left( clip.lastIndexOf( "." ) );
+
+                    int row = ui->tableWidget->rowCount();
+                    bool add = true;
+                    for( int i = 0; i < row; i++ )
+                    {
+                        if( ui->tableWidget->item( i, 0 )->text() == clip )
+                        {
+                            add = false;
+                            break;
+                        }
+                    }
+
+                    if( add )
+                    {
+                        ui->tableWidget->insertRow( row );
+                        QTableWidgetItem *item1 = new QTableWidgetItem( clip );
+                        ui->tableWidget->setItem( row, 0, item1 );
+                        QTableWidgetItem *item2 = new QTableWidgetItem( "" );
+                        ui->tableWidget->setItem( row, 1, item2 );
+                    }
+                    while( !(Rxml.isEndElement() && ( Rxml.name() == QString( "clipitem" ) ) ) )
+                    {
+                        Rxml.readNext();
+                    }
                 }
             }
         }

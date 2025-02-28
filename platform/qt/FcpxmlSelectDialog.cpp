@@ -9,6 +9,7 @@
 #include "QFile"
 #include "QXmlStreamReader"
 #include "QDirIterator"
+#include "QDebug"
 
 #include "FcpxmlSelectDialog.h"
 #include "ui_FcpxmlSelectDialog.h"
@@ -49,7 +50,7 @@ void FcpxmlSelectDialog::on_pushButtonFcpxml_clicked()
     QString path = QDir::homePath();
     QString fileName = QFileDialog::getOpenFileName(this,
                                            tr("Open FCPXML..."), path,
-                                           tr("FCPXML files (*.fcpxml)"));
+                                           tr("FCPXML files (*.fcpxml *.xml)"));
 
     //Abort selected
     if( fileName.count() == 0 ) return;
@@ -99,11 +100,45 @@ void FcpxmlSelectDialog::xmlParser(QString fileName)
                 int row = ui->tableWidget->rowCount();
                 for( int i = 0; i < row; i++ )
                 {
-                    if( ui->tableWidget->item( i, 0 )->text().contains( clip ) )
+                    if( ui->tableWidget->item( i, 0 )->text().contains( clip + ".mlv", Qt::CaseInsensitive) )
                     {
                         if( !ui->checkBoxInvert->isChecked() ) ui->tableWidget->item( i, 0 )->setCheckState( Qt::Checked );
                         else ui->tableWidget->item( i, 0 )->setCheckState( Qt::Unchecked );
                         break;
+                    }
+                }
+            }
+        }
+        if( Rxml.isStartElement() && ( Rxml.name() == QString( "clipitem" ) ) )
+        {
+            while( !(Rxml.isEndElement() && ( Rxml.name() == QString( "clipitem" ) ) ) )
+            {
+                Rxml.readNext();
+                if( Rxml.isStartElement() && ( Rxml.name() == QString( "name" ) ) )
+                {
+                    QString clip = Rxml.readElementText();
+                    if( clip.isEmpty() ) continue;
+
+                    //Clean the davinci resolve naming to a correct real name
+                    if( clip.contains( ".[" ) ) clip = clip.left( clip.indexOf( ".[" ) );
+                    if( clip.right(5).contains( "." ) ) clip = clip.left( clip.lastIndexOf( "." ) );
+
+                    qDebug() << clip;
+
+                    int row = ui->tableWidget->rowCount();
+                    for( int i = 0; i < row; i++ )
+                    {
+                        if( ui->tableWidget->item( i, 0 )->text().contains( clip + ".mlv", Qt::CaseInsensitive) )
+                        {
+                            if( !ui->checkBoxInvert->isChecked() ) ui->tableWidget->item( i, 0 )->setCheckState( Qt::Checked );
+                            else ui->tableWidget->item( i, 0 )->setCheckState( Qt::Unchecked );
+                            break;
+                        }
+                    }
+
+                    while( !(Rxml.isEndElement() && ( Rxml.name() == QString( "clipitem" ) ) ) )
+                    {
+                        Rxml.readNext();
                     }
                 }
             }
