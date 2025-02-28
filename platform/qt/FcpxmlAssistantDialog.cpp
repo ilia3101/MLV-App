@@ -9,7 +9,6 @@
 #include "QFile"
 #include "QXmlStreamReader"
 #include "QDirIterator"
-#include "QDebug"
 
 #include "FcpxmlAssistantDialog.h"
 #include "ui_FcpxmlAssistantDialog.h"

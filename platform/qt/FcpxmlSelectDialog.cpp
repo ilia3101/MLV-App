@@ -9,7 +9,6 @@
 #include "QFile"
 #include "QXmlStreamReader"
 #include "QDirIterator"
-#include "QDebug"
 
 #include "FcpxmlSelectDialog.h"
 #include "ui_FcpxmlSelectDialog.h"
@@ -122,8 +121,6 @@ void FcpxmlSelectDialog::xmlParser(QString fileName)
                     //Clean the davinci resolve naming to a correct real name
                     if( clip.contains( ".[" ) ) clip = clip.left( clip.indexOf( ".[" ) );
                     if( clip.right(5).contains( "." ) ) clip = clip.left( clip.lastIndexOf( "." ) );
-
-                    qDebug() << clip;
 
                     int row = ui->tableWidget->rowCount();
                     for( int i = 0; i < row; i++ )
