@@ -70,7 +70,8 @@ macx{
         QMAKE_CFLAGS += -fopenmp -ftree-vectorize
         QMAKE_CXXFLAGS += -fopenmp -std=c++15 -ftree-vectorize
         INCLUDEPATH += -I/opt/homebrew/opt/llvm/include
-        LIBS += -L/opt/homebrew/opt/llvm/lib -lomp -L/opt/homebrew/opt/openssl/lib -lssl
+        LIBS += -L/opt/homebrew/opt/llvm/lib -lomp -lunwind -L/opt/homebrew/opt/openssl/lib -lssl -L/opt/homebrew/opt/llvm/lib/c++ -lc++ -lc++abi
+        QMAKE_MACOSX_DEPLOYMENT_TARGET = 11.7
         QMAKE_APPLE_DEVICE_ARCHS = arm64
     }
 }
@@ -120,7 +121,12 @@ win32{
 
 # Linux
 linux-g++*{
-    QMAKE_CFLAGS += -O3 -fopenmp -msse4.1 -mssse3 -msse3 -msse2 -msse -std=c99 -ftree-vectorize
+    gcc {
+        QMAKE_CFLAGS += -std=gnu99
+    } else {
+        QMAKE_CFLAGS += -std=c99
+    }
+    QMAKE_CFLAGS += -O3 -fopenmp -msse4.1 -mssse3 -msse3 -msse2 -msse -ftree-vectorize
     QMAKE_CXXFLAGS += -fopenmp -std=c++11 -ftree-vectorize
     LIBS += -lgomp
 }
@@ -396,8 +402,8 @@ DISTFILES += \
 #Application version
 VERSION_MAJOR = 1
 VERSION_MINOR = 15
-VERSION_PATCH = 3
-VERSION_BUILD = 1
+VERSION_PATCH = 0
+VERSION_BUILD = 0
 
 #Target version
 DEFINES += "VERSION_MAJOR=$$VERSION_MAJOR"\

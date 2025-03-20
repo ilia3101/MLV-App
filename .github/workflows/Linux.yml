@@ -16,11 +16,25 @@ jobs:
     steps:
     - uses: actions/checkout@master
 
+    - name: Fix APT sources
+      run: |
+           sudo mv /etc/apt/sources.list /etc/apt/sources.list.backup
+           echo "deb http://archive.ubuntu.com/ubuntu focal main restricted universe multiverse" | sudo tee /etc/apt/sources.list
+           echo "deb http://archive.ubuntu.com/ubuntu focal-updates main restricted universe multiverse" | sudo tee -a /etc/apt/sources.list
+           echo "deb http://archive.ubuntu.com/ubuntu focal-security main restricted universe multiverse" | sudo tee -a /etc/apt/sources.list
+           echo "deb http://archive.ubuntu.com/ubuntu focal-backports main restricted universe multiverse" | sudo tee -a /etc/apt/sources.list
+           sudo apt-get update
+
     - name: Install compiler & Qt
       run: |
-           sudo apt-get install --no-install-recommends make g++ qt5-qmake qtbase5-dev qtmultimedia5-dev libqt5multimedia5 libqt5multimedia5-plugins libqt5opengl5-dev libqt5designer5 libqt5svg5-dev libfuse2 libxkbcommon-x11-0 appstream
-           cd /usr/lib/x86_64-linux-gnu/qt5/plugins/
-           ls -al
+           sudo apt-get install --fix-missing --no-install-recommends make g++ qt5-qmake qtbase5-dev qtmultimedia5-dev libqt5multimedia5 libqt5multimedia5-plugins libqt5opengl5-dev libqt5designer5 libqt5svg5-dev libfuse2 libxkbcommon-x11-0 appstream
+
+    - name: Inspect Qt plugin directories
+      run: |
+           ls -l /usr/lib/x86_64-linux-gnu/qt5/plugins/
+           ls -l /usr/lib/x86_64-linux-gnu/qt5/plugins/audio
+           ls -l /usr/lib/x86_64-linux-gnu/qt5/plugins/mediaservice
+           ls -l /usr/lib/x86_64-linux-gnu/qt5/plugins/playlistformats
            
     - name: Create build directory
       run:  mkdir ${{ env.SOURCE_DIR }}/build
@@ -48,6 +62,16 @@ jobs:
             mv ${{ env.SOURCE_DIR }}/qt/raw2mlv/raw2mlv .
             ls -al
 
+    - name: Copy Qt multimedia plugins
+      working-directory: ${{ env.SOURCE_DIR }}/build
+      run: |
+           mkdir -p image/usr/plugins/audio
+           mkdir -p image/usr/plugins/mediaservice
+           mkdir -p image/usr/plugins/playlistformats
+           cp -r /usr/lib/x86_64-linux-gnu/qt5/plugins/audio/* image/usr/plugins/audio/ || true
+           cp -r /usr/lib/x86_64-linux-gnu/qt5/plugins/mediaservice/* image/usr/plugins/mediaservice/ || true
+           cp -r /usr/lib/x86_64-linux-gnu/qt5/plugins/playlistformats/* image/usr/plugins/playlistformats/ || true
+
     - name: Install LinuxDeploy
       uses: miurahr/install-linuxdeploy-action@v1.7.0
       with:
@@ -56,7 +80,7 @@ jobs:
     - name: Create Appimage
       working-directory: ${{ env.SOURCE_DIR }}/build
       run: |
-           # Install lib for linuxdeploy, /usr/local/qwt-6.2.0/lib/libqwt.so.6.2
+           export QT_PLUGIN_PATH=/usr/lib/x86_64-linux-gnu/qt5/plugins
            linuxdeploy-x86_64.AppImage --desktop-file=image/mlvapp.desktop --executable=mlvapp --appdir=image --plugin=qt --output=appimage --verbosity=3 --icon-file=image/MLVAPP.png
            cp MLVApp-*.AppImage ${{ env.ARTIFACT }}
 

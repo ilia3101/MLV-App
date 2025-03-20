@@ -52,7 +52,7 @@ static const double ciecam02_danne[] = {
 
 
 /* Matrices XYZ -> RGB */
-static double colour_gamuts[][10] = {
+static double colour_gamuts[][12] = {
     { /* GAMUT_Rec709 */
          3.2404542, -1.5371385, -0.4985314,
         -0.9692660,  1.8760108,  0.0415560,
@@ -100,6 +100,16 @@ static double colour_gamuts[][10] = {
         1.6410233797, -0.3248032942, -0.2364246952,
         -0.6636628587, 1.6153315917, 0.0167563477,
         0.0117218943, -0.0082844420, 0.9883948585
+    },
+    { /* GAMUT_Canon_Cinema */
+        1.48981827, -0.2608959,  -0.14242652,
+        -0.45816657,  1.26162778,  0.15962363,
+        -0.07034967,  0.22155767,  0.7761816
+    },
+    { /* GAMUT_PanasonivV */
+        1.589012, -0.313204,  -0.180965,
+        -0.534053,  1.396011,  0.102458,
+        0.011179,  0.003194,  0.905535
     }
 };
 
@@ -124,8 +134,8 @@ double TangentTonemap(double x) { return atan(x) / atan(8.0); }
 float TangentTonemap_f(float x) { return atanf(x) / atanf(8.0f); }
 
 /* Canon C-Log: http://learn.usa.canon.com/app/pdfs/white_papers/White_Paper_Clog_optoelectronic.pdf (not working right) */
-double CanonCLogTonemap(double x) { return (0.529136 * log10(x * 1015.96 + 1.0) + 0.0730597); }
-float CanonCLogTonemap_f(float x) { return (0.529136f * log10f(x * 1015.96f + 1.0f) + 0.0730597f); }
+double CanonCLogTonemap(double x) { return (0.529136 * log10(x * 10.1596 + 1.0) + 0.0730597); }
+float CanonCLogTonemap_f(float x) { return (0.529136f * log10f(x * 10.1596f + 1.0f) + 0.0730597f); }
 
 /* Calculate Alexa Log curve (iso 800 version), from here: http://www.vocas.nl/webfm_send/964 */
 double AlexaLogCTonemap(double x) { return (x > 0.010591) ? (0.247190 * log10(5.555556 * x + 0.052272) + 0.385537) : (5.367655 * x + 0.092809); }
@@ -171,7 +181,9 @@ static tonemap_func_t tonemap_function_strings[] = {
     { TONEMAP_Rec709, "(x <= 0.018) ? (x * 4.5) : 1.099 * pow( x, (0.45) ) - 0.099" },
     { TONEMAP_HLG, "(x <= 1.0) ? (sqrt(x) * 0.5) : 0.17883277 * log(x - 0.28466892) + 0.55991073" },
     { TONEMAP_DavinciIntermediate, "(x <= 0.00262409) ? (x * 10.44426855) : (log10(x + 0.0075) / log10(2) + 7.0) * 0.07329248" },
-    { TONEMAP_Reinhard_3_5, "(x < 0.4) ? x : (((x-0.4)/0.6) / (1.0 + ((x-0.4)/0.6)))*0.6 + 0.4" }
+    { TONEMAP_Reinhard_3_5, "(x < 0.4) ? x : (((x-0.4)/0.6) / (1.0 + ((x-0.4)/0.6)))*0.6 + 0.4" },
+    { TONEMAP_CanonLog, "(0.529136 * (log10 ( 10.1596 * x + 1 ))) + 0.0730597" },
+    { TONEMAP_PanasonicVLog, "(x >= 0.01) ? (0.241514 * log10(x + 0.00873) + 0.598206) : (5.6 * x + 0.125)" }
 };
 
 char * get_tonemap_func_string(int id)
@@ -189,7 +201,6 @@ static void * tonemap_functions[] =
     (void *)&NoTonemap,
     (void *)&ReinhardTonemap,
     (void *)&TangentTonemap,
-    //(void *)&CanonCLogTonemap,
     (void *)&AlexaLogCTonemap,
     (void *)&CineonLogTonemap,
     (void *)&SonySLogTonemap,
@@ -197,7 +208,8 @@ static void * tonemap_functions[] =
     (void *)&Rec709TransferFunction,
     (void *)&HLG_TransferFunction,
     (void *)&DavinciIntermediateTonemap,
-    (void *)&Reinhard_3_5_Tonemap
+    (void *)&Reinhard_3_5_Tonemap,
+    (void *)&CanonCLogTonemap,
 };
 
 /* Returns multipliers for white balance by (linearly) interpolating measured 

@@ -1,4 +1,4 @@
-name: macOS Intel Release
+name: macOS Arm64 Release
 
 on:
   workflow_dispatch:
@@ -6,13 +6,13 @@ on:
 
 env:
   SOURCE_DIR:   ${{ github.workspace }}/platform
-  QTDIR:        /usr/local/opt/qt@5/bin
+  QTDIR:        /opt/homebrew/opt/qt@5/bin
   ARTIFACT:     ${{ github.workspace }}/platform/build/MLV\ App.dmg
 
 jobs:
   build:
 
-    runs-on: macos-13
+    runs-on: macos-14
 
     steps:
     - uses: actions/checkout@master
@@ -37,5 +37,5 @@ jobs:
     - name: Save build artifact
       uses: actions/upload-artifact@master
       with:
-        name: MLVApp macOS Intel
+        name: MLVApp macOS Arm64
         path: ${{ env.ARTIFACT }}

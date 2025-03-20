@@ -77,5 +77,19 @@ static image_profile_t default_image_profiles[] =
         .gamma_power = 1.0,
         .colour_gamut = GAMUT_Rec2020,
         .transfer_function = "(x < 0.00089) ? (8.735631 * x + 0.092864) : (0.344676 * log10(0.555556 * x + 0.009468) + 0.790453)"
+    },
+    { /* PROFILE_CANON_LOG (source: WhitePaper_Clog_optoelectronic.pdf by Canon)*/
+        .allow_creative_adjustments = 0,
+        .tonemap_function = TONEMAP_CanonLog,
+        .gamma_power = 1.0,
+        .colour_gamut = GAMUT_Canon_Cinema,
+        .transfer_function = "(0.529136 * (log10 ( 10.1596 * x + 1 ))) + 0.0730597"
+    },
+    { /* PROFILE_CANON_LOG (source: VARICAM_V-Log_V-Gamut.pdf)*/
+        .allow_creative_adjustments = 0,
+        .tonemap_function = TONEMAP_PanasonicVLog,
+        .gamma_power = 1.0,
+        .colour_gamut = GAMUT_PanasonivV,
+        .transfer_function = "(x >= 0.01) ? (0.241514 * log10(x + 0.00873) + 0.598206) : (5.6 * x + 0.125)"
     }
 };

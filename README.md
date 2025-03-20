@@ -82,7 +82,6 @@ What is MLV App? Lightroom, but for Magic Lantern MLV Video (and open source and
 - install Qt5 (5.6 .. 5.15.2) or Qt6 (6.4 or later)
 - open `platform/qt/MLVApp.pro` in QtCreator
 - Build and Start
-- OR download and doubleclick easy-to-use [compiler app](https://bitbucket.org/Dannephoto/mlv_app_compiler-git/downloads/mlv_app_compiler.dmg) from @dannephoto
 
 #### Qt App macOS (Apple Silicon based, with Qt5)
 - install command line tools (SDK 11.3 is known to work)
@@ -96,6 +95,7 @@ What is MLV App? Lightroom, but for Magic Lantern MLV Video (and open source and
 - open `platform/qt/MLVApp.pro` in QtCreator
 - uncomment section for Apple Silicon in `MLVApp.pro`
 - Build and Start
+- OR download and doubleclick easy-to-use [compiler app](https://bitbucket.org/Dannephoto/mlv_app_compiler-git/downloads/mlv_app_compiler_arm64.dmg) from @dannephoto
 
 #### Qt App macOS (Apple Silicon based, with Qt6)
 - same as Qt App macOS (Intel based)
@@ -107,7 +107,10 @@ What is MLV App? Lightroom, but for Magic Lantern MLV Video (and open source and
 - Build and Start
 
 #### Qt App Linux (generally)
-- install Qt5 (5.6 .. 5.15.2) or Qt6 (6.4 or later) and ffmpeg (we use v3.3.2) 
+- install Qt5 (5.6 .. 5.15.2) or Qt6 (6.4 or later), ffmpeg (we use v3.3.2) and other needed packages. We install this in the github Linux runner:
+  ```
+  sudo apt-get install --no-install-recommends make g++ qt5-qmake qtbase5-dev qtmultimedia5-dev libqt5multimedia5 libqt5multimedia5-plugins libqt5opengl5-dev libqt5designer5 libqt5svg5-dev libfuse2 libxkbcommon-x11-0 appstream
+  ```
 - `cd platform/qt/`
 - `qmake MLVApp.pro` or equivalent (depending on distro and version and...)
 - `make -j$(nproc)`
@@ -115,18 +118,17 @@ What is MLV App? Lightroom, but for Magic Lantern MLV Video (and open source and
 
 A detailed guide for compiling MLV-App on Linux can be found [here](https://sternenkarten.com/tutorial-englisch/) (thanks to @seescho).
 
-If you have a Debian based distro, these packages will give you everything you need: 
-```
-sudo apt install qt5-default qtchooser qtmultimedia5-dev qt5-qmake
-```
-(tested on Ubuntu 20.04 and ChromeOS linnux)
-
 #### Cocoa App (very very deprecated)
 ```
 git clone https://github.com/ilia3101/MLV-App.git
 cd MLV-App/platform/cocoa
 make app -j4
 ```
+
+## Install MLVApp on mobile systems
+#### Android (via Wine)
+- install winlator app
+- install Win64 MLVApp release version into winlator app
 
 ## The Code
 All the MLV stuff is in src/mlv
