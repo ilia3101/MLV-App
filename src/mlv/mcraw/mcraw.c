@@ -342,6 +342,11 @@ static int mr_read_file_metadata(mr_ctx_t *ctx)
                     }
                     break;
 
+                case 17:
+                    if (STRING_EQ(js, t, len, "sensorArrangement") == 0) {
+                        parse_sensor_arrangment(&ctx->cfa_pattern, js, &tokens[++i]);
+                    }
+
                 case 18:
                     if (STRING_EQ(js, t, len, "calibrationMatrix1") == 0) {
                         cpy_matrix(ctx->calibration_matrix1, 9, js, tokens, &i);
