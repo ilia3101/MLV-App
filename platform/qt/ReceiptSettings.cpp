@@ -52,7 +52,7 @@ ReceiptSettings::ReceiptSettings()
     m_grainStrength = 0;
     m_grainLumaWeight = 0;
     m_highlightReconstruction = false;
-    m_useCamMatrix = 1;
+    m_useCamMatrix = -1;
     m_chromaSeparation = false;
     m_rawFixesEnabled = true;
     m_vertical_stripes = -1;

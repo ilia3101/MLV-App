@@ -842,8 +842,6 @@ int MainWindow::openMlv( QString fileName )
 #else
         new_MlvObject = initMlvObjectWithMcrawClip( fileName.toLatin1().data(), mlvOpenMode, &mlvErr, mlvErrMsg );
 #endif
-        ui->comboBoxUseCameraMatrix->setCurrentIndex(0);
-        on_comboBoxUseCameraMatrix_currentIndexChanged(0);
     }
     else
     {
@@ -3674,7 +3672,7 @@ void MainWindow::on_actionExportReceipt_triggered()
 void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings *receipt, int version)
 {
     //Compatibility for Cam Matrix (files without the tag will disable it
-    receipt->setCamMatrixUsed( false );
+    receipt->setCamMatrixUsed( 0 );
 
     //Compatibility for old saved dual iso projects
     receipt->setDualIsoForced( DISO_FORCED );
@@ -4455,13 +4453,17 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     ui->horizontalSliderExposure->setValue( receipt->exposure() );
     ui->horizontalSliderContrast->setValue( receipt->contrast() );
     ui->horizontalSliderPivot->setValue( receipt->pivot() );
-    if( receipt->temperature() == -1 )
-    {
+    if( receipt->temperature() == -1 ) {
         //Init Temp read from the file when imported and loaded very first time completely
         setWhiteBalanceFromMlv( receipt );
     }
-    if (isMcrawLoaded(m_pMlvObject)) {
-        receipt->setCamMatrixUsed(0);
+    if( receipt->camMatrixUsed() == -1 ) {
+        //Init cameramatrix = off for mcraw and else cameramatrix = on
+        if( isMcrawLoaded(m_pMlvObject) ) {
+            receipt->setCamMatrixUsed(0);
+        } else {
+            receipt->setCamMatrixUsed(1);
+        }
     }
     ui->comboBoxUseCameraMatrix->setCurrentIndex( receipt->camMatrixUsed() );
     on_comboBoxUseCameraMatrix_currentIndexChanged( receipt->camMatrixUsed() );

@@ -58,7 +58,7 @@ public:
     void setGrainStrength( int value )        {m_grainStrength = value;}
     void setGrainLumaWeight( int  on )        {m_grainLumaWeight = on;}
     void setHighlightReconstruction( bool on ){m_highlightReconstruction = on;}
-    void setCamMatrixUsed( uint8_t val )      {m_useCamMatrix = val;}
+    void setCamMatrixUsed( int8_t val )       {m_useCamMatrix = val;}
     void setChromaSeparation( bool on )       {m_chromaSeparation = on;}
     void setProfile( uint8_t num )            {m_profile = num;}
     void setTonemap( int8_t num )             {m_tonemap = num;}
@@ -164,7 +164,7 @@ public:
     int grainStrength( void ){return m_grainStrength;}
     int grainLumaWeight( void ){return m_grainLumaWeight;}
     bool isHighlightReconstruction( void ){return m_highlightReconstruction;}
-    uint8_t camMatrixUsed( void ){return m_useCamMatrix;}
+    int8_t camMatrixUsed( void ){return m_useCamMatrix;}
     bool isChromaSeparation( void ){return m_chromaSeparation;}
     bool rawFixesEnabled( void ){return m_rawFixesEnabled;}
     int verticalStripes( void ){return m_vertical_stripes;}
@@ -279,7 +279,7 @@ private:
     int m_grainStrength;
     int m_grainLumaWeight;
     bool m_highlightReconstruction;
-    uint8_t m_useCamMatrix;
+    int8_t m_useCamMatrix;
     bool m_chromaSeparation;
     bool m_rawFixesEnabled; // Enable/Disable all raw fixes
     int m_vertical_stripes; // fix vertical stripes, 0 - do not fix", 1 - fix, 2 - calculate for every frame
