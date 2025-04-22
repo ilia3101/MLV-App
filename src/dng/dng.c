@@ -488,9 +488,6 @@ int loadDngPropertiesInt(char *props_buffer, char *key, int *value)
     int res = 0;
 
     char *p = strstr(props_buffer, key);
-    char *d = value;
-
-    int len = 0;
 
     if (p != NULL)
     {
