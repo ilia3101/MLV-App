@@ -4640,7 +4640,7 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     else if( receipt->stretchFactorX() == STRETCH_H_167 ) ui->comboBoxHStretch->setCurrentIndex( 3 );
     else if( receipt->stretchFactorX() == STRETCH_H_175 ) ui->comboBoxHStretch->setCurrentIndex( 4 );
     else if( receipt->stretchFactorX() == STRETCH_H_180 ) ui->comboBoxHStretch->setCurrentIndex( 5 );
-    else ui->comboBoxHStretch->setCurrentIndex( 5 );
+    else ui->comboBoxHStretch->setCurrentIndex( 6 );
     on_comboBoxHStretch_currentIndexChanged( ui->comboBoxHStretch->currentIndex() );
 
     if( receipt->stretchFactorY() == -1 )
