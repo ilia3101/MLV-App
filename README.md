@@ -22,6 +22,7 @@ What is MLV App? Lightroom, but for Magic Lantern MLV Video (and open source and
 - [Find the latest official releases here](https://mlv.app). Download, unpack and start
 - Find debian packages [here](http://sid.ethz.ch/debian/mlv-app/) (thanks to @alexmyczko)
 - Find Arch Linux image [here](https://aur.archlinux.org/packages/mlv.app/) (thanks to davvore33)
+- Find NixOS package [here](https://search.nixos.org/packages?show=mlv-app)
 - Ask questions on the [Magic Lantern forum thread](https://www.magiclantern.fm/forum/index.php?topic=20025.0)
 - Report bugs on the [issues page](https://github.com/ilia3101/MLV-App/issues)
 - A user manual can be found [here](https://github.com/ilia3101/MLV-App/wiki) and in-app
