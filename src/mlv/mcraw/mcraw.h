@@ -30,6 +30,12 @@
 extern "C" {
 #endif
 
+enum mr_comp_type
+{
+    MOTIONCAM_COMPRESSION_TYPE_LEGACY = 6,
+    MOTIONCAM_COMPRESSION_TYPE = 7
+};
+
 enum mr_item_type
 {
     BUFFER_INDEX,
@@ -142,7 +148,7 @@ void mr_decoder_close(mr_ctx_t *ctx);
 int mr_read_video_frame(FILE *fd, int64_t offset, mr_packet_t *pkt);
 int mr_read_audio_packet(FILE *fd, int64_t offset, mr_packet_t *pkt);
 int mr_read_frame_metadata(FILE *fd, mr_frame_data_t *frame_data);
-size_t mr_decode_video_frame(uint8_t *dstData, uint8_t *srcData, uint32_t srcSize, int width, int height);
+size_t mr_decode_video_frame(uint8_t *dstData, uint8_t *srcData, uint32_t srcSize, int width, int height, int comp_type);
 
 void mr_dump(mr_ctx_t *ctx);
 FILE* mr_get_file_handle(mr_ctx_t *ctx);
@@ -172,6 +178,7 @@ int64_t mr_get_timestamp(mr_ctx_t *ctx);
 const char* mr_get_manufacturer(mr_ctx_t *ctx);
 const char* mr_get_model(mr_ctx_t *ctx);
 uint32_t mr_get_cfa_pattern(mr_ctx_t *ctx);
+int mr_get_compression_type(mr_ctx_t *ctx);
 
 int32_t mr_get_audio_sample_rate(mr_ctx_t *ctx);
 int32_t mr_get_audio_channels(mr_ctx_t *ctx);

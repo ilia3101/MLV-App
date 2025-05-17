@@ -157,6 +157,7 @@ SOURCES += \
     ../../src/mlv/camid/camera_id.c \   
     ../../src/mlv/mcraw/mcraw.c \
     ../../src/mlv/mcraw/RawData.cpp \
+    ../../src/mlv/mcraw/RawData_Legacy.cpp \
     ../../src/processing/processing.c \
     ../../src/processing/raw_processing.c \
     ../../src/processing/filter/filter.c \

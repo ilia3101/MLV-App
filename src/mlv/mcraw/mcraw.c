@@ -1054,6 +1054,12 @@ uint32_t mr_get_cfa_pattern(mr_ctx_t *ctx)
 }
 
 //-----------------------------------------------------------------------------
+int mr_get_compression_type(mr_ctx_t *ctx)
+{
+    return ctx->frame_data.compression_type;
+}
+
+//-----------------------------------------------------------------------------
 FILE* mr_get_file_handle(mr_ctx_t *ctx)
 {
     return ctx->fd;

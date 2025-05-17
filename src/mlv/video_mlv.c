@@ -240,7 +240,7 @@ int getMlvRawFrameUint16(mlvObject_t * video, uint64_t frameIndex, uint16_t * un
 
         pthread_mutex_unlock(video->main_file_mutex + chunk);
 
-        int64_t ret = mr_decode_video_frame((uint8_t*)unpackedFrame, raw_frame, frame_size, width, height);
+        int64_t ret = mr_decode_video_frame((uint8_t*)unpackedFrame, raw_frame, frame_size, width, height, video->compression_type);
 
         if (ret <= 0)
         {
@@ -1619,6 +1619,7 @@ int openMcrawClip(mlvObject_t * video, char * mcrawPath, int open_mode, char * e
        video_index_max = 1;
     }
 
+    video->compression_type = mr_get_compression_type(ctx);
     video->frames      = video_index_max;
     video->video_index = (frame_index_t *)calloc(video->frames, sizeof(frame_index_t));
 
