@@ -96,6 +96,7 @@ typedef struct {
     double      frame_rate;      /* User may want to override it */
     uint32_t    frames;          /* Number of frames */
     uint32_t    frame_size;      /* NOT counting compression factor */
+    int         compression_type;  /* mcraw compression type. legacy/binned: 6, default: 7 */
     frame_index_t * video_index;
 
     /* Audio info */

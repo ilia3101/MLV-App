@@ -946,7 +946,8 @@ static int dng_get_frame(mlvObject_t * mlv_data, dngObject_t * dng_data, uint32_
                                             (uint8_t*)dng_data->image_buf2,
                                             stored_size,
                                             mlv_data->RAWI.xRes,
-                                            mlv_data->RAWI.yRes);
+                                            mlv_data->RAWI.yRes,
+                                            mlv_data->compression_type);
 
         if (ret <= 0)
         {
