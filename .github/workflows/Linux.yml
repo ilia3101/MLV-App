@@ -25,9 +25,6 @@ jobs:
             libqt5opengl5-dev libqt5designer5 libqt5svg5-dev \
             libfuse2 libxkbcommon-x11-0 appstream
 
-    - name: Setup Qt environment
-      run: echo 'source /opt/qt515/bin/qt515-env.sh' >> $GITHUB_ENV
-
     - name: Inspect Qt plugin directories
       run: |
            ls -l /usr/lib/x86_64-linux-gnu/qt5/plugins/
