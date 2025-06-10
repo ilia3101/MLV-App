@@ -27,7 +27,15 @@ jobs:
 
     - name: Install compiler & Qt
       run: |
-           sudo apt-get install --fix-missing --no-install-recommends make g++ qt5-qmake qtbase5-dev qtmultimedia5-dev libqt5multimedia5 libqt5multimedia5-plugins libqt5opengl5-dev libqt5designer5 libqt5svg5-dev libfuse2 libxkbcommon-x11-0 appstream
+        sudo add-apt-repository ppa:beineri/opt-qt-5.15.2-focal -y
+        sudo apt-get update
+        sudo apt-get install --no-install-recommends -y \
+          make g++ \
+          qt515base qt515svg qt515tools qt515multimedia qt515opengl \
+          libfuse2 libxkbcommon-x11-0 appstream
+
+    - name: Setup Qt environment
+      run: echo 'source /opt/qt515/bin/qt515-env.sh' >> $GITHUB_ENV
 
     - name: Inspect Qt plugin directories
       run: |
