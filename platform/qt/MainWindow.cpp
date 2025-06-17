@@ -1524,7 +1524,7 @@ void MainWindow::initLib( void )
     m_pProcessingObject = initProcessingObject();
     /* Set exposure to + 1.2 stops instead of correct 0.0, this is to give the impression
      * (to those that believe) that highlights are recoverable (shhh don't tell) */
-    processingSetExposureStops( m_pProcessingObject, 1.2 );
+    //processingSetExposureStops( m_pProcessingObject, 1.2 );
     /* Link video with processing settings */
     setMlvProcessing( m_pMlvObject, m_pProcessingObject );
     processingSetImageProfile(m_pProcessingObject, PROFILE_TONEMAPPED);
