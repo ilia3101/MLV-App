@@ -20,7 +20,11 @@
 
 // //////////////
 //Interpolation functions
+#if QT_NO_DEBUG
 inline float lerp(float x, float x1, float x2, float q00, float q01) {
+#else
+float lerp(float x, float x1, float x2, float q00, float q01) {
+#endif
     if( ( x2 - x1 ) == 0 ) return q00;
     else return ( ( ( x2 - x ) / ( x2 - x1 ) ) * q00 ) + ( ( ( x - x1 ) / ( x2 - x1 ) ) * q01 );
 }
