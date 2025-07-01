@@ -49,7 +49,7 @@ typedef struct _ljp {
     int skiplen; // Skip this many values after each row
     u16* linearize; // Linearization table
     int linlen;
-    int sssshist[16];
+    //int sssshist[16];
 
     // Huffman table - only one supported, and probably needed
 #ifdef SLOW_HUFF
@@ -365,7 +365,7 @@ inline static int nextdiff(ljp* self) {
     u16 ssssused = self->hufflut[index];
     int usedbits = ssssused&0xFF;
     int t = ssssused>>8;
-    self->sssshist[t]++;
+    //self->sssshist[t]++;
     cnt -= usedbits;
     int keepbitsmask = (1 << cnt)-1;
     b &= keepbitsmask;
@@ -424,7 +424,7 @@ static int parsePred6(ljp* self) {
     int diff;
     int Px;
     int col = 0;
-    int row = 0;
+    //int row = 0;
     int left = 0;
     int linear;
 
@@ -463,7 +463,7 @@ static int parsePred6(ljp* self) {
     temprow = lastrow;
     lastrow = thisrow;
     thisrow = temprow;
-    row++;
+    //row++;
     //printf("%x %x\n",thisrow,lastrow);
     while (c<pixels) {
         col = 0;
@@ -514,7 +514,7 @@ static int parsePred6(ljp* self) {
 
 static int parseScan(ljp* self) {
     int ret = LJ92_ERROR_CORRUPT;
-    memset(self->sssshist,0,sizeof(self->sssshist));
+    //memset(self->sssshist,0,sizeof(self->sssshist));
     self->ix = self->scanstart;
     int compcount = self->data[self->ix+2];
     int pred = self->data[self->ix+3+2*compcount];
@@ -750,7 +750,7 @@ int frequencyScan(lje* self) {
     int row = 0;
     int Px = 0;
     int32_t diff = 0;
-    int maxval = (1 << self->bitdepth);
+    //int maxval = (1 << self->bitdepth);
     while (pixcount--) {
         uint16_t p = *pixel;
         /* if (self->delinearize) {
@@ -938,7 +938,7 @@ for (int i=0;i<18;i++) {
     memset(huffbits,0,sizeof(self->huffbits));
     memset(self->huffsym,0,sizeof(self->huffsym));
     i = 0;
-    int hv = 0;
+    //int hv = 0;
     int rv = 0;
     int vl = 0; // i
     //int hcode;
@@ -957,7 +957,7 @@ for (int i=0;i<18;i++) {
         if (rv == 1 << (maxbits-bitsused)) {
             rv = 0;
             vl++;
-            hv++;
+            //hv++;
             //printf("%04x:%x:%d:%x\n",i,huffvals[hv],bitsused,1<<(maxbits-bitsused));
             continue;
         }
@@ -1047,7 +1047,7 @@ int writeBody(lje* self) {
     int row = 0;
     int Px = 0;
     int32_t diff = 0;
-    int bitcount = 0;
+    //int bitcount = 0;
     uint8_t* out = self->encoded;
     int w = self->encodedWritten;
     uint8_t next = 0;
