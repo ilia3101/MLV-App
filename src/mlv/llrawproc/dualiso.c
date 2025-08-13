@@ -29,6 +29,7 @@
 #include "wirth.h"
 #include <pthread.h>
 #include "../../debayer/debayer.h"
+#include <omp.h>
 
 #define EV_RESOLUTION 65536
 #ifndef M_PI
@@ -1025,23 +1026,67 @@ static inline void amaze_interpolate(struct raw_info raw_info, uint32_t * raw_bu
         yh++;
         if (yh >= h) break; /* just in case */
     }
-#if 0
-    void amaze_demosaic_RT(
-                           float** rawData,    /* holds preprocessed pixel values, rawData[i][j] corresponds to the ith row and jth column */
-                           float** red,        /* the interpolated red plane */
-                           float** green,      /* the interpolated green plane */
-                           float** blue,       /* the interpolated blue plane */
-                           int winx, int winy, /* crop window for demosaicing */
-                           int winw, int winh
-                           );
-#endif
-    //IDK if AMaZE is actually thread safe, but I'm just going to assume not, rather than inspecting that huge mess of code
-    LOCK(amaze_mutex)
+
+    //multithreaded debayer
+
+    int threads = omp_get_num_procs();
+    int startchunk_y[threads];
+    int endchunk_y[threads];
+
+    /* How big each thread's chunk is, multiple of 2 - or debayer
+     * would start on wrong pixel and magenta stripes appear */
+    int chunk_height = h / threads;
+    chunk_height -= chunk_height % 2;
+
+    /* To small chunk heights bring AMaZE module to crash */
+    while( chunk_height <= 32 )
     {
-        demosaic(& (amazeinfo_t) { rawData, red, green, blue, 0, 0, w, h, 0, 0 });
+        if( threads <= 1 ) break;
+        threads--;
+        chunk_height = h / threads;
+        chunk_height -= chunk_height % 2;
     }
-    UNLOCK(amaze_mutex)
-    
+
+    /* Calculate chunks of image for each thread */
+    for (int thread = 0; thread < threads; ++thread)
+    {
+        startchunk_y[thread] = chunk_height * thread;
+        endchunk_y[thread] = chunk_height * (thread + 1);
+    }
+
+    /* Last chunk must reach end of frame */
+    endchunk_y[threads-1] = h;
+
+    pthread_t thread_id[threads];
+    amazeinfo_t amaze_arguments[threads];
+
+    /* Create amaze pthreads */
+    for (int thread = 0; thread < threads; ++thread)
+    {
+        amaze_arguments[thread] = (amazeinfo_t) {
+            rawData,
+            red,
+            green,
+            blue,
+            /* Crop out a part for each thread */
+            0, startchunk_y[thread],    /* crop window for demosaicing */
+            w, (endchunk_y[thread] - startchunk_y[thread]),
+            0,
+            0 };
+
+        /* Amaze arguments */
+       // amaze_arguments[thread] = (amazeinfo_t) { rawData, red, green, blue, 0, 0, w, h, 0, 0 };
+
+        /* Create pthread! */
+        pthread_create( &thread_id[thread], NULL, (void *)&demosaic, (void *)&amaze_arguments[thread] );
+    }
+
+    /* let all threads finish */
+    for (int thread = 0; thread < threads; ++thread)
+    {
+        pthread_join( thread_id[thread], NULL );
+    }
+
     /* undo green channel scaling and clamp the other channels */
     //#pragma omp parallel for collapse(2)
     for (int y = 0; y < h; y ++)
@@ -1075,11 +1120,7 @@ static inline void amaze_interpolate(struct raw_info raw_info, uint32_t * raw_bu
     double * fullres_curve = build_fullres_curve(black);
     
     //~ printf("Cross-correlation...\n");
-    int semi_overexposed = 0;
-    int not_overexposed = 0;
-    int deep_shadow = 0;
-    int not_shadow = 0;
-    
+
     /* for fast EV - raw conversion */
     static int raw2ev[1<<20];   /* EV x EV_RESOLUTION */
     static int ev2raw_0[24*EV_RESOLUTION];
@@ -1090,16 +1131,21 @@ static inline void amaze_interpolate(struct raw_info raw_info, uint32_t * raw_bu
     
     LOCK(ev2raw_mutex)
     {
+        int semi_overexposed = 0;
+        int not_overexposed = 0;
+        int deep_shadow = 0;
+        int not_shadow = 0;
+
         if(black != previous_black)
         {
             build_ev2raw_lut(raw2ev, ev2raw_0, black, white);
             previous_black = black;
         }
-        //#pragma omp parallel for
+        #pragma omp parallel for
         for (int y = 5; y < h-5; y ++)
         {
             int s = (is_bright[y%4] == is_bright[(y+1)%4]) ? -1 : 1;    /* points to the closest row having different exposure */
-            //#pragma omp parallel for
+
             for (int x = 5; x < w-5; x ++)
             {
                 int e_best = INT_MAX;
@@ -1113,6 +1159,7 @@ static inline void amaze_interpolate(struct raw_info raw_info, uint32_t * raw_bu
                 {
                     /* interpolating bright exposure */
                     if (fullres_curve[raw_get_pixel32(x, y)] > fullres_thr)
+#pragma omp critical
                     {
                         /* no high accuracy needed, just interpolate vertically */
                         not_shadow++;
@@ -1120,12 +1167,14 @@ static inline void amaze_interpolate(struct raw_info raw_info, uint32_t * raw_bu
                         dmax = d0;
                     }
                     else
+#pragma omp critical
                     {
                         /* deep shadows, unlikely to use fullres, so we need a good interpolation */
                         deep_shadow++;
                     }
                 }
                 else if (raw_get_pixel32(x, y) < (unsigned int)white_darkened)
+#pragma omp critical
                 {
                     /* interpolating dark exposure, but we also have good data from the bright one */
                     not_overexposed++;
@@ -1133,6 +1182,7 @@ static inline void amaze_interpolate(struct raw_info raw_info, uint32_t * raw_bu
                     dmax = d0;
                 }
                 else
+#pragma omp critical
                 {
                     /* interpolating dark exposure, but the bright one is clipped */
                     semi_overexposed++;
