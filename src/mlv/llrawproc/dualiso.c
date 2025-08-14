@@ -1028,7 +1028,6 @@ static inline void amaze_interpolate(struct raw_info raw_info, uint32_t * raw_bu
     }
 
     //multithreaded debayer
-
     int threads = omp_get_num_procs();
     int startchunk_y[threads];
     int endchunk_y[threads];
@@ -1073,9 +1072,6 @@ static inline void amaze_interpolate(struct raw_info raw_info, uint32_t * raw_bu
             w, (endchunk_y[thread] - startchunk_y[thread]),
             0,
             0 };
-
-        /* Amaze arguments */
-       // amaze_arguments[thread] = (amazeinfo_t) { rawData, red, green, blue, 0, 0, w, h, 0, 0 };
 
         /* Create pthread! */
         pthread_create( &thread_id[thread], NULL, (void *)&demosaic, (void *)&amaze_arguments[thread] );
