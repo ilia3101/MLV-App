@@ -146,6 +146,8 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
 
     //Init the lib
     initLib();
+    
+    resetSliders();
 
     //Setup Toning (has to be done after initLib())
     on_horizontalSliderTone_valueChanged( 0 );
@@ -174,6 +176,8 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
         }
         else if( QFile(fileName).exists() && fileName.endsWith( ".masxml", Qt::CaseInsensitive ) )
         {
+            if( SESSION_CLIP_COUNT && askToSaveCurrentSession() ) return;
+
             m_inOpeningProcess = true;
             openSession( fileName );
             //Show last imported file
@@ -379,6 +383,8 @@ bool MainWindow::event(QEvent *event)
         }
         else if( QFile(fileName).exists() && fileName.endsWith( ".masxml", Qt::CaseInsensitive ) )
         {
+            if( SESSION_CLIP_COUNT && askToSaveCurrentSession() ) return false;
+
             m_inOpeningProcess = true;
             openSession( fileName );
             //Show last imported file
@@ -430,6 +436,8 @@ void MainWindow::dropEvent(QDropEvent *event)
         }
         else if( event->mimeData()->urls().at(0).path().endsWith( ".masxml", Qt::CaseInsensitive ) )
         {
+            if( SESSION_CLIP_COUNT && askToSaveCurrentSession() ) return;
+
             m_inOpeningProcess = true;
             openSession( event->mimeData()->urls().at(0).path() );
             //Show last imported file
@@ -475,6 +483,7 @@ void MainWindow::openMlvSet( QStringList list )
 
         if( i == 0 && QFile(fileName).exists() && fileName.endsWith( ".masxml", Qt::CaseInsensitive ) )
         {
+            if( SESSION_CLIP_COUNT && askToSaveCurrentSession() ) return;
             openSession( fileName );
         }
         else
@@ -508,8 +517,8 @@ void MainWindow::closeEvent(QCloseEvent *event)
     if( ui->actionAskForSavingOnQuit->isChecked() && SESSION_CLIP_COUNT != 0 )
     {
         //Ask before quit
-        QMessageBox::StandardButton ret = QMessageBox::warning( this, APPNAME, tr( "Do you really like to quit MLVApp? Do you like to save the session?" ),
-                                                                QMessageBox::Cancel | QMessageBox::Close | QMessageBox::Save, QMessageBox::Cancel );
+        QMessageBox::StandardButton ret = QMessageBox::warning( this, APPNAME, tr( "Do you want to save the current session?" ),
+                                                                QMessageBox::Cancel | QMessageBox::Discard | QMessageBox::Save, QMessageBox::Cancel );
         //Aborted
         if( ret == QMessageBox::Escape || ret == QMessageBox::Cancel )
         {
@@ -907,41 +916,21 @@ int MainWindow::openMlv( QString fileName )
     float shutterAngle = getMlvFramerate( m_pMlvObject ) * 360.0f / shutterSpeed;
 
     //Form ISO info string.
-    int isoVal = (int)getMlvIso( m_pMlvObject );
-    int disoVal = (int)getMlv2ndIso( m_pMlvObject );
-    QString isoInfo = QString( "%1" ).arg( isoVal );
+    QString isoInfo = QString( "%1" ).arg( (int)getMlvIso( m_pMlvObject ) );
     QString dualIso = QString( "-" );
     QString dualIsoInfo = isoInfo;
+
     if( llrpGetDualIsoValidity( m_pMlvObject ) == DISO_VALID )
     {
-        //disoVal choises for first two checks: "-6 EV", "-5 EV", "-4 EV", "-3 EV", "-2 EV", "-1 EV", "+1 EV", "+2 EV", "+3 EV", "+4 EV", "+5 EV", "+6 EV", "100", "200", "400", "800", "1600", "3200", "6400", "12800", "25600"
-        if(disoVal < 0) //Menu index mode relative ISO
-        {
-            uint32_t recoveryIsoVal = isoVal * pow (2, disoVal);
-            if(recoveryIsoVal < 100) recoveryIsoVal = 100;
-            isoInfo = QString( "%1/%2" ).arg( getMlvIso( m_pMlvObject ) ).arg( recoveryIsoVal );
-            dualIso = QString( "DualISO" );
-            dualIsoInfo = QString( "%1, %2" ).arg( isoInfo ).arg( dualIso );
-        }
-        else if( disoVal && (disoVal < 100) ) //Menu index mode absolute ISO
-        {
-            uint32_t recoveryIsoVal = 100 * pow (2, disoVal);
-            isoInfo = QString( "%1/%2" ).arg( getMlvIso( m_pMlvObject ) ).arg( recoveryIsoVal );
-            dualIso = QString( "DualISO" );
-            dualIsoInfo = QString( "%1, %2" ).arg( isoInfo ).arg( dualIso );
-        }
-        else if( (disoVal >= 100) && (disoVal <= 25600) ) //Valid iso mode
-        {
-            isoInfo = QString( "%1/%2" ).arg( getMlvIso( m_pMlvObject ) ).arg( disoVal );
-            dualIso = QString( "DualISO" );
-            dualIsoInfo = QString( "%1, %2" ).arg( isoInfo ).arg( dualIso );
-        }
+        isoInfo = QString( "%1/%2" ).arg( m_pMlvObject->llrawproc->diso1 ).arg( m_pMlvObject->llrawproc->diso2 );
+        dualIso = QString( "Dual ISO" );
+        dualIsoInfo = QString( "%1, %2" ).arg( isoInfo ).arg( dualIso );
     }
 
     QString audioText;
     if( doesMlvHaveAudio( m_pMlvObject ) )
     {
-        audioText = QString( "%1 channel(s),  %2 kHz" )
+        audioText = QString( "%1 channel(s), %2 kHz" )
                 .arg( getMlvAudioChannels( m_pMlvObject ) )
                 .arg( getMlvSampleRate( m_pMlvObject ) );
     }
@@ -957,11 +946,11 @@ int MainWindow::openMlv( QString fileName )
                                  QString( "%1" ).arg( (int)getMlvFrames( m_pMlvObject ) ),
                                  QString( "%1 fps" ).arg( getMlvFramerate( m_pMlvObject ) ),
                                  QString( "%1 mm" ).arg( getMlvFocalLength( m_pMlvObject ) ),
-                                 QString( "1/%1 s,  %2 deg,  %3 µs" ).arg( (uint16_t)(shutterSpeed + 0.5f) ).arg( (uint16_t)(shutterAngle + 0.5f) ).arg( getMlvShutter( m_pMlvObject ) ),
+                                 QString( "1/%1 s, %2 deg, %3 µs" ).arg( (uint16_t)(shutterSpeed + 0.5f) ).arg( (uint16_t)(shutterAngle + 0.5f) ).arg( getMlvShutter( m_pMlvObject ) ),
                                  QString( "ƒ/%1" ).arg( getMlvAperture( m_pMlvObject ) / 100.0, 0, 'f', 1 ),
                                  isoInfo,
                                  dualIso,
-                                 QString( "%1 bits,  %2" ).arg( getLosslessBpp( m_pMlvObject ) ).arg( getMlvCompression( m_pMlvObject ) ),
+                                 QString( "%1 bits, %2" ).arg( getLosslessBpp( m_pMlvObject ) ).arg( getMlvCompression( m_pMlvObject ) ),
                                  QString( "%1-%2-%3 / %4:%5:%6" )
                                            .arg( getMlvTmYear(m_pMlvObject) )
                                            .arg( getMlvTmMonth(m_pMlvObject), 2, 10, QChar('0') )
@@ -983,10 +972,10 @@ int MainWindow::openMlv( QString fileName )
     m_pInfoDialog->ui->tableWidget->item( 8, 1 )->setText( ACTIVE_CLIP->getElement( 10 ).toString() );
     m_pInfoDialog->ui->tableWidget->item( 9, 1 )->setText( dualIsoInfo );
     m_pInfoDialog->ui->tableWidget->item( 10, 1 )->setText( ACTIVE_CLIP->getElement( 13 ).toString() );
-    m_pInfoDialog->ui->tableWidget->item( 11, 1 )->setText( QString( "%1 black,  %2 white" ).arg( getMlvOriginalBlackLevel( m_pMlvObject ) ).arg( getMlvOriginalWhiteLevel( m_pMlvObject ) ) );
+    m_pInfoDialog->ui->tableWidget->item( 11, 1 )->setText( QString( "%1 black, %2 white" ).arg( getMlvOriginalBlackLevel( m_pMlvObject ) ).arg( getMlvOriginalWhiteLevel( m_pMlvObject ) ) );
     m_pInfoDialog->ui->tableWidget->item( 12, 1 )->setText( ACTIVE_CLIP->getElement( 14 ).toString() );
     m_pInfoDialog->ui->tableWidget->item( 13, 1 )->setText( ACTIVE_CLIP->getElement( 15 ).toString() );
-    m_pInfoDialog->ui->tableWidget->item( 14, 1 )->setText( ACTIVE_CLIP->getElement( 16 ).toString() + ",  " + ACTIVE_CLIP->getElement( 17 ).toString() );
+    m_pInfoDialog->ui->tableWidget->item( 14, 1 )->setText( ACTIVE_CLIP->getElement( 16 ).toString() + ", " + ACTIVE_CLIP->getElement( 17 ).toString() );
 
     resultingResolution();
 
@@ -1468,7 +1457,7 @@ void MainWindow::initGui( void )
     ui->toolButtonWbMode->setToolTip( tr( "Chose between WB picker on grey or on skin" ) );
 
     //DualIso Button by default invisible
-    ui->toolButtonDualIsoForce->setVisible( false );
+    //ui->toolButtonDualIsoForce->setVisible( false );
 
     //Vidstab
     on_checkBoxVidstabEnable_toggled( false );
@@ -3331,6 +3320,37 @@ void MainWindow::addFileToSession(QString fileName)
     qApp->processEvents();
 }
 
+int MainWindow::askToSaveCurrentSession()
+{
+    switch( QMessageBox::warning( this,
+                                  APPNAME,
+                                  tr( "Do you want to save the current session?" ),
+                                  QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel,
+                                  QMessageBox::Cancel ) )
+    {
+    //Save
+    case QMessageBox::Save:
+        on_actionSaveSession_triggered();
+        //Saving was aborted -> abort quit
+        if( m_sessionFileName.size() == 0 )
+        {
+            return 1;
+        }
+        break;
+    //Don't save
+    case QMessageBox::Discard:
+        break;
+    //Cancel
+    case QMessageBox::Escape:
+    case QMessageBox::Cancel:
+    default:
+        return 1;
+        break;
+    }
+
+    return 0;
+}
+
 //Open a session file
 void MainWindow::openSession(QString fileNameSession)
 {
@@ -3503,7 +3523,7 @@ void MainWindow::saveSession(QString fileName)
     xmlWriter.writeStartDocument();
 
     xmlWriter.writeStartElement( "mlv_files" );
-    xmlWriter.writeAttribute( "version", "4" );
+    xmlWriter.writeAttribute( "version", "5" );
     xmlWriter.writeAttribute( "mlvapp", VERSION );
     for( int i = 0; i < SESSION_CLIP_COUNT; i++ )
     {
@@ -3560,6 +3580,8 @@ void MainWindow::resetReceiptWithDefault( ReceiptSettings *receipt )
         }
     }
     file.close();
+
+    receipt->setDualIso( -1 );
 
     //Never change RAW Black and White Level, reset CutIn/Out
     receipt->setRawWhite( -1 );
@@ -3657,7 +3679,7 @@ void MainWindow::on_actionExportReceipt_triggered()
     xmlWriter.writeStartDocument();
 
     xmlWriter.writeStartElement( "receipt" );
-    xmlWriter.writeAttribute( "version", "4" );
+    xmlWriter.writeAttribute( "version", "5" );
     xmlWriter.writeAttribute( "mlvapp", VERSION );
 
     writeXmlElementsToFile( &xmlWriter, GET_RECEIPT( clipToExport ) );
@@ -3676,6 +3698,9 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
 
     //Compatibility for old saved dual iso projects
     receipt->setDualIsoForced( DISO_FORCED );
+    receipt->setDualIsoPattern( 0 );
+    receipt->setDualIsoEvCorrection( 1 );
+    receipt->setDualIsoBlackDelta( -1 );
 
     //Read tags
     while( !Rxml->atEnd() && !Rxml->isEndElement() )
@@ -4032,6 +4057,21 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
             receipt->setDualIso( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "dualIsoPattern" ) )
+        {
+            receipt->setDualIsoPattern( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "dualIsoEvCorrection" ) )
+        {
+            receipt->setDualIsoEvCorrection( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "dualIsoBlackDelta" ) )
+        {
+            receipt->setDualIsoBlackDelta( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
         else if( Rxml->isStartElement() && Rxml->name() == QString( "dualIsoInterpolation" ) )
         {
             receipt->setDualIsoInterpolation( Rxml->readElementText().toInt() );
@@ -4069,8 +4109,9 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
         }
         else if( Rxml->isStartElement() && Rxml->name() == QString( "rawBlack" ) )
         {
-            if( version < 4 ) receipt->setRawBlack( Rxml->readElementText().toInt() * 10 );
-            else  receipt->setRawBlack( Rxml->readElementText().toInt() );
+            if( version == 4 ) receipt->setRawBlack( Rxml->readElementText().toInt() / 10 );
+            else receipt->setRawBlack( Rxml->readElementText().toInt() );
+
             Rxml->readNext();
         }
         else if( Rxml->isStartElement() && Rxml->name() == QString( "rawWhite" ) )
@@ -4289,6 +4330,9 @@ void MainWindow::writeXmlElementsToFile(QXmlStreamWriter *xmlWriter, ReceiptSett
     xmlWriter->writeTextElement( "deflickerTarget",         QString( "%1" ).arg( receipt->deflickerTarget() ) );
     xmlWriter->writeTextElement( "dualIsoForced",           QString( "%1" ).arg( receipt->dualIsoForced() ) );
     xmlWriter->writeTextElement( "dualIso",                 QString( "%1" ).arg( receipt->dualIso() ) );
+    xmlWriter->writeTextElement( "dualIsoPattern",          QString( "%1" ).arg( receipt->dualIsoPattern() ) );
+    xmlWriter->writeTextElement( "dualIsoEvCorrection",     QString( "%1" ).arg( receipt->dualIsoEvCorrection() ) );
+    xmlWriter->writeTextElement( "dualIsoBlackDelta",       QString( "%1" ).arg( receipt->dualIsoBlackDelta() ) );
     xmlWriter->writeTextElement( "dualIsoInterpolation",    QString( "%1" ).arg( receipt->dualIsoInterpolation() ) );
     xmlWriter->writeTextElement( "dualIsoAliasMap",         QString( "%1" ).arg( receipt->dualIsoAliasMap() ) );
     xmlWriter->writeTextElement( "dualIsoFrBlending",       QString( "%1" ).arg( receipt->dualIsoFrBlending() ) );
@@ -4349,28 +4393,19 @@ void MainWindow::deleteSession()
     //Fake no audio track
     paintAudioTrack();
 
-    //And reset sliders
-    on_actionResetReceipt_triggered();
+    resetSliders();
 
     //Export not possible without mlv file
     ui->actionExport->setEnabled( false );
     ui->actionExportCurrentFrame->setEnabled( false );
 
     //Set Clip Info to Dialog
-    m_pInfoDialog->ui->tableWidget->item( 0, 1 )->setText( "-" );
-    m_pInfoDialog->ui->tableWidget->item( 1, 1 )->setText( "-" );
-    m_pInfoDialog->ui->tableWidget->item( 2, 1 )->setText( "-" );
-    m_pInfoDialog->ui->tableWidget->item( 3, 1 )->setText( "-" );
-    m_pInfoDialog->ui->tableWidget->item( 4, 1 )->setText( "-" );
-    m_pInfoDialog->ui->tableWidget->item( 5, 1 )->setText( "-" );
-    m_pInfoDialog->ui->tableWidget->item( 6, 1 )->setText( "-" );
-    m_pInfoDialog->ui->tableWidget->item( 7, 1 )->setText( "-" );
-    m_pInfoDialog->ui->tableWidget->item( 8, 1 )->setText( "-" );
-    m_pInfoDialog->ui->tableWidget->item( 9, 1 )->setText( "-" );
-    m_pInfoDialog->ui->tableWidget->item( 10, 1 )->setText( "-" );
-    m_pInfoDialog->ui->tableWidget->item( 11, 1 )->setText( "-" );
-    m_pInfoDialog->ui->tableWidget->item( 12, 1 )->setText( "-" );
-    m_pInfoDialog->ui->tableWidget->item( 13, 1 )->setText( "-" );
+    int rowCount = m_pInfoDialog->ui->tableWidget->rowCount();
+
+    for( int i = 0; i < rowCount; i++ )
+    {
+        m_pInfoDialog->ui->tableWidget->item( i, 1 )->setText( "–" );
+    }
 
     ui->label_resResolution->setText( "0 x 0 pixels" );
 
@@ -4395,12 +4430,6 @@ void MainWindow::deleteSession()
     ui->checkBoxGradientEnable->setChecked( false );
     ui->checkBoxGradientEnable->setEnabled( false );
     ui->toolButtonGradientPaint->setEnabled( false );
-
-    //Set darkframe subtraction, fix focus pixels and fix bad pixels to off
-    ui->toolButtonDarkFrameSubtractionInt->setEnabled( false );
-    setToolButtonDarkFrameSubtraction( 0 );
-    setToolButtonFocusPixels( 0 );
-    setToolButtonBadPixels( 0 );
 
     //Cut In & Out
     initCutInOut( -1 );
@@ -4469,8 +4498,10 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     on_comboBoxUseCameraMatrix_currentIndexChanged( receipt->camMatrixUsed() );
 
     ui->horizontalSliderTemperature->setValue( receipt->temperature() );
+    on_horizontalSliderTemperature_valueChanged( receipt->temperature() );
     ui->horizontalSliderTint->setValue( receipt->tint() );
-    on_horizontalSliderTint_valueChanged( receipt->tint() ); // Tint needs sometimes extra invitation
+    on_horizontalSliderTint_valueChanged( receipt->tint() );
+
     ui->horizontalSliderClarity->setValue( receipt->clarity() );
     ui->horizontalSliderVibrance->setValue( receipt->vibrance() );
     ui->horizontalSliderSaturation->setValue( receipt->saturation() );
@@ -4584,13 +4615,77 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
         receipt->setDualIsoForced( DISO_VALID );
     }
     //Copy & Paste problems between old and new dual iso
-    else if( receipt->dualIsoForced() == DISO_VALID && llrpGetDualIsoValidity( m_pMlvObject ) == DISO_INVALID )
+    else if( receipt->dualIsoForced() == DISO_VALID && llrpGetDualIsoValidity( m_pMlvObject ) != DISO_VALID )
     {
         receipt->setDualIsoForced( DISO_FORCED );
     }
-    ui->toolButtonDualIsoForce->setVisible( receipt->dualIsoForced() != DISO_VALID );
-    ui->toolButtonDualIsoForce->setChecked( receipt->dualIsoForced() == DISO_FORCED );
-    on_toolButtonDualIsoForce_toggled( receipt->dualIsoForced() == DISO_FORCED );
+    //ui->toolButtonDualIsoForce->setVisible( receipt->dualIsoForced() != DISO_VALID );
+    //ui->toolButtonDualIsoForce->setChecked( receipt->dualIsoForced() == DISO_FORCED );
+    //on_toolButtonDualIsoForce_toggled( receipt->dualIsoForced() == DISO_FORCED );
+
+    if( receipt->dualIsoForced() == DISO_FORCED )
+    {
+        llrpSetDualIsoValidity( m_pMlvObject, 1 );
+
+        ui->toolButtonDualIsoOn->setText(tr( "Force On" ));
+        ui->toolButtonDualIsoMatchExposures1->setEnabled( false );
+        ui->toolButtonDualIsoMatchExposures2->setChecked( true );
+    }
+    else
+    {
+        ui->toolButtonDualIsoOn->setText(tr( "On" ));
+        ui->toolButtonDualIsoMatchExposures1->setEnabled( true );
+        ui->toolButtonDualIsoMatchExposures1->setChecked( true );
+    }
+ 
+    if( m_pMlvObject->llrawproc->diso_auto_correction > 0 )
+    {
+        m_pMlvObject->llrawproc->diso_auto_correction = -m_pMlvObject->llrawproc->diso_auto_correction;
+    }
+
+    if( receipt->dualIso() == -1 )
+    {
+        if( receipt->dualIsoForced() == DISO_VALID )
+        {
+            if( m_pMlvObject->llrawproc->diso1 != m_pMlvObject->llrawproc->diso2 )
+            {
+                receipt->setDualIso( 1 );
+            }
+            else
+            {
+                receipt->setDualIso( 0 );
+            }
+
+            m_pMlvObject->llrawproc->diso_pattern = 0;
+            m_pMlvObject->llrawproc->diso_auto_correction = -1;
+            m_pMlvObject->llrawproc->diso_ev_correction = 1;
+            m_pMlvObject->llrawproc->diso_black_delta = -1;
+        }
+        else
+        {
+            receipt->setDualIso( 0 );
+            ui->DualIsoPatternComboBox->setCurrentIndex( 0 );
+            ui->horizontalSliderDualIsoEvCorrection->setValue( 0 );
+            ui->horizontalSliderDualIsoBlackDelta->setValue( 0 );
+        }
+        
+        if( receipt->dualIsoForced() == DISO_FORCED )
+        {
+            m_pMlvObject->llrawproc->diso_pattern = 0;
+            m_pMlvObject->llrawproc->diso_auto_correction = -2;
+            m_pMlvObject->llrawproc->diso_ev_correction = 1;
+            m_pMlvObject->llrawproc->diso_black_delta = -1;
+        }
+    }
+    else
+    {
+        ui->DualIsoPatternComboBox->setCurrentIndex( receipt->dualIsoPattern() );
+        on_DualIsoPatternComboBox_currentIndexChanged( receipt->dualIsoPattern() );
+        ui->horizontalSliderDualIsoEvCorrection->setValue( receipt->dualIsoEvCorrection() );
+        on_horizontalSliderDualIsoEvCorrection_valueChanged( receipt->dualIsoEvCorrection() );
+        ui->horizontalSliderDualIsoBlackDelta->setValue( receipt->dualIsoBlackDelta() );
+        on_horizontalSliderDualIsoBlackDelta_valueChanged( receipt->dualIsoBlackDelta() );
+    }
 
     setToolButtonDualIso( receipt->dualIso() );
     setToolButtonDualIsoInterpolation( receipt->dualIsoInterpolation() );
@@ -4714,6 +4809,31 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     m_setSliders = false;
 }
 
+void MainWindow::resetSliders( void )
+{
+    ReceiptSettings *sliders = new ReceiptSettings(); //default
+
+    if( ui->actionUseDefaultReceipt->isChecked() ) resetReceiptWithDefault( sliders );
+
+    sliders->setRawWhite( 0 );
+    sliders->setRawBlack( 0 );
+
+    sliders->setDualIsoForced( 0 );
+    sliders->setDualIso( 0 );
+
+    setSliders( sliders, false );
+
+    setToolButtonDarkFrameSubtraction( 0 );
+    ui->lineEditDarkFrameFile->setEnabled( false );
+    ui->toolButtonDarkFrameSubtractionFile->setEnabled( false );
+    ui->toolButtonDarkFrameSubtractionInt->setEnabled( false );
+
+    setToolButtonFocusPixels( 0 );
+    setToolButtonBadPixels( 0 );
+
+    delete sliders;
+}
+
 //Set the receipt from sliders
 void MainWindow::setReceipt( ReceiptSettings *receipt )
 {
@@ -4781,6 +4901,9 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     receipt->setDeflickerTarget( ui->spinBoxDeflickerTarget->value() );
     receipt->setDualIsoForced( llrpGetDualIsoValidity( m_pMlvObject ) );
     receipt->setDualIso( toolButtonDualIsoCurrentIndex() );
+    receipt->setDualIsoPattern( ui->DualIsoPatternComboBox->currentIndex() );
+    receipt->setDualIsoEvCorrection( ui->horizontalSliderDualIsoEvCorrection->value() );
+    receipt->setDualIsoBlackDelta( ui->horizontalSliderDualIsoBlackDelta->value() );
     receipt->setDualIsoInterpolation( toolButtonDualIsoInterpolationCurrentIndex() );
     receipt->setDualIsoAliasMap( toolButtonDualIsoAliasMapCurrentIndex() );
     receipt->setDualIsoFrBlending( toolButtonDualIsoFullresBlendingCurrentIndex() );
@@ -4908,6 +5031,9 @@ void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings 
     if( paste && cdui->checkBoxPatternNoise->isChecked() )     receiptTarget->setPatternNoise( receiptSource->patternNoise() );
     if( paste && cdui->checkBoxDualIso->isChecked() )          receiptTarget->setDualIsoForced( receiptSource->dualIsoForced() );
     if( paste && cdui->checkBoxDualIso->isChecked() )          receiptTarget->setDualIso( receiptSource->dualIso() );
+    if( paste && cdui->checkBoxDualIso->isChecked() )          receiptTarget->setDualIsoPattern( receiptSource->dualIsoPattern() );
+    if( paste && cdui->checkBoxDualIso->isChecked() )          receiptTarget->setDualIsoEvCorrection( receiptSource->dualIsoEvCorrection() );
+    if( paste && cdui->checkBoxDualIso->isChecked() )          receiptTarget->setDualIsoBlackDelta( receiptSource->dualIsoBlackDelta() );
     if( paste && cdui->checkBoxDualIso->isChecked() )          receiptTarget->setDualIsoInterpolation( receiptSource->dualIsoInterpolation() );
     if( paste && cdui->checkBoxDualIso->isChecked() )          receiptTarget->setDualIsoAliasMap( receiptSource->dualIsoAliasMap() );
     if( paste && cdui->checkBoxDualIso->isChecked() )          receiptTarget->setDualIsoFrBlending( receiptSource->dualIsoFrBlending() );
@@ -5101,6 +5227,9 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     receipt->setDeflickerTarget( GET_RECEIPT( row )->deflickerTarget() );
     receipt->setDualIsoForced( GET_RECEIPT( row )->dualIsoForced() );
     receipt->setDualIso( GET_RECEIPT( row )->dualIso() );
+    receipt->setDualIsoPattern( GET_RECEIPT( row )->dualIsoPattern() );
+    receipt->setDualIsoEvCorrection( GET_RECEIPT( row )->dualIsoEvCorrection() );
+    receipt->setDualIsoBlackDelta( GET_RECEIPT( row )->dualIsoBlackDelta() );
     receipt->setDualIsoInterpolation( GET_RECEIPT( row )->dualIsoInterpolation() );
     receipt->setDualIsoAliasMap( GET_RECEIPT( row )->dualIsoAliasMap() );
     receipt->setDualIsoFrBlending( GET_RECEIPT( row )->dualIsoFrBlending() );
@@ -5510,8 +5639,8 @@ void MainWindow::setToolButtonDualIso(int index)
         break;
     case 1: ui->toolButtonDualIsoOn->setChecked( true );
         break;
-    case 2: ui->toolButtonDualIsoPreview->setChecked( true );
-        break;
+    //case 2: ui->toolButtonDualIsoPreview->setChecked( true );
+        //break;
     default: break;
     }
     if( actualize ) toolButtonDualIsoChanged();
@@ -5571,8 +5700,8 @@ void MainWindow::setToolButtonDualIsoFullresBlending(int index)
 //Set Toolbuttons Darkframe Subtraction On/Off
 void MainWindow::setToolButtonDarkFrameSubtraction(int index)
 {
-    //Switch Darkframe Subtraction to OFF if internal was selected and no internal data is available
-    if( !llrpGetDarkFrameIntStatus( m_pMlvObject ) && index == 2 ) index = 0;
+    //Switch Darkframe Subtraction to OFF if external or internal was selected and no file or data is available
+    if( !llrpGetDarkFrameExtStatus( m_pMlvObject ) && index ) index = 0;
 
     bool actualize = false;
     if( index == toolButtonDarkFrameSubtractionCurrentIndex() ) actualize = true;
@@ -5683,18 +5812,19 @@ int MainWindow::toolButtonVerticalStripesCurrentIndex()
 }
 
 //Get toolbutton index of dual iso force
+/*
 int MainWindow::toolButtonDualIsoForceCurrentIndex()
 {
     if( ui->toolButtonDualIsoForce->isChecked() ) return 0;
     else return 1;
 }
+*/
 
 //Get toolbutton index of dual Iso
 int MainWindow::toolButtonDualIsoCurrentIndex()
 {
     if( ui->toolButtonDualIsoOff->isChecked() ) return 0;
-    else if( ui->toolButtonDualIsoOn->isChecked() ) return 1;
-    else return 2;
+    return 1;
 }
 
 //Get toolbutton index of dual iso interpolation
@@ -6113,19 +6243,19 @@ void MainWindow::on_horizontalSliderCaRadius_valueChanged(int position)
 
 void MainWindow::on_horizontalSliderRawWhite_valueChanged(int position)
 {
+    ui->label_RawWhiteVal->setText( QString("%1").arg( position ) );
+
     if( !m_fileLoaded ) return;
     if( getMlvBitdepth( m_pMlvObject ) == 0 ) return;
     if( getMlvBitdepth( m_pMlvObject ) > 16 ) return;
-
-    ui->label_RawWhiteVal->setText( QString("%1").arg( position ) );
 
     if( !ui->checkBoxRawFixEnable->isChecked() )
     {
         position = getMlvOriginalWhiteLevel( m_pMlvObject );
     }
-    else if( position <= ui->horizontalSliderRawBlack->value() / 10.0 + 1 )
+    else if( position <= ui->horizontalSliderRawBlack->value() + 1 )
     {
-        position = ui->horizontalSliderRawBlack->value() / 10.0 + 1;
+        position = ui->horizontalSliderRawBlack->value() + 1;
         ui->horizontalSliderRawWhite->setValue( position );
     }
 
@@ -6145,30 +6275,80 @@ void MainWindow::on_horizontalSliderRawWhite_valueChanged(int position)
 
 void MainWindow::on_horizontalSliderRawBlack_valueChanged(int position)
 {
+    ui->label_RawBlackVal->setText( QString("%1").arg( position ) );
+
     if( !m_fileLoaded ) return;
     if( getMlvBitdepth( m_pMlvObject ) == 0 ) return;
     if( getMlvBitdepth( m_pMlvObject ) > 16 ) return;
 
-    double rawBlack = position / 10.0;
-
-    ui->label_RawBlackVal->setText( QString("%1").arg( rawBlack, 0, 'f', 1 ) );
-
     if( !ui->checkBoxRawFixEnable->isChecked() )
     {
-        rawBlack = getMlvOriginalBlackLevel( m_pMlvObject );
+        position = getMlvOriginalBlackLevel( m_pMlvObject );
     }
-    else if( rawBlack >= ui->horizontalSliderRawWhite->value() - 1 )
+    else if( position >= ui->horizontalSliderRawWhite->value() - 1 )
     {
-        rawBlack = ui->horizontalSliderRawWhite->value() - 1;
-        ui->horizontalSliderRawBlack->setValue( rawBlack * 10 );
+        position = ui->horizontalSliderRawWhite->value() - 1;
+        ui->horizontalSliderRawBlack->setValue( position );
     }
 
     while( !m_pRenderThread->isIdle() ) QThread::msleep(1);
 
     /* Set mlv raw white level to the slider value */
-    setMlvBlackLevel( m_pMlvObject, rawBlack );
+    setMlvBlackLevel( m_pMlvObject, position );
     /* Set processing white level with correction */
-    processingSetBlackLevel( m_pProcessingObject, rawBlack, getMlvBitdepth( m_pMlvObject ) );
+    processingSetBlackLevel( m_pProcessingObject, position, getMlvBitdepth( m_pMlvObject ) );
+
+    llrpResetFpmStatus(m_pMlvObject);
+    llrpResetBpmStatus(m_pMlvObject);
+    resetMlvCache( m_pMlvObject );
+    resetMlvCachedFrame( m_pMlvObject );
+    m_frameChanged = true;
+}
+
+void MainWindow::on_horizontalSliderDualIsoEvCorrection_valueChanged(int position)
+{
+    double ev = position;
+
+    if( position != 1 )
+    {
+        if( !m_pRenderThread->isIdle() ) return;
+
+        ev /= 200.0;
+        ui->DualIsoEvCorrectionVal->setText( QString("%1").arg( ev, 0, 'f', 2 ) );
+    }
+    else
+    {
+        if( m_frameStillDrawing ) return;
+        m_pMlvObject->llrawproc->diso_auto_correction = -m_pMlvObject->llrawproc->diso_auto_correction;        
+    }
+
+    if( !m_fileLoaded ) return;
+
+    m_pMlvObject->llrawproc->diso_ev_correction = ev;
+
+    llrpResetFpmStatus(m_pMlvObject);
+    llrpResetBpmStatus(m_pMlvObject);
+    resetMlvCache( m_pMlvObject );
+    resetMlvCachedFrame( m_pMlvObject );
+    m_frameChanged = true;
+}
+
+void MainWindow::on_horizontalSliderDualIsoBlackDelta_valueChanged(int position)
+{
+    if( position != -1 )
+    {
+        if( !m_pRenderThread->isIdle() ) return;
+        ui->DualIsoBlackDeltaVal->setText( QString("%1").arg( position ) );
+    }
+    else
+    {
+        if( m_frameStillDrawing ) return;
+        m_pMlvObject->llrawproc->diso_auto_correction = -m_pMlvObject->llrawproc->diso_auto_correction;        
+    }
+
+    if( !m_fileLoaded ) return;
+
+    m_pMlvObject->llrawproc->diso_black_delta = position;
 
     llrpResetFpmStatus(m_pMlvObject);
     llrpResetBpmStatus(m_pMlvObject);
@@ -6480,7 +6660,17 @@ void MainWindow::on_horizontalSliderRawWhite_doubleClicked()
 
 void MainWindow::on_horizontalSliderRawBlack_doubleClicked()
 {
-    ui->horizontalSliderRawBlack->setValue( getMlvOriginalBlackLevel( m_pMlvObject ) * 10 );
+    ui->horizontalSliderRawBlack->setValue( getMlvOriginalBlackLevel( m_pMlvObject ) );
+}
+
+void MainWindow::on_horizontalSliderDualIsoEvCorrection_doubleClicked()
+{
+    on_horizontalSliderDualIsoEvCorrection_valueChanged( 1 );
+}
+
+void MainWindow::on_horizontalSliderDualIsoBlackDelta_doubleClicked()
+{
+    on_horizontalSliderDualIsoBlackDelta_valueChanged( -1 );    
 }
 
 void MainWindow::on_horizontalSliderTone_doubleClicked()
@@ -7234,7 +7424,7 @@ void MainWindow::on_actionResetReceipt_triggered()
     ReceiptSettings *sliders = new ReceiptSettings(); //default
     if( ui->actionUseDefaultReceipt->isChecked() ) resetReceiptWithDefault( sliders );
     sliders->setRawWhite( getMlvOriginalWhiteLevel( m_pMlvObject ) );
-    sliders->setRawBlack( getMlvOriginalBlackLevel( m_pMlvObject ) * 10 );
+    sliders->setRawBlack( getMlvOriginalBlackLevel( m_pMlvObject ) );
     setSliders( sliders, false );
     delete sliders;
 }
@@ -7287,36 +7477,7 @@ void MainWindow::on_actionPasteReceipt_triggered()
 //New Session
 void MainWindow::on_actionNewSession_triggered()
 {
-    //Save last session?
-    if( SESSION_CLIP_COUNT != 0 )
-    {
-        switch( QMessageBox::warning( this,
-                                      APPNAME,
-                                      tr( "Do you like to save the current session?" ),
-                                      QMessageBox::Save | QMessageBox::No | QMessageBox::Cancel,
-                                      QMessageBox::Cancel ) )
-        {
-        //Don't save
-        case QMessageBox::No:
-            break;
-        //Save and quit
-        case QMessageBox::Save:
-            on_actionSaveSession_triggered();
-            //Saving was aborted -> abort quit
-            if( m_sessionFileName.size() == 0 )
-            {
-                return;
-            }
-            break;
-        //Aborted
-        case QMessageBox::Escape:
-        case QMessageBox::Cancel:
-        default:
-            return;
-            break;
-        }
-    }
-
+    if( SESSION_CLIP_COUNT && askToSaveCurrentSession() ) return;
     deleteSession();
 }
 
@@ -7335,6 +7496,8 @@ void MainWindow::on_actionOpenSession_triggered()
 
     //Abort selected
     if( fileName.size() == 0 ) return;
+
+    if( SESSION_CLIP_COUNT && askToSaveCurrentSession() ) return;
 
     m_inOpeningProcess = true;
     openSession( fileName );
@@ -8155,9 +8318,25 @@ void MainWindow::on_label_RawWhiteVal_doubleClicked()
 void MainWindow::on_label_RawBlackVal_doubleClicked()
 {
     EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderRawBlack, ui->label_RawBlackVal, 10.0, 1, 10.0 );
+    editSlider.autoSetup( ui->horizontalSliderRawBlack, ui->label_RawBlackVal, 1.0, 0, 1.0 );
     editSlider.exec();
     ui->horizontalSliderRawBlack->setValue( editSlider.getValue() );
+}
+
+void MainWindow::on_DualIsoEvCorrectionVal_doubleClicked()
+{
+    EditSliderValueDialog editSlider;
+    editSlider.autoSetup( ui->horizontalSliderDualIsoEvCorrection, ui->DualIsoEvCorrectionVal, 0.05, 2, 200.0 );
+    editSlider.exec();
+    ui->horizontalSliderDualIsoEvCorrection->setValue( editSlider.getValue() - 0.5 );
+}
+
+void MainWindow::on_DualIsoBlackDeltaVal_doubleClicked()
+{
+    EditSliderValueDialog editSlider;
+    editSlider.autoSetup( ui->horizontalSliderDualIsoBlackDelta, ui->DualIsoBlackDeltaVal, 1.0, 0, 1.0 );
+    editSlider.exec();
+    ui->horizontalSliderDualIsoBlackDelta->setValue( editSlider.getValue() );
 }
 
 void MainWindow::on_label_ToneVal_doubleClicked()
@@ -8363,9 +8542,9 @@ void MainWindow::exportHandler( void )
         {
             //Start export script when ready
             m_pScripting->executePostExportScript();
-            QMessageBox::information( this, tr( "Export" ), tr( "Export is ready." ) );
+            //QMessageBox::information( this, tr( "Export" ), tr( "Export is ready." ) );
         }
-        else QMessageBox::information( this, tr( "Export" ), tr( "Export aborted." ) );
+        //else QMessageBox::information( this, tr( "Export" ), tr( "Export aborted." ) );
 
         //Caching is in which state? Set it!
         if( ui->actionCaching->isChecked() ) on_actionCaching_triggered();
@@ -8541,6 +8720,7 @@ void MainWindow::on_spinBoxDeflickerTarget_valueChanged(int arg1)
 }
 
 //Dual iso force button toggled
+/*
 void MainWindow::on_toolButtonDualIsoForce_toggled( bool checked )
 {
     if( llrpGetDualIsoValidity( m_pMlvObject ) == DISO_VALID )
@@ -8548,14 +8728,14 @@ void MainWindow::on_toolButtonDualIsoForce_toggled( bool checked )
         ui->DualISOLabel->setEnabled( true );
         ui->toolButtonDualIsoOff->setEnabled( true );
         ui->toolButtonDualIsoOn->setEnabled( true );
-        ui->toolButtonDualIsoPreview->setEnabled( true );
+        //ui->toolButtonDualIsoPreview->setEnabled( true );
     }
     else
     {
         ui->DualISOLabel->setEnabled( checked );
         ui->toolButtonDualIsoOff->setEnabled( checked );
         ui->toolButtonDualIsoOn->setEnabled( checked );
-        ui->toolButtonDualIsoPreview->setEnabled( checked );
+        //ui->toolButtonDualIsoPreview->setEnabled( checked );
         llrpSetDualIsoValidity( m_pMlvObject, checked );
 
         if( !checked )
@@ -8564,15 +8744,28 @@ void MainWindow::on_toolButtonDualIsoForce_toggled( bool checked )
         }
     }
 }
+*/
 
 //DualISO changed
 void MainWindow::toolButtonDualIsoChanged( void )
 {
-    if(!m_fileLoaded) return;
-
-    //In preview mode, the other dualIso options are grayed out
-    if( ( toolButtonDualIsoCurrentIndex() == 1 ) && ui->checkBoxRawFixEnable->isChecked() )
+    if( toolButtonDualIsoCurrentIndex() && ui->checkBoxRawFixEnable->isChecked() )
     {
+        ui->toolButtonFocusDotInterpolation->setEnabled( false );
+        ui->FocusPixelsInterpolationMethodLabel->setEnabled( false );
+        ui->toolButtonBadPixelsInterpolation->setEnabled( false );
+        ui->BadPixelsInterpolationMethodLabel->setEnabled( false );
+        ui->DualIsoPatternLabel->setEnabled( true );
+        ui->DualIsoPatternComboBox->setEnabled( true );
+        ui->DualIsoMatchExposuresLabel->setEnabled( true );
+        ui->toolButtonDualIsoMatchExposures->setEnabled( true );
+        ui->DualIsoEvCorrectionLabel->setEnabled( true );
+        ui->DualIsoEvCorrectionVal->setEnabled( true );
+        ui->horizontalSliderDualIsoEvCorrection->setEnabled( true );
+        ui->DualIsoBlackDeltaLabel->setEnabled( true );
+        ui->DualIsoBlackDeltaVal->setEnabled( true );
+        ui->horizontalSliderDualIsoBlackDelta->setEnabled( true );
+        ui->DualIsoNote->setEnabled( true );
         ui->toolButtonDualIsoInterpolation->setEnabled( true );
         ui->toolButtonDualIsoAliasMap->setEnabled( true );
         ui->toolButtonDualIsoFullresBlending->setEnabled( true );
@@ -8581,6 +8774,21 @@ void MainWindow::toolButtonDualIsoChanged( void )
     }
     else
     {
+        ui->toolButtonFocusDotInterpolation->setEnabled( true );
+        ui->FocusPixelsInterpolationMethodLabel->setEnabled( true );
+        ui->toolButtonBadPixelsInterpolation->setEnabled( true );
+        ui->BadPixelsInterpolationMethodLabel->setEnabled( true );
+        ui->DualIsoPatternLabel->setEnabled( false );
+        ui->DualIsoPatternComboBox->setEnabled( false );
+        ui->DualIsoMatchExposuresLabel->setEnabled( false );
+        ui->toolButtonDualIsoMatchExposures->setEnabled( false );
+        ui->DualIsoEvCorrectionLabel->setEnabled( false );
+        ui->DualIsoEvCorrectionVal->setEnabled( false );
+        ui->horizontalSliderDualIsoEvCorrection->setEnabled( false );
+        ui->DualIsoBlackDeltaLabel->setEnabled( false );
+        ui->DualIsoBlackDeltaVal->setEnabled( false );
+        ui->horizontalSliderDualIsoBlackDelta->setEnabled( false );
+        ui->DualIsoNote->setEnabled( false );
         ui->toolButtonDualIsoInterpolation->setEnabled( false );
         ui->toolButtonDualIsoAliasMap->setEnabled( false );
         ui->toolButtonDualIsoFullresBlending->setEnabled( false );
@@ -8588,12 +8796,64 @@ void MainWindow::toolButtonDualIsoChanged( void )
         ui->DualISOAliasMapLabel->setEnabled( false );
     }
 
+    if( !m_fileLoaded ) return;
+
     //Set dualIso mode
     llrpSetDualIsoMode( m_pMlvObject, toolButtonDualIsoCurrentIndex() );
     //Reset processing black and white levels
     processingSetBlackAndWhiteLevel( m_pMlvObject->processing, getMlvBlackLevel( m_pMlvObject ), getMlvWhiteLevel( m_pMlvObject ), getMlvBitdepth( m_pMlvObject ) );
     //Reset diso levels to mlv raw levels
     llrpResetDngBWLevels( m_pMlvObject );
+    resetMlvCache( m_pMlvObject );
+    resetMlvCachedFrame( m_pMlvObject );
+    m_frameChanged = true;
+}
+
+void MainWindow::on_DualIsoPatternComboBox_currentIndexChanged(int index)
+{
+    if( !m_fileLoaded || m_frameStillDrawing ) return;
+
+    m_pMlvObject->llrawproc->diso_pattern = index;
+
+    if( m_pMlvObject->llrawproc->diso_validity == DISO_FORCED || m_pMlvObject->llrawproc->diso_auto_correction == 2 )
+    {
+        m_pMlvObject->llrawproc->diso_auto_correction = -2;
+        m_pMlvObject->llrawproc->diso_ev_correction = 1;
+        m_pMlvObject->llrawproc->diso_black_delta = -1;
+    }
+
+    llrpResetFpmStatus(m_pMlvObject);
+    llrpResetBpmStatus(m_pMlvObject);
+    resetMlvCache( m_pMlvObject );
+    resetMlvCachedFrame( m_pMlvObject );
+    m_frameChanged = true;
+}
+
+void MainWindow::on_toolButtonDualIsoMatchExposures1_clicked()
+{
+    if( !m_fileLoaded || m_frameStillDrawing ) return;
+
+    m_pMlvObject->llrawproc->diso_auto_correction = -1;
+    m_pMlvObject->llrawproc->diso_ev_correction = 1;
+    m_pMlvObject->llrawproc->diso_black_delta = -1;
+
+    llrpResetFpmStatus(m_pMlvObject);
+    llrpResetBpmStatus(m_pMlvObject);
+    resetMlvCache( m_pMlvObject );
+    resetMlvCachedFrame( m_pMlvObject );
+    m_frameChanged = true;
+}
+
+void MainWindow::on_toolButtonDualIsoMatchExposures2_clicked()
+{
+    if( !m_fileLoaded || m_frameStillDrawing ) return;
+
+    m_pMlvObject->llrawproc->diso_auto_correction = -2;
+    m_pMlvObject->llrawproc->diso_ev_correction = 1;
+    m_pMlvObject->llrawproc->diso_black_delta = -1;
+
+    llrpResetFpmStatus(m_pMlvObject);
+    llrpResetBpmStatus(m_pMlvObject);
     resetMlvCache( m_pMlvObject );
     resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
@@ -8643,6 +8903,14 @@ void MainWindow::toolButtonDarkFrameSubtractionChanged( bool checked )
         ui->lineEditDarkFrameFile->setEnabled( true );
         ui->toolButtonDarkFrameSubtractionFile->setEnabled( true );
     }
+
+    // Force dual ISO black delta auto correction
+    if( m_pMlvObject->llrawproc->diso_auto_correction > 0 )
+    {
+        m_pMlvObject->llrawproc->diso_auto_correction = -m_pMlvObject->llrawproc->diso_auto_correction;
+        m_pMlvObject->llrawproc->diso_black_delta = -1;
+    }
+
     //Force bad pixels and stripes calculation b/c dark frame processing happens before
     llrpResetBpmStatus(m_pMlvObject);
     llrpComputeStripesOn(m_pMlvObject);
@@ -8753,21 +9021,34 @@ void MainWindow::on_checkBoxRawFixEnable_clicked(bool checked)
     ui->PatternNoiseLabel->setEnabled( checked );
     ui->VerticalStripesLabel->setEnabled( checked );
     ui->DeflickerTargetLabel->setEnabled( checked );
-    ui->DualISOLabel->setEnabled( checked && ( llrpGetDualIsoValidity( m_pMlvObject ) > 0 ) );
+    ui->DualISOLabel->setEnabled( checked );
+    ui->DualIsoPatternLabel->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() == 1 ) );
+    ui->DualIsoPatternComboBox->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() == 1 ) );
+    ui->DualIsoMatchExposuresLabel->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() == 1 ) );
+    ui->toolButtonDualIsoMatchExposures->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() == 1 ) );
+    ui->DualIsoEvCorrectionLabel->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() == 1 ) );
+    ui->DualIsoEvCorrectionVal->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() == 1 ) );
+    ui->horizontalSliderDualIsoEvCorrection->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() == 1 ) );
+    ui->DualIsoBlackDeltaLabel->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() == 1 ) );
+    ui->DualIsoBlackDeltaVal->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() == 1 ) );
+    ui->horizontalSliderDualIsoBlackDelta->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() == 1 ) );
+    ui->DualIsoNote->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() == 1 ) );
     ui->DualISOInterpolationLabel->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() == 1 ) );
     ui->DualISOAliasMapLabel->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() == 1 ) );
     ui->DualISOFullresBlendingLabel->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() == 1 ) );
     ui->FocusPixelsInterpolationMethodLabel_2->setEnabled( checked );
 
     ui->toolButtonFocusDots->setEnabled( checked );
-    ui->toolButtonFocusDotInterpolation->setEnabled( checked );
+    ui->toolButtonFocusDotInterpolation->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() != 1 ) );
+    ui->FocusPixelsInterpolationMethodLabel->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() != 1 ) );
     ui->toolButtonBadPixels->setEnabled( checked );
-    ui->toolButtonBadPixelsInterpolation->setEnabled( checked );
+    ui->toolButtonBadPixelsInterpolation->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() != 1 ) );
+    ui->BadPixelsInterpolationMethodLabel->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() != 1 ) );
     ui->toolButtonChroma->setEnabled( checked );
     ui->toolButtonPatternNoise->setEnabled( checked );
     ui->toolButtonVerticalStripes->setEnabled( checked );
     ui->toolButtonDualIso->setEnabled( checked );
-    ui->toolButtonDualIsoForce->setEnabled( checked );
+    //ui->toolButtonDualIsoForce->setEnabled( checked );
     ui->toolButtonDualIsoInterpolation->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() == 1 ) );
     ui->toolButtonDualIsoAliasMap->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() == 1 ) );
     ui->toolButtonDualIsoFullresBlending->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() == 1 ) );
@@ -8779,9 +9060,10 @@ void MainWindow::on_checkBoxRawFixEnable_clicked(bool checked)
     ui->toolButtonDeleteBpm->setEnabled( checked );
     ui->labelDarkFrameSubtraction->setEnabled( checked );
     ui->toolButtonDarkFrameSubtraction->setEnabled( checked );
-    ui->toolButtonDarkFrameSubtractionFile->setEnabled( checked );
-    ui->lineEditDarkFrameFile->setEnabled( checked );
+    ui->toolButtonDarkFrameSubtractionFile->setEnabled( m_fileLoaded && checked );
+    ui->lineEditDarkFrameFile->setEnabled( m_fileLoaded && checked );
 
+    ui->toolButtonRawBlackAutoCorrect->setEnabled( isRawBlackLevelWrong() );
     ui->RawBlackLabel->setEnabled( checked );
     ui->horizontalSliderRawBlack->setEnabled( checked );
     ui->label_RawBlackVal->setEnabled( checked );
@@ -9291,6 +9573,43 @@ void MainWindow::drawFrameReady()
         }
     }
 
+    // Set sliders after dual ISO processing
+    if( toolButtonDualIsoCurrentIndex() == 1 )
+    {
+        if( m_pMlvObject->llrawproc->diso_pattern < 0 )
+        {
+            m_pMlvObject->llrawproc->diso_pattern = -m_pMlvObject->llrawproc->diso_pattern;
+
+            ui->DualIsoPatternComboBox->blockSignals( true );
+            ui->DualIsoPatternComboBox->setCurrentIndex(m_pMlvObject->llrawproc->diso_pattern);
+            ui->DualIsoPatternComboBox->blockSignals( false );
+            //printf("DISO pattern: %d\n", m_pMlvObject->llrawproc->diso_pattern);
+        }
+
+        if( m_pMlvObject->llrawproc->diso_auto_correction < 0 )
+        {
+            //printf("DISO: %d, %.2f, %d\n", m_pMlvObject->llrawproc->diso_auto_correction, m_pMlvObject->llrawproc->diso_ev_correction, m_pMlvObject->llrawproc->diso_black_delta);
+
+            if( m_pMlvObject->llrawproc->diso_ev_correction != 1 )
+            {
+                ui->horizontalSliderDualIsoEvCorrection->blockSignals( true );
+                ui->horizontalSliderDualIsoEvCorrection->setValue( (m_pMlvObject->llrawproc->diso_ev_correction * 200) - 0.5 );
+                ui->horizontalSliderDualIsoEvCorrection->blockSignals( false );
+                ui->DualIsoEvCorrectionVal->setText( QString("%1").arg( m_pMlvObject->llrawproc->diso_ev_correction, 0, 'f', 2 ) );
+            }
+
+            if( m_pMlvObject->llrawproc->diso_black_delta != -1 )
+            {
+                ui->horizontalSliderDualIsoBlackDelta->blockSignals( true );
+                ui->horizontalSliderDualIsoBlackDelta->setValue( m_pMlvObject->llrawproc->diso_black_delta );
+                ui->horizontalSliderDualIsoBlackDelta->blockSignals( false );
+                ui->DualIsoBlackDeltaVal->setText( QString("%1").arg( m_pMlvObject->llrawproc->diso_black_delta ) );
+            }
+
+            m_pMlvObject->llrawproc->diso_auto_correction = -m_pMlvObject->llrawproc->diso_auto_correction;
+        }
+    }
+
     //Add zebras on the image
     uint8_t underOver = drawZebras();
 
@@ -9557,14 +9876,14 @@ void MainWindow::initCutInOut(int frames)
 void MainWindow::initRawBlackAndWhite()
 {
     ui->horizontalSliderRawBlack->blockSignals( true );
-    ui->horizontalSliderRawBlack->setMaximum( ( ( 2 << ( getMlvBitdepth( m_pMlvObject ) - 1 ) ) - 1 ) * 10 );
+    ui->horizontalSliderRawBlack->setMaximum( ( 1 << getMlvBitdepth( m_pMlvObject ) ) - 1 );
     ui->horizontalSliderRawBlack->blockSignals( false );
     ui->horizontalSliderRawWhite->blockSignals( true );
-    ui->horizontalSliderRawWhite->setMaximum( ( 2 << ( getMlvBitdepth( m_pMlvObject ) - 1 ) ) - 1 );
-    ui->horizontalSliderRawWhite->setValue( ( 2 << ( getMlvBitdepth( m_pMlvObject ) - 1 ) ) - 1 ); //set value to max, because otherwise the new black value is blocked by old white value
+    ui->horizontalSliderRawWhite->setMaximum( ( 1 << getMlvBitdepth( m_pMlvObject ) ) - 1 );
+    ui->horizontalSliderRawWhite->setValue( ( 1 << getMlvBitdepth( m_pMlvObject ) ) - 1 ); //set value to max, because otherwise the new black value is blocked by old white value
     ui->horizontalSliderRawWhite->blockSignals( false );
-    ui->horizontalSliderRawBlack->setValue( getMlvOriginalBlackLevel( m_pMlvObject ) * 10 );
-    on_horizontalSliderRawBlack_valueChanged( getMlvOriginalBlackLevel( m_pMlvObject ) * 10 );
+    ui->horizontalSliderRawBlack->setValue( getMlvOriginalBlackLevel( m_pMlvObject ) );
+    on_horizontalSliderRawBlack_valueChanged( getMlvOriginalBlackLevel( m_pMlvObject ) );
     ui->horizontalSliderRawWhite->setValue( getMlvOriginalWhiteLevel( m_pMlvObject ) );
     on_horizontalSliderRawWhite_valueChanged( getMlvOriginalWhiteLevel( m_pMlvObject ) );
 }
@@ -9685,6 +10004,8 @@ uint16_t MainWindow::autoCorrectRawBlackLevel()
 //Get info, if RAW black level is wrong
 bool MainWindow::isRawBlackLevelWrong()
 {
+    if( !m_fileLoaded ) return false;
+
     int factor = 1;
     switch( getMlvBitdepth( m_pMlvObject ) )
     {
@@ -10116,7 +10437,7 @@ void MainWindow::on_toolButtonRawBlackAutoCorrect_clicked()
 {
     int value = autoCorrectRawBlackLevel();
     if( value != getMlvOriginalBlackLevel( m_pMlvObject ) )
-        ui->horizontalSliderRawBlack->setValue( value * 10 );
+        ui->horizontalSliderRawBlack->setValue( value );
 }
 
 //Open UserManualDialog
@@ -10246,41 +10567,13 @@ void MainWindow::on_actionSelectExternalApplication_triggered()
 //Open one of the recent sessions
 void MainWindow::openRecentSession(QString fileName)
 {
-    //Save actual session?
-    if( SESSION_CLIP_COUNT > 0 )
-    {
-        switch( QMessageBox::warning( this,
-                                      APPNAME,
-                                      tr( "Do you like to save the session before loading?" ),
-                                      QMessageBox::Save | QMessageBox::No | QMessageBox::Cancel,
-                                      QMessageBox::Cancel ) )
-        {
-        //Save
-        case QMessageBox::Save:
-            on_actionSaveSession_triggered();
-            //Saving was aborted -> abort quit
-            if( m_sessionFileName.size() == 0 )
-            {
-                return;
-            }
-            break;
-        //No
-        case QMessageBox::No:
-            break;
-        //Cancel
-        case QMessageBox::Escape:
-        case QMessageBox::Cancel:
-        default:
-            return;
-            break;
-        }
-    }
-
     if( !QFileInfo( fileName ).exists() )
     {
         m_pRecentFilesMenu->removeRecentFile( fileName );
         return;
     }
+
+    if( SESSION_CLIP_COUNT && askToSaveCurrentSession() ) return;
 
     m_inOpeningProcess = true;
     openSession( fileName );

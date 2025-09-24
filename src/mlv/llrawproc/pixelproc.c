@@ -237,7 +237,7 @@ static inline void interpolate_pixel(uint16_t * image_data, int x, int y, int w,
     image_data[x + y*w] = -median_int_wirth(neighbours, k);
 }
 
-static inline void interpolate_horizontal(uint16_t * image_data, int i, int * raw2ev, int * ev2raw)
+static inline void _interpolate_horizontal(uint16_t * image_data, int i, int * raw2ev, int * ev2raw)
 {
     int gh1 = image_data[i + 3];
     int gh2 = image_data[i + 1];
@@ -257,6 +257,41 @@ static inline void interpolate_horizontal(uint16_t * image_data, int i, int * ra
         
         int ev_corr = ((raw2ev[image_data[i + 2]] * ch1) >> 8) + ((raw2ev[image_data[i - 2]] * ch2) >> 8);
         image_data[i] = ev2raw[COERCE(ev_corr, 0, 14*EV_RESOLUTION-1)];
+    }
+}
+
+static inline void interpolate_horizontal(uint16_t * image_data, int i, int * raw2ev, int * ev2raw)
+{
+    int gh1 = image_data[i + 3];
+    int gh2 = image_data[i + 1];
+    int gh3 = image_data[i - 1];
+    int gh4 = image_data[i - 3];
+    int dh1 = ABS(raw2ev[gh1] - raw2ev[gh2]);
+    int dh2 = ABS(raw2ev[gh3] - raw2ev[gh4]);
+    int sum = dh1 + dh2;
+
+    //printf("%d Before: %d\n", i, image_data[i]);
+
+    if (sum == 0)
+    {
+        image_data[i] = image_data[i + 2];
+    }
+    else if (sum < (3*EV_RESOLUTION))
+    {
+        int ch1 = (dh1 << 8) / sum;
+        int ch2 = (dh2 << 8) / sum;
+
+        int ev_corr = ((raw2ev[image_data[i - 2]] * ch1) >> 8) + ((raw2ev[image_data[i + 2]] * ch2) >> 8);
+        int p = ev2raw[COERCE(ev_corr, 0, 14*EV_RESOLUTION-1)];
+
+        if (p < image_data[i])
+        {
+            image_data[i] = p;
+        }
+
+        //printf("%d, %d, %d, %d, %d, %d, %d\n", gh1, gh2, gh3, gh4, dh1, dh2, sum);
+        //printf("%d, %d, %d\n", ch1, ch2, ev_corr);
+        //printf("%d After: %d\n\n", i, p);
     }
 }
 

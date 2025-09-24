@@ -113,6 +113,8 @@ private slots:
     void on_horizontalSliderCaRadius_valueChanged(int position);
     void on_horizontalSliderRawWhite_valueChanged(int position);
     void on_horizontalSliderRawBlack_valueChanged(int position);
+    void on_horizontalSliderDualIsoEvCorrection_valueChanged(int position);
+    void on_horizontalSliderDualIsoBlackDelta_valueChanged(int position);
     void on_horizontalSliderTone_valueChanged(int position);
     void on_horizontalSliderToningStrength_valueChanged(int position);
     void on_horizontalSliderVidstabStepsize_valueChanged(int position);
@@ -158,6 +160,8 @@ private slots:
     void on_horizontalSliderCaRadius_doubleClicked();
     void on_horizontalSliderRawWhite_doubleClicked();
     void on_horizontalSliderRawBlack_doubleClicked();
+    void on_horizontalSliderDualIsoEvCorrection_doubleClicked();
+    void on_horizontalSliderDualIsoBlackDelta_doubleClicked();
     void on_horizontalSliderTone_doubleClicked();
     void on_horizontalSliderToningStrength_doubleClicked();
     void on_horizontalSliderVidstabStepsize_doubleClicked();
@@ -274,6 +278,8 @@ private slots:
     void on_label_CaRadiusVal_doubleClicked( void );
     void on_label_RawWhiteVal_doubleClicked( void );
     void on_label_RawBlackVal_doubleClicked( void );
+    void on_DualIsoEvCorrectionVal_doubleClicked( void );
+    void on_DualIsoBlackDeltaVal_doubleClicked( void );
     void on_label_ToneVal_doubleClicked( void );
     void on_label_ToningStrengthVal_doubleClicked( void );
     void on_label_VidstabStepsizeVal_doubleClicked( void );
@@ -296,8 +302,11 @@ private slots:
     void toolButtonUpsideDownChanged( void );
     void toolButtonVerticalStripesChanged( void );
     void on_spinBoxDeflickerTarget_valueChanged(int arg1);
-    void on_toolButtonDualIsoForce_toggled( bool checked );
+    //void on_toolButtonDualIsoForce_toggled( bool checked );
     void toolButtonDualIsoChanged( void );
+    void on_DualIsoPatternComboBox_currentIndexChanged(int index);
+    void on_toolButtonDualIsoMatchExposures1_clicked();
+    void on_toolButtonDualIsoMatchExposures2_clicked();
     void toolButtonDualIsoInterpolationChanged( void );
     void toolButtonDualIsoAliasMapChanged( void );
     void toolButtonDualIsoFullresBlendingChanged( void );
@@ -500,6 +509,7 @@ private:
     void startExportMlv( QString fileName );
     void startExportAVFoundation( QString fileName );
     void addFileToSession( QString fileName );
+    int askToSaveCurrentSession( void );
     void openSession(QString fileNameSession );
     void saveSession( QString fileName );
     void readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings *receipt , int version);
@@ -508,6 +518,7 @@ private:
     bool isFileInSession( QString fileName );
     void pasteReceiptFromClipboardTo( int row );
     void setSliders(ReceiptSettings *sliders , bool paste);
+    void resetSliders( void );
     void setReceipt( ReceiptSettings *sliders );
     void replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings *receiptSource , bool paste);
     void resetReceiptWithDefault( ReceiptSettings *receipt );
@@ -543,7 +554,7 @@ private:
     int toolButtonPatternNoiseCurrentIndex( void );
     int toolButtonUpsideDownCurrentIndex( void );
     int toolButtonVerticalStripesCurrentIndex( void );
-    int toolButtonDualIsoForceCurrentIndex();
+    //int toolButtonDualIsoForceCurrentIndex();
     int toolButtonDualIsoCurrentIndex( void );
     int toolButtonDualIsoInterpolationCurrentIndex( void );
     int toolButtonDualIsoAliasMapCurrentIndex( void );
