@@ -17,6 +17,7 @@ jobs:
     - uses: actions/checkout@master
 
     - name: Install OpenSSL
+      continue-on-error: true
       run: |
            choco install openssl
            dir "C:\Program Files\OpenSSL\"
@@ -40,8 +41,8 @@ jobs:
             cd release
             C:\Qt\5.15.2\mingw81_64\bin\windeployqt MLVApp.exe
             copy C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\bin\libgomp-1.dll .
-            copy "C:\Program Files\OpenSSL\bin\libcrypto-1_1-x64.dll" .
-            copy "C:\Program Files\OpenSSL\bin\libssl-1_1-x64.dll" .
+            copy "C:\Program Files\OpenSSL\bin\libcrypto*" .
+            copy "C:\Program Files\OpenSSL\bin\libssl*" .
             dir
 
     - name: Decompress FFMPEG
