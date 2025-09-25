@@ -2,7 +2,7 @@ name: Windows Release
 
 on:
   workflow_dispatch:
-    branches: [ "master" ]
+    branches: [ "Dual-ISO" ]
 
 env:
   SOURCE_DIR:   ${{ github.workspace }}\platform
