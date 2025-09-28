@@ -1332,7 +1332,7 @@ static inline void amaze_interpolate(struct raw_info raw_info, uint32_t * raw_bu
             build_ev2raw_lut(raw2ev, ev2raw_0, black, white);
             previous_black = black;
         }
-        #pragma omp parallel for collapse(2)
+        #pragma omp parallel for
         for (int y = 5; y < h-5; y ++)
         {
             int s = (is_bright[y%4] == is_bright[(y+1)%4]) ? -1 : 1;    /* points to the closest row having different exposure */
@@ -1421,7 +1421,7 @@ static inline void amaze_interpolate(struct raw_info raw_info, uint32_t * raw_bu
 #endif
         //~ printf("Actual interpolation...\n");
         
-        #pragma omp parallel for collapse(2)
+        #pragma omp parallel for
         for (int y = 2; y < h-2; y ++)
         {
             uint32_t* native = BRIGHT_ROW ? bright : dark;
@@ -1494,7 +1494,7 @@ static inline void mean23_interpolate(struct raw_info raw_info, uint32_t * raw_b
             build_ev2raw_lut(raw2ev, ev2raw_0, black, white);
             previous_black = black;
         }
-        #pragma omp parallel for collapse(2)
+        #pragma omp parallel for
         for (int y = 2; y < h-2; y ++)
         {
             uint32_t* native = BRIGHT_ROW ? bright : dark;
