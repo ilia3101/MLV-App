@@ -3313,7 +3313,9 @@ void MainWindow::addFileToSession(QString fileName)
     ClipInformation *clipInfo = new ClipInformation( QFileInfo(fileName).fileName(), fileName );
     m_pModel->append( clipInfo );
     m_pModel->setActiveRow( SESSION_CLIP_COUNT - 1 );
+
     if( ui->actionUseDefaultReceipt->isChecked() ) resetReceiptWithDefault( ACTIVE_RECEIPT );
+    ACTIVE_RECEIPT->setDualIsoForced( DISO_FORCED );
 
     //Update App
     listViewSessionUpdate();
