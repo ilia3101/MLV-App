@@ -4639,7 +4639,7 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
         ui->toolButtonDualIsoMatchExposures1->setEnabled( true );
         ui->toolButtonDualIsoMatchExposures1->setChecked( true );
     }
- 
+
     if( m_pMlvObject->llrawproc->diso_auto_correction > 0 )
     {
         m_pMlvObject->llrawproc->diso_auto_correction = -m_pMlvObject->llrawproc->diso_auto_correction;
@@ -4647,15 +4647,13 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
 
     if( receipt->dualIso() == -1 )
     {
+        receipt->setDualIso( 0 );
+
         if( receipt->dualIsoForced() == DISO_VALID )
         {
             if( m_pMlvObject->llrawproc->diso1 != m_pMlvObject->llrawproc->diso2 )
             {
                 receipt->setDualIso( 1 );
-            }
-            else
-            {
-                receipt->setDualIso( 0 );
             }
 
             m_pMlvObject->llrawproc->diso_pattern = 0;
@@ -4665,12 +4663,11 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
         }
         else
         {
-            receipt->setDualIso( 0 );
             ui->DualIsoPatternComboBox->setCurrentIndex( 0 );
             ui->horizontalSliderDualIsoEvCorrection->setValue( 0 );
             ui->horizontalSliderDualIsoBlackDelta->setValue( 0 );
         }
-        
+
         if( receipt->dualIsoForced() == DISO_FORCED )
         {
             m_pMlvObject->llrawproc->diso_pattern = 0;
@@ -4678,9 +4675,12 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
             m_pMlvObject->llrawproc->diso_ev_correction = 1;
             m_pMlvObject->llrawproc->diso_black_delta = -1;
         }
+
+        setToolButtonDualIso( receipt->dualIso() );
     }
     else
     {
+        setToolButtonDualIso( receipt->dualIso() );
         ui->DualIsoPatternComboBox->setCurrentIndex( receipt->dualIsoPattern() );
         on_DualIsoPatternComboBox_currentIndexChanged( receipt->dualIsoPattern() );
         ui->horizontalSliderDualIsoEvCorrection->setValue( receipt->dualIsoEvCorrection() );
@@ -4689,7 +4689,6 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
         on_horizontalSliderDualIsoBlackDelta_valueChanged( receipt->dualIsoBlackDelta() );
     }
 
-    setToolButtonDualIso( receipt->dualIso() );
     setToolButtonDualIsoInterpolation( receipt->dualIsoInterpolation() );
     setToolButtonDualIsoAliasMap( receipt->dualIsoAliasMap() );
     setToolButtonDualIsoFullresBlending( receipt->dualIsoFrBlending() );
@@ -6324,7 +6323,7 @@ void MainWindow::on_horizontalSliderDualIsoEvCorrection_valueChanged(int positio
         m_pMlvObject->llrawproc->diso_auto_correction = -m_pMlvObject->llrawproc->diso_auto_correction;        
     }
 
-    if( !m_fileLoaded ) return;
+    if( !m_fileLoaded || !m_pMlvObject->llrawproc->dual_iso ) return;
 
     m_pMlvObject->llrawproc->diso_ev_correction = ev;
 
@@ -6348,7 +6347,7 @@ void MainWindow::on_horizontalSliderDualIsoBlackDelta_valueChanged(int position)
         m_pMlvObject->llrawproc->diso_auto_correction = -m_pMlvObject->llrawproc->diso_auto_correction;        
     }
 
-    if( !m_fileLoaded ) return;
+    if( !m_fileLoaded || !m_pMlvObject->llrawproc->dual_iso ) return;
 
     m_pMlvObject->llrawproc->diso_black_delta = position;
 
@@ -9590,8 +9589,6 @@ void MainWindow::drawFrameReady()
 
         if( m_pMlvObject->llrawproc->diso_auto_correction < 0 )
         {
-            //printf("DISO: %d, %.2f, %d\n", m_pMlvObject->llrawproc->diso_auto_correction, m_pMlvObject->llrawproc->diso_ev_correction, m_pMlvObject->llrawproc->diso_black_delta);
-
             if( m_pMlvObject->llrawproc->diso_ev_correction != 1 )
             {
                 ui->horizontalSliderDualIsoEvCorrection->blockSignals( true );
@@ -9609,6 +9606,8 @@ void MainWindow::drawFrameReady()
             }
 
             m_pMlvObject->llrawproc->diso_auto_correction = -m_pMlvObject->llrawproc->diso_auto_correction;
+
+            //printf("DISO: %d, %.2f, %d\n", m_pMlvObject->llrawproc->diso_auto_correction, m_pMlvObject->llrawproc->diso_ev_correction, m_pMlvObject->llrawproc->diso_black_delta);
         }
     }
 
