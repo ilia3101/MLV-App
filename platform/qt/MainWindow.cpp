@@ -483,7 +483,11 @@ void MainWindow::openMlvSet( QStringList list )
 
         if( i == 0 && QFile(fileName).exists() && fileName.endsWith( ".masxml", Qt::CaseInsensitive ) )
         {
-            if( SESSION_CLIP_COUNT && askToSaveCurrentSession() ) return;
+            if( SESSION_CLIP_COUNT && askToSaveCurrentSession() )
+            {
+                m_inOpeningProcess = false;
+                return;
+            }
             openSession( fileName );
         }
         else
