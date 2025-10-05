@@ -157,7 +157,11 @@ void SingleFrameExportDialog::exportDng()
     //Set aspect ratio of the picture
     int32_t picAR[4] = { 0 };
     //Set horizontal stretch
-    if( m_stretchX == STRETCH_H_133 )
+    if( m_stretchX == STRETCH_H_125 )
+    {
+        picAR[0] = 5; picAR[1] = 4;
+    }
+    else if( m_stretchX == STRETCH_H_133 )
     {
         picAR[0] = 4; picAR[1] = 3;
     }

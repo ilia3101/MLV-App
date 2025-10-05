@@ -9,6 +9,7 @@
 #define STRETCHFACTORS_H
 
 #define STRETCH_H_100   1.0
+#define STRETCH_H_125   1.25
 #define STRETCH_H_133   1.3333
 #define STRETCH_H_150   1.5
 #define STRETCH_H_167   1.6667
