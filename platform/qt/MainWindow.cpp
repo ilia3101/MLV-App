@@ -2799,7 +2799,11 @@ void MainWindow::startExportCdng(QString fileName)
     //Set aspect ratio of the picture
     int32_t picAR[4] = { 0 };
     //Set horizontal stretch
-    if( m_exportQueue.first()->stretchFactorX() == STRETCH_H_133 )
+    if( m_exportQueue.first()->stretchFactorX() == STRETCH_H_125 )
+    {
+        picAR[0] = 5; picAR[1] = 4;
+    }
+    else if( m_exportQueue.first()->stretchFactorX() == STRETCH_H_133 )
     {
         picAR[0] = 4; picAR[1] = 3;
     }
@@ -4735,12 +4739,13 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     ui->horizontalSliderFilterStrength->setValue( receipt->filterStrength() );
 
     if( receipt->stretchFactorX() == STRETCH_H_100 ) ui->comboBoxHStretch->setCurrentIndex( 0 );
-    else if( receipt->stretchFactorX() == STRETCH_H_133 ) ui->comboBoxHStretch->setCurrentIndex( 1 );
-    else if( receipt->stretchFactorX() == STRETCH_H_150 ) ui->comboBoxHStretch->setCurrentIndex( 2 );
-    else if( receipt->stretchFactorX() == STRETCH_H_167 ) ui->comboBoxHStretch->setCurrentIndex( 3 );
-    else if( receipt->stretchFactorX() == STRETCH_H_175 ) ui->comboBoxHStretch->setCurrentIndex( 4 );
-    else if( receipt->stretchFactorX() == STRETCH_H_180 ) ui->comboBoxHStretch->setCurrentIndex( 5 );
-    else ui->comboBoxHStretch->setCurrentIndex( 6 );
+    else if( receipt->stretchFactorX() == STRETCH_H_125 ) ui->comboBoxHStretch->setCurrentIndex( 1 );
+    else if( receipt->stretchFactorX() == STRETCH_H_133 ) ui->comboBoxHStretch->setCurrentIndex( 2 );
+    else if( receipt->stretchFactorX() == STRETCH_H_150 ) ui->comboBoxHStretch->setCurrentIndex( 3 );
+    else if( receipt->stretchFactorX() == STRETCH_H_167 ) ui->comboBoxHStretch->setCurrentIndex( 4 );
+    else if( receipt->stretchFactorX() == STRETCH_H_175 ) ui->comboBoxHStretch->setCurrentIndex( 5 );
+    else if( receipt->stretchFactorX() == STRETCH_H_180 ) ui->comboBoxHStretch->setCurrentIndex( 6 );
+    else ui->comboBoxHStretch->setCurrentIndex( 7 );
     on_comboBoxHStretch_currentIndexChanged( ui->comboBoxHStretch->currentIndex() );
 
     if( receipt->stretchFactorY() == -1 )
@@ -9898,11 +9903,12 @@ double MainWindow::getHorizontalStretchFactor( bool downScale )
 {
     double factor = 1.0;
     if( ui->comboBoxHStretch->currentIndex() == 0 ) factor = STRETCH_H_100;
-    else if( ui->comboBoxHStretch->currentIndex() == 1 ) factor = STRETCH_H_133;
-    else if( ui->comboBoxHStretch->currentIndex() == 2 ) factor = STRETCH_H_150;
-    else if( ui->comboBoxHStretch->currentIndex() == 3 ) factor = STRETCH_H_167;
-    else if( ui->comboBoxHStretch->currentIndex() == 4 ) factor = STRETCH_H_175;
-    else if( ui->comboBoxHStretch->currentIndex() == 5 ) factor = STRETCH_H_180;
+    else if( ui->comboBoxHStretch->currentIndex() == 1 ) factor = STRETCH_H_125;
+    else if( ui->comboBoxHStretch->currentIndex() == 2 ) factor = STRETCH_H_133;
+    else if( ui->comboBoxHStretch->currentIndex() == 3 ) factor = STRETCH_H_150;
+    else if( ui->comboBoxHStretch->currentIndex() == 4 ) factor = STRETCH_H_167;
+    else if( ui->comboBoxHStretch->currentIndex() == 5 ) factor = STRETCH_H_175;
+    else if( ui->comboBoxHStretch->currentIndex() == 6 ) factor = STRETCH_H_180;
     else factor = STRETCH_H_200;
 
     if( ui->comboBoxVStretch->currentIndex() == 3 && !downScale ) factor *= 3.0;

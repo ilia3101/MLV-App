@@ -9547,6 +9547,11 @@ QGroupBox::indicator:checked:disabled {
                      </item>
                      <item>
                       <property name="text">
+                       <string>1.25x</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
                        <string>1.33x</string>
                       </property>
                      </item>
