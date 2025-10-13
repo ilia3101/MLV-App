@@ -1615,6 +1615,7 @@ void MainWindow::readSettings()
     resizeDocks({ui->dockWidgetSession}, {set.value( "dockSessionSize", 130 ).toInt()}, Qt::Vertical);
     m_pRecentFilesMenu->restoreState( set.value("recentSessions").toByteArray() );
     ui->actionAskForSavingOnQuit->setChecked( set.value( "askForSavingOnQuit", true ).toBool() );
+    ui->actionNotificationExportFinished->setChecked( set.value( "notificationExportFinished", true ).toBool() );
     ui->actionBetterResizer->setChecked( set.value( "betterResizerViewer", false ).toBool() );
     m_defaultReceiptFileName = set.value( "defaultReceiptFileName", QDir::homePath() ).toString();
     ui->actionUseDefaultReceipt->setChecked( set.value( "defaultReceiptEnabled", false ).toBool() );
@@ -1690,6 +1691,7 @@ void MainWindow::writeSettings()
     else set.setValue( "dockSessionSize", ui->dockWidgetSession->width() );
     set.setValue( "recentSessions", m_pRecentFilesMenu->saveState() );
     set.setValue( "askForSavingOnQuit", ui->actionAskForSavingOnQuit->isChecked() );
+    set.setValue( "notificationExportFinished", ui->actionNotificationExportFinished->isChecked() );
     set.setValue( "betterResizerViewer", ui->actionBetterResizer->isChecked() );
     if( ui->actionDarkThemeStandard->isChecked() ) set.setValue( "themeId", 0 );
     else set.setValue( "themeId", 1 );
@@ -8552,9 +8554,11 @@ void MainWindow::exportHandler( void )
         {
             //Start export script when ready
             m_pScripting->executePostExportScript();
-            //QMessageBox::information( this, tr( "Export" ), tr( "Export is ready." ) );
+            if( ui->actionNotificationExportFinished->isChecked() )
+                QMessageBox::information( this, tr( "Export" ), tr( "Export is ready." ) );
         }
-        //else QMessageBox::information( this, tr( "Export" ), tr( "Export aborted." ) );
+        else if( ui->actionNotificationExportFinished->isChecked() )
+            QMessageBox::information( this, tr( "Export" ), tr( "Export aborted." ) );
 
         //Caching is in which state? Set it!
         if( ui->actionCaching->isChecked() ) on_actionCaching_triggered();
