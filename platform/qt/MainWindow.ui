@@ -276,6 +276,7 @@
     <addaction name="menuTheme"/>
     <addaction name="separator"/>
     <addaction name="actionAskForSavingOnQuit"/>
+    <addaction name="actionNotificationExportFinished"/>
     <addaction name="separator"/>
     <addaction name="actionShowRedClips"/>
     <addaction name="actionShowYellowClips"/>
@@ -467,7 +468,7 @@ QGroupBox::indicator:checked:disabled {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>-1807</y>
+            <y>0</y>
             <width>269</width>
             <height>5772</height>
            </rect>
@@ -10927,6 +10928,14 @@ QGroupBox::indicator:checked:disabled {
    </property>
    <property name="toolTip">
     <string>If checked, clips are imported with reduced metadata on first read.</string>
+   </property>
+  </action>
+  <action name="actionNotificationExportFinished">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Notification on Export Finished</string>
    </property>
   </action>
  </widget>
