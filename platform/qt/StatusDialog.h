@@ -28,6 +28,9 @@ public:
     void drawTimeFromToDoFrames( uint32_t frames );
     void startExportTime( void );
 
+protected:
+    void keyPressEvent( QKeyEvent *event ) override;
+
 private:
     uint32_t m_totalTodoFrames;
     QDateTime m_startTime;

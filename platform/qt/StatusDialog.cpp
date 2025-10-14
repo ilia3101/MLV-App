@@ -7,6 +7,7 @@
 
 #include "StatusDialog.h"
 #include <QDebug>
+#include <QKeyEvent>
 
 //Constructor
 StatusDialog::StatusDialog(QWidget *parent) :
@@ -59,6 +60,21 @@ void StatusDialog::startExportTime()
 {
     m_startTime = QDateTime::currentDateTime();
     ui->labelEstimatedTime->setText( "" );
+}
+
+void StatusDialog::keyPressEvent( QKeyEvent *event )
+{
+    if( event->key() == Qt::Key_Escape ||
+        event->key() == Qt::Key_Enter ||
+        event->key() == Qt::Key_Return )
+    {
+        // Ignoriere diese Tasten vollständig
+        event->ignore();
+        return;
+    }
+
+    // Alle anderen Tasten normal behandeln
+    QDialog::keyPressEvent( event );
 }
 
 //Abort clicked
