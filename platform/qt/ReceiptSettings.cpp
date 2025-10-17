@@ -65,7 +65,8 @@ ReceiptSettings::ReceiptSettings()
     m_pattern_noise = 0;
     m_deflicker_target = 0;
     m_dualIsoForced = -1;
-    m_dualIsoOn = -1;
+    m_dualIsoOn = 0;
+    m_dualIsoAutoCorrected = 0;
     m_dualIsoPattern = 0;
     m_dualIsoEvCorrection = 0;
     m_dualIsoBlackDelta = 0;

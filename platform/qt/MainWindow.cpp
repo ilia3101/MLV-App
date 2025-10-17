@@ -3593,8 +3593,6 @@ void MainWindow::resetReceiptWithDefault( ReceiptSettings *receipt )
     }
     file.close();
 
-    receipt->setDualIso( -1 );
-
     //Never change RAW Black and White Level, reset CutIn/Out
     receipt->setRawWhite( -1 );
     receipt->setRawBlack( -1 );
@@ -3710,6 +3708,7 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
 
     //Compatibility for old saved dual iso projects
     receipt->setDualIsoForced( DISO_FORCED );
+    receipt->setDualIsoAutoCorrected( 1 );
     receipt->setDualIsoPattern( 0 );
     receipt->setDualIsoEvCorrection( 1 );
     receipt->setDualIsoBlackDelta( -1 );
@@ -4655,7 +4654,7 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
         m_pMlvObject->llrawproc->diso_auto_correction = -m_pMlvObject->llrawproc->diso_auto_correction;
     }
 
-    if( receipt->dualIso() == -1 )
+    if( !receipt->dualIsoAutoCorrected() )
     {
         receipt->setDualIso( 0 );
 
@@ -4685,12 +4684,9 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
             m_pMlvObject->llrawproc->diso_ev_correction = 1;
             m_pMlvObject->llrawproc->diso_black_delta = -1;
         }
-
-        setToolButtonDualIso( receipt->dualIso() );
     }
     else
     {
-        setToolButtonDualIso( receipt->dualIso() );
         ui->DualIsoPatternComboBox->setCurrentIndex( receipt->dualIsoPattern() );
         on_DualIsoPatternComboBox_currentIndexChanged( receipt->dualIsoPattern() );
         ui->horizontalSliderDualIsoEvCorrection->setValue( receipt->dualIsoEvCorrection() );
@@ -4699,6 +4695,7 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
         on_horizontalSliderDualIsoBlackDelta_valueChanged( receipt->dualIsoBlackDelta() );
     }
 
+    setToolButtonDualIso( receipt->dualIso() );
     setToolButtonDualIsoInterpolation( receipt->dualIsoInterpolation() );
     setToolButtonDualIsoAliasMap( receipt->dualIsoAliasMap() );
     setToolButtonDualIsoFullresBlending( receipt->dualIsoFrBlending() );
@@ -5043,6 +5040,7 @@ void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings 
     if( paste && cdui->checkBoxPatternNoise->isChecked() )     receiptTarget->setPatternNoise( receiptSource->patternNoise() );
     if( paste && cdui->checkBoxDualIso->isChecked() )          receiptTarget->setDualIsoForced( receiptSource->dualIsoForced() );
     if( paste && cdui->checkBoxDualIso->isChecked() )          receiptTarget->setDualIso( receiptSource->dualIso() );
+    if( paste && cdui->checkBoxDualIso->isChecked() )          receiptTarget->setDualIsoAutoCorrected( receiptSource->dualIsoAutoCorrected() );
     if( paste && cdui->checkBoxDualIso->isChecked() )          receiptTarget->setDualIsoPattern( receiptSource->dualIsoPattern() );
     if( paste && cdui->checkBoxDualIso->isChecked() )          receiptTarget->setDualIsoEvCorrection( receiptSource->dualIsoEvCorrection() );
     if( paste && cdui->checkBoxDualIso->isChecked() )          receiptTarget->setDualIsoBlackDelta( receiptSource->dualIsoBlackDelta() );
@@ -6334,7 +6332,7 @@ void MainWindow::on_horizontalSliderDualIsoEvCorrection_valueChanged(int positio
         m_pMlvObject->llrawproc->diso_auto_correction = -m_pMlvObject->llrawproc->diso_auto_correction;        
     }
 
-    if( !m_fileLoaded || !m_pMlvObject->llrawproc->dual_iso ) return;
+    if( !m_fileLoaded ) return;
 
     m_pMlvObject->llrawproc->diso_ev_correction = ev;
 
@@ -6358,7 +6356,7 @@ void MainWindow::on_horizontalSliderDualIsoBlackDelta_valueChanged(int position)
         m_pMlvObject->llrawproc->diso_auto_correction = -m_pMlvObject->llrawproc->diso_auto_correction;        
     }
 
-    if( !m_fileLoaded || !m_pMlvObject->llrawproc->dual_iso ) return;
+    if( !m_fileLoaded ) return;
 
     m_pMlvObject->llrawproc->diso_black_delta = position;
 
@@ -7433,12 +7431,14 @@ void MainWindow::on_actionExportSettings_triggered()
 //Reset the edit sliders to default
 void MainWindow::on_actionResetReceipt_triggered()
 {
-    ReceiptSettings *sliders = new ReceiptSettings(); //default
-    if( ui->actionUseDefaultReceipt->isChecked() ) resetReceiptWithDefault( sliders );
-    sliders->setRawWhite( getMlvOriginalWhiteLevel( m_pMlvObject ) );
-    sliders->setRawBlack( getMlvOriginalBlackLevel( m_pMlvObject ) );
-    setSliders( sliders, false );
-    delete sliders;
+    ReceiptSettings *receipt = new ReceiptSettings(); //default
+    if( ui->actionUseDefaultReceipt->isChecked() ) resetReceiptWithDefault( receipt );
+    receipt->setRawWhite( getMlvOriginalWhiteLevel( m_pMlvObject ) );
+    receipt->setRawBlack( getMlvOriginalBlackLevel( m_pMlvObject ) );
+    receipt->setDualIsoAutoCorrected( 0 );
+    ACTIVE_RECEIPT->setDualIsoAutoCorrected( 0 );
+    setSliders( receipt, false );
+    delete receipt;
 }
 
 //Copy receipt to clipboard
@@ -9590,6 +9590,8 @@ void MainWindow::drawFrameReady()
     // Set sliders after dual ISO processing
     if( toolButtonDualIsoCurrentIndex() == 1 )
     {
+        ACTIVE_RECEIPT->setDualIsoAutoCorrected( 1 );
+
         if( m_pMlvObject->llrawproc->diso_pattern < 0 )
         {
             m_pMlvObject->llrawproc->diso_pattern = -m_pMlvObject->llrawproc->diso_pattern;
