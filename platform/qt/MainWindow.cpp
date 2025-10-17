@@ -8346,7 +8346,7 @@ void MainWindow::on_DualIsoEvCorrectionVal_doubleClicked()
 void MainWindow::on_DualIsoBlackDeltaVal_doubleClicked()
 {
     EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderDualIsoBlackDelta, ui->DualIsoBlackDeltaVal, 1.0, 0, 1.0 );
+    editSlider.autoSetup( ui->horizontalSliderDualIsoBlackDelta, ui->DualIsoBlackDeltaVal, 5.0, 0, 1.0 );
     editSlider.exec();
     ui->horizontalSliderDualIsoBlackDelta->setValue( editSlider.getValue() );
 }
