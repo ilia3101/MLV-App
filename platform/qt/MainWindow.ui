@@ -468,7 +468,7 @@ QGroupBox::indicator:checked:disabled {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>-418</y>
+            <y>0</y>
             <width>270</width>
             <height>5922</height>
            </rect>
@@ -558,7 +558,7 @@ QGroupBox::indicator:checked:disabled {
                     </font>
                    </property>
                    <property name="text">
-                    <string>Dark-frame Subtraction</string>
+                    <string>Dark-Frame Subtraction</string>
                    </property>
                   </widget>
                  </item>
