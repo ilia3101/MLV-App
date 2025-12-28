@@ -2,7 +2,7 @@ name: Linux Release
 
 on:
   workflow_dispatch:
-    branches: [ "Dual-ISO" ]
+    branches: [ "master" ]
 
 env:
   SOURCE_DIR:   ${{ github.workspace }}/platform
