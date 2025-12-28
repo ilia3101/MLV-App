@@ -934,7 +934,7 @@ int MainWindow::openMlv( QString fileName )
     QString audioText;
     if( doesMlvHaveAudio( m_pMlvObject ) )
     {
-        audioText = QString( "%1 channel(s), %2 kHz" )
+        audioText = QString( "%1 channel(s),  %2 kHz" )
                 .arg( getMlvAudioChannels( m_pMlvObject ) )
                 .arg( getMlvSampleRate( m_pMlvObject ) );
     }
@@ -950,11 +950,11 @@ int MainWindow::openMlv( QString fileName )
                                  QString( "%1" ).arg( (int)getMlvFrames( m_pMlvObject ) ),
                                  QString( "%1 fps" ).arg( getMlvFramerate( m_pMlvObject ) ),
                                  QString( "%1 mm" ).arg( getMlvFocalLength( m_pMlvObject ) ),
-                                 QString( "1/%1 s, %2 deg, %3 µs" ).arg( (uint16_t)(shutterSpeed + 0.5f) ).arg( (uint16_t)(shutterAngle + 0.5f) ).arg( getMlvShutter( m_pMlvObject ) ),
+                                 QString( "1/%1 s,  %2 deg,  %3 µs" ).arg( (uint16_t)(shutterSpeed + 0.5f) ).arg( (uint16_t)(shutterAngle + 0.5f) ).arg( getMlvShutter( m_pMlvObject ) ),
                                  QString( "ƒ/%1" ).arg( getMlvAperture( m_pMlvObject ) / 100.0, 0, 'f', 1 ),
                                  isoInfo,
                                  dualIso,
-                                 QString( "%1 bits, %2" ).arg( getLosslessBpp( m_pMlvObject ) ).arg( getMlvCompression( m_pMlvObject ) ),
+                                 QString( "%1 bits,  %2" ).arg( getLosslessBpp( m_pMlvObject ) ).arg( getMlvCompression( m_pMlvObject ) ),
                                  QString( "%1-%2-%3 / %4:%5:%6" )
                                            .arg( getMlvTmYear(m_pMlvObject) )
                                            .arg( getMlvTmMonth(m_pMlvObject), 2, 10, QChar('0') )
@@ -976,10 +976,10 @@ int MainWindow::openMlv( QString fileName )
     m_pInfoDialog->ui->tableWidget->item( 8, 1 )->setText( ACTIVE_CLIP->getElement( 10 ).toString() );
     m_pInfoDialog->ui->tableWidget->item( 9, 1 )->setText( dualIsoInfo );
     m_pInfoDialog->ui->tableWidget->item( 10, 1 )->setText( ACTIVE_CLIP->getElement( 13 ).toString() );
-    m_pInfoDialog->ui->tableWidget->item( 11, 1 )->setText( QString( "%1 black, %2 white" ).arg( getMlvOriginalBlackLevel( m_pMlvObject ) ).arg( getMlvOriginalWhiteLevel( m_pMlvObject ) ) );
+    m_pInfoDialog->ui->tableWidget->item( 11, 1 )->setText( QString( "%1 black,  %2 white" ).arg( getMlvOriginalBlackLevel( m_pMlvObject ) ).arg( getMlvOriginalWhiteLevel( m_pMlvObject ) ) );
     m_pInfoDialog->ui->tableWidget->item( 12, 1 )->setText( ACTIVE_CLIP->getElement( 14 ).toString() );
     m_pInfoDialog->ui->tableWidget->item( 13, 1 )->setText( ACTIVE_CLIP->getElement( 15 ).toString() );
-    m_pInfoDialog->ui->tableWidget->item( 14, 1 )->setText( ACTIVE_CLIP->getElement( 16 ).toString() + ", " + ACTIVE_CLIP->getElement( 17 ).toString() );
+    m_pInfoDialog->ui->tableWidget->item( 14, 1 )->setText( ACTIVE_CLIP->getElement( 16 ).toString() + ",  " + ACTIVE_CLIP->getElement( 17 ).toString() );
 
     resultingResolution();
 
@@ -3535,7 +3535,7 @@ void MainWindow::saveSession(QString fileName)
     xmlWriter.writeStartDocument();
 
     xmlWriter.writeStartElement( "mlv_files" );
-    xmlWriter.writeAttribute( "version", "5" );
+    xmlWriter.writeAttribute( "version", "4" );
     xmlWriter.writeAttribute( "mlvapp", VERSION );
     for( int i = 0; i < SESSION_CLIP_COUNT; i++ )
     {
@@ -3689,7 +3689,7 @@ void MainWindow::on_actionExportReceipt_triggered()
     xmlWriter.writeStartDocument();
 
     xmlWriter.writeStartElement( "receipt" );
-    xmlWriter.writeAttribute( "version", "5" );
+    xmlWriter.writeAttribute( "version", "4" );
     xmlWriter.writeAttribute( "mlvapp", VERSION );
 
     writeXmlElementsToFile( &xmlWriter, GET_RECEIPT( clipToExport ) );
@@ -4120,7 +4120,7 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
         }
         else if( Rxml->isStartElement() && Rxml->name() == QString( "rawBlack" ) )
         {
-            if( version == 4 ) receipt->setRawBlack( Rxml->readElementText().toInt() / 10 );
+            if( version < 4 ) receipt->setRawBlack( Rxml->readElementText().toInt() * 10 );
             else receipt->setRawBlack( Rxml->readElementText().toInt() );
 
             Rxml->readNext();
@@ -5821,15 +5821,6 @@ int MainWindow::toolButtonVerticalStripesCurrentIndex()
     else return 2;
 }
 
-//Get toolbutton index of dual iso force
-/*
-int MainWindow::toolButtonDualIsoForceCurrentIndex()
-{
-    if( ui->toolButtonDualIsoForce->isChecked() ) return 0;
-    else return 1;
-}
-*/
-
 //Get toolbutton index of dual Iso
 int MainWindow::toolButtonDualIsoCurrentIndex()
 {
@@ -6263,9 +6254,9 @@ void MainWindow::on_horizontalSliderRawWhite_valueChanged(int position)
     {
         position = getMlvOriginalWhiteLevel( m_pMlvObject );
     }
-    else if( position <= ui->horizontalSliderRawBlack->value() + 1 )
+    else if( position <= ui->horizontalSliderRawBlack->value() / 10.0 + 1 )
     {
-        position = ui->horizontalSliderRawBlack->value() + 1;
+        position = ui->horizontalSliderRawBlack->value() / 10.0 + 1;
         ui->horizontalSliderRawWhite->setValue( position );
     }
 
@@ -6285,7 +6276,8 @@ void MainWindow::on_horizontalSliderRawWhite_valueChanged(int position)
 
 void MainWindow::on_horizontalSliderRawBlack_valueChanged(int position)
 {
-    ui->label_RawBlackVal->setText( QString("%1").arg( position ) );
+    double rawBlack = position / 10.0;
+    ui->label_RawBlackVal->setText( QString("%1").arg( rawBlack, 0, 'f', 1 ) );
 
     if( !m_fileLoaded ) return;
     if( getMlvBitdepth( m_pMlvObject ) == 0 ) return;
@@ -6293,20 +6285,20 @@ void MainWindow::on_horizontalSliderRawBlack_valueChanged(int position)
 
     if( !ui->checkBoxRawFixEnable->isChecked() )
     {
-        position = getMlvOriginalBlackLevel( m_pMlvObject );
+        rawBlack = getMlvOriginalBlackLevel( m_pMlvObject );
     }
-    else if( position >= ui->horizontalSliderRawWhite->value() - 1 )
+    else if( rawBlack >= ui->horizontalSliderRawWhite->value() - 1 )
     {
-        position = ui->horizontalSliderRawWhite->value() - 1;
-        ui->horizontalSliderRawBlack->setValue( position );
+        rawBlack = ui->horizontalSliderRawWhite->value() - 1;
+        ui->horizontalSliderRawBlack->setValue( rawBlack * 10 );
     }
 
     while( !m_pRenderThread->isIdle() ) QThread::msleep(1);
 
     /* Set mlv raw white level to the slider value */
-    setMlvBlackLevel( m_pMlvObject, position );
+    setMlvBlackLevel( m_pMlvObject, rawBlack );
     /* Set processing white level with correction */
-    processingSetBlackLevel( m_pProcessingObject, position, getMlvBitdepth( m_pMlvObject ) );
+    processingSetBlackLevel( m_pProcessingObject, rawBlack, getMlvBitdepth( m_pMlvObject ) );
 
     llrpResetFpmStatus(m_pMlvObject);
     llrpResetBpmStatus(m_pMlvObject);
@@ -6670,7 +6662,7 @@ void MainWindow::on_horizontalSliderRawWhite_doubleClicked()
 
 void MainWindow::on_horizontalSliderRawBlack_doubleClicked()
 {
-    ui->horizontalSliderRawBlack->setValue( getMlvOriginalBlackLevel( m_pMlvObject ) );
+    ui->horizontalSliderRawBlack->setValue( getMlvOriginalBlackLevel( m_pMlvObject ) * 10 );
 }
 
 void MainWindow::on_horizontalSliderDualIsoEvCorrection_doubleClicked()
@@ -7434,7 +7426,7 @@ void MainWindow::on_actionResetReceipt_triggered()
     ReceiptSettings *receipt = new ReceiptSettings(); //default
     if( ui->actionUseDefaultReceipt->isChecked() ) resetReceiptWithDefault( receipt );
     receipt->setRawWhite( getMlvOriginalWhiteLevel( m_pMlvObject ) );
-    receipt->setRawBlack( getMlvOriginalBlackLevel( m_pMlvObject ) );
+    receipt->setRawBlack( getMlvOriginalBlackLevel( m_pMlvObject ) * 10 );
     receipt->setDualIsoAutoCorrected( 0 );
     ACTIVE_RECEIPT->setDualIsoAutoCorrected( 0 );
     setSliders( receipt, false );
@@ -8330,7 +8322,7 @@ void MainWindow::on_label_RawWhiteVal_doubleClicked()
 void MainWindow::on_label_RawBlackVal_doubleClicked()
 {
     EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderRawBlack, ui->label_RawBlackVal, 1.0, 0, 1.0 );
+    editSlider.autoSetup( ui->horizontalSliderRawBlack, ui->label_RawBlackVal, 1.0, 1, 10.0 );
     editSlider.exec();
     ui->horizontalSliderRawBlack->setValue( editSlider.getValue() );
 }
@@ -8733,33 +8725,6 @@ void MainWindow::on_spinBoxDeflickerTarget_valueChanged(int arg1)
     m_frameChanged = true;
 }
 
-//Dual iso force button toggled
-/*
-void MainWindow::on_toolButtonDualIsoForce_toggled( bool checked )
-{
-    if( llrpGetDualIsoValidity( m_pMlvObject ) == DISO_VALID )
-    {
-        ui->DualISOLabel->setEnabled( true );
-        ui->toolButtonDualIsoOff->setEnabled( true );
-        ui->toolButtonDualIsoOn->setEnabled( true );
-        //ui->toolButtonDualIsoPreview->setEnabled( true );
-    }
-    else
-    {
-        ui->DualISOLabel->setEnabled( checked );
-        ui->toolButtonDualIsoOff->setEnabled( checked );
-        ui->toolButtonDualIsoOn->setEnabled( checked );
-        //ui->toolButtonDualIsoPreview->setEnabled( checked );
-        llrpSetDualIsoValidity( m_pMlvObject, checked );
-
-        if( !checked )
-        {
-            setToolButtonDualIso( false );
-        }
-    }
-}
-*/
-
 //DualISO changed
 void MainWindow::toolButtonDualIsoChanged( void )
 {
@@ -8779,7 +8744,6 @@ void MainWindow::toolButtonDualIsoChanged( void )
         ui->DualIsoBlackDeltaLabel->setEnabled( true );
         ui->DualIsoBlackDeltaVal->setEnabled( true );
         ui->horizontalSliderDualIsoBlackDelta->setEnabled( true );
-        ui->DualIsoNote->setEnabled( true );
         ui->toolButtonDualIsoInterpolation->setEnabled( true );
         ui->toolButtonDualIsoAliasMap->setEnabled( true );
         ui->toolButtonDualIsoFullresBlending->setEnabled( true );
@@ -8802,7 +8766,6 @@ void MainWindow::toolButtonDualIsoChanged( void )
         ui->DualIsoBlackDeltaLabel->setEnabled( false );
         ui->DualIsoBlackDeltaVal->setEnabled( false );
         ui->horizontalSliderDualIsoBlackDelta->setEnabled( false );
-        ui->DualIsoNote->setEnabled( false );
         ui->toolButtonDualIsoInterpolation->setEnabled( false );
         ui->toolButtonDualIsoAliasMap->setEnabled( false );
         ui->toolButtonDualIsoFullresBlending->setEnabled( false );
@@ -9046,7 +9009,6 @@ void MainWindow::on_checkBoxRawFixEnable_clicked(bool checked)
     ui->DualIsoBlackDeltaLabel->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() == 1 ) );
     ui->DualIsoBlackDeltaVal->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() == 1 ) );
     ui->horizontalSliderDualIsoBlackDelta->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() == 1 ) );
-    ui->DualIsoNote->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() == 1 ) );
     ui->DualISOInterpolationLabel->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() == 1 ) );
     ui->DualISOAliasMapLabel->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() == 1 ) );
     ui->DualISOFullresBlendingLabel->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() == 1 ) );
@@ -9062,7 +9024,6 @@ void MainWindow::on_checkBoxRawFixEnable_clicked(bool checked)
     ui->toolButtonPatternNoise->setEnabled( checked );
     ui->toolButtonVerticalStripes->setEnabled( checked );
     ui->toolButtonDualIso->setEnabled( checked );
-    //ui->toolButtonDualIsoForce->setEnabled( checked );
     ui->toolButtonDualIsoInterpolation->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() == 1 ) );
     ui->toolButtonDualIsoAliasMap->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() == 1 ) );
     ui->toolButtonDualIsoFullresBlending->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() == 1 ) );
@@ -9892,14 +9853,14 @@ void MainWindow::initCutInOut(int frames)
 void MainWindow::initRawBlackAndWhite()
 {
     ui->horizontalSliderRawBlack->blockSignals( true );
-    ui->horizontalSliderRawBlack->setMaximum( ( 1 << getMlvBitdepth( m_pMlvObject ) ) - 1 );
+    ui->horizontalSliderRawBlack->setMaximum( ( ( 2 << ( getMlvBitdepth( m_pMlvObject ) - 1 ) ) - 1 ) * 10 );
     ui->horizontalSliderRawBlack->blockSignals( false );
     ui->horizontalSliderRawWhite->blockSignals( true );
-    ui->horizontalSliderRawWhite->setMaximum( ( 1 << getMlvBitdepth( m_pMlvObject ) ) - 1 );
-    ui->horizontalSliderRawWhite->setValue( ( 1 << getMlvBitdepth( m_pMlvObject ) ) - 1 ); //set value to max, because otherwise the new black value is blocked by old white value
+    ui->horizontalSliderRawWhite->setMaximum( ( 2 << ( getMlvBitdepth( m_pMlvObject ) - 1 ) ) - 1 );
+    ui->horizontalSliderRawWhite->setValue( ( 2 << ( getMlvBitdepth( m_pMlvObject ) - 1 ) ) - 1 ); //set value to max, because otherwise the new black value is blocked by old white value
     ui->horizontalSliderRawWhite->blockSignals( false );
-    ui->horizontalSliderRawBlack->setValue( getMlvOriginalBlackLevel( m_pMlvObject ) );
-    on_horizontalSliderRawBlack_valueChanged( getMlvOriginalBlackLevel( m_pMlvObject ) );
+    ui->horizontalSliderRawBlack->setValue( getMlvOriginalBlackLevel( m_pMlvObject ) * 10 );
+    on_horizontalSliderRawBlack_valueChanged( getMlvOriginalBlackLevel( m_pMlvObject ) * 10 );
     ui->horizontalSliderRawWhite->setValue( getMlvOriginalWhiteLevel( m_pMlvObject ) );
     on_horizontalSliderRawWhite_valueChanged( getMlvOriginalWhiteLevel( m_pMlvObject ) );
 }
@@ -10454,7 +10415,7 @@ void MainWindow::on_toolButtonRawBlackAutoCorrect_clicked()
 {
     int value = autoCorrectRawBlackLevel();
     if( value != getMlvOriginalBlackLevel( m_pMlvObject ) )
-        ui->horizontalSliderRawBlack->setValue( value );
+        ui->horizontalSliderRawBlack->setValue( value * 10 );
 }
 
 //Open UserManualDialog

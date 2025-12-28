@@ -302,7 +302,6 @@ private slots:
     void toolButtonUpsideDownChanged( void );
     void toolButtonVerticalStripesChanged( void );
     void on_spinBoxDeflickerTarget_valueChanged(int arg1);
-    //void on_toolButtonDualIsoForce_toggled( bool checked );
     void toolButtonDualIsoChanged( void );
     void on_DualIsoPatternComboBox_currentIndexChanged(int index);
     void on_toolButtonDualIsoMatchExposures1_clicked();
@@ -554,7 +553,6 @@ private:
     int toolButtonPatternNoiseCurrentIndex( void );
     int toolButtonUpsideDownCurrentIndex( void );
     int toolButtonVerticalStripesCurrentIndex( void );
-    //int toolButtonDualIsoForceCurrentIndex();
     int toolButtonDualIsoCurrentIndex( void );
     int toolButtonDualIsoInterpolationCurrentIndex( void );
     int toolButtonDualIsoAliasMapCurrentIndex( void );

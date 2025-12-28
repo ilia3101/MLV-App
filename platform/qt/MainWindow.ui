@@ -468,9 +468,9 @@ QGroupBox::indicator:checked:disabled {
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>0</y>
-            <width>269</width>
-            <height>5772</height>
+            <y>-418</y>
+            <width>270</width>
+            <height>5922</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayoutScrollArea">
@@ -1750,43 +1750,6 @@ QGroupBox::indicator:checked:disabled {
                      </property>
                     </widget>
                    </item>
-                   <!--<item>
-                    <spacer name="horizontalSpacer_32">
-                     <property name="orientation">
-                      <enum>Qt::Horizontal</enum>
-                     </property>
-                     <property name="sizeType">
-                      <enum>QSizePolicy::Fixed</enum>
-                     </property>
-                     <property name="sizeHint" stdset="0">
-                      <size>
-                       <width>0</width>
-                       <height>21</height>
-                      </size>
-                     </property>
-                    </spacer>
-                   </item>
-                   <item>
-                    <widget class="ColorToolButton" name="toolButtonDualIsoForce">
-                     <property name="sizePolicy">
-                      <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-                       <horstretch>0</horstretch>
-                       <verstretch>0</verstretch>
-                      </sizepolicy>
-                     </property>
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
-                     <property name="text">
-                      <string>Force</string>
-                     </property>
-                     <property name="checkable">
-                      <bool>true</bool>
-                     </property>
-                    </widget>
-                   </item>-->
                   </layout>
                  </item>
                  <item row="22" column="0">
@@ -1874,44 +1837,44 @@ QGroupBox::indicator:checked:disabled {
                   </widget>
                  </item>
                  <item row="24" column="0">
-                   <widget class="NoScrollComboBox" name="DualIsoPatternComboBox">
-                    <property name="font">
-                     <font>
-                      <pointsize>10</pointsize>
-                     </font>
-                    </property>
-                    <property name="currentText">
+                  <widget class="NoScrollComboBox" name="DualIsoPatternComboBox">
+                   <property name="font">
+                    <font>
+                     <pointsize>10</pointsize>
+                    </font>
+                   </property>
+                   <property name="currentText">
+                    <string>(Auto Detect)</string>
+                   </property>
+                   <property name="currentIndex">
+                    <number>0</number>
+                   </property>
+                   <item>
+                    <property name="text">
                      <string>(Auto Detect)</string>
                     </property>
-                    <property name="currentIndex">
-                     <number>0</number>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>HIGH-HIGH-low-low</string>
                     </property>
-                    <item>
-                     <property name="text">
-                      <string>(Auto Detect)</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>HIGH-HIGH-low-low</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
+                   </item>
+                   <item>
+                    <property name="text">
                      <string>HIGH-low-low-HIGH</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>low-low-HIGH-HIGH</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>low-low-HIGH-HIGH</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
                      <string>low-HIGH-HIGH-low</string>
-                     </property>
-                    </item>
-                   </widget>
+                    </property>
+                   </item>
+                  </widget>
                  </item>
                  <item row="25" column="0">
                   <widget class="QLabel" name="DualIsoMatchExposuresLabel">
@@ -1983,6 +1946,9 @@ QGroupBox::indicator:checked:disabled {
                         <pointsize>10</pointsize>
                        </font>
                       </property>
+                      <property name="toolTip">
+                       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p style=&quot; margin-top:5px; margin-bottom:5px;&quot;&gt;Matching exposures by histogram requires you to select a scene/frame with a wide (ideally full) dynamic range for accurate results.&lt;/p&gt;&lt;p style=&quot; margin-top:5px; margin-bottom:5px;&quot;&gt;For best results, try using dark-frame subtraction with the same dual ISO and bit depth settings.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                      </property>
                       <property name="text">
                        <string>Histogram</string>
                       </property>
@@ -2005,6 +1971,21 @@ QGroupBox::indicator:checked:disabled {
                    <property name="verticalSpacing">
                     <number>0</number>
                    </property>
+                   <item row="2" column="2">
+                    <widget class="DoubleClickLabel" name="DualIsoBlackDeltaVal">
+                     <property name="font">
+                      <font>
+                       <pointsize>10</pointsize>
+                      </font>
+                     </property>
+                     <property name="text">
+                      <string>0</string>
+                     </property>
+                     <property name="alignment">
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                     </property>
+                    </widget>
+                   </item>
                    <item row="0" column="0">
                     <widget class="QLabel" name="DualIsoEvCorrectionLabel">
                      <property name="font">
@@ -2017,13 +1998,25 @@ QGroupBox::indicator:checked:disabled {
                      </property>
                     </widget>
                    </item>
-                   <item row="0" column="1">
-                    <spacer name="horizontalSpacer_65">
+                   <item row="2" column="0">
+                    <widget class="QLabel" name="DualIsoBlackDeltaLabel">
+                     <property name="font">
+                      <font>
+                       <pointsize>10</pointsize>
+                      </font>
+                     </property>
+                     <property name="text">
+                      <string>Black Delta</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="2" column="1">
+                    <spacer name="horizontalSpacer_68">
                      <property name="orientation">
                       <enum>Qt::Horizontal</enum>
                      </property>
                      <property name="sizeType">
-                      <enum>QSizePolicy::Policy::Maximum</enum>
+                      <enum>QSizePolicy::Fixed</enum>
                      </property>
                      <property name="sizeHint" stdset="0">
                       <size>
@@ -2032,6 +2025,38 @@ QGroupBox::indicator:checked:disabled {
                       </size>
                      </property>
                     </spacer>
+                   </item>
+                   <item row="0" column="1">
+                    <spacer name="horizontalSpacer_65">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                     <property name="sizeType">
+                      <enum>QSizePolicy::Fixed</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>40</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                   <item row="3" column="0" colspan="3">
+                    <widget class="NoScrollSlider" name="horizontalSliderDualIsoBlackDelta">
+                     <property name="minimum">
+                      <number>0</number>
+                     </property>
+                     <property name="maximum">
+                      <number>100</number>
+                     </property>
+                     <property name="pageStep">
+                      <number>5</number>
+                     </property>
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                    </widget>
                    </item>
                    <item row="0" column="2">
                     <widget class="DoubleClickLabel" name="DualIsoEvCorrectionVal">
@@ -2060,109 +2085,6 @@ QGroupBox::indicator:checked:disabled {
                       <enum>Qt::Horizontal</enum>
                      </property>
                     </widget>
-                   </item>
-                   <item row="2" column="0">
-                    <widget class="QLabel" name="DualIsoBlackDeltaLabel">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
-                     <property name="text">
-                      <string>Black Delta</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="2" column="1">
-                    <spacer name="horizontalSpacer_68">
-                     <property name="orientation">
-                      <enum>Qt::Horizontal</enum>
-                     </property>
-                     <property name="sizeType">
-                      <enum>QSizePolicy::Policy::Maximum</enum>
-                     </property>
-                     <property name="sizeHint" stdset="0">
-                      <size>
-                       <width>40</width>
-                       <height>20</height>
-                      </size>
-                     </property>
-                    </spacer>
-                   </item>
-                   <item row="2" column="2">
-                    <widget class="DoubleClickLabel" name="DualIsoBlackDeltaVal">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
-                     <property name="text">
-                      <string>0</string>
-                     </property>
-                     <property name="alignment">
-                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="3" column="0" colspan="3">
-                    <widget class="NoScrollSlider" name="horizontalSliderDualIsoBlackDelta">
-                     <property name="minimum">
-                      <number>0</number>
-                     </property>
-                     <property name="maximum">
-                      <number>100</number>
-                     </property>
-                     <property name="pageStep">
-                      <number>5</number>
-                     </property>
-                     <property name="orientation">
-                      <enum>Qt::Horizontal</enum>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="4" column="0" colspan="3">
-                    <spacer name="horizontalSpacer_66">
-                     <property name="orientation">
-                      <enum>Qt::Horizontal</enum>
-                     </property>
-                     <property name="sizeHint" stdset="0">
-                      <size>
-                       <width>40</width>
-                       <height>5</height>
-                      </size>
-                     </property>
-                    </spacer>
-                   </item>
-                   <item row="5" column="0" colspan="3">
-                    <widget class="QLabel" name="DualIsoNote">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
-                     <property name="text">
-                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p style=&quot; margin-top:5px; margin-bottom:5px;&quot;&gt;Matching exposures by histogram requires you to select a scene/frame with a wide (ideally full) dynamic range for accurate results.&lt;/p&gt;&lt;p style=&quot; margin-top:5px; margin-bottom:5px;&quot;&gt;For best results, try using dark-frame subtraction with the same dual ISO and bit depth settings.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                     </property>
-                     <property name="wordWrap">
-                      <bool>true</bool>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="6" column="0" colspan="3">
-                    <spacer name="horizontalSpacer_67">
-                     <property name="orientation">
-                      <enum>Qt::Horizontal</enum>
-                     </property>
-                     <property name="sizeType">
-                      <enum>QSizePolicy::Expanding</enum>
-                     </property>
-                     <property name="sizeHint" stdset="0">
-                      <size>
-                       <width>40</width>
-                       <height>5</height>
-                      </size>
-                     </property>
-                    </spacer>
                    </item>
                   </layout>
                  </item>
