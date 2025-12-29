@@ -1186,7 +1186,13 @@ static inline int edge_interp(float ** plane, int * squeezed, int * raw2ev, int 
     return pi;
 }
 
-static inline void amaze_interpolate(struct raw_info raw_info, uint32_t * raw_buffer_32, uint32_t* dark, uint32_t* bright, int black, int white, int white_darkened, int * is_bright)
+static void* demosaic_wrapper(void* arg) {
+    amazeinfo_t* info = (amazeinfo_t*)arg;
+    demosaic(info);
+    return NULL;
+}
+
+static inline void amaze_interpolate(struct raw_info raw_info, uint32_t * raw_buffer_32, uint32_t* dark, uint32_t* bright, int black, int white, int white_darkened, int * is_bright, int threads)
 {
     int w = raw_info.width;
     int h = raw_info.height;
@@ -1260,22 +1266,52 @@ static inline void amaze_interpolate(struct raw_info raw_info, uint32_t * raw_bu
         yh++;
         if (yh >= h) break; /* just in case */
     }
-#if 0
-    void amaze_demosaic_RT(
-                           float** rawData,    /* holds preprocessed pixel values, rawData[i][j] corresponds to the ith row and jth column */
-                           float** red,        /* the interpolated red plane */
-                           float** green,      /* the interpolated green plane */
-                           float** blue,       /* the interpolated blue plane */
-                           int winx, int winy, /* crop window for demosaicing */
-                           int winw, int winh
-                           );
-#endif
-    //IDK if AMaZE is actually thread safe, but I'm just going to assume not, rather than inspecting that huge mess of code
-    LOCK(amaze_mutex)
-    {
-        demosaic(& (amazeinfo_t) { rawData, red, green, blue, 0, 0, w, h, 0, 0 });
+
+    // Multithreaded debayer
+    int* startchunk_y = malloc(threads * sizeof(int));
+    int* endchunk_y = malloc(threads * sizeof(int));
+
+    int chunk_height = h / threads;
+    chunk_height -= chunk_height % 2;
+
+    while(chunk_height <= 32 && threads > 1) {
+        threads--;
+        chunk_height = h / threads;
+        chunk_height -= chunk_height % 2;
     }
-    UNLOCK(amaze_mutex)
+
+    for (int thread = 0; thread < threads; ++thread) {
+        startchunk_y[thread] = chunk_height * thread;
+        endchunk_y[thread] = chunk_height * (thread + 1);
+    }
+    endchunk_y[threads-1] = h;
+
+    pthread_t* thread_id = malloc(threads * sizeof(pthread_t));
+    amazeinfo_t* amaze_arguments = malloc(threads * sizeof(amazeinfo_t));
+
+    for (int thread = 0; thread < threads; ++thread) {
+        amaze_arguments[thread] = (amazeinfo_t) {
+            rawData,
+            red,
+            green,
+            blue,
+            0, startchunk_y[thread],
+            w, (endchunk_y[thread] - startchunk_y[thread]),
+            0,
+            0
+        };
+        
+        pthread_create(&thread_id[thread], NULL, demosaic_wrapper, &amaze_arguments[thread]);
+    }
+
+    for (int thread = 0; thread < threads; ++thread) {
+        pthread_join(thread_id[thread], NULL);
+    }
+
+    free(startchunk_y);
+    free(endchunk_y);
+    free(thread_id);
+    free(amaze_arguments);
     
     /* undo green channel scaling and clamp the other channels */
     #pragma omp parallel for collapse(2)
@@ -1312,10 +1348,6 @@ static inline void amaze_interpolate(struct raw_info raw_info, uint32_t * raw_bu
     double * fullres_curve = build_fullres_curve(black);
     
     //~ printf("Cross-correlation...\n");
-    int semi_overexposed = 0;
-    int not_overexposed = 0;
-    int deep_shadow = 0;
-    int not_shadow = 0;
     
     /* for fast EV - raw conversion */
     static int raw2ev[1<<20];   /* EV x EV_RESOLUTION */
@@ -1327,6 +1359,11 @@ static inline void amaze_interpolate(struct raw_info raw_info, uint32_t * raw_bu
     
     LOCK(ev2raw_mutex)
     {
+        int semi_overexposed = 0;
+        int not_overexposed = 0;
+        int deep_shadow = 0;
+        int not_shadow = 0;
+
         if(black != previous_black)
         {
             build_ev2raw_lut(raw2ev, ev2raw_0, black, white);
@@ -1350,6 +1387,7 @@ static inline void amaze_interpolate(struct raw_info raw_info, uint32_t * raw_bu
                     /* interpolating bright exposure */
                     if (fullres_curve[raw_get_pixel32(x, y)] > fullres_thr)
                     {
+#pragma omp atomic
                         /* no high accuracy needed, just interpolate vertically */
                         not_shadow++;
                         dmin = d0;
@@ -1357,12 +1395,14 @@ static inline void amaze_interpolate(struct raw_info raw_info, uint32_t * raw_bu
                     }
                     else
                     {
+#pragma omp atomic
                         /* deep shadows, unlikely to use fullres, so we need a good interpolation */
                         deep_shadow++;
                     }
                 }
                 else if (raw_get_pixel32(x, y) < (unsigned int)white_darkened)
                 {
+#pragma omp atomic
                     /* interpolating dark exposure, but we also have good data from the bright one */
                     not_overexposed++;
                     dmin = d0;
@@ -1370,6 +1410,7 @@ static inline void amaze_interpolate(struct raw_info raw_info, uint32_t * raw_bu
                 }
                 else
                 {
+#pragma omp atomic
                     /* interpolating dark exposure, but the bright one is clipped */
                     semi_overexposed++;
                 }
@@ -2041,7 +2082,7 @@ static inline void convert_20_to_16bit(struct raw_info raw_info, uint16_t * imag
             raw_set_pixel_20to16_rand(x, y, raw_buffer_32[x + y*w]);
 }
 
-int diso_get_full20bit(struct raw_info raw_info, uint16_t * image_data, int dark_frame, int iso1, int iso2, int * iso_pattern, int * auto_correction, double * ev_correction, int * black_delta, int interp_method, int use_alias_map, int use_fullres, int chroma_smooth_method)
+int diso_get_full20bit(struct raw_info raw_info, uint16_t * image_data, int dark_frame, int iso1, int iso2, int * iso_pattern, int * auto_correction, double * ev_correction, int * black_delta, int interp_method, int use_alias_map, int use_fullres, int chroma_smooth_method, int threads)
 {
     int w = raw_info.width;
     int h = raw_info.height;
@@ -2184,7 +2225,7 @@ int diso_get_full20bit(struct raw_info raw_info, uint16_t * image_data, int dark
 
     if (interp_method == 0)
     {
-        amaze_interpolate(raw_info, raw_buffer_32, dark, bright, black, white, white_darkened, is_bright);
+        amaze_interpolate(raw_info, raw_buffer_32, dark, bright, black, white, white_darkened, is_bright, threads);
     }
     else
     {

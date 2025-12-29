@@ -361,7 +361,8 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
                                video->llrawproc->diso_averaging,
                                video->llrawproc->diso_alias_map,
                                video->llrawproc->diso_frblending,
-                               video->llrawproc->chroma_smooth);
+                               video->llrawproc->chroma_smooth,
+                               video->cpu_cores);
 
             /* for full20bit set diso levels and bit depth to 16 bit, needed for cDNG export */
             int bits_shift = 16 - raw_info.bits_per_pixel;
