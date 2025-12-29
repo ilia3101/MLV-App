@@ -5237,6 +5237,7 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     receipt->setDeflickerTarget( GET_RECEIPT( row )->deflickerTarget() );
     receipt->setDualIsoForced( GET_RECEIPT( row )->dualIsoForced() );
     receipt->setDualIso( GET_RECEIPT( row )->dualIso() );
+    receipt->setDualIsoAutoCorrected( GET_RECEIPT( row )->dualIsoAutoCorrected() );
     receipt->setDualIsoPattern( GET_RECEIPT( row )->dualIsoPattern() );
     receipt->setDualIsoEvCorrection( GET_RECEIPT( row )->dualIsoEvCorrection() );
     receipt->setDualIsoBlackDelta( GET_RECEIPT( row )->dualIsoBlackDelta() );
