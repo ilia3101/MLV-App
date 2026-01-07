@@ -250,7 +250,7 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
     }
 
     /* fix focus pixels */
-    if (video->llrawproc->focus_pixels && video->llrawproc->fpm_status < 3 && !(video->llrawproc->diso_validity && video->llrawproc->dual_iso))
+    if (video->llrawproc->focus_pixels && video->llrawproc->fpm_status < 3)
     {
         /* detect crop_rec mode */
         int crop_rec = (llrpDetectFocusDotFixMode(video) == 2) ? 1 : (video->llrawproc->focus_pixels == 2);
@@ -275,7 +275,7 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
     }
 
     /* fix bad pixels */
-    if (video->llrawproc->bad_pixels && video->llrawproc->bpm_status < 3 && !(video->llrawproc->diso_validity && video->llrawproc->dual_iso))
+    if (video->llrawproc->bad_pixels && video->llrawproc->bpm_status < 3)
     {
         fix_bad_pixels(&video->llrawproc->bad_pixel_map,
                        &video->llrawproc->bpm_status,
@@ -347,8 +347,6 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
         /* dual iso processing */
         if (video->llrawproc->dual_iso == 1) // Full 20bit processing mode
         {
-            int oldDngBlackLevel = video->llrawproc->dng_black_level;
-
             diso_get_full20bit(raw_info,
                                raw_image_buff,
                                video->llrawproc->dark_frame,
@@ -371,11 +369,8 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
             video->llrawproc->dng_bit_depth = 16;
 
             /* for dualiso blacklevel may have been changed. Correct values needed for following pixel fixes */
-            if (oldDngBlackLevel != video->llrawproc->dng_black_level)
-            {
-                video->llrawproc->raw2ev = get_raw2ev(video->llrawproc->dng_black_level);
-                video->llrawproc->ev2raw = get_ev2raw(video->llrawproc->dng_black_level);
-            }
+            video->llrawproc->raw2ev = get_raw2ev(video->llrawproc->dng_black_level);
+            video->llrawproc->ev2raw = get_ev2raw(video->llrawproc->dng_black_level);
 
             /* fix focus pixels */
             if (video->llrawproc->focus_pixels && video->llrawproc->fpm_status < 3)
@@ -423,6 +418,10 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
                                video->llrawproc->raw2ev,
                                video->llrawproc->ev2raw);
             }
+
+            /* revert LUTs */
+            video->llrawproc->raw2ev = get_raw2ev(raw_info.black_level);
+            video->llrawproc->ev2raw = get_ev2raw(raw_info.black_level);
         }
         /*
         else if (video->llrawproc->dual_iso == 2) // Preview mode
