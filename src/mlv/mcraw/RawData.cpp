@@ -20,7 +20,7 @@
 #include <cstdint>
 #include <vector>
 #include <cstring>
-#ifndef __arm64
+#if defined(__x86_64__)
 #include <immintrin.h>
 #endif
 
@@ -61,7 +61,7 @@ namespace motioncam {
 // https://github.com/mirsadm/motioncam-decoder/commit/15fd711525e0701205b3805b4777c63b6184782d?diff=split&w=0
 // Code from hanatos
 
-#ifndef __arm64
+#if defined(__x86_64__)
             struct UInt16x8
             {
                 __m128i d;
