@@ -126,9 +126,12 @@ linux-g++*{
     } else {
         QMAKE_CFLAGS += -std=c99
     }
-    QMAKE_CFLAGS += -O3 -fopenmp -msse4.1 -mssse3 -msse3 -msse2 -msse -ftree-vectorize
+    QMAKE_CFLAGS += -O3 -fopenmp  -ftree-vectorize
     QMAKE_CXXFLAGS += -fopenmp -std=c++11 -ftree-vectorize
     LIBS += -lgomp
+    equals(QT_ARCH, x86_64) {
+        QMAKE_CFLAGS += -msse4.1 -mssse3 -msse3 -msse2 -msse
+    }
 }
 
 ##############
