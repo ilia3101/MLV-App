@@ -5163,18 +5163,117 @@ void MainWindow::previewPicture( int row )
     //disable low level raw fixes for preview
     m_pMlvObject->llrawproc->fix_raw = 0;
 
-    //Get frame from library
-    getMlvProcessedFrame8( m_pMlvObject, 0, m_pRawImage, QThread::idealThreadCount() );
+    int raw_w = m_pMlvObject->RAWI.xRes;
+    int raw_h = m_pMlvObject->RAWI.yRes;
 
-    //Display in SessionList
-    QPixmap pic = QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
-                                      .scaled( getMlvWidth(m_pMlvObject) * devicePixelRatio() / 10.0 * getHorizontalStretchFactor(true),
-                                               getMlvHeight(m_pMlvObject) * devicePixelRatio() / 10.0 * getVerticalStretchFactor(true),
-                                               Qt::IgnoreAspectRatio, Qt::SmoothTransformation) );
-    pic.setDevicePixelRatio( devicePixelRatio() );
-    m_pModel->setData( m_pModel->index( row, 0, QModelIndex() ), QIcon( pic ), Qt::DecorationRole );
+    uint16_t *raw_frame = (uint16_t *)malloc(raw_w * raw_h * sizeof(uint16_t));
+    if (getMlvRawFrameUint16(m_pMlvObject, 0, raw_frame)){
+        free(raw_frame);
+    }
+    else {
+        int downscale_factor = 0;
+        if (raw_w > 2000 && raw_h > 1500) downscale_factor = 9;
+        else if (raw_w < 2000 && raw_h < 1500) downscale_factor = 5;
+        else downscale_factor = 7;
+        int ds_w = raw_w / downscale_factor;
+        int ds_h = raw_h / downscale_factor;
+        int pixel_count = (ds_w) * (ds_h);
 
-    setPreviewMode();
+        uint16_t *downscaled_frame = (uint16_t *) malloc(pixel_count * sizeof(uint16_t));
+
+        for (int i = 0; i < ds_h; i++)
+            for (int j = 0; j < ds_w; j++)
+                downscaled_frame[i * ds_w + j] = raw_frame[(i * downscale_factor) * raw_w +
+                                                           (j * downscale_factor)];
+
+        float *float_thumb = (float *) malloc(pixel_count * sizeof(float));
+        if (!float_thumb) {
+            free(raw_frame);
+            free(downscaled_frame);
+            return;
+        }
+        int shift_val = (llrpHQDualIso(m_pMlvObject)) ? 0 : (16 - m_pMlvObject->RAWI.raw_info.bits_per_pixel);
+        for (int i = 0; i < pixel_count; i++)
+            float_thumb[i] = (float) (downscaled_frame[i] << shift_val);
+
+        uint16_t *debayered_frame = (uint16_t *) malloc(pixel_count * 3 * sizeof(uint16_t));
+        if (!debayered_frame) {
+            free(raw_frame);
+            free(downscaled_frame);
+            free(float_thumb);
+            return;
+        }
+        debayerBasic(debayered_frame, float_thumb, ds_w, ds_h, 1);
+
+        uint16_t *processed_frame = (uint16_t *) malloc(pixel_count * 3 * sizeof(uint16_t));
+        if (!processed_frame) {
+            free(raw_frame);
+            free(downscaled_frame);
+            free(float_thumb);
+            free(debayered_frame);
+            return;
+        }
+        applyProcessingObject(m_pMlvObject->processing,
+                              ds_w, ds_h,
+                              debayered_frame,
+                              processed_frame,
+                              QThread::idealThreadCount(), 1, 0);
+
+        uint8_t *thumbnail_img = (uint8_t *) malloc(pixel_count * 3 * sizeof(uint8_t));
+        if (!thumbnail_img) {
+            free(raw_frame);
+            free(downscaled_frame);
+            free(float_thumb);
+            free(debayered_frame);
+            free(processed_frame);
+            return;
+        }
+        for (int i = 0; i < pixel_count * 3; i++)
+            thumbnail_img[i] = (uint8_t) (processed_frame[i] >> 8);
+
+
+        QImage img( (unsigned char *) thumbnail_img,
+                    ds_w,
+                    ds_h,
+                    ds_w * 3,
+                    QImage::Format_RGB888 );
+
+        QPixmap pic = QPixmap::fromImage(   img.scaled(
+                                            ds_w * devicePixelRatio() / 10.0 * getHorizontalStretchFactor(true),
+                                            ds_h * devicePixelRatio() / 10.0 * getVerticalStretchFactor(true),
+                                            Qt::IgnoreAspectRatio,
+                                            Qt::SmoothTransformation)
+                                        );
+
+        pic.setDevicePixelRatio( devicePixelRatio() );
+        m_pModel->setData( m_pModel->index( row, 0, QModelIndex() ), QIcon( pic ), Qt::DecorationRole );
+
+        setPreviewMode();
+
+        // clean up
+        free(raw_frame);
+        free(downscaled_frame);
+        free(float_thumb);
+        free(debayered_frame);
+        free(processed_frame);
+        free(thumbnail_img);
+    }
+
+
+    // // previous logic for thumbnail
+    // //Get frame from library
+    // getMlvProcessedFrame8( m_pMlvObject, 0, m_pRawImage, QThread::idealThreadCount() );
+
+    // //Display in SessionList
+    // QPixmap pic = QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
+    //                                   .scaled( getMlvWidth(m_pMlvObject) * devicePixelRatio() / 10.0 * getHorizontalStretchFactor(true),
+    //                                            getMlvHeight(m_pMlvObject) * devicePixelRatio() / 10.0 * getVerticalStretchFactor(true),
+    //                                            Qt::IgnoreAspectRatio, Qt::SmoothTransformation) );
+
+    // pic.setDevicePixelRatio( devicePixelRatio() );
+    // m_pModel->setData( m_pModel->index( row, 0, QModelIndex() ), QIcon( pic ), Qt::DecorationRole );
+
+    // setPreviewMode();
 }
 
 //Sets the preview mode

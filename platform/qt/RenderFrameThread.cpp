@@ -7,10 +7,12 @@
 
 #include "RenderFrameThread.h"
 #include <QDebug>
+#include <stdlib.h>
 
 //Constructor
 RenderFrameThread::RenderFrameThread()
 {
+    setStackSize(4 * 1024 * 1024);
     m_stop = false;
     m_initialized = false;
     m_renderFrame = false;

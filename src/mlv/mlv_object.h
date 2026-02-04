@@ -163,6 +163,8 @@ typedef struct {
     /* How many cores, will not neccesarily determine number of threads made in any case, but helps */
     int cpu_cores; /* Default 4 */
 
+    /* Context for MCRAW decoder (opaque pointer) */
+    void * mcraw_context;
 
 } mlvObject_t;
 

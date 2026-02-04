@@ -1,7 +1,4 @@
-
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
+#include <motioncam/RawData.hpp>
 #include <vector>
 
 namespace motioncam {
@@ -403,7 +400,7 @@ namespace motioncam {
         
         switch (bits) {
             case 0:
-                memset(output, 0, sizeof(uint16_t)*BLOCK_SIZE);
+                std::memset(output, 0, sizeof(uint16_t)*BLOCK_SIZE);
                 break;
             case 1:
                 Decode1(output, input);
@@ -490,7 +487,7 @@ namespace motioncam {
             }
 
             // Skip padded garbage at the ned
-            memcpy(output, row.data(), width * 2);
+            std::memcpy(output, row.data(), width * 2);
             output += width;
         }
         

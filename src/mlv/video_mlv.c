@@ -218,21 +218,10 @@ int getMlvRawFrameUint16(mlvObject_t * video, uint64_t frameIndex, uint16_t * un
 
     if (isMcrawLoaded(video))
     {
-        mr_item_t item = {};
-
-        if (fread(&item, sizeof(mr_item_t), 1, file) != 1)
+        /* Use High-Level API from mcraw.cpp wrapper */
+        if (mr_load_frame((mr_ctx_t*)video->mcraw_context, (uint32_t)frameIndex, (uint8_t*)unpackedFrame, NULL) != 0)
         {
-            DEBUG( printf("Frame header read error\n"); )
-            free(raw_frame);
-            pthread_mutex_unlock(video->main_file_mutex + chunk);
-            return 1;
-        }
-
-        frame_size = item.size;
-
-        if (fread(raw_frame, frame_size, 1, file) != 1)
-        {
-            DEBUG( printf("Frame data read error\n"); )
+            DEBUG( printf("mcraw load frame failed for index %llu\n", frameIndex); )
             free(raw_frame);
             pthread_mutex_unlock(video->main_file_mutex + chunk);
             return 1;
@@ -240,15 +229,7 @@ int getMlvRawFrameUint16(mlvObject_t * video, uint64_t frameIndex, uint16_t * un
 
         pthread_mutex_unlock(video->main_file_mutex + chunk);
 
-        int64_t ret = mr_decode_video_frame((uint8_t*)unpackedFrame, raw_frame, frame_size, width, height, video->compression_type);
-
-        if (ret <= 0)
-        {
-            DEBUG( printf("mcraw decoder: Failed with error code (%d)\n", ret); )
-            free(raw_frame);
-            return 1;
-        }
-
+        /* CFA Pattern Correction logic follows below... */
         if (video->RAWI.raw_info.cfa_pattern == 0x01000201)   // gbrg
         {
             // gb  ->  rg
@@ -667,6 +648,12 @@ void freeMlvObject(mlvObject_t * video)
     /* Stop caching and make sure using silly sleep trick */
     video->stop_caching = 1;
     while (video->cache_thread_count) usleep(100);
+
+    /* Free mcraw context if exists */
+    if (video->mcraw_context) {
+        mr_decoder_free((mr_ctx_t*)video->mcraw_context);
+        video->mcraw_context = NULL;
+    }
 
     /* Close all MLV file chunks */
     if(video->file) close_all_chunks(video->file, video->filenum);
@@ -1584,7 +1571,8 @@ int openMcrawClip(mlvObject_t * video, char * mcrawPath, int open_mode, char * e
 
     int res = mr_decoder_open(ctx, mcrawPath);
 
-    if (res == 0) {
+    if (res == 0)
+    {
         res = mr_decoder_parse(ctx);
     }
 
@@ -1598,6 +1586,7 @@ int openMcrawClip(mlvObject_t * video, char * mcrawPath, int open_mode, char * e
     FILE **files = malloc(sizeof(FILE*));
     files[0] = mr_get_file_handle(ctx);
     video->file = files;
+    video->mcraw_context = (void*)ctx;
 
 
     /* Mutexes for every file */
@@ -1615,7 +1604,8 @@ int openMcrawClip(mlvObject_t * video, char * mcrawPath, int open_mode, char * e
 
     int64_t video_index_max = mr_get_frame_count(ctx);
 
-    if (open_mode == MLV_OPEN_PREVIEW) {
+    if (open_mode == MLV_OPEN_PREVIEW)
+    {
        video_index_max = 1;
     }
 
@@ -1729,7 +1719,7 @@ int openMcrawClip(mlvObject_t * video, char * mcrawPath, int open_mode, char * e
 
     memcpy(&video->IDNT.blockType, "IDNT", 4);
     video->IDNT.blockSize        = sizeof(mlv_idnt_hdr_t);
-    snprintf(video->IDNT.cameraName, 31, "%s %s", mr_get_manufacturer(ctx), mr_get_model(ctx));
+    snprintf(video->IDNT.cameraName, 31, "%s", mr_get_model(ctx));
 
     memcpy(&video->LENS.blockType, "LENS", 4);
     video->LENS.blockSize        = sizeof(mlv_lens_hdr_t);

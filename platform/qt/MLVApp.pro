@@ -11,7 +11,7 @@ win32{
     else: CONFIG += c++14
 }
 else{
-    greaterThan(QT_MAJOR_VERSION, 5): CONFIG   += c++15
+    greaterThan(QT_MAJOR_VERSION, 5): CONFIG   += c++17
     else: CONFIG += c++14
 }
 
@@ -57,7 +57,7 @@ macx{
         QMAKE_CXX = /usr/local/opt/llvm/bin/clang++
         QMAKE_LINK = /usr/local/opt/llvm/bin/clang++
         QMAKE_CFLAGS += -fopenmp -ftree-vectorize
-        QMAKE_CXXFLAGS += -fopenmp -std=c++15 -ftree-vectorize
+        QMAKE_CXXFLAGS += -fopenmp -std=c++17 -ftree-vectorize
         INCLUDEPATH += -I/usr/local/opt/llvm/include
         LIBS += -L/usr/local/opt/llvm/lib -lomp -L/usr/local/opt/openssl/lib -lssl
         QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.8
@@ -68,9 +68,12 @@ macx{
         QMAKE_CXX = /opt/homebrew/opt/llvm/bin/clang++
         QMAKE_LINK = /opt/homebrew/opt/llvm/bin/clang++
         QMAKE_CFLAGS += -fopenmp -ftree-vectorize
-        QMAKE_CXXFLAGS += -fopenmp -std=c++15 -ftree-vectorize
+        QMAKE_CXXFLAGS += -fopenmp -std=c++17 -ftree-vectorize
         INCLUDEPATH += -I/opt/homebrew/opt/llvm/include
-        LIBS += -L/opt/homebrew/opt/llvm/lib -lomp -L/opt/homebrew/opt/llvm/lib/unwind -lunwind -L/opt/homebrew/opt/openssl/lib -lssl -L/opt/homebrew/opt/llvm/lib/c++ -lc++ -lc++abi
+        # deleted -lc++ -lc++abi. it causes app crash. Because of conflict between default libc++ and llvm's libc++
+        LIBS += -L/opt/homebrew/opt/llvm/lib -lomp \
+                    -L/opt/homebrew/opt/openssl@3/lib -lssl \
+                    -L/opt/homebrew/opt/llvm/lib/unwind -lunwind
         QMAKE_MACOSX_DEPLOYMENT_TARGET = 11.7
         QMAKE_APPLE_DEVICE_ARCHS = arm64
     }
@@ -142,10 +145,6 @@ SOURCES += \
     Updater/Updater.cpp \
         main.cpp \
         MainWindow.cpp \
-    ../../src/debayer/amaze_demosaic.c \
-    ../../src/debayer/debayer.c \
-    ../../src/debayer/conv.c \
-    ../../src/debayer/basic.c \
     ../../src/ca_correct/CA_correct_RT.c \
     ../../src/matrix/matrix.c \
     ../../src/mlv/frame_caching.c \
@@ -157,17 +156,10 @@ SOURCES += \
     ../../src/mlv/llrawproc/patternnoise.c \
     ../../src/mlv/llrawproc/chroma_smooth.c \
     ../../src/mlv/llrawproc/hist.c \
-    ../../src/mlv/camid/camera_id.c \   
-    ../../src/mlv/mcraw/mcraw.c \
-    ../../src/mlv/mcraw/RawData.cpp \
-    ../../src/mlv/mcraw/RawData_Legacy.cpp \
-    ../../src/processing/processing.c \
-    ../../src/processing/raw_processing.c \
-    ../../src/processing/filter/filter.c \
-    ../../src/processing/filter/genann/genann.c \
-    ../../src/processing/image_profiles.c \
-    ../../src/processing/cube_lut.c \
+    ../../src/mlv/camid/camera_id.c \
     ../../src/mlv/llrawproc/dualiso.c \
+    ../../src/mlv/audio_mlv.c \
+    ../../src/mlv/llrawproc/darkframe.c \
     ../../src/dng/dng.c \
     ScopesLabel.cpp \
     InfoDialog.cpp \
@@ -191,40 +183,49 @@ SOURCES += \
     GradientElement.cpp \
     VectorScope.cpp \
     TimeCodeLabel.cpp \
-    ../../src/mlv/llrawproc/darkframe.c \
     ColorWheel.cpp \
-    ../../src/mlv/audio_mlv.c \
     Updater/updaterUI/cupdaterdialog.cpp \
-    ../../src/processing/blur_threaded.c \
     Scripting.cpp \
     FcpxmlAssistantDialog.cpp \
     FcpxmlSelectDialog.cpp \
-    ../../src/processing/denoiser/denoiser_2d_median.c \
     ReceiptCopyMaskDialog.cpp \
     UserManualDialog.cpp \
     QRecentFilesMenu.cpp \
     SingleFrameExportDialog.cpp \
     Curves.cpp \
-    ../../src/processing/interpolation/spline_helper.cpp \
-    ../../src/processing/interpolation/cosine_interpolation.c \
-    ../../src/processing/rbfilter/rbf_wrapper.cpp \
     HueVsDiagram.cpp \
-    ../../src/processing/rbfilter/RBFilterPlain.cpp \
-    ../../src/debayer/wb_conversion.c \
-    ../../src/processing/sobel/sobel.c \
     MoveToTrash.cpp \
     OverwriteListDialog.cpp \
     PixelMapListDialog.cpp \
-    ../../src/processing/cafilter/ColorAberrationCorrection.c \
     NoScrollSpinBox.cpp \
     NoScrollComboBox.cpp \
     TranscodeDialog.cpp \
     CrossElement.cpp \
     BadPixelFileHandler.cpp \
-    ../../src/processing/tinyexpr/tinyexpr.c \
     FocusPixelMapManager.cpp \
     DownloadManager.cpp \
     StatusFpmDialog.cpp \
+    ../../src/processing/processing.c \
+    ../../src/processing/raw_processing.c \
+    ../../src/processing/image_profiles.c \
+    ../../src/processing/cube_lut.c \
+    ../../src/processing/blur_threaded.c \
+    ../../src/processing/denoiser/denoiser_2d_median.c \
+    ../../src/processing/cafilter/ColorAberrationCorrection.c \
+    ../../src/processing/tinyexpr/tinyexpr.c \
+    ../../src/processing/rbfilter/RBFilterPlain.cpp \
+    ../../src/processing/sobel/sobel.c \
+    ../../src/processing/interpolation/spline_helper.cpp \
+    ../../src/processing/interpolation/cosine_interpolation.c \
+    ../../src/processing/rbfilter/rbf_wrapper.cpp \
+    ../../src/processing/filter/filter.c \
+    ../../src/processing/filter/genann/genann.c \
+    ../../src/debayer/wb_conversion.c \
+    ../../src/debayer/amaze_demosaic.c \
+    ../../src/debayer/debayer.c \
+    ../../src/debayer/conv.c \
+    ../../src/debayer/basic.c \
+    ../../src/debayer/ahdOld.c \
     ../../src/librtprocess/src/demosaic/ahd.cc \
     ../../src/librtprocess/src/demosaic/amaze.cc \
     ../../src/librtprocess/src/demosaic/bayerfast.cc \
@@ -240,47 +241,19 @@ SOURCES += \
     ../../src/librtprocess/src/postprocess/hilite_recon.cc \
     ../../src/librtprocess/src/preprocess/CA_correct.cc \
     ../../src/librtprocess/src/include/librtprocesswrapper.cpp \
-    ../../src/debayer/ahdOld.c
+    ../../src/mlv/mcraw/Decoder.cpp \
+    ../../src/mlv/mcraw/mcraw.cpp \
+    ../../src/mlv/mcraw/mcraw.h \
+    ../../src/mlv/mcraw/RawData_Legacy.cpp \
+    ../../src/mlv/mcraw/RawData.cpp
 
-INCLUDEPATH += ../../src/librtprocess/src/include/
+INCLUDEPATH += ../../src/librtprocess/src/include/ \
+    ../../src/mlv/mcraw/include/
+
 
 macx: SOURCES += ../cocoa/avf_lib/avf_lib.m
 
 HEADERS += MainWindow.h \
-    ../../src/debayer/debayer.h \
-    ../../src/debayer/helpersse2.h \
-    ../../src/debayer/conv.h \
-    ../../src/debayer/basic.h \
-    ../../src/ca_correct/CA_correct_RT.h \
-    ../../src/matrix/matrix.h \
-    ../../src/mlv/mlv.h \
-    ../../src/mlv/mlv_object.h \
-    ../../src/mlv/raw.h \
-    ../../src/mlv/video_mlv.h \
-    ../../src/mlv/liblj92/lj92.h \
-    ../../src/mlv/llrawproc/llrawproc_object.h \
-    ../../src/mlv/llrawproc/llrawproc.h \
-    ../../src/mlv/llrawproc/pixelproc.h \
-    ../../src/mlv/llrawproc/stripes.h \
-    ../../src/mlv/llrawproc/patternnoise.h \
-    ../../src/mlv/llrawproc/hist.h \
-    ../../src/mlv/llrawproc/opt_med.h \
-    ../../src/mlv/llrawproc/wirth.h \
-    ../../src/mlv_include.h \
-    ../../src/mlv/llrawproc/dualiso.h \
-    ../../src/mlv/camid/camera_id.h \
-    ../../src/dng/dng.h \
-    ../../src/dng/dng_tag_codes.h \
-    ../../src/dng/dng_tag_types.h \
-    ../../src/dng/dng_tag_values.h \
-    ../../src/processing/processing_object.h \
-    ../../src/processing/raw_processing.h \
-    ../../src/processing/filter/filter.h \
-    ../../src/processing/filter/film.h \
-    ../../src/processing/filter/genann/genann.h \
-    ../../src/processing/image_profile.h \
-    ../../src/processing/cube_lut.h \
-    ../../src/processing/denoiser/denoiser_2d_median.h \
     ClipInformation.h \
     InfoDialog.h \
     MyApplication.h \
@@ -310,12 +283,6 @@ HEADERS += MainWindow.h \
     GradientElement.h \
     VectorScope.h \
     TimeCodeLabel.h \
-    ../../src/mlv/llrawproc/darkframe.h \
-    ColorWheel.h \
-    ../../src/mlv/audio_mlv.h \
-    ../../src/mlv/macros.h \
-    Updater/updaterUI/cupdaterdialog.h \
-    ../../src/processing/blur_threaded.h \
     Scripting.h \
     FcpxmlAssistantDialog.h \
     FcpxmlSelectDialog.h \
@@ -326,31 +293,71 @@ HEADERS += MainWindow.h \
     StretchFactors.h \
     DarkStyleModern.h \
     Curves.h \
-    ../../src/processing/interpolation/spline_helper.h \
-    ../../src/processing/interpolation/spline.h \
-    ../../src/processing/interpolation/cosine_interpolation.h \
+    ColorWheel.h \
     HueVsDiagram.h \
-    ../../src/processing/rbfilter/rbf_wrapper.h \
-    ../../src/processing/rbfilter/rbf.h \
-    ../../src/processing/rbfilter/RBFilterPlain.h \
     FpmInstaller.h \
-    ../../src/processing/sobel/sobel.h \
     avir/avir.h \
     MoveToTrash.h \
     OverwriteListDialog.h \
     avir/avirthreadpool.h \
     avir/ThreadPool.h \
     PixelMapListDialog.h \
-    ../../src/processing/cafilter/ColorAberrationCorrection.h \
     NoScrollSpinBox.h \
     NoScrollComboBox.h \
     TranscodeDialog.h \
     CrossElement.h \
     BadPixelFileHandler.h \
-    ../../src/processing/tinyexpr/tinyexpr.h \
     DownloadManager.h \
     FocusPixelMapManager.h \
     StatusFpmDialog.h \
+    Updater/updaterUI/cupdaterdialog.h \
+    ../../src/debayer/debayer.h \
+    ../../src/debayer/helpersse2.h \
+    ../../src/debayer/conv.h \
+    ../../src/debayer/basic.h \
+    ../../src/ca_correct/CA_correct_RT.h \
+    ../../src/matrix/matrix.h \
+    ../../src/mlv_include.h \
+    ../../src/mlv/mlv.h \
+    ../../src/mlv/mlv_object.h \
+    ../../src/mlv/raw.h \
+    ../../src/mlv/video_mlv.h \
+    ../../src/mlv/liblj92/lj92.h \
+    ../../src/mlv/llrawproc/darkframe.h \
+    ../../src/mlv/llrawproc/llrawproc_object.h \
+    ../../src/mlv/llrawproc/llrawproc.h \
+    ../../src/mlv/llrawproc/pixelproc.h \
+    ../../src/mlv/llrawproc/stripes.h \
+    ../../src/mlv/llrawproc/patternnoise.h \
+    ../../src/mlv/llrawproc/hist.h \
+    ../../src/mlv/llrawproc/opt_med.h \
+    ../../src/mlv/llrawproc/wirth.h \
+    ../../src/mlv/llrawproc/dualiso.h \
+    ../../src/mlv/camid/camera_id.h \
+    ../../src/mlv/audio_mlv.h \
+    ../../src/mlv/macros.h \
+    ../../src/dng/dng.h \
+    ../../src/dng/dng_tag_codes.h \
+    ../../src/dng/dng_tag_types.h \
+    ../../src/dng/dng_tag_values.h \
+    ../../src/processing/processing_object.h \
+    ../../src/processing/raw_processing.h \
+    ../../src/processing/filter/filter.h \
+    ../../src/processing/filter/film.h \
+    ../../src/processing/filter/genann/genann.h \
+    ../../src/processing/image_profile.h \
+    ../../src/processing/cube_lut.h \
+    ../../src/processing/denoiser/denoiser_2d_median.h \
+    ../../src/processing/blur_threaded.h \
+    ../../src/processing/interpolation/spline_helper.h \
+    ../../src/processing/interpolation/spline.h \
+    ../../src/processing/interpolation/cosine_interpolation.h \
+    ../../src/processing/rbfilter/rbf_wrapper.h \
+    ../../src/processing/rbfilter/rbf.h \
+    ../../src/processing/rbfilter/RBFilterPlain.h \
+    ../../src/processing/sobel/sobel.h \
+    ../../src/processing/tinyexpr/tinyexpr.h \
+    ../../src/processing/cafilter/ColorAberrationCorrection.h \
     ../../src/librtprocess/src/include/array2D.h \
     ../../src/librtprocess/src/include/bayerhelper.h \
     ../../src/librtprocess/src/include/boxblur.h \
@@ -440,11 +447,11 @@ ICON_FILES.path = Contents/Resources
 QMAKE_BUNDLE_DATA += ICON_FILES
 
 #unpack & install ffmpeg on OSX
-macx: QMAKE_POST_LINK += unzip -o ../qt/FFmpeg/ffmpegOSX.zip $$escape_expand(\n\t)
+macx: QMAKE_POST_LINK += unzip -o $$quote($$PWD/../qt/FFmpeg/ffmpegOSX.zip) $$escape_expand(\n\t)
 macx: QMAKE_POST_LINK += "mv ffmpeg MLV\ App.app/Contents/MacOS/" $$escape_expand(\n\t)
 #unpack & install raw2mlv on OSX
-macx: equals(QT_ARCH, arm64): QMAKE_POST_LINK += unzip -o ../qt/raw2mlv/raw2mlvMacOsArm.zip $$escape_expand(\n\t)
-macx: equals(QT_ARCH, x86_64): QMAKE_POST_LINK += unzip -o ../qt/raw2mlv/raw2mlvOSX.zip $$escape_expand(\n\t)
+macx: equals(QT_ARCH, arm64): QMAKE_POST_LINK += unzip -o $$quote($$PWD/../qt/raw2mlv/raw2mlvMacOsArm.zip) $$escape_expand(\n\t)
+macx: equals(QT_ARCH, x86_64): QMAKE_POST_LINK += unzip -o $$quote($$PWD/../qt/raw2mlv/raw2mlvOSX.zip) $$escape_expand(\n\t)
 macx: QMAKE_POST_LINK += "mv raw2mlv MLV\ App.app/Contents/MacOS/" $$escape_expand(\n\t)
 
 unix{

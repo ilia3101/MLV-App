@@ -1,141 +1,58 @@
-/*
- * Copyright 2023 MotionCam
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-// Changed:
-// - Add c API function mr_decode_video_frame(...)
-
-#include <cstdint>
+#include <motioncam/RawData.hpp>
 #include <vector>
 #include <cstring>
-#if defined(__x86_64__)
-#include <immintrin.h>
-#endif
+#include <cmath>
+#include <cstdint>
 
 #include "mcraw.h"
 
+#include <simde/x86/sse2.h>
+#include <simde/x86/sse4.1.h>
+
+#if defined(__GNUC__)
+#  define INLINE  __attribute__((always_inline))
+#  define RESTRICT __restrict__
+#elif defined(_MSC_VER)
+#  define INLINE __forceinline
+#  define RESTRICT __restrict
+#else
+#  define INLINE
+#  define RESTRICT
+#endif
+
 namespace motioncam {
     namespace raw {
-
+    
     size_t DecodeLegacy(uint16_t* output, const int width, const int height, const uint8_t* input, const size_t len);
-
 
     namespace {
     const int ENCODING_BLOCK = 64;
     const int HEADER_LENGTH = 2;
     const int METADATA_OFFSET = 16;
-
-        constexpr int ENCODING_BLOCK_LENGTH[] = {
-                0,
-                8,
-                16,
-                24,
-                32,
-                40,
-                48,
-                64,
-                64,
-                80,
-                80,
-                128,
-                128,
-                128,
-                128,
-                128,
-                128
-        };
-
-// Original push request
-// https://github.com/mirsadm/motioncam-decoder/commit/15fd711525e0701205b3805b4777c63b6184782d?diff=split&w=0
-// Code from hanatos
-
-#if defined(__x86_64__)
-            struct UInt16x8
-            {
-                __m128i d;
-                UInt16x8(
-                        const uint16_t p0,
-                        const uint16_t p1,
-                        const uint16_t p2,
-                        const uint16_t p3,
-                        const uint16_t p4,
-                        const uint16_t p5,
-                        const uint16_t p6,
-                        const uint16_t p7)
-                {
-                    d = _mm_set_epi16(p7, p6, p5, p4, p3, p2, p1, p0);
-                }
-
-                UInt16x8(const __m128i other)
-                {
-                    d = other;
-                }
-
-                UInt16x8(const UInt16x8& src)
-                {
-                    d = src.d;
-                }
-
-                UInt16x8(const uint16_t val)
-                {
-                    d = _mm_set1_epi16(val);
-                }
-
-                inline
-                UInt16x8 operator&(const UInt16x8& rhs) const {
-                    return UInt16x8(_mm_and_si128(d, rhs.d));
-                }
-
-                inline
-                UInt16x8 operator|(const UInt16x8& rhs) const {
-                    return UInt16x8(_mm_or_si128(d, rhs.d));
-                }
-
-                inline
-                UInt16x8 operator<<(const int n) const {
-                    return UInt16x8(_mm_slli_epi16(d, n));
-                }
-
-                inline
-                UInt16x8 operator>>(const int n) const {
-                    return UInt16x8(_mm_srli_epi16(d, n));
-                }
-            };
-            inline
-            UInt16x8 Load(const uint8_t* src) {
-                // return UInt16x8(_mm_loadu_si128((__m128i *)src)); // this would be wrong, we expand 8 bit to 16 here
-                return UInt16x8(
-                        src[0],
-                        src[1],
-                        src[2],
-                        src[3],
-                        src[4],
-                        src[5],
-                        src[6],
-                        src[7]);
-            }
-
-            inline
-            void Store(uint16_t* dst, const UInt16x8& src) {
-                _mm_storeu_si128((__m128i *)dst, src.d);
-            }
-#else
+    
+    constexpr int ENCODING_BLOCK_LENGTH[] = {
+        0,
+        8,
+        16,
+        24,
+        32,
+        40,
+        48,
+        64,
+        64,
+        80,
+        80,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128
+    };
 
     struct UInt16x8 {
-        const uint16_t d[8];
-        
+        const simde__m128i d;
+
         UInt16x8(
             const uint16_t p0,
             const uint16_t p1,
@@ -145,101 +62,61 @@ namespace motioncam {
             const uint16_t p5,
             const uint16_t p6,
             const uint16_t p7) :
-                d{ p0, p1, p2, p3, p4, p5, p6, p7 }
+            d{ simde_mm_set_epi16(p7, p6, p5, p4, p3, p2, p1, p0) }
         {
         }
 
-        UInt16x8(const UInt16x8& src) :
-            d{src.d[0], src.d[1], src.d[2], src.d[3], src.d[4], src.d[5], src.d[6], src.d[7]}
+        UInt16x8(const simde__m128i& src) : d{ src }
         {
         }
 
-        UInt16x8(const uint16_t val) : d{val, val, val, val, val, val, val, val}
+        UInt16x8(const uint16_t val) : d{ simde_mm_set1_epi16(val) }
         {
         }
-        
-        inline
+
+        INLINE
         UInt16x8 operator&(const UInt16x8& rhs) const {
-            return UInt16x8(
-                d[0] & rhs.d[0],
-                d[1] & rhs.d[1],
-                d[2] & rhs.d[2],
-                d[3] & rhs.d[3],
-                d[4] & rhs.d[4],
-                d[5] & rhs.d[5],
-                d[6] & rhs.d[6],
-                d[7] & rhs.d[7]);
+            return UInt16x8(simde_mm_and_si128(d, rhs.d));
         }
 
-        inline
+        INLINE
         UInt16x8 operator|(const UInt16x8& rhs) const {
-            return UInt16x8(
-                d[0] | rhs.d[0],
-                d[1] | rhs.d[1],
-                d[2] | rhs.d[2],
-                d[3] | rhs.d[3],
-                d[4] | rhs.d[4],
-                d[5] | rhs.d[5],
-                d[6] | rhs.d[6],
-                d[7] | rhs.d[7]);
+            return UInt16x8(simde_mm_or_si128(d, rhs.d));
         }
-        
-        inline
-        UInt16x8 operator<<(const int n) const {
-            return UInt16x8(
-                d[0] << n,
-                d[1] << n,
-                d[2] << n,
-                d[3] << n,
-                d[4] << n,
-                d[5] << n,
-                d[6] << n,
-                d[7] << n);
+
+        INLINE
+        UInt16x8 operator<<(const int16_t n) const {
+            simde__m128i shift = simde_mm_set_epi64x(0, n);
+            return UInt16x8(simde_mm_sll_epi16(d, shift));
         }
-        
-        inline
-        UInt16x8 operator>>(const int n) const {
-            return UInt16x8(
-                d[0] >> n,
-                d[1] >> n,
-                d[2] >> n,
-                d[3] >> n,
-                d[4] >> n,
-                d[5] >> n,
-                d[6] >> n,
-                d[7] >> n);
+
+        INLINE
+        UInt16x8 operator>>(const int16_t n) const {
+            simde__m128i shift = simde_mm_set_epi64x(0, n);
+            return UInt16x8(simde_mm_srl_epi16(d, shift));
         }
     };
 
-    inline
+    INLINE
     UInt16x8 Load(const uint8_t* src) {
-        return UInt16x8(
-            src[0],
-            src[1],
-            src[2],
-            src[3],
-            src[4],
-            src[5],
-            src[6],
-            src[7]);
+        // Load 8 bytes and zero-extend to 16 bits per element
+        simde__m128i temp = simde_mm_loadl_epi64((const simde__m128i*)src);
+        return UInt16x8(simde_mm_cvtepu8_epi16(temp));
     }
 
-    inline
-    void Store(uint16_t* dst, const UInt16x8& src) {
-        for(int i = 0; i < 8; i++)
-            dst[i] = src.d[i];
+    INLINE
+    void Store(uint16_t* RESTRICT dst, const UInt16x8& src) {
+        simde_mm_storeu_si128((simde__m128i*)dst, src.d);
     }
 
-#endif
-
-    inline
+    INLINE
     void DecodeHeader(uint8_t& bits, uint16_t& reference, const uint8_t* input) {
         bits = ((*input) >> 4) & 0x0F;
         reference = (*(input) & 0x0F) << 8 | *(input + 1);
     }
     
-    inline
-    const uint8_t* Decode1(uint16_t* output, const uint8_t* input) {
+    INLINE
+    const uint8_t* Decode1(uint16_t *RESTRICT output, const uint8_t* input) {
         const UInt16x8 N(0x01);
         const UInt16x8 p = Load(input);
 
@@ -264,8 +141,8 @@ namespace motioncam {
         return input + ENCODING_BLOCK_LENGTH[1];
     }
     
-    inline
-    const uint8_t* Decode2_One(uint16_t* output, const uint8_t* input) {
+    INLINE
+    const uint8_t* Decode2_One(uint16_t *RESTRICT output, const uint8_t* input) {
         const UInt16x8 N(0x03);
         const UInt16x8 p = Load(input);
 
@@ -282,16 +159,16 @@ namespace motioncam {
         return input + 8;
     }
     
-    inline
-    const uint8_t* Decode2(uint16_t* output, const uint8_t* input) {
+    INLINE
+    const uint8_t* Decode2(uint16_t *RESTRICT output, const uint8_t* input) {
         input = Decode2_One(output, input);
         input = Decode2_One(output + 32, input);
         
         return input;
     }
     
-    inline
-    const uint8_t* Decode3(uint16_t* output, const uint8_t* input) {
+    INLINE
+    const uint8_t* Decode3(uint16_t *RESTRICT output, const uint8_t* input) {
         const UInt16x8 N(0x07);
         const UInt16x8 T(0x03);
         const UInt16x8 R(0x01);
@@ -327,8 +204,8 @@ namespace motioncam {
         return input + ENCODING_BLOCK_LENGTH[3];
     }
 
-    inline
-    const uint8_t* Decode4_One(uint16_t* output, const uint8_t* input) {
+    INLINE
+    const uint8_t* Decode4_One(uint16_t *RESTRICT output, const uint8_t* input) {
         const UInt16x8 N(0x0F);
         const UInt16x8 p = Load(input);
        
@@ -341,8 +218,8 @@ namespace motioncam {
         return input + 8;
     }
     
-    inline
-    const uint8_t* Decode4(uint16_t* output, const uint8_t* input) {
+    INLINE
+    const uint8_t* Decode4(uint16_t *RESTRICT output, const uint8_t* input) {
         input = Decode4_One(output, input);
         input = Decode4_One(output + 16, input);
         input = Decode4_One(output + 32, input);
@@ -351,8 +228,8 @@ namespace motioncam {
         return input;
     }
     
-    inline
-    const uint8_t* Decode5(uint16_t* output, const uint8_t* input) {
+    INLINE
+    const uint8_t* Decode5(uint16_t *RESTRICT output, const uint8_t* input) {
         const UInt16x8 N(0x1F);
         const UInt16x8 L(0x07);
         const UInt16x8 U(0x03);
@@ -390,8 +267,8 @@ namespace motioncam {
         return input + ENCODING_BLOCK_LENGTH[5];
     }
     
-    inline
-    const uint8_t* Decode6(uint16_t* output, const uint8_t* input) {
+    INLINE
+    const uint8_t* Decode6(uint16_t *RESTRICT output, const uint8_t* input) {
         const UInt16x8 N(0x3F);
         const UInt16x8 L(0x03);
 
@@ -432,15 +309,15 @@ namespace motioncam {
         return input + ENCODING_BLOCK_LENGTH[6];
     }
     
-    inline
-    const uint8_t* Decode8_One(uint16_t* output, const uint8_t* input) {
+    INLINE
+    const uint8_t* Decode8_One(uint16_t *RESTRICT output, const uint8_t* input) {
         Store(output, Load(input));
         
         return input + 8;
     }
 
-    inline
-    const uint8_t* Decode8(uint16_t* output, const uint8_t* input) {
+    INLINE
+    const uint8_t* Decode8(uint16_t *RESTRICT output, const uint8_t* input) {
         input = Decode8_One(output, input);
         input = Decode8_One(output + 8, input);
         input = Decode8_One(output + 16, input);
@@ -454,8 +331,8 @@ namespace motioncam {
         return input;
     }
 
-    inline
-    const uint8_t* Decode10(uint16_t* output, const uint8_t* input) {
+    INLINE
+    const uint8_t* Decode10(uint16_t *RESTRICT output, const uint8_t* input) {
         const UInt16x8 N(0xFF);
         const UInt16x8 L(0x03);
 
@@ -502,8 +379,8 @@ namespace motioncam {
         return input + ENCODING_BLOCK_LENGTH[10];
     }
     
-    inline
-    const uint8_t* Decode16_ONE(uint16_t* output, const uint8_t* input) {
+    INLINE
+    const uint8_t* Decode16_ONE(uint16_t *RESTRICT output, const uint8_t* input) {
         auto input16 = reinterpret_cast<const uint16_t*>(input);
         
         const UInt16x8 p(
@@ -521,8 +398,8 @@ namespace motioncam {
         return input + 16;
     }
 
-    inline
-    const uint8_t* Decode16(uint16_t* output, const uint8_t* input) {
+    INLINE
+    const uint8_t* Decode16(uint16_t *RESTRICT output, const uint8_t* input) {
         input = Decode16_ONE(output,    input);
         input = Decode16_ONE(output+8,  input);
         input = Decode16_ONE(output+16, input);
@@ -536,9 +413,9 @@ namespace motioncam {
         return input;
     }
     
-    inline
+    INLINE
     size_t DecodeBlock(
-        uint16_t* output,
+        uint16_t *RESTRICT output,
         const uint16_t bits,
         const uint8_t* input,
         const size_t offset,
@@ -589,7 +466,7 @@ namespace motioncam {
         return ENCODING_BLOCK_LENGTH[bits];
     }
     
-    inline
+    INLINE
     size_t DecodeMetadata(
         const uint8_t* input,
         size_t offset,
@@ -749,3 +626,4 @@ extern "C" size_t mr_decode_video_frame(uint8_t *dstData, uint8_t *srcData, uint
 
     return motioncam::raw::DecodeLegacy((uint16_t*)dstData, width, height, srcData, srcSize);
 }
+

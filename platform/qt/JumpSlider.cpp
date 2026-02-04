@@ -22,7 +22,7 @@ void JumpSlider::mousePressEvent(QMouseEvent *event)
         if( orientation() == Qt::Vertical )
         {
            double halfHandleHeight = ( 0.5 * sr.height() ) + 0.5;
-           int adaptedPosY = height() - event->y();
+           int adaptedPosY = height() - static_cast<int>(event->position().y());
            if( adaptedPosY < halfHandleHeight )
                  adaptedPosY = halfHandleHeight;
            if( adaptedPosY > height() - halfHandleHeight )
@@ -35,7 +35,7 @@ void JumpSlider::mousePressEvent(QMouseEvent *event)
         else
         {
             double halfHandleWidth = ( 0.5 * sr.width() ) + 0.5;
-            int adaptedPosX = event->x();
+            int adaptedPosX = static_cast<int>(event->position().x());
             if ( adaptedPosX < halfHandleWidth )
                   adaptedPosX = halfHandleWidth;
             if ( adaptedPosX > width() - halfHandleWidth )

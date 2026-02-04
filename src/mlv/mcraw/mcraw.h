@@ -126,8 +126,8 @@ typedef struct
     int        iso;
     int64_t    exposure_time;
 
-    int16_t    orientation;
-    int16_t    compression_type;
+    int    orientation;
+    int    compression_type;
 
     double     as_shot_neutral[3];
     int64_t    timestamp;           // milliseconds
@@ -149,6 +149,12 @@ int mr_read_video_frame(FILE *fd, int64_t offset, mr_packet_t *pkt);
 int mr_read_audio_packet(FILE *fd, int64_t offset, mr_packet_t *pkt);
 int mr_read_frame_metadata(FILE *fd, mr_frame_data_t *frame_data);
 size_t mr_decode_video_frame(uint8_t *dstData, uint8_t *srcData, uint32_t srcSize, int width, int height, int comp_type);
+
+// New High-Level API (Recommended)
+// Loads and decodes frame 'index' into 'dest_buffer'.
+// dest_buffer must be large enough (width * height * 2 bytes).
+// dest_metadata is optional.
+int mr_load_frame(mr_ctx_t* ctx, uint32_t index, uint8_t* dest_buffer, mr_frame_data_t* dest_metadata);
 
 void mr_dump(mr_ctx_t *ctx);
 FILE* mr_get_file_handle(mr_ctx_t *ctx);
@@ -172,16 +178,15 @@ int mr_get_frame_rate(mr_ctx_t *ctx, int *num, int *den);
 double mr_get_focal_length(mr_ctx_t *ctx);
 double mr_get_aperture(mr_ctx_t *ctx);
 int mr_get_iso(mr_ctx_t *ctx);
-int mr_get_exposure_time(mr_ctx_t *ctx);
+int64_t mr_get_exposure_time(mr_ctx_t *ctx);
 double* mr_get_as_shot_neutral(mr_ctx_t *ctx);
 int64_t mr_get_timestamp(mr_ctx_t *ctx);
-const char* mr_get_manufacturer(mr_ctx_t *ctx);
 const char* mr_get_model(mr_ctx_t *ctx);
 uint32_t mr_get_cfa_pattern(mr_ctx_t *ctx);
 int mr_get_compression_type(mr_ctx_t *ctx);
 
-int32_t mr_get_audio_sample_rate(mr_ctx_t *ctx);
-int32_t mr_get_audio_channels(mr_ctx_t *ctx);
+int mr_get_audio_sample_rate(mr_ctx_t *ctx);
+int mr_get_audio_channels(mr_ctx_t *ctx);
 
 void mr_packet_free(mr_packet_t *pkt);
 
