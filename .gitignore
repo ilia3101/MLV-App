@@ -36,3 +36,5 @@ osx_installer/create-dmg-master/builder/create-dmg.builder
 80000285_2080x1318.bpm
 80000218_2040x1268.bpm
 platform/build-*
+*build*
+.qtcreator
