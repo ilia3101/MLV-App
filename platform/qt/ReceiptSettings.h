@@ -86,6 +86,10 @@ public:
     void setDeflickerTarget( int value )      {m_deflicker_target = value;}
     void setDualIsoForced( int value )        {m_dualIsoForced = value;}
     void setDualIso( int mode )               {m_dualIsoOn = mode;}
+    void setDualIsoAutoCorrected( int value ) {m_dualIsoAutoCorrected = value;}
+    void setDualIsoPattern( int value )       {m_dualIsoPattern = value;}
+    void setDualIsoEvCorrection( int value )  {m_dualIsoEvCorrection = value;}
+    void setDualIsoBlackDelta( int value )    {m_dualIsoBlackDelta = value;}
     void setDualIsoInterpolation( int mode )  {m_dualIsoInt = mode;}
     void setDualIsoAliasMap( int on )         {m_dualIsoAliasMap = on;}
     void setDualIsoFrBlending( int on )       {m_dualIsoFrBlending = on;}
@@ -178,6 +182,10 @@ public:
     int deflickerTarget( void ){return m_deflicker_target;}
     int dualIsoForced( void ){return m_dualIsoForced;}
     int dualIso( void )    {return m_dualIsoOn;}
+    int dualIsoAutoCorrected( void )    {return m_dualIsoAutoCorrected;}
+    int dualIsoPattern( void )    {return m_dualIsoPattern;}
+    int dualIsoEvCorrection( void )    {return m_dualIsoEvCorrection;}
+    int dualIsoBlackDelta( void )    {return m_dualIsoBlackDelta;}
     int dualIsoInterpolation( void ){return m_dualIsoInt;}
     int dualIsoAliasMap( void ){return m_dualIsoAliasMap;}
     int dualIsoFrBlending( void ){return m_dualIsoFrBlending;}
@@ -293,6 +301,10 @@ private:
     int m_deflicker_target; // deflicker value
     int m_dualIsoForced;    // -1 = uninitialized, 0 = DISO_INVALID, 1 = DISO_FORCED, 2 = DISO_VALID
     int m_dualIsoOn;        // DualISO, 0 = off, 1 = on, 2 = preview
+    int m_dualIsoAutoCorrected;
+    int m_dualIsoPattern;
+    int m_dualIsoEvCorrection;
+    int m_dualIsoBlackDelta;
     int m_dualIsoInt;       // DualIsoInterpolation method, 0 - amaze-edge, 1 - mean23
     int m_dualIsoAliasMap;  // flag for Alias Map switchin on/off
     int m_dualIsoFrBlending;// flag for Fullres Blending switching on/off

@@ -85,7 +85,7 @@ static void undo_14bit(uint16_t * raw_image_buff, size_t raw_image_size, uint32_
 }
 
 /* rescale restricted to imaginary 10-12bit levels of lossless raw data to about real 14bit range */
-static void scale_restricted_range(struct raw_info * raw_info, uint16_t * image_data)
+static void _scale_restricted_range(struct raw_info * raw_info, uint16_t * image_data)
 {
     uint32_t pixel_count = raw_info->width * raw_info->height;
     /* find min and max level values in the currecnt raw frame */
@@ -113,6 +113,35 @@ static void scale_restricted_range(struct raw_info * raw_info, uint16_t * image_
     }
 }
 
+/* rescale restricted to imaginary 10-12bit levels of lossless raw data to about real 14bit range */
+static void scale_restricted_range(struct raw_info * raw_info, uint16_t * image_data, int low_iso, int high_iso)
+{
+    int32_t bd = ceil(log2(raw_info->white_level - raw_info->black_level));
+
+    // Digital gain? Add 1 bit…
+    int32_t add_bit = 0;
+
+    if (low_iso != high_iso && high_iso >= 6400)
+    {
+        add_bit = 1;
+    }
+
+    int32_t actual_white_level = raw_info->black_level + ((1 << (bd + add_bit)) - 1);
+    int32_t scaled_white_level = (raw_info->white_level - raw_info->black_level) * (1 << (14 - bd));
+
+    double scale_ratio = (double)(scaled_white_level - raw_info->black_level) / (double)(actual_white_level - raw_info->black_level);
+
+    raw_info->white_level = scaled_white_level;
+
+    uint32_t pixel_count = raw_info->width * raw_info->height;
+
+    #pragma omp parallel for
+    for (uint32_t i = 0; i < pixel_count; ++i)
+    {
+        image_data[i] = MIN((uint16_t)((double)((image_data[i] - raw_info->black_level) * scale_ratio + raw_info->black_level) + 0.5), 16383);
+    }
+}
+
 /* initialise low level raw processing struct */
 llrawprocObject_t * initLLRawProcObject()
 {
@@ -133,8 +162,12 @@ llrawprocObject_t * initLLRawProcObject()
     llrawproc->compute_stripes = 0;
     llrawproc->first_time = 1;
     llrawproc->dual_iso = 0;
+    llrawproc->diso_pattern = 0;
+    llrawproc->diso_auto_correction = -1;
+    llrawproc->diso_ev_correction = 0;
+    llrawproc->diso_black_delta = 0;
     llrawproc->diso_averaging = 0;
-    llrawproc->diso_alias_map = 1;
+    llrawproc->diso_alias_map = 0;
     llrawproc->diso_frblending = 1;
     llrawproc->dark_frame = 0;
 
@@ -168,7 +201,7 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
     /* if 'fix_raw == false' skip raw processing alltogether */
     if(!video->llrawproc->fix_raw) return;
 
-    /* subtruct dark frame if Ext or Int mode specified and df_init is successful */
+    /* subtract dark frame if Ext or Int mode specified and df_init is successful */
     if (!df_init(video))
     {
 #ifndef STDOUT_SILENT
@@ -231,8 +264,8 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
                          video->RAWI.yRes,
                          video->VIDF.panPosX,
                          video->VIDF.panPosY,
-                         raw_info.width,
-                         raw_info.height,
+                         video->RAWI.raw_info.width,
+                         video->RAWI.raw_info.height,
                          crop_rec,
                          unified_mode,
                          video->llrawproc->fpi_method,
@@ -252,8 +285,8 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
                        video->RAWI.yRes,
                        video->VIDF.panPosX,
                        video->VIDF.panPosY,
-                       raw_info.width,
-                       raw_info.height,
+                       video->RAWI.raw_info.width,
+                       video->RAWI.raw_info.height,
                        raw_info.black_level,
                        video->llrawproc->bad_pixels,
                        video->llrawproc->bps_method,
@@ -285,15 +318,21 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
         raw_info.active_area.y1 = 0;
         raw_info.active_area.x2 = raw_info.width;
         raw_info.active_area.y2 = raw_info.height;
+        
         /* detect if lossless raw data is restricted to imaginary 8-12bit levels */
         int restricted_lossless = (video->MLVI.videoClass & MLV_VIDEO_CLASS_FLAG_LJ92) && raw_info.white_level < 15000;
+
         if(restricted_lossless)
         {
 #ifndef STDOUT_SILENT
             printf("\nScaling raw data range...\n");
             printf("Raw_Black = %d, Raw_White = %d <= BEFORE SCALING\n", raw_info.black_level, raw_info.white_level);
 #endif
-            scale_restricted_range(&raw_info, raw_image_buff);
+            int low_iso = MIN(video->llrawproc->diso1, video->llrawproc->diso2);
+            int high_iso = MAX(video->llrawproc->diso1, video->llrawproc->diso2);
+
+            scale_restricted_range(&raw_info, raw_image_buff, low_iso, high_iso);
+
 #ifndef STDOUT_SILENT
             printf("Raw_Black = %d, Raw_White = %d <= AFTER SCALING\n", raw_info.black_level, raw_info.white_level);
             printf("\nChanging processing B/W levels...\n");
@@ -310,17 +349,81 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
         {
             diso_get_full20bit(raw_info,
                                raw_image_buff,
+                               video->llrawproc->dark_frame,
+                               video->llrawproc->diso1,
+                               video->llrawproc->diso2,
+                               &video->llrawproc->diso_pattern,
+                               &video->llrawproc->diso_auto_correction,
+                               &video->llrawproc->diso_ev_correction,
+                               &video->llrawproc->diso_black_delta,
                                video->llrawproc->diso_averaging,
                                video->llrawproc->diso_alias_map,
                                video->llrawproc->diso_frblending,
-                               video->llrawproc->chroma_smooth);
+                               video->llrawproc->chroma_smooth,
+                               video->cpu_cores);
 
             /* for full20bit set diso levels and bit depth to 16 bit, needed for cDNG export */
             int bits_shift = 16 - raw_info.bits_per_pixel;
             video->llrawproc->dng_black_level = raw_info.black_level << bits_shift;
             video->llrawproc->dng_white_level = raw_info.white_level << bits_shift;
             video->llrawproc->dng_bit_depth = 16;
+
+            /* for dualiso blacklevel may have been changed. Correct values needed for following pixel fixes */
+            video->llrawproc->raw2ev = get_raw2ev(video->llrawproc->dng_black_level);
+            video->llrawproc->ev2raw = get_ev2raw(video->llrawproc->dng_black_level);
+
+            /* fix focus pixels */
+            if (video->llrawproc->focus_pixels && video->llrawproc->fpm_status < 3)
+            {
+                /* detect crop_rec mode */
+                int crop_rec = (llrpDetectFocusDotFixMode(video) == 2) ? 1 : (video->llrawproc->focus_pixels == 2);
+                /* if raw data is lossless set unified mode */
+                int unified_mode = (video->MLVI.videoClass & MLV_VIDEO_CLASS_FLAG_LJ92) ? 5 : 0;
+                fix_focus_pixels(&video->llrawproc->focus_pixel_map,
+                                 &video->llrawproc->fpm_status,
+                                 raw_image_buff,
+                                 video->IDNT.cameraModel,
+                                 video->RAWI.xRes,
+                                 video->RAWI.yRes,
+                                 video->VIDF.panPosX,
+                                 video->VIDF.panPosY,
+                                 video->RAWI.raw_info.width,
+                                 video->RAWI.raw_info.height,
+                                 crop_rec,
+                                 unified_mode,
+                                 2,
+                                 0,
+                                 video->llrawproc->raw2ev,
+                                 video->llrawproc->ev2raw);
+            }
+
+            /* fix bad pixels */
+            if (video->llrawproc->bad_pixels && video->llrawproc->bpm_status < 3)
+            {
+                fix_bad_pixels(&video->llrawproc->bad_pixel_map,
+                               &video->llrawproc->bpm_status,
+                               raw_image_buff,
+                               video->IDNT.cameraModel,
+                               video->RAWI.xRes,
+                               video->RAWI.yRes,
+                               video->VIDF.panPosX,
+                               video->VIDF.panPosY,
+                               video->RAWI.raw_info.width,
+                               video->RAWI.raw_info.height,
+                               raw_info.black_level,
+                               video->llrawproc->bad_pixels,
+                               video->llrawproc->bps_method,
+                               2,
+                               0,
+                               video->llrawproc->raw2ev,
+                               video->llrawproc->ev2raw);
+            }
+
+            /* revert LUTs */
+            video->llrawproc->raw2ev = get_raw2ev(raw_info.black_level);
+            video->llrawproc->ev2raw = get_ev2raw(raw_info.black_level);
         }
+        /*
         else if (video->llrawproc->dual_iso == 2) // Preview mode
         {
             diso_get_preview(raw_image_buff,
@@ -330,6 +433,7 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
                              raw_info.white_level,
                              0); // dual iso check mode is off
         }
+        */
     }
 
     /* do chroma smoothing */
@@ -355,6 +459,7 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
     }
 
     /* deflicker RAW data by changing 'tcBaselineExposure' tag in the exported DNG */
+    /*
     if (video->llrawproc->deflicker_target)
     {
 #ifndef STDOUT_SILENT
@@ -362,6 +467,7 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
 #endif
         deflicker(video, raw_image_buff, raw_image_size);
     }
+    */
 
 #ifndef STDOUT_SILENT
     printf("raw_image_buff[1000] = %u, Proc_Black = %d, Proc_White = %d, Raw_Black = %d, Raw_White = %d <= THE END OF LLRAWPROC\n", raw_image_buff[1000], video->processing->black_level, video->processing->white_level, video->RAWI.raw_info.black_level, video->RAWI.raw_info.white_level);
@@ -548,13 +654,46 @@ int llrpGetDualIsoValidity(mlvObject_t * video)
 
 void llrpSetDualIsoValidity(mlvObject_t * video, int diso_force)
 {
-    if(diso_force)
+    int iso1 = (int)video->EXPO.isoValue;
+
+    if (iso1 < 100)
+    {
+        iso1 = 100;
+    }
+
+    if (diso_force)
     {
         video->llrawproc->diso_validity = DISO_FORCED;
+
+        video->llrawproc->diso1 = iso1;
+        video->llrawproc->diso2 = iso1;
     }
-    else if(video->DISO.blockType[0] && video->DISO.dualMode)
+    else if (video->DISO.blockType[0] && video->DISO.dualMode)
     {
         video->llrawproc->diso_validity = DISO_VALID;
+
+        int iso2 = (int)video->DISO.isoValue;
+
+        if (iso2 < 0)
+        {
+            if (iso2 < -6)
+            {
+                iso2 = iso1 / pow(2, ABS(iso2) - 6);
+            }
+            else
+            {
+                iso2 = iso1 * pow(2, ABS(7 + iso2));
+            }
+
+            iso2 = COERCE(iso2, 100, 3200);
+        }
+        else if ((iso2 >= 0) && (iso2 < 100))
+        {
+            iso2 = iso1 * pow(2, iso2) / (iso1 / 100);
+        }
+
+        video->llrawproc->diso1 = iso1;
+        video->llrawproc->diso2 = iso2;
     }
     else
     {
