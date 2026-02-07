@@ -10,7 +10,7 @@
 //The higher this values, the higher the performance
 //The lower this values, the higher the quality
 //We skip only columns, because it is really ugly if not...
-#define MERGE 8 //must be 2^x
+#define MERGE 4 //must be 2^x
 
 //Constructor
 WaveFormMonitor::WaveFormMonitor( uint16_t width )
