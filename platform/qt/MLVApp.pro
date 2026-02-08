@@ -150,6 +150,7 @@ SOURCES += \
     ../../src/matrix/matrix.c \
     ../../src/mlv/frame_caching.c \
     ../../src/mlv/video_mlv.c \
+    ../../src/mlv/video_mlv_misc.c \
     ../../src/mlv/liblj92/lj92.c \
     ../../src/mlv/llrawproc/llrawproc.c \
     ../../src/mlv/llrawproc/pixelproc.c \
