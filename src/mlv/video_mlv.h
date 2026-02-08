@@ -114,6 +114,6 @@ void get_mlv_raw_frame_debayered(mlvObject_t * video,
 int create_thumbnail(mlvObject_t * video, uint8_t * thumbnail_img, int downscaled_factor, int width, int height, int threads);
 
 /* Thumbnail Creation with full debayer, but downscaled image processing */
-void get_area_average_downscale_thumnail (mlvObject_t *video, int frame_index, int downscale_factor, int cpu_cores, unsigned char *out_buffer);
+void get_area_average_downscale_thumnail(mlvObject_t *video, int frame_index, int downscale_factor, int cpu_cores, unsigned char *out_buffer);
 
 #endif

@@ -88,12 +88,8 @@ int create_thumbnail(mlvObject_t * video, uint8_t * thumbnail_img, int downscale
     return 0;
 }
 
-void get_area_average_downscale_thumnail (
-    mlvObject_t *video,
-    int frame_index, int downscale_factor,
-    int cpu_cores,
-    unsigned char *out_buffer) {
-
+void get_area_average_downscale_thumnail(mlvObject_t *video, int frame_index, int downscale_factor, int cpu_cores, unsigned char *out_buffer)
+{
     if (!video || !out_buffer) {
         return;
     }
