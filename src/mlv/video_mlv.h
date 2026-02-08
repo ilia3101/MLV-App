@@ -110,7 +110,10 @@ void get_mlv_raw_frame_debayered(mlvObject_t * video,
                                   uint16_t * output_frame,
                                   int debayer_type ); /* Debayer type: 0=bilinear 1=amaze */
 
-/* Thumbnail Creation with a downscaled image sub-sampling algorithm is used. */
+/* Thumbnail Creation with a downscaled raw image sub-sampling algorithm is used. */
 int create_thumbnail(mlvObject_t * video, uint8_t * thumbnail_img, int downscaled_factor, int width, int height, int threads);
+
+/* Thumbnail Creation with full debayer, but downscaled image processing */
+void get_area_average_downscale_thumnail (mlvObject_t *video, int frame_index, int downscale_factor, int cpu_cores, unsigned char *out_buffer);
 
 #endif

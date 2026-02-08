@@ -5176,13 +5176,14 @@ void MainWindow::previewPicture( int row )
     int height = raw_h / downscaled_factor;
 
     //Get frame from library
-    create_thumbnail( m_pMlvObject, m_pRawImage, downscaled_factor, width, height, QThread::idealThreadCount() );
+    //create_thumbnail( m_pMlvObject, m_pRawImage, downscaled_factor, width, height, QThread::idealThreadCount() );
+    get_area_average_downscale_thumnail(m_pMlvObject, 0, downscaled_factor, QThread::idealThreadCount(), m_pRawImage);
 
-    QImage img( (unsigned char *) m_pRawImage,
-                        width,
-                        height,
-                        width * 3,
-                        QImage::Format_RGB888 );
+    QImage img( m_pRawImage,
+                width,
+                height,
+                width * 3,
+                QImage::Format_RGB888 );
 
     QPixmap pic = QPixmap::fromImage( img.scaled(
                         width * getHorizontalStretchFactor(true),
@@ -5191,14 +5192,6 @@ void MainWindow::previewPicture( int row )
                         Qt::SmoothTransformation)
                     );
 
-    // // the previous function for thumbnail creation. It can be change if compatability issue is caused.
-    // getMlvProcessedFrame8( m_pMlvObject, 0, m_pRawImage, QThread::idealThreadCount() );
-
-    // //Display in SessionList
-    // QPixmap pic = QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
-    //                                   .scaled( getMlvWidth(m_pMlvObject) * devicePixelRatio() / 10.0 * getHorizontalStretchFactor(true),
-    //                                            getMlvHeight(m_pMlvObject) * devicePixelRatio() / 10.0 * getVerticalStretchFactor(true),
-    //                                            Qt::IgnoreAspectRatio, Qt::SmoothTransformation) );
     pic.setDevicePixelRatio( devicePixelRatio() );
     m_pModel->setData( m_pModel->index( row, 0, QModelIndex() ), QIcon( pic ), Qt::DecorationRole );
 
