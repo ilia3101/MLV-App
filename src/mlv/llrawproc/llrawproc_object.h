@@ -44,7 +44,6 @@ typedef struct
     int chroma_smooth;    // chroma smooth, 2 = cs2x2, 3 cs3x3, 5 = cs5x5
     int pattern_noise;    // fix pattern noise (0, 1)
     int deflicker_target; // deflicker value
-    int first_time;       // controls some events which should occur only once per object instance
 
     int diso_validity;    // Dual iso status:
                           // 0 = not valid (no DISO block found, can be older dual iso clip),
@@ -84,6 +83,9 @@ typedef struct
     /* LUTs */
     int * raw2ev;
     int * ev2raw;
+    
+    /* used to check whether the black level has changed (for updating the LUTs) */
+    int32_t prev_black_level;
 
     /* pixel maps */
     pixel_map focus_pixel_map;

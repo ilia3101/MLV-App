@@ -160,7 +160,6 @@ llrawprocObject_t * initLLRawProcObject()
     llrawproc->fpm_status = 0;
     llrawproc->bpm_status = 0;
     llrawproc->compute_stripes = 0;
-    llrawproc->first_time = 1;
     llrawproc->dual_iso = 0;
     llrawproc->diso_pattern = 0;
     llrawproc->diso_auto_correction = -1;
@@ -177,6 +176,8 @@ llrawprocObject_t * initLLRawProcObject()
 
     llrawproc->raw2ev = NULL;
     llrawproc->ev2raw = NULL;
+
+    llrawproc->prev_black_level = -1;
 
     llrawproc->focus_pixel_map.type = PIX_FOCUS;
     llrawproc->focus_pixel_map.pixels = NULL;
@@ -222,17 +223,16 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
         make_14bit(raw_image_buff, raw_image_size, &raw_info);
     }
 
-    /* do one time stuff */
-    if(video->llrawproc->first_time)
-    {
-        /* initialize dual iso black and white levels */
-        llrpResetDngBWLevels(video);
+    /* initialize dual iso black and white levels */
+    llrpResetDngBWLevels(video);
 
-        /* initialise LUTs */
+    /* initialise or update the LUTs if the black level has changed */
+    if (video->llrawproc->prev_black_level != raw_info.black_level)
+    {
         video->llrawproc->raw2ev = get_raw2ev(raw_info.black_level);
         video->llrawproc->ev2raw = get_ev2raw(raw_info.black_level);
 
-        video->llrawproc->first_time = 0;
+        video->llrawproc->prev_black_level = raw_info.black_level;
     }
 
     /* fix vertical stripes */
