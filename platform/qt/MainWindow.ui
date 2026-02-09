@@ -1874,6 +1874,11 @@ QGroupBox::indicator:checked:disabled {
                      <string>low-HIGH-HIGH-low</string>
                     </property>
                    </item>
+                   <item>
+                    <property name="text">
+                     <string>Auto Detect Every Frame</string>
+                    </property>
+                   </item>
                   </widget>
                  </item>
                  <item row="25" column="0">
