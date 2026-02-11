@@ -31,6 +31,7 @@
 #include <math.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <omp.h>
 
 #ifdef Q_OS_MACX
 #include "AvfLibWrapper.h"
@@ -2877,7 +2878,7 @@ void MainWindow::startExportCdng(QString fileName)
 
     QMutex mutex;
 
-#pragma omp parallel
+#pragma omp parallel if( m_pMlvObject->llrawproc->dual_iso == 0 )
     {
         dngObject_t* localDng = initDngObject(
             m_pMlvObject,
