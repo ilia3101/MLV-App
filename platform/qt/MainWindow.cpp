@@ -2851,9 +2851,6 @@ void MainWindow::startExportCdng(QString fileName)
         picAR[2] = 1; picAR[3] = 1;
     }
 
-    //Init DNG data struct
-    dngObject_t * cinemaDng = initDngObject( m_pMlvObject, m_codecProfile - 6, getFramerate(), picAR);
-
     //Render one single frame for raw correction init
     uint32_t frameSize = getMlvWidth( m_pMlvObject ) * getMlvHeight( m_pMlvObject ) * 3;
     uint16_t * imgBuffer;
@@ -2861,67 +2858,82 @@ void MainWindow::startExportCdng(QString fileName)
     getMlvProcessedFrame16( m_pMlvObject, 0, imgBuffer, QThread::idealThreadCount() );
     free( imgBuffer );
 
-    //Output frames loop
-    for( uint32_t frame = m_exportQueue.first()->cutIn() - 1; frame < m_exportQueue.first()->cutOut(); frame++ )
+    std::atomic<int> doneFrames{0};
+    std::atomic<bool> abortFlag{false};
+
+    QTimer* progressTimer = new QTimer(this);
+    connect(progressTimer, &QTimer::timeout, this, [=,&doneFrames,&abortFlag]() {
+        m_pStatusDialog->ui->progressBar->setValue(doneFrames.load());
+        m_pStatusDialog->ui->progressBar->repaint();
+        m_pStatusDialog->drawTimeFromToDoFrames( totalFrames - doneFrames.load() + ( m_exportQueue.first()->cutIn() - 1 ) - 1 );
+        qApp->processEvents();
+    });
+    progressTimer->start(50);
+
+    uint32_t start = m_exportQueue.first()->cutIn() - 1;
+    uint32_t end   = m_exportQueue.first()->cutOut();
+
+    QMutex mutex;
+
+#pragma omp parallel
     {
-        QString dngName;
-        if( m_codecOption == CODEC_CNDG_DEFAULT ) dngName = dngName.append( "%1_%2.dng" )
-                                                                                .arg( fileName )
-                                                                                .arg( getMlvFrameNumber( m_pMlvObject, frame ), 6, 10, QChar('0') );
-        else dngName = dngName.append( "%1_1_%2-%3-%4_0001_C0000_%5.dng" )
-            .arg( fileName )
-            .arg( getMlvTmYear( m_pMlvObject ), 2, 10, QChar('0') )
-            .arg( getMlvTmMonth( m_pMlvObject ), 2, 10, QChar('0') )
-            .arg( getMlvTmDay( m_pMlvObject ), 2, 10, QChar('0') )
-            .arg( getMlvFrameNumber( m_pMlvObject, frame ), 6, 10, QChar('0') );
+        dngObject_t* localDng = initDngObject(
+            m_pMlvObject,
+            m_codecProfile - 6,
+            getFramerate(),
+            picAR
+            );
 
-        QString filePathNr = pathName;
-        filePathNr = filePathNr.append( "/" + dngName );
-
-        //Save cDNG frame
-#ifdef Q_OS_UNIX
-        QString properties_fn = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
-        properties_fn.append("/mlv-dng-params.txt");
-        if( saveDngFrame( m_pMlvObject, cinemaDng, frame, filePathNr.toUtf8().data(), properties_fn.toUtf8().data() ) )
-#else
-        QString properties_fn = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
-        properties_fn.append("\\mlv-dng-params.txt");
-        if( saveDngFrame( m_pMlvObject, cinemaDng, frame, filePathNr.toLatin1().data(), properties_fn.toLatin1().data() ) )
-#endif
+#pragma omp for schedule(dynamic)
+        for (uint32_t frame = start; frame < end; ++frame)
         {
-            m_pStatusDialog->close();
+            if (abortFlag.load())
+                continue;
+
+            QString dngName;
+            if( m_codecOption == CODEC_CNDG_DEFAULT ) dngName = dngName.append( "%1_%2.dng" )
+                              .arg( fileName )
+                              .arg( getMlvFrameNumber( m_pMlvObject, frame ), 6, 10, QChar('0') );
+            else dngName = dngName.append( "%1_1_%2-%3-%4_0001_C0000_%5.dng" )
+                              .arg( fileName )
+                              .arg( getMlvTmYear( m_pMlvObject ), 2, 10, QChar('0') )
+                              .arg( getMlvTmMonth( m_pMlvObject ), 2, 10, QChar('0') )
+                              .arg( getMlvTmDay( m_pMlvObject ), 2, 10, QChar('0') )
+                              .arg( getMlvFrameNumber( m_pMlvObject, frame ), 6, 10, QChar('0') );
+
+            QString filePathNr = pathName;
+            filePathNr = filePathNr.append( "/" + dngName );
+
+            m_pMlvObject->cpu_cores = 1;
+
+            //Save cDNG frame
+#ifdef Q_OS_UNIX
+            QString properties_fn = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+            properties_fn.append("/mlv-dng-params.txt");
+            bool error = saveDngFrame( m_pMlvObject, localDng, frame, filePathNr.toUtf8().data(), properties_fn.toUtf8().data() );
+#else
+            QString properties_fn = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+            properties_fn.append("\\mlv-dng-params.txt");
+            bool error =  saveDngFrame( m_pMlvObject, localDng, frame, filePathNr.toLatin1().data(), properties_fn.toLatin1().data() );
+#endif
+
+            if (error || m_exportAbortPressed)
+            {
+                abortFlag = true;
+            }
+
+            //Check diskspace
+            mutex.lock();
+            checkDiskFull( filePathNr );
+            mutex.unlock();
+
+            doneFrames++;
+
             qApp->processEvents();
-            int ret = QMessageBox::critical( this,
-                                             tr( "MLV App - Export file error" ),
-                                             tr( "Could not save: %1\nHow do you like to proceed?" ).arg( dngName ),
-                                             tr( "Skip frame" ),
-                                             tr( "Abort current export" ),
-                                             tr( "Abort batch export" ),
-                                             0, 2 );
-            if( ret == 2 )
-            {
-                exportAbort();
-            }
-            if( ret > 0 )
-            {
-                break;
-            }
         }
 
-        //Set Status
-        m_pStatusDialog->ui->progressBar->setValue( frame - ( m_exportQueue.first()->cutIn() - 1 ) + 1 );
-        m_pStatusDialog->ui->progressBar->repaint();
-        m_pStatusDialog->drawTimeFromToDoFrames( totalFrames - frame + ( m_exportQueue.first()->cutIn() - 1 ) - 1 );
-        qApp->processEvents();
-
-        //Check diskspace
-        checkDiskFull( filePathNr );
-        //Abort pressed? -> End the loop
-        if( m_exportAbortPressed ) break;
+        freeDngObject(localDng);
     }
-
-    //Free DNG data struct
-    freeDngObject( cinemaDng );
 
     //Enable GUI drawing
     m_dontDraw = false;
