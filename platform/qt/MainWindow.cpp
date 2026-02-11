@@ -2861,6 +2861,7 @@ void MainWindow::startExportCdng(QString fileName)
 
     std::atomic<int> doneFrames{0};
     std::atomic<bool> abortFlag{false};
+    std::atomic<bool> errorFlag{false};
 
     QTimer* progressTimer = new QTimer(this);
     connect(progressTimer, &QTimer::timeout, this, [=,&doneFrames,&abortFlag]() {
@@ -2919,6 +2920,7 @@ void MainWindow::startExportCdng(QString fileName)
             if (error || m_exportAbortPressed)
             {
                 abortFlag = true;
+                errorFlag = true;
             }
 
             //Check diskspace
@@ -2932,6 +2934,20 @@ void MainWindow::startExportCdng(QString fileName)
         }
 
         freeDngObject(localDng);
+    }
+
+    m_pStatusDialog->close();
+    if( errorFlag.load() )
+    {
+        int ret = QMessageBox::critical( this,
+                                        tr( "MLV App - Export file error" ),
+                                        tr( "Error exporting DNG frame.\nAbort batch export?" ),
+                                        tr( "Yes" ),
+                                        tr( "No" ) );
+        if( ret == 0 )
+        {
+            exportAbort();
+        }
     }
 
     //Enable GUI drawing
