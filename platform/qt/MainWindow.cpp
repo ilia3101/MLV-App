@@ -2871,8 +2871,6 @@ void MainWindow::startExportCdng(QString fileName)
     });
     progressTimer->start(50);
 
-    m_pMlvObject->cpu_cores = 1;
-
     uint32_t start = m_exportQueue.first()->cutIn() - 1;
     uint32_t end   = m_exportQueue.first()->cutOut();
 
