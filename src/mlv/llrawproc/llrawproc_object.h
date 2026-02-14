@@ -62,7 +62,7 @@ typedef struct
     double diso_ev_correction; // from -6 to 0, 1 = auto correct
     int diso_black_delta;      // from 0 to 100, -1 = auto correct
 
-    int diso_averaging;   // dual iso interpolation method, 0 = amaze-edge, 1 = mean23
+    int diso_averaging;   // dual iso interpolation method, 0 = amaze-edge, 1 = mean23, 2 = RCD
     int diso_alias_map;   // flag for Alias Map switchin on/off
     int diso_frblending;  // flag for Fullres Blending switching on/off
     int dark_frame;       // flag for Dark Frame subtraction mode 0 = off, 1 = ext, 2 = int
