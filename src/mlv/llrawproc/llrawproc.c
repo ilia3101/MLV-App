@@ -229,6 +229,7 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
     /* initialise or update the LUTs if the black level has changed */
     if (video->llrawproc->prev_black_level != raw_info.black_level)
     {
+        free_luts(video->llrawproc->raw2ev, video->llrawproc->ev2raw);
         video->llrawproc->raw2ev = get_raw2ev(raw_info.black_level);
         video->llrawproc->ev2raw = get_ev2raw(raw_info.black_level);
 
@@ -369,6 +370,7 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
             video->llrawproc->dng_bit_depth = 16;
 
             /* for dualiso blacklevel may have been changed. Correct values needed for following pixel fixes */
+            free_luts(video->llrawproc->raw2ev, video->llrawproc->ev2raw);
             video->llrawproc->raw2ev = get_raw2ev(video->llrawproc->dng_black_level);
             video->llrawproc->ev2raw = get_ev2raw(video->llrawproc->dng_black_level);
 
@@ -420,6 +422,7 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
             }
 
             /* revert LUTs */
+            free_luts(video->llrawproc->raw2ev, video->llrawproc->ev2raw);
             video->llrawproc->raw2ev = get_raw2ev(raw_info.black_level);
             video->llrawproc->ev2raw = get_ev2raw(raw_info.black_level);
         }
