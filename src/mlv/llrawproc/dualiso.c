@@ -27,8 +27,10 @@
 #include "dualiso.h"
 #include "opt_med.h"
 #include "wirth.h"
+#include <omp.h>
 #include <pthread.h>
 #include "../../debayer/debayer.h"
+#include "librtprocesswrapper.h"
 
 #define EV_RESOLUTION 65536
 #ifndef M_PI
@@ -1172,6 +1174,2293 @@ edge_directions[] = {       /* note: all y coords should be multiplied by s */
     //~ { { 6,2}, { 3,1}, {-6,-2}, {-9,-3} },     /* almost horizontal */
 };
 
+void rcd_original(
+    float** rawData,
+    float** red,
+    float** green,
+    float** blue,
+    int w,
+    int h,
+    int threads
+)
+{
+    lrtpRcdDemosaic(rawData, red, green, blue, w, h);    
+}
+
+void rcd_interpolate15(
+    float** rawData,
+    float** red,
+    float** green,
+    float** blue,
+    int w,
+    int h,
+    int threads
+)
+{
+    int x, y;
+
+    omp_set_num_threads(threads);
+
+    // ------------------------------------------------------------
+    // 1) Copy Bayer samples (branch minimized)
+    // ------------------------------------------------------------
+    #pragma omp parallel for schedule(dynamic)
+    for (y = 0; y < h; y++)
+    {
+        int y_even = !(y & 1);
+
+        for (x = 0; x < w; x += 2)
+        {
+            int x_even = !(x & 1);
+
+            float v0 = rawData[y][x];
+            float v1 = (x + 1 < w) ? rawData[y][x + 1] : rawData[y][x];
+
+            if (y_even)
+            {
+                // even row: R G R G
+                red[y][x]   = v0;
+                green[y][x] = 0.0f;
+                blue[y][x]  = 0.0f;
+
+                if (x + 1 < w)
+                {
+                    green[y][x + 1] = v1;
+                    red[y][x + 1]   = 0.0f;
+                    blue[y][x + 1]  = 0.0f;
+                }
+            }
+            else
+            {
+                // odd row: G B G B
+                green[y][x] = v0;
+                red[y][x]   = 0.0f;
+                blue[y][x]  = 0.0f;
+
+                if (x + 1 < w)
+                {
+                    blue[y][x + 1]  = v1;
+                    red[y][x + 1]   = 0.0f;
+                    green[y][x + 1] = 0.0f;
+                }
+            }
+        }
+    }
+
+    // ------------------------------------------------------------
+    // 2) Green interpolation (separate R and B pixels)
+    // ------------------------------------------------------------
+    #pragma omp parallel for schedule(dynamic)
+    for (y = 0; y < h; y++)
+    {
+        int yu = (y > 0)   ? y - 1 : y;
+        int yd = (y < h - 1) ? y + 1 : y;
+
+        for (x = (y % 2 == 0 ? 0 : 1); x < w; x += 2)
+        {
+            int xl = (x > 0)   ? x - 1 : x;
+            int xr = (x < w - 1) ? x + 1 : x;
+
+            float Gh = fabsf(rawData[y][xl] - rawData[y][xr]);
+            float Gv = fabsf(rawData[yu][x]   - rawData[yd][x]);
+
+            green[y][x] = (Gh < Gv)
+                ? 0.5f * (rawData[y][xl] + rawData[y][xr])
+                : 0.5f * (rawData[yu][x] + rawData[yd][x]);
+        }
+    }
+
+    // ------------------------------------------------------------
+    // 3) Red / Blue reconstruction (split by pixel type)
+    // ------------------------------------------------------------
+    #pragma omp parallel for schedule(dynamic)
+    for (y = 0; y < h; y++)
+    {
+        int yu = (y > 0)   ? y - 1 : y;
+        int yd = (y < h - 1) ? y + 1 : y;
+
+        for (x = (y % 2 == 0 ? 0 : 1); x < w; x += 2)
+        {
+            int xl = (x > 0)   ? x - 1 : x;
+            int xr = (x < w - 1) ? x + 1 : x;
+
+            float g = green[y][x];
+
+            if (y % 2 == 0) // red pixel
+            {
+                float sum =
+                    rawData[yu][xl]   / (green[yu][xl]   + 1e-6f) +
+                    rawData[yu][xr]   / (green[yu][xr]   + 1e-6f) +
+                    rawData[yd][xl] / (green[yd][xl] + 1e-6f) +
+                    rawData[yd][xr] / (green[yd][xr] + 1e-6f);
+
+                blue[y][x] = g * 0.25f * sum;
+            }
+            else // blue pixel
+            {
+                float sum =
+                    rawData[yu][xl]   / (green[yu][xl]   + 1e-6f) +
+                    rawData[yu][xr]   / (green[yu][xr]   + 1e-6f) +
+                    rawData[yd][xl] / (green[yd][xl] + 1e-6f) +
+                    rawData[yd][xr] / (green[yd][xr] + 1e-6f);
+
+                red[y][x] = g * 0.25f * sum;
+            }
+        }
+
+        // --- Green pixels (separate loop)
+        for (x = (y % 2 == 0 ? 1 : 0); x < w; x += 2)
+        {
+            int xl = (x > 0)   ? x - 1 : x;
+            int xr = (x < w - 1) ? x + 1 : x;
+
+            float g = green[y][x];
+
+            if (y % 2 == 0)
+            {
+                red[y][x] =
+                    g * 0.5f *
+                    (red[y][xl] / (green[y][xl] + 1e-6f) +
+                     red[y][xr] / (green[y][xr] + 1e-6f));
+
+                blue[y][x] =
+                    g * 0.5f *
+                    (blue[yu][x] / (green[yu][x] + 1e-6f) +
+                     blue[yd][x] / (green[yd][x] + 1e-6f));
+            }
+            else
+            {
+                blue[y][x] =
+                    g * 0.5f *
+                    (blue[y][xl] / (green[y][xl] + 1e-6f) +
+                     blue[y][xr] / (green[y][xr] + 1e-6f));
+
+                red[y][x] =
+                    g * 0.5f *
+                    (red[yu][x] / (green[yu][x] + 1e-6f) +
+                     red[yd][x] / (green[yd][x] + 1e-6f));
+            }
+        }
+    }
+}
+
+static inline float safe_div(float a, float b) { return a / (b + 1e-6f); }
+
+void rcd_interpolate14(
+    float** rawData,
+    float** red,
+    float** green,
+    float** blue,
+    int w,
+    int h,
+    int threads
+)
+{
+    omp_set_num_threads(threads);
+    const float eps = 1e-6f;
+    const int border = 2; // simple edge fix
+
+    int x, y;
+
+    // ------------------------------------------------------------
+    // 1) Copy Bayer samples (branch minimized)
+    // ------------------------------------------------------------
+    #pragma omp parallel for schedule(static)
+    for (y = 0; y < h; y++)
+    {
+        float* rawRow   = rawData[y];
+        float* redRow   = red[y];
+        float* greenRow = green[y];
+        float* blueRow  = blue[y];
+
+        int y_even = !(y & 1);
+
+        for (x = 0; x < w; x += 2)
+        {
+            int x_even = !(x & 1);
+            float v0 = rawRow[x];
+            float v1 = (x+1 < w) ? rawRow[x+1] : rawRow[x];
+
+            if (y_even) {
+                redRow[x]   = v0;  greenRow[x] = 0.f;  blueRow[x]  = 0.f;
+                if (x+1 < w) { greenRow[x+1] = v1; redRow[x+1] = 0.f; blueRow[x+1] = 0.f; }
+            } else {
+                greenRow[x] = v0;  redRow[x] = 0.f;  blueRow[x] = 0.f;
+                if (x+1 < w) { blueRow[x+1] = v1; redRow[x+1] = 0.f; greenRow[x+1] = 0.f; }
+            }
+        }
+    }
+
+    // ------------------------------------------------------------
+    // 2) Green interpolation at missing G
+    // ------------------------------------------------------------
+    #pragma omp parallel for schedule(static)
+    for (y = 0; y < h; y++)
+    {
+        float* rawRow   = rawData[y];
+        float* greenRow = green[y];
+
+        int yu = (y > 0) ? y-1 : y;
+        int yd = (y < h-1) ? y+1 : y;
+        float* rawUp   = rawData[yu];
+        float* rawDown = rawData[yd];
+
+        int y_even = !(y & 1);
+        for (x = (y_even ? 0 : 1); x < w; x += 2)
+        {
+            int xl = (x>0)?x-1:x;
+            int xr = (x<w-1)?x+1:x;
+
+            float Gh = fabsf(rawRow[xl]-rawRow[xr]);
+            float Gv = fabsf(rawUp[x]-rawDown[x]);
+            greenRow[x] = (Gh < Gv) ? 0.5f*(rawRow[xl]+rawRow[xr]) : 0.5f*(rawUp[x]+rawDown[x]);
+        }
+    }
+
+    // ------------------------------------------------------------
+    // 3) Red/Blue reconstruction
+    // ------------------------------------------------------------
+    #pragma omp parallel for schedule(static)
+    for (y = 0; y < h; y++)
+    {
+        float* redRow   = red[y];
+        float* greenRow = green[y];
+        float* blueRow  = blue[y];
+
+        int yu = (y>0)?y-1:y;
+        int yd = (y<h-1)?y+1:y;
+        float* redUp   = red[yu];   float* redDown   = red[yd];
+        float* blueUp  = blue[yu];  float* blueDown  = blue[yd];
+        float* greenUp = green[yu]; float* greenDown = green[yd];
+
+        int y_even = !(y & 1);
+
+        for (x = (y_even ? 0 : 1); x < w; x += 2) {
+            int xl = (x>0)?x-1:x;
+            int xr = (x<w-1)?x+1:x;
+            float g = greenRow[x];
+
+            if (y_even) // R pixel
+                blueRow[x] = g*0.25f*(safe_div(blueUp[xl],greenUp[xl]) + safe_div(blueUp[xr],greenUp[xr]) +
+                                      safe_div(blueDown[xl],greenDown[xl]) + safe_div(blueDown[xr],greenDown[xr]));
+            else // B pixel
+                redRow[x] = g*0.25f*(safe_div(redUp[xl],greenUp[xl]) + safe_div(redUp[xr],greenUp[xr]) +
+                                     safe_div(redDown[xl],greenDown[xl]) + safe_div(redDown[xr],greenDown[xr]));
+        }
+
+        // Green pixels
+        for (x = (y_even ? 1 : 0); x < w; x += 2)
+        {
+            int xl = (x>0)?x-1:x;
+            int xr = (x<w-1)?x+1:x;
+            float g = greenRow[x];
+
+            if (y_even) {
+                redRow[x]   = g*0.5f*(safe_div(redRow[xl],greenRow[xl]) + safe_div(redRow[xr],greenRow[xr]));
+                blueRow[x]  = g*0.5f*(safe_div(blueUp[x],greenUp[x]) + safe_div(blueDown[x],greenDown[x]));
+            } else {
+                blueRow[x]  = g*0.5f*(safe_div(blueRow[xl],greenRow[xl]) + safe_div(blueRow[xr],greenRow[xr]));
+                redRow[x]   = g*0.5f*(safe_div(redUp[x],greenUp[x]) + safe_div(redDown[x],greenDown[x]));
+            }
+        }
+    }
+
+    // ------------------------------------------------------------
+    // 4) Outer border fix
+    // ------------------------------------------------------------
+    #pragma omp parallel for schedule(static)
+    for (y = 0; y < h; y++)
+    {
+        for (x = 0; x < w; x++)
+        {
+            int xl = (x>0)?x-1:x;
+            int xr = (x<w-1)?x+1:x;
+            int yu = (y>0)?y-1:y;
+            int yd = (y<h-1)?y+1:y;
+
+            if (green[y][x]==0.f) {
+                float Gh = fabsf(rawData[y][xl]-rawData[y][xr]);
+                float Gv = fabsf(rawData[yu][x]-rawData[yd][x]);
+                green[y][x] = (Gh<Gv)?0.5f*(rawData[y][xl]+rawData[y][xr])
+                                     :0.5f*(rawData[yu][x]+rawData[yd][x]);
+            }
+        }
+    }
+}
+
+void rcd_interpolate13(
+    float** rawData,
+    float** red,
+    float** green,
+    float** blue,
+    int w,
+    int h,
+    int threads
+)
+{
+    int x, y;
+
+    omp_set_num_threads(threads);
+
+    // ------------------------------------------------------------
+    // 1) Copy Bayer samples (branch minimized)
+    // ------------------------------------------------------------
+    #pragma omp parallel for schedule(static)
+    for (y = 0; y < h; y++)
+    {
+        float* rawRow   = rawData[y];
+        float* redRow   = red[y];
+        float* greenRow = green[y];
+        float* blueRow  = blue[y];
+
+        int y_even = !(y & 1);
+
+        for (x = 0; x < w; x += 2)
+        {
+            int x_even = !(x & 1);
+
+            float v0 = rawRow[x];
+            float v1 = (x + 1 < w) ? rawRow[x+1] : rawRow[x];
+
+            if (y_even)
+            {
+                // even row: R G R G
+                redRow[x]   = v0;
+                greenRow[x] = 0.0f;
+                blueRow[x]  = 0.0f;
+
+                if (x+1 < w)
+                {
+                    greenRow[x+1] = v1;
+                    redRow[x+1]   = 0.0f;
+                    blueRow[x+1]  = 0.0f;
+                }
+            }
+            else
+            {
+                // odd row: G B G B
+                greenRow[x] = v0;
+                redRow[x]   = 0.0f;
+                blueRow[x]  = 0.0f;
+
+                if (x+1 < w)
+                {
+                    blueRow[x+1]  = v1;
+                    redRow[x+1]   = 0.0f;
+                    greenRow[x+1] = 0.0f;
+                }
+            }
+        }
+    }
+
+    // ------------------------------------------------------------
+    // 2) Green interpolation (separate R and B pixels)
+    // ------------------------------------------------------------
+    #pragma omp parallel for schedule(static)
+    for (y = 0; y < h; y++)
+    {
+        float* rawRow   = rawData[y];
+        float* greenRow = green[y];
+
+        int yu = (y > 0)   ? y-1 : y;
+        int yd = (y < h-1) ? y+1 : y;
+
+        float* rawUp   = rawData[yu];
+        float* rawDown = rawData[yd];
+
+        int y_even = !(y & 1);
+
+        // iterate only over R/B positions (step 2)
+        for (x = (y_even ? 0 : 1); x < w; x += 2)
+        {
+            int xl = (x > 0)   ? x-1 : x;
+            int xr = (x < w-1) ? x+1 : x;
+
+            float Gh = fabsf(rawRow[xl] - rawRow[xr]);
+            float Gv = fabsf(rawUp[x]   - rawDown[x]);
+
+            greenRow[x] = (Gh < Gv)
+                ? 0.5f * (rawRow[xl] + rawRow[xr])
+                : 0.5f * (rawUp[x] + rawDown[x]);
+        }
+    }
+
+    // ------------------------------------------------------------
+    // 3) Red / Blue reconstruction (split by pixel type)
+    // ------------------------------------------------------------
+    #pragma omp parallel for schedule(static)
+    for (y = 0; y < h; y++)
+    {
+        float* redRow   = red[y];
+        float* greenRow = green[y];
+        float* blueRow  = blue[y];
+
+        int yu = (y > 0)   ? y-1 : y;
+        int yd = (y < h-1) ? y+1 : y;
+
+        float* redUp   = red[yu];
+        float* redDown = red[yd];
+        float* blueUp  = blue[yu];
+        float* blueDown= blue[yd];
+
+        float* greenUp   = green[yu];
+        float* greenDown = green[yd];
+
+        int y_even = !(y & 1);
+
+        // --- R or B pixels (step 2 loop, vector-friendly)
+        for (x = (y_even ? 0 : 1); x < w; x += 2)
+        {
+            int xl = (x > 0)   ? x-1 : x;
+            int xr = (x < w-1) ? x+1 : x;
+
+            float g = greenRow[x];
+
+            if (y_even) // red pixel
+            {
+                float sum =
+                    blueUp[xl]   / (greenUp[xl]   + 1e-6f) +
+                    blueUp[xr]   / (greenUp[xr]   + 1e-6f) +
+                    blueDown[xl] / (greenDown[xl] + 1e-6f) +
+                    blueDown[xr] / (greenDown[xr] + 1e-6f);
+
+                blueRow[x] = g * 0.25f * sum;
+            }
+            else // blue pixel
+            {
+                float sum =
+                    redUp[xl]   / (greenUp[xl]   + 1e-6f) +
+                    redUp[xr]   / (greenUp[xr]   + 1e-6f) +
+                    redDown[xl] / (greenDown[xl] + 1e-6f) +
+                    redDown[xr] / (greenDown[xr] + 1e-6f);
+
+                redRow[x] = g * 0.25f * sum;
+            }
+        }
+
+        // --- Green pixels (separate loop)
+        for (x = (y_even ? 1 : 0); x < w; x += 2)
+        {
+            int xl = (x > 0)   ? x-1 : x;
+            int xr = (x < w-1) ? x+1 : x;
+
+            float g = greenRow[x];
+
+            if (y_even)
+            {
+                redRow[x] =
+                    g * 0.5f *
+                    (redRow[xl] / (greenRow[xl] + 1e-6f) +
+                     redRow[xr] / (greenRow[xr] + 1e-6f));
+
+                blueRow[x] =
+                    g * 0.5f *
+                    (blueUp[x] / (greenUp[x] + 1e-6f) +
+                     blueDown[x] / (greenDown[x] + 1e-6f));
+            }
+            else
+            {
+                blueRow[x] =
+                    g * 0.5f *
+                    (blueRow[xl] / (greenRow[xl] + 1e-6f) +
+                     blueRow[xr] / (greenRow[xr] + 1e-6f));
+
+                redRow[x] =
+                    g * 0.5f *
+                    (redUp[x] / (greenUp[x] + 1e-6f) +
+                     redDown[x] / (greenDown[x] + 1e-6f));
+            }
+        }
+    }
+}
+
+void rcd_interpolate12(
+    float** rawData,
+    float** red,
+    float** green,
+    float** blue,
+    int w,
+    int h,
+    int threads
+)
+{
+    int x, y;
+
+    omp_set_num_threads(threads);
+
+    // ------------------------------------------------------------
+    // 1) Copy Bayer samples
+    // ------------------------------------------------------------
+    #pragma omp parallel for schedule(static)
+    for (y = 0; y < h; y++)
+    {
+        float* rawRow   = rawData[y];
+        float* redRow   = red[y];
+        float* greenRow = green[y];
+        float* blueRow  = blue[y];
+
+        int y_even = !(y & 1);
+
+        for (x = 0; x < w; x++)
+        {
+            float v = rawRow[x];
+            int x_even = !(x & 1);
+
+            if (y_even && x_even)
+            {
+                redRow[x] = v;
+                greenRow[x] = 0.0f;
+                blueRow[x] = 0.0f;
+            }
+            else if (!y_even && !x_even)
+            {
+                blueRow[x] = v;
+                redRow[x] = 0.0f;
+                greenRow[x] = 0.0f;
+            }
+            else
+            {
+                greenRow[x] = v;
+                redRow[x] = 0.0f;
+                blueRow[x] = 0.0f;
+            }
+        }
+    }
+
+    // ------------------------------------------------------------
+    // 2) Green interpolation
+    // ------------------------------------------------------------
+    #pragma omp parallel for schedule(static)
+    for (y = 0; y < h; y++)
+    {
+        float* rawRow   = rawData[y];
+        float* greenRow = green[y];
+
+        int yu = (y > 0)   ? y-1 : y;
+        int yd = (y < h-1) ? y+1 : y;
+
+        float* rawUp   = rawData[yu];
+        float* rawDown = rawData[yd];
+
+        int y_even = !(y & 1);
+
+        for (x = 0; x < w; x++)
+        {
+            int x_even = !(x & 1);
+
+            // skip green pixels
+            if ((y_even && !x_even) || (!y_even && x_even))
+                continue;
+
+            int xl = (x > 0)   ? x-1 : x;
+            int xr = (x < w-1) ? x+1 : x;
+
+            float Gh = fabsf(rawRow[xl] - rawRow[xr]);
+            float Gv = fabsf(rawUp[x]   - rawDown[x]);
+
+            if (Gh < Gv)
+                greenRow[x] = 0.5f * (rawRow[xl] + rawRow[xr]);
+            else
+                greenRow[x] = 0.5f * (rawUp[x] + rawDown[x]);
+        }
+    }
+
+    // ------------------------------------------------------------
+    // 3) Red / Blue reconstruction (no reciprocal buffer)
+    // ------------------------------------------------------------
+    #pragma omp parallel for schedule(static)
+    for (y = 0; y < h; y++)
+    {
+        float* redRow   = red[y];
+        float* greenRow = green[y];
+        float* blueRow  = blue[y];
+
+        int yu = (y > 0)   ? y-1 : y;
+        int yd = (y < h-1) ? y+1 : y;
+
+        float* redUp   = red[yu];
+        float* redDown = red[yd];
+        float* blueUp  = blue[yu];
+        float* blueDown= blue[yd];
+
+        float* greenUp   = green[yu];
+        float* greenDown = green[yd];
+
+        int y_even = !(y & 1);
+
+        for (x = 0; x < w; x++)
+        {
+            int x_even = !(x & 1);
+            int xl = (x > 0)   ? x-1 : x;
+            int xr = (x < w-1) ? x+1 : x;
+
+            float g = greenRow[x];
+
+            if (y_even && x_even)
+            {
+                float sum =
+                    blueUp[xl]   / (greenUp[xl]   + 1e-6f) +
+                    blueUp[xr]   / (greenUp[xr]   + 1e-6f) +
+                    blueDown[xl] / (greenDown[xl] + 1e-6f) +
+                    blueDown[xr] / (greenDown[xr] + 1e-6f);
+
+                blueRow[x] = g * 0.25f * sum;
+            }
+            else if (!y_even && !x_even)
+            {
+                float sum =
+                    redUp[xl]   / (greenUp[xl]   + 1e-6f) +
+                    redUp[xr]   / (greenUp[xr]   + 1e-6f) +
+                    redDown[xl] / (greenDown[xl] + 1e-6f) +
+                    redDown[xr] / (greenDown[xr] + 1e-6f);
+
+                redRow[x] = g * 0.25f * sum;
+            }
+            else
+            {
+                if (y_even)
+                {
+                    redRow[x] =
+                        g * 0.5f *
+                        (redRow[xl] / (greenRow[xl] + 1e-6f) +
+                         redRow[xr] / (greenRow[xr] + 1e-6f));
+
+                    blueRow[x] =
+                        g * 0.5f *
+                        (blueUp[x] / (greenUp[x] + 1e-6f) +
+                         blueDown[x] / (greenDown[x] + 1e-6f));
+                }
+                else
+                {
+                    blueRow[x] =
+                        g * 0.5f *
+                        (blueRow[xl] / (greenRow[xl] + 1e-6f) +
+                         blueRow[xr] / (greenRow[xr] + 1e-6f));
+
+                    redRow[x] =
+                        g * 0.5f *
+                        (redUp[x] / (greenUp[x] + 1e-6f) +
+                         redDown[x] / (greenDown[x] + 1e-6f));
+                }
+            }
+        }
+    }
+}
+
+void rcd_interpolate11(
+    float** rawData,
+    float** red,
+    float** green,
+    float** blue,
+    int w,
+    int h,
+    int threads
+)
+{
+    int x, y;
+    omp_set_num_threads(threads);
+
+    float* greenInv = (float*)malloc((size_t)w * h * sizeof(float));
+
+    // ------------------------------------------------------------
+    // 1) Copy Bayer samples
+    // ------------------------------------------------------------
+    #pragma omp parallel for schedule(static)
+    for (y = 0; y < h; y++)
+    {
+        float* rawRow   = rawData[y];
+        float* redRow   = red[y];
+        float* greenRow = green[y];
+        float* blueRow  = blue[y];
+
+        int y_even = !(y & 1);
+
+        for (x = 0; x < w; x++)
+        {
+            float v = rawRow[x];
+            int x_even = !(x & 1);
+
+            if (y_even && x_even)
+            {
+                redRow[x] = v;
+                greenRow[x] = 0.0f;
+                blueRow[x] = 0.0f;
+            }
+            else if (!y_even && !x_even)
+            {
+                blueRow[x] = v;
+                redRow[x] = 0.0f;
+                greenRow[x] = 0.0f;
+            }
+            else
+            {
+                greenRow[x] = v;
+                redRow[x] = 0.0f;
+                blueRow[x] = 0.0f;
+            }
+        }
+    }
+
+    // ------------------------------------------------------------
+    // 2) Green interpolation
+    // ------------------------------------------------------------
+    #pragma omp parallel for schedule(static)
+    for (y = 0; y < h; y++)
+    {
+        float* rawRow   = rawData[y];
+        float* greenRow = green[y];
+
+        int yu = (y > 0)   ? y-1 : y;
+        int yd = (y < h-1) ? y+1 : y;
+
+        float* rawUp   = rawData[yu];
+        float* rawDown = rawData[yd];
+
+        int y_even = !(y & 1);
+
+        for (x = 0; x < w; x++)
+        {
+            int x_even = !(x & 1);
+
+            if ((y_even && !x_even) || (!y_even && x_even))
+                continue;
+
+            int xl = (x > 0)   ? x-1 : x;
+            int xr = (x < w-1) ? x+1 : x;
+
+            float Gh = fabsf(rawRow[xl] - rawRow[xr]);
+            float Gv = fabsf(rawUp[x] - rawDown[x]);
+
+            if (Gh < Gv)
+                greenRow[x] = 0.5f * (rawRow[xl] + rawRow[xr]);
+            else
+                greenRow[x] = 0.5f * (rawUp[x] + rawDown[x]);
+        }
+    }
+
+    // ------------------------------------------------------------
+    // 3) Precompute reciprocals (contiguous)
+    // ------------------------------------------------------------
+    #pragma omp parallel for schedule(static)
+    for (y = 0; y < h; y++)
+    {
+        float* gRow = green[y];
+        float* invRow = greenInv + (size_t)y * w;
+
+        for (x = 0; x < w; x++)
+            invRow[x] = 1.0f / (gRow[x] + 1e-6f);
+    }
+
+    // ------------------------------------------------------------
+    // 4) Red / Blue reconstruction
+    // ------------------------------------------------------------
+    #pragma omp parallel for schedule(static)
+    for (y = 0; y < h; y++)
+    {
+        float* redRow   = red[y];
+        float* greenRow = green[y];
+        float* blueRow  = blue[y];
+        float* invRow   = greenInv + (size_t)y * w;
+
+        int yu = (y > 0)   ? y-1 : y;
+        int yd = (y < h-1) ? y+1 : y;
+
+        float* redUp   = red[yu];
+        float* redDown = red[yd];
+        float* blueUp  = blue[yu];
+        float* blueDown= blue[yd];
+
+        float* invUp   = greenInv + (size_t)yu * w;
+        float* invDown = greenInv + (size_t)yd * w;
+
+        int y_even = !(y & 1);
+
+        for (x = 0; x < w; x++)
+        {
+            int x_even = !(x & 1);
+            int xl = (x > 0)   ? x-1 : x;
+            int xr = (x < w-1) ? x+1 : x;
+
+            if (y_even && x_even)
+            {
+                float sum =
+                    blueUp[xl]*invUp[xl] +
+                    blueUp[xr]*invUp[xr] +
+                    blueDown[xl]*invDown[xl] +
+                    blueDown[xr]*invDown[xr];
+
+                blueRow[x] = greenRow[x] * 0.25f * sum;
+            }
+            else if (!y_even && !x_even)
+            {
+                float sum =
+                    redUp[xl]*invUp[xl] +
+                    redUp[xr]*invUp[xr] +
+                    redDown[xl]*invDown[xl] +
+                    redDown[xr]*invDown[xr];
+
+                redRow[x] = greenRow[x] * 0.25f * sum;
+            }
+            else
+            {
+                if (y_even)
+                {
+                    redRow[x] =
+                        greenRow[x] * 0.5f *
+                        (redRow[xl]*invRow[xl] +
+                         redRow[xr]*invRow[xr]);
+
+                    blueRow[x] =
+                        greenRow[x] * 0.5f *
+                        (blueUp[x]*invUp[x] +
+                         blueDown[x]*invDown[x]);
+                }
+                else
+                {
+                    blueRow[x] =
+                        greenRow[x] * 0.5f *
+                        (blueRow[xl]*invRow[xl] +
+                         blueRow[xr]*invRow[xr]);
+
+                    redRow[x] =
+                        greenRow[x] * 0.5f *
+                        (redUp[x]*invUp[x] +
+                         redDown[x]*invDown[x]);
+                }
+            }
+        }
+    }
+
+    free(greenInv);
+}
+
+void rcd_interpolate10(
+    float** rawData,
+    float** red,
+    float** green,
+    float** blue,
+    int w,
+    int h,
+    int threads
+)
+{
+    int x, y;
+    omp_set_num_threads(threads);
+
+    // Allocate one contiguous greenInv block
+    float* greenInvBlock = (float*)malloc((size_t)w * h * sizeof(float));
+
+    // ------------------------------------------------------------
+    // 1) Copy Bayer samples
+    // ------------------------------------------------------------
+    #pragma omp parallel for schedule(static)
+    for (y = 0; y < h; y++)
+    {
+        float* rawRow   = rawData[y];
+        float* redRow   = red[y];
+        float* greenRow = green[y];
+        float* blueRow  = blue[y];
+
+        int y_even = !(y & 1);
+
+        for (x = 0; x < w; x++)
+        {
+            float v = rawRow[x];
+            int x_even = !(x & 1);
+
+            if (y_even && x_even)             // RED
+            {
+                redRow[x] = v; greenRow[x] = 0.0f; blueRow[x] = 0.0f;
+            }
+            else if (!y_even && !x_even)      // BLUE
+            {
+                blueRow[x] = v; redRow[x] = 0.0f; greenRow[x] = 0.0f;
+            }
+            else                              // GREEN
+            {
+                greenRow[x] = v; redRow[x] = 0.0f; blueRow[x] = 0.0f;
+            }
+        }
+    }
+
+    // ------------------------------------------------------------
+    // 2) Green interpolation
+    // ------------------------------------------------------------
+    #pragma omp parallel for schedule(static)
+    for (y = 0; y < h; y++)
+    {
+        float* rawRow   = rawData[y];
+        float* greenRow = green[y];
+
+        int yu = (y > 0)   ? y-1 : y;
+        int yd = (y < h-1) ? y+1 : y;
+
+        float* rawUp   = rawData[yu];
+        float* rawDown = rawData[yd];
+
+        int y_even = !(y & 1);
+
+        for (x = 0; x < w; x++)
+        {
+            int x_even = !(x & 1);
+
+            // skip green pixels
+            if ((y_even && !x_even) || (!y_even && x_even))
+                continue;
+
+            int xl = (x > 0)   ? x-1 : x;
+            int xr = (x < w-1) ? x+1 : x;
+
+            float Gh = fabsf(rawRow[xl] - rawRow[xr]);
+            float Gv = fabsf(rawUp[x] - rawDown[x]);
+
+            if (Gh < Gv)
+                greenRow[x] = 0.5f * (rawRow[xl] + rawRow[xr]);
+            else
+                greenRow[x] = 0.5f * (rawUp[x] + rawDown[x]);
+        }
+    }
+
+    // ------------------------------------------------------------
+    // 3) Precompute green reciprocals (contiguous)
+    // ------------------------------------------------------------
+    #pragma omp parallel for schedule(static)
+    for (y = 0; y < h; y++)
+    {
+        float* gRow = green[y];
+        float* invRow = greenInvBlock + (size_t)y * w;
+
+        for (x = 0; x < w; x++)
+            invRow[x] = 1.0f / (gRow[x] + 1e-6f);
+    }
+
+    // ------------------------------------------------------------
+    // 4) Red / Blue reconstruction
+    // ------------------------------------------------------------
+    #pragma omp parallel for schedule(static)
+    for (y = 0; y < h; y++)
+    {
+        float* redRow   = red[y];
+        float* greenRow = green[y];
+        float* blueRow  = blue[y];
+        float* invRow   = greenInvBlock + (size_t)y * w;
+
+        int yu = (y > 0)   ? y-1 : y;
+        int yd = (y < h-1) ? y+1 : y;
+
+        float* redUp   = red[yu];
+        float* redDown = red[yd];
+        float* blueUp  = blue[yu];
+        float* blueDown= blue[yd];
+
+        float* invUp   = greenInvBlock + (size_t)yu * w;
+        float* invDown = greenInvBlock + (size_t)yd * w;
+
+        int y_even = !(y & 1);
+
+        for (x = 0; x < w; x++)
+        {
+            int x_even = !(x & 1);
+            int xl = (x > 0)   ? x-1 : x;
+            int xr = (x < w-1) ? x+1 : x;
+
+            if (y_even && x_even) // RED
+            {
+                float b1 = blueUp[xl]*invUp[xl];
+                float b2 = blueUp[xr]*invUp[xr];
+                float b3 = blueDown[xl]*invDown[xl];
+                float b4 = blueDown[xr]*invDown[xr];
+                blueRow[x] = greenRow[x]*0.25f*(b1+b2+b3+b4);
+            }
+            else if (!y_even && !x_even) // BLUE
+            {
+                float r1 = redUp[xl]*invUp[xl];
+                float r2 = redUp[xr]*invUp[xr];
+                float r3 = redDown[xl]*invDown[xl];
+                float r4 = redDown[xr]*invDown[xr];
+                redRow[x] = greenRow[x]*0.25f*(r1+r2+r3+r4);
+            }
+            else
+            {
+                if (y_even)
+                {
+                    redRow[x]  = greenRow[x]*0.5f*
+                        (redRow[xl]*invRow[xl] + redRow[xr]*invRow[xr]);
+
+                    blueRow[x] = greenRow[x]*0.5f*
+                        (blueUp[x]*invUp[x] + blueDown[x]*invDown[x]);
+                }
+                else
+                {
+                    blueRow[x] = greenRow[x]*0.5f*
+                        (blueRow[xl]*invRow[xl] + blueRow[xr]*invRow[xr]);
+
+                    redRow[x]  = greenRow[x]*0.5f*
+                        (redUp[x]*invUp[x] + redDown[x]*invDown[x]);
+                }
+            }
+        }
+    }
+
+    free(greenInvBlock);
+}
+
+static inline int is_red(int x, int y)
+{
+    return ((y & 1) == 0) && ((x & 1) == 0);
+}
+
+static inline int is_blue(int x, int y)
+{
+    return ((y & 1) == 1) && ((x & 1) == 1);
+}
+
+static inline int is_green(int x, int y)
+{
+    return !is_red(x,y) && !is_blue(x,y);
+}
+
+void rcd_interpolate9(
+    float** rawData,
+    float** red,
+    float** green,
+    float** blue,
+    int w,
+    int h,
+    int threads
+)
+{
+    int x, y;
+    const float half = 0.5f;
+    const float quarter = 0.25f;
+
+    omp_set_num_threads(threads);
+
+    // ------------------------------------------------------------
+    // 1) Copy Bayer samples
+    // ------------------------------------------------------------
+    #pragma omp parallel for schedule(static)
+    for (y = 0; y < h; y++)
+    {
+        for (x = 0; x < w; x++)
+        {
+            float v = rawData[y][x];
+            if (is_red(x,y))      { red[y][x]=v; green[y][x]=0.0f; blue[y][x]=0.0f; }
+            else if (is_blue(x,y)){ blue[y][x]=v; red[y][x]=0.0f; green[y][x]=0.0f; }
+            else                  { green[y][x]=v; red[y][x]=0.0f; blue[y][x]=0.0f; }
+        }
+    }
+
+    // ------------------------------------------------------------
+    // 2) Green interpolation at R/B pixels
+    // ------------------------------------------------------------
+    #pragma omp parallel for schedule(static)
+    for (y = 0; y < h; y++)
+    {
+        float* rawRow   = rawData[y];
+        float* greenRow = green[y];
+
+        int yu = y > 0 ? y-1 : y;
+        int yd = y < h-1 ? y+1 : y;
+
+        float* rawRowUp   = rawData[yu];
+        float* rawRowDown = rawData[yd];
+
+        for (x = 0; x < w; x++)
+        {
+            if (is_green(x,y)) continue;
+
+            int xl = x > 0 ? x-1 : x;
+            int xr = x < w-1 ? x+1 : x;
+
+            float Gh = fabsf(rawRow[xl] - rawRow[xr]);
+            float Gv = fabsf(rawRowUp[x] - rawRowDown[x]);
+
+            greenRow[x] = (Gh < Gv) ? half*(rawRow[xl] + rawRow[xr])
+                                     : half*(rawRowUp[x] + rawRowDown[x]);
+        }
+    }
+
+    // ------------------------------------------------------------
+    // 3) Precompute reciprocals of green for ratio reconstruction
+    // ------------------------------------------------------------
+    float** greenInv = (float**)malloc(h * sizeof(float*));
+    #pragma omp parallel for schedule(static)
+    for (y = 0; y < h; y++)
+    {
+        greenInv[y] = (float*)malloc(w * sizeof(float));
+        for (x = 0; x < w; x++)
+            greenInv[y][x] = 1.0f / (green[y][x] + 1e-6f);
+    }
+
+    // ------------------------------------------------------------
+    // 4) Red / Blue reconstruction (using greenInv)
+    // ------------------------------------------------------------
+    #pragma omp parallel for schedule(static)
+    for (y = 0; y < h; y++)
+    {
+        float* greenRow  = green[y];
+        float* redRow    = red[y];
+        float* blueRow   = blue[y];
+
+        int yu = y > 0 ? y-1 : y;
+        int yd = y < h-1 ? y+1 : y;
+
+        float* redUp    = red[yu];
+        float* redDown  = red[yd];
+        float* blueUp   = blue[yu];
+        float* blueDown = blue[yd];
+        float* greenInvUp    = greenInv[yu];
+        float* greenInvDown  = greenInv[yd];
+        float* greenInvRow   = greenInv[y];
+
+        for (x = 0; x < w; x++)
+        {
+            int xl = x > 0 ? x-1 : x;
+            int xr = x < w-1 ? x+1 : x;
+
+            if (is_red(x,y))
+            {
+                blueRow[x] = greenRow[x]*quarter*(
+                    blueUp[xl]*greenInvUp[xl] +
+                    blueUp[xr]*greenInvUp[xr] +
+                    blueDown[xl]*greenInvDown[xl] +
+                    blueDown[xr]*greenInvDown[xr]
+                );
+            }
+            else if (is_blue(x,y))
+            {
+                redRow[x] = greenRow[x]*quarter*(
+                    redUp[xl]*greenInvUp[xl] +
+                    redUp[xr]*greenInvUp[xr] +
+                    redDown[xl]*greenInvDown[xl] +
+                    redDown[xr]*greenInvDown[xr]
+                );
+            }
+            else
+            {
+                if ((y & 1) == 0) // green on red row
+                {
+                    redRow[x]  = greenRow[x]*half*(redRow[xl]*greenInvRow[xl] + redRow[xr]*greenInvRow[xr]);
+                    blueRow[x] = greenRow[x]*half*(blueUp[x]*greenInvUp[x] + blueDown[x]*greenInvDown[x]);
+                }
+                else // green on blue row
+                {
+                    blueRow[x] = greenRow[x]*half*(blueRow[xl]*greenInvRow[xl] + blueRow[xr]*greenInvRow[xr]);
+                    redRow[x]  = greenRow[x]*half*(redUp[x]*greenInvUp[x] + redDown[x]*greenInvDown[x]);
+                }
+            }
+        }
+    }
+
+    // ------------------------------------------------------------
+    // 5) Free temporary greenInv
+    // ------------------------------------------------------------
+    for (y = 0; y < h; y++) free(greenInv[y]);
+    free(greenInv);
+}
+
+void rcd_interpolate8(
+    float** rawData,
+    float** red,
+    float** green,
+    float** blue,
+    int w,
+    int h,
+    int threads
+)
+{
+    int x, y;
+    omp_set_num_threads(threads);
+
+    // ------------------------------------------------------------
+    // 1) Copy Bayer samples
+    // ------------------------------------------------------------
+    #pragma omp parallel for schedule(static)
+    for (y = 0; y < h; y++) {
+        for (x = 0; x < w; x++) {
+            float v = rawData[y][x];
+            if (is_red(x,y))      { red[y][x]=v; green[y][x]=0.0f; blue[y][x]=0.0f; }
+            else if (is_blue(x,y)){ blue[y][x]=v; red[y][x]=0.0f; green[y][x]=0.0f; }
+            else                  { green[y][x]=v; red[y][x]=0.0f; blue[y][x]=0.0f; }
+        }
+    }
+
+    // ------------------------------------------------------------
+    // 2) Green interpolation (R/B pixels)
+    // ------------------------------------------------------------
+    #pragma omp parallel for schedule(static)
+    for (y = 0; y < h; y++) {
+        float* rawRow   = rawData[y];
+        float* greenRow = green[y];
+        int yu = y>0 ? y-1 : y;
+        int yd = y<h-1 ? y+1 : y;
+        float* rawRowUp   = rawData[yu];
+        float* rawRowDown = rawData[yd];
+
+        for (x = 0; x < w; x+=4) { // unroll 4 pixels per iteration
+            int xi;
+            for (xi = 0; xi < 4 && (x+xi)<w; xi++) {
+                int xx = x+xi;
+                if (is_green(xx,y)) continue;
+
+                int xl = xx>0 ? xx-1 : xx;
+                int xr = xx<w-1 ? xx+1 : xx;
+                float Gh = fabsf(rawRow[xl] - rawRow[xr]);
+                float Gv = fabsf(rawRowUp[xx] - rawRowDown[xx]);
+                greenRow[xx] = (Gh < Gv) ? 0.5f*(rawRow[xl]+rawRow[xr])
+                                          : 0.5f*(rawRowUp[xx]+rawRowDown[xx]);
+            }
+        }
+    }
+
+    // ------------------------------------------------------------
+    // 3) Precompute green reciprocals
+    // ------------------------------------------------------------
+    float** greenInv = (float**)malloc(h * sizeof(float*));
+    for (y = 0; y < h; y++) {
+        greenInv[y] = (float*)malloc(w * sizeof(float));
+        for (x = 0; x < w; x++)
+            greenInv[y][x] = 1.0f / (green[y][x] + 1e-6f);
+    }
+
+    // ------------------------------------------------------------
+    // 4) Red / Blue reconstruction
+    // ------------------------------------------------------------
+    #pragma omp parallel for schedule(static)
+    for (y = 0; y < h; y++) {
+        int yu = y>0 ? y-1 : y, yd = y<h-1 ? y+1 : y;
+        for (x = 0; x < w; x+=4) { // unroll 4 pixels
+            int xi;
+            for (xi = 0; xi < 4 && (x+xi)<w; xi++) {
+                int xx = x+xi;
+                int xl = xx>0 ? xx-1 : xx;
+                int xr = xx<w-1 ? xx+1 : xx;
+
+                if (is_red(xx,y)) {
+                    float b1 = blue[yu][xl] * greenInv[yu][xl];
+                    float b2 = blue[yu][xr] * greenInv[yu][xr];
+                    float b3 = blue[yd][xl] * greenInv[yd][xl];
+                    float b4 = blue[yd][xr] * greenInv[yd][xr];
+                    blue[y][xx] = green[y][xx]*0.25f*(b1+b2+b3+b4);
+                }
+                else if (is_blue(xx,y)) {
+                    float r1 = red[yu][xl] * greenInv[yu][xl];
+                    float r2 = red[yu][xr] * greenInv[yu][xr];
+                    float r3 = red[yd][xl] * greenInv[yd][xl];
+                    float r4 = red[yd][xr] * greenInv[yd][xr];
+                    red[y][xx] = green[y][xx]*0.25f*(r1+r2+r3+r4);
+                }
+                else {
+                    if ((y & 1) == 0) {
+                        red[y][xx]  = green[y][xx]*0.5f*(red[y][xl]*greenInv[y][xl] + red[y][xr]*greenInv[y][xr]);
+                        blue[y][xx] = green[y][xx]*0.5f*(blue[yu][xx]*greenInv[yu][xx] + blue[yd][xx]*greenInv[yd][xx]);
+                    } else {
+                        blue[y][xx] = green[y][xx]*0.5f*(blue[y][xl]*greenInv[y][xl] + blue[y][xr]*greenInv[y][xr]);
+                        red[y][xx]  = green[y][xx]*0.5f*(red[yu][xx]*greenInv[yu][xx] + red[yd][xx]*greenInv[yd][xx]);
+                    }
+                }
+            }
+        }
+    }
+
+    // ------------------------------------------------------------
+    // 5) Free temporary greenInv
+    // ------------------------------------------------------------
+    for (y = 0; y < h; y++) free(greenInv[y]);
+    free(greenInv);
+}
+
+void rcd_interpolate7(
+    float** rawData,
+    float** red,
+    float** green,
+    float** blue,
+    int w,
+    int h,
+    int threads
+)
+{
+    omp_set_num_threads(threads);
+
+    int x, y;
+
+    // ------------------------------------------------------------
+    // 1) Copy Bayer samples (4x unrolled)
+    // ------------------------------------------------------------
+    #pragma omp parallel for schedule(static)
+    for (y = 0; y < h; y++)
+    {
+        float* rawRow   = rawData[y];
+        float* redRow   = red[y];
+        float* greenRow = green[y];
+        float* blueRow  = blue[y];
+
+        for (x = 0; x < w-3; x+=4)
+        {
+            for (int i=0; i<4; i++)
+            {
+                float v = rawRow[x+i];
+                if (is_red(x+i,y))      { redRow[x+i]=v; greenRow[x+i]=0.0f; blueRow[x+i]=0.0f; }
+                else if (is_blue(x+i,y)){ blueRow[x+i]=v; redRow[x+i]=0.0f; greenRow[x+i]=0.0f; }
+                else                    { greenRow[x+i]=v; redRow[x+i]=0.0f; blueRow[x+i]=0.0f; }
+            }
+        }
+        for (; x < w; x++)
+        {
+            float v = rawRow[x];
+            if (is_red(x,y))      { redRow[x]=v; greenRow[x]=0.0f; blueRow[x]=0.0f; }
+            else if (is_blue(x,y)){ blueRow[x]=v; redRow[x]=0.0f; greenRow[x]=0.0f; }
+            else                  { greenRow[x]=v; redRow[x]=0.0f; blueRow[x]=0.0f; }
+        }
+    }
+
+    // ------------------------------------------------------------
+    // 2) Green interpolation at R/B pixels (4x unrolled)
+    // ------------------------------------------------------------
+    #pragma omp parallel for schedule(static)
+    for (y = 0; y < h; y++)
+    {
+        int yu = (y>0)?y-1:0;
+        int yd = (y<h-1)?y+1:h-1;
+
+        float* rawRow   = rawData[y];
+        float* greenRow = green[y];
+        float* rawRowUp   = rawData[yu];
+        float* rawRowDown = rawData[yd];
+
+        for (x = 0; x < w-3; x+=4)
+        {
+            for (int i=0; i<4; i++)
+            {
+                int xx = x+i;
+                if (!is_green(xx,y))
+                {
+                    int xl = (xx>0)?xx-1:0;
+                    int xr = (xx<w-1)?xx+1:w-1;
+                    float Gh = fabsf(rawRow[xl]-rawRow[xr]);
+                    float Gv = fabsf(rawRowUp[xx]-rawRowDown[xx]);
+                    greenRow[xx] = (Gh<Gv)?0.5f*(rawRow[xl]+rawRow[xr])
+                                          :0.5f*(rawRowUp[xx]+rawRowDown[xx]);
+                }
+            }
+        }
+        for (; x < w; x++)
+        {
+            if (!is_green(x,y))
+            {
+                int xl = (x>0)?x-1:0;
+                int xr = (x<w-1)?x+1:w-1;
+                float Gh = fabsf(rawRow[xl]-rawRow[xr]);
+                float Gv = fabsf(rawRowUp[x]-rawRowDown[x]);
+                greenRow[x] = (Gh<Gv)?0.5f*(rawRow[xl]+rawRow[xr])
+                                     :0.5f*(rawRowUp[x]+rawRowDown[x]);
+            }
+        }
+    }
+
+    // ------------------------------------------------------------
+    // 3) Precompute green reciprocals
+    // ------------------------------------------------------------
+    float** greenInv = (float**)malloc(h * sizeof(float*));
+    for (y = 0; y < h; y++)
+    {
+        greenInv[y] = (float*)malloc(w * sizeof(float));
+        for (x = 0; x < w; x++)
+            greenInv[y][x] = 1.0f / (green[y][x] + 1e-6f);
+    }
+
+    // ------------------------------------------------------------
+    // 4) Red/Blue reconstruction (4x unrolled, using greenInv)
+    // ------------------------------------------------------------
+    #pragma omp parallel for schedule(static)
+    for (y = 0; y < h; y++)
+    {
+        int yu = (y>0)?y-1:0;
+        int yd = (y<h-1)?y+1:h-1;
+
+        float* redRow   = red[y];
+        float* blueRow  = blue[y];
+        float* greenRow = green[y];
+
+        float* redUp    = red[yu];
+        float* blueUp   = blue[yu];
+        float* greenUp  = greenInv[yu];
+
+        float* redDown  = red[yd];
+        float* blueDown = blue[yd];
+        float* greenDown= greenInv[yd];
+
+        for (x = 0; x < w-3; x+=4)
+        {
+            for (int i=0; i<4; i++)
+            {
+                int xx = x+i;
+                int xl = (xx>0)?xx-1:0;
+                int xr = (xx<w-1)?xx+1:w-1;
+                float g = greenRow[xx];
+
+                if (is_red(xx,y))
+                {
+                    float b1 = blueUp[xl]*greenUp[xl];
+                    float b2 = blueUp[xr]*greenUp[xr];
+                    float b3 = blueDown[xl]*greenDown[xl];
+                    float b4 = blueDown[xr]*greenDown[xr];
+                    blueRow[xx] = g*0.25f*(b1+b2+b3+b4);
+                }
+                else if (is_blue(xx,y))
+                {
+                    float r1 = redUp[xl]*greenUp[xl];
+                    float r2 = redUp[xr]*greenUp[xr];
+                    float r3 = redDown[xl]*greenDown[xl];
+                    float r4 = redDown[xr]*greenDown[xr];
+                    redRow[xx] = g*0.25f*(r1+r2+r3+r4);
+                }
+                else
+                {
+                    if ((y & 1) == 0)
+                    {
+                        redRow[xx]  = g*0.5f*(redRow[xl]*greenInv[y][xl] + redRow[xr]*greenInv[y][xr]);
+                        blueRow[xx] = g*0.5f*(blueUp[xx]*greenUp[xx] + blueDown[xx]*greenDown[xx]);
+                    }
+                    else
+                    {
+                        blueRow[xx] = g*0.5f*(blueRow[xl]*greenInv[y][xl] + blueRow[xr]*greenInv[y][xr]);
+                        redRow[xx]  = g*0.5f*(redUp[xx]*greenUp[xx] + redDown[xx]*greenDown[xx]);
+                    }
+                }
+            }
+        }
+        for (; x < w; x++)
+        {
+            int xl = (x>0)?x-1:0;
+            int xr = (x<w-1)?x+1:w-1;
+            float g = greenRow[x];
+
+            if (is_red(x,y))
+            {
+                float b1 = blueUp[xl]*greenUp[xl];
+                float b2 = blueUp[xr]*greenUp[xr];
+                float b3 = blueDown[xl]*greenDown[xl];
+                float b4 = blueDown[xr]*greenDown[xr];
+                blueRow[x] = g*0.25f*(b1+b2+b3+b4);
+            }
+            else if (is_blue(x,y))
+            {
+                float r1 = redUp[xl]*greenUp[xl];
+                float r2 = redUp[xr]*greenUp[xr];
+                float r3 = redDown[xl]*greenDown[xl];
+                float r4 = redDown[xr]*greenDown[xr];
+                redRow[x] = g*0.25f*(r1+r2+r3+r4);
+            }
+            else
+            {
+                if ((y & 1) == 0)
+                {
+                    redRow[x]  = g*0.5f*(redRow[xl]*greenInv[y][xl] + redRow[xr]*greenInv[y][xr]);
+                    blueRow[x] = g*0.5f*(blueUp[x]*greenUp[x] + blueDown[x]*greenDown[x]);
+                }
+                else
+                {
+                    blueRow[x] = g*0.5f*(blueRow[xl]*greenInv[y][xl] + blueRow[xr]*greenInv[y][xr]);
+                    redRow[x]  = g*0.5f*(redUp[x]*greenUp[x] + redDown[x]*greenDown[x]);
+                }
+            }
+        }
+    }
+
+    // ------------------------------------------------------------
+    // 5) Free greenInv
+    // ------------------------------------------------------------
+    for (y = 0; y < h; y++) free(greenInv[y]);
+    free(greenInv);
+}
+
+void rcd_interpolate6(
+    float** rawData,
+    float** red,
+    float** green,
+    float** blue,
+    int w,
+    int h,
+    int threads
+)
+{
+    omp_set_num_threads(threads);
+
+    // ------------------------------------------------------------
+    // 1) Copy Bayer samples
+    // ------------------------------------------------------------
+    #pragma omp parallel for schedule(static)
+    for (int y = 0; y < h; y++)
+    {
+        float* rawRow = rawData[y];
+        float* redRow = red[y];
+        float* greenRow = green[y];
+        float* blueRow = blue[y];
+
+        int x;
+        for (x = 0; x < w; x++)
+        {
+            float v = rawRow[x];
+            if (is_red(x,y))      { redRow[x]=v; greenRow[x]=0.0f; blueRow[x]=0.0f; }
+            else if (is_blue(x,y)){ blueRow[x]=v; redRow[x]=0.0f; greenRow[x]=0.0f; }
+            else                  { greenRow[x]=v; redRow[x]=0.0f; blueRow[x]=0.0f; }
+        }
+    }
+
+    // ------------------------------------------------------------
+    // 2) Green interpolation at R/B pixels
+    // ------------------------------------------------------------
+    #pragma omp parallel for schedule(static)
+    for (int y = 0; y < h; y++)
+    {
+        int yu = (y > 0) ? y-1 : 0;
+        int yd = (y < h-1) ? y+1 : h-1;
+
+        float* rawRow   = rawData[y];
+        float* greenRow = green[y];
+        float* rawRowUp   = rawData[yu];
+        float* rawRowDown = rawData[yd];
+
+        for (int x = 0; x < w; x++)
+        {
+            if (is_green(x,y)) continue;
+
+            int xl = (x > 0) ? x-1 : 0;
+            int xr = (x < w-1) ? x+1 : w-1;
+
+            float Gh = fabsf(rawRow[xl] - rawRow[xr]);
+            float Gv = fabsf(rawRowUp[x] - rawRowDown[x]);
+
+            greenRow[x] = (Gh < Gv) ? 0.5f*(rawRow[xl]+rawRow[xr])
+                                    : 0.5f*(rawRowUp[x]+rawRowDown[x]);
+        }
+    }
+
+    // ------------------------------------------------------------
+    // 3) Red/Blue reconstruction
+    // ------------------------------------------------------------
+    #pragma omp parallel for schedule(static)
+    for (int y = 0; y < h; y++)
+    {
+        int yu = (y > 0) ? y-1 : 0;
+        int yd = (y < h-1) ? y+1 : h-1;
+
+        float* redRow   = red[y];
+        float* blueRow  = blue[y];
+        float* greenRow = green[y];
+
+        float* redUp    = red[yu];
+        float* blueUp   = blue[yu];
+        float* greenUp  = green[yu];
+
+        float* redDown    = red[yd];
+        float* blueDown   = blue[yd];
+        float* greenDown  = green[yd];
+
+        for (int x = 0; x < w; x++)
+        {
+            int xl = (x > 0) ? x-1 : 0;
+            int xr = (x < w-1) ? x+1 : w-1;
+            float g = greenRow[x];
+
+            if (is_red(x,y))
+            {
+                float b1 = blueUp[xl]/(greenUp[xl]+1e-6f);
+                float b2 = blueUp[xr]/(greenUp[xr]+1e-6f);
+                float b3 = blueDown[xl]/(greenDown[xl]+1e-6f);
+                float b4 = blueDown[xr]/(greenDown[xr]+1e-6f);
+                blueRow[x] = g*0.25f*(b1+b2+b3+b4);
+            }
+            else if (is_blue(x,y))
+            {
+                float r1 = redUp[xl]/(greenUp[xl]+1e-6f);
+                float r2 = redUp[xr]/(greenUp[xr]+1e-6f);
+                float r3 = redDown[xl]/(greenDown[xl]+1e-6f);
+                float r4 = redDown[xr]/(greenDown[xr]+1e-6f);
+                redRow[x] = g*0.25f*(r1+r2+r3+r4);
+            }
+            else
+            {
+                if ((y & 1) == 0) // green on red row
+                {
+                    redRow[x]  = g*0.5f*(redRow[xl]/(greenRow[xl]+1e-6f) + redRow[xr]/(greenRow[xr]+1e-6f));
+                    blueRow[x] = g*0.5f*(blueUp[x]/(greenUp[x]+1e-6f) + blueDown[x]/(greenDown[x]+1e-6f));
+                }
+                else // green on blue row
+                {
+                    blueRow[x] = g*0.5f*(blueRow[xl]/(greenRow[xl]+1e-6f) + blueRow[xr]/(greenRow[xr]+1e-6f));
+                    redRow[x]  = g*0.5f*(redUp[x]/(greenUp[x]+1e-6f) + redDown[x]/(greenDown[x]+1e-6f));
+                }
+            }
+        }
+    }
+}
+
+void rcd_interpolate5(
+    float** rawData,
+    float** red,
+    float** green,
+    float** blue,
+    int w,
+    int h,
+    int threads
+)
+{
+    omp_set_num_threads(threads);
+
+    // ------------------------------------------------------------
+    // 1) Copy Bayer samples
+    // ------------------------------------------------------------
+    #pragma omp parallel for schedule(static)
+    for (int y = 0; y < h; y++)
+    {
+        for (int x = 0; x < w; x++)
+        {
+            float v = rawData[y][x];
+            if (is_red(x,y))      { red[y][x]=v; green[y][x]=0.0f; blue[y][x]=0.0f; }
+            else if (is_blue(x,y)){ blue[y][x]=v; red[y][x]=0.0f; green[y][x]=0.0f; }
+            else                  { green[y][x]=v; red[y][x]=0.0f; blue[y][x]=0.0f; }
+        }
+    }
+
+    // ------------------------------------------------------------
+    // 2) Green interpolation at R/B pixels
+    // ------------------------------------------------------------
+    #pragma omp parallel for schedule(static)
+    for (int y = 0; y < h; y++)
+    {
+        float* rawRow   = rawData[y];
+        float* greenRow = green[y];
+
+        int yu = y>0 ? y-1 : y;
+        int yd = y<h-1 ? y+1 : y;
+
+        float* rawRowUp   = rawData[yu];
+        float* rawRowDown = rawData[yd];
+
+        for (int x = 0; x < w; x++)
+        {
+            if (is_green(x,y)) continue;
+
+            int xl = x>0 ? x-1 : x;
+            int xr = x<w-1 ? x+1 : x;
+
+            float Gh = fabsf(rawRow[xl] - rawRow[xr]);
+            float Gv = fabsf(rawRowUp[x] - rawRowDown[x]);
+
+            greenRow[x] = (Gh < Gv) ? 0.5f*(rawRow[xl]+rawRow[xr])
+                                     : 0.5f*(rawRowUp[x]+rawRowDown[x]);
+        }
+    }
+
+    // ------------------------------------------------------------
+    // 3) Precompute reciprocals of green for ratio reconstruction
+    // ------------------------------------------------------------
+    float** greenInv = (float**)malloc(h * sizeof(float*));
+    for (int y = 0; y < h; y++)
+    {
+        greenInv[y] = (float*)malloc(w * sizeof(float));
+        for (int x = 0; x < w; x++)
+            greenInv[y][x] = 1.0f / (green[y][x] + 1e-6f);
+    }
+
+    // ------------------------------------------------------------
+    // 4) Red / Blue reconstruction (using greenInv)
+    // ------------------------------------------------------------
+    #pragma omp parallel for schedule(static)
+    for (int y = 0; y < h; y++)
+    {
+        int yu = y>0 ? y-1 : y;
+        int yd = y<h-1 ? y+1 : y;
+
+        for (int x = 0; x < w; x++)
+        {
+            int xl = x>0 ? x-1 : x;
+            int xr = x<w-1 ? x+1 : x;
+
+            if (is_red(x,y))
+            {
+                float b1 = blue[yu][xl] * greenInv[yu][xl];
+                float b2 = blue[yu][xr] * greenInv[yu][xr];
+                float b3 = blue[yd][xl] * greenInv[yd][xl];
+                float b4 = blue[yd][xr] * greenInv[yd][xr];
+                blue[y][x] = green[y][x]*0.25f*(b1+b2+b3+b4);
+            }
+            else if (is_blue(x,y))
+            {
+                float r1 = red[yu][xl] * greenInv[yu][xl];
+                float r2 = red[yu][xr] * greenInv[yu][xr];
+                float r3 = red[yd][xl] * greenInv[yd][xl];
+                float r4 = red[yd][xr] * greenInv[yd][xr];
+                red[y][x] = green[y][x]*0.25f*(r1+r2+r3+r4);
+            }
+            else
+            {
+                if ((y & 1) == 0) // green on red row
+                {
+                    red[y][x]  = green[y][x]*0.5f*(red[y][xl]*greenInv[y][xl] + red[y][xr]*greenInv[y][xr]);
+                    blue[y][x] = green[y][x]*0.5f*(blue[yu][x]*greenInv[yu][x] + blue[yd][x]*greenInv[yd][x]);
+                }
+                else // green on blue row
+                {
+                    blue[y][x] = green[y][x]*0.5f*(blue[y][xl]*greenInv[y][xl] + blue[y][xr]*greenInv[y][xr]);
+                    red[y][x]  = green[y][x]*0.5f*(red[yu][x]*greenInv[yu][x] + red[yd][x]*greenInv[yd][x]);
+                }
+            }
+        }
+    }
+
+    // ------------------------------------------------------------
+    // 5) Free temporary greenInv
+    // ------------------------------------------------------------
+    for (int y = 0; y < h; y++) free(greenInv[y]);
+    free(greenInv);
+}
+
+void rcd_interpolate4(
+    float** rawData,
+    float** red,
+    float** green,
+    float** blue,
+    int w,
+    int h,
+    int threads
+)
+{
+    int x, y;
+    omp_set_num_threads(threads);
+
+    // ------------------------------------------------------------
+    // 1) Copy Bayer samples
+    // ------------------------------------------------------------
+    #pragma omp parallel for private(x) schedule(static)
+    for (y = 0; y < h; y++)
+    {
+        for (x = 0; x < w; x++)
+        {
+            float v = rawData[y][x];
+            if (is_red(x,y))      { red[y][x]=v; green[y][x]=0.0f; blue[y][x]=0.0f; }
+            else if (is_blue(x,y)){ blue[y][x]=v; red[y][x]=0.0f; green[y][x]=0.0f; }
+            else                  { green[y][x]=v; red[y][x]=0.0f; blue[y][x]=0.0f; }
+        }
+    }
+
+    // ------------------------------------------------------------
+    // 2) Green interpolation at R/B pixels
+    // ------------------------------------------------------------
+    #pragma omp parallel for private(x) schedule(static)
+    for (y = 0; y < h; y++)
+    {
+        float* rawRow   = rawData[y];
+        float* greenRow = green[y];
+
+        int yu = y>0 ? y-1 : y;
+        int yd = y<h-1 ? y+1 : y;
+
+        float* rawRowUp   = rawData[yu];
+        float* rawRowDown = rawData[yd];
+
+        for (x = 0; x < w; x++)
+        {
+            if (is_green(x,y)) continue;
+
+            int xl = x>0 ? x-1 : x;
+            int xr = x<w-1 ? x+1 : x;
+
+            float Gh = fabsf(rawRow[xl] - rawRow[xr]);
+            float Gv = fabsf(rawRowUp[x] - rawRowDown[x]);
+
+            greenRow[x] = (Gh < Gv) ? 0.5f*(rawRow[xl]+rawRow[xr])
+                                     : 0.5f*(rawRowUp[x]+rawRowDown[x]);
+        }
+    }
+
+    // ------------------------------------------------------------
+    // 3) Precompute reciprocals of green for ratio reconstruction
+    // ------------------------------------------------------------
+    float** greenInv = (float**)malloc(h * sizeof(float*));
+    for (y = 0; y < h; y++)
+    {
+        greenInv[y] = (float*)malloc(w * sizeof(float));
+        for (x = 0; x < w; x++)
+            greenInv[y][x] = 1.0f / (green[y][x] + 1e-6f);
+    }
+
+    // ------------------------------------------------------------
+    // 4) Red / Blue reconstruction (using greenInv)
+    // ------------------------------------------------------------
+    #pragma omp parallel for private(x) schedule(static)
+    for (y = 0; y < h; y++)
+    {
+        for (x = 0; x < w; x++)
+        {
+            int xl = x>0 ? x-1 : x, xr = x<w-1 ? x+1 : x;
+            int yu = y>0 ? y-1 : y, yd = y<h-1 ? y+1 : y;
+
+            if (is_red(x,y))
+            {
+                float b1 = blue[yu][xl] * greenInv[yu][xl];
+                float b2 = blue[yu][xr] * greenInv[yu][xr];
+                float b3 = blue[yd][xl] * greenInv[yd][xl];
+                float b4 = blue[yd][xr] * greenInv[yd][xr];
+                blue[y][x] = green[y][x]*0.25f*(b1+b2+b3+b4);
+            }
+            else if (is_blue(x,y))
+            {
+                float r1 = red[yu][xl] * greenInv[yu][xl];
+                float r2 = red[yu][xr] * greenInv[yu][xr];
+                float r3 = red[yd][xl] * greenInv[yd][xl];
+                float r4 = red[yd][xr] * greenInv[yd][xr];
+                red[y][x] = green[y][x]*0.25f*(r1+r2+r3+r4);
+            }
+            else
+            {
+                if ((y & 1) == 0) // green on red row
+                {
+                    red[y][x]  = green[y][x]*0.5f*(red[y][xl]*greenInv[y][xl] + red[y][xr]*greenInv[y][xr]);
+                    blue[y][x] = green[y][x]*0.5f*(blue[yu][x]*greenInv[yu][x] + blue[yd][x]*greenInv[yd][x]);
+                }
+                else // green on blue row
+                {
+                    blue[y][x] = green[y][x]*0.5f*(blue[y][xl]*greenInv[y][xl] + blue[y][xr]*greenInv[y][xr]);
+                    red[y][x]  = green[y][x]*0.5f*(red[yu][x]*greenInv[yu][x] + red[yd][x]*greenInv[yd][x]);
+                }
+            }
+        }
+    }
+
+    // ------------------------------------------------------------
+    // 5) Free temporary greenInv
+    // ------------------------------------------------------------
+    for (y = 0; y < h; y++) free(greenInv[y]);
+    free(greenInv);
+}
+
+void rcd_interpolate3(
+    float** rawData,
+    float** red,
+    float** green,
+    float** blue,
+    int w,
+    int h,
+    int threads
+)
+{
+    int x, y;
+    omp_set_num_threads(threads);
+
+    // ------------------------------------------------------------
+    // 1) Copy Bayer samples
+    // ------------------------------------------------------------
+    #pragma omp parallel for private(x) schedule(static)
+    for (y = 0; y < h; y++)
+    {
+        for (x = 0; x < w; x++)
+        {
+            float v = rawData[y][x];
+            if (is_red(x,y))      { red[y][x]=v; green[y][x]=0.0f; blue[y][x]=0.0f; }
+            else if (is_blue(x,y)){ blue[y][x]=v; red[y][x]=0.0f; green[y][x]=0.0f; }
+            else                  { green[y][x]=v; red[y][x]=0.0f; blue[y][x]=0.0f; }
+        }
+    }
+
+    // ------------------------------------------------------------
+    // 2) Green interpolation at R/B pixels (optimized)
+    // ------------------------------------------------------------
+    #pragma omp parallel for private(x) schedule(static)
+    for (y = 0; y < h; y++)
+    {
+        float* rawRow     = rawData[y];
+        float* greenRow   = green[y];
+
+        int yu = y>0 ? y-1 : y;
+        int yd = y<h-1 ? y+1 : y;
+
+        float* rawRowUp   = rawData[yu];
+        float* rawRowDown = rawData[yd];
+
+        for (x = 0; x < w; x++)
+        {
+            if (is_green(x,y)) continue;
+
+            int xl = x>0 ? x-1 : x;
+            int xr = x<w-1 ? x+1 : x;
+
+            float Gh = fabsf(rawRow[xl] - rawRow[xr]);
+            float Gv = fabsf(rawRowUp[x] - rawRowDown[x]);
+
+            greenRow[x] = (Gh < Gv) ? 0.5f*(rawRow[xl]+rawRow[xr])
+                                     : 0.5f*(rawRowUp[x]+rawRowDown[x]);
+        }
+    }
+
+    // ------------------------------------------------------------
+    // 3) Red / Blue reconstruction with precomputed reciprocal
+    // ------------------------------------------------------------
+    #pragma omp parallel for private(x) schedule(static)
+    for (y = 0; y < h; y++)
+    {
+        for (x = 0; x < w; x++)
+        {
+            int xl = x>0 ? x-1 : x, xr = x<w-1 ? x+1 : x;
+            int yu = y>0 ? y-1 : y, yd = y<h-1 ? y+1 : y;
+
+            if (is_red(x,y))
+            {
+                float g1_inv = 1.0f/(green[yu][xl]+1e-6f);
+                float g2_inv = 1.0f/(green[yu][xr]+1e-6f);
+                float g3_inv = 1.0f/(green[yd][xl]+1e-6f);
+                float g4_inv = 1.0f/(green[yd][xr]+1e-6f);
+
+                float b1 = blue[yu][xl]*g1_inv;
+                float b2 = blue[yu][xr]*g2_inv;
+                float b3 = blue[yd][xl]*g3_inv;
+                float b4 = blue[yd][xr]*g4_inv;
+
+                blue[y][x] = green[y][x]*0.25f*(b1+b2+b3+b4);
+            }
+            else if (is_blue(x,y))
+            {
+                float g1_inv = 1.0f/(green[yu][xl]+1e-6f);
+                float g2_inv = 1.0f/(green[yu][xr]+1e-6f);
+                float g3_inv = 1.0f/(green[yd][xl]+1e-6f);
+                float g4_inv = 1.0f/(green[yd][xr]+1e-6f);
+
+                float r1 = red[yu][xl]*g1_inv;
+                float r2 = red[yu][xr]*g2_inv;
+                float r3 = red[yd][xl]*g3_inv;
+                float r4 = red[yd][xr]*g4_inv;
+
+                red[y][x] = green[y][x]*0.25f*(r1+r2+r3+r4);
+            }
+            else
+            {
+                if ((y & 1) == 0) // green on red row
+                {
+                    float gxl_inv = 1.0f/(green[y][xl]+1e-6f);
+                    float gxr_inv = 1.0f/(green[y][xr]+1e-6f);
+                    float gyu_inv = 1.0f/(green[yu][x]+1e-6f);
+                    float gyd_inv = 1.0f/(green[yd][x]+1e-6f);
+
+                    red[y][x]  = green[y][x]*0.5f*(red[y][xl]*gxl_inv + red[y][xr]*gxr_inv);
+                    blue[y][x] = green[y][x]*0.5f*(blue[yu][x]*gyu_inv + blue[yd][x]*gyd_inv);
+                }
+                else // green on blue row
+                {
+                    float gxl_inv = 1.0f/(green[y][xl]+1e-6f);
+                    float gxr_inv = 1.0f/(green[y][xr]+1e-6f);
+                    float gyu_inv = 1.0f/(green[yu][x]+1e-6f);
+                    float gyd_inv = 1.0f/(green[yd][x]+1e-6f);
+
+                    blue[y][x] = green[y][x]*0.5f*(blue[y][xl]*gxl_inv + blue[y][xr]*gxr_inv);
+                    red[y][x]  = green[y][x]*0.5f*(red[yu][x]*gyu_inv + red[yd][x]*gyd_inv);
+                }
+            }
+        }
+    }
+}
+
+void rcd_interpolate2(
+    float** rawData,
+    float** red,
+    float** green,
+    float** blue,
+    int w,
+    int h,
+    int threads
+)
+{
+    int x, y;
+    omp_set_num_threads(threads);
+
+    // 1) Copy Bayer samples
+    #pragma omp parallel for private(x) schedule(static)
+    for (y = 0; y < h; y++)
+    {
+        for (x = 0; x < w; x++)
+        {
+            float v = rawData[y][x];
+            if (is_red(x,y))      { red[y][x]=v; green[y][x]=0.0f; blue[y][x]=0.0f; }
+            else if (is_blue(x,y)){ blue[y][x]=v; red[y][x]=0.0f; green[y][x]=0.0f; }
+            else                  { green[y][x]=v; red[y][x]=0.0f; blue[y][x]=0.0f; }
+        }
+    }
+
+    // 2) Green interpolation at R/B pixels
+    #pragma omp parallel for private(x) schedule(static)
+    for (y = 0; y < h; y++)
+    {
+        for (x = 0; x < w; x++)
+        {
+            if (is_green(x,y)) continue;
+
+            int xl = x>0 ? x-1 : x, xr = x<w-1 ? x+1 : x;
+            int yu = y>0 ? y-1 : y, yd = y<h-1 ? y+1 : y;
+
+            float Gh = fabsf(rawData[y][xl] - rawData[y][xr]);
+            float Gv = fabsf(rawData[yu][x] - rawData[yd][x]);
+
+            green[y][x] = (Gh < Gv) ? 0.5f*(rawData[y][xl]+rawData[y][xr])
+                                     : 0.5f*(rawData[yu][x]+rawData[yd][x]);
+        }
+    }
+
+    // 3) Red / Blue reconstruction with precomputed reciprocal
+    #pragma omp parallel for private(x) schedule(static)
+    for (y = 0; y < h; y++)
+    {
+        for (x = 0; x < w; x++)
+        {
+            int xl = x>0 ? x-1 : x, xr = x<w-1 ? x+1 : x;
+            int yu = y>0 ? y-1 : y, yd = y<h-1 ? y+1 : y;
+
+            if (is_red(x,y))
+            {
+                float g1_inv = 1.0f/(green[yu][xl]+1e-6f);
+                float g2_inv = 1.0f/(green[yu][xr]+1e-6f);
+                float g3_inv = 1.0f/(green[yd][xl]+1e-6f);
+                float g4_inv = 1.0f/(green[yd][xr]+1e-6f);
+
+                float b1 = blue[yu][xl]*g1_inv;
+                float b2 = blue[yu][xr]*g2_inv;
+                float b3 = blue[yd][xl]*g3_inv;
+                float b4 = blue[yd][xr]*g4_inv;
+
+                blue[y][x] = green[y][x]*0.25f*(b1+b2+b3+b4);
+            }
+            else if (is_blue(x,y))
+            {
+                float g1_inv = 1.0f/(green[yu][xl]+1e-6f);
+                float g2_inv = 1.0f/(green[yu][xr]+1e-6f);
+                float g3_inv = 1.0f/(green[yd][xl]+1e-6f);
+                float g4_inv = 1.0f/(green[yd][xr]+1e-6f);
+
+                float r1 = red[yu][xl]*g1_inv;
+                float r2 = red[yu][xr]*g2_inv;
+                float r3 = red[yd][xl]*g3_inv;
+                float r4 = red[yd][xr]*g4_inv;
+
+                red[y][x] = green[y][x]*0.25f*(r1+r2+r3+r4);
+            }
+            else
+            {
+                if ((y & 1) == 0) // green on red row
+                {
+                    float gxl_inv = 1.0f/(green[y][xl]+1e-6f);
+                    float gxr_inv = 1.0f/(green[y][xr]+1e-6f);
+                    float gyu_inv = 1.0f/(green[yu][x]+1e-6f);
+                    float gyd_inv = 1.0f/(green[yd][x]+1e-6f);
+
+                    red[y][x]  = green[y][x]*0.5f*(red[y][xl]*gxl_inv + red[y][xr]*gxr_inv);
+                    blue[y][x] = green[y][x]*0.5f*(blue[yu][x]*gyu_inv + blue[yd][x]*gyd_inv);
+                }
+                else // green on blue row
+                {
+                    float gxl_inv = 1.0f/(green[y][xl]+1e-6f);
+                    float gxr_inv = 1.0f/(green[y][xr]+1e-6f);
+                    float gyu_inv = 1.0f/(green[yu][x]+1e-6f);
+                    float gyd_inv = 1.0f/(green[yd][x]+1e-6f);
+
+                    blue[y][x] = green[y][x]*0.5f*(blue[y][xl]*gxl_inv + blue[y][xr]*gxr_inv);
+                    red[y][x]  = green[y][x]*0.5f*(red[yu][x]*gyu_inv + red[yd][x]*gyd_inv);
+                }
+            }
+        }
+    }
+}
+
+void rcd_interpolate1(
+    float** rawData,
+    float** red,
+    float** green,
+    float** blue,
+    int w,
+    int h,
+    int threads
+)
+{
+    int x, y, i;
+    omp_set_num_threads(threads);
+
+    // ------------------------------------------------------------
+    // 1) Copy Bayer samples
+    // ------------------------------------------------------------
+    #pragma omp parallel for private(x,y) schedule(static)
+    for (y = 0; y < h; y++)
+    {
+        for (x = 0; x < w; x++)
+        {
+            float v = rawData[y][x];
+            if (is_red(x,y))      { red[y][x]=v; green[y][x]=0.0f; blue[y][x]=0.0f; }
+            else if (is_blue(x,y)){ blue[y][x]=v; red[y][x]=0.0f; green[y][x]=0.0f; }
+            else                  { green[y][x]=v; red[y][x]=0.0f; blue[y][x]=0.0f; }
+        }
+    }
+
+    // ------------------------------------------------------------
+    // 2) Green interpolation at R/B pixels
+    // ------------------------------------------------------------
+    #pragma omp parallel for private(x,y,i) schedule(static)
+    for (y = 0; y < h; y++)
+    {
+        for (x = 0; x < w; x++)
+        {
+            if (is_green(x,y)) continue;
+
+            // Determine neighbors safely (clamped at edges)
+            int xl = x > 0 ? x-1 : x;
+            int xr = x < w-1 ? x+1 : x;
+            int yu = y > 0 ? y-1 : y;
+            int yd = y < h-1 ? y+1 : y;
+
+            float Gh = fabsf(rawData[y][xl] - rawData[y][xr]);
+            float Gv = fabsf(rawData[yu][x] - rawData[yd][x]);
+
+            if (Gh < Gv)
+                green[y][x] = 0.5f * (rawData[y][xl] + rawData[y][xr]);
+            else
+                green[y][x] = 0.5f * (rawData[yu][x] + rawData[yd][x]);
+        }
+    }
+
+    // ------------------------------------------------------------
+    // 3) Red / Blue reconstruction (ratio correction)
+    // ------------------------------------------------------------
+    #pragma omp parallel for private(x,y,i) schedule(static)
+    for (y = 0; y < h; y++)
+    {
+        for (x = 0; x < w; x++)
+        {
+            if (is_red(x,y))
+            {
+                int xl = x>0 ? x-1 : x, xr = x<w-1 ? x+1 : x;
+                int yu = y>0 ? y-1 : y, yd = y<h-1 ? y+1 : y;
+
+                float b1 = blue[yu][xl]/(green[yu][xl]+1e-6f);
+                float b2 = blue[yu][xr]/(green[yu][xr]+1e-6f);
+                float b3 = blue[yd][xl]/(green[yd][xl]+1e-6f);
+                float b4 = blue[yd][xr]/(green[yd][xr]+1e-6f);
+                blue[y][x] = green[y][x]*0.25f*(b1+b2+b3+b4);
+            }
+            else if (is_blue(x,y))
+            {
+                int xl = x>0 ? x-1 : x, xr = x<w-1 ? x+1 : x;
+                int yu = y>0 ? y-1 : y, yd = y<h-1 ? y+1 : y;
+
+                float r1 = red[yu][xl]/(green[yu][xl]+1e-6f);
+                float r2 = red[yu][xr]/(green[yu][xr]+1e-6f);
+                float r3 = red[yd][xl]/(green[yd][xl]+1e-6f);
+                float r4 = red[yd][xr]/(green[yd][xr]+1e-6f);
+                red[y][x] = green[y][x]*0.25f*(r1+r2+r3+r4);
+            }
+            else
+            {
+                if ((y & 1) == 0) // green on red row
+                {
+                    int xl = x>0 ? x-1 : x, xr = x<w-1 ? x+1 : x;
+                    int yu = y>0 ? y-1 : y, yd = y<h-1 ? y+1 : y;
+
+                    red[y][x] = green[y][x]*0.5f*(
+                        red[y][xl]/(green[y][xl]+1e-6f) +
+                        red[y][xr]/(green[y][xr]+1e-6f)
+                    );
+                    blue[y][x] = green[y][x]*0.5f*(
+                        blue[yu][x]/(green[yu][x]+1e-6f) +
+                        blue[yd][x]/(green[yd][x]+1e-6f)
+                    );
+                }
+                else // green on blue row
+                {
+                    int xl = x>0 ? x-1 : x, xr = x<w-1 ? x+1 : x;
+                    int yu = y>0 ? y-1 : y, yd = y<h-1 ? y+1 : y;
+
+                    blue[y][x] = green[y][x]*0.5f*(
+                        blue[y][xl]/(green[y][xl]+1e-6f) +
+                        blue[y][xr]/(green[y][xr]+1e-6f)
+                    );
+                    red[y][x] = green[y][x]*0.5f*(
+                        red[yu][x]/(green[yu][x]+1e-6f) +
+                        red[yd][x]/(green[yd][x]+1e-6f)
+                    );
+                }
+            }
+        }
+    }
+}
+
+static void* amaze_wrapper(void* arg) {
+    amazeinfo_t* info = (amazeinfo_t*)arg;
+    demosaic(info);
+    return NULL;
+}
+
+static inline void amaze_interpolate(float** rawData, float** red, float** green, float** blue, int w, int h, int threads)
+{
+    int* startchunk_y = malloc(threads * sizeof(int));
+    int* endchunk_y = malloc(threads * sizeof(int));
+
+    int chunk_height = h / threads;
+    chunk_height -= chunk_height % 2;
+
+    while(chunk_height <= 32 && threads > 1) {
+        threads--;
+        chunk_height = h / threads;
+        chunk_height -= chunk_height % 2;
+    }
+
+    for (int thread = 0; thread < threads; ++thread) {
+        startchunk_y[thread] = chunk_height * thread;
+        endchunk_y[thread] = chunk_height * (thread + 1);
+    }
+    endchunk_y[threads-1] = h;
+
+    pthread_t* thread_id = malloc(threads * sizeof(pthread_t));
+    amazeinfo_t* amaze_arguments = malloc(threads * sizeof(amazeinfo_t));
+
+    for (int thread = 0; thread < threads; ++thread) {
+        amaze_arguments[thread] = (amazeinfo_t) {
+            rawData,
+            red,
+            green,
+            blue,
+            0, startchunk_y[thread],
+            w, (endchunk_y[thread] - startchunk_y[thread]),
+            0,
+            0
+        };
+        
+        pthread_create(&thread_id[thread], NULL, amaze_wrapper, &amaze_arguments[thread]);
+    }
+
+    for (int thread = 0; thread < threads; ++thread) {
+        pthread_join(thread_id[thread], NULL);
+    }
+
+    free(startchunk_y);
+    free(endchunk_y);
+    free(thread_id);
+    free(amaze_arguments);
+}
+
+double benchmark_rcd_interpolate(
+    void (*rcd_interpolate_fn)(float**, float**, float**, float**, int, int, int),
+    float** rawData, 
+    float** red, 
+    float** green, 
+    float** blue, 
+    int w, 
+    int h, 
+    int threads) 
+{
+    double start_time = omp_get_wtime();
+    rcd_interpolate_fn(rawData, red, green, blue, w, h, threads);
+    double end_time = omp_get_wtime();
+
+    return end_time - start_time;
+}
+
 static inline int edge_interp(float ** plane, int * squeezed, int * raw2ev, int dir, int x, int y, int s)
 {
     
@@ -1186,13 +3475,7 @@ static inline int edge_interp(float ** plane, int * squeezed, int * raw2ev, int 
     return pi;
 }
 
-static void* demosaic_wrapper(void* arg) {
-    amazeinfo_t* info = (amazeinfo_t*)arg;
-    demosaic(info);
-    return NULL;
-}
-
-static inline void amaze_interpolate(struct raw_info raw_info, uint32_t * raw_buffer_32, uint32_t* dark, uint32_t* bright, int black, int white, int white_darkened, int * is_bright, int threads)
+static inline void interpolate_wrapper(struct raw_info raw_info, uint32_t * raw_buffer_32, uint32_t* dark, uint32_t* bright, int black, int white, int white_darkened, int * is_bright, int interp_method, int threads)
 {
     int w = raw_info.width;
     int h = raw_info.height;
@@ -1267,52 +3550,53 @@ static inline void amaze_interpolate(struct raw_info raw_info, uint32_t * raw_bu
         if (yh >= h) break; /* just in case */
     }
 
-    // Multithreaded debayer
-    int* startchunk_y = malloc(threads * sizeof(int));
-    int* endchunk_y = malloc(threads * sizeof(int));
+    /* Benchmarks
+    double time[17];
 
-    int chunk_height = h / threads;
-    chunk_height -= chunk_height % 2;
+    time[0] = benchmark_rcd_interpolate(rcd_interpolate1, rawData, red, green, blue, w, h, threads);
+    time[1] = benchmark_rcd_interpolate(rcd_interpolate2, rawData, red, green, blue, w, h, threads);
+    time[2] = benchmark_rcd_interpolate(rcd_interpolate3, rawData, red, green, blue, w, h, threads);
+    time[3] = benchmark_rcd_interpolate(rcd_interpolate4, rawData, red, green, blue, w, h, threads);
+    time[4] = benchmark_rcd_interpolate(rcd_interpolate5, rawData, red, green, blue, w, h, threads);
+    time[5] = benchmark_rcd_interpolate(rcd_interpolate6, rawData, red, green, blue, w, h, threads);
+    time[6] = benchmark_rcd_interpolate(rcd_interpolate7, rawData, red, green, blue, w, h, threads);
+    time[7] = benchmark_rcd_interpolate(rcd_interpolate8, rawData, red, green, blue, w, h, threads);
+    time[8] = benchmark_rcd_interpolate(rcd_interpolate9, rawData, red, green, blue, w, h, threads);
+    time[9] = benchmark_rcd_interpolate(rcd_interpolate10, rawData, red, green, blue, w, h, threads);
+    time[10] = benchmark_rcd_interpolate(rcd_interpolate11, rawData, red, green, blue, w, h, threads);
+    time[11] = benchmark_rcd_interpolate(rcd_interpolate12, rawData, red, green, blue, w, h, threads);
+    time[12] = benchmark_rcd_interpolate(rcd_interpolate13, rawData, red, green, blue, w, h, threads);
+    time[13] = benchmark_rcd_interpolate(rcd_interpolate14, rawData, red, green, blue, w, h, threads);
+    time[14] = benchmark_rcd_interpolate(rcd_interpolate15, rawData, red, green, blue, w, h, threads);
+    time[14] = benchmark_rcd_interpolate(rcd_original, rawData, red, green, blue, w, h, threads);
+    time[15] = benchmark_rcd_interpolate(amaze_interpolate, rawData, red, green, blue, w, h, threads);
 
-    while(chunk_height <= 32 && threads > 1) {
-        threads--;
-        chunk_height = h / threads;
-        chunk_height -= chunk_height % 2;
+    int min_time = 0;
+
+    printf("Version %d Time: %f seconds\n", 1, time[0]);
+
+    for (int i = 1; i < 16; i++)
+    {
+        printf("Version %d Time: %f seconds\n", i+1, time[i]);
+
+        if (time[i] < time[min_time])
+        {
+            min_time = i;
+        }
     }
 
-    for (int thread = 0; thread < threads; ++thread) {
-        startchunk_y[thread] = chunk_height * thread;
-        endchunk_y[thread] = chunk_height * (thread + 1);
+    printf("Best: %d, %f seconds\n", min_time+1, time[min_time]);
+    */
+
+    if (interp_method == 2)
+    {
+        rcd_interpolate6(rawData, red, green, blue, w, h, threads);
     }
-    endchunk_y[threads-1] = h;
-
-    pthread_t* thread_id = malloc(threads * sizeof(pthread_t));
-    amazeinfo_t* amaze_arguments = malloc(threads * sizeof(amazeinfo_t));
-
-    for (int thread = 0; thread < threads; ++thread) {
-        amaze_arguments[thread] = (amazeinfo_t) {
-            rawData,
-            red,
-            green,
-            blue,
-            0, startchunk_y[thread],
-            w, (endchunk_y[thread] - startchunk_y[thread]),
-            0,
-            0
-        };
-        
-        pthread_create(&thread_id[thread], NULL, demosaic_wrapper, &amaze_arguments[thread]);
+    else
+    {
+        amaze_interpolate(rawData, red, green, blue, w, h, threads);
     }
 
-    for (int thread = 0; thread < threads; ++thread) {
-        pthread_join(thread_id[thread], NULL);
-    }
-
-    free(startchunk_y);
-    free(endchunk_y);
-    free(thread_id);
-    free(amaze_arguments);
-    
     /* undo green channel scaling and clamp the other channels */
     #pragma omp parallel for collapse(2)
     for (int y = 0; y < h; y ++)
@@ -2230,9 +4514,9 @@ int diso_get_full20bit(struct raw_info raw_info, uint16_t * image_data, int dark
     //bright_noise /= factor;
     //bright_noise_ev -= corr_ev;
 
-    if (interp_method == 0)
+    if (interp_method != 1)
     {
-        amaze_interpolate(raw_info, raw_buffer_32, dark, bright, black, white, white_darkened, is_bright, threads);
+        interpolate_wrapper(raw_info, raw_buffer_32, dark, bright, black, white, white_darkened, is_bright, interp_method, threads);
     }
     else
     {
