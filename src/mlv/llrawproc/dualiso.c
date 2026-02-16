@@ -2276,8 +2276,6 @@ void rcd_interpolate_max_quality_simd(
         #pragma omp simd
         for (int x = 0; x < w; x++)
         {
-            if (is_green(x,y)) continue;
-    
             int xl = (x > 0) ? x-1 : 0;
             int xr = (x < w-1) ? x+1 : w-1;
     
@@ -2297,7 +2295,14 @@ void rcd_interpolate_max_quality_simd(
             float weight_h = (dh > Gh) ? dh : Gh;
             float weight_v = (dv > Gv) ? dv : Gv;
     
-            greenRow[x] = (weight_h < weight_v) ? gh : gv;
+            float interp = (weight_h < weight_v) ? gh : gv;
+    
+            // Mask instead of continue
+            int gMask = is_green(x, y) ? 1 : 0;
+    
+            // If green pixel, keep original
+            // If R/B pixel, use interpolation
+            greenRow[x] = gMask * greenRow[x] + (1 - gMask) * interp;
         }
     }
 
