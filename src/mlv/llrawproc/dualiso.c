@@ -27,8 +27,10 @@
 #include "dualiso.h"
 #include "opt_med.h"
 #include "wirth.h"
+#include <omp.h>
 #include <pthread.h>
 #include "../../debayer/debayer.h"
+#include "librtprocesswrapper.h"
 
 #define EV_RESOLUTION 65536
 #ifndef M_PI
@@ -1172,6 +1174,285 @@ edge_directions[] = {       /* note: all y coords should be multiplied by s */
     //~ { { 6,2}, { 3,1}, {-6,-2}, {-9,-3} },     /* almost horizontal */
 };
 
+void rcd_interpolate(float** rawData, float** red, float** green, float** blue, int w, int h, int threads)
+{
+    lrtpRcdDemosaic(rawData, red, green, blue, w, h);    
+}
+
+static inline int is_red(int x, int y)
+{
+    return ((y & 1) == 0) && ((x & 1) == 0);
+}
+
+static inline int is_blue(int x, int y)
+{
+    return ((y & 1) == 1) && ((x & 1) == 1);
+}
+
+static inline int is_green(int x, int y)
+{
+    return !is_red(x,y) && !is_blue(x,y);
+}
+
+/**
+ * Edge-aware Bayer demosaicing using adaptive directional
+ * green reconstruction and ratio-based chroma interpolation.
+ *
+ * Overview:
+ *  1) Split raw Bayer samples into R, G, B planes.
+ *     Copies raw Bayer values into separate arrays. Missing colors are set to zero.
+ *     Step 1 is required for ratio-based reconstruction.
+ *
+ *  2) Reconstruct missing green values at red/blue pixels using horizontal/vertical
+ *     edge-directed interpolation. Only R/B pixels are interpolated; green pixels
+ *     retain original values. Diagonal edges are not considered (may produce
+ *     zipper artifacts on diagonals).
+ *
+ *  3) Reconstruct red and blue channels using ratio-based interpolation relative
+ *     to the local green channel (R/G and B/G). Edge-aware directional blending
+ *     uses `alpha` computed from local green gradients.
+ *
+ * Characteristics:
+ *  - Single-pass, non-iterative
+ *  - Directionally adaptive (H/V)
+ *  - Ratio-based chroma reconstruction
+ *  - SIMD and OpenMP friendly
+ *  - Good quality/performance tradeoff
+ *
+ * Similarity to RCD:
+ *  - Conceptually closest to RCD (Ratio-Corrected Demosaicing): missing chroma
+ *    channels are reconstructed by computing ratios to green, and blended along
+ *    H/V directions based on local edge strength.
+ *  - Unlike full RCD implementations, diagonal interpolation is omitted for simplicity.
+ *
+ * Assumptions:
+ *  - RGGB Bayer pattern (R at pixel 0,0)
+ *  - Border pixels are clamped
+ *  - Small epsilon values prevent division by zero
+ */
+static inline void adaptive_ratio_interpolation(float** rawData, float** red, float** green, float** blue, int w, int h, int threads)
+{
+    // ============================================================
+    // 1) Copy Bayer samples into separate R/G/B planes
+    // ============================================================
+    #pragma omp parallel for schedule(static)
+    for (int y = 0; y < h; y++)
+    {
+        float* rawRow   = rawData[y];
+        float* redRow   = red[y];
+        float* greenRow = green[y];
+        float* blueRow  = blue[y];
+
+        #pragma omp simd
+        for (int x = 0; x < w; x++)
+        {
+            float v = rawRow[x];
+
+            // Determine Bayer color at (x, y)
+            int rMask = is_red(x, y);
+            int bMask = is_blue(x, y);
+            int gMask = 1 - rMask - bMask;
+
+            // Assign sample to correct channel; missing colors set to zero
+            redRow[x]   = rMask * v;
+            greenRow[x] = gMask * v;
+            blueRow[x]  = bMask * v;
+        }
+    }
+
+    // ============================================================
+    // 2) Green interpolation at R/B pixels
+    // ============================================================
+    #pragma omp parallel for schedule(static)
+    for (int y = 0; y < h; y++)
+    {
+        int yu = (y > 0) ? y-1 : 0;
+        int yd = (y < h-1) ? y+1 : h-1;
+
+        float* rawRow   = rawData[y];
+        float* rawUp    = rawData[yu];
+        float* rawDown  = rawData[yd];
+        float* greenRow = green[y];
+
+        #pragma omp simd
+        for (int x = 0; x < w; x++)
+        {
+            int xl = (x > 0) ? x-1 : 0;
+            int xr = (x < w-1) ? x+1 : w-1;
+
+            // Horizontal and vertical interpolations
+            float gh = 0.5f * (rawRow[xl] + rawRow[xr]);
+            float gv = 0.5f * (rawUp[x] + rawDown[x]);
+
+            // Second-derivative (edge-aware)
+            float dh = fabsf(rawRow[xl] - 2*rawRow[x] + rawRow[xr]);
+            float dv = fabsf(rawUp[x] - 2*rawRow[x] + rawDown[x]);
+
+            // First-derivative (flat-area)
+            float Gh = fabsf(rawRow[xl] - rawRow[xr]);
+            float Gv = fabsf(rawUp[x] - rawDown[x]);
+    
+            // If strong edge, use second-derivative; else, use first-derivative
+            float weight_h = (dh > Gh) ? dh : Gh;
+            float weight_v = (dv > Gv) ? dv : Gv;
+
+            // Choose interpolation along smoother direction
+            float interp = (weight_h < weight_v) ? gh : gv;
+
+            // Preserve original green pixels; only R/B pixels are replaced
+            int gMask = is_green(x, y);
+            greenRow[x] = gMask * greenRow[x] + (1 - gMask) * interp;
+        }
+    }
+
+    // ============================================================
+    // 3) Red/Blue reconstruction using ratio-based interpolation
+    // ============================================================
+    #pragma omp parallel for schedule(static)
+    for (int y = 0; y < h; y++)
+    {
+        int yu = (y > 0) ? y-1 : 0;
+        int yd = (y < h-1) ? y+1 : h-1;
+
+        float* rRow = red[y];
+        float* bRow = blue[y];
+        float* gRow = green[y];
+
+        float* rUp  = red[yu];
+        float* bUp  = blue[yu];
+        float* gUp  = green[yu];
+
+        float* rDn  = red[yd];
+        float* bDn  = blue[yd];
+        float* gDn  = green[yd];
+
+        #pragma omp simd
+        for (int x = 0; x < w; x++)
+        {
+            int xl = (x > 0) ? x-1 : 0;
+            int xr = (x < w-1) ? x+1 : w-1;
+
+            float g = gRow[x];
+
+            // Edge-aware directional blending: alpha weights H vs V contributions
+            float edgeH = gRow[xr] - gRow[xl];
+            float edgeV = gUp[x] - gDn[x];
+            float absEdgeH = fabsf(edgeH);
+            float absEdgeV = fabsf(edgeV);
+
+            float alpha = (absEdgeH + absEdgeV > 1e-6f) ? absEdgeH / (absEdgeH + absEdgeV) : 0.5f;
+            alpha = alpha < 0.25f ? 0.25f : (alpha > 0.75f ? 0.75f : alpha);
+
+            // Precompute reciprocal green values to avoid repeated division
+            float igUp_xl  = 1.0f / (gUp[xl]  + 1e-6f);
+            float igUp_xr  = 1.0f / (gUp[xr]  + 1e-6f);
+            float igDn_xl  = 1.0f / (gDn[xl]  + 1e-6f);
+            float igDn_xr  = 1.0f / (gDn[xr]  + 1e-6f);
+            float igRow_xl = 1.0f / (gRow[xl] + 1e-6f);
+            float igRow_xr = 1.0f / (gRow[xr] + 1e-6f);
+            float igUp_x   = 1.0f / (gUp[x]   + 1e-6f);
+            float igDn_x   = 1.0f / (gDn[x]   + 1e-6f);
+
+            if (is_red(x, y))
+            {
+                // Reconstruct blue at red pixel
+                float bH = 0.5f * (bUp[xl]*igUp_xl + bUp[xr]*igUp_xr);
+                float bV = 0.5f * (bDn[xl]*igDn_xl + bDn[xr]*igDn_xr);
+                bRow[x] = g * (alpha*bH + (1.0f - alpha)*bV);
+            }
+            else if (is_blue(x, y))
+            {
+                // Reconstruct red at blue pixel
+                float rH = 0.5f * (rUp[xl]*igUp_xl + rUp[xr]*igUp_xr);
+                float rV = 0.5f * (rDn[xl]*igDn_xl + rDn[xr]*igDn_xr);
+                rRow[x] = g * (alpha*rH + (1.0f - alpha)*rV);
+            }
+            else
+            {
+                // At green pixels: interpolate one chroma horizontally, one vertically
+                if ((y & 1) == 0)
+                {
+                    rRow[x] = g * 0.5f * (rRow[xl]*igRow_xl + rRow[xr]*igRow_xr);
+                    float bH = bUp[x]*igUp_x;
+                    float bV = bDn[x]*igDn_x;
+                    bRow[x] = g * (alpha*bH + (1.0f - alpha)*bV);
+                }
+                else
+                {
+                    bRow[x] = g * 0.5f * (bRow[xl]*igRow_xl + bRow[xr]*igRow_xr);
+                    float rH = rUp[x]*igUp_x;
+                    float rV = rDn[x]*igDn_x;
+                    rRow[x] = g * (alpha*rH + (1.0f - alpha)*rV);
+                }
+            }
+        }
+    }
+}
+
+static void* amaze_wrapper(void* arg)
+{
+    amazeinfo_t* info = (amazeinfo_t*)arg;
+    demosaic(info);
+    return NULL;
+}
+
+static inline void amaze_interpolate(float** rawData, float** red, float** green, float** blue, int w, int h, int threads)
+{
+    int* startchunk_y = malloc(threads * sizeof(int));
+    int* endchunk_y = malloc(threads * sizeof(int));
+
+    int chunk_height = h / threads;
+    chunk_height -= chunk_height % 2;
+
+    while(chunk_height <= 32 && threads > 1) {
+        threads--;
+        chunk_height = h / threads;
+        chunk_height -= chunk_height % 2;
+    }
+
+    for (int thread = 0; thread < threads; ++thread) {
+        startchunk_y[thread] = chunk_height * thread;
+        endchunk_y[thread] = chunk_height * (thread + 1);
+    }
+    endchunk_y[threads-1] = h;
+
+    pthread_t* thread_id = malloc(threads * sizeof(pthread_t));
+    amazeinfo_t* amaze_arguments = malloc(threads * sizeof(amazeinfo_t));
+
+    for (int thread = 0; thread < threads; ++thread) {
+        amaze_arguments[thread] = (amazeinfo_t) {
+            rawData,
+            red,
+            green,
+            blue,
+            0, startchunk_y[thread],
+            w, (endchunk_y[thread] - startchunk_y[thread]),
+            0,
+            0
+        };
+        
+        pthread_create(&thread_id[thread], NULL, amaze_wrapper, &amaze_arguments[thread]);
+    }
+
+    for (int thread = 0; thread < threads; ++thread) {
+        pthread_join(thread_id[thread], NULL);
+    }
+
+    free(startchunk_y);
+    free(endchunk_y);
+    free(thread_id);
+    free(amaze_arguments);
+}
+
+double benchmark_interpolate(void (*interpolate_fn)(float**, float**, float**, float**, int, int, int), float** rawData, float** red, float** green, float** blue, int w, int h, int threads)
+{
+    double start_time = omp_get_wtime();
+    interpolate_fn(rawData, red, green, blue, w, h, threads);
+    double end_time = omp_get_wtime();
+
+    return end_time - start_time;
+}
+
 static inline int edge_interp(float ** plane, int * squeezed, int * raw2ev, int dir, int x, int y, int s)
 {
     
@@ -1186,13 +1467,7 @@ static inline int edge_interp(float ** plane, int * squeezed, int * raw2ev, int 
     return pi;
 }
 
-static void* demosaic_wrapper(void* arg) {
-    amazeinfo_t* info = (amazeinfo_t*)arg;
-    demosaic(info);
-    return NULL;
-}
-
-static inline void amaze_interpolate(struct raw_info raw_info, uint32_t * raw_buffer_32, uint32_t* dark, uint32_t* bright, int black, int white, int white_darkened, int * is_bright, int threads)
+static inline void interpolate_wrapper(struct raw_info raw_info, uint32_t * raw_buffer_32, uint32_t* dark, uint32_t* bright, int black, int white, int white_darkened, int * is_bright, int interp_method, int threads)
 {
     int w = raw_info.width;
     int h = raw_info.height;
@@ -1267,52 +1542,40 @@ static inline void amaze_interpolate(struct raw_info raw_info, uint32_t * raw_bu
         if (yh >= h) break; /* just in case */
     }
 
-    // Multithreaded debayer
-    int* startchunk_y = malloc(threads * sizeof(int));
-    int* endchunk_y = malloc(threads * sizeof(int));
+    /* Benchmarks
+    double time[3] = { 0 };
+    int t = 0;
 
-    int chunk_height = h / threads;
-    chunk_height -= chunk_height % 2;
+    time[t++] = benchmark_interpolate(adaptive_ratio_interpolation, rawData, red, green, blue, w, h, threads);
+    time[t++] = benchmark_interpolate(rcd_interpolate, rawData, red, green, blue, w, h, threads);
+    time[t++] = benchmark_interpolate(amaze_interpolate, rawData, red, green, blue, w, h, threads);
 
-    while(chunk_height <= 32 && threads > 1) {
-        threads--;
-        chunk_height = h / threads;
-        chunk_height -= chunk_height % 2;
+    int min_time = 0;
+
+    printf("Version %d Time: %f seconds\n", 1, time[0]);
+
+    for (int i = 1; i < t; i++)
+    {
+        printf("Version %d Time: %f seconds\n", i+1, time[i]);
+
+        if (time[i] < time[min_time])
+        {
+            min_time = i;
+        }
     }
 
-    for (int thread = 0; thread < threads; ++thread) {
-        startchunk_y[thread] = chunk_height * thread;
-        endchunk_y[thread] = chunk_height * (thread + 1);
+    printf("Best: %d, %f seconds\n", min_time+1, time[min_time]);
+    */
+
+    if (interp_method == 2)
+    {
+        adaptive_ratio_interpolation(rawData, red, green, blue, w, h, threads);
     }
-    endchunk_y[threads-1] = h;
-
-    pthread_t* thread_id = malloc(threads * sizeof(pthread_t));
-    amazeinfo_t* amaze_arguments = malloc(threads * sizeof(amazeinfo_t));
-
-    for (int thread = 0; thread < threads; ++thread) {
-        amaze_arguments[thread] = (amazeinfo_t) {
-            rawData,
-            red,
-            green,
-            blue,
-            0, startchunk_y[thread],
-            w, (endchunk_y[thread] - startchunk_y[thread]),
-            0,
-            0
-        };
-        
-        pthread_create(&thread_id[thread], NULL, demosaic_wrapper, &amaze_arguments[thread]);
+    else
+    {
+        amaze_interpolate(rawData, red, green, blue, w, h, threads);
     }
 
-    for (int thread = 0; thread < threads; ++thread) {
-        pthread_join(thread_id[thread], NULL);
-    }
-
-    free(startchunk_y);
-    free(endchunk_y);
-    free(thread_id);
-    free(amaze_arguments);
-    
     /* undo green channel scaling and clamp the other channels */
     #pragma omp parallel for collapse(2)
     for (int y = 0; y < h; y ++)
@@ -2230,9 +2493,9 @@ int diso_get_full20bit(struct raw_info raw_info, uint16_t * image_data, int dark
     //bright_noise /= factor;
     //bright_noise_ev -= corr_ev;
 
-    if (interp_method == 0)
+    if (interp_method != 1)
     {
-        amaze_interpolate(raw_info, raw_buffer_32, dark, bright, black, white, white_darkened, is_bright, threads);
+        interpolate_wrapper(raw_info, raw_buffer_32, dark, bright, black, white, white_darkened, is_bright, interp_method, threads);
     }
     else
     {
