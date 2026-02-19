@@ -2851,9 +2851,6 @@ void MainWindow::startExportCdng(QString fileName)
         picAR[2] = 1; picAR[3] = 1;
     }
 
-    //Init DNG data struct
-    dngObject_t * cinemaDng = initDngObject( m_pMlvObject, m_codecProfile - 6, getFramerate(), picAR);
-
     //Render one single frame for raw correction init
     uint32_t frameSize = getMlvWidth( m_pMlvObject ) * getMlvHeight( m_pMlvObject ) * 3;
     uint16_t * imgBuffer;
@@ -2862,8 +2859,18 @@ void MainWindow::startExportCdng(QString fileName)
     free( imgBuffer );
 
     //Output frames loop
+    volatile bool shouldStop = false;
+    volatile int renderedFrames = 0;
+
+    #pragma omp parallel for shared(shouldStop)
     for( uint32_t frame = m_exportQueue.first()->cutIn() - 1; frame < m_exportQueue.first()->cutOut(); frame++ )
     {
+        if (shouldStop)
+            continue;
+
+        //Init DNG data struct
+        dngObject_t * cinemaDng = initDngObject( m_pMlvObject, m_codecProfile - 6, getFramerate(), picAR);
+
         QString dngName;
         if( m_codecOption == CODEC_CNDG_DEFAULT ) dngName = dngName.append( "%1_%2.dng" )
                                                                                 .arg( fileName )
@@ -2886,6 +2893,7 @@ void MainWindow::startExportCdng(QString fileName)
 #else
         QString properties_fn = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
         properties_fn.append("\\mlv-dng-params.txt");
+
         if( saveDngFrame( m_pMlvObject, cinemaDng, frame, filePathNr.toLatin1().data(), properties_fn.toLatin1().data() ) )
 #endif
         {
@@ -2904,24 +2912,29 @@ void MainWindow::startExportCdng(QString fileName)
             }
             if( ret > 0 )
             {
-                break;
+                shouldStop = true;
             }
         }
-
-        //Set Status
-        m_pStatusDialog->ui->progressBar->setValue( frame - ( m_exportQueue.first()->cutIn() - 1 ) + 1 );
-        m_pStatusDialog->ui->progressBar->repaint();
-        m_pStatusDialog->drawTimeFromToDoFrames( totalFrames - frame + ( m_exportQueue.first()->cutIn() - 1 ) - 1 );
-        qApp->processEvents();
 
         //Check diskspace
         checkDiskFull( filePathNr );
         //Abort pressed? -> End the loop
-        if( m_exportAbortPressed ) break;
-    }
+        if( m_exportAbortPressed ) shouldStop = true;
 
-    //Free DNG data struct
-    freeDngObject( cinemaDng );
+        //Free DNG data struct
+        freeDngObject( cinemaDng );
+
+        //Set Status
+#pragma omp critical
+        {
+            renderedFrames++;
+            m_pStatusDialog->ui->progressBar->setValue( renderedFrames );
+            m_pStatusDialog->ui->progressBar->repaint();
+            m_pStatusDialog->drawTimeFromToDoFrames( totalFrames - renderedFrames );
+            qApp->processEvents();
+        }
+
+    }
 
     //Enable GUI drawing
     m_dontDraw = false;
