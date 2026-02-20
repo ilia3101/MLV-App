@@ -20,7 +20,7 @@
 #include <math.h>
 
 #include "mcraw.h"
-#include "jsmn.h"
+#include "cJSON.h"
 
 struct mr_ctx_s
 {
@@ -148,15 +148,156 @@ static int mr_set_error(mr_ctx_t *ctx, int error, const char *msg, ...)
     return error;
 }
 
-//-----------------------------------------------------------------------------
-#define STRING_EQ(json_str, tok, tok_len, name) \
-    (!(memcmp(json_str + tok->start, name, tok_len) == 0))
+static const cJSON *mr_json_first(const cJSON *item)
+{
+    if (item == NULL) {
+        return NULL;
+    }
+
+    if (cJSON_IsArray(item)) {
+        return cJSON_GetArrayItem(item, 0);
+    }
+
+    return item;
+}
 
 //-----------------------------------------------------------------------------
-void cpy_string(char *dst, int max_len, const char *js, jsmntok_t *tok)
+static const cJSON *mr_json_get_first(const cJSON *root, const char *name)
 {
-    int tok_len = tok->end - tok->start;
-    strncpy(dst, js + tok->start, tok_len < max_len ? tok_len : max_len);
+    return mr_json_first(cJSON_GetObjectItemCaseSensitive(root, name));
+}
+
+//-----------------------------------------------------------------------------
+static int mr_json_get_int64(const cJSON *root, const char *name, int64_t *dst)
+{
+    const cJSON *item = mr_json_get_first(root, name);
+
+    if (item == NULL) {
+        return 0;
+    }
+
+    if (cJSON_IsNumber(item)) {
+        *dst = (int64_t)item->valuedouble;
+        return 1;
+    }
+
+    if (cJSON_IsString(item) && item->valuestring != NULL) {
+        *dst = (int64_t)strtoll(item->valuestring, NULL, 10);
+        return 1;
+    }
+
+    return 0;
+}
+
+//-----------------------------------------------------------------------------
+static int mr_json_get_int32(const cJSON *root, const char *name, int32_t *dst)
+{
+    int64_t value;
+
+    if (!mr_json_get_int64(root, name, &value)) {
+        return 0;
+    }
+
+    *dst = (int32_t)value;
+    return 1;
+}
+
+//-----------------------------------------------------------------------------
+static int mr_json_get_int16(const cJSON *root, const char *name, int16_t *dst)
+{
+    int64_t value;
+
+    if (!mr_json_get_int64(root, name, &value)) {
+        return 0;
+    }
+
+    *dst = (int16_t)value;
+    return 1;
+}
+
+//-----------------------------------------------------------------------------
+static int mr_json_get_double(const cJSON *root, const char *name, double *dst)
+{
+    const cJSON *item = mr_json_get_first(root, name);
+
+    if (item == NULL) {
+        return 0;
+    }
+
+    if (cJSON_IsNumber(item)) {
+        *dst = item->valuedouble;
+        return 1;
+    }
+
+    if (cJSON_IsString(item) && item->valuestring != NULL) {
+        *dst = strtod(item->valuestring, NULL);
+        return 1;
+    }
+
+    return 0;
+}
+
+//-----------------------------------------------------------------------------
+static int mr_json_get_string(const cJSON *root, const char *name, const char **dst)
+{
+    const cJSON *item = mr_json_get_first(root, name);
+
+    if (item == NULL || !cJSON_IsString(item) || item->valuestring == NULL) {
+        return 0;
+    }
+
+    *dst = item->valuestring;
+    return 1;
+}
+
+//-----------------------------------------------------------------------------
+static int mr_json_copy_string(const cJSON *root, const char *name, char *dst, size_t max_len)
+{
+    const char *src = NULL;
+    size_t copy_len;
+
+    if (!mr_json_get_string(root, name, &src)) {
+        return 0;
+    }
+
+    copy_len = strlen(src);
+    if (copy_len > max_len) {
+        copy_len = max_len;
+    }
+
+    memcpy(dst, src, copy_len);
+    dst[copy_len] = '\0';
+
+    return 1;
+}
+
+//-----------------------------------------------------------------------------
+static int mr_json_copy_matrix(const cJSON *root, const char *name, double *dst, int size)
+{
+    const cJSON *array = cJSON_GetObjectItemCaseSensitive(root, name);
+    int matrix_size = 0;
+    int copy_count = 0;
+
+    if (!cJSON_IsArray(array)) {
+        return 0;
+    }
+
+    matrix_size = cJSON_GetArraySize(array);
+    copy_count = (matrix_size < size) ? matrix_size : size;
+
+    for (int i = 0; i < copy_count; i++)
+    {
+        const cJSON *entry = cJSON_GetArrayItem(array, i);
+
+        if (cJSON_IsNumber(entry)) {
+            dst[i] = entry->valuedouble;
+        }
+        else if (cJSON_IsString(entry) && entry->valuestring != NULL) {
+            dst[i] = strtod(entry->valuestring, NULL);
+        }
+    }
+
+    return copy_count;
 }
 
 // Color filter array (CFA) geometric pattern
@@ -166,68 +307,21 @@ void cpy_string(char *dst, int max_len, const char *js, jsmntok_t *tok)
 //    rggb -> 0x02010100
 //    gbrg -> 0x01000201
 //-----------------------------------------------------------------------------
-void parse_sensor_arrangment(uint32_t *cfa_pattern, const char *js, jsmntok_t *tok)
+static void parse_sensor_arrangment(uint32_t *cfa_pattern, const char *sensor_arrangement)
 {
-    const char *p =  js + tok->start;
+    uint32_t pattern = 0;
 
-    for (int i = 0; i < 4; i++, p++)
-    {
-        uint32_t n = *p == 'g' ? 1 : *p == 'b' ? 2 : 0;
-        *cfa_pattern |= (n << (i * 8));
-    }
-}
-
-// Copy int and double values
-//
-// tok might be a JSMN_ARRAY, and we just want the first entry.
-// In that case skip the starting '['
-
-//-----------------------------------------------------------------------------
-void cpy_int64(int64_t *dst, const char *js, jsmntok_t *tok)
-{
-    *dst = (int64_t)strtol(js + (tok->type != JSMN_ARRAY ? tok->start : tok->start + 1), NULL, 10);
-}
-
-//-----------------------------------------------------------------------------
-void cpy_int32(int32_t *dst, const char *js, jsmntok_t *tok)
-{
-    *dst = (int32_t)strtol(js + (tok->type != JSMN_ARRAY ? tok->start : tok->start + 1), NULL, 10);
-}
-
-//-----------------------------------------------------------------------------
-void cpy_int16(int16_t *dst, const char *js, jsmntok_t *tok)
-{
-    *dst = (int16_t)strtol(js + (tok->type != JSMN_ARRAY ? tok->start : tok->start + 1), NULL, 10);
-}
-
-//-----------------------------------------------------------------------------
-void cpy_double(double *dst, const char *js, jsmntok_t *tok)
-{
-    *dst = strtod(js + (tok->type == JSMN_PRIMITIVE ? tok->start : tok->start + 1), NULL);
-}
-
-//-----------------------------------------------------------------------------
-void cpy_matrix(double *dst, int size, const char *js, jsmntok_t *tokens, int *idx)
-{
-    jsmntok_t *t = &tokens[*idx + 1];
-
-    if (t->type == JSMN_ARRAY) {
-        size = t->size < size ? t->size : size;
-    }
-    else {
+    if (sensor_arrangement == NULL) {
         return;
     }
 
-    (*idx)++;
-
-    for (int i = 0; i < size; i++)
+    for (int i = 0; i < 4 && sensor_arrangement[i] != '\0'; i++)
     {
-        (*idx)++;
-        t = &tokens[*idx];
-
-        char* pEnd;
-        dst[i] = strtod(js + t->start, &pEnd);
+        uint32_t n = sensor_arrangement[i] == 'g' ? 1 : sensor_arrangement[i] == 'b' ? 2 : 0;
+        pattern |= (n << (i * 8));
     }
+
+    *cfa_pattern = pattern;
 }
 
 //-----------------------------------------------------------------------------
@@ -235,139 +329,92 @@ static int mr_read_file_metadata(mr_ctx_t *ctx)
 {
     // Read camera metadata
     mr_item_t metadataItem = {};
+    char *metadataJson = NULL;
+    cJSON *metadata = NULL;
+    int res = 0;
+    const char *sensor_arrangement = NULL;
 
     if (fread(&metadataItem, sizeof(mr_item_t), 1, ctx->fd) != 1 || metadataItem.type != METADATA) {
         return mr_set_error(ctx, -1, "Invalid camera metadata");
     }
 
-    char *metadataJson = malloc(metadataItem.size);
+    metadataJson = malloc(metadataItem.size);
+    if (metadataJson == NULL) {
+        return mr_set_error(ctx, kMrErrorRead, "Failed to allocate metadata buffer");
+    }
 
     if (fread(metadataJson, metadataItem.size, 1, ctx->fd) != 1) {
-        return mr_set_error(ctx, kMrErrorRead, "File read error");
+        res = mr_set_error(ctx, kMrErrorRead, "File read error");
+        goto done;
     }
 
-    jsmn_parser parser;
-    jsmntok_t tokens[256];      // We expect no more than 256 tokens
-    int nb_tokens;
-
-    jsmn_init(&parser);
-
-    int res = jsmn_parse(&parser, metadataJson, metadataItem.size, tokens, sizeof(tokens) / sizeof(tokens[0]));
-    if (res < -1) {
-        return mr_set_error(ctx, kMrErrorMetadata, "Failed to parse JSON: %d", res);
-    }
-    else if (res == -1) {
-        nb_tokens = 255;
-    }
-    else {
-        nb_tokens = res - 1;
+    metadata = cJSON_ParseWithLength(metadataJson, metadataItem.size);
+    if (metadata == NULL || !cJSON_IsObject(metadata)) {
+        res = mr_set_error(ctx, kMrErrorMetadata, "Failed to parse metadata JSON");
+        goto done;
     }
 
-    const char *js = metadataJson;
+    mr_json_get_double(metadata, "apertures", &ctx->aperture);
+    mr_json_get_double(metadata, "focalLengths", &ctx->focal_length);
+    mr_json_get_int16(metadata, "whiteLevel", &ctx->white_level);
+    mr_json_get_int16(metadata, "blackLevel", &ctx->black_level);
+    mr_json_get_int32(metadata, "audioChannels", &ctx->audio_channels);
+    mr_json_get_int32(metadata, "audioSampleRate", &ctx->audio_sample_rate);
 
-    int i = 0;
-    while (i < nb_tokens)
-    {
-        jsmntok_t *t = &tokens[i];
+    mr_json_copy_string(metadata, "build.manufacturer", ctx->manufacturer, MR_MAX_STRING);
+    mr_json_copy_string(metadata, "deviceSpecificProfile.deviceModel", ctx->model, MR_MAX_STRING);
+    mr_json_copy_string(metadata, "colorIlluminant1", ctx->color_illuminant1, MR_MAX_STRING);
+    mr_json_copy_string(metadata, "colorIlluminant2", ctx->color_illuminant2, MR_MAX_STRING);
 
-        if (t->type == JSMN_STRING)
-        {
-            int len = t->end - t->start;
+    int cm1_len = mr_json_copy_matrix(metadata, "colorMatrix1", ctx->color_matrix1, 9);
+    int cm2_len = mr_json_copy_matrix(metadata, "colorMatrix2", ctx->color_matrix2, 9);
+    int fm1_len = mr_json_copy_matrix(metadata, "forwardMatrix1", ctx->forward_matrix1, 9);
+    int fm2_len = mr_json_copy_matrix(metadata, "forwardMatrix2", ctx->forward_matrix2, 9);
 
-            switch (len)
-            {
-                case 9:
-                    if (STRING_EQ(js, t, len, "apertures") == 0) {
-                        cpy_double(&ctx->aperture, js, &tokens[++i]);
-                    }
-                    break;
+    mr_json_copy_matrix(metadata, "calibrationMatrix1", ctx->calibration_matrix1, 9);
+    mr_json_copy_matrix(metadata, "calibrationMatrix2", ctx->calibration_matrix2, 9);
 
-                case 10:
-                    if (STRING_EQ(js, t, len, "whiteLevel") == 0) {
-                        cpy_int16(&ctx->white_level, js, &tokens[++i]);
-                    }
-                    else if (STRING_EQ(js, t, len, "blackLevel") == 0) {
-                        cpy_int16(&ctx->black_level, js, &tokens[++i]);
-                    }
-                    break;
-
-                case 11:
-                    if (STRING_EQ(js, t, len, "build.model") == 0) {
-                        cpy_string(ctx->model, MR_MAX_STRING, js, &tokens[++i]);
-                    }
-                    break;
-
-                case 12:
-                    if (STRING_EQ(js, t, len, "colorMatrix1") == 0) {
-                        cpy_matrix(ctx->color_matrix1, 9, js, tokens, &i);
-                    }
-                    else if (STRING_EQ(js, t, len, "colorMatrix2") == 0) {
-                        cpy_matrix(ctx->color_matrix2, 9, js, tokens, &i);
-                    }
-                    else if (STRING_EQ(js, t, len, "focalLengths") == 0) {
-                        cpy_double(&ctx->focal_length, js, &tokens[++i]);
-                    }
-                    break;
-
-                case 13:
-                    if (STRING_EQ(js, t, len, "audioChannels") == 0) {
-                        cpy_int32(&ctx->audio_channels, js, &tokens[++i]);
-                    }
-                    break;
-
-                case 14:
-                    if (STRING_EQ(js, t, len, "forwardMatrix1") == 0) {
-                        cpy_matrix(ctx->forward_matrix1, 9, js, tokens, &i);
-                    }
-                    else if (STRING_EQ(js, t, len, "forwardMatrix2") == 0) {
-                        cpy_matrix(ctx->forward_matrix2, 9, js, tokens, &i);
-                    }
-                    break;
-
-                case 15:
-                    if (STRING_EQ(js, t, len, "audioSampleRate") == 0) {
-                        cpy_int32(&ctx->audio_sample_rate, js, &tokens[++i]);
-                    }
-                    break;
-
-                case 16:
-                    if (STRING_EQ(js, t, len, "colorIlluminant1") == 0) {
-                        cpy_string(ctx->color_illuminant1, MR_MAX_STRING, js, &tokens[++i]);
-                    }
-                    else if (STRING_EQ(js, t, len, "colorIlluminant2") == 0) {
-                        cpy_string(ctx->color_illuminant2, MR_MAX_STRING, js, &tokens[++i]);
-                    }
-                    else if (STRING_EQ(js, t, len, "sensorArrangment") == 0) {
-                        parse_sensor_arrangment(&ctx->cfa_pattern, js, &tokens[++i]);
-                    }
-                    break;
-
-                case 17:
-                    if (STRING_EQ(js, t, len, "sensorArrangement") == 0) {
-                        parse_sensor_arrangment(&ctx->cfa_pattern, js, &tokens[++i]);
-                    }
-
-                case 18:
-                    if (STRING_EQ(js, t, len, "calibrationMatrix1") == 0) {
-                        cpy_matrix(ctx->calibration_matrix1, 9, js, tokens, &i);
-                    }
-                    else if (STRING_EQ(js, t, len, "calibrationMatrix2") == 0) {
-                        cpy_matrix(ctx->calibration_matrix2, 9, js, tokens, &i);
-                    }
-                    else if (STRING_EQ(js, t, len, "build.manufacturer") == 0) {
-                        cpy_string(ctx->manufacturer, MR_MAX_STRING, js, &tokens[++i]);
-                    }
-                    break;
-
-                default:
-                    break;
-            }
-        }
-
-        i++;
+    // Normalize color matrices (cross-pollinate or identity)
+    if (cm1_len < 9 && cm2_len >= 9) memcpy(ctx->color_matrix1, ctx->color_matrix2, 9 * sizeof(double));
+    else if (cm1_len < 9) {
+        memset(ctx->color_matrix1, 0, 9 * sizeof(double));
+        ctx->color_matrix1[0] = ctx->color_matrix1[4] = ctx->color_matrix1[8] = 1.0;
     }
 
-    return 0;
+    if (cm2_len < 9 && cm1_len >= 9) memcpy(ctx->color_matrix2, ctx->color_matrix1, 9 * sizeof(double));
+    else if (cm2_len < 9) {
+        memset(ctx->color_matrix2, 0, 9 * sizeof(double));
+        ctx->color_matrix2[0] = ctx->color_matrix2[4] = ctx->color_matrix2[8] = 1.0;
+    }
+
+    // Normalize forward matrices
+    if (fm1_len < 9 && fm2_len >= 9) memcpy(ctx->forward_matrix1, ctx->forward_matrix2, 9 * sizeof(double));
+    else if (fm1_len < 9) {
+        memset(ctx->forward_matrix1, 0, 9 * sizeof(double));
+        ctx->forward_matrix1[0] = ctx->forward_matrix1[4] = ctx->forward_matrix1[8] = 1.0;
+    }
+
+    if (fm2_len < 9 && fm1_len >= 9) memcpy(ctx->forward_matrix2, ctx->forward_matrix1, 9 * sizeof(double));
+    else if (fm2_len < 9) {
+        memset(ctx->forward_matrix2, 0, 9 * sizeof(double));
+        ctx->forward_matrix2[0] = ctx->forward_matrix2[4] = ctx->forward_matrix2[8] = 1.0;
+    }
+
+    if (!mr_json_get_string(metadata, "sensorArrangement", &sensor_arrangement)) {
+        mr_json_get_string(metadata, "sensorArrangment", &sensor_arrangement);
+    }
+
+    if (sensor_arrangement != NULL) {
+        parse_sensor_arrangment(&ctx->cfa_pattern, sensor_arrangement);
+    }
+
+done:
+    if (metadata != NULL) {
+        cJSON_Delete(metadata);
+    }
+
+    free(metadataJson);
+    return res;
 }
 
 //-----------------------------------------------------------------------------
@@ -760,106 +807,38 @@ int mr_read_frame_metadata(FILE *fd, mr_frame_data_t *frame_data)
 
     if (fread(pkt.data, pkt.size, 1, fd) == 1)
     {
-        jsmn_parser parser;
-        jsmntok_t tokens[256];      // We expect no more than 256 tokens
+        cJSON *metadata = cJSON_ParseWithLength((const char *)pkt.data, pkt.size);
+        const char *pixel_format = NULL;
 
-        jsmn_init(&parser);
-
-        int nb_tokens = jsmn_parse(&parser, (const char*)pkt.data, pkt.size, tokens, sizeof(tokens) / sizeof(tokens[0]));
-        if (nb_tokens < -1) {
+        if (metadata == NULL || !cJSON_IsObject(metadata)) {
             res = kMrErrorMetadata;
         }
-        else if (nb_tokens == -1) {
-            nb_tokens = 255;
-        }
         else {
-            nb_tokens--;   // Process key, value together
-        }
+            mr_json_get_int32(metadata, "iso", &frame_data->iso);
+            mr_json_get_int32(metadata, "width", &frame_data->width);
+            mr_json_get_int32(metadata, "height", &frame_data->height);
+            mr_json_get_int32(metadata, "originalWidth", &frame_data->original_width);
+            mr_json_get_int32(metadata, "originalHeight", &frame_data->original_height);
+            mr_json_get_int64(metadata, "exposureTime", &frame_data->exposure_time);
+            mr_json_get_int64(metadata, "recvdTimestampMs", &frame_data->timestamp);
+            mr_json_get_int16(metadata, "orientation", &frame_data->orientation);
+            mr_json_get_int16(metadata, "compressionType", &frame_data->compression_type);
 
-        const char *js = (char*)pkt.data;
-
-        int i = 0;
-        while (i < nb_tokens)
-        {
-            jsmntok_t *t = &tokens[i];
-
-            if (t->type == JSMN_STRING)
-            {
-                int len = t->end - t->start;
-
-                switch (len)
-                {
-                    case 3:
-                        if (STRING_EQ(js, t, len, "iso") == 0) {
-                            cpy_int32(&frame_data->iso, js, &tokens[++i]);
-                        }
-                        break;
-
-                    case 5:
-                        if (STRING_EQ(js, t, len, "width") == 0) {
-                            cpy_int32(&frame_data->width, js, &tokens[++i]);
-                        }
-                        break;
-
-                    case 6:
-                        if (STRING_EQ(js, t, len, "height") == 0) {
-                            cpy_int32(&frame_data->height, js, &tokens[++i]);
-                        }
-                        break;
-
-                    case 11:
-                        if (STRING_EQ(js, t, len, "orientation") == 0) {
-                            cpy_int16(&frame_data->orientation, js, &tokens[++i]);
-                        }
-                        else if (STRING_EQ(js, t, len, "pixelFormat") == 0)
-                        {
-                            char buf[6] = "";
-                            cpy_string(buf, 5, js, &tokens[++i]);
-                            if (strncmp(buf, "raw16", 5) == 0) {
-                                frame_data->stored_pixel_format = 16;
-                            }
-                        }
-                        break;
-
-                    case 12:
-                        if (STRING_EQ(js, t, len, "exposureTime") == 0) {
-                            cpy_int64(&frame_data->exposure_time, js, &tokens[++i]);
-                        }
-                        break;
-
-                    case 13:
-                        if (STRING_EQ(js, t, len, "originalWidth") == 0) {
-                            cpy_int32(&frame_data->original_width, js, &tokens[++i]);
-                        }
-                        else if (STRING_EQ(js, t, len, "asShotNeutral") == 0) {
-                            cpy_matrix(frame_data->as_shot_neutral, 3, js, tokens, &i);
-                        }
-                        break;
-
-                    case 14:
-                        if (STRING_EQ(js, t, len, "originalHeight") == 0) {
-                            cpy_int32(&frame_data->original_height, js, &tokens[++i]);
-                        }
-                        break;
-
-                    case 15:
-                        if (STRING_EQ(js, t, len, "compressionType") == 0) {
-                            cpy_int16(&frame_data->compression_type, js, &tokens[++i]);
-                        }
-                        break;
-
-                    case 16:
-                        if (STRING_EQ(js, t, len, "recvdTimestampMs") == 0) {
-                            cpy_int64(&frame_data->timestamp, js, &tokens[++i]);
-                        }
-                        break;
-
-                    default:
-                        break;
-                }
+            if (mr_json_copy_matrix(metadata, "asShotNeutral", frame_data->as_shot_neutral, 3) < 3) {
+                frame_data->as_shot_neutral[0] = 1.0;
+                frame_data->as_shot_neutral[1] = 1.0;
+                frame_data->as_shot_neutral[2] = 1.0;
             }
 
-            i++;
+            if (mr_json_get_string(metadata, "pixelFormat", &pixel_format) &&
+                strncmp(pixel_format, "raw16", 5) == 0)
+            {
+                frame_data->stored_pixel_format = 16;
+            }
+        }
+
+        if (metadata != NULL) {
+            cJSON_Delete(metadata);
         }
     }
     else {
