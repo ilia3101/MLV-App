@@ -34,6 +34,7 @@ protected:
 private:
     uint32_t m_totalTodoFrames;
     QDateTime m_startTime;
+    double m_avgSecsPerFrame;
 
 signals:
     void abortPressed( void );

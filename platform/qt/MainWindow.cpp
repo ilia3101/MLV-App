@@ -2851,9 +2851,6 @@ void MainWindow::startExportCdng(QString fileName)
         picAR[2] = 1; picAR[3] = 1;
     }
 
-    //Init DNG data struct
-    dngObject_t * cinemaDng = initDngObject( m_pMlvObject, m_codecProfile - 6, getFramerate(), picAR);
-
     //Render one single frame for raw correction init
     uint32_t frameSize = getMlvWidth( m_pMlvObject ) * getMlvHeight( m_pMlvObject ) * 3;
     uint16_t * imgBuffer;
@@ -2861,9 +2858,53 @@ void MainWindow::startExportCdng(QString fileName)
     getMlvProcessedFrame16( m_pMlvObject, 0, imgBuffer, QThread::idealThreadCount() );
     free( imgBuffer );
 
-    //Output frames loop
-    for( uint32_t frame = m_exportQueue.first()->cutIn() - 1; frame < m_exportQueue.first()->cutOut(); frame++ )
+    std::atomic<unsigned int> exportedFrames{ 0 };
+    std::atomic<unsigned int> exportError{ 0 };
+    std::atomic<unsigned int> errorFrame{ 0 };
+
+    QTimer* progressTimer = new QTimer(this);
+
+    connect(progressTimer, &QTimer::timeout, this, [=, &exportedFrames]() {
+        int done = exportedFrames.load();
+        m_pStatusDialog->ui->progressBar->setValue(done);
+        m_pStatusDialog->drawTimeFromToDoFrames(totalFrames - done);
+
+        // Check diskspace (only safe here, because inside the parallel loop, QMessageBox will cause crash)
+        checkDiskFull( pathName );
+    });
+
+    // No need for shorter interval than 500 ms (m_pStatusDialog still depends on qApp->processEvents())
+    progressTimer->start(500);
+
+    uint32_t start = m_exportQueue.first()->cutIn() - 1;
+    uint32_t end = m_exportQueue.first()->cutOut();
+
+    /*
+     * Frame cost is mostly uniform, so schedule(static, 1)
+     * could be used to achieve a more even, round-robin
+     * distribution of frames across threads:
+     *
+     * T0 → 0, 4, 8, 12, ...
+     * T1 → 1, 5, 9, 13, ...
+     * T2 → 2, 6, 10, 14, ...
+     * T3 → 3, 7, 11, 15, ...
+     * ...
+     * 
+     * However, schedule(dynamic) is used to improve load
+     * balancing in case some frames occasionally take longer
+     * to process or some CPU cores are not fully available.
+    */
+    #pragma omp parallel for schedule(dynamic)
+    for( uint32_t frame = start; frame < end; frame++ )
     {
+        if( exportError.load() || m_exportAbortPressed)
+        {
+            continue;
+        }
+        
+        //Init DNG data struct
+        dngObject_t * cinemaDng = initDngObject( m_pMlvObject, m_codecProfile - 6, getFramerate(), picAR);
+
         QString dngName;
         if( m_codecOption == CODEC_CNDG_DEFAULT ) dngName = dngName.append( "%1_%2.dng" )
                                                                                 .arg( fileName )
@@ -2882,46 +2923,53 @@ void MainWindow::startExportCdng(QString fileName)
 #ifdef Q_OS_UNIX
         QString properties_fn = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
         properties_fn.append("/mlv-dng-params.txt");
-        if( saveDngFrame( m_pMlvObject, cinemaDng, frame, filePathNr.toUtf8().data(), properties_fn.toUtf8().data() ) )
+        int error = saveDngFrame( m_pMlvObject, cinemaDng, frame, filePathNr.toUtf8().data(), properties_fn.toUtf8().data() );
 #else
         QString properties_fn = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
         properties_fn.append("\\mlv-dng-params.txt");
-        if( saveDngFrame( m_pMlvObject, cinemaDng, frame, filePathNr.toLatin1().data(), properties_fn.toLatin1().data() ) )
+        int error = saveDngFrame( m_pMlvObject, cinemaDng, frame, filePathNr.toLatin1().data(), properties_fn.toLatin1().data() );
 #endif
+
+        if( error )
         {
-            m_pStatusDialog->close();
-            qApp->processEvents();
-            int ret = QMessageBox::critical( this,
-                                             tr( "MLV App - Export file error" ),
-                                             tr( "Could not save: %1\nHow do you like to proceed?" ).arg( dngName ),
-                                             tr( "Skip frame" ),
-                                             tr( "Abort current export" ),
-                                             tr( "Abort batch export" ),
-                                             0, 2 );
-            if( ret == 2 )
-            {
-                exportAbort();
-            }
-            if( ret > 0 )
-            {
-                break;
-            }
+            exportError = 1;
+            errorFrame = getMlvFrameNumber( m_pMlvObject, frame );
+        }
+        else
+        {
+            exportedFrames++;
         }
 
-        //Set Status
-        m_pStatusDialog->ui->progressBar->setValue( frame - ( m_exportQueue.first()->cutIn() - 1 ) + 1 );
-        m_pStatusDialog->ui->progressBar->repaint();
-        m_pStatusDialog->drawTimeFromToDoFrames( totalFrames - frame + ( m_exportQueue.first()->cutIn() - 1 ) - 1 );
-        qApp->processEvents();
+        //Free DNG data struct
+        freeDngObject( cinemaDng );
 
-        //Check diskspace
-        checkDiskFull( filePathNr );
-        //Abort pressed? -> End the loop
-        if( m_exportAbortPressed ) break;
+        // Just to be safe, so QT won't crash. But there is probably a better way to make UI responsive.
+        #pragma omp critical
+        {
+            qApp->processEvents();
+        }
     }
 
-    //Free DNG data struct
-    freeDngObject( cinemaDng );
+    progressTimer->stop();
+    progressTimer->deleteLater();
+
+    if( exportError.load() )
+    {
+        m_pStatusDialog->close();
+
+        int dialogResult = QMessageBox::critical( this,
+                                         tr( "%1 - Export file error" ).arg( APPNAME ),
+                                         tr( "Error exporting frame %1 from %2 clip.\nHow do you like to proceed?" )
+                                            .arg( errorFrame.load() ).arg( fileName ),
+                                         tr( "Abort current export" ),
+                                         tr( "Abort batch export" ),
+                                         0, 1 );
+
+        if( dialogResult )
+        {
+            exportAbort();
+        }
+    }
 
     //Enable GUI drawing
     m_dontDraw = false;
