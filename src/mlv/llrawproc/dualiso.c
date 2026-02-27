@@ -29,6 +29,7 @@
 #include "wirth.h"
 #include <pthread.h>
 #include "../../debayer/debayer.h"
+#include "librtprocesswrapper.h"
 
 #define EV_RESOLUTION 65536
 #ifndef M_PI
@@ -1389,8 +1390,16 @@ static inline void interpolate_wrapper(struct raw_info raw_info, uint32_t * raw_
         }
     }
 
-    /* The interp_method var can be used to try different demosaicing algorithms in the future */
-    amaze_interpolate(rawData, red, green, blue, w, h, threads);
+    switch (interp_method)
+    {
+        case 0:
+            amaze_interpolate(rawData, red, green, blue, w, h, threads);
+            break;
+
+        case 2:
+            lrtpRcdDemosaic(rawData, red, green, blue, w, h);
+            break;
+    }
 
     /* undo green channel scaling and clamp the other channels */
     #pragma omp parallel for if(USE_OMP) collapse(2) schedule(static)

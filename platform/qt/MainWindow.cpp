@@ -5738,6 +5738,8 @@ void MainWindow::setToolButtonDualIsoInterpolation(int index)
         break;
     case 1: ui->toolButtonDualIsoInterpolationMean->setChecked( true );
         break;
+    case 2: ui->toolButtonDualIsoInterpolationRCD->setChecked( true );
+        break;
     default: break;
     }
     if( actualize ) toolButtonDualIsoInterpolationChanged();
@@ -5902,7 +5904,8 @@ int MainWindow::toolButtonDualIsoCurrentIndex()
 int MainWindow::toolButtonDualIsoInterpolationCurrentIndex()
 {
     if( ui->toolButtonDualIsoInterpolationAmaze->isChecked() ) return 0;
-    else return 1;
+    if( ui->toolButtonDualIsoInterpolationMean->isChecked() ) return 1;
+    else return 2;
 }
 
 //Get toolbutton index of dual iso alias map
