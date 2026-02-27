@@ -241,7 +241,9 @@ SOURCES += \
     ../../src/librtprocess/src/postprocess/hilite_recon.cc \
     ../../src/librtprocess/src/preprocess/CA_correct.cc \
     ../../src/librtprocess/src/include/librtprocesswrapper.cpp \
-    ../../src/debayer/ahdOld.c
+    ../../src/debayer/ahdOld.c \
+    ../../src/batch/BatchContext.cpp \
+    ../../src/batch/BatchPrompts.cpp
 
 INCLUDEPATH += ../../src/librtprocess/src/include/
 
@@ -368,7 +370,10 @@ HEADERS += MainWindow.h \
     ../../src/librtprocess/src/include/xtranshelper.h \
     ../../src/librtprocess/src/include/librtprocesswrapper.h \
     ../../src/librtprocess/src/include/sleef.h \
-    ../../src/librtprocess/src/include/sleefsseavx.h
+    ../../src/librtprocess/src/include/sleefsseavx.h \
+    ../../src/batch/BatchTypes.h \
+    ../../src/batch/BatchContext.h \
+    ../../src/batch/BatchPrompts.h
 
 macx: HEADERS += \
     ../cocoa/avf_lib/avencoder.h \

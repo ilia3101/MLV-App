@@ -1,0 +1,19 @@
+#include "BatchContext.h"
+
+/* Static member definitions */
+bool BatchContext::s_batchMode = false;
+bool BatchContext::s_skipErrors = false;
+bool BatchContext::s_verbose = false;
+QString BatchContext::s_logPath;
+
+void BatchContext::setBatchMode(bool enabled) { s_batchMode = enabled; }
+bool BatchContext::isBatchMode() { return s_batchMode; }
+
+void BatchContext::setSkipErrors(bool skip) { s_skipErrors = skip; }
+bool BatchContext::skipErrors() { return s_skipErrors; }
+
+void BatchContext::setVerbose(bool verbose) { s_verbose = verbose; }
+bool BatchContext::isVerbose() { return s_verbose; }
+
+void BatchContext::setLogPath(const QString &path) { s_logPath = path; }
+QString BatchContext::logPath() { return s_logPath; }
