@@ -22,6 +22,9 @@ public:
     static void setLogPath(const QString &path);
     static QString logPath();
 
+    static void setReceiptPath(const QString &path);
+    static QString receiptPath();
+
 private:
     BatchContext() = delete; /* Pure static — no instances */
 
@@ -29,6 +32,7 @@ private:
     static bool s_skipErrors;
     static bool s_verbose;
     static QString s_logPath;
+    static QString s_receiptPath;
 };
 
 #endif // BATCHCONTEXT_H

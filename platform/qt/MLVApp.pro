@@ -245,7 +245,8 @@ SOURCES += \
     ../../src/batch/BatchContext.cpp \
     ../../src/batch/BatchPrompts.cpp \
     ../../src/batch/BatchRunner.cpp \
-    ../../src/batch/BatchLogger.cpp
+    ../../src/batch/BatchLogger.cpp \
+    ../../src/batch/ReceiptLoader.cpp
 
 INCLUDEPATH += ../../src/librtprocess/src/include/
 INCLUDEPATH += $$PWD/../../src
@@ -378,7 +379,8 @@ HEADERS += MainWindow.h \
     ../../src/batch/BatchContext.h \
     ../../src/batch/BatchPrompts.h \
     ../../src/batch/BatchRunner.h \
-    ../../src/batch/BatchLogger.h
+    ../../src/batch/BatchLogger.h \
+    ../../src/batch/ReceiptLoader.h
 
 macx: HEADERS += \
     ../cocoa/avf_lib/avencoder.h \

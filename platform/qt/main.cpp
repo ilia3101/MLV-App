@@ -75,6 +75,12 @@ static int runBatch(QCoreApplication &app)
         QStringLiteral("Enable detailed per-frame logging."));
     parser.addOption(verboseOpt);
 
+    QCommandLineOption receiptOpt(
+        QStringList() << QStringLiteral("r") << QStringLiteral("receipt"),
+        QStringLiteral("Apply .marxml receipt settings to export."),
+        QStringLiteral("file"));
+    parser.addOption(receiptOpt);
+
     parser.process(app);
 
     /* Init log file mirror as early as possible so that --help and
@@ -99,16 +105,18 @@ static int runBatch(QCoreApplication &app)
         return 2;
     }
 
-    QString inputPath  = parser.value(inputOpt);
-    QString outputPath = parser.value(outputOpt);
-    bool skipErrors    = parser.isSet(skipErrorsOpt);
-    bool verbose       = parser.isSet(verboseOpt);
+    QString inputPath   = parser.value(inputOpt);
+    QString outputPath  = parser.value(outputOpt);
+    bool skipErrors     = parser.isSet(skipErrorsOpt);
+    bool verbose        = parser.isSet(verboseOpt);
+    QString receiptPath = parser.value(receiptOpt);
 
     /* Store in BatchContext for global access */
     BatchContext::setBatchMode(true);
     BatchContext::setSkipErrors(skipErrors);
     BatchContext::setVerbose(verbose);
     BatchContext::setLogPath(logPath);
+    BatchContext::setReceiptPath(receiptPath);
 
     int exitCode = BatchRunner::run(inputPath, outputPath);
     BatchLogger::shutdown();

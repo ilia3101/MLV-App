@@ -1,6 +1,7 @@
 #include "BatchRunner.h"
 #include "BatchContext.h"
 #include "BatchLogger.h"
+#include "ReceiptLoader.h"
 
 #include <QDir>
 #include <QFileInfo>
@@ -12,11 +13,32 @@
 #include "../../platform/qt/MainWindow.h"
 #include "../../platform/qt/ExportSettingsDialog.h"
 #include "../../platform/qt/StretchFactors.h"
+#include "../../platform/qt/ReceiptSettings.h"
 
 int BatchRunner::run(const QString &inputPath, const QString &outputPath)
 {
     QElapsedTimer totalTimer;
     totalTimer.start();
+
+    /* --- Receipt loading (Phase 6A: parse + print, do NOT apply) --- */
+    QString receiptPath = BatchContext::receiptPath();
+    ReceiptSettings receipt;  /* default-constructed */
+
+    if( !receiptPath.isEmpty() )
+    {
+        QString errMsg;
+        if( !ReceiptLoader::loadFromFile(receiptPath, &receipt, &errMsg) )
+        {
+            BatchLogger::err(QStringLiteral("[BATCH] ERROR: %1\n").arg(errMsg));
+            return 5;
+        }
+        BatchLogger::out(QStringLiteral("[BATCH] Receipt loaded: %1\n").arg(receiptPath));
+        ReceiptLoader::printCdngSettings(&receipt);
+    }
+    else
+    {
+        BatchLogger::out(QStringLiteral("[BATCH] Using default settings (no --receipt provided)\n"));
+    }
 
     /* Collect list of .mlv files to process */
     QStringList mlvFiles;
