@@ -8,6 +8,7 @@
 #include "MainWindow.h"
 #include "MyApplication.h"
 #include "../../src/batch/BatchContext.h"
+#include "../../src/batch/BatchRunner.h"
 
 #include <QCommandLineParser>
 #include <QTextStream>
@@ -91,16 +92,7 @@ static int runBatch(QCoreApplication &app)
     BatchContext::setVerbose(verbose);
     BatchContext::setLogPath(logPath);
 
-    out << QStringLiteral("[BATCH] START input=%1 output=%2 skip-errors=%3\n")
-               .arg(inputPath,
-                    outputPath,
-                    skipErrors ? QStringLiteral("true")
-                               : QStringLiteral("false"));
-    out.flush();
-
-    /* TODO Phase 5: wire BatchRunner here.
-     * For now, stub — print and exit 0. */
-    return 0;
+    return BatchRunner::run(inputPath, outputPath);
 }
 
 int main(int argc, char *argv[])

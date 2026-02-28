@@ -2,14 +2,16 @@
 #define BATCHPROMPTS_H
 
 #include <QString>
+#include <functional>
 
-/* Helper class for replacing QMessageBox dialogs in batch mode.
- * In GUI mode, the original QMessageBox calls remain active.
- * In batch mode, these static methods decide skip-or-abort based on
- * BatchContext::skipErrors() and log the decision to stdout.
+/* Helper class for dialog replacement in both batch and GUI mode.
  *
- * Phase 4 will provide the real implementation.
- * For now, both methods are stubs that return false (abort). */
+ * Batch mode: logs to stderr, returns based on BatchContext::skipErrors().
+ * GUI mode:   shows the original QMessageBox with 3 buttons
+ *             (Skip frame / Abort current export / Abort batch export).
+ *
+ * The "Abort batch export" button in GUI mode invokes an optional
+ * callback set via setAbortBatchCallback(). */
 class BatchPrompts
 {
 public:
@@ -24,8 +26,14 @@ public:
     static bool shouldContinue(const QString &context,
                                const QString &message);
 
+    /* Set a callback invoked when the GUI user clicks "Abort batch export".
+     * MainWindow wires this in its constructor to call exportAbort(). */
+    static void setAbortBatchCallback(std::function<void()> fn);
+
 private:
     BatchPrompts() = delete; /* Pure static — no instances */
+
+    static std::function<void()> s_abortBatchFn;
 };
 
 #endif // BATCHPROMPTS_H
