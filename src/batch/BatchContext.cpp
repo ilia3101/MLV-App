@@ -5,6 +5,7 @@ bool BatchContext::s_batchMode = false;
 bool BatchContext::s_skipErrors = false;
 bool BatchContext::s_verbose = false;
 bool BatchContext::s_useDefaultReceipt = false;
+bool BatchContext::s_resumeEnabled = false;
 QString BatchContext::s_logPath;
 QString BatchContext::s_receiptPath;
 
@@ -25,3 +26,6 @@ QString BatchContext::receiptPath() { return s_receiptPath; }
 
 void BatchContext::setUseDefaultReceipt(bool use) { s_useDefaultReceipt = use; }
 bool BatchContext::useDefaultReceipt() { return s_useDefaultReceipt; }
+
+void BatchContext::setResumeEnabled(bool enabled) { s_resumeEnabled = enabled; }
+bool BatchContext::resumeEnabled() { return s_resumeEnabled; }

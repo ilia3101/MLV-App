@@ -28,6 +28,9 @@ public:
     static void setUseDefaultReceipt(bool use);
     static bool useDefaultReceipt();
 
+    static void setResumeEnabled(bool enabled);
+    static bool resumeEnabled();
+
 private:
     BatchContext() = delete; /* Pure static — no instances */
 
@@ -35,6 +38,7 @@ private:
     static bool s_skipErrors;
     static bool s_verbose;
     static bool s_useDefaultReceipt;
+    static bool s_resumeEnabled;
     static QString s_logPath;
     static QString s_receiptPath;
 };

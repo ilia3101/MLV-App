@@ -86,6 +86,11 @@ static int runBatch(QCoreApplication &app)
         QStringLiteral("Use the GUI-configured default receipt."));
     parser.addOption(defaultReceiptOpt);
 
+    QCommandLineOption resumeOpt(
+        QStringLiteral("resume"),
+        QStringLiteral("Skip clips whose DNG output already matches expected frame count."));
+    parser.addOption(resumeOpt);
+
     parser.process(app);
 
     /* Init log file mirror as early as possible so that --help and
@@ -117,6 +122,8 @@ static int runBatch(QCoreApplication &app)
     QString receiptPath     = parser.value(receiptOpt);
     bool useDefaultReceipt  = parser.isSet(defaultReceiptOpt);
 
+    bool resume         = parser.isSet(resumeOpt);
+
     /* Store in BatchContext for global access */
     BatchContext::setBatchMode(true);
     BatchContext::setSkipErrors(skipErrors);
@@ -124,6 +131,7 @@ static int runBatch(QCoreApplication &app)
     BatchContext::setLogPath(logPath);
     BatchContext::setReceiptPath(receiptPath);
     BatchContext::setUseDefaultReceipt(useDefaultReceipt);
+    BatchContext::setResumeEnabled(resume);
 
     int exitCode = BatchRunner::run(inputPath, outputPath);
     BatchLogger::shutdown();

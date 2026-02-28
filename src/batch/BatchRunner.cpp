@@ -157,10 +157,12 @@ int BatchRunner::run(const QString &inputPath, const QString &outputPath)
         }
     }
 
-    BatchLogger::out(QStringLiteral("[BATCH] START input=%1 output=%2 skip-errors=%3\n")
+    BatchLogger::out(QStringLiteral("[BATCH] START input=%1 output=%2 skip-errors=%3 resume=%4\n")
                .arg( inputPath, outputPath,
                      BatchContext::skipErrors() ? QStringLiteral("true")
-                                               : QStringLiteral("false") ));
+                                               : QStringLiteral("false"),
+                     BatchContext::resumeEnabled() ? QStringLiteral("true")
+                                                   : QStringLiteral("false") ));
 
     int succeeded = 0;
     int failed = 0;
@@ -245,28 +247,142 @@ ProcessResult BatchRunner::exportSingleFile(const QString &mlvPath,
     uint32_t totalFrames = getMlvFrames( mlvObject );
     BatchLogger::out(QStringLiteral("[BATCH] FILE %1 frames=%2\n").arg( baseName ).arg( totalFrames ));
 
-    /* ---- Phase 6B: Apply receipt settings to the MLV pipeline ----
-     * This calls the same C API functions the GUI's setSliders() triggers.
-     * Works with both default-constructed receipts (no-op for most settings)
-     * and receipts loaded from .marxml files. */
-    ReceiptApplier::applyToMlv( receipt, mlvObject, processingObject );
-
-    /* Print runtime FINGERPRINT — proves settings reached the pipeline */
-    ReceiptApplier::printFingerprint( mlvObject, processingObject );
-
     /* ---- Derive export parameters from receipt ----
      * cutIn/cutOut: use receipt values if set, else export all frames.
-     * stretchX/Y: use receipt values if set, else no stretch. */
+     * stretchX/Y: use receipt values if set, else no stretch.
+     * NOTE: These must be computed BEFORE resume logic (which adjusts cutIn)
+     * and BEFORE applyToMlv (which may mutate receipt fields). */
     uint32_t cutIn  = receipt->cutIn();
     uint32_t cutOut = receipt->cutOut();
     if( cutIn == 0 )  cutIn  = 1;
     if( cutOut == 0 || cutOut > totalFrames ) cutOut = totalFrames;
+
+    uint32_t effectiveCutIn = cutIn;  /* may be adjusted by resume */
 
     double stretchX = receipt->stretchFactorX();
     double stretchY = receipt->stretchFactorY();
     /* -1 = uninitialized (never loaded); use no-stretch defaults */
     if( stretchX <= 0 ) stretchX = STRETCH_H_100;
     if( stretchY <= 0 ) stretchY = STRETCH_V_100;
+
+    /* ---- Resume logic (--resume flag) ----
+     * Scan the output subfolder for existing DNG files.  If the clip is
+     * already fully exported, skip it entirely (exit 0, no file deletion).
+     * If partially exported, advance cutIn past the last completed frame. */
+    if( BatchContext::resumeEnabled() )
+    {
+        QString subFolder = outputRoot + QStringLiteral("/") + baseName;
+        QDir subDir(subFolder);
+
+        if( subDir.exists() )
+        {
+            /* Scan for clipBaseName_NNNNNN.dng files */
+            QStringList dngFilter;
+            dngFilter << baseName + QStringLiteral("_*.dng");
+            QFileInfoList dngFiles = subDir.entryInfoList( dngFilter, QDir::Files );
+
+            if( !dngFiles.isEmpty() )
+            {
+                /* Find the highest numeric suffix among existing DNG files.
+                 * Filename pattern: clipBaseName_NNNNNN.dng
+                 * We extract NNNNNN from each matching file. */
+                uint32_t highestSuffix = 0;
+                int validCount = 0;
+                QString prefix = baseName + QStringLiteral("_");
+
+                for( const QFileInfo &fi : dngFiles )
+                {
+                    QString fn = fi.completeBaseName(); /* clipBaseName_NNNNNN */
+                    if( !fn.startsWith(prefix) ) continue;
+                    QString numStr = fn.mid( prefix.length() );
+                    bool ok = false;
+                    uint32_t num = numStr.toUInt( &ok );
+                    if( ok )
+                    {
+                        validCount++;
+                        if( num > highestSuffix ) highestSuffix = num;
+                    }
+                }
+
+                if( validCount > 0 )
+                {
+                    /* Map suffix → frame_index by scanning video_index[].
+                     * Do NOT assume suffix == frame_index.  The MLV file's
+                     * VIDF blocks store arbitrary frame_number values. */
+                    int resumeFrameIndex = -1;
+                    for( uint32_t fi = 0; fi < totalFrames; fi++ )
+                    {
+                        if( getMlvFrameNumber( mlvObject, fi ) == highestSuffix )
+                        {
+                            resumeFrameIndex = (int)fi;
+                            break;
+                        }
+                    }
+
+                    if( resumeFrameIndex >= 0 )
+                    {
+                        /* Convert to 1-based cutIn: next frame after last completed */
+                        uint32_t newCutIn = (uint32_t)resumeFrameIndex + 2; /* +1 for 0→1-based, +1 for next */
+
+                        if( newCutIn > cutOut )
+                        {
+                            /* Already complete — do NOT delete files, just log and skip */
+                            BatchLogger::out(QStringLiteral("[BATCH] RESUME %1 already_complete existing=%2 highestSuffix=%3\n")
+                                       .arg( baseName ).arg( validCount ).arg( highestSuffix ));
+                            result.success = true;
+                            result.framesExported = 0;
+                            result.framesSkipped = cutOut - cutIn + 1;
+                            result.elapsedSeconds = 0.0;
+                            freeMlvObject( mlvObject );
+                            freeProcessingObject( processingObject );
+                            return result;
+                        }
+
+                        /* Clamp: never go below the receipt's original cutIn */
+                        if( newCutIn > cutIn )
+                        {
+                            effectiveCutIn = newCutIn;
+                            BatchLogger::out(QStringLiteral("[BATCH] RESUME %1 advancing cutIn=%2 (was %3) existing=%4 highestSuffix=%5\n")
+                                       .arg( baseName ).arg( effectiveCutIn ).arg( cutIn )
+                                       .arg( validCount ).arg( highestSuffix ));
+                        }
+                        else
+                        {
+                            BatchLogger::out(QStringLiteral("[BATCH] RESUME %1 no_advance highestSuffix=%2 maps_to_frame=%3 below_cutIn=%4\n")
+                                       .arg( baseName ).arg( highestSuffix )
+                                       .arg( resumeFrameIndex ).arg( cutIn ));
+                        }
+                    }
+                    else
+                    {
+                        /* Suffix not found in video_index — files may be from a different clip.
+                         * Play it safe: export from original cutIn (overwrite). */
+                        BatchLogger::out(QStringLiteral("[BATCH] RESUME %1 suffix_not_found highestSuffix=%2 exporting_from=%3\n")
+                                   .arg( baseName ).arg( highestSuffix ).arg( cutIn ));
+                    }
+                }
+            }
+            else
+            {
+                BatchLogger::out(QStringLiteral("[BATCH] RESUME %1 no_existing_frames\n").arg( baseName ));
+            }
+        }
+        else
+        {
+            BatchLogger::out(QStringLiteral("[BATCH] RESUME %1 no_output_folder\n").arg( baseName ));
+        }
+    }
+
+    /* ---- Apply receipt settings to the MLV pipeline ----
+     * This calls the same C API functions the GUI's setSliders() triggers.
+     * Works with both default-constructed receipts (no-op for most settings)
+     * and receipts loaded from .marxml files.
+     * Must happen AFTER resume logic (which needs raw mlvObject state for
+     * video_index scanning) but BEFORE the export call. */
+    ReceiptApplier::applyToMlv( receipt, mlvObject, processingObject );
+
+    /* Print runtime FINGERPRINT — proves settings reached the pipeline */
+    ReceiptApplier::printFingerprint( mlvObject, processingObject );
 
     /* Export CDNG sequence */
     result = MainWindow::exportCdngSequence(
@@ -275,7 +391,7 @@ ProcessResult BatchRunner::exportSingleFile(const QString &mlvPath,
         baseName,
         CODEC_CDNG,           /* uncompressed CDNG */
         CODEC_CNDG_DEFAULT,   /* standard folder/file naming */
-        cutIn,                /* from receipt or 1 */
+        effectiveCutIn,       /* from receipt, possibly advanced by --resume */
         cutOut,               /* from receipt or totalFrames */
         stretchX,             /* from receipt or STRETCH_H_100 */
         stretchY,             /* from receipt or STRETCH_V_100 */
