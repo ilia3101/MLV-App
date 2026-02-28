@@ -25,12 +25,16 @@ public:
     static void setReceiptPath(const QString &path);
     static QString receiptPath();
 
+    static void setUseDefaultReceipt(bool use);
+    static bool useDefaultReceipt();
+
 private:
     BatchContext() = delete; /* Pure static — no instances */
 
     static bool s_batchMode;
     static bool s_skipErrors;
     static bool s_verbose;
+    static bool s_useDefaultReceipt;
     static QString s_logPath;
     static QString s_receiptPath;
 };

@@ -7,6 +7,7 @@
 #include <QFileInfo>
 #include <QThread>
 #include <QElapsedTimer>
+#include <QSettings>
 
 /* MainWindow.h gives us the static exportCdngSequence helper
  * and pulls in mlv_include.h (C API) transitively. */
@@ -20,24 +21,93 @@ int BatchRunner::run(const QString &inputPath, const QString &outputPath)
     QElapsedTimer totalTimer;
     totalTimer.start();
 
-    /* --- Receipt loading (Phase 6A: parse + print, do NOT apply) --- */
+    /* --- Receipt resolution (4-way priority) ---
+     * 1. --receipt <file>       → explicit, exit 5 on failure
+     * 2. --default-receipt      → GUI default, exit 5 if not configured/missing
+     * 3. auto-detect            → GUI default if enabled in QSettings, warn on missing
+     * 4. none                   → use defaults */
     QString receiptPath = BatchContext::receiptPath();
+    bool useDefault     = BatchContext::useDefaultReceipt();
     ReceiptSettings receipt;  /* default-constructed */
 
     if( !receiptPath.isEmpty() )
     {
+        /* Priority 1: explicit --receipt <file> (wins over --default-receipt) */
         QString errMsg;
         if( !ReceiptLoader::loadFromFile(receiptPath, &receipt, &errMsg) )
         {
             BatchLogger::err(QStringLiteral("[BATCH] ERROR: %1\n").arg(errMsg));
             return 5;
         }
-        BatchLogger::out(QStringLiteral("[BATCH] Receipt loaded: %1\n").arg(receiptPath));
+        BatchLogger::out(QStringLiteral("[BATCH] RECEIPT source=explicit path=%1\n").arg(receiptPath));
+        ReceiptLoader::printCdngSettings(&receipt);
+    }
+    else if( useDefault )
+    {
+        /* Priority 2: --default-receipt flag — read GUI's QSettings */
+        QSettings set( QSettings::UserScope,
+                       QStringLiteral("magiclantern.MLVApp"),
+                       QStringLiteral("MLVApp") );
+        QString defaultPath = set.value( QStringLiteral("defaultReceiptFileName"),
+                                         QDir::homePath() ).toString();
+        bool defaultEnabled = set.value( QStringLiteral("defaultReceiptEnabled"),
+                                         false ).toBool();
+
+        if( !defaultEnabled || defaultPath.isEmpty() || defaultPath == QDir::homePath() )
+        {
+            BatchLogger::err(QStringLiteral("[BATCH] ERROR: --default-receipt requested but no default receipt configured in GUI\n"));
+            return 5;
+        }
+
+        QString errMsg;
+        if( !ReceiptLoader::loadFromFile(defaultPath, &receipt, &errMsg) )
+        {
+            BatchLogger::err(QStringLiteral("[BATCH] ERROR: %1\n").arg(errMsg));
+            return 5;
+        }
+        BatchLogger::out(QStringLiteral("[BATCH] RECEIPT source=default path=%1\n").arg(defaultPath));
         ReceiptLoader::printCdngSettings(&receipt);
     }
     else
     {
-        BatchLogger::out(QStringLiteral("[BATCH] Using default settings (no --receipt provided)\n"));
+        /* Priority 3: auto-detect — check GUI QSettings silently */
+        QSettings set( QSettings::UserScope,
+                       QStringLiteral("magiclantern.MLVApp"),
+                       QStringLiteral("MLVApp") );
+        bool defaultEnabled = set.value( QStringLiteral("defaultReceiptEnabled"),
+                                         false ).toBool();
+
+        if( defaultEnabled )
+        {
+            QString defaultPath = set.value( QStringLiteral("defaultReceiptFileName"),
+                                             QDir::homePath() ).toString();
+
+            if( !defaultPath.isEmpty() && defaultPath != QDir::homePath()
+                && QFileInfo::exists(defaultPath) )
+            {
+                QString errMsg;
+                if( ReceiptLoader::loadFromFile(defaultPath, &receipt, &errMsg) )
+                {
+                    BatchLogger::out(QStringLiteral("[BATCH] RECEIPT source=auto-default path=%1\n").arg(defaultPath));
+                    ReceiptLoader::printCdngSettings(&receipt);
+                }
+                else
+                {
+                    BatchLogger::err(QStringLiteral("[BATCH] WARNING default receipt failed to parse: %1 (using defaults)\n").arg(errMsg));
+                    BatchLogger::out(QStringLiteral("[BATCH] RECEIPT source=none (using defaults)\n"));
+                }
+            }
+            else
+            {
+                BatchLogger::err(QStringLiteral("[BATCH] WARNING default receipt missing: %1 (using defaults)\n").arg(defaultPath));
+                BatchLogger::out(QStringLiteral("[BATCH] RECEIPT source=none (using defaults)\n"));
+            }
+        }
+        else
+        {
+            /* Priority 4: no receipt at all */
+            BatchLogger::out(QStringLiteral("[BATCH] RECEIPT source=none (using defaults)\n"));
+        }
     }
 
     /* Collect list of .mlv files to process */

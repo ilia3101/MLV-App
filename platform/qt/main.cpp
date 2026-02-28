@@ -81,6 +81,11 @@ static int runBatch(QCoreApplication &app)
         QStringLiteral("file"));
     parser.addOption(receiptOpt);
 
+    QCommandLineOption defaultReceiptOpt(
+        QStringLiteral("default-receipt"),
+        QStringLiteral("Use the GUI-configured default receipt."));
+    parser.addOption(defaultReceiptOpt);
+
     parser.process(app);
 
     /* Init log file mirror as early as possible so that --help and
@@ -109,7 +114,8 @@ static int runBatch(QCoreApplication &app)
     QString outputPath  = parser.value(outputOpt);
     bool skipErrors     = parser.isSet(skipErrorsOpt);
     bool verbose        = parser.isSet(verboseOpt);
-    QString receiptPath = parser.value(receiptOpt);
+    QString receiptPath     = parser.value(receiptOpt);
+    bool useDefaultReceipt  = parser.isSet(defaultReceiptOpt);
 
     /* Store in BatchContext for global access */
     BatchContext::setBatchMode(true);
@@ -117,6 +123,7 @@ static int runBatch(QCoreApplication &app)
     BatchContext::setVerbose(verbose);
     BatchContext::setLogPath(logPath);
     BatchContext::setReceiptPath(receiptPath);
+    BatchContext::setUseDefaultReceipt(useDefaultReceipt);
 
     int exitCode = BatchRunner::run(inputPath, outputPath);
     BatchLogger::shutdown();
