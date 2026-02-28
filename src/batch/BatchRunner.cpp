@@ -2,6 +2,7 @@
 #include "BatchContext.h"
 #include "BatchLogger.h"
 #include "ReceiptLoader.h"
+#include "ReceiptApplier.h"
 
 #include <QDir>
 #include <QFileInfo>
@@ -166,7 +167,7 @@ int BatchRunner::run(const QString &inputPath, const QString &outputPath)
 
     for( const QString &mlvPath : mlvFiles )
     {
-        ProcessResult res = exportSingleFile( mlvPath, outputPath );
+        ProcessResult res = exportSingleFile( mlvPath, outputPath, &receipt );
 
         QString baseName = QFileInfo(mlvPath).completeBaseName();
         if( res.success )
@@ -209,7 +210,8 @@ int BatchRunner::run(const QString &inputPath, const QString &outputPath)
 }
 
 ProcessResult BatchRunner::exportSingleFile(const QString &mlvPath,
-                                            const QString &outputRoot)
+                                            const QString &outputRoot,
+                                            ReceiptSettings *receipt)
 {
     ProcessResult result;
     QString baseName = QFileInfo(mlvPath).completeBaseName();
@@ -243,24 +245,42 @@ ProcessResult BatchRunner::exportSingleFile(const QString &mlvPath,
     uint32_t totalFrames = getMlvFrames( mlvObject );
     BatchLogger::out(QStringLiteral("[BATCH] FILE %1 frames=%2\n").arg( baseName ).arg( totalFrames ));
 
-    /* Export using defaults:
-     * - codecProfile = CODEC_CDNG (uncompressed)
-     * - codecOption = CODEC_CNDG_DEFAULT (standard naming)
-     * - cutIn = 1, cutOut = totalFrames (all frames)
-     * - stretchX/Y = 1.0 (no stretch)
-     * - audioExport = true, rawFixEnabled = true */
+    /* ---- Phase 6B: Apply receipt settings to the MLV pipeline ----
+     * This calls the same C API functions the GUI's setSliders() triggers.
+     * Works with both default-constructed receipts (no-op for most settings)
+     * and receipts loaded from .marxml files. */
+    ReceiptApplier::applyToMlv( receipt, mlvObject, processingObject );
+
+    /* Print runtime FINGERPRINT — proves settings reached the pipeline */
+    ReceiptApplier::printFingerprint( mlvObject, processingObject );
+
+    /* ---- Derive export parameters from receipt ----
+     * cutIn/cutOut: use receipt values if set, else export all frames.
+     * stretchX/Y: use receipt values if set, else no stretch. */
+    uint32_t cutIn  = receipt->cutIn();
+    uint32_t cutOut = receipt->cutOut();
+    if( cutIn == 0 )  cutIn  = 1;
+    if( cutOut == 0 || cutOut > totalFrames ) cutOut = totalFrames;
+
+    double stretchX = receipt->stretchFactorX();
+    double stretchY = receipt->stretchFactorY();
+    /* -1 = uninitialized (never loaded); use no-stretch defaults */
+    if( stretchX <= 0 ) stretchX = STRETCH_H_100;
+    if( stretchY <= 0 ) stretchY = STRETCH_V_100;
+
+    /* Export CDNG sequence */
     result = MainWindow::exportCdngSequence(
         mlvObject,
         outputRoot,
         baseName,
         CODEC_CDNG,           /* uncompressed CDNG */
         CODEC_CNDG_DEFAULT,   /* standard folder/file naming */
-        1,                    /* cutIn: first frame */
-        totalFrames,          /* cutOut: last frame */
-        STRETCH_H_100,        /* no horizontal stretch */
-        STRETCH_V_100,        /* no vertical stretch */
+        cutIn,                /* from receipt or 1 */
+        cutOut,               /* from receipt or totalFrames */
+        stretchX,             /* from receipt or STRETCH_H_100 */
+        stretchY,             /* from receipt or STRETCH_V_100 */
         true,                 /* export audio if present */
-        true                  /* enable raw fixes */
+        receipt->rawFixesEnabled()  /* from receipt */
     );
 
     /* Clean up */

@@ -4,6 +4,8 @@
 #include <QString>
 #include "BatchTypes.h"
 
+class ReceiptSettings;
+
 /* Orchestrates headless batch CDNG export.
  * Called from main.cpp after CLI args are parsed.
  * Opens each MLV, calls MainWindow::exportCdngSequence(), logs results. */
@@ -19,9 +21,12 @@ public:
 private:
     BatchRunner() = delete; /* Pure static */
 
-    /* Export a single MLV file.  Returns ProcessResult. */
+    /* Export a single MLV file.  receipt may be default-constructed
+     * (no receipt loaded) or populated from .marxml parsing.
+     * Returns ProcessResult. */
     static ProcessResult exportSingleFile(const QString &mlvPath,
-                                          const QString &outputRoot);
+                                          const QString &outputRoot,
+                                          ReceiptSettings *receipt);
 };
 
 #endif // BATCHRUNNER_H
