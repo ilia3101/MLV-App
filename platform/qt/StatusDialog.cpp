@@ -34,52 +34,43 @@ void StatusDialog::setTotalFrames(uint32_t frames)
 //Draw remaining time to UI, input is todoFrames
 void StatusDialog::drawTimeFromToDoFrames(uint32_t framesToDo)
 {
-    QDateTime currentTime = QDateTime::currentDateTime();
-    quint64 secsGone = m_startTime.secsTo(currentTime);
-    uint32_t framesDone = m_totalTodoFrames - framesToDo;
-    
     // We don't like to divide by 0
-    if( framesDone == 0 ) return;
+    if( !m_totalTodoFrames || framesToDo >= m_totalTodoFrames ) return;
+
+    uint32_t framesDone = m_totalTodoFrames - framesToDo;
+
+    QDateTime currentTime = QDateTime::currentDateTime();
+    double secsGone = std::max(0.0, m_startTime.msecsTo(currentTime) / 1000.0);
 
     // Compute current seconds per frame
-    double secsPerFrame = (double)secsGone / (double)framesDone;
+    double secsPerFrame = secsGone / framesDone;
 
-    if (m_avgSecsPerFrame <= 0.0)
+    if( m_avgSecsPerFrame <= 0.0 )
     {
         m_avgSecsPerFrame = secsPerFrame;
     }
     else
     {
         // Adaptive smoothing (better accuracy with less jitter)
-        double progress = (double)framesDone / (double)m_totalTodoFrames;
-        double alpha;
+        double progress = static_cast<double>(framesDone) / m_totalTodoFrames;
+        double alpha = 0.5;
 
-        if (progress < 0.0625)
-            // very responsive early    
-            alpha = 0.5;
-        
-        else if (progress < 0.125)
-            // stable later    
-            alpha = 0.25;
-        
-        else
-            alpha = 0.125;
+        // Responsive for the first 20 seconds, then gradually smooths from 0.5 to 0.125
+        if( secsGone > 20.0 ) alpha -= 0.375 * progress;
 
         m_avgSecsPerFrame = (1.0 - alpha) * m_avgSecsPerFrame + alpha * secsPerFrame;
     }
 
     // Compute remaining time
-    double secsRemainingDouble = m_avgSecsPerFrame * framesToDo;
+    double secsRemaining = std::max(0.0, m_avgSecsPerFrame * framesToDo);
 
-    if (secsRemainingDouble < 0.0) secsRemainingDouble = 0.0;
+    quint64 duration = static_cast<quint64>(secsRemaining + 0.5);
 
-    quint64 duration = (quint64)(secsRemainingDouble + 0.5);
-
-    int seconds = (int) (duration % 60);
+    quint64 seconds = duration % 60;
     duration /= 60;
-    int minutes = (int) (duration % 60);
+    quint64 minutes = duration % 60;
     duration /= 60;
-    int hours = (int) (duration);
+    quint64 hours = duration;
 
     ui->labelEstimatedTime->setText( QString( "ETA: %1h%2m%3s" )
             .arg( hours, 2, 10, QChar('0') )
