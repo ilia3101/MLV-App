@@ -1,9 +1,9 @@
 #include "BatchRunner.h"
 #include "BatchContext.h"
+#include "BatchLogger.h"
 
 #include <QDir>
 #include <QFileInfo>
-#include <QTextStream>
 #include <QThread>
 #include <QElapsedTimer>
 
@@ -15,7 +15,6 @@
 
 int BatchRunner::run(const QString &inputPath, const QString &outputPath)
 {
-    QTextStream out(stdout);
     QElapsedTimer totalTimer;
     totalTimer.start();
 
@@ -29,8 +28,7 @@ int BatchRunner::run(const QString &inputPath, const QString &outputPath)
             mlvFiles << inputPath;
         else
         {
-            out << QStringLiteral("[BATCH] ERROR: Input is not an MLV file: %1\n").arg(inputPath);
-            out.flush();
+            BatchLogger::err(QStringLiteral("[BATCH] ERROR: Input is not an MLV file: %1\n").arg(inputPath));
             return 3;
         }
     }
@@ -45,15 +43,13 @@ int BatchRunner::run(const QString &inputPath, const QString &outputPath)
 
         if( mlvFiles.isEmpty() )
         {
-            out << QStringLiteral("[BATCH] ERROR: No MLV files found in: %1\n").arg(inputPath);
-            out.flush();
+            BatchLogger::err(QStringLiteral("[BATCH] ERROR: No MLV files found in: %1\n").arg(inputPath));
             return 3;
         }
     }
     else
     {
-        out << QStringLiteral("[BATCH] ERROR: Input path does not exist: %1\n").arg(inputPath);
-        out.flush();
+        BatchLogger::err(QStringLiteral("[BATCH] ERROR: Input path does not exist: %1\n").arg(inputPath));
         return 3;
     }
 
@@ -63,17 +59,15 @@ int BatchRunner::run(const QString &inputPath, const QString &outputPath)
     {
         if( !outDir.mkpath( QStringLiteral(".") ) )
         {
-            out << QStringLiteral("[BATCH] ERROR: Cannot create output directory: %1\n").arg(outputPath);
-            out.flush();
+            BatchLogger::err(QStringLiteral("[BATCH] ERROR: Cannot create output directory: %1\n").arg(outputPath));
             return 3;
         }
     }
 
-    out << QStringLiteral("[BATCH] START input=%1 output=%2 skip-errors=%3\n")
+    BatchLogger::out(QStringLiteral("[BATCH] START input=%1 output=%2 skip-errors=%3\n")
                .arg( inputPath, outputPath,
                      BatchContext::skipErrors() ? QStringLiteral("true")
-                                               : QStringLiteral("false") );
-    out.flush();
+                                               : QStringLiteral("false") ));
 
     int succeeded = 0;
     int failed = 0;
@@ -85,42 +79,38 @@ int BatchRunner::run(const QString &inputPath, const QString &outputPath)
         QString baseName = QFileInfo(mlvPath).completeBaseName();
         if( res.success )
         {
-            out << QStringLiteral("[BATCH] DONE %1 exported=%2 skipped=%3 elapsed=%4\n")
+            BatchLogger::out(QStringLiteral("[BATCH] DONE %1 exported=%2 skipped=%3 elapsed=%4\n")
                        .arg( baseName )
                        .arg( res.framesExported )
                        .arg( res.framesSkipped )
-                       .arg( res.elapsedSeconds, 0, 'f', 1 );
-            out.flush();
+                       .arg( res.elapsedSeconds, 0, 'f', 1 ));
             succeeded++;
         }
         else
         {
-            out << QStringLiteral("[BATCH] FAIL %1 error=%2 exported=%3 skipped=%4 elapsed=%5\n")
+            BatchLogger::out(QStringLiteral("[BATCH] FAIL %1 error=%2 exported=%3 skipped=%4 elapsed=%5\n")
                        .arg( baseName,
                               res.errorMessage )
                        .arg( res.framesExported )
                        .arg( res.framesSkipped )
-                       .arg( res.elapsedSeconds, 0, 'f', 1 );
-            out.flush();
+                       .arg( res.elapsedSeconds, 0, 'f', 1 ));
             failed++;
 
             /* Without --skip-errors, abort the entire batch on first failure */
             if( !BatchContext::skipErrors() )
             {
-                out << QStringLiteral("[BATCH] COMPLETE files=%1 succeeded=%2 failed=%3 total_elapsed=%4\n")
+                BatchLogger::out(QStringLiteral("[BATCH] COMPLETE files=%1 succeeded=%2 failed=%3 total_elapsed=%4\n")
                            .arg( mlvFiles.size() ).arg( succeeded ).arg( failed )
-                           .arg( totalTimer.elapsed() / 1000.0, 0, 'f', 1 );
-                out.flush();
+                           .arg( totalTimer.elapsed() / 1000.0, 0, 'f', 1 ));
                 return 4;
             }
         }
     }
 
     double totalElapsed = totalTimer.elapsed() / 1000.0;
-    out << QStringLiteral("[BATCH] COMPLETE files=%1 succeeded=%2 failed=%3 total_elapsed=%4\n")
+    BatchLogger::out(QStringLiteral("[BATCH] COMPLETE files=%1 succeeded=%2 failed=%3 total_elapsed=%4\n")
                .arg( mlvFiles.size() ).arg( succeeded ).arg( failed )
-               .arg( totalElapsed, 0, 'f', 1 );
-    out.flush();
+               .arg( totalElapsed, 0, 'f', 1 ));
 
     if( failed > 0 ) return 1;
     return 0;
@@ -130,7 +120,6 @@ ProcessResult BatchRunner::exportSingleFile(const QString &mlvPath,
                                             const QString &outputRoot)
 {
     ProcessResult result;
-    QTextStream out(stdout);
     QString baseName = QFileInfo(mlvPath).completeBaseName();
 
     /* Open MLV file using the C API — same as MainWindow::openMlv() */
@@ -160,8 +149,7 @@ ProcessResult BatchRunner::exportSingleFile(const QString &mlvPath,
     setMlvCpuCores( mlvObject, QThread::idealThreadCount() );
 
     uint32_t totalFrames = getMlvFrames( mlvObject );
-    out << QStringLiteral("[BATCH] FILE %1 frames=%2\n").arg( baseName ).arg( totalFrames );
-    out.flush();
+    BatchLogger::out(QStringLiteral("[BATCH] FILE %1 frames=%2\n").arg( baseName ).arg( totalFrames ));
 
     /* Export using defaults:
      * - codecProfile = CODEC_CDNG (uncompressed)

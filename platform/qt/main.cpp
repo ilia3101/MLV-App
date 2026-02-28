@@ -9,6 +9,7 @@
 #include "MyApplication.h"
 #include "../../src/batch/BatchContext.h"
 #include "../../src/batch/BatchRunner.h"
+#include "../../src/batch/BatchLogger.h"
 
 #include <QCommandLineParser>
 #include <QTextStream>
@@ -28,12 +29,16 @@ static bool hasBatchFlag(int argc, char *argv[])
 
 static int runBatch(QCoreApplication &app)
 {
-    QTextStream out(stdout);
-
     QCommandLineParser parser;
     parser.setApplicationDescription(
         QStringLiteral("MLVApp batch mode — headless Cinema DNG export"));
-    parser.addHelpOption();
+
+    /* Do NOT call parser.addHelpOption() — on Windows/Qt it triggers a
+     * QMessageBox.  We handle -h/--help manually below. */
+    QCommandLineOption helpOpt(
+        QStringList() << QStringLiteral("h") << QStringLiteral("help"),
+        QStringLiteral("Show this help text and exit."));
+    parser.addOption(helpOpt);
 
     /* --batch is already consumed by hasBatchFlag(); add it here so
      * QCommandLineParser doesn't complain about an unknown option. */
@@ -72,18 +77,31 @@ static int runBatch(QCoreApplication &app)
 
     parser.process(app);
 
-    /* --input and --output are required in batch mode */
-    if (!parser.isSet(inputOpt) || !parser.isSet(outputOpt))
+    /* Init log file mirror as early as possible so that --help and
+     * missing-arg errors are captured in the log file too. */
+    QString logPath = parser.value(logOpt);
+    BatchLogger::init(logPath);
+
+    /* --help: print to stdout (+ log), exit 0.  No QMessageBox. */
+    if( parser.isSet(helpOpt) )
     {
-        out << QStringLiteral("[BATCH] ERROR: --input and --output are required.\n");
-        out.flush();
-        parser.showHelp(2); /* exits with code 2 (bad arguments) */
+        BatchLogger::out(parser.helpText() + QStringLiteral("\n"));
+        BatchLogger::shutdown();
+        return 0;
+    }
+
+    /* --input and --output are required in batch mode */
+    if( !parser.isSet(inputOpt) || !parser.isSet(outputOpt) )
+    {
+        BatchLogger::err(QStringLiteral("[BATCH] ERROR: --input and --output are required.\n\n"));
+        BatchLogger::err(parser.helpText() + QStringLiteral("\n"));
+        BatchLogger::shutdown();
+        return 2;
     }
 
     QString inputPath  = parser.value(inputOpt);
     QString outputPath = parser.value(outputOpt);
     bool skipErrors    = parser.isSet(skipErrorsOpt);
-    QString logPath    = parser.value(logOpt);
     bool verbose       = parser.isSet(verboseOpt);
 
     /* Store in BatchContext for global access */
@@ -92,7 +110,9 @@ static int runBatch(QCoreApplication &app)
     BatchContext::setVerbose(verbose);
     BatchContext::setLogPath(logPath);
 
-    return BatchRunner::run(inputPath, outputPath);
+    int exitCode = BatchRunner::run(inputPath, outputPath);
+    BatchLogger::shutdown();
+    return exitCode;
 }
 
 int main(int argc, char *argv[])

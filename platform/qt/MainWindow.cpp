@@ -62,7 +62,7 @@
 #include "RenameDialog.h"
 #include "batch/BatchContext.h"
 #include "batch/BatchPrompts.h"
-#include <QTextStream>
+#include "batch/BatchLogger.h"
 #include <QElapsedTimer>
 
 /* spaceTag argument options: ffmpeg color space tag number compliant */
@@ -2765,7 +2765,6 @@ ProcessResult MainWindow::exportCdngSequence(
     ProcessResult result;
     QElapsedTimer timer;
     timer.start();
-    QTextStream out(stdout);
     bool verbose = BatchContext::isVerbose();
 
     /* --- Prepare mlvObject for raw export --- */
@@ -2931,11 +2930,10 @@ ProcessResult MainWindow::exportCdngSequence(
         }
         else if( BatchContext::isBatchMode() && verbose )
         {
-            out << QStringLiteral("[BATCH] FRAME %1 %2/%3\n")
+            BatchLogger::out(QStringLiteral("[BATCH] FRAME %1 %2/%3\n")
                        .arg( clipBaseName )
                        .arg( result.framesExported + result.framesSkipped )
-                       .arg( totalFrames );
-            out.flush();
+                       .arg( totalFrames ));
         }
 
         /* Let event loop breathe */

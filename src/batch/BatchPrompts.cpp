@@ -1,7 +1,7 @@
 #include "BatchPrompts.h"
 #include "BatchContext.h"
+#include "BatchLogger.h"
 
-#include <QTextStream>
 #include <QMessageBox>
 #include <QApplication>
 
@@ -19,19 +19,16 @@ bool BatchPrompts::shouldSkipFrame(const QString &clipName,
 {
     if( BatchContext::isBatchMode() )
     {
-        QTextStream err(stderr);
         if( BatchContext::skipErrors() )
         {
-            err << QStringLiteral("[BATCH] SKIP %1 frame=%2 error=%3\n")
-                       .arg( clipName ).arg( frameIndex ).arg( errorDetail );
-            err.flush();
+            BatchLogger::err(QStringLiteral("[BATCH] SKIP %1 frame=%2 error=%3\n")
+                       .arg( clipName ).arg( frameIndex ).arg( errorDetail ));
             return true; /* skip frame, continue */
         }
         else
         {
-            err << QStringLiteral("[BATCH] ERROR %1 frame=%2 error=%3\n")
-                       .arg( clipName ).arg( frameIndex ).arg( errorDetail );
-            err.flush();
+            BatchLogger::err(QStringLiteral("[BATCH] ERROR %1 frame=%2 error=%3\n")
+                       .arg( clipName ).arg( frameIndex ).arg( errorDetail ));
             return false; /* abort */
         }
     }
@@ -67,9 +64,7 @@ bool BatchPrompts::shouldContinue(const QString &context,
 {
     if( BatchContext::isBatchMode() )
     {
-        QTextStream err(stderr);
-        err << QStringLiteral("[BATCH] WARNING %1: %2\n").arg( context, message );
-        err.flush();
+        BatchLogger::err(QStringLiteral("[BATCH] WARNING %1: %2\n").arg( context, message ));
         /* In batch mode, disk-full is always fatal */
         return false;
     }
