@@ -148,6 +148,7 @@ static int mr_set_error(mr_ctx_t *ctx, int error, const char *msg, ...)
     return error;
 }
 
+//-----------------------------------------------------------------------------
 static const cJSON *mr_json_first(const cJSON *item)
 {
     if (item == NULL) {
@@ -358,11 +359,26 @@ static int mr_read_file_metadata(mr_ctx_t *ctx)
     mr_json_get_double(metadata, "focalLengths", &ctx->focal_length);
     mr_json_get_int16(metadata, "whiteLevel", &ctx->white_level);
     mr_json_get_int16(metadata, "blackLevel", &ctx->black_level);
-    mr_json_get_int32(metadata, "audioChannels", &ctx->audio_channels);
-    mr_json_get_int32(metadata, "audioSampleRate", &ctx->audio_sample_rate);
 
-    mr_json_copy_string(metadata, "build.manufacturer", ctx->manufacturer, MR_MAX_STRING);
-    mr_json_copy_string(metadata, "deviceSpecificProfile.deviceModel", ctx->model, MR_MAX_STRING);
+    cJSON *extraData = cJSON_GetObjectItemCaseSensitive(metadata, "extraData");
+    if (extraData) {
+        mr_json_get_int32(extraData, "audioChannels", &ctx->audio_channels);
+        mr_json_get_int32(extraData, "audioSampleRate", &ctx->audio_sample_rate);
+    } else {
+        // Fallback just in case
+        mr_json_get_int32(metadata, "audioChannels", &ctx->audio_channels);
+        mr_json_get_int32(metadata, "audioSampleRate", &ctx->audio_sample_rate);
+    }
+
+    cJSON *deviceProfile = cJSON_GetObjectItemCaseSensitive(metadata, "deviceSpecificProfile");
+    if (deviceProfile) {
+        mr_json_copy_string(deviceProfile, "deviceModel", ctx->model, MR_MAX_STRING);
+    } else {
+        mr_json_copy_string(metadata, "deviceSpecificProfile.deviceModel", ctx->model, MR_MAX_STRING);
+    }
+
+    ctx->manufacturer[0] = '\0'; // Not used anymore
+
     mr_json_copy_string(metadata, "colorIlluminant1", ctx->color_illuminant1, MR_MAX_STRING);
     mr_json_copy_string(metadata, "colorIlluminant2", ctx->color_illuminant2, MR_MAX_STRING);
 

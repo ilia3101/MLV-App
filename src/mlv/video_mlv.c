@@ -1729,7 +1729,7 @@ int openMcrawClip(mlvObject_t * video, char * mcrawPath, int open_mode, char * e
 
     memcpy(&video->IDNT.blockType, "IDNT", 4);
     video->IDNT.blockSize        = sizeof(mlv_idnt_hdr_t);
-    snprintf(video->IDNT.cameraName, 31, "%s %s", mr_get_manufacturer(ctx), mr_get_model(ctx));
+    snprintf((char *)video->IDNT.cameraName, 31, "%s", mr_get_model(ctx));
 
     memcpy(&video->LENS.blockType, "LENS", 4);
     video->LENS.blockSize        = sizeof(mlv_lens_hdr_t);
