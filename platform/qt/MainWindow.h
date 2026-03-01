@@ -39,6 +39,8 @@
 #include "Scripting.h"
 #include "ReceiptCopyMaskDialog.h"
 #include "QRecentFilesMenu.h"
+#include "batch/BatchTypes.h"
+#include <functional>
 
 namespace Ui {
 class MainWindow;
@@ -51,6 +53,29 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(int &argc, char **argv, QWidget *parent = 0);
     ~MainWindow();
+
+    /* Progress-only callback for exportCdngSequence.
+     * framesDone:   frames completed so far (exported + skipped)
+     * totalFrames:  total frames to export
+     * Return true to continue, false to abort (e.g. user pressed abort). */
+    using ProgressCallback = std::function<bool(int framesDone, int totalFrames)>;
+
+    /* Static CDNG export helper — callable from both GUI and batch mode.
+     * Error decisions go through BatchPrompts directly.
+     * ProgressCallback is for progress updates and abort-polling only. */
+    static ProcessResult exportCdngSequence(
+        mlvObject_t *mlvObject,
+        const QString &outDir,
+        const QString &clipBaseName,
+        int codecProfile,
+        int codecOption,
+        uint32_t cutIn,
+        uint32_t cutOut,
+        double stretchX,
+        double stretchY,
+        bool audioExport,
+        bool rawFixEnabled,
+        ProgressCallback progressCallback = nullptr);
 
 protected:
     void timerEvent( QTimerEvent *t );
