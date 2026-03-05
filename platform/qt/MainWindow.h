@@ -475,7 +475,7 @@ private:
     bool m_tryToSyncAudio;
     bool m_audioExportEnabled;
     bool m_hdrExport;
-    uint32_t *m_exportedFramesArray;
+    uint32_t *m_pExportedFramesArray;
     bool m_exportAbortPressed;
     bool m_zoomTo100Center;
     bool m_zoomModeChanged;

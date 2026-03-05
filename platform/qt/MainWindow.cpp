@@ -162,7 +162,7 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     //Connect Export Handler
     connect( this, SIGNAL(exportReady()), this, SLOT(exportHandler()) );
 
-    m_exportedFramesArray = NULL;
+    m_pExportedFramesArray = NULL;
 
     //"Open with" for Windows or scripts
     if( argc > 1 )
@@ -2917,18 +2917,18 @@ void MainWindow::startExportCdng(QString fileName)
     uint32_t start = m_exportQueue.first()->cutIn() - 1;
     uint32_t end = m_exportQueue.first()->cutOut();
 
-    if ( m_exportedFramesArray )
+    if ( m_pExportedFramesArray )
     {
         // Count successfully exported frames after resume
         for( uint32_t frame = start; frame < end; frame++ )
         {
-            if( m_exportedFramesArray[frame] ) exportedFrames++;
+            if( m_pExportedFramesArray[frame] ) exportedFrames++;
         }
     }
     else
     {
         // Parallel processing requires an array to track exported frames
-        m_exportedFramesArray = ( uint32_t* )calloc( end, sizeof( uint32_t ));
+        m_pExportedFramesArray = ( uint32_t* )calloc( end, sizeof( uint32_t ));
 
         // StatusDialog
         m_pStatusDialog->ui->progressBar->setMaximum( m_exportQueue.first()->cutOut() - m_exportQueue.first()->cutIn() + 1 );
@@ -2993,7 +2993,7 @@ void MainWindow::startExportCdng(QString fileName)
             diskFull.load() ||
             m_exportAbortPressed ||
             m_pStatusDialog->isPaused() ||
-            m_exportedFramesArray[frame] )
+            m_pExportedFramesArray[frame] )
         {
             continue;
         }
@@ -3034,7 +3034,7 @@ void MainWindow::startExportCdng(QString fileName)
         else
         {
             exportedFrames++;
-            m_exportedFramesArray[frame] = 1;
+            m_pExportedFramesArray[frame] = 1;
         }
 
         //Free DNG data struct
@@ -3106,8 +3106,8 @@ void MainWindow::startExportCdng(QString fileName)
     //Enable GUI drawing
     m_dontDraw = false;
 
-    free( m_exportedFramesArray );
-    m_exportedFramesArray = NULL;
+    free( m_pExportedFramesArray );
+    m_pExportedFramesArray = NULL;
 
     //Emit Ready-Signal
     emit exportReady();
@@ -8820,10 +8820,10 @@ void MainWindow::exportHandler( void )
 
         m_pStatusDialog->setJobFrames( m_exportQueue.first()->cutOut() - m_exportQueue.first()->cutIn() + 1 );
 
-        if( m_exportedFramesArray )
+        if( m_pExportedFramesArray )
         {
-            free( m_exportedFramesArray );
-            m_exportedFramesArray = NULL;
+            free( m_pExportedFramesArray );
+            m_pExportedFramesArray = NULL;
         }
 
         //Start it, raw/rendered
