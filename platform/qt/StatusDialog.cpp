@@ -8,6 +8,7 @@
 #include "StatusDialog.h"
 #include <QDebug>
 #include <QKeyEvent>
+#include <QFontDatabase>
 
 //Constructor
 StatusDialog::StatusDialog(QWidget *parent) :
@@ -16,6 +17,10 @@ StatusDialog::StatusDialog(QWidget *parent) :
 {
     ui->setupUi(this);
     setWindowFlags( Qt::Window | Qt::WindowTitleHint | Qt::CustomizeWindowHint );
+
+    // Use a monospace font for the labelEstimatedTime to prevent text "dancing" :)
+    QFont monospace = QFontDatabase::systemFont(QFontDatabase::FixedFont);
+    ui->labelEstimatedTime->setFont(monospace);
 }
 
 //Destructor
@@ -24,47 +29,44 @@ StatusDialog::~StatusDialog()
     delete ui;
 }
 
-//Set total number of frames, for remaining time calc
-void StatusDialog::setTotalFrames(uint32_t frames)
+//Export initialization
+void StatusDialog::exportStart(int numberOfJobs, uint32_t totalFrames)
 {
-    m_totalTodoFrames = frames;
-    ui->labelEstimatedTime->setText( "" );
-}
+    m_totalTodoFrames = totalFrames;
+    m_startTime = QDateTime::currentDateTime();
+    m_paused = false;
 
-//Draw remaining time to UI, input is todoFrames
-void StatusDialog::drawTimeFromToDoFrames(uint32_t framesToDo)
-{
-    // We don't like to divide by 0
-    if( !m_totalTodoFrames || framesToDo >= m_totalTodoFrames ) return;
+    ui->totalProgressBar->setMaximum( totalFrames );
+    ui->totalProgressBar->setValue( 0 );
 
-    uint32_t framesDone = m_totalTodoFrames - framesToDo;
-
-    QDateTime currentTime = QDateTime::currentDateTime();
-    double secsGone = std::max(0.0, m_startTime.msecsTo(currentTime) / 1000.0);
-
-    // Compute current seconds per frame
-    double secsPerFrame = secsGone / framesDone;
-
-    if( m_avgSecsPerFrame <= 0.0 )
+    if( numberOfJobs > 1)
     {
-        m_avgSecsPerFrame = secsPerFrame;
+        ui->totalProgressBar->show();
     }
     else
     {
-        // Adaptive smoothing (better accuracy with less jitter)
-        double progress = static_cast<double>(framesDone) / m_totalTodoFrames;
-        double alpha = 0.5;
-
-        // Responsive for the first 20 seconds, then gradually smooths from 0.5 to 0.125
-        if( secsGone > 20.0 ) alpha -= 0.375 * progress;
-
-        m_avgSecsPerFrame = (1.0 - alpha) * m_avgSecsPerFrame + alpha * secsPerFrame;
+        ui->totalProgressBar->hide();
     }
 
-    // Compute remaining time
-    double secsRemaining = std::max(0.0, m_avgSecsPerFrame * framesToDo);
+    ui->labelEstimatedTime->setText( "Estimating remaining time…" );
+    ui->pushButtonPause->setText( "Pause" );
+    ui->pushButtonPause->hide();
 
-    quint64 duration = static_cast<quint64>(secsRemaining + 0.5);
+    this->layout()->activate();
+    this->adjustSize();
+}
+
+//Set job/clip frames
+void StatusDialog::setJobFrames(uint32_t jobFrames)
+{
+    m_jobFrames = jobFrames;
+    m_jobFramesDone = -1;
+}
+
+//Get formatted time string
+QString StatusDialog::getTimeString(double secsRemaining)
+{
+    quint64 duration = static_cast<quint64>( secsRemaining + 0.5 );
 
     quint64 seconds = duration % 60;
     duration /= 60;
@@ -72,18 +74,131 @@ void StatusDialog::drawTimeFromToDoFrames(uint32_t framesToDo)
     duration /= 60;
     quint64 hours = duration;
 
-    ui->labelEstimatedTime->setText( QString( "ETA: %1h%2m%3s" )
-            .arg( hours, 2, 10, QChar('0') )
-            .arg( minutes, 2, 10, QChar('0') )
-            .arg( seconds, 2, 10, QChar('0') ) );
+    return QString( "%1:%2:%3" )
+                .arg( hours, 2, 10, QChar('0') )
+                .arg( minutes, 2, 10, QChar('0') )
+                .arg( seconds, 2, 10, QChar('0') );
 }
 
-//Start Time for remaining time calculation
-void StatusDialog::startExportTime()
+//Draw remaining time to UI, input is todoFrames
+void StatusDialog::drawTimeFromToDoFrames(uint32_t framesToDo)
 {
-    m_startTime = QDateTime::currentDateTime();
-    m_avgSecsPerFrame = 0.0;
-    ui->labelEstimatedTime->setText( "" );
+    if( framesToDo < 1 || m_jobFrames < 1 ) return;
+
+    static uint32_t prevFamesToDo = 0;
+
+    double secsGone = 0;
+    double secsPerFrame = 0;
+    static double avgSecsPerFrame = 0;
+
+    if( m_jobFramesDone == -1 )
+    {
+        m_jobStartTime = QDateTime::currentDateTime();
+        avgSecsPerFrame = 0;
+        prevFamesToDo = framesToDo;
+    }
+
+    m_jobFramesDone = prevFamesToDo - framesToDo;
+
+    if ( m_jobFramesDone < 1 ) return;
+
+    QDateTime currentTime = QDateTime::currentDateTime();
+
+    secsGone = m_jobStartTime.msecsTo( currentTime ) / 1000.0;
+    secsGone = std::max( 0.0, secsGone );
+
+    secsPerFrame = secsGone / m_jobFramesDone;
+
+    if( avgSecsPerFrame <= 0.0 )
+    {
+        avgSecsPerFrame = secsPerFrame;
+    }
+
+    // Adaptive smoothing (better accuracy with less jitter)
+    // Gradually smooths from 0.5 to 0.125 with every job/clip
+    double progress = static_cast<double>( m_jobFramesDone ) / m_jobFrames;
+    double alpha = 0.5 - ( 0.375 * progress );
+
+    avgSecsPerFrame = ( 1.0 - alpha ) * avgSecsPerFrame + alpha * secsPerFrame;
+
+    // Compute remaining and elapsed time
+    double jobSecsRemaining = avgSecsPerFrame * ( m_jobFrames - m_jobFramesDone );
+    jobSecsRemaining = std::max( 0.0, jobSecsRemaining );
+    double jobSecsElapsed = m_jobStartTime.msecsTo( currentTime ) / 1000.0;
+    jobSecsElapsed = std::max( 0.0, jobSecsElapsed );
+
+    if( ui->totalProgressBar->isVisible() )
+    {
+        double secsRemaining = avgSecsPerFrame * framesToDo;
+        secsRemaining = std::max( 0.0, secsRemaining );
+        double secsElapsed = m_startTime.msecsTo( currentTime ) / 1000.0;
+        secsElapsed = std::max( 0.0, secsElapsed );
+
+        ui->labelEstimatedTime->setText(
+            QString( "%1 Remaining / %2 Elapsed (Current)\n%3 Remaining / %4 Elapsed (Total)" )
+                .arg( getTimeString( jobSecsRemaining ) )
+                .arg( getTimeString( jobSecsElapsed ) )
+                .arg( getTimeString( secsRemaining ) )
+                .arg( getTimeString( secsElapsed ) )
+        );
+    }
+    else
+    {
+        ui->labelEstimatedTime->setText(
+            QString( "%1 Remaining / %2 Elapsed" )
+                .arg( getTimeString( jobSecsRemaining ) )
+                .arg( getTimeString( jobSecsElapsed ) )
+        );
+    }
+}
+
+void StatusDialog::totalProgressBar(uint32_t framesToDo)
+{
+    if( ui->totalProgressBar->isVisible() )
+    {
+        ui->totalProgressBar->setValue( m_totalTodoFrames - framesToDo );
+    }
+}
+
+bool StatusDialog::isPaused()
+{
+    return m_paused;
+}
+
+//Toggle pause/resume
+void StatusDialog::togglePauseResume( int state )
+{
+    QString label = " (Paused)";
+
+    // Resume
+    if( state )
+    {
+        if( m_paused )
+        {
+            m_paused = false;
+
+            // Subtract paused time from start time
+            QDateTime currentTime = QDateTime::currentDateTime();
+            quint64 mSeconds = m_pausedTime.msecsTo( currentTime );
+
+            m_startTime = m_startTime.addMSecs( mSeconds );
+            m_jobStartTime = m_jobStartTime.addMSecs( mSeconds );
+
+            ui->label->setText( ui->label->text().replace( label, "" ) );
+            ui->pushButtonPause->setText( "Pause" );
+        }
+
+        if( state == 2 ) emit resumePressed();
+    }
+    // Pause
+    else if( !m_paused )
+    {
+        m_paused = true;
+        m_pausedTime = QDateTime::currentDateTime();
+
+        ui->label->setText( ui->label->text().append( label ) );
+        ui->pushButtonPause->setText( "Resume" );
+    }
 }
 
 void StatusDialog::keyPressEvent( QKeyEvent *event )
@@ -99,6 +214,12 @@ void StatusDialog::keyPressEvent( QKeyEvent *event )
 
     // Alle anderen Tasten normal behandeln
     QDialog::keyPressEvent( event );
+}
+
+//Pause clicked
+void StatusDialog::on_pushButtonPause_clicked()
+{
+    togglePauseResume( m_paused ? 2 : 0 );
 }
 
 //Abort clicked

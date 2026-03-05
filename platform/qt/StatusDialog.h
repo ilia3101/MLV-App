@@ -24,29 +24,32 @@ public:
     explicit StatusDialog(QWidget *parent = 0);
     ~StatusDialog();
     Ui::StatusDialog *ui;
-    void setTotalFrames( uint32_t frames );
-    void drawTimeFromToDoFrames( uint32_t frames );
-    void startExportTime( void );
+    void exportStart( int numberOfJobs, uint32_t totalFrames );
+    void setJobFrames( uint32_t jobFrames );
+    void drawTimeFromToDoFrames( uint32_t framesToDo );
+    void totalProgressBar( uint32_t framesToDo );
+    bool isPaused( void );
+    void togglePauseResume( int state );
 
 protected:
     void keyPressEvent( QKeyEvent *event ) override;
 
 private:
     uint32_t m_totalTodoFrames;
+    uint32_t m_jobFrames;
+    int32_t m_jobFramesDone;
     QDateTime m_startTime;
-    double m_avgSecsPerFrame;
+    QDateTime m_jobStartTime;
+    QDateTime m_pausedTime;
+    bool m_paused;
+    QString getTimeString( double secsRemaining );
 
 signals:
+    void resumePressed( void );
     void abortPressed( void );
 
-public slots:
-    void incrementProgressBar( void )
-    {
-        ui->progressBar->setValue( ui->progressBar->value() + 1 );
-        ui->progressBar->repaint();
-        qApp->processEvents();
-    }
 private slots:
+    void on_pushButtonPause_clicked();
     void on_pushButtonAbort_clicked();
 };
 

@@ -350,6 +350,7 @@ private slots:
     void on_groupBoxVignette_toggled(bool arg1);
     void on_groupBoxLinearGradient_toggled(bool arg1);
     void on_groupBoxTransformation_toggled(bool arg1);
+    void exportAbortPressed( void );
     void exportAbort( void );
     void drawFrameReady( void );
 
@@ -474,6 +475,7 @@ private:
     bool m_tryToSyncAudio;
     bool m_audioExportEnabled;
     bool m_hdrExport;
+    uint32_t *m_exportedFramesArray;
     bool m_exportAbortPressed;
     bool m_zoomTo100Center;
     bool m_zoomModeChanged;
@@ -503,6 +505,7 @@ private:
     void initLib( void );
     void readSettings( void );
     void writeSettings( void );
+    int confirmAbort( void );
     void startExportPipe( QString fileName );
     void startExportCdng( QString fileName );
     void startExportMlv( QString fileName );
@@ -577,7 +580,7 @@ private:
     void checkFocusPixelUpdate( void );
     QModelIndexList selectedClipsList( void );
     void listViewSessionUpdate( void );
-    void checkDiskFull( QString path );
+    bool checkDiskFull( QString path, bool showDialog );
 
 signals:
     void exportReady( void );
