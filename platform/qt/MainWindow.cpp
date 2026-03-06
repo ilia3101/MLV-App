@@ -146,7 +146,7 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
 
     //Init the lib
     initLib();
-    
+
     resetSliders();
 
     //Setup Toning (has to be done after initLib())
@@ -1895,7 +1895,7 @@ void MainWindow::startExportPipe(QString fileName)
         emit exportReady();
         return;
     }
-    
+
     //StatusDialog
     m_pStatusDialog->ui->progressBar->setMaximum( m_exportQueue.first()->cutOut() - m_exportQueue.first()->cutIn() + 1 );
     m_pStatusDialog->ui->progressBar->setValue( 0 );
@@ -2739,7 +2739,7 @@ void MainWindow::startExportPipe(QString fileName)
                 if( !( m_exportQueue.first()->vidStabEnabled() && m_codecProfile == CODEC_H264 ) )
                 {
                     uint32_t framesToDo = totalFrames - i + ( m_exportQueue.first()->cutIn() - 1 ) - 1;
-    
+
                     m_pStatusDialog->ui->progressBar->setValue( i - ( m_exportQueue.first()->cutIn() - 1 ) + 1 );
                     m_pStatusDialog->totalProgressBar( framesToDo );
                     m_pStatusDialog->drawTimeFromToDoFrames( framesToDo );
@@ -2747,7 +2747,7 @@ void MainWindow::startExportPipe(QString fileName)
                 else
                 {
                     uint32_t framesToDo = totalFrames - ( ( totalFrames + i - ( m_exportQueue.first()->cutIn() - 1 ) + 1 ) >> 1 );
-    
+
                     m_pStatusDialog->ui->progressBar->setValue( ( totalFrames + i - ( m_exportQueue.first()->cutIn() - 1 ) + 1 ) >> 1 );
                     m_pStatusDialog->totalProgressBar( framesToDo );
                     m_pStatusDialog->drawTimeFromToDoFrames( framesToDo );
@@ -6550,7 +6550,7 @@ void MainWindow::on_horizontalSliderDualIsoEvCorrection_valueChanged(int positio
     else
     {
         if( m_frameStillDrawing ) return;
-        m_pMlvObject->llrawproc->diso_auto_correction = -m_pMlvObject->llrawproc->diso_auto_correction;        
+        m_pMlvObject->llrawproc->diso_auto_correction = -m_pMlvObject->llrawproc->diso_auto_correction;
     }
 
     if( !m_fileLoaded ) return;
@@ -6574,7 +6574,7 @@ void MainWindow::on_horizontalSliderDualIsoBlackDelta_valueChanged(int position)
     else
     {
         if( m_frameStillDrawing ) return;
-        m_pMlvObject->llrawproc->diso_auto_correction = -m_pMlvObject->llrawproc->diso_auto_correction;        
+        m_pMlvObject->llrawproc->diso_auto_correction = -m_pMlvObject->llrawproc->diso_auto_correction;
     }
 
     if( !m_fileLoaded ) return;
@@ -6901,7 +6901,7 @@ void MainWindow::on_horizontalSliderDualIsoEvCorrection_doubleClicked()
 
 void MainWindow::on_horizontalSliderDualIsoBlackDelta_doubleClicked()
 {
-    on_horizontalSliderDualIsoBlackDelta_valueChanged( -1 );    
+    on_horizontalSliderDualIsoBlackDelta_valueChanged( -1 );
 }
 
 void MainWindow::on_horizontalSliderTone_doubleClicked()
@@ -9976,7 +9976,7 @@ void MainWindow::drawFrameReady()
             ui->labelScope->setScope( m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), under, over, ScopesLabel::ScopeVectorScope );
         }
     }
-    
+
     //Drawing ready, next frame can be rendered
     m_frameStillDrawing = false;
 

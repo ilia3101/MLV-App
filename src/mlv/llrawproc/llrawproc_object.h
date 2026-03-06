@@ -30,7 +30,7 @@
 /* Low level raw processing object */
 typedef struct
 {
-    /* flags */ 
+    /* flags */
     int fix_raw;          // apply raw fixes or not, 0 = do not apply, 1 = apply
     int vertical_stripes; // fix vertical stripes, 0 = do not fix", 1 = fix, 2 = compute stripes for every frame
     int compute_stripes;  // 0 = do not compute stripes, 1 = compute stripes
@@ -83,7 +83,7 @@ typedef struct
     /* LUTs */
     int * raw2ev;
     int * ev2raw;
-    
+
     /* used to check whether the black level has changed (for updating the LUTs) */
     int32_t prev_black_level;
 
