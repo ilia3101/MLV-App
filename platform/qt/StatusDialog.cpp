@@ -34,6 +34,7 @@ void StatusDialog::exportStart(int numberOfJobs, uint32_t totalFrames)
 {
     m_totalTodoFrames = totalFrames;
     m_startTime = QDateTime::currentDateTime();
+    m_isLoopRunning = false;
     m_paused = false;
 
     ui->totalProgressBar->setMaximum( totalFrames );
@@ -173,6 +174,9 @@ void StatusDialog::togglePauseResume( int state )
     // Resume
     if( state )
     {
+        // Allow resuming only after the parallel loop has finished (prevents double-clicks on the pause button)
+        if( m_isLoopRunning ) return;
+
         if( m_paused )
         {
             m_paused = false;

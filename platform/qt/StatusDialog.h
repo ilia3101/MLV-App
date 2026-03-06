@@ -30,6 +30,7 @@ public:
     void totalProgressBar( uint32_t framesToDo );
     bool isPaused( void );
     void togglePauseResume( int state );
+    bool m_isLoopRunning;
 
 protected:
     void keyPressEvent( QKeyEvent *event ) override;

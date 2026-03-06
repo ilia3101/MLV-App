@@ -2802,6 +2802,10 @@ void MainWindow::startExportPipe(QString fileName)
 //CDNG output
 void MainWindow::startExportCdng(QString fileName)
 {
+    // Prevents resuming (double-clicks on the pause button) while the parallel loop is still running
+    if( m_pStatusDialog->m_isLoopRunning ) return;
+    m_pStatusDialog->m_isLoopRunning = true;
+
     //Disable GUI drawing
     m_dontDraw = true;
 
@@ -3054,6 +3058,9 @@ void MainWindow::startExportCdng(QString fileName)
     // Stop and delete timer
     progressTimer->stop();
     progressTimer->deleteLater();
+
+    // Safe to resume
+    m_pStatusDialog->m_isLoopRunning = false;
 
     // Check diskspace again after the parallel loop and show dialog
     if ( checkDiskFull( pathName, true ) )
