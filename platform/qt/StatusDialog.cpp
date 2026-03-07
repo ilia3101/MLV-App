@@ -49,8 +49,8 @@ void StatusDialog::exportStart(int numberOfJobs, uint32_t totalFrames)
         ui->totalProgressBar->hide();
     }
 
-    ui->labelEstimatedTime->setText( "Estimating remaining time…" );
-    ui->pushButtonPause->setText( "Pause" );
+    ui->labelEstimatedTime->setText( tr( "Estimating time remaining…" ) );
+    ui->pushButtonPause->setText( tr( "Pause" ) );
     ui->pushButtonPause->hide();
 
     this->layout()->activate();
@@ -136,7 +136,7 @@ void StatusDialog::drawTimeFromToDoFrames(uint32_t framesToDo)
         secsElapsed = std::max( 0.0, secsElapsed );
 
         ui->labelEstimatedTime->setText(
-            QString( "%1 Remaining / %2 Elapsed (Current)\n%3 Remaining / %4 Elapsed (Total)" )
+            tr( "%1 Remaining / %2 Elapsed (Current)\n%3 Remaining / %4 Elapsed (Total)" )
                 .arg( getTimeString( jobSecsRemaining ) )
                 .arg( getTimeString( jobSecsElapsed ) )
                 .arg( getTimeString( secsRemaining ) )
@@ -146,7 +146,7 @@ void StatusDialog::drawTimeFromToDoFrames(uint32_t framesToDo)
     else
     {
         ui->labelEstimatedTime->setText(
-            QString( "%1 Remaining / %2 Elapsed" )
+            tr( "%1 Remaining / %2 Elapsed" )
                 .arg( getTimeString( jobSecsRemaining ) )
                 .arg( getTimeString( jobSecsElapsed ) )
         );
@@ -169,7 +169,7 @@ bool StatusDialog::isPaused()
 //Toggle pause/resume
 void StatusDialog::togglePauseResume( int state )
 {
-    QString label = " (Paused)";
+    QString label = tr( " (Paused)" );
 
     // Resume
     if( state )
@@ -189,7 +189,7 @@ void StatusDialog::togglePauseResume( int state )
             m_jobStartTime = m_jobStartTime.addMSecs( mSeconds );
 
             ui->label->setText( ui->label->text().replace( label, "" ) );
-            ui->pushButtonPause->setText( "Pause" );
+            ui->pushButtonPause->setText( tr( "Pause" ) );
         }
 
         if( state == 2 ) emit resumePressed();
@@ -201,7 +201,7 @@ void StatusDialog::togglePauseResume( int state )
         m_pausedTime = QDateTime::currentDateTime();
 
         ui->label->setText( ui->label->text().append( label ) );
-        ui->pushButtonPause->setText( "Resume" );
+        ui->pushButtonPause->setText( tr( "Resume" ) );
     }
 }
 

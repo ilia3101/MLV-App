@@ -5364,7 +5364,7 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     //A file must be opened once before being able to be exported
     if( GET_RECEIPT( row )->wasNeverLoaded() )
     {
-        m_pStatusDialog->ui->label->setText( "Preparing export…" );
+        m_pStatusDialog->ui->label->setText( tr( "Preparing export…" ) );
         m_pStatusDialog->ui->labelEstimatedTime->setText( "" );
         m_pStatusDialog->ui->progressBar->setValue( 0 );
         m_pStatusDialog->ui->totalProgressBar->hide();
@@ -8981,8 +8981,8 @@ void MainWindow::toolButtonBadPixelsChanged( void )
     ui->toolButtonBadPixelsCrosshairEnable->setVisible( index >= 3 );
     ui->toolButtonBadPixelsSearchMethodNormal->setVisible( index < 3 );
     ui->toolButtonBadPixelsSearchMethodAggressive->setVisible( index < 3 );
-    if( index < 3 ) ui->FocusPixelsInterpolationMethodLabel_2->setText( "Search Method" );
-    else ui->FocusPixelsInterpolationMethodLabel_2->setText( "Edit" );
+    if( index < 3 ) ui->FocusPixelsInterpolationMethodLabel_2->setText( tr( "Search Method" ) );
+    else ui->FocusPixelsInterpolationMethodLabel_2->setText( tr( "Edit" ) );
 
     llrpResetBpmStatus(m_pMlvObject);
     resetMlvCache( m_pMlvObject );
@@ -10606,7 +10606,7 @@ void MainWindow::on_lineEditDarkFrameFile_textChanged(const QString &arg1)
         if( ret )
         {
             QMessageBox::critical( this, tr( "Error" ), tr( "%1" ).arg( errorMessage ), QMessageBox::Cancel, QMessageBox::Cancel );
-            ui->lineEditDarkFrameFile->setText( "No file selected" );
+            ui->lineEditDarkFrameFile->setText( tr( "No file selected" ) );
             return;
         }
         else if( !ret && errorMessage[0] )
@@ -10795,7 +10795,7 @@ void MainWindow::on_actionCreateAllMappFilesNow_triggered()
     setEnabled( false );
 
     m_pStatusDialog->setEnabled( true );
-    m_pStatusDialog->ui->label->setText( "Creating MAPP files…" );
+    m_pStatusDialog->ui->label->setText( tr( "Creating MAPP files…" ) );
     m_pStatusDialog->ui->labelEstimatedTime->setText( "" );
     m_pStatusDialog->ui->progressBar->setValue( 0 );
     m_pStatusDialog->ui->totalProgressBar->hide();
