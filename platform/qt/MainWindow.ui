@@ -1535,7 +1535,7 @@ QGroupBox::indicator:checked:disabled {
                        </font>
                       </property>
                       <property name="text">
-                       <string>2x2</string>
+                       <string>2×2</string>
                       </property>
                       <property name="checkable">
                        <bool>true</bool>
@@ -1559,7 +1559,7 @@ QGroupBox::indicator:checked:disabled {
                        </font>
                       </property>
                       <property name="text">
-                       <string>3x3</string>
+                       <string>3×3</string>
                       </property>
                       <property name="checkable">
                        <bool>true</bool>
@@ -1583,7 +1583,7 @@ QGroupBox::indicator:checked:disabled {
                        </font>
                       </property>
                       <property name="text">
-                       <string>5x5</string>
+                       <string>5×5</string>
                       </property>
                       <property name="checkable">
                        <bool>true</bool>
@@ -1876,7 +1876,7 @@ QGroupBox::indicator:checked:disabled {
                    </item>
                    <item>
                     <property name="text">
-                     <string>Auto Detect Every Frame</string>
+                     <string>Frame-by-Frame Detection</string>
                     </property>
                    </item>
                   </widget>
@@ -9489,42 +9489,42 @@ QGroupBox::indicator:checked:disabled {
                      </property>
                      <item>
                       <property name="text">
-                       <string>1.0x</string>
+                       <string>1.0×</string>
                       </property>
                      </item>
                      <item>
                       <property name="text">
-                       <string>1.25x</string>
+                       <string>1.25×</string>
                       </property>
                      </item>
                      <item>
                       <property name="text">
-                       <string>1.33x</string>
+                       <string>1.33×</string>
                       </property>
                      </item>
                      <item>
                       <property name="text">
-                       <string>1.5x</string>
+                       <string>1.5×</string>
                       </property>
                      </item>
                      <item>
                       <property name="text">
-                       <string>1.67x</string>
+                       <string>1.67×</string>
                       </property>
                      </item>
                      <item>
                       <property name="text">
-                       <string>1.75x</string>
+                       <string>1.75×</string>
                       </property>
                      </item>
                      <item>
                       <property name="text">
-                       <string>1.8x</string>
+                       <string>1.8×</string>
                       </property>
                      </item>
                      <item>
                       <property name="text">
-                       <string>2.0x</string>
+                       <string>2.0×</string>
                       </property>
                      </item>
                     </widget>
@@ -9839,22 +9839,22 @@ QGroupBox::indicator:checked:disabled {
                      </property>
                      <item>
                       <property name="text">
-                       <string>1.0x</string>
+                       <string>1.0×</string>
                       </property>
                      </item>
                      <item>
                       <property name="text">
-                       <string>1.67x</string>
+                       <string>1.67×</string>
                       </property>
                      </item>
                      <item>
                       <property name="text">
-                       <string>3.0x</string>
+                       <string>3.0×</string>
                       </property>
                      </item>
                      <item>
                       <property name="text">
-                       <string>0.33x</string>
+                       <string>0.33×</string>
                       </property>
                      </item>
                     </widget>
@@ -9883,7 +9883,7 @@ QGroupBox::indicator:checked:disabled {
                       </font>
                      </property>
                      <property name="text">
-                      <string>0 x 0 pixels</string>
+                      <string>0 × 0 pixels</string>
                      </property>
                     </widget>
                    </item>

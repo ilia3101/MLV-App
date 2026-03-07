@@ -947,7 +947,7 @@ int MainWindow::openMlv( QString fileName )
 
     ACTIVE_CLIP->updateMetadata( QString( "%1" ).arg( (char*)getMlvCamera( m_pMlvObject ) ),
                                  QString( "%1" ).arg( (char*)getMlvLens( m_pMlvObject ) ),
-                                 QString( "%1 x %2 pixels" ).arg( (int)getMlvWidth( m_pMlvObject ) ).arg( (int)getMlvHeight( m_pMlvObject ) ),
+                                 QString( "%1 × %2 pixels" ).arg( (int)getMlvWidth( m_pMlvObject ) ).arg( (int)getMlvHeight( m_pMlvObject ) ),
                                  QString( "%1" ).arg( m_pTimeCodeImage->getTimeCodeFromFps( (int)getMlvFrames( m_pMlvObject ), getMlvFramerate( m_pMlvObject ) ) ),
                                  QString( "%1" ).arg( (int)getMlvFrames( m_pMlvObject ) ),
                                  QString( "%1 fps" ).arg( getMlvFramerate( m_pMlvObject ) ),
@@ -4618,7 +4618,7 @@ void MainWindow::deleteSession()
         m_pInfoDialog->ui->tableWidget->item( i, 1 )->setText( "–" );
     }
 
-    ui->label_resResolution->setText( "0 x 0 pixels" );
+    ui->label_resResolution->setText( "0 × 0 pixels" );
 
     //Adapt slider to clip and move to position 0
     ui->horizontalSliderPosition->setValue( 0 );
@@ -7414,7 +7414,7 @@ void MainWindow::resultingResolution( void )
     if( !SESSION_CLIP_COUNT ) return;
     int x = getMlvWidth( m_pMlvObject ) * getHorizontalStretchFactor( false );
     int y = getMlvHeight( m_pMlvObject ) * getVerticalStretchFactor( false );
-    ui->label_resResolution->setText( QString( "%1 x %2 pixels" ).arg(x).arg(y) );
+    ui->label_resResolution->setText( QString( "%1 × %2 pixels" ).arg( x ).arg( y ) );
 }
 
 //Is the current export setting set to sequnce?
