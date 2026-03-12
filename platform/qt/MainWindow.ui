@@ -1535,7 +1535,7 @@ QGroupBox::indicator:checked:disabled {
                        </font>
                       </property>
                       <property name="text">
-                       <string>2x2</string>
+                       <string>2×2</string>
                       </property>
                       <property name="checkable">
                        <bool>true</bool>
@@ -1559,7 +1559,7 @@ QGroupBox::indicator:checked:disabled {
                        </font>
                       </property>
                       <property name="text">
-                       <string>3x3</string>
+                       <string>3×3</string>
                       </property>
                       <property name="checkable">
                        <bool>true</bool>
@@ -1583,7 +1583,7 @@ QGroupBox::indicator:checked:disabled {
                        </font>
                       </property>
                       <property name="text">
-                       <string>5x5</string>
+                       <string>5×5</string>
                       </property>
                       <property name="checkable">
                        <bool>true</bool>
@@ -1876,7 +1876,7 @@ QGroupBox::indicator:checked:disabled {
                    </item>
                    <item>
                     <property name="text">
-                     <string>Auto Detect Every Frame</string>
+                     <string>Frame-by-Frame Detection</string>
                     </property>
                    </item>
                   </widget>
@@ -2094,182 +2094,198 @@ QGroupBox::indicator:checked:disabled {
                   </layout>
                  </item>
                  <item row="28" column="0">
-                  <layout class="QHBoxLayout" name="horizontalLayout_14">
-                   <item>
-                    <widget class="QLabel" name="DualISOInterpolationLabel">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
-                     <property name="text">
-                      <string>Interpolation</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <widget class="QFrame" name="toolButtonDualIsoInterpolation">
-                     <layout class="QHBoxLayout" name="horizontalLayout_2">
-                      <property name="spacing">
-                       <number>0</number>
-                      </property>
-                      <property name="leftMargin">
-                       <number>0</number>
-                      </property>
-                      <property name="topMargin">
-                       <number>0</number>
-                      </property>
-                      <property name="rightMargin">
-                       <number>0</number>
-                      </property>
-                      <property name="bottomMargin">
-                       <number>0</number>
-                      </property>
-                      <item>
-                       <widget class="ColorToolButton" name="toolButtonDualIsoInterpolationAmaze">
-                        <property name="sizePolicy">
-                         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                          <horstretch>0</horstretch>
-                          <verstretch>0</verstretch>
-                         </sizepolicy>
-                        </property>
-                        <property name="font">
-                         <font>
-                          <pointsize>10</pointsize>
-                         </font>
-                        </property>
-                        <property name="text">
-                         <string>AMaZE</string>
-                        </property>
-                        <property name="checkable">
-                         <bool>true</bool>
-                        </property>
-                        <property name="checked">
-                         <bool>true</bool>
-                        </property>
-                        <property name="autoExclusive">
-                         <bool>true</bool>
-                        </property>
-                       </widget>
-                      </item>
-                      <item>
-                       <widget class="ColorToolButton" name="toolButtonDualIsoInterpolationMean">
-                        <property name="sizePolicy">
-                         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                          <horstretch>0</horstretch>
-                          <verstretch>0</verstretch>
-                         </sizepolicy>
-                        </property>
-                        <property name="font">
-                         <font>
-                          <pointsize>10</pointsize>
-                         </font>
-                        </property>
-                        <property name="text">
-                         <string>Mean</string>
-                        </property>
-                        <property name="checkable">
-                         <bool>true</bool>
-                        </property>
-                        <property name="autoExclusive">
-                         <bool>true</bool>
-                        </property>
-                       </widget>
-                      </item>
-                     </layout>
-                    </widget>
-                   </item>
-                  </layout>
+                  <widget class="QLabel" name="DualISOInterpolationLabel">
+                   <property name="font">
+                    <font>
+                     <pointsize>10</pointsize>
+                    </font>
+                   </property>
+                   <property name="text">
+                    <string>Interpolation</string>
+                   </property>
+                  </widget>
                  </item>
                  <item row="29" column="0">
-                  <layout class="QHBoxLayout" name="horizontalLayout_15">
-                   <item>
-                    <widget class="QLabel" name="DualISOAliasMapLabel">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
-                     <property name="text">
-                      <string>Alias Map</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <widget class="QFrame" name="toolButtonDualIsoAliasMap">
-                     <layout class="QHBoxLayout" name="horizontalLayout_3">
-                      <property name="spacing">
-                       <number>0</number>
+                  <widget class="QFrame" name="toolButtonDualIsoInterpolation">
+                   <layout class="QHBoxLayout" name="horizontalLayout_52">
+                    <property name="spacing">
+                     <number>0</number>
+                    </property>
+                    <property name="leftMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="topMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="rightMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="bottomMargin">
+                     <number>0</number>
+                    </property>
+                    <item>
+                     <widget class="ColorToolButton" name="toolButtonDualIsoInterpolationAmaze">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
                       </property>
-                      <property name="leftMargin">
-                       <number>0</number>
+                      <property name="font">
+                       <font>
+                        <pointsize>10</pointsize>
+                       </font>
                       </property>
-                      <property name="topMargin">
-                       <number>0</number>
+                      <property name="text">
+                       <string>AMaZE</string>
                       </property>
-                      <property name="rightMargin">
-                       <number>0</number>
+                      <property name="checkable">
+                       <bool>true</bool>
                       </property>
-                      <property name="bottomMargin">
-                       <number>0</number>
+                      <property name="checked">
+                       <bool>true</bool>
                       </property>
-                      <item>
-                       <widget class="ColorToolButton" name="toolButtonDualIsoAliasMapOff">
-                        <property name="sizePolicy">
-                         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                          <horstretch>0</horstretch>
-                          <verstretch>0</verstretch>
-                         </sizepolicy>
-                        </property>
-                        <property name="font">
-                         <font>
-                          <pointsize>10</pointsize>
-                         </font>
-                        </property>
-                        <property name="text">
-                         <string>Off</string>
-                        </property>
-                        <property name="checkable">
-                         <bool>true</bool>
-                        </property>
-                        <property name="checked">
-                         <bool>true</bool>
-                        </property>
-                        <property name="autoExclusive">
-                         <bool>true</bool>
-                        </property>
-                       </widget>
-                      </item>
-                      <item>
-                       <widget class="ColorToolButton" name="toolButtonDualIsoAliasMapOn">
-                        <property name="sizePolicy">
-                         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                          <horstretch>0</horstretch>
-                          <verstretch>0</verstretch>
-                         </sizepolicy>
-                        </property>
-                        <property name="font">
-                         <font>
-                          <pointsize>10</pointsize>
-                         </font>
-                        </property>
-                        <property name="text">
-                         <string>On</string>
-                        </property>
-                        <property name="checkable">
-                         <bool>true</bool>
-                        </property>
-                        <property name="autoExclusive">
-                         <bool>true</bool>
-                        </property>
-                       </widget>
-                      </item>
-                     </layout>
-                    </widget>
-                   </item>
-                  </layout>
+                      <property name="autoExclusive">
+                       <bool>true</bool>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="ColorToolButton" name="toolButtonDualIsoInterpolationRCD">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="font">
+                       <font>
+                        <pointsize>10</pointsize>
+                       </font>
+                      </property>
+                      <property name="text">
+                       <string>RCD</string>
+                      </property>
+                      <property name="checkable">
+                       <bool>true</bool>
+                      </property>
+                      <property name="autoExclusive">
+                       <bool>true</bool>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="ColorToolButton" name="toolButtonDualIsoInterpolationMean">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="font">
+                       <font>
+                        <pointsize>10</pointsize>
+                       </font>
+                      </property>
+                      <property name="text">
+                       <string>Mean</string>
+                      </property>
+                      <property name="checkable">
+                       <bool>true</bool>
+                      </property>
+                      <property name="autoExclusive">
+                       <bool>true</bool>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </widget>
                  </item>
                  <item row="30" column="0">
+                  <widget class="QLabel" name="DualISOAliasMapLabel">
+                   <property name="font">
+                    <font>
+                     <pointsize>10</pointsize>
+                    </font>
+                   </property>
+                   <property name="text">
+                    <string>Alias Map</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="31" column="0">
+                  <widget class="QFrame" name="toolButtonDualIsoAliasMap">
+                   <layout class="QHBoxLayout" name="horizontalLayout_52">
+                    <property name="spacing">
+                     <number>0</number>
+                    </property>
+                    <property name="leftMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="topMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="rightMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="bottomMargin">
+                     <number>0</number>
+                    </property>
+                    <item>
+                     <widget class="ColorToolButton" name="toolButtonDualIsoAliasMapOff">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="font">
+                       <font>
+                        <pointsize>10</pointsize>
+                       </font>
+                      </property>
+                      <property name="text">
+                       <string>Off</string>
+                      </property>
+                      <property name="checkable">
+                       <bool>true</bool>
+                      </property>
+                      <property name="checked">
+                       <bool>true</bool>
+                      </property>
+                      <property name="autoExclusive">
+                       <bool>true</bool>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="ColorToolButton" name="toolButtonDualIsoAliasMapOn">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="font">
+                       <font>
+                        <pointsize>10</pointsize>
+                       </font>
+                      </property>
+                      <property name="text">
+                       <string>On</string>
+                      </property>
+                      <property name="checkable">
+                       <bool>true</bool>
+                      </property>
+                      <property name="autoExclusive">
+                       <bool>true</bool>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </widget>
+                 </item>
+                 <item row="32" column="0">
                   <layout class="QHBoxLayout" name="horizontalLayout_16">
                    <item>
                     <widget class="QLabel" name="DualISOFullresBlendingLabel">
@@ -2357,7 +2373,7 @@ QGroupBox::indicator:checked:disabled {
                    </item>
                   </layout>
                  </item>
-                 <item row="31" column="0">
+                 <item row="33" column="0">
                   <widget class="Line" name="line_6">
                    <property name="styleSheet">
                     <string notr="true">background-color: rgb(115, 115, 115);</string>
@@ -2367,7 +2383,7 @@ QGroupBox::indicator:checked:disabled {
                    </property>
                   </widget>
                  </item>
-                 <item row="32" column="0">
+                 <item row="34" column="0">
                   <layout class="QHBoxLayout" name="horizontalLayout_18">
                    <property name="bottomMargin">
                     <number>0</number>
@@ -2407,7 +2423,7 @@ QGroupBox::indicator:checked:disabled {
                    </item>
                   </layout>
                  </item>
-                 <item row="33" column="0">
+                 <item row="35" column="0">
                   <widget class="Line" name="line_11">
                    <property name="styleSheet">
                     <string notr="true">background-color: rgb(115, 115, 115);</string>
@@ -2417,7 +2433,7 @@ QGroupBox::indicator:checked:disabled {
                    </property>
                   </widget>
                  </item>
-                 <item row="34" column="0">
+                 <item row="36" column="0">
                   <widget class="QLabel" name="PatternNoiseLabel">
                    <property name="font">
                     <font>
@@ -2429,7 +2445,7 @@ QGroupBox::indicator:checked:disabled {
                    </property>
                   </widget>
                  </item>
-                 <item row="35" column="0">
+                 <item row="37" column="0">
                   <widget class="QFrame" name="toolButtonPatternNoise">
                    <layout class="QHBoxLayout" name="horizontalLayout_10">
                     <property name="spacing">
@@ -2501,7 +2517,7 @@ QGroupBox::indicator:checked:disabled {
                    </layout>
                   </widget>
                  </item>
-                 <item row="36" column="0">
+                 <item row="38" column="0">
                   <widget class="Line" name="line_16">
                    <property name="styleSheet">
                     <string notr="true">background-color: rgb(115, 115, 115);</string>
@@ -2511,7 +2527,7 @@ QGroupBox::indicator:checked:disabled {
                    </property>
                   </widget>
                  </item>
-                 <item row="37" column="0">
+                 <item row="39" column="0">
                   <layout class="QGridLayout" name="gridLayout_32">
                    <property name="horizontalSpacing">
                     <number>5</number>
@@ -2614,7 +2630,7 @@ QGroupBox::indicator:checked:disabled {
                    </item>
                   </layout>
                  </item>
-                 <item row="38" column="0">
+                 <item row="40" column="0">
                   <layout class="QGridLayout" name="gridLayout_31">
                    <property name="spacing">
                     <number>0</number>
@@ -9473,42 +9489,42 @@ QGroupBox::indicator:checked:disabled {
                      </property>
                      <item>
                       <property name="text">
-                       <string>1.0x</string>
+                       <string>1.0×</string>
                       </property>
                      </item>
                      <item>
                       <property name="text">
-                       <string>1.25x</string>
+                       <string>1.25×</string>
                       </property>
                      </item>
                      <item>
                       <property name="text">
-                       <string>1.33x</string>
+                       <string>1.33×</string>
                       </property>
                      </item>
                      <item>
                       <property name="text">
-                       <string>1.5x</string>
+                       <string>1.5×</string>
                       </property>
                      </item>
                      <item>
                       <property name="text">
-                       <string>1.67x</string>
+                       <string>1.67×</string>
                       </property>
                      </item>
                      <item>
                       <property name="text">
-                       <string>1.75x</string>
+                       <string>1.75×</string>
                       </property>
                      </item>
                      <item>
                       <property name="text">
-                       <string>1.8x</string>
+                       <string>1.8×</string>
                       </property>
                      </item>
                      <item>
                       <property name="text">
-                       <string>2.0x</string>
+                       <string>2.0×</string>
                       </property>
                      </item>
                     </widget>
@@ -9823,22 +9839,22 @@ QGroupBox::indicator:checked:disabled {
                      </property>
                      <item>
                       <property name="text">
-                       <string>1.0x</string>
+                       <string>1.0×</string>
                       </property>
                      </item>
                      <item>
                       <property name="text">
-                       <string>1.67x</string>
+                       <string>1.67×</string>
                       </property>
                      </item>
                      <item>
                       <property name="text">
-                       <string>3.0x</string>
+                       <string>3.0×</string>
                       </property>
                      </item>
                      <item>
                       <property name="text">
-                       <string>0.33x</string>
+                       <string>0.33×</string>
                       </property>
                      </item>
                     </widget>
@@ -9867,7 +9883,7 @@ QGroupBox::indicator:checked:disabled {
                       </font>
                      </property>
                      <property name="text">
-                      <string>0 x 0 pixels</string>
+                      <string>0 × 0 pixels</string>
                      </property>
                     </widget>
                    </item>

@@ -146,7 +146,7 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
 
     //Init the lib
     initLib();
-    
+
     resetSliders();
 
     //Setup Toning (has to be done after initLib())
@@ -161,6 +161,8 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
 
     //Connect Export Handler
     connect( this, SIGNAL(exportReady()), this, SLOT(exportHandler()) );
+
+    m_pExportedFramesArray = NULL;
 
     //"Open with" for Windows or scripts
     if( argc > 1 )
@@ -758,7 +760,7 @@ void MainWindow::on_actionOpen_triggered()
     if( !QDir( path ).exists() ) path = QDir::homePath();
 
     //Open File Dialog
-    QStringList files = QFileDialog::getOpenFileNames( this, tr("Open one or more MLV..."),
+    QStringList files = QFileDialog::getOpenFileNames( this, tr("Open one or more MLV…"),
                                                     path,
                                                     tr("Video (*.mlv *.MLV *.mcraw *.MCRAW)") );
 
@@ -945,7 +947,7 @@ int MainWindow::openMlv( QString fileName )
 
     ACTIVE_CLIP->updateMetadata( QString( "%1" ).arg( (char*)getMlvCamera( m_pMlvObject ) ),
                                  QString( "%1" ).arg( (char*)getMlvLens( m_pMlvObject ) ),
-                                 QString( "%1 x %2 pixels" ).arg( (int)getMlvWidth( m_pMlvObject ) ).arg( (int)getMlvHeight( m_pMlvObject ) ),
+                                 QString( "%1 × %2 pixels" ).arg( (int)getMlvWidth( m_pMlvObject ) ).arg( (int)getMlvHeight( m_pMlvObject ) ),
                                  QString( "%1" ).arg( m_pTimeCodeImage->getTimeCodeFromFps( (int)getMlvFrames( m_pMlvObject ), getMlvFramerate( m_pMlvObject ) ) ),
                                  QString( "%1" ).arg( (int)getMlvFrames( m_pMlvObject ) ),
                                  QString( "%1 fps" ).arg( getMlvFramerate( m_pMlvObject ) ),
@@ -1225,7 +1227,7 @@ void MainWindow::initGui( void )
     ui->actionShowHistogram->setChecked( true );
 
     //Export abort connection
-    connect( m_pStatusDialog, SIGNAL(abortPressed()), this, SLOT(exportAbort()) );
+    connect( m_pStatusDialog, SIGNAL(abortPressed()), this, SLOT(exportAbortPressed()) );
 
     //AudioTrackWave
     m_pAudioWave = new AudioWave();
@@ -1701,6 +1703,37 @@ void MainWindow::writeSettings()
     set.setValue( "backgroundcolorB", backgroundColor.blue() );
 }
 
+int MainWindow::confirmAbort( void )
+{
+    int paused = m_pStatusDialog->isPaused();
+
+    // Pause time
+    m_pStatusDialog->togglePauseResume( 0 );
+
+    int abortExport = QMessageBox::warning(
+        this,
+        tr( "%1 – Abort Export" ).arg( APPNAME ),
+        tr( "Are you sure you want to abort export?" ),
+        tr( "Continue export" ),
+        tr( "Abort export" ),
+        0, 0
+    );
+
+    // Restore previous state
+    m_pStatusDialog->togglePauseResume( paused ? 0 : 1 );
+
+    if( abortExport )
+    {
+        exportAbort();
+    }
+    else
+    {
+        m_exportAbortPressed = false;
+    }
+
+    return abortExport;
+}
+
 //Start Export via Pipe
 void MainWindow::startExportPipe(QString fileName)
 {
@@ -1780,11 +1813,6 @@ void MainWindow::startExportPipe(QString fileName)
     //enable low level raw fixes (if wanted)
     if( ui->checkBoxRawFixEnable->isChecked() ) m_pMlvObject->llrawproc->fix_raw = 1;
 
-    //StatusDialog
-    m_pStatusDialog->ui->progressBar->setMaximum( m_exportQueue.first()->cutOut() - m_exportQueue.first()->cutIn() + 1 );
-    m_pStatusDialog->ui->progressBar->setValue( 0 );
-    m_pStatusDialog->open();
-
     //Audio Export
     QString wavFileName = QString( "%1.wav" ).arg( fileName.left( fileName.lastIndexOf( "." ) ) );
     QString ffmpegAudioCommand;
@@ -1805,19 +1833,41 @@ void MainWindow::startExportPipe(QString fileName)
     //If audio only, exit here
     if( m_codecProfile == CODEC_AUDIO_ONLY )
     {
+        static int numberOfJobs = 1;
+        static int jobNumber = 0;
+
+        if( ++jobNumber == 1 )
+        {
+            numberOfJobs = m_exportQueue.size();
+
+            m_pStatusDialog->ui->progressBar->setMaximum( numberOfJobs );
+            m_pStatusDialog->ui->progressBar->setValue( 0 );
+            m_pStatusDialog->ui->totalProgressBar->hide();
+            m_pStatusDialog->ui->labelEstimatedTime->setText( "" );
+            m_pStatusDialog->ui->pushButtonPause->hide();
+            m_pStatusDialog->layout()->activate();
+            m_pStatusDialog->adjustSize();
+            m_pStatusDialog->open();
+        }
+
         //Set Status
-        m_pStatusDialog->ui->progressBar->setValue( (m_exportQueue.first()->cutOut() - 1) - ( m_exportQueue.first()->cutIn() - 1 ) + 1 );
-        m_pStatusDialog->ui->progressBar->repaint();
+        m_pStatusDialog->ui->progressBar->setValue( jobNumber );
         qApp->processEvents();
+
+        if( jobNumber == numberOfJobs )
+        {
+            jobNumber = 0;
+        }
 
         if( !doesMlvHaveAudio( m_pMlvObject ) )
         {
             //Hide Status Dialog
             m_pStatusDialog->close();
             qApp->processEvents();
+
             //Then show error
             int ret = QMessageBox::critical( this,
-                                             tr( "MLV App - Export file error" ),
+                                             tr( "%1 – Export file error" ).arg( APPNAME ),
                                              tr( "No audio track available in MLV for export.\nHow do you like to proceed?" ),
                                              tr( "Continue" ),
                                              tr( "Abort batch export" ),
@@ -1829,7 +1879,7 @@ void MainWindow::startExportPipe(QString fileName)
         }
 
         //Delete wav file if aborted
-        if( m_exportAbortPressed )
+        if( m_exportAbortPressed && confirmAbort() )
         {
             QFile *file = new QFile( wavFileName );
             if( file->exists() ) file->remove();
@@ -1846,6 +1896,11 @@ void MainWindow::startExportPipe(QString fileName)
         emit exportReady();
         return;
     }
+
+    //StatusDialog
+    m_pStatusDialog->ui->progressBar->setMaximum( m_exportQueue.first()->cutOut() - m_exportQueue.first()->cutIn() + 1 );
+    m_pStatusDialog->ui->progressBar->setValue( 0 );
+    m_pStatusDialog->open();
 
     //HDR detection check
     bool isHdrClip = false;
@@ -2092,7 +2147,7 @@ void MainWindow::startExportPipe(QString fileName)
             imgBuffer = ( uint16_t* )malloc( frameSize * sizeof( uint16_t ) );
 
             //Frames in the export queue?!
-            int totalFrames = 0;
+            uint32_t totalFrames = 0;
             for( int i = 0; i < m_exportQueue.size(); i++ )
             {
                 totalFrames += m_exportQueue.at(i)->cutOut() - m_exportQueue.at(i)->cutIn() + 1;
@@ -2142,16 +2197,19 @@ void MainWindow::startExportPipe(QString fileName)
                     fflush(pPipeStab);
                 }
 
+                uint32_t framesToDo = totalFrames - ( ( i - ( m_exportQueue.first()->cutIn() - 1 ) + 1 ) >> 1 );
+
                 //Set Status
                 m_pStatusDialog->ui->progressBar->setValue( ( i - ( m_exportQueue.first()->cutIn() - 1 ) + 1 ) >> 1 );
-                m_pStatusDialog->ui->progressBar->repaint();
-                m_pStatusDialog->drawTimeFromToDoFrames( totalFrames - ( ( i - ( m_exportQueue.first()->cutIn() - 1 ) + 1 ) >> 1 ) );
+                m_pStatusDialog->totalProgressBar( framesToDo );
+                m_pStatusDialog->drawTimeFromToDoFrames( framesToDo );
                 qApp->processEvents();
 
-                //Check diskspace
-                checkDiskFull( fileName );
+                //Check disk space
+                checkDiskFull( fileName, true );
+
                 //Abort pressed? -> End the loop
-                if( m_exportAbortPressed ) break;
+                if( m_exportAbortPressed && confirmAbort() ) break;
             }
             //Close pipe
             if( pclose( pPipeStab ) != 0 )
@@ -2628,7 +2686,7 @@ void MainWindow::startExportPipe(QString fileName)
             imgBuffer = ( uint16_t* )malloc( frameSize * sizeof( uint16_t ) );
 
             //Frames in the export queue?!
-            int totalFrames = 0;
+            uint32_t totalFrames = 0;
             for( int i = 0; i < m_exportQueue.size(); i++ )
             {
                 totalFrames += m_exportQueue.at(i)->cutOut() - m_exportQueue.at(i)->cutIn() + 1;
@@ -2681,22 +2739,27 @@ void MainWindow::startExportPipe(QString fileName)
                 //Set Status
                 if( !( m_exportQueue.first()->vidStabEnabled() && m_codecProfile == CODEC_H264 ) )
                 {
+                    uint32_t framesToDo = totalFrames - i + ( m_exportQueue.first()->cutIn() - 1 ) - 1;
+
                     m_pStatusDialog->ui->progressBar->setValue( i - ( m_exportQueue.first()->cutIn() - 1 ) + 1 );
-                    m_pStatusDialog->ui->progressBar->repaint();
-                    m_pStatusDialog->drawTimeFromToDoFrames( totalFrames - i + ( m_exportQueue.first()->cutIn() - 1 ) - 1 );
+                    m_pStatusDialog->totalProgressBar( framesToDo );
+                    m_pStatusDialog->drawTimeFromToDoFrames( framesToDo );
                 }
                 else
                 {
+                    uint32_t framesToDo = totalFrames - ( ( totalFrames + i - ( m_exportQueue.first()->cutIn() - 1 ) + 1 ) >> 1 );
+
                     m_pStatusDialog->ui->progressBar->setValue( ( totalFrames + i - ( m_exportQueue.first()->cutIn() - 1 ) + 1 ) >> 1 );
-                    m_pStatusDialog->ui->progressBar->repaint();
-                    m_pStatusDialog->drawTimeFromToDoFrames( totalFrames - ( ( totalFrames + i - ( m_exportQueue.first()->cutIn() - 1 ) + 1 ) >> 1 ) );
+                    m_pStatusDialog->totalProgressBar( framesToDo );
+                    m_pStatusDialog->drawTimeFromToDoFrames( framesToDo );
                 }
                 qApp->processEvents();
 
-                //Check diskspace
-                checkDiskFull( fileName );
+                //Check disk space
+                checkDiskFull( fileName, true );
+
                 //Abort pressed? -> End the loop
-                if( m_exportAbortPressed ) break;
+                if( m_exportAbortPressed && confirmAbort() ) break;
             }
             //Close pipe
             if( pclose( pPipe ) != 0 )
@@ -2740,6 +2803,10 @@ void MainWindow::startExportPipe(QString fileName)
 //CDNG output
 void MainWindow::startExportCdng(QString fileName)
 {
+    // Prevents resuming (double-clicks on the pause button) while the parallel loop is still running
+    if( m_pStatusDialog->m_isLoopRunning ) return;
+    m_pStatusDialog->m_isLoopRunning = true;
+
     //Disable GUI drawing
     m_dontDraw = true;
 
@@ -2751,17 +2818,6 @@ void MainWindow::startExportCdng(QString fileName)
     m_pMlvObject->current_cached_frame_active = 0;
     //enable low level raw fixes (if wanted)
     if( ui->checkBoxRawFixEnable->isChecked() ) m_pMlvObject->llrawproc->fix_raw = 1;
-
-    //StatusDialog
-    m_pStatusDialog->ui->progressBar->setMaximum( m_exportQueue.first()->cutOut() - m_exportQueue.first()->cutIn() + 1 );
-    m_pStatusDialog->ui->progressBar->setValue( 0 );
-    m_pStatusDialog->open();
-    //Frames in the export queue?!
-    int totalFrames = 0;
-    for( int i = 0; i < m_exportQueue.size(); i++ )
-    {
-        totalFrames += m_exportQueue.at(i)->cutOut() - m_exportQueue.at(i)->cutIn() + 1;
-    }
 
     //Create folders and build name schemes
     QString pathName = QFileInfo( fileName ).path();
@@ -2851,19 +2907,100 @@ void MainWindow::startExportCdng(QString fileName)
         picAR[2] = 1; picAR[3] = 1;
     }
 
-    //Init DNG data struct
-    dngObject_t * cinemaDng = initDngObject( m_pMlvObject, m_codecProfile - 6, getFramerate(), picAR);
-
     //Render one single frame for raw correction init
     uint32_t frameSize = getMlvWidth( m_pMlvObject ) * getMlvHeight( m_pMlvObject ) * 3;
-    uint16_t * imgBuffer;
+    uint16_t* imgBuffer;
     imgBuffer = ( uint16_t* )malloc( frameSize * sizeof( uint16_t ) );
     getMlvProcessedFrame16( m_pMlvObject, 0, imgBuffer, QThread::idealThreadCount() );
     free( imgBuffer );
 
-    //Output frames loop
-    for( uint32_t frame = m_exportQueue.first()->cutIn() - 1; frame < m_exportQueue.first()->cutOut(); frame++ )
+    std::atomic<unsigned int> exportedFrames{ 0 };
+    std::atomic<unsigned int> exportError{ 0 };
+    std::atomic<unsigned int> errorFrame{ 0 };
+
+    uint32_t start = m_exportQueue.first()->cutIn() - 1;
+    uint32_t end = m_exportQueue.first()->cutOut();
+
+    if( m_pExportedFramesArray )
     {
+        // Count successfully exported frames after resume
+        for( uint32_t frame = start; frame < end; frame++ )
+        {
+            if( m_pExportedFramesArray[frame] ) exportedFrames++;
+        }
+    }
+    else
+    {
+        // Parallel processing requires an array to track exported frames
+        m_pExportedFramesArray = ( uint32_t* )calloc( end, sizeof( uint32_t ));
+
+        // StatusDialog
+        m_pStatusDialog->ui->progressBar->setMaximum( m_exportQueue.first()->cutOut() - m_exportQueue.first()->cutIn() + 1 );
+        m_pStatusDialog->ui->progressBar->setValue( 0 );
+        m_pStatusDialog->open();
+    }
+
+    //Frames in the export queue?!
+    uint32_t totalFrames = 0;
+    for( int i = 0; i < m_exportQueue.size(); i++ )
+    {
+        totalFrames += m_exportQueue.at(i)->cutOut() - m_exportQueue.at(i)->cutIn() + 1;
+    }
+
+    auto updateProgress = [&]() {
+        if( m_pStatusDialog->isPaused() ) return;
+        int done = exportedFrames.load();
+        m_pStatusDialog->ui->progressBar->setValue( done );
+        m_pStatusDialog->totalProgressBar( totalFrames - done );
+        m_pStatusDialog->drawTimeFromToDoFrames( totalFrames - done );
+    };
+
+    // Update immediately
+    updateProgress();
+    qApp->processEvents();
+
+    // Create timer for updating the progress and checking disk space
+    QTimer* progressTimer = new QTimer(this);
+
+    connect(progressTimer, &QTimer::timeout, this, [&]() {
+        updateProgress();
+
+        // Check disk space quietly and set `m_exportAbortPressed = true` if full
+        checkDiskFull( pathName, false );
+    });
+
+    // No need for shorter interval than 500 ms (m_pStatusDialog still depends on qApp->processEvents())
+    progressTimer->start(500);
+
+    /*
+     * Frame cost is mostly uniform, so schedule(static, 1)
+     * could be used to achieve a more even, round-robin
+     * distribution of frames across threads:
+     *
+     * T0 → 0, 4, 8, 12, ...
+     * T1 → 1, 5, 9, 13, ...
+     * T2 → 2, 6, 10, 14, ...
+     * T3 → 3, 7, 11, 15, ...
+     * ...
+     *
+     * However, schedule(dynamic) is used to improve load
+     * balancing in case some frames occasionally take longer
+     * to process or some CPU cores are not fully available.
+     */
+    #pragma omp parallel for schedule(dynamic)
+    for( uint32_t frame = start; frame < end; frame++ )
+    {
+        if( exportError.load() ||
+            m_exportAbortPressed ||
+            m_pStatusDialog->isPaused() ||
+            m_pExportedFramesArray[frame] )
+        {
+            continue;
+        }
+
+        //Init DNG data struct
+        dngObject_t * cinemaDng = initDngObject( m_pMlvObject, m_codecProfile - 6, getFramerate(), picAR);
+
         QString dngName;
         if( m_codecOption == CODEC_CNDG_DEFAULT ) dngName = dngName.append( "%1_%2.dng" )
                                                                                 .arg( fileName )
@@ -2882,49 +3019,95 @@ void MainWindow::startExportCdng(QString fileName)
 #ifdef Q_OS_UNIX
         QString properties_fn = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
         properties_fn.append("/mlv-dng-params.txt");
-        if( saveDngFrame( m_pMlvObject, cinemaDng, frame, filePathNr.toUtf8().data(), properties_fn.toUtf8().data() ) )
+        int error = saveDngFrame( m_pMlvObject, cinemaDng, frame, filePathNr.toUtf8().data(), properties_fn.toUtf8().data() );
 #else
         QString properties_fn = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
         properties_fn.append("\\mlv-dng-params.txt");
-        if( saveDngFrame( m_pMlvObject, cinemaDng, frame, filePathNr.toLatin1().data(), properties_fn.toLatin1().data() ) )
+        int error = saveDngFrame( m_pMlvObject, cinemaDng, frame, filePathNr.toLatin1().data(), properties_fn.toLatin1().data() );
 #endif
+
+        if( error )
         {
-            m_pStatusDialog->close();
-            qApp->processEvents();
-            int ret = QMessageBox::critical( this,
-                                             tr( "MLV App - Export file error" ),
-                                             tr( "Could not save: %1\nHow do you like to proceed?" ).arg( dngName ),
-                                             tr( "Skip frame" ),
-                                             tr( "Abort current export" ),
-                                             tr( "Abort batch export" ),
-                                             0, 2 );
-            if( ret == 2 )
-            {
-                exportAbort();
-            }
-            if( ret > 0 )
-            {
-                break;
-            }
+            exportError = 1;
+            errorFrame = getMlvFrameNumber( m_pMlvObject, frame );
+        }
+        else
+        {
+            exportedFrames++;
+            m_pExportedFramesArray[frame] = 1;
         }
 
-        //Set Status
-        m_pStatusDialog->ui->progressBar->setValue( frame - ( m_exportQueue.first()->cutIn() - 1 ) + 1 );
-        m_pStatusDialog->ui->progressBar->repaint();
-        m_pStatusDialog->drawTimeFromToDoFrames( totalFrames - frame + ( m_exportQueue.first()->cutIn() - 1 ) - 1 );
-        qApp->processEvents();
+        //Free DNG data struct
+        freeDngObject( cinemaDng );
 
-        //Check diskspace
-        checkDiskFull( filePathNr );
-        //Abort pressed? -> End the loop
-        if( m_exportAbortPressed ) break;
+        // Just to be safe, so QT won't crash. But there is probably a better way to make UI responsive.
+        #pragma omp critical
+        {
+            qApp->processEvents();
+        }
     }
 
-    //Free DNG data struct
-    freeDngObject( cinemaDng );
+    // To make progress update nicely to 100%
+    updateProgress();
+    qApp->processEvents();
+
+    // Stop and delete timer
+    progressTimer->stop();
+    progressTimer->deleteLater();
+
+    // Safe to resume
+    m_pStatusDialog->m_isLoopRunning = false;
+
+    // Check disk space again after the parallel loop and show dialog if full
+    if( checkDiskFull( pathName, true ) )
+    {
+        exportAbort();
+    }
+    // Show dialog if error occurred
+    else if( exportError.load() )
+    {
+        // Pause time
+        m_pStatusDialog->togglePauseResume( 0 );
+
+        int abortBatch = QMessageBox::critical(
+            this,
+            tr( "%1 – Export file error" ).arg( APPNAME ),
+
+            tr( "Error exporting frame %1 from %2 clip.\nHow do you like to proceed?" )
+                .arg( errorFrame.load() )
+                .arg( fileName ),
+
+            tr( "Abort current export" ),
+            tr( "Abort batch export" ),
+            0, 0
+        );
+
+        // Resume time
+        m_pStatusDialog->togglePauseResume( 1 );
+
+        if( abortBatch )
+        {
+            exportAbort();
+        }
+    }
+    // Confirm export abort
+    else if( m_exportAbortPressed && !confirmAbort() )
+    {
+        // Resume export
+        m_pStatusDialog->togglePauseResume( 2 );
+        return;
+    }
+
+    if( m_pStatusDialog->isPaused() )
+    {
+        return;
+    }
 
     //Enable GUI drawing
     m_dontDraw = false;
+
+    free( m_pExportedFramesArray );
+    m_pExportedFramesArray = NULL;
 
     //Emit Ready-Signal
     emit exportReady();
@@ -2940,6 +3123,7 @@ void MainWindow::startExportMlv(QString fileName)
     m_pStatusDialog->ui->progressBar->setMaximum( m_exportQueue.first()->cutOut() - m_exportQueue.first()->cutIn() + 1 );
     m_pStatusDialog->ui->progressBar->setValue( 0 );
     m_pStatusDialog->open();
+
     //Frames in the export queue?!
     uint32_t totalFrames = 0;
     for( int i = 0; i < m_exportQueue.size(); i++ )
@@ -2987,24 +3171,29 @@ void MainWindow::startExportMlv(QString fileName)
             QFile( pathName ).remove();
 
             ret = QMessageBox::critical( this,
-                                         tr( "MLV App - Export file error" ),
+                                         tr( "%1 – Export file error" ).arg( APPNAME ),
                                          tr( "%1" ).arg( errorMessage ),
                                          tr( "Abort current export" ),
                                          tr( "Abort batch export" ),
-                                         0, 1 );
+                                         0, 0 );
             if( ret ) exportAbort();
             else break;
         }
         else
         {
+            uint32_t framesToDo = totalFrames - frame + ( m_exportQueue.first()->cutIn() - 1 ) - 1;
+
             //Set Status
             m_pStatusDialog->ui->progressBar->setValue( frame - ( m_exportQueue.first()->cutIn() - 1 ) + 1 );
-            m_pStatusDialog->ui->progressBar->repaint();
-            m_pStatusDialog->drawTimeFromToDoFrames( totalFrames - frame + ( m_exportQueue.first()->cutIn() - 1 ) - 1 );
+            m_pStatusDialog->totalProgressBar( framesToDo );
+            m_pStatusDialog->drawTimeFromToDoFrames( framesToDo );
             qApp->processEvents();
         }
+
+        if( m_codecOption == CODEC_MLV_EXTRACT_DF) break;
+
         //Abort pressed? -> End the loop
-        if( m_exportAbortPressed || m_codecOption == CODEC_MLV_EXTRACT_DF) break;
+        if( m_exportAbortPressed && confirmAbort() ) break;
     }
     //Clean up
     if( averagedImage ) free( averagedImage );
@@ -3079,8 +3268,9 @@ void MainWindow::startExportAVFoundation(QString fileName)
     m_pStatusDialog->ui->progressBar->setMaximum( m_exportQueue.first()->cutOut() - m_exportQueue.first()->cutIn() + 1 );
     m_pStatusDialog->ui->progressBar->setValue( 0 );
     m_pStatusDialog->open();
+
     //Frames in the export queue?!
-    int totalFrames = 0;
+    uint32_t totalFrames = 0;
     for( int i = 0; i < m_exportQueue.size(); i++ )
     {
         totalFrames += m_exportQueue.at(i)->cutOut() - m_exportQueue.at(i)->cutIn() + 1;
@@ -3226,16 +3416,19 @@ void MainWindow::startExportAVFoundation(QString fileName)
             }
         }
 
+        uint32_t framesToDo = totalFrames - frame + ( m_exportQueue.first()->cutIn() - 1 ) - 1;
+
         //Set Status
         m_pStatusDialog->ui->progressBar->setValue( frame - ( m_exportQueue.first()->cutIn() - 1 ) + 1 );
-        m_pStatusDialog->ui->progressBar->repaint();
-        m_pStatusDialog->drawTimeFromToDoFrames( totalFrames - frame + ( m_exportQueue.first()->cutIn() - 1 ) - 1 );
+        m_pStatusDialog->totalProgressBar( framesToDo );
+        m_pStatusDialog->drawTimeFromToDoFrames( framesToDo );
         qApp->processEvents();
 
-        //Check diskspace
-        checkDiskFull( fileName );
+        //Check disk space
+        checkDiskFull( fileName, true );
+
         //Abort pressed? -> End the loop
-        if( m_exportAbortPressed ) break;
+        if( m_exportAbortPressed && confirmAbort() ) break;
     }
 
     //Clean up
@@ -3332,7 +3525,7 @@ void MainWindow::addFileToSession(QString fileName)
     qApp->processEvents();
 }
 
-int MainWindow::askToSaveCurrentSession()
+int MainWindow::askToSaveCurrentSession( void )
 {
     switch( QMessageBox::warning( this,
                                   APPNAME,
@@ -4418,7 +4611,7 @@ void MainWindow::deleteSession()
         m_pInfoDialog->ui->tableWidget->item( i, 1 )->setText( "–" );
     }
 
-    ui->label_resResolution->setText( "0 x 0 pixels" );
+    ui->label_resResolution->setText( "0 × 0 pixels" );
 
     //Adapt slider to clip and move to position 0
     ui->horizontalSliderPosition->setValue( 0 );
@@ -5164,9 +5357,13 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     //A file must be opened once before being able to be exported
     if( GET_RECEIPT( row )->wasNeverLoaded() )
     {
-        m_pStatusDialog->ui->label->setText( "Preparing export..." );
+        m_pStatusDialog->ui->label->setText( tr( "Preparing export…" ) );
         m_pStatusDialog->ui->labelEstimatedTime->setText( "" );
         m_pStatusDialog->ui->progressBar->setValue( 0 );
+        m_pStatusDialog->ui->totalProgressBar->hide();
+        m_pStatusDialog->ui->pushButtonPause->hide();
+        m_pStatusDialog->layout()->activate();
+        m_pStatusDialog->adjustSize();
         m_pStatusDialog->open();
         if( showFileInEditor( row ) ) return; //Don't add to export queue when corrupted file
         qApp->processEvents();
@@ -5690,6 +5887,8 @@ void MainWindow::setToolButtonDualIsoInterpolation(int index)
         break;
     case 1: ui->toolButtonDualIsoInterpolationMean->setChecked( true );
         break;
+    case 2: ui->toolButtonDualIsoInterpolationRCD->setChecked( true );
+        break;
     default: break;
     }
     if( actualize ) toolButtonDualIsoInterpolationChanged();
@@ -5854,7 +6053,8 @@ int MainWindow::toolButtonDualIsoCurrentIndex()
 int MainWindow::toolButtonDualIsoInterpolationCurrentIndex()
 {
     if( ui->toolButtonDualIsoInterpolationAmaze->isChecked() ) return 0;
-    else return 1;
+    if( ui->toolButtonDualIsoInterpolationMean->isChecked() ) return 1;
+    else return 2;
 }
 
 //Get toolbutton index of dual iso alias map
@@ -6343,7 +6543,7 @@ void MainWindow::on_horizontalSliderDualIsoEvCorrection_valueChanged(int positio
     else
     {
         if( m_frameStillDrawing ) return;
-        m_pMlvObject->llrawproc->diso_auto_correction = -m_pMlvObject->llrawproc->diso_auto_correction;        
+        m_pMlvObject->llrawproc->diso_auto_correction = -m_pMlvObject->llrawproc->diso_auto_correction;
     }
 
     if( !m_fileLoaded ) return;
@@ -6367,7 +6567,7 @@ void MainWindow::on_horizontalSliderDualIsoBlackDelta_valueChanged(int position)
     else
     {
         if( m_frameStillDrawing ) return;
-        m_pMlvObject->llrawproc->diso_auto_correction = -m_pMlvObject->llrawproc->diso_auto_correction;        
+        m_pMlvObject->llrawproc->diso_auto_correction = -m_pMlvObject->llrawproc->diso_auto_correction;
     }
 
     if( !m_fileLoaded ) return;
@@ -6694,7 +6894,7 @@ void MainWindow::on_horizontalSliderDualIsoEvCorrection_doubleClicked()
 
 void MainWindow::on_horizontalSliderDualIsoBlackDelta_doubleClicked()
 {
-    on_horizontalSliderDualIsoBlackDelta_valueChanged( -1 );    
+    on_horizontalSliderDualIsoBlackDelta_valueChanged( -1 );
 }
 
 void MainWindow::on_horizontalSliderTone_doubleClicked()
@@ -6868,7 +7068,7 @@ void MainWindow::on_actionExport_triggered()
      && !isExportSequence() )
     {
         //File Dialog
-        QString fileName = QFileDialog::getSaveFileName( this, tr("Export..."),
+        QString fileName = QFileDialog::getSaveFileName( this, tr("Export…"),
                                                         saveFileName,
                                                         fileType );
 
@@ -6909,7 +7109,7 @@ void MainWindow::on_actionExport_triggered()
                 fileName.prepend( "/" );
                 fileName.prepend( folderName );
 
-                if( QDir( fileName ).exists() ) overwriteList.append( fileName.append( "/..." ) );
+                if( QDir( fileName ).exists() ) overwriteList.append( fileName.append( "/…" ) );
             }
             //Clips
             else
@@ -7207,7 +7407,7 @@ void MainWindow::resultingResolution( void )
     if( !SESSION_CLIP_COUNT ) return;
     int x = getMlvWidth( m_pMlvObject ) * getHorizontalStretchFactor( false );
     int y = getMlvHeight( m_pMlvObject ) * getVerticalStretchFactor( false );
-    ui->label_resResolution->setText( QString( "%1 x %2 pixels" ).arg(x).arg(y) );
+    ui->label_resResolution->setText( QString( "%1 × %2 pixels" ).arg( x ).arg( y ) );
 }
 
 //Is the current export setting set to sequnce?
@@ -7772,7 +7972,7 @@ void MainWindow::deleteFileFromSession( void )
     //Ask for options
     QMessageBox msg;
     msg.setIcon( QMessageBox::Question );
-    msg.setWindowTitle( tr( "%1 - Remove clip" ).arg( APPNAME ) );
+    msg.setWindowTitle( tr( "%1 – Remove clip" ).arg( APPNAME ) );
     msg.setText( tr( "Remove clip from session, or delete clip from disk?" ) );
     msg.addButton(tr("Remove"), QMessageBox::ApplyRole);
     QPushButton *deleteButton = msg.addButton(tr("Delete from Disk"), QMessageBox::ActionRole);
@@ -7805,14 +8005,14 @@ void MainWindow::deleteFileFromSession( void )
             freeMlvObject( m_pMlvObject );
             m_pMlvObject = initMlvObject();
 #endif
-            if( MoveToTrash( GET_RECEIPT(row)->fileName() ) ) QMessageBox::critical( this, tr( "%1 - Delete clip from disk" ).arg( APPNAME ), tr( "Delete clip failed!" ) );
+            if( MoveToTrash( GET_RECEIPT(row)->fileName() ) ) QMessageBox::critical( this, tr( "%1 – Delete clip from disk" ).arg( APPNAME ), tr( "Delete clip failed!" ) );
             //MAPP
             QString mappName = GET_RECEIPT(row)->fileName();
             mappName.chop( 4 );
             mappName.append( ".MAPP" );
             if( QFileInfo( mappName ).exists() )
             {
-                if( MoveToTrash( mappName ) ) QMessageBox::critical( this, tr( "%1 - Delete MAPP file from disk" ).arg( APPNAME ), tr( "Delete MAPP file failed!" ) );
+                if( MoveToTrash( mappName ) ) QMessageBox::critical( this, tr( "%1 – Delete MAPP file from disk" ).arg( APPNAME ), tr( "Delete MAPP file failed!" ) );
             }
             //M00..M99
             mappName.chop( 1 );
@@ -7822,7 +8022,7 @@ void MainWindow::deleteFileFromSession( void )
                 mappName.append( QString( "%1" ).arg( nr, 2, 10, QChar( '0' ) ) );
                 if( QFileInfo( mappName ).exists() )
                 {
-                    if( MoveToTrash( mappName ) ) QMessageBox::critical( this, tr( "%1 - Delete M%2 file from disk" ).arg( APPNAME ).arg( nr, 2, 10, QChar( '0' ) ), tr( "Delete M%1 file failed!" ).arg( nr, 2, 10, QChar( '0' ) ) );
+                    if( MoveToTrash( mappName ) ) QMessageBox::critical( this, tr( "%1 – Delete M%2 file from disk" ).arg( APPNAME ).arg( nr, 2, 10, QChar( '0' ) ), tr( "Delete M%1 file failed!" ).arg( nr, 2, 10, QChar( '0' ) ) );
                 }
                 else
                 {
@@ -8473,6 +8673,7 @@ void MainWindow::exportHandler( void )
     static bool exportRunning = false;
     static int numberOfJobs = 1;
     static int jobNumber = 0;
+
     //Was started?
     if( exportRunning )
     {
@@ -8487,22 +8688,38 @@ void MainWindow::exportHandler( void )
     {
         //If not running save number of jobs
         numberOfJobs = m_exportQueue.size();
-        m_exportAbortPressed = false;
         jobNumber = 0;
-        int totalFrames = 0;
+
+        uint32_t totalFrames = 0;
         for( int i = 0; i < numberOfJobs; i++ )
         {
             totalFrames += m_exportQueue.at(i)->cutOut() - m_exportQueue.at(i)->cutIn() + 1;
         }
-        m_pStatusDialog->setTotalFrames( totalFrames );
-        m_pStatusDialog->startExportTime();
+
+        m_pStatusDialog->exportStart( numberOfJobs, totalFrames );
     }
+
+    // Resume export connection
+    static QMetaObject::Connection resumeExport;
+    if( resumeExport ) disconnect( resumeExport );
+
     //Are there jobs?
     if( !m_exportQueue.empty() )
     {
+        // Check disk space before export
+        if( checkDiskFull( m_exportQueue.first()->exportFileName(), true ) )
+        {
+            exportAbort();
+            emit exportReady();
+            return;
+        }
+
+        m_exportAbortPressed = false;
+
         //Next job!
         exportRunning = true;
         jobNumber++;
+
         //Open file and settings
         if( openMlv( m_exportQueue.first()->fileName() ) )
         {
@@ -8510,19 +8727,126 @@ void MainWindow::exportHandler( void )
             emit exportReady();
             return;
         }
+
         //Set sliders to receipt
         setSliders( m_exportQueue.first(), false );
+
+        // Get codec name for label in StatusDialog
+        QString codecName = "";
+
+        switch ( m_codecProfile )
+        {
+            case CODEC_PRORES422PROXY:
+                codecName = "Apple ProRes 422 Proxy";
+                break;
+            case CODEC_PRORES422LT:
+                codecName = "Apple ProRes 422 LT";
+                break;
+            case CODEC_PRORES422ST:
+                codecName = "Apple ProRes 422";
+                break;
+            case CODEC_PRORES422HQ:
+                codecName = "Apple ProRes 422 HQ";
+                break;
+            case CODEC_PRORES4444:
+                codecName = "Apple ProRes 4444";
+                break;
+            case CODEC_AVI:
+                codecName = "Uncompressed AVI";
+                break;
+            case CODEC_CDNG:
+                codecName = "CinemaDNG Uncompressed";
+                break;
+            case CODEC_CDNG_LOSSLESS:
+                codecName = "CinemaDNG Lossless";
+                break;
+            case CODEC_CDNG_FAST:
+                codecName = "CinemaDNG Fast Pass";
+                break;
+            case CODEC_H264:
+                codecName = "H.264";
+                break;
+            case CODEC_H265_8:
+                codecName = "H.265 8bit 4:2:0";
+                break;
+            case CODEC_H265_10:
+                codecName = "H.265 10bit 4:2:0";
+                break;
+            case CODEC_H265_12:
+                codecName = "H.265 12bit 4:4:4";
+                break;
+            case CODEC_TIFF:
+                codecName = "TIFF";
+                break;
+            case CODEC_PNG:
+                codecName = "PNG Sequence";
+                break;
+            case CODEC_JPG2K:
+                codecName = "JPEG2000";
+                break;
+            case CODEC_MJPEG:
+                codecName = "Motion JPEG";
+                break;
+            case CODEC_FFVHUFF:
+                codecName = "Huff YUV (FFVH)";
+                break;
+            case CODEC_MLV:
+                codecName = "MLV";
+                break;
+            case CODEC_DNXHR:
+                codecName = "DNxHD";
+                break;
+            case CODEC_DNXHD:
+                codecName = "DNxHR";
+                break;
+            case CODEC_CINEFORM_10:
+                codecName = "GoPro Cineform 10bit 4:2:2";
+                break;
+            case CODEC_CINEFORM_12:
+                codecName = "GoPro Cineform 12bit 4:4:4";
+                break;
+            case CODEC_VP9:
+                codecName = "VP9";
+                break;
+            case CODEC_AUDIO_ONLY:
+                codecName = "WAV (Audio Only)";
+                break;
+        }
+
+        if( !codecName.isEmpty() )
+        {
+            codecName = QString( " – %1" ).arg( codecName );
+        }
+
         //Fill label in StatusDialog
-        m_pStatusDialog->ui->label->setText( tr( "%1/%2 - %3" )
-                                             .arg( jobNumber )
-                                             .arg( numberOfJobs )
-                                             .arg( QFileInfo( m_exportQueue.first()->fileName() ).fileName() ) );
+        m_pStatusDialog->ui->label->setText(
+            tr( "Exporting – %1/%2 – %3%4" )
+                .arg( jobNumber )
+                .arg( numberOfJobs )
+                .arg( QFileInfo( m_exportQueue.first()->fileName() ).fileName() )
+                .arg( codecName )
+        );
+
+        m_pStatusDialog->setJobFrames( m_exportQueue.first()->cutOut() - m_exportQueue.first()->cutIn() + 1 );
+
+        if( m_pExportedFramesArray )
+        {
+            free( m_pExportedFramesArray );
+            m_pExportedFramesArray = NULL;
+        }
 
         //Start it, raw/rendered
         if( m_codecProfile == CODEC_CDNG
          || m_codecProfile == CODEC_CDNG_LOSSLESS
          || m_codecProfile == CODEC_CDNG_FAST )
         {
+            m_pStatusDialog->ui->pushButtonPause->show();
+
+            // Resume export connection
+            resumeExport = connect(m_pStatusDialog, &StatusDialog::resumePressed, this, [&]() {
+                startExportCdng( m_exportQueue.first()->exportFileName() );
+            });
+
             //raw output
             startExportCdng( m_exportQueue.first()->exportFileName() );
         }
@@ -8555,6 +8879,8 @@ void MainWindow::exportHandler( void )
     {
         //Hide Status Dialog
         m_pStatusDialog->close();
+        qApp->processEvents();
+
         //Open last file which was opened before export
         openMlv( GET_RECEIPT( m_lastClipBeforeExport )->fileName() );
         setSliders( GET_RECEIPT( m_lastClipBeforeExport ), false );
@@ -8568,11 +8894,28 @@ void MainWindow::exportHandler( void )
         {
             //Start export script when ready
             m_pScripting->executePostExportScript();
+
             if( ui->actionNotificationExportFinished->isChecked() )
-                QMessageBox::information( this, tr( "Export" ), tr( "Export is ready." ) );
+            {
+                QString elapsedTimeString = m_pStatusDialog->getElapsedTimeString();
+                QString message;
+
+                if( elapsedTimeString == QString( "00:00:00" ) )
+                {
+                    message = tr( "Export is finished." );
+                }
+                else
+                {
+                    message = tr( "Export finished in %1." ).arg( elapsedTimeString );
+                }
+
+                QMessageBox::information( this, tr( "Export" ), message );
+            }
         }
         else if( ui->actionNotificationExportFinished->isChecked() )
-            QMessageBox::information( this, tr( "Export" ), tr( "Export aborted." ) );
+        {
+            QMessageBox::information( this, tr( "Export" ), tr( "Export was aborted." ) );
+        }
 
         //Caching is in which state? Set it!
         if( ui->actionCaching->isChecked() ) on_actionCaching_triggered();
@@ -8657,8 +9000,8 @@ void MainWindow::toolButtonBadPixelsChanged( void )
     ui->toolButtonBadPixelsCrosshairEnable->setVisible( index >= 3 );
     ui->toolButtonBadPixelsSearchMethodNormal->setVisible( index < 3 );
     ui->toolButtonBadPixelsSearchMethodAggressive->setVisible( index < 3 );
-    if( index < 3 ) ui->FocusPixelsInterpolationMethodLabel_2->setText( "Search Method" );
-    else ui->FocusPixelsInterpolationMethodLabel_2->setText( "Edit" );
+    if( index < 3 ) ui->FocusPixelsInterpolationMethodLabel_2->setText( tr( "Search Method" ) );
+    else ui->FocusPixelsInterpolationMethodLabel_2->setText( tr( "Edit" ) );
 
     llrpResetBpmStatus(m_pMlvObject);
     resetMlvCache( m_pMlvObject );
@@ -9149,13 +9492,13 @@ void MainWindow::on_checkBoxVidstabTripod_toggled(bool checked)
 void MainWindow::on_toolButtonDeleteBpm_clicked()
 {
     if( !m_fileLoaded ) return;
-    if( QMessageBox::warning( this, tr( "%1 - Remove bad pixel map" ).arg( APPNAME ), tr( "Delete bad pixel map from disk?" ), tr( "Delete from Disk" ), tr( "Abort" ) ) )
+    if( QMessageBox::warning( this, tr( "%1 – Remove bad pixel map" ).arg( APPNAME ), tr( "Delete bad pixel map from disk?" ), tr( "Delete from Disk" ), tr( "Abort" ) ) )
     {
         return;
     }
     if( BadPixelFileHandler::deleteCurrentMap( m_pMlvObject ) )
     {
-        QMessageBox::critical( this, tr( "%1 - Delete bad pixel map from disk" ).arg( APPNAME ), tr( "Delete bad pixel map failed!" ) );
+        QMessageBox::critical( this, tr( "%1 – Delete bad pixel map from disk" ).arg( APPNAME ), tr( "Delete bad pixel map failed!" ) );
         return;
     }
     //Prepare crosses for bad pixel map
@@ -9468,6 +9811,17 @@ void MainWindow::on_groupBoxTransformation_toggled(bool arg1)
 }
 
 //Abort pressed while exporting
+void MainWindow::exportAbortPressed( void )
+{
+    m_exportAbortPressed = true;
+
+    if( m_pStatusDialog->isPaused() && confirmAbort() )
+    {
+        emit exportReady();
+    }
+}
+
+//Abort export and clear queue
 void MainWindow::exportAbort( void )
 {
     m_exportAbortPressed = true;
@@ -9641,7 +9995,7 @@ void MainWindow::drawFrameReady()
             ui->labelScope->setScope( m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), under, over, ScopesLabel::ScopeVectorScope );
         }
     }
-    
+
     //Drawing ready, next frame can be rendered
     m_frameStillDrawing = false;
 
@@ -10244,7 +10598,7 @@ void MainWindow::on_toolButtonDarkFrameSubtractionFile_clicked()
     if( !QDir( path ).exists() ) path = QDir::homePath();
 
     //Open File Dialog
-    QString fileName = QFileDialog::getOpenFileName( this, tr("Open one or more MLV..."),
+    QString fileName = QFileDialog::getOpenFileName( this, tr("Open one or more MLV…"),
                                                     path,
                                                     tr("Magic Lantern Video (*.mlv *.MLV)") );
 
@@ -10271,7 +10625,7 @@ void MainWindow::on_lineEditDarkFrameFile_textChanged(const QString &arg1)
         if( ret )
         {
             QMessageBox::critical( this, tr( "Error" ), tr( "%1" ).arg( errorMessage ), QMessageBox::Cancel, QMessageBox::Cancel );
-            ui->lineEditDarkFrameFile->setText( "No file selected" );
+            ui->lineEditDarkFrameFile->setText( tr( "No file selected" ) );
             return;
         }
         else if( !ret && errorMessage[0] )
@@ -10324,7 +10678,7 @@ void MainWindow::on_toolButtonLoadLut_clicked()
     if( !QDir( path ).exists() ) path = QDir::homePath();
 
     //Open File Dialog
-    QString fileName = QFileDialog::getOpenFileName( this, tr("Open cube LUT (*.cube)..."),
+    QString fileName = QFileDialog::getOpenFileName( this, tr("Open cube LUT (*.cube)…"),
                                                     path,
                                                     tr("Cube LUT (*.cube *.CUBE)") );
 
@@ -10460,10 +10814,14 @@ void MainWindow::on_actionCreateAllMappFilesNow_triggered()
     setEnabled( false );
 
     m_pStatusDialog->setEnabled( true );
-    m_pStatusDialog->ui->label->setText( "Creating MAPP files..." );
+    m_pStatusDialog->ui->label->setText( tr( "Creating MAPP files…" ) );
     m_pStatusDialog->ui->labelEstimatedTime->setText( "" );
     m_pStatusDialog->ui->progressBar->setValue( 0 );
-    m_pStatusDialog->ui->pushButtonAbort->setVisible( false );
+    m_pStatusDialog->ui->totalProgressBar->hide();
+    m_pStatusDialog->ui->pushButtonPause->hide();
+    m_pStatusDialog->ui->pushButtonAbort->hide();
+    m_pStatusDialog->layout()->activate();
+    m_pStatusDialog->adjustSize();
     m_pStatusDialog->open();
 
     //Open all clips
@@ -11030,15 +11388,24 @@ void MainWindow::listViewSessionUpdate()
 }
 
 //Check if disk nearly full
-void MainWindow::checkDiskFull(QString path)
+bool MainWindow::checkDiskFull(QString path, bool showDialog)
 {
     QStorageInfo disk = QStorageInfo( QFileInfo( path ).path() );
+
     //qDebug() << QFileInfo( path ).path() << "availableSize:" << disk.bytesAvailable()/1024/1024 << "MB";
     if( 20 > disk.bytesAvailable()/1024/1024 )
     {
-        QMessageBox::warning( this, APPNAME, tr( "Disk full. Export aborted." ) );
         m_exportAbortPressed = true;
+
+        if( showDialog )
+        {
+            QMessageBox::warning( this, APPNAME, tr( "Disk is full. Export was aborted." ) );
+        }
+
+        return true;
     }
+
+    return false;
 }
 
 //Changed the transfer function text

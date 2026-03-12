@@ -160,6 +160,7 @@ llrawprocObject_t * initLLRawProcObject()
     llrawproc->fpm_status = 0;
     llrawproc->bpm_status = 0;
     llrawproc->compute_stripes = 0;
+
     llrawproc->dual_iso = 0;
     llrawproc->diso_pattern = 0;
     llrawproc->diso_auto_correction = -1;
@@ -168,6 +169,7 @@ llrawprocObject_t * initLLRawProcObject()
     llrawproc->diso_averaging = 0;
     llrawproc->diso_alias_map = 0;
     llrawproc->diso_frblending = 1;
+
     llrawproc->dark_frame = 0;
 
     llrawproc->dark_frame_filename = NULL;
@@ -223,12 +225,11 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
         make_14bit(raw_image_buff, raw_image_size, &raw_info);
     }
 
-    /* initialize dual iso black and white levels */
-    llrpResetDngBWLevels(video);
-
     /* initialise or update the LUTs if the black level has changed */
     if (video->llrawproc->prev_black_level != raw_info.black_level)
     {
+        llrpResetDngBWLevels(video);
+
         free_luts(video->llrawproc->raw2ev, video->llrawproc->ev2raw);
         video->llrawproc->raw2ev = get_raw2ev(raw_info.black_level);
         video->llrawproc->ev2raw = get_ev2raw(raw_info.black_level);
@@ -319,11 +320,9 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
         raw_info.active_area.y1 = 0;
         raw_info.active_area.x2 = raw_info.width;
         raw_info.active_area.y2 = raw_info.height;
-        
-        /* detect if lossless raw data is restricted to imaginary 8-12bit levels */
-        int restricted_lossless = (video->MLVI.videoClass & MLV_VIDEO_CLASS_FLAG_LJ92) && raw_info.white_level < 15000;
 
-        if(restricted_lossless)
+        /* detect if raw data is restricted to imaginary 8-12bit levels */
+        if (raw_info.white_level < 15000)
         {
 #ifndef STDOUT_SILENT
             printf("\nScaling raw data range...\n");
@@ -369,10 +368,18 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
             video->llrawproc->dng_white_level = raw_info.white_level << bits_shift;
             video->llrawproc->dng_bit_depth = 16;
 
-            /* for dualiso blacklevel may have been changed. Correct values needed for following pixel fixes */
-            free_luts(video->llrawproc->raw2ev, video->llrawproc->ev2raw);
-            video->llrawproc->raw2ev = get_raw2ev(video->llrawproc->dng_black_level);
-            video->llrawproc->ev2raw = get_ev2raw(video->llrawproc->dng_black_level);
+            static int prev_dng_black_level = -1;
+            static int * diso_raw2ev = NULL, * diso_ev2raw = NULL;
+
+            /* initialise or update the LUTs if the black level has changed */
+            if (prev_dng_black_level != video->llrawproc->dng_black_level)
+            {
+                free_luts(diso_raw2ev, diso_ev2raw);
+                diso_raw2ev = get_raw2ev(video->llrawproc->dng_black_level);
+                diso_ev2raw = get_ev2raw(video->llrawproc->dng_black_level);
+
+                prev_dng_black_level = video->llrawproc->dng_black_level;
+            }
 
             /* fix focus pixels */
             if (video->llrawproc->focus_pixels && video->llrawproc->fpm_status < 3)
@@ -395,8 +402,8 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
                                  unified_mode,
                                  2,
                                  0,
-                                 video->llrawproc->raw2ev,
-                                 video->llrawproc->ev2raw);
+                                 diso_raw2ev,
+                                 diso_ev2raw);
             }
 
             /* fix bad pixels */
@@ -417,14 +424,9 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
                                video->llrawproc->bps_method,
                                2,
                                0,
-                               video->llrawproc->raw2ev,
-                               video->llrawproc->ev2raw);
+                               diso_raw2ev,
+                               diso_ev2raw);
             }
-
-            /* revert LUTs */
-            free_luts(video->llrawproc->raw2ev, video->llrawproc->ev2raw);
-            video->llrawproc->raw2ev = get_raw2ev(raw_info.black_level);
-            video->llrawproc->ev2raw = get_ev2raw(raw_info.black_level);
         }
         /*
         else if (video->llrawproc->dual_iso == 2) // Preview mode
