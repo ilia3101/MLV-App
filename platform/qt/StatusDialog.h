@@ -30,6 +30,7 @@ public:
     void totalProgressBar( uint32_t framesToDo );
     bool isPaused( void );
     void togglePauseResume( int state );
+    QString getElapsedTimeString( void );
     bool m_isLoopRunning;
 
 protected:
@@ -42,6 +43,7 @@ private:
     QDateTime m_startTime;
     QDateTime m_jobStartTime;
     QDateTime m_pausedTime;
+    double m_secsElapsed;
     bool m_paused;
     QString getTimeString( double secsRemaining );
 

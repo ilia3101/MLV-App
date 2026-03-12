@@ -8894,11 +8894,28 @@ void MainWindow::exportHandler( void )
         {
             //Start export script when ready
             m_pScripting->executePostExportScript();
+
             if( ui->actionNotificationExportFinished->isChecked() )
-                QMessageBox::information( this, tr( "Export" ), tr( "Export is ready." ) );
+            {
+                QString elapsedTimeString = m_pStatusDialog->getElapsedTimeString();
+                QString message;
+
+                if( elapsedTimeString == QString( "00:00:00" ) )
+                {
+                    message = tr( "Export is finished." );
+                }
+                else
+                {
+                    message = tr( "Export finished in %1." ).arg( elapsedTimeString );
+                }
+
+                QMessageBox::information( this, tr( "Export" ), message );
+            }
         }
         else if( ui->actionNotificationExportFinished->isChecked() )
+        {
             QMessageBox::information( this, tr( "Export" ), tr( "Export was aborted." ) );
+        }
 
         //Caching is in which state? Set it!
         if( ui->actionCaching->isChecked() ) on_actionCaching_triggered();

@@ -34,6 +34,7 @@ void StatusDialog::exportStart(int numberOfJobs, uint32_t totalFrames)
 {
     m_totalTodoFrames = totalFrames;
     m_startTime = QDateTime::currentDateTime();
+    m_secsElapsed = 0;
     m_isLoopRunning = false;
     m_paused = false;
 
@@ -79,6 +80,12 @@ QString StatusDialog::getTimeString(double secsRemaining)
                 .arg( hours, 2, 10, QChar('0') )
                 .arg( minutes, 2, 10, QChar('0') )
                 .arg( seconds, 2, 10, QChar('0') );
+}
+
+//Get elapsed time string (for export finished notification)
+QString StatusDialog::getElapsedTimeString()
+{
+    return getTimeString( m_secsElapsed );
 }
 
 //Draw remaining time to UI, input is todoFrames
@@ -132,19 +139,21 @@ void StatusDialog::drawTimeFromToDoFrames(uint32_t framesToDo)
     {
         double secsRemaining = avgSecsPerFrame * framesToDo;
         secsRemaining = std::max( 0.0, secsRemaining );
-        double secsElapsed = m_startTime.msecsTo( currentTime ) / 1000.0;
-        secsElapsed = std::max( 0.0, secsElapsed );
+        m_secsElapsed = m_startTime.msecsTo( currentTime ) / 1000.0;
+        m_secsElapsed = std::max( 0.0, m_secsElapsed );
 
         ui->labelEstimatedTime->setText(
             tr( "%1 Remaining / %2 Elapsed (Current)\n%3 Remaining / %4 Elapsed (Total)" )
                 .arg( getTimeString( jobSecsRemaining ) )
                 .arg( getTimeString( jobSecsElapsed ) )
                 .arg( getTimeString( secsRemaining ) )
-                .arg( getTimeString( secsElapsed ) )
+                .arg( getTimeString( m_secsElapsed ) )
         );
     }
     else
     {
+        m_secsElapsed = jobSecsElapsed;
+
         ui->labelEstimatedTime->setText(
             tr( "%1 Remaining / %2 Elapsed" )
                 .arg( getTimeString( jobSecsRemaining ) )
