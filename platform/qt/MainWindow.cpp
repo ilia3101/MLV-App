@@ -8688,7 +8688,6 @@ void MainWindow::exportHandler( void )
     {
         //If not running save number of jobs
         numberOfJobs = m_exportQueue.size();
-        m_exportAbortPressed = false;
         jobNumber = 0;
 
         uint32_t totalFrames = 0;
@@ -8707,6 +8706,16 @@ void MainWindow::exportHandler( void )
     //Are there jobs?
     if( !m_exportQueue.empty() )
     {
+        // Check disk space before export
+        if( checkDiskFull( m_exportQueue.first()->exportFileName(), true ) )
+        {
+            exportAbort();
+            emit exportReady();
+            return;
+        }
+
+        m_exportAbortPressed = false;
+
         //Next job!
         exportRunning = true;
         jobNumber++;
