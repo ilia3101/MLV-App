@@ -1864,6 +1864,7 @@ void MainWindow::startExportPipe(QString fileName)
             //Hide Status Dialog
             m_pStatusDialog->close();
             qApp->processEvents();
+
             //Then show error
             int ret = QMessageBox::critical( this,
                                              tr( "%1 – Export file error" ).arg( APPNAME ),
@@ -2204,7 +2205,7 @@ void MainWindow::startExportPipe(QString fileName)
                 m_pStatusDialog->drawTimeFromToDoFrames( framesToDo );
                 qApp->processEvents();
 
-                //Check diskspace
+                //Check disk space
                 checkDiskFull( fileName, true );
 
                 //Abort pressed? -> End the loop
@@ -2754,7 +2755,7 @@ void MainWindow::startExportPipe(QString fileName)
                 }
                 qApp->processEvents();
 
-                //Check diskspace
+                //Check disk space
                 checkDiskFull( fileName, true );
 
                 //Abort pressed? -> End the loop
@@ -2916,12 +2917,11 @@ void MainWindow::startExportCdng(QString fileName)
     std::atomic<unsigned int> exportedFrames{ 0 };
     std::atomic<unsigned int> exportError{ 0 };
     std::atomic<unsigned int> errorFrame{ 0 };
-    std::atomic<unsigned int> diskFull{ 0 };
 
     uint32_t start = m_exportQueue.first()->cutIn() - 1;
     uint32_t end = m_exportQueue.first()->cutOut();
 
-    if ( m_pExportedFramesArray )
+    if( m_pExportedFramesArray )
     {
         // Count successfully exported frames after resume
         for( uint32_t frame = start; frame < end; frame++ )
@@ -2947,7 +2947,7 @@ void MainWindow::startExportCdng(QString fileName)
         totalFrames += m_exportQueue.at(i)->cutOut() - m_exportQueue.at(i)->cutIn() + 1;
     }
 
-    auto updateProgress = [=, this, &exportedFrames]() {
+    auto updateProgress = [&]() {
         if( m_pStatusDialog->isPaused() ) return;
         int done = exportedFrames.load();
         m_pStatusDialog->ui->progressBar->setValue( done );
@@ -2959,17 +2959,14 @@ void MainWindow::startExportCdng(QString fileName)
     updateProgress();
     qApp->processEvents();
 
-    // Create timer for updating the progress and checking diskspace
+    // Create timer for updating the progress and checking disk space
     QTimer* progressTimer = new QTimer(this);
 
-    connect(progressTimer, &QTimer::timeout, this, [=, this, &diskFull]() {
+    connect(progressTimer, &QTimer::timeout, this, [&]() {
         updateProgress();
 
-        // Check diskspace quietly and set flag if full
-        if( !diskFull.load() && checkDiskFull( pathName, false ) )
-        {
-            diskFull = 1;
-        }
+        // Check disk space quietly and set `m_exportAbortPressed = true` if full
+        checkDiskFull( pathName, false );
     });
 
     // No need for shorter interval than 500 ms (m_pStatusDialog still depends on qApp->processEvents())
@@ -2989,12 +2986,11 @@ void MainWindow::startExportCdng(QString fileName)
      * However, schedule(dynamic) is used to improve load
      * balancing in case some frames occasionally take longer
      * to process or some CPU cores are not fully available.
-    */
+     */
     #pragma omp parallel for schedule(dynamic)
     for( uint32_t frame = start; frame < end; frame++ )
     {
         if( exportError.load() ||
-            diskFull.load() ||
             m_exportAbortPressed ||
             m_pStatusDialog->isPaused() ||
             m_pExportedFramesArray[frame] )
@@ -3062,8 +3058,8 @@ void MainWindow::startExportCdng(QString fileName)
     // Safe to resume
     m_pStatusDialog->m_isLoopRunning = false;
 
-    // Check diskspace again after the parallel loop and show dialog
-    if ( checkDiskFull( pathName, true ) )
+    // Check disk space again after the parallel loop and show dialog if full
+    if( checkDiskFull( pathName, true ) )
     {
         exportAbort();
     }
@@ -3095,14 +3091,11 @@ void MainWindow::startExportCdng(QString fileName)
         }
     }
     // Confirm export abort
-    else if( m_exportAbortPressed )
+    else if( m_exportAbortPressed && !confirmAbort() )
     {
-        if( !confirmAbort() )
-        {
-            // Resume export
-            m_pStatusDialog->togglePauseResume( 2 );
-            return;
-        }
+        // Resume export
+        m_pStatusDialog->togglePauseResume( 2 );
+        return;
     }
 
     if( m_pStatusDialog->isPaused() )
@@ -3431,7 +3424,7 @@ void MainWindow::startExportAVFoundation(QString fileName)
         m_pStatusDialog->drawTimeFromToDoFrames( framesToDo );
         qApp->processEvents();
 
-        //Check diskspace
+        //Check disk space
         checkDiskFull( fileName, true );
 
         //Abort pressed? -> End the loop
@@ -8841,7 +8834,7 @@ void MainWindow::exportHandler( void )
             m_pStatusDialog->ui->pushButtonPause->show();
 
             // Resume export connection
-            resumeExport = connect(m_pStatusDialog, &StatusDialog::resumePressed, this, [this]() {
+            resumeExport = connect(m_pStatusDialog, &StatusDialog::resumePressed, this, [&]() {
                 startExportCdng( m_exportQueue.first()->exportFileName() );
             });
 
@@ -8877,6 +8870,8 @@ void MainWindow::exportHandler( void )
     {
         //Hide Status Dialog
         m_pStatusDialog->close();
+        qApp->processEvents();
+
         //Open last file which was opened before export
         openMlv( GET_RECEIPT( m_lastClipBeforeExport )->fileName() );
         setSliders( GET_RECEIPT( m_lastClipBeforeExport ), false );
@@ -8886,8 +8881,6 @@ void MainWindow::exportHandler( void )
         //Export is ready
         exportRunning = false;
 
-        disconnect( resumeExport );
-
         if( !m_exportAbortPressed )
         {
             //Start export script when ready
@@ -8896,7 +8889,7 @@ void MainWindow::exportHandler( void )
                 QMessageBox::information( this, tr( "Export" ), tr( "Export is ready." ) );
         }
         else if( ui->actionNotificationExportFinished->isChecked() )
-            QMessageBox::information( this, tr( "Export" ), tr( "Export aborted." ) );
+            QMessageBox::information( this, tr( "Export" ), tr( "Export was aborted." ) );
 
         //Caching is in which state? Set it!
         if( ui->actionCaching->isChecked() ) on_actionCaching_triggered();
@@ -11380,7 +11373,7 @@ bool MainWindow::checkDiskFull(QString path, bool showDialog)
 
         if( showDialog )
         {
-            QMessageBox::warning( this, APPNAME, tr( "Disk full. Export aborted." ) );
+            QMessageBox::warning( this, APPNAME, tr( "Disk is full. Export was aborted." ) );
         }
 
         return true;

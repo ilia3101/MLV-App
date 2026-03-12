@@ -101,7 +101,7 @@ void StatusDialog::drawTimeFromToDoFrames(uint32_t framesToDo)
 
     m_jobFramesDone = prevFamesToDo - framesToDo;
 
-    if ( m_jobFramesDone < 1 ) return;
+    if( m_jobFramesDone < 1 ) return;
 
     QDateTime currentTime = QDateTime::currentDateTime();
 
