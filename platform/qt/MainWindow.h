@@ -580,7 +580,7 @@ private:
     void checkFocusPixelUpdate( void );
     QModelIndexList selectedClipsList( void );
     void listViewSessionUpdate( void );
-    bool checkDiskFull( QString path, bool showDialog );
+    bool checkDiskFull( QString path, bool showDialog = true );
 
 signals:
     void exportReady( void );

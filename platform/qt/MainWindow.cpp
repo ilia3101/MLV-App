@@ -2206,7 +2206,7 @@ void MainWindow::startExportPipe(QString fileName)
                 qApp->processEvents();
 
                 //Check disk space
-                checkDiskFull( fileName, true );
+                checkDiskFull( fileName );
 
                 //Abort pressed? -> End the loop
                 if( m_exportAbortPressed && confirmAbort() ) break;
@@ -2756,7 +2756,7 @@ void MainWindow::startExportPipe(QString fileName)
                 qApp->processEvents();
 
                 //Check disk space
-                checkDiskFull( fileName, true );
+                checkDiskFull( fileName );
 
                 //Abort pressed? -> End the loop
                 if( m_exportAbortPressed && confirmAbort() ) break;
@@ -3058,8 +3058,14 @@ void MainWindow::startExportCdng(QString fileName)
     // Safe to resume
     m_pStatusDialog->m_isLoopRunning = false;
 
+    // Ignore abort and disk full if done
+    if( exportedFrames.load() == end )
+    {
+        m_exportAbortPressed = false;
+    }
+
     // Check disk space again after the parallel loop and show dialog if full
-    if( checkDiskFull( pathName, true ) )
+    if( m_exportAbortPressed && checkDiskFull( pathName ) )
     {
         exportAbort();
     }
@@ -3425,7 +3431,7 @@ void MainWindow::startExportAVFoundation(QString fileName)
         qApp->processEvents();
 
         //Check disk space
-        checkDiskFull( fileName, true );
+        checkDiskFull( fileName );
 
         //Abort pressed? -> End the loop
         if( m_exportAbortPressed && confirmAbort() ) break;
@@ -5359,6 +5365,7 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     {
         m_pStatusDialog->ui->label->setText( tr( "Preparing export…" ) );
         m_pStatusDialog->ui->labelEstimatedTime->setText( "" );
+        m_pStatusDialog->ui->progressBar->setMaximum( 0 );
         m_pStatusDialog->ui->progressBar->setValue( 0 );
         m_pStatusDialog->ui->totalProgressBar->hide();
         m_pStatusDialog->ui->pushButtonPause->hide();
@@ -8707,7 +8714,7 @@ void MainWindow::exportHandler( void )
     if( !m_exportQueue.empty() )
     {
         // Check disk space before export
-        if( checkDiskFull( m_exportQueue.first()->exportFileName(), true ) )
+        if( checkDiskFull( m_exportQueue.first()->exportFileName() ) )
         {
             exportAbort();
             emit exportReady();
