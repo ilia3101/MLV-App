@@ -5305,12 +5305,26 @@ void MainWindow::previewPicture( int row )
     else if (raw_w < 2000 && raw_h < 1500) downscaled_factor = 5;
     else downscaled_factor = 7;
 
+    // For get_area_average_downscale_thumnail only: other factors for dualiso hiding the horizontal lines
+    if (m_pMlvObject->llrawproc->dual_iso > 0)
+    {
+        if (downscaled_factor > 5) downscaled_factor = 8;
+        else downscaled_factor = 4;
+    }
+
+
     int width = raw_w / downscaled_factor;
     int height = raw_h / downscaled_factor;
 
-    //Get frame from library
+    //Get frame from library, temp disable linear gradient and vignette, because not compatible with shrinked resolutions
+    auto vstr = m_pMlvObject->processing->vignette_strength;
+    auto gren = m_pMlvObject->processing->gradient_enable;
+    m_pMlvObject->processing->vignette_strength = 0;
+    m_pMlvObject->processing->gradient_enable = 0;
     //create_thumbnail( m_pMlvObject, m_pRawImage, downscaled_factor, width, height, QThread::idealThreadCount() );
     get_area_average_downscale_thumnail(m_pMlvObject, 0, downscaled_factor, QThread::idealThreadCount(), m_pRawImage);
+    m_pMlvObject->processing->vignette_strength = vstr;
+    m_pMlvObject->processing->gradient_enable = gren;
 
     QImage img( m_pRawImage,
                 width,
