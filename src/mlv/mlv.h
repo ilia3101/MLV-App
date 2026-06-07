@@ -97,6 +97,13 @@ typedef struct {
 }  mlv_rawi_hdr_t;
 
 typedef struct {
+    uint8_t     blockType[4];    /* curve lookup table for decoding data from encoded values to linear (to which black/white level should be applied to) */
+    uint32_t    blockSize;    /* total curve block size */
+    uint64_t    timestamp;    /* hardware counter timestamp for this frame (relative to recording start) */
+/*    uint16_t    data[variable]; */ /* May be less thatn full 16-bit range, limited by Blocksize - 16 - if less than 65535 samples contained, just pad the lookup table with zeros for safety and index into that */
+}  mlv_curv_hdr_t;
+
+typedef struct {
     uint8_t     blockType[4];   /* RAWC - raw image capture information */
     uint32_t    blockSize;      /* sizeof(mlv_rawc_hdr_t) */
     uint64_t    timestamp;      /* hardware counter timestamp */

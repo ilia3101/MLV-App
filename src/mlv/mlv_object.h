@@ -91,6 +91,9 @@ typedef struct {
     uint16_t original_black_level;
     uint16_t original_white_level;
 
+    /* CURV block lookup table for linearising encoded values */
+    uint16_t * linearise_lut;
+
     /* Video info */
     double      real_frame_rate; /* ...Because framerate is not explicitly stored in the file */
     double      frame_rate;      /* User may want to override it */

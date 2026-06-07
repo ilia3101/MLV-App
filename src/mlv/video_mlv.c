@@ -434,6 +434,15 @@ int getMlvRawFrameUint16(mlvObject_t * video, uint64_t frameIndex, uint16_t * un
         }
     }
 
+    if (video->linearise_lut)
+    {
+        #pragma omp parallel for
+        for (int i = 0; i < pixels_count; ++i)
+        {
+            unpackedFrame[i] = video->linearise_lut[unpackedFrame[i]];
+        }
+    }
+
     free(raw_frame);
     return 0;
 }
@@ -715,6 +724,9 @@ mlvObject_t * initMlvObject()
     video->ca_red = 0.0;
     video->ca_blue = 0.0;
 
+    /* CURV lookup table */
+    video->linearise_lut = NULL;
+
     /* Use default camid as fallback */
     camera_id_t *camid = camidGet(0);
     memcpy(&video->camid, camid, sizeof(camera_id_t));
@@ -756,6 +768,7 @@ void freeMlvObject(mlvObject_t * video)
     if(video->rgb_raw_current_frame) free(video->rgb_raw_current_frame);
     if(video->cache_memory_block) free(video->cache_memory_block);
     if(video->path) free(video->path);
+    if(video->linearise_lut) free(video->linearise_lut);
     freeLLRawProcObject(video);
 
     /* Mutex things here... */
@@ -1914,6 +1927,7 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode, char * error
     int elns_read = 0; /* Flips to 1 if 1st ELNS block was read */
     int wbal_read = 0; /* Flips to 1 if 1st WBAL block was read */
     int styl_read = 0; /* Flips to 1 if 1st STYL block was read */
+    int curv_read = 0; /* Flips to 1 if 1st CURV block was read */
     int fread_err = 1;
 
     for(int i = 0; i < video->filenum; i++)
@@ -2194,6 +2208,24 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode, char * error
             {
                 fread_err &= fread(&video->DARK, sizeof(mlv_dark_hdr_t), 1, video->file[i]);
                 video->dark_frame_offset = file_get_pos(video->file[i]);
+            }
+            else if ( memcmp(block_header.blockType, "CURV", 4) == 0 )
+            {
+                if( !curv_read )
+                {
+                    mlv_curv_hdr_t cur_hdr;
+                    fread_err &= fread(&cur_hdr, sizeof(mlv_curv_hdr_t), 1, video->file[i]);
+                    uint32_t lut_entries = (cur_hdr.blockSize - sizeof(mlv_curv_hdr_t)) / sizeof(uint16_t);
+                    if(lut_entries > 0)
+                    {
+                        video->linearise_lut = (uint16_t *)calloc(65536, sizeof(uint16_t));
+                        if(video->linearise_lut)
+                        {
+                            fread_err &= fread(video->linearise_lut, lut_entries * sizeof(uint16_t), 1, video->file[i]);
+                        }
+                    }
+                    curv_read = 1;
+                }
             }
             else
             {
