@@ -30,6 +30,13 @@
 /* Lossless decompression */
 #include "liblj92/lj92.h"
 
+#define ENABLE_CINEFORM
+
+/* Cineform decompression */
+#ifdef ENABLE_CINEFORM
+#include "CineformSDK/Common/CFHDDecoder.h"
+#endif
+
 /* Bitunpack and lossless compression */
 #include "../dng/dng.h"
 
@@ -314,7 +321,7 @@ int getMlvRawFrameUint16(mlvObject_t * video, uint64_t frameIndex, uint16_t * un
         {
             if(fread(raw_frame, frame_size, 1, file) != 1)
             {
-                DEBUG( printf("Frame data read error\n"); )
+                DEBUG( printf("Frame data read error lj92\n"); )
                 free(raw_frame);
                 pthread_mutex_unlock(video->main_file_mutex + chunk);
                 return 1;
@@ -343,11 +350,68 @@ int getMlvRawFrameUint16(mlvObject_t * video, uint64_t frameIndex, uint16_t * un
             }
             lj92_close(decoder_object);
         }
+        else if (video->MLVI.videoClass & MLV_VIDEO_CLASS_FLAG_CINEFORM)
+        {
+#ifdef ENABLE_CINEFORM
+            if(fread(raw_frame, frame_size, 1, file) != 1)
+            {
+                DEBUG( printf("Frame data read error cineform\n"); )
+                free(raw_frame);
+                pthread_mutex_unlock(video->main_file_mutex + chunk);
+                return 1;
+            }
+
+            pthread_mutex_unlock(video->main_file_mutex + chunk);
+
+            CFHD_DecoderRef decoder = NULL;
+            CFHD_Error err = CFHD_OpenDecoder(&decoder, NULL);
+            if(err != CFHD_ERROR_OKAY)
+            {
+                DEBUG( printf("Cineform decoder: Failed to open decoder (error %d)\n", err); )
+                free(raw_frame);
+                return 1;
+            }
+
+            int actual_width = 0;
+            int actual_height = 0;
+            CFHD_PixelFormat actual_format = CFHD_PIXEL_FORMAT_UNKNOWN;
+            err = CFHD_PrepareToDecode(decoder, width, height,
+                                       CFHD_PIXEL_FORMAT_BYR4,
+                                       CFHD_DECODED_RESOLUTION_FULL,
+                                       CFHD_DECODING_FLAGS_NONE,
+                                       raw_frame, frame_size,
+                                       &actual_width, &actual_height, &actual_format);
+            if(err != CFHD_ERROR_OKAY)
+            {
+                DEBUG( printf("Cineform decoder: PrepareToDecode failed (error %d)\n", err); )
+                CFHD_CloseDecoder(decoder);
+                free(raw_frame);
+                return 1;
+            }
+
+            err = CFHD_DecodeSample(decoder, raw_frame, frame_size,
+                                    unpackedFrame, width * 2);
+            if(err != CFHD_ERROR_OKAY)
+            {
+                DEBUG( printf("Cineform decoder: DecodeSample failed (error %d)\n", err); )
+                CFHD_CloseDecoder(decoder);
+                free(raw_frame);
+                return 1;
+            }
+
+            CFHD_CloseDecoder(decoder);
+#else
+            DEBUG( printf("Cineform codec is not enabled at build\n", err); )
+            free(raw_frame);
+            pthread_mutex_unlock(video->main_file_mutex + chunk);
+            return 1;
+#endif
+        }
         else /* If not compressed just unpack to 16bit */
         {
             if(fread(raw_frame, raw_frame_size, 1, file) != 1)
             {
-                DEBUG( printf("Frame data read error\n"); )
+                DEBUG( printf("Frame data read error none\n"); )
                 free(raw_frame);
                 pthread_mutex_unlock(video->main_file_mutex + chunk);
                 return 1;
@@ -427,7 +491,7 @@ void setMlvProcessing(mlvObject_t * video, processingObject_t * processing)
     /* Gradient alloc */
     video->processing->gradient_mask = realloc( video->processing->gradient_mask, getMlvWidth(video) * getMlvHeight(video) * sizeof( uint16_t ) );
 
-    /* MATRIX stuff (not working, so commented out - 
+    /* MATRIX stuff (not working, so commented out -
      * processing object defaults to 1,0,0,0,1,0,0,0,1) */
 
     /* Get camera matrix for MLV clip and set it in the processing object */
@@ -490,7 +554,7 @@ void getMlvRawFrameDebayered(mlvObject_t * video, uint64_t frameIndex, uint16_t 
 
     /* If frame was requested last time and is sitting in the "current" frame cache */
     if ( video->cached_frames[frameIndex] == MLV_FRAME_NOT_CACHED
-         && video->current_cached_frame_active 
+         && video->current_cached_frame_active
          && video->current_cached_frame == frameIndex )
     {
         memcpy(outputFrame, video->rgb_raw_current_frame, frame_size);
@@ -608,7 +672,7 @@ mlvObject_t * initMlvObjectWithMcrawClip(char * mlvPath, int preview, int * err,
 }
 
 /* Allocates a tiny bit of memory for everything in the structure
- * so we can always be sure there is memory, and when we need to 
+ * so we can always be sure there is memory, and when we need to
  * resize it, simply do free followed by malloc */
 mlvObject_t * initMlvObject()
 {
@@ -1575,7 +1639,7 @@ int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
  * only puts metadata in to the mlvObject_t, no debayering or bit unpacking
  */
 int openMcrawClip(mlvObject_t * video, char * mcrawPath, int open_mode, char * error_message)
-{    
+{
     video->path = malloc( strlen(mcrawPath) + 1 );
     memcpy(video->path, mcrawPath, strlen(mcrawPath));
     video->path[strlen(mcrawPath)] = 0x0;
@@ -1807,8 +1871,8 @@ short_cut:
     return MLV_ERR_NONE;
 }
 
-/* Reads an MLV file in to a mlv object(mlvObject_t struct) 
- * only puts metadata in to the mlvObject_t, 
+/* Reads an MLV file in to a mlv object(mlvObject_t struct)
+ * only puts metadata in to the mlvObject_t,
  * no debayering or bit unpacking */
 int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode, char * error_message)
 {
