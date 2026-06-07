@@ -36,7 +36,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 ##############
 # Silent Mode, deactivate for more debug info
 ##############
-DEFINES += STDOUT_SILENT
+#DEFINES += STDOUT_SILENT
 
 ##############
 # Compiler flags
@@ -49,6 +49,7 @@ macx: LIBS += -framework CoreVideo \
               -framework Foundation \
               -framework CoreFoundation \
               -framework CoreMedia
+
 
 macx{
     #OpenMP on macOS: first install llvm and openssl via brew, setup llvm kit & compiler in Qt settings!
@@ -64,14 +65,14 @@ macx{
     }
     #Qt5 on Apple Silicon with openMP: install llvm and openssl via brew, build Qt5 from source
     equals(QT_ARCH, arm64) {
-        QMAKE_CC = /opt/homebrew/opt/llvm/bin/clang
-        QMAKE_CXX = /opt/homebrew/opt/llvm/bin/clang++
-        QMAKE_LINK = /opt/homebrew/opt/llvm/bin/clang++
-        QMAKE_CFLAGS += -fopenmp -ftree-vectorize
-        QMAKE_CXXFLAGS += -fopenmp -std=c++15 -ftree-vectorize
+        QMAKE_CC = clang
+        QMAKE_CXX = clang++
+        QMAKE_LINK = clang++
+        QMAKE_CFLAGS += -ftree-vectorize
+        QMAKE_CXXFLAGS += -std=c++15 -ftree-vectorize
         INCLUDEPATH += -I/opt/homebrew/opt/llvm/include
-        LIBS += -L/opt/homebrew/opt/llvm/lib -lomp -L/opt/homebrew/opt/llvm/lib/unwind -lunwind -L/opt/homebrew/opt/openssl/lib -lssl -L/opt/homebrew/opt/llvm/lib/c++ -lc++ -lc++abi
-        QMAKE_MACOSX_DEPLOYMENT_TARGET = 11.7
+        LIBS += -L/opt/homebrew/opt/llvm/lib/unwind -lunwind -L/opt/homebrew/opt/openssl/lib -lssl -lc++ -lc++abi
+        QMAKE_MACOSX_DEPLOYMENT_TARGET = 26.0
         QMAKE_APPLE_DEVICE_ARCHS = arm64
     }
 }
@@ -242,9 +243,21 @@ SOURCES += \
     ../../src/librtprocess/src/postprocess/hilite_recon.cc \
     ../../src/librtprocess/src/preprocess/CA_correct.cc \
     ../../src/librtprocess/src/include/librtprocesswrapper.cpp \
-    ../../src/debayer/ahdOld.c
+    ../../src/debayer/ahdOld.c \
+    ../../src/mlv/CineformSDK/Codec/*.c \
+    ../../src/mlv/CineformSDK/Codec/*.cpp \
+    ../../src/mlv/CineformSDK/ConvertLib/*.cpp \
+    ../../src/mlv/CineformSDK/DecoderSDK/*.cpp \
+    ../../src/mlv/CineformSDK/EncoderSDK/*.cpp \
+    ../../src/mlv/CineformSDK/WarpLib/*.c
 
-INCLUDEPATH += ../../src/librtprocess/src/include/
+INCLUDEPATH += ../../src/librtprocess/src/include/ \
+    ../../src/mlv/CineformSDK/Common/ \
+    ../../src/mlv/CineformSDK/Codec/ \
+    ../../src/mlv/CineformSDK/ConvertLib/ \
+    ../../src/mlv/CineformSDK/DecoderSDK/ \
+    ../../src/mlv/CineformSDK/EncoderSDK/ \
+    ../../src/mlv/CineformSDK/WarpLib/ \
 
 macx: SOURCES += ../cocoa/avf_lib/avf_lib.m
 
@@ -371,7 +384,14 @@ HEADERS += MainWindow.h \
     ../../src/librtprocess/src/include/xtranshelper.h \
     ../../src/librtprocess/src/include/librtprocesswrapper.h \
     ../../src/librtprocess/src/include/sleef.h \
-    ../../src/librtprocess/src/include/sleefsseavx.h
+    ../../src/librtprocess/src/include/sleefsseavx.h \
+    ../../src/mlv/CineformSDK/Common/*.h \
+    ../../src/mlv/CineformSDK/Codec/*.h \
+    ../../src/mlv/CineformSDK/Codec/sse2neon/sse2neon.h \
+    ../../src/mlv/CineformSDK/ConvertLib/*.h \
+    ../../src/mlv/CineformSDK/DecoderSDK/*.h \
+    ../../src/mlv/CineformSDK/EncoderSDK/*.h \
+    ../../src/mlv/CineformSDK/WarpLib/*.h
 
 macx: HEADERS += \
     ../cocoa/avf_lib/avencoder.h \
@@ -450,6 +470,7 @@ macx: QMAKE_POST_LINK += "mv ffmpeg MLV\ App.app/Contents/MacOS/" $$escape_expan
 macx: equals(QT_ARCH, arm64): QMAKE_POST_LINK += unzip -o $$quote($$PWD/../qt/raw2mlv/raw2mlvMacOsArm.zip) $$escape_expand(\n\t)
 macx: equals(QT_ARCH, x86_64): QMAKE_POST_LINK += unzip -o $$quote($$PWD/../qt/raw2mlv/raw2mlvOSX.zip) $$escape_expand(\n\t)
 macx: QMAKE_POST_LINK += "mv raw2mlv MLV\ App.app/Contents/MacOS/" $$escape_expand(\n\t)
+
 
 unix{
     OBJECTS_DIR = .obj
