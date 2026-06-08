@@ -19,7 +19,7 @@ jobs:
     - name: Install OpenSSL
       continue-on-error: true
       run: |
-           choco install openssl
+           choco install openssl --version=1.1.1.2100 -y
            dir "C:\Program Files\OpenSSL\"
            dir "C:\Program Files\OpenSSL\bin"
               
