@@ -39,6 +39,14 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += STDOUT_SILENT
 
 ##############
+# Feature gates: comment out to disable
+##############
+CONFIG += cineform_enabled
+CONFIG += jpeg2k_enabled
+cineform_enabled: DEFINES += ENABLE_CINEFORM
+jpeg2k_enabled: DEFINES += ENABLE_JPEG2K
+
+##############
 # Compiler flags
 ##############
 # OSX
@@ -243,21 +251,68 @@ SOURCES += \
     ../../src/librtprocess/src/postprocess/hilite_recon.cc \
     ../../src/librtprocess/src/preprocess/CA_correct.cc \
     ../../src/librtprocess/src/include/librtprocesswrapper.cpp \
-    ../../src/debayer/ahdOld.c \
+    ../../src/debayer/ahdOld.c
+
+cineform_enabled {
+    SOURCES += \
     ../../src/mlv/CineformSDK/Codec/*.c \
     ../../src/mlv/CineformSDK/Codec/*.cpp \
     ../../src/mlv/CineformSDK/ConvertLib/*.cpp \
     ../../src/mlv/CineformSDK/DecoderSDK/*.cpp \
     ../../src/mlv/CineformSDK/EncoderSDK/*.cpp \
     ../../src/mlv/CineformSDK/WarpLib/*.c
+}
 
-INCLUDEPATH += ../../src/librtprocess/src/include/ \
+jpeg2k_enabled {
+    SOURCES += \
+    ../../src/mlv/OpenJPH/ojph_wrapper.cpp \
+    ../../src/mlv/OpenJPH/codestream/ojph_codeblock.cpp \
+    ../../src/mlv/OpenJPH/codestream/ojph_codeblock_fun.cpp \
+    ../../src/mlv/OpenJPH/codestream/ojph_codestream.cpp \
+    ../../src/mlv/OpenJPH/codestream/ojph_codestream_gen.cpp \
+    ../../src/mlv/OpenJPH/codestream/ojph_codestream_local.cpp \
+    ../../src/mlv/OpenJPH/codestream/ojph_codestream_sse.cpp \
+    ../../src/mlv/OpenJPH/codestream/ojph_codestream_sse2.cpp \
+    ../../src/mlv/OpenJPH/codestream/ojph_params.cpp \
+    ../../src/mlv/OpenJPH/codestream/ojph_precinct.cpp \
+    ../../src/mlv/OpenJPH/codestream/ojph_resolution.cpp \
+    ../../src/mlv/OpenJPH/codestream/ojph_subband.cpp \
+    ../../src/mlv/OpenJPH/codestream/ojph_tile.cpp \
+    ../../src/mlv/OpenJPH/codestream/ojph_tile_comp.cpp \
+    ../../src/mlv/OpenJPH/coding/ojph_block_common.cpp \
+    ../../src/mlv/OpenJPH/coding/ojph_block_decoder32.cpp \
+    ../../src/mlv/OpenJPH/coding/ojph_block_decoder64.cpp \
+    ../../src/mlv/OpenJPH/coding/ojph_block_decoder_ssse3.cpp \
+    ../../src/mlv/OpenJPH/coding/ojph_block_encoder.cpp \
+    ../../src/mlv/OpenJPH/transform/ojph_colour.cpp \
+    ../../src/mlv/OpenJPH/transform/ojph_colour_sse.cpp \
+    ../../src/mlv/OpenJPH/transform/ojph_colour_sse2.cpp \
+    ../../src/mlv/OpenJPH/transform/ojph_transform.cpp \
+    ../../src/mlv/OpenJPH/transform/ojph_transform_sse.cpp \
+    ../../src/mlv/OpenJPH/others/ojph_arch.cpp \
+    ../../src/mlv/OpenJPH/others/ojph_file.cpp \
+    ../../src/mlv/OpenJPH/others/ojph_mem.cpp \
+    ../../src/mlv/OpenJPH/others/ojph_mem_c.c \
+    ../../src/mlv/OpenJPH/others/ojph_message.cpp
+}
+
+INCLUDEPATH += ../../src/librtprocess/src/include/
+
+cineform_enabled: INCLUDEPATH += \
     ../../src/mlv/CineformSDK/Common/ \
     ../../src/mlv/CineformSDK/Codec/ \
     ../../src/mlv/CineformSDK/ConvertLib/ \
     ../../src/mlv/CineformSDK/DecoderSDK/ \
     ../../src/mlv/CineformSDK/EncoderSDK/ \
-    ../../src/mlv/CineformSDK/WarpLib/ \
+    ../../src/mlv/CineformSDK/WarpLib/
+
+jpeg2k_enabled: INCLUDEPATH += \
+    ../../src/mlv/OpenJPH/openjph/ \
+    ../../src/mlv/OpenJPH/codestream/ \
+    ../../src/mlv/OpenJPH/coding/ \
+    ../../src/mlv/OpenJPH/transform/ \
+    ../../src/mlv/OpenJPH/others/ \
+    ../../src/mlv/OpenJPH/sse2neon/ \
 
 macx: SOURCES += ../cocoa/avf_lib/avf_lib.m
 
@@ -384,7 +439,9 @@ HEADERS += MainWindow.h \
     ../../src/librtprocess/src/include/xtranshelper.h \
     ../../src/librtprocess/src/include/librtprocesswrapper.h \
     ../../src/librtprocess/src/include/sleef.h \
-    ../../src/librtprocess/src/include/sleefsseavx.h \
+    ../../src/librtprocess/src/include/sleefsseavx.h
+
+cineform_enabled: HEADERS += \
     ../../src/mlv/CineformSDK/Common/*.h \
     ../../src/mlv/CineformSDK/Codec/*.h \
     ../../src/mlv/CineformSDK/Codec/sse2neon/sse2neon.h \
@@ -392,6 +449,14 @@ HEADERS += MainWindow.h \
     ../../src/mlv/CineformSDK/DecoderSDK/*.h \
     ../../src/mlv/CineformSDK/EncoderSDK/*.h \
     ../../src/mlv/CineformSDK/WarpLib/*.h
+
+jpeg2k_enabled: HEADERS += \
+    ../../src/mlv/OpenJPH/ojph_wrapper.h \
+    ../../src/mlv/OpenJPH/openjph/*.h \
+    ../../src/mlv/OpenJPH/codestream/*.h \
+    ../../src/mlv/OpenJPH/coding/*.h \
+    ../../src/mlv/OpenJPH/transform/*.h \
+    ../../src/mlv/OpenJPH/sse2neon/sse2neon.h
 
 macx: HEADERS += \
     ../cocoa/avf_lib/avencoder.h \

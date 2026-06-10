@@ -1,7 +1,7 @@
 /*! @file CFHDDecoder.cpp
 
 *  @brief This module implements the C functions for the decoder API
-*  
+*
 *  Interface to the CineForm HD decoder.  The decoder API uses an opaque
 *  data type to represent an instance of a decoder.  The decoder reference
 *  is returned by the call to @ref CFHD_OpenDecoder.
@@ -11,7 +11,7 @@
 *  (C) Copyright 2017 GoPro Inc (http://gopro.com/).
 *
 *  Licensed under either:
-*  - Apache License, Version 2.0, http://www.apache.org/licenses/LICENSE-2.0  
+*  - Apache License, Version 2.0, http://www.apache.org/licenses/LICENSE-2.0
 *  - MIT license, http://opensource.org/licenses/MIT
 *  at your option.
 *
@@ -72,7 +72,7 @@ extern "C" {
 #include "SampleDecoder.h"
 #include "SampleMetadata.h"
 
-	
+
 #if _WIN32
 	#ifdef DYNAMICLIB
 	BOOL APIENTRY DllMain(HANDLE hModule,
@@ -195,7 +195,7 @@ CFHD_OpenDecoder(CFHD_DecoderRef *decoderRefOut,
 
 	@param outputFormatArray
 	Pointer to a preallocated array of type CFHD_PixelFormat.
-	
+
 	@param outputFormatArrayLength
 	Number elements in the preallocated array of type CFHD_PixelFormat.
 
@@ -240,7 +240,7 @@ CFHD_GetOutputFormats(CFHD_DecoderRef decoderRef,
 
 	@description Requesting miscellaneous information from a CineForm
 	sample, by Tag-Value pair.
-		
+
 	@param decoderRef
 	An opaque reference to a decoder created by a call to @ref CFHD_OpenDecoder.
 
@@ -366,7 +366,7 @@ CFHD_GetSampleInfo(	CFHD_DecoderRef decoderRef,
 	decoded frames.  The caller can pass NULL, but should use the output pixel
 	format to determine the size of the output pixels for allocating the buffers
 	that will receive the decoded frames.
-	
+
 	@details If the output width or height are zero, the decoder will compute
 	the output width and height by using the encoded width and height obtained
 	from the video sample passed as an argument and reducing the width and height
@@ -428,7 +428,7 @@ CFHD_PrepareToDecode(CFHD_DecoderRef decoderRef,
 
 	@description The sample header is parsed to obtain information about the
 	video sample without decoding the video sample.
-	
+
 	@param samplePtr
 	The memory address of a CineForm compressed sample.
 
@@ -511,7 +511,7 @@ finish:
 	@function CFHD_GetPixelSize
 
 	@brief Return the size of the specified pixel format in bytes.
-	
+
 	@description Return the size of a pixel in byte is it uniquely
 	addressable.  Note that the pixel size is not defined for some
 	image formats such as v210.  This routine returns zero for pixel
@@ -534,7 +534,7 @@ CFHD_GetPixelSize(CFHD_PixelFormat pixelFormat, uint32_t *pixelSizeOut)
 	if (pixelSizeOut == NULL) {
 		return CFHD_ERROR_INVALID_ARGUMENT;
 	}
-	
+
 	// Catch any errors in the decoder
 	try
 	{
@@ -555,7 +555,7 @@ CFHD_GetPixelSize(CFHD_PixelFormat pixelFormat, uint32_t *pixelSizeOut)
 	case CFHD_PIXEL_FORMAT_YUY2:
 	case CFHD_PIXEL_FORMAT_2VUY:
 	case CFHD_PIXEL_FORMAT_BYR2:
-	case CFHD_PIXEL_FORMAT_BYR4:	
+	case CFHD_PIXEL_FORMAT_BYR4:
 	case CFHD_PIXEL_FORMAT_CT_10BIT_2_8:		// Avid format with two planes of 2-bit and 8-bit pixels
 		pixelSize = 2;
 		break;
@@ -611,7 +611,7 @@ CFHD_GetPixelSize(CFHD_PixelFormat pixelFormat, uint32_t *pixelSizeOut)
 	pixel formats such as v210 where the pixel size is not defined.
 
 	@param imageWidth
-	Width of the image. 
+	Width of the image.
 
 	@param pixelFormat
 	CFHD_PixelFormat of the decoding pixel type.
@@ -639,7 +639,7 @@ CFHD_GetImagePitch(uint32_t imageWidth, CFHD_PixelFormat pixelFormat, int32_t *i
 
 	@brief Return the size of an image in bytes.
 
-	@description This image size returned by this routine can be used to allocate a 
+	@description This image size returned by this routine can be used to allocate a
 	buffer for a decoded 2D or 3D image.
 
 	@param imageWidth
@@ -663,7 +663,7 @@ CFHD_GetImagePitch(uint32_t imageWidth, CFHD_PixelFormat pixelFormat, int32_t *i
 	@return Returns a CFHD error code.
 */
 CFHDDECODER_API CFHD_Error
-CFHD_GetImageSize(uint32_t imageWidth, uint32_t imageHeight, CFHD_PixelFormat pixelFormat, 
+CFHD_GetImageSize(uint32_t imageWidth, uint32_t imageHeight, CFHD_PixelFormat pixelFormat,
 				  CFHD_VideoSelect videoselect,	CFHD_Stereo3DType stereotype, uint32_t *imageSizeOut)
 {
 	uint32_t imagePitch = GetFramePitch(imageWidth, pixelFormat);
@@ -783,7 +783,7 @@ CFHD_SetLicense(CFHD_DecoderRef decoderRef,
 				const unsigned char *licenseKey)
 {
 	CFHD_Error errorCode = CFHD_ERROR_OKAY;
-	
+
 	// Check the input arguments
 	if (decoderRef == NULL) {
 		return CFHD_ERROR_INVALID_ARGUMENT;
@@ -791,11 +791,11 @@ CFHD_SetLicense(CFHD_DecoderRef decoderRef,
 	if (licenseKey == NULL) {
 		return CFHD_ERROR_INVALID_ARGUMENT;
 	}
-	
+
 	CSampleDecoder *decoder = (CSampleDecoder *)decoderRef;
 
 	errorCode = decoder->SetLicense(licenseKey);
-	
+
 	return errorCode;
 }
 
@@ -1344,7 +1344,7 @@ CFHD_SetActiveMetadata(	CFHD_DecoderRef decoderRef,
 	{
 		decoder->SetChannelMix(*((uint32_t *)data));
 	}
-	
+
 	if(tag == TAG_LOOK_FILE)
 	{
 		uint32_t crc = 0;
@@ -1359,14 +1359,14 @@ CFHD_SetActiveMetadata(	CFHD_DecoderRef decoderRef,
 			typesizebytes = ('H'<<24)|4;
 			metadata->AddMetaData(TAG_LOOK_CRC, typesizebytes, (void *)&lastLUTcrc);
 		}
-		else 
+		else
 		{
 			char drive[260];
 			char dir[260];
 			char fname[260];
 			char ext[64];
 			char filename[260];
-			
+
 //DANREMOVE			crc = ValidateLookGenCRC((char *)data);
 
 #ifdef _WIN32
@@ -1385,11 +1385,11 @@ CFHD_SetActiveMetadata(	CFHD_DecoderRef decoderRef,
 				metadata->AddMetaData(TAG_LOOK_FILE, typesizebytes, (void *)&filename[0]);
 
 #ifdef _WIN32
-				strcpy_s(lastLUTfilename, sizeof(lastLUTfilename), filename); 
+				strcpy_s(lastLUTfilename, sizeof(lastLUTfilename), filename);
 #else
 				strcpy(lastLUTfilename, filename);
 #endif
-				
+
 				if(crc)
 				{
 					typesizebytes = ('H'<<24)|4;
@@ -1473,9 +1473,9 @@ CFHD_ClearActiveMetadata(	CFHD_DecoderRef decoderRef,
 /*!
 	@function CFHD_GetThumbnail
 
-	@brief The generate a thumbnail 
+	@brief The generate a thumbnail
 
-	@description Extract the base wavelet into a using image thumbnail without 
+	@description Extract the base wavelet into a using image thumbnail without
 	decompressing the sample
 
 	@param decoderRef An opaque reference to a decoder created by a
@@ -1496,7 +1496,7 @@ CFHD_ClearActiveMetadata(	CFHD_DecoderRef decoderRef,
 
 	@param flags
 	future usage
-	
+
 	@param retWidth
 	If successful contains thumbnail width.
 
@@ -1566,10 +1566,10 @@ CFHD_GetThumbnail(CFHD_DecoderRef decoderRef,
 	@return Returns a CFHD error code.
 */
 CFHDDECODER_API CFHD_Error
-CFHD_CreateImageDeveloper(CFHD_DecoderRef decoderRef, 
-						  uint32_t imageWidth, 
+CFHD_CreateImageDeveloper(CFHD_DecoderRef decoderRef,
+						  uint32_t imageWidth,
 						  uint32_t imageHeight,
-						  uint32_t sourceVideoChannels, 
+						  uint32_t sourceVideoChannels,
 						  CFHD_PixelFormat pixelFormatSrc,
 						  CFHD_PixelFormat pixelFormatDst) //1 or 2 for 3D double high stacked
 {
@@ -1579,7 +1579,7 @@ CFHD_CreateImageDeveloper(CFHD_DecoderRef decoderRef,
 	if (decoderRef == NULL) {
 		return CFHD_ERROR_INVALID_ARGUMENT;
 	}
-	
+
 	CSampleDecoder *decoder = (CSampleDecoder *)decoderRef;
 
 	int actualWidthOut,actualHeightOut;

@@ -30,11 +30,14 @@
 /* Lossless decompression */
 #include "liblj92/lj92.h"
 
-#define ENABLE_CINEFORM
-
 /* Cineform decompression */
 #ifdef ENABLE_CINEFORM
 #include "CineformSDK/Common/CFHDDecoder.h"
+#endif
+
+/* JPEG2000 decompression via OpenJPH */
+#ifdef ENABLE_JPEG2K
+#include "OpenJPH/ojph_wrapper.h"
 #endif
 
 /* Bitunpack and lossless compression */
@@ -374,7 +377,7 @@ int getMlvRawFrameUint16(mlvObject_t * video, uint64_t frameIndex, uint16_t * un
 
             int actual_width = 0;
             int actual_height = 0;
-            CFHD_PixelFormat actual_format = CFHD_PIXEL_FORMAT_UNKNOWN;
+            CFHD_PixelFormat actual_format = CFHD_PIXEL_FORMAT_BYR4;
             err = CFHD_PrepareToDecode(decoder, width, height,
                                        CFHD_PIXEL_FORMAT_BYR4,
                                        CFHD_DECODED_RESOLUTION_FULL,
@@ -402,6 +405,135 @@ int getMlvRawFrameUint16(mlvObject_t * video, uint64_t frameIndex, uint16_t * un
             CFHD_CloseDecoder(decoder);
 #else
             DEBUG( printf("Cineform codec is not enabled at build\n", err); )
+            free(raw_frame);
+            pthread_mutex_unlock(video->main_file_mutex + chunk);
+            return 1;
+#endif
+        }
+        else if (video->MLVI.videoClass & MLV_VIDEO_CLASS_FLAG_JPEG2K)
+        {
+#ifdef ENABLE_JPEG2K
+            if(fread(raw_frame, frame_size, 1, file) != 1)
+            {
+                DEBUG( printf("Frame data read error jpeg2k\n"); )
+                free(raw_frame);
+                pthread_mutex_unlock(video->main_file_mutex + chunk);
+                return 1;
+            }
+
+            pthread_mutex_unlock(video->main_file_mutex + chunk);
+
+            /* Parse bayer JPEG2K header: version + 8 u32s (offset/size for 4 channels) */
+            uint32_t *hdr = (uint32_t *)raw_frame;
+            if(hdr[0] != 1)
+            {
+                DEBUG( printf("JPEG2K decoder: unsupported version of JPEG2K MLV layout.\n"); )
+                free(raw_frame);
+                return 1;
+            }
+            uint32_t sizes[4]  = { hdr[2], hdr[4], hdr[6], hdr[8] };
+            uint32_t offsets[4] = { hdr[1], hdr[3], hdr[5], hdr[7] };
+
+            uint32_t hw = width / 2;
+            uint32_t hh = height / 2;
+            size_t quarter_pixels = (size_t)hw * hh;
+
+            /* Allocate 4 separate quarter buffers */
+            int32_t *quarter_bufs[4] = { NULL, NULL, NULL, NULL };
+            int alloc_ok = 1;
+            for(int c = 0; c < 4; c++)
+            {
+                quarter_bufs[c] = (int32_t *)malloc(quarter_pixels * sizeof(int32_t));
+                if(!quarter_bufs[c])
+                {
+                    DEBUG( printf("JPEG2K decoder: memory allocation failed\n"); )
+                    alloc_ok = 0;
+                    break;
+                }
+            }
+            if(!alloc_ok)
+            {
+                for(int c = 0; c < 4; c++) free(quarter_bufs[c]);
+                free(raw_frame);
+                return 1;
+            }
+
+            /* Decode 4 channels in parallel into separate buffers */
+            int decode_errors[4] = { 0, 0, 0, 0 };
+            #pragma omp parallel for num_threads(4)
+            for(int c = 0; c < 4; c++)
+            {
+                uint8_t *encoded = ((uint8_t *)raw_frame) + offsets[c];
+                uint32_t enc_size = sizes[c];
+
+                void *decoder = ojph_decoder_new();
+                if(!decoder)
+                {
+                    DEBUG( printf("JPEG2K decoder: failed to create decoder\n"); )
+                    decode_errors[c] = 1;
+                    continue;
+                }
+
+                uint32_t dw = 0, dh = 0, nc = 0, bd = 0;
+                int is_signed = 0;
+                int ret = ojph_decoder_probe(decoder, encoded, enc_size,
+                                             &dw, &dh, &nc, &bd, &is_signed);
+                if(ret != 0)
+                {
+                    DEBUG( printf("JPEG2K decoder: probe failed channel %d (error %d)\n", c, ret); )
+                    ojph_decoder_free(decoder);
+                    decode_errors[c] = 1;
+                    continue;
+                }
+
+                size_t pix_count = (size_t)dw * dh;
+                size_t decoded = ojph_decoder_decode_into(decoder, encoded, enc_size,
+                                                           quarter_bufs[c], pix_count,
+                                                           &dw, &dh, &nc);
+                if(decoded == 0 || decoded != pix_count)
+                {
+                    DEBUG( printf("JPEG2K decoder: decode failed channel %d\n", c); )
+                    ojph_decoder_free(decoder);
+                    decode_errors[c] = 1;
+                    continue;
+                }
+
+                ojph_decoder_free(decoder);
+            }
+
+            /* Check for decode errors */
+            for(int c = 0; c < 4; c++)
+            {
+                if(decode_errors[c])
+                {
+                    for(int c2 = 0; c2 < 4; c2++) free(quarter_bufs[c2]);
+                    free(raw_frame);
+                    return 1;
+                }
+            }
+
+            /* Scatter 4 quarter buffers into full bayer frame
+             * Channel order: 0=x0y0, 1=x1y0, 2=x0y1, 3=x1y1 */
+            for(int c = 0; c < 4; c++)
+            {
+                uint32_t x_off = (c == 1 || c == 3) ? 1 : 0;
+                uint32_t y_off = (c == 2 || c == 3) ? 1 : 0;
+
+                for(uint32_t y = 0; y < hh; y++)
+                {
+                    for(uint32_t x = 0; x < hw; x++)
+                    {
+                        int32_t val = quarter_bufs[c][y * hw + x];
+                        if(val < 0) val = 0;
+                        if(val > 65535) val = 65535;
+                        unpackedFrame[((y * 2 + y_off) * width) + (x * 2 + x_off)] = (uint16_t)val;
+                    }
+                }
+            }
+
+            for(int c = 0; c < 4; c++) free(quarter_bufs[c]);
+#else
+            DEBUG( printf("JPEG2K codec is not enabled at build\n"); )
             free(raw_frame);
             pthread_mutex_unlock(video->main_file_mutex + chunk);
             return 1;
