@@ -444,7 +444,8 @@ ICON_FILES.path = Contents/Resources
 QMAKE_BUNDLE_DATA += ICON_FILES
 
 #unpack & install ffmpeg on OSX
-macx: QMAKE_POST_LINK += unzip -o $$quote($$PWD/../qt/FFmpeg/ffmpegOSX.zip) $$escape_expand(\n\t)
+macx: equals(QT_ARCH, arm64): QMAKE_POST_LINK += unzip -o $$quote($$PWD/../qt/FFmpeg/ffmpegOSXarm.zip) $$escape_expand(\n\t)
+macx: equals(QT_ARCH, x86_64): QMAKE_POST_LINK += unzip -o $$quote($$PWD/../qt/FFmpeg/ffmpegOSX.zip) $$escape_expand(\n\t)
 macx: QMAKE_POST_LINK += "mv ffmpeg MLV\ App.app/Contents/MacOS/" $$escape_expand(\n\t)
 #unpack & install raw2mlv on OSX
 macx: equals(QT_ARCH, arm64): QMAKE_POST_LINK += unzip -o $$quote($$PWD/../qt/raw2mlv/raw2mlvMacOsArm.zip) $$escape_expand(\n\t)
