@@ -83,6 +83,12 @@
 #define CODEC_MLV_DECOMPRESS        2
 #define CODEC_MLV_AVERAGED          3
 #define CODEC_MLV_EXTRACT_DF        4
+#define CODEC_MLV_CINEFORM          5
+#define CODEC_MLV_JP2K_LOW          6
+#define CODEC_MLV_JP2K_MEDIUM       7
+#define CODEC_MLV_JP2K_HIGH         8
+#define CODEC_MLV_JP2K_VERYHIGH     9
+#define CODEC_MLV_JP2K_LOSSLESS    10
 
 #define CODEC_DNXHD_1080p_10bit     0
 #define CODEC_DNXHD_1080p_8bit      1
