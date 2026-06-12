@@ -1344,7 +1344,7 @@ int saveMlvHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int
     if(video->RAWC.blockType[0]) mlv_headers_size += video->RAWC.blockSize;
     if(video->STYL.blockType[0]) mlv_headers_size += video->STYL.blockSize;
     if(video->DISO.blockType[0]) mlv_headers_size += video->DISO.blockSize;
-    if(video->WAVI.blockType[0] && export_audio && export_mode < MLV_AVERAGED_FRAME) mlv_headers_size += video->WAVI.blockSize;
+    if(video->WAVI.blockType[0] && export_audio && !(export_mode == MLV_AVERAGED_FRAME || export_mode == MLV_DF_INT)) mlv_headers_size += video->WAVI.blockSize;
     if(video->INFO.blockType[0] && video->INFO_STRING[0]) mlv_headers_size += video->INFO.blockSize;
     if(video->llrawproc->dark_frame && export_mode < MLV_AVERAGED_FRAME) // if normal MLV export specified and dark frame exists
     {
@@ -1371,13 +1371,14 @@ int saveMlvHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int
     memcpy(&output_mlvi, (uint8_t*)&(video->MLVI), sizeof(mlv_file_hdr_t));
     output_mlvi.fileNum = 0;
     output_mlvi.fileCount = 1;
-    output_mlvi.videoFrameCount = (export_mode >= MLV_AVERAGED_FRAME) ? 1 : frame_end - frame_start + 1;
-    output_mlvi.audioFrameCount = (!export_audio || export_mode >= MLV_AVERAGED_FRAME) ? 0 : 1;
+    output_mlvi.videoFrameCount = (export_mode == MLV_AVERAGED_FRAME || export_mode == MLV_DF_INT) ? 1 : frame_end - frame_start + 1;
+    output_mlvi.audioFrameCount = (!export_audio || (export_mode == MLV_AVERAGED_FRAME || export_mode == MLV_DF_INT)) ? 0 : 1;
     output_mlvi.videoClass = MLV_VIDEO_CLASS_RAW;
+    if (export_mode == MLV_FAST_PASS) output_mlvi.videoClass = video->MLVI.videoClass;
     if (export_mode == MLV_LJ92) output_mlvi.videoClass |= MLV_VIDEO_CLASS_FLAG_LJ92;
     else if (is_cineform) output_mlvi.videoClass |= MLV_VIDEO_CLASS_FLAG_CINEFORM;
     else if (is_jp2k) output_mlvi.videoClass |= MLV_VIDEO_CLASS_FLAG_JPEG2K;
-    output_mlvi.audioClass = (!export_audio || export_mode >= MLV_AVERAGED_FRAME) ? 0 : 1;
+    output_mlvi.audioClass = (!export_audio || (export_mode == MLV_AVERAGED_FRAME || export_mode == MLV_DF_INT)) ? 0 : 1;
     if(export_mode == MLV_DF_INT)
     {
         output_mlvi.sourceFpsNom = video->DARK.sourceFpsNom;
@@ -1489,7 +1490,7 @@ int saveMlvHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int
         ptr += video->DISO.blockSize;
     }
 
-    if(video->WAVI.blockType[0] && export_audio && (export_mode < MLV_AVERAGED_FRAME))
+    if(video->WAVI.blockType[0] && export_audio && !(export_mode == MLV_AVERAGED_FRAME || export_mode == MLV_DF_INT))
     {
         memcpy(ptr, (uint8_t*)&(video->WAVI), sizeof(mlv_wavi_hdr_t));
         ptr += video->WAVI.blockSize;
@@ -1985,7 +1986,7 @@ int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
     }
 
     /* if audio export is enabled */
-    if(!(frame_start - frame_index - 1) && export_audio && export_mode < MLV_AVERAGED_FRAME )
+    if(!(frame_start - frame_index - 1) && export_audio && !(export_mode == MLV_AVERAGED_FRAME || export_mode == MLV_DF_INT))
     {
         /* initialize AUDF header */
         mlv_audf_hdr_t audf_hdr = { { 'A','U','D','F' }, 0, 0, 0, 0 };
