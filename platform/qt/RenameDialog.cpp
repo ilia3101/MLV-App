@@ -34,7 +34,7 @@ QString RenameDialog::clipName()
 
 void RenameDialog::on_lineEdit_textChanged(const QString &arg1)
 {
-#if QT_VERSION <= QT_VERSION_CHECK(5, 0, 0)
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     QRegExp rx("*.MLV");
     rx.setPatternSyntax(QRegExp::Wildcard);
     ui->pushButtonRename->setEnabled( rx.exactMatch( arg1 ) );
