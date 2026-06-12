@@ -333,7 +333,7 @@ void MLVBlenderExportMLV(MLVBlender_t * Blender, const char * OutputPath)
     if (isMlvCompressed(mlv_object))
         saveMlvHeaders(mlv_object, mlv_output_file, 0, MLV_FAST_PASS, 0, longest_vid, "MLVStitcher", error);
     else
-        saveMlvHeaders(mlv_object, mlv_output_file, 0, MLV_COMPRESS, 0, longest_vid, "MLVStitcher", error);
+        saveMlvHeaders(mlv_object, mlv_output_file, 0, MLV_LJ92, 0, longest_vid, "MLVStitcher", error);
 
     uint16_t * buffer16 = malloc(sizeof(uint16_t) * frame_size);
     uint8_t * buffer_compressed = malloc(2 * frame_size * sizeof(uint16_t));
