@@ -133,7 +133,7 @@ void MLVBlenderGUI::UpdateInterface()
     MLVBlenderBlend(blender, 1);
 
     char subtitle_string[256];
-    sprintf(subtitle_string, "Result %ix%i", MLVBlenderGetOutputWidth(blender), MLVBlenderGetOutputHeight(blender));
+    snprintf(subtitle_string, sizeof(subtitle_string), "Result %ix%i", MLVBlenderGetOutputWidth(blender), MLVBlenderGetOutputHeight(blender));
     header_bar.set_subtitle(subtitle_string);
 
     image_changed = true;
