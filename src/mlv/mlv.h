@@ -24,17 +24,19 @@
 #include "raw.h"
 
 #define MLV_VERSION_STRING "v2.0"
-#define MLV_VIDEO_CLASS_RAW          0x01
-#define MLV_VIDEO_CLASS_YUV          0x02
-#define MLV_VIDEO_CLASS_JPEG         0x03
-#define MLV_VIDEO_CLASS_H264         0x04
+#define MLV_VIDEO_CLASS_RAW             0x01
+#define MLV_VIDEO_CLASS_YUV             0x02
+#define MLV_VIDEO_CLASS_JPEG            0x03
+#define MLV_VIDEO_CLASS_H264            0x04
 
-#define MLV_VIDEO_CLASS_FLAG_MCRAW   0x100
-#define MLV_VIDEO_CLASS_FLAG_LZMA    0x80
-#define MLV_VIDEO_CLASS_FLAG_DELTA   0x40
-#define MLV_VIDEO_CLASS_FLAG_LJ92    0x20
+#define MLV_VIDEO_CLASS_FLAG_MCRAW      0x100
+#define MLV_VIDEO_CLASS_FLAG_LZMA       0x80
+#define MLV_VIDEO_CLASS_FLAG_DELTA      0x40
+#define MLV_VIDEO_CLASS_FLAG_LJ92       0x20
+#define MLV_VIDEO_CLASS_FLAG_CINEFORM   0x10
+#define MLV_VIDEO_CLASS_FLAG_JPEG2K     0x200
 
-#define MLV_AUDIO_CLASS_FLAG_LZMA    0x80
+#define MLV_AUDIO_CLASS_FLAG_LZMA       0x80
 
 #define MLV_FRAME_UNSPECIFIED 0
 #define MLV_FRAME_VIDF        1
@@ -94,6 +96,13 @@ typedef struct {
     uint16_t    yRes;    /* Configured video resolution, may differ from payload resolution */
     struct raw_info raw_info;    /* the raw_info structure delivered by raw.h of ML Core */
 }  mlv_rawi_hdr_t;
+
+typedef struct {
+    uint8_t     blockType[4];    /* curve lookup table for decoding data from encoded values to linear (to which black/white level should be applied to) */
+    uint32_t    blockSize;    /* total curve block size */
+    uint64_t    timestamp;    /* hardware counter timestamp for this frame (relative to recording start) */
+/*    uint16_t    data[variable]; */ /* May be less thatn full 16-bit range, limited by Blocksize - 16 - if less than 65535 samples contained, just pad the lookup table with zeros for safety and index into that */
+}  mlv_curv_hdr_t;
 
 typedef struct {
     uint8_t     blockType[4];   /* RAWC - raw image capture information */

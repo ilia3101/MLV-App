@@ -8,6 +8,7 @@
 #include <time.h>
 #include <inttypes.h>
 #include "camid/camera_id.h"
+#include "macros.h"
 
 #include <unistd.h>
 #if defined(__linux)
@@ -29,6 +30,17 @@
 
 /* Lossless decompression */
 #include "liblj92/lj92.h"
+
+/* Cineform decompression */
+#ifdef ENABLE_CINEFORM
+#include "CineformSDK/Common/CFHDDecoder.h"
+#include "CineformSDK/Common/CFHDEncoder.h"
+#endif
+
+/* JPEG2000 decompression via OpenJPH */
+#ifdef ENABLE_JPEG2K
+#include "OpenJPH/ojph_wrapper.h"
+#endif
 
 /* Bitunpack and lossless compression */
 #include "../dng/dng.h"
@@ -314,7 +326,7 @@ int getMlvRawFrameUint16(mlvObject_t * video, uint64_t frameIndex, uint16_t * un
         {
             if(fread(raw_frame, frame_size, 1, file) != 1)
             {
-                DEBUG( printf("Frame data read error\n"); )
+                DEBUG( printf("Frame data read error lj92\n"); )
                 free(raw_frame);
                 pthread_mutex_unlock(video->main_file_mutex + chunk);
                 return 1;
@@ -343,11 +355,197 @@ int getMlvRawFrameUint16(mlvObject_t * video, uint64_t frameIndex, uint16_t * un
             }
             lj92_close(decoder_object);
         }
+        else if (video->MLVI.videoClass & MLV_VIDEO_CLASS_FLAG_CINEFORM)
+        {
+#ifdef ENABLE_CINEFORM
+            if(fread(raw_frame, frame_size, 1, file) != 1)
+            {
+                DEBUG( printf("Frame data read error cineform\n"); )
+                free(raw_frame);
+                pthread_mutex_unlock(video->main_file_mutex + chunk);
+                return 1;
+            }
+
+            pthread_mutex_unlock(video->main_file_mutex + chunk);
+
+            CFHD_DecoderRef decoder = NULL;
+            CFHD_Error err = CFHD_OpenDecoder(&decoder, NULL);
+            if(err != CFHD_ERROR_OKAY)
+            {
+                DEBUG( printf("Cineform decoder: Failed to open decoder (error %d)\n", err); )
+                free(raw_frame);
+                return 1;
+            }
+
+            int actual_width = 0;
+            int actual_height = 0;
+            CFHD_PixelFormat actual_format = CFHD_PIXEL_FORMAT_BYR4;
+            err = CFHD_PrepareToDecode(decoder, width, height,
+                                       CFHD_PIXEL_FORMAT_BYR4,
+                                       CFHD_DECODED_RESOLUTION_FULL,
+                                       CFHD_DECODING_FLAGS_NONE,
+                                       raw_frame, frame_size,
+                                       &actual_width, &actual_height, &actual_format);
+            if(err != CFHD_ERROR_OKAY)
+            {
+                DEBUG( printf("Cineform decoder: PrepareToDecode failed (error %d)\n", err); )
+                CFHD_CloseDecoder(decoder);
+                free(raw_frame);
+                return 1;
+            }
+
+            err = CFHD_DecodeSample(decoder, raw_frame, frame_size,
+                                    unpackedFrame, width * 2);
+            if(err != CFHD_ERROR_OKAY)
+            {
+                DEBUG( printf("Cineform decoder: DecodeSample failed (error %d)\n", err); )
+                CFHD_CloseDecoder(decoder);
+                free(raw_frame);
+                return 1;
+            }
+
+            CFHD_CloseDecoder(decoder);
+#else
+            DEBUG( printf("Cineform codec is not enabled at build\n", err); )
+            free(raw_frame);
+            pthread_mutex_unlock(video->main_file_mutex + chunk);
+            return 1;
+#endif
+        }
+        else if (video->MLVI.videoClass & MLV_VIDEO_CLASS_FLAG_JPEG2K)
+        {
+#ifdef ENABLE_JPEG2K
+            if(fread(raw_frame, frame_size, 1, file) != 1)
+            {
+                DEBUG( printf("Frame data read error jpeg2k\n"); )
+                free(raw_frame);
+                pthread_mutex_unlock(video->main_file_mutex + chunk);
+                return 1;
+            }
+
+            pthread_mutex_unlock(video->main_file_mutex + chunk);
+
+            /* Parse bayer JPEG2K header: version + 8 u32s (offset/size for 4 channels) */
+            uint32_t *hdr = (uint32_t *)raw_frame;
+            if(hdr[0] != 1)
+            {
+                DEBUG( printf("JPEG2K decoder: unsupported version of JPEG2K MLV layout.\n"); )
+                free(raw_frame);
+                return 1;
+            }
+            uint32_t sizes[4]  = { hdr[2], hdr[4], hdr[6], hdr[8] };
+            uint32_t offsets[4] = { hdr[1], hdr[3], hdr[5], hdr[7] };
+
+            uint32_t hw = width / 2;
+            uint32_t hh = height / 2;
+            size_t quarter_pixels = (size_t)hw * hh;
+
+            /* Allocate 4 separate quarter buffers */
+            int32_t *quarter_bufs[4] = { NULL, NULL, NULL, NULL };
+            int alloc_ok = 1;
+            for(int c = 0; c < 4; c++)
+            {
+                quarter_bufs[c] = (int32_t *)malloc(quarter_pixels * sizeof(int32_t));
+                if(!quarter_bufs[c])
+                {
+                    DEBUG( printf("JPEG2K decoder: memory allocation failed\n"); )
+                    alloc_ok = 0;
+                    break;
+                }
+            }
+            if(!alloc_ok)
+            {
+                for(int c = 0; c < 4; c++) free(quarter_bufs[c]);
+                free(raw_frame);
+                return 1;
+            }
+
+            /* Decode 4 channels in parallel into separate buffers */
+            int decode_errors[4] = { 0, 0, 0, 0 };
+            #pragma omp parallel for num_threads(4)
+            for(int c = 0; c < 4; c++)
+            {
+                uint8_t *encoded = ((uint8_t *)raw_frame) + offsets[c];
+                uint32_t enc_size = sizes[c];
+
+                void *decoder = ojph_decoder_new();
+                if(!decoder)
+                {
+                    DEBUG( printf("JPEG2K decoder: failed to create decoder\n"); )
+                    decode_errors[c] = 1;
+                    continue;
+                }
+
+                uint32_t dw = 0, dh = 0, nc = 0, bd = 0;
+                int is_signed = 0;
+                int ret = ojph_decoder_probe(decoder, encoded, enc_size,
+                                             &dw, &dh, &nc, &bd, &is_signed);
+                if(ret != 0)
+                {
+                    DEBUG( printf("JPEG2K decoder: probe failed channel %d (error %d)\n", c, ret); )
+                    ojph_decoder_free(decoder);
+                    decode_errors[c] = 1;
+                    continue;
+                }
+
+                size_t pix_count = (size_t)dw * dh;
+                size_t decoded = ojph_decoder_decode_into(decoder, encoded, enc_size,
+                                                           quarter_bufs[c], pix_count,
+                                                           &dw, &dh, &nc);
+                if(decoded == 0 || decoded != pix_count)
+                {
+                    DEBUG( printf("JPEG2K decoder: decode failed channel %d\n", c); )
+                    ojph_decoder_free(decoder);
+                    decode_errors[c] = 1;
+                    continue;
+                }
+
+                ojph_decoder_free(decoder);
+            }
+
+            /* Check for decode errors */
+            for(int c = 0; c < 4; c++)
+            {
+                if(decode_errors[c])
+                {
+                    for(int c2 = 0; c2 < 4; c2++) free(quarter_bufs[c2]);
+                    free(raw_frame);
+                    return 1;
+                }
+            }
+
+            /* Scatter 4 quarter buffers into full bayer frame
+             * Channel order: 0=x0y0, 1=x1y0, 2=x0y1, 3=x1y1 */
+            for(int c = 0; c < 4; c++)
+            {
+                uint32_t x_off = (c == 1 || c == 3) ? 1 : 0;
+                uint32_t y_off = (c == 2 || c == 3) ? 1 : 0;
+
+                for(uint32_t y = 0; y < hh; y++)
+                {
+                    for(uint32_t x = 0; x < hw; x++)
+                    {
+                        int32_t val = quarter_bufs[c][y * hw + x];
+                        if(val < 0) val = 0;
+                        if(val > 65535) val = 65535;
+                        unpackedFrame[((y * 2 + y_off) * width) + (x * 2 + x_off)] = (uint16_t)val;
+                    }
+                }
+            }
+
+            for(int c = 0; c < 4; c++) free(quarter_bufs[c]);
+#else
+            DEBUG( printf("JPEG2K codec is not enabled at build\n"); )
+            free(raw_frame);
+            pthread_mutex_unlock(video->main_file_mutex + chunk);
+            return 1;
+#endif
+        }
         else /* If not compressed just unpack to 16bit */
         {
             if(fread(raw_frame, raw_frame_size, 1, file) != 1)
             {
-                DEBUG( printf("Frame data read error\n"); )
+                DEBUG( printf("Frame data read error none\n"); )
                 free(raw_frame);
                 pthread_mutex_unlock(video->main_file_mutex + chunk);
                 return 1;
@@ -367,6 +565,15 @@ int getMlvRawFrameUint16(mlvObject_t * video, uint64_t frameIndex, uint16_t * un
                 uint32_t data = ROR32(uncorrected_data, rotate_value);
                 unpackedFrame[i] = ((uint16_t)(data & mask));
             }
+        }
+    }
+
+    if (video->linearise_lut)
+    {
+        #pragma omp parallel for
+        for (int i = 0; i < pixels_count; ++i)
+        {
+            unpackedFrame[i] = video->linearise_lut[unpackedFrame[i]];
         }
     }
 
@@ -427,7 +634,7 @@ void setMlvProcessing(mlvObject_t * video, processingObject_t * processing)
     /* Gradient alloc */
     video->processing->gradient_mask = realloc( video->processing->gradient_mask, getMlvWidth(video) * getMlvHeight(video) * sizeof( uint16_t ) );
 
-    /* MATRIX stuff (not working, so commented out - 
+    /* MATRIX stuff (not working, so commented out -
      * processing object defaults to 1,0,0,0,1,0,0,0,1) */
 
     /* Get camera matrix for MLV clip and set it in the processing object */
@@ -490,7 +697,7 @@ void getMlvRawFrameDebayered(mlvObject_t * video, uint64_t frameIndex, uint16_t 
 
     /* If frame was requested last time and is sitting in the "current" frame cache */
     if ( video->cached_frames[frameIndex] == MLV_FRAME_NOT_CACHED
-         && video->current_cached_frame_active 
+         && video->current_cached_frame_active
          && video->current_cached_frame == frameIndex )
     {
         memcpy(outputFrame, video->rgb_raw_current_frame, frame_size);
@@ -608,7 +815,7 @@ mlvObject_t * initMlvObjectWithMcrawClip(char * mlvPath, int preview, int * err,
 }
 
 /* Allocates a tiny bit of memory for everything in the structure
- * so we can always be sure there is memory, and when we need to 
+ * so we can always be sure there is memory, and when we need to
  * resize it, simply do free followed by malloc */
 mlvObject_t * initMlvObject()
 {
@@ -651,6 +858,9 @@ mlvObject_t * initMlvObject()
     video->ca_red = 0.0;
     video->ca_blue = 0.0;
 
+    /* CURV lookup table */
+    video->linearise_lut = NULL;
+
     /* Use default camid as fallback */
     camera_id_t *camid = camidGet(0);
     memcpy(&video->camid, camid, sizeof(camera_id_t));
@@ -692,6 +902,7 @@ void freeMlvObject(mlvObject_t * video)
     if(video->rgb_raw_current_frame) free(video->rgb_raw_current_frame);
     if(video->cache_memory_block) free(video->cache_memory_block);
     if(video->path) free(video->path);
+    if(video->linearise_lut) free(video->linearise_lut);
     freeLLRawProcObject(video);
 
     /* Mutex things here... */
@@ -1009,16 +1220,72 @@ mapp_error:
     return 1;
 }
 
+#define LOG_THRESH 0.0061
+#define LOG_STOPS  9.72
+
+uint16_t log_encode_int(uint16_t x, uint16_t bl, uint16_t max, uint16_t max_value)
+{
+    double v;
+    if (x <= bl)
+        v = 0.0;
+    else if (x >= max)
+        v = 1.0;
+    else
+        v = (double)(x - bl) / (double)(max - bl);
+
+    double encoded;
+    if (v < LOG_THRESH) {
+        double y_thresh = (log2(LOG_THRESH) - 1.0) / LOG_STOPS + 1.0;
+        double slope_m  = 1.0 / (LOG_THRESH * LOG_STOPS * log(2.0));
+        encoded = slope_m * (v - LOG_THRESH) + y_thresh;
+    } else {
+        encoded = (log2(v) - 1.0) / LOG_STOPS + 1.0;
+    }
+
+    double result = encoded * (double)max_value + 0.5;
+    if (result < 0.0) result = 0.0;
+    if (result > (double)max_value) result = (double)max_value;
+    return (uint16_t)result;
+}
+
+uint16_t log_decode_int(uint16_t x, uint16_t bl, uint16_t max, uint16_t max_value)
+{
+    double y_thresh = (log2(LOG_THRESH) - 1.0) / LOG_STOPS + 1.0;
+    double slope_m  = 1.0 / (LOG_THRESH * LOG_STOPS * log(2.0));
+
+    if (x > max_value) x = max_value;
+    double v = (double)x / (double)max_value;
+
+    double decoded;
+    if (v >= y_thresh)
+        decoded = pow(2.0, (v - 1.0) * LOG_STOPS + 1.0);
+    else
+        decoded = LOG_THRESH + (v - y_thresh) / slope_m;
+
+    double result = decoded * (double)(max - bl) + (double)bl + 0.5;
+    if (result < 0.0) result = 0.0;
+    if (result > 65535.0) result = 65535.0;
+    return (uint16_t)result;
+}
+
 /* Save MLV headers */
 int saveMlvHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int export_mode, uint32_t frame_start, uint32_t frame_end, const char * version, char * error_message)
 {
+    int is_cineform = export_mode == MLV_CINEFORM;
+    int is_jp2k = export_mode == MLV_JP2K_LOW
+        || export_mode == MLV_JP2K_MED
+        || export_mode == MLV_JP2K_HIGH
+        || export_mode == MLV_JP2K_VERYHIGH
+        || export_mode == MLV_JP2K_VISULOSSLESS;
+    int is_lossy = is_cineform || is_jp2k;
+
     if(export_mode == MLV_DF_INT && !video->DARK.blockType[0])
     {
         sprintf(error_message, "There is no internal darkframe in:  %s", video->path);
         DEBUG( printf("\n%s\n", error_message); )
         return 1;
     }
-    else if((export_mode == MLV_COMPRESS) && isMlvCompressed(video))
+    else if((export_mode == MLV_LJ92) && isMlvCompressed(video))
     {
         sprintf(error_message, "MLV already compressed:  %s\nUse 'Fast Pass' instead", video->path);
         DEBUG( printf("\n%s\n", error_message); )
@@ -1040,36 +1307,21 @@ int saveMlvHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int
     struct tm *tm = localtime(&rawtm);
     strftime(tms, sizeof(tms), "%H:%M:%S %b %e %Y", tm);
 
-    switch(export_mode)
-    {
-        case MLV_FAST_PASS:
-        {
-            strcat(export_mode_str, "MLV_FAST_PASS");
-            break;
-        }
-        case MLV_COMPRESS:
-        {
-            strcat(export_mode_str, "MLV_COMPRESS");
-            break;
-        }
-        case MLV_DECOMPRESS:
-        {
-            strcat(export_mode_str, "MLV_DECOMPRESS");
-            break;
-        }
-        case MLV_AVERAGED_FRAME:
-        {
-            strcat(export_mode_str, "MLV_AVERAGED_FRAME");
-            break;
-        }
-        case MLV_DF_INT:
-        {
-            strcat(export_mode_str, "MLV_DF_INT");
-            break;
-        }
-        default:
-            strcat(export_mode_str, "MLV_FAST_PASS");
-    }
+    char * export_mode_strings[] = {
+        "MLV_FAST_PASS",
+        "MLV_LJ92",
+        "MLV_DECOMPRESS",
+        "MLV_AVERAGED_FRAME",
+        "MLV_DF_INT",
+        "MLV_CINEFORM",
+        "MLV_JP2K_LOW",
+        "MLV_JP2K_MED",
+        "MLV_JP2K_HIGH",
+        "MLV_JP2K_VERYHIGH",
+        "MLV_JP2K_VISULOSSLESS"
+    };
+
+    strcat(export_mode_str, export_mode_strings[export_mode]);
 
     if(video->WAVI.blockType[0] && export_audio && (export_mode < MLV_AVERAGED_FRAME)) strcat(export_audio_str, "ON");
     else strcat(export_audio_str, "OFF");
@@ -1092,7 +1344,7 @@ int saveMlvHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int
     if(video->RAWC.blockType[0]) mlv_headers_size += video->RAWC.blockSize;
     if(video->STYL.blockType[0]) mlv_headers_size += video->STYL.blockSize;
     if(video->DISO.blockType[0]) mlv_headers_size += video->DISO.blockSize;
-    if(video->WAVI.blockType[0] && export_audio && export_mode < MLV_AVERAGED_FRAME) mlv_headers_size += video->WAVI.blockSize;
+    if(video->WAVI.blockType[0] && export_audio && !(export_mode == MLV_AVERAGED_FRAME || export_mode == MLV_DF_INT)) mlv_headers_size += video->WAVI.blockSize;
     if(video->INFO.blockType[0] && video->INFO_STRING[0]) mlv_headers_size += video->INFO.blockSize;
     if(video->llrawproc->dark_frame && export_mode < MLV_AVERAGED_FRAME) // if normal MLV export specified and dark frame exists
     {
@@ -1100,6 +1352,10 @@ int saveMlvHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int
         DEBUG( printf("Block Size = %u, DF Size = %u, Export Mode = %u, Filename = %s\n", video->llrawproc->dark_frame_hdr.blockSize, video->llrawproc->dark_frame_size, export_mode, video->llrawproc->dark_frame_filename); )
         DEBUG( printf("Headers Size += %u\n", video->llrawproc->dark_frame_hdr.blockSize); )
         mlv_headers_size += video->llrawproc->dark_frame_hdr.blockSize;
+    }
+    if (is_lossy)
+    {
+        mlv_headers_size += sizeof(mlv_curv_hdr_t) + 4096 * sizeof(uint16_t);
     }
     uint8_t * mlv_headers_buf = malloc(mlv_headers_size);
     if(!mlv_headers_buf)
@@ -1115,11 +1371,14 @@ int saveMlvHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int
     memcpy(&output_mlvi, (uint8_t*)&(video->MLVI), sizeof(mlv_file_hdr_t));
     output_mlvi.fileNum = 0;
     output_mlvi.fileCount = 1;
-    output_mlvi.videoFrameCount = (export_mode >= MLV_AVERAGED_FRAME) ? 1 : frame_end - frame_start + 1;
-    output_mlvi.audioFrameCount = (!export_audio || export_mode >= MLV_AVERAGED_FRAME) ? 0 : 1;
-    if(export_mode == MLV_COMPRESS && (!isMlvCompressed(video))) output_mlvi.videoClass |= MLV_VIDEO_CLASS_FLAG_LJ92;
-    else if(export_mode >= MLV_DECOMPRESS && isMlvCompressed(video)) output_mlvi.videoClass  = 1;
-    output_mlvi.audioClass = (!export_audio || export_mode >= MLV_AVERAGED_FRAME) ? 0 : 1;
+    output_mlvi.videoFrameCount = (export_mode == MLV_AVERAGED_FRAME || export_mode == MLV_DF_INT) ? 1 : frame_end - frame_start + 1;
+    output_mlvi.audioFrameCount = (!export_audio || (export_mode == MLV_AVERAGED_FRAME || export_mode == MLV_DF_INT)) ? 0 : 1;
+    output_mlvi.videoClass = MLV_VIDEO_CLASS_RAW;
+    if (export_mode == MLV_FAST_PASS) output_mlvi.videoClass = video->MLVI.videoClass;
+    if (export_mode == MLV_LJ92) output_mlvi.videoClass |= MLV_VIDEO_CLASS_FLAG_LJ92;
+    else if (is_cineform) output_mlvi.videoClass |= MLV_VIDEO_CLASS_FLAG_CINEFORM;
+    else if (is_jp2k) output_mlvi.videoClass |= MLV_VIDEO_CLASS_FLAG_JPEG2K;
+    output_mlvi.audioClass = (!export_audio || (export_mode == MLV_AVERAGED_FRAME || export_mode == MLV_DF_INT)) ? 0 : 1;
     if(export_mode == MLV_DF_INT)
     {
         output_mlvi.sourceFpsNom = video->DARK.sourceFpsNom;
@@ -1231,7 +1490,7 @@ int saveMlvHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int
         ptr += video->DISO.blockSize;
     }
 
-    if(video->WAVI.blockType[0] && export_audio && (export_mode < MLV_AVERAGED_FRAME))
+    if(video->WAVI.blockType[0] && export_audio && !(export_mode == MLV_AVERAGED_FRAME || export_mode == MLV_DF_INT))
     {
         memcpy(ptr, (uint8_t*)&(video->WAVI), sizeof(mlv_wavi_hdr_t));
         ptr += video->WAVI.blockSize;
@@ -1248,6 +1507,21 @@ int saveMlvHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int
         memcpy(ptr, df_packed, df_packed_size);
         ptr += df_packed_size;
         DEBUG( printf("\nDARK block inserted\n"); )
+    }
+
+    if (is_lossy)
+    {
+        mlv_curv_hdr_t curv = {{'C', 'U', 'R', 'V'}, sizeof(mlv_curv_hdr_t) + 4096 * sizeof(uint16_t), 0};
+        uint16_t decode_lut[4096];
+        uint16_t max_value = 1 << (getMlvBitdepth(video));
+        uint16_t bl = getMlvBlackLevel(video);
+        for (int i = 0; i < 4096; i++) {
+            decode_lut[i] = log_decode_int(i, bl, max_value, 4095);
+        }
+        memcpy(ptr, &curv, sizeof(mlv_curv_hdr_t));
+        ptr += sizeof(mlv_curv_hdr_t);
+        memcpy(ptr, &decode_lut, sizeof(decode_lut));
+        ptr += sizeof(decode_lut);
     }
 
     memcpy(ptr, &VERS_HEADER, sizeof(mlv_vers_hdr_t));
@@ -1305,6 +1579,9 @@ int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
     uint64_t frame_offset = video->video_index[frame_index].frame_offset;
     uint64_t block_offset = video->video_index[frame_index].block_offset;
 
+    uint8_t * block_buf = NULL;
+    uint8_t * frame_buf = NULL;
+
     /* read VIDF block header */
     file_set_pos(video->file[chunk], block_offset, SEEK_SET);
     if(fread(&vidf_hdr, sizeof(mlv_vidf_hdr_t), 1, video->file[chunk]) != 1)
@@ -1314,198 +1591,402 @@ int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
         return 1;
     }
 
-    vidf_hdr.blockSize -= vidf_hdr.frameSpace;
-    vidf_hdr.frameSpace = 0;
-
-    /* for safety allocate max possible size buffer for VIDF block, calculated for 16bits per pixel */
-    uint8_t * block_buf = calloc(sizeof(mlv_vidf_hdr_t) + frame_size_unpacked, 1);
-    if(!block_buf)
+    /* ilia3101: Implementing compressed export - for compressed modes I have added a simpler
+     * code path using this switch statement - read the frame using the simple frame reader utility,
+     * and then encode. I have kept bouncyball's original efficient logic for uncompressed/lossless modes. */
+    switch (export_mode)
     {
-        sprintf(error_message, "Could not allocate memory for VIDF block");
-        DEBUG( printf("\n%s\n", error_message); )
-        return 1;
-    }
-    /* for safety allocate max possible size buffer for image data, calculated for 16bits per pixel */
-    uint8_t * frame_buf = calloc(frame_size_unpacked, 1);
-    if(!frame_buf)
-    {
-        sprintf(error_message, "Could not allocate memory for VIDF frame");
-        DEBUG( printf("\n%s\n", error_message); )
-        free(block_buf);
-        return 1;
-    }
-
-    /* read frame buffer */
-    file_set_pos(video->file[chunk], frame_offset, SEEK_SET);
-    if(fread(frame_buf, frame_size, 1, video->file[chunk]) != 1)
-    {
-        sprintf(error_message, "Could not read VIDF image data from:  %s", video->path);
-        DEBUG( printf("\n%s\n", error_message); )
-        free(frame_buf);
-        free(block_buf);
-        return 1;
-    }
-
-    if(export_mode == MLV_DF_INT) // export internal dark frame as separate MLV
-    {
-        size_t df_packed_size = video->DARK.blockSize - sizeof(mlv_dark_hdr_t);
-        /* read dark frame */
-        file_set_pos(video->file[0], video->dark_frame_offset, SEEK_SET);
-        if(fread(frame_buf, df_packed_size, 1, video->file[0]) != 1)
+        case MLV_CINEFORM:
+        case MLV_JP2K_LOW:
+        case MLV_JP2K_MED:
+        case MLV_JP2K_HIGH:
+        case MLV_JP2K_VERYHIGH:
+        case MLV_JP2K_VISULOSSLESS:
         {
-            sprintf(error_message, "Could not read DARK block image data from:  %s", video->path);
-            DEBUG( printf("\n%s\n", error_message); )
-            free(frame_buf);
-            free(block_buf);
-            return 1;
+            /* TODO ilia3101: maybe add some error handling to getMlvRawFrameUint16 */
+            uint16_t * frame = malloc(pixel_count * sizeof(uint16_t));
+            getMlvRawFrameUint16(video, frame_index, frame);
+
+            uint16_t encode_lut[16384];
+            uint16_t bl = getMlvBlackLevel(video);
+            uint16_t max_value = 1 << getMlvBitdepth(video);
+            for (int i = 0; i < 16384; i++) {
+                encode_lut[i] = log_encode_int(i, bl, max_value, 4095);
+            }
+
+            for (uint32_t p = 0; p < pixel_count; p++) {
+                frame[p] = encode_lut[frame[p]];
+            }
+
+            if (export_mode == MLV_CINEFORM) {
+                #ifdef ENABLE_CINEFORM
+                CFHD_EncoderRef encoder = NULL;
+                if (CFHD_OpenEncoder(&encoder, NULL) == CFHD_ERROR_OKAY)
+                {
+                    if (CFHD_PrepareToEncode(encoder,
+                                              video->RAWI.xRes,
+                                              video->RAWI.yRes,
+                                              CFHD_PIXEL_FORMAT_BYR4,
+                                              CFHD_ENCODED_FORMAT_BAYER,
+                                              CFHD_ENCODING_FLAGS_NONE,
+                                              CFHD_ENCODING_QUALITY_FILMSCAN3) == CFHD_ERROR_OKAY)
+                    {
+                        if (CFHD_EncodeSample(encoder, frame, video->RAWI.xRes * 2) == CFHD_ERROR_OKAY)
+                        {
+                            void *sample_data = NULL;
+                            size_t sample_size = 0;
+                            if (CFHD_GetSampleData(encoder, &sample_data, &sample_size) == CFHD_ERROR_OKAY
+                                && sample_data && sample_size > 0)
+                            {
+                                vidf_hdr.blockSize = sizeof(mlv_vidf_hdr_t) + sample_size;
+                                vidf_hdr.frameSpace = 0;
+                                block_buf = malloc(vidf_hdr.blockSize);
+                                if (block_buf)
+                                {
+                                    memcpy(block_buf, &vidf_hdr, sizeof(mlv_vidf_hdr_t));
+                                    memcpy(block_buf + sizeof(mlv_vidf_hdr_t), sample_data, sample_size);
+                                }
+                            }
+                        }
+                    }
+                    CFHD_CloseEncoder(encoder);
+                }
+                #else
+                sprintf(error_message, "Cineform export is not enabled in this build (ENABLE_CINEFORM)");
+                free(frame);
+                return 1;
+                #endif
+            }
+            else if (
+                export_mode == MLV_JP2K_LOW
+                ||export_mode == MLV_JP2K_MED
+                ||export_mode == MLV_JP2K_HIGH
+                ||export_mode == MLV_JP2K_VERYHIGH
+                ||export_mode == MLV_JP2K_VISULOSSLESS
+            ) {
+                #ifdef ENABLE_JPEG2K
+                void *encoders[4] = {NULL, NULL, NULL, NULL};
+                int32_t *quarter_bufs[4] = {NULL, NULL, NULL, NULL};
+                uint8_t *encoded_bufs[4] = {NULL, NULL, NULL, NULL};
+                size_t enc_sizes[4] = {0, 0, 0, 0};
+                int enc_ok = 1;
+                uint32_t hw = video->RAWI.xRes / 2;
+                uint32_t hh = video->RAWI.yRes / 2;
+                size_t quarter_pixels = (size_t)((uint32_t)hw * (uint32_t)hh);
+                size_t max_enc_size = quarter_pixels * 2;
+
+                float jp2k_threshold = 0.0;
+                if (export_mode == MLV_JP2K_LOW) {
+                    jp2k_threshold = 0.010;
+                } else if (export_mode == MLV_JP2K_MED) {
+                    jp2k_threshold = 0.0065;
+                } else if (export_mode == MLV_JP2K_HIGH) {
+                    jp2k_threshold = 0.0045;
+                } else if (export_mode == MLV_JP2K_VERYHIGH) {
+                    jp2k_threshold = 0.0032;
+                } else if (export_mode == MLV_JP2K_VISULOSSLESS) {
+                    jp2k_threshold = 0.0015;
+                }
+
+                for (int c = 0; c < 4 && enc_ok; c++)
+                {
+                    encoders[c] = ojph_encoder_new();
+                    if (!encoders[c]) { enc_ok = 0; break; }
+                    ojph_encoder_set_image(encoders[c], hw, hh, 1, 12, 0);
+                    ojph_encoder_set_decompositions(encoders[c], 5);
+                    ojph_encoder_set_lossless(encoders[c], 0);
+                    ojph_encoder_set_quantization(encoders[c], jp2k_threshold);
+
+                    quarter_bufs[c] = (int32_t *)malloc(quarter_pixels * sizeof(int32_t));
+                    encoded_bufs[c] = (uint8_t *)malloc(max_enc_size);
+                    if (!quarter_bufs[c] || !encoded_bufs[c]) { enc_ok = 0; break; }
+                }
+
+                if (enc_ok)
+                {
+                    //TODO: does this parallelisation actually work?
+                    #pragma omp parallel for num_threads(4)
+                    for (int c = 0; c < 4; c++)
+                    {
+                        uint32_t x_off = (c & 1) ? 1 : 0;
+                        uint32_t y_off = (c & 2) ? 1 : 0;
+                        for (uint32_t y = 0; y < hh; y++)
+                        {
+                            uint32_t in_row = (y * 2 + y_off) * video->RAWI.xRes;
+                            uint32_t out_row = y * hw;
+                            for (uint32_t x = 0; x < hw; x++)
+                            {
+                                quarter_bufs[c][out_row + x] = (int32_t)frame[in_row + x * 2 + x_off];
+                            }
+                        }
+                        enc_sizes[c] = ojph_encoder_encode_into(encoders[c], quarter_bufs[c],
+                                                                  encoded_bufs[c], max_enc_size);
+                    }
+                }
+
+                for (int c = 0; c < 4; c++) {
+                    if (encoders[c]) ojph_encoder_free(encoders[c]);
+                }
+
+                if (enc_ok && enc_sizes[0] > 0 && enc_sizes[1] > 0 && enc_sizes[2] > 0 && enc_sizes[3] > 0)
+                {
+                    uint32_t offsets[4];
+                    offsets[0] = 36;
+                    offsets[1] = offsets[0] + (uint32_t)enc_sizes[0];
+                    offsets[2] = offsets[1] + (uint32_t)enc_sizes[1];
+                    offsets[3] = offsets[2] + (uint32_t)enc_sizes[2];
+                    size_t total_size = (size_t)offsets[3] + enc_sizes[3];
+
+                    vidf_hdr.blockSize = sizeof(mlv_vidf_hdr_t) + total_size;
+                    vidf_hdr.frameSpace = 0;
+
+                    block_buf = malloc(vidf_hdr.blockSize);
+                    if (block_buf)
+                    {
+                        uint8_t *ptr = block_buf + sizeof(mlv_vidf_hdr_t);
+                        memcpy(block_buf, &vidf_hdr, sizeof(mlv_vidf_hdr_t));
+
+                        uint32_t version = 1;
+                        memcpy(ptr, &version, 4); ptr += 4;
+                        memcpy(ptr, &offsets[0], 4); ptr += 4;
+                        memcpy(ptr, &enc_sizes[0], 4); ptr += 4;
+                        memcpy(ptr, &offsets[1], 4); ptr += 4;
+                        memcpy(ptr, &enc_sizes[1], 4); ptr += 4;
+                        memcpy(ptr, &offsets[2], 4); ptr += 4;
+                        memcpy(ptr, &enc_sizes[2], 4); ptr += 4;
+                        memcpy(ptr, &offsets[3], 4); ptr += 4;
+                        memcpy(ptr, &enc_sizes[3], 4); ptr += 4;
+                        memcpy(ptr, encoded_bufs[0], enc_sizes[0]); ptr += enc_sizes[0];
+                        memcpy(ptr, encoded_bufs[1], enc_sizes[1]); ptr += enc_sizes[1];
+                        memcpy(ptr, encoded_bufs[2], enc_sizes[2]); ptr += enc_sizes[2];
+                        memcpy(ptr, encoded_bufs[3], enc_sizes[3]); ptr += enc_sizes[3];
+                    }
+                }
+                else
+                {
+                    sprintf(error_message, "JPEG2000 encoding failed");
+                    for (int c = 0; c < 4; c++)
+                    {
+                        if (quarter_bufs[c]) free(quarter_bufs[c]);
+                        if (encoded_bufs[c]) free(encoded_bufs[c]);
+                    }
+                    free(frame);
+                    return 1;
+                }
+
+                for (int c = 0; c < 4; c++)
+                {
+                    if (quarter_bufs[c]) free(quarter_bufs[c]);
+                    if (encoded_bufs[c]) free(encoded_bufs[c]);
+                }
+                #else
+                sprintf(error_message, "JPEG2000 export is not enabled in this build (ENABLE_JPEG2K)");
+                free(frame);
+                return 1;
+                #endif
+            }
+
+            free(frame);
+            break;
         }
-        /* set blocksize and samplesAveraged to frameNumber */
-        vidf_hdr.blockSize = video->DARK.blockSize;
-        vidf_hdr.frameNumber = video->DARK.samplesAveraged;
-        memcpy(block_buf, &vidf_hdr, sizeof(mlv_vidf_hdr_t));
-        memcpy((block_buf + sizeof(mlv_vidf_hdr_t)), frame_buf, df_packed_size);
-    }
-    else if(export_mode == MLV_AVERAGED_FRAME) // average all frames to one dark frame
-    {
-        uint16_t * frame_buf_unpacked = calloc(frame_size_unpacked, 1);
-        if(!frame_buf_unpacked)
-        {
-            sprintf(error_message, "Averaging: could not allocate memory for unpacked frame");
-            DEBUG( printf("\n%s\n", error_message); )
-            free(frame_buf);
-            free(block_buf);
-            return 1;
-        }
-        if(isMlvCompressed(video))
-        {
-            int ret = dng_decompress_image(frame_buf_unpacked, (uint16_t*)frame_buf, frame_size, video->RAWI.xRes, video->RAWI.yRes, video->RAWI.raw_info.bits_per_pixel);
-            if(ret != LJ92_ERROR_NONE)
+        default: {
+            /* ilia3101: bouncyball's original code: */
+
+            vidf_hdr.blockSize -= vidf_hdr.frameSpace;
+            vidf_hdr.frameSpace = 0;
+            /* for safety allocate max possible size buffer for VIDF block, calculated for 16bits per pixel */
+            block_buf = calloc(sizeof(mlv_vidf_hdr_t) + frame_size_unpacked, 1);
+            if(!block_buf)
             {
-                sprintf(error_message, "Averaging: could not decompress frame:  LJ92_ERROR %u", ret);
+                sprintf(error_message, "Could not allocate memory for VIDF block");
                 DEBUG( printf("\n%s\n", error_message); )
-                free(frame_buf_unpacked);
+                return 1;
+            }
+            /* for safety allocate max possible size buffer for image data, calculated for 16bits per pixel */
+            frame_buf = calloc(frame_size_unpacked, 1);
+            if(!frame_buf)
+            {
+                sprintf(error_message, "Could not allocate memory for VIDF frame");
+                DEBUG( printf("\n%s\n", error_message); )
+                free(block_buf);
+                return 1;
+            }
+
+            /* read frame buffer */
+            file_set_pos(video->file[chunk], frame_offset, SEEK_SET);
+            if(fread(frame_buf, frame_size, 1, video->file[chunk]) != 1)
+            {
+                sprintf(error_message, "Could not read VIDF image data from:  %s", video->path);
+                DEBUG( printf("\n%s\n", error_message); )
                 free(frame_buf);
                 free(block_buf);
-                return ret;
+                return 1;
             }
-        }
-        else
-        {
-            dng_unpack_image_bits(frame_buf_unpacked, (uint16_t*)frame_buf, video->RAWI.xRes, video->RAWI.yRes, video->RAWI.raw_info.bits_per_pixel);
-        }
-        for(uint32_t i = 0; i < pixel_count; i++)
-        {
-            avg_buf[i] += frame_buf_unpacked[i];
-        }
 
-        if(frame_index == frame_end - 1)
-        {
-            for(uint32_t i = 0; i < pixel_count; i++)
+            if(export_mode == MLV_DF_INT) // export internal dark frame as separate MLV
             {
-                frame_buf_unpacked[i] = (avg_buf[i] + max_frame_number / 2) / max_frame_number;
-            }
-            dng_pack_image_bits((uint16_t *)frame_buf, frame_buf_unpacked, video->RAWI.xRes, video->RAWI.yRes, video->RAWI.raw_info.bits_per_pixel, 0);
-
-            vidf_hdr.frameNumber = max_frame_number;
-            vidf_hdr.blockSize = sizeof(mlv_vidf_hdr_t) + frame_size_packed;
-            memcpy(block_buf, &vidf_hdr, sizeof(mlv_vidf_hdr_t));
-            memcpy((block_buf + sizeof(mlv_vidf_hdr_t)), frame_buf, frame_size_packed);
-            write_ok = 1;
-        }
-
-        free(frame_buf_unpacked);
-    }
-    else if((export_mode == MLV_COMPRESS) && (!isMlvCompressed(video))) // compress MLV frame with LJ92 if specified
-    {
-        int ret = 0;
-        size_t frame_size_compressed = 0;
-
-        uint16_t * frame_buf_unpacked = calloc(frame_size_unpacked, 1);
-        uint16_t * frame_buf_compressed = calloc(frame_size_unpacked, 1);
-        if(!frame_buf_unpacked || !frame_buf_compressed)
-        {
-            DEBUG( printf("\nCould not allocate memory for frame compressing\n"); )
-            ret = 1;
-        }
-
-        if(!ret)
-        {
-            dng_unpack_image_bits(frame_buf_unpacked, (uint16_t*)frame_buf, video->RAWI.xRes, video->RAWI.yRes, video->RAWI.raw_info.bits_per_pixel);
-            ret = dng_compress_image(frame_buf_compressed, frame_buf_unpacked, &frame_size_compressed, video->RAWI.xRes, video->RAWI.yRes, video->RAWI.raw_info.bits_per_pixel);
-            if(ret == LJ92_ERROR_NONE)
-            {
-                vidf_hdr.blockSize = sizeof(mlv_vidf_hdr_t) + frame_size_compressed;
+                size_t df_packed_size = video->DARK.blockSize - sizeof(mlv_dark_hdr_t);
+                /* read dark frame */
+                file_set_pos(video->file[0], video->dark_frame_offset, SEEK_SET);
+                if(fread(frame_buf, df_packed_size, 1, video->file[0]) != 1)
+                {
+                    sprintf(error_message, "Could not read DARK block image data from:  %s", video->path);
+                    DEBUG( printf("\n%s\n", error_message); )
+                    free(frame_buf);
+                    free(block_buf);
+                    return 1;
+                }
+                /* set blocksize and samplesAveraged to frameNumber */
+                vidf_hdr.blockSize = video->DARK.blockSize;
+                vidf_hdr.frameNumber = video->DARK.samplesAveraged;
                 memcpy(block_buf, &vidf_hdr, sizeof(mlv_vidf_hdr_t));
-                memcpy((block_buf + sizeof(mlv_vidf_hdr_t)), (uint8_t*)frame_buf_compressed, frame_size_compressed);
+                memcpy((block_buf + sizeof(mlv_vidf_hdr_t)), frame_buf, df_packed_size);
             }
-            else // if compression error then save original uncompressed raw
+            else if(export_mode == MLV_AVERAGED_FRAME) // average all frames to one dark frame
+            {
+                uint16_t * frame_buf_unpacked = calloc(frame_size_unpacked, 1);
+                if(!frame_buf_unpacked)
+                {
+                    sprintf(error_message, "Averaging: could not allocate memory for unpacked frame");
+                    DEBUG( printf("\n%s\n", error_message); )
+                    free(frame_buf);
+                    free(block_buf);
+                    return 1;
+                }
+                if(isMlvCompressed(video))
+                {
+                    int ret = dng_decompress_image(frame_buf_unpacked, (uint16_t*)frame_buf, frame_size, video->RAWI.xRes, video->RAWI.yRes, video->RAWI.raw_info.bits_per_pixel);
+                    if(ret != LJ92_ERROR_NONE)
+                    {
+                        sprintf(error_message, "Averaging: could not decompress frame:  LJ92_ERROR %u", ret);
+                        DEBUG( printf("\n%s\n", error_message); )
+                        free(frame_buf_unpacked);
+                        free(frame_buf);
+                        free(block_buf);
+                        return ret;
+                    }
+                }
+                else
+                {
+                    dng_unpack_image_bits(frame_buf_unpacked, (uint16_t*)frame_buf, video->RAWI.xRes, video->RAWI.yRes, video->RAWI.raw_info.bits_per_pixel);
+                }
+                for(uint32_t i = 0; i < pixel_count; i++)
+                {
+                    avg_buf[i] += frame_buf_unpacked[i];
+                }
+
+                if(frame_index == frame_end - 1)
+                {
+                    for(uint32_t i = 0; i < pixel_count; i++)
+                    {
+                        frame_buf_unpacked[i] = (avg_buf[i] + max_frame_number / 2) / max_frame_number;
+                    }
+                    dng_pack_image_bits((uint16_t *)frame_buf, frame_buf_unpacked, video->RAWI.xRes, video->RAWI.yRes, video->RAWI.raw_info.bits_per_pixel, 0);
+
+                    vidf_hdr.frameNumber = max_frame_number;
+                    vidf_hdr.blockSize = sizeof(mlv_vidf_hdr_t) + frame_size_packed;
+                    memcpy(block_buf, &vidf_hdr, sizeof(mlv_vidf_hdr_t));
+                    memcpy((block_buf + sizeof(mlv_vidf_hdr_t)), frame_buf, frame_size_packed);
+                    write_ok = 1;
+                }
+
+                free(frame_buf_unpacked);
+            }
+            else if((export_mode == MLV_LJ92) && (!isMlvLj92(video))) // compress MLV frame with LJ92 if specified
+            {
+                int ret = 0;
+                size_t frame_size_compressed = 0;
+
+                uint16_t * frame_buf_unpacked = calloc(frame_size_unpacked, 1);
+                uint16_t * frame_buf_compressed = calloc(frame_size_unpacked, 1);
+                if(!frame_buf_unpacked || !frame_buf_compressed)
+                {
+                    DEBUG( printf("\nCould not allocate memory for frame compressing\n"); )
+                    ret = 1;
+                }
+
+                if(!ret)
+                {
+                    // ilia3101: by calling mlv video reader (to support all types of compression) work is being
+                    // duplicated, so the earlier read becomes redundant. TODO: refactor this whole function!
+                    getMlvRawFrameUint16(video, frame_index, frame_buf_unpacked);
+                    ret = dng_compress_image(frame_buf_compressed, frame_buf_unpacked, &frame_size_compressed, video->RAWI.xRes, video->RAWI.yRes, video->RAWI.raw_info.bits_per_pixel);
+                    if(ret == LJ92_ERROR_NONE)
+                    {
+                        vidf_hdr.blockSize = sizeof(mlv_vidf_hdr_t) + frame_size_compressed;
+                        memcpy(block_buf, &vidf_hdr, sizeof(mlv_vidf_hdr_t));
+                        memcpy((block_buf + sizeof(mlv_vidf_hdr_t)), (uint8_t*)frame_buf_compressed, frame_size_compressed);
+                    }
+                    else // if compression error then save original uncompressed raw
+                    {
+                        memcpy(block_buf, &vidf_hdr, sizeof(mlv_vidf_hdr_t));
+                        memcpy((block_buf + sizeof(mlv_vidf_hdr_t)), frame_buf, frame_size);
+
+                        /* patch MLVI header and set back videoClass to 1 (uncompressed) */
+                        uint64_t current_pos = file_get_pos(output_mlv);
+                        file_set_pos(output_mlv, 32, SEEK_SET);
+                        uint16_t videoClass = 0x1;
+                        if(fwrite(&videoClass, sizeof(uint16_t), 1, output_mlv) != 1)
+                        {
+                            DEBUG( printf("\nCould not patch videoClass in MLV header\n"); )
+                        }
+                        file_set_pos(output_mlv, current_pos, SEEK_SET);
+                    }
+                }
+
+                if(frame_buf_unpacked) free(frame_buf_unpacked);
+                if(frame_buf_compressed) free(frame_buf_compressed);
+            }
+            else if((export_mode == MLV_DECOMPRESS) && isMlvCompressed(video)) // decompress MLV frame with LJ92 if specified
+            {
+                int ret = 0;
+
+                uint16_t * frame_buf_unpacked = calloc(frame_size_unpacked, 1);
+                if(!frame_buf_unpacked)
+                {
+                    DEBUG( printf("\nCould not allocate memory for frame decompressing\n"); )
+                    ret = 1;
+                }
+
+                if(!ret)
+                {
+                    int ret = getMlvRawFrameUint16(video, frame_index, frame_buf_unpacked);
+                    if (ret == 0)
+                    {
+                        dng_pack_image_bits((uint16_t*)frame_buf, frame_buf_unpacked, video->RAWI.xRes, video->RAWI.yRes, video->RAWI.raw_info.bits_per_pixel, 0);
+                        vidf_hdr.blockSize = sizeof(mlv_vidf_hdr_t) + frame_size_packed;
+                        memcpy(block_buf, &vidf_hdr, sizeof(mlv_vidf_hdr_t));
+                        memcpy((block_buf + sizeof(mlv_vidf_hdr_t)), frame_buf, frame_size_packed);
+                    }
+                    else // if decompression error then save original compressed raw
+                    {
+                        memcpy(block_buf, &vidf_hdr, sizeof(mlv_vidf_hdr_t));
+                        memcpy((block_buf + sizeof(mlv_vidf_hdr_t)), frame_buf, frame_size);
+
+                        /* patch MLVI header and set back videoClass to original compressed videoclass */
+                        uint64_t current_pos = file_get_pos(output_mlv);
+                        file_set_pos(output_mlv, 32, SEEK_SET);
+                        uint16_t videoClass = video->MLVI.videoClass;
+                        if(fwrite(&videoClass, sizeof(uint16_t), 1, output_mlv) != 1)
+                        {
+                            DEBUG( printf("\nCould not patch videoClass in MLV header\n"); )
+                        }
+                        file_set_pos(output_mlv, current_pos, SEEK_SET);
+                    }
+                }
+
+                if(frame_buf_unpacked) free(frame_buf_unpacked);
+            }
+            else // pass through the original raw frame. TODO: verify this logic is still correct (ilia3101)
             {
                 memcpy(block_buf, &vidf_hdr, sizeof(mlv_vidf_hdr_t));
                 memcpy((block_buf + sizeof(mlv_vidf_hdr_t)), frame_buf, frame_size);
-
-                /* patch MLVI header and set back videoClass to 1 (uncompressed) */
-                uint64_t current_pos = file_get_pos(output_mlv);
-                file_set_pos(output_mlv, 32, SEEK_SET);
-                uint16_t videoClass = 0x1;
-                if(fwrite(&videoClass, sizeof(uint16_t), 1, output_mlv) != 1)
-                {
-                    DEBUG( printf("\nCould not patch videoClass in MLV header\n"); )
-                }
-                file_set_pos(output_mlv, current_pos, SEEK_SET);
             }
         }
-
-        if(frame_buf_unpacked) free(frame_buf_unpacked);
-        if(frame_buf_compressed) free(frame_buf_compressed);
-    }
-    else if((export_mode == MLV_DECOMPRESS) && isMlvCompressed(video)) // decompress MLV frame with LJ92 if specified
-    {
-        int ret = 0;
-
-        uint16_t * frame_buf_unpacked = calloc(frame_size_unpacked, 1);
-        if(!frame_buf_unpacked)
-        {
-            DEBUG( printf("\nCould not allocate memory for frame decompressing\n"); )
-            ret = 1;
-        }
-
-        if(!ret)
-        {
-            int ret = dng_decompress_image(frame_buf_unpacked, (uint16_t*)frame_buf, frame_size, video->RAWI.xRes, video->RAWI.yRes, video->RAWI.raw_info.bits_per_pixel);
-            if(ret == LJ92_ERROR_NONE)
-            {
-                dng_pack_image_bits((uint16_t*)frame_buf, frame_buf_unpacked, video->RAWI.xRes, video->RAWI.yRes, video->RAWI.raw_info.bits_per_pixel, 0);
-                vidf_hdr.blockSize = sizeof(mlv_vidf_hdr_t) + frame_size_packed;
-                memcpy(block_buf, &vidf_hdr, sizeof(mlv_vidf_hdr_t));
-                memcpy((block_buf + sizeof(mlv_vidf_hdr_t)), frame_buf, frame_size_packed);
-            }
-            else // if decompression error then save original lossless raw
-            {
-                memcpy(block_buf, &vidf_hdr, sizeof(mlv_vidf_hdr_t));
-                memcpy((block_buf + sizeof(mlv_vidf_hdr_t)), frame_buf, frame_size);
-
-                /* patch MLVI header and set back videoClass to 0x21 (lossless) */
-                uint64_t current_pos = file_get_pos(output_mlv);
-                file_set_pos(output_mlv, 32, SEEK_SET);
-                uint16_t videoClass = 0x1 | MLV_VIDEO_CLASS_FLAG_LJ92;
-                if(fwrite(&videoClass, sizeof(uint16_t), 1, output_mlv) != 1)
-                {
-                    DEBUG( printf("\nCould not patch videoClass in MLV header\n"); )
-                }
-                file_set_pos(output_mlv, current_pos, SEEK_SET);
-            }
-        }
-
-        if(frame_buf_unpacked) free(frame_buf_unpacked);
-    }
-    else // pass through the original raw frame
-    {
-        memcpy(block_buf, &vidf_hdr, sizeof(mlv_vidf_hdr_t));
-        memcpy((block_buf + sizeof(mlv_vidf_hdr_t)), frame_buf, frame_size);
     }
 
     /* if audio export is enabled */
-    if(!(frame_start - frame_index - 1) && export_audio && export_mode < MLV_AVERAGED_FRAME )
+    if(!(frame_start - frame_index - 1) && export_audio && !(export_mode == MLV_AVERAGED_FRAME || export_mode == MLV_DF_INT))
     {
         /* initialize AUDF header */
         mlv_audf_hdr_t audf_hdr = { { 'A','U','D','F' }, 0, 0, 0, 0 };
@@ -1536,8 +2017,8 @@ int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
         {
             sprintf(error_message, "Could not write AUDF block header");
             DEBUG( printf("\n%s\n", error_message); )
-            free(frame_buf);
-            free(block_buf);
+            if (frame_buf != NULL) free(frame_buf);
+            if (block_buf != NULL) free(block_buf);
             return 1;
         }
 
@@ -1546,8 +2027,8 @@ int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
         {
             sprintf(error_message, "Could not write AUDF block audio data");
             DEBUG( printf("\n%s\n", error_message); )
-            free(frame_buf);
-            free(block_buf);
+            if (frame_buf != NULL) free(frame_buf);
+            if (block_buf != NULL) free(block_buf);
             return 1;
         }
     }
@@ -1559,14 +2040,14 @@ int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
         {
             sprintf(error_message, "Could not write video frame #%u", frame_index);
             DEBUG( printf("\n%s\n", error_message); )
-            free(frame_buf);
-            free(block_buf);
+            if (frame_buf != NULL) free(frame_buf);
+            if (block_buf != NULL) free(block_buf);
             return 1;
         }
     }
 
-    free(frame_buf);
-    free(block_buf);
+    if (frame_buf != NULL) free(frame_buf);
+    if (block_buf != NULL) free(block_buf);
     DEBUG( if( (export_mode == MLV_FAST_PASS) && (!isMlvCompressed(video)) ) printf("Saved video frame #%u\n", frame_index); )
     return 0;
 }
@@ -1575,7 +2056,7 @@ int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
  * only puts metadata in to the mlvObject_t, no debayering or bit unpacking
  */
 int openMcrawClip(mlvObject_t * video, char * mcrawPath, int open_mode, char * error_message)
-{    
+{
     video->path = malloc( strlen(mcrawPath) + 1 );
     memcpy(video->path, mcrawPath, strlen(mcrawPath));
     video->path[strlen(mcrawPath)] = 0x0;
@@ -1807,8 +2288,8 @@ short_cut:
     return MLV_ERR_NONE;
 }
 
-/* Reads an MLV file in to a mlv object(mlvObject_t struct) 
- * only puts metadata in to the mlvObject_t, 
+/* Reads an MLV file in to a mlv object(mlvObject_t struct)
+ * only puts metadata in to the mlvObject_t,
  * no debayering or bit unpacking */
 int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode, char * error_message)
 {
@@ -1850,6 +2331,7 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode, char * error
     int elns_read = 0; /* Flips to 1 if 1st ELNS block was read */
     int wbal_read = 0; /* Flips to 1 if 1st WBAL block was read */
     int styl_read = 0; /* Flips to 1 if 1st STYL block was read */
+    int curv_read = 0; /* Flips to 1 if 1st CURV block was read */
     int fread_err = 1;
 
     for(int i = 0; i < video->filenum; i++)
@@ -2130,6 +2612,24 @@ int openMlvClip(mlvObject_t * video, char * mlvPath, int open_mode, char * error
             {
                 fread_err &= fread(&video->DARK, sizeof(mlv_dark_hdr_t), 1, video->file[i]);
                 video->dark_frame_offset = file_get_pos(video->file[i]);
+            }
+            else if ( memcmp(block_header.blockType, "CURV", 4) == 0 )
+            {
+                if( !curv_read )
+                {
+                    mlv_curv_hdr_t cur_hdr;
+                    fread_err &= fread(&cur_hdr, sizeof(mlv_curv_hdr_t), 1, video->file[i]);
+                    uint32_t lut_entries = (cur_hdr.blockSize - sizeof(mlv_curv_hdr_t)) / sizeof(uint16_t);
+                    if(lut_entries > 0)
+                    {
+                        video->linearise_lut = (uint16_t *)calloc(65536, sizeof(uint16_t));
+                        if(video->linearise_lut)
+                        {
+                            fread_err &= fread(video->linearise_lut, lut_entries * sizeof(uint16_t), 1, video->file[i]);
+                        }
+                    }
+                    curv_read = 1;
+                }
             }
             else
             {
