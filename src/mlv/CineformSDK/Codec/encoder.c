@@ -2150,14 +2150,6 @@ bool EncodeSample(ENCODER *encoder, uint8_t *data, int width, int height, int pi
 		else
 		{	
 			encoder->error = CODEC_ERROR_INVALID_FORMAT;
-	#ifdef _WIN32
-			if(encoder->reported_license_issue == 0)
-			{
-				encoder->reported_license_issue = 1;
-
-				MessageBox(GetFocus(), "You are attempting to encode a format for which this system is not licensed. Please contact support@CineForm.com.", "Licensing Error", MB_OK|MB_SYSTEMMODAL);
-			}
-	#endif
 			return false;
 		}
 	}
@@ -2172,14 +2164,6 @@ bool EncodeSample(ENCODER *encoder, uint8_t *data, int width, int height, int pi
 		else
 		{
 			encoder->error = CODEC_ERROR_INVALID_FORMAT;
-	#ifdef _WIN32
-			if(encoder->reported_license_issue == 0)
-			{
-				encoder->reported_license_issue = 1;
-
-				MessageBox(GetFocus(), "You are attempting to encode a format for which this system is not licensed. Please contact support@CineForm.com.", "Licensing Error", MB_OK|MB_SYSTEMMODAL);
-			}
-	#endif
 			return false;
 		}
 	}
@@ -2202,14 +2186,6 @@ bool EncodeSample(ENCODER *encoder, uint8_t *data, int width, int height, int pi
 		else
 		{
 			encoder->error = CODEC_ERROR_INVALID_SIZE;
-	#ifdef _WIN32
-			if(encoder->reported_license_issue == 0)
-			{
-				encoder->reported_license_issue = 1;
-
-				MessageBox(GetFocus(), "You are attempting to encode an image size for which this system is not licensed. Please contact support@CineForm.com.", "Licensing Error", MB_OK|MB_SYSTEMMODAL);
-			}
-	#endif
 			return false;
 		}
 	}
@@ -2223,14 +2199,6 @@ bool EncodeSample(ENCODER *encoder, uint8_t *data, int width, int height, int pi
 		else
 		{
 			encoder->error = CODEC_ERROR_INVALID_FORMAT;
-	#ifdef _WIN32
-			if(encoder->reported_license_issue == 0)
-			{
-				encoder->reported_license_issue = 1;
-
-				MessageBox(GetFocus(), "You are attempting to encode a stereo/3D format for which this system is not licensed. Please contact support@CineForm.com.", "Licensing Error", MB_OK|MB_SYSTEMMODAL);
-			}
-	#endif
 			return false;
 		}
 	}
@@ -2859,13 +2827,6 @@ bool EncodeSample(ENCODER *encoder, uint8_t *data, int width, int height, int pi
 	default:
 		// Cannot handle this color format
 		encoder->error = CODEC_ERROR_INVALID_FORMAT;
-#ifdef _WIN32
-		if(encoder->reported_error == 0)
-		{
-			encoder->reported_error = 1;
-			MessageBox(GetFocus(), "CODEC_ERROR_INVALID_FORMAT. Please contact support@CineForm.com.", "Licensing Error", MB_OK|MB_SYSTEMMODAL);
-		}
-#endif
 		return false;
 	}
 	STOP(tk_convert);
