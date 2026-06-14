@@ -137,7 +137,7 @@ linux-g++*{
     }
     QMAKE_CFLAGS += -O3 -fopenmp  -ftree-vectorize
     QMAKE_CXXFLAGS += -fopenmp -std=c++11 -ftree-vectorize
-    LIBS += -lgomp
+    LIBS += -lgomp -luuid
     equals(QT_ARCH, x86_64) {
         QMAKE_CFLAGS += -msse4.1 -mssse3 -msse3 -msse2 -msse
         QMAKE_CXXFLAGS += -msse4.1 -mssse3
@@ -268,40 +268,20 @@ jpeg2k_enabled {
     OPENJPH = ../../src/mlv/OpenJPH
 
     SOURCES += \
-        $$OPENJPH/ojph_wrapper.cpp \
-        $$OPENJPH/codestream/ojph_codeblock.cpp \
-        $$OPENJPH/codestream/ojph_codeblock_fun.cpp \
-        $$OPENJPH/codestream/ojph_codestream.cpp \
-        $$OPENJPH/codestream/ojph_codestream_gen.cpp \
-        $$OPENJPH/codestream/ojph_codestream_local.cpp \
-        $$OPENJPH/codestream/ojph_params.cpp \
-        $$OPENJPH/codestream/ojph_precinct.cpp \
-        $$OPENJPH/codestream/ojph_resolution.cpp \
-        $$OPENJPH/codestream/ojph_subband.cpp \
-        $$OPENJPH/codestream/ojph_tile.cpp \
-        $$OPENJPH/codestream/ojph_tile_comp.cpp \
-        $$OPENJPH/coding/ojph_block_common.cpp \
-        $$OPENJPH/coding/ojph_block_decoder32.cpp \
-        $$OPENJPH/coding/ojph_block_decoder64.cpp \
-        $$OPENJPH/coding/ojph_block_encoder.cpp \
-        $$OPENJPH/transform/ojph_colour.cpp \
-        $$OPENJPH/transform/ojph_transform.cpp \
-        $$OPENJPH/others/ojph_arch.cpp \
-        $$OPENJPH/others/ojph_file.cpp \
-        $$OPENJPH/others/ojph_mem.cpp \
-        $$OPENJPH/others/ojph_mem_c.c \
-        $$OPENJPH/others/ojph_message.cpp
+        $$files($$OPENJPH/codestream/*.cpp) \
+        $$files($$OPENJPH/coding/*.cpp) \
+        $$files($$OPENJPH/transform/*.cpp) \
+        $$files($$OPENJPH/others/*.cpp)
 
-    #
-    # SSE (Intel + ARM via sse2neon)
-    #
     SOURCES += \
-        $$OPENJPH/codestream/ojph_codestream_sse.cpp \
-        $$OPENJPH/codestream/ojph_codestream_sse2.cpp \
-        $$OPENJPH/coding/ojph_block_decoder_ssse3.cpp \
-        $$OPENJPH/transform/ojph_colour_sse.cpp \
-        $$OPENJPH/transform/ojph_colour_sse2.cpp \
-        $$OPENJPH/transform/ojph_transform_sse.cpp
+        $$OPENJPH/others/ojph_mem_c.c \
+        $$OPENJPH/ojph_wrapper.cpp
+
+    SOURCES -= \
+        $$OPENJPH/codestream/ojph_codestream_wasm.cpp \
+        $$OPENJPH/coding/ojph_block_decoder_wasm.cpp \
+        $$OPENJPH/transform/ojph_colour_wasm.cpp \
+        $$OPENJPH/transform/ojph_transform_wasm.cpp
 }
 
 INCLUDEPATH += ../../src/librtprocess/src/include/
