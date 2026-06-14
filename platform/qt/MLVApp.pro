@@ -264,36 +264,59 @@ cineform_enabled {
 }
 
 jpeg2k_enabled {
+    OPENJPH = ../../src/mlv/OpenJPH
+
     SOURCES += \
-    ../../src/mlv/OpenJPH/ojph_wrapper.cpp \
-    ../../src/mlv/OpenJPH/codestream/ojph_codeblock.cpp \
-    ../../src/mlv/OpenJPH/codestream/ojph_codeblock_fun.cpp \
-    ../../src/mlv/OpenJPH/codestream/ojph_codestream.cpp \
-    ../../src/mlv/OpenJPH/codestream/ojph_codestream_gen.cpp \
-    ../../src/mlv/OpenJPH/codestream/ojph_codestream_local.cpp \
-    ../../src/mlv/OpenJPH/codestream/ojph_codestream_sse.cpp \
-    ../../src/mlv/OpenJPH/codestream/ojph_codestream_sse2.cpp \
-    ../../src/mlv/OpenJPH/codestream/ojph_params.cpp \
-    ../../src/mlv/OpenJPH/codestream/ojph_precinct.cpp \
-    ../../src/mlv/OpenJPH/codestream/ojph_resolution.cpp \
-    ../../src/mlv/OpenJPH/codestream/ojph_subband.cpp \
-    ../../src/mlv/OpenJPH/codestream/ojph_tile.cpp \
-    ../../src/mlv/OpenJPH/codestream/ojph_tile_comp.cpp \
-    ../../src/mlv/OpenJPH/coding/ojph_block_common.cpp \
-    ../../src/mlv/OpenJPH/coding/ojph_block_decoder32.cpp \
-    ../../src/mlv/OpenJPH/coding/ojph_block_decoder64.cpp \
-    ../../src/mlv/OpenJPH/coding/ojph_block_decoder_ssse3.cpp \
-    ../../src/mlv/OpenJPH/coding/ojph_block_encoder.cpp \
-    ../../src/mlv/OpenJPH/transform/ojph_colour.cpp \
-    ../../src/mlv/OpenJPH/transform/ojph_colour_sse.cpp \
-    ../../src/mlv/OpenJPH/transform/ojph_colour_sse2.cpp \
-    ../../src/mlv/OpenJPH/transform/ojph_transform.cpp \
-    ../../src/mlv/OpenJPH/transform/ojph_transform_sse.cpp \
-    ../../src/mlv/OpenJPH/others/ojph_arch.cpp \
-    ../../src/mlv/OpenJPH/others/ojph_file.cpp \
-    ../../src/mlv/OpenJPH/others/ojph_mem.cpp \
-    ../../src/mlv/OpenJPH/others/ojph_mem_c.c \
-    ../../src/mlv/OpenJPH/others/ojph_message.cpp
+        $$OPENJPH/ojph_wrapper.cpp \
+        $$OPENJPH/codestream/ojph_codeblock.cpp \
+        $$OPENJPH/codestream/ojph_codeblock_fun.cpp \
+        $$OPENJPH/codestream/ojph_codestream.cpp \
+        $$OPENJPH/codestream/ojph_codestream_gen.cpp \
+        $$OPENJPH/codestream/ojph_codestream_local.cpp \
+        $$OPENJPH/codestream/ojph_params.cpp \
+        $$OPENJPH/codestream/ojph_precinct.cpp \
+        $$OPENJPH/codestream/ojph_resolution.cpp \
+        $$OPENJPH/codestream/ojph_subband.cpp \
+        $$OPENJPH/codestream/ojph_tile.cpp \
+        $$OPENJPH/codestream/ojph_tile_comp.cpp \
+        $$OPENJPH/coding/ojph_block_common.cpp \
+        $$OPENJPH/coding/ojph_block_decoder32.cpp \
+        $$OPENJPH/coding/ojph_block_decoder64.cpp \
+        $$OPENJPH/coding/ojph_block_encoder.cpp \
+        $$OPENJPH/transform/ojph_colour.cpp \
+        $$OPENJPH/transform/ojph_transform.cpp \
+        $$OPENJPH/others/ojph_arch.cpp \
+        $$OPENJPH/others/ojph_file.cpp \
+        $$OPENJPH/others/ojph_mem.cpp \
+        $$OPENJPH/others/ojph_mem_c.c \
+        $$OPENJPH/others/ojph_message.cpp
+
+    #
+    # SSE (Intel + ARM via sse2neon)
+    #
+    SOURCES += \
+        $$OPENJPH/codestream/ojph_codestream_sse.cpp \
+        $$OPENJPH/codestream/ojph_codestream_sse2.cpp \
+        $$OPENJPH/coding/ojph_block_decoder_ssse3.cpp \
+        $$OPENJPH/transform/ojph_colour_sse.cpp \
+        $$OPENJPH/transform/ojph_colour_sse2.cpp \
+        $$OPENJPH/transform/ojph_transform_sse.cpp
+
+    #
+    # AVX nur x86_64
+    #
+    equals(QT_ARCH, x86_64) {
+
+        SOURCES += \
+            $$OPENJPH/codestream/ojph_codestream_avx.cpp \
+            $$OPENJPH/codestream/ojph_codestream_avx2.cpp \
+            $$OPENJPH/coding/ojph_block_decoder_avx2.cpp \
+            $$OPENJPH/coding/ojph_block_encoder_avx2.cpp \
+            $$OPENJPH/transform/ojph_colour_avx.cpp \
+            $$OPENJPH/transform/ojph_colour_avx2.cpp \
+            $$OPENJPH/transform/ojph_transform_avx.cpp \
+            $$OPENJPH/transform/ojph_transform_avx2.cpp
+    }
 }
 
 INCLUDEPATH += ../../src/librtprocess/src/include/
@@ -306,13 +329,19 @@ cineform_enabled: INCLUDEPATH += \
     ../../src/mlv/CineformSDK/EncoderSDK/ \
     ../../src/mlv/CineformSDK/WarpLib/
 
-jpeg2k_enabled: INCLUDEPATH += \
-    ../../src/mlv/OpenJPH/openjph/ \
-    ../../src/mlv/OpenJPH/codestream/ \
-    ../../src/mlv/OpenJPH/coding/ \
-    ../../src/mlv/OpenJPH/transform/ \
-    ../../src/mlv/OpenJPH/others/ \
-    ../../src/mlv/OpenJPH/sse2neon/ \
+jpeg2k_enabled {
+    INCLUDEPATH += \
+        ../../src/mlv/OpenJPH \
+        ../../src/mlv/OpenJPH/openjph \
+        ../../src/mlv/OpenJPH/codestream \
+        ../../src/mlv/OpenJPH/coding \
+        ../../src/mlv/OpenJPH/transform \
+        ../../src/mlv/OpenJPH/others
+
+    macx:equals(QT_ARCH, arm64) {
+        INCLUDEPATH += ../../src/mlv/OpenJPH/sse2neon
+    }
+}
 
 macx: SOURCES += ../cocoa/avf_lib/avf_lib.m
 
@@ -450,13 +479,22 @@ cineform_enabled: HEADERS += \
     ../../src/mlv/CineformSDK/EncoderSDK/*.h \
     ../../src/mlv/CineformSDK/WarpLib/*.h
 
-jpeg2k_enabled: HEADERS += \
-    ../../src/mlv/OpenJPH/ojph_wrapper.h \
-    ../../src/mlv/OpenJPH/openjph/*.h \
-    ../../src/mlv/OpenJPH/codestream/*.h \
-    ../../src/mlv/OpenJPH/coding/*.h \
-    ../../src/mlv/OpenJPH/transform/*.h \
-    ../../src/mlv/OpenJPH/sse2neon/sse2neon.h
+jpeg2k_enabled {
+    HEADERS += \
+        ../../src/mlv/OpenJPH/ojph_wrapper.h \
+        ../../src/mlv/OpenJPH/openjph/*.h \
+        ../../src/mlv/OpenJPH/codestream/*.h \
+        ../../src/mlv/OpenJPH/coding/*.h \
+        ../../src/mlv/OpenJPH/transform/*.h
+
+    macx:equals(QT_ARCH, arm64) {
+        HEADERS += \
+            ../../src/mlv/OpenJPH/sse2neon/sse2neon.h \
+            ../../src/mlv/OpenJPH/sse2neon/emmintrin.h \
+            ../../src/mlv/OpenJPH/sse2neon/immintrin.h \
+            ../../src/mlv/OpenJPH/sse2neon/xmmintrin.h
+    }
+}
 
 macx: HEADERS += \
     ../cocoa/avf_lib/avencoder.h \
