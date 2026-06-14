@@ -139,8 +139,8 @@ linux-g++*{
     QMAKE_CXXFLAGS += -fopenmp -std=c++11 -ftree-vectorize
     LIBS += -lgomp
     equals(QT_ARCH, x86_64) {
-        QMAKE_CFLAGS += -msse4.1 -mssse3 -msse3 -msse2 -msse -mavx -mavx2
-        QMAKE_CXXFLAGS += -msse4.1 -mssse3 -mavx -mavx2
+        QMAKE_CFLAGS += -msse4.1 -mssse3 -msse3 -msse2 -msse
+        QMAKE_CXXFLAGS += -msse4.1 -mssse3
     }
 }
 
@@ -302,22 +302,6 @@ jpeg2k_enabled {
         $$OPENJPH/transform/ojph_colour_sse.cpp \
         $$OPENJPH/transform/ojph_colour_sse2.cpp \
         $$OPENJPH/transform/ojph_transform_sse.cpp
-
-    #
-    # AVX nur x86_64
-    #
-    equals(QT_ARCH, x86_64) {
-
-        SOURCES += \
-            $$OPENJPH/codestream/ojph_codestream_avx.cpp \
-            $$OPENJPH/codestream/ojph_codestream_avx2.cpp \
-            $$OPENJPH/coding/ojph_block_decoder_avx2.cpp \
-            $$OPENJPH/coding/ojph_block_encoder_avx2.cpp \
-            $$OPENJPH/transform/ojph_colour_avx.cpp \
-            $$OPENJPH/transform/ojph_colour_avx2.cpp \
-            $$OPENJPH/transform/ojph_transform_avx.cpp \
-            $$OPENJPH/transform/ojph_transform_avx2.cpp
-    }
 }
 
 INCLUDEPATH += ../../src/librtprocess/src/include/
