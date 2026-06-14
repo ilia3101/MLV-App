@@ -44,7 +44,13 @@ DEFINES += QT_DEPRECATED_WARNINGS
 CONFIG += cineform_enabled
 CONFIG += jpeg2k_enabled
 cineform_enabled: DEFINES += ENABLE_CINEFORM
-jpeg2k_enabled: DEFINES += ENABLE_JPEG2K
+jpeg2k_enabled{
+    DEFINES += \
+        ENABLE_JPEG2K \
+        OJPH_DISABLE_AVX512 \
+        OJPH_DISABLE_AVX2 \
+        OJPH_DISABLE_AVX
+}
 
 ##############
 # Compiler flags
@@ -68,7 +74,7 @@ macx{
         QMAKE_CFLAGS += -fopenmp -ftree-vectorize
         QMAKE_CXXFLAGS += -fopenmp -std=c++15 -ftree-vectorize
         INCLUDEPATH += -I/usr/local/opt/llvm/include
-        LIBS += -L/usr/local/opt/llvm/lib -lomp -L/usr/local/opt/openssl/lib -lssl
+        LIBS += -L/usr/local/opt/llvm/lib -lomp -lc++ -lc++abi -L/usr/local/opt/openssl/lib -lssl
         QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.8
     }
     #Qt5 on Apple Silicon with openMP: install llvm and openssl via brew, build Qt5 from source
@@ -280,8 +286,18 @@ jpeg2k_enabled {
     SOURCES -= \
         $$OPENJPH/codestream/ojph_codestream_wasm.cpp \
         $$OPENJPH/coding/ojph_block_decoder_wasm.cpp \
+        $$OPENJPH/coding/ojph_block_decoder_avx2.cpp \
+        $$OPENJPH/coding/ojph_block_encoder_avx2.cpp \
+        $$OPENJPH/coding/ojph_block_encoder_avx512.cpp \
         $$OPENJPH/transform/ojph_colour_wasm.cpp \
-        $$OPENJPH/transform/ojph_transform_wasm.cpp
+        $$OPENJPH/transform/ojph_colour_avx.cpp \
+        $$OPENJPH/transform/ojph_colour_avx2.cpp \
+        $$OPENJPH/transform/ojph_transform_wasm.cpp \
+        $$OPENJPH/transform/ojph_transform_avx.cpp \
+        $$OPENJPH/transform/ojph_transform_avx2.cpp \
+        $$OPENJPH/transform/ojph_transform_avx512.cpp \
+        $$OPENJPH/codestream/ojph_codestream_avx.cpp \
+        $$OPENJPH/codestream/ojph_codestream_avx2.cpp
 }
 
 INCLUDEPATH += ../../src/librtprocess/src/include/
@@ -435,14 +451,17 @@ HEADERS += MainWindow.h \
     ../../src/librtprocess/src/include/sleef.h \
     ../../src/librtprocess/src/include/sleefsseavx.h
 
-cineform_enabled: HEADERS += \
-    ../../src/mlv/CineformSDK/Common/*.h \
-    ../../src/mlv/CineformSDK/Codec/*.h \
-    ../../src/mlv/CineformSDK/Codec/sse2neon/sse2neon.h \
-    ../../src/mlv/CineformSDK/ConvertLib/*.h \
-    ../../src/mlv/CineformSDK/DecoderSDK/*.h \
-    ../../src/mlv/CineformSDK/EncoderSDK/*.h \
-    ../../src/mlv/CineformSDK/WarpLib/*.h
+cineform_enabled {
+    HEADERS += \
+        ../../src/mlv/CineformSDK/Common/*.h \
+        ../../src/mlv/CineformSDK/Codec/*.h \
+        ../../src/mlv/CineformSDK/ConvertLib/*.h \
+        ../../src/mlv/CineformSDK/DecoderSDK/*.h \
+        ../../src/mlv/CineformSDK/EncoderSDK/*.h \
+        ../../src/mlv/CineformSDK/WarpLib/*.h
+
+    macx:equals(QT_ARCH, arm64): HEADERS += ../../src/mlv/CineformSDK/Codec/sse2neon/sse2neon.h
+}
 
 jpeg2k_enabled {
     HEADERS += \
