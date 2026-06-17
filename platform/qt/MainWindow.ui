@@ -11123,6 +11123,14 @@ QGroupBox::indicator:checked:disabled {
     <string>Notification on Export Finished</string>
    </property>
   </action>
+  <action name="actionRename">
+   <property name="text">
+    <string>Rename</string>
+   </property>
+   <property name="shortcut">
+    <string>F2</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
