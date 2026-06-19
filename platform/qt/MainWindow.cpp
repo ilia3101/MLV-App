@@ -1501,6 +1501,10 @@ void MainWindow::initGui( void )
     if( QFileInfo( QString( "%1/raw2mlv" ).arg( QCoreApplication::applicationDirPath() ) ).exists() )
         ui->actionTranscodeAndImport->setVisible( true );
 #endif
+
+    //Rename selected clip (only one! selected clip)
+    connect( ui->actionRename, SIGNAL( triggered() ), this, SLOT( renameActiveClip() ) );
+    addAction( ui->actionRename );
 }
 
 //Initialize the library
@@ -5509,12 +5513,26 @@ void MainWindow::previewPicture( int row )
     else if (raw_w < 2000 && raw_h < 1500) downscaled_factor = 5;
     else downscaled_factor = 7;
 
+    // For get_area_average_downscale_thumnail only: other factors for dualiso hiding the horizontal lines
+    if (m_pMlvObject->llrawproc->dual_iso > 0)
+    {
+        if (downscaled_factor > 5) downscaled_factor = 8;
+        else downscaled_factor = 4;
+    }
+
+
     int width = raw_w / downscaled_factor;
     int height = raw_h / downscaled_factor;
 
-    //Get frame from library
+    //Get frame from library, temp disable linear gradient and vignette, because not compatible with shrinked resolutions
+    auto vstr = m_pMlvObject->processing->vignette_strength;
+    auto gren = m_pMlvObject->processing->gradient_enable;
+    m_pMlvObject->processing->vignette_strength = 0;
+    m_pMlvObject->processing->gradient_enable = 0;
     //create_thumbnail( m_pMlvObject, m_pRawImage, downscaled_factor, width, height, QThread::idealThreadCount() );
     get_area_average_downscale_thumnail(m_pMlvObject, 0, downscaled_factor, QThread::idealThreadCount(), m_pRawImage);
+    m_pMlvObject->processing->vignette_strength = vstr;
+    m_pMlvObject->processing->gradient_enable = gren;
 
     QImage img( m_pRawImage,
                 width,
@@ -7901,7 +7919,7 @@ void MainWindow::on_listViewSession_customContextMenuRequested(const QPoint &pos
             myMenu.addAction( ui->actionSelectAllClips );
             myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Image-icon.png" ), "Show in Editor",  this, SLOT( rightClickShowFile() ) );
             myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Delete-icon.png" ), "Delete Selected File from Session",  this, SLOT( deleteFileFromSession() ) );
-            myMenu.addAction( "Rename", this, SLOT( renameActiveClip() ) );
+            myMenu.addAction( ui->actionRename );
             markMenu.setTitle( "Mark Clip" );
             myMenu.addMenu( &markMenu );
             myMenu.addSeparator();
@@ -8073,12 +8091,15 @@ void MainWindow::deleteFileFromSession( void )
 //Rename the selected clip
 void MainWindow::renameActiveClip( void )
 {
+    //Catch all invalid cases to not crash the app or damage clips
+    if( !m_pModel || SESSION_EMPTY || m_pModel->activeRow() < 0 ) return;
+
     //Save slider receipt
     setReceipt( ACTIVE_RECEIPT );
 
     //If multiple selection is on, we do nothing. We just rename one selected clip
     QModelIndexList list = selectedClipsList();
-    if( list.size() > 1 ) return;
+    if( list.size() != 1 ) return;
 
     int row = list.first().data( ROLE_REALINDEX ).toInt();
 

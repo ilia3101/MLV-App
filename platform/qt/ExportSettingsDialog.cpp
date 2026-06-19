@@ -344,10 +344,16 @@ void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
         ui->comboBoxDebayer->setEnabled( false );
         ui->comboBoxOption->setEnabled( true );
         ui->comboBoxOption->addItem( QString( "Fast Pass" ) );
-        ui->comboBoxOption->addItem( QString( "Compress" ) );
+        ui->comboBoxOption->addItem( QString( "Compress Lossless" ) );
         ui->comboBoxOption->addItem( QString( "Decompress" ) );
         ui->comboBoxOption->addItem( QString( "Averaged Frame" ) );
         ui->comboBoxOption->addItem( QString( "Extract Internal Darkframe" ) );
+        ui->comboBoxOption->addItem( QString( "Compress CineForm Film3" ) );
+        ui->comboBoxOption->addItem( QString( "Compress Jpeg2000 Small" ) );
+        ui->comboBoxOption->addItem( QString( "Compress Jpeg2000 Medium" ) );
+        ui->comboBoxOption->addItem( QString( "Compress Jpeg2000 High Quality" ) );
+        ui->comboBoxOption->addItem( QString( "Compress Jpeg2000 Very High Quality" ) );
+        ui->comboBoxOption->addItem( QString( "Compress Jpeg2000 Visually Lossless" ) );
         enableResize = false;
     }
     else if( index == CODEC_DNXHD )

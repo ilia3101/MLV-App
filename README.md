@@ -1,4 +1,4 @@
-# :fire::fire::fire: MLV App :fire::fire::fire:
+# MLV App
 What is MLV App? Lightroom, but for Magic Lantern MLV Video (and open source and cross platform)
 
 [![Lates Release](https://img.shields.io/github/v/release/ilia3101/MLV-App)](https://github.com/ilia3101/MLV-App/releases)

@@ -20,8 +20,17 @@
 #define getMlvMaxHeight(video) ((video)->RAWI.raw_info.active_area.y2 - (video)->RAWI.raw_info.active_area.y1)
 #define getMlvFrames(video) (video)->frames
 #define getMlvBitdepth(video) (video)->RAWI.raw_info.bits_per_pixel
-#define getMlvCompression(video) !((video)->MLVI.videoClass & MLV_VIDEO_CLASS_FLAG_LJ92) ? "Uncompressed" : "Lossless"
-#define isMlvCompressed(video) ((video)->MLVI.videoClass & MLV_VIDEO_CLASS_FLAG_LJ92) ? 1 : 0
+#define getMlvCompression(video) \
+    (((video)->MLVI.videoClass & MLV_VIDEO_CLASS_FLAG_JPEG2K)   ? "JPEG2000" : \
+     ((video)->MLVI.videoClass & MLV_VIDEO_CLASS_FLAG_CINEFORM) ? "CineForm" : \
+     ((video)->MLVI.videoClass & MLV_VIDEO_CLASS_FLAG_LJ92)     ? "Lossless"  : \
+     "Uncompressed")
+#define isMlvLj92(video)      (((video)->MLVI.videoClass & MLV_VIDEO_CLASS_FLAG_LJ92) ? 1 : 0)
+#define isMlvCineform(video)  (((video)->MLVI.videoClass & MLV_VIDEO_CLASS_FLAG_CINEFORM) ? 1 : 0)
+#define isMlvJpeg2000(video)  (((video)->MLVI.videoClass & MLV_VIDEO_CLASS_FLAG_JPEG2K) ? 1 : 0)
+#define isMlvCompressed(video) \
+    (((video)->MLVI.videoClass & \
+      (MLV_VIDEO_CLASS_FLAG_LJ92 | MLV_VIDEO_CLASS_FLAG_CINEFORM | MLV_VIDEO_CLASS_FLAG_JPEG2K)) ? 1 : 0)
 #define getMlvFramerate(video) (video)->frame_rate
 #define getMlvFramerateOrig(video) (double)(video->MLVI.sourceFpsNom / (double)video->MLVI.sourceFpsDenom)
 #define getMlvFrameNumber(video, frame_index) (video)->video_index[(frame_index)].frame_number
@@ -79,7 +88,7 @@
 
 /* Use setMlvAlwaysUseAmaze() to always get AMaZE frames, for best quality always */
 #define setMlvAlwaysUseAmaze(video) (video)->use_amaze = 1; (video)->current_cached_frame_active = 0
-/* Or this one for speed/ultimate playback performance, will give AMaZE if it is in cache, 
+/* Or this one for speed/ultimate playback performance, will give AMaZE if it is in cache,
  * or bilinear if cached AMaZE frame is not avalible in cache */
 #define setMlvDontAlwaysUseAmaze(video) (video)->use_amaze = 0; (video)->current_cached_frame_active = 0
 /* Use the non debayer for best speed + no quality :-P */

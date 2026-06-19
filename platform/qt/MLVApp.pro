@@ -36,7 +36,21 @@ DEFINES += QT_DEPRECATED_WARNINGS
 ##############
 # Silent Mode, deactivate for more debug info
 ##############
-DEFINES += STDOUT_SILENT
+#DEFINES += STDOUT_SILENT
+
+##############
+# Feature gates: comment out to disable
+##############
+CONFIG += cineform_enabled
+CONFIG += jpeg2k_enabled
+cineform_enabled: DEFINES += ENABLE_CINEFORM
+jpeg2k_enabled{
+    DEFINES += \
+        ENABLE_JPEG2K \
+        OJPH_DISABLE_AVX512 \
+        OJPH_DISABLE_AVX2 \
+        OJPH_DISABLE_AVX
+}
 
 ##############
 # Compiler flags
@@ -50,6 +64,7 @@ macx: LIBS += -framework CoreVideo \
               -framework CoreFoundation \
               -framework CoreMedia
 
+
 macx{
     #OpenMP on macOS: first install llvm and openssl via brew, setup llvm kit & compiler in Qt settings!
     equals(QT_ARCH, x86_64) {
@@ -59,7 +74,7 @@ macx{
         QMAKE_CFLAGS += -fopenmp -ftree-vectorize
         QMAKE_CXXFLAGS += -fopenmp -std=c++15 -ftree-vectorize
         INCLUDEPATH += -I/usr/local/opt/llvm/include
-        LIBS += -L/usr/local/opt/llvm/lib -lomp -L/usr/local/opt/openssl/lib -lssl
+        LIBS += -L/usr/local/opt/llvm/lib -lomp -lc++ -lc++abi -L/usr/local/opt/openssl/lib -lssl
         QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.8
     }
     #Qt5 on Apple Silicon with openMP: install llvm and openssl via brew, build Qt5 from source
@@ -128,9 +143,10 @@ linux-g++*{
     }
     QMAKE_CFLAGS += -O3 -fopenmp  -ftree-vectorize
     QMAKE_CXXFLAGS += -fopenmp -std=c++11 -ftree-vectorize
-    LIBS += -lgomp
+    LIBS += -lgomp -luuid
     equals(QT_ARCH, x86_64) {
         QMAKE_CFLAGS += -msse4.1 -mssse3 -msse3 -msse2 -msse
+        QMAKE_CXXFLAGS += -msse4.1 -mssse3
     }
 }
 
@@ -160,6 +176,7 @@ SOURCES += \
     ../../src/mlv/llrawproc/hist.c \
     ../../src/mlv/camid/camera_id.c \   
     ../../src/mlv/mcraw/mcraw.c \
+    ../../src/mlv/mcraw/cJSON.c \
     ../../src/mlv/mcraw/RawData.cpp \
     ../../src/mlv/mcraw/RawData_Legacy.cpp \
     ../../src/processing/processing.c \
@@ -243,7 +260,69 @@ SOURCES += \
     ../../src/librtprocess/src/include/librtprocesswrapper.cpp \
     ../../src/debayer/ahdOld.c
 
+cineform_enabled {
+    SOURCES += \
+    ../../src/mlv/CineformSDK/Codec/*.c \
+    ../../src/mlv/CineformSDK/Codec/*.cpp \
+    ../../src/mlv/CineformSDK/ConvertLib/*.cpp \
+    ../../src/mlv/CineformSDK/DecoderSDK/*.cpp \
+    ../../src/mlv/CineformSDK/EncoderSDK/*.cpp \
+    ../../src/mlv/CineformSDK/WarpLib/*.c
+}
+
+jpeg2k_enabled {
+    OPENJPH = ../../src/mlv/OpenJPH
+
+    SOURCES += \
+        $$files($$OPENJPH/codestream/*.cpp) \
+        $$files($$OPENJPH/coding/*.cpp) \
+        $$files($$OPENJPH/transform/*.cpp) \
+        $$files($$OPENJPH/others/*.cpp)
+
+    SOURCES += \
+        $$OPENJPH/others/ojph_mem_c.c \
+        $$OPENJPH/ojph_wrapper.cpp
+
+    SOURCES -= \
+        $$OPENJPH/codestream/ojph_codestream_wasm.cpp \
+        $$OPENJPH/coding/ojph_block_decoder_wasm.cpp \
+        $$OPENJPH/coding/ojph_block_decoder_avx2.cpp \
+        $$OPENJPH/coding/ojph_block_encoder_avx2.cpp \
+        $$OPENJPH/coding/ojph_block_encoder_avx512.cpp \
+        $$OPENJPH/transform/ojph_colour_wasm.cpp \
+        $$OPENJPH/transform/ojph_colour_avx.cpp \
+        $$OPENJPH/transform/ojph_colour_avx2.cpp \
+        $$OPENJPH/transform/ojph_transform_wasm.cpp \
+        $$OPENJPH/transform/ojph_transform_avx.cpp \
+        $$OPENJPH/transform/ojph_transform_avx2.cpp \
+        $$OPENJPH/transform/ojph_transform_avx512.cpp \
+        $$OPENJPH/codestream/ojph_codestream_avx.cpp \
+        $$OPENJPH/codestream/ojph_codestream_avx2.cpp
+}
+
 INCLUDEPATH += ../../src/librtprocess/src/include/
+
+cineform_enabled: INCLUDEPATH += \
+    ../../src/mlv/CineformSDK/Common/ \
+    ../../src/mlv/CineformSDK/Codec/ \
+    ../../src/mlv/CineformSDK/ConvertLib/ \
+    ../../src/mlv/CineformSDK/DecoderSDK/ \
+    ../../src/mlv/CineformSDK/EncoderSDK/ \
+    ../../src/mlv/CineformSDK/WarpLib/
+
+jpeg2k_enabled {
+    INCLUDEPATH += \
+        ../../src/mlv/OpenJPH \
+        ../../src/mlv/OpenJPH/openjph \
+        ../../src/mlv/OpenJPH/codestream \
+        ../../src/mlv/OpenJPH/coding \
+        ../../src/mlv/OpenJPH/transform \
+        ../../src/mlv/OpenJPH/others
+
+    macx:equals(QT_ARCH, arm64) {
+        INCLUDEPATH += ../../src/mlv/OpenJPH/sse2neon
+    }
+}
 
 macx: SOURCES += ../cocoa/avf_lib/avf_lib.m
 
@@ -258,6 +337,8 @@ HEADERS += MainWindow.h \
     ../../src/mlv/mlv_object.h \
     ../../src/mlv/raw.h \
     ../../src/mlv/video_mlv.h \
+    ../../src/mlv/mcraw/mcraw.h \
+    ../../src/mlv/mcraw/cJSON.h \
     ../../src/mlv/liblj92/lj92.h \
     ../../src/mlv/llrawproc/llrawproc_object.h \
     ../../src/mlv/llrawproc/llrawproc.h \
@@ -370,6 +451,35 @@ HEADERS += MainWindow.h \
     ../../src/librtprocess/src/include/sleef.h \
     ../../src/librtprocess/src/include/sleefsseavx.h
 
+cineform_enabled {
+    HEADERS += \
+        ../../src/mlv/CineformSDK/Common/*.h \
+        ../../src/mlv/CineformSDK/Codec/*.h \
+        ../../src/mlv/CineformSDK/ConvertLib/*.h \
+        ../../src/mlv/CineformSDK/DecoderSDK/*.h \
+        ../../src/mlv/CineformSDK/EncoderSDK/*.h \
+        ../../src/mlv/CineformSDK/WarpLib/*.h
+
+    macx:equals(QT_ARCH, arm64): HEADERS += ../../src/mlv/CineformSDK/Codec/sse2neon/sse2neon.h
+}
+
+jpeg2k_enabled {
+    HEADERS += \
+        ../../src/mlv/OpenJPH/ojph_wrapper.h \
+        ../../src/mlv/OpenJPH/openjph/*.h \
+        ../../src/mlv/OpenJPH/codestream/*.h \
+        ../../src/mlv/OpenJPH/coding/*.h \
+        ../../src/mlv/OpenJPH/transform/*.h
+
+    macx:equals(QT_ARCH, arm64) {
+        HEADERS += \
+            ../../src/mlv/OpenJPH/sse2neon/sse2neon.h \
+            ../../src/mlv/OpenJPH/sse2neon/emmintrin.h \
+            ../../src/mlv/OpenJPH/sse2neon/immintrin.h \
+            ../../src/mlv/OpenJPH/sse2neon/xmmintrin.h
+    }
+}
+
 macx: HEADERS += \
     ../cocoa/avf_lib/avencoder.h \
     ../cocoa/avf_lib/avf_lib.h \
@@ -406,7 +516,7 @@ DISTFILES += \
 
 #Application version
 VERSION_MAJOR = 1
-VERSION_MINOR = 15
+VERSION_MINOR = 16
 VERSION_PATCH = 0
 VERSION_BUILD = 0
 
@@ -441,12 +551,14 @@ ICON_FILES.path = Contents/Resources
 QMAKE_BUNDLE_DATA += ICON_FILES
 
 #unpack & install ffmpeg on OSX
-macx: QMAKE_POST_LINK += unzip -o ../qt/FFmpeg/ffmpegOSX.zip $$escape_expand(\n\t)
+macx: equals(QT_ARCH, arm64): QMAKE_POST_LINK += unzip -o $$quote($$PWD/../qt/FFmpeg/ffmpegOSXarm.zip) $$escape_expand(\n\t)
+macx: equals(QT_ARCH, x86_64): QMAKE_POST_LINK += unzip -o $$quote($$PWD/../qt/FFmpeg/ffmpegOSX.zip) $$escape_expand(\n\t)
 macx: QMAKE_POST_LINK += "mv ffmpeg MLV\ App.app/Contents/MacOS/" $$escape_expand(\n\t)
 #unpack & install raw2mlv on OSX
-macx: equals(QT_ARCH, arm64): QMAKE_POST_LINK += unzip -o ../qt/raw2mlv/raw2mlvMacOsArm.zip $$escape_expand(\n\t)
-macx: equals(QT_ARCH, x86_64): QMAKE_POST_LINK += unzip -o ../qt/raw2mlv/raw2mlvOSX.zip $$escape_expand(\n\t)
+macx: equals(QT_ARCH, arm64): QMAKE_POST_LINK += unzip -o $$quote($$PWD/../qt/raw2mlv/raw2mlvMacOsArm.zip) $$escape_expand(\n\t)
+macx: equals(QT_ARCH, x86_64): QMAKE_POST_LINK += unzip -o $$quote($$PWD/../qt/raw2mlv/raw2mlvOSX.zip) $$escape_expand(\n\t)
 macx: QMAKE_POST_LINK += "mv raw2mlv MLV\ App.app/Contents/MacOS/" $$escape_expand(\n\t)
+
 
 unix{
     OBJECTS_DIR = .obj
