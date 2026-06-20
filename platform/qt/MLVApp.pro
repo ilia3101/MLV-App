@@ -158,6 +158,25 @@ SOURCES += \
     Updater/Updater.cpp \
         main.cpp \
         MainWindow.cpp \
+        MainWindowClipActions.cpp \
+        MainWindowClipListUi.cpp \
+        MainWindowClipLoading.cpp \
+        MainWindowEditControls.cpp \
+        MainWindowExport.cpp \
+        MainWindowFocusPixelMaps.cpp \
+        MainWindowHelpActions.cpp \
+        MainWindowPlayback.cpp \
+        MainWindowProcessingControls.cpp \
+        MainWindowRawCorrection.cpp \
+        MainWindowReceiptBinding.cpp \
+        MainWindowSessionActions.cpp \
+        MainWindowSessionLifecycle.cpp \
+        MainWindowSettings.cpp \
+        MainWindowSliderActions.cpp \
+        MainWindowUi.cpp \
+        MainWindowUpdateChecks.cpp \
+        MainWindowViewerActions.cpp \
+        MainWindowViewerControls.cpp \
     ../../src/debayer/amaze_demosaic.c \
     ../../src/debayer/debayer.c \
     ../../src/debayer/conv.c \
@@ -262,12 +281,12 @@ SOURCES += \
 
 cineform_enabled {
     SOURCES += \
-    ../../src/mlv/CineformSDK/Codec/*.c \
-    ../../src/mlv/CineformSDK/Codec/*.cpp \
-    ../../src/mlv/CineformSDK/ConvertLib/*.cpp \
-    ../../src/mlv/CineformSDK/DecoderSDK/*.cpp \
-    ../../src/mlv/CineformSDK/EncoderSDK/*.cpp \
-    ../../src/mlv/CineformSDK/WarpLib/*.c
+    $$files(../../src/mlv/CineformSDK/Codec/*.c) \
+    $$files(../../src/mlv/CineformSDK/Codec/*.cpp) \
+    $$files(../../src/mlv/CineformSDK/ConvertLib/*.cpp) \
+    $$files(../../src/mlv/CineformSDK/DecoderSDK/*.cpp) \
+    $$files(../../src/mlv/CineformSDK/EncoderSDK/*.cpp) \
+    $$files(../../src/mlv/CineformSDK/WarpLib/*.c)
 }
 
 jpeg2k_enabled {
@@ -453,23 +472,23 @@ HEADERS += MainWindow.h \
 
 cineform_enabled {
     HEADERS += \
-        ../../src/mlv/CineformSDK/Common/*.h \
-        ../../src/mlv/CineformSDK/Codec/*.h \
-        ../../src/mlv/CineformSDK/ConvertLib/*.h \
-        ../../src/mlv/CineformSDK/DecoderSDK/*.h \
-        ../../src/mlv/CineformSDK/EncoderSDK/*.h \
-        ../../src/mlv/CineformSDK/WarpLib/*.h
+        $$files(../../src/mlv/CineformSDK/Common/*.h) \
+        $$files(../../src/mlv/CineformSDK/Codec/*.h) \
+        $$files(../../src/mlv/CineformSDK/ConvertLib/*.h) \
+        $$files(../../src/mlv/CineformSDK/DecoderSDK/*.h) \
+        $$files(../../src/mlv/CineformSDK/EncoderSDK/*.h) \
+        $$files(../../src/mlv/CineformSDK/WarpLib/*.h)
 
     macx:equals(QT_ARCH, arm64): HEADERS += ../../src/mlv/CineformSDK/Codec/sse2neon/sse2neon.h
 }
 
 jpeg2k_enabled {
     HEADERS += \
-        ../../src/mlv/OpenJPH/ojph_wrapper.h \
-        ../../src/mlv/OpenJPH/openjph/*.h \
-        ../../src/mlv/OpenJPH/codestream/*.h \
-        ../../src/mlv/OpenJPH/coding/*.h \
-        ../../src/mlv/OpenJPH/transform/*.h
+        $$files(../../src/mlv/OpenJPH/ojph_wrapper.h) \
+        $$files(../../src/mlv/OpenJPH/openjph/*.h) \
+        $$files(../../src/mlv/OpenJPH/codestream/*.h) \
+        $$files(../../src/mlv/OpenJPH/coding/*.h) \
+        $$files(../../src/mlv/OpenJPH/transform/*.h)
 
     macx:equals(QT_ARCH, arm64) {
         HEADERS += \
