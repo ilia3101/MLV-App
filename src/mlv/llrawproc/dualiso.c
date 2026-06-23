@@ -54,20 +54,20 @@ int diso_get_preview(uint16_t * image_data, uint16_t width, uint16_t height, int
     struct histogram * hist[4];
     struct histogram * hist_hi = NULL;
     struct histogram * hist_lo = NULL;
-    
+
     for(int i = 0; i < 4; i++)
         hist[i] = hist_create(white);
-    
+
     for(uint16_t y = 4; y < height - 4; y += 5)
     {
         hist_add(hist[y % 4], &(image_data[y * width + (y + 1) % 2]), width - (y + 1) % 2, 3);
     }
-    
+
     for(int i = 0; i < 4; i++)
     {
         median[i] = hist_median(hist[i]);
     }
-    
+
     uint16_t dark_row_start = -1;
     if((median[2] - black) > ((median[0] - black) * 2) &&
        (median[2] - black) > ((median[1] - black) * 2) &&
@@ -117,7 +117,7 @@ int diso_get_preview(uint16_t * image_data, uint16_t width, uint16_t height, int
         }
         return 0;
     }
-    
+
     if(diso_check)
     {
 #ifndef STDOUT_SILENT
@@ -138,28 +138,28 @@ int diso_get_preview(uint16_t * image_data, uint16_t width, uint16_t height, int
     int* data_y = (int *)malloc(data_size * sizeof(data_y[0]));
     double* data_w = (double *)malloc(data_size * sizeof(data_w[0]));
     int data_num = 0;
-    
+
     int acc_lo = 0;
     int acc_hi = 0;
     int raw_lo = 0;
     int raw_hi = 0;
     int prev_acc_hi = 0;
-    
+
     int hist_total = hist[0]->count;
-    
+
     for (raw_hi = 0; raw_hi < hist_total; raw_hi++)
     {
         acc_hi += hist_hi->data[raw_hi];
-        
+
         while (acc_lo < acc_hi)
         {
             acc_lo += hist_lo->data[raw_lo];
             raw_lo++;
         }
-        
+
         if (raw_lo >= white)
             break;
-        
+
         if (acc_hi - prev_acc_hi > min_pix)
         {
             if (acc_hi > hist_total * 1 / 100 && acc_hi < hist_total * 99.99 / 100)    /* throw away outliers */
@@ -172,14 +172,14 @@ int diso_get_preview(uint16_t * image_data, uint16_t width, uint16_t height, int
             }
         }
     }
-    
+
     /**
      * plain least squares
      * y = ax + b
      * a = (mean(xy) - mean(x)mean(y)) / (mean(x^2) - mean(x)^2)
      * b = mean(y) - a mean(x)
      */
-    
+
     double mx = 0, my = 0, mxy = 0, mx2 = 0;
     double weight = 0;
     for (int i = 0; i < data_num; i++)
@@ -196,7 +196,7 @@ int diso_get_preview(uint16_t * image_data, uint16_t width, uint16_t height, int
     mx2 /= weight;
     double a = (mxy - mx*my) / (mx2 - mx*mx);
     double b = my - a * mx;
-    
+
     free(data_w);
     free(data_y);
     free(data_x);
@@ -205,10 +205,10 @@ int diso_get_preview(uint16_t * image_data, uint16_t width, uint16_t height, int
     {
         hist_destroy(hist[i]);
     }
-    
+
     //TODO: what's a better way to pick a value for this?
     uint16_t shadow = (uint16_t)(black + 1 / (a * a) + b);
-    
+
     for(int y = 0; y < height; y++)
     {
         int row_start = y * width;
@@ -236,7 +236,7 @@ int diso_get_preview(uint16_t * image_data, uint16_t width, uint16_t height, int
                 {
                     image_data[i] = (uint16_t)(y > 2 ? (y < height - 2 ? (image_data[i-width*2] + MIN(white,(image_data[i+width*2]  - black) * a + black + b)) / 2 : image_data[i-width*2]) : MIN(white,(image_data[i+width*2]  - black) * a + black + b));
                 }
-                
+
             }
         }
     }
@@ -271,12 +271,12 @@ static void white_detect(struct raw_info raw_info, uint16_t * image_data, int* w
     /* workaround: consider the white level as a little under the maximum pixel value from the raw file */
     /* caveat: bright and dark exposure may have different white levels, so we'll take the minimum value */
     /* side effect: if the image is not overexposed, it may get brightened a little; shouldn't hurt */
-    
+
     int whites[2]         = {  0,    0};
     int discard_pixels[2] = { 10,   50}; /* discard the brightest N pixels */
     int safety_margins[2] = {100, 1500}; /* use a higher safety margin for the higher ISO */
     /* note: with the high-ISO WL underestimated by 1500, you would lose around 0.15 EV of non-aliased detail */
-    
+
     int* pixels[2];
     int max_pix = raw_info.width * raw_info.height / 2 / 9;
     pixels[0] = malloc(max_pix * sizeof(pixels[0][0]));
@@ -284,7 +284,7 @@ static void white_detect(struct raw_info raw_info, uint16_t * image_data, int* w
     memset(pixels[0], 0, sizeof(max_pix * sizeof(pixels[0][0])));
     memset(pixels[1], 0, sizeof(max_pix * sizeof(pixels[0][0])));
     int counts[2] = {0, 0};
-    
+
     /* collect all the pixels and find the k-th max, thus ignoring hot pixels */
     /* change the sign in order to use kth_smallest_int */
     //#pragma omp parallel for if(USE_OMP) collapse(2)
@@ -293,7 +293,7 @@ static void white_detect(struct raw_info raw_info, uint16_t * image_data, int* w
         for (int x = raw_info.active_area.x1; x < raw_info.active_area.x2; x += 3)
         {
             int pix = raw_get_pixel16(x, y);
-            
+
 #define BIN_IDX is_bright[y%4]
             counts[BIN_IDX] = MIN(counts[BIN_IDX], max_pix-1);
             pixels[BIN_IDX][counts[BIN_IDX]] = -pix;
@@ -301,13 +301,13 @@ static void white_detect(struct raw_info raw_info, uint16_t * image_data, int* w
 #undef BIN_IDX
         }
     }
-    
+
     whites[0] = -kth_smallest_int(pixels[0], counts[0], discard_pixels[0]) - safety_margins[0];
     whites[1] = -kth_smallest_int(pixels[1], counts[1], discard_pixels[1]) - safety_margins[1];
-    
+
     //~ printf("%8d %8d\n", whites[0], whites[1]);
     //~ printf("%8d %8d\n", counts[0], counts[1]);
-    
+
     /* we assume 14-bit input data; out-of-range white levels may cause crash */
     *white_dark = COERCE(whites[0], 10000, 16383);
     *white_bright = COERCE(whites[1], 5000, 16383);
@@ -332,9 +332,9 @@ static void compute_black_noise(struct raw_info raw_info, uint16_t * image_data,
             num++;
         }
     }
-    
+
     double mean = (double) black / num;
-    
+
     /* compute standard deviation */
     double stdev = 0;
     //#pragma omp parallel for if(USE_OMP) collapse(2) reduction(+:stdev) schedule(static)
@@ -348,13 +348,13 @@ static void compute_black_noise(struct raw_info raw_info, uint16_t * image_data,
     }
     stdev /= (num-1);
     stdev = sqrt(stdev);
-    
+
     if (num == 0)
     {
         mean = raw_info.black_level;
         stdev = 8; /* default to 11 stops of DR */
     }
-    
+
     *out_mean = mean;
     *out_stdev = stdev;
 }
@@ -366,25 +366,25 @@ static int mean2(int a, int b, int white, int* err)
         if (err) *err = 10000000;
         return white;
     }
-    
+
     int m = (a + b) / 2;
-    
+
     if (err)
         *err = ABS(a - b);
-    
+
     return m;
 }
 
 static int mean3(int a, int b, int c, int white, int* err)
 {
     int m = (a + b + c) / 3;
-    
+
     if (err)
         *err = MAX(MAX(ABS(a - m), ABS(b - m)), ABS(c - m));
-    
+
     if (a >= white || b >= white || c >= white)
         return MAX(m, white);
-    
+
     return m;
 }
 
@@ -428,7 +428,7 @@ static int identify_rggb_or_gbrg(struct raw_info raw_info, uint16_t * image_data
 {
     int w = raw_info.width;
     int h = raw_info.height;
-    
+
     /* build 4 little histograms: one for red, one for blue and two for green */
     /* we don't know yet which channels are which, but that's what we are trying to find out */
     /* the ones with the smallest difference are likely the green channels */
@@ -439,9 +439,9 @@ static int identify_rggb_or_gbrg(struct raw_info raw_info, uint16_t * image_data
         hist[i] = malloc(hist_size);
         memset(hist[i], 0, hist_size);
     }
-    
+
     int y0 = (raw_info.active_area.y1 + 3) & ~3;
-    
+
     /* to simplify things, analyze an identical number of bright and dark lines */
     //#pragma omp parallel for if(USE_OMP) collapse(2)
     for (int y = y0; y < h/4*4; y++)
@@ -449,7 +449,7 @@ static int identify_rggb_or_gbrg(struct raw_info raw_info, uint16_t * image_data
         for (int x = 0; x < w; x++)
             hist[(y%2)*2 + (x%2)][raw_get_pixel16(x,y) & 16383]++;
     }
-    
+
     /* compute cdf */
     for (int k = 0; k < 4; k++)
     {
@@ -460,7 +460,7 @@ static int identify_rggb_or_gbrg(struct raw_info raw_info, uint16_t * image_data
             hist[k][i] = acc;
         }
     }
-    
+
     /* compare cdf's */
     /* for rggb, greens are at y%2 != x%2, that is, 1 and 2 */
     /* for gbrg, greens are at y%2 == x%2, that is, 0 and 3 */
@@ -472,12 +472,12 @@ static int identify_rggb_or_gbrg(struct raw_info raw_info, uint16_t * image_data
         diffs_rggb += ABS(hist[1][i] - hist[2][i]);
         diffs_gbrg += ABS(hist[0][i] - hist[3][i]);
     }
-    
+
     for (int i = 0; i < 4; i++)
     {
         free(hist[i]); hist[i] = 0;
     }
-    
+
     /* which one is most likely? */
     return diffs_rggb < diffs_gbrg;
 }
@@ -486,11 +486,11 @@ static int identify_bright_and_dark_fields(struct raw_info raw_info, uint16_t * 
 {
     /* first we need to know which lines are dark and which are bright */
     /* the pattern is not always the same, so we need to autodetect it */
-    
+
     /* it may look like this */                       /* or like this */
     /*
      ab cd ef gh  ab cd ef gh               ab cd ef gh  ab cd ef gh
-     
+
      0  RG RG RG RG  RG RG RG RG            0  rg rg rg rg  rg rg rg rg
      1  gb gb gb gb  gb gb gb gb            1  gb gb gb gb  gb gb gb gb
      2  rg rg rg rg  rg rg rg rg            2  RG RG RG RG  RG RG RG RG
@@ -501,14 +501,14 @@ static int identify_bright_and_dark_fields(struct raw_info raw_info, uint16_t * 
      7  GB GB GB GB  GB GB GB GB            7  GB GB GB GB  GB GB GB GB
      8  RG RG RG RG  RG RG RG RG            8  rg rg rg rg  rg rg rg rg
      */
-    
+
     /* white level is not yet known, just use a rough guess */
     int white = 10000;
     int black = raw_info.black_level;
-    
+
     int w = raw_info.width;
     int h = raw_info.height;
-    
+
     /* build 4 little histograms */
     int hist_size = 16384 * sizeof(int);
     int* hist[4];
@@ -516,14 +516,14 @@ static int identify_bright_and_dark_fields(struct raw_info raw_info, uint16_t * 
     {
         hist[i] = calloc(hist_size, sizeof(int));
     }
-    
+
     int y0 = (raw_info.active_area.y1 + 3) & ~3;
-    
+
     /* to simplify things, analyze an identical number of bright and dark lines */
     for (int y = y0; y < h/4*4; y++)
     {
         int y_mod_4 = y & 3;
-    
+
         for (int x = 0; x < w; x++)
         {
             if ((x + y) & 1)
@@ -539,10 +539,10 @@ static int identify_bright_and_dark_fields(struct raw_info raw_info, uint16_t * 
     for (int y = y0; y < h / 4 * 4; y++)
     {
         int y_mod_4 = y & 3;
-        
+
         // Create a local histogram for each thread
         int local_hist[16384] = { 0 };
-    
+
         #pragma omp simd if(USE_OMP)
         for (int x = 0; x < w; x++)
         {
@@ -552,7 +552,7 @@ static int identify_bright_and_dark_fields(struct raw_info raw_info, uint16_t * 
                 local_hist[raw_get_pixel16(x, y) & 16383]++;
             }
         }
-    
+
         // After the loop, merge the local histogram into the global histogram
         #pragma omp critical
         for (int i = 0; i < 16384; i++)
@@ -581,20 +581,20 @@ static int identify_bright_and_dark_fields(struct raw_info raw_info, uint16_t * 
             }
         }
     }
-    
+
     // Merge once after parallel region
     for (int t = 0; t < num_threads; t++)
         for (int i = 0; i < 4; i++)
             for (int j = 0; j < 16384; j++)
                 hist[i][j] += local_hist[t][i][j];
-    
+
     free(local_hist);
     */
-    
+
     int hist_total = 0;
     for (int i = 0; i < 16384; i++)
         hist_total += hist[0][i];
-    
+
     /* choose the highest percentile that is not overexposed */
     /* but not higher than 99.8, to keep a tiny bit of robustness (specular highlights may play dirty tricks) */
     int acc[4] = {0};
@@ -613,7 +613,7 @@ static int identify_bright_and_dark_fields(struct raw_info raw_info, uint16_t * 
                 raw[i]++;
             }
         }
-        
+
         if (ref < ref_off)
         {
             if (MAX(MAX(raw[0], raw[1]), MAX(raw[2], raw[3])) < black + (white-black) / 4)
@@ -625,24 +625,24 @@ static int identify_bright_and_dark_fields(struct raw_info raw_info, uint16_t * 
                 off[3] = raw[3];
             }
         }
-        
+
         if (raw[0] >= white) break;
         if (raw[1] >= white) break;
         if (raw[2] >= white) break;
         if (raw[3] >= white) break;
     }
-    
+
     for (int i = 0; i < 4; i++)
     {
         free(hist[i]); hist[i] = 0;
     }
-    
+
     /* remove black offsets */
     raw[0] -= off[0];
     raw[1] -= off[1];
     raw[2] -= off[2];
     raw[3] -= off[3];
-    
+
     /* very crude way to compute median */
     int sorted_bright[4];
     memcpy(sorted_bright, raw, sizeof(sorted_bright));
@@ -661,7 +661,7 @@ static int identify_bright_and_dark_fields(struct raw_info raw_info, uint16_t * 
         }
     }
     double median_bright = (sorted_bright[1] + sorted_bright[2]) / 2;
-    
+
     for (int i = 0; i < 4; i++)
         is_bright[i] = raw[i] > median_bright;
 #ifndef STDOUT_SILENT
@@ -674,7 +674,7 @@ static int identify_bright_and_dark_fields(struct raw_info raw_info, uint16_t * 
 #endif
         return 0;
     }
-    
+
     if (is_bright[0] == is_bright[2] || is_bright[1] == is_bright[3])
     {
 #ifndef STDOUT_SILENT
@@ -694,17 +694,17 @@ static int _match_exposures(struct raw_info raw_info, uint32_t * raw_buffer_32, 
     int white = white20/16;
     int clip0 = white - black;
     int clip  = clip0 * 0.95;    /* there may be nonlinear response in very bright areas */
-    
+
     int w = raw_info.width;
     int h = raw_info.height;
     int y0 = raw_info.active_area.y1 + 2;
-    
+
     /* quick interpolation for matching */
     int* dark   = malloc(w * h * sizeof(dark[0]));
     int* bright = malloc(w * h * sizeof(bright[0]));
     memset(dark, 0, w * h * sizeof(dark[0]));
     memset(bright, 0, w * h * sizeof(bright[0]));
-    
+
     //#pragma omp parallel for if(USE_OMP)
     for (int y = y0; y < h-2; y += 3)
     {
@@ -723,7 +723,7 @@ static int _match_exposures(struct raw_info raw_info, uint32_t * raw_buffer_32, 
             native[x + y * w] = pn;
         }
     }
-    
+
     /*
      * Robust line fit (match unclipped data):
      * - use (median_bright, median_dark) as origin
@@ -737,7 +737,7 @@ static int _match_exposures(struct raw_info raw_info, uint32_t * raw_buffer_32, 
      */
     int nmax = (w+2) * (h+2) / 9;   /* downsample by 3x3 for speed */
     int * tmp = malloc(nmax * sizeof(tmp[0]));
-    
+
     /* median_bright */
     int n = 0;
     for (int y = y0; y < h-2; y += 3)
@@ -750,13 +750,13 @@ static int _match_exposures(struct raw_info raw_info, uint32_t * raw_buffer_32, 
         }
     }
     int bmed = median_int_wirth(tmp, n);
-    
+
     int * bps = 0;
-    
+
     /* also compute the range for bright pixels (used to find the slope) */
     int b_lo = kth_smallest_int(tmp, n, n*98/100);
     int b_hi = kth_smallest_int(tmp, n, n*99.9/100);
-    
+
     /* median_dark */
     n = 0;
     for (int y = y0; y < h-2; y += 3)
@@ -770,16 +770,16 @@ static int _match_exposures(struct raw_info raw_info, uint32_t * raw_buffer_32, 
         }
     }
     int dmed = median_int_wirth(tmp, n);
-    
+
     int * dps = 0;
-    
+
     /* select highlights used to find the slope (ISO) */
     /* (98th percentile => up to 2% highlights) */
     int hi_nmax = nmax/50;
     int hi_n = 0;
     int* hi_dark = malloc(hi_nmax * sizeof(hi_dark[0]));
     int* hi_bright = malloc(hi_nmax * sizeof(hi_bright[0]));
-    
+
     for (int y = y0; y < h-2; y += 3)
     {
         for (int x = 0; x < w; x += 3)
@@ -794,18 +794,18 @@ static int _match_exposures(struct raw_info raw_info, uint32_t * raw_buffer_32, 
             if (hi_n >= hi_nmax) break;
         }
     }
-    
+
     //~ printf("Selected %d highlight points (max %d)\n", hi_n, hi_nmax);
-    
+
     double a = 0;
     double b = 0;
-    
+
     int best_score = 0;
     for (double ev = 0; ev < 6; ev += 0.002)
     {
         double test_a = pow(2, -ev);
         double test_b = dmed - bmed * test_a;
-        
+
         int score = 0;
         for (int i = 0; i < hi_n; i++)
         {
@@ -825,12 +825,12 @@ static int _match_exposures(struct raw_info raw_info, uint32_t * raw_buffer_32, 
     free(hi_dark); hi_dark = 0;
     free(hi_bright); hi_bright = 0;
     free(tmp); tmp = 0;
-    
+
     free(dark);
     free(bright);
     if (dps) free(dps);
     if (bps) free(bps);
-    
+
     /* apply the correction */
     double b20 = b * 16;
     //#pragma omp parallel for if(USE_OMP) collapse(2)
@@ -840,7 +840,7 @@ static int _match_exposures(struct raw_info raw_info, uint32_t * raw_buffer_32, 
         {
             int p = raw_get_pixel32(x, y);
             if (p == 0) continue;
-            
+
             if (BRIGHT_ROW)
             {
                 /* bright exposure: darken and apply the black offset (fixme: why not half?) */
@@ -850,16 +850,16 @@ static int _match_exposures(struct raw_info raw_info, uint32_t * raw_buffer_32, 
             {
                 p = p - b20 + b20*a;
             }
-            
+
             /* out of range? */
             /* note: this breaks M24-1127 */
             //p = COERCE(p, 0, 0xFFFFF);
-            
+
             raw_set_pixel20(x, y, p);
         }
     }
     *white_darkened = (white20 - black20 + b20) * a + black20;
-    
+
     double factor = 1/a;
     if (factor < 1.2 || !isfinite(factor))
     {
@@ -868,7 +868,7 @@ static int _match_exposures(struct raw_info raw_info, uint32_t * raw_buffer_32, 
 #endif
         return 0;
     }
-    
+
     *corr_ev = log2(factor);
 #ifndef STDOUT_SILENT
     printf("ISO difference  : %.2f EV (%d)\n", log2(factor), (int)round(factor*100));
@@ -1108,7 +1108,7 @@ static int match_exposures(struct raw_info raw_info, uint32_t * raw_buffer_32, i
     for (int y = 0; y < h; y++)
     {
         int bright_row = BRIGHT_ROW;
-    
+
         #pragma omp simd if(USE_OMP)
         for (int x = 0; x < w; x++)
         {
@@ -1124,7 +1124,7 @@ static int match_exposures(struct raw_info raw_info, uint32_t * raw_buffer_32, i
                 {
                     p = (p - _black_delta) + (_black_delta * factor);
                 }
-    
+
                 raw_set_pixel20(x, y, p);
             }
         }
@@ -1141,19 +1141,19 @@ static inline uint32_t * convert_to_20bit(struct raw_info raw_info, uint16_t * i
     int h = raw_info.height;
     /* promote from 14 to 20 bits (original raw buffer holds 14-bit values stored as uint16_t) */
     uint32_t * raw_buffer_32 = malloc(w * h * sizeof(raw_buffer_32[0]));
-    
+
     #pragma omp parallel for if(USE_OMP) collapse(2) schedule(static)
     for (int y = 0; y < h; y ++)
         for (int x = 0; x < w; x ++)
             raw_buffer_32[x + y*w] = raw_get_pixel_14to20(x, y);
-    
+
     return raw_buffer_32;
 }
 
 static inline void build_ev2raw_lut(int * raw2ev, int * ev2raw_0, int black, int white)
 {
     int* ev2raw = ev2raw_0 + 10*EV_RESOLUTION;
-    
+
     #pragma omp parallel for if(USE_OMP) schedule(static)
     for (int i = 0; i < 1<<20; i++)
     {
@@ -1163,28 +1163,28 @@ static inline void build_ev2raw_lut(int * raw2ev, int * ev2raw_0, int black, int
         else
             raw2ev[i] = -(int)round(log2(1-signal) * EV_RESOLUTION);
     }
-    
+
     #pragma omp parallel for if(USE_OMP) schedule(static)
     for (int i = -10*EV_RESOLUTION; i < 0; i++)
     {
         ev2raw[i] = COERCE(black+64 - round(64*pow(2, ((double)-i/EV_RESOLUTION))), 0, black);
     }
-    
+
     #pragma omp parallel for if(USE_OMP) schedule(static)
     for (int i = 0; i < 14*EV_RESOLUTION; i++)
     {
         ev2raw[i] = COERCE(black-64 + round(64*pow(2, ((double)i/EV_RESOLUTION))), black, (1<<20)-1);
-        
+
         if (i >= raw2ev[white])
         {
             ev2raw[i] = MAX(ev2raw[i], white);
         }
     }
-    
+
     /* keep "bad" pixels, if any */
     ev2raw[raw2ev[0]] = 0;
     ev2raw[raw2ev[0]] = 0;
-    
+
     /* check raw <--> ev conversion */
     //~ printf("%d %d %d %d %d %d %d *%d* %d %d %d %d %d\n", raw2ev[0],         raw2ev[16000],         raw2ev[32000],         raw2ev[131068],         raw2ev[131069],         raw2ev[131070],         raw2ev[131071],         raw2ev[131072],         raw2ev[131073],         raw2ev[131074],         raw2ev[131075],         raw2ev[131076],         raw2ev[132000]);
     //~ printf("%d %d %d %d %d %d %d *%d* %d %d %d %d %d\n", ev2raw[raw2ev[0]], ev2raw[raw2ev[16000]], ev2raw[raw2ev[32000]], ev2raw[raw2ev[131068]], ev2raw[raw2ev[131069]], ev2raw[raw2ev[131070]], ev2raw[raw2ev[131071]], ev2raw[raw2ev[131072]], ev2raw[raw2ev[131073]], ev2raw[raw2ev[131074]], ev2raw[raw2ev[131075]], ev2raw[raw2ev[131076]], ev2raw[raw2ev[132000]]);
@@ -1210,15 +1210,15 @@ static inline double * build_fullres_curve(int black)
     /* fullres mixing curve */
     static double fullres_curve[1<<20];
     static int previous_black = -1;
-    
+
     if(previous_black == black) return fullres_curve;
-    
+
     previous_black = black;
-    
+
     const double fullres_start = 4;
     const double fullres_transition = 4;
     //const double fullres_thr = 0.8;
-    
+
     #pragma omp parallel for if(USE_OMP) schedule(static)
     for (int i = 0; i < (1<<20); i++)
     {
@@ -1227,7 +1227,7 @@ static inline double * build_fullres_curve(int black)
         double f = (c2+1) / 2;
         fullres_curve[i] = f;
     }
-    
+
     return fullres_curve;
 }
 
@@ -1297,7 +1297,7 @@ static inline void amaze_interpolate(float** rawData, float** red, float** green
             0,
             0
         };
-        
+
         pthread_create(&thread_id[thread], NULL, amaze_wrapper, &amaze_arguments[thread]);
     }
 
@@ -1313,7 +1313,7 @@ static inline void amaze_interpolate(float** rawData, float** red, float** green
 
 static inline int edge_interp(float ** plane, int * squeezed, int * raw2ev, int dir, int x, int y, int s)
 {
-    
+
     int dxa = edge_directions[dir].a.x;
     int dya = edge_directions[dir].a.y * s;
     int pa = COERCE((int)plane[squeezed[y+dya]][x+dxa], 0, 0xFFFFF);
@@ -1321,7 +1321,7 @@ static inline int edge_interp(float ** plane, int * squeezed, int * raw2ev, int 
     int dyb = edge_directions[dir].b.y * s;
     int pb = COERCE((int)plane[squeezed[y+dyb]][x+dxb], 0, 0xFFFFF);
     int pi = (raw2ev[pa] * 2 + raw2ev[pb]) / 3;
-    
+
     return pi;
 }
 
