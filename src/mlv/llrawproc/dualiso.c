@@ -1348,46 +1348,59 @@ static inline void interpolate_wrapper(struct raw_info raw_info, uint32_t * raw_
 
     int* squeezed = calloc(h, sizeof(int));
 
-    /* squeeze the dark image by deleting fields from the bright exposure and vice versa */
-    int yh_bright = -1, yh_dark = -1;
-
-    for (int y = 0; y < h; y++)
+    /* squeeze the dark image by deleting fields from the bright exposure */
+    int yh = -1;
+    for (int y = 0; y < h; y ++)
     {
         if (BRIGHT_ROW)
-        {
-            /* make sure we start at the same parity (RGGB cell) */
-            if (yh_bright < 0) yh_bright = h / 4 * 2 + y;
+            continue;
 
-            /* just in case */
-            if (yh_bright >= h) continue;
+        if (yh < 0) /* make sure we start at the same parity (RGGB cell) */
+            yh = y;
 
-            squeezed[y] = yh_bright++;
-        }
-        else
-        {
-            /* make sure we start at the same parity (RGGB cell) */
-            if (yh_dark < 0) yh_dark = y;
+        float* dst = rawData[yh];
 
-            squeezed[y] = yh_dark++;
-        }
-    }
-
-    #pragma omp parallel for if(USE_OMP) schedule(static)
-    for (int y = 0; y < h; y++)
-    {
-        int row = squeezed[y];
-        if (!row) continue;
-
-        #pragma omp simd if(USE_OMP)
         for (int x = 0; x < w; x++)
         {
             int p = raw_get_pixel32(x, y);
 
-            /* divide green channel by 2 to approximate the final WB better */
-            if ((x ^ y) & 1) p = (p - black) / 2 + black;
+            if ((x ^ y) & 1) /* divide green channel by 2 to approximate the final WB better */
+                p = (p - black) / 2 + black;
 
-            rawData[row][x] = p;
+            dst[x] = p;
         }
+
+        squeezed[y] = yh;
+
+        yh++;
+    }
+
+    /* now the same for the bright exposure */
+    yh = -1;
+    for (int y = 0; y < h; y ++)
+    {
+        if (!BRIGHT_ROW)
+            continue;
+
+        if (yh < 0) /* make sure we start with the same parity (RGGB cell) */
+            yh = h/4*2 + y;
+
+        float* dst = rawData[yh];
+
+        for (int x = 0; x < w; x++)
+        {
+            int p = raw_get_pixel32(x, y);
+
+            if ((x ^ y) & 1) /* divide green channel by 2 to approximate the final WB better */
+                p = (p - black) / 2 + black;
+
+            dst[x] = p;
+        }
+
+        squeezed[y] = yh;
+
+        yh++;
+        if (yh >= h) break; /* just in case */
     }
 
     switch (interp_method)
