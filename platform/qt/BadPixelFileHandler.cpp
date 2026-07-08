@@ -15,6 +15,31 @@
 #include <QTextStream>
 #include <QDebug>
 
+static int debayerOutputBorder(mlvObject_t *video)
+{
+    int border = getMlvDebayerBorder(video);
+    if(border < 0) {
+        border = 0;
+    } else if(border > 16) {
+        border = 16;
+    }
+
+    int minDimension = getMlvWidth(video) < getMlvHeight(video) ? getMlvWidth(video) : getMlvHeight(video);
+    int maxBorder = (minDimension - 1) / 2;
+
+    return border > maxBorder ? maxBorder : border;
+}
+
+static int debayerOutputWidth(mlvObject_t *video)
+{
+    return getMlvWidth(video) - 2 * debayerOutputBorder(video);
+}
+
+static int debayerOutputHeight(mlvObject_t *video)
+{
+    return getMlvHeight(video) - 2 * debayerOutputBorder(video);
+}
+
 //Constructor
 BadPixelFileHandler::BadPixelFileHandler()
 {
@@ -123,11 +148,16 @@ void BadPixelFileHandler::crossesPrepareAll(mlvObject_t *pMlvObject, QVector<Cro
         if( !ok ) continue;
         x = getPicX( pMlvObject, x );
         y = getPicY( pMlvObject, y );
+        int border = debayerOutputBorder( pMlvObject );
+        if( x < (uint32_t)border
+         || y < (uint32_t)border
+         || x >= (uint32_t)( getMlvWidth( pMlvObject ) - border )
+         || y >= (uint32_t)( getMlvHeight( pMlvObject ) - border ) ) continue;
         //paintCross( pMlvObject, pRawImage, x, y );
 
         QPolygon poly;
         CrossElement *cross = new CrossElement( poly );
-        cross->setPosition( x, y );
+        cross->setPosition( x - border, y - border );
         pCrossVector->append( cross );
         pScene->addItem( pCrossVector->last()->crossGraphicsElement() );
     }
@@ -158,8 +188,8 @@ void BadPixelFileHandler::crossesRedrawAll(mlvObject_t *pMlvObject, QVector<Cros
     {
         pCrossVector->at(i)->redrawCrossElement( pScene->width(),
                                                  pScene->height(),
-                                                 getMlvWidth( pMlvObject ),
-                                                 getMlvHeight( pMlvObject ) );
+                                                 debayerOutputWidth( pMlvObject ),
+                                                 debayerOutputHeight( pMlvObject ) );
     }
 }
 

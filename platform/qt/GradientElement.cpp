@@ -170,11 +170,11 @@ void GradientElement::createGradientElement( int scaledLength )
 }
 
 //Draw the element to a position, with length and angle
-void GradientElement::redrawGradientElement(int sceneX, int sceneY, int picX, int picY)
+void GradientElement::redrawGradientElement(int sceneX, int sceneY, int picX, int picY, int offsetX, int offsetY)
 {
     m_pGradientGraphicsItem->blockSignals( true );
-    m_pGradientGraphicsItem->setPos( m_startX * sceneX / picX,
-                                     m_startY * sceneY / picY );
+    m_pGradientGraphicsItem->setPos( ( m_startX - offsetX ) * sceneX / picX,
+                                     ( m_startY - offsetY ) * sceneY / picY );
     m_pGradientGraphicsItem->setRotation( m_angleStretched );
     createGradientElement( m_lengthStretched * sceneX / picX );
     m_pGradientGraphicsItem->blockSignals( false );

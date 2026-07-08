@@ -787,6 +787,12 @@ mlvObject_t * initMlvObject()
     /* Seems about right */
     setMlvCpuCores(video, 4);
 
+    /* Extra debayer controls. Border defaults to 0 to preserve existing MLV-App framing. */
+    setMlvDebayerBorder(video, 0);
+    setMlvDebayerFalseColor(video, 0);
+    setMlvDebayerLmmseIterations(video, 1);
+    setMlvDebayerDcbIterations(video, 2);
+
     /* Init low level raw processing object */
     video->llrawproc = initLLRawProcObject();
 

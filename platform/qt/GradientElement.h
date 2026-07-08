@@ -32,7 +32,7 @@ public:
     double stretchedAngle( void );
 
     GraphicsPolygonMoveItem* gradientGraphicsElement( void );
-    void redrawGradientElement( int sceneX, int sceneY, int picX, int picY );
+    void redrawGradientElement( int sceneX, int sceneY, int picX, int picY, int offsetX = 0, int offsetY = 0 );
 
     void setMovable( bool on );
 

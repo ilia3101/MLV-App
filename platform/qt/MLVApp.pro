@@ -172,7 +172,7 @@ SOURCES += \
     ../../src/mlv/llrawproc/patternnoise.c \
     ../../src/mlv/llrawproc/chroma_smooth.c \
     ../../src/mlv/llrawproc/hist.c \
-    ../../src/mlv/camid/camera_id.c \   
+    ../../src/mlv/camid/camera_id.c \
     ../../src/mlv/mcraw/mcraw.c \
     ../../src/mlv/mcraw/cJSON.c \
     ../../src/mlv/mcraw/RawData.cpp \
@@ -433,11 +433,11 @@ HEADERS += MainWindow.h \
 
 jpeg2k_enabled {
     HEADERS += \
-        ../../src/mlv/OpenJPH/ojph_wrapper.h \
-        ../../src/mlv/OpenJPH/openjph/*.h \
-        ../../src/mlv/OpenJPH/codestream/*.h \
-        ../../src/mlv/OpenJPH/coding/*.h \
-        ../../src/mlv/OpenJPH/transform/*.h
+        $$files(../../src/mlv/OpenJPH/ojph_wrapper.h) \
+        $$files(../../src/mlv/OpenJPH/openjph/*.h) \
+        $$files(../../src/mlv/OpenJPH/codestream/*.h) \
+        $$files(../../src/mlv/OpenJPH/coding/*.h) \
+        $$files(../../src/mlv/OpenJPH/transform/*.h)
 
     macx:equals(QT_ARCH, arm64) {
         HEADERS += \

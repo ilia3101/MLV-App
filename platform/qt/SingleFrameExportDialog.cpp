@@ -15,6 +15,54 @@
 #include <QDebug>
 #include <QStandardPaths>
 #include "avir/avirthreadpool.h"
+#include <cstring>
+
+static int debayerOutputBorder(mlvObject_t *video)
+{
+    if(!video) {
+        return 0;
+    }
+
+    int border = getMlvDebayerBorder(video);
+    if(border < 0) {
+        border = 0;
+    } else if(border > 16) {
+        border = 16;
+    }
+
+    int minDimension = getMlvWidth(video) < getMlvHeight(video) ? getMlvWidth(video) : getMlvHeight(video);
+    int maxBorder = (minDimension - 1) / 2;
+
+    return border > maxBorder ? maxBorder : border;
+}
+
+static int debayerOutputWidth(mlvObject_t *video)
+{
+    return getMlvWidth(video) - 2 * debayerOutputBorder(video);
+}
+
+static int debayerOutputHeight(mlvObject_t *video)
+{
+    return getMlvHeight(video) - 2 * debayerOutputBorder(video);
+}
+
+template <typename Pixel>
+static void copyCroppedRgbFrame(const Pixel *src, Pixel *dst, int srcWidth, int srcHeight, int border)
+{
+    int dstWidth = srcWidth - 2 * border;
+    int dstHeight = srcHeight - 2 * border;
+
+    if(border <= 0) {
+        memcpy(dst, src, srcWidth * srcHeight * 3 * sizeof(Pixel));
+        return;
+    }
+
+    for(int y = 0; y < dstHeight; ++y) {
+        const Pixel *srcRow = src + (((y + border) * srcWidth + border) * 3);
+        Pixel *dstRow = dst + (y * dstWidth * 3);
+        memcpy(dstRow, srcRow, dstWidth * 3 * sizeof(Pixel));
+    }
+}
 
 //Constructor
 SingleFrameExportDialog::SingleFrameExportDialog(QWidget *parent,
@@ -106,31 +154,61 @@ void SingleFrameExportDialog::exportViaQt()
 
     //Get frame from library
     uint8_t *pRawImage = (uint8_t*)malloc( 3 * getMlvWidth(m_pMlvObject) * getMlvHeight(m_pMlvObject) * sizeof( uint8_t ) );
+    if( !pRawImage )
+    {
+        QMessageBox::critical( this, tr( "Frame export failed" ), tr( "Could not allocate image buffer." ) );
+        return;
+    }
     getMlvProcessedFrame8( m_pMlvObject, m_frameNr, pRawImage, 1 );
+    int sourceBorder = debayerOutputBorder(m_pMlvObject);
+    int sourceWidth = debayerOutputWidth(m_pMlvObject);
+    int sourceHeight = debayerOutputHeight(m_pMlvObject);
+    uint8_t *pSourceImage = pRawImage;
+    uint8_t *pCroppedImage = NULL;
+    if( sourceBorder > 0 )
+    {
+        pCroppedImage = (uint8_t*)malloc( 3 * sourceWidth * sourceHeight * sizeof( uint8_t ) );
+        if( !pCroppedImage )
+        {
+            QMessageBox::critical( this, tr( "Frame export failed" ), tr( "Could not allocate image buffer." ) );
+            free( pRawImage );
+            return;
+        }
+        copyCroppedRgbFrame( pRawImage, pCroppedImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), sourceBorder );
+        pSourceImage = pCroppedImage;
+    }
 
     uint8_t * imgBufferScaled8;
-    imgBufferScaled8 = ( uint8_t* )malloc( getMlvWidth(m_pMlvObject) * stretchX * getMlvHeight(m_pMlvObject) * stretchY * 3 * sizeof( uint8_t ) );
+    imgBufferScaled8 = ( uint8_t* )malloc( sourceWidth * stretchX * sourceHeight * stretchY * 3 * sizeof( uint8_t ) );
+    if( !imgBufferScaled8 )
+    {
+        QMessageBox::critical( this, tr( "Frame export failed" ), tr( "Could not allocate image buffer." ) );
+        if( pCroppedImage ) free( pCroppedImage );
+        free( pRawImage );
+        return;
+    }
 
     avir_scale_thread_pool scaling_pool;
     avir::CImageResizerVars vars; vars.ThreadPool = &scaling_pool;
     avir::CImageResizerParamsUltra roptions;
     avir::CImageResizer<> image_resizer( 8, 0, roptions );
-    image_resizer.resizeImage( pRawImage,
-                                getMlvWidth(m_pMlvObject),
-                                getMlvHeight(m_pMlvObject), 0,
+    image_resizer.resizeImage( pSourceImage,
+                                sourceWidth,
+                                sourceHeight, 0,
                                 imgBufferScaled8,
-                                getMlvWidth(m_pMlvObject) * stretchX,
-                                getMlvHeight(m_pMlvObject) * stretchY,
+                                sourceWidth * stretchX,
+                                sourceHeight * stretchY,
                                 3, 0, &vars );
 
     if( ui->comboBoxCodec->currentIndex() == 2 )
-        QImage( ( unsigned char *) imgBufferScaled8, getMlvWidth(m_pMlvObject) * stretchX, getMlvHeight(m_pMlvObject) * stretchY, QImage::Format_RGB888 )
+        QImage( ( unsigned char *) imgBufferScaled8, sourceWidth * stretchX, sourceHeight * stretchY, QImage::Format_RGB888 )
                 .save( fileName, "png", -1 );
     else
-        QImage( ( unsigned char *) imgBufferScaled8, getMlvWidth(m_pMlvObject) * stretchX, getMlvHeight(m_pMlvObject) * stretchY, QImage::Format_RGB888 )
+        QImage( ( unsigned char *) imgBufferScaled8, sourceWidth * stretchX, sourceHeight * stretchY, QImage::Format_RGB888 )
                 .save( fileName, "jpg", -1 );
 
     free( imgBufferScaled8 );
+    if( pCroppedImage ) free( pCroppedImage );
     free( pRawImage );
 }
 

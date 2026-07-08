@@ -24,9 +24,20 @@ const std::function<bool(double)> sPC = myFunc;
 size_t chunkSize = 2;
 bool measure = false;
 
-void lrtpLmmseDemosaic(float **rawData, float **red, float **green, float **blue, int width, int height)
+static int clampInt(int value, int minValue, int maxValue)
 {
-    lmmse_demosaic( width, height, rawData, red, green, blue, cfa, sPC, 1 );
+    if(value < minValue) {
+        return minValue;
+    }
+    if(value > maxValue) {
+        return maxValue;
+    }
+    return value;
+}
+
+void lrtpLmmseDemosaic(float **rawData, float **red, float **green, float **blue, int width, int height, int iterations)
+{
+    lmmse_demosaic( width, height, rawData, red, green, blue, cfa, sPC, clampInt(iterations, 0, 6) );
 }
 
 void lrtpIgvDemosaic(float **rawData, float **red, float **green, float **blue, int width, int height)
@@ -58,9 +69,9 @@ void lrtpBayerfastDemosaic(float **rawData, float **red, float **green, float **
     bayerfast_demosaic( width, height, rawData, red, green, blue, cfa, sPC, 1.0 );
 }
 
-void lrtpDcbDemosaic(float **rawData, float **red, float **green, float **blue, int width, int height)
+void lrtpDcbDemosaic(float **rawData, float **red, float **green, float **blue, int width, int height, int iterations)
 {
-    dcb_demosaic( width, height, rawData, red, green, blue, cfa, sPC, 2, true );
+    dcb_demosaic( width, height, rawData, red, green, blue, cfa, sPC, clampInt(iterations, 0, 5), true );
 }
 
 void lrtpHphdDemosaic(float **rawData, float **red, float **green, float **blue, int width, int height)
