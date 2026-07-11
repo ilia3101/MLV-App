@@ -697,11 +697,16 @@ void getMlvProcessedFrame16(mlvObject_t * video, uint64_t frameIndex, uint16_t *
     getMlvRawFrameDebayered(video, frameIndex, unprocessed_frame);
 
     /* Do processing.......... */
+    int debayer_type = doesMlvAlwaysUseAmaze(video);
+    int false_color_steps = (debayer_type == 0 || debayer_type == 2 || debayer_type == 3)
+                          ? 0
+                          : getMlvDebayerFalseColor(video);
     applyProcessingObject( video->processing,
                            width, height,
                            unprocessed_frame,
                            outputFrame,
-                           threads, 1, frameIndex );
+                           threads, 1, frameIndex,
+                           false_color_steps );
 
     free(unprocessed_frame);
 }

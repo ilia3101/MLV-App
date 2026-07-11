@@ -39,9 +39,9 @@ static float median9_float(float *values)
     return values[4];
 }
 
-static void convert_row_to_yiq(const uint16_t *frame, int width, int row, float *Y, float *I, float *Q)
+static void convert_row_to_yiq(const float *frame, int width, int row, float *Y, float *I, float *Q)
 {
-    const uint16_t *pix = frame + (row * width * 3);
+    const float *pix = frame + (row * width * 3);
 
     for(int x = 0; x < width; ++x, pix += 3)
     {
@@ -91,7 +91,7 @@ static void median_chroma_row(
 }
 
 static void finalize_false_color_row(
-    uint16_t *frame,
+    float *frame,
     int width,
     int row,
     const float *Y,
@@ -102,11 +102,11 @@ static void finalize_false_color_row(
     const float *curr_q,
     const float *next_q)
 {
-    uint16_t *pix = frame + (row * width * 3);
+    float *pix = frame + (row * width * 3);
 
-    pix[0] = float_to_uint16(Y[0] + 0.956f * curr_i[0] + 0.621f * curr_q[0]);
-    pix[1] = float_to_uint16(Y[0] - 0.272f * curr_i[0] - 0.647f * curr_q[0]);
-    pix[2] = float_to_uint16(Y[0] - 1.105f * curr_i[0] + 1.702f * curr_q[0]);
+    pix[0] = Y[0] + 0.956f * curr_i[0] + 0.621f * curr_q[0];
+    pix[1] = Y[0] - 0.272f * curr_i[0] - 0.647f * curr_q[0];
+    pix[2] = Y[0] - 1.105f * curr_i[0] + 1.702f * curr_q[0];
 
     #pragma omp simd
     for(int x = 1; x < width - 1; ++x)
@@ -117,47 +117,64 @@ static void finalize_false_color_row(
         float out_q = (prev_q[x - 1] + prev_q[x] + prev_q[x + 1]
                      + curr_q[x - 1] + curr_q[x] + curr_q[x + 1]
                      + next_q[x - 1] + next_q[x] + next_q[x + 1]) / 9.0f;
-        uint16_t *dst = pix + (x * 3);
+        float *dst = pix + (x * 3);
 
-        dst[0] = float_to_uint16(Y[x] + 0.956f * out_i + 0.621f * out_q);
-        dst[1] = float_to_uint16(Y[x] - 0.272f * out_i - 0.647f * out_q);
-        dst[2] = float_to_uint16(Y[x] - 1.105f * out_i + 1.702f * out_q);
+        dst[0] = Y[x] + 0.956f * out_i + 0.621f * out_q;
+        dst[1] = Y[x] - 0.272f * out_i - 0.647f * out_q;
+        dst[2] = Y[x] - 1.105f * out_i + 1.702f * out_q;
     }
 
     pix += (width - 1) * 3;
-    pix[0] = float_to_uint16(Y[width - 1] + 0.956f * curr_i[width - 1] + 0.621f * curr_q[width - 1]);
-    pix[1] = float_to_uint16(Y[width - 1] - 0.272f * curr_i[width - 1] - 0.647f * curr_q[width - 1]);
-    pix[2] = float_to_uint16(Y[width - 1] - 1.105f * curr_i[width - 1] + 1.702f * curr_q[width - 1]);
+    pix[0] = Y[width - 1] + 0.956f * curr_i[width - 1] + 0.621f * curr_q[width - 1];
+    pix[1] = Y[width - 1] - 0.272f * curr_i[width - 1] - 0.647f * curr_q[width - 1];
+    pix[2] = Y[width - 1] - 1.105f * curr_i[width - 1] + 1.702f * curr_q[width - 1];
 }
 
-void debayerFalseColorCorrection(uint16_t *frame, int width, int height, int steps)
+void debayerFalseColorCorrection(uint16_t *frame, int width, int height, int steps, const double wb_multipliers[3])
 {
-    if(steps <= 0 || width < 3 || height < 4) {
+    if(!frame || !wb_multipliers || steps <= 0 || width < 3 || height < 4) {
         return;
     }
     if(steps > 5) {
         steps = 5;
     }
 
-    size_t pixel_count = (size_t)width * (size_t)height;
-    size_t row_values = (size_t)width * 3;
-    size_t frame_values = pixel_count * 3;
-    float *buffer = (float *)malloc(pixel_count * 5 * sizeof(float));
-    uint16_t *temp_frame = (uint16_t *)malloc(frame_values * sizeof(uint16_t));
-    if(!buffer || !temp_frame) {
-        free(temp_frame);
-        free(buffer);
+    double max_wb = MAX(wb_multipliers[0], MAX(wb_multipliers[1], wb_multipliers[2]));
+    if(!(max_wb > 0.0)) {
         return;
     }
 
-    float *Y = buffer;
+    float normalized_wb[3];
+    for(int channel = 0; channel < 3; ++channel)
+    {
+        normalized_wb[channel] = (float)(wb_multipliers[channel] / max_wb);
+        if(!(normalized_wb[channel] > 0.0f)) {
+            return;
+        }
+    }
+
+    size_t pixel_count = (size_t)width * (size_t)height;
+    size_t frame_values = pixel_count * 3;
+    float *buffer = (float *)malloc(pixel_count * 8 * sizeof(float));
+    if(!buffer) {
+        return;
+    }
+
+    float *working_frame = buffer;
+    float *Y = working_frame + frame_values;
     float *I = Y + pixel_count;
     float *Q = I + pixel_count;
     float *filtered_i = Q + pixel_count;
     float *filtered_q = filtered_i + pixel_count;
 
-    uint16_t *src = frame;
-    uint16_t *dst = temp_frame;
+#pragma omp parallel for
+    for(size_t pixel = 0; pixel < pixel_count; ++pixel)
+    {
+        size_t offset = pixel * 3;
+        working_frame[offset] = frame[offset] * normalized_wb[0];
+        working_frame[offset + 1] = frame[offset + 1] * normalized_wb[1];
+        working_frame[offset + 2] = frame[offset + 2] * normalized_wb[2];
+    }
 
     for(int step = 0; step < steps; ++step)
     {
@@ -166,7 +183,7 @@ void debayerFalseColorCorrection(uint16_t *frame, int width, int height, int ste
 #pragma omp for
             for(int y = 0; y < height; ++y)
             {
-                convert_row_to_yiq(src, width, y, Y + (y * width), I + (y * width), Q + (y * width));
+                convert_row_to_yiq(working_frame, width, y, Y + (y * width), I + (y * width), Q + (y * width));
             }
 
 #pragma omp for
@@ -199,7 +216,7 @@ void debayerFalseColorCorrection(uint16_t *frame, int width, int height, int ste
             for(int y = 1; y < height - 1; ++y)
             {
                 finalize_false_color_row(
-                    dst, width, y, Y + (y * width),
+                    working_frame, width, y, Y + (y * width),
                     filtered_i + ((y - 1) * width),
                     filtered_i + (y * width),
                     filtered_i + ((y + 1) * width),
@@ -208,21 +225,17 @@ void debayerFalseColorCorrection(uint16_t *frame, int width, int height, int ste
                     filtered_q + ((y + 1) * width));
             }
         }
-
-        size_t last_row_offset = (size_t)(height - 1) * row_values;
-        memcpy(dst, src, row_values * sizeof(uint16_t));
-        memcpy(dst + last_row_offset, src + last_row_offset, row_values * sizeof(uint16_t));
-
-        uint16_t *next_src = dst;
-        dst = src;
-        src = next_src;
     }
 
-    if(src != frame) {
-        memcpy(frame, src, frame_values * sizeof(uint16_t));
+#pragma omp parallel for
+    for(size_t pixel = 0; pixel < pixel_count; ++pixel)
+    {
+        size_t offset = pixel * 3;
+        frame[offset] = float_to_uint16(working_frame[offset] / normalized_wb[0]);
+        frame[offset + 1] = float_to_uint16(working_frame[offset + 1] / normalized_wb[1]);
+        frame[offset + 2] = float_to_uint16(working_frame[offset + 2] / normalized_wb[2]);
     }
 
-    free(temp_frame);
     free(buffer);
 }
 

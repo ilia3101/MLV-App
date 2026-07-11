@@ -25,6 +25,7 @@
 #include "rbfilter/rbf_wrapper.h"
 #include "sobel/sobel.h"
 #include "cafilter/ColorAberrationCorrection.h"
+#include "../debayer/debayer.h"
 
 /* Matrix functions which are useful */
 #include "../matrix/matrix.h"
@@ -420,7 +421,8 @@ void applyProcessingObject( processingObject_t * processing,
                             int imageX, int imageY, 
                             uint16_t * __restrict inputImage, 
                             uint16_t * __restrict outputImage,
-                            int threads, int imageChanged, uint64_t frameIndex )
+                            int threads, int imageChanged, uint64_t frameIndex,
+                            int falseColorSteps )
 {
     /* Do transformation */
     get_frame_transformed(processing, inputImage, imageX, imageY);
@@ -469,6 +471,11 @@ void applyProcessingObject( processingObject_t * processing,
 
     /* Analyse dual iso frame to find highest green for highlight reconstruction */
     analyse_frame_highest_green( processing, imageX, imageY, inputImage );
+
+    #pragma omp parallel for
+    for (int i = 0; i < img_s; ++i) inputImage[i] = processing->pre_calc_levels[inputImage[i]];
+
+    debayerFalseColorCorrection(inputImage, imageX, imageY, falseColorSteps, processing->wb_multipliers);
 
     /* If threads is 1, no threads are needed */
     if (threads == 1)
@@ -750,13 +757,6 @@ void apply_processing_object( processingObject_t * processing,
 
     /* In case of camera matrix */
     //double (* tone_mapping_function)(double) = tonemap_functions[processing->tonemap_function];
-
-    /* Apply some precalcuolated settings */
-    for (int i = 0; i < img_s; ++i)
-    {
-        /* Black + white level */
-        img[i] = processing->pre_calc_levels[ img[i] ];
-    }
 
     /* white balance & exposure & highlights & gamma & highlight reconstruction */
     for (uint16_t * pix = img, * bpix = blurImage, *gmpix = gm; pix < img_end; pix += 3, bpix += 3, gmpix++)

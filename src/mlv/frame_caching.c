@@ -269,8 +269,6 @@ void an_mlv_cache_thread(mlvObject_t * video)
             pix[1] = (uint16_t)MIN(green1d[i], 65535);
             pix[2] = (uint16_t)MIN(blue1d[i], 65535);
         }
-        debayerFalseColorCorrection(out, width, height, getMlvDebayerFalseColor(video));
-
         pthread_mutex_lock( &video->g_mutexFind );
         video->cached_frames[cache_frame] = MLV_FRAME_IS_CACHED;
         pthread_mutex_unlock( &video->g_mutexFind );
@@ -354,10 +352,6 @@ void get_mlv_raw_frame_debayered( mlvObject_t * video,
         /* Debayer quickly (bilinearly) */
         debayerBasic(output_frame, temp_memory, width, height, 1);
     }
-
-    /* False color correction should operate on the demosaic-balanced RGB, before undoing WB preconditioning. */
-    if( !( debayer_type == 0 || debayer_type == 2 || debayer_type == 3 ) )
-        debayerFalseColorCorrection(output_frame, width, height, getMlvDebayerFalseColor(video));
 
     /* WB conversion undo for ideal debayer result */
     if( !( debayer_type == 0 || debayer_type == 2 || debayer_type == 3 ) )
