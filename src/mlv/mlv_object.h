@@ -138,7 +138,6 @@ typedef struct {
     int use_amaze;
 
     /* Extra debayer controls */
-    int debayer_border;
     int debayer_false_color;
     int debayer_lmmse_iterations;
     int debayer_dcb_iterations;

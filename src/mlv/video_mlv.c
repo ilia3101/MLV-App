@@ -701,12 +701,14 @@ void getMlvProcessedFrame16(mlvObject_t * video, uint64_t frameIndex, uint16_t *
     int false_color_steps = (debayer_type == 0 || debayer_type == 2 || debayer_type == 3)
                           ? 0
                           : getMlvDebayerFalseColor(video);
+    int false_color_edge_aware = false_color_steps > 0;
     applyProcessingObject( video->processing,
                            width, height,
                            unprocessed_frame,
                            outputFrame,
                            threads, 1, frameIndex,
-                           false_color_steps );
+                           false_color_steps,
+                           false_color_edge_aware );
 
     free(unprocessed_frame);
 }
@@ -792,8 +794,7 @@ mlvObject_t * initMlvObject()
     /* Seems about right */
     setMlvCpuCores(video, 4);
 
-    /* Extra debayer controls. Border defaults to 0 to preserve existing MLV-App framing. */
-    setMlvDebayerBorder(video, 0);
+    /* Extra debayer controls */
     setMlvDebayerFalseColor(video, 0);
     setMlvDebayerLmmseIterations(video, 1);
     setMlvDebayerDcbIterations(video, 2);

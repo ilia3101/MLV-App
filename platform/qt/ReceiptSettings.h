@@ -124,7 +124,6 @@ public:
     void setCutOut( uint32_t frame )          {m_cutOut = frame;}
     void setLastPlaybackPosition( uint32_t pos ){m_lastPlaybackPosition = pos;}
     void setDebayer( uint8_t algorithm )      {m_debayer = algorithm;}
-    void setDebayerBorder( int value )        {m_debayerBorder = value;}
     void setDebayerFalseColor( int value )    {m_debayerFalseColor = value;}
     void setDebayerLmmseIterations( int value ){m_debayerLmmseIterations = value;}
     void setDebayerDcbIterations( int value ) {m_debayerDcbIterations = value;}
@@ -238,7 +237,6 @@ public:
     QString exportFileName( void ){return m_exportFileName;}
     uint32_t lastPlaybackPosition( void ){return m_lastPlaybackPosition;}
     uint8_t debayer( void ){return m_debayer;}
-    int debayerBorder( void ){return m_debayerBorder;}
     int debayerFalseColor( void ){return m_debayerFalseColor;}
     int debayerLmmseIterations( void ){return m_debayerLmmseIterations;}
     int debayerDcbIterations( void ){return m_debayerDcbIterations;}
@@ -354,7 +352,6 @@ private:
     QString m_exportFileName;
     uint32_t m_lastPlaybackPosition;
     uint8_t m_debayer;
-    int m_debayerBorder;
     int m_debayerFalseColor;
     int m_debayerLmmseIterations;
     int m_debayerDcbIterations;

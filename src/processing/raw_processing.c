@@ -413,7 +413,72 @@ void processing_object_thread(apply_processing_parameters_t * p)
                              p->outputImage,
                              p->blurImage,
                              p->gradientMask,
-                             p->vignetteMask );
+                             p->vignetteMask,
+                             p->highlightMap );
+}
+
+static uint8_t *build_false_color_highlight_map(
+    processingObject_t *processing,
+    int imageX,
+    int imageY,
+    const uint16_t *inputImage)
+{
+    size_t pixel_count = (size_t)imageX * (size_t)imageY;
+    uint8_t *highlight_map = malloc(pixel_count);
+    if(!highlight_map) {
+        return NULL;
+    }
+
+    int32_t **pm = processing->pre_calc_matrix;
+    int32_t **pmg = processing->pre_calc_matrix_gradient;
+    int dual_iso = *processing->dual_iso != 0;
+    int gradient_active = processing->gradient_enable &&
+        (processing->gradient_exposure_stops < -0.01 || processing->gradient_exposure_stops > 0.01 ||
+         processing->gradient_contrast < -0.01 || processing->gradient_contrast > 0.01);
+
+    #pragma omp parallel for
+    for(size_t pixel = 0; pixel < pixel_count; ++pixel)
+    {
+        uint16_t green = inputImage[pixel * 3 + 1];
+        uint16_t base_green = LIMIT16(pm[4][green]);
+        uint8_t flags = 0;
+
+        if(dual_iso)
+        {
+            if(base_green >= LIMIT16(processing->highest_green_diso - 5000) &&
+               base_green <= LIMIT16(processing->highest_green_diso + 5000)) {
+                flags |= DEBAYER_FCS_HIGHLIGHT_BASE;
+            }
+        }
+        else if(base_green == processing->highest_green)
+        {
+            flags |= DEBAYER_FCS_HIGHLIGHT_BASE;
+        }
+
+        if(gradient_active && processing->gradient_mask[pixel] != 0)
+        {
+            uint16_t gradient_green = LIMIT16(pmg[4][green]);
+            if(dual_iso)
+            {
+                if(gradient_green >= LIMIT16(processing->highest_green_gradient_diso - 5000) &&
+                   gradient_green <= LIMIT16(processing->highest_green_gradient_diso + 5000)) {
+                    flags |= DEBAYER_FCS_HIGHLIGHT_GRADIENT;
+                }
+            }
+            else if(gradient_green == processing->highest_green_gradient)
+            {
+                flags |= DEBAYER_FCS_HIGHLIGHT_GRADIENT;
+            }
+        }
+
+        if((!dual_iso && flags != 0) || green == 65535) {
+            flags |= DEBAYER_FCS_HIGHLIGHT_PROTECT;
+        }
+
+        highlight_map[pixel] = flags;
+    }
+
+    return highlight_map;
 }
 
 /* Apply it with multiple threads */
@@ -422,7 +487,8 @@ void applyProcessingObject( processingObject_t * processing,
                             uint16_t * __restrict inputImage, 
                             uint16_t * __restrict outputImage,
                             int threads, int imageChanged, uint64_t frameIndex,
-                            int falseColorSteps )
+                            int falseColorSteps,
+                            int falseColorEdgeAware )
 {
     /* Do transformation */
     get_frame_transformed(processing, inputImage, imageX, imageY);
@@ -475,12 +541,23 @@ void applyProcessingObject( processingObject_t * processing,
     #pragma omp parallel for
     for (int i = 0; i < img_s; ++i) inputImage[i] = processing->pre_calc_levels[inputImage[i]];
 
-    debayerFalseColorCorrection(inputImage, imageX, imageY, falseColorSteps, processing->wb_multipliers);
+    uint8_t *highlight_map = NULL;
+    int applied_false_color_steps = falseColorSteps;
+    if(processing->highlight_reconstruction && falseColorSteps > 0) {
+        highlight_map = build_false_color_highlight_map(processing, imageX, imageY, inputImage);
+        if(!highlight_map) {
+            applied_false_color_steps = 0;
+        }
+    }
+
+    debayerFalseColorCorrection(
+        inputImage, imageX, imageY, applied_false_color_steps,
+        processing->wb_multipliers, falseColorEdgeAware, highlight_map);
 
     /* If threads is 1, no threads are needed */
     if (threads == 1)
     {
-        apply_processing_object(processing, imageX, imageY, inputImage, outputImage, get_buffer(processing->shadows_highlights.blur_image), processing->gradient_mask, processing->vignette_mask);
+        apply_processing_object(processing, imageX, imageY, inputImage, outputImage, get_buffer(processing->shadows_highlights.blur_image), processing->gradient_mask, processing->vignette_mask, highlight_map);
     }
     else
     {
@@ -502,6 +579,7 @@ void applyProcessingObject( processingObject_t * processing,
             params[t].blurImage = get_buffer(processing->shadows_highlights.blur_image) + offset_chunk*t;
             params[t].gradientMask = processing->gradient_mask + (imageX * chunk_size * t);
             params[t].vignetteMask = processing->vignette_mask + (imageX * chunk_size * t);
+            params[t].highlightMap = highlight_map ? highlight_map + (imageX * chunk_size * t) : NULL;
         }
 
         /* To make sure bottom is processed */
@@ -520,6 +598,8 @@ void applyProcessingObject( processingObject_t * processing,
             pthread_join(threadid[t], NULL);
         }
     }
+
+    free(highlight_map);
 
     /* Denoiser must render on complete image, because of 2D median border problem */
     if( processing->denoiserStrength > 0 )
@@ -731,7 +811,8 @@ void apply_processing_object( processingObject_t * processing,
                               uint16_t * __restrict outputImage,
                               uint16_t * __restrict blurImage,
                               uint16_t * __restrict gradientMask,
-                              float * __restrict vignetteMask )
+                              float * __restrict vignetteMask,
+                              const uint8_t *highlightMap )
 {
     /* Number of elements */
     int img_s = imageX * imageY * 3;
@@ -759,8 +840,10 @@ void apply_processing_object( processingObject_t * processing,
     //double (* tone_mapping_function)(double) = tonemap_functions[processing->tonemap_function];
 
     /* white balance & exposure & highlights & gamma & highlight reconstruction */
+    const uint8_t *highlight_pixel = highlightMap;
     for (uint16_t * pix = img, * bpix = blurImage, *gmpix = gm; pix < img_end; pix += 3, bpix += 3, gmpix++)
     {
+        uint8_t highlight_flags = highlight_pixel ? *highlight_pixel++ : 0;
         double expo_correction = 1.0;
         double expo_correction_gradient = 1.0;
 
@@ -859,7 +942,8 @@ void apply_processing_object( processingObject_t * processing,
                 {
                     /* Check if its the range of highest green value possible */
                     /* the range makes it cleaner against pink noise */
-                    if (tmp1g >= LIMIT16( processing->highest_green_gradient_diso - 5000 ) && tmp1g <= LIMIT16( processing->highest_green_gradient_diso + 5000 ))
+                    if ((highlightMap && (highlight_flags & DEBAYER_FCS_HIGHLIGHT_GRADIENT)) ||
+                        (!highlightMap && tmp1g >= LIMIT16( processing->highest_green_gradient_diso - 5000 ) && tmp1g <= LIMIT16( processing->highest_green_gradient_diso + 5000 )))
                     {
                         if( pixg[1] < 1.1*pixg[0] && pixg[1] < pixg[2] )
                         {
@@ -870,7 +954,8 @@ void apply_processing_object( processingObject_t * processing,
                 else
                 {
                     /* Check if its the highest green value possible */
-                    if (tmp1g == processing->highest_green_gradient)
+                    if ((highlightMap && (highlight_flags & DEBAYER_FCS_HIGHLIGHT_GRADIENT)) ||
+                        (!highlightMap && tmp1g == processing->highest_green_gradient))
                     {
                         pixg[1] = (pixg[0] + pixg[2]) / 2;
                     }
@@ -890,7 +975,8 @@ void apply_processing_object( processingObject_t * processing,
             {
                 /* Check if its the range of highest green value possible */
                 /* the range makes it cleaner against pink noise */
-                if (tmp1 >= LIMIT16( processing->highest_green_diso - 5000 ) && tmp1 <= LIMIT16( processing->highest_green_diso + 5000 ))
+                if ((highlightMap && (highlight_flags & DEBAYER_FCS_HIGHLIGHT_BASE)) ||
+                    (!highlightMap && tmp1 >= LIMIT16( processing->highest_green_diso - 5000 ) && tmp1 <= LIMIT16( processing->highest_green_diso + 5000 )))
                 {
                     if( pix[1] < 1.1*pix[0] && pix[1] < pix[2] )
                     {
@@ -901,7 +987,8 @@ void apply_processing_object( processingObject_t * processing,
             else
             {
                 /* Check if its the highest green value possible */
-                if (tmp1 == processing->highest_green)
+                if ((highlightMap && (highlight_flags & DEBAYER_FCS_HIGHLIGHT_BASE)) ||
+                    (!highlightMap && tmp1 == processing->highest_green))
                 {
                     pix[1] = (pix[0] + pix[2]) / 2;
                 }

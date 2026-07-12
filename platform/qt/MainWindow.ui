@@ -2963,51 +2963,6 @@ QGroupBox::indicator:checked:disabled {
                   </widget>
                  </item>
                  <item row="1" column="0">
-                  <widget class="QLabel" name="labelDebayerBorder">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-                   <property name="text">
-                    <string>Border</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="1">
-                  <widget class="NoScrollSlider" name="horizontalSliderDebayerBorder">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-                   <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
-                   </property>
-	                   <property name="maximum">
-	                    <number>16</number>
-	                   </property>
-	                   <property name="value">
-	                    <number>0</number>
-	                   </property>
-	                  </widget>
-                 </item>
-                 <item row="1" column="2">
-                  <widget class="QLabel" name="labelDebayerBorderValue">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-	                   <property name="text">
-	                    <string>0</string>
-	                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="2" column="0">
                   <widget class="QLabel" name="labelDebayerFalseColor">
                    <property name="font">
                     <font>
@@ -3019,7 +2974,7 @@ QGroupBox::indicator:checked:disabled {
                    </property>
                   </widget>
                  </item>
-                 <item row="2" column="1">
+                 <item row="1" column="1">
                   <widget class="NoScrollSlider" name="horizontalSliderDebayerFalseColor">
                    <property name="font">
                     <font>
@@ -3034,7 +2989,7 @@ QGroupBox::indicator:checked:disabled {
                    </property>
                   </widget>
                  </item>
-                 <item row="2" column="2">
+                 <item row="1" column="2">
                   <widget class="QLabel" name="labelDebayerFalseColorValue">
                    <property name="font">
                     <font>
@@ -3049,7 +3004,7 @@ QGroupBox::indicator:checked:disabled {
                    </property>
                   </widget>
                  </item>
-                 <item row="3" column="0">
+                 <item row="2" column="0">
                   <widget class="QLabel" name="labelDebayerLmmseIterations">
                    <property name="font">
                     <font>
@@ -3064,7 +3019,7 @@ QGroupBox::indicator:checked:disabled {
                    </property>
                   </widget>
                  </item>
-                 <item row="3" column="1">
+                 <item row="2" column="1">
                   <widget class="NoScrollSlider" name="horizontalSliderDebayerLmmseIterations">
                    <property name="font">
                     <font>
@@ -3085,7 +3040,7 @@ QGroupBox::indicator:checked:disabled {
                    </property>
                   </widget>
                  </item>
-                 <item row="3" column="2">
+                 <item row="2" column="2">
                   <widget class="QLabel" name="labelDebayerLmmseIterationsValue">
                    <property name="font">
                     <font>
@@ -3100,7 +3055,7 @@ QGroupBox::indicator:checked:disabled {
                    </property>
                   </widget>
                  </item>
-                 <item row="4" column="0">
+                 <item row="3" column="0">
                   <widget class="QLabel" name="labelDebayerDcbIterations">
                    <property name="font">
                     <font>
@@ -3112,7 +3067,7 @@ QGroupBox::indicator:checked:disabled {
                    </property>
                   </widget>
                  </item>
-                 <item row="4" column="1">
+                 <item row="3" column="1">
                   <widget class="NoScrollSlider" name="horizontalSliderDebayerDcbIterations">
                    <property name="font">
                     <font>
@@ -3130,7 +3085,7 @@ QGroupBox::indicator:checked:disabled {
                    </property>
                   </widget>
                  </item>
-                 <item row="4" column="2">
+                 <item row="3" column="2">
                   <widget class="QLabel" name="labelDebayerDcbIterationsValue">
                    <property name="font">
                     <font>

@@ -87,7 +87,8 @@ void applyProcessingObject( processingObject_t * processing,
                             uint16_t * __restrict inputImage, 
                             uint16_t * __restrict outputImage,
                             int threads, int imageChanged, uint64_t frameIndex,
-                            int falseColorSteps );
+                            int falseColorSteps,
+                            int falseColorEdgeAware );
 
 /* This is for EXR output, works exactly the same as applyprocessing object,
  * except output is float and ready for EXR export. */
@@ -312,7 +313,8 @@ void apply_processing_object(processingObject_t * processing,
                               uint16_t * __restrict outputImage,
                               uint16_t * __restrict blurImage,
                               uint16_t * __restrict gradientMask,
-                              float *vignetteMask);
+                              float *vignetteMask,
+                              const uint8_t *highlightMap);
 
 /* Pass frame buffer and do the transform on it */
 void get_frame_transformed(processingObject_t * processing, uint16_t * frame_buf , uint16_t imageX, uint16_t imageY);
@@ -329,6 +331,7 @@ typedef struct {
     uint16_t * blurImage;
     uint16_t * gradientMask;
     float * vignetteMask;
+    const uint8_t * highlightMap;
 } apply_processing_parameters_t;
 
 /* applyProcessingObject but with one argument for pthreading  */

@@ -405,7 +405,6 @@ private slots:
     void on_actionDarkThemeModern_triggered(bool checked);
 
     void on_comboBoxDebayer_currentIndexChanged( int index );
-    void on_horizontalSliderDebayerBorder_valueChanged( int value );
     void on_horizontalSliderDebayerFalseColor_valueChanged( int value );
     void on_horizontalSliderDebayerLmmseIterations_valueChanged( int value );
     void on_horizontalSliderDebayerDcbIterations_valueChanged( int value );
@@ -421,11 +420,9 @@ private slots:
     void on_actionShowUnmarkedClips_toggled(bool arg1);
 
     void on_lineEditTransferFunction_textChanged(const QString &arg1);
+    void updateDebayerOptionVisibility( void );
 
 private:
-    void updateDebayerOptionVisibility( void );
-    void redrawGradientElement( void );
-
     Ui::MainWindow *ui;
     InfoDialog *m_pInfoDialog;
     StatusDialog *m_pStatusDialog;

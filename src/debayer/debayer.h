@@ -11,7 +11,10 @@ void debayerBasic(uint16_t * __restrict debayerto, float * __restrict bayerdata,
 void debayerAmaze(uint16_t * __restrict debayerto, float * __restrict bayerdata, int width, int height, int threads, int blacklevel);
 /* via librtprocess */
 void debayerLibRtProcess(uint16_t *__restrict debayerto, float *__restrict bayerdata, int width, int height, int algorithm, double camMatrix[9], int lmmseIterations, int dcbIterations);
-void debayerFalseColorCorrection(uint16_t *__restrict frame, int width, int height, int steps, const double wb_multipliers[3]);
+#define DEBAYER_FCS_HIGHLIGHT_BASE      0x01u
+#define DEBAYER_FCS_HIGHLIGHT_GRADIENT  0x02u
+#define DEBAYER_FCS_HIGHLIGHT_PROTECT   0x04u
+void debayerFalseColorCorrection(uint16_t *__restrict frame, int width, int height, int steps, const double wb_multipliers[3], int edge_aware, const uint8_t *highlight_map);
 /* AHD debayer */
 void debayerAhd(uint16_t *__restrict debayerto, float *__restrict bayerdata, int width, int height);
 

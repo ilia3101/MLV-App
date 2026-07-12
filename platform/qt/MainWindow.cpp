@@ -31,7 +31,6 @@
 #include <math.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <string.h>
 
 #ifdef Q_OS_MACX
 #include "AvfLibWrapper.h"
@@ -106,57 +105,15 @@ static int clampDebayerOption(int value, int minValue, int maxValue)
     return value;
 }
 
-static void setDebayerOptions(mlvObject_t *video, int border, int falseColor, int lmmseIterations, int dcbIterations)
+static void setDebayerOptions(mlvObject_t *video, int falseColor, int lmmseIterations, int dcbIterations)
 {
     if(!video) {
         return;
     }
 
-    setMlvDebayerBorder(video, clampDebayerOption(border, 0, 16));
     setMlvDebayerFalseColor(video, clampDebayerOption(falseColor, 0, 5));
     setMlvDebayerLmmseIterations(video, clampDebayerOption(lmmseIterations, 0, 6));
     setMlvDebayerDcbIterations(video, clampDebayerOption(dcbIterations, 0, 5));
-}
-
-static int mlvOutputBorder(mlvObject_t *video)
-{
-    if(!video) {
-        return 0;
-    }
-
-    int border = clampDebayerOption(getMlvDebayerBorder(video), 0, 16);
-    int minDimension = getMlvWidth(video) < getMlvHeight(video) ? getMlvWidth(video) : getMlvHeight(video);
-    int maxBorder = (minDimension - 1) / 2;
-
-    return border > maxBorder ? maxBorder : border;
-}
-
-static int mlvOutputWidth(mlvObject_t *video)
-{
-    return getMlvWidth(video) - 2 * mlvOutputBorder(video);
-}
-
-static int mlvOutputHeight(mlvObject_t *video)
-{
-    return getMlvHeight(video) - 2 * mlvOutputBorder(video);
-}
-
-template <typename Pixel>
-static void copyCroppedRgbFrame(const Pixel *src, Pixel *dst, int srcWidth, int srcHeight, int border)
-{
-    int dstWidth = srcWidth - 2 * border;
-    int dstHeight = srcHeight - 2 * border;
-
-    if(border <= 0) {
-        memcpy(dst, src, srcWidth * srcHeight * 3 * sizeof(Pixel));
-        return;
-    }
-
-    for(int y = 0; y < dstHeight; ++y) {
-        const Pixel *srcRow = src + (((y + border) * srcWidth + border) * 3);
-        Pixel *dstRow = dst + (y * dstWidth * 3);
-        memcpy(dstRow, srcRow, dstWidth * 3 * sizeof(Pixel));
-    }
 }
 
 //Constructor
@@ -422,7 +379,10 @@ void MainWindow::resizeEvent(QResizeEvent *event)
         if( ui->checkBoxGradientEnable->isChecked() && ui->groupBoxLinearGradient->isChecked() )
         {
             while( m_frameStillDrawing ) qApp->processEvents();
-            redrawGradientElement();
+            m_pGradientElement->redrawGradientElement( m_pScene->width(),
+                                                       m_pScene->height(),
+                                                       getMlvWidth( m_pMlvObject ),
+                                                       getMlvHeight( m_pMlvObject ) );
         }
     }
     event->accept();
@@ -1809,7 +1769,6 @@ void MainWindow::startExportPipe(QString fileName)
     m_dontDraw = true;
 
     setDebayerOptions( m_pMlvObject,
-                       m_exportQueue.first()->debayerBorder(),
                        m_exportQueue.first()->debayerFalseColor(),
                        m_exportQueue.first()->debayerLmmseIterations(),
                        m_exportQueue.first()->debayerDcbIterations() );
@@ -2057,21 +2016,18 @@ void MainWindow::startExportPipe(QString fileName)
         colorTag = SPACETAG_UNKNOWN;
 
     //Dimension & scaling
-    int sourceBorder = mlvOutputBorder(m_pMlvObject);
-    int sourceWidth = mlvOutputWidth(m_pMlvObject);
-    int sourceHeight = mlvOutputHeight(m_pMlvObject);
-    uint16_t width = sourceWidth;
-    uint16_t height = sourceHeight;
+    uint16_t width = getMlvWidth(m_pMlvObject);
+    uint16_t height = getMlvHeight(m_pMlvObject);
     bool scaled = false;
     if( m_resizeFilterEnabled )
     {
         //Autocalc height
         if( m_resizeFilterHeightLocked )
         {
-            height = (double)m_resizeWidth / (double)sourceWidth
+            height = (double)m_resizeWidth / (double)getMlvWidth( m_pMlvObject )
                     / m_exportQueue.first()->stretchFactorX()
                     * m_exportQueue.first()->stretchFactorY()
-                    * (double)sourceHeight + 0.5;
+                    * (double)getMlvHeight( m_pMlvObject ) + 0.5;
         }
         else
         {
@@ -2086,13 +2042,13 @@ void MainWindow::startExportPipe(QString fileName)
         //Upscale only
         if( m_exportQueue.first()->stretchFactorY() == STRETCH_V_033 )
         {
-            width = sourceWidth * 3;
-            height = sourceHeight;
+            width = getMlvWidth( m_pMlvObject ) * 3;
+            height = getMlvHeight( m_pMlvObject );
         }
         else
         {
-            width = sourceWidth * m_exportQueue.first()->stretchFactorX();
-            height = sourceHeight * m_exportQueue.first()->stretchFactorY();
+            width = getMlvWidth( m_pMlvObject ) * m_exportQueue.first()->stretchFactorX();
+            height = getMlvHeight( m_pMlvObject ) * m_exportQueue.first()->stretchFactorY();
         }
         scaled = true;
     }
@@ -2183,12 +2139,9 @@ void MainWindow::startExportPipe(QString fileName)
         else
         {
             //Buffer
-            uint32_t rawFrameSize = getMlvWidth( m_pMlvObject ) * getMlvHeight( m_pMlvObject ) * 3;
-            uint32_t sourceFrameSize = sourceWidth * sourceHeight * 3;
+            uint32_t frameSize = getMlvWidth( m_pMlvObject ) * getMlvHeight( m_pMlvObject ) * 3;
             uint16_t * imgBuffer;
-            imgBuffer = ( uint16_t* )malloc( rawFrameSize * sizeof( uint16_t ) );
-            uint16_t * imgBufferCropped = NULL;
-            if( sourceBorder > 0 ) imgBufferCropped = ( uint16_t* )malloc( sourceFrameSize * sizeof( uint16_t ) );
+            imgBuffer = ( uint16_t* )malloc( frameSize * sizeof( uint16_t ) );
 
             //Frames in the export queue?!
             int totalFrames = 0;
@@ -2200,7 +2153,7 @@ void MainWindow::startExportPipe(QString fileName)
             //Build buffer
             uint16_t * imgBufferScaled;
             imgBufferScaled = ( uint16_t* )malloc( width * height * 3 * sizeof( uint16_t ) );
-            bool bufferOk = imgBuffer && imgBufferScaled && ( sourceBorder <= 0 || imgBufferCropped );
+            bool bufferOk = imgBuffer && imgBufferScaled;
             if( !bufferOk )
             {
                 QMessageBox::critical( this, tr( "File export failed" ), tr( "Could not allocate image buffer." ) );
@@ -2218,20 +2171,14 @@ void MainWindow::startExportPipe(QString fileName)
                     m_pRenderThread->lock();
                     getMlvProcessedFrame16( m_pMlvObject, i, imgBuffer, QThread::idealThreadCount() );
                     m_pRenderThread->unlock();
-                    uint16_t * sourceBuffer = imgBuffer;
-                    if( sourceBorder > 0 )
-                    {
-                        copyCroppedRgbFrame( imgBuffer, imgBufferCropped, getMlvWidth( m_pMlvObject ), getMlvHeight( m_pMlvObject ), sourceBorder );
-                        sourceBuffer = imgBufferCropped;
-                    }
 
                     avir_scale_thread_pool scaling_pool;
                     avir::CImageResizerVars vars; vars.ThreadPool = &scaling_pool;
                     avir::CImageResizerParamsUltra roptions;
                     avir::CImageResizer<> image_resizer( 16, 0, roptions );
-                    image_resizer.resizeImage( sourceBuffer,
-                                               sourceWidth,
-                                               sourceHeight, 0,
+                    image_resizer.resizeImage( imgBuffer,
+                                               getMlvWidth(m_pMlvObject),
+                                               getMlvHeight(m_pMlvObject), 0,
                                                imgBufferScaled,
                                                width,
                                                height,
@@ -2247,15 +2194,9 @@ void MainWindow::startExportPipe(QString fileName)
                     m_pRenderThread->lock();
                     getMlvProcessedFrame16( m_pMlvObject, i, imgBuffer, QThread::idealThreadCount() );
                     m_pRenderThread->unlock();
-                    uint16_t * sourceBuffer = imgBuffer;
-                    if( sourceBorder > 0 )
-                    {
-                        copyCroppedRgbFrame( imgBuffer, imgBufferCropped, getMlvWidth( m_pMlvObject ), getMlvHeight( m_pMlvObject ), sourceBorder );
-                        sourceBuffer = imgBufferCropped;
-                    }
 
                     //Write to pipe
-                    fwrite(sourceBuffer, sizeof( uint16_t ), sourceFrameSize, pPipeStab);
+                    fwrite(imgBuffer, sizeof( uint16_t ), frameSize, pPipeStab);
                     fflush(pPipeStab);
                 }
 
@@ -2276,7 +2217,6 @@ void MainWindow::startExportPipe(QString fileName)
                 staberr = true;
                 QMessageBox::critical( this, tr( "File export failed" ), tr( "FFmpeg closed unexpectedly during stabilization.\n\nFile %1 was not exported completely." ).arg( fileName ) );
             }
-            if( imgBufferCropped ) free( imgBufferCropped );
             free( imgBufferScaled );
             free( imgBuffer );
         }
@@ -2741,12 +2681,9 @@ void MainWindow::startExportPipe(QString fileName)
         else
         {
             //Buffer
-            uint32_t rawFrameSize = getMlvWidth( m_pMlvObject ) * getMlvHeight( m_pMlvObject ) * 3;
-            uint32_t sourceFrameSize = sourceWidth * sourceHeight * 3;
+            uint32_t frameSize = getMlvWidth( m_pMlvObject ) * getMlvHeight( m_pMlvObject ) * 3;
             uint16_t * imgBuffer;
-            imgBuffer = ( uint16_t* )malloc( rawFrameSize * sizeof( uint16_t ) );
-            uint16_t * imgBufferCropped = NULL;
-            if( sourceBorder > 0 ) imgBufferCropped = ( uint16_t* )malloc( sourceFrameSize * sizeof( uint16_t ) );
+            imgBuffer = ( uint16_t* )malloc( frameSize * sizeof( uint16_t ) );
 
             //Frames in the export queue?!
             int totalFrames = 0;
@@ -2758,7 +2695,7 @@ void MainWindow::startExportPipe(QString fileName)
             //Build buffer
             uint16_t * imgBufferScaled;
             imgBufferScaled = ( uint16_t* )malloc( width * height * 3 * sizeof( uint16_t ) );
-            bool bufferOk = imgBuffer && imgBufferScaled && ( sourceBorder <= 0 || imgBufferCropped );
+            bool bufferOk = imgBuffer && imgBufferScaled;
             if( !bufferOk )
             {
                 QMessageBox::critical( this, tr( "File export failed" ), tr( "Could not allocate image buffer." ) );
@@ -2776,20 +2713,14 @@ void MainWindow::startExportPipe(QString fileName)
                     m_pRenderThread->lock();
                     getMlvProcessedFrame16( m_pMlvObject, i, imgBuffer, QThread::idealThreadCount() );
                     m_pRenderThread->unlock();
-                    uint16_t * sourceBuffer = imgBuffer;
-                    if( sourceBorder > 0 )
-                    {
-                        copyCroppedRgbFrame( imgBuffer, imgBufferCropped, getMlvWidth( m_pMlvObject ), getMlvHeight( m_pMlvObject ), sourceBorder );
-                        sourceBuffer = imgBufferCropped;
-                    }
 
                     avir_scale_thread_pool scaling_pool;
                     avir::CImageResizerVars vars; vars.ThreadPool = &scaling_pool;
                     avir::CImageResizerParamsUltra roptions;
                     avir::CImageResizer<> image_resizer( 16, 0, roptions );
-                    image_resizer.resizeImage( sourceBuffer,
-                                               sourceWidth,
-                                               sourceHeight, 0,
+                    image_resizer.resizeImage( imgBuffer,
+                                               getMlvWidth(m_pMlvObject),
+                                               getMlvHeight(m_pMlvObject), 0,
                                                imgBufferScaled,
                                                width,
                                                height,
@@ -2805,15 +2736,9 @@ void MainWindow::startExportPipe(QString fileName)
                     m_pRenderThread->lock();
                     getMlvProcessedFrame16( m_pMlvObject, i, imgBuffer, QThread::idealThreadCount() );
                     m_pRenderThread->unlock();
-                    uint16_t * sourceBuffer = imgBuffer;
-                    if( sourceBorder > 0 )
-                    {
-                        copyCroppedRgbFrame( imgBuffer, imgBufferCropped, getMlvWidth( m_pMlvObject ), getMlvHeight( m_pMlvObject ), sourceBorder );
-                        sourceBuffer = imgBufferCropped;
-                    }
 
                     //Write to pipe
-                    fwrite(sourceBuffer, sizeof( uint16_t ), sourceFrameSize, pPipe);
+                    fwrite(imgBuffer, sizeof( uint16_t ), frameSize, pPipe);
                     fflush(pPipe);
                 }
 
@@ -2842,7 +2767,6 @@ void MainWindow::startExportPipe(QString fileName)
             {
                 QMessageBox::critical( this, tr( "File export failed" ), tr( "FFmpeg closed unexpectedly during export.\n\nFile %1 was not exported completely." ).arg( fileName ) );
             }
-            if( imgBufferCropped ) free( imgBufferCropped );
             free( imgBufferScaled );
             free( imgBuffer );
         }
@@ -3163,7 +3087,6 @@ void MainWindow::startExportAVFoundation(QString fileName)
     m_dontDraw = true;
 
     setDebayerOptions( m_pMlvObject,
-                       m_exportQueue.first()->debayerBorder(),
                        m_exportQueue.first()->debayerFalseColor(),
                        m_exportQueue.first()->debayerLmmseIterations(),
                        m_exportQueue.first()->debayerDcbIterations() );
@@ -3256,21 +3179,18 @@ void MainWindow::startExportAVFoundation(QString fileName)
     else avfCodec = AVF_CODEC_PRORES_4444;
 
     //Dimension & scaling
-    int sourceBorder = mlvOutputBorder(m_pMlvObject);
-    int sourceWidth = mlvOutputWidth(m_pMlvObject);
-    int sourceHeight = mlvOutputHeight(m_pMlvObject);
-    uint16_t width = sourceWidth;
-    uint16_t height = sourceHeight;
+    uint16_t width = getMlvWidth(m_pMlvObject);
+    uint16_t height = getMlvHeight(m_pMlvObject);
     bool scaled = false;
     if( m_resizeFilterEnabled )
     {
         //Autocalc height
         if( m_resizeFilterHeightLocked )
         {
-            height = (double)m_resizeWidth / (double)sourceWidth
+            height = (double)m_resizeWidth / (double)getMlvWidth( m_pMlvObject )
                     / m_exportQueue.first()->stretchFactorX()
                     * m_exportQueue.first()->stretchFactorY()
-                    * (double)sourceHeight + 0.5;
+                    * (double)getMlvHeight( m_pMlvObject ) + 0.5;
         }
         else
         {
@@ -3285,13 +3205,13 @@ void MainWindow::startExportAVFoundation(QString fileName)
         //Upscale only
         if( m_exportQueue.first()->stretchFactorY() == STRETCH_V_033 )
         {
-            width = sourceWidth * 3;
-            height = sourceHeight;
+            width = getMlvWidth( m_pMlvObject ) * 3;
+            height = getMlvHeight( m_pMlvObject );
         }
         else
         {
-            width = sourceWidth * m_exportQueue.first()->stretchFactorX();
-            height = sourceHeight * m_exportQueue.first()->stretchFactorY();
+            width = getMlvWidth( m_pMlvObject ) * m_exportQueue.first()->stretchFactorX();
+            height = getMlvHeight( m_pMlvObject ) * m_exportQueue.first()->stretchFactorY();
         }
         scaled = true;
     }
@@ -3322,32 +3242,21 @@ void MainWindow::startExportAVFoundation(QString fileName)
     beginWritingVideoFile(encoder, fileName.toUtf8().data());
 
     //Build buffer
-    uint32_t rawFrameSize = getMlvWidth( m_pMlvObject ) * getMlvHeight( m_pMlvObject ) * 3;
-    uint32_t sourceFrameSize = sourceWidth * sourceHeight * 3;
+    uint32_t frameSize = getMlvWidth( m_pMlvObject ) * getMlvHeight( m_pMlvObject ) * 3;
     uint16_t * imgBuffer;
-    imgBuffer = ( uint16_t* )malloc( rawFrameSize * sizeof( uint16_t ) );
-    uint16_t * imgBufferCropped = NULL;
-    uint8_t * rawImageCropped = NULL;
-    if( sourceBorder > 0 )
-    {
-        imgBufferCropped = ( uint16_t* )malloc( sourceFrameSize * sizeof( uint16_t ) );
-        rawImageCropped = ( uint8_t* )malloc( sourceFrameSize * sizeof( uint8_t ) );
-    }
+    imgBuffer = ( uint16_t* )malloc( frameSize * sizeof( uint16_t ) );
     uint16_t * imgBufferScaled = NULL;
     uint8_t * imgBufferScaled8 = NULL;
     if( m_codecProfile == CODEC_H264 || m_codecProfile == CODEC_H265_8 ) imgBufferScaled8 = ( uint8_t* )malloc( width * height * 3 * sizeof( uint8_t ) );
     else imgBufferScaled = ( uint16_t* )malloc( width * height * 3 * sizeof( uint16_t ) );
     bool use8BitAvf = ( m_codecProfile == CODEC_H264 || m_codecProfile == CODEC_H265_8 );
     bool bufferOk = imgBuffer
-                 && ( use8BitAvf ? ( imgBufferScaled8 != NULL ) : ( imgBufferScaled != NULL ) )
-                 && ( sourceBorder <= 0 || ( imgBufferCropped && rawImageCropped ) );
+                 && ( use8BitAvf ? ( imgBufferScaled8 != NULL ) : ( imgBufferScaled != NULL ) );
     if( !bufferOk )
     {
         QMessageBox::critical( this, APPNAME, tr( "Could not allocate image buffer." ) );
         if( imgBufferScaled8 ) free( imgBufferScaled8 );
         if( imgBufferScaled ) free( imgBufferScaled );
-        if( rawImageCropped ) free( rawImageCropped );
-        if( imgBufferCropped ) free( imgBufferCropped );
         if( imgBuffer ) free( imgBuffer );
         endWritingVideoFile(encoder);
         freeAVEncoder(encoder);
@@ -3364,21 +3273,15 @@ void MainWindow::startExportAVFoundation(QString fileName)
         if( m_codecProfile == CODEC_H264 || m_codecProfile == CODEC_H265_8 )
         {
             getMlvProcessedFrame8( m_pMlvObject, frame, m_pRawImage, QThread::idealThreadCount() );
-            uint8_t * sourceBuffer = m_pRawImage;
-            if( sourceBorder > 0 )
-            {
-                copyCroppedRgbFrame( m_pRawImage, rawImageCropped, getMlvWidth( m_pMlvObject ), getMlvHeight( m_pMlvObject ), sourceBorder );
-                sourceBuffer = rawImageCropped;
-            }
             if( scaled )
             {
                 avir_scale_thread_pool scaling_pool;
                 avir::CImageResizerVars vars; vars.ThreadPool = &scaling_pool;
                 avir::CImageResizerParamsUltra roptions;
                 avir::CImageResizer<> image_resizer( 8, 0, roptions );
-                image_resizer.resizeImage( sourceBuffer,
-                                           sourceWidth,
-                                           sourceHeight, 0,
+                image_resizer.resizeImage( m_pRawImage,
+                                           getMlvWidth(m_pMlvObject),
+                                           getMlvHeight(m_pMlvObject), 0,
                                            imgBufferScaled8,
                                            width,
                                            height,
@@ -3387,27 +3290,21 @@ void MainWindow::startExportAVFoundation(QString fileName)
             }
             else
             {
-                addFrameToVideoFile8bit( encoder, sourceBuffer );
+                addFrameToVideoFile8bit( encoder, m_pRawImage );
             }
         }
         else
         {
             getMlvProcessedFrame16( m_pMlvObject, frame, imgBuffer, QThread::idealThreadCount() );
-            uint16_t * sourceBuffer = imgBuffer;
-            if( sourceBorder > 0 )
-            {
-                copyCroppedRgbFrame( imgBuffer, imgBufferCropped, getMlvWidth( m_pMlvObject ), getMlvHeight( m_pMlvObject ), sourceBorder );
-                sourceBuffer = imgBufferCropped;
-            }
             if( scaled )
             {
                 avir_scale_thread_pool scaling_pool;
                 avir::CImageResizerVars vars; vars.ThreadPool = &scaling_pool;
                 avir::CImageResizerParamsUltra roptions;
                 avir::CImageResizer<> image_resizer( 16, 0, roptions );
-                image_resizer.resizeImage( sourceBuffer,
-                                           sourceWidth,
-                                           sourceHeight, 0,
+                image_resizer.resizeImage( imgBuffer,
+                                           getMlvWidth(m_pMlvObject),
+                                           getMlvHeight(m_pMlvObject), 0,
                                            imgBufferScaled,
                                            width,
                                            height,
@@ -3416,7 +3313,7 @@ void MainWindow::startExportAVFoundation(QString fileName)
             }
             else
             {
-                addFrameToVideoFile( encoder, sourceBuffer );
+                addFrameToVideoFile( encoder, imgBuffer );
             }
         }
 
@@ -3435,8 +3332,6 @@ void MainWindow::startExportAVFoundation(QString fileName)
     //Clean up
     if( m_codecProfile == CODEC_H264 || m_codecProfile == CODEC_H265_8 ) free( imgBufferScaled8 );
     else free( imgBufferScaled );
-    if( rawImageCropped ) free( rawImageCropped );
-    if( imgBufferCropped ) free( imgBufferCropped );
     free( imgBuffer );
     endWritingVideoFile(encoder);
     freeAVEncoder(encoder);
@@ -4466,11 +4361,6 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
             receipt->setDebayer( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
-        else if( Rxml->isStartElement() && Rxml->name() == QString( "debayerBorder" ) )
-        {
-            receipt->setDebayerBorder( clampDebayerOption( Rxml->readElementText().toInt(), 0, 16 ) );
-            Rxml->readNext();
-        }
         else if( Rxml->isStartElement() && Rxml->name() == QString( "debayerFalseColor" ) )
         {
             receipt->setDebayerFalseColor( clampDebayerOption( Rxml->readElementText().toInt(), 0, 5 ) );
@@ -4597,7 +4487,6 @@ void MainWindow::writeXmlElementsToFile(QXmlStreamWriter *xmlWriter, ReceiptSett
     xmlWriter->writeTextElement( "cutIn",                   QString( "%1" ).arg( receipt->cutIn() ) );
     xmlWriter->writeTextElement( "cutOut",                  QString( "%1" ).arg( receipt->cutOut() ) );
     xmlWriter->writeTextElement( "debayer",                 QString( "%1" ).arg( receipt->debayer() ) );
-    xmlWriter->writeTextElement( "debayerBorder",           QString( "%1" ).arg( receipt->debayerBorder() ) );
     xmlWriter->writeTextElement( "debayerFalseColor",       QString( "%1" ).arg( receipt->debayerFalseColor() ) );
     xmlWriter->writeTextElement( "debayerLmmseIterations",  QString( "%1" ).arg( receipt->debayerLmmseIterations() ) );
     xmlWriter->writeTextElement( "debayerDcbIterations",    QString( "%1" ).arg( receipt->debayerDcbIterations() ) );
@@ -5022,7 +4911,6 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     m_pMlvObject->current_cached_frame_active = 0;
 
     if( ui->actionPlaybackPosition->isChecked() ) ui->horizontalSliderPosition->setValue( receipt->lastPlaybackPosition() );
-    ui->horizontalSliderDebayerBorder->setValue( receipt->debayerBorder() );
     ui->horizontalSliderDebayerFalseColor->setValue( receipt->debayerFalseColor() );
     ui->horizontalSliderDebayerLmmseIterations->setValue( receipt->debayerLmmseIterations() );
     ui->horizontalSliderDebayerDcbIterations->setValue( receipt->debayerDcbIterations() );
@@ -5176,7 +5064,6 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     else receipt->setLastPlaybackPosition( 0 );
 
     receipt->setDebayer( ui->comboBoxDebayer->currentIndex() );
-    receipt->setDebayerBorder( ui->horizontalSliderDebayerBorder->value() );
     receipt->setDebayerFalseColor( ui->horizontalSliderDebayerFalseColor->value() );
     receipt->setDebayerLmmseIterations( ui->horizontalSliderDebayerLmmseIterations->value() );
     receipt->setDebayerDcbIterations( ui->horizontalSliderDebayerDcbIterations->value() );
@@ -5285,7 +5172,6 @@ void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings 
     if( paste && cdui->checkBoxDebayer->isChecked() )
     {
         receiptTarget->setDebayer( receiptSource->debayer() );
-        receiptTarget->setDebayerBorder( receiptSource->debayerBorder() );
         receiptTarget->setDebayerFalseColor( receiptSource->debayerFalseColor() );
         receiptTarget->setDebayerLmmseIterations( receiptSource->debayerLmmseIterations() );
         receiptTarget->setDebayerDcbIterations( receiptSource->debayerDcbIterations() );
@@ -5517,7 +5403,6 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     receipt->setVidstabTripod( GET_RECEIPT( row )->vidStabTripod() );
 
     receipt->setDebayer( GET_RECEIPT( row )->debayer() );
-    receipt->setDebayerBorder( GET_RECEIPT( row )->debayerBorder() );
     receipt->setDebayerFalseColor( GET_RECEIPT( row )->debayerFalseColor() );
     receipt->setDebayerLmmseIterations( GET_RECEIPT( row )->debayerLmmseIterations() );
     receipt->setDebayerDcbIterations( GET_RECEIPT( row )->debayerDcbIterations() );
@@ -7458,8 +7343,8 @@ void MainWindow::enableCreativeAdjustments( bool enable )
 void MainWindow::resultingResolution( void )
 {
     if( !SESSION_CLIP_COUNT ) return;
-    int x = mlvOutputWidth( m_pMlvObject ) * getHorizontalStretchFactor( false );
-    int y = mlvOutputHeight( m_pMlvObject ) * getVerticalStretchFactor( false );
+    int x = getMlvWidth( m_pMlvObject ) * getHorizontalStretchFactor( false );
+    int y = getMlvHeight( m_pMlvObject ) * getVerticalStretchFactor( false );
     ui->label_resResolution->setText( QString( "%1 x %2 pixels" ).arg(x).arg(y) );
 }
 
@@ -9458,22 +9343,16 @@ void MainWindow::badPixelPicked( int x, int y )
     if( !m_fileLoaded ) return;
 
     //Some math if in stretch (fit) mode
-    int sourceBorder = mlvOutputBorder( m_pMlvObject );
-    int sourceWidth = mlvOutputWidth( m_pMlvObject );
-    int sourceHeight = mlvOutputHeight( m_pMlvObject );
     if( ui->actionZoomFit->isChecked() )
     {
-        x *= sourceWidth / m_pScene->width();
-        y *= sourceHeight / m_pScene->height();
+        x *= getMlvWidth( m_pMlvObject ) / m_pScene->width();
+        y *= getMlvHeight( m_pMlvObject ) / m_pScene->height();
     }
     else
     {
         x /= getHorizontalStretchFactor(false);
         y /= getVerticalStretchFactor(false);
     }
-    x += sourceBorder;
-    y += sourceBorder;
-
     //Quit if click not in picture
     if( x < 0 || y < 0 || x >= getMlvWidth( m_pMlvObject ) || y >= getMlvHeight( m_pMlvObject ) ) return;
 
@@ -9517,22 +9396,16 @@ void MainWindow::whiteBalancePicked( int x, int y )
     if( !m_fileLoaded ) return;
 
     //Some math if in stretch (fit) mode
-    int sourceBorder = mlvOutputBorder( m_pMlvObject );
-    int sourceWidth = mlvOutputWidth( m_pMlvObject );
-    int sourceHeight = mlvOutputHeight( m_pMlvObject );
     if( ui->actionZoomFit->isChecked() )
     {
-        x *= sourceWidth / m_pScene->width();
-        y *= sourceHeight / m_pScene->height();
+        x *= getMlvWidth( m_pMlvObject ) / m_pScene->width();
+        y *= getMlvHeight( m_pMlvObject ) / m_pScene->height();
     }
     else
     {
         x /= getHorizontalStretchFactor(false);
         y /= getVerticalStretchFactor(false);
     }
-    x += sourceBorder;
-    y += sourceBorder;
-
     //Quit if click not in picture
     if( x < 0 || y < 0 || x >= getMlvWidth( m_pMlvObject ) || y >= getMlvHeight( m_pMlvObject ) ) return;
 
@@ -9568,11 +9441,8 @@ void MainWindow::gradientAnchorPicked(int x, int y)
 {
     ui->checkBoxGradientEnable->setChecked( true );
     //Some math if in stretch (fit) mode
-    int sourceBorder = mlvOutputBorder( m_pMlvObject );
-    x *= mlvOutputWidth( m_pMlvObject ) / m_pScene->width();
-    y *= mlvOutputHeight( m_pMlvObject ) / m_pScene->height();
-    x += sourceBorder;
-    y += sourceBorder;
+    x *= getMlvWidth( m_pMlvObject ) / m_pScene->width();
+    y *= getMlvHeight( m_pMlvObject ) / m_pScene->height();
 
     m_pGradientElement->reset();
     m_pGradientElement->setStartPos( x, y );
@@ -9589,12 +9459,14 @@ void MainWindow::gradientAnchorPicked(int x, int y)
 void MainWindow::gradientFinalPosPicked(int x, int y, bool isFinished)
 {
     //Get both positions
-    int sourceBorder = mlvOutputBorder( m_pMlvObject );
-    QPointF endPos = QPointF( x * mlvOutputWidth( m_pMlvObject ) / m_pScene->width() + sourceBorder,
-                              y * mlvOutputHeight( m_pMlvObject ) / m_pScene->height() + sourceBorder );
+    QPointF endPos = QPointF( x * getMlvWidth( m_pMlvObject ) / m_pScene->width(),
+                              y * getMlvHeight( m_pMlvObject ) / m_pScene->height() );
     //Some math
     m_pGradientElement->setFinalPos( endPos.x(), endPos.y() );
-    redrawGradientElement();
+    m_pGradientElement->redrawGradientElement( m_pScene->width(),
+                                               m_pScene->height(),
+                                               getMlvWidth( m_pMlvObject ),
+                                               getMlvHeight( m_pMlvObject ) );
     m_pGradientElement->gradientGraphicsElement()->show();
 
     //Set the UI numbers and sliders
@@ -9752,13 +9624,6 @@ void MainWindow::drawFrameReady()
         mode = Qt::SmoothTransformation;
     }
 
-    int sourceBorder = mlvOutputBorder(m_pMlvObject);
-    int sourceWidth = mlvOutputWidth(m_pMlvObject);
-    int sourceHeight = mlvOutputHeight(m_pMlvObject);
-    int rawWidth = getMlvWidth(m_pMlvObject);
-    unsigned char *sourceData = m_pRawImage + ((sourceBorder * rawWidth + sourceBorder) * 3);
-    QImage sourceImage( sourceData, sourceWidth, sourceHeight, rawWidth * 3, QImage::Format_RGB888 );
-
     if( ui->actionZoomFit->isChecked() )
     {
         //Some math to have the picture exactly in the frame
@@ -9775,17 +9640,21 @@ void MainWindow::drawFrameReady()
             actHeight = ui->graphicsView->height();
         }
         int desWidth = actWidth;
-        int desHeight = actWidth * sourceHeight / sourceWidth * getVerticalStretchFactor(false) / getHorizontalStretchFactor(false);
+        int desHeight = actWidth * getMlvHeight(m_pMlvObject) / getMlvWidth(m_pMlvObject) * getVerticalStretchFactor(false) / getHorizontalStretchFactor(false);
         if( desHeight > actHeight )
         {
             desHeight = actHeight;
-            desWidth = actHeight * sourceWidth / sourceHeight / getVerticalStretchFactor(false) * getHorizontalStretchFactor(false);
+            desWidth = actHeight * getMlvWidth(m_pMlvObject) / getMlvHeight(m_pMlvObject) / getVerticalStretchFactor(false) * getHorizontalStretchFactor(false);
         }
 
         //Get Picture
 
-
-        QPixmap pic = QPixmap::fromImage( sourceImage.scaled( desWidth * devicePixelRatio(),
+        QPixmap pic = QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage,
+                                                  getMlvWidth(m_pMlvObject),
+                                                  getMlvHeight(m_pMlvObject),
+                                                  getMlvWidth(m_pMlvObject) * 3,
+                                                  QImage::Format_RGB888 )
+                                          .scaled( desWidth * devicePixelRatio(),
                                                    desHeight * devicePixelRatio(),
                                                    Qt::IgnoreAspectRatio, mode) );
         //Set Picture to Retina
@@ -9801,8 +9670,12 @@ void MainWindow::drawFrameReady()
         if( getVerticalStretchFactor(false) == 1.0
          && getHorizontalStretchFactor(false) == 1.0 ) //Fast mode for 1.0 stretch factor
         {
-            m_pGraphicsItem->setPixmap( QPixmap::fromImage( sourceImage ) );
-            m_pScene->setSceneRect( 0, 0, sourceWidth, sourceHeight );
+            m_pGraphicsItem->setPixmap( QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage,
+                                                                    getMlvWidth(m_pMlvObject),
+                                                                    getMlvHeight(m_pMlvObject),
+                                                                    getMlvWidth(m_pMlvObject) * 3,
+                                                                    QImage::Format_RGB888 ) ) );
+            m_pScene->setSceneRect( 0, 0, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject) );
         }
         else
         {
@@ -9810,35 +9683,20 @@ void MainWindow::drawFrameReady()
             //Qvir resize
             if( mode == Qt::SmoothTransformation && ui->actionBetterResizer->isChecked() )
             {
-                int scaledWidth = sourceWidth * getHorizontalStretchFactor(false);
-                int scaledHeight = sourceHeight * getVerticalStretchFactor(false);
+                int scaledWidth = getMlvWidth(m_pMlvObject) * getHorizontalStretchFactor(false);
+                int scaledHeight = getMlvHeight(m_pMlvObject) * getVerticalStretchFactor(false);
                 uint8_t *scaledPic = (uint8_t*)malloc( 3 * scaledWidth * scaledHeight
                                                          * sizeof( uint8_t ) );
-                uint8_t *sourceBuffer = m_pRawImage;
-                uint8_t *croppedPic = NULL;
                 bool useBetterResizer = ( scaledPic != NULL );
-                if( sourceBorder > 0 )
-                {
-                    croppedPic = (uint8_t*)malloc( 3 * sourceWidth * sourceHeight * sizeof( uint8_t ) );
-                    if( croppedPic )
-                    {
-                        copyCroppedRgbFrame( m_pRawImage, croppedPic, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), sourceBorder );
-                        sourceBuffer = croppedPic;
-                    }
-                    else
-                    {
-                        useBetterResizer = false;
-                    }
-                }
                 if( useBetterResizer )
                 {
                     avir_scale_thread_pool scaling_pool;
                     avir::CImageResizerVars vars; vars.ThreadPool = &scaling_pool;
                     avir::CImageResizerParamsUltra roptions;
                     avir::CImageResizer<> image_resizer( 8, 0, roptions );
-                    image_resizer.resizeImage( sourceBuffer,
-                                               sourceWidth,
-                                               sourceHeight, 0,
+                    image_resizer.resizeImage( m_pRawImage,
+                                               getMlvWidth(m_pMlvObject),
+                                               getMlvHeight(m_pMlvObject), 0,
                                                scaledPic,
                                                scaledWidth,
                                                scaledHeight,
@@ -9846,28 +9704,36 @@ void MainWindow::drawFrameReady()
                     pixmap = QPixmap::fromImage( QImage( ( unsigned char *) scaledPic,
                                                          scaledWidth,
                                                          scaledHeight,
+                                                         scaledWidth * 3,
                                                          QImage::Format_RGB888 ) );
                 }
                 else
                 {
-                    pixmap = QPixmap::fromImage( sourceImage
+                    pixmap = QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage,
+                                                         getMlvWidth(m_pMlvObject),
+                                                         getMlvHeight(m_pMlvObject),
+                                                         getMlvWidth(m_pMlvObject) * 3,
+                                                         QImage::Format_RGB888 )
                                                  .scaled( scaledWidth,
                                                           scaledHeight,
                                                           Qt::IgnoreAspectRatio, mode) );
                 }
-                if( croppedPic ) free( croppedPic );
                 if( scaledPic ) free( scaledPic );
             }
             //Qt resize
             else
             {
-                pixmap = QPixmap::fromImage( sourceImage
-                                             .scaled( sourceWidth * getHorizontalStretchFactor(false),
-                                                      sourceHeight * getVerticalStretchFactor(false),
+                pixmap = QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage,
+                                                     getMlvWidth(m_pMlvObject),
+                                                     getMlvHeight(m_pMlvObject),
+                                                     getMlvWidth(m_pMlvObject) * 3,
+                                                     QImage::Format_RGB888 )
+                                             .scaled( getMlvWidth(m_pMlvObject) * getHorizontalStretchFactor(false),
+                                                      getMlvHeight(m_pMlvObject) * getVerticalStretchFactor(false),
                                                       Qt::IgnoreAspectRatio, mode) );
             }
             m_pGraphicsItem->setPixmap( pixmap );
-            m_pScene->setSceneRect( 0, 0, sourceWidth * getHorizontalStretchFactor(false), sourceHeight * getVerticalStretchFactor(false) );
+            m_pScene->setSceneRect( 0, 0, getMlvWidth(m_pMlvObject) * getHorizontalStretchFactor(false), getMlvHeight(m_pMlvObject) * getVerticalStretchFactor(false) );
         }
     }
 
@@ -9920,43 +9786,27 @@ void MainWindow::drawFrameReady()
         bool over = false;
         if( ( underOver & 0x01 ) == 0x01 ) under = true;
         if( ( underOver & 0x02 ) == 0x02 ) over = true;
-        uint8_t *scopeImage = m_pRawImage;
-        uint8_t *scopeCropped = NULL;
-        if( sourceBorder > 0 )
-        {
-            scopeCropped = (uint8_t*)malloc( 3 * sourceWidth * sourceHeight * sizeof( uint8_t ) );
-            if( scopeCropped )
-            {
-                copyCroppedRgbFrame( m_pRawImage, scopeCropped, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), sourceBorder );
-                scopeImage = scopeCropped;
-            }
-            else
-            {
-                scopeImage = NULL;
-            }
-        }
 
         //GetHistogram
-        if( scopeImage && ui->actionShowHistogram->isChecked() )
+        if( ui->actionShowHistogram->isChecked() )
         {
-            ui->labelScope->setScope( scopeImage, sourceWidth, sourceHeight, under, over, ScopesLabel::ScopeHistogram );
+            ui->labelScope->setScope( m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), under, over, ScopesLabel::ScopeHistogram );
         }
         //Waveform
-        else if( scopeImage && ui->actionShowWaveFormMonitor->isChecked() )
+        else if( ui->actionShowWaveFormMonitor->isChecked() )
         {
-            ui->labelScope->setScope( scopeImage, sourceWidth, sourceHeight, under, over, ScopesLabel::ScopeWaveForm );
+            ui->labelScope->setScope( m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), under, over, ScopesLabel::ScopeWaveForm );
         }
         //Parade
-        else if( scopeImage && ui->actionShowParade->isChecked() )
+        else if( ui->actionShowParade->isChecked() )
         {
-            ui->labelScope->setScope( scopeImage, sourceWidth, sourceHeight, under, over, ScopesLabel::ScopeRgbParade);
+            ui->labelScope->setScope( m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), under, over, ScopesLabel::ScopeRgbParade);
         }
         //VectorScope
-        else if( scopeImage && ui->actionShowVectorScope->isChecked() )
+        else if( ui->actionShowVectorScope->isChecked() )
         {
-            ui->labelScope->setScope( scopeImage, sourceWidth, sourceHeight, under, over, ScopesLabel::ScopeVectorScope );
+            ui->labelScope->setScope( m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), under, over, ScopesLabel::ScopeVectorScope );
         }
-        if( scopeCropped ) free( scopeCropped );
     }
     
     //Drawing ready, next frame can be rendered
@@ -9986,7 +9836,10 @@ void MainWindow::drawFrameReady()
     if( m_zoomModeChanged )
     {
         m_zoomModeChanged = false;
-        redrawGradientElement();
+        m_pGradientElement->redrawGradientElement( m_pScene->width(),
+                                                   m_pScene->height(),
+                                                   getMlvWidth( m_pMlvObject ),
+                                                   getMlvHeight( m_pMlvObject ) );
     }
 
     //Bad Pixel crosses in viewer
@@ -10050,7 +9903,10 @@ void MainWindow::on_spinBoxGradientX_valueChanged(int arg1)
 {
     m_pGradientElement->gradientGraphicsElement()->blockSignals( true );
     m_pGradientElement->setStartPos( arg1, ui->spinBoxGradientY->value() );
-    redrawGradientElement();
+    m_pGradientElement->redrawGradientElement( m_pScene->width(),
+                                               m_pScene->height(),
+                                               getMlvWidth( m_pMlvObject ),
+                                               getMlvHeight( m_pMlvObject ) );
     m_pGradientElement->gradientGraphicsElement()->blockSignals( false );
 
     //Send to processing module
@@ -10062,7 +9918,10 @@ void MainWindow::on_spinBoxGradientY_valueChanged(int arg1)
 {
     m_pGradientElement->gradientGraphicsElement()->blockSignals( true );
     m_pGradientElement->setStartPos( ui->spinBoxGradientX->value(), arg1 );
-    redrawGradientElement();
+    m_pGradientElement->redrawGradientElement( m_pScene->width(),
+                                               m_pScene->height(),
+                                               getMlvWidth( m_pMlvObject ),
+                                               getMlvHeight( m_pMlvObject ) );
     m_pGradientElement->gradientGraphicsElement()->blockSignals( false );
 
     //Send to processing module
@@ -10074,7 +9933,10 @@ void MainWindow::on_spinBoxGradientLength_valueChanged(int arg1)
 {
     m_pGradientElement->gradientGraphicsElement()->blockSignals( true );
     m_pGradientElement->setUiLength( arg1 );
-    redrawGradientElement();
+    m_pGradientElement->redrawGradientElement( m_pScene->width(),
+                                               m_pScene->height(),
+                                               getMlvWidth( m_pMlvObject ),
+                                               getMlvHeight( m_pMlvObject ) );
     m_pGradientElement->gradientGraphicsElement()->blockSignals( false );
 
     //Send to processing module
@@ -10109,7 +9971,10 @@ void MainWindow::on_dialGradientAngle_valueChanged(int value)
 
     m_pGradientElement->gradientGraphicsElement()->blockSignals( true );
     m_pGradientElement->setUiAngle( value / 10.0 );
-    redrawGradientElement();
+    m_pGradientElement->redrawGradientElement( m_pScene->width(),
+                                               m_pScene->height(),
+                                               getMlvWidth( m_pMlvObject ),
+                                               getMlvHeight( m_pMlvObject ) );
     m_pGradientElement->gradientGraphicsElement()->blockSignals( false );
 
     //Send to processing module
@@ -10120,9 +9985,8 @@ void MainWindow::on_dialGradientAngle_valueChanged(int value)
 void MainWindow::gradientGraphicElementMoved(int x, int y)
 {
     //Some math if in stretch (fit) mode
-    int sourceBorder = mlvOutputBorder( m_pMlvObject );
-    x = x * mlvOutputWidth( m_pMlvObject ) / m_pScene->width() + sourceBorder;
-    y = y * mlvOutputHeight( m_pMlvObject ) / m_pScene->height() + sourceBorder;
+    x *= getMlvWidth( m_pMlvObject ) / m_pScene->width();
+    y *= getMlvHeight( m_pMlvObject ) / m_pScene->height();
 
     m_pGradientElement->setStartPos( x, y );
 
@@ -10908,48 +10772,12 @@ void MainWindow::on_comboBoxDebayer_currentIndexChanged(int index)
     selectDebayerAlgorithm();
 }
 
-void MainWindow::on_horizontalSliderDebayerBorder_valueChanged(int value)
-{
-    ui->labelDebayerBorderValue->setText( QString("%1").arg( value ) );
-    if( !m_pMlvObject ) return;
-
-    setDebayerOptions( m_pMlvObject,
-                       ui->horizontalSliderDebayerBorder->value(),
-                       ui->horizontalSliderDebayerFalseColor->value(),
-                       ui->horizontalSliderDebayerLmmseIterations->value(),
-                       ui->horizontalSliderDebayerDcbIterations->value() );
-    resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
-    resultingResolution();
-
-    int sourceWidth = mlvOutputWidth( m_pMlvObject );
-    int sourceHeight = mlvOutputHeight( m_pMlvObject );
-    if( m_fileLoaded && sourceWidth > 0 && sourceHeight > 0 )
-    {
-        redrawGradientElement();
-        BadPixelFileHandler::crossesPrepareAll( m_pMlvObject, &m_pBadPixelCrosses, m_pScene );
-        BadPixelFileHandler::crossesRedrawAll( m_pMlvObject, &m_pBadPixelCrosses, m_pScene );
-        if( ui->toolButtonBadPixelsCrosshairEnable->isChecked()
-         && toolButtonBadPixelsCurrentIndex() >= 3
-         && ui->checkBoxRawFixEnable->isChecked() )
-            BadPixelFileHandler::crossesShowAll( &m_pBadPixelCrosses );
-        else
-            BadPixelFileHandler::crossesHideAll( &m_pBadPixelCrosses );
-    }
-    else
-    {
-        BadPixelFileHandler::crossesHideAll( &m_pBadPixelCrosses );
-    }
-    m_frameChanged = true;
-}
-
 void MainWindow::on_horizontalSliderDebayerFalseColor_valueChanged(int value)
 {
     ui->labelDebayerFalseColorValue->setText( QString("%1").arg( value ) );
     if( !m_pMlvObject ) return;
 
     setDebayerOptions( m_pMlvObject,
-                       ui->horizontalSliderDebayerBorder->value(),
                        ui->horizontalSliderDebayerFalseColor->value(),
                        ui->horizontalSliderDebayerLmmseIterations->value(),
                        ui->horizontalSliderDebayerDcbIterations->value() );
@@ -10964,7 +10792,6 @@ void MainWindow::on_horizontalSliderDebayerLmmseIterations_valueChanged(int valu
     if( !m_pMlvObject ) return;
 
     setDebayerOptions( m_pMlvObject,
-                       ui->horizontalSliderDebayerBorder->value(),
                        ui->horizontalSliderDebayerFalseColor->value(),
                        ui->horizontalSliderDebayerLmmseIterations->value(),
                        ui->horizontalSliderDebayerDcbIterations->value() );
@@ -10979,7 +10806,6 @@ void MainWindow::on_horizontalSliderDebayerDcbIterations_valueChanged(int value)
     if( !m_pMlvObject ) return;
 
     setDebayerOptions( m_pMlvObject,
-                       ui->horizontalSliderDebayerBorder->value(),
                        ui->horizontalSliderDebayerFalseColor->value(),
                        ui->horizontalSliderDebayerLmmseIterations->value(),
                        ui->horizontalSliderDebayerDcbIterations->value() );
@@ -11010,23 +10836,6 @@ void MainWindow::updateDebayerOptionVisibility(void)
     ui->labelDebayerDcbIterationsValue->setVisible( isDcb );
 }
 
-void MainWindow::redrawGradientElement(void)
-{
-    if( !m_pMlvObject || !m_pGradientElement || !m_pScene ) return;
-
-    int sourceBorder = mlvOutputBorder( m_pMlvObject );
-    int sourceWidth = mlvOutputWidth( m_pMlvObject );
-    int sourceHeight = mlvOutputHeight( m_pMlvObject );
-    if( sourceWidth <= 0 || sourceHeight <= 0 ) return;
-
-    m_pGradientElement->redrawGradientElement( m_pScene->width(),
-                                               m_pScene->height(),
-                                               sourceWidth,
-                                               sourceHeight,
-                                               sourceBorder,
-                                               sourceBorder );
-}
-
 //Select the debayer algorithm in dependency to playback and chosen playback setting, or clip setting
 void MainWindow::selectDebayerAlgorithm()
 {
@@ -11034,7 +10843,6 @@ void MainWindow::selectDebayerAlgorithm()
     if( m_inOpeningProcess ) return;
 
     setDebayerOptions( m_pMlvObject,
-                       ui->horizontalSliderDebayerBorder->value(),
                        ui->horizontalSliderDebayerFalseColor->value(),
                        ui->horizontalSliderDebayerLmmseIterations->value(),
                        ui->horizontalSliderDebayerDcbIterations->value() );

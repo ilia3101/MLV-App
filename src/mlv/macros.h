@@ -105,8 +105,6 @@
 #define setMlvUseDcbDebayer(video) (video)->use_amaze = 8; (video)->current_cached_frame_active = 0
 
 /* Extra debayer controls */
-#define setMlvDebayerBorder(video, value) (video)->debayer_border = (value); (video)->current_cached_frame_active = 0
-#define getMlvDebayerBorder(video) (video)->debayer_border
 #define setMlvDebayerFalseColor(video, value) (video)->debayer_false_color = (value); (video)->current_cached_frame_active = 0
 #define getMlvDebayerFalseColor(video) (video)->debayer_false_color
 #define setMlvDebayerLmmseIterations(video, value) (video)->debayer_lmmse_iterations = (value); (video)->current_cached_frame_active = 0

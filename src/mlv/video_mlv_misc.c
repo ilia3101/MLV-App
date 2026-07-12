@@ -75,6 +75,7 @@ int create_thumbnail(mlvObject_t * video, uint8_t * thumbnail_img, int downscale
                           debayered_frame,
                           processed_frame,
                           threads, 1, 0,
+                          0,
                           0);
 
     for (i = 0; i < pixel_count * 3; i++)
@@ -176,6 +177,7 @@ void get_area_average_downscale_thumnail(mlvObject_t *video, int frame_index, in
                           downscaled_image,
                           downscaled_processed_image,
                           cpu_cores, 1, frame_index,
+                          0,
                           0);
 
     size_t size = thumbW * thumbH * 3;

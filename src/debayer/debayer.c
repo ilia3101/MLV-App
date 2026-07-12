@@ -3,13 +3,13 @@
 #include <stdio.h>
 #include <string.h>
 #include <pthread.h>
+#include <math.h>
 
 #include "debayer.h"
 #include "librtprocesswrapper.h"
 
 #define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
 #define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
-#define LIMIT16(X) MAX(MIN(X, 65535), 0)
 
 static uint16_t float_to_uint16(float value)
 {
@@ -39,6 +39,32 @@ static float median9_float(float *values)
     return values[4];
 }
 
+static float median_float(float *values, int value_count)
+{
+    for(int index = 1; index < value_count; ++index)
+    {
+        float value = values[index];
+        int insert_at = index - 1;
+        while(insert_at >= 0 && values[insert_at] > value)
+        {
+            values[insert_at + 1] = values[insert_at];
+            --insert_at;
+        }
+        values[insert_at + 1] = value;
+    }
+
+    int middle = value_count / 2;
+    if(value_count & 1) {
+        return values[middle];
+    }
+    return (values[middle - 1] + values[middle]) * 0.5f;
+}
+
+static int highlight_is_protected(const uint8_t *highlight_row, int column)
+{
+    return highlight_row && (highlight_row[column] & DEBAYER_FCS_HIGHLIGHT_PROTECT);
+}
+
 static void convert_row_to_yiq(const float *frame, int width, int row, float *Y, float *I, float *Q)
 {
     const float *pix = frame + (row * width * 3);
@@ -63,74 +89,299 @@ static void median_chroma_row(
     const float *prev_q,
     const float *curr_q,
     const float *next_q,
+    const uint8_t *prev_highlights,
+    const uint8_t *curr_highlights,
+    const uint8_t *next_highlights,
     float *out_i,
     float *out_q)
 {
     out_i[0] = curr_i[0];
     out_q[0] = curr_q[0];
 
-    for(int x = 1; x < width - 1; ++x)
+    if(!curr_highlights)
     {
-        float values_i[9] = {
-            prev_i[x - 1], prev_i[x], prev_i[x + 1],
-            curr_i[x - 1], curr_i[x], curr_i[x + 1],
-            next_i[x - 1], next_i[x], next_i[x + 1]
-        };
-        float values_q[9] = {
-            prev_q[x - 1], prev_q[x], prev_q[x + 1],
-            curr_q[x - 1], curr_q[x], curr_q[x + 1],
-            next_q[x - 1], next_q[x], next_q[x + 1]
-        };
+        for(int x = 1; x < width - 1; ++x)
+        {
+            float values_i[9] = {
+                prev_i[x - 1], prev_i[x], prev_i[x + 1],
+                curr_i[x - 1], curr_i[x], curr_i[x + 1],
+                next_i[x - 1], next_i[x], next_i[x + 1]
+            };
+            float values_q[9] = {
+                prev_q[x - 1], prev_q[x], prev_q[x + 1],
+                curr_q[x - 1], curr_q[x], curr_q[x + 1],
+                next_q[x - 1], next_q[x], next_q[x + 1]
+            };
 
-        out_i[x] = median9_float(values_i);
-        out_q[x] = median9_float(values_q);
+            out_i[x] = median9_float(values_i);
+            out_q[x] = median9_float(values_q);
+        }
+    }
+    else
+    {
+        const float *i_rows[3] = { prev_i, curr_i, next_i };
+        const float *q_rows[3] = { prev_q, curr_q, next_q };
+        const uint8_t *highlight_rows[3] = { prev_highlights, curr_highlights, next_highlights };
+
+        for(int x = 1; x < width - 1; ++x)
+        {
+            if(highlight_is_protected(curr_highlights, x))
+            {
+                out_i[x] = curr_i[x];
+                out_q[x] = curr_q[x];
+                continue;
+            }
+
+            float values_i[9];
+            float values_q[9];
+            int value_count = 0;
+
+            for(int sample_row = 0; sample_row < 3; ++sample_row)
+            {
+                for(int sample_column = x - 1; sample_column <= x + 1; ++sample_column)
+                {
+                    if(highlight_is_protected(highlight_rows[sample_row], sample_column)) continue;
+
+                    values_i[value_count] = i_rows[sample_row][sample_column];
+                    values_q[value_count] = q_rows[sample_row][sample_column];
+                    ++value_count;
+                }
+            }
+
+            if(value_count == 9)
+            {
+                out_i[x] = median9_float(values_i);
+                out_q[x] = median9_float(values_q);
+            }
+            else if(value_count > 0)
+            {
+                out_i[x] = median_float(values_i, value_count);
+                out_q[x] = median_float(values_q, value_count);
+            }
+            else
+            {
+                out_i[x] = curr_i[x];
+                out_q[x] = curr_q[x];
+            }
+        }
     }
 
     out_i[width - 1] = curr_i[width - 1];
     out_q[width - 1] = curr_q[width - 1];
 }
 
+static float luminance_similarity_weight(float center_y, float sample_y)
+{
+    float luminance_scale = 1024.0f + 0.05f * MAX(center_y, sample_y);
+    float ratio = fabsf(sample_y - center_y) / luminance_scale;
+    return 1.0f / (1.0f + ratio * ratio);
+}
+
+static void store_edge_aware_pixel(
+    float *pixel,
+    float luminance,
+    float original_i,
+    float original_q,
+    float candidate_i,
+    float candidate_q,
+    const float channel_max[3])
+{
+    float original_chroma_squared = original_i * original_i + original_q * original_q;
+    float chroma_dot = original_i * candidate_i + original_q * candidate_q;
+
+    if(original_chroma_squared > 4096.0f && chroma_dot < 0.0f)
+    {
+        candidate_i = 0.0f;
+        candidate_q = 0.0f;
+    }
+
+    float candidate[3] = {
+        luminance + 0.956f * candidate_i + 0.621f * candidate_q,
+        luminance - 0.272f * candidate_i - 0.647f * candidate_q,
+        luminance - 1.105f * candidate_i + 1.702f * candidate_q
+    };
+    float original[3] = { pixel[0], pixel[1], pixel[2] };
+    float correction_blend = 1.0f;
+
+    for(int channel = 0; channel < 3; ++channel)
+    {
+        float correction = candidate[channel] - original[channel];
+        float channel_blend = 1.0f;
+
+        if(candidate[channel] < 0.0f && correction < 0.0f) {
+            channel_blend = original[channel] / -correction;
+        } else if(candidate[channel] > channel_max[channel] && correction > 0.0f) {
+            channel_blend = (channel_max[channel] - original[channel]) / correction;
+        }
+
+        correction_blend = MIN(correction_blend, channel_blend);
+    }
+
+    correction_blend = MAX(0.0f, MIN(1.0f, correction_blend));
+    for(int channel = 0; channel < 3; ++channel) {
+        pixel[channel] = original[channel] + correction_blend * (candidate[channel] - original[channel]);
+    }
+}
+
 static void finalize_false_color_row(
     float *frame,
     int width,
     int row,
-    const float *Y,
+    const float *prev_y,
+    const float *curr_y,
+    const float *next_y,
+    const float *original_i,
+    const float *original_q,
     const float *prev_i,
     const float *curr_i,
     const float *next_i,
     const float *prev_q,
     const float *curr_q,
-    const float *next_q)
+    const float *next_q,
+    const uint8_t *prev_highlights,
+    const uint8_t *curr_highlights,
+    const uint8_t *next_highlights,
+    int edge_aware,
+    const float channel_max[3])
 {
     float *pix = frame + (row * width * 3);
 
-    pix[0] = Y[0] + 0.956f * curr_i[0] + 0.621f * curr_q[0];
-    pix[1] = Y[0] - 0.272f * curr_i[0] - 0.647f * curr_q[0];
-    pix[2] = Y[0] - 1.105f * curr_i[0] + 1.702f * curr_q[0];
-
-    #pragma omp simd
-    for(int x = 1; x < width - 1; ++x)
+    if(!highlight_is_protected(curr_highlights, 0))
     {
-        float out_i = (prev_i[x - 1] + prev_i[x] + prev_i[x + 1]
-                     + curr_i[x - 1] + curr_i[x] + curr_i[x + 1]
-                     + next_i[x - 1] + next_i[x] + next_i[x + 1]) / 9.0f;
-        float out_q = (prev_q[x - 1] + prev_q[x] + prev_q[x + 1]
-                     + curr_q[x - 1] + curr_q[x] + curr_q[x + 1]
-                     + next_q[x - 1] + next_q[x] + next_q[x + 1]) / 9.0f;
-        float *dst = pix + (x * 3);
+        pix[0] = curr_y[0] + 0.956f * curr_i[0] + 0.621f * curr_q[0];
+        pix[1] = curr_y[0] - 0.272f * curr_i[0] - 0.647f * curr_q[0];
+        pix[2] = curr_y[0] - 1.105f * curr_i[0] + 1.702f * curr_q[0];
+    }
 
-        dst[0] = Y[x] + 0.956f * out_i + 0.621f * out_q;
-        dst[1] = Y[x] - 0.272f * out_i - 0.647f * out_q;
-        dst[2] = Y[x] - 1.105f * out_i + 1.702f * out_q;
+    if(!edge_aware)
+    {
+        if(!curr_highlights)
+        {
+            #pragma omp simd
+            for(int x = 1; x < width - 1; ++x)
+            {
+                float out_i = (prev_i[x - 1] + prev_i[x] + prev_i[x + 1]
+                             + curr_i[x - 1] + curr_i[x] + curr_i[x + 1]
+                             + next_i[x - 1] + next_i[x] + next_i[x + 1]) / 9.0f;
+                float out_q = (prev_q[x - 1] + prev_q[x] + prev_q[x + 1]
+                             + curr_q[x - 1] + curr_q[x] + curr_q[x + 1]
+                             + next_q[x - 1] + next_q[x] + next_q[x + 1]) / 9.0f;
+                float *dst = pix + (x * 3);
+
+                dst[0] = curr_y[x] + 0.956f * out_i + 0.621f * out_q;
+                dst[1] = curr_y[x] - 0.272f * out_i - 0.647f * out_q;
+                dst[2] = curr_y[x] - 1.105f * out_i + 1.702f * out_q;
+            }
+        }
+        else
+        {
+            const float *i_rows[3] = { prev_i, curr_i, next_i };
+            const float *q_rows[3] = { prev_q, curr_q, next_q };
+            const uint8_t *highlight_rows[3] = { prev_highlights, curr_highlights, next_highlights };
+
+            for(int x = 1; x < width - 1; ++x)
+            {
+                if(highlight_is_protected(curr_highlights, x)) continue;
+
+                int value_count = 0;
+                for(int sample_row = 0; sample_row < 3; ++sample_row)
+                {
+                    for(int sample_column = x - 1; sample_column <= x + 1; ++sample_column)
+                    {
+                        if(!highlight_is_protected(highlight_rows[sample_row], sample_column)) {
+                            ++value_count;
+                        }
+                    }
+                }
+
+                float out_i;
+                float out_q;
+                if(value_count == 9)
+                {
+                    out_i = (prev_i[x - 1] + prev_i[x] + prev_i[x + 1]
+                           + curr_i[x - 1] + curr_i[x] + curr_i[x + 1]
+                           + next_i[x - 1] + next_i[x] + next_i[x + 1]) / 9.0f;
+                    out_q = (prev_q[x - 1] + prev_q[x] + prev_q[x + 1]
+                           + curr_q[x - 1] + curr_q[x] + curr_q[x + 1]
+                           + next_q[x - 1] + next_q[x] + next_q[x + 1]) / 9.0f;
+                }
+                else if(value_count > 0)
+                {
+                    float sum_i = 0.0f;
+                    float sum_q = 0.0f;
+                    for(int sample_row = 0; sample_row < 3; ++sample_row)
+                    {
+                        for(int sample_column = x - 1; sample_column <= x + 1; ++sample_column)
+                        {
+                            if(highlight_is_protected(highlight_rows[sample_row], sample_column)) continue;
+
+                            sum_i += i_rows[sample_row][sample_column];
+                            sum_q += q_rows[sample_row][sample_column];
+                        }
+                    }
+                    out_i = sum_i / value_count;
+                    out_q = sum_q / value_count;
+                }
+                else
+                {
+                    continue;
+                }
+
+                float *dst = pix + (x * 3);
+                dst[0] = curr_y[x] + 0.956f * out_i + 0.621f * out_q;
+                dst[1] = curr_y[x] - 0.272f * out_i - 0.647f * out_q;
+                dst[2] = curr_y[x] - 1.105f * out_i + 1.702f * out_q;
+            }
+        }
+    }
+    else
+    {
+        const float *y_rows[3] = { prev_y, curr_y, next_y };
+        const float *i_rows[3] = { prev_i, curr_i, next_i };
+        const float *q_rows[3] = { prev_q, curr_q, next_q };
+        const uint8_t *highlight_rows[3] = { prev_highlights, curr_highlights, next_highlights };
+
+        for(int x = 1; x < width - 1; ++x)
+        {
+            if(highlight_is_protected(curr_highlights, x)) continue;
+
+            float weighted_i = 0.0f;
+            float weighted_q = 0.0f;
+            float total_weight = 0.0f;
+
+            for(int sample_row = 0; sample_row < 3; ++sample_row)
+            {
+                for(int sample_x = x - 1; sample_x <= x + 1; ++sample_x)
+                {
+                    if(highlight_is_protected(highlight_rows[sample_row], sample_x)) continue;
+
+                    float weight = luminance_similarity_weight(curr_y[x], y_rows[sample_row][sample_x]);
+                    weighted_i += weight * i_rows[sample_row][sample_x];
+                    weighted_q += weight * q_rows[sample_row][sample_x];
+                    total_weight += weight;
+                }
+            }
+
+            if(!(total_weight > 0.0f)) continue;
+
+            float candidate_i = weighted_i / total_weight;
+            float candidate_q = weighted_q / total_weight;
+            store_edge_aware_pixel(
+                pix + (x * 3), curr_y[x], original_i[x], original_q[x],
+                candidate_i, candidate_q, channel_max);
+        }
     }
 
     pix += (width - 1) * 3;
-    pix[0] = Y[width - 1] + 0.956f * curr_i[width - 1] + 0.621f * curr_q[width - 1];
-    pix[1] = Y[width - 1] - 0.272f * curr_i[width - 1] - 0.647f * curr_q[width - 1];
-    pix[2] = Y[width - 1] - 1.105f * curr_i[width - 1] + 1.702f * curr_q[width - 1];
+    if(!highlight_is_protected(curr_highlights, width - 1))
+    {
+        pix[0] = curr_y[width - 1] + 0.956f * curr_i[width - 1] + 0.621f * curr_q[width - 1];
+        pix[1] = curr_y[width - 1] - 0.272f * curr_i[width - 1] - 0.647f * curr_q[width - 1];
+        pix[2] = curr_y[width - 1] - 1.105f * curr_i[width - 1] + 1.702f * curr_q[width - 1];
+    }
 }
 
-void debayerFalseColorCorrection(uint16_t *frame, int width, int height, int steps, const double wb_multipliers[3])
+void debayerFalseColorCorrection(uint16_t *frame, int width, int height, int steps, const double wb_multipliers[3], int edge_aware, const uint8_t *highlight_map)
 {
     if(!frame || !wb_multipliers || steps <= 0 || width < 3 || height < 4) {
         return;
@@ -166,6 +417,11 @@ void debayerFalseColorCorrection(uint16_t *frame, int width, int height, int ste
     float *Q = I + pixel_count;
     float *filtered_i = Q + pixel_count;
     float *filtered_q = filtered_i + pixel_count;
+    float channel_max[3];
+
+    for(int channel = 0; channel < 3; ++channel) {
+        channel_max[channel] = 65535.0f * normalized_wb[channel];
+    }
 
 #pragma omp parallel for
     for(size_t pixel = 0; pixel < pixel_count; ++pixel)
@@ -207,6 +463,9 @@ void debayerFalseColorCorrection(uint16_t *frame, int width, int height, int ste
                         Q + ((y - 1) * width),
                         Q + (y * width),
                         Q + ((y + 1) * width),
+                        highlight_map ? highlight_map + ((y - 1) * width) : NULL,
+                        highlight_map ? highlight_map + (y * width) : NULL,
+                        highlight_map ? highlight_map + ((y + 1) * width) : NULL,
                         out_i,
                         out_q);
                 }
@@ -216,13 +475,23 @@ void debayerFalseColorCorrection(uint16_t *frame, int width, int height, int ste
             for(int y = 1; y < height - 1; ++y)
             {
                 finalize_false_color_row(
-                    working_frame, width, y, Y + (y * width),
+                    working_frame, width, y,
+                    Y + ((y - 1) * width),
+                    Y + (y * width),
+                    Y + ((y + 1) * width),
+                    I + (y * width),
+                    Q + (y * width),
                     filtered_i + ((y - 1) * width),
                     filtered_i + (y * width),
                     filtered_i + ((y + 1) * width),
                     filtered_q + ((y - 1) * width),
                     filtered_q + (y * width),
-                    filtered_q + ((y + 1) * width));
+                    filtered_q + ((y + 1) * width),
+                    highlight_map ? highlight_map + ((y - 1) * width) : NULL,
+                    highlight_map ? highlight_map + (y * width) : NULL,
+                    highlight_map ? highlight_map + ((y + 1) * width) : NULL,
+                    edge_aware,
+                    channel_max);
             }
         }
     }
@@ -230,6 +499,10 @@ void debayerFalseColorCorrection(uint16_t *frame, int width, int height, int ste
 #pragma omp parallel for
     for(size_t pixel = 0; pixel < pixel_count; ++pixel)
     {
+        if(highlight_map && (highlight_map[pixel] & DEBAYER_FCS_HIGHLIGHT_PROTECT)) {
+            continue;
+        }
+
         size_t offset = pixel * 3;
         frame[offset] = float_to_uint16(working_frame[offset] / normalized_wb[0]);
         frame[offset + 1] = float_to_uint16(working_frame[offset + 1] / normalized_wb[1]);
