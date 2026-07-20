@@ -241,7 +241,6 @@ static void finalize_false_color_row(
     const uint8_t *prev_highlights,
     const uint8_t *curr_highlights,
     const uint8_t *next_highlights,
-    int edge_aware,
     const float channel_max[3])
 {
     float *pix = frame + (row * width * 3);
@@ -253,123 +252,39 @@ static void finalize_false_color_row(
         pix[2] = curr_y[0] - 1.105f * curr_i[0] + 1.702f * curr_q[0];
     }
 
-    if(!edge_aware)
+    const float *y_rows[3] = { prev_y, curr_y, next_y };
+    const float *i_rows[3] = { prev_i, curr_i, next_i };
+    const float *q_rows[3] = { prev_q, curr_q, next_q };
+    const uint8_t *highlight_rows[3] = { prev_highlights, curr_highlights, next_highlights };
+
+    for(int x = 1; x < width - 1; ++x)
     {
-        if(!curr_highlights)
-        {
-            #pragma omp simd
-            for(int x = 1; x < width - 1; ++x)
-            {
-                float out_i = (prev_i[x - 1] + prev_i[x] + prev_i[x + 1]
-                             + curr_i[x - 1] + curr_i[x] + curr_i[x + 1]
-                             + next_i[x - 1] + next_i[x] + next_i[x + 1]) / 9.0f;
-                float out_q = (prev_q[x - 1] + prev_q[x] + prev_q[x + 1]
-                             + curr_q[x - 1] + curr_q[x] + curr_q[x + 1]
-                             + next_q[x - 1] + next_q[x] + next_q[x + 1]) / 9.0f;
-                float *dst = pix + (x * 3);
+        if(highlight_is_protected(curr_highlights, x)) continue;
 
-                dst[0] = curr_y[x] + 0.956f * out_i + 0.621f * out_q;
-                dst[1] = curr_y[x] - 0.272f * out_i - 0.647f * out_q;
-                dst[2] = curr_y[x] - 1.105f * out_i + 1.702f * out_q;
+        float weighted_i = 0.0f;
+        float weighted_q = 0.0f;
+        float total_weight = 0.0f;
+
+        for(int sample_row = 0; sample_row < 3; ++sample_row)
+        {
+            for(int sample_x = x - 1; sample_x <= x + 1; ++sample_x)
+            {
+                if(highlight_is_protected(highlight_rows[sample_row], sample_x)) continue;
+
+                float weight = luminance_similarity_weight(curr_y[x], y_rows[sample_row][sample_x]);
+                weighted_i += weight * i_rows[sample_row][sample_x];
+                weighted_q += weight * q_rows[sample_row][sample_x];
+                total_weight += weight;
             }
         }
-        else
-        {
-            const float *i_rows[3] = { prev_i, curr_i, next_i };
-            const float *q_rows[3] = { prev_q, curr_q, next_q };
-            const uint8_t *highlight_rows[3] = { prev_highlights, curr_highlights, next_highlights };
 
-            for(int x = 1; x < width - 1; ++x)
-            {
-                if(highlight_is_protected(curr_highlights, x)) continue;
+        if(!(total_weight > 0.0f)) continue;
 
-                int value_count = 0;
-                for(int sample_row = 0; sample_row < 3; ++sample_row)
-                {
-                    for(int sample_column = x - 1; sample_column <= x + 1; ++sample_column)
-                    {
-                        if(!highlight_is_protected(highlight_rows[sample_row], sample_column)) {
-                            ++value_count;
-                        }
-                    }
-                }
-
-                float out_i;
-                float out_q;
-                if(value_count == 9)
-                {
-                    out_i = (prev_i[x - 1] + prev_i[x] + prev_i[x + 1]
-                           + curr_i[x - 1] + curr_i[x] + curr_i[x + 1]
-                           + next_i[x - 1] + next_i[x] + next_i[x + 1]) / 9.0f;
-                    out_q = (prev_q[x - 1] + prev_q[x] + prev_q[x + 1]
-                           + curr_q[x - 1] + curr_q[x] + curr_q[x + 1]
-                           + next_q[x - 1] + next_q[x] + next_q[x + 1]) / 9.0f;
-                }
-                else if(value_count > 0)
-                {
-                    float sum_i = 0.0f;
-                    float sum_q = 0.0f;
-                    for(int sample_row = 0; sample_row < 3; ++sample_row)
-                    {
-                        for(int sample_column = x - 1; sample_column <= x + 1; ++sample_column)
-                        {
-                            if(highlight_is_protected(highlight_rows[sample_row], sample_column)) continue;
-
-                            sum_i += i_rows[sample_row][sample_column];
-                            sum_q += q_rows[sample_row][sample_column];
-                        }
-                    }
-                    out_i = sum_i / value_count;
-                    out_q = sum_q / value_count;
-                }
-                else
-                {
-                    continue;
-                }
-
-                float *dst = pix + (x * 3);
-                dst[0] = curr_y[x] + 0.956f * out_i + 0.621f * out_q;
-                dst[1] = curr_y[x] - 0.272f * out_i - 0.647f * out_q;
-                dst[2] = curr_y[x] - 1.105f * out_i + 1.702f * out_q;
-            }
-        }
-    }
-    else
-    {
-        const float *y_rows[3] = { prev_y, curr_y, next_y };
-        const float *i_rows[3] = { prev_i, curr_i, next_i };
-        const float *q_rows[3] = { prev_q, curr_q, next_q };
-        const uint8_t *highlight_rows[3] = { prev_highlights, curr_highlights, next_highlights };
-
-        for(int x = 1; x < width - 1; ++x)
-        {
-            if(highlight_is_protected(curr_highlights, x)) continue;
-
-            float weighted_i = 0.0f;
-            float weighted_q = 0.0f;
-            float total_weight = 0.0f;
-
-            for(int sample_row = 0; sample_row < 3; ++sample_row)
-            {
-                for(int sample_x = x - 1; sample_x <= x + 1; ++sample_x)
-                {
-                    if(highlight_is_protected(highlight_rows[sample_row], sample_x)) continue;
-
-                    float weight = luminance_similarity_weight(curr_y[x], y_rows[sample_row][sample_x]);
-                    weighted_i += weight * i_rows[sample_row][sample_x];
-                    weighted_q += weight * q_rows[sample_row][sample_x];
-                    total_weight += weight;
-                }
-            }
-
-            if(!(total_weight > 0.0f)) continue;
-
-            float candidate_i = weighted_i / total_weight;
-            float candidate_q = weighted_q / total_weight;
-            store_edge_aware_pixel(
-                pix + (x * 3), curr_y[x], original_i[x], original_q[x],
-                candidate_i, candidate_q, channel_max);
-        }
+        float candidate_i = weighted_i / total_weight;
+        float candidate_q = weighted_q / total_weight;
+        store_edge_aware_pixel(
+            pix + (x * 3), curr_y[x], original_i[x], original_q[x],
+            candidate_i, candidate_q, channel_max);
     }
 
     pix += (width - 1) * 3;
@@ -381,7 +296,7 @@ static void finalize_false_color_row(
     }
 }
 
-void debayerFalseColorCorrection(uint16_t *frame, int width, int height, int steps, const double wb_multipliers[3], int edge_aware, const uint8_t *highlight_map)
+void debayerFalseColorCorrection(uint16_t *frame, int width, int height, int steps, const double wb_multipliers[3], const uint8_t *highlight_map)
 {
     if(!frame || !wb_multipliers || steps <= 0 || width < 3 || height < 4) {
         return;
@@ -490,7 +405,6 @@ void debayerFalseColorCorrection(uint16_t *frame, int width, int height, int ste
                     highlight_map ? highlight_map + ((y - 1) * width) : NULL,
                     highlight_map ? highlight_map + (y * width) : NULL,
                     highlight_map ? highlight_map + ((y + 1) * width) : NULL,
-                    edge_aware,
                     channel_max);
             }
         }
@@ -879,7 +793,7 @@ void debayerEasy(uint16_t * __restrict debayerto, float * __restrict bayerdata, 
     }
 }
 
-void debayerLibRtProcess(uint16_t *debayerto, float *bayerdata, int width, int height, int algorithm, double camMatrix[9], int lmmseIterations, int dcbIterations)
+void debayerLibRtProcess(uint16_t *debayerto, float *bayerdata, int width, int height, int algorithm, double camMatrix[9])
 {
     int pixelsize = width * height;
 
@@ -899,7 +813,7 @@ void debayerLibRtProcess(uint16_t *debayerto, float *bayerdata, int width, int h
     for (int y = 0; y < height; ++y) blue2d[y] = (float *)(blue1d+(y*width));
 
     if( algorithm == 4)
-        lrtpLmmseDemosaic( imagefloat2d, red2d, green2d, blue2d, width, height, lmmseIterations );
+        lrtpLmmseDemosaic( imagefloat2d, red2d, green2d, blue2d, width, height );
     else if( algorithm == 5 )
         lrtpIgvDemosaic( imagefloat2d, red2d, green2d, blue2d, width, height );
     else if( algorithm == 6 )
@@ -907,7 +821,7 @@ void debayerLibRtProcess(uint16_t *debayerto, float *bayerdata, int width, int h
     else if( algorithm == 7 )
         lrtpRcdDemosaic( imagefloat2d, red2d, green2d, blue2d, width, height );
     else if( algorithm == 8 )
-        lrtpDcbDemosaic( imagefloat2d, red2d, green2d, blue2d, width, height, dcbIterations );
+        lrtpDcbDemosaic( imagefloat2d, red2d, green2d, blue2d, width, height );
     else //AMaZE
         lrtpAmazeDemosaic( imagefloat2d, red2d, green2d, blue2d, width, height );
 

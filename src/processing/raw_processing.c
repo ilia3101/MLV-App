@@ -93,6 +93,7 @@ processingObject_t * initProcessingObject()
 
     processing->exr_mode = 0;
     processing->AgX = 1;
+    processing->false_color_steps = 0;
 
     processing->filter = initFilterObject();
 
@@ -481,14 +482,20 @@ static uint8_t *build_false_color_highlight_map(
     return highlight_map;
 }
 
+void processingSetFalseColorSteps(processingObject_t * processing, int steps)
+{
+    if(!processing) return;
+    if(steps < 0) steps = 0;
+    if(steps > 5) steps = 5;
+    processing->false_color_steps = steps;
+}
+
 /* Apply it with multiple threads */
 void applyProcessingObject( processingObject_t * processing, 
                             int imageX, int imageY, 
                             uint16_t * __restrict inputImage, 
                             uint16_t * __restrict outputImage,
-                            int threads, int imageChanged, uint64_t frameIndex,
-                            int falseColorSteps,
-                            int falseColorEdgeAware )
+                            int threads, int imageChanged, uint64_t frameIndex )
 {
     /* Do transformation */
     get_frame_transformed(processing, inputImage, imageX, imageY);
@@ -541,18 +548,18 @@ void applyProcessingObject( processingObject_t * processing,
     #pragma omp parallel for
     for (int i = 0; i < img_s; ++i) inputImage[i] = processing->pre_calc_levels[inputImage[i]];
 
+    /* Per-frame applied steps: never clear processing->false_color_steps (user setting). */
     uint8_t *highlight_map = NULL;
-    int applied_false_color_steps = falseColorSteps;
-    if(processing->highlight_reconstruction && falseColorSteps > 0) {
+    if(processing->highlight_reconstruction && processing->false_color_steps > 0) {
         highlight_map = build_false_color_highlight_map(processing, imageX, imageY, inputImage);
         if(!highlight_map) {
-            applied_false_color_steps = 0;
+            processing->false_color_steps = 0;
         }
     }
 
     debayerFalseColorCorrection(
-        inputImage, imageX, imageY, applied_false_color_steps,
-        processing->wb_multipliers, falseColorEdgeAware, highlight_map);
+        inputImage, imageX, imageY, processing->false_color_steps,
+        processing->wb_multipliers, highlight_map);
 
     /* If threads is 1, no threads are needed */
     if (threads == 1)

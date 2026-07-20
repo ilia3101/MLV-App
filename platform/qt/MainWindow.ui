@@ -2975,22 +2975,23 @@ QGroupBox::indicator:checked:disabled {
                   </widget>
                  </item>
                  <item row="1" column="1">
-                  <widget class="NoScrollSlider" name="horizontalSliderDebayerFalseColor">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
+                  <spacer name="horizontalSpacerDebayerFalseColor">
                    <property name="orientation">
                     <enum>Qt::Horizontal</enum>
                    </property>
-                   <property name="maximum">
-                    <number>5</number>
+                   <property name="sizeType">
+                    <enum>QSizePolicy::Maximum</enum>
                    </property>
-                  </widget>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
                  </item>
                  <item row="1" column="2">
-                  <widget class="QLabel" name="labelDebayerFalseColorValue">
+                  <widget class="DoubleClickLabel" name="labelDebayerFalseColorVal">
                    <property name="font">
                     <font>
                      <pointsize>10</pointsize>
@@ -3004,99 +3005,27 @@ QGroupBox::indicator:checked:disabled {
                    </property>
                   </widget>
                  </item>
-                 <item row="2" column="0">
-                  <widget class="QLabel" name="labelDebayerLmmseIterations">
+                 <item row="2" column="0" colspan="3">
+                  <widget class="NoScrollSlider" name="horizontalSliderDebayerFalseColor">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
                    <property name="font">
                     <font>
                      <pointsize>10</pointsize>
                     </font>
-                   </property>
-                   <property name="toolTip">
-                    <string>Adds gamma (step 1), median (steps 2-4), and refinement (steps 5-6) to reduce artifacts and improve the signal-to-noise ratio.</string>
-                   </property>
-                   <property name="text">
-                    <string>LMMSE Enhancement</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="2" column="1">
-                  <widget class="NoScrollSlider" name="horizontalSliderDebayerLmmseIterations">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-                   <property name="toolTip">
-                    <string>Adds gamma (step 1), median (steps 2-4), and refinement (steps 5-6) to reduce artifacts and improve the signal-to-noise ratio.</string>
-                   </property>
-                   <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
-                   </property>
-                   <property name="maximum">
-                    <number>6</number>
-                   </property>
-                   <property name="value">
-                    <number>1</number>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="2" column="2">
-                  <widget class="QLabel" name="labelDebayerLmmseIterationsValue">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-                   <property name="text">
-                    <string>1</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="3" column="0">
-                  <widget class="QLabel" name="labelDebayerDcbIterations">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-                   <property name="text">
-                    <string>DCB Iter.</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="3" column="1">
-                  <widget class="NoScrollSlider" name="horizontalSliderDebayerDcbIterations">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-                   <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
                    </property>
                    <property name="maximum">
                     <number>5</number>
                    </property>
                    <property name="value">
-                    <number>2</number>
+                    <number>0</number>
                    </property>
-                  </widget>
-                 </item>
-                 <item row="3" column="2">
-                  <widget class="QLabel" name="labelDebayerDcbIterationsValue">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-                   <property name="text">
-                    <string>2</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
                    </property>
                   </widget>
                  </item>

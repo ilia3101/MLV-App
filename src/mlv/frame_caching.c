@@ -332,7 +332,7 @@ void get_mlv_raw_frame_debayered( mlvObject_t * video,
     if (/*debayer_type == 1 ||*/ debayer_type == 4 || debayer_type == 5 || /*debayer_type == 6 ||*/ debayer_type == 7 || debayer_type == 8)
     {
         //AMaZE and AHD disabled from librtprocess because of bad artifacts
-        debayerLibRtProcess(output_frame, temp_memory, width, height, debayer_type, video->processing->cam_matrix, getMlvDebayerLmmseIterations(video), getMlvDebayerDcbIterations(video));
+        debayerLibRtProcess(output_frame, temp_memory, width, height, debayer_type, video->processing->cam_matrix);
     }
     else if (debayer_type == 1 )
     {

@@ -217,6 +217,9 @@ typedef struct {
     uint8_t ca_desaturate; /* Range 0..100 */
     uint8_t ca_radius; /* Range 0.. */
 
+    /* False color suppression steps after demosaic (0 = off, typically 0..5) */
+    int false_color_steps;
+
     /* Transfer function */
     uint8_t transfer_split; /* Boolean */
     double transfer_split_value;

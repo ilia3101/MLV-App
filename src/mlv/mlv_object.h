@@ -137,11 +137,6 @@ typedef struct {
     /* Decides whether or not AMaZE *has* to be used or not, normally disabled for smooth playback */
     int use_amaze;
 
-    /* Extra debayer controls */
-    int debayer_false_color;
-    int debayer_lmmse_iterations;
-    int debayer_dcb_iterations;
-
     /* CA correction */
     //uint8_t ca_auto; /* off=0, on=1 */
     float ca_red;    /* Range -5..5 */

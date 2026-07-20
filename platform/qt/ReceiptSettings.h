@@ -125,8 +125,6 @@ public:
     void setLastPlaybackPosition( uint32_t pos ){m_lastPlaybackPosition = pos;}
     void setDebayer( uint8_t algorithm )      {m_debayer = algorithm;}
     void setDebayerFalseColor( int value )    {m_debayerFalseColor = value;}
-    void setDebayerLmmseIterations( int value ){m_debayerLmmseIterations = value;}
-    void setDebayerDcbIterations( int value ) {m_debayerDcbIterations = value;}
     void setMark( uint8_t mark )              {m_mark = mark;}
 
     bool wasNeverLoaded( void ){return m_neverLoaded;}
@@ -238,8 +236,6 @@ public:
     uint32_t lastPlaybackPosition( void ){return m_lastPlaybackPosition;}
     uint8_t debayer( void ){return m_debayer;}
     int debayerFalseColor( void ){return m_debayerFalseColor;}
-    int debayerLmmseIterations( void ){return m_debayerLmmseIterations;}
-    int debayerDcbIterations( void ){return m_debayerDcbIterations;}
     uint8_t mark( void ){return m_mark;}
 
 private:
@@ -353,8 +349,6 @@ private:
     uint32_t m_lastPlaybackPosition;
     uint8_t m_debayer;
     int m_debayerFalseColor;
-    int m_debayerLmmseIterations;
-    int m_debayerDcbIterations;
     uint8_t m_mark;
 };
 

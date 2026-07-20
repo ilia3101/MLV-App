@@ -117,7 +117,5 @@ ReceiptSettings::ReceiptSettings()
     m_lastPlaybackPosition = 0;
     m_debayer = AMaZE;
     m_debayerFalseColor = 0;
-    m_debayerLmmseIterations = 1;
-    m_debayerDcbIterations = 2;
     m_mark = 0;
 }

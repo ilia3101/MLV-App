@@ -94,28 +94,6 @@ extern const char* camidGetCameraName(uint32_t cameraModel, int camname_type);
 #define SET_ACTIVE_CLIP_IDX(index)   m_pModel->setActiveRow(index)
 #define SESSION_EMPTY                m_pModel->rowCount(QModelIndex())==0
 
-static int clampDebayerOption(int value, int minValue, int maxValue)
-{
-    if(value < minValue) {
-        return minValue;
-    }
-    if(value > maxValue) {
-        return maxValue;
-    }
-    return value;
-}
-
-static void setDebayerOptions(mlvObject_t *video, int falseColor, int lmmseIterations, int dcbIterations)
-{
-    if(!video) {
-        return;
-    }
-
-    setMlvDebayerFalseColor(video, clampDebayerOption(falseColor, 0, 5));
-    setMlvDebayerLmmseIterations(video, clampDebayerOption(lmmseIterations, 0, 6));
-    setMlvDebayerDcbIterations(video, clampDebayerOption(dcbIterations, 0, 5));
-}
-
 //Constructor
 MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     QMainWindow(parent),
@@ -170,7 +148,6 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     initLib();
     
     resetSliders();
-    updateDebayerOptionVisibility();
 
     //Setup Toning (has to be done after initLib())
     on_horizontalSliderTone_valueChanged( 0 );
@@ -1768,10 +1745,9 @@ void MainWindow::startExportPipe(QString fileName)
     //Disable GUI drawing
     m_dontDraw = true;
 
-    setDebayerOptions( m_pMlvObject,
-                       m_exportQueue.first()->debayerFalseColor(),
-                       m_exportQueue.first()->debayerLmmseIterations(),
-                       m_exportQueue.first()->debayerDcbIterations() );
+    processingSetFalseColorSteps(
+        m_pProcessingObject,
+        m_exportQueue.first()->debayerFalseColor() );
 
     //chose if we want to get amaze frames for exporting, or bilinear
     if( m_exportDebayerMode == 0 )
@@ -3086,10 +3062,9 @@ void MainWindow::startExportAVFoundation(QString fileName)
     //Disable GUI drawing
     m_dontDraw = true;
 
-    setDebayerOptions( m_pMlvObject,
-                       m_exportQueue.first()->debayerFalseColor(),
-                       m_exportQueue.first()->debayerLmmseIterations(),
-                       m_exportQueue.first()->debayerDcbIterations() );
+    processingSetFalseColorSteps(
+        m_pProcessingObject,
+        m_exportQueue.first()->debayerFalseColor() );
 
     //chose if we want to get amaze frames for exporting, or bilinear
     if( m_exportDebayerMode == 0 )
@@ -4363,17 +4338,7 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
         }
         else if( Rxml->isStartElement() && Rxml->name() == QString( "debayerFalseColor" ) )
         {
-            receipt->setDebayerFalseColor( clampDebayerOption( Rxml->readElementText().toInt(), 0, 5 ) );
-            Rxml->readNext();
-        }
-        else if( Rxml->isStartElement() && Rxml->name() == QString( "debayerLmmseIterations" ) )
-        {
-            receipt->setDebayerLmmseIterations( clampDebayerOption( Rxml->readElementText().toInt(), 0, 6 ) );
-            Rxml->readNext();
-        }
-        else if( Rxml->isStartElement() && Rxml->name() == QString( "debayerDcbIterations" ) )
-        {
-            receipt->setDebayerDcbIterations( clampDebayerOption( Rxml->readElementText().toInt(), 0, 5 ) );
+            receipt->setDebayerFalseColor( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
         else if( Rxml->isStartElement() ) //future features
@@ -4488,8 +4453,6 @@ void MainWindow::writeXmlElementsToFile(QXmlStreamWriter *xmlWriter, ReceiptSett
     xmlWriter->writeTextElement( "cutOut",                  QString( "%1" ).arg( receipt->cutOut() ) );
     xmlWriter->writeTextElement( "debayer",                 QString( "%1" ).arg( receipt->debayer() ) );
     xmlWriter->writeTextElement( "debayerFalseColor",       QString( "%1" ).arg( receipt->debayerFalseColor() ) );
-    xmlWriter->writeTextElement( "debayerLmmseIterations",  QString( "%1" ).arg( receipt->debayerLmmseIterations() ) );
-    xmlWriter->writeTextElement( "debayerDcbIterations",    QString( "%1" ).arg( receipt->debayerDcbIterations() ) );
 }
 
 //Delete all clips from Session
@@ -4912,8 +4875,6 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
 
     if( ui->actionPlaybackPosition->isChecked() ) ui->horizontalSliderPosition->setValue( receipt->lastPlaybackPosition() );
     ui->horizontalSliderDebayerFalseColor->setValue( receipt->debayerFalseColor() );
-    ui->horizontalSliderDebayerLmmseIterations->setValue( receipt->debayerLmmseIterations() );
-    ui->horizontalSliderDebayerDcbIterations->setValue( receipt->debayerDcbIterations() );
     ui->comboBoxDebayer->setCurrentIndex( receipt->debayer() );
     on_comboBoxDebayer_currentIndexChanged( receipt->debayer() );
 
@@ -5065,8 +5026,6 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
 
     receipt->setDebayer( ui->comboBoxDebayer->currentIndex() );
     receipt->setDebayerFalseColor( ui->horizontalSliderDebayerFalseColor->value() );
-    receipt->setDebayerLmmseIterations( ui->horizontalSliderDebayerLmmseIterations->value() );
-    receipt->setDebayerDcbIterations( ui->horizontalSliderDebayerDcbIterations->value() );
 
     receipt->setVidstabEnabled( ui->checkBoxVidstabEnable->isChecked() );
     receipt->setVidstabStepsize( ui->horizontalSliderVidstabStepsize->value() );
@@ -5173,8 +5132,6 @@ void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings 
     {
         receiptTarget->setDebayer( receiptSource->debayer() );
         receiptTarget->setDebayerFalseColor( receiptSource->debayerFalseColor() );
-        receiptTarget->setDebayerLmmseIterations( receiptSource->debayerLmmseIterations() );
-        receiptTarget->setDebayerDcbIterations( receiptSource->debayerDcbIterations() );
     }
 
     if( paste && cdui->checkBoxToning->isChecked() )
@@ -5404,8 +5361,6 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
 
     receipt->setDebayer( GET_RECEIPT( row )->debayer() );
     receipt->setDebayerFalseColor( GET_RECEIPT( row )->debayerFalseColor() );
-    receipt->setDebayerLmmseIterations( GET_RECEIPT( row )->debayerLmmseIterations() );
-    receipt->setDebayerDcbIterations( GET_RECEIPT( row )->debayerDcbIterations() );
 
     receipt->setFileName( GET_RECEIPT( row )->fileName() );
     receipt->setCutIn( GET_RECEIPT( row )->cutIn() );
@@ -10768,72 +10723,29 @@ void MainWindow::on_actionDarkThemeModern_triggered(bool checked)
 void MainWindow::on_comboBoxDebayer_currentIndexChanged(int index)
 {
     Q_UNUSED( index );
-    updateDebayerOptionVisibility();
     selectDebayerAlgorithm();
 }
 
 void MainWindow::on_horizontalSliderDebayerFalseColor_valueChanged(int value)
 {
-    ui->labelDebayerFalseColorValue->setText( QString("%1").arg( value ) );
-    if( !m_pMlvObject ) return;
+    ui->labelDebayerFalseColorVal->setText( QString("%1").arg( value ) );
+    if( !m_pProcessingObject ) return;
 
-    setDebayerOptions( m_pMlvObject,
-                       ui->horizontalSliderDebayerFalseColor->value(),
-                       ui->horizontalSliderDebayerLmmseIterations->value(),
-                       ui->horizontalSliderDebayerDcbIterations->value() );
-    resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
+    processingSetFalseColorSteps( m_pProcessingObject, value );
     m_frameChanged = true;
 }
 
-void MainWindow::on_horizontalSliderDebayerLmmseIterations_valueChanged(int value)
+void MainWindow::on_horizontalSliderDebayerFalseColor_doubleClicked()
 {
-    ui->labelDebayerLmmseIterationsValue->setText( QString("%1").arg( value ) );
-    if( !m_pMlvObject ) return;
-
-    setDebayerOptions( m_pMlvObject,
-                       ui->horizontalSliderDebayerFalseColor->value(),
-                       ui->horizontalSliderDebayerLmmseIterations->value(),
-                       ui->horizontalSliderDebayerDcbIterations->value() );
-    resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
-    m_frameChanged = true;
+    ui->horizontalSliderDebayerFalseColor->setValue( 0 );
 }
 
-void MainWindow::on_horizontalSliderDebayerDcbIterations_valueChanged(int value)
+void MainWindow::on_labelDebayerFalseColorVal_doubleClicked()
 {
-    ui->labelDebayerDcbIterationsValue->setText( QString("%1").arg( value ) );
-    if( !m_pMlvObject ) return;
-
-    setDebayerOptions( m_pMlvObject,
-                       ui->horizontalSliderDebayerFalseColor->value(),
-                       ui->horizontalSliderDebayerLmmseIterations->value(),
-                       ui->horizontalSliderDebayerDcbIterations->value() );
-    resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
-    m_frameChanged = true;
-}
-
-void MainWindow::updateDebayerOptionVisibility(void)
-{
-    int debayer = ui->comboBoxDebayer->currentIndex();
-    bool isLmmse = ( debayer == ReceiptSettings::LMMSE );
-    bool isDcb = ( debayer == ReceiptSettings::DCB );
-    bool supportsFalseColor = ( debayer != ReceiptSettings::None
-                             && debayer != ReceiptSettings::Simple
-                             && debayer != ReceiptSettings::Bilinear );
-
-    ui->labelDebayerFalseColor->setVisible( supportsFalseColor );
-    ui->horizontalSliderDebayerFalseColor->setVisible( supportsFalseColor );
-    ui->labelDebayerFalseColorValue->setVisible( supportsFalseColor );
-
-    ui->labelDebayerLmmseIterations->setVisible( isLmmse );
-    ui->horizontalSliderDebayerLmmseIterations->setVisible( isLmmse );
-    ui->labelDebayerLmmseIterationsValue->setVisible( isLmmse );
-
-    ui->labelDebayerDcbIterations->setVisible( isDcb );
-    ui->horizontalSliderDebayerDcbIterations->setVisible( isDcb );
-    ui->labelDebayerDcbIterationsValue->setVisible( isDcb );
+    EditSliderValueDialog editSlider;
+    editSlider.autoSetup( ui->horizontalSliderDebayerFalseColor, ui->labelDebayerFalseColorVal, 1.0, 0, 1.0 );
+    editSlider.exec();
+    ui->horizontalSliderDebayerFalseColor->setValue( editSlider.getValue() );
 }
 
 //Select the debayer algorithm in dependency to playback and chosen playback setting, or clip setting
@@ -10841,11 +10753,6 @@ void MainWindow::selectDebayerAlgorithm()
 {
     //Do nothing while preview pics are rendered when importing
     if( m_inOpeningProcess ) return;
-
-    setDebayerOptions( m_pMlvObject,
-                       ui->horizontalSliderDebayerFalseColor->value(),
-                       ui->horizontalSliderDebayerLmmseIterations->value(),
-                       ui->horizontalSliderDebayerDcbIterations->value() );
 
     //If no playback active change debayer to receipt settings
     if( !ui->actionPlay->isChecked() || ui->actionDontSwitchDebayerForPlayback->isChecked() )

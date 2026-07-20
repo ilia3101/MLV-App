@@ -406,8 +406,8 @@ private slots:
 
     void on_comboBoxDebayer_currentIndexChanged( int index );
     void on_horizontalSliderDebayerFalseColor_valueChanged( int value );
-    void on_horizontalSliderDebayerLmmseIterations_valueChanged( int value );
-    void on_horizontalSliderDebayerDcbIterations_valueChanged( int value );
+    void on_horizontalSliderDebayerFalseColor_doubleClicked();
+    void on_labelDebayerFalseColorVal_doubleClicked();
 
     void on_actionMarkRed_triggered();
     void on_actionMarkYellow_triggered();
@@ -420,7 +420,7 @@ private slots:
     void on_actionShowUnmarkedClips_toggled(bool arg1);
 
     void on_lineEditTransferFunction_textChanged(const QString &arg1);
-    void updateDebayerOptionVisibility( void );
+
 
 private:
     Ui::MainWindow *ui;

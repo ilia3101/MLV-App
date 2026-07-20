@@ -86,9 +86,10 @@ void applyProcessingObject( processingObject_t * processing,
                             int imageX, int imageY, 
                             uint16_t * __restrict inputImage, 
                             uint16_t * __restrict outputImage,
-                            int threads, int imageChanged, uint64_t frameIndex,
-                            int falseColorSteps,
-                            int falseColorEdgeAware );
+                            int threads, int imageChanged, uint64_t frameIndex );
+
+/* False color suppression steps after demosaic (0 = off) */
+void processingSetFalseColorSteps(processingObject_t * processing, int steps);
 
 /* This is for EXR output, works exactly the same as applyprocessing object,
  * except output is float and ready for EXR export. */
