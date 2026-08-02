@@ -31,12 +31,6 @@
 /* Lossless decompression */
 #include "liblj92/lj92.h"
 
-/* Cineform decompression */
-#ifdef ENABLE_CINEFORM
-#include "CineformSDK/Common/CFHDDecoder.h"
-#include "CineformSDK/Common/CFHDEncoder.h"
-#endif
-
 /* JPEG2000 decompression via OpenJPH */
 #ifdef ENABLE_JPEG2K
 #include "OpenJPH/ojph_wrapper.h"
@@ -354,63 +348,6 @@ int getMlvRawFrameUint16(mlvObject_t * video, uint64_t frameIndex, uint16_t * un
                 }
             }
             lj92_close(decoder_object);
-        }
-        else if (video->MLVI.videoClass & MLV_VIDEO_CLASS_FLAG_CINEFORM)
-        {
-#ifdef ENABLE_CINEFORM
-            if(fread(raw_frame, frame_size, 1, file) != 1)
-            {
-                DEBUG( printf("Frame data read error cineform\n"); )
-                free(raw_frame);
-                pthread_mutex_unlock(video->main_file_mutex + chunk);
-                return 1;
-            }
-
-            pthread_mutex_unlock(video->main_file_mutex + chunk);
-
-            CFHD_DecoderRef decoder = NULL;
-            CFHD_Error err = CFHD_OpenDecoder(&decoder, NULL);
-            if(err != CFHD_ERROR_OKAY)
-            {
-                DEBUG( printf("Cineform decoder: Failed to open decoder (error %d)\n", err); )
-                free(raw_frame);
-                return 1;
-            }
-
-            int actual_width = 0;
-            int actual_height = 0;
-            CFHD_PixelFormat actual_format = CFHD_PIXEL_FORMAT_BYR4;
-            err = CFHD_PrepareToDecode(decoder, width, height,
-                                       CFHD_PIXEL_FORMAT_BYR4,
-                                       CFHD_DECODED_RESOLUTION_FULL,
-                                       CFHD_DECODING_FLAGS_NONE,
-                                       raw_frame, frame_size,
-                                       &actual_width, &actual_height, &actual_format);
-            if(err != CFHD_ERROR_OKAY)
-            {
-                DEBUG( printf("Cineform decoder: PrepareToDecode failed (error %d)\n", err); )
-                CFHD_CloseDecoder(decoder);
-                free(raw_frame);
-                return 1;
-            }
-
-            err = CFHD_DecodeSample(decoder, raw_frame, frame_size,
-                                    unpackedFrame, width * 2);
-            if(err != CFHD_ERROR_OKAY)
-            {
-                DEBUG( printf("Cineform decoder: DecodeSample failed (error %d)\n", err); )
-                CFHD_CloseDecoder(decoder);
-                free(raw_frame);
-                return 1;
-            }
-
-            CFHD_CloseDecoder(decoder);
-#else
-            DEBUG( printf("Cineform codec is not enabled at build\n", err); )
-            free(raw_frame);
-            pthread_mutex_unlock(video->main_file_mutex + chunk);
-            return 1;
-#endif
         }
         else if (video->MLVI.videoClass & MLV_VIDEO_CLASS_FLAG_JPEG2K)
         {
@@ -1271,13 +1208,12 @@ uint16_t log_decode_int(uint16_t x, uint16_t bl, uint16_t max, uint16_t max_valu
 /* Save MLV headers */
 int saveMlvHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int export_mode, uint32_t frame_start, uint32_t frame_end, const char * version, char * error_message)
 {
-    int is_cineform = export_mode == MLV_CINEFORM;
     int is_jp2k = export_mode == MLV_JP2K_LOW
         || export_mode == MLV_JP2K_MED
         || export_mode == MLV_JP2K_HIGH
         || export_mode == MLV_JP2K_VERYHIGH
         || export_mode == MLV_JP2K_VISULOSSLESS;
-    int is_lossy = is_cineform || is_jp2k;
+    int is_lossy = is_jp2k;
 
     if(export_mode == MLV_DF_INT && !video->DARK.blockType[0])
     {
@@ -1313,7 +1249,6 @@ int saveMlvHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int
         "MLV_DECOMPRESS",
         "MLV_AVERAGED_FRAME",
         "MLV_DF_INT",
-        "MLV_CINEFORM",
         "MLV_JP2K_LOW",
         "MLV_JP2K_MED",
         "MLV_JP2K_HIGH",
@@ -1376,8 +1311,7 @@ int saveMlvHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int
     output_mlvi.videoClass = MLV_VIDEO_CLASS_RAW;
     if (export_mode == MLV_FAST_PASS) output_mlvi.videoClass = video->MLVI.videoClass;
     if (export_mode == MLV_LJ92) output_mlvi.videoClass |= MLV_VIDEO_CLASS_FLAG_LJ92;
-    else if (is_cineform) output_mlvi.videoClass |= MLV_VIDEO_CLASS_FLAG_CINEFORM;
-    else if (is_jp2k) output_mlvi.videoClass |= MLV_VIDEO_CLASS_FLAG_JPEG2K;
+    if (is_jp2k) output_mlvi.videoClass |= MLV_VIDEO_CLASS_FLAG_JPEG2K;
     output_mlvi.audioClass = (!export_audio || (export_mode == MLV_AVERAGED_FRAME || export_mode == MLV_DF_INT)) ? 0 : 1;
     if(export_mode == MLV_DF_INT)
     {
@@ -1596,7 +1530,6 @@ int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
      * and then encode. I have kept bouncyball's original efficient logic for uncompressed/lossless modes. */
     switch (export_mode)
     {
-        case MLV_CINEFORM:
         case MLV_JP2K_LOW:
         case MLV_JP2K_MED:
         case MLV_JP2K_HIGH:
@@ -1618,46 +1551,7 @@ int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int
                 frame[p] = encode_lut[frame[p]];
             }
 
-            if (export_mode == MLV_CINEFORM) {
-                #ifdef ENABLE_CINEFORM
-                CFHD_EncoderRef encoder = NULL;
-                if (CFHD_OpenEncoder(&encoder, NULL) == CFHD_ERROR_OKAY)
-                {
-                    if (CFHD_PrepareToEncode(encoder,
-                                              video->RAWI.xRes,
-                                              video->RAWI.yRes,
-                                              CFHD_PIXEL_FORMAT_BYR4,
-                                              CFHD_ENCODED_FORMAT_BAYER,
-                                              CFHD_ENCODING_FLAGS_NONE,
-                                              CFHD_ENCODING_QUALITY_FILMSCAN3) == CFHD_ERROR_OKAY)
-                    {
-                        if (CFHD_EncodeSample(encoder, frame, video->RAWI.xRes * 2) == CFHD_ERROR_OKAY)
-                        {
-                            void *sample_data = NULL;
-                            size_t sample_size = 0;
-                            if (CFHD_GetSampleData(encoder, &sample_data, &sample_size) == CFHD_ERROR_OKAY
-                                && sample_data && sample_size > 0)
-                            {
-                                vidf_hdr.blockSize = sizeof(mlv_vidf_hdr_t) + sample_size;
-                                vidf_hdr.frameSpace = 0;
-                                block_buf = malloc(vidf_hdr.blockSize);
-                                if (block_buf)
-                                {
-                                    memcpy(block_buf, &vidf_hdr, sizeof(mlv_vidf_hdr_t));
-                                    memcpy(block_buf + sizeof(mlv_vidf_hdr_t), sample_data, sample_size);
-                                }
-                            }
-                        }
-                    }
-                    CFHD_CloseEncoder(encoder);
-                }
-                #else
-                sprintf(error_message, "Cineform export is not enabled in this build (ENABLE_CINEFORM)");
-                free(frame);
-                return 1;
-                #endif
-            }
-            else if (
+            if (
                 export_mode == MLV_JP2K_LOW
                 ||export_mode == MLV_JP2K_MED
                 ||export_mode == MLV_JP2K_HIGH

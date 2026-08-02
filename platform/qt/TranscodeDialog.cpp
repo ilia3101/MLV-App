@@ -145,7 +145,6 @@ bool TranscodeDialog::supportedFileType(QString fileName)
 //Transcode via RAW2MLV
 void TranscodeDialog::on_pushButtonTranscode_clicked()
 {
-
     QString folderName = QFileDialog::getExistingDirectory(this, tr("Choose Destination Folder"),
                                                       m_lastTargetPath,
                                                       QFileDialog::ShowDirsOnly
@@ -162,42 +161,43 @@ void TranscodeDialog::on_pushButtonTranscode_clicked()
 #elif __WIN32__
         QString command = QString( "raw2mlv" );
 #else
-        QString command = QCoreApplication::applicationDirPath();
-        command.append( QString( "/raw2mlv\"" ) );
-        command.prepend( QString( "\"" ) );
+        QString command = QCoreApplication::applicationDirPath() + "/raw2mlv";
 #endif
+
+        QStringList args;
+
         //Input
         if( ui->treeWidget->topLevelItem(i)->childCount() == 0 )
         {
-            command.append( QString( " \"%1\"" ).arg( ui->treeWidget->topLevelItem(i)->text(1) ) );
+            args << ui->treeWidget->topLevelItem(i)->text(1);
         }
         else
         {
             for( int j = 0; j < ui->treeWidget->topLevelItem(i)->childCount(); j++ )
             {
-                command.append( QString( " \"%1\"" ).arg( ui->treeWidget->topLevelItem(i)->child(j)->text(1) ) );
+                args << ui->treeWidget->topLevelItem(i)->child(j)->text(1);
             }
         }
 
         //Output
-        command.append( QString( " -o \"%1/%2\"" ).arg( folderName ).arg( ui->treeWidget->topLevelItem(i)->text(2) ) );
+        args << "-o" << folderName + "/" + ui->treeWidget->topLevelItem(i)->text(2);
 
         //Compress
         if( ui->checkBoxCompress->isChecked() )
         {
-            command.append( QString( " --compression 1" ) );
+            args << "--compression" << "1";
         }
 
         //Bitdepth
         switch( ui->comboBoxBitDepth->currentIndex() )
         {
-        case 1: command.append( QString( " -b 10" ) );
+        case 1: args << "-b" << "10";
             break;
-        case 2: command.append( QString( " -b 12" ) );
+        case 2: args << "-b" << "12";
             break;
-        case 3: command.append( QString( " -b 14" ) );
+        case 3: args << "-b" << "14";
             break;
-        case 4: command.append( QString( " -b 16" ) );
+        case 4: args << "-b" << "16";
             break;
         default:
             break;
@@ -206,31 +206,31 @@ void TranscodeDialog::on_pushButtonTranscode_clicked()
         //Framerate
         switch( ui->comboBoxFps->currentIndex() )
         {
-        case 0: command.append( QString( " -f 24000 1001" ) );
+        case 0: args << "-f" << "24000" << "1001";
             break;
-        case 1: command.append( QString( " -f 24 1" ) );
+        case 1: args << "-f" << "24" << "1";
             break;
-        case 2: command.append( QString( " -f 25 1" ) );
+        case 2: args << "-f" << "25" << "1";
             break;
-        case 3: command.append( QString( " -f 30000 1001" ) );
+        case 3: args << "-f" << "30000" << "1001";
             break;
-        case 4: command.append( QString( " -f 30 1" ) );
+        case 4: args << "-f" << "30" << "1";
             break;
-        case 5: command.append( QString( " -f 48 1" ) );
+        case 5: args << "-f" << "48" << "1";
             break;
-        case 6: command.append( QString( " -f 50 1" ) );
+        case 6: args << "-f" << "50" << "1";
             break;
-        case 7: command.append( QString( " -f 60000 1001" ) );
+        case 7: args << "-f" << "60000" << "1001";
             break;
-        case 8: command.append( QString( " -f 60 1" ) );
+        case 8: args << "-f" << "60" << "1";
             break;
         default:
             break;
         }
 
-        qDebug() << command;
+        qDebug() << command << args;
         QProcess process;
-        process.execute( command );
+        process.execute( command, args );
 
         m_importList.append( QString( "%1/%2" ).arg( folderName ).arg( ui->treeWidget->topLevelItem(i)->text(2) ) );
     }

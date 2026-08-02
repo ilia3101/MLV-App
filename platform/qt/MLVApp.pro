@@ -41,9 +41,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 ##############
 # Feature gates: comment out to disable
 ##############
-CONFIG += cineform_enabled
 CONFIG += jpeg2k_enabled
-cineform_enabled: DEFINES += ENABLE_CINEFORM
 jpeg2k_enabled{
     DEFINES += \
         ENABLE_JPEG2K \
@@ -106,11 +104,11 @@ win32{
     QMAKE_CFLAGS += -O2 -fopenmp -mssse3 -msse3 -msse2 -msse -D_FILE_OFFSET_BITS=64 -std=c99 -ftree-vectorize
     LIBS += -llibgomp-1
     greaterThan(QT_MAJOR_VERSION, 5){
-        QMAKE_CXXFLAGS += -fopenmp -std=c++17 -ftree-vectorize
+        QMAKE_CXXFLAGS += -fopenmp -mssse3 -std=c++17 -ftree-vectorize
     }
     else
     {
-        QMAKE_CXXFLAGS += -fopenmp -std=c++14 -ftree-vectorize
+        QMAKE_CXXFLAGS += -fopenmp -mssse3 -std=c++14 -ftree-vectorize
     }
 }
 
@@ -260,16 +258,6 @@ SOURCES += \
     ../../src/librtprocess/src/include/librtprocesswrapper.cpp \
     ../../src/debayer/ahdOld.c
 
-cineform_enabled {
-    SOURCES += \
-    ../../src/mlv/CineformSDK/Codec/*.c \
-    ../../src/mlv/CineformSDK/Codec/*.cpp \
-    ../../src/mlv/CineformSDK/ConvertLib/*.cpp \
-    ../../src/mlv/CineformSDK/DecoderSDK/*.cpp \
-    ../../src/mlv/CineformSDK/EncoderSDK/*.cpp \
-    ../../src/mlv/CineformSDK/WarpLib/*.c
-}
-
 jpeg2k_enabled {
     OPENJPH = ../../src/mlv/OpenJPH
 
@@ -301,14 +289,6 @@ jpeg2k_enabled {
 }
 
 INCLUDEPATH += ../../src/librtprocess/src/include/
-
-cineform_enabled: INCLUDEPATH += \
-    ../../src/mlv/CineformSDK/Common/ \
-    ../../src/mlv/CineformSDK/Codec/ \
-    ../../src/mlv/CineformSDK/ConvertLib/ \
-    ../../src/mlv/CineformSDK/DecoderSDK/ \
-    ../../src/mlv/CineformSDK/EncoderSDK/ \
-    ../../src/mlv/CineformSDK/WarpLib/
 
 jpeg2k_enabled {
     INCLUDEPATH += \
@@ -450,18 +430,6 @@ HEADERS += MainWindow.h \
     ../../src/librtprocess/src/include/librtprocesswrapper.h \
     ../../src/librtprocess/src/include/sleef.h \
     ../../src/librtprocess/src/include/sleefsseavx.h
-
-cineform_enabled {
-    HEADERS += \
-        ../../src/mlv/CineformSDK/Common/*.h \
-        ../../src/mlv/CineformSDK/Codec/*.h \
-        ../../src/mlv/CineformSDK/ConvertLib/*.h \
-        ../../src/mlv/CineformSDK/DecoderSDK/*.h \
-        ../../src/mlv/CineformSDK/EncoderSDK/*.h \
-        ../../src/mlv/CineformSDK/WarpLib/*.h
-
-    macx:equals(QT_ARCH, arm64): HEADERS += ../../src/mlv/CineformSDK/Codec/sse2neon/sse2neon.h
-}
 
 jpeg2k_enabled {
     HEADERS += \

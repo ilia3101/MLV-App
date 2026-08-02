@@ -1063,6 +1063,20 @@ int MainWindow::openMlv( QString fileName )
     //Cut In & Out
     initCutInOut( getMlvFrames( m_pMlvObject ) );
 
+    //Seek to the saved "In" frame. The receipt's default is cutIn == 1 (frame
+    //0), so a fresh clip with no In point set still opens at the first frame.
+    //A value > 1 means the user (or a saved session) explicitly set an In
+    //point, and we should jump there. Clamp to the slider's valid range so a
+    //stale cut-in from a longer clip cannot overshoot this one.
+    if( ACTIVE_RECEIPT->cutIn() > 1 )
+    {
+        int cutInFrame = (int)ACTIVE_RECEIPT->cutIn() - 1; // 0-based frame index
+        int sliderMax = ui->horizontalSliderPosition->maximum();
+        if( cutInFrame < 0 ) cutInFrame = 0;
+        if( cutInFrame > sliderMax ) cutInFrame = sliderMax;
+        ui->horizontalSliderPosition->setValue( cutInFrame );
+    }
+
     //Raw black & white level
     initRawBlackAndWhite();
 
