@@ -72,7 +72,8 @@ param(
     # Backstop against a runaway lane. Claude only (codex exec has no equivalent).
     # 0 disables the cap. Measured 2026-09-03: real lanes used 13-21 turns, so 40 is a
     # runaway guard, NOT the spend control - that is -DenyBulkReads below.
-    [int]$MaxTurns = 40,
+    # Updated 2026-09-10: raised from 40 to 65 to prevent mid-work cutoffs (lanes executed 41 turns).
+    [int]$MaxTurns = 65,
 
     # Optional per-process override; never changes the user's provider settings.
     [ValidateSet('', 'low', 'medium', 'high')]
