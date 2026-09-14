@@ -1067,15 +1067,21 @@ $fence
         exit 3
     }
 
+    . (Join-Path $PSScriptRoot 'Retire-LaneWorktree.ps1')
+    $script:LastWorktreeDisposition = $null
     function Remove-LaneWorktreeIfClean([string]$WorkDirToCheck) {
-        # Never removes a worktree the lane left dirty - the path is recorded on the dispatch
-        # record instead, so nothing a lane produced is silently discarded.
-        $statusOut = & git -C $WorkDirToCheck status --porcelain 2>$null
-        if ($LASTEXITCODE -eq 0 -and -not $statusOut) {
-            & git -C $RepoRoot -c core.longpaths=true worktree remove $WorkDirToCheck --force 2>&1 | Out-Null
-            return $true
-        }
-        Write-Output "WORKSTREAM: worktree left in place (not clean): $WorkDirToCheck"
+        # Never removes a worktree the lane left dirty, unpushed or unmerged - the SAFE gate in
+        # Retire-LaneWorktree.ps1 decides, without --force, and the disposition (with its
+        # reason) is recorded on the dispatch record, so nothing a lane produced is silently
+        # discarded. The previous `worktree remove --force` after a porcelain-only check
+        # also deleted git-ignored evidence and never looked for unpushed commits.
+        # MergeTarget is the ref baseSha was resolved from: local master can lag fork/master,
+        # which would wrongly keep a worktree whose HEAD is still exactly baseSha.
+        $disp = Invoke-RetireLaneWorktree -WorkDir $WorkDirToCheck -MergeTarget 'fork/master' `
+            -QuarantineRoot (Join-Path $RepoRoot ('.claude-state\disk-hygiene\quarantine\lane-exit\' + (Get-Date).ToUniversalTime().ToString('yyyyMMdd')))
+        $script:LastWorktreeDisposition = $disp
+        if ($disp.action -eq 'retired') { return $true }
+        Write-Output "WORKSTREAM: worktree left in place ($($disp.reason)): $WorkDirToCheck"
         return $false
     }
 
@@ -1145,6 +1151,7 @@ $fence
         promptPath      = $promptPath
         runDir          = $runDir
         worktreeRemoved = $cleanRemoved
+        worktreeDisposition = $script:LastWorktreeDisposition
         dispatchedUtc   = (Get-Date).ToUniversalTime().ToString('o')
         laneExitCode    = $laneExit
         laneCostUsd     = $reservationRecord.laneCostUsd

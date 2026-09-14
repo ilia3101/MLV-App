@@ -95,7 +95,20 @@ param(
     # 0.1: an extra directory the lane may read beyond -WorkDir (e.g. board
     # coordination paths an editing lane needs without a full -AllowBulkReads
     # grant). Optional; claude engine only (--add-dir).
-    [string]$ExtraReadDir = ''
+    [string]$ExtraReadDir = '',
+
+    # Disk hygiene (2026-09-14): when the lane exits, retire -WorkDir if it is a linked
+    # worktree that passes the SAFE gate in Retire-LaneWorktree.ps1; otherwise keep it.
+    # Either way the receipt carries `worktreeDisposition` saying which and why.
+    # Never applies to the main checkout, and never deletes a branch ref.
+    [switch]$RetireWorktree,
+
+    # Lane scratch. The child's TEMP/TMP point at <ScratchRoot>\<lane>-NNN, never bare
+    # %TEMP% (which every project on this box shares). C:\mlvtmp is a DiskGuard-registered
+    # MLV root. The run's own scratch dir is removed when the lane exits unless -KeepScratch;
+    # its size is recorded in the receipt either way.
+    [string]$ScratchRoot = 'C:\mlvtmp\lane-scratch',
+    [switch]$KeepScratch
 )
 
 $ErrorActionPreference = 'Stop'
@@ -496,6 +509,13 @@ $psi.CreateNoWindow         = $true
 if ($cfg.engine -eq 'claude' -and $ReasoningEffort) {
     $psi.Environment['CLAUDE_CODE_EFFORT_LEVEL'] = $ReasoningEffort
 }
+# Per-run lane scratch under an MLV-owned root instead of the shared %TEMP%.
+$scratchDir = $null
+if ($ScratchRoot) {
+    $scratchDir = Join-Path $ScratchRoot ('{0}-{1}' -f (Split-Path $RunDir -Leaf), (Split-Path $base -Leaf))
+    New-Item -ItemType Directory -Force -Path $scratchDir | Out-Null
+    foreach ($v in 'TEMP', 'TMP', 'TMPDIR') { $psi.Environment[$v] = $scratchDir }
+}
 $psi.RedirectStandardInput  = $true
 $psi.RedirectStandardOutput = $true
 $psi.RedirectStandardError  = $true
@@ -799,6 +819,38 @@ if ($jobHandle -ne [IntPtr]::Zero) {
     $jobHandle = [IntPtr]::Zero
 }
 $sw.Stop()
+# Disk hygiene. Neither step may throw: a failure here is recorded, never propagated,
+# because the receipt below must still be written on every exit path.
+$scratchDisposition = $null
+if (Get-Variable -Name scratchDir -ValueOnly -ErrorAction SilentlyContinue) {
+    try {
+        $sb = [int64]0
+        if (Test-Path -LiteralPath $scratchDir) { Get-ChildItem -LiteralPath $scratchDir -Recurse -File -Force -ErrorAction SilentlyContinue | ForEach-Object { $sb += $_.Length } }
+        $removed = $false
+        if (-not $KeepScratch -and (Test-Path -LiteralPath $scratchDir)) { Remove-Item -LiteralPath $scratchDir -Recurse -Force -ErrorAction Stop; $removed = $true }
+        $scratchDisposition = [ordered]@{ path = $scratchDir; bytes = $sb; removed = $removed; error = $null }
+    } catch {
+        $scratchDisposition = [ordered]@{ path = $scratchDir; bytes = $null; removed = $false; error = $_.Exception.Message }
+    }
+}
+$worktreeDisposition = $null
+if ($RetireWorktree) {
+    try {
+        . (Join-Path $PSScriptRoot 'Retire-LaneWorktree.ps1')
+        # The CANONICAL board (parent of the common .git), never the checkout this script runs
+        # from: a copy of this script inside a linked worktree must not quarantine into that worktree.
+        # No `| Select-Object -First 1` on the native call: it can stop the pipeline before
+        # $LASTEXITCODE is set, and reading it then throws under StrictMode Latest.
+        $commonOut = @(& git -C $PSScriptRoot rev-parse --path-format=absolute --git-common-dir 2>$null)
+        $commonDir = if ($commonOut.Count) { [string]$commonOut[0] } else { $null }
+        if (-not $commonDir -or -not (Test-Path -LiteralPath $commonDir)) { throw 'cannot resolve board root from git common dir' }
+        $boardRoot = Split-Path -Parent ($commonDir -replace '/', '\')
+        $worktreeDisposition = Invoke-RetireLaneWorktree -WorkDir $WorkDir -ProtectPath @($RunDir) `
+            -QuarantineRoot (Join-Path $boardRoot ('.claude-state\disk-hygiene\quarantine\lane-exit\' + (Get-Date).ToUniversalTime().ToString('yyyyMMdd')))
+    } catch {
+        $worktreeDisposition = [ordered]@{ action = 'kept'; reason = "cannot-determine: $($_.Exception.Message)" }
+    }
+}
 $receipt = [ordered]@{
     schema       = 'mlv-app/fleet-lane-receipt/v1'
     # SAME KEY AT EVERY STAGE. A reader checks `state` once - reserved, complete or
@@ -839,7 +891,9 @@ $receipt = [ordered]@{
     # fail, the provider declined, and a reader must never mistake that for a verdict.
     providerRefusal = $providerRefusal
     containment  = $containment
-    complete     = ($null -eq $failure -and $null -eq $providerRefusal -and $exitCode -ne -999)
+    scratch      = $scratchDisposition
+    worktreeDisposition = $worktreeDisposition
+    complete     =($null -eq $failure -and $null -eq $providerRefusal -and $exitCode -ne -999)
     spend        = [ordered]@{
         costUsd            = $costUsd
         costReported       = ($null -ne $costUsd)
