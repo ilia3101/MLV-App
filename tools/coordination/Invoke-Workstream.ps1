@@ -1067,15 +1067,29 @@ $fence
         exit 3
     }
 
+    $script:LastWorktreeDisposition = $null
     function Remove-LaneWorktreeIfClean([string]$WorkDirToCheck) {
-        # Never removes a worktree the lane left dirty - the path is recorded on the dispatch
-        # record instead, so nothing a lane produced is silently discarded.
-        $statusOut = & git -C $WorkDirToCheck status --porcelain 2>$null
-        if ($LASTEXITCODE -eq 0 -and -not $statusOut) {
-            & git -C $RepoRoot -c core.longpaths=true worktree remove $WorkDirToCheck --force 2>&1 | Out-Null
-            return $true
+        # Loaded lazily and fail-closed: a dispatcher copied without its helper (test fixtures copy
+        # dependencies by name) must KEEP the worktree with a reason, never abort the dispatch.
+        if (-not (Get-Command Invoke-RetireLaneWorktree -ErrorAction SilentlyContinue)) {
+            try { . (Join-Path $PSScriptRoot 'Retire-LaneWorktree.ps1') } catch {
+                $script:LastWorktreeDisposition = [ordered]@{ action = 'kept'; reason = "cannot-determine: Retire-LaneWorktree.ps1 not loadable: $($_.Exception.Message)" }
+                Write-Output "WORKSTREAM: worktree left in place ($($script:LastWorktreeDisposition.reason)): $WorkDirToCheck"
+                return $false
+            }
         }
-        Write-Output "WORKSTREAM: worktree left in place (not clean): $WorkDirToCheck"
+        # Never removes a worktree the lane left dirty, unpushed or unmerged - the SAFE gate in
+        # Retire-LaneWorktree.ps1 decides, without --force, and the disposition (with its
+        # reason) is recorded on the dispatch record, so nothing a lane produced is silently
+        # discarded. The previous `worktree remove --force` after a porcelain-only check
+        # also deleted git-ignored evidence and never looked for unpushed commits.
+        # MergeTarget is the ref baseSha was resolved from: local master can lag fork/master,
+        # which would wrongly keep a worktree whose HEAD is still exactly baseSha.
+        $disp = Invoke-RetireLaneWorktree -WorkDir $WorkDirToCheck -MergeTarget 'fork/master' `
+            -QuarantineRoot (Join-Path $RepoRoot ('.claude-state\disk-hygiene\quarantine\lane-exit\' + (Get-Date).ToUniversalTime().ToString('yyyyMMdd')))
+        $script:LastWorktreeDisposition = $disp
+        if ($disp.action -eq 'retired') { return $true }
+        Write-Output "WORKSTREAM: worktree left in place ($($disp.reason)): $WorkDirToCheck"
         return $false
     }
 
@@ -1089,8 +1103,11 @@ $fence
         # The worktree above is REAL, exactly like the gh-evidence export in the read-only path
         # is real under -DryRun: what you inspect is byte-identical to what a lane would receive.
         # Nothing ran in it, so it is guaranteed clean - remove it rather than leaving debris.
-        Write-Output 'WORKSTREAM: DRY RUN - no lane dispatched. Worktree and prompt above were real and are now removed.'
-        Remove-LaneWorktreeIfClean $laneWorkDir | Out-Null
+        Write-Output 'WORKSTREAM: DRY RUN - no lane dispatched. Worktree and prompt above were real; the worktree is retired if it passes the SAFE gate.'
+        # The function also emits status lines, so its pipeline output is an array (always truthy);
+        # decide from the recorded disposition instead.
+        Remove-LaneWorktreeIfClean $laneWorkDir | Out-Host
+        if ($script:LastWorktreeDisposition -and $script:LastWorktreeDisposition.action -eq 'retired') { Write-Output "WORKSTREAM: DRY RUN worktree retired: $laneWorkDir" }
         exit 0
     }
 
@@ -1145,6 +1162,7 @@ $fence
         promptPath      = $promptPath
         runDir          = $runDir
         worktreeRemoved = $cleanRemoved
+        worktreeDisposition = $script:LastWorktreeDisposition
         dispatchedUtc   = (Get-Date).ToUniversalTime().ToString('o')
         laneExitCode    = $laneExit
         laneCostUsd     = $reservationRecord.laneCostUsd
