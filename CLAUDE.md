@@ -9,6 +9,11 @@ Standing September 8 tiering: Fable reviews, Opus hubs and adjudicates, Sonnet
 implements, Haiku reports, Sol/Luna review and recon. Follow
 [agents/orchestration-tiering.md](agents/orchestration-tiering.md).
 
+Standing September 9 owner ruling: Agent Bridge product SoT is
+[`layibabalola/agent-bridge`](https://github.com/layibabalola/agent-bridge); suspend in-tree `tools/agent-bridge/` feature/bugfix/refactor/CI churn.
+Factory Bridge stays integration smoke only. Follow
+[agents/agent-bridge-source-of-truth.md](agents/agent-bridge-source-of-truth.md).
+
 Index only; details live in claude/. Policy: [fragmentation limits](docs/22-doc-fragmentation-policy.md), 8KB soft/12KB hard. Check with:
 
 ```bash
