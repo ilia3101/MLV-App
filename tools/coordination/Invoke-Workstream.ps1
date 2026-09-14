@@ -1067,9 +1067,17 @@ $fence
         exit 3
     }
 
-    . (Join-Path $PSScriptRoot 'Retire-LaneWorktree.ps1')
     $script:LastWorktreeDisposition = $null
     function Remove-LaneWorktreeIfClean([string]$WorkDirToCheck) {
+        # Loaded lazily and fail-closed: a dispatcher copied without its helper (test fixtures copy
+        # dependencies by name) must KEEP the worktree with a reason, never abort the dispatch.
+        if (-not (Get-Command Invoke-RetireLaneWorktree -ErrorAction SilentlyContinue)) {
+            try { . (Join-Path $PSScriptRoot 'Retire-LaneWorktree.ps1') } catch {
+                $script:LastWorktreeDisposition = [ordered]@{ action = 'kept'; reason = "cannot-determine: Retire-LaneWorktree.ps1 not loadable: $($_.Exception.Message)" }
+                Write-Output "WORKSTREAM: worktree left in place ($($script:LastWorktreeDisposition.reason)): $WorkDirToCheck"
+                return $false
+            }
+        }
         # Never removes a worktree the lane left dirty, unpushed or unmerged - the SAFE gate in
         # Retire-LaneWorktree.ps1 decides, without --force, and the disposition (with its
         # reason) is recorded on the dispatch record, so nothing a lane produced is silently
@@ -1096,7 +1104,10 @@ $fence
         # is real under -DryRun: what you inspect is byte-identical to what a lane would receive.
         # Nothing ran in it, so it is guaranteed clean - remove it rather than leaving debris.
         Write-Output 'WORKSTREAM: DRY RUN - no lane dispatched. Worktree and prompt above were real; the worktree is retired if it passes the SAFE gate.'
-        if (Remove-LaneWorktreeIfClean $laneWorkDir) { Write-Output "WORKSTREAM: DRY RUN worktree retired: $laneWorkDir" }
+        # The function also emits status lines, so its pipeline output is an array (always truthy);
+        # decide from the recorded disposition instead.
+        Remove-LaneWorktreeIfClean $laneWorkDir | Out-Host
+        if ($script:LastWorktreeDisposition -and $script:LastWorktreeDisposition.action -eq 'retired') { Write-Output "WORKSTREAM: DRY RUN worktree retired: $laneWorkDir" }
         exit 0
     }
 
