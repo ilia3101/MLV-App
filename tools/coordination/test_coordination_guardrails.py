@@ -1188,7 +1188,76 @@ def test_invoke_lane_records_a_provider_refusal_as_refused_not_complete():
     assert "-Prompt $Prompt" in body, "the echoed prompt must be excluded from classification (sol PR #80 R1 BLOCKER)"
     assert "providerRefusal = $providerRefusal" in body, "the receipt must carry the refusal verbatim"
     assert "elseif ($null -ne $providerRefusal) { 'refused' }" in body, "state must have a third value"
-    assert "$null -eq $providerRefusal -and $exitCode -ne -999" in body, "complete must be false on refusal"
+    assert "$null -eq $failure -and $null -eq $providerRefusal -and $processEnded -and $workEvidence.workCompleted -eq $true" in body, (
+        "complete must be false on refusal, on failure, and without positive work evidence"
+    )
+
+
+# --- Invoke-Lane: `complete` is POSITIVE evidence the work finished, never "the process ended" ---
+# Incident 2026-09-14, fleet-runs\ws-PLAY-COUNTERS-CPU-20260914T151951Z: exitCode 1 and this
+# envelope (trimmed to the deciding fields), yet the receipt said state=complete, complete=true.
+REAL_CLAUDE_MAX_TURNS_ENVELOPE = (
+    '{"type":"result","subtype":"error_max_turns","is_error":true,"num_turns":66,'
+    '"stop_reason":"tool_use","terminal_reason":"max_turns","total_cost_usd":4.87,'
+    '"errors":["Reached maximum number of turns (65)"]}\n'
+)
+CLAUDE_SUCCESS_ENVELOPE = (
+    '{"type":"result","subtype":"success","is_error":false,"num_turns":18,'
+    '"stop_reason":"end_turn","terminal_reason":"completed","result":"done"}\n'
+)
+# Measured on this board: is_error=true while subtype still says success.
+CLAUDE_API_ERROR_SUCCESS_SUBTYPE_ENVELOPE = (
+    '{"type":"result","subtype":"success","is_error":true,"terminal_reason":"api_error","result":"x"}\n'
+)
+
+
+def _work_evidence(tmp_path, engine, answer, exit_code):
+    asrc = tmp_path / "lane-answer.txt"
+    asrc.write_text(answer, encoding="utf-8")
+    cmd = (
+        f". '{REFUSAL_HELPER}'; "
+        f"$a = [IO.File]::ReadAllText('{asrc}'); "
+        f"Get-LaneWorkEvidence -Engine '{engine}' -Answer $a -ExitCode {exit_code} | ConvertTo-Json -Compress"
+    )
+    out = subprocess.run(
+        ["pwsh", "-NoLogo", "-NoProfile", "-NonInteractive", "-Command", cmd],
+        text=True, capture_output=True,
+    )
+    assert out.returncode == 0, out.stderr
+    return json.loads(out.stdout.strip().splitlines()[-1])
+
+
+def test_work_evidence_falsifier_exit_1_max_turns_is_not_complete(tmp_path):
+    r = _work_evidence(tmp_path, "claude", REAL_CLAUDE_MAX_TURNS_ENVELOPE, 1)
+    assert r["workCompleted"] is False, r
+    assert r["subtype"] == "error_max_turns" and r["terminalReason"] == "max_turns", r
+
+
+def test_work_evidence_max_turns_is_not_complete_even_with_exit_0(tmp_path):
+    # The envelope alone must defeat completion: exit code is necessary, never sufficient.
+    r = _work_evidence(tmp_path, "claude", REAL_CLAUDE_MAX_TURNS_ENVELOPE, 0)
+    assert r["workCompleted"] is False, r
+    assert r["reason"] == "envelope-is-error", r
+
+
+def test_work_evidence_requires_every_success_signal(tmp_path):
+    assert _work_evidence(tmp_path, "claude", CLAUDE_SUCCESS_ENVELOPE, 0)["workCompleted"] is True
+    assert _work_evidence(tmp_path, "claude", CLAUDE_API_ERROR_SUCCESS_SUBTYPE_ENVELOPE, 0)["workCompleted"] is False
+    # No envelope on the claude engine is absence of evidence, not completion.
+    assert _work_evidence(tmp_path, "claude", "", 0)["reason"] == "no-result-envelope"
+    assert _work_evidence(tmp_path, "claude", "not json at all", 0)["workCompleted"] is False
+    # codex exposes no envelope: exit 0 is the only observable, and non-zero defeats it.
+    assert _work_evidence(tmp_path, "codex", "answer", 0)["workCompleted"] is True
+    assert _work_evidence(tmp_path, "codex", "answer", 1)["workCompleted"] is False
+
+
+def test_invoke_lane_receipt_separates_process_ended_from_complete():
+    body = LANE_RUNNER.read_text(encoding="utf-8")
+    assert "processEnded = $processEnded" in body
+    assert "complete     = $workCompleted" in body
+    assert "workEvidence = $workEvidence" in body
+    assert "elseif ($workCompleted) { 'complete' }" in body, "state=complete must require work evidence"
+    assert "elseif ($processEnded) { 'ended-incomplete' }" in body
 
 
 def test_invoke_lane_propagates_a_refusal_as_125_ahead_of_the_child_code():
@@ -1626,6 +1695,49 @@ def test_editing_dispatch_refuses_an_existing_branch_that_carries_work(tmp_path)
         assert git(tmp_path, "rev-parse", "refs/heads/product/TEST-EDIT-REUSE-2") == tip
     finally:
         cleanup_lane_worktree(tmp_path, "TEST-EDIT-REUSE-2")
+
+
+def test_a_real_refused_dispatch_leaves_a_typed_attempt_receipt(tmp_path):
+    """2026-09-14: ~90 PLAY-COUNTERS-CPU run dirs held only lane-prompt.md because a pre-launch
+    refusal reached stdout alone. A NON-dry-run refusal must leave dispatch-attempt.json naming
+    the cause, and no lane may have started (no lane receipt)."""
+    dual, head = editing_board(tmp_path)
+    subprocess.run(["git", "checkout", "-q", "-b", "product/TEST-EDIT-ATTEMPT"], cwd=tmp_path, check=True)
+    (tmp_path / "work.txt").write_text("lane work\n")
+    subprocess.run(["git", "add", "work.txt"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "commit", "-qm", "lane work"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "checkout", "-q", "--detach", head], cwd=tmp_path, check=True)
+    try:
+        result = run_editing_dispatch(tmp_path, [_reuse_card(dual, "TEST-EDIT-ATTEMPT")], "TEST-EDIT-ATTEMPT",
+                                      dry_run=False)
+        assert result.returncode == 6, result.stdout + result.stderr
+        run_dirs = glob.glob(str(tmp_path / ".claude-state" / "fleet-runs" / "ws-TEST-EDIT-ATTEMPT-*"))
+        assert len(run_dirs) == 1, run_dirs
+        attempt = json.loads((Path(run_dirs[0]) / "dispatch-attempt.json").read_text(encoding="utf-8"))
+        assert attempt["schema"] == "mlv-app/workstream-dispatch-attempt/v1"
+        assert attempt["outcome"] == "refused-before-launch", attempt
+        assert attempt["cause"] == "existing-branch-has-work", attempt
+        assert attempt["exitCode"] == 6 and attempt["laneReceipts"] == [], attempt
+    finally:
+        cleanup_lane_worktree(tmp_path, "TEST-EDIT-ATTEMPT")
+
+
+def test_every_workstream_exit_after_the_run_dir_is_named_writes_an_attempt_receipt():
+    """Structural: once $runDir is named, every exit except the two DryRun exits is immediately
+    preceded by Write-DispatchAttempt, and both launch paths record 'launched' before and after."""
+    lines = WORKSTREAM.read_text(encoding="utf-8").splitlines()
+    start = next(i for i, l in enumerate(lines) if "function Write-DispatchAttempt" in l)
+    unreceipted = []
+    for i in range(start, len(lines)):
+        if re.match(r"^\s*exit\b", lines[i]):
+            prev = lines[i - 1].strip()
+            if "Write-DispatchAttempt" in prev or "DRY RUN" in prev or "WORKSTREAM: dispatched" in prev:
+                continue
+            unreceipted.append((i + 1, prev))
+    assert not unreceipted, unreceipted
+    body = "\n".join(lines)
+    assert body.count("-Outcome 'launched' -Cause 'lane-starting'") == 2
+    assert body.count("-Outcome 'launched' -Cause 'lane-returned'") == 2
 
 
 def test_editing_dispatch_creates_a_new_branch_when_none_exists(tmp_path):

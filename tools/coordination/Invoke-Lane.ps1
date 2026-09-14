@@ -345,7 +345,9 @@ $scratchDir = $null
 # A PROVIDER REFUSAL is a third outcome beside ran/threw: the child exited cleanly and
 # the provider did no work. Detected from raw output after harvest; see lane-provider-refusal.ps1.
 $providerRefusal = $null
-$authority  = [ordered]@{ permissionMode = 'unset'; allowedTools = 'unset'; sandbox = 'unset'; writableRoot = $null }
+# Harvested child stdout; initialised here so the finally can classify work evidence on every path.
+$stdout = ''
+$authority  =[ordered]@{ permissionMode = 'unset'; allowedTools = 'unset'; sandbox = 'unset'; writableRoot = $null }
 $denyRules  = @()
 $jobHandle = [IntPtr]::Zero
 $jobAssigned = $false
@@ -855,13 +857,25 @@ if ($RetireWorktree) {
         $worktreeDisposition = [ordered]@{ action = 'kept'; reason = "cannot-determine: $($_.Exception.Message)" }
     }
 }
+# `processEnded` records that the child exited; `complete` records POSITIVE evidence that the WORK
+# finished (exit 0 and, for claude, a success envelope). Until 2026-09-14 `complete` meant only the
+# former, so an exit-1 error_max_turns run was receipted state=complete, complete=true.
+$processEnded = ($exitCode -ne -999)
+try {
+    $workEvidence = Get-LaneWorkEvidence -Engine $cfg.engine -Answer $stdout -ExitCode $exitCode
+} catch {
+    $workEvidence = [ordered]@{ workCompleted = $false; reason = "cannot-determine: $($_.Exception.Message)"; subtype = $null; terminalReason = $null; isError = $null }
+}
+$workCompleted = ($null -eq $failure -and $null -eq $providerRefusal -and $processEnded -and $workEvidence.workCompleted -eq $true)
 $receipt = [ordered]@{
     schema       = 'mlv-app/fleet-lane-receipt/v1'
     # SAME KEY AT EVERY STAGE. A reader checks `state` once - reserved, complete or
     # failed - instead of inferring liveness from which fields happen to be present.
+    # 'ended-incomplete' = the process exited but there is no positive evidence the work finished.
     state        = if ($null -ne $failure) { 'failed' }
                    elseif ($null -ne $providerRefusal) { 'refused' }
-                   elseif ($exitCode -ne -999) { 'complete' }
+                   elseif ($workCompleted) { 'complete' }
+                   elseif ($processEnded) { 'ended-incomplete' }
                    else { 'incomplete' }
     lane         = $Lane
     role         = $cfg.role
@@ -897,7 +911,9 @@ $receipt = [ordered]@{
     containment  = $containment
     scratch      = $scratchDisposition
     worktreeDisposition = $worktreeDisposition
-    complete     =($null -eq $failure -and $null -eq $providerRefusal -and $exitCode -ne -999)
+    processEnded = $processEnded
+    complete     = $workCompleted
+    workEvidence = $workEvidence
     spend        = [ordered]@{
         costUsd            = $costUsd
         costReported       = ($null -ne $costUsd)
