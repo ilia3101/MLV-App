@@ -618,10 +618,11 @@ $runDir = Join-Path $RepoRoot ".claude-state\fleet-runs\ws-$cardId-$stamp"
 # this one) or 'refused-before-launch' with the cause. MEASURED 2026-09-14: PLAY-COUNTERS-CPU left
 # ~90 run dirs holding ONLY lane-prompt.md - `git worktree add` failed after the prompt was written
 # and the exit-3 reason reached nothing but the loop's stdout, so the run dirs read as launches
-# that silently produced nothing. Never throws: a receipt write failure is reported, not fatal.
+# that silently produced nothing. Never throws: a receipt write failure is reported on stdout AND
+# stderr (the disk that refused the receipt is the one fact no receipt can carry), never fatal.
+# -DryRun writes one too (outcome 'dry-run-not-launched'): it names a run dir and writes into it.
 function Write-DispatchAttempt {
     param([string]$Outcome, [string]$Cause, [int]$ExitCode, [string]$Detail = '', $LaneExitCode = $null)
-    if ($DryRun) { return }
     try {
         if (-not (Test-Path -LiteralPath $runDir)) { New-Item -ItemType Directory -Path $runDir -Force | Out-Null }
         $laneReceipts = @(Get-ChildItem -LiteralPath $runDir -Filter '*.receipt.json' -File -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName })
@@ -643,8 +644,23 @@ function Write-DispatchAttempt {
         }
         [System.IO.File]::WriteAllText((Join-Path $runDir 'dispatch-attempt.json'), ($attempt | ConvertTo-Json -Depth 4), [System.Text.UTF8Encoding]::new($false))
     } catch {
-        Write-Output "WORKSTREAM: dispatch-attempt receipt NOT written ($($_.Exception.Message)) runDir=$runDir"
+        $why = "WORKSTREAM: dispatch-attempt receipt NOT written ($($_.Exception.Message)) runDir=$runDir"
+        Write-Output $why
+        [Console]::Error.WriteLine($why)
     }
+}
+
+# A TERMINATING ERROR is an exit path too (sol PR #111 R1): New-Item, the prompt write, Get-FileHash,
+# reservation writes and worktree cleanup can all throw after the run dir is named. A trap applies to
+# the whole script scope, so it is guarded on $runDir existing; `break` re-throws, so the process
+# still fails exactly as before - it just no longer fails silently.
+$script:LaneLaunched = $false
+trap {
+    if (Get-Variable -Name runDir -Scope Script -ErrorAction SilentlyContinue) {
+        $trapOutcome = if ($script:LaneLaunched) { 'launched' } else { 'refused-before-launch' }
+        Write-DispatchAttempt -Outcome $trapOutcome -Cause 'unhandled-error' -ExitCode 1 -Detail $_.Exception.Message
+    }
+    break
 }
 
 # ------------------------------------------------------------------ pre-dispatch PR review evidence
@@ -960,6 +976,7 @@ $fence
         # The exports above ALREADY RAN and are on disk. Saying "nothing dispatched" without saying
         # that would be a lie by omission about a directory this command created.
         Write-Output 'WORKSTREAM: DRY RUN - no lane dispatched. Any gh-evidence export above is real and on disk.'
+        Write-DispatchAttempt -Outcome 'dry-run-not-launched' -Cause 'dry-run' -ExitCode 0
         exit 0
     }
 
@@ -984,6 +1001,7 @@ $fence
     $null = Write-DispatchReservation -ReservationId $reservationId -State 'reserved' -Card $cardId -Kind $cardKind -Lane $Lane -RunDir $runDir
 
     Write-DispatchAttempt -Outcome 'launched' -Cause 'lane-starting' -ExitCode 0
+    $script:LaneLaunched = $true
     $laneExit = $null
     $reservationOutcome = 'charged'
     try {
@@ -1195,6 +1213,7 @@ $fence
         # decide from the recorded disposition instead.
         Remove-LaneWorktreeIfClean $laneWorkDir | Out-Host
         if ($script:LastWorktreeDisposition -and $script:LastWorktreeDisposition.action -eq 'retired') { Write-Output "WORKSTREAM: DRY RUN worktree retired: $laneWorkDir" }
+        Write-DispatchAttempt -Outcome 'dry-run-not-launched' -Cause 'dry-run' -ExitCode 0
         exit 0
     }
 
@@ -1222,6 +1241,7 @@ $fence
     $null = Write-DispatchReservation -ReservationId $reservationId -State 'reserved' -Card $cardId -Kind $cardKind -Lane $Lane -RunDir $runDir
 
     Write-DispatchAttempt -Outcome 'launched' -Cause 'lane-starting' -ExitCode 0
+    $script:LaneLaunched = $true
     $laneExit = $null
     $reservationOutcome = 'charged'
     try {

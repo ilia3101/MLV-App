@@ -1722,22 +1722,47 @@ def test_a_real_refused_dispatch_leaves_a_typed_attempt_receipt(tmp_path):
         cleanup_lane_worktree(tmp_path, "TEST-EDIT-ATTEMPT")
 
 
+def test_a_terminating_error_after_the_run_dir_is_named_still_leaves_an_attempt_receipt(tmp_path):
+    """sol PR #111 R1: a THROW is an exit path too. A procedure path that is a directory passes
+    Test-Path and then makes Get-FileHash throw - after $runDir is named, before any refusal."""
+    dual, head = editing_board(tmp_path)
+    (dual / "prompts" / "v2" / "fields-TEST-EDIT-THROW.md").mkdir(parents=True)
+    item = {"id": "TEST-EDIT-THROW", "state": "queued", "track": "product", "kind": "product",
+            "owner": "sonnet", "priority": 1,
+            "procedure": ".claude-state/coordination/dual-lane/prompts/v2/fields-TEST-EDIT-THROW.md",
+            "procedureSha256": "0" * 64}
+    try:
+        result = run_editing_dispatch(tmp_path, [item], "TEST-EDIT-THROW", dry_run=False)
+        assert result.returncode != 0, result.stdout + result.stderr
+        run_dirs = glob.glob(str(tmp_path / ".claude-state" / "fleet-runs" / "ws-TEST-EDIT-THROW-*"))
+        assert len(run_dirs) == 1, (run_dirs, result.stdout, result.stderr)
+        attempt = json.loads((Path(run_dirs[0]) / "dispatch-attempt.json").read_text(encoding="utf-8"))
+        assert attempt["outcome"] == "refused-before-launch" and attempt["cause"] == "unhandled-error", attempt
+    finally:
+        cleanup_lane_worktree(tmp_path, "TEST-EDIT-THROW")
+
+
 def test_every_workstream_exit_after_the_run_dir_is_named_writes_an_attempt_receipt():
-    """Structural: once $runDir is named, every exit except the two DryRun exits is immediately
-    preceded by Write-DispatchAttempt, and both launch paths record 'launched' before and after."""
+    """Structural: once $runDir is named, every exit (DryRun included) is immediately preceded by
+    Write-DispatchAttempt, throws are covered by a guarded trap, and both launch paths record
+    'launched' before and after."""
     lines = WORKSTREAM.read_text(encoding="utf-8").splitlines()
     start = next(i for i, l in enumerate(lines) if "function Write-DispatchAttempt" in l)
     unreceipted = []
     for i in range(start, len(lines)):
         if re.match(r"^\s*exit\b", lines[i]):
             prev = lines[i - 1].strip()
-            if "Write-DispatchAttempt" in prev or "DRY RUN" in prev or "WORKSTREAM: dispatched" in prev:
+            if "Write-DispatchAttempt" in prev or "WORKSTREAM: dispatched" in prev:
                 continue
             unreceipted.append((i + 1, prev))
     assert not unreceipted, unreceipted
     body = "\n".join(lines)
+    assert "if ($DryRun) { return }" not in body
+    assert body.count("-Outcome 'dry-run-not-launched'") == 2
+    assert "-Cause 'unhandled-error'" in body and re.search(r"^trap \{", body, re.M)
     assert body.count("-Outcome 'launched' -Cause 'lane-starting'") == 2
     assert body.count("-Outcome 'launched' -Cause 'lane-returned'") == 2
+    assert body.count("$script:LaneLaunched = $true") == 2
 
 
 def test_editing_dispatch_creates_a_new_branch_when_none_exists(tmp_path):
