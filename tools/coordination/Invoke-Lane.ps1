@@ -338,6 +338,9 @@ $exitCode   = -999
 $timedOut   = $false
 $final      = ''
 $failure    = $null
+# Initialized here, before the try, so the finally never resolves a parent-scope $scratchDir
+# (dynamic scoping) and removes a path this run did not create.
+$scratchDir = $null
 # A PROVIDER REFUSAL is a third outcome beside ran/threw: the child exited cleanly and
 # the provider did no work. Detected from raw output after harvest; see lane-provider-refusal.ps1.
 $providerRefusal = $null
@@ -822,7 +825,7 @@ $sw.Stop()
 # Disk hygiene. Neither step may throw: a failure here is recorded, never propagated,
 # because the receipt below must still be written on every exit path.
 $scratchDisposition = $null
-if (Get-Variable -Name scratchDir -ValueOnly -ErrorAction SilentlyContinue) {
+if ($scratchDir) {
     try {
         $sb = [int64]0
         if (Test-Path -LiteralPath $scratchDir) { Get-ChildItem -LiteralPath $scratchDir -Recurse -File -Force -ErrorAction SilentlyContinue | ForEach-Object { $sb += $_.Length } }

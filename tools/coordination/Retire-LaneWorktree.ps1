@@ -96,9 +96,11 @@ function Invoke-RetireLaneWorktree {
         if ($keep.Count -and -not $QuarantineRoot) { $d.reason = "cannot-determine: $($keep.Count) ignored non-debris entr(y/ies) and no -QuarantineRoot"; return [pscustomobject]$d }
         if ($WhatIf) { $d.action = 'would-retire'; $d.reason = 'ok'; $d.quarantined = $keep; return [pscustomobject]$d }
 
+        # <leaf>-<utc stamp>: two same-named worktrees retired the same day must not nest into each other.
+        $qDir = Join-Path $QuarantineRoot ('{0}-{1}' -f (Split-Path $wd -Leaf), (Get-Date).ToUniversalTime().ToString('yyyyMMddTHHmmssfffZ'))
         foreach ($rel in $keep) {
             $relWin = $rel.TrimEnd('/') -replace '/', '\'
-            $dst = Join-Path (Join-Path $QuarantineRoot (Split-Path $wd -Leaf)) $relWin
+            $dst = Join-Path $qDir $relWin
             New-Item -ItemType Directory -Force -Path (Split-Path $dst -Parent) | Out-Null
             Move-Item -LiteralPath (Join-Path $wd $relWin) -Destination $dst -ErrorAction Stop
             $d.quarantined += $dst

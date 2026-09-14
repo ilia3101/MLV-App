@@ -1095,8 +1095,8 @@ $fence
         # The worktree above is REAL, exactly like the gh-evidence export in the read-only path
         # is real under -DryRun: what you inspect is byte-identical to what a lane would receive.
         # Nothing ran in it, so it is guaranteed clean - remove it rather than leaving debris.
-        Write-Output 'WORKSTREAM: DRY RUN - no lane dispatched. Worktree and prompt above were real and are now removed.'
-        Remove-LaneWorktreeIfClean $laneWorkDir | Out-Null
+        Write-Output 'WORKSTREAM: DRY RUN - no lane dispatched. Worktree and prompt above were real; the worktree is retired if it passes the SAFE gate.'
+        if (Remove-LaneWorktreeIfClean $laneWorkDir) { Write-Output "WORKSTREAM: DRY RUN worktree retired: $laneWorkDir" }
         exit 0
     }
 

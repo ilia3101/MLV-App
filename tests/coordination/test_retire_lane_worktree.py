@@ -102,7 +102,8 @@ def test_ignored_evidence_is_quarantined_not_deleted(repo):
     q = tmp / "q"
     d = _retire(wt, MergeTarget="origin/master", QuarantineRoot=str(q))
     assert (d["action"], d["reason"]) == ("retired", "ok")
-    assert (q / "wt-ignored" / ".claude-state" / "receipt.json").is_file()
+    moved = list(q.glob("wt-ignored-*/.claude-state/receipt.json"))
+    assert len(moved) == 1 and moved[0].is_file()
 
 
 def test_ignored_evidence_without_quarantine_root_is_kept(repo):
@@ -111,8 +112,28 @@ def test_ignored_evidence_without_quarantine_root_is_kept(repo):
     (wt / ".claude-state").mkdir()
     (wt / ".claude-state" / "e.txt").write_text("x", encoding="utf-8")
     d = _retire(wt, MergeTarget="origin/master")
-    assert d["action"] == "kept" and d["reason"].startswith("cannot-determine")
+    # Pin the explicit guard, not just the fail-closed outcome a later throw would also give.
+    assert d["action"] == "kept" and "no -QuarantineRoot" in d["reason"]
     assert (wt / ".claude-state" / "e.txt").is_file()
+
+
+def test_nested_registered_worktree_is_kept(repo):
+    tmp, main = repo
+    wt = _add_wt(main, tmp / "wt-outer")
+    (wt / ".claude-state").mkdir()
+    _git(main, "worktree", "add", "--detach", str(wt / ".claude-state" / "inner"), "origin/master")
+    d = _retire(wt, MergeTarget="origin/master", QuarantineRoot=str(tmp / "q"))
+    assert d["action"] == "kept" and d["reason"].startswith("nested-worktree")
+    assert (wt / ".claude-state" / "inner" / "a.txt").is_file()
+
+
+def test_non_empty_stash_keeps_worktree(repo):
+    tmp, main = repo
+    (main / "a.txt").write_text("changed\n", encoding="utf-8")
+    _git(main, "-c", "user.name=t", "-c", "user.email=t@t", "stash")
+    wt = _add_wt(main, tmp / "wt-stash")
+    d = _retire(wt, MergeTarget="origin/master", QuarantineRoot=str(tmp / "q"))
+    assert d["action"] == "kept" and d["reason"].startswith("stash")
 
 
 def test_protected_run_dir_inside_worktree_is_kept(repo):
