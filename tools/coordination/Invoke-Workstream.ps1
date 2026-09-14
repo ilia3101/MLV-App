@@ -1061,7 +1061,41 @@ $fence
     # diagnosis-base sha - and is recorded on the receipt below. A real branch checkout, never
     # --detach: the composed procedure itself tells the lane to `git switch -c` this branch, so
     # the worktree must already be on it.
-    & git -C $RepoRoot -c core.longpaths=true worktree add -b $branch $laneWorkDir $baseSha 2>&1 | Out-Null
+    #
+    # A branch left behind by an earlier attempt (the lane worktree is removed, the branch ref is
+    # not) used to make `worktree add -b` fail on every later cycle - the loop logged
+    # "worktree add failed" for PLAY-COUNTERS-CPU every 45 min from 2026-09-10. Reuse such a
+    # branch ONLY when it carries nothing beyond baseSha, and move it to baseSha first so the lane
+    # never starts from a stale tip. A branch with commits not in baseSha holds work this dispatch
+    # must not overwrite: refuse the card instead (exit 6, the loop's skip-this-track code).
+    & git -C $RepoRoot show-ref --verify --quiet "refs/heads/$branch" 2>$null
+    $branchExists = switch ($LASTEXITCODE) { 0 { $true } 1 { $false } default { $null } }
+    if ($null -eq $branchExists) {
+        Write-Output "WORKSTREAM: CANNOT-DETERMINE - could not check whether branch $branch exists"
+        exit 3
+    }
+    if ($branchExists) {
+        $uniqueOut = @(& git -C $RepoRoot rev-list "$baseSha..refs/heads/$branch" 2>$null)
+        if ($LASTEXITCODE -ne 0) {
+            Write-Output "WORKSTREAM: CANNOT-DETERMINE - rev-list failed for existing branch $branch"
+            exit 3
+        }
+        $unique = @($uniqueOut | Where-Object { $_ })
+        if ($unique.Count -gt 0) {
+            Write-Output "WORKSTREAM: REFUSED existing-branch-has-work card=$cardId branch=$branch commits=$($unique.Count)"
+            exit 6
+        }
+        # Fails (and is reported) if the branch is checked out in another worktree.
+        & git -C $RepoRoot branch -f $branch $baseSha 2>&1 | Out-Null
+        if ($LASTEXITCODE -ne 0) {
+            Write-Output "WORKSTREAM: CANNOT-DETERMINE - could not move existing branch $branch to $baseSha (checked out elsewhere?)"
+            exit 3
+        }
+        Write-Output "WORKSTREAM: reusing existing branch $branch (no commits beyond baseSha), moved to $baseSha"
+        & git -C $RepoRoot -c core.longpaths=true worktree add $laneWorkDir $branch 2>&1 | Out-Null
+    } else {
+        & git -C $RepoRoot -c core.longpaths=true worktree add -b $branch $laneWorkDir $baseSha 2>&1 | Out-Null
+    }
     if ($LASTEXITCODE -ne 0) {
         Write-Output "WORKSTREAM: CANNOT-DETERMINE - git worktree add failed for $laneWorkDir at $baseSha (branch $branch)"
         exit 3

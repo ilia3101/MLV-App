@@ -1581,6 +1581,64 @@ def test_editing_dispatch_prints_workdir_lane_and_a_full_basesha(tmp_path):
         cleanup_lane_worktree(tmp_path, "TEST-EDIT-A")
 
 
+def _reuse_card(dual, card_id):
+    proc = write_fields_card(dual / "prompts" / "v2", card_id)
+    return {"id": card_id, "state": "queued", "track": "product", "kind": "product",
+            "owner": "sonnet", "priority": 1,
+            "procedure": ".claude-state/coordination/dual-lane/prompts/v2/fields-%s.md" % card_id,
+            "procedureSha256": sha256_of(proc)}
+
+
+def test_editing_dispatch_reuses_a_stale_branch_with_no_unique_commits_and_moves_it_to_base(tmp_path):
+    """A branch left by an earlier attempt, sitting on an OLDER commit that is an ancestor of
+    baseSha, must not block `worktree add` forever: it is reused and moved to baseSha, so the
+    lane starts from the fresh base, never the stale tip."""
+    dual, first = editing_board(tmp_path)
+    subprocess.run(["git", "branch", "product/TEST-EDIT-REUSE-1", first], cwd=tmp_path, check=True)
+    (tmp_path / "seed2.txt").write_text("more\n")
+    subprocess.run(["git", "add", "seed2.txt"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "commit", "-qm", "second"], cwd=tmp_path, check=True)
+    head = git(tmp_path, "rev-parse", "HEAD")
+    subprocess.run(["git", "update-ref", "refs/remotes/fork/master", head], cwd=tmp_path, check=True)
+    try:
+        result = run_editing_dispatch(tmp_path, [_reuse_card(dual, "TEST-EDIT-REUSE-1")], "TEST-EDIT-REUSE-1")
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert "reusing existing branch product/TEST-EDIT-REUSE-1" in result.stdout, result.stdout
+        assert git(tmp_path, "rev-parse", "refs/heads/product/TEST-EDIT-REUSE-1") == head
+    finally:
+        cleanup_lane_worktree(tmp_path, "TEST-EDIT-REUSE-1")
+
+
+def test_editing_dispatch_refuses_an_existing_branch_that_carries_work(tmp_path):
+    """A branch with a commit NOT in baseSha holds work; the dispatcher must refuse (exit 6)
+    and must not move or overwrite the branch."""
+    dual, head = editing_board(tmp_path)
+    subprocess.run(["git", "checkout", "-q", "-b", "product/TEST-EDIT-REUSE-2"], cwd=tmp_path, check=True)
+    (tmp_path / "work.txt").write_text("lane work\n")
+    subprocess.run(["git", "add", "work.txt"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "commit", "-qm", "lane work"], cwd=tmp_path, check=True)
+    tip = git(tmp_path, "rev-parse", "HEAD")
+    subprocess.run(["git", "checkout", "-q", "--detach", head], cwd=tmp_path, check=True)
+    try:
+        result = run_editing_dispatch(tmp_path, [_reuse_card(dual, "TEST-EDIT-REUSE-2")], "TEST-EDIT-REUSE-2")
+        assert result.returncode == 6, result.stdout + result.stderr
+        assert "REFUSED existing-branch-has-work card=TEST-EDIT-REUSE-2" in result.stdout, result.stdout
+        assert git(tmp_path, "rev-parse", "refs/heads/product/TEST-EDIT-REUSE-2") == tip
+    finally:
+        cleanup_lane_worktree(tmp_path, "TEST-EDIT-REUSE-2")
+
+
+def test_editing_dispatch_creates_a_new_branch_when_none_exists(tmp_path):
+    dual, head = editing_board(tmp_path)
+    try:
+        result = run_editing_dispatch(tmp_path, [_reuse_card(dual, "TEST-EDIT-REUSE-3")], "TEST-EDIT-REUSE-3")
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert "reusing existing branch" not in result.stdout
+        assert git(tmp_path, "rev-parse", "refs/heads/product/TEST-EDIT-REUSE-3") == head
+    finally:
+        cleanup_lane_worktree(tmp_path, "TEST-EDIT-REUSE-3")
+
+
 def test_two_editing_dispatches_get_two_distinct_worktree_paths(tmp_path):
     dual, head = editing_board(tmp_path)
     proc_a = write_fields_card(dual / "prompts" / "v2", "TEST-EDIT-B1")
