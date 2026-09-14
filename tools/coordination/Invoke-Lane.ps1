@@ -72,7 +72,8 @@ param(
     # Backstop against a runaway lane. Claude only (codex exec has no equivalent).
     # 0 disables the cap. Measured 2026-09-03: real lanes used 13-21 turns, so 40 is a
     # runaway guard, NOT the spend control - that is -DenyBulkReads below.
-    [int]$MaxTurns = 40,
+    # Updated 2026-09-10: raised from 40 to 65 to prevent mid-work cutoffs (lanes executed 41 turns).
+    [int]$MaxTurns = 65,
 
     # Optional per-process override; never changes the user's provider settings.
     [ValidateSet('', 'low', 'medium', 'high')]
@@ -95,7 +96,20 @@ param(
     # 0.1: an extra directory the lane may read beyond -WorkDir (e.g. board
     # coordination paths an editing lane needs without a full -AllowBulkReads
     # grant). Optional; claude engine only (--add-dir).
-    [string]$ExtraReadDir = ''
+    [string]$ExtraReadDir = '',
+
+    # Disk hygiene (2026-09-14): when the lane exits, retire -WorkDir if it is a linked
+    # worktree that passes the SAFE gate in Retire-LaneWorktree.ps1; otherwise keep it.
+    # Either way the receipt carries `worktreeDisposition` saying which and why.
+    # Never applies to the main checkout, and never deletes a branch ref.
+    [switch]$RetireWorktree,
+
+    # Lane scratch. The child's TEMP/TMP point at <ScratchRoot>\<lane>-NNN, never bare
+    # %TEMP% (which every project on this box shares). C:\mlvtmp is a DiskGuard-registered
+    # MLV root. The run's own scratch dir is removed when the lane exits unless -KeepScratch;
+    # its size is recorded in the receipt either way.
+    [string]$ScratchRoot = 'C:\mlvtmp\lane-scratch',
+    [switch]$KeepScratch
 )
 
 $ErrorActionPreference = 'Stop'
@@ -325,6 +339,9 @@ $exitCode   = -999
 $timedOut   = $false
 $final      = ''
 $failure    = $null
+# Initialized here, before the try, so the finally never resolves a parent-scope $scratchDir
+# (dynamic scoping) and removes a path this run did not create.
+$scratchDir = $null
 # A PROVIDER REFUSAL is a third outcome beside ran/threw: the child exited cleanly and
 # the provider did no work. Detected from raw output after harvest; see lane-provider-refusal.ps1.
 $providerRefusal = $null
@@ -334,6 +351,41 @@ $jobHandle = [IntPtr]::Zero
 $jobAssigned = $false
 $promptDelivered = $false
 $containedHost = $null
+# Set to $true the INSTANT Process::Start returns for the claude engine (a plain
+# boolean assignment cannot throw), BEFORE the pid/dictionary construction that
+# builds $containedHost -- which CAN throw (PR #105 round 4). $containedHost alone
+# cannot tell "Start was never called/never returned" apart from "Start returned
+# but the record of it never got built"; $hostStarted can, because it is set
+# unconditionally the moment a host process exists.
+$hostStarted = $false
+# Captured on its OWN line the instant Start returns (PR #105 round 5, this
+# packet): a bare property read on a live Process, which the .NET contract
+# binds before Start returns and which therefore cannot throw. Kept separate
+# from $containedHost (whose own dictionary/build CAN still throw) so the
+# post-start-unrecorded fallback always has a pid to report -- the pid is the
+# only channel by which anyone later learns an orphan existed.
+$hostPid = $null
+# Fixed tokens for containment.ownerAbsentReason, chosen by WHERE the failure
+# happened rather than by what its exception message said -- free text is not
+# admissible evidence about a safety property (PR #105 round 4). Kept in one
+# place; tests/coordination/test_lane_containment.py pins these as literals
+# since it cannot import a .ps1 file, with a comment pointing back here.
+$OWNER_ABSENT_NO_HOST_BUDGET = 'launch-budget-exhausted'  # unchanged text: line ~471's throw message, asserted verbatim since PR #105 round 3
+$OWNER_ABSENT_NO_HOST_START_THREW = 'start-threw'         # Process::Start itself threw; no host was ever created
+$OWNER_ABSENT_POST_START_UNRECORDED = 'post-start-unrecorded'  # Start returned (a host EXISTS) but $containedHost's own construction threw -- the genuinely ambiguous state
+# Outcome of the PRE-ASSIGNMENT kill at line ~677 (host started but never
+# joined the job, so a swallowed kill failure there is a genuine orphan, unlike
+# the post-timeout kill at line ~602 where the job is kill-on-close and the
+# tree is already terminated). A kill cannot be made infallible, but its
+# failure can be made visible instead of vanishing into a bare `catch { }`
+# (PR #105 round 5, sol PR #105 blocker).
+$ownerKillAttempted = $false
+$ownerKillOutcome = $null
+$ownerKillDetail = $null
+$OWNER_KILL_OUTCOME_ALREADY_EXITED = 'already-exited'  # host had already exited before the pre-assignment kill was attempted
+$OWNER_KILL_OUTCOME_KILLED = 'killed'                  # Kill() did not throw AND WaitForExit's own return value was $true -- the host was OBSERVED to exit within the bounded wait
+$OWNER_KILL_OUTCOME_KILL_WAIT_TIMEOUT = 'kill-wait-timeout'  # Kill() did not throw, but WaitForExit's return value was $false -- the bounded wait expired before the host was observed to exit. It MAY STILL BE ALIVE. (PR #105 final: WaitForExit(Int32) returns a bool and round 5 discarded it with [void], so a host that outlived the wait was misreported as 'killed' -- worse than the bare catch{} it replaced, since it manufactured false evidence instead of merely omitting true evidence.)
+$OWNER_KILL_OUTCOME_KILL_THREW = 'kill-threw'          # Kill() or WaitForExit itself threw -- see ownerKillDetail for the raw message
 $childIdentity = $null
 $deadlineUtc = $startedUtc.AddSeconds($TimeoutSec)
 $containment = $null
@@ -461,6 +513,13 @@ $psi.CreateNoWindow         = $true
 if ($cfg.engine -eq 'claude' -and $ReasoningEffort) {
     $psi.Environment['CLAUDE_CODE_EFFORT_LEVEL'] = $ReasoningEffort
 }
+# Per-run lane scratch under an MLV-owned root instead of the shared %TEMP%.
+$scratchDir = $null
+if ($ScratchRoot) {
+    $scratchDir = Join-Path $ScratchRoot ('{0}-{1}' -f (Split-Path $RunDir -Leaf), (Split-Path $base -Leaf))
+    New-Item -ItemType Directory -Force -Path $scratchDir | Out-Null
+    foreach ($v in 'TEMP', 'TMP', 'TMPDIR') { $psi.Environment[$v] = $scratchDir }
+}
 $psi.RedirectStandardInput  = $true
 $psi.RedirectStandardOutput = $true
 $psi.RedirectStandardError  = $true
@@ -500,7 +559,20 @@ $child.StandardInput.Write($prompt); $child.StandardInput.Close(); $child.WaitFo
     }
     $jobHandle = [MlvLaneJob]::CreateKillOnClose()
     $proc = [Diagnostics.Process]::Start($psi)
-    $containedHost = [ordered]@{ pid=$proc.Id; createdUtc=$proc.StartTime.ToUniversalTime().ToString('o') }
+    $hostStarted = $true
+    # Record the pid the instant Start returns, before anything that can throw:
+    # once Start succeeds a host EXISTS, and a receipt that omits its pid is
+    # indistinguishable from "no host was started" (PR #105 round 2 blocker).
+    # $hostPid is a bare property read on a live Process -- it cannot throw,
+    # unlike $containedHost's own ordered-map build below (PR #105 round 4
+    # blocker), so it survives even when that build itself throws (PR #105
+    # round 5): the post-start-unrecorded fallback reports $hostPid instead of
+    # null, so a host that exists is never reported as if it did not.
+    # createdUtc is read defensively in its own try -- a StartTime failure must
+    # not erase the pid we already have.
+    $hostPid = $proc.Id
+    $containedHost = [ordered]@{ pid=$hostPid; createdUtc=$null }
+    try { $containedHost.createdUtc = $proc.StartTime.ToUniversalTime().ToString('o') } catch { }
     [MlvLaneJob]::AssignOrThrow($jobHandle, $proc.Handle)
     $jobAssigned = $true
 } else {
@@ -649,16 +721,92 @@ catch {
     }
     # Before assignment the inert host is outside the job. Terminate only the exact
     # Process object created by this invocation; it has received no launch frame.
+    # UNLIKE the post-timeout kill at line ~602 -- where the job handle has just
+    # been closed and the job is kill-on-close, so the tree is already terminated
+    # and that catch is belt-and-braces -- this host was NEVER inside the job, so
+    # a swallowed failure here is a GENUINE orphan (PR #105 round 5, sol PR #105
+    # blocker). The kill call itself still must not throw out of this catch (this
+    # is already a failure path; a second exception would only mask the first),
+    # but its OUTCOME is recorded into the containment record below instead of
+    # vanishing silently -- the honest fix for a swallow is not to make the kill
+    # infallible (it cannot be), but to make its failure visible.
     if ($cfg.engine -eq 'claude' -and -not $jobAssigned -and $null -ne $proc) {
-        try { if (-not $proc.HasExited) { $proc.Kill($true); [void]$proc.WaitForExit(5000) } } catch { }
+        $ownerKillAttempted = $true
+        try {
+            if ($proc.HasExited) {
+                $ownerKillOutcome = $OWNER_KILL_OUTCOME_ALREADY_EXITED
+            } else {
+                # WaitForExit(Int32) RETURNS a bool -- $true iff the process exited
+                # within the timeout, $false if the wait merely expired. Round 5
+                # discarded that return with [void] and recorded 'killed'
+                # unconditionally, so a host that survived the bounded wait (exactly
+                # the orphan this whole change exists to make visible) was reported
+                # as killed -- manufactured evidence, not just an omission. Capture
+                # the observed boolean and branch on IT, never on what was attempted.
+                $proc.Kill($true)
+                $exitedWithinWait = $proc.WaitForExit(5000)
+                $ownerKillOutcome = if ($exitedWithinWait) { $OWNER_KILL_OUTCOME_KILLED } else { $OWNER_KILL_OUTCOME_KILL_WAIT_TIMEOUT }
+            }
+        } catch {
+            $ownerKillOutcome = $OWNER_KILL_OUTCOME_KILL_THREW
+            $ownerKillDetail = $_.Exception.Message
+        }
+        # Considered also stamping $proc.HasExited at the moment the containment
+        # record is BUILT (further below, well after this try/catch) as a second,
+        # cheaper corroborating observation. Declined: that build site sits inside
+        # the outer exception handler with no catch of its own, so a HasExited
+        # read there that throws (it CAN -- Win32Exception/InvalidOperationException
+        # per the .NET contract) would escape uncaught and blow past receipt
+        # construction entirely, the same "second exception masks the first"
+        # failure mode the comment on this catch already warns against. Not worth
+        # it for a value that WaitForExit's own return already answers.
     }
     if ($cfg.engine -eq 'claude' -and $null -eq $containment) {
         $native = if ($_.Exception.PSObject.Properties.Name -contains 'NativeErrorCode') { [int]$_.Exception.NativeErrorCode } else { $null }
+        # CLASSIFYING THE THIRD STATE (PR #105 round 4): round 3 recorded the raw exception
+        # MESSAGE as ownerAbsentReason, and the test accepted any truthy string as proof no
+        # host existed. But $containedHost's own construction (the pid/dictionary build
+        # above) can itself throw AFTER Start already returned and a host is alive -- so
+        # that exception's message would pose as a legitimate no-host reason. Free text is
+        # not admissible evidence about a safety property, so classify by WHERE the failure
+        # happened instead of by WHAT it said:
+        #   - $containedHost non-null  -> a pid was recorded; no absence to explain.
+        #   - $containedHost null, $hostStarted false -> Start never returned: either the
+        #     launch budget was already gone (line ~470, throws before Start is reached) or
+        #     Start itself threw. Distinguish cheaply by exception type/message where we can;
+        #     otherwise fall back to the generic "start threw" token. Both are legitimate
+        #     no-host reasons, and $hostPid is still null in both (no host ever existed).
+        #   - $containedHost null, $hostStarted true -> Start returned (a host EXISTS) but
+        #     the record of it was never built. This is the genuinely ambiguous state and it
+        #     is named as such, never hidden behind a message that merely looks legitimate.
+        #     $hostPid (captured on its own non-throwing line before this build) is used for
+        #     ownerPid below, so this state is never reported as if no host existed (PR #105
+        #     round 5): the pid is the only channel by which anyone learns the orphan existed.
+        # The raw message is kept for humans in ownerAbsentDetail, a field no decision reads.
+        $ownerAbsentReason = $null
+        $ownerAbsentDetail = $null
+        if ($null -eq $containedHost) {
+            $ownerAbsentDetail = $_.Exception.Message
+            if (-not $hostStarted) {
+                $ownerAbsentReason = if ($_.Exception -is [TimeoutException] -and $_.Exception.Message -eq $OWNER_ABSENT_NO_HOST_BUDGET) {
+                    $OWNER_ABSENT_NO_HOST_BUDGET
+                } else {
+                    $OWNER_ABSENT_NO_HOST_START_THREW
+                }
+            } else {
+                $ownerAbsentReason = $OWNER_ABSENT_POST_START_UNRECORDED
+            }
+        }
         $containment = [ordered]@{
             kind='windows-job-kill-on-close'; jobAssigned=$jobAssigned
             runnerPid=$PID; runnerCreatedUtc=(Get-Process -Id $PID).StartTime.ToUniversalTime().ToString('o')
-            ownerPid=if($null-ne $containedHost){$containedHost.pid}else{$null}
+            ownerPid=if($null-ne $containedHost){$containedHost.pid}else{$hostPid}
             ownerCreatedUtc=if($null-ne $containedHost){$containedHost.createdUtc}else{$null}
+            ownerAbsentReason=$ownerAbsentReason
+            ownerAbsentDetail=$ownerAbsentDetail
+            ownerKillAttempted=$ownerKillAttempted
+            ownerKillOutcome=$ownerKillOutcome
+            ownerKillDetail=$ownerKillDetail
             childPid=$null; childCreatedUtc=$null; deadlineUtc=$deadlineUtc.ToString('o')
             promptDelivered=$promptDelivered; assignmentErrorCode=$native
         }
@@ -675,6 +823,38 @@ if ($jobHandle -ne [IntPtr]::Zero) {
     $jobHandle = [IntPtr]::Zero
 }
 $sw.Stop()
+# Disk hygiene. Neither step may throw: a failure here is recorded, never propagated,
+# because the receipt below must still be written on every exit path.
+$scratchDisposition = $null
+if ($scratchDir) {
+    try {
+        $sb = [int64]0
+        if (Test-Path -LiteralPath $scratchDir) { Get-ChildItem -LiteralPath $scratchDir -Recurse -File -Force -ErrorAction SilentlyContinue | ForEach-Object { $sb += $_.Length } }
+        $removed = $false
+        if (-not $KeepScratch -and (Test-Path -LiteralPath $scratchDir)) { Remove-Item -LiteralPath $scratchDir -Recurse -Force -ErrorAction Stop; $removed = $true }
+        $scratchDisposition = [ordered]@{ path = $scratchDir; bytes = $sb; removed = $removed; error = $null }
+    } catch {
+        $scratchDisposition = [ordered]@{ path = $scratchDir; bytes = $null; removed = $false; error = $_.Exception.Message }
+    }
+}
+$worktreeDisposition = $null
+if ($RetireWorktree) {
+    try {
+        . (Join-Path $PSScriptRoot 'Retire-LaneWorktree.ps1')
+        # The CANONICAL board (parent of the common .git), never the checkout this script runs
+        # from: a copy of this script inside a linked worktree must not quarantine into that worktree.
+        # No `| Select-Object -First 1` on the native call: it can stop the pipeline before
+        # $LASTEXITCODE is set, and reading it then throws under StrictMode Latest.
+        $commonOut = @(& git -C $PSScriptRoot rev-parse --path-format=absolute --git-common-dir 2>$null)
+        $commonDir = if ($commonOut.Count) { [string]$commonOut[0] } else { $null }
+        if (-not $commonDir -or -not (Test-Path -LiteralPath $commonDir)) { throw 'cannot resolve board root from git common dir' }
+        $boardRoot = Split-Path -Parent ($commonDir -replace '/', '\')
+        $worktreeDisposition = Invoke-RetireLaneWorktree -WorkDir $WorkDir -ProtectPath @($RunDir) `
+            -QuarantineRoot (Join-Path $boardRoot ('.claude-state\disk-hygiene\quarantine\lane-exit\' + (Get-Date).ToUniversalTime().ToString('yyyyMMdd')))
+    } catch {
+        $worktreeDisposition = [ordered]@{ action = 'kept'; reason = "cannot-determine: $($_.Exception.Message)" }
+    }
+}
 $receipt = [ordered]@{
     schema       = 'mlv-app/fleet-lane-receipt/v1'
     # SAME KEY AT EVERY STAGE. A reader checks `state` once - reserved, complete or
@@ -715,7 +895,9 @@ $receipt = [ordered]@{
     # fail, the provider declined, and a reader must never mistake that for a verdict.
     providerRefusal = $providerRefusal
     containment  = $containment
-    complete     = ($null -eq $failure -and $null -eq $providerRefusal -and $exitCode -ne -999)
+    scratch      = $scratchDisposition
+    worktreeDisposition = $worktreeDisposition
+    complete     =($null -eq $failure -and $null -eq $providerRefusal -and $exitCode -ne -999)
     spend        = [ordered]@{
         costUsd            = $costUsd
         costReported       = ($null -ne $costUsd)

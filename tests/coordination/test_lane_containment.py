@@ -1,4 +1,4 @@
-import hashlib, json, os, subprocess, sys, time
+import hashlib, json, os, re, subprocess, sys, time
 from datetime import datetime
 from pathlib import Path
 
@@ -9,6 +9,45 @@ ROOT = HERE.parents[1]
 CANDIDATE = ROOT / "tools" / "coordination" / "Invoke-Lane.ps1"
 pytestmark = pytest.mark.skipif(sys.platform != "win32", reason="Windows Job Object contract")
 PWSH = "pwsh.exe"
+
+# PR #105 round 4: Invoke-Lane.ps1 classifies containment.ownerAbsentReason into a
+# CLOSED set of fixed tokens, chosen by WHERE a failure happened rather than by what
+# its raw exception message said -- free text is not admissible evidence about a
+# safety property. This test file cannot import a .ps1 file, so the tokens are
+# pinned here as literals; keep them in sync BY HAND with Invoke-Lane.ps1's own
+# $OWNER_ABSENT_* constants (declared beside $hostStarted, ~line 337-346).
+NO_HOST_TOKENS = {"launch-budget-exhausted", "start-threw"}
+POST_START_UNRECORDED = "post-start-unrecorded"
+
+# PR #105 final: containment.ownerKillOutcome tokens, same hand-duplication problem
+# as NO_HOST_TOKENS above -- kept in sync BY HAND with Invoke-Lane.ps1's own
+# $OWNER_KILL_OUTCOME_* constants (declared beside $ownerKillAttempted, ~line 365-372).
+# The cross-family review that added kill-wait-timeout noted this duplication drifts
+# silently unless something pins the full set; test_kill_outcome_token_set_matches_
+# producer_constants below asserts this literal against the source directly instead
+# of trusting the hand-copy.
+KILL_OUTCOME_TOKENS = {"already-exited", "killed", "kill-wait-timeout", "kill-threw"}
+
+
+def assert_owner_absence_is_legitimate(containment, context):
+    # The one place round-3, round-4, and round-5 tests all funnel through. Since
+    # PR #105 round 5, a POST_START_UNRECORDED receipt carries a NON-NULL ownerPid
+    # (captured on its own non-throwing line before the construction that failed),
+    # so ownerPid presence/absence no longer distinguishes the states -- only
+    # ownerAbsentReason does. See Invoke-Lane.ps1's catch block (~line 679-711, and
+    # the pre-assignment kill block around ~line 674-696) for the producer side.
+    assert containment is not None, f"ambiguous containment receipt: containment itself is None: {context}"
+    reason = containment.get("ownerAbsentReason")
+    if reason in NO_HOST_TOKENS:
+        assert containment.get("ownerPid") is None, (
+            f"a no-host token must never carry a pid -- no host ever existed: {context}"
+        )
+        return  # legitimate: no host was ever created
+    pytest.fail(f"ambiguous or unrecognised containment receipt: ownerAbsentReason is {reason!r}, which is "
+                f"not one of the closed-set no-host tokens {NO_HOST_TOKENS!r} -- either it is "
+                f"{POST_START_UNRECORDED!r} (a host EXISTED; its pid is recorded so the orphan is never "
+                f"invisible, but the receipt is still ambiguous and must never be treated as a legitimate "
+                f"absence) or it is unrecognised entirely: {context}")
 
 
 def wait_json(path, pred=lambda x: True, seconds=12):
@@ -23,6 +62,11 @@ def wait_json(path, pred=lambda x: True, seconds=12):
 
 
 def identity(pid):
+    # 1 s -TimeoutSec deadline race (evidence 2026-09-09): the fallback receipt
+    # built in Invoke-Lane.ps1's catch block can carry containment.ownerPid=None
+    # when the deadline fires before a contained host was ever started. There is
+    # no process to look up in that case, so return None instead of int(None).
+    if pid is None: return None
     q=f"$p=Get-Process -Id {int(pid)} -ErrorAction SilentlyContinue;if($null-eq $p){{exit 3}};$p.StartTime.ToUniversalTime().ToString('o')"
     r=subprocess.run([PWSH,"-NoProfile","-NonInteractive","-Command",q],text=True,capture_output=True,timeout=5)
     return r.stdout.strip() if r.returncode==0 else None
@@ -191,7 +235,251 @@ def test_startup_consumes_same_deadline_without_starting_provider(fixture_tree):
     q=json.loads(receipt.read_text(encoding="utf-8"))
     assert q["timedOut"]
     assert not (fixture_tree["root"]/"child.json").exists()
-    wait_absent({"pid":q["containment"]["ownerPid"],"createdUtc":q["containment"]["ownerCreatedUtc"]})
+    # PR #105 round 2 (sol blocker): Invoke-Lane.ps1 now records containedHost.pid
+    # the instant Process::Start returns, before any call that can throw -- so a
+    # null ownerPid means no host exists (either the launch budget was already
+    # gone, or Start itself threw). This fixture's delayed stdin read happens
+    # AFTER a successful Start, so it must land in the "owner present" branch;
+    # ownerPid==None here would itself be the round-2 regression.
+    #
+    # PR #105 round 3: a null ownerPid alone still can't tell "budget exhausted
+    # before Start was ever called" (Invoke-Lane.ps1:470-472, legitimate) apart
+    # from an ambiguous, unexplained absence. containment.ownerAbsentReason
+    # (Invoke-Lane.ps1's catch block, ~661-676) now names WHY, so classify on
+    # that instead of guessing from ownerPid alone.
+    containment=q.get("containment")
+    owner_pid=containment.get("ownerPid") if containment else None
+    if containment is not None and owner_pid is not None:
+        # Unchanged from round 2: a pid was recorded, so a host definitely exists
+        # (or existed) and must be reaped.
+        if containment["ownerCreatedUtc"] is None:
+            # A pid with no createdUtc means Start succeeded but StartTime read threw;
+            # there is no createdUtc to compare against, so the only provable check is
+            # that the pid is not (or no longer) an alive process.
+            assert identity(owner_pid) is None
+        else:
+            wait_absent({"pid":q["containment"]["ownerPid"],"createdUtc":q["containment"]["ownerCreatedUtc"]})
+    else:
+        # PR #105 round 4: ownerAbsentReason must be one of the closed-set no-host
+        # tokens, never an arbitrary truthy string (round 3's "if reason: pass" let
+        # a POST_START_UNRECORDED-shaped failure pose as a legitimate absence).
+        assert_owner_absence_is_legitimate(containment, q)
+
+
+def test_zero_timeout_exhausts_budget_before_spawn_and_names_the_reason(fixture_tree):
+    # Reachability proof for the legitimate null-owner branch (PR #105 round 3,
+    # task item 4): -TimeoutSec 0 means the budget is already spent by the time
+    # execution reaches Invoke-Lane.ps1:470, so that line's throw fires BEFORE
+    # Process::Start is ever called -- no mutation/mock needed, this is the real
+    # code path. No host exists, so ownerPid must be null with ownerAbsentReason
+    # naming why.
+    cmd,env,receipt=prepare(fixture_tree,"normal")
+    cmd[cmd.index("-TimeoutSec")+1]="0"
+    r=subprocess.run(cmd,env=env,text=True,capture_output=True,timeout=15)
+    assert r.returncode==124,(r.stdout,r.stderr)
+    q=json.loads(receipt.read_text(encoding="utf-8"))
+    assert q["timedOut"]
+    assert not (fixture_tree["root"]/"child.json").exists()
+    containment=q["containment"]
+    assert containment["ownerPid"] is None
+    assert containment["ownerAbsentReason"]=="launch-budget-exhausted"
+
+
+def test_start_threw_is_classified_as_no_host(fixture_tree):
+    # Reachability proof for the other no-host token (PR #105 round 4): make
+    # Process::Start itself throw for the claude engine. $hostStarted is never set
+    # (it is assigned on the line immediately AFTER Start returns), so the catch
+    # block must land in the "Start never returned" branch and pick the generic
+    # start-threw token, not the budget token (this is not a TimeoutException) and
+    # not POST_START_UNRECORDED (no host ever existed).
+    def break_start(text):
+        old = "$proc = [Diagnostics.Process]::Start($psi)"
+        assert text.count(old) == 2
+        # Replace ONLY the first occurrence -- the claude-engine branch (~line 517),
+        # which runs before $hostStarted is set. The second occurrence is the
+        # non-claude branch and must stay untouched.
+        return text.replace(old, "throw 'fixture-start-threw'", 1)
+    cmd,env,receipt=prepare(fixture_tree,"normal",mutation=break_start)
+    r=subprocess.run(cmd,env=env,text=True,capture_output=True,timeout=15)
+    assert r.returncode==127,(r.stdout,r.stderr)
+    assert not (fixture_tree["root"]/"child.json").exists()
+    q=json.loads(receipt.read_text(encoding="utf-8"))
+    containment=q["containment"]
+    assert containment["ownerPid"] is None
+    assert containment["ownerAbsentReason"]=="start-threw"
+    assert containment["ownerAbsentDetail"]=="fixture-start-threw"
+    assert_owner_absence_is_legitimate(containment, q)
+
+
+def test_post_start_unrecorded_is_named_not_hidden(fixture_tree):
+    # Reachability proof for the genuinely-ambiguous branch (PR #105 round 4, task
+    # item 4): inject a throw between Process::Start returning (a host now EXISTS)
+    # and $containedHost being built, using the same fixture-mutation mechanism
+    # test_setup_origin_and_expired_budget_are_deterministic already uses to inject
+    # text at a specific line. This is exactly the failure the cross-family review
+    # found: without $hostStarted, this exception's message would pose as a
+    # legitimate no-host reason. With it, the catch block must name it
+    # POST_START_UNRECORDED instead -- and the test below must FAIL LOUD on that
+    # receipt if a caller naively treated it as legitimate (proven by calling the
+    # shared assertion helper and expecting it to raise).
+    #
+    # PR #105 round 5 (this packet): $hostPid is now captured on its own
+    # non-throwing line BEFORE the $containedHost build that this fixture breaks,
+    # so a post-start-unrecorded receipt must carry the REAL host pid, not null --
+    # a null ownerPid here would itself be the round-5 regression, since the pid
+    # is the only channel by which anyone later learns the orphan existed. The
+    # mutation also drops a marker file with $hostPid's value (via the same
+    # Write-Utf8NoBom helper the production code already uses) so the test can
+    # assert the receipt's ownerPid equals the REAL pid, not merely "non-null".
+    marker = fixture_tree["root"] / "host-pid.txt"
+    def break_containedHost_build(text):
+        old = "$containedHost = [ordered]@{ pid=$hostPid; createdUtc=$null }"
+        assert text.count(old) == 1
+        marker_literal = str(marker).replace("'", "''")
+        return text.replace(old, "Write-Utf8NoBom '%s' ([string]$hostPid)\n    throw 'fixture-post-start-unrecorded'" % marker_literal)
+    cmd,env,receipt=prepare(fixture_tree,"normal",mutation=break_containedHost_build)
+    r=subprocess.run(cmd,env=env,text=True,capture_output=True,timeout=15)
+    assert r.returncode==127,(r.stdout,r.stderr)
+    assert not (fixture_tree["root"]/"child.json").exists()
+    q=json.loads(receipt.read_text(encoding="utf-8"))
+    containment=q["containment"]
+    real_pid = int(marker.read_text(encoding="utf-8-sig").strip())
+    assert containment["ownerPid"] == real_pid
+    assert containment["ownerAbsentReason"]==POST_START_UNRECORDED
+    assert containment["ownerAbsentDetail"]=="fixture-post-start-unrecorded"
+    assert containment["ownerAbsentReason"] not in NO_HOST_TOKENS
+    # The whole point: this receipt must NOT be accepted as a legitimate absence,
+    # even though a pid is now present.
+    with pytest.raises(pytest.fail.Exception):
+        assert_owner_absence_is_legitimate(containment, q)
+
+
+def test_pre_assignment_kill_failure_is_recorded_not_swallowed(fixture_tree):
+    # Falsifier for the OTHER half of this packet (PR #105 round 5, sol PR #105
+    # blocker): at the pre-assignment site (Invoke-Lane.ps1 ~line 674-696), the
+    # host is still OUTSIDE the job, so a swallowed Kill failure there leaves a
+    # GENUINE orphan -- unlike the post-timeout kill at ~line 602, where the job
+    # is kill-on-close and the tree is already terminated. Combine the same
+    # post-start-unrecorded trigger (so the pre-assignment kill path is reached
+    # at all: $jobAssigned is still false) with a forced Kill failure, and prove
+    # the receipt records ownerKillAttempted/ownerKillOutcome instead of the bare
+    # `catch { }` this repo used to have there silently discarding it.
+    def break_kill(text):
+        old_throw = "$containedHost = [ordered]@{ pid=$hostPid; createdUtc=$null }"
+        assert text.count(old_throw) == 1
+        text = text.replace(old_throw, "throw 'fixture-post-start-unrecorded'")
+        # 1b4a82ab split the old single `Kill($true); [void]WaitForExit(5000)`
+        # statement into two lines so WaitForExit's bool return could be
+        # captured instead of discarded -- the anchor now spans both lines.
+        # `$proc.Kill($true)` alone is NOT unique (the post-timeout kill at
+        # ~line 626 also calls it), so the second line's exact indentation is
+        # part of the anchor, same discipline as every other anchor here.
+        old_kill = "$proc.Kill($true)\n                $exitedWithinWait = $proc.WaitForExit(5000)"
+        assert text.count(old_kill) == 1
+        return text.replace(old_kill, "throw 'fixture-kill-failed'")
+    cmd,env,receipt=prepare(fixture_tree,"normal",mutation=break_kill)
+    r=subprocess.run(cmd,env=env,text=True,capture_output=True,timeout=15)
+    assert r.returncode==127,(r.stdout,r.stderr)
+    q=json.loads(receipt.read_text(encoding="utf-8"))
+    containment=q["containment"]
+    # The whole point: the failed kill is VISIBLE, never silent.
+    assert containment["ownerKillAttempted"] is True
+    assert containment["ownerKillOutcome"]=="kill-threw"
+    assert containment["ownerKillDetail"]=="fixture-kill-failed"
+    # Forcing the kill to throw means the real kill never ran -- this test, not
+    # production code, is responsible for reaping the host it just orphaned.
+    # ownerPid is guaranteed non-null by this same packet's other remedy.
+    owner_pid = containment["ownerPid"]
+    assert owner_pid is not None
+    subprocess.run([PWSH,"-NoProfile","-NonInteractive","-Command",
+                     f"Stop-Process -Id {int(owner_pid)} -Force -ErrorAction SilentlyContinue"],
+                    timeout=5, check=False)
+
+
+def test_pre_assignment_kill_wait_timeout_is_recorded_not_killed(fixture_tree):
+    # Falsifier for PR #105 final (cross-family review of 0f8ba40a): WaitForExit(Int32)
+    # RETURNS a bool -- true iff the process exited within the timeout -- and round 5
+    # discarded that return with [void], recording 'killed' unconditionally. A host
+    # that outlives the bounded wait -- exactly the orphan this whole change exists to
+    # make visible -- was therefore reported as killed: manufactured evidence, worse
+    # than the bare `catch { }` this whole packet replaced.
+    #
+    # PR #105 round 6 (falsifier hardening, 2026-09-09): the prior construction shrank
+    # the real wait to WaitForExit(0), racing a real WaitForExit call against real OS
+    # process teardown on the bet that 0ms wouldn't be enough time for the process to
+    # actually exit. It was not reliable: reproduced 3 of 3 in isolation on this host
+    # (36 processes, 27% CPU -- well below saturation) as an ASSERTION failure, not a
+    # timeout, because WaitForExit(0) sometimes observed the process as already gone.
+    # A falsifier for "false observations are classified correctly" that can itself
+    # observe true is not a proof.
+    #
+    # Constructing a real process that genuinely SURVIVES Process.Kill(entireProcessTree:
+    # true) plus a real bounded wait is not achievable on demand on this platform --
+    # TerminateProcess cannot be caught, ignored, or reliably outlasted by the target,
+    # so there is no cheap, reliable way to make a real teardown race land on the false
+    # branch every time. Per this packet's own instructions, an unreliable variant is
+    # worse than no variant (a 3-of-3-failing test teaches a reader to ignore red), so
+    # instead of shrinking the wait, this test now mutates the runner's own source to
+    # force the OBSERVED boolean itself to $false -- the same fixture-mutation
+    # discipline every other test in this file already uses to reach its own branch
+    # (see test_start_threw_is_classified_as_no_host,
+    # test_post_start_unrecorded_is_named_not_hidden). The real Kill($true) call is
+    # left untouched; only the captured WaitForExit result is forced.
+    #
+    # WHAT THIS PROVES: the CLASSIFICATION LOGIC -- that a false WaitForExit observation
+    # is recorded as 'kill-wait-timeout' and is never silently upgraded to 'killed'.
+    # WHAT THIS DOES NOT PROVE: that a real process can outlive a real Kill($true) plus
+    # a real five-second WaitForExit on this platform. Whether a genuinely slow-to-die
+    # host is always caught inside a realistic multi-second window is a timing property
+    # of the OS, not a property of this code path, and is not exercised here.
+    def force_wait_false(text):
+        old = "$exitedWithinWait = $proc.WaitForExit(5000)"
+        assert text.count(old) == 1
+        return text.replace(old, "$exitedWithinWait = $false")
+    cmd,env,receipt=prepare(fixture_tree,"normal",assignment_failure=True,mutation=force_wait_false)
+    r=subprocess.run(cmd,env=env,text=True,capture_output=True,timeout=15)
+    assert r.returncode==127,(r.stdout,r.stderr)
+    q=json.loads(receipt.read_text(encoding="utf-8"))
+    containment=q["containment"]
+    # The whole point: an observed-not-exited result must never be reported as killed.
+    assert containment["ownerKillAttempted"] is True
+    assert containment["ownerKillOutcome"]=="kill-wait-timeout", (
+        f"expected the observed-timeout token, got {containment['ownerKillOutcome']!r} -- "
+        "this is the exact false-evidence defect this test exists to catch"
+    )
+    # Kill() itself was real and unmodified (only the captured wait result is forced),
+    # so the host is gone or about to be -- reap defensively like the sibling
+    # kill-threw test does.
+    owner_pid = containment["ownerPid"]
+    assert owner_pid is not None
+    subprocess.run([PWSH,"-NoProfile","-NonInteractive","-Command",
+                     f"Stop-Process -Id {int(owner_pid)} -Force -ErrorAction SilentlyContinue"],
+                    timeout=5, check=False)
+
+
+def test_kill_outcome_token_set_matches_producer_constants():
+    # Guard against the exact drift the cross-family review flagged: this file's
+    # KILL_OUTCOME_TOKENS is a hand-copy of Invoke-Lane.ps1's $OWNER_KILL_OUTCOME_*
+    # constants because this file cannot import a .ps1. Pin the full set against the
+    # source directly so an added/renamed/removed token fails this test loudly
+    # instead of only failing closed by accident via an exact-string assertion
+    # elsewhere.
+    text = CANDIDATE.read_text(encoding="utf-8")
+    found = set(re.findall(r"\$OWNER_KILL_OUTCOME_\w+\s*=\s*'([^']+)'", text))
+    assert found == KILL_OUTCOME_TOKENS, f"producer constants {found!r} != pinned set {KILL_OUTCOME_TOKENS!r}"
+
+
+def test_owner_absence_helper_fails_loud_on_post_start_or_unrecognised_tokens():
+    # Prove the test-side guardrail itself is reachable and fires (not just
+    # written): both the named-ambiguous token and a wholly unrecognised string
+    # must be rejected, never silently tolerated the way round 3's bare
+    # "if reason: pass" tolerated any truthy string.
+    for reason in (POST_START_UNRECORDED, "something-unrecognised", None):
+        with pytest.raises(pytest.fail.Exception):
+            assert_owner_absence_is_legitimate({"ownerPid": None, "ownerAbsentReason": reason}, {"case": reason})
+    # And the closed set itself must still pass.
+    for reason in NO_HOST_TOKENS:
+        assert_owner_absence_is_legitimate({"ownerPid": None, "ownerAbsentReason": reason}, {"case": reason})
 
 
 @pytest.mark.parametrize("elapsed_ms,expected_exit", [(0, 0), (4000, 124)])
@@ -218,6 +506,12 @@ def test_setup_origin_and_expired_budget_are_deterministic(fixture_tree, elapsed
     if expected_exit == 124:
         assert not q["containment"]["jobAssigned"]
         assert q["containment"]["ownerPid"] is None
+        # PR #105 round 3: this parametrization mocks $sw.Elapsed to already exceed
+        # the budget, so Invoke-Lane.ps1:470-472 throws before $proc = ...Start()
+        # (proven by marker.exists() is False above) -- the same code path
+        # -TimeoutSec 0 reproduces for real in
+        # test_zero_timeout_exhausts_budget_before_spawn_and_names_the_reason.
+        assert q["containment"]["ownerAbsentReason"]=="launch-budget-exhausted"
         assert not (fixture_tree["root"] / "child.json").exists()
 
 
