@@ -10,7 +10,7 @@ already fetched every object you need and exported the hosted evidence into your
   diff: `git -C "C:\!Layi Wkspc\MLV-App" diff {{BASE_SHA_40}}..{{HEAD_SHA_40}}`.
 - Hosted checks, exported: `{{RUNDIR}}\pr-{{PR_NUMBER}}-checks.json` (from `gh pr checks`, with `retrievedUtc`); and the PR itself, exported:
   `{{RUNDIR}}\pr-{{PR_NUMBER}}-review.json` (from `gh pr view --json number,headRefOid,body,state`, read before and after the checks; carries
-  `headRefOidBefore`, `headRefOidAfter`, `requiredContextsBefore`, `requiredContextsAfter`, `body`, the checks and `retrievedUtc`). Do not call `gh`.
+  `number`, `stateBefore`, `stateAfter`, `headRefOidBefore`, `headRefOidAfter`, `requiredContextsBefore`, `requiredContextsAfter`, `body`, the checks and `retrievedUtc`). Do not call `gh`.
 - Card: {{CARD_ID}}. Deliverable: {{DELIVERABLE}}
 - Acceptance test the PR claims: {{ACCEPTANCE}}
 
