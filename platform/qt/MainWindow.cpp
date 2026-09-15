@@ -13,6 +13,7 @@
 #include "ExportProcess.h"
 #include "DualIsoLevelSyncPolicy.h"
 #include "PlaybackFrameRange.h"
+#include "PlaybackGatePolicy.h"
 #include "PlaybackPrepPresentationPolicy.h"
 #include "debug/StageTiming.h"
 extern "C" {
@@ -5509,6 +5510,10 @@ void MainWindow::presentPlaybackPreparedFrame( const PlaybackPrepResult &result 
             readyFrame.stageTimingTelemetry.insert(
                 QStringLiteral("gpu_playback_recon_gl_probe_mismatch_count"),
                 static_cast<double>( parity.mismatchCount ) );
+            if( parity.checked && parity.match )
+            {
+                ++m_playbackSmokeParityMatchCount;
+            }
 
             qInfo().noquote()
                 << QStringLiteral(
@@ -22232,9 +22237,12 @@ void MainWindow::beginPlaybackSmokeTelemetry( void )
     m_playbackSmokeStartQualityMode = m_playbackQualityMode;
     m_playbackSmokeStartWorkerThreads = mlvappEffectivePlaybackWorkerThreadCount();
     m_playbackSmokePresentedFrames = 0;
+    m_playbackSmokeParityMatchCount = 0;
     m_playbackSmokeFirstPresentedFrame = -1;
     m_playbackSmokeLastPresentedFrame = -1;
     m_playbackSmokeStartRequestSerial = m_nextRenderRequestSerial;
+    m_playbackSmokeStartDecodeRequestsIssued =
+        m_pRenderThread ? m_pRenderThread->decodeRequestsIssuedCount() : 0;
     m_playbackSmokeStartPrepStaleDrops =
         m_playbackPrepStaleDropCount.load( std::memory_order_acquire );
     m_playbackSmokeStartPrepGenerationDrops =
@@ -25553,6 +25561,29 @@ void MainWindow::finishPlaybackSmokeTelemetry( const char *reason )
                    .arg( avgDualIsoFull20Ms( m_playbackSmokeDualIsoFull20MixChromaHalfresCenterStoreRProbeSumMs ), 0, 'f', 3 )
                    .arg( avgDualIsoFull20Ms( m_playbackSmokeDualIsoFull20MixChromaHalfresCenterStoreBProbeSumMs ), 0, 'f', 3 );
     }
+
+    const uint64_t decodeRequestsIssuedNow =
+        m_pRenderThread ? m_pRenderThread->decodeRequestsIssuedCount() : 0;
+    const uint64_t decodeRequestsIssuedDelta =
+        decodeRequestsIssuedNow >= m_playbackSmokeStartDecodeRequestsIssued
+            ? decodeRequestsIssuedNow - m_playbackSmokeStartDecodeRequestsIssued
+            : 0;
+    const PlaybackGateVerdict gateVerdict =
+        PlaybackGatePolicy::evaluate( PlaybackGateCounters{
+            m_playbackSmokePresentedFrames,
+            static_cast<int>( decodeRequestsIssuedDelta ),
+            m_playbackSmokeParityMatchCount,
+            m_playbackSmokeTargetPresentedFrames } );
+    qInfo().noquote()
+        << QStringLiteral(
+               "playback_smoke.gate session=%1 verdict=%2 frames_presented=%3 "
+               "decode_requests_issued=%4 parity_match_count=%5 frames_expected=%6" )
+               .arg( static_cast<qulonglong>( m_playbackSmokeSessionId ) )
+               .arg( static_cast<int>( gateVerdict ) )
+               .arg( m_playbackSmokePresentedFrames )
+               .arg( static_cast<qulonglong>( decodeRequestsIssuedDelta ) )
+               .arg( m_playbackSmokeParityMatchCount )
+               .arg( m_playbackSmokeTargetPresentedFrames );
 }
 
 bool MainWindow::primePlaybackCacheOnPlayStart( void )

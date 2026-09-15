@@ -14,9 +14,14 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MAIN_WINDOW_CPP = REPO_ROOT / "platform" / "qt" / "MainWindow.cpp"
+RENDER_FRAME_THREAD_CPP = REPO_ROOT / "platform" / "qt" / "RenderFrameThread.cpp"
 
 EVALUATE_CALL_MARKER = "PlaybackGatePolicy::evaluate("
 COUNTERS_INIT_MARKER = "PlaybackGateCounters{"
+FINISH_TELEMETRY_SIGNATURE = "void MainWindow::finishPlaybackSmokeTelemetry("
+NOTE_PRESENTED_FRAME_SIGNATURE = "void MainWindow::notePlaybackSmokePresentedFrame("
+DECODE_COUNTER_NAME = "m_decodeRequestsIssuedCount"
+FORBIDDEN_QUEUE_DEPTH_SYMBOL = "decodeRequestCountAtRequest"
 
 NUMERIC_LITERAL_RE = re.compile(r"^-?\d+(\.\d+)?[fFuUlL]*$")
 
@@ -90,6 +95,23 @@ def check_evaluate_call_uses_live_arguments(source):
     return [arg for arg in args if NUMERIC_LITERAL_RE.match(arg)]
 
 
+def _function_body_span(source, signature_marker):
+    """Return (start, end) offsets spanning the function whose definition
+    begins at `signature_marker`, where `end` is the offset just past the
+    closing brace matching the function's opening brace."""
+    start = source.index(signature_marker)
+    brace_open = source.index("{", start)
+    depth = 1
+    i = brace_open + 1
+    while depth > 0:
+        if source[i] == "{":
+            depth += 1
+        elif source[i] == "}":
+            depth -= 1
+        i += 1
+    return start, i
+
+
 class PlaybackGatePolicyWiringTest(unittest.TestCase):
     def test_checker_rejects_a_hardcoded_literal_argument_fixture(self):
         # In-test fixture, not the real file: proves the checker itself
@@ -137,6 +159,77 @@ class PlaybackGatePolicyWiringTest(unittest.TestCase):
             )
         violations = check_evaluate_call_uses_live_arguments(source)
         self.assertEqual(violations, [])
+
+    def test_evaluate_call_site_is_inside_finish_not_note(self):
+        source = MAIN_WINDOW_CPP.read_text(encoding="utf-8")
+        if EVALUATE_CALL_MARKER not in source:
+            self.skipTest(
+                "MainWindow.cpp has no PlaybackGatePolicy::evaluate(...) call site yet; "
+                "that wiring is added by PLAY-COUNTERS-CPU-B"
+            )
+        finish_start, finish_end = _function_body_span(
+            source, FINISH_TELEMETRY_SIGNATURE)
+        note_start, note_end = _function_body_span(
+            source, NOTE_PRESENTED_FRAME_SIGNATURE)
+        call_offset = source.index(EVALUATE_CALL_MARKER)
+        self.assertTrue(
+            finish_start <= call_offset < finish_end,
+            "evaluate(...) call must sit inside finishPlaybackSmokeTelemetry")
+        self.assertFalse(
+            note_start <= call_offset < note_end,
+            "evaluate(...) call must not sit inside notePlaybackSmokePresentedFrame")
+
+    def test_evaluate_call_does_not_reference_queue_depth_counter(self):
+        source = MAIN_WINDOW_CPP.read_text(encoding="utf-8")
+        if EVALUATE_CALL_MARKER not in source:
+            self.skipTest(
+                "MainWindow.cpp has no PlaybackGatePolicy::evaluate(...) call site yet; "
+                "that wiring is added by PLAY-COUNTERS-CPU-B"
+            )
+        call_starts = [
+            m.start() for m in re.finditer(re.escape(EVALUATE_CALL_MARKER), source)
+        ]
+        self.assertEqual(len(call_starts), 1)
+        call_open = call_starts[0] + len(EVALUATE_CALL_MARKER) - 1
+        call_args_text = _extract_balanced(source, call_open, "(", ")")
+        self.assertNotIn(FORBIDDEN_QUEUE_DEPTH_SYMBOL, call_args_text)
+
+    def test_decode_requests_issued_counter_is_only_ever_incremented(self):
+        source = RENDER_FRAME_THREAD_CPP.read_text(encoding="utf-8")
+        occurrences = [
+            m.start() for m in re.finditer(re.escape(DECODE_COUNTER_NAME), source)
+        ]
+        self.assertGreaterEqual(
+            len(occurrences), 1,
+            "expected at least one use of %r" % DECODE_COUNTER_NAME)
+        saw_increment = False
+        for offset in occurrences:
+            prefix = source[max(0, offset - 2):offset]
+            after = source[offset + len(DECODE_COUNTER_NAME):offset + len(DECODE_COUNTER_NAME) + 12]
+            after_stripped = after.lstrip()
+            is_increment = (
+                after_stripped.startswith(".fetch_add(")
+                or after_stripped.startswith("++")
+                or prefix == "++"
+            )
+            is_read = after_stripped.startswith(".load(")
+            is_size_assignment = ".size()" in source[offset:offset + 60] and "=" in after_stripped[:4]
+            is_bare_assignment = (
+                after_stripped.startswith("=") and not after_stripped.startswith("==")
+            )
+            self.assertFalse(
+                is_size_assignment or is_bare_assignment,
+                "found a disallowed assignment to %r: %r"
+                % (DECODE_COUNTER_NAME, source[offset - 2:offset + 60]))
+            if is_increment:
+                saw_increment = True
+            self.assertTrue(
+                is_increment or is_read,
+                "found an unrecognized use of %r: %r"
+                % (DECODE_COUNTER_NAME, source[offset - 2:offset + 40]))
+        self.assertTrue(
+            saw_increment,
+            "expected at least one increment site for %r" % DECODE_COUNTER_NAME)
 
 
 if __name__ == "__main__":

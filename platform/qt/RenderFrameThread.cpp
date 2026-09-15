@@ -1443,6 +1443,11 @@ int RenderFrameThread::cancelPlaybackPresentationRequests( uint64_t presentation
     return cancelled;
 }
 
+uint64_t RenderFrameThread::decodeRequestsIssuedCount() const
+{
+    return m_decodeRequestsIssuedCount.load( std::memory_order_acquire );
+}
+
 int RenderFrameThread::gpuTextureNoReadbackReadyFrameCount()
 {
     QMutexLocker locker(&m_mutex);
@@ -1853,6 +1858,7 @@ void RenderFrameThread::queueDecodeRequestLocked( int slotIndex, const RenderReq
                          request.requestSerial,
                          "phase3-3b-decode-requested" );
     m_decodeRequests.push_back( { slotIndex, request } );
+    m_decodeRequestsIssuedCount.fetch_add( 1, std::memory_order_relaxed );
     m_decodeWaitCondition.wakeOne();
 }
 

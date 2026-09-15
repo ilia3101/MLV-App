@@ -43,6 +43,12 @@ ASCII-only .ps1). Additions for round 2:
   proxy code — do not repeat that.
 - Items 1-3 are pixel-affecting and strictly PLAYBACK-ONLY: pause/scrub/export stay full quality.
   Pixel items end "pending user softness sign-off".
+- **The playback-smoke acceptance gate is `PlaybackGatePolicy::evaluate`** (`platform/qt/PlaybackGatePolicy.h`),
+  called once per session from `MainWindow::finishPlaybackSmokeTelemetry` with the session's
+  cumulative frames-presented, decode-requests-issued, and GL-vs-oracle parity-match totals against
+  the frames-expected target. Wall-clock fps is diagnostic only and must never gate a session; a
+  session with an inactive parity probe fails closed (parity total 0) rather than passing on
+  missing evidence.
 
 ## Item 0 — Detector session segmentation (harness fix; BLOCKING, no pixel changes)
 
