@@ -98,6 +98,7 @@ function Get-LaneWorkEvidence {
     if ($ExitCode -ne 0) { $rec.reason = "exit-code-$ExitCode"; return $rec }
     if ($Engine -eq 'claude') {
         if ($null -eq $rec.isError -and $null -eq $rec.subtype) { $rec.reason = 'no-result-envelope'; return $rec }
+        if ($null -eq $rec.isError) { $rec.reason = 'envelope-is-error-absent'; return $rec }
         if ($rec.isError -ne $false) { $rec.reason = 'envelope-is-error'; return $rec }
         if ($rec.subtype -ne 'success') { $rec.reason = "subtype-$($rec.subtype)"; return $rec }
         if ($rec.terminalReason -and $rec.terminalReason -ne 'completed') { $rec.reason = "terminal-reason-$($rec.terminalReason)"; return $rec }

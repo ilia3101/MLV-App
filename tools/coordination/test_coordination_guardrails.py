@@ -1243,6 +1243,20 @@ def test_work_evidence_max_turns_is_not_complete_even_with_exit_0(tmp_path):
 def test_work_evidence_requires_every_success_signal(tmp_path):
     assert _work_evidence(tmp_path, "claude", CLAUDE_SUCCESS_ENVELOPE, 0)["workCompleted"] is True
     assert _work_evidence(tmp_path, "claude", CLAUDE_API_ERROR_SUCCESS_SUBTYPE_ENVELOPE, 0)["workCompleted"] is False
+    # One falsifier per remaining conjunct (degraded review PR #111, opus-002 major): each envelope
+    # passes every other guard, so deleting exactly that guard turns this red.
+    bad_subtype = '{"type":"result","subtype":"error_during_execution","is_error":false,"terminal_reason":"completed"}\n'
+    r = _work_evidence(tmp_path, "claude", bad_subtype, 0)
+    assert r["workCompleted"] is False and r["reason"] == "subtype-error_during_execution", r
+    bad_terminal = '{"type":"result","subtype":"success","is_error":false,"terminal_reason":"max_turns"}\n'
+    r = _work_evidence(tmp_path, "claude", bad_terminal, 0)
+    assert r["workCompleted"] is False and r["reason"] == "terminal-reason-max_turns", r
+    no_is_error = '{"type":"result","subtype":"success","terminal_reason":"completed"}\n'
+    r = _work_evidence(tmp_path, "claude", no_is_error, 0)
+    assert r["workCompleted"] is False and r["reason"] == "envelope-is-error-absent", r
+    # terminal_reason absent on an otherwise-successful envelope is still completion.
+    no_terminal = '{"type":"result","subtype":"success","is_error":false}\n'
+    assert _work_evidence(tmp_path, "claude", no_terminal, 0)["workCompleted"] is True
     # No envelope on the claude engine is absence of evidence, not completion.
     assert _work_evidence(tmp_path, "claude", "", 0)["reason"] == "no-result-envelope"
     assert _work_evidence(tmp_path, "claude", "not json at all", 0)["workCompleted"] is False
@@ -1747,14 +1761,15 @@ def test_every_workstream_exit_after_the_run_dir_is_named_writes_an_attempt_rece
     Write-DispatchAttempt, throws are covered by a guarded trap, and both launch paths record
     'launched' before and after."""
     lines = WORKSTREAM.read_text(encoding="utf-8").splitlines()
-    start = next(i for i, l in enumerate(lines) if "function Write-DispatchAttempt" in l)
+    start = next(i for i, l in enumerate(lines) if l.startswith("$runDir = Join-Path"))
     unreceipted = []
     for i in range(start, len(lines)):
         if re.match(r"^\s*exit\b", lines[i]):
-            prev = lines[i - 1].strip()
-            if "Write-DispatchAttempt" in prev or "WORKSTREAM: dispatched" in prev:
+            # The receipt comes first; at most a cleanup call and its status line may sit between.
+            window = [l.strip() for l in lines[i - 3:i]]
+            if any("Write-DispatchAttempt" in l for l in window) or "WORKSTREAM: dispatched" in window[-1]:
                 continue
-            unreceipted.append((i + 1, prev))
+            unreceipted.append((i + 1, window[-1]))
     assert not unreceipted, unreceipted
     body = "\n".join(lines)
     assert "if ($DryRun) { return }" not in body

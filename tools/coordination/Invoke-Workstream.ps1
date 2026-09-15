@@ -616,9 +616,9 @@ $runDir = Join-Path $RepoRoot ".claude-state\fleet-runs\ws-$cardId-$stamp"
 # DISPATCH-ATTEMPT RECEIPT. Every attempt that names a run directory leaves a typed
 # dispatch-attempt.json in it: 'launched' (a lane process was started; its own receipt sits beside
 # this one) or 'refused-before-launch' with the cause. MEASURED 2026-09-14: PLAY-COUNTERS-CPU left
-# ~90 run dirs holding ONLY lane-prompt.md - `git worktree add` failed after the prompt was written
-# and the exit-3 reason reached nothing but the loop's stdout, so the run dirs read as launches
-# that silently produced nothing. Never throws: a receipt write failure is reported on stdout AND
+# ~90 run dirs holding ONLY lane-prompt.md - `git worktree add` failed after the prompt was written;
+# the exit-3 reason reached only a detail line in a separate loop-cycles receipt, so the run dirs
+# themselves read as launches that silently produced nothing. Never throws: a receipt write failure is reported on stdout AND
 # stderr (the disk that refused the receipt is the one fact no receipt can carry), never fatal.
 # -DryRun writes one too (outcome 'dry-run-not-launched'): it names a run dir and writes into it.
 function Write-DispatchAttempt {
@@ -658,7 +658,8 @@ $script:LaneLaunched = $false
 trap {
     if (Get-Variable -Name runDir -Scope Script -ErrorAction SilentlyContinue) {
         $trapOutcome = if ($script:LaneLaunched) { 'launched' } else { 'refused-before-launch' }
-        Write-DispatchAttempt -Outcome $trapOutcome -Cause 'unhandled-error' -ExitCode 1 -Detail $_.Exception.Message
+        $trapLaneExit = if (Get-Variable -Name laneExit -Scope Script -ErrorAction SilentlyContinue) { $script:laneExit } else { $null }
+        Write-DispatchAttempt -Outcome $trapOutcome -Cause 'unhandled-error' -ExitCode 1 -Detail $_.Exception.Message -LaneExitCode $trapLaneExit
     }
     break
 }
@@ -1211,9 +1212,10 @@ $fence
         Write-Output 'WORKSTREAM: DRY RUN - no lane dispatched. Worktree and prompt above were real; the worktree is retired if it passes the SAFE gate.'
         # The function also emits status lines, so its pipeline output is an array (always truthy);
         # decide from the recorded disposition instead.
+        # Receipt BEFORE cleanup: a throw from the retire gate must not replace the cause.
+        Write-DispatchAttempt -Outcome 'dry-run-not-launched' -Cause 'dry-run' -ExitCode 0
         Remove-LaneWorktreeIfClean $laneWorkDir | Out-Host
         if ($script:LastWorktreeDisposition -and $script:LastWorktreeDisposition.action -eq 'retired') { Write-Output "WORKSTREAM: DRY RUN worktree retired: $laneWorkDir" }
-        Write-DispatchAttempt -Outcome 'dry-run-not-launched' -Cause 'dry-run' -ExitCode 0
         exit 0
     }
 
@@ -1222,15 +1224,15 @@ $fence
     # between the cycle's own check and this particular start.
     if (Test-KillSwitchArmed) {
         Write-Output "WORKSTREAM: REFUSED kill-switch-armed card=$cardId"
-        Remove-LaneWorktreeIfClean $laneWorkDir | Out-Null
         Write-DispatchAttempt -Outcome 'refused-before-launch' -Cause 'kill-switch-armed' -ExitCode 6
+        Remove-LaneWorktreeIfClean $laneWorkDir | Out-Null
         exit 6
     }
 
     $ratioExit = Test-RatioDispatchPermission -Kind $cardKind
     if ($ratioExit -ne 0) {
-        Remove-LaneWorktreeIfClean $laneWorkDir | Out-Null
         Write-DispatchAttempt -Outcome 'refused-before-launch' -Cause 'product-ratio-guard' -ExitCode $ratioExit
+        Remove-LaneWorktreeIfClean $laneWorkDir | Out-Null
         exit $ratioExit
     }
 
