@@ -21,7 +21,8 @@ not listed below.
 | 4 | PROD-ENVFLAG-1 | product | `fields-PROD-ENVFLAG-1.md` |
 | 5 | PROD-DUALISO-GUARD-TEST | product | `fields-PROD-DUALISO-GUARD-TEST.md` |
 | 6 | PROD-TOOLCHAIN-1 | product | `fields-PROD-TOOLCHAIN-1.md` |
-| 7 | PLAY-COUNTERS-CPU | playback | `fields-PLAY-COUNTERS-CPU.md` |
+| 7 | PLAY-COUNTERS-CPU-A | playback | `fields-PLAY-COUNTERS-CPU-A.md` |
+| 7 | PLAY-COUNTERS-CPU-B | playback | `fields-PLAY-COUNTERS-CPU-B.md` |
 | 7 | PLAY-COUNTERS-GPU | playback | `fields-PLAY-COUNTERS-GPU.md` |
 | 8 | PLAY-C2-SUBMIT-2-ACCEPT | playback | `fields-PLAY-C2-SUBMIT-2-ACCEPT.md` |
 | 9 | PROD-UPSTREAM-SYNC-1 | product | `fields-PROD-UPSTREAM-SYNC-1.md` |
@@ -30,7 +31,7 @@ not listed below.
 | 12 | PROD-BATCHTYPES-SPLIT-1 | product | `fields-PROD-BATCHTYPES-SPLIT-1.md` |
 | 14 | PROD-README-FORK-1 | product | `fields-PROD-README-FORK-1.md` |
 
-15 cards. Parity with `docs/lane-prompts/v2/*` (every file carrying exactly one
+16 cards. Parity with `docs/lane-prompts/v2/*` (every file carrying exactly one
 `ALLOWED_PATHS:` line is dispatchable and must appear above; every row above must name
 a file that exists there) is enforced in CI by
 `tools/repo_hygiene/test_roadmap_queue_parity.py`. The queue-side check (`kind`,
