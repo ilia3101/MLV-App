@@ -101,7 +101,7 @@ if($env:MLV_FIXTURE_MODE -ne 'normal'){
 $text=[Console]::In.ReadToEnd()
 $text|Set-Content -Encoding utf8NoBOM $env:MLV_FIXTURE_PROMPT
 if($env:MLV_FIXTURE_MODE -ne 'normal'){Start-Sleep -Seconds 60}
-[Console]::Out.Write('{"result":"fixture-result","total_cost_usd":0,"num_turns":1}')
+[Console]::Out.Write('{"type":"result","subtype":"success","is_error":false,"terminal_reason":"completed","result":"fixture-result","total_cost_usd":0,"num_turns":1}')
 [Console]::Error.Write('fixture-err')
 exit 0
 ''',encoding="ascii")
@@ -164,7 +164,9 @@ def test_timeout_kills_owned_child_and_grandchild(fixture_tree):
     cmd,env,receipt=prepare(fixture_tree,"timeout")
     r=subprocess.run(cmd,env=env,text=True,capture_output=True,timeout=20)
     assert r.returncode==124,(r.stdout,r.stderr)
-    q=json.loads(receipt.read_text(encoding="utf-8")); assert q["state"]=="complete" and q["timedOut"]
+    # A timed-out run ENDED but did not complete its work (2026-09-14: complete means work evidence).
+    q=json.loads(receipt.read_text(encoding="utf-8")); assert q["state"]=="ended-incomplete" and q["timedOut"]
+    assert q["processEnded"] is True and q["complete"] is False
     wait_absent(json.loads((fixture_tree["root"]/"child.json").read_text(encoding="utf-8-sig")))
     wait_absent(json.loads((fixture_tree["root"]/"grand.json").read_text(encoding="utf-8-sig")))
 

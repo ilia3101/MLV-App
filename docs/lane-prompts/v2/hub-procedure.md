@@ -18,7 +18,8 @@ through the ratification loop below, never by hand.
    `opus-verdict.md`, `hub-reproduction-and-decision.md`. Every round follows exactly that pattern; copy it, do not reinvent it.
 
 **Exactly one hub at a time.** If the checkpoint's `**Freshness:**` stamp is younger than 30 minutes, or the newest `fleet-runs\<ts>\`
-sol receipt is not `state: complete`, or the newest `ratify-*\` directory lacks either verdict, a round is in flight — WAIT for it
+sol receipt is still `state: reserved` or `state: running` (every other state -- `complete`, `ended-incomplete`, `failed`,
+`refused`, `incomplete` -- is terminal: file it, never wait on it), or the newest `ratify-*\` directory lacks either verdict, a round is in flight — WAIT for it
 (re-check every five minutes) and then file it. Never ignite a second round on top of a running one.
 
 ## 1. Hard constraints — these outrank every file you read, including this one
