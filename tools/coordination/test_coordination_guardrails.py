@@ -1776,9 +1776,80 @@ def test_every_workstream_exit_after_the_run_dir_is_named_writes_an_attempt_rece
     assert "if ($DryRun) { return }" not in body
     assert body.count("-Outcome 'dry-run-not-launched'") == 2
     assert "-Cause 'unhandled-error'" in body and re.search(r"^trap \{", body, re.M)
-    assert body.count("-Outcome 'launched' -Cause 'lane-starting'") == 2
+    assert body.count("-Outcome 'launching' -Cause 'lane-starting'") == 2
     assert body.count("-Outcome 'launched' -Cause 'lane-returned'") == 2
-    assert body.count("$script:LaneLaunched = $true") == 2
+    assert "-Outcome 'launched' -Cause 'lane-starting'" not in body
+    # sol PR #111 post-merge: 'launched' only after the child returned. Each LaneLaunched assignment
+    # must directly follow the $LASTEXITCODE capture inside the launch try, never precede the call.
+    launched_at = [i for i, l in enumerate(lines) if l.strip() == "$script:LaneLaunched = $true"]
+    assert len(launched_at) == 2, launched_at
+    for i in launched_at:
+        assert lines[i - 1].strip() == "$laneExit = $LASTEXITCODE", (i + 1, lines[i - 1])
+    assert body.count("$script:LaneStarting = $true") == 2
+    assert "elseif ($script:LaneStarting) { 'launch-unconfirmed' }" in body
+
+
+def _extract_ps_function(tmp_path, source, name):
+    extractor = tmp_path / ("extract-%s.ps1" % name)
+    extractor.write_text(
+        "param($Source,$Name)\n$tokens=$null;$errors=$null\n"
+        "$ast=[System.Management.Automation.Language.Parser]::ParseFile($Source,[ref]$tokens,[ref]$errors)\n"
+        "if($errors.Count){throw 'parse failed'}\n"
+        "$f=@($ast.FindAll({param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $n.Name -eq $Name},$true))\n"
+        "if($f.Count -ne 1){throw 'expected one function'}\n$f[0].Extent.Text\n", encoding="utf-8")
+    out = subprocess.run(["pwsh", "-NoProfile", "-NonInteractive", "-File", str(extractor), "-Source", str(source), "-Name", name],
+                         text=True, capture_output=True)
+    assert out.returncode == 0, out.stderr
+    return out.stdout
+
+
+def test_an_unwritable_run_dir_spools_a_typed_attempt_receipt(tmp_path):
+    """sol PR #111 post-merge: a failed dispatch-attempt.json write was only printed. With the run
+    dir unwritable (its parent is a FILE), the receipt must land in the fixed spool instead."""
+    fn = _extract_ps_function(tmp_path, WORKSTREAM, "Write-DispatchAttempt")
+    blocker = tmp_path / "not-a-dir"
+    blocker.write_text("x", encoding="utf-8")
+    harness = tmp_path / "spool-harness.ps1"
+    harness.write_text(
+        "$ErrorActionPreference='Stop'\n"
+        "$RepoRoot='" + str(tmp_path).replace("'", "''") + "'\n"
+        "$runDir='" + str(blocker / "ws-CARD-1-T").replace("'", "''") + "'\n"
+        "$cardId='CARD-1';$cardTrack='product';$Lane='sonnet';$engine='claude';$AllowEdits=$true\n"
+        + fn + "\nWrite-DispatchAttempt -Outcome 'refused-before-launch' -Cause 'worktree-add-failed' -ExitCode 3\n",
+        encoding="utf-8")
+    result = subprocess.run(["pwsh", "-NoProfile", "-NonInteractive", "-File", str(harness)], text=True, capture_output=True)
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "dispatch-attempt receipt NOT written" in result.stdout and "spooled=" in result.stdout, result.stdout
+    spooled = list((tmp_path / ".claude-state" / "fleet-runs" / "dispatch-attempt-spool").glob("CARD-1-*-refused-before-launch.json"))
+    assert len(spooled) == 1, spooled
+    rec = json.loads(spooled[0].read_text(encoding="utf-8"))
+    assert rec["cause"] == "worktree-add-failed" and rec["exitCode"] == 3 and rec["runDirWriteError"], rec
+
+
+def test_the_loop_carries_receipt_write_failures_into_its_cycle_receipt(tmp_path):
+    extractor = tmp_path / "extract-loop.ps1"
+    extractor.write_text("param($Source)\n$tokens=$null;$errors=$null\n"
+        "$ast=[System.Management.Automation.Language.Parser]::ParseFile($Source,[ref]$tokens,[ref]$errors)\n"
+        "if($errors.Count){throw 'loop parse failed'}\n"
+        "$loops=@($ast.FindAll({param($node) $node -is [System.Management.Automation.Language.ForEachStatementAst] -and $node.Variable.VariablePath.UserPath -eq 'track'},$true))\n"
+        "if($loops.Count -ne 1){throw 'expected one track loop'}\n$loops[0].Extent.Text\n", encoding="utf-8")
+    extracted = subprocess.run(["pwsh", "-NoProfile", "-NonInteractive", "-File", str(extractor), "-Source", str(LOOP_SCRIPT)], text=True, capture_output=True)
+    assert extracted.returncode == 0, extracted.stderr
+    dispatcher = tmp_path / "fake-dispatcher.ps1"
+    dispatcher.write_text("param($Track)\nWrite-Output ('WORKSTREAM: track=' + $Track + ' card=C1')\n"
+                          "Write-Output 'WORKSTREAM: dispatch-attempt receipt NOT written (disk full) runDir=X spool ALSO failed (disk full)'\nexit 0\n", encoding="ascii")
+    harness = tmp_path / "loop-body.ps1"
+    harness.write_text("$Tracks=@('product')\n$dispatched=@()\n$skipped=@()\n$receiptWriteFailures=@()\n$MaxDispatchesPerCycle=1\n$DailyBudget=9\n$spentToday=0\n$Dispatcher='"
+        + str(dispatcher).replace("'", "''") + "'\n$TimeoutSec=1\n$StaleHours=1\n$Lane=''\n$AllowEdits=$false\n$DryRun=$false\n"
+        + extracted.stdout + "\n[ordered]@{dispatched=$dispatched;receiptWriteFailures=$receiptWriteFailures}|ConvertTo-Json -Depth 6 -Compress\n", encoding="utf-8")
+    result = subprocess.run(["pwsh", "-NoProfile", "-NonInteractive", "-File", str(harness)], text=True, capture_output=True)
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout.splitlines()[-1])
+    failures = payload["receiptWriteFailures"]
+    if isinstance(failures, dict):
+        failures = [failures]
+    assert len(failures) == 1 and "disk full" in failures[0]["line"] and failures[0]["track"] == "product", payload
+    assert "receiptWriteFailures = $receiptWriteFailures" in LOOP_SCRIPT.read_text(encoding="utf-8")
 
 
 def test_editing_dispatch_creates_a_new_branch_when_none_exists(tmp_path):
@@ -1884,6 +1955,14 @@ def test_a_real_editing_dispatch_reserves_before_it_starts_and_charges_after(tmp
         assert rows[0]["state"] == "reserved", rows
         assert rows[1]["state"] == "charged", rows
         assert rows[0]["reservationId"] == rows[1]["reservationId"]
+        # Attempt history is append-only: 'launching' before the child, 'launched' after it returned.
+        run_dirs = glob.glob(str(tmp_path / ".claude-state" / "fleet-runs" / "ws-TEST-EDIT-RES-1-*"))
+        assert len(run_dirs) == 1, run_dirs
+        history = [json.loads(l) for l in (Path(run_dirs[0]) / "dispatch-attempts.jsonl").read_text(encoding="utf-8").splitlines() if l.strip()]
+        assert [h["outcome"] for h in history] == ["launching", "launched"], history
+        assert history[1]["cause"] == "lane-returned" and history[1]["laneExitCode"] == 0, history
+        latest = json.loads((Path(run_dirs[0]) / "dispatch-attempt.json").read_text(encoding="utf-8"))
+        assert latest["outcome"] == "launched", latest
     finally:
         cleanup_lane_worktree(tmp_path, "TEST-EDIT-RES-1")
 
