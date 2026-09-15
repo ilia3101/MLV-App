@@ -1212,7 +1212,9 @@ $fence
         Write-Output 'WORKSTREAM: DRY RUN - no lane dispatched. Worktree and prompt above were real; the worktree is retired if it passes the SAFE gate.'
         # The function also emits status lines, so its pipeline output is an array (always truthy);
         # decide from the recorded disposition instead.
-        # Receipt BEFORE cleanup: a throw from the retire gate must not replace the cause.
+        # Receipt BEFORE cleanup, so the cause is on disk even if cleanup hangs or the process is
+        # killed. A cleanup THROW still overwrites it with 'unhandled-error' (single-file receipt;
+        # append-only semantics are deferred to TOOL-DISPATCH-ATTEMPT-WRITE-FAILURE-1).
         Write-DispatchAttempt -Outcome 'dry-run-not-launched' -Cause 'dry-run' -ExitCode 0
         Remove-LaneWorktreeIfClean $laneWorkDir | Out-Host
         if ($script:LastWorktreeDisposition -and $script:LastWorktreeDisposition.action -eq 'retired') { Write-Output "WORKSTREAM: DRY RUN worktree retired: $laneWorkDir" }

@@ -1757,9 +1757,10 @@ def test_a_terminating_error_after_the_run_dir_is_named_still_leaves_an_attempt_
 
 
 def test_every_workstream_exit_after_the_run_dir_is_named_writes_an_attempt_receipt():
-    """Structural: once $runDir is named, every exit (DryRun included) is immediately preceded by
-    Write-DispatchAttempt, throws are covered by a guarded trap, and both launch paths record
-    'launched' before and after."""
+    """Structural: once $runDir is named, every exit (DryRun included) has a Write-DispatchAttempt
+    call within the three lines above it (a worktree-cleanup call may sit between), throws are
+    covered by a guarded trap, and both launch paths record 'launched' before and after.
+    Behavioural tests cover the real refusal and throw paths; this is the cheap net for new exits."""
     lines = WORKSTREAM.read_text(encoding="utf-8").splitlines()
     start = next(i for i, l in enumerate(lines) if l.startswith("$runDir = Join-Path"))
     unreceipted = []
