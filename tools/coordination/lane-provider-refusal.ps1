@@ -37,7 +37,10 @@ function Get-RefusalKind {
         @{ kind = 'provider-usage-limit'; rx = 'usage[ _-]limit[ _-]reached' },
         @{ kind = 'provider-rate-limit';  rx = '\brate[ _-]limit(ed|s)?\b' },
         @{ kind = 'provider-rate-limit';  rx = '\b429\b' },
-        @{ kind = 'provider-auth';        rx = 'not logged in|invalid api key|authentication failed' }
+        @{ kind = 'provider-auth';        rx = 'not logged in|invalid api key|authentication failed' },
+        # Measured 2026-09-15 (fleet-runs\ws-PLAY-COUNTERS-CPU-B-20260915T080318Z): the claude CLI's
+        # token expired after an account rotation; envelope is_error=true, api_error_status=null.
+        @{ kind = 'provider-auth';        rx = 'failed to authenticate|oauth session expired' }
     )
     foreach ($p in $patterns) { if ($Line -imatch $p.rx) { return $p.kind } }
     return $null
@@ -136,6 +139,9 @@ function Get-ProviderRefusal {
         if (-not $isError -and $status -eq '') { return $null }
         $msg  = if ($names -contains 'result') { [string]$j.result } else { '' }
         $kind = Get-RefusalKind -Line $msg
+        # Result TEXT never classifies a successful envelope (sol PR #117 BLOCKER): with is_error=false only
+        # the numeric 429 status counts. 134 recorded envelopes never pair is_error=false with a status.
+        if (-not $isError) { $kind = $null }
         if ($null -eq $kind -and $status -eq '429') { $kind = 'provider-rate-limit' }
         if ($null -eq $kind) { return $null }
         return New-RefusalRecord -Kind $kind -Engine $Engine -Match ("api_error_status=$status " + $msg)

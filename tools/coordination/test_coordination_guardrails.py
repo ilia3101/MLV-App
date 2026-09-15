@@ -999,6 +999,33 @@ CLAUDE_SUCCESS_QUOTING_ENVELOPE = (
     '"num_turns":3}\n'
 )
 
+# Measured 2026-09-15, fleet-runs\ws-PLAY-COUNTERS-CPU-B-20260915T080318Z: the lane CLI's OAuth token
+# expired after an account rotation. exit 1 in 5.9 s, USD 0, and no api_error_status - yet the
+# receipt carried providerRefusal=null, so a dead login read as an ordinary incomplete run.
+REAL_CLAUDE_OAUTH_EXPIRED_ENVELOPE = (
+    '{"type":"result","subtype":"success","is_error":true,"api_error_status":null,'
+    '"result":"Failed to authenticate: OAuth session expired and could not be refreshed",'
+    '"terminal_reason":"api_error","num_turns":1}\n'
+)
+
+
+def test_an_expired_claude_oauth_session_is_a_provider_auth_refusal(tmp_path):
+    r = _classify(tmp_path, "", "claude", answer=REAL_CLAUDE_OAUTH_EXPIRED_ENVELOPE)
+    assert r is not None and r["kind"] == "provider-auth", r
+    assert "owner re-authenticates" in r["remedy"], r
+    # Quoting the phrase in a SUCCESSFUL answer is still not a refusal.
+    quoting = ('{"type":"result","subtype":"success","is_error":false,'
+               '"result":"the log said Failed to authenticate: OAuth session expired","num_turns":2}\n')
+    assert _classify(tmp_path, "", "claude", answer=quoting) is None
+    # sol PR #117 BLOCKER repro: a status on a SUCCESSFUL envelope must not let quoted text classify.
+    quoting_with_status = ('{"type":"result","subtype":"success","is_error":false,"api_error_status":401,'
+                           '"result":"Failed to authenticate: OAuth session expired"}\n')
+    assert _classify(tmp_path, "", "claude", answer=quoting_with_status) is None
+    # ...while the numeric 429 status still classifies on its own.
+    status_429 = '{"type":"result","subtype":"success","is_error":false,"api_error_status":429,"result":"ok"}\n'
+    r429 = _classify(tmp_path, "", "claude", answer=status_429)
+    assert r429 is not None and r429["kind"] == "provider-rate-limit", r429
+
 
 def _classify(tmp_path, text, engine, prompt="", answer=""):
     src = tmp_path / "lane-stderr.txt"
