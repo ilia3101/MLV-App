@@ -139,6 +139,9 @@ function Get-ProviderRefusal {
         if (-not $isError -and $status -eq '') { return $null }
         $msg  = if ($names -contains 'result') { [string]$j.result } else { '' }
         $kind = Get-RefusalKind -Line $msg
+        # Result TEXT never classifies a successful envelope (sol PR #117 BLOCKER): with is_error=false only
+        # the numeric 429 status counts. 134 recorded envelopes never pair is_error=false with a status.
+        if (-not $isError) { $kind = $null }
         if ($null -eq $kind -and $status -eq '429') { $kind = 'provider-rate-limit' }
         if ($null -eq $kind) { return $null }
         return New-RefusalRecord -Kind $kind -Engine $Engine -Match ("api_error_status=$status " + $msg)

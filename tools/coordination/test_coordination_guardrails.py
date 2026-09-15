@@ -1017,6 +1017,14 @@ def test_an_expired_claude_oauth_session_is_a_provider_auth_refusal(tmp_path):
     quoting = ('{"type":"result","subtype":"success","is_error":false,'
                '"result":"the log said Failed to authenticate: OAuth session expired","num_turns":2}\n')
     assert _classify(tmp_path, "", "claude", answer=quoting) is None
+    # sol PR #117 BLOCKER repro: a status on a SUCCESSFUL envelope must not let quoted text classify.
+    quoting_with_status = ('{"type":"result","subtype":"success","is_error":false,"api_error_status":401,'
+                           '"result":"Failed to authenticate: OAuth session expired"}\n')
+    assert _classify(tmp_path, "", "claude", answer=quoting_with_status) is None
+    # ...while the numeric 429 status still classifies on its own.
+    status_429 = '{"type":"result","subtype":"success","is_error":false,"api_error_status":429,"result":"ok"}\n'
+    r429 = _classify(tmp_path, "", "claude", answer=status_429)
+    assert r429 is not None and r429["kind"] == "provider-rate-limit", r429
 
 
 def _classify(tmp_path, text, engine, prompt="", answer=""):
