@@ -37,7 +37,10 @@ function Get-RefusalKind {
         @{ kind = 'provider-usage-limit'; rx = 'usage[ _-]limit[ _-]reached' },
         @{ kind = 'provider-rate-limit';  rx = '\brate[ _-]limit(ed|s)?\b' },
         @{ kind = 'provider-rate-limit';  rx = '\b429\b' },
-        @{ kind = 'provider-auth';        rx = 'not logged in|invalid api key|authentication failed' }
+        @{ kind = 'provider-auth';        rx = 'not logged in|invalid api key|authentication failed' },
+        # Measured 2026-09-15 (fleet-runs\ws-PLAY-COUNTERS-CPU-B-20260915T080318Z): the claude CLI's
+        # token expired after an account rotation; envelope is_error=true, api_error_status=null.
+        @{ kind = 'provider-auth';        rx = 'failed to authenticate|oauth session expired' }
     )
     foreach ($p in $patterns) { if ($Line -imatch $p.rx) { return $p.kind } }
     return $null
