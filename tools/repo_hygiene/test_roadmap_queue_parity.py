@@ -90,7 +90,7 @@ class RoadmapQueueParityTests(unittest.TestCase):
     def test_every_roadmap_row_names_an_existing_dispatchable_file(self) -> None:
         dispatchable = _dispatchable_card_files()
         rows = _roadmap_rows()
-        self.assertEqual(len(rows), 15, f"expected 15 roadmap rows, found {len(rows)}")
+        self.assertEqual(len(rows), 16, f"expected 16 roadmap rows, found {len(rows)}")
         for card_id, proc in rows:
             self.assertTrue((CARDS_DIR / proc).is_file(), f"{card_id}: {proc} does not exist in {CARDS_DIR}")
             self.assertIn(proc, dispatchable, f"{card_id}: {proc} exists but is not dispatchable (ALLOWED_PATHS count != 1)")
