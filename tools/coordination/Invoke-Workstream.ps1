@@ -614,8 +614,9 @@ $stamp  = (Get-Date).ToUniversalTime().ToString('yyyyMMddTHHmmssZ')
 $runDir = Join-Path $RepoRoot ".claude-state\fleet-runs\ws-$cardId-$stamp"
 
 # DISPATCH-ATTEMPT RECEIPT. Every attempt that names a run directory leaves a typed
-# dispatch-attempt.json in it: 'launched' (a lane process was started; its own receipt sits beside
-# this one) or 'refused-before-launch' with the cause. MEASURED 2026-09-14: PLAY-COUNTERS-CPU left
+# dispatch-attempt.json in it: 'launching' (about to start the lane), then 'launched' (the lane process
+# ran and returned; its own receipt sits beside this one), or 'refused-before-launch' with the cause,
+# or 'launch-unconfirmed' (a throw between 'launching' and the child returning). MEASURED 2026-09-14: PLAY-COUNTERS-CPU left
 # ~90 run dirs holding ONLY lane-prompt.md - `git worktree add` failed after the prompt was written;
 # the exit-3 reason reached only a detail line in a separate loop-cycles receipt, so the run dirs
 # themselves read as launches that silently produced nothing. Never throws: a receipt write failure is reported on stdout AND
@@ -642,9 +643,31 @@ function Write-DispatchAttempt {
             runDir       = $runDir
             recordedUtc  = (Get-Date).ToUniversalTime().ToString('o')
         }
+        # dispatch-attempt.json is the LATEST state; dispatch-attempts.jsonl is the append-only history of
+        # every transition (sol PR #111 post-merge: a single overwritten file lost 'launching' and any
+        # refusal cause a later trap replaced).
+        [System.IO.File]::AppendAllText((Join-Path $runDir 'dispatch-attempts.jsonl'), (($attempt | ConvertTo-Json -Depth 4 -Compress) + "`n"), [System.Text.UTF8Encoding]::new($false))
         [System.IO.File]::WriteAllText((Join-Path $runDir 'dispatch-attempt.json'), ($attempt | ConvertTo-Json -Depth 4), [System.Text.UTF8Encoding]::new($false))
     } catch {
         $why = "WORKSTREAM: dispatch-attempt receipt NOT written ($($_.Exception.Message)) runDir=$runDir"
+        # FALLBACK SPOOL outside the run dir, so an unwritable run dir still leaves a typed record a
+        # reader can find. Only when the spool also fails is stdout/stderr the last channel; the loop
+        # copies these lines into its cycle receipt (receiptWriteFailures).
+        $runDirError = $_.Exception.Message
+        try {
+            $spool = Join-Path $RepoRoot '.claude-state\fleet-runs\dispatch-attempt-spool'
+            if (-not (Test-Path -LiteralPath $spool)) { New-Item -ItemType Directory -Path $spool -Force | Out-Null }
+            $spooled = [ordered]@{
+                schema = 'mlv-app/workstream-dispatch-attempt/v1'; outcome = $Outcome; cause = $Cause; detail = $Detail
+                card = $cardId; lane = $Lane; exitCode = $ExitCode; laneExitCode = $LaneExitCode; runDir = $runDir
+                runDirWriteError = $runDirError; recordedUtc = (Get-Date).ToUniversalTime().ToString('o')
+            }
+            $spoolFile = Join-Path $spool ('{0}-{1}-{2}.json' -f $cardId, (Get-Date).ToUniversalTime().ToString('yyyyMMddTHHmmssfffZ'), $Outcome)
+            [System.IO.File]::WriteAllText($spoolFile, ($spooled | ConvertTo-Json -Depth 4), [System.Text.UTF8Encoding]::new($false))
+            $why += " spooled=$spoolFile"
+        } catch {
+            $why += " spool ALSO failed ($($_.Exception.Message))"
+        }
         Write-Output $why
         [Console]::Error.WriteLine($why)
     }
@@ -654,10 +677,13 @@ function Write-DispatchAttempt {
 # reservation writes and worktree cleanup can all throw after the run dir is named. A trap applies to
 # the whole script scope, so it is guarded on $runDir existing; `break` re-throws, so the process
 # still fails exactly as before - it just no longer fails silently.
+# LaneStarting is set just before the child pwsh call; LaneLaunched only AFTER it returns (sol PR #111
+# post-merge: setting 'launched' before the call receipted a start failure as a launch).
+$script:LaneStarting = $false
 $script:LaneLaunched = $false
 trap {
     if (Get-Variable -Name runDir -Scope Script -ErrorAction SilentlyContinue) {
-        $trapOutcome = if ($script:LaneLaunched) { 'launched' } else { 'refused-before-launch' }
+        $trapOutcome = if ($script:LaneLaunched) { 'launched' } elseif ($script:LaneStarting) { 'launch-unconfirmed' } else { 'refused-before-launch' }
         $trapLaneExit = if (Get-Variable -Name laneExit -Scope Script -ErrorAction SilentlyContinue) { $script:laneExit } else { $null }
         Write-DispatchAttempt -Outcome $trapOutcome -Cause 'unhandled-error' -ExitCode 1 -Detail $_.Exception.Message -LaneExitCode $trapLaneExit
     }
@@ -1001,14 +1027,15 @@ $fence
     $reservationId = [guid]::NewGuid().ToString()
     $null = Write-DispatchReservation -ReservationId $reservationId -State 'reserved' -Card $cardId -Kind $cardKind -Lane $Lane -RunDir $runDir
 
-    Write-DispatchAttempt -Outcome 'launched' -Cause 'lane-starting' -ExitCode 0
-    $script:LaneLaunched = $true
+    Write-DispatchAttempt -Outcome 'launching' -Cause 'lane-starting' -ExitCode 0
+    $script:LaneStarting = $true
     $laneExit = $null
     $reservationOutcome = 'charged'
     try {
         & pwsh -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $LaneRunner `
             -Lane $Lane -PromptFile $promptPath -Card $cardId -RunDir $runDir -TimeoutSec $TimeoutSec
         $laneExit = $LASTEXITCODE
+        $script:LaneLaunched = $true
         $reservationOutcome = 'charged'
     } finally {
         $reservationRecord = Write-DispatchReservation -ReservationId $reservationId -State $reservationOutcome -Card $cardId -Kind $cardKind -Lane $Lane -RunDir $runDir -ObservedExit $laneExit
@@ -1244,8 +1271,8 @@ $fence
     $reservationId = [guid]::NewGuid().ToString()
     $null = Write-DispatchReservation -ReservationId $reservationId -State 'reserved' -Card $cardId -Kind $cardKind -Lane $Lane -RunDir $runDir
 
-    Write-DispatchAttempt -Outcome 'launched' -Cause 'lane-starting' -ExitCode 0
-    $script:LaneLaunched = $true
+    Write-DispatchAttempt -Outcome 'launching' -Cause 'lane-starting' -ExitCode 0
+    $script:LaneStarting = $true
     $laneExit = $null
     $reservationOutcome = 'charged'
     try {
@@ -1253,6 +1280,7 @@ $fence
             -Lane $Lane -PromptFile $promptPath -WorkDir $laneWorkDir -Card $cardId -RunDir $runDir `
             -ExtraReadDir $runDir -TimeoutSec $TimeoutSec
         $laneExit = $LASTEXITCODE
+        $script:LaneLaunched = $true
         # The terminal writer derives any refund from the actual receipt bytes.
         $reservationOutcome = 'charged'
     } finally {

@@ -308,6 +308,7 @@ $cycleStart = (Get-Date).ToUniversalTime()
 $stamp      = $cycleStart.ToString('yyyyMMddTHHmmssZ')
 $dispatched = @()
 $skipped    = @()
+$receiptWriteFailures = @()
 $halted     = $null
 Write-Output "LOOP: tracks=$($Tracks -join ', ')"
 
@@ -388,6 +389,12 @@ if ($halted) {
             # the last WORKSTREAM: line, never the first.
             $line = ($out | Where-Object { $_ -match 'WORKSTREAM: track=' } | Select-Object -First 1)
             if (-not $line) { $line = ($out | Where-Object { $_ -match 'WORKSTREAM:' } | Select-Object -Last 1) }
+            # The single detail line above drops every other output line, including the dispatcher's
+            # "dispatch-attempt receipt NOT written" report - the one fact its run dir could not hold
+            # (sol PR #111 post-merge). Carry each such line into the cycle receipt.
+            foreach ($w in @($out | Where-Object { "$_" -match 'dispatch-attempt receipt NOT written' })) {
+                $receiptWriteFailures += [ordered]@{ track = $track; exitCode = $rc; line = "$w" }
+            }
 
             switch ($rc) {
                 0 { $dispatched += [ordered]@{ track = $track; detail = "$line" } ; Write-Output "LOOP: [$track] dispatched - $line" }
@@ -412,6 +419,7 @@ $receipt = [ordered]@{
     dailyBudget   = $DailyBudget
     dispatched    = $dispatched
     skipped       = $skipped
+    receiptWriteFailures = $receiptWriteFailures
     haltedReason  = $halted
 }
 $receiptPath = Join-Path $CycleDir "cycle-$stamp.json"
