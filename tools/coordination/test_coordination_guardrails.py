@@ -2389,6 +2389,8 @@ def test_exporter_writes_both_exports_byte_exact(tmp_path):
     checks_doc = json.loads(checks_raw.decode("utf-8"))
     review_doc = json.loads(review_raw.decode("utf-8"))
     assert checks_doc["checks"] == checks_payload
+    assert review_doc["number"] == 99
+    assert review_doc["stateBefore"] == "OPEN" and review_doc["stateAfter"] == "OPEN"
     assert review_doc["headRefOidBefore"] == head_sha
     assert review_doc["headRefOidAfter"] == head_sha
     assert review_doc["requiredContextsBefore"] == ["build"]

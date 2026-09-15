@@ -22,7 +22,7 @@
 
     Exports (into -RunDir):
       pr-<n>-checks.json  = { checks, retrievedUtc }
-      pr-<n>-review.json  = { headRefOidBefore, headRefOidAfter, requiredContextsBefore,
+      pr-<n>-review.json  = { number, stateBefore, stateAfter, headRefOidBefore, headRefOidAfter, requiredContextsBefore,
                                requiredContextsAfter, body, checks, missingRequiredContexts,
                                retrievedUtc }
 
@@ -141,6 +141,12 @@ $checksPath = Join-Path $RunDir "pr-$PrNumber-checks.json"
 Write-Utf8NoBom $checksPath ($checksRecord | ConvertTo-Json -Depth 8)
 
 $reviewRecord = [ordered]@{
+    # sol-review-PR-TEMPLATE.md binds a verdict to the PR itself (S114); without number and state
+    # the export cannot prove WHICH PR it describes or whether it is open or merged (sol PR #111
+    # post-merge and PR #115 reviews, both CHANGES_REQUESTED on this alone).
+    number                  = [int]$prBefore.number
+    stateBefore             = [string]$prBefore.state
+    stateAfter              = [string]$prAfter.state
     headRefOidBefore        = $headBefore
     headRefOidAfter         = $headAfter
     requiredContextsBefore  = $requiredBefore
