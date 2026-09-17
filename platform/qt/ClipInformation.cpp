@@ -19,6 +19,7 @@ ClipInformation::ClipInformation(QString name,
                                  QString frames,
                                  QString frameRate,
                                  QString focalLength,
+                                 QString focusDistance,
                                  QString shutter,
                                  QString aperture,
                                  QString iso,
@@ -36,6 +37,7 @@ ClipInformation::ClipInformation(QString name,
     m_frames( frames ),
     m_frameRate( frameRate ),
     m_focalLength( focalLength ),
+    m_focusDistance( focusDistance ),
     m_shutter( shutter ),
     m_aperture( aperture ),
     m_iso( iso ),
@@ -64,6 +66,7 @@ ClipInformation::ClipInformation(QString name,
     m_frames( "-" ),
     m_frameRate( "-" ),
     m_focalLength( "-" ),
+    m_focusDistance( "-" ),
     m_shutter( "-" ),
     m_aperture( "-" ),
     m_iso( "-" ),
@@ -119,7 +122,7 @@ QVariant ClipInformation::getElement(int element) const
         return m_frameRate;
     case 8:
         return m_focalLength;
-    case 9: //focus distance
+    case 9:
         return m_focusDistance;
     case 10:
         return m_shutter;
@@ -208,7 +211,7 @@ void ClipInformation::setElement(int element, QVariant value)
 
 //Update missing metadata to the class
 void ClipInformation::updateMetadata(QString camera, QString lens, QString resolution, QString duration,
-                                     QString frames, QString frameRate, QString focalLength, QString shutter,
+                                     QString frames, QString frameRate, QString focalLength, QString focusDistance, QString shutter,
                                      QString aperture, QString iso, QString dualIso, QString bitDepth, QString dateTime,
                                      QString audio)
 {
@@ -219,6 +222,7 @@ void ClipInformation::updateMetadata(QString camera, QString lens, QString resol
     m_frames = frames;
     m_frameRate = frameRate;
     m_focalLength = focalLength;
+    m_focusDistance = focusDistance;
     m_shutter = shutter;
     m_aperture = aperture;
     m_iso = iso;
