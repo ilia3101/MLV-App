@@ -196,7 +196,7 @@ void addFrameToVideoFile(AVEncoder_t * encoder, uint16_t * frame)
     
     BOOL append_ok = NO;
     int j = 0;
-    while (!append_ok && j < 30) {
+    while (!append_ok && j < 500) {
         if (encoder->adaptor.assetWriterInput.readyForMoreMediaData)  {
 #ifndef STDOUT_SILENT
             NSLog(@"Processing video frame %d",encoder->frames_encoded);
@@ -212,8 +212,7 @@ void addFrameToVideoFile(AVEncoder_t * encoder, uint16_t * frame)
             }
         }
         else {
-            printf("adaptor not ready %d, %d\n", encoder->frames_encoded, j);
-            [NSThread sleepForTimeInterval:0.1];
+            [NSThread sleepForTimeInterval:0.02];
         }
         j++;
     }
@@ -246,7 +245,7 @@ void addFrameToVideoFile8bit(AVEncoder_t * encoder, uint8_t * frame)
 
     BOOL append_ok = NO;
     int j = 0;
-    while (!append_ok && j < 30) {
+    while (!append_ok && j < 500) {
         if (encoder->adaptor.assetWriterInput.readyForMoreMediaData)  {
 #ifndef STDOUT_SILENT
             NSLog(@"Processing video frame %d",encoder->frames_encoded);
@@ -262,8 +261,7 @@ void addFrameToVideoFile8bit(AVEncoder_t * encoder, uint8_t * frame)
             }
         }
         else {
-            printf("adaptor not ready %d, %d\n", encoder->frames_encoded, j);
-            [NSThread sleepForTimeInterval:0.1];
+            [NSThread sleepForTimeInterval:0.02];
         }
         j++;
     }

@@ -22,6 +22,10 @@
 #ifndef OPTHELPER_H
     #define OPTHELPER_H
 
+    #if !defined(__SSE2__) && (defined(__ARM_NEON) || defined(__ARM_NEON__))
+        #define __SSE2__ 1
+    #endif
+
     #define pow_F(a,b) (xexpf(b*xlogf(a)))
 
     #ifdef __SSE2__

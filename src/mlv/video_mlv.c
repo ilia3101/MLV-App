@@ -491,13 +491,14 @@ int getMlvRawFrameUint16(mlvObject_t * video, uint64_t frameIndex, uint16_t * un
             pthread_mutex_unlock(video->main_file_mutex + chunk);
 
             uint32_t mask = (1 << bitdepth) - 1;
-            #pragma omp parallel for
+            uint32_t base_rot = 48 - bitdepth;
+            #pragma omp parallel for schedule(guided)
             for (int i = 0; i < pixels_count; ++i)
             {
                 uint32_t bits_offset = i * bitdepth;
-                uint32_t bits_address = bits_offset / 16;
-                uint32_t bits_shift = bits_offset % 16;
-                uint32_t rotate_value = 16 + ((32 - bitdepth) - bits_shift);
+                uint32_t bits_address = bits_offset >> 4;
+                uint32_t bits_shift = bits_offset & 15;
+                uint32_t rotate_value = base_rot - bits_shift;
                 uint32_t uncorrected_data = *((uint32_t *)&((uint16_t *)raw_frame)[bits_address]);
                 uint32_t data = ROR32(uncorrected_data, rotate_value);
                 unpackedFrame[i] = ((uint16_t)(data & mask));

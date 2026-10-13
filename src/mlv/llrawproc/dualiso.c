@@ -460,10 +460,9 @@ static int identify_rggb_or_gbrg(struct raw_info raw_info, uint16_t * image_data
     
     /* compare cdf's */
     /* for rggb, greens are at y%2 != x%2, that is, 1 and 2 */
-    /* for gbrg, greens are at y%2 == x%2, that is, 0 and 3 */
     double diffs_rggb = 0;
     double diffs_gbrg = 0;
-    //#pragma omp parallel for
+    #pragma omp parallel for reduction(+:diffs_rggb, diffs_gbrg)
     for (int i = 0; i < 16384; i++)
     {
         diffs_rggb += ABS(hist[1][i] - hist[2][i]);
@@ -644,7 +643,7 @@ static int _match_exposures(struct raw_info raw_info, uint32_t * raw_buffer_32, 
     memset(dark, 0, w * h * sizeof(dark[0]));
     memset(bright, 0, w * h * sizeof(bright[0]));
     
-    //#pragma omp parallel for
+    #pragma omp parallel for
     for (int y = y0; y < h-2; y += 3)
     {
         int* native = BRIGHT_ROW ? bright : dark;
@@ -772,7 +771,7 @@ static int _match_exposures(struct raw_info raw_info, uint32_t * raw_buffer_32, 
     
     /* apply the correction */
     double b20 = b * 16;
-    //#pragma omp parallel for collapse(2)
+    #pragma omp parallel for
     for (int y = 0; y < h; y ++)
     {
         for (int x = 0; x < w; x ++)
@@ -836,7 +835,7 @@ static void match_by_histogram(struct raw_info raw_info, uint32_t * raw_buffer_3
     memset(dark, 0, w * h * sizeof(dark[0]));
     memset(bright, 0, w * h * sizeof(bright[0]));
 
-    //#pragma omp parallel for
+    #pragma omp parallel for
     for (int y = y0; y < h-2; y += 3)
     {
         int* native = BRIGHT_ROW ? bright : dark;
@@ -1200,20 +1199,24 @@ static inline void amaze_interpolate(struct raw_info raw_info, uint32_t * raw_bu
     int* squeezed = malloc(h * sizeof(int));
     memset(squeezed, 0, h * sizeof(int));
     
+    int wx = w + 16;
+    float * rawData_buf = (float *)calloc((size_t)h * wx, sizeof(float));
+    float * red_buf     = (float *)malloc((size_t)h * wx * sizeof(float));
+    float * green_buf   = (float *)malloc((size_t)h * wx * sizeof(float));
+    float * blue_buf    = (float *)malloc((size_t)h * wx * sizeof(float));
+
     float** rawData = malloc(h * sizeof(rawData[0]));
     float** red     = malloc(h * sizeof(red[0]));
     float** green   = malloc(h * sizeof(green[0]));
     float** blue    = malloc(h * sizeof(blue[0]));
-    
-    #pragma omp parallel for
+
     for (int i = 0; i < h; i++)
     {
-        int wx = w + 16;
-        rawData[i] =   malloc(wx * sizeof(rawData[0][0]));
-        memset(rawData[i], 0, wx * sizeof(rawData[0][0]));
-        red[i]     = malloc(wx * sizeof(red[0][0]));
-        green[i]   = malloc(wx * sizeof(green[0][0]));
-        blue[i]    = malloc(wx * sizeof(blue[0][0]));
+        size_t offset = (size_t)i * wx;
+        rawData[i] = rawData_buf + offset;
+        red[i]     = red_buf + offset;
+        green[i]   = green_buf + offset;
+        blue[i]    = blue_buf + offset;
     }
     
     /* squeeze the dark image by deleting fields from the bright exposure */
@@ -1369,7 +1372,7 @@ static inline void amaze_interpolate(struct raw_info raw_info, uint32_t * raw_bu
             build_ev2raw_lut(raw2ev, ev2raw_0, black, white);
             previous_black = black;
         }
-        #pragma omp parallel for
+        #pragma omp parallel for reduction(+:semi_overexposed, not_overexposed, deep_shadow, not_shadow)
         for (int y = 5; y < h-5; y ++)
         {
             int s = (is_bright[y%4] == is_bright[(y+1)%4]) ? -1 : 1;    /* points to the closest row having different exposure */
@@ -1387,7 +1390,6 @@ static inline void amaze_interpolate(struct raw_info raw_info, uint32_t * raw_bu
                     /* interpolating bright exposure */
                     if (fullres_curve[raw_get_pixel32(x, y)] > fullres_thr)
                     {
-#pragma omp atomic
                         /* no high accuracy needed, just interpolate vertically */
                         not_shadow++;
                         dmin = d0;
@@ -1395,14 +1397,12 @@ static inline void amaze_interpolate(struct raw_info raw_info, uint32_t * raw_bu
                     }
                     else
                     {
-#pragma omp atomic
                         /* deep shadows, unlikely to use fullres, so we need a good interpolation */
                         deep_shadow++;
                     }
                 }
                 else if (raw_get_pixel32(x, y) < (unsigned int)white_darkened)
                 {
-#pragma omp atomic
                     /* interpolating dark exposure, but we also have good data from the bright one */
                     not_overexposed++;
                     dmin = d0;
@@ -1410,7 +1410,6 @@ static inline void amaze_interpolate(struct raw_info raw_info, uint32_t * raw_bu
                 }
                 else
                 {
-#pragma omp atomic
                     /* interpolating dark exposure, but the bright one is clipped */
                     semi_overexposed++;
                 }
@@ -1495,15 +1494,11 @@ static inline void amaze_interpolate(struct raw_info raw_info, uint32_t * raw_bu
     }
     UNLOCK(ev2raw_mutex)
     
-    #pragma omp parallel for
-    for (int i = 0; i < h; i++)
-    {
-        free(rawData[i]);
-        free(red[i]);
-        free(green[i]);
-        free(blue[i]);
-    }
-    
+    free(rawData_buf);
+    free(red_buf);
+    free(green_buf);
+    free(blue_buf);
+
     free(squeezed); squeezed = 0;
     free(rawData); rawData = 0;
     free(red); red = 0;

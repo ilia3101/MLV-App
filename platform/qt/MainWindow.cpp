@@ -8,6 +8,7 @@
 #include "MainWindow.h"
 #include "ui_MainWindow.h"
 #include "math.h"
+#include <memory>
 
 #include <QMessageBox>
 #include <QThread>
@@ -166,7 +167,6 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     if( argc > 1 )
     {
         QString fileName = QString( "%1" ).arg( argv[1] );
-
         //Exit if not an MLV file or aborted
         if( QFile(fileName).exists() && fileName.endsWith( ".mlv", Qt::CaseInsensitive ) )
         {
@@ -2671,8 +2671,23 @@ void MainWindow::startExportPipe(QString fileName)
             uint16_t * imgBufferScaled;
             imgBufferScaled = ( uint16_t* )malloc( width * height * 3 * sizeof( uint16_t ) );
 
+            //Persist scaling pool and resizer across frames when scaled is true
+            std::unique_ptr<avir_scale_thread_pool> p_scaling_pool;
+            std::unique_ptr<avir::CImageResizer<>> p_image_resizer;
+            avir::CImageResizerVars vars;
+            if( scaled )
+            {
+                p_scaling_pool.reset(new avir_scale_thread_pool());
+                vars.ThreadPool = p_scaling_pool.get();
+                avir::CImageResizerParamsUltra roptions;
+                p_image_resizer.reset(new avir::CImageResizer<>( 16, 0, roptions ));
+            }
+
+            uint32_t cutInFrame = m_exportQueue.first()->cutIn() - 1;
+            uint32_t cutOutFrame = m_exportQueue.first()->cutOut();
+
             //Get all pictures and send to pipe
-            for( uint32_t i = (m_exportQueue.first()->cutIn() - 1); i < m_exportQueue.first()->cutOut(); i++ )
+            for( uint32_t i = cutInFrame; i < cutOutFrame; i++ )
             {
                 if( m_codecProfile == CODEC_TIFF && m_codecOption == CODEC_TIFF_AVG && i > 128 ) break;
 
@@ -2683,11 +2698,7 @@ void MainWindow::startExportPipe(QString fileName)
                     getMlvProcessedFrame16( m_pMlvObject, i, imgBuffer, QThread::idealThreadCount() );
                     m_pRenderThread->unlock();
 
-                    avir_scale_thread_pool scaling_pool;
-                    avir::CImageResizerVars vars; vars.ThreadPool = &scaling_pool;
-                    avir::CImageResizerParamsUltra roptions;
-                    avir::CImageResizer<> image_resizer( 16, 0, roptions );
-                    image_resizer.resizeImage( imgBuffer,
+                    p_image_resizer->resizeImage( imgBuffer,
                                                getMlvWidth(m_pMlvObject),
                                                getMlvHeight(m_pMlvObject), 0,
                                                imgBufferScaled,
@@ -2697,7 +2708,6 @@ void MainWindow::startExportPipe(QString fileName)
 
                     //Write to pipe
                     fwrite(imgBufferScaled, sizeof( uint16_t ), width * height * 3, pPipe);
-                    fflush(pPipe);
                 }
                 else
                 {
@@ -2708,29 +2718,35 @@ void MainWindow::startExportPipe(QString fileName)
 
                     //Write to pipe
                     fwrite(imgBuffer, sizeof( uint16_t ), frameSize, pPipe);
-                    fflush(pPipe);
                 }
 
-                //Set Status
-                if( !( m_exportQueue.first()->vidStabEnabled() && m_codecProfile == CODEC_H264 ) )
+                //Set Status (throttled to avoid stalling rendering on Apple Silicon)
+                uint32_t currentProgress = i - cutInFrame + 1;
+                uint32_t totalClipFrames = cutOutFrame - cutInFrame;
+                if( (currentProgress % 10 == 0) || (currentProgress == totalClipFrames) )
                 {
-                    m_pStatusDialog->ui->progressBar->setValue( i - ( m_exportQueue.first()->cutIn() - 1 ) + 1 );
-                    m_pStatusDialog->ui->progressBar->repaint();
-                    m_pStatusDialog->drawTimeFromToDoFrames( totalFrames - i + ( m_exportQueue.first()->cutIn() - 1 ) - 1 );
-                }
-                else
-                {
-                    m_pStatusDialog->ui->progressBar->setValue( ( totalFrames + i - ( m_exportQueue.first()->cutIn() - 1 ) + 1 ) >> 1 );
-                    m_pStatusDialog->ui->progressBar->repaint();
-                    m_pStatusDialog->drawTimeFromToDoFrames( totalFrames - ( ( totalFrames + i - ( m_exportQueue.first()->cutIn() - 1 ) + 1 ) >> 1 ) );
-                }
-                qApp->processEvents();
+                    if( !( m_exportQueue.first()->vidStabEnabled() && m_codecProfile == CODEC_H264 ) )
+                    {
+                        m_pStatusDialog->ui->progressBar->setValue( currentProgress );
+                        m_pStatusDialog->ui->progressBar->repaint();
+                        m_pStatusDialog->drawTimeFromToDoFrames( totalFrames - currentProgress );
+                    }
+                    else
+                    {
+                        m_pStatusDialog->ui->progressBar->setValue( ( totalFrames + currentProgress ) >> 1 );
+                        m_pStatusDialog->ui->progressBar->repaint();
+                        m_pStatusDialog->drawTimeFromToDoFrames( totalFrames - ( ( totalFrames + currentProgress ) >> 1 ) );
+                    }
+                    qApp->processEvents();
 
-                //Check diskspace
-                checkDiskFull( fileName );
+                    //Check diskspace periodically
+                    checkDiskFull( fileName );
+                }
+
                 //Abort pressed? -> End the loop
                 if( m_exportAbortPressed ) break;
             }
+            fflush(pPipe);
             //Close pipe
             if( pclose( pPipe ) != 0 )
             {
@@ -3209,13 +3225,36 @@ void MainWindow::startExportAVFoundation(QString fileName)
     uint32_t frameSize = getMlvWidth( m_pMlvObject ) * getMlvHeight( m_pMlvObject ) * 3;
     uint16_t * imgBuffer;
     imgBuffer = ( uint16_t* )malloc( frameSize * sizeof( uint16_t ) );
-    uint16_t * imgBufferScaled;
-    uint8_t * imgBufferScaled8;
+    uint16_t * imgBufferScaled = NULL;
+    uint8_t * imgBufferScaled8 = NULL;
     if( m_codecProfile == CODEC_H264 || m_codecProfile == CODEC_H265_8 ) imgBufferScaled8 = ( uint8_t* )malloc( width * height * 3 * sizeof( uint8_t ) );
     else imgBufferScaled = ( uint16_t* )malloc( width * height * 3 * sizeof( uint16_t ) );
 
+    //Persist scaling pool and resizer across frames when scaled is true
+    std::unique_ptr<avir_scale_thread_pool> p_scaling_pool;
+    std::unique_ptr<avir::CImageResizer<>> p_image_resizer16;
+    std::unique_ptr<avir::CImageResizer<>> p_image_resizer8;
+    avir::CImageResizerVars vars;
+    if( scaled )
+    {
+        p_scaling_pool.reset(new avir_scale_thread_pool());
+        vars.ThreadPool = p_scaling_pool.get();
+        avir::CImageResizerParamsUltra roptions;
+        if( m_codecProfile == CODEC_H264 || m_codecProfile == CODEC_H265_8 )
+        {
+            p_image_resizer8.reset(new avir::CImageResizer<>( 8, 0, roptions ));
+        }
+        else
+        {
+            p_image_resizer16.reset(new avir::CImageResizer<>( 16, 0, roptions ));
+        }
+    }
+
+    uint64_t cutInFrame = m_exportQueue.first()->cutIn() - 1;
+    uint64_t cutOutFrame = m_exportQueue.first()->cutOut();
+
     //Encoder frames
-    for( uint64_t frame = ( m_exportQueue.first()->cutIn() - 1 ); frame < m_exportQueue.first()->cutOut(); frame++ )
+    for( uint64_t frame = cutInFrame; frame < cutOutFrame; frame++ )
     {
         //Get&Encode
         if( m_codecProfile == CODEC_H264 || m_codecProfile == CODEC_H265_8 )
@@ -3223,11 +3262,7 @@ void MainWindow::startExportAVFoundation(QString fileName)
             getMlvProcessedFrame8( m_pMlvObject, frame, m_pRawImage, QThread::idealThreadCount() );
             if( scaled )
             {
-                avir_scale_thread_pool scaling_pool;
-                avir::CImageResizerVars vars; vars.ThreadPool = &scaling_pool;
-                avir::CImageResizerParamsUltra roptions;
-                avir::CImageResizer<> image_resizer( 8, 0, roptions );
-                image_resizer.resizeImage( m_pRawImage,
+                p_image_resizer8->resizeImage( m_pRawImage,
                                            getMlvWidth(m_pMlvObject),
                                            getMlvHeight(m_pMlvObject), 0,
                                            imgBufferScaled8,
@@ -3246,11 +3281,7 @@ void MainWindow::startExportAVFoundation(QString fileName)
             getMlvProcessedFrame16( m_pMlvObject, frame, imgBuffer, QThread::idealThreadCount() );
             if( scaled )
             {
-                avir_scale_thread_pool scaling_pool;
-                avir::CImageResizerVars vars; vars.ThreadPool = &scaling_pool;
-                avir::CImageResizerParamsUltra roptions;
-                avir::CImageResizer<> image_resizer( 16, 0, roptions );
-                image_resizer.resizeImage( imgBuffer,
+                p_image_resizer16->resizeImage( imgBuffer,
                                            getMlvWidth(m_pMlvObject),
                                            getMlvHeight(m_pMlvObject), 0,
                                            imgBufferScaled,
@@ -3265,14 +3296,20 @@ void MainWindow::startExportAVFoundation(QString fileName)
             }
         }
 
-        //Set Status
-        m_pStatusDialog->ui->progressBar->setValue( frame - ( m_exportQueue.first()->cutIn() - 1 ) + 1 );
-        m_pStatusDialog->ui->progressBar->repaint();
-        m_pStatusDialog->drawTimeFromToDoFrames( totalFrames - frame + ( m_exportQueue.first()->cutIn() - 1 ) - 1 );
-        qApp->processEvents();
+        //Set Status (throttled to avoid stalling rendering on Apple Silicon)
+        uint64_t currentProgress = frame - cutInFrame + 1;
+        uint64_t totalClipFrames = cutOutFrame - cutInFrame;
+        if( (currentProgress % 10 == 0) || (currentProgress == totalClipFrames) )
+        {
+            m_pStatusDialog->ui->progressBar->setValue( (int)currentProgress );
+            m_pStatusDialog->ui->progressBar->repaint();
+            m_pStatusDialog->drawTimeFromToDoFrames( totalFrames - (int)currentProgress );
+            qApp->processEvents();
 
-        //Check diskspace
-        checkDiskFull( fileName );
+            //Check diskspace periodically
+            checkDiskFull( fileName );
+        }
+
         //Abort pressed? -> End the loop
         if( m_exportAbortPressed ) break;
     }
