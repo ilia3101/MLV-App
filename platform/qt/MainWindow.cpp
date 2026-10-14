@@ -28,6 +28,7 @@
 #include <QDate>
 #include <QStorageInfo>
 #include <QColorDialog>
+#include <QElapsedTimer>
 #include <unistd.h>
 #include <math.h>
 #include <sys/stat.h>
@@ -2686,6 +2687,9 @@ void MainWindow::startExportPipe(QString fileName)
             uint32_t cutInFrame = m_exportQueue.first()->cutIn() - 1;
             uint32_t cutOutFrame = m_exportQueue.first()->cutOut();
 
+            QElapsedTimer statusTimer;
+            statusTimer.start();
+
             //Get all pictures and send to pipe
             for( uint32_t i = cutInFrame; i < cutOutFrame; i++ )
             {
@@ -2720,11 +2724,12 @@ void MainWindow::startExportPipe(QString fileName)
                     fwrite(imgBuffer, sizeof( uint16_t ), frameSize, pPipe);
                 }
 
-                //Set Status (throttled to avoid stalling rendering on Apple Silicon)
+                //Set Status (throttled to ~100ms intervals to keep UI and abort responsive)
                 uint32_t currentProgress = i - cutInFrame + 1;
                 uint32_t totalClipFrames = cutOutFrame - cutInFrame;
-                if( (currentProgress % 10 == 0) || (currentProgress == totalClipFrames) )
+                if( statusTimer.elapsed() >= 100 || currentProgress == totalClipFrames )
                 {
+                    statusTimer.restart();
                     if( !( m_exportQueue.first()->vidStabEnabled() && m_codecProfile == CODEC_H264 ) )
                     {
                         m_pStatusDialog->ui->progressBar->setValue( currentProgress );
@@ -3253,6 +3258,9 @@ void MainWindow::startExportAVFoundation(QString fileName)
     uint64_t cutInFrame = m_exportQueue.first()->cutIn() - 1;
     uint64_t cutOutFrame = m_exportQueue.first()->cutOut();
 
+    QElapsedTimer statusTimer;
+    statusTimer.start();
+
     //Encoder frames
     for( uint64_t frame = cutInFrame; frame < cutOutFrame; frame++ )
     {
@@ -3296,11 +3304,12 @@ void MainWindow::startExportAVFoundation(QString fileName)
             }
         }
 
-        //Set Status (throttled to avoid stalling rendering on Apple Silicon)
+        //Set Status (throttled to ~100ms intervals to keep UI and abort responsive)
         uint64_t currentProgress = frame - cutInFrame + 1;
         uint64_t totalClipFrames = cutOutFrame - cutInFrame;
-        if( (currentProgress % 10 == 0) || (currentProgress == totalClipFrames) )
+        if( statusTimer.elapsed() >= 100 || currentProgress == totalClipFrames )
         {
+            statusTimer.restart();
             m_pStatusDialog->ui->progressBar->setValue( (int)currentProgress );
             m_pStatusDialog->ui->progressBar->repaint();
             m_pStatusDialog->drawTimeFromToDoFrames( totalFrames - (int)currentProgress );

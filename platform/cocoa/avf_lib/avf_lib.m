@@ -209,6 +209,11 @@ void addFrameToVideoFile(AVEncoder_t * encoder, uint16_t * frame)
                 if(error!=nil) {
                     NSLog(@"Unresolved error %@,%@.", error, [error userInfo]);
                 }
+                if (encoder->video_writer.status == AVAssetWriterStatusFailed ||
+                    encoder->video_writer.status == AVAssetWriterStatusCancelled) {
+                    break;
+                }
+                [NSThread sleepForTimeInterval:0.01];
             }
         }
         else {
