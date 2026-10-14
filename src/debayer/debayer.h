@@ -1,10 +1,6 @@
 #ifndef _debayer_
 #define _debayer_
 
-#if !defined(__SSE2__) && (defined(__ARM_NEON) || defined(__ARM_NEON__))
-#define __SSE2__ 1
-#endif
-
 #include <stdint.h>
 
 /* Easy debayer types */
