@@ -8,6 +8,7 @@
 #include "MainWindow.h"
 #include "ui_MainWindow.h"
 #include "math.h"
+#include <memory>
 
 #include <QMessageBox>
 #include <QThread>
@@ -27,6 +28,7 @@
 #include <QDate>
 #include <QStorageInfo>
 #include <QColorDialog>
+#include <QElapsedTimer>
 #include <unistd.h>
 #include <math.h>
 #include <sys/stat.h>
@@ -168,7 +170,6 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     if( argc > 1 )
     {
         QString fileName = QString( "%1" ).arg( argv[1] );
-
         //Exit if not an MLV file or aborted
         if( QFile(fileName).exists() && fileName.endsWith( ".mlv", Qt::CaseInsensitive ) )
         {
@@ -945,6 +946,12 @@ int MainWindow::openMlv( QString fileName )
         audioText = QString( "-" );
     }
 
+    //Focus distance from LENS block. Magic Lantern stores it in cm (0 = not reported, 65535 = infinity)
+    QString focusDistStr = QString( "-" );
+    uint16_t focusDist = getMlvFocalDist( m_pMlvObject );
+    if( focusDist == 65535 ) focusDistStr = QString( "Infinity" );
+    else if( focusDist > 0 ) focusDistStr = QString( "%1 cm" ).arg( focusDist );
+
     ACTIVE_CLIP->updateMetadata( QString( "%1" ).arg( (char*)getMlvCamera( m_pMlvObject ) ),
                                  QString( "%1" ).arg( (char*)getMlvLens( m_pMlvObject ) ),
                                  QString( "%1 × %2 pixels" ).arg( (int)getMlvWidth( m_pMlvObject ) ).arg( (int)getMlvHeight( m_pMlvObject ) ),
@@ -952,6 +959,7 @@ int MainWindow::openMlv( QString fileName )
                                  QString( "%1" ).arg( (int)getMlvFrames( m_pMlvObject ) ),
                                  QString( "%1 fps" ).arg( getMlvFramerate( m_pMlvObject ) ),
                                  QString( "%1 mm" ).arg( getMlvFocalLength( m_pMlvObject ) ),
+                                 QString( "%1" ).arg( focusDistStr ),
                                  QString( "1/%1 s,  %2 deg,  %3 µs" ).arg( (uint16_t)(shutterSpeed + 0.5f) ).arg( (uint16_t)(shutterAngle + 0.5f) ).arg( getMlvShutter( m_pMlvObject ) ),
                                  QString( "ƒ/%1" ).arg( getMlvAperture( m_pMlvObject ) / 100.0, 0, 'f', 1 ),
                                  isoInfo,
@@ -966,6 +974,7 @@ int MainWindow::openMlv( QString fileName )
                                            .arg( getMlvTmSec(m_pMlvObject), 2, 10, QChar('0') ),
                                  audioText );
 
+
     //Set Clip Info to Dialog
     m_pInfoDialog->ui->tableWidget->item( 0, 1 )->setText( ACTIVE_CLIP->getElement( 2 ).toString() );
     m_pInfoDialog->ui->tableWidget->item( 1, 1 )->setText( ACTIVE_CLIP->getElement( 3 ).toString() );
@@ -976,12 +985,13 @@ int MainWindow::openMlv( QString fileName )
     m_pInfoDialog->ui->tableWidget->item( 6, 1 )->setText( ACTIVE_CLIP->getElement( 8 ).toString() );
     m_pInfoDialog->ui->tableWidget->item( 7, 1 )->setText( ACTIVE_CLIP->getElement( 9 ).toString() );
     m_pInfoDialog->ui->tableWidget->item( 8, 1 )->setText( ACTIVE_CLIP->getElement( 10 ).toString() );
-    m_pInfoDialog->ui->tableWidget->item( 9, 1 )->setText( dualIsoInfo );
-    m_pInfoDialog->ui->tableWidget->item( 10, 1 )->setText( ACTIVE_CLIP->getElement( 13 ).toString() );
-    m_pInfoDialog->ui->tableWidget->item( 11, 1 )->setText( QString( "%1 black,  %2 white" ).arg( getMlvOriginalBlackLevel( m_pMlvObject ) ).arg( getMlvOriginalWhiteLevel( m_pMlvObject ) ) );
-    m_pInfoDialog->ui->tableWidget->item( 12, 1 )->setText( ACTIVE_CLIP->getElement( 14 ).toString() );
+    m_pInfoDialog->ui->tableWidget->item( 9, 1 )->setText( ACTIVE_CLIP->getElement( 11 ).toString() );
+    m_pInfoDialog->ui->tableWidget->item( 10, 1 )->setText( dualIsoInfo );
+    m_pInfoDialog->ui->tableWidget->item( 11, 1 )->setText( ACTIVE_CLIP->getElement( 14 ).toString() );
+    m_pInfoDialog->ui->tableWidget->item( 12, 1 )->setText( QString( "%1 black,  %2 white" ).arg( getMlvOriginalBlackLevel( m_pMlvObject ) ).arg( getMlvOriginalWhiteLevel( m_pMlvObject ) ) );
     m_pInfoDialog->ui->tableWidget->item( 13, 1 )->setText( ACTIVE_CLIP->getElement( 15 ).toString() );
-    m_pInfoDialog->ui->tableWidget->item( 14, 1 )->setText( ACTIVE_CLIP->getElement( 16 ).toString() + ",  " + ACTIVE_CLIP->getElement( 17 ).toString() );
+    m_pInfoDialog->ui->tableWidget->item( 14, 1 )->setText( ACTIVE_CLIP->getElement( 16 ).toString() );
+    m_pInfoDialog->ui->tableWidget->item( 15, 1 )->setText( ACTIVE_CLIP->getElement( 17 ).toString() + ",  " + ACTIVE_CLIP->getElement( 18 ).toString() );
 
     resultingResolution();
 
@@ -1819,6 +1829,12 @@ void MainWindow::startExportPipe(QString fileName)
             break;
         case ReceiptSettings::AHD:
             setMlvUseAhdDebayer( m_pMlvObject );
+            break;
+        case ReceiptSettings::RCD:
+            setMlvUseRcdDebayer( m_pMlvObject );
+            break;
+        case ReceiptSettings::DCB:
+            setMlvUseDcbDebayer( m_pMlvObject );
             break;
         default:
             break;
@@ -2714,8 +2730,26 @@ void MainWindow::startExportPipe(QString fileName)
             uint16_t * imgBufferScaled;
             imgBufferScaled = ( uint16_t* )malloc( width * height * 3 * sizeof( uint16_t ) );
 
+            //Persist scaling pool and resizer across frames when scaled is true
+            std::unique_ptr<avir_scale_thread_pool> p_scaling_pool;
+            std::unique_ptr<avir::CImageResizer<>> p_image_resizer;
+            avir::CImageResizerVars vars;
+            if( scaled )
+            {
+                p_scaling_pool.reset(new avir_scale_thread_pool());
+                vars.ThreadPool = p_scaling_pool.get();
+                avir::CImageResizerParamsUltra roptions;
+                p_image_resizer.reset(new avir::CImageResizer<>( 16, 0, roptions ));
+            }
+
+            uint32_t cutInFrame = m_exportQueue.first()->cutIn() - 1;
+            uint32_t cutOutFrame = m_exportQueue.first()->cutOut();
+
+            QElapsedTimer statusTimer;
+            statusTimer.start();
+
             //Get all pictures and send to pipe
-            for( uint32_t i = (m_exportQueue.first()->cutIn() - 1); i < m_exportQueue.first()->cutOut(); i++ )
+            for( uint32_t i = cutInFrame; i < cutOutFrame; i++ )
             {
                 if( m_codecProfile == CODEC_TIFF && m_codecOption == CODEC_TIFF_AVG && i > 128 ) break;
 
@@ -2726,11 +2760,7 @@ void MainWindow::startExportPipe(QString fileName)
                     getMlvProcessedFrame16( m_pMlvObject, i, imgBuffer, QThread::idealThreadCount() );
                     m_pRenderThread->unlock();
 
-                    avir_scale_thread_pool scaling_pool;
-                    avir::CImageResizerVars vars; vars.ThreadPool = &scaling_pool;
-                    avir::CImageResizerParamsUltra roptions;
-                    avir::CImageResizer<> image_resizer( 16, 0, roptions );
-                    image_resizer.resizeImage( imgBuffer,
+                    p_image_resizer->resizeImage( imgBuffer,
                                                getMlvWidth(m_pMlvObject),
                                                getMlvHeight(m_pMlvObject), 0,
                                                imgBufferScaled,
@@ -2740,7 +2770,6 @@ void MainWindow::startExportPipe(QString fileName)
 
                     //Write to pipe
                     fwrite(imgBufferScaled, sizeof( uint16_t ), width * height * 3, pPipe);
-                    fflush(pPipe);
                 }
                 else
                 {
@@ -2751,11 +2780,12 @@ void MainWindow::startExportPipe(QString fileName)
 
                     //Write to pipe
                     fwrite(imgBuffer, sizeof( uint16_t ), frameSize, pPipe);
-                    fflush(pPipe);
                 }
 
-                //Set Status
-                if( !( m_exportQueue.first()->vidStabEnabled() && m_codecProfile == CODEC_H264 ) )
+                //Set Status (throttled to ~100ms intervals to keep UI and abort responsive)
+                uint32_t currentProgress = i - cutInFrame + 1;
+                uint32_t totalClipFrames = cutOutFrame - cutInFrame;
+                if( statusTimer.elapsed() >= 100 || currentProgress == totalClipFrames )
                 {
                     uint32_t framesToDo = totalFrames - i + ( m_exportQueue.first()->cutIn() - 1 ) - 1;
 
@@ -2779,6 +2809,7 @@ void MainWindow::startExportPipe(QString fileName)
                 //Abort pressed? -> End the loop
                 if( m_exportAbortPressed && confirmAbort() ) break;
             }
+            fflush(pPipe);
             //Close pipe
             if( pclose( pPipe ) != 0 )
             {
@@ -3005,7 +3036,7 @@ void MainWindow::startExportCdng(QString fileName)
      * balancing in case some frames occasionally take longer
      * to process or some CPU cores are not fully available.
      */
-    #pragma omp parallel for schedule(dynamic)
+    // #pragma omp parallel for schedule(dynamic)
     for( uint32_t frame = start; frame < end; frame++ )
     {
         if( exportError.load() ||
@@ -3277,6 +3308,12 @@ void MainWindow::startExportAVFoundation(QString fileName)
         case ReceiptSettings::AHD:
             setMlvUseAhdDebayer( m_pMlvObject );
             break;
+        case ReceiptSettings::RCD:
+            setMlvUseRcdDebayer( m_pMlvObject );
+            break;
+        case ReceiptSettings::DCB:
+            setMlvUseDcbDebayer( m_pMlvObject );
+            break;
         default:
             break;
         }
@@ -3384,13 +3421,39 @@ void MainWindow::startExportAVFoundation(QString fileName)
     uint32_t frameSize = getMlvWidth( m_pMlvObject ) * getMlvHeight( m_pMlvObject ) * 3;
     uint16_t * imgBuffer;
     imgBuffer = ( uint16_t* )malloc( frameSize * sizeof( uint16_t ) );
-    uint16_t * imgBufferScaled;
-    uint8_t * imgBufferScaled8;
+    uint16_t * imgBufferScaled = NULL;
+    uint8_t * imgBufferScaled8 = NULL;
     if( m_codecProfile == CODEC_H264 || m_codecProfile == CODEC_H265_8 ) imgBufferScaled8 = ( uint8_t* )malloc( width * height * 3 * sizeof( uint8_t ) );
     else imgBufferScaled = ( uint16_t* )malloc( width * height * 3 * sizeof( uint16_t ) );
 
+    //Persist scaling pool and resizer across frames when scaled is true
+    std::unique_ptr<avir_scale_thread_pool> p_scaling_pool;
+    std::unique_ptr<avir::CImageResizer<>> p_image_resizer16;
+    std::unique_ptr<avir::CImageResizer<>> p_image_resizer8;
+    avir::CImageResizerVars vars;
+    if( scaled )
+    {
+        p_scaling_pool.reset(new avir_scale_thread_pool());
+        vars.ThreadPool = p_scaling_pool.get();
+        avir::CImageResizerParamsUltra roptions;
+        if( m_codecProfile == CODEC_H264 || m_codecProfile == CODEC_H265_8 )
+        {
+            p_image_resizer8.reset(new avir::CImageResizer<>( 8, 0, roptions ));
+        }
+        else
+        {
+            p_image_resizer16.reset(new avir::CImageResizer<>( 16, 0, roptions ));
+        }
+    }
+
+    uint64_t cutInFrame = m_exportQueue.first()->cutIn() - 1;
+    uint64_t cutOutFrame = m_exportQueue.first()->cutOut();
+
+    QElapsedTimer statusTimer;
+    statusTimer.start();
+
     //Encoder frames
-    for( uint64_t frame = ( m_exportQueue.first()->cutIn() - 1 ); frame < m_exportQueue.first()->cutOut(); frame++ )
+    for( uint64_t frame = cutInFrame; frame < cutOutFrame; frame++ )
     {
         //Get&Encode
         if( m_codecProfile == CODEC_H264 || m_codecProfile == CODEC_H265_8 )
@@ -3398,11 +3461,7 @@ void MainWindow::startExportAVFoundation(QString fileName)
             getMlvProcessedFrame8( m_pMlvObject, frame, m_pRawImage, QThread::idealThreadCount() );
             if( scaled )
             {
-                avir_scale_thread_pool scaling_pool;
-                avir::CImageResizerVars vars; vars.ThreadPool = &scaling_pool;
-                avir::CImageResizerParamsUltra roptions;
-                avir::CImageResizer<> image_resizer( 8, 0, roptions );
-                image_resizer.resizeImage( m_pRawImage,
+                p_image_resizer8->resizeImage( m_pRawImage,
                                            getMlvWidth(m_pMlvObject),
                                            getMlvHeight(m_pMlvObject), 0,
                                            imgBufferScaled8,
@@ -3421,11 +3480,7 @@ void MainWindow::startExportAVFoundation(QString fileName)
             getMlvProcessedFrame16( m_pMlvObject, frame, imgBuffer, QThread::idealThreadCount() );
             if( scaled )
             {
-                avir_scale_thread_pool scaling_pool;
-                avir::CImageResizerVars vars; vars.ThreadPool = &scaling_pool;
-                avir::CImageResizerParamsUltra roptions;
-                avir::CImageResizer<> image_resizer( 16, 0, roptions );
-                image_resizer.resizeImage( imgBuffer,
+                p_image_resizer16->resizeImage( imgBuffer,
                                            getMlvWidth(m_pMlvObject),
                                            getMlvHeight(m_pMlvObject), 0,
                                            imgBufferScaled,
