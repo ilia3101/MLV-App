@@ -35,6 +35,27 @@
 #if !defined(DISO_NO_FAST_CHROMA5) && (defined(__clang__) || defined(__GNUC__))
 #define DISO_FAST_CHROMA5 1
 #endif
+
+#if defined(__APPLE__) && !defined(DISO_SINGLE_THREAD)
+#include <dispatch/dispatch.h>
+#define DISO_PARALLEL_Y(y_start, y_end, y_var, body) \
+    do { \
+        int _ys = (y_start), _ye = (y_end); \
+        if (_ye > _ys) { \
+            dispatch_apply((size_t)(_ye - _ys), dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^(size_t _yi) { \
+                int y_var = _ys + (int)_yi; \
+                body \
+            }); \
+        } \
+    } while (0)
+#elif defined(_OPENMP) && !defined(DISO_SINGLE_THREAD)
+#define DISO_PARALLEL_Y(y_start, y_end, y_var, body) \
+    _Pragma("omp parallel for") \
+    for (int y_var = (y_start); y_var < (y_end); y_var++) { body }
+#else
+#define DISO_PARALLEL_Y(y_start, y_end, y_var, body) \
+    for (int y_var = (y_start); y_var < (y_end); y_var++) { body }
+#endif
 #ifndef M_PI
 #define M_PI 3.14159265358979323846 /* pi */
 #endif
@@ -997,7 +1018,10 @@ static int match_exposures(struct raw_info raw_info, uint32_t * raw_buffer_32, i
     }
     else if (*auto_correction == -2)
     {
-        match_by_histogram(raw_info, raw_buffer_32, &_ev_correction, &_black_delta, white_darkened, is_bright);
+        if (*ev_correction == 1 || *black_delta == -1)
+        {
+            match_by_histogram(raw_info, raw_buffer_32, &_ev_correction, &_black_delta, white_darkened, is_bright);
+        }
     }
 
     if (*ev_correction != 1)
@@ -1619,8 +1643,7 @@ static inline void border_interpolate(struct raw_info raw_info, uint32_t * raw_b
         }
     }
     
-    for (int y = 2; y < h; y ++)
-    {
+    DISO_PARALLEL_Y(2, h, y, {
         uint32_t* native = BRIGHT_ROW ? bright : dark;
         uint32_t* interp = BRIGHT_ROW ? dark : bright;
         
@@ -1635,7 +1658,7 @@ static inline void border_interpolate(struct raw_info raw_info, uint32_t * raw_b
             interp[x + y * w] = raw_get_pixel32(x-2, y-2);
             native[x + y * w] = raw_get_pixel32(x-2, y);
         }
-    }
+    });
 }
 
 static inline void fullres_reconstruction(struct raw_info raw_info, uint32_t * fullres, uint32_t* dark, uint32_t* bright, uint32_t white_darkened, int * is_bright)
@@ -1648,9 +1671,7 @@ static inline void fullres_reconstruction(struct raw_info raw_info, uint32_t * f
 #ifndef STDOUT_SILENT
     printf("Full-res reconstruction...\n");
 #endif
-    #pragma omp parallel for collapse(2)
-    for (int y = 0; y < h; y ++)
-    {
+    DISO_PARALLEL_Y(0, h, y, {
         for (int x = 0; x < w; x ++)
         {
             if (BRIGHT_ROW)
@@ -1664,7 +1685,7 @@ static inline void fullres_reconstruction(struct raw_info raw_info, uint32_t * f
                 fullres[x + y*w] = dark[x + y*w];
             }
         }
-    }
+    });
 }
 
 static inline void build_alias_map(struct raw_info raw_info, uint16_t* alias_map, uint32_t* fullres_smooth, uint32_t* halfres_smooth, uint32_t* bright, int dark_noise, int black, int * raw2ev)
@@ -2215,7 +2236,7 @@ int diso_get_full20bit(struct raw_info raw_info, uint16_t * image_data, int dark
     int expo_matched = match_exposures(raw_info, raw_buffer_32, dark_frame, iso1, iso2, auto_correction, ev_correction, black_delta, &white_darkened, is_bright);
     double corr_ev = ABS(*ev_correction);
 
-#ifndef STDOUT_SILENT
+#ifdef DISO_VERBOSE_DIAGNOSTICS
     if (expo_matched)
     {
         printf("Exposures matched");
@@ -2227,7 +2248,7 @@ int diso_get_full20bit(struct raw_info raw_info, uint16_t * image_data, int dark
 #endif
     /* estimate dynamic range */
     double lowiso_dr = log2(white - black) - dark_noise_ev;
-#ifndef STDOUT_SILENT
+#ifdef DISO_VERBOSE_DIAGNOSTICS
     double highiso_dr = log2(white_bright - black) - bright_noise_ev;
     printf("Dynamic range   : %.02f (+) %.02f => %.02f EV (in theory)\n", lowiso_dr, highiso_dr, highiso_dr + corr_ev);
 #endif
@@ -2254,7 +2275,7 @@ int diso_get_full20bit(struct raw_info raw_info, uint16_t * image_data, int dark
     if (mix_images(raw_info, fullres, fullres_smooth, halfres, halfres_smooth, alias_map, dark, bright, overexposed, dark_noise, white_darkened, corr_ev, lowiso_dr, black, white, chroma_smooth_method))
     {
         /* let's check the ideal noise levels (on the halfres image, which in black areas is identical to the bright one) */
-#ifndef STDOUT_SILENT
+#ifdef DISO_VERBOSE_DIAGNOSTICS
         //#pragma omp parallel for collapse(2)
         for (int y = 3; y < h-2; y ++)
             for (int x = 2; x < w-2; x ++)
@@ -2266,7 +2287,7 @@ int diso_get_full20bit(struct raw_info raw_info, uint16_t * image_data, int dark
         final_blend(raw_info, raw_buffer_32, fullres, fullres_smooth, halfres_smooth, dark, bright, overexposed, alias_map, black, white, dark_noise);
 
         /* let's see how much dynamic range we actually got */
-#ifndef STDOUT_SILENT
+#ifdef DISO_VERBOSE_DIAGNOSTICS
         compute_black_noise(raw_info, image_data, 8, raw_info.active_area.x1 - 8, raw_info.active_area.y1 + 20, raw_info.active_area.y2 - 20, 1, 1, &noise_avg, &noise_std[0]);
         printf("Noise level     : %.02f (20-bit), ideally %.02f\n", noise_std[0], ideal_noise_std);
         printf("Dynamic range   : %.02f EV (cooked)\n", log2(white - black) - log2(noise_std[0]));
