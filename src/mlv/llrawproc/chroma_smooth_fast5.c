@@ -1,8 +1,6 @@
 #include <string.h>
 #include <stdlib.h>
-#ifdef __APPLE__
-#include <dispatch/dispatch.h>
-#endif
+
 
 typedef int v4i __attribute__((vector_size(16)));
 #define VSORT(a,b) { v4i _t = __builtin_elementwise_min((a),(b)); (b) = __builtin_elementwise_max((a),(b)); (a) = _t; }
@@ -156,19 +154,6 @@ static void chroma_smooth_5x5(int w, int h, uint32_t * inp, uint32_t * out, int*
     int nstrips = (ny + CS5_STRIP_H - 1) / CS5_STRIP_H;
     size_t strip_bytes = 6 * (size_t)(nx + 4) * (CS5_STRIP_H + 4) * sizeof(int);
 
-#if defined(__APPLE__) && !defined(DISO_SINGLE_THREAD)
-    __block int alloc_failed = 0;
-    dispatch_apply((size_t)nstrips, dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^(size_t s) {
-        int * planes = (int *)malloc(strip_bytes);
-        if (!planes) { __sync_fetch_and_or(&alloc_failed, 1); return; }
-        int iy0 = (int)s * CS5_STRIP_H;
-        int iy_end = iy0 + CS5_STRIP_H;
-        if (iy_end > ny) iy_end = ny;
-        cs5_process_strip(iy0, iy_end, nx, w, inp, out, raw2ev, ev2raw, black, white, planes);
-        free(planes);
-    });
-    if (alloc_failed) chroma_smooth_5x5_ref(w, h, inp, out, raw2ev, ev2raw, black, white);
-#else
     int alloc_failed = 0;
     #pragma omp parallel for schedule(dynamic, 1)
     for (int s = 0; s < nstrips; s++)
@@ -182,5 +167,4 @@ static void chroma_smooth_5x5(int w, int h, uint32_t * inp, uint32_t * out, int*
         free(planes);
     }
     if (alloc_failed) chroma_smooth_5x5_ref(w, h, inp, out, raw2ev, ev2raw, black, white);
-#endif
 }
