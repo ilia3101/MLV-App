@@ -460,9 +460,10 @@ static int identify_rggb_or_gbrg(struct raw_info raw_info, uint16_t * image_data
     
     /* compare cdf's */
     /* for rggb, greens are at y%2 != x%2, that is, 1 and 2 */
+    /* for gbrg, greens are at y%2 == x%2, that is, 0 and 3 */
     double diffs_rggb = 0;
     double diffs_gbrg = 0;
-    #pragma omp parallel for reduction(+:diffs_rggb, diffs_gbrg)
+    //#pragma omp parallel for
     for (int i = 0; i < 16384; i++)
     {
         diffs_rggb += ABS(hist[1][i] - hist[2][i]);
@@ -643,7 +644,7 @@ static int _match_exposures(struct raw_info raw_info, uint32_t * raw_buffer_32, 
     memset(dark, 0, w * h * sizeof(dark[0]));
     memset(bright, 0, w * h * sizeof(bright[0]));
     
-    #pragma omp parallel for
+    //#pragma omp parallel for
     for (int y = y0; y < h-2; y += 3)
     {
         int* native = BRIGHT_ROW ? bright : dark;
@@ -771,7 +772,7 @@ static int _match_exposures(struct raw_info raw_info, uint32_t * raw_buffer_32, 
     
     /* apply the correction */
     double b20 = b * 16;
-    #pragma omp parallel for
+    //#pragma omp parallel for collapse(2)
     for (int y = 0; y < h; y ++)
     {
         for (int x = 0; x < w; x ++)
