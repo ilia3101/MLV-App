@@ -3,7 +3,12 @@
 
 
 typedef int v4i __attribute__((vector_size(16)));
+
+#if defined(__clang__) && __has_builtin(__builtin_elementwise_min) && __has_builtin(__builtin_elementwise_max)
 #define VSORT(a,b) { v4i _t = __builtin_elementwise_min((a),(b)); (b) = __builtin_elementwise_max((a),(b)); (a) = _t; }
+#elif defined(__GNUC__)
+#define VSORT(a,b) { v4i _min = ((a) < (b)) ? (a) : (b); v4i _max = ((a) > (b)) ? (a) : (b); (a) = _min; (b) = _max; }
+#endif
 
 static inline v4i vmed25(v4i * p)
 {
@@ -70,7 +75,7 @@ static inline void cs5_finish_cell(int w, uint32_t * inp, uint32_t * out, int * 
 
 enum { CS5_STRIP_H = 32 };
 
-static void cs5_process_strip(int iy0, int iy_end, int nx, int w, uint32_t * inp, uint32_t * out,
+void cs5_process_strip(int iy0, int iy_end, int nx, int w, uint32_t * inp, uint32_t * out,
                               int * raw2ev, int * ev2raw, int black, int white, int * planes)
 {
     int sh = iy_end - iy0;

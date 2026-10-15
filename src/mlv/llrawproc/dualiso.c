@@ -32,16 +32,8 @@
 
 #define EV_RESOLUTION 65536
 
-#ifndef DISO_FAST_CHROMA5
-#  ifndef DISO_NO_FAST_CHROMA5
-#    ifdef __clang__
-#      ifdef __has_builtin
-#        if __has_builtin(__builtin_elementwise_min) && __has_builtin(__builtin_elementwise_max)
-#          define DISO_FAST_CHROMA5 1
-#        endif
-#      endif
-#    endif
-#  endif
+#if !defined(DISO_NO_FAST_CHROMA5) && (defined(__clang__) || defined(__GNUC__))
+#define DISO_FAST_CHROMA5 1
 #endif
 #ifndef M_PI
 #define M_PI 3.14159265358979323846 /* pi */
