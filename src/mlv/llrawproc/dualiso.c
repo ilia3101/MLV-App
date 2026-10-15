@@ -31,6 +31,12 @@
 #include "../../debayer/debayer.h"
 
 #define EV_RESOLUTION 65536
+
+#if !defined(DISO_NO_FAST_CHROMA5) && defined(__clang__) && defined(__has_builtin)
+#if __has_builtin(__builtin_elementwise_min) && __has_builtin(__builtin_elementwise_max)
+#define DISO_FAST_CHROMA5 1
+#endif
+#endif
 #ifndef M_PI
 #define M_PI 3.14159265358979323846 /* pi */
 #endif
@@ -993,7 +999,10 @@ static int match_exposures(struct raw_info raw_info, uint32_t * raw_buffer_32, i
     }
     else if (*auto_correction == -2)
     {
-        match_by_histogram(raw_info, raw_buffer_32, &_ev_correction, &_black_delta, white_darkened, is_bright);
+        if (*ev_correction == 1 || *black_delta == -1)
+        {
+            match_by_histogram(raw_info, raw_buffer_32, &_ev_correction, &_black_delta, white_darkened, is_bright);
+        }
     }
 
     if (*ev_correction != 1)
@@ -1525,13 +1534,14 @@ static inline void mean23_interpolate(struct raw_info raw_info, uint32_t * raw_b
     int* ev2raw = ev2raw_0 + 10*EV_RESOLUTION;
     
     LOCK(ev2raw_mutex)
+    if(black != previous_black)
     {
-        if(black != previous_black)
-        {
-            build_ev2raw_lut(raw2ev, ev2raw_0, black, white);
-            previous_black = black;
-        }
-        #pragma omp parallel for
+        build_ev2raw_lut(raw2ev, ev2raw_0, black, white);
+        previous_black = black;
+    }
+    UNLOCK(ev2raw_mutex)
+    
+    #pragma omp parallel for
         for (int y = 2; y < h-2; y ++)
         {
             uint32_t* native = BRIGHT_ROW ? bright : dark;
@@ -1580,8 +1590,6 @@ static inline void mean23_interpolate(struct raw_info raw_info, uint32_t * raw_b
                 native[x+1 + y * w] = raw_get_pixel32(x+1, y);
             }
         }
-    }
-    UNLOCK(ev2raw_mutex)
 }
 
 static inline void border_interpolate(struct raw_info raw_info, uint32_t * raw_buffer_32, uint32_t* dark, uint32_t* bright, int * is_bright)
@@ -1786,7 +1794,14 @@ static inline void build_alias_map(struct raw_info raw_info, uint16_t* alias_map
 #undef CHROMA_SMOOTH_3X3
 
 #define CHROMA_SMOOTH_5X5
+#ifdef DISO_FAST_CHROMA5
+#define chroma_smooth_5x5 chroma_smooth_5x5_ref
+#endif
 #include "chroma_smooth.c"
+#ifdef DISO_FAST_CHROMA5
+#undef chroma_smooth_5x5
+#include "chroma_smooth_fast5.c"
+#endif
 #undef CHROMA_SMOOTH_5X5
 
 static inline void hdr_chroma_smooth(struct raw_info raw_info, uint32_t * input, uint32_t * output, int method, int * raw2ev, int * ev2raw)
@@ -1879,14 +1894,14 @@ static inline int mix_images(struct raw_info raw_info, uint32_t* fullres, uint32
     int* ev2raw = ev2raw_0 + 10*EV_RESOLUTION;
     
     LOCK(ev2raw_mutex)
+    if(black != (int)previous_black)
     {
-        if(black != previous_black)
-        {
-            build_ev2raw_lut(raw2ev, ev2raw_0, black, white);
-            previous_black = black;
-        }
-        
-        #pragma omp parallel for collapse(2)
+        build_ev2raw_lut(raw2ev, ev2raw_0, black, white);
+        previous_black = black;
+    }
+    UNLOCK(ev2raw_mutex)
+    
+    #pragma omp parallel for collapse(2)
         for (int y = 0; y < h; y ++)
         {
             for (int x = 0; x < w; x ++)
@@ -1923,8 +1938,6 @@ static inline int mix_images(struct raw_info raw_info, uint32_t* fullres, uint32
         {
             build_alias_map(raw_info, alias_map, fullres_smooth, halfres_smooth, bright, dark_noise, black, raw2ev);
         }
-    }
-    UNLOCK(ev2raw_mutex)
     
     #pragma omp parallel for collapse(2)
     for (int y = 0; y < h; y ++)
@@ -1981,16 +1994,16 @@ static inline void final_blend(struct raw_info raw_info, uint32_t* raw_buffer_32
     int* ev2raw = ev2raw_0 + 10*EV_RESOLUTION;
     
     LOCK(ev2raw_mutex)
+    if(black != previous_black)
     {
-        if(black != previous_black)
-        {
-            build_ev2raw_lut(raw2ev, ev2raw_0, black, white);
-            previous_black = black;
-        }
+        build_ev2raw_lut(raw2ev, ev2raw_0, black, white);
+        previous_black = black;
+    }
+    UNLOCK(ev2raw_mutex)
 #ifndef STDOUT_SILENT
-        printf("Final blending...\n");
+    printf("Final blending...\n");
 #endif
-        #pragma omp parallel for collapse(2)
+    #pragma omp parallel for collapse(2)
         for (int y = 0; y < h; y ++)
         {
             for (int x = 0; x < w; x ++)
@@ -2059,8 +2072,6 @@ static inline void final_blend(struct raw_info raw_info, uint32_t* raw_buffer_32
                 raw_set_pixel32(x, y, ev2raw[output]);
             }
         }
-    }
-    UNLOCK(ev2raw_mutex)
 }
 
 static inline void convert_20_to_16bit(struct raw_info raw_info, uint16_t * image_data, uint32_t * raw_buffer_32)
