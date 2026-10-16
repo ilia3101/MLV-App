@@ -1,6 +1,9 @@
 #include <string.h>
 #include <stdlib.h>
 
+#if defined(__APPLE__) && !defined(DISO_SINGLE_THREAD)
+#include <dispatch/dispatch.h>
+#endif
 
 typedef int v4i __attribute__((vector_size(16)));
 
@@ -40,7 +43,11 @@ static inline v4i vmed25(v4i * p)
     return p[12];
 }
 
-static inline void cs5_finish_cell(int w, uint32_t * inp, uint32_t * out, int * raw2ev, int * ev2raw, int black, int white,
+#ifndef CHROMA_SMOOTH_TYPE
+#define CHROMA_SMOOTH_TYPE uint16_t
+#endif
+
+static inline void cs5_finish_cell(int w, CHROMA_SMOOTH_TYPE * inp, CHROMA_SMOOTH_TYPE * out, int * raw2ev, int * ev2raw, int black, int white,
                                    int x, int y, int drh, int dbh, int drv, int dbv, int eh, int ev)
 {
     int g1 = raw2ev[inp[x+1 +     y * w]];
@@ -75,7 +82,7 @@ static inline void cs5_finish_cell(int w, uint32_t * inp, uint32_t * out, int * 
 
 enum { CS5_STRIP_H = 32 };
 
-void cs5_process_strip(int iy0, int iy_end, int nx, int w, uint32_t * inp, uint32_t * out,
+static void cs5_process_strip(int iy0, int iy_end, int nx, int w, CHROMA_SMOOTH_TYPE * inp, CHROMA_SMOOTH_TYPE * out,
                               int * raw2ev, int * ev2raw, int black, int white, int * planes)
 {
     int sh = iy_end - iy0;
@@ -148,7 +155,7 @@ void cs5_process_strip(int iy0, int iy_end, int nx, int w, uint32_t * inp, uint3
     }
 }
 
-static void chroma_smooth_5x5(int w, int h, uint32_t * inp, uint32_t * out, int* raw2ev, int* ev2raw, int black, int white)
+static void chroma_smooth_5x5(int w, int h, CHROMA_SMOOTH_TYPE * inp, CHROMA_SMOOTH_TYPE * out, int* raw2ev, int* ev2raw, int black, int white)
 {
     if (inp == out) { chroma_smooth_5x5_ref(w, h, inp, out, raw2ev, ev2raw, black, white); return; }
 
@@ -159,17 +166,65 @@ static void chroma_smooth_5x5(int w, int h, uint32_t * inp, uint32_t * out, int*
     int nstrips = (ny + CS5_STRIP_H - 1) / CS5_STRIP_H;
     size_t strip_bytes = 6 * (size_t)(nx + 4) * (CS5_STRIP_H + 4) * sizeof(int);
 
+#if defined(__APPLE__) && !defined(DISO_SINGLE_THREAD)
+    __block int alloc_failed = 0;
+#else
     int alloc_failed = 0;
-    #pragma omp parallel for schedule(dynamic, 1)
-    for (int s = 0; s < nstrips; s++)
+#endif
+#if defined(__APPLE__) && !defined(DISO_SINGLE_THREAD)
+    int nworkers = nstrips < 8 ? nstrips : 8;
+    dispatch_apply((size_t)nworkers, dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^(size_t worker_id) {
+        int * planes = (int *)malloc(strip_bytes);
+        if (!planes)
+        {
+            alloc_failed = 1;
+            return;
+        }
+        for (int s = (int)worker_id; s < nstrips; s += nworkers)
+        {
+            int iy0 = s * CS5_STRIP_H;
+            int iy_end = iy0 + CS5_STRIP_H;
+            if (iy_end > ny) iy_end = ny;
+            cs5_process_strip(iy0, iy_end, nx, w, inp, out, raw2ev, ev2raw, black, white, planes);
+        }
+        free(planes);
+    });
+#elif defined(_OPENMP) && !defined(DISO_SINGLE_THREAD)
+    #pragma omp parallel
     {
         int * planes = (int *)malloc(strip_bytes);
-        if (!planes) { alloc_failed = 1; continue; }
-        int iy0 = s * CS5_STRIP_H;
-        int iy_end = iy0 + CS5_STRIP_H;
-        if (iy_end > ny) iy_end = ny;
-        cs5_process_strip(iy0, iy_end, nx, w, inp, out, raw2ev, ev2raw, black, white, planes);
+        if (!planes)
+        {
+            alloc_failed = 1;
+        }
+        #pragma omp for schedule(dynamic, 1)
+        for (int s = 0; s < nstrips; s++)
+        {
+            if (!planes) continue;
+            int iy0 = s * CS5_STRIP_H;
+            int iy_end = iy0 + CS5_STRIP_H;
+            if (iy_end > ny) iy_end = ny;
+            cs5_process_strip(iy0, iy_end, nx, w, inp, out, raw2ev, ev2raw, black, white, planes);
+        }
         free(planes);
     }
+#else
+    int * planes = (int *)malloc(strip_bytes);
+    if (!planes)
+    {
+        alloc_failed = 1;
+    }
+    else
+    {
+        for (int s = 0; s < nstrips; s++)
+        {
+            int iy0 = s * CS5_STRIP_H;
+            int iy_end = iy0 + CS5_STRIP_H;
+            if (iy_end > ny) iy_end = ny;
+            cs5_process_strip(iy0, iy_end, nx, w, inp, out, raw2ev, ev2raw, black, white, planes);
+        }
+        free(planes);
+    }
+#endif
     if (alloc_failed) chroma_smooth_5x5_ref(w, h, inp, out, raw2ev, ev2raw, black, white);
 }
