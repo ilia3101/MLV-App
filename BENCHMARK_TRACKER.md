@@ -99,10 +99,22 @@ Dual ISO frame computation from the test harness, without disk or encoder time. 
 
 ## 4. Output checks
 
-**5×5 chroma change (Dual ISO)**
+**Unified Fast Chroma Smoothing (`2x2`, `3x3`, `5x5`)**
 
-- 10 of 10 test cases give identical output to the reference code (FNV-1a 64-bit hash).
-- A full 4096×2160 frame (17,694,720 bytes) compared with `cmp`: 0 bytes differ.
+- **Dual ISO (32-bit pipeline):**
+  - **11 of 11 test cases** give identical output to the reference code (FNV-1a 64-bit hash).
+  - A full 4096×2160 frame (17,694,720 bytes) compared with `cmp`: 0 bytes differ.
+  - `chroma=3` (1280×720): 163.4 ms $\rightarrow$ **101.6 ms/frame** (Hash: `b2828383c69dab62` exact match).
+  - `chroma=2` (1280×720): 140.8 ms $\rightarrow$ **102.4 ms/frame** (Hash: `21a699cd620d7d95` exact match).
+
+- **Standard RAW (16-bit pipeline in `pixelproc.c`):**
+  - Full 5.4K frame (11.3 million pixels) tested against unpatched reference functions:
+    - `2x2`: `902db65711855157` (100% exact match)
+    - `3x3`: `396f5427af9a37f7` (100% exact match)
+    - `5x5`: `17714e1ab313b163` (100% exact match)
+
+- **DNG bit-packing (`dng.c`):**
+  - 14-bit and 12-bit unrolled bit packing match reference byte-for-byte across all pixel lengths 1..37 and full 5.4K frame (8.1× speedup).
 
 **Whole app against the original (clip C, ProRes 4444 exports, 5.4K, 7 s)**
 
