@@ -2161,7 +2161,11 @@ int diso_get_full20bit(struct raw_info raw_info, uint16_t * image_data, int dark
     
     double noise_std[4];
     double dark_noise, bright_noise, dark_noise_ev, bright_noise_ev;
+#ifdef DISO_VERBOSE_DIAGNOSTICS
     double noise_avg = compute_noise(raw_info, image_data, noise_std, &dark_noise, &bright_noise, &dark_noise_ev, &bright_noise_ev);
+#else
+    compute_noise(raw_info, image_data, noise_std, &dark_noise, &bright_noise, &dark_noise_ev, &bright_noise_ev);
+#endif
     
     /* promote from 14 to 20 bits (original raw buffer holds 14-bit values stored as uint16_t) */
     uint32_t * raw_buffer_32 = convert_to_20bit(raw_info, image_data);
@@ -2211,10 +2215,10 @@ int diso_get_full20bit(struct raw_info raw_info, uint16_t * image_data, int dark
     //~ printf("Exposure matching...\n");
     /* estimate ISO difference between bright and dark exposures */
     int white_darkened = white_bright;
+#ifdef DISO_VERBOSE_DIAGNOSTICS
     int expo_matched = match_exposures(raw_info, raw_buffer_32, dark_frame, iso1, iso2, auto_correction, ev_correction, black_delta, &white_darkened, is_bright);
     double corr_ev = ABS(*ev_correction);
 
-#ifdef DISO_VERBOSE_DIAGNOSTICS
     if (expo_matched)
     {
         printf("Exposures matched");
@@ -2223,6 +2227,9 @@ int diso_get_full20bit(struct raw_info raw_info, uint16_t * image_data, int dark
     {
         printf("Exposures not matched");
     }
+#else
+    match_exposures(raw_info, raw_buffer_32, dark_frame, iso1, iso2, auto_correction, ev_correction, black_delta, &white_darkened, is_bright);
+    double corr_ev = ABS(*ev_correction);
 #endif
     /* estimate dynamic range */
     double lowiso_dr = log2(white - black) - dark_noise_ev;
