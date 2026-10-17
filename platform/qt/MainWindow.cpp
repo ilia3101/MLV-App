@@ -33,6 +33,9 @@
 #include <math.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 #ifdef Q_OS_MACX
 #include "AvfLibWrapper.h"
@@ -3036,7 +3039,14 @@ void MainWindow::startExportCdng(QString fileName)
      * balancing in case some frames occasionally take longer
      * to process or some CPU cores are not fully available.
      */
-    // #pragma omp parallel for schedule(dynamic)
+    int maxThreads = QThread::idealThreadCount();
+    if( maxThreads > 4 ) maxThreads = 4;
+    if( maxThreads < 1 ) maxThreads = 1;
+
+    QElapsedTimer uiTimer;
+    uiTimer.start();
+
+    #pragma omp parallel for schedule(dynamic) num_threads(maxThreads)
     for( uint32_t frame = start; frame < end; frame++ )
     {
         if( exportError.load() ||
@@ -3089,9 +3099,15 @@ void MainWindow::startExportCdng(QString fileName)
         //Free DNG data struct
         freeDngObject( cinemaDng );
 
-        // Just to be safe, so QT won't crash. But there is probably a better way to make UI responsive.
-        #pragma omp critical
+        // Only the main GUI thread (thread 0) processes Qt events, throttled to 100ms
+#ifdef _OPENMP
+        if( omp_get_thread_num() == 0 && uiTimer.elapsed() >= 100 )
+#else
+        if( uiTimer.elapsed() >= 100 )
+#endif
         {
+            uiTimer.restart();
+            updateProgress();
             qApp->processEvents();
         }
     }
