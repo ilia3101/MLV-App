@@ -570,8 +570,8 @@ static void dng_fill_header(mlvObject_t * mlv_data, dngObject_t * dng_data, uint
 
 
         /* Focal resolution stuff */
-        int32_t * focal_resolution_x = camid->focal_resolution_x;
-        int32_t * focal_resolution_y = camid->focal_resolution_y;
+        int32_t focal_resolution_x[2] = { camid->focal_resolution_x[0], camid->focal_resolution_x[1] };
+        int32_t focal_resolution_y[2] = { camid->focal_resolution_y[0], camid->focal_resolution_y[1] };
 
         /* Picture aspect ratio */
         int manual_ar = 0;
