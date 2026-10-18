@@ -3039,14 +3039,35 @@ void MainWindow::startExportCdng(QString fileName)
      * balancing in case some frames occasionally take longer
      * to process or some CPU cores are not fully available.
      */
-    int maxThreads = QThread::idealThreadCount();
-    if( maxThreads > 4 ) maxThreads = 4;
-    if( maxThreads < 1 ) maxThreads = 1;
+    bool isDualIsoClip = (m_pMlvObject && m_pMlvObject->llrawproc && m_pMlvObject->llrawproc->dual_iso != 0);
+    int idealThreads = QThread::idealThreadCount();
+    if (idealThreads < 1) idealThreads = 4;
+
+    size_t systemRamMB = getMemorySize() / 1024 / 1024;
+    size_t exportRamBudgetMB = systemRamMB / 4; // allow export workers up to 25% of total RAM
+
+    size_t pixels = (size_t)getMlvWidth(m_pMlvObject) * (size_t)getMlvHeight(m_pMlvObject);
+    size_t frameMemMB = isDualIsoClip
+        ? ((pixels * 48) / (1024 * 1024) + 16)
+        : ((pixels * 6) / (1024 * 1024) + 8);
+
+    int ramSafeThreads = (int)(exportRamBudgetMB / (frameMemMB > 0 ? frameMemMB : 1));
+    int cDngThreads = ramSafeThreads;
+    if (cDngThreads > idealThreads) cDngThreads = idealThreads;
+    if (cDngThreads < 1) cDngThreads = 1;
+
+    if (isDualIsoClip)
+    {
+        // Cap outer Dual ISO frame workers at 8 (or 4 on <= 8GB RAM machines) to avoid
+        // N x N nested-thread oversubscription with inner amaze/GCD worker threads
+        int dualIsoCap = (systemRamMB <= 8192) ? 4 : 8;
+        if (cDngThreads > dualIsoCap) cDngThreads = dualIsoCap;
+    }
 
     QElapsedTimer uiTimer;
     uiTimer.start();
 
-    #pragma omp parallel for schedule(dynamic) num_threads(maxThreads)
+    #pragma omp parallel for schedule(dynamic) num_threads(cDngThreads)
     for( uint32_t frame = start; frame < end; frame++ )
     {
         if( exportError.load() ||
