@@ -39,16 +39,24 @@
 #define ABS(a) ((a) > 0 ? (a) : -(a))
 
 #define CHROMA_SMOOTH_2X2
+#define chroma_smooth_2x2 chroma_smooth_2x2_ref
 #include "chroma_smooth.c"
 #undef CHROMA_SMOOTH_2X2
+#undef chroma_smooth_2x2
 
 #define CHROMA_SMOOTH_3X3
+#define chroma_smooth_3x3 chroma_smooth_3x3_ref
 #include "chroma_smooth.c"
 #undef CHROMA_SMOOTH_3X3
+#undef chroma_smooth_3x3
 
 #define CHROMA_SMOOTH_5X5
+#define chroma_smooth_5x5 chroma_smooth_5x5_ref
 #include "chroma_smooth.c"
 #undef CHROMA_SMOOTH_5X5
+#undef chroma_smooth_5x5
+
+#include "chroma_smooth_fast5.c"
 
 #ifdef __WIN32
 #define FMT_SIZE "%u"
@@ -103,7 +111,7 @@ void free_luts(int * raw2ev, int * ev2raw)
 
 void chroma_smooth(int method, uint16_t * image_data, int width, int height, int black, int white, int * raw2ev, int * ev2raw)
 {
-    if(raw2ev == NULL) return;
+    if(raw2ev == NULL || ev2raw == NULL) return;
     
     uint16_t * buf = (uint16_t *)malloc(width*height*sizeof(uint16_t));
     if (!buf)

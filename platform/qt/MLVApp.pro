@@ -336,6 +336,7 @@ HEADERS += MainWindow.h \
     ../../src/mlv/llrawproc/wirth.h \
     ../../src/mlv_include.h \
     ../../src/mlv/llrawproc/dualiso.h \
+    ../../src/mlv/llrawproc/chroma_smooth_fast5.c \
     ../../src/mlv/camid/camera_id.h \
     ../../src/dng/dng.h \
     ../../src/dng/dng_tag_codes.h \

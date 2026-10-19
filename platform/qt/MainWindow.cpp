@@ -33,6 +33,9 @@
 #include <math.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 #ifdef Q_OS_MACX
 #include "AvfLibWrapper.h"
@@ -3036,7 +3039,35 @@ void MainWindow::startExportCdng(QString fileName)
      * balancing in case some frames occasionally take longer
      * to process or some CPU cores are not fully available.
      */
-    // #pragma omp parallel for schedule(dynamic)
+    bool isDualIsoClip = (m_pMlvObject && m_pMlvObject->llrawproc && m_pMlvObject->llrawproc->dual_iso != 0);
+    int idealThreads = QThread::idealThreadCount();
+    if (idealThreads < 1) idealThreads = 4;
+
+    size_t systemRamMB = getMemorySize() / 1024 / 1024;
+    size_t exportRamBudgetMB = systemRamMB / 4; // allow export workers up to 25% of total RAM
+
+    size_t pixels = (size_t)getMlvWidth(m_pMlvObject) * (size_t)getMlvHeight(m_pMlvObject);
+    size_t frameMemMB = isDualIsoClip
+        ? ((pixels * 48) / (1024 * 1024) + 16)
+        : ((pixels * 6) / (1024 * 1024) + 8);
+
+    int ramSafeThreads = (int)(exportRamBudgetMB / (frameMemMB > 0 ? frameMemMB : 1));
+    int cDngThreads = ramSafeThreads;
+    if (cDngThreads > idealThreads) cDngThreads = idealThreads;
+    if (cDngThreads < 1) cDngThreads = 1;
+
+    if (isDualIsoClip)
+    {
+        // Cap outer Dual ISO frame workers at 8 (or 4 on <= 8GB RAM machines) to avoid
+        // N x N nested-thread oversubscription with inner amaze/GCD worker threads
+        int dualIsoCap = (systemRamMB <= 8192) ? 4 : 8;
+        if (cDngThreads > dualIsoCap) cDngThreads = dualIsoCap;
+    }
+
+    QElapsedTimer uiTimer;
+    uiTimer.start();
+
+    #pragma omp parallel for schedule(dynamic) num_threads(cDngThreads)
     for( uint32_t frame = start; frame < end; frame++ )
     {
         if( exportError.load() ||
@@ -3089,9 +3120,15 @@ void MainWindow::startExportCdng(QString fileName)
         //Free DNG data struct
         freeDngObject( cinemaDng );
 
-        // Just to be safe, so QT won't crash. But there is probably a better way to make UI responsive.
-        #pragma omp critical
+        // Only the main GUI thread (thread 0) processes Qt events, throttled to 100ms
+#ifdef _OPENMP
+        if( omp_get_thread_num() == 0 && uiTimer.elapsed() >= 100 )
+#else
+        if( uiTimer.elapsed() >= 100 )
+#endif
         {
+            uiTimer.restart();
+            updateProgress();
             qApp->processEvents();
         }
     }
