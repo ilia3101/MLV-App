@@ -1337,13 +1337,19 @@ static inline void interpolate_wrapper(struct raw_info raw_info, uint32_t * raw_
 
     int wx = w + 16;
 
+    float * rawData_buf = (float *)calloc((size_t)h * wx, sizeof(float));
+    float * red_buf     = (float *)malloc((size_t)h * wx * sizeof(float));
+    float * green_buf   = (float *)malloc((size_t)h * wx * sizeof(float));
+    float * blue_buf    = (float *)malloc((size_t)h * wx * sizeof(float));
+
     #pragma omp parallel for if(USE_OMP) schedule(static)
     for (int i = 0; i < h; i++)
     {
-        rawData[i] = calloc(wx, sizeof *rawData[i]);
-        red[i]     = malloc(wx * sizeof *red[i]);
-        green[i]   = malloc(wx * sizeof *green[i]);
-        blue[i]    = malloc(wx * sizeof *blue[i]);
+        size_t offset = (size_t)i * wx;
+        rawData[i] = rawData_buf + offset;
+        red[i]     = red_buf + offset;
+        green[i]   = green_buf + offset;
+        blue[i]    = blue_buf + offset;
     }
 
     int* squeezed = calloc(h, sizeof(int));
@@ -1634,14 +1640,10 @@ static inline void interpolate_wrapper(struct raw_info raw_info, uint32_t * raw_
         }
     }
 
-    #pragma omp parallel for if(USE_OMP) schedule(static)
-    for (int i = 0; i < h; i++)
-    {
-        free(rawData[i]);
-        free(red[i]);
-        free(green[i]);
-        free(blue[i]);
-    }
+    free(rawData_buf);
+    free(red_buf);
+    free(green_buf);
+    free(blue_buf);
 
     free(squeezed); squeezed = 0;
     free(rawData); rawData = 0;
