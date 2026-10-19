@@ -740,7 +740,7 @@ static void dng_fill_header(mlvObject_t * mlv_data, dngObject_t * dng_data, uint
             {tcISOSpeedRatings,             ttShort,    1,      mlv_data->EXPO.isoValue},
             {tcSensitivityType,             ttShort,    1,      stISOSpeed},
             {tcExifVersion,                 ttUndefined,4,      0x30333230},
-            {tcSubjectDistance,             ttRational, RATIONAL_ENTRY2(mlv_data->LENS.focalDist, 1, header, &data_offset)},
+            {tcSubjectDistance,             ttRational, RATIONAL_ENTRY2(mlv_data->LENS.focalDist, 100, header, &data_offset)},
             {tcFocalLength,                 ttRational, RATIONAL_ENTRY2(mlv_data->LENS.focalLength, 1, header, &data_offset)},
             {tcFocalPlaneXResolutionExif,   ttRational, RATIONAL_ENTRY(focal_resolution_x, header, &data_offset, 2)},
             {tcFocalPlaneYResolutionExif,   ttRational, RATIONAL_ENTRY(focal_resolution_x, header, &data_offset, 2)},

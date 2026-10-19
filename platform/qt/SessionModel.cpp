@@ -14,7 +14,7 @@
 SessionModel::SessionModel(QObject *parent) : QAbstractItemModel(parent), m_activeRow( -1 )
 {
     m_headers = QStringList();
-    m_headers << "Name" << "Path" << "Camera" << "Lens" << "Resolution" << "Duration" << "Frames" << "Frame Rate" << "Focal Length" << "Shutter" << "Aperture" << "ISO" << "DualISO" << "Bit Depth" << "Date / Time" << "Audio" << "Size" << "Data Rate";
+    m_headers << "Name" << "Path" << "Camera" << "Lens" << "Resolution" << "Duration" << "Frames" << "Frame Rate" << "Focal Length" << "Focus Distance" << "Shutter" << "Aperture" << "ISO" << "DualISO" << "Bit Depth" << "Date / Time" << "Audio" << "Size" << "Data Rate";
 }
 
 //Read data for the session table / list

@@ -945,6 +945,12 @@ int MainWindow::openMlv( QString fileName )
         audioText = QString( "-" );
     }
 
+    //Focus distance from LENS block. Magic Lantern stores it in cm (0 = not reported, 65535 = infinity)
+    QString focusDistStr = QString( "-" );
+    uint16_t focusDist = getMlvFocalDist( m_pMlvObject );
+    if( focusDist == 65535 ) focusDistStr = QString( "Infinity" );
+    else if( focusDist > 0 ) focusDistStr = QString( "%1 cm" ).arg( focusDist );
+
     ACTIVE_CLIP->updateMetadata( QString( "%1" ).arg( (char*)getMlvCamera( m_pMlvObject ) ),
                                  QString( "%1" ).arg( (char*)getMlvLens( m_pMlvObject ) ),
                                  QString( "%1 × %2 pixels" ).arg( (int)getMlvWidth( m_pMlvObject ) ).arg( (int)getMlvHeight( m_pMlvObject ) ),
@@ -952,6 +958,7 @@ int MainWindow::openMlv( QString fileName )
                                  QString( "%1" ).arg( (int)getMlvFrames( m_pMlvObject ) ),
                                  QString( "%1 fps" ).arg( getMlvFramerate( m_pMlvObject ) ),
                                  QString( "%1 mm" ).arg( getMlvFocalLength( m_pMlvObject ) ),
+                                 QString( "%1" ).arg( focusDistStr ),
                                  QString( "1/%1 s,  %2 deg,  %3 µs" ).arg( (uint16_t)(shutterSpeed + 0.5f) ).arg( (uint16_t)(shutterAngle + 0.5f) ).arg( getMlvShutter( m_pMlvObject ) ),
                                  QString( "ƒ/%1" ).arg( getMlvAperture( m_pMlvObject ) / 100.0, 0, 'f', 1 ),
                                  isoInfo,
@@ -966,6 +973,7 @@ int MainWindow::openMlv( QString fileName )
                                            .arg( getMlvTmSec(m_pMlvObject), 2, 10, QChar('0') ),
                                  audioText );
 
+
     //Set Clip Info to Dialog
     m_pInfoDialog->ui->tableWidget->item( 0, 1 )->setText( ACTIVE_CLIP->getElement( 2 ).toString() );
     m_pInfoDialog->ui->tableWidget->item( 1, 1 )->setText( ACTIVE_CLIP->getElement( 3 ).toString() );
@@ -976,12 +984,13 @@ int MainWindow::openMlv( QString fileName )
     m_pInfoDialog->ui->tableWidget->item( 6, 1 )->setText( ACTIVE_CLIP->getElement( 8 ).toString() );
     m_pInfoDialog->ui->tableWidget->item( 7, 1 )->setText( ACTIVE_CLIP->getElement( 9 ).toString() );
     m_pInfoDialog->ui->tableWidget->item( 8, 1 )->setText( ACTIVE_CLIP->getElement( 10 ).toString() );
-    m_pInfoDialog->ui->tableWidget->item( 9, 1 )->setText( dualIsoInfo );
-    m_pInfoDialog->ui->tableWidget->item( 10, 1 )->setText( ACTIVE_CLIP->getElement( 13 ).toString() );
-    m_pInfoDialog->ui->tableWidget->item( 11, 1 )->setText( QString( "%1 black,  %2 white" ).arg( getMlvOriginalBlackLevel( m_pMlvObject ) ).arg( getMlvOriginalWhiteLevel( m_pMlvObject ) ) );
-    m_pInfoDialog->ui->tableWidget->item( 12, 1 )->setText( ACTIVE_CLIP->getElement( 14 ).toString() );
+    m_pInfoDialog->ui->tableWidget->item( 9, 1 )->setText( ACTIVE_CLIP->getElement( 11 ).toString() );
+    m_pInfoDialog->ui->tableWidget->item( 10, 1 )->setText( dualIsoInfo );
+    m_pInfoDialog->ui->tableWidget->item( 11, 1 )->setText( ACTIVE_CLIP->getElement( 14 ).toString() );
+    m_pInfoDialog->ui->tableWidget->item( 12, 1 )->setText( QString( "%1 black,  %2 white" ).arg( getMlvOriginalBlackLevel( m_pMlvObject ) ).arg( getMlvOriginalWhiteLevel( m_pMlvObject ) ) );
     m_pInfoDialog->ui->tableWidget->item( 13, 1 )->setText( ACTIVE_CLIP->getElement( 15 ).toString() );
-    m_pInfoDialog->ui->tableWidget->item( 14, 1 )->setText( ACTIVE_CLIP->getElement( 16 ).toString() + ",  " + ACTIVE_CLIP->getElement( 17 ).toString() );
+    m_pInfoDialog->ui->tableWidget->item( 14, 1 )->setText( ACTIVE_CLIP->getElement( 16 ).toString() );
+    m_pInfoDialog->ui->tableWidget->item( 15, 1 )->setText( ACTIVE_CLIP->getElement( 17 ).toString() + ",  " + ACTIVE_CLIP->getElement( 18 ).toString() );
 
     resultingResolution();
 
@@ -1819,6 +1828,12 @@ void MainWindow::startExportPipe(QString fileName)
             break;
         case ReceiptSettings::AHD:
             setMlvUseAhdDebayer( m_pMlvObject );
+            break;
+        case ReceiptSettings::RCD:
+            setMlvUseRcdDebayer( m_pMlvObject );
+            break;
+        case ReceiptSettings::DCB:
+            setMlvUseDcbDebayer( m_pMlvObject );
             break;
         default:
             break;
@@ -3276,6 +3291,12 @@ void MainWindow::startExportAVFoundation(QString fileName)
             break;
         case ReceiptSettings::AHD:
             setMlvUseAhdDebayer( m_pMlvObject );
+            break;
+        case ReceiptSettings::RCD:
+            setMlvUseRcdDebayer( m_pMlvObject );
+            break;
+        case ReceiptSettings::DCB:
+            setMlvUseDcbDebayer( m_pMlvObject );
             break;
         default:
             break;

@@ -16,7 +16,7 @@
 class ClipInformation
 {
 public:
-    ClipInformation(QString name, QString path, QString camera, QString lens, QString resolution, QString duration, QString frames, QString frameRate, QString focalLength, QString shutter, QString aperture, QString iso, QString dualIso, QString bitDepth, QString dateTime, QString audio, QColor backgroundColor);
+    ClipInformation(QString name, QString path, QString camera, QString lens, QString resolution, QString duration, QString frames, QString frameRate, QString focalLength, QString focusDistance, QString shutter, QString aperture, QString iso, QString dualIso, QString bitDepth, QString dateTime, QString audio, QColor backgroundColor);
     ClipInformation(QString name, QString path);
 
     ~ClipInformation();
@@ -55,7 +55,7 @@ public:
         return m_pReceipt;
     }
 
-    void updateMetadata(QString camera, QString lens, QString resolution, QString duration, QString frames, QString frameRate, QString focalLength, QString shutter, QString aperture, QString iso, QString dualIso, QString bitDepth, QString dateTime, QString audio);
+    void updateMetadata(QString camera, QString lens, QString resolution, QString duration, QString frames, QString frameRate, QString focalLength, QString focusDistance, QString shutter, QString aperture, QString iso, QString dualIso, QString bitDepth, QString dateTime, QString audio);
 
 private:
     quint64 clipSize() const;
@@ -69,6 +69,7 @@ private:
     QString m_frames;
     QString m_frameRate;
     QString m_focalLength;
+    QString m_focusDistance;
     QString m_shutter;
     QString m_aperture;
     QString m_iso;

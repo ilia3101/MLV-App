@@ -19,6 +19,7 @@ ClipInformation::ClipInformation(QString name,
                                  QString frames,
                                  QString frameRate,
                                  QString focalLength,
+                                 QString focusDistance,
                                  QString shutter,
                                  QString aperture,
                                  QString iso,
@@ -36,6 +37,7 @@ ClipInformation::ClipInformation(QString name,
     m_frames( frames ),
     m_frameRate( frameRate ),
     m_focalLength( focalLength ),
+    m_focusDistance( focusDistance ),
     m_shutter( shutter ),
     m_aperture( aperture ),
     m_iso( iso ),
@@ -64,6 +66,7 @@ ClipInformation::ClipInformation(QString name,
     m_frames( "-" ),
     m_frameRate( "-" ),
     m_focalLength( "-" ),
+    m_focusDistance( "-" ),
     m_shutter( "-" ),
     m_aperture( "-" ),
     m_iso( "-" ),
@@ -120,22 +123,24 @@ QVariant ClipInformation::getElement(int element) const
     case 8:
         return m_focalLength;
     case 9:
-        return m_shutter;
+        return m_focusDistance;
     case 10:
-        return m_aperture;
+        return m_shutter;
     case 11:
-        return m_iso;
+        return m_aperture;
     case 12:
-        return m_dualIso;
+        return m_iso;
     case 13:
-        return m_bitDepth;
+        return m_dualIso;
     case 14:
-        return m_dateTime;
+        return m_bitDepth;
     case 15:
+        return m_dateTime;
+    case 16:
         return m_audio;
-    case 16: //size
+    case 17: //size
         return QString( "%1 MB" ).arg( clipSize() / 1024 / 1024 );
-    case 17: //datarate
+    case 18: //datarate
         if( m_frames == "-" || m_frameRate == "-" || 0.0 == m_frames.toDouble() || 0.0 == frameRate.toDouble() ) return QString( "-" );
         else return QString( "%1 MB/s" ).arg( (double)clipSize() / ( m_frames.toDouble() / frameRate.toDouble() ) / 1024 / 1024, 0, 'f', 2 );
     default:
@@ -176,24 +181,27 @@ void ClipInformation::setElement(int element, QVariant value)
         m_focalLength = value.toString();
         break;
     case 9:
-        m_shutter = value.toString();
+        m_focusDistance = value.toString();
         break;
     case 10:
-        m_aperture = value.toString();
+        m_shutter = value.toString();
         break;
     case 11:
-        m_iso = value.toString();
+        m_aperture = value.toString();
         break;
     case 12:
-        m_dualIso = value.toString();
+        m_iso = value.toString();
         break;
     case 13:
-        m_bitDepth = value.toString();
+        m_dualIso = value.toString();
         break;
     case 14:
-        m_dateTime = value.toString();
+        m_bitDepth = value.toString();
         break;
     case 15:
+        m_dateTime = value.toString();
+        break;
+    case 16:
         m_audio = value.toString();
         break;
     default:
@@ -203,7 +211,7 @@ void ClipInformation::setElement(int element, QVariant value)
 
 //Update missing metadata to the class
 void ClipInformation::updateMetadata(QString camera, QString lens, QString resolution, QString duration,
-                                     QString frames, QString frameRate, QString focalLength, QString shutter,
+                                     QString frames, QString frameRate, QString focalLength, QString focusDistance, QString shutter,
                                      QString aperture, QString iso, QString dualIso, QString bitDepth, QString dateTime,
                                      QString audio)
 {
@@ -214,6 +222,7 @@ void ClipInformation::updateMetadata(QString camera, QString lens, QString resol
     m_frames = frames;
     m_frameRate = frameRate;
     m_focalLength = focalLength;
+    m_focusDistance = focusDistance;
     m_shutter = shutter;
     m_aperture = aperture;
     m_iso = iso;
