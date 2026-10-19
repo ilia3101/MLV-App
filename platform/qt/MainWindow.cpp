@@ -2790,24 +2790,28 @@ void MainWindow::startExportPipe(QString fileName)
                 uint32_t totalClipFrames = cutOutFrame - cutInFrame;
                 if( statusTimer.elapsed() >= 100 || currentProgress == totalClipFrames )
                 {
-                    uint32_t framesToDo = totalFrames - i + ( m_exportQueue.first()->cutIn() - 1 ) - 1;
+                    statusTimer.restart();
+                    if( !( m_exportQueue.first()->vidStabEnabled() && m_codecProfile == CODEC_H264 ) )
+                    {
+                        uint32_t framesToDo = totalFrames - i + ( m_exportQueue.first()->cutIn() - 1 ) - 1;
 
-                    m_pStatusDialog->ui->progressBar->setValue( i - ( m_exportQueue.first()->cutIn() - 1 ) + 1 );
-                    m_pStatusDialog->totalProgressBar( framesToDo );
-                    m_pStatusDialog->drawTimeFromToDoFrames( framesToDo );
+                        m_pStatusDialog->ui->progressBar->setValue( i - ( m_exportQueue.first()->cutIn() - 1 ) + 1 );
+                        m_pStatusDialog->totalProgressBar( framesToDo );
+                        m_pStatusDialog->drawTimeFromToDoFrames( framesToDo );
+                    }
+                    else
+                    {
+                        uint32_t framesToDo = totalFrames - ( ( totalFrames + i - ( m_exportQueue.first()->cutIn() - 1 ) + 1 ) >> 1 );
+
+                        m_pStatusDialog->ui->progressBar->setValue( ( totalFrames + i - ( m_exportQueue.first()->cutIn() - 1 ) + 1 ) >> 1 );
+                        m_pStatusDialog->totalProgressBar( framesToDo );
+                        m_pStatusDialog->drawTimeFromToDoFrames( framesToDo );
+                    }
+                    qApp->processEvents();
+
+                    //Check disk space
+                    checkDiskFull( fileName );
                 }
-                else
-                {
-                    uint32_t framesToDo = totalFrames - ( ( totalFrames + i - ( m_exportQueue.first()->cutIn() - 1 ) + 1 ) >> 1 );
-
-                    m_pStatusDialog->ui->progressBar->setValue( ( totalFrames + i - ( m_exportQueue.first()->cutIn() - 1 ) + 1 ) >> 1 );
-                    m_pStatusDialog->totalProgressBar( framesToDo );
-                    m_pStatusDialog->drawTimeFromToDoFrames( framesToDo );
-                }
-                qApp->processEvents();
-
-                //Check disk space
-                checkDiskFull( fileName );
 
                 //Abort pressed? -> End the loop
                 if( m_exportAbortPressed && confirmAbort() ) break;
@@ -3532,16 +3536,23 @@ void MainWindow::startExportAVFoundation(QString fileName)
             }
         }
 
-        uint32_t framesToDo = totalFrames - frame + ( m_exportQueue.first()->cutIn() - 1 ) - 1;
+        //Set Status (throttled to ~100ms intervals to keep UI and abort responsive)
+        uint64_t currentProgress = frame - cutInFrame + 1;
+        uint64_t totalClipFrames = cutOutFrame - cutInFrame;
+        if( statusTimer.elapsed() >= 100 || currentProgress == totalClipFrames )
+        {
+            statusTimer.restart();
+            uint32_t framesToDo = totalFrames - frame + ( m_exportQueue.first()->cutIn() - 1 ) - 1;
 
-        //Set Status
-        m_pStatusDialog->ui->progressBar->setValue( frame - ( m_exportQueue.first()->cutIn() - 1 ) + 1 );
-        m_pStatusDialog->totalProgressBar( framesToDo );
-        m_pStatusDialog->drawTimeFromToDoFrames( framesToDo );
-        qApp->processEvents();
+            //Set Status
+            m_pStatusDialog->ui->progressBar->setValue( frame - ( m_exportQueue.first()->cutIn() - 1 ) + 1 );
+            m_pStatusDialog->totalProgressBar( framesToDo );
+            m_pStatusDialog->drawTimeFromToDoFrames( framesToDo );
+            qApp->processEvents();
 
-        //Check disk space
-        checkDiskFull( fileName );
+            //Check disk space
+            checkDiskFull( fileName );
+        }
 
         //Abort pressed? -> End the loop
         if( m_exportAbortPressed && confirmAbort() ) break;
