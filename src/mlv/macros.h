@@ -48,6 +48,7 @@
 #define getMlvIso(video) (video)->EXPO.isoValue
 #define getMlv2ndIso(video) (video)->DISO.isoValue
 #define getMlvFocalLength(video) (video)->LENS.focalLength
+#define getMlvFocalDist(video) (video)->LENS.focalDist
 #define getMlvShutter(video) (video)->EXPO.shutterValue
 #define getMlvAperture(video) (video)->LENS.aperture
 #define doesMlvHaveAudio(video) (((video)->MLVI.audioClass) && ((video)->audios) && ((video)->WAVI.channels != 0))

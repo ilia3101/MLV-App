@@ -31,6 +31,9 @@
 #include <math.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 #ifdef Q_OS_MACX
 #include "AvfLibWrapper.h"
@@ -945,6 +948,12 @@ int MainWindow::openMlv( QString fileName )
         audioText = QString( "-" );
     }
 
+    //Focus distance from LENS block. Magic Lantern stores it in cm (0 = not reported, 65535 = infinity)
+    QString focusDistStr = QString( "-" );
+    uint16_t focusDist = getMlvFocalDist( m_pMlvObject );
+    if( focusDist == 65535 ) focusDistStr = QString( "Infinity" );
+    else if( focusDist > 0 ) focusDistStr = QString( "%1 cm" ).arg( focusDist );
+
     ACTIVE_CLIP->updateMetadata( QString( "%1" ).arg( (char*)getMlvCamera( m_pMlvObject ) ),
                                  QString( "%1" ).arg( (char*)getMlvLens( m_pMlvObject ) ),
                                  QString( "%1 × %2 pixels" ).arg( (int)getMlvWidth( m_pMlvObject ) ).arg( (int)getMlvHeight( m_pMlvObject ) ),
@@ -952,6 +961,7 @@ int MainWindow::openMlv( QString fileName )
                                  QString( "%1" ).arg( (int)getMlvFrames( m_pMlvObject ) ),
                                  QString( "%1 fps" ).arg( getMlvFramerate( m_pMlvObject ) ),
                                  QString( "%1 mm" ).arg( getMlvFocalLength( m_pMlvObject ) ),
+                                 QString( "%1" ).arg( focusDistStr ),
                                  QString( "1/%1 s,  %2 deg,  %3 µs" ).arg( (uint16_t)(shutterSpeed + 0.5f) ).arg( (uint16_t)(shutterAngle + 0.5f) ).arg( getMlvShutter( m_pMlvObject ) ),
                                  QString( "ƒ/%1" ).arg( getMlvAperture( m_pMlvObject ) / 100.0, 0, 'f', 1 ),
                                  isoInfo,
@@ -966,6 +976,7 @@ int MainWindow::openMlv( QString fileName )
                                            .arg( getMlvTmSec(m_pMlvObject), 2, 10, QChar('0') ),
                                  audioText );
 
+
     //Set Clip Info to Dialog
     m_pInfoDialog->ui->tableWidget->item( 0, 1 )->setText( ACTIVE_CLIP->getElement( 2 ).toString() );
     m_pInfoDialog->ui->tableWidget->item( 1, 1 )->setText( ACTIVE_CLIP->getElement( 3 ).toString() );
@@ -976,12 +987,13 @@ int MainWindow::openMlv( QString fileName )
     m_pInfoDialog->ui->tableWidget->item( 6, 1 )->setText( ACTIVE_CLIP->getElement( 8 ).toString() );
     m_pInfoDialog->ui->tableWidget->item( 7, 1 )->setText( ACTIVE_CLIP->getElement( 9 ).toString() );
     m_pInfoDialog->ui->tableWidget->item( 8, 1 )->setText( ACTIVE_CLIP->getElement( 10 ).toString() );
-    m_pInfoDialog->ui->tableWidget->item( 9, 1 )->setText( dualIsoInfo );
-    m_pInfoDialog->ui->tableWidget->item( 10, 1 )->setText( ACTIVE_CLIP->getElement( 13 ).toString() );
-    m_pInfoDialog->ui->tableWidget->item( 11, 1 )->setText( QString( "%1 black,  %2 white" ).arg( getMlvOriginalBlackLevel( m_pMlvObject ) ).arg( getMlvOriginalWhiteLevel( m_pMlvObject ) ) );
-    m_pInfoDialog->ui->tableWidget->item( 12, 1 )->setText( ACTIVE_CLIP->getElement( 14 ).toString() );
+    m_pInfoDialog->ui->tableWidget->item( 9, 1 )->setText( ACTIVE_CLIP->getElement( 11 ).toString() );
+    m_pInfoDialog->ui->tableWidget->item( 10, 1 )->setText( dualIsoInfo );
+    m_pInfoDialog->ui->tableWidget->item( 11, 1 )->setText( ACTIVE_CLIP->getElement( 14 ).toString() );
+    m_pInfoDialog->ui->tableWidget->item( 12, 1 )->setText( QString( "%1 black,  %2 white" ).arg( getMlvOriginalBlackLevel( m_pMlvObject ) ).arg( getMlvOriginalWhiteLevel( m_pMlvObject ) ) );
     m_pInfoDialog->ui->tableWidget->item( 13, 1 )->setText( ACTIVE_CLIP->getElement( 15 ).toString() );
-    m_pInfoDialog->ui->tableWidget->item( 14, 1 )->setText( ACTIVE_CLIP->getElement( 16 ).toString() + ",  " + ACTIVE_CLIP->getElement( 17 ).toString() );
+    m_pInfoDialog->ui->tableWidget->item( 14, 1 )->setText( ACTIVE_CLIP->getElement( 16 ).toString() );
+    m_pInfoDialog->ui->tableWidget->item( 15, 1 )->setText( ACTIVE_CLIP->getElement( 17 ).toString() + ",  " + ACTIVE_CLIP->getElement( 18 ).toString() );
 
     resultingResolution();
 
@@ -1819,6 +1831,12 @@ void MainWindow::startExportPipe(QString fileName)
             break;
         case ReceiptSettings::AHD:
             setMlvUseAhdDebayer( m_pMlvObject );
+            break;
+        case ReceiptSettings::RCD:
+            setMlvUseRcdDebayer( m_pMlvObject );
+            break;
+        case ReceiptSettings::DCB:
+            setMlvUseDcbDebayer( m_pMlvObject );
             break;
         default:
             break;
@@ -3005,7 +3023,35 @@ void MainWindow::startExportCdng(QString fileName)
      * balancing in case some frames occasionally take longer
      * to process or some CPU cores are not fully available.
      */
-    #pragma omp parallel for schedule(dynamic)
+    bool isDualIsoClip = (m_pMlvObject && m_pMlvObject->llrawproc && m_pMlvObject->llrawproc->dual_iso != 0);
+    int idealThreads = QThread::idealThreadCount();
+    if (idealThreads < 1) idealThreads = 4;
+
+    size_t systemRamMB = getMemorySize() / 1024 / 1024;
+    size_t exportRamBudgetMB = systemRamMB / 4; // allow export workers up to 25% of total RAM
+
+    size_t pixels = (size_t)getMlvWidth(m_pMlvObject) * (size_t)getMlvHeight(m_pMlvObject);
+    size_t frameMemMB = isDualIsoClip
+        ? ((pixels * 48) / (1024 * 1024) + 16)
+        : ((pixels * 6) / (1024 * 1024) + 8);
+
+    int ramSafeThreads = (int)(exportRamBudgetMB / (frameMemMB > 0 ? frameMemMB : 1));
+    int cDngThreads = ramSafeThreads;
+    if (cDngThreads > idealThreads) cDngThreads = idealThreads;
+    if (cDngThreads < 1) cDngThreads = 1;
+
+    if (isDualIsoClip)
+    {
+        // Cap outer Dual ISO frame workers at 8 (or 4 on <= 8GB RAM machines) to avoid
+        // N x N nested-thread oversubscription with inner amaze/GCD worker threads
+        int dualIsoCap = (systemRamMB <= 8192) ? 4 : 8;
+        if (cDngThreads > dualIsoCap) cDngThreads = dualIsoCap;
+    }
+
+    QElapsedTimer uiTimer;
+    uiTimer.start();
+
+    #pragma omp parallel for schedule(dynamic) num_threads(cDngThreads)
     for( uint32_t frame = start; frame < end; frame++ )
     {
         if( exportError.load() ||
@@ -3058,9 +3104,15 @@ void MainWindow::startExportCdng(QString fileName)
         //Free DNG data struct
         freeDngObject( cinemaDng );
 
-        // Just to be safe, so QT won't crash. But there is probably a better way to make UI responsive.
-        #pragma omp critical
+        // Only the main GUI thread (thread 0) processes Qt events, throttled to 100ms
+#ifdef _OPENMP
+        if( omp_get_thread_num() == 0 && uiTimer.elapsed() >= 100 )
+#else
+        if( uiTimer.elapsed() >= 100 )
+#endif
         {
+            uiTimer.restart();
+            updateProgress();
             qApp->processEvents();
         }
     }
@@ -3276,6 +3328,12 @@ void MainWindow::startExportAVFoundation(QString fileName)
             break;
         case ReceiptSettings::AHD:
             setMlvUseAhdDebayer( m_pMlvObject );
+            break;
+        case ReceiptSettings::RCD:
+            setMlvUseRcdDebayer( m_pMlvObject );
+            break;
+        case ReceiptSettings::DCB:
+            setMlvUseDcbDebayer( m_pMlvObject );
             break;
         default:
             break;
