@@ -29,13 +29,24 @@ PixelMapListDialog::PixelMapListDialog(QWidget *parent, MapType mapType) :
     ui(new Ui::PixelMapListDialog)
 {
     ui->setupUi(this);
-    setWindowFlags( Qt::Dialog | Qt::WindowTitleHint | Qt::WindowCloseButtonHint | Qt::WindowStaysOnTopHint );
+    setWindowFlags( Qt::Tool | Qt::WindowCloseButtonHint | Qt::CustomizeWindowHint | Qt::WindowStaysOnTopHint );
 
     m_mapType = mapType;
     ui->labelMissing->setVisible( false );
+    
+    update();
+}
 
+PixelMapListDialog::~PixelMapListDialog()
+{
+    delete ui;
+}
+
+void PixelMapListDialog::update()
+{
     QDir directory( QCoreApplication::applicationDirPath() );
     QStringList fpms;
+
     if( m_mapType == FPM )
     {
         fpms = directory.entryList( QStringList() << "*.fpm" << "*.FPM", QDir::Files );
@@ -46,6 +57,8 @@ PixelMapListDialog::PixelMapListDialog(QWidget *parent, MapType mapType) :
         fpms = directory.entryList( QStringList() << "*.bpm" << "*.BPM", QDir::Files );
         setWindowTitle( "Installed Bad Pixel Maps" );
     }
+
+    ui->treeWidget->clear();
 
     //For all maps
     while( fpms.count() > 0 )
@@ -79,11 +92,6 @@ PixelMapListDialog::PixelMapListDialog(QWidget *parent, MapType mapType) :
     }
 }
 
-PixelMapListDialog::~PixelMapListDialog()
-{
-    delete ui;
-}
-
 //Mark used fpm in tree structure
 void PixelMapListDialog::showCurrentMap( mlvObject_t *pMlvObject )
 {
@@ -96,20 +104,30 @@ void PixelMapListDialog::showCurrentMap( mlvObject_t *pMlvObject )
                                            .arg( pMlvObject->RAWI.raw_info.height )
                                            .arg( fileType );
 
+    // QPalette palette = QApplication::palette();
+
+    // QColor highlight = palette.color( QPalette::Highlight );
+    // QColor text = palette.color( QPalette::Text );
+    // double lightness = 0.5 - (0.5 * text.lightness() / 255);
+    // QColor inverted = QColor::fromHsl( (highlight.hslHue() + 180) % 360, highlight.hslSaturation(), (1.0 - lightness) * highlight.lightness() + lightness * text.lightness() );
+
     bool foundMap = false;
     for( int i = 0; i < ui->treeWidget->topLevelItemCount(); i++ )
     {
         for( int j = 0; j < ui->treeWidget->topLevelItem( i )->childCount(); j++ )
         {
-            if( ui->treeWidget->topLevelItem( i )->child( j )->text( 0 ) == name )
+            bool found = ui->treeWidget->topLevelItem( i )->child( j )->text( 0 ) == name;
+
+            QFont f = ui->treeWidget->topLevelItem( i )->child( j )->font(i);
+            f.setBold( found );
+
+            ui->treeWidget->topLevelItem( i )->child( j )->setFont( 0, f );
+            // ui->treeWidget->topLevelItem( i )->child( j )->setForeground( 0, found ? inverted : QBrush() );
+
+            if( found )
             {
-                ui->treeWidget->expandItem( ui->treeWidget->topLevelItem( i ) );
                 foundMap = true;
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-                ui->treeWidget->topLevelItem( i )->child( j )->setTextColor( 0, Qt::green );
-#else
-                ui->treeWidget->topLevelItem( i )->child( j )->setForeground( 0, Qt::green );
-#endif
+                ui->treeWidget->topLevelItem( i )->setExpanded( true );
             }
         }
     }

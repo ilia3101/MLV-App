@@ -21,7 +21,7 @@ public:
     HueVsDiagram(QWidget* parent = Q_NULLPTR);
     ~HueVsDiagram();
     void setProcessingObject( processingObject_t *processing );
-    void paintElement(void);
+    void paintElement(bool frameChanged = true);
     void setFrameChangedPointer( bool *pFrameChanged );
     void resetLine( void );
     void resetLineDefaultPoints(void);
@@ -31,9 +31,8 @@ public:
     void setDiagramType( DiagramType type );
 
 private:
-    QImage *m_pImage;
     QPoint m_cursor;
-    uint16_t m_width;
+    uint16_t m_height;
     bool m_pointSelected;
     bool m_firstPoint;
     bool m_lastPoint;
@@ -41,7 +40,6 @@ private:
     bool m_LoadAll;
     DiagramType m_diagramType;
     uint8_t m_activeLine;
-    uint16_t m_size;
     QVector<QPointF> m_whiteLine;
     processingObject_t *m_pProcessing;
 

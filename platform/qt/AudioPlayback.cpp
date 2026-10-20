@@ -10,6 +10,7 @@
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 #include <QAudioFormat>
 #endif
+#include <QMediaDevices>
 #include <QDebug>
 
 //Constructor
@@ -18,6 +19,9 @@ AudioPlayback::AudioPlayback( QObject *parent )
 {
     m_audioEngineInitialized = false;
     m_audioEngineRunning = false;
+
+    QMediaDevices *mediaDevices = new QMediaDevices( this );
+    connect( mediaDevices, &QMediaDevices::audioOutputsChanged, this, &AudioPlayback::outputDeviceChanged );
 }
 
 //Destructor
@@ -40,18 +44,17 @@ void AudioPlayback::initAudioEngine( mlvObject_t *pMlvObject )
     if( m_audioEngineInitialized ) resetAudioEngine();
 
     //Set up the format, eg.
-    QAudioFormat format;
-    format.setSampleRate( m_audioSampleRate );
-    format.setChannelCount( m_audioChannels );
+    m_audioFormat.setSampleRate( m_audioSampleRate );
+    m_audioFormat.setChannelCount( m_audioChannels );
  #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-    format.setSampleSize( 16 );
-    format.setCodec( "audio/pcm" );
-    format.setByteOrder( QAudioFormat::LittleEndian );
-    format.setSampleType( QAudioFormat::SignedInt );
-    m_pAudioOutput = new QAudioOutput( format, this );
+    m_audioFormat.setSampleSize( 16 );
+    m_audioFormat.setCodec( "audio/pcm" );
+    m_audioFormat.setByteOrder( QAudioFormat::LittleEndian );
+    m_audioFormat.setSampleType( QAudioFormat::SignedInt );
+    m_pAudioOutput = new QAudioOutput( m_audioFormat, this );
 #else
-    format.setSampleFormat( QAudioFormat::Int16 );
-    m_pAudioOutput = new QAudioSink(format, (QObject*)this );
+    m_audioFormat.setSampleFormat( QAudioFormat::Int16 );
+    m_pAudioOutput = new QAudioSink( m_audioFormat, this );
 #endif
 
     m_pByteArrayAudio = new QByteArray();
@@ -66,13 +69,38 @@ void AudioPlayback::initAudioEngine( mlvObject_t *pMlvObject )
     m_pAudioOutput->setBufferSize( 131072 );
 #elif defined(Q_OS_WIN)
     m_pAudioOutput->setBufferSize( 32768 );
-#else //Q_OS_OSX
+#else //Q_OS_MACOS
     m_pAudioOutput->setBufferSize( 524288 );
 #endif
     m_pAudioOutput->setVolume( 1.0 );
     m_pAudioOutput->suspend();
 
     m_audioEngineInitialized = true;
+}
+
+void AudioPlayback::outputDeviceChanged()
+{
+    if( !m_audioEngineInitialized ) return;
+
+    bool wasPlaying = m_audioEngineRunning;
+    qint64 position = m_pAudioStream->device()->pos();
+
+    stop();
+
+    delete m_pAudioOutput;
+    m_pAudioOutput = new QAudioSink( m_audioFormat, this );
+
+    m_pAudioStream->device()->seek( position );
+#ifdef Q_OS_LINUX
+    m_pAudioOutput->setBufferSize( 131072 );
+#elif defined(Q_OS_WIN)
+    m_pAudioOutput->setBufferSize( 32768 );
+#else //Q_OS_MACOS
+    m_pAudioOutput->setBufferSize( 524288 );
+#endif
+    m_pAudioOutput->setVolume( 1.0 );
+
+    if( wasPlaying ) play();
 }
 
 //Unload the audio of a mlv

@@ -18,10 +18,10 @@ void DoubleClickLabel::mouseDoubleClickEvent(QMouseEvent*) {
     emit doubleClicked();
 }
 
-void DoubleClickLabel::enterEvent(QEvent *event)
+void DoubleClickLabel::enterEvent(QEnterEvent *event)
 {
     Q_UNUSED (event);
-    if( this->isEnabled() ) setStyleSheet( "QLabel { color: rgb(255,154,50); }" );
+    if( this->isEnabled() ) setStyleSheet( "QLabel { color: palette(link); }" );
 }
 
 void DoubleClickLabel::leaveEvent(QEvent *event)

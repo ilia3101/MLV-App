@@ -8,15 +8,19 @@
 #include "TimeCodeLabel.h"
 #include <QRect>
 #include <QPainter>
+#include <QPainterPath>
 #include <QLinearGradient>
 #include <QFontDatabase>
 #include <QString>
+#include <QIcon>
+#include <AppTheme.h>
 
 //Constructor
-TimeCodeLabel::TimeCodeLabel()
+TimeCodeLabel::TimeCodeLabel( int height, qreal pixelRatio )
 {
-    m_tcImage = new QImage( 400, 60, QImage::Format_RGB888 );
     m_mode = false;
+    m_height = height * pixelRatio;
+    m_devicePixelRatio = pixelRatio;
 
     QFontDatabase::addApplicationFont( ":/Fonts/Fonts/DSEG7Modern-Regular.ttf" );
 }
@@ -24,78 +28,116 @@ TimeCodeLabel::TimeCodeLabel()
 //Destructor
 TimeCodeLabel::~TimeCodeLabel()
 {
-    delete m_tcImage;
 }
 
 //Get the image for frameNumber at clipFps
 QImage TimeCodeLabel::getTimeCodeLabel(uint32_t frameNumber, float clipFps)
 {
+    // Measure real font size
+    QString em = "M";
+    QFontMetrics fm( QFont( "Arial", 16 ) );
+    double factor = fm.horizontalAdvance( em ) / 16.0;
+    int fontSize = ( m_height - ( m_height / 3 ) ) * factor;
+
+    QFont font1 = QFont( "DSEG7 Modern", fontSize, QFont::Bold );
+    QFont font2 = QFont( "Arial", fontSize / 2, QFont::Bold );
+
+    QString text1 = "88 : 88 : 88 . 88";
+
+    QFontMetrics fm1( font1 );
+    int fm1W = fm1.horizontalAdvance( text1 );
+    int fm1H = fm1.height();
+
+    QString text2 = "TC";
+
+    QFontMetrics fm2( font2 );
+    int fm2W = fm2.horizontalAdvance( text2 );
+    int fm2H = fm2.height();
+
+    // QString text3 = "[<–>]";
+
+    // QFontMetrics fm3( font2 );
+    // int fm3W = fm3.horizontalAdvance( text3 );
+    // int fm3H = fm3.height();
+
+    int padding = m_height / 2;
+
+    int x1 = padding;
+    int y1 = ( m_height - fm1H ) / 2;
+
+    int x2 = x1 + fm1W + font2.pointSize() / 2;
+    int y2 = y1 - 1;
+
+    int x3 = x1 + fm1W + font2.pointSize() / 2;
+    int y3 = y1 + 1 + fm1H - fm2H;
+
+    QIcon icon( ":/fontawesome/fontawesome/svgs-full/solid/arrow-right-to-bracket.svg" );
+    QRect iconRect( x3, y3, fm2H, fm2H );
+
+    QImage tcImage = QImage( fm1W + font2.pointSize() / 2 + iconRect.width() * 2 - 1 + padding * 2, m_height, QImage::Format_ARGB32_Premultiplied );
+
+    QColor background = QColor::fromHsl( 0, 0, 16, 208 );
+    QColor active = QColor::fromHsl( 0, 0, 255, 208 );
+    QColor inactive = QColor::fromHsl( 0, 0, 255, 48 );
+
     //Background
-    m_tcImage->fill( QColor( 20, 20, 20, 255 ) );
+    tcImage.fill( Qt::transparent );
 
-    //Boarder
-    QRect rect( 0, 0, 2, 60 );
-    QPainter painterTc( m_tcImage );
-    QLinearGradient gradient( rect.topLeft(), (rect.topLeft() + rect.bottomLeft() ) / 2 ); // diagonal gradient from top-left to bottom-right
-    gradient.setColorAt( 0, QColor( 30, 30, 30, 255 ) );
-    gradient.setColorAt( 1, QColor( 90, 90, 90, 255 ) );
-    painterTc.fillRect(rect, gradient);
+    QPainter painterTc( &tcImage );
+    painterTc.setRenderHint( QPainter::Antialiasing );
 
-    QRect rect2( 398, 0, 2, 60 );
-    painterTc.fillRect(rect2, gradient);
+    QPainterPath path;
+    path.addRoundedRect( tcImage.rect(), 4 * m_devicePixelRatio, 4 * m_devicePixelRatio );
+    painterTc.setClipPath( path );
+    painterTc.fillPath( path, background );
 
-    QRect rect3( 0, 0, 400, 2 );
-    QLinearGradient gradient3( rect3.topLeft(), rect3.bottomLeft() );
-    gradient3.setColorAt( 0, QColor( 90, 90, 90, 255 ) );
-    gradient3.setColorAt( 1, QColor( 30, 30, 30, 255 ) );
-    painterTc.fillRect(rect3, gradient3);
+    //Border
+    QRectF r = tcImage.rect().adjusted( 1, 1, -1, -1 );
+    QLinearGradient gradient( r.topLeft(), r.bottomLeft() );
+    gradient.setColorAt( 0.0, QColor::fromHsl( 0, 0, 255, 0 ) );
+    gradient.setColorAt( 1.0, QColor::fromHsl( 0, 0, 255, 96 ) );
 
-    QRect rect4( 0, 58, 400, 2 );
-    QLinearGradient gradient4( rect4.topLeft(), rect4.bottomLeft() );
-    gradient4.setColorAt( 0, QColor( 90, 90, 90, 255 ) );
-    gradient4.setColorAt( 1, QColor( 60, 60, 60, 255 ) );
-    painterTc.fillRect(rect4, gradient4);
+    QPen pen( QBrush( gradient ), 2 );
+    painterTc.setPen( pen );
+    painterTc.setBrush( Qt::NoBrush );
+    painterTc.drawPath( path );
 
-    //Mode
-#ifdef Q_OS_MAC
-    QFont font = QFont("Arial Bold", 16, 1);
-#else
-    QFont font = QFont("Arial Bold", 12, 1);
-#endif
-    painterTc.setFont( font );
+    painterTc.setFont( font2 );
+
     if( !m_mode )
     {
-        painterTc.setPen( QPen( QColor( 220, 220, 220 ) ) );
-        painterTc.drawText( 340, 11, 50, 50, 0, QString( "TC" ) );
-        painterTc.setPen( QPen( QColor( 70, 70, 70 ) ) );
-        painterTc.drawText( 340, 30, 50, 50, 0, QString( "[<–>]" ) );
+        painterTc.setPen( QPen( active ) );
+        painterTc.drawText( x2, y2, fm2W, fm2H, 0, text2 );
+        // painterTc.setPen( QPen( inactive ) );
+        // painterTc.drawText( x3, y3, fm3W, fm3H, 0, text3 );
     }
     else
     {
-        painterTc.setPen( QPen( QColor( 70, 70, 70 ) ) );
-        painterTc.drawText( 340, 11, 50, 50, 0, QString( "TC" ) );
-        painterTc.setPen( QPen( QColor( 220, 220, 220 ) ) );
-        painterTc.drawText( 340, 30, 50, 50, 0, QString( "[<–>]" ) );
+        painterTc.setPen( QPen( inactive ) );
+        painterTc.drawText( x2, y2, fm2W, fm2H, 0, text2 );
+        // painterTc.setPen( QPen( active ) );
+        // painterTc.drawText( x3, y3, fm3W, fm3H, 0, text3 );
     }
 
-    //Font selection
-#ifdef Q_OS_MAC
-    font = QFont("DSEG7 Modern", 32, 1);
-#else
-    font = QFont("DSEG7 Modern", 24, 1);
-#endif
+    QPixmap tinted = AppTheme::tintPixmap( icon.pixmap( iconRect.size() ), m_mode ? active : inactive, m_devicePixelRatio );
+    QTransform transform;
+    transform.scale( -1, 1 );
+    QPixmap flipped = tinted.transformed( transform );
+
+    painterTc.drawPixmap( iconRect.topLeft(), flipped );
+    painterTc.drawPixmap( iconRect.adjusted( iconRect.width() - 1, 0, 0, 0 ).topLeft(), tinted );
+
+    painterTc.setFont( font1 );
 
     //Shadow
-    painterTc.setPen( QPen( QColor( 70, 70, 70 ) ) );
-    painterTc.setFont( font );
-    painterTc.drawText( 70, 14, 380, 40, 0, QString( "88 : 88 : 88 . 88" ) );
+    painterTc.setPen( QPen( inactive ) );
+    painterTc.drawText( x1, y1, fm1W, fm1H, 0, text1 );
 
     //Foreground
-    painterTc.setPen( QPen( QColor( 220, 220, 220 ) ) );
-    painterTc.setFont( font );
-    painterTc.drawText( 70, 14, 380, 40, 0, getTimeCodeFromFps( frameNumber, clipFps, true ) );
+    painterTc.setPen( QPen( active ) );
+    painterTc.drawText( x1, y1, fm1W, fm1H, 0, getTimeCodeFromFps( frameNumber, clipFps, true ) );
 
-    return *m_tcImage;
+    return tcImage;
 }
 
 //Generate Timecode String

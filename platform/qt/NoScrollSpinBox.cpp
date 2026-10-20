@@ -12,7 +12,8 @@ NoScrollSpinBox::NoScrollSpinBox(QWidget *parent)
 
 }
 
-void NoScrollSpinBox::wheelEvent(QWheelEvent *)
+void NoScrollSpinBox::wheelEvent(QWheelEvent *event)
 {
-    //Do nothing!!!
+    // Propagate to the parent
+    event->ignore();
 }
