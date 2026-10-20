@@ -77,12 +77,18 @@ macx{
     }
     #Qt5 on Apple Silicon with openMP: install llvm and openssl via brew, build Qt5 from source
     equals(QT_ARCH, arm64) {
+        DEFINES += __SSE2__
         QMAKE_CC = /opt/homebrew/opt/llvm/bin/clang
         QMAKE_CXX = /opt/homebrew/opt/llvm/bin/clang++
         QMAKE_LINK = /opt/homebrew/opt/llvm/bin/clang++
-        QMAKE_CFLAGS += -fopenmp -ftree-vectorize
-        QMAKE_CXXFLAGS += -fopenmp -std=c++15 -ftree-vectorize
-        INCLUDEPATH += -I/opt/homebrew/opt/llvm/include
+        QMAKE_CFLAGS += -fopenmp -ftree-vectorize -fno-math-errno
+        QMAKE_CXXFLAGS += -fopenmp -std=c++15 -ftree-vectorize -fno-math-errno
+        QMAKE_CFLAGS_RELEASE -= -O2
+        QMAKE_CFLAGS_RELEASE += -O3
+        QMAKE_CXXFLAGS_RELEASE -= -O2
+        QMAKE_CXXFLAGS_RELEASE += -O3
+        INCLUDEPATH += -I/opt/homebrew/opt/llvm/include \
+                       ../../src/mlv/OpenJPH/sse2neon
         LIBS += -L/opt/homebrew/opt/llvm/lib -lomp -L/opt/homebrew/opt/llvm/lib/unwind -lunwind -L/opt/homebrew/opt/openssl/lib -lssl -L/opt/homebrew/opt/llvm/lib/c++ -lc++ -lc++abi
         QMAKE_MACOSX_DEPLOYMENT_TARGET = 11.7
         QMAKE_APPLE_DEVICE_ARCHS = arm64
@@ -330,6 +336,7 @@ HEADERS += MainWindow.h \
     ../../src/mlv/llrawproc/wirth.h \
     ../../src/mlv_include.h \
     ../../src/mlv/llrawproc/dualiso.h \
+    ../../src/mlv/llrawproc/chroma_smooth_fast5.c \
     ../../src/mlv/camid/camera_id.h \
     ../../src/dng/dng.h \
     ../../src/dng/dng_tag_codes.h \

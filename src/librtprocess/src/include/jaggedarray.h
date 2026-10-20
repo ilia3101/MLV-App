@@ -20,6 +20,7 @@
 #pragma once
 
 #include <cstring>
+#include <new>
 
 namespace librtprocess
 {
@@ -37,7 +38,7 @@ public:
         array(
             [width, height, init_zero]() -> T**
             {
-                T** const res = new (std::nothrow) T*[height];
+                T** res = new (std::nothrow) T*[height];
                 if (res) {
                     res[0] = new (std::nothrow)T[height * width];
 
@@ -48,8 +49,6 @@ public:
                     if (res[0] && init_zero) {
                         std::memset(res[0], 0, sizeof(T) * width * height);
                     }
-                } else {
-                    res[0] = nullptr;
                 }
                 return res;
             }()

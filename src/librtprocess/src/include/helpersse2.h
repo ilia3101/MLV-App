@@ -11,7 +11,6 @@
 //  This version contains modifications made by Ingo Weyrich
 //
 ////////////////////////////////////////////////////////////////
-
 #ifndef __SSE2__
 #error Please specify -msse2.
 #endif
@@ -22,7 +21,13 @@
 #define INLINE inline
 #endif
 
+#if defined(__ARM_NEON) || defined(__ARM_NEON__)
+#include "sse2neon.h"
+#elif defined(WIN32) && defined(__x86_64__)
+#include <intrin.h>
+#else
 #include <x86intrin.h>
+#endif
 
 #include <stdint.h>
 
