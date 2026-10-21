@@ -1952,16 +1952,25 @@ static inline void build_alias_map(struct raw_info raw_info, uint16_t* alias_map
 #define CHROMA_SMOOTH_TYPE uint32_t
 
 #define CHROMA_SMOOTH_2X2
+#define chroma_smooth_2x2 chroma_smooth_2x2_ref
 #include "chroma_smooth.c"
 #undef CHROMA_SMOOTH_2X2
+#undef chroma_smooth_2x2
 
 #define CHROMA_SMOOTH_3X3
+#define chroma_smooth_3x3 chroma_smooth_3x3_ref
 #include "chroma_smooth.c"
 #undef CHROMA_SMOOTH_3X3
+#undef chroma_smooth_3x3
 
 #define CHROMA_SMOOTH_5X5
+#define chroma_smooth_5x5 chroma_smooth_5x5_ref
 #include "chroma_smooth.c"
 #undef CHROMA_SMOOTH_5X5
+#undef chroma_smooth_5x5
+
+#include "chroma_smooth_fast5.c"
+#undef CHROMA_SMOOTH_TYPE
 
 static inline void hdr_chroma_smooth(struct raw_info raw_info, uint32_t * input, uint32_t * output, int method, int * raw2ev, int * ev2raw)
 {
