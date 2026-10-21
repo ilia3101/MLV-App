@@ -71,7 +71,12 @@ rpError rcd_demosaic(int width, int height, const float * const *rawData, float 
     //Tolerance to avoid dividing by zero
     constexpr float eps = 1e-5f;
     constexpr float epssq = 1e-10f;
-    constexpr float scale = 65536.f;
+    
+    /* 
+     * Removed fixed scale, so the function works with any input bit depth
+     * (up to the float mantissa), preserving full precision.
+     */
+    // constexpr float scale = 65536.f;
 
 #ifdef _OPENMP
 #pragma omp parallel if(multiThread)
@@ -121,7 +126,8 @@ rpError rcd_demosaic(int width, int height, const float * const *rawData, float 
                     const int c0 = fc(cfarray, row, colStart);
                     const int c1 = fc(cfarray, row, colStart + 1);
                     for (int col = colStart, indx = (row - rowStart) * tileSize; col < colEnd; ++col, ++indx) {
-                        cfa[indx] = rgb[c0][indx] = rgb[c1][indx] = LIM01(rawData[row][col] / scale);
+                        // cfa[indx] = rgb[c0][indx] = rgb[c1][indx] = LIM01(rawData[row][col] / scale);
+                        cfa[indx] = rgb[c0][indx] = rgb[c1][indx] = rawData[row][col];
                     }
                 }
 
@@ -303,9 +309,12 @@ rpError rcd_demosaic(int width, int height, const float * const *rawData, float 
                 for (int row = firstVertical; row < lastVertical; ++row) {
                     for (int col = firstHorizontal; col < lastHorizontal; ++col) {
                         int idx = (row - rowStart) * tileSize + col - colStart ;
-                        red[row][col] = std::max(0.f, rgb[0][idx] * scale);
-                        green[row][col] = std::max(0.f, rgb[1][idx] * scale);
-                        blue[row][col] = std::max(0.f, rgb[2][idx] * scale);
+                        // red[row][col] = std::max(0.f, rgb[0][idx] * scale);
+                        // green[row][col] = std::max(0.f, rgb[1][idx] * scale);
+                        // blue[row][col] = std::max(0.f, rgb[2][idx] * scale);
+                        red[row][col] = std::max(0.f, rgb[0][idx]);
+                        green[row][col] = std::max(0.f, rgb[1][idx]);
+                        blue[row][col] = std::max(0.f, rgb[2][idx]);
                     }
                 }
 
