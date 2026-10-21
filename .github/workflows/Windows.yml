@@ -4,6 +4,9 @@ on:
   workflow_dispatch:
     branches: [ "master" ]
 
+  pull_request:
+    branches: [ "master" ]
+
 env:
   SOURCE_DIR:   ${{ github.workspace }}\platform
   ARTIFACT:     ${{ github.workspace }}\platform\build\MLVApp\MLVApp.Win64.zip
