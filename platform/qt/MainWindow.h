@@ -27,6 +27,8 @@
 #include "../../src/mlv_include.h"
 #include "InfoDialog.h"
 #include "StatusDialog.h"
+#include "PixelMapListDialog.h"
+#include "UserManualDialog.h"
 #include "AudioWave.h"
 #include "ReceiptSettings.h"
 #include "AudioPlayback.h"
@@ -39,6 +41,7 @@
 #include "Scripting.h"
 #include "ReceiptCopyMaskDialog.h"
 #include "QRecentFilesMenu.h"
+#include "ScopesLabel.h"
 
 namespace Ui {
 class MainWindow;
@@ -54,10 +57,10 @@ public:
 
 protected:
     void timerEvent( QTimerEvent *t );
-    void resizeEvent( QResizeEvent *event );
     bool event( QEvent *event );
     void dragEnterEvent( QDragEnterEvent *event );
     void dropEvent( QDropEvent *event );
+    //void showEvent( QShowEvent *event ) ;
     void closeEvent( QCloseEvent *event );
     bool eventFilter(QObject *watched, QEvent *event);
 
@@ -74,7 +77,8 @@ private slots:
     void on_actionAbout_triggered();
     void on_actionAboutQt_triggered();
     void on_horizontalSliderPosition_valueChanged(int position);
-    void on_actionClip_Information_triggered();
+    void on_actionClipInfo_triggered();
+    void on_actionRenameClip_triggered();
     void on_horizontalSliderGamma_valueChanged(int position);
     void on_horizontalSliderExposure_valueChanged(int position);
     void on_horizontalSliderExposureGradient_valueChanged(int position);
@@ -204,7 +208,7 @@ private slots:
     void on_actionDontSwitchDebayerForPlayback_triggered();
     void on_actionExportSettings_triggered();
     void on_actionResetReceipt_triggered();
-    void on_actionCopyRecept_triggered();
+    void on_actionCopyReceipt_triggered();
     void on_actionPasteReceipt_triggered();
     void on_actionNewSession_triggered();
     void on_actionOpenSession_triggered();
@@ -232,7 +236,6 @@ private slots:
     void on_listViewSession_customContextMenuRequested(const QPoint &pos);
     void on_tableViewSession_customContextMenuRequested(const QPoint &pos);
     void deleteFileFromSession( void );
-    void renameActiveClip( void );
     void on_actionShowInFinder_triggered( void );
     void on_actionOpenWithExternalApplication_triggered( void );
     void rightClickShowFile( void );
@@ -333,23 +336,11 @@ private slots:
     void badPixelPicked( int x, int y );
     void on_actionWhiteBalancePicker_toggled(bool checked);
     void whiteBalancePicked( int x, int y );
-    void on_toolButtonWbMode_clicked();
+    void on_toolButtonWbModeGrey_toggled(bool checked);
     void gradientAnchorPicked( int x, int y );
     void gradientFinalPosPicked(int x, int y , bool isFinished);
-    void on_groupBoxRawCorrection_toggled(bool arg1);
-    void on_groupBoxCutInOut_toggled(bool arg1);
-    void on_groupBoxDebayer_toggled(bool arg1);
-    void on_groupBoxProfiles_toggled(bool arg1);
-    void on_groupBoxProcessing_toggled(bool arg1);
-    void on_groupBoxDetails_toggled(bool arg1);
-    void on_groupBoxHsl_toggled(bool arg1);
-    void on_groupBoxToning_toggled(bool arg1);
-    void on_groupBoxColorWheels_toggled(bool arg1);
-    void on_groupBoxLut_toggled(bool arg1);
-    void on_groupBoxFilter_toggled(bool arg1);
-    void on_groupBoxVignette_toggled(bool arg1);
-    void on_groupBoxLinearGradient_toggled(bool arg1);
-    void on_groupBoxTransformation_toggled(bool arg1);
+    void on_groupBoxLinearGradient_toggled(bool checked);
+    void exportAbortPressed( void );
     void exportAbort( void );
     void drawFrameReady( void );
 
@@ -380,8 +371,6 @@ private slots:
     void on_comboBoxVStretch_currentIndexChanged(int index);
 
     void mpTcLabel_customContextMenuRequested(const QPoint &pos);
-    void on_actionTimecodePositionMiddle_triggered();
-    void on_actionTimecodePositionRight_triggered();
     void tcLabelDoubleClicked();
     void on_actionToggleTimecodeDisplay_triggered();
 
@@ -401,8 +390,10 @@ private slots:
     void on_actionSelectExternalApplication_triggered();
     void openRecentSession( QString fileName );
 
-    void on_actionDarkThemeStandard_triggered(bool checked);
-    void on_actionDarkThemeModern_triggered(bool checked);
+    void on_actionTheme1_triggered(bool checked);
+    void on_actionTheme2_triggered(bool checked);
+    void on_actionTheme3_triggered(bool checked);
+    void on_actionTheme4_triggered(bool checked);
 
     void on_comboBoxDebayer_currentIndexChanged( int index );
 
@@ -422,6 +413,9 @@ private:
     Ui::MainWindow *ui;
     InfoDialog *m_pInfoDialog;
     StatusDialog *m_pStatusDialog;
+    PixelMapListDialog *m_pFpmListDialog;
+    PixelMapListDialog *m_pBpmListDialog;
+    UserManualDialog *m_pHelpDialog;
     AudioWave *m_pAudioWave;
     AudioPlayback *m_pAudioPlayback;
     RenderFrameThread *m_pRenderThread;
@@ -434,12 +428,12 @@ private:
     TimeCodeLabel* m_pTimeCodeImage;
     ReceiptCopyMaskDialog *m_pCopyMask;
     Scripting* m_pScripting;
-    uint8_t m_timeCodePosition;
+    QLabel *m_pSessionStatus;
     QLabel *m_pCachingStatus;
     QLabel *m_pFpsStatus;
     QLabel *m_pFrameNumber;
     QLabel *m_pChosenDebayer;
-    QActionGroup *m_darkFrameGroup;
+    QActionGroup *m_themeGroup;
     QActionGroup *m_previewDebayerGroup;
     QActionGroup *m_sessionListGroup;
     QActionGroup *m_playbackElementGroup;
@@ -474,6 +468,7 @@ private:
     bool m_tryToSyncAudio;
     bool m_audioExportEnabled;
     bool m_hdrExport;
+    uint32_t *m_pExportedFramesArray;
     bool m_exportAbortPressed;
     bool m_zoomTo100Center;
     bool m_zoomModeChanged;
@@ -494,7 +489,10 @@ private:
     QSortFilterProxyModel* m_pProxyModel;
     QItemSelectionModel* m_pSelectionModel;
     int m_lastClipBeforeExport;
+    bool m_rawProcessingChanged;
+
     void drawFrame( void );
+    void drawPicture( void );
     void importNewMlv(QString fileName);
     int openMlvForPreview(QString fileName);
     int openMlv(QString fileName);
@@ -503,6 +501,7 @@ private:
     void initLib( void );
     void readSettings( void );
     void writeSettings( void );
+    int confirmAbort( void );
     void startExportPipe( QString fileName );
     void startExportCdng( QString fileName );
     void startExportMlv( QString fileName );
@@ -524,10 +523,11 @@ private:
     int showFileInEditor(int row);
     void addClipToExportQueue( int row, QString fileName );
     void previewPicture( int row );
+    void listViewUpdateGridSize( void );
     void setPreviewMode( void );
     double getFramerate( void );
     void paintAudioTrack( void );
-    uint8_t drawZebras( void );
+    void drawZebras( void );
     void drawFrameNumberLabel( void );
     void setToolButtonFocusPixels( int index );
     void setToolButtonFocusPixelsIntMethod( int index );
@@ -577,7 +577,10 @@ private:
     void checkFocusPixelUpdate( void );
     QModelIndexList selectedClipsList( void );
     void listViewSessionUpdate( void );
-    void checkDiskFull( QString path );
+    bool checkDiskFull( QString path, bool showDialog = true );
+    void sessionCustomContextMenu(QPoint globalPos);
+    ScopesLabel::ScopeType getSelectedScopeType( void );
+    void setSelectedScopeType();
 
 signals:
     void exportReady( void );

@@ -8,6 +8,8 @@
 #include "ClipInformation.h"
 #include <QVariant>
 #include <QFileInfo>
+#include <QPainter>
+#include <QPainterPath>
 
 //Constructor
 ClipInformation::ClipInformation(QString name,
@@ -47,9 +49,10 @@ ClipInformation::ClipInformation(QString name,
     m_audio( audio ),
     m_backgroundColor( backgroundColor )
 {
-    QPixmap pixmap = QPixmap( 100, 50 );
+    QPixmap pixmap = QPixmap( m_previewMinWidth * 2, m_previewMinWidth * 2 / m_previewRatio );
     pixmap.fill( Qt::black );
-    m_preview = QIcon( pixmap );
+    setPreview( pixmap );
+
     m_pReceipt = new ReceiptSettings();
     m_pReceipt->setFileName( path );
 }
@@ -59,28 +62,75 @@ ClipInformation::ClipInformation(QString name,
                                  QString path) :
     m_name( name ),
     m_path( path ),
-    m_camera( "-" ),
-    m_lens( "-" ),
-    m_resolution( "-" ),
-    m_duration( "-" ),
-    m_frames( "-" ),
-    m_frameRate( "-" ),
-    m_focalLength( "-" ),
-    m_focusDistance( "-" ),
-    m_shutter( "-" ),
-    m_aperture( "-" ),
-    m_iso( "-" ),
-    m_dualIso( "-" ),
-    m_bitDepth( "-" ),
-    m_dateTime( "-" ),
-    m_audio( "-" ),
+    m_camera( "–" ),
+    m_lens( "–" ),
+    m_resolution( "–" ),
+    m_duration( "–" ),
+    m_frames( "–" ),
+    m_frameRate( "–" ),
+    m_focalLength( "–" ),
+    m_focusDistance( "–" ),
+    m_shutter( "–" ),
+    m_aperture( "–" ),
+    m_iso( "–" ),
+    m_dualIso( "–" ),
+    m_bitDepth( "–" ),
+    m_dateTime( "–" ),
+    m_audio( "–" ),
     m_backgroundColor( QColor( 0, 0, 0, 0 ) )
 {
-    QPixmap pixmap = QPixmap( 100, 50 );
+    QPixmap pixmap = QPixmap( m_previewMinWidth * 2, m_previewMinWidth * 2 / m_previewRatio );
     pixmap.fill( Qt::black );
-    m_preview = QIcon( pixmap );
+    setPreview( pixmap );
+
     m_pReceipt = new ReceiptSettings();
     m_pReceipt->setFileName( path );
+}
+
+void ClipInformation::setPreview( const QPixmap &src )
+{
+    int width = m_previewMinWidth * 2 * src.devicePixelRatio();
+    width = src.width() < width ? width : src.width();
+    int height = width / m_previewRatio;
+
+    qreal factor = static_cast<qreal>( width ) / m_previewMinWidth;
+
+    // Create thumbnail canvas
+    qreal paddingTop = m_previewPaddingTop * factor;
+    QPixmap thumbnail( width, height + paddingTop );
+
+    thumbnail.fill( Qt::transparent );
+
+    // Scale source to fit (or fill with Qt::KeepAspectRatioByExpanding)
+    QPixmap scaled = src.scaled( width, width / m_previewRatio + 0.5, Qt::KeepAspectRatio, Qt::SmoothTransformation );
+    scaled.setDevicePixelRatio( 1 );
+
+    // Optional rounded corners
+    qreal radius = m_radius * factor;
+
+    QPainter painter( &thumbnail );
+    painter.setRenderHint( QPainter::Antialiasing );
+
+    QPainterPath path;
+    path.addRoundedRect( 0, paddingTop, width, height, radius, radius );
+    painter.setClipPath( path );
+
+    // Center the pixmap
+    qreal x = ( width - scaled.width() ) / 2.0;
+    qreal y = ( height - scaled.height() ) / 2.0;
+
+    // Only fill black if needed to prevent ugly corners
+    if( x > 1 || y > 1 ) painter.fillPath( path, Qt::black );
+
+    painter.drawPixmap( x, y + paddingTop, scaled );
+
+    // Border
+    // QPen pen( Qt::black, 2 );
+    // painter.setPen( pen );
+    // painter.setBrush( Qt::NoBrush );
+    // painter.drawPath( path );
+
+    m_preview = QIcon( thumbnail );
 }
 
 //Destructor
@@ -215,21 +265,21 @@ void ClipInformation::updateMetadata(QString camera, QString lens, QString resol
                                      QString aperture, QString iso, QString dualIso, QString bitDepth, QString dateTime,
                                      QString audio)
 {
-    m_camera = camera;
-    m_lens = lens;
-    m_resolution = resolution;
-    m_duration = duration;
-    m_frames = frames;
-    m_frameRate = frameRate;
-    m_focalLength = focalLength;
-    m_focusDistance = focusDistance;
-    m_shutter = shutter;
-    m_aperture = aperture;
-    m_iso = iso;
-    m_dualIso = dualIso;
-    m_bitDepth = bitDepth;
-    m_dateTime = dateTime;
-    m_audio = audio;
+    m_camera = camera.isEmpty() ? "–" : camera;
+    m_lens = lens.isEmpty() ? "–" : lens;
+    m_resolution = resolution.isEmpty() ? "–" : resolution;
+    m_duration = duration.isEmpty() ? "–" : duration;
+    m_frames = frames.isEmpty() ? "–" : frames;
+    m_frameRate = frameRate.isEmpty() ? "–" : frameRate;
+    m_focalLength = focalLength.isEmpty() ? "–" : focalLength;
+    m_focusDistance = focusDistance.isEmpty() ? "–" : focusDistance;
+    m_shutter = shutter.isEmpty() ? "–" : shutter;
+    m_aperture = aperture.isEmpty() ? "–" : aperture;
+    m_iso = iso.isEmpty() ? "–" : iso;
+    m_dualIso = dualIso.isEmpty() ? "–" : dualIso;
+    m_bitDepth = bitDepth.isEmpty() ? "–" : bitDepth;
+    m_dateTime = dateTime.isEmpty() ? "–" : dateTime;
+    m_audio = audio.isEmpty() ? "–" : audio;
 }
 
 //Calc the clip size

@@ -11,6 +11,7 @@
 #include <QSpinBox>
 #include <QWidget>
 #include <Qt>
+#include <QWheelEvent>
 
 class NoScrollSpinBox : public QSpinBox
 {
@@ -19,7 +20,7 @@ public:
     explicit NoScrollSpinBox(QWidget* parent = Q_NULLPTR);
 
 protected:
-    void wheelEvent(QWheelEvent*);
+    void wheelEvent(QWheelEvent *event) override;
 };
 
 #endif // NOSCROLLSPINBOX_H

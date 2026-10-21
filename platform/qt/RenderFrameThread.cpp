@@ -8,92 +8,96 @@
 #include "RenderFrameThread.h"
 #include <QDebug>
 
-//Constructor
 RenderFrameThread::RenderFrameThread()
 {
-    m_stop = false;
-    m_initialized = false;
-    m_renderFrame = false;
-    m_frameReady = false;
 }
 
-//Destructor
 RenderFrameThread::~RenderFrameThread()
 {
-
+    stop();
+    wait();
 }
 
-//Init all objects
-void RenderFrameThread::init(mlvObject_t *pMlvObject, uint8_t *pRawImage)
+void RenderFrameThread::init(mlvObject_t *pMlvObject)
 {
-    m_mutex.lock();
-    m_frameReady = false;
+    QMutexLocker locker( &m_mutex );
+
     m_pMlvObject = pMlvObject;
-    m_pRawImage = pRawImage;
-    m_mutex.unlock();
+
+    size_t imageSize = (size_t)getMlvWidth( m_pMlvObject ) * (size_t)getMlvHeight( m_pMlvObject ) * 3;
+
+    m_rawBuffer.resize( imageSize );
+    m_rawImage.resize( imageSize );
 }
 
-//Start rendering
 void RenderFrameThread::renderFrame(uint32_t frameNumber)
 {
-    m_mutex.lock();
-    m_frameNumber = frameNumber;
-    m_renderFrame = true;
-    m_frameReady = false;
-    m_mutex.unlock();
+    {
+        QMutexLocker locker( &m_mutex );
+
+        if( m_stop ) return;
+
+        m_frameNumber = frameNumber;
+        m_requestID++;
+    }
+
+    m_renderCondition.wakeOne();
 }
 
-//Is rendering finished?
-bool RenderFrameThread::isFrameReady()
+void RenderFrameThread::waitUntilIdle()
 {
-    m_mutex.lock();
-    bool retVal = m_frameReady;
-    m_mutex.unlock();
-    return retVal;
+    QMutexLocker locker( &m_mutex );
+    while( m_requestID != m_lastProcessedID && !m_stop ) m_idleCondition.wait( &m_mutex );
 }
 
-//Returns if there is a frame in the pipeline...
-bool RenderFrameThread::isIdle()
-{
-    m_mutex.lock();
-    bool retVal = m_renderFrame;
-    m_mutex.unlock();
-    return !retVal;
-}
-
-//Stop the thread
 void RenderFrameThread::stop()
 {
-    m_mutex.lock();
-    m_stop = true;
-    m_mutex.unlock();
-    this->thread()->quit();
-}
-
-//Main loop of the thread
-void RenderFrameThread::run(void)
-{
-    m_mutex.lock();
-    while( !m_stop )
     {
-        if( m_renderFrame )
-        {
-            drawFrame();
-            m_renderFrame = false;
-            m_frameReady = true;
-        }
-        m_mutex.unlock();
-        msleep(1);
-        m_mutex.lock();
+        QMutexLocker locker( &m_mutex );
+        m_stop = true;
     }
-    m_stop = false;
-    m_mutex.unlock();
+
+    m_renderCondition.wakeAll();
+    m_idleCondition.wakeAll();
 }
 
-//render the picture
-void RenderFrameThread::drawFrame()
+void RenderFrameThread::run()
 {
-    //Get frame from library
-    getMlvProcessedFrame8( m_pMlvObject, m_frameNumber, m_pRawImage, QThread::idealThreadCount() );
-    emit frameReady();
+    const int threadCount = QThread::idealThreadCount();
+
+    while( true )
+    {
+        uint64_t requestID;
+        uint32_t frameNumber;
+
+        {
+            QMutexLocker locker( &m_mutex );
+
+            while( m_requestID == m_lastProcessedID && !m_stop ) m_renderCondition.wait( &m_mutex );
+
+            if( m_stop ) break;
+
+            requestID = m_requestID;
+            frameNumber = m_frameNumber;
+        }
+
+        getMlvProcessedFrame8( m_pMlvObject, frameNumber, m_rawBuffer.data(), threadCount );
+
+        {
+            QMutexLocker locker( &m_mutex );
+
+            if( requestID != m_requestID )
+            {
+                m_idleCondition.wakeAll();
+                continue;
+            }
+
+            m_rawImage.swap( m_rawBuffer );
+
+            m_lastProcessedID = requestID;
+            m_idleCondition.wakeAll();
+        }
+
+        emit frameReady();
+    }
 }

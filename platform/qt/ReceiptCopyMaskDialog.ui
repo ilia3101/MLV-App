@@ -2,155 +2,73 @@
 <ui version="4.0">
  <class>ReceiptCopyMaskDialog</class>
  <widget class="QDialog" name="ReceiptCopyMaskDialog">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>712</width>
-    <height>406</height>
-   </rect>
-  </property>
   <property name="windowTitle">
-   <string>Receipt Mask Setup</string>
+   <string>Copy Receipt</string>
   </property>
-  <layout class="QGridLayout" name="gridLayout_3">
-   <item row="0" column="0" colspan="4">
+  <layout class="QVBoxLayout" name="verticalLayout_8">
+   <property name="spacing">
+    <number>20</number>
+   </property>
+   <property name="leftMargin">
+    <number>20</number>
+   </property>
+   <property name="topMargin">
+    <number>20</number>
+   </property>
+   <property name="rightMargin">
+    <number>20</number>
+   </property>
+   <property name="bottomMargin">
+    <number>20</number>
+   </property>
+   <item>
     <widget class="QGroupBox" name="groupBox">
      <property name="title">
-      <string>Receipt Mask</string>
+      <string>Select receipt parameters you want to copy</string>
      </property>
-     <layout class="QGridLayout" name="gridLayout_2">
+     <layout class="QGridLayout" name="gridLayout" columnminimumwidth="200,200,200">
+      <property name="leftMargin">
+       <number>20</number>
+      </property>
+      <property name="topMargin">
+       <number>20</number>
+      </property>
+      <property name="rightMargin">
+       <number>20</number>
+      </property>
+      <property name="bottomMargin">
+       <number>20</number>
+      </property>
+      <property name="horizontalSpacing">
+       <number>20</number>
+      </property>
       <item row="0" column="0">
-       <layout class="QGridLayout" name="gridLayout">
-        <property name="verticalSpacing">
-         <number>6</number>
+       <layout class="QVBoxLayout" name="verticalLayout_4">
+        <property name="spacing">
+         <number>5</number>
         </property>
-        <item row="0" column="0" colspan="2">
+        <item>
          <widget class="QCheckBox" name="checkBoxRawCorrection">
+          <property name="font">
+           <font>
+            <bold>true</bold>
+           </font>
+          </property>
           <property name="text">
            <string>RAW Correction</string>
           </property>
           <property name="tristate">
-           <bool>false</bool>
+           <bool>true</bool>
           </property>
          </widget>
         </item>
-        <item row="1" column="4" colspan="2">
-         <widget class="QCheckBox" name="checkBoxDetails">
-          <property name="text">
-           <string>Details</string>
-          </property>
-          <property name="tristate">
-           <bool>false</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="5" rowspan="2">
-         <layout class="QVBoxLayout" name="verticalLayout">
-          <property name="spacing">
-           <number>6</number>
-          </property>
-          <property name="sizeConstraint">
-           <enum>QLayout::SetMinimumSize</enum>
-          </property>
-          <item>
-           <widget class="QCheckBox" name="checkBoxSharpen">
-            <property name="text">
-             <string>Sharpen</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="checkBoxChromaBlur">
-            <property name="text">
-             <string>Chroma Blur</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="checkBoxDenoise">
-            <property name="text">
-             <string>Denoise</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="checkBoxGrain">
-            <property name="text">
-             <string>Grain</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item row="5" column="4" colspan="2">
-         <widget class="QCheckBox" name="checkBoxToning">
-          <property name="text">
-           <string>Toning</string>
-          </property>
-         </widget>
-        </item>
-        <item row="8" column="4" colspan="2">
-         <widget class="QCheckBox" name="checkBoxFilter">
-          <property name="text">
-           <string>Filter</string>
-          </property>
-         </widget>
-        </item>
-        <item row="4" column="4" colspan="2">
-         <widget class="QCheckBox" name="checkBoxHslCurves">
-          <property name="toolTip">
-           <string>Hue, Saturation, Luminance Curves</string>
-          </property>
-          <property name="text">
-           <string>HSL Curves</string>
-          </property>
-         </widget>
-        </item>
-        <item row="6" column="4" colspan="2">
-         <widget class="QCheckBox" name="checkBoxGradient">
-          <property name="text">
-           <string>Linear Gradient</string>
-          </property>
-         </widget>
-        </item>
-        <item row="10" column="4" colspan="2">
-         <widget class="QCheckBox" name="checkBoxTransformation">
-          <property name="toolTip">
-           <string>All parameters in group &quot;Transformation&quot;</string>
-          </property>
-          <property name="text">
-           <string>Transformation</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="4" colspan="2">
-         <widget class="QCheckBox" name="checkBoxDebayer">
-          <property name="text">
-           <string>Debayer Algorithm</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="2" colspan="2">
-         <widget class="QCheckBox" name="checkBoxProcessing">
-          <property name="text">
-           <string>Processing</string>
-          </property>
-          <property name="checked">
-           <bool>false</bool>
-          </property>
-          <property name="tristate">
-           <bool>false</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="1" rowspan="11">
+        <item>
          <layout class="QVBoxLayout" name="verticalLayout_3">
           <property name="spacing">
-           <number>6</number>
+           <number>5</number>
           </property>
-          <property name="sizeConstraint">
-           <enum>QLayout::SetMinimumSize</enum>
+          <property name="leftMargin">
+           <number>20</number>
           </property>
           <item>
            <widget class="QCheckBox" name="checkBoxRawCorrectEnable">
@@ -162,7 +80,7 @@
           <item>
            <widget class="QCheckBox" name="checkBoxDarkFrameSubtraction">
             <property name="text">
-             <string>Dark Frame Subtraction</string>
+             <string>Dark-Frame Subtraction</string>
             </property>
            </widget>
           </item>
@@ -210,56 +128,81 @@
           </item>
           <item>
            <widget class="QCheckBox" name="checkBoxRawBlackLevel">
-            <property name="toolTip">
-             <string>Copying the RAW levels might screw up clips with different bit rate.</string>
+            <property name="font">
+             <font>
+              <italic>true</italic>
+             </font>
             </property>
-            <property name="styleSheet">
-             <string notr="true">QCheckBox{
-color: rgb(255, 154, 50)
-}</string>
+            <property name="toolTip">
+             <string>Copying the RAW levels might screw up clips with different bit rate</string>
             </property>
             <property name="text">
-             <string>RAW Black Level</string>
+             <string>RAW Black Level *</string>
             </property>
            </widget>
           </item>
           <item>
            <widget class="QCheckBox" name="checkBoxRawWhiteLevel">
-            <property name="toolTip">
-             <string>Copying the RAW levels might screw up clips with different bit rate.</string>
+            <property name="font">
+             <font>
+              <italic>true</italic>
+             </font>
             </property>
-            <property name="styleSheet">
-             <string notr="true">QCheckBox{
-color: rgb(255, 154, 50)
-}</string>
+            <property name="toolTip">
+             <string>Copying the RAW levels might screw up clips with different bit rate</string>
             </property>
             <property name="text">
-             <string>RAW White Level</string>
+             <string>RAW White Level *</string>
             </property>
            </widget>
           </item>
           <item>
            <spacer name="verticalSpacer">
             <property name="orientation">
-             <enum>Qt::Vertical</enum>
+             <enum>Qt::Orientation::Vertical</enum>
             </property>
             <property name="sizeHint" stdset="0">
              <size>
-              <width>20</width>
-              <height>40</height>
+              <width>0</width>
+              <height>0</height>
              </size>
             </property>
            </spacer>
           </item>
          </layout>
         </item>
-        <item row="1" column="3" rowspan="11">
+       </layout>
+      </item>
+      <item row="0" column="1">
+       <layout class="QVBoxLayout" name="verticalLayout_5">
+        <property name="spacing">
+         <number>5</number>
+        </property>
+        <item>
+         <widget class="QCheckBox" name="checkBoxProcessing">
+          <property name="font">
+           <font>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="text">
+           <string>Processing</string>
+          </property>
+          <property name="checked">
+           <bool>false</bool>
+          </property>
+          <property name="tristate">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
          <layout class="QVBoxLayout" name="verticalLayout_2">
           <property name="spacing">
-           <number>6</number>
+           <number>5</number>
           </property>
-          <property name="sizeConstraint">
-           <enum>QLayout::SetMinimumSize</enum>
+          <property name="leftMargin">
+           <number>20</number>
           </property>
           <item>
            <widget class="QCheckBox" name="checkBoxExposure">
@@ -365,44 +308,211 @@ color: rgb(255, 154, 50)
           <item>
            <spacer name="verticalSpacer_2">
             <property name="orientation">
-             <enum>Qt::Vertical</enum>
+             <enum>Qt::Orientation::Vertical</enum>
             </property>
             <property name="sizeHint" stdset="0">
              <size>
-              <width>20</width>
-              <height>40</height>
+              <width>0</width>
+              <height>0</height>
              </size>
             </property>
            </spacer>
           </item>
          </layout>
         </item>
-        <item row="9" column="4" colspan="2">
-         <widget class="QCheckBox" name="checkBoxVignette">
+       </layout>
+      </item>
+      <item row="0" column="2">
+       <layout class="QVBoxLayout" name="verticalLayout_7">
+        <property name="spacing">
+         <number>10</number>
+        </property>
+        <item>
+         <widget class="QCheckBox" name="checkBoxDebayer">
+          <property name="font">
+           <font>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="text">
+           <string>Debayer Algorithm</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <layout class="QVBoxLayout" name="verticalLayout_6">
+          <property name="spacing">
+           <number>5</number>
+          </property>
+          <item>
+           <widget class="QCheckBox" name="checkBoxDetails">
+            <property name="font">
+             <font>
+              <bold>true</bold>
+             </font>
+            </property>
+            <property name="text">
+             <string>Details</string>
+            </property>
+            <property name="tristate">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <layout class="QVBoxLayout" name="verticalLayout">
+            <property name="spacing">
+             <number>5</number>
+            </property>
+            <property name="leftMargin">
+             <number>20</number>
+            </property>
+            <item>
+             <widget class="QCheckBox" name="checkBoxSharpen">
+              <property name="text">
+               <string>Sharpen</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="checkBoxChromaBlur">
+              <property name="text">
+               <string>Chroma Blur</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="checkBoxDenoise">
+              <property name="text">
+               <string>Denoise</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="checkBoxGrain">
+              <property name="text">
+               <string>Grain</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="checkBoxHslCurves">
+          <property name="font">
+           <font>
+            <bold>true</bold>
+           </font>
+          </property>
           <property name="toolTip">
-           <string>All parameters in group &quot;Lens Correction&quot;</string>
+           <string>All group parameters</string>
+          </property>
+          <property name="text">
+           <string>HSL Curves</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="checkBoxToning">
+          <property name="font">
+           <font>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="toolTip">
+           <string>All group parameters</string>
+          </property>
+          <property name="text">
+           <string>Toning</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="checkBoxGradient">
+          <property name="font">
+           <font>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="toolTip">
+           <string>All group parameters</string>
+          </property>
+          <property name="text">
+           <string>Linear Gradient</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="checkBoxLut">
+          <property name="font">
+           <font>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="toolTip">
+           <string>All group parameters</string>
+          </property>
+          <property name="text">
+           <string>LUT</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="checkBoxFilter">
+          <property name="font">
+           <font>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="toolTip">
+           <string>All group parameters</string>
+          </property>
+          <property name="text">
+           <string>Filter</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="checkBoxVignette">
+          <property name="font">
+           <font>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="toolTip">
+           <string>All group parameters</string>
           </property>
           <property name="text">
            <string>Lens Correction</string>
           </property>
          </widget>
         </item>
-        <item row="7" column="4" colspan="2">
-         <widget class="QCheckBox" name="checkBoxLut">
+        <item>
+         <widget class="QCheckBox" name="checkBoxTransformation">
+          <property name="font">
+           <font>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="toolTip">
+           <string>All group parameters</string>
+          </property>
           <property name="text">
-           <string>LUT</string>
+           <string>Transformation</string>
           </property>
          </widget>
         </item>
-        <item row="11" column="4" colspan="2">
-         <spacer name="verticalSpacer_4">
+        <item>
+         <spacer name="verticalSpacer_3">
           <property name="orientation">
-           <enum>Qt::Vertical</enum>
+           <enum>Qt::Orientation::Vertical</enum>
           </property>
           <property name="sizeHint" stdset="0">
            <size>
-            <width>20</width>
-            <height>40</height>
+            <width>0</width>
+            <height>0</height>
            </size>
           </property>
          </spacer>
@@ -412,60 +522,52 @@ color: rgb(255, 154, 50)
      </layout>
     </widget>
    </item>
-   <item row="1" column="0">
-    <widget class="QPushButton" name="pushButtonAll">
-     <property name="minimumSize">
-      <size>
-       <width>100</width>
-       <height>0</height>
-      </size>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <property name="spacing">
+      <number>10</number>
      </property>
-     <property name="text">
-      <string>All</string>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="1">
-    <widget class="QPushButton" name="pushButtonNone">
-     <property name="minimumSize">
-      <size>
-       <width>100</width>
-       <height>0</height>
-      </size>
-     </property>
-     <property name="text">
-      <string>None</string>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="2">
-    <spacer name="horizontalSpacer">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>379</width>
-       <height>20</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
-   <item row="1" column="3">
-    <widget class="QPushButton" name="pushButtonOk">
-     <property name="minimumSize">
-      <size>
-       <width>100</width>
-       <height>0</height>
-      </size>
-     </property>
-     <property name="text">
-      <string>Ok</string>
-     </property>
-     <property name="shortcut">
-      <string>Return</string>
-     </property>
-    </widget>
+     <item>
+      <widget class="QPushButton" name="pushButtonAll">
+       <property name="toolTip">
+        <string>All except RAW levels</string>
+       </property>
+       <property name="text">
+        <string>All</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButtonNone">
+       <property name="text">
+        <string>None</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Orientation::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButtonOk">
+       <property name="text">
+        <string>Copy</string>
+       </property>
+       <property name="shortcut">
+        <string>Return</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
   </layout>
  </widget>
@@ -473,6 +575,8 @@ color: rgb(255, 154, 50)
   <tabstop>pushButtonOk</tabstop>
   <tabstop>pushButtonAll</tabstop>
   <tabstop>pushButtonNone</tabstop>
+  <tabstop>checkBoxRawCorrection</tabstop>
+  <tabstop>checkBoxRawCorrectEnable</tabstop>
   <tabstop>checkBoxDarkFrameSubtraction</tabstop>
   <tabstop>checkBoxFoxusDots</tabstop>
   <tabstop>checkBoxBadPixels</tabstop>
@@ -482,8 +586,10 @@ color: rgb(255, 154, 50)
   <tabstop>checkBoxPatternNoise</tabstop>
   <tabstop>checkBoxRawBlackLevel</tabstop>
   <tabstop>checkBoxRawWhiteLevel</tabstop>
+  <tabstop>checkBoxProcessing</tabstop>
   <tabstop>checkBoxExposure</tabstop>
   <tabstop>checkBoxContrast</tabstop>
+  <tabstop>checkBoxPivot</tabstop>
   <tabstop>checkBoxWb</tabstop>
   <tabstop>checkBoxClarity</tabstop>
   <tabstop>checkBoxVibrance</tabstop>
@@ -491,11 +597,23 @@ color: rgb(255, 154, 50)
   <tabstop>checkBoxCurve</tabstop>
   <tabstop>checkBoxHighlights</tabstop>
   <tabstop>checkBoxShadows</tabstop>
+  <tabstop>checkBoxGradationCurve</tabstop>
   <tabstop>checkBoxHighlightReconstruction</tabstop>
+  <tabstop>checkBoxCameraMatrix</tabstop>
   <tabstop>checkBoxProfile</tabstop>
+  <tabstop>checkBoxDebayer</tabstop>
   <tabstop>checkBoxDetails</tabstop>
   <tabstop>checkBoxSharpen</tabstop>
   <tabstop>checkBoxChromaBlur</tabstop>
+  <tabstop>checkBoxDenoise</tabstop>
+  <tabstop>checkBoxGrain</tabstop>
+  <tabstop>checkBoxHslCurves</tabstop>
+  <tabstop>checkBoxToning</tabstop>
+  <tabstop>checkBoxGradient</tabstop>
+  <tabstop>checkBoxLut</tabstop>
+  <tabstop>checkBoxFilter</tabstop>
+  <tabstop>checkBoxVignette</tabstop>
+  <tabstop>checkBoxTransformation</tabstop>
  </tabstops>
  <resources/>
  <connections>
@@ -506,8 +624,8 @@ color: rgb(255, 154, 50)
    <slot>close()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>655</x>
-     <y>281</y>
+     <x>706</x>
+     <y>414</y>
     </hint>
     <hint type="destinationlabel">
      <x>355</x>

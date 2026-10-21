@@ -36,7 +36,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 ##############
 # Silent Mode, deactivate for more debug info
 ##############
-#DEFINES += STDOUT_SILENT
+DEFINES += STDOUT_SILENT
 
 ##############
 # Feature gates: comment out to disable
@@ -69,20 +69,30 @@ macx{
         QMAKE_CC = /usr/local/opt/llvm/bin/clang
         QMAKE_CXX = /usr/local/opt/llvm/bin/clang++
         QMAKE_LINK = /usr/local/opt/llvm/bin/clang++
+
         QMAKE_CFLAGS += -fopenmp -ftree-vectorize
+        #QMAKE_CFLAGS += -O3 -fopenmp -march=native -Rpass=loop-vectorize -Rpass-missed=loop-vectorize
         QMAKE_CXXFLAGS += -fopenmp -std=c++15 -ftree-vectorize
+        #QMAKE_CXXFLAGS += -O3 -fopenmp -march=native -std=c++15 -Rpass=loop-vectorize -Rpass-missed=loop-vectorize
+
         INCLUDEPATH += -I/usr/local/opt/llvm/include
         LIBS += -L/usr/local/opt/llvm/lib -lomp -lc++ -lc++abi -L/usr/local/opt/openssl/lib -lssl
         QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.8
     }
     #Qt5 on Apple Silicon with openMP: install llvm and openssl via brew, build Qt5 from source
     equals(QT_ARCH, arm64) {
+        DEFINES += __SSE2__
         QMAKE_CC = /opt/homebrew/opt/llvm/bin/clang
         QMAKE_CXX = /opt/homebrew/opt/llvm/bin/clang++
         QMAKE_LINK = /opt/homebrew/opt/llvm/bin/clang++
-        QMAKE_CFLAGS += -fopenmp -ftree-vectorize
-        QMAKE_CXXFLAGS += -fopenmp -std=c++15 -ftree-vectorize
-        INCLUDEPATH += -I/opt/homebrew/opt/llvm/include
+        QMAKE_CFLAGS += -fopenmp -ftree-vectorize -fno-math-errno
+        QMAKE_CXXFLAGS += -fopenmp -std=c++15 -ftree-vectorize -fno-math-errno
+        QMAKE_CFLAGS_RELEASE -= -O2
+        QMAKE_CFLAGS_RELEASE += -O3
+        QMAKE_CXXFLAGS_RELEASE -= -O2
+        QMAKE_CXXFLAGS_RELEASE += -O3
+        INCLUDEPATH += -I/opt/homebrew/opt/llvm/include \
+                       ../../src/mlv/OpenJPH/sse2neon
         LIBS += -L/opt/homebrew/opt/llvm/lib -lomp -L/opt/homebrew/opt/llvm/lib/unwind -lunwind -L/opt/homebrew/opt/openssl/lib -lssl -L/opt/homebrew/opt/llvm/lib/c++ -lc++ -lc++abi
         QMAKE_MACOSX_DEPLOYMENT_TARGET = 11.7
         QMAKE_APPLE_DEVICE_ARCHS = arm64
@@ -154,8 +164,8 @@ SOURCES += \
     RenameDialog.cpp \
     SessionModel.cpp \
     Updater/Updater.cpp \
-        main.cpp \
-        MainWindow.cpp \
+    main.cpp \
+    MainWindow.cpp \
     ../../src/debayer/amaze_demosaic.c \
     ../../src/debayer/debayer.c \
     ../../src/debayer/conv.c \
@@ -172,7 +182,7 @@ SOURCES += \
     ../../src/mlv/llrawproc/patternnoise.c \
     ../../src/mlv/llrawproc/chroma_smooth.c \
     ../../src/mlv/llrawproc/hist.c \
-    ../../src/mlv/camid/camera_id.c \   
+    ../../src/mlv/camid/camera_id.c \
     ../../src/mlv/mcraw/mcraw.c \
     ../../src/mlv/mcraw/cJSON.c \
     ../../src/mlv/mcraw/RawData.cpp \
@@ -185,6 +195,7 @@ SOURCES += \
     ../../src/processing/cube_lut.c \
     ../../src/mlv/llrawproc/dualiso.c \
     ../../src/dng/dng.c \
+    AppTheme.cpp \
     ScopesLabel.cpp \
     InfoDialog.cpp \
     StatusDialog.cpp \
@@ -330,6 +341,7 @@ HEADERS += MainWindow.h \
     ../../src/mlv/llrawproc/wirth.h \
     ../../src/mlv_include.h \
     ../../src/mlv/llrawproc/dualiso.h \
+    ../../src/mlv/llrawproc/chroma_smooth_fast5.c \
     ../../src/mlv/camid/camera_id.h \
     ../../src/dng/dng.h \
     ../../src/dng/dng_tag_codes.h \
@@ -343,6 +355,7 @@ HEADERS += MainWindow.h \
     ../../src/processing/image_profile.h \
     ../../src/processing/cube_lut.h \
     ../../src/processing/denoiser/denoiser_2d_median.h \
+    AppTheme.h \
     ClipInformation.h \
     InfoDialog.h \
     MyApplication.h \
@@ -361,7 +374,6 @@ HEADERS += MainWindow.h \
     AudioWave.h \
     ResizeLabel.h \
     GraphicsZoomView.h \
-    DarkStyle.h \
     JumpSlider.h \
     AudioPlayback.h \
     GraphicsPickerScene.h \
@@ -386,7 +398,6 @@ HEADERS += MainWindow.h \
     QRecentFilesMenu.h \
     SingleFrameExportDialog.h \
     StretchFactors.h \
-    DarkStyleModern.h \
     Curves.h \
     ../../src/processing/interpolation/spline_helper.h \
     ../../src/processing/interpolation/spline.h \
@@ -472,14 +483,11 @@ FORMS += \
     StatusFpmDialog.ui
 
 RESOURCES += \
-    ressources.qrc \
-    darkstyle.qrc
+    ressources.qrc
 
 DISTFILES += \
     Info.plist \
     MLVAPP.ico \
-    darkstyle/darkstyle.qss \
-    darkstyle/darkstyleOSX.qss \
     mlvapp.desktop
 
 #Application version

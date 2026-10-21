@@ -9,27 +9,15 @@
 #include "math.h"
 #include <QPainter>
 
-#define HEIGHT 140
-#define WIDTH 511 //511 = 8bit * 2 - 1
-
-//Constructor
-Histogram::Histogram()
-{
-    m_pHistogram = new QImage( WIDTH, HEIGHT, QImage::Format_RGB888 );
-}
-
-//Destructor
-Histogram::~Histogram()
-{
-    delete m_pHistogram;
-}
-
 //Make histogram from QImage
+/*
 QImage Histogram::getHistogramFromImg( QImage *img )
 {
     uint32_t tableR[256] = {0};
     uint32_t tableG[256] = {0};
     uint32_t tableB[256] = {0};
+
+    double factor = WIDTH / 256.0;
 
     //Count
     for( int y = 0; y < img->height(); y++ )
@@ -66,11 +54,11 @@ QImage Histogram::getHistogramFromImg( QImage *img )
         //"Real" points
         for( uint8_t y = 0; y < HEIGHT; y++ )
         {
-            QColor color = QColor( Qt::black );
+            QColor color = Qt::black;
             if( tableR[x] >= ( uint32_t )( HEIGHT - y ) ) color.setRed( 255 );
             if( tableG[x] >= ( uint32_t )( HEIGHT - y ) ) color.setGreen( 255 );
             if( tableB[x] >= ( uint32_t )( HEIGHT - y ) ) color.setBlue( 255 );
-            m_pHistogram->setPixelColor( x * 2, y, color );
+            m_pHistogram->setPixelColor( x * factor, y, color );
         }
 
         //Interpolation
@@ -78,23 +66,28 @@ QImage Histogram::getHistogramFromImg( QImage *img )
         {
             for( uint8_t y = 0; y < HEIGHT; y++ )
             {
-                QColor color = QColor( Qt::black );
+                QColor color = Qt::black;
                 if( ( ( tableR[x] + tableR[x-1] ) >> 1 ) >= ( uint32_t )( HEIGHT - y ) ) color.setRed( 255 );
                 if( ( ( tableG[x] + tableG[x-1] ) >> 1 ) >= ( uint32_t )( HEIGHT - y ) ) color.setGreen( 255 );
                 if( ( ( tableB[x] + tableB[x-1] ) >> 1 ) >= ( uint32_t )( HEIGHT - y ) ) color.setBlue( 255 );
-                m_pHistogram->setPixelColor( ( x * 2 ) - 1, y, color );
+                m_pHistogram->setPixelColor( ( x * factor ) - 1, y, color );
             }
         }
     }
     return *m_pHistogram;
 }
+*/
 
 //Make histogram from Raw Image (8bit R, 8bit G, 8bit B,...)
-QImage Histogram::getHistogramFromRaw( uint8_t *raw, uint16_t width, uint16_t height, bool under, bool over )
+QImage Histogram::getHistogramFromRaw( const uint8_t *raw, uint16_t width, uint16_t height, uint16_t labelWidth, uint16_t labelHeight, bool under, bool over )
 {
+    QImage image( labelWidth, labelHeight, QImage::Format_RGB32 );
+
     uint32_t tableR[256] = {};
     uint32_t tableG[256] = {};
     uint32_t tableB[256] = {};
+
+    double factor = image.width() / 256.0;
 
     // --- Count ---
     const uint8_t* p = raw;
@@ -121,16 +114,16 @@ QImage Histogram::getHistogramFromRaw( uint8_t *raw, uint16_t width, uint16_t he
     // --- Normalize ---
     for (int x = 0; x < 256; ++x)
     {
-        tableR[x] = tableR[x] * HEIGHT / highestVal;
-        tableG[x] = tableG[x] * HEIGHT / highestVal;
-        tableB[x] = tableB[x] * HEIGHT / highestVal;
+        tableR[x] = tableR[x] * image.height() / highestVal;
+        tableG[x] = tableG[x] * image.height() / highestVal;
+        tableB[x] = tableB[x] * image.height() / highestVal;
     }
 
     // --- Clear ---
-    m_pHistogram->fill(Qt::black);
+    image.fill(Qt::black);
 
-    QPainter painter(m_pHistogram);
-    painter.setRenderHint(QPainter::Antialiasing, true);
+    QPainter painter(&image);
+    painter.setRenderHint(QPainter::Antialiasing);
     painter.setCompositionMode(QPainter::CompositionMode_Plus);
     painter.setPen(Qt::NoPen);
 
@@ -140,17 +133,17 @@ QImage Histogram::getHistogramFromRaw( uint8_t *raw, uint16_t width, uint16_t he
         poly.reserve(258);
 
         // bottom-left
-        poly << QPointF(0, HEIGHT);
+        poly << QPointF(0, image.height());
 
         for (int x = 0; x < 256; ++x)
         {
-            const qreal px = x * 2.0;
-            const qreal py = HEIGHT - table[x];
+            const qreal px = x * factor;
+            const qreal py = image.height() - table[x];
             poly << QPointF(px, py);
         }
 
         // bottom-right
-        poly << QPointF(WIDTH, HEIGHT);
+        poly << QPointF(image.width(), image.height());
 
         painter.setBrush(color);
         painter.drawPolygon(poly);
@@ -165,20 +158,26 @@ QImage Histogram::getHistogramFromRaw( uint8_t *raw, uint16_t width, uint16_t he
     // --- Over / Underexposed Marker (optional, bleibt wie gehabt) ---
     if (over || under)
     {
-        QPainter p2(m_pHistogram);
+        QPainter p2(&image);
         p2.setPen(Qt::NoPen);
+
+        int size = image.width() * 0.025;
 
         if (over)
         {
+            p2.setBrush(Qt::white);
+            p2.drawRect(image.width() - (size + 1), 0, size + 1, size + 1);
             p2.setBrush(Qt::red);
-            p2.drawRect(WIDTH - 10, 0, 10, 10);
+            p2.drawRect(image.width() - size, 0, size, size);
         }
         if (under)
         {
+            p2.setBrush(Qt::white);
+            p2.drawRect(0, 0, size + 1, size + 1);
             p2.setBrush(Qt::blue);
-            p2.drawRect(0, 0, 10, 10);
+            p2.drawRect(0, 0, size, size);
         }
     }
 
-    return *m_pHistogram;
+    return image;
 }

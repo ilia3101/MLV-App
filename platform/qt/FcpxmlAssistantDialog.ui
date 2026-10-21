@@ -6,16 +6,34 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>616</width>
-    <height>428</height>
+    <width>600</width>
+    <height>400</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>FCPXML Import Assistant</string>
   </property>
-  <layout class="QGridLayout" name="gridLayout_2">
-   <item row="0" column="0">
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <property name="spacing">
+    <number>10</number>
+   </property>
+   <property name="leftMargin">
+    <number>20</number>
+   </property>
+   <property name="topMargin">
+    <number>20</number>
+   </property>
+   <property name="rightMargin">
+    <number>20</number>
+   </property>
+   <property name="bottomMargin">
+    <number>20</number>
+   </property>
+   <item>
     <layout class="QGridLayout" name="gridLayout">
+     <property name="spacing">
+      <number>5</number>
+     </property>
      <item row="0" column="0">
       <widget class="QPushButton" name="pushButtonFcpxml">
        <property name="text">
@@ -23,7 +41,7 @@
        </property>
        <property name="icon">
         <iconset resource="ressources.qrc">
-         <normaloff>:/RetinaIMG/RetinaIMG/Movie-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Movie-icon.png</iconset>
+         <normaloff>:/fontawesome/fontawesome/svgs-full/solid/film.svg</normaloff>:/fontawesome/fontawesome/svgs-full/solid/film.svg</iconset>
        </property>
        <property name="default">
         <bool>true</bool>
@@ -47,7 +65,7 @@
        </property>
        <property name="icon">
         <iconset resource="ressources.qrc">
-         <normaloff>:/RetinaIMG/RetinaIMG/Folder-Open-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Folder-Open-icon.png</iconset>
+         <normaloff>:/fontawesome/fontawesome/svgs-full/solid/folder-open.svg</normaloff>:/fontawesome/fontawesome/svgs-full/solid/folder-open.svg</iconset>
        </property>
       </widget>
      </item>
@@ -67,19 +85,16 @@
      </item>
     </layout>
    </item>
-   <item row="1" column="0">
+   <item>
     <widget class="QTableWidget" name="tableWidget">
-     <property name="verticalScrollBarPolicy">
-      <enum>Qt::ScrollBarAlwaysOn</enum>
-     </property>
      <property name="editTriggers">
-      <set>QAbstractItemView::NoEditTriggers</set>
+      <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
      </property>
      <property name="selectionMode">
-      <enum>QAbstractItemView::NoSelection</enum>
+      <enum>QAbstractItemView::SelectionMode::NoSelection</enum>
      </property>
      <property name="selectionBehavior">
-      <enum>QAbstractItemView::SelectRows</enum>
+      <enum>QAbstractItemView::SelectionBehavior::SelectRows</enum>
      </property>
      <attribute name="horizontalHeaderDefaultSectionSize">
       <number>200</number>
@@ -102,8 +117,14 @@
      </column>
     </widget>
    </item>
-   <item row="2" column="0">
+   <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
+     <property name="spacing">
+      <number>10</number>
+     </property>
+     <property name="topMargin">
+      <number>10</number>
+     </property>
      <item>
       <widget class="QLabel" name="labelStatus">
        <property name="text">
@@ -114,12 +135,12 @@
      <item>
       <spacer name="horizontalSpacer">
        <property name="orientation">
-        <enum>Qt::Horizontal</enum>
+        <enum>Qt::Orientation::Horizontal</enum>
        </property>
        <property name="sizeHint" stdset="0">
         <size>
-         <width>40</width>
-         <height>20</height>
+         <width>0</width>
+         <height>0</height>
         </size>
        </property>
       </spacer>
@@ -127,7 +148,7 @@
      <item>
       <widget class="QPushButton" name="pushButtonAbort">
        <property name="text">
-        <string>Abort</string>
+        <string>Cancel</string>
        </property>
       </widget>
      </item>
@@ -150,6 +171,7 @@
   <tabstop>lineEditFcpxml</tabstop>
   <tabstop>pushButtonMlv</tabstop>
   <tabstop>lineEditMlvFolder</tabstop>
+  <tabstop>checkBoxScanRecursively</tabstop>
   <tabstop>tableWidget</tabstop>
   <tabstop>pushButtonAbort</tabstop>
   <tabstop>pushButtonImport</tabstop>
@@ -165,8 +187,8 @@
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>216</x>
-     <y>275</y>
+     <x>498</x>
+     <y>379</y>
     </hint>
     <hint type="destinationlabel">
      <x>199</x>
@@ -181,8 +203,8 @@
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>326</x>
-     <y>275</y>
+     <x>578</x>
+     <y>379</y>
     </hint>
     <hint type="destinationlabel">
      <x>199</x>

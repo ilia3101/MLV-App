@@ -24,7 +24,7 @@ signals:
 
 protected:
     void mouseDoubleClickEvent(QMouseEvent*);
-    void enterEvent(QEvent *event);
+    void enterEvent(QEnterEvent *event);
     void leaveEvent(QEvent *event);
 };
 

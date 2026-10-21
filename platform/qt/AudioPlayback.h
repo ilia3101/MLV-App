@@ -26,6 +26,7 @@ public:
     explicit AudioPlayback( QObject *parent = Q_NULLPTR );
     ~AudioPlayback();
     void initAudioEngine( mlvObject_t *pMlvObject );
+    void outputDeviceChanged();
     void resetAudioEngine( void );
     void jumpToPos( int frame );
     void play( void );
@@ -40,6 +41,7 @@ private:
     bool m_audioEngineInitialized;
     bool m_audioEngineRunning;
 
+    QAudioFormat m_audioFormat;
     QByteArray *m_pByteArrayAudio;
     QDataStream *m_pAudioStream;
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)

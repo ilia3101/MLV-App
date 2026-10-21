@@ -477,40 +477,32 @@ void applyProcessingObject( processingObject_t * processing,
     }
     else
     {
-        apply_processing_parameters_t * params = alloca(sizeof(apply_processing_parameters_t) * threads);
-
-        /* All chunks this height except possibly slightly longer last one */
-        int chunk_size = imageY/threads;
-        /* Size of a chunk */
-        uint32_t offset_chunk = imageX * chunk_size * 3;
-
-        /* Split in to chunks for each thread */
-        for (int t = 0; t < threads; ++t)
-        {
-            params[t].processing = processing;
-            params[t].imageX = imageX;
-            params[t].imageY = chunk_size;
-            params[t].inputImage = inputImage + offset_chunk*t;
-            params[t].outputImage = outputImage + offset_chunk*t;
-            params[t].blurImage = get_buffer(processing->shadows_highlights.blur_image) + offset_chunk*t;
-            params[t].gradientMask = processing->gradient_mask + (imageX * chunk_size * t);
-            params[t].vignetteMask = processing->vignette_mask + (imageX * chunk_size * t);
+        /* Finer chunks with dynamic OpenMP scheduling for heterogeneous Apple Silicon P/E cores */
+        int num_chunks = threads * 3;
+        int chunk_size = imageY / num_chunks;
+        if (chunk_size < 16) {
+            num_chunks = (imageY / 16 > 0) ? (imageY / 16) : 1;
+            chunk_size = imageY / num_chunks;
         }
 
-        /* To make sure bottom is processed */
-        params[threads-1].imageY = imageY - chunk_size * (threads-1);
+        uint16_t * blur_buf = get_buffer(processing->shadows_highlights.blur_image);
 
-        pthread_t * threadid = alloca(threads * sizeof(pthread_t));
+        #pragma omp parallel for schedule(dynamic, 1)
+        for (int t = 0; t < num_chunks; ++t)
+        {
+            int cur_chunk_y = (t == num_chunks - 1) ? (imageY - chunk_size * (num_chunks - 1)) : chunk_size;
+            uint32_t offset_chunk = (uint32_t)imageX * chunk_size * 3 * t;
+            uint32_t mask_offset = (uint32_t)imageX * chunk_size * t;
 
-        /* Do threads */
-        for (int t = 0; t < threads; ++t)
-        {
-            pthread_create(&threadid[t], NULL, (void *)&processing_object_thread, (void *)(params + t));
-        }
-        /* let all threads finish */
-        for (int t = 0; t < threads; ++t)
-        {
-            pthread_join(threadid[t], NULL);
+            apply_processing_object(
+                processing,
+                imageX, cur_chunk_y,
+                inputImage + offset_chunk,
+                outputImage + offset_chunk,
+                blur_buf ? (blur_buf + offset_chunk) : NULL,
+                processing->gradient_mask + mask_offset,
+                processing->vignette_mask + mask_offset
+            );
         }
     }
 
@@ -606,7 +598,7 @@ void applyProcessingObject( processingObject_t * processing,
         /* Row length elements */
         uint32_t rl = imageX * 3;
 
-#pragma omp parallel for
+#pragma omp parallel for schedule(guided)
         for (uint32_t y = 0; y < y_max+1; ++y)
         {
             uint16_t * out_row = outputImage + (y * rl); /* current row ouptut */
@@ -770,7 +762,9 @@ void apply_processing_object( processingObject_t * processing,
             vmpix++;
             if( vmpix < processing->vignette_end )  /* just safety - sometimes parameters may change faster than processing */
             {
-                expo_correction *= pow( 1.0 + ( vmpix[0] * processing->vignette_strength / 128.0 ), 4 );
+                double vig = 1.0 + ( vmpix[0] * processing->vignette_strength / 128.0 );
+                double vig2 = vig * vig;
+                expo_correction *= vig2 * vig2;
             }
         }
 

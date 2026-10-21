@@ -85,7 +85,7 @@ bool BadPixelFileHandler::isPixelIncluded(mlvObject_t *pMlvObject, uint32_t x, u
 }
 
 //Prepare all crosses in GraphicsScene, to be able to show it...
-void BadPixelFileHandler::crossesPrepareAll(mlvObject_t *pMlvObject, QVector<CrossElement *> *pCrossVector, GraphicsPickerScene* pScene)
+void BadPixelFileHandler::crossesClearAll(QVector<CrossElement *> *pCrossVector, GraphicsPickerScene* pScene)
 {
     for( int i = 0; i < pCrossVector->size(); i++ )
     {
@@ -93,6 +93,12 @@ void BadPixelFileHandler::crossesPrepareAll(mlvObject_t *pMlvObject, QVector<Cro
         pScene->removeItem( pCrossVector->at(i)->crossGraphicsElement() );
     }
     pCrossVector->clear();
+}
+
+//Prepare all crosses in GraphicsScene, to be able to show it...
+void BadPixelFileHandler::crossesPrepareAll(mlvObject_t *pMlvObject, QVector<CrossElement *> *pCrossVector, GraphicsPickerScene* pScene)
+{
+    crossesClearAll( pCrossVector, pScene );
 
     QString fileName = getFileName( pMlvObject );
     if( !QFileInfo( fileName ).exists() ) return;
@@ -125,8 +131,8 @@ void BadPixelFileHandler::crossesPrepareAll(mlvObject_t *pMlvObject, QVector<Cro
         y = getPicY( pMlvObject, y );
         //paintCross( pMlvObject, pRawImage, x, y );
 
-        QPolygon poly;
-        CrossElement *cross = new CrossElement( poly );
+        QPainterPath path;
+        CrossElement *cross = new CrossElement( path );
         cross->setPosition( x, y );
         pCrossVector->append( cross );
         pScene->addItem( pCrossVector->last()->crossGraphicsElement() );

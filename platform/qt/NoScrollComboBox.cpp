@@ -12,7 +12,8 @@ NoScrollComboBox::NoScrollComboBox(QWidget *parent)
 
 }
 
-void NoScrollComboBox::wheelEvent(QWheelEvent *)
+void NoScrollComboBox::wheelEvent(QWheelEvent *event)
 {
-    //Do nothing!!!
+    // Propagate to the parent
+    event->ignore();
 }
