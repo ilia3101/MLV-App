@@ -5,6 +5,7 @@
  * \brief Draws a RGB WaveForm Monitor for an image
  */
 
+#include <cmath>
 #include "WaveFormMonitor.h"
 
 QImage WaveFormMonitor::getWaveFormMonitorFromRaw( const uint8_t *m_pRawImage, uint16_t width, uint16_t height, uint16_t labelWidth, uint16_t labelHeight, bool parade )

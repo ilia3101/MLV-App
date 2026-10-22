@@ -3,7 +3,7 @@
  <class>CUpdaterDialog</class>
  <widget class="QDialog" name="CUpdaterDialog">
   <property name="windowModality">
-   <enum>Qt::WindowModality::NonModal</enum>
+   <enum>Qt::NonModal</enum>
   </property>
   <property name="geometry">
    <rect>
@@ -88,7 +88,7 @@
        <item>
         <spacer name="verticalSpacer">
          <property name="orientation">
-          <enum>Qt::Orientation::Vertical</enum>
+          <enum>Qt::Vertical</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
@@ -137,7 +137,7 @@
        <item>
         <widget class="QDialogButtonBox" name="buttonBox">
          <property name="standardButtons">
-          <set>QDialogButtonBox::StandardButton::Close|QDialogButtonBox::StandardButton::Ok</set>
+          <set>QDialogButtonBox::Close|QDialogButtonBox::Ok</set>
          </property>
         </widget>
        </item>

@@ -18,7 +18,11 @@ void DoubleClickLabel::mouseDoubleClickEvent(QMouseEvent*) {
     emit doubleClicked();
 }
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 void DoubleClickLabel::enterEvent(QEnterEvent *event)
+#else
+void DoubleClickLabel::enterEvent(QEvent *event)
+#endif
 {
     Q_UNUSED (event);
     if( this->isEnabled() ) setStyleSheet( "QLabel { color: palette(link); }" );

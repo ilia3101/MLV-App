@@ -334,7 +334,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
        <item>
         <spacer name="horizontalSpacer_13">
          <property name="orientation">
-          <enum>Qt::Orientation::Horizontal</enum>
+          <enum>Qt::Horizontal</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
@@ -372,7 +372,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
        <item>
         <spacer name="horizontalSpacer_32">
          <property name="orientation">
-          <enum>Qt::Orientation::Horizontal</enum>
+          <enum>Qt::Horizontal</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
@@ -414,16 +414,16 @@ QScrollBar::add-page, QScrollBar::sub-page {
        </size>
       </property>
       <property name="contextMenuPolicy">
-       <enum>Qt::ContextMenuPolicy::CustomContextMenu</enum>
+       <enum>Qt::CustomContextMenu</enum>
       </property>
       <property name="frameShape">
-       <enum>QFrame::Shape::NoFrame</enum>
+       <enum>QFrame::NoFrame</enum>
       </property>
       <property name="verticalScrollBarPolicy">
-       <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum>
+       <enum>Qt::ScrollBarAlwaysOff</enum>
       </property>
       <property name="horizontalScrollBarPolicy">
-       <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum>
+       <enum>Qt::ScrollBarAlwaysOff</enum>
       </property>
       <property name="backgroundBrush">
        <brush brushstyle="SolidPattern">
@@ -435,7 +435,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
        </brush>
       </property>
       <property name="dragMode">
-       <enum>QGraphicsView::DragMode::ScrollHandDrag</enum>
+       <enum>QGraphicsView::ScrollHandDrag</enum>
       </property>
      </widget>
     </item>
@@ -478,7 +478,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
           <number>1</number>
          </property>
          <property name="orientation">
-          <enum>Qt::Orientation::Horizontal</enum>
+          <enum>Qt::Horizontal</enum>
          </property>
         </widget>
        </item>
@@ -515,7 +515,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
        <bool>true</bool>
       </property>
       <property name="alignment">
-       <set>Qt::AlignmentFlag::AlignCenter</set>
+       <set>Qt::AlignCenter</set>
       </property>
      </widget>
     </item>
@@ -699,7 +699,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
     <bool>false</bool>
    </property>
    <property name="allowedAreas">
-    <set>Qt::DockWidgetArea::RightDockWidgetArea</set>
+    <set>Qt::RightDockWidgetArea</set>
    </property>
    <property name="windowTitle">
     <string>Edit</string>
@@ -739,7 +739,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
         </size>
        </property>
        <property name="contextMenuPolicy">
-        <enum>Qt::ContextMenuPolicy::CustomContextMenu</enum>
+        <enum>Qt::CustomContextMenu</enum>
        </property>
        <property name="text">
         <string/>
@@ -748,7 +748,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
         <bool>true</bool>
        </property>
        <property name="alignment">
-        <set>Qt::AlignmentFlag::AlignCenter</set>
+        <set>Qt::AlignCenter</set>
        </property>
       </widget>
      </item>
@@ -761,13 +761,13 @@ QScrollBar::add-page, QScrollBar::sub-page {
         </sizepolicy>
        </property>
        <property name="frameShape">
-        <enum>QFrame::Shape::NoFrame</enum>
+        <enum>QFrame::NoFrame</enum>
        </property>
        <property name="verticalScrollBarPolicy">
-        <enum>Qt::ScrollBarPolicy::ScrollBarAsNeeded</enum>
+        <enum>Qt::ScrollBarAsNeeded</enum>
        </property>
        <property name="horizontalScrollBarPolicy">
-        <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum>
+        <enum>Qt::ScrollBarAlwaysOff</enum>
        </property>
        <property name="widgetResizable">
         <bool>true</bool>
@@ -854,7 +854,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  <item>
                   <widget class="Line" name="line_10">
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                   </widget>
                  </item>
@@ -1041,7 +1041,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  <item>
                   <widget class="Line" name="line_7">
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                   </widget>
                  </item>
@@ -1281,7 +1281,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  <item>
                   <widget class="Line" name="line_30">
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                   </widget>
                  </item>
@@ -1747,7 +1747,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  <item>
                   <widget class="Line" name="line_31">
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                   </widget>
                  </item>
@@ -1896,7 +1896,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  <item>
                   <widget class="Line" name="line_32">
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                   </widget>
                  </item>
@@ -2021,7 +2021,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  <item>
                   <widget class="Line" name="line_33">
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                   </widget>
                  </item>
@@ -2283,7 +2283,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     <string>0</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                    </property>
                   </widget>
                  </item>
@@ -2314,10 +2314,10 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  <item row="2" column="1">
                   <spacer name="horizontalSpacer_68">
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                    <property name="sizeType">
-                    <enum>QSizePolicy::Policy::Fixed</enum>
+                    <enum>QSizePolicy::Fixed</enum>
                    </property>
                    <property name="sizeHint" stdset="0">
                     <size>
@@ -2330,10 +2330,10 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  <item row="0" column="1">
                   <spacer name="horizontalSpacer_65">
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                    <property name="sizeType">
-                    <enum>QSizePolicy::Policy::Fixed</enum>
+                    <enum>QSizePolicy::Fixed</enum>
                    </property>
                    <property name="sizeHint" stdset="0">
                     <size>
@@ -2355,7 +2355,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     <number>5</number>
                    </property>
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                   </widget>
                  </item>
@@ -2370,7 +2370,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     <string>0.00</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                    </property>
                   </widget>
                  </item>
@@ -2383,7 +2383,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     <number>0</number>
                    </property>
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                   </widget>
                  </item>
@@ -2683,7 +2683,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  <item>
                   <widget class="Line" name="line_34">
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                   </widget>
                  </item>
@@ -2717,7 +2717,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     </font>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                    </property>
                    <property name="maximum">
                     <number>9999</number>
@@ -2821,7 +2821,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  <item>
                   <widget class="Line" name="line_35">
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                   </widget>
                  </item>
@@ -2855,10 +2855,10 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    <item row="0" column="2">
                     <spacer name="horizontalSpacer_27">
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                      <property name="sizeType">
-                      <enum>QSizePolicy::Policy::Maximum</enum>
+                      <enum>QSizePolicy::Maximum</enum>
                      </property>
                      <property name="sizeHint" stdset="0">
                       <size>
@@ -2876,16 +2876,16 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       </font>
                      </property>
                      <property name="contextMenuPolicy">
-                      <enum>Qt::ContextMenuPolicy::CustomContextMenu</enum>
+                      <enum>Qt::CustomContextMenu</enum>
                      </property>
                      <property name="layoutDirection">
-                      <enum>Qt::LayoutDirection::RightToLeft</enum>
+                      <enum>Qt::RightToLeft</enum>
                      </property>
                      <property name="text">
                       <string>0</string>
                      </property>
                      <property name="alignment">
-                      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                      </property>
                     </widget>
                    </item>
@@ -2910,7 +2910,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <number>0</number>
                      </property>
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                     </widget>
                    </item>
@@ -2943,10 +2943,10 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    <item row="0" column="1">
                     <spacer name="horizontalSpacer_26">
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                      <property name="sizeType">
-                      <enum>QSizePolicy::Policy::Maximum</enum>
+                      <enum>QSizePolicy::Maximum</enum>
                      </property>
                      <property name="sizeHint" stdset="0">
                       <size>
@@ -2964,16 +2964,16 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       </font>
                      </property>
                      <property name="contextMenuPolicy">
-                      <enum>Qt::ContextMenuPolicy::CustomContextMenu</enum>
+                      <enum>Qt::CustomContextMenu</enum>
                      </property>
                      <property name="layoutDirection">
-                      <enum>Qt::LayoutDirection::RightToLeft</enum>
+                      <enum>Qt::RightToLeft</enum>
                      </property>
                      <property name="text">
                       <string>0</string>
                      </property>
                      <property name="alignment">
-                      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                      </property>
                     </widget>
                    </item>
@@ -2995,7 +2995,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <number>0</number>
                      </property>
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                     </widget>
                    </item>
@@ -3079,10 +3079,10 @@ QScrollBar::add-page, QScrollBar::sub-page {
                   </font>
                  </property>
                  <property name="focusPolicy">
-                  <enum>Qt::FocusPolicy::ClickFocus</enum>
+                  <enum>Qt::ClickFocus</enum>
                  </property>
                  <property name="alignment">
-                  <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                  </property>
                 </widget>
                </item>
@@ -3134,10 +3134,10 @@ QScrollBar::add-page, QScrollBar::sub-page {
                   </font>
                  </property>
                  <property name="focusPolicy">
-                  <enum>Qt::FocusPolicy::ClickFocus</enum>
+                  <enum>Qt::ClickFocus</enum>
                  </property>
                  <property name="alignment">
-                  <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                  </property>
                 </widget>
                </item>
@@ -3333,10 +3333,10 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    <item row="0" column="1">
                     <spacer name="horizontalSpacer">
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                      <property name="sizeType">
-                      <enum>QSizePolicy::Policy::Maximum</enum>
+                      <enum>QSizePolicy::Maximum</enum>
                      </property>
                      <property name="sizeHint" stdset="0">
                       <size>
@@ -3354,16 +3354,16 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       </font>
                      </property>
                      <property name="contextMenuPolicy">
-                      <enum>Qt::ContextMenuPolicy::CustomContextMenu</enum>
+                      <enum>Qt::CustomContextMenu</enum>
                      </property>
                      <property name="layoutDirection">
-                      <enum>Qt::LayoutDirection::RightToLeft</enum>
+                      <enum>Qt::RightToLeft</enum>
                      </property>
                      <property name="text">
                       <string>0.00</string>
                      </property>
                      <property name="alignment">
-                      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                      </property>
                     </widget>
                    </item>
@@ -3385,7 +3385,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <number>0</number>
                      </property>
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                     </widget>
                    </item>
@@ -3411,10 +3411,10 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    <item row="0" column="1">
                     <spacer name="horizontalSpacer_28">
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                      <property name="sizeType">
-                      <enum>QSizePolicy::Policy::Maximum</enum>
+                      <enum>QSizePolicy::Maximum</enum>
                      </property>
                      <property name="sizeHint" stdset="0">
                       <size>
@@ -3432,13 +3432,13 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       </font>
                      </property>
                      <property name="layoutDirection">
-                      <enum>Qt::LayoutDirection::RightToLeft</enum>
+                      <enum>Qt::RightToLeft</enum>
                      </property>
                      <property name="text">
                       <string>0</string>
                      </property>
                      <property name="alignment">
-                      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                      </property>
                     </widget>
                    </item>
@@ -3460,7 +3460,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <number>0</number>
                      </property>
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                     </widget>
                    </item>
@@ -3486,10 +3486,10 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    <item row="0" column="1">
                     <spacer name="horizontalSpacer_58">
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                      <property name="sizeType">
-                      <enum>QSizePolicy::Policy::Maximum</enum>
+                      <enum>QSizePolicy::Maximum</enum>
                      </property>
                      <property name="sizeHint" stdset="0">
                       <size>
@@ -3507,13 +3507,13 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       </font>
                      </property>
                      <property name="layoutDirection">
-                      <enum>Qt::LayoutDirection::RightToLeft</enum>
+                      <enum>Qt::RightToLeft</enum>
                      </property>
                      <property name="text">
                       <string>0.75</string>
                      </property>
                      <property name="alignment">
-                      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                      </property>
                     </widget>
                    </item>
@@ -3535,7 +3535,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <number>75</number>
                      </property>
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                     </widget>
                    </item>
@@ -3554,7 +3554,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  <item>
                   <widget class="Line" name="line_36">
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                   </widget>
                  </item>
@@ -3705,13 +3705,13 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       </font>
                      </property>
                      <property name="layoutDirection">
-                      <enum>Qt::LayoutDirection::RightToLeft</enum>
+                      <enum>Qt::RightToLeft</enum>
                      </property>
                      <property name="text">
                       <string>6000 K</string>
                      </property>
                      <property name="alignment">
-                      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                      </property>
                     </widget>
                    </item>
@@ -3736,17 +3736,17 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <number>6000</number>
                      </property>
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                     </widget>
                    </item>
                    <item row="0" column="1">
                     <spacer name="horizontalSpacer_62">
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                      <property name="sizeType">
-                      <enum>QSizePolicy::Policy::Maximum</enum>
+                      <enum>QSizePolicy::Maximum</enum>
                      </property>
                      <property name="sizeHint" stdset="0">
                       <size>
@@ -3778,10 +3778,10 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    <item row="0" column="1">
                     <spacer name="horizontalSpacer_3">
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                      <property name="sizeType">
-                      <enum>QSizePolicy::Policy::Maximum</enum>
+                      <enum>QSizePolicy::Maximum</enum>
                      </property>
                      <property name="sizeHint" stdset="0">
                       <size>
@@ -3799,13 +3799,13 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       </font>
                      </property>
                      <property name="layoutDirection">
-                      <enum>Qt::LayoutDirection::RightToLeft</enum>
+                      <enum>Qt::RightToLeft</enum>
                      </property>
                      <property name="text">
                       <string>0</string>
                      </property>
                      <property name="alignment">
-                      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                      </property>
                     </widget>
                    </item>
@@ -3827,7 +3827,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <number>0</number>
                      </property>
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                     </widget>
                    </item>
@@ -3846,7 +3846,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  <item>
                   <widget class="Line" name="line_37">
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                   </widget>
                  </item>
@@ -3877,10 +3877,10 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    <item row="0" column="1">
                     <spacer name="horizontalSpacer_30">
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                      <property name="sizeType">
-                      <enum>QSizePolicy::Policy::Maximum</enum>
+                      <enum>QSizePolicy::Maximum</enum>
                      </property>
                      <property name="sizeHint" stdset="0">
                       <size>
@@ -3898,13 +3898,13 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       </font>
                      </property>
                      <property name="layoutDirection">
-                      <enum>Qt::LayoutDirection::RightToLeft</enum>
+                      <enum>Qt::RightToLeft</enum>
                      </property>
                      <property name="text">
                       <string>0</string>
                      </property>
                      <property name="alignment">
-                      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                      </property>
                     </widget>
                    </item>
@@ -3926,7 +3926,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <number>0</number>
                      </property>
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                     </widget>
                    </item>
@@ -3952,10 +3952,10 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    <item row="0" column="1">
                     <spacer name="horizontalSpacer_29">
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                      <property name="sizeType">
-                      <enum>QSizePolicy::Policy::Maximum</enum>
+                      <enum>QSizePolicy::Maximum</enum>
                      </property>
                      <property name="sizeHint" stdset="0">
                       <size>
@@ -3973,13 +3973,13 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       </font>
                      </property>
                      <property name="layoutDirection">
-                      <enum>Qt::LayoutDirection::RightToLeft</enum>
+                      <enum>Qt::RightToLeft</enum>
                      </property>
                      <property name="text">
                       <string>0</string>
                      </property>
                      <property name="alignment">
-                      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                      </property>
                     </widget>
                    </item>
@@ -4001,7 +4001,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <number>0</number>
                      </property>
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                     </widget>
                    </item>
@@ -4027,10 +4027,10 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    <item row="0" column="1">
                     <spacer name="horizontalSpacer_4">
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                      <property name="sizeType">
-                      <enum>QSizePolicy::Policy::Maximum</enum>
+                      <enum>QSizePolicy::Maximum</enum>
                      </property>
                      <property name="sizeHint" stdset="0">
                       <size>
@@ -4048,13 +4048,13 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       </font>
                      </property>
                      <property name="layoutDirection">
-                      <enum>Qt::LayoutDirection::RightToLeft</enum>
+                      <enum>Qt::RightToLeft</enum>
                      </property>
                      <property name="text">
                       <string>0</string>
                      </property>
                      <property name="alignment">
-                      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                      </property>
                     </widget>
                    </item>
@@ -4076,7 +4076,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <number>0</number>
                      </property>
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                     </widget>
                    </item>
@@ -4095,7 +4095,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  <item>
                   <widget class="Line" name="line_38">
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                   </widget>
                  </item>
@@ -4126,10 +4126,10 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    <item row="0" column="1">
                     <spacer name="horizontalSpacer_5">
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                      <property name="sizeType">
-                      <enum>QSizePolicy::Policy::Maximum</enum>
+                      <enum>QSizePolicy::Maximum</enum>
                      </property>
                      <property name="sizeHint" stdset="0">
                       <size>
@@ -4147,13 +4147,13 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       </font>
                      </property>
                      <property name="layoutDirection">
-                      <enum>Qt::LayoutDirection::RightToLeft</enum>
+                      <enum>Qt::RightToLeft</enum>
                      </property>
                      <property name="text">
                       <string>20</string>
                      </property>
                      <property name="alignment">
-                      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                      </property>
                     </widget>
                    </item>
@@ -4172,7 +4172,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <number>20</number>
                      </property>
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                     </widget>
                    </item>
@@ -4198,10 +4198,10 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    <item row="0" column="1">
                     <spacer name="horizontalSpacer_6">
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                      <property name="sizeType">
-                      <enum>QSizePolicy::Policy::Maximum</enum>
+                      <enum>QSizePolicy::Maximum</enum>
                      </property>
                      <property name="sizeHint" stdset="0">
                       <size>
@@ -4219,13 +4219,13 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       </font>
                      </property>
                      <property name="layoutDirection">
-                      <enum>Qt::LayoutDirection::RightToLeft</enum>
+                      <enum>Qt::RightToLeft</enum>
                      </property>
                      <property name="text">
                       <string>70</string>
                      </property>
                      <property name="alignment">
-                      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                      </property>
                     </widget>
                    </item>
@@ -4244,7 +4244,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <number>70</number>
                      </property>
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                     </widget>
                    </item>
@@ -4270,10 +4270,10 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    <item row="0" column="1">
                     <spacer name="horizontalSpacer_7">
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                      <property name="sizeType">
-                      <enum>QSizePolicy::Policy::Maximum</enum>
+                      <enum>QSizePolicy::Maximum</enum>
                      </property>
                      <property name="sizeHint" stdset="0">
                       <size>
@@ -4291,13 +4291,13 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       </font>
                      </property>
                      <property name="layoutDirection">
-                      <enum>Qt::LayoutDirection::RightToLeft</enum>
+                      <enum>Qt::RightToLeft</enum>
                      </property>
                      <property name="text">
                       <string>0</string>
                      </property>
                      <property name="alignment">
-                      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                      </property>
                     </widget>
                    </item>
@@ -4313,7 +4313,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <number>100</number>
                      </property>
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                     </widget>
                    </item>
@@ -4339,10 +4339,10 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    <item row="0" column="1">
                     <spacer name="horizontalSpacer_8">
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                      <property name="sizeType">
-                      <enum>QSizePolicy::Policy::Maximum</enum>
+                      <enum>QSizePolicy::Maximum</enum>
                      </property>
                      <property name="sizeHint" stdset="0">
                       <size>
@@ -4360,13 +4360,13 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       </font>
                      </property>
                      <property name="layoutDirection">
-                      <enum>Qt::LayoutDirection::RightToLeft</enum>
+                      <enum>Qt::RightToLeft</enum>
                      </property>
                      <property name="text">
                       <string>50</string>
                      </property>
                      <property name="alignment">
-                      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                      </property>
                     </widget>
                    </item>
@@ -4385,7 +4385,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <number>50</number>
                      </property>
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                     </widget>
                    </item>
@@ -4411,10 +4411,10 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    <item row="0" column="1">
                     <spacer name="horizontalSpacer_9">
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                      <property name="sizeType">
-                      <enum>QSizePolicy::Policy::Maximum</enum>
+                      <enum>QSizePolicy::Maximum</enum>
                      </property>
                      <property name="sizeHint" stdset="0">
                       <size>
@@ -4432,13 +4432,13 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       </font>
                      </property>
                      <property name="layoutDirection">
-                      <enum>Qt::LayoutDirection::RightToLeft</enum>
+                      <enum>Qt::RightToLeft</enum>
                      </property>
                      <property name="text">
                       <string>0</string>
                      </property>
                      <property name="alignment">
-                      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                      </property>
                     </widget>
                    </item>
@@ -4454,7 +4454,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <number>100</number>
                      </property>
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                     </widget>
                    </item>
@@ -4473,7 +4473,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  <item>
                   <widget class="Line" name="line_49">
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                   </widget>
                  </item>
@@ -4516,10 +4516,10 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    <item row="0" column="1">
                     <spacer name="horizontalSpacer_16">
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                      <property name="sizeType">
-                      <enum>QSizePolicy::Policy::Maximum</enum>
+                      <enum>QSizePolicy::Maximum</enum>
                      </property>
                      <property name="sizeHint" stdset="0">
                       <size>
@@ -4537,13 +4537,13 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       </font>
                      </property>
                      <property name="layoutDirection">
-                      <enum>Qt::LayoutDirection::RightToLeft</enum>
+                      <enum>Qt::RightToLeft</enum>
                      </property>
                      <property name="text">
                       <string>0</string>
                      </property>
                      <property name="alignment">
-                      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                      </property>
                     </widget>
                    </item>
@@ -4562,7 +4562,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <number>100</number>
                      </property>
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                     </widget>
                    </item>
@@ -4588,10 +4588,10 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    <item row="0" column="1">
                     <spacer name="horizontalSpacer_17">
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                      <property name="sizeType">
-                      <enum>QSizePolicy::Policy::Maximum</enum>
+                      <enum>QSizePolicy::Maximum</enum>
                      </property>
                      <property name="sizeHint" stdset="0">
                       <size>
@@ -4609,13 +4609,13 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       </font>
                      </property>
                      <property name="layoutDirection">
-                      <enum>Qt::LayoutDirection::RightToLeft</enum>
+                      <enum>Qt::RightToLeft</enum>
                      </property>
                      <property name="text">
                       <string>0</string>
                      </property>
                      <property name="alignment">
-                      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                      </property>
                     </widget>
                    </item>
@@ -4634,7 +4634,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <number>100</number>
                      </property>
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                     </widget>
                    </item>
@@ -4653,7 +4653,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  <item>
                   <widget class="Line" name="line_39">
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                   </widget>
                  </item>
@@ -4679,7 +4679,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  <item>
                   <spacer name="horizontalSpacer_40">
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                    <property name="sizeHint" stdset="0">
                     <size>
@@ -4741,7 +4741,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     <bool>true</bool>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
+                    <set>Qt::AlignCenter</set>
                    </property>
                   </widget>
                  </item>
@@ -5036,7 +5036,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  <item>
                   <widget class="Line" name="line_40">
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                   </widget>
                  </item>
@@ -5250,10 +5250,10 @@ QScrollBar::add-page, QScrollBar::sub-page {
                   <item row="0" column="1">
                    <spacer name="horizontalSpacer_Gamma">
                     <property name="orientation">
-                     <enum>Qt::Orientation::Horizontal</enum>
+                     <enum>Qt::Horizontal</enum>
                     </property>
                     <property name="sizeType">
-                     <enum>QSizePolicy::Policy::Maximum</enum>
+                     <enum>QSizePolicy::Maximum</enum>
                     </property>
                     <property name="sizeHint" stdset="0">
                      <size>
@@ -5274,7 +5274,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                      <string>1.00</string>
                     </property>
                     <property name="alignment">
-                     <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                     </property>
                    </widget>
                   </item>
@@ -5299,7 +5299,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                      <number>100</number>
                     </property>
                     <property name="orientation">
-                     <enum>Qt::Orientation::Horizontal</enum>
+                     <enum>Qt::Horizontal</enum>
                     </property>
                    </widget>
                   </item>
@@ -5341,7 +5341,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                   <string>Warning: Having creative adjustments and log profile enabled may not give logarithmic output!</string>
                  </property>
                  <property name="layoutDirection">
-                  <enum>Qt::LayoutDirection::LeftToRight</enum>
+                  <enum>Qt::LeftToRight</enum>
                  </property>
                  <property name="text">
                   <string>Allow Creative Adjustments</string>
@@ -5359,7 +5359,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  <item>
                   <widget class="Line" name="line_41">
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                   </widget>
                  </item>
@@ -5513,10 +5513,10 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    <item row="0" column="1">
                     <spacer name="horizontalSpacer_10">
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                      <property name="sizeType">
-                      <enum>QSizePolicy::Policy::Maximum</enum>
+                      <enum>QSizePolicy::Maximum</enum>
                      </property>
                      <property name="sizeHint" stdset="0">
                       <size>
@@ -5537,7 +5537,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <string>0</string>
                      </property>
                      <property name="alignment">
-                      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                      </property>
                     </widget>
                    </item>
@@ -5559,7 +5559,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <number>0</number>
                      </property>
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                     </widget>
                    </item>
@@ -5585,10 +5585,10 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    <item row="0" column="1">
                     <spacer name="horizontalSpacer_57">
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                      <property name="sizeType">
-                      <enum>QSizePolicy::Policy::Maximum</enum>
+                      <enum>QSizePolicy::Maximum</enum>
                      </property>
                      <property name="sizeHint" stdset="0">
                       <size>
@@ -5609,7 +5609,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <string>0</string>
                      </property>
                      <property name="alignment">
-                      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                      </property>
                     </widget>
                    </item>
@@ -5631,7 +5631,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <number>0</number>
                      </property>
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                     </widget>
                    </item>
@@ -5656,7 +5656,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <string>0</string>
                      </property>
                      <property name="alignment">
-                      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                      </property>
                     </widget>
                    </item>
@@ -5678,17 +5678,17 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <number>1</number>
                      </property>
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                     </widget>
                    </item>
                    <item row="0" column="1">
                     <spacer name="horizontalSpacer_11">
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                      <property name="sizeType">
-                      <enum>QSizePolicy::Policy::Maximum</enum>
+                      <enum>QSizePolicy::Maximum</enum>
                      </property>
                      <property name="sizeHint" stdset="0">
                       <size>
@@ -5728,7 +5728,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  <item>
                   <widget class="Line" name="line_43">
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                   </widget>
                  </item>
@@ -5815,10 +5815,10 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  <item row="0" column="1">
                   <spacer name="horizontalSpacer_31">
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                    <property name="sizeType">
-                    <enum>QSizePolicy::Policy::Maximum</enum>
+                    <enum>QSizePolicy::Maximum</enum>
                    </property>
                    <property name="sizeHint" stdset="0">
                     <size>
@@ -5839,7 +5839,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     <string>0</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                    </property>
                   </widget>
                  </item>
@@ -5861,7 +5861,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     <number>0</number>
                    </property>
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                   </widget>
                  </item>
@@ -5878,7 +5878,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  <item>
                   <widget class="Line" name="line_44">
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                   </widget>
                  </item>
@@ -5897,10 +5897,10 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    <item row="0" column="1">
                     <spacer name="horizontalSpacer_46">
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                      <property name="sizeType">
-                      <enum>QSizePolicy::Policy::Maximum</enum>
+                      <enum>QSizePolicy::Maximum</enum>
                      </property>
                      <property name="sizeHint" stdset="0">
                       <size>
@@ -5921,7 +5921,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <string>0</string>
                      </property>
                      <property name="alignment">
-                      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                      </property>
                     </widget>
                    </item>
@@ -5958,7 +5958,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <number>0</number>
                      </property>
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                     </widget>
                    </item>
@@ -5995,7 +5995,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <string>0</string>
                      </property>
                      <property name="alignment">
-                      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                      </property>
                     </widget>
                    </item>
@@ -6017,17 +6017,17 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <number>0</number>
                      </property>
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                     </widget>
                    </item>
                    <item row="0" column="1">
                     <spacer name="horizontalSpacer_44">
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                      <property name="sizeType">
-                      <enum>QSizePolicy::Policy::Maximum</enum>
+                      <enum>QSizePolicy::Maximum</enum>
                      </property>
                      <property name="sizeHint" stdset="0">
                       <size>
@@ -6055,7 +6055,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <string>40</string>
                      </property>
                      <property name="alignment">
-                      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                      </property>
                     </widget>
                    </item>
@@ -6092,17 +6092,17 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <number>40</number>
                      </property>
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                     </widget>
                    </item>
                    <item row="0" column="1">
                     <spacer name="horizontalSpacer_47">
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                      <property name="sizeType">
-                      <enum>QSizePolicy::Policy::Maximum</enum>
+                      <enum>QSizePolicy::Maximum</enum>
                      </property>
                      <property name="sizeHint" stdset="0">
                       <size>
@@ -6127,7 +6127,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  <item>
                   <widget class="Line" name="line_45">
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                   </widget>
                  </item>
@@ -6166,7 +6166,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <string>0</string>
                      </property>
                      <property name="alignment">
-                      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                      </property>
                     </widget>
                    </item>
@@ -6188,17 +6188,17 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <number>0</number>
                      </property>
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                     </widget>
                    </item>
                    <item row="0" column="1">
                     <spacer name="horizontalSpacer_48">
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                      <property name="sizeType">
-                      <enum>QSizePolicy::Policy::Maximum</enum>
+                      <enum>QSizePolicy::Maximum</enum>
                      </property>
                      <property name="sizeHint" stdset="0">
                       <size>
@@ -6238,7 +6238,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <string>0</string>
                      </property>
                      <property name="alignment">
-                      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                      </property>
                     </widget>
                    </item>
@@ -6260,17 +6260,17 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <number>0</number>
                      </property>
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                     </widget>
                    </item>
                    <item row="0" column="1">
                     <spacer name="horizontalSpacer_63">
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                      <property name="sizeType">
-                      <enum>QSizePolicy::Policy::Maximum</enum>
+                      <enum>QSizePolicy::Maximum</enum>
                      </property>
                      <property name="sizeHint" stdset="0">
                       <size>
@@ -6349,7 +6349,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  <item>
                   <spacer name="horizontalSpacer_45">
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                    <property name="sizeHint" stdset="0">
                     <size>
@@ -6403,7 +6403,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     <string>Place holder for curves</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
+                    <set>Qt::AlignCenter</set>
                    </property>
                   </widget>
                  </item>
@@ -6420,7 +6420,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  <item>
                   <widget class="Line" name="line_46">
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                   </widget>
                  </item>
@@ -6446,7 +6446,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  <item>
                   <spacer name="horizontalSpacer_41">
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                    <property name="sizeHint" stdset="0">
                     <size>
@@ -6500,7 +6500,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     <string>Place holder for curves</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
+                    <set>Qt::AlignCenter</set>
                    </property>
                   </widget>
                  </item>
@@ -6517,7 +6517,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  <item>
                   <widget class="Line" name="line_47">
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                   </widget>
                  </item>
@@ -6543,7 +6543,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  <item>
                   <spacer name="horizontalSpacer_42">
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                    <property name="sizeHint" stdset="0">
                     <size>
@@ -6597,7 +6597,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     <string>Place holder for curves</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
+                    <set>Qt::AlignCenter</set>
                    </property>
                   </widget>
                  </item>
@@ -6614,7 +6614,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  <item>
                   <widget class="Line" name="line_48">
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                   </widget>
                  </item>
@@ -6640,7 +6640,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  <item>
                   <spacer name="horizontalSpacer_59">
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                    <property name="sizeHint" stdset="0">
                     <size>
@@ -6677,7 +6677,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     <string>Place holder for curves</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
+                    <set>Qt::AlignCenter</set>
                    </property>
                   </widget>
                  </item>
@@ -6747,7 +6747,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     <bool>false</bool>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
+                    <set>Qt::AlignCenter</set>
                    </property>
                   </widget>
                  </item>
@@ -6759,16 +6759,16 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     </font>
                    </property>
                    <property name="contextMenuPolicy">
-                    <enum>Qt::ContextMenuPolicy::CustomContextMenu</enum>
+                    <enum>Qt::CustomContextMenu</enum>
                    </property>
                    <property name="layoutDirection">
-                    <enum>Qt::LayoutDirection::RightToLeft</enum>
+                    <enum>Qt::RightToLeft</enum>
                    </property>
                    <property name="text">
                     <string>0</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                    </property>
                   </widget>
                  </item>
@@ -6790,17 +6790,17 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     <number>0</number>
                    </property>
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                   </widget>
                  </item>
                  <item row="0" column="3">
                   <spacer name="horizontalSpacer_36">
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                    <property name="sizeType">
-                    <enum>QSizePolicy::Policy::Maximum</enum>
+                    <enum>QSizePolicy::Maximum</enum>
                    </property>
                    <property name="sizeHint" stdset="0">
                     <size>
@@ -6825,10 +6825,10 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  <item row="0" column="1">
                   <spacer name="horizontalSpacer_38">
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                    <property name="sizeType">
-                    <enum>QSizePolicy::Policy::Maximum</enum>
+                    <enum>QSizePolicy::Maximum</enum>
                    </property>
                    <property name="sizeHint" stdset="0">
                     <size>
@@ -6860,10 +6860,10 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  <item row="0" column="1">
                   <spacer name="horizontalSpacer_37">
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                    <property name="sizeType">
-                    <enum>QSizePolicy::Policy::Maximum</enum>
+                    <enum>QSizePolicy::Maximum</enum>
                    </property>
                    <property name="sizeHint" stdset="0">
                     <size>
@@ -6881,16 +6881,16 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     </font>
                    </property>
                    <property name="contextMenuPolicy">
-                    <enum>Qt::ContextMenuPolicy::CustomContextMenu</enum>
+                    <enum>Qt::CustomContextMenu</enum>
                    </property>
                    <property name="layoutDirection">
-                    <enum>Qt::LayoutDirection::RightToLeft</enum>
+                    <enum>Qt::RightToLeft</enum>
                    </property>
                    <property name="text">
                     <string>0</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                    </property>
                   </widget>
                  </item>
@@ -6912,7 +6912,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     <number>0</number>
                    </property>
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                   </widget>
                  </item>
@@ -6980,7 +6980,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  <item>
                   <spacer name="horizontalSpacer_18">
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                    <property name="sizeHint" stdset="0">
                     <size>
@@ -7014,14 +7014,14 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     <string>ColorWheel</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
+                    <set>Qt::AlignCenter</set>
                    </property>
                   </widget>
                  </item>
                  <item>
                   <spacer name="horizontalSpacer_19">
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                    <property name="sizeHint" stdset="0">
                     <size>
@@ -7046,7 +7046,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     <string>Y</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
+                    <set>Qt::AlignCenter</set>
                    </property>
                   </widget>
                  </item>
@@ -7061,7 +7061,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     <string>R</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
+                    <set>Qt::AlignCenter</set>
                    </property>
                   </widget>
                  </item>
@@ -7076,7 +7076,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     <string>G</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
+                    <set>Qt::AlignCenter</set>
                    </property>
                   </widget>
                  </item>
@@ -7091,7 +7091,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     <string>B</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
+                    <set>Qt::AlignCenter</set>
                    </property>
                   </widget>
                  </item>
@@ -7106,7 +7106,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     <string>0.00</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
+                    <set>Qt::AlignCenter</set>
                    </property>
                   </widget>
                  </item>
@@ -7121,7 +7121,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     <string>0.00</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
+                    <set>Qt::AlignCenter</set>
                    </property>
                   </widget>
                  </item>
@@ -7136,7 +7136,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     <string>0.00</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
+                    <set>Qt::AlignCenter</set>
                    </property>
                   </widget>
                  </item>
@@ -7151,7 +7151,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     <string>0.00</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
+                    <set>Qt::AlignCenter</set>
                    </property>
                   </widget>
                  </item>
@@ -7168,7 +7168,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  <item>
                   <widget class="Line" name="line_50">
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                   </widget>
                  </item>
@@ -7191,7 +7191,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  <item>
                   <spacer name="horizontalSpacer_21">
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                    <property name="sizeHint" stdset="0">
                     <size>
@@ -7225,14 +7225,14 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     <string>ColorWheel</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
+                    <set>Qt::AlignCenter</set>
                    </property>
                   </widget>
                  </item>
                  <item>
                   <spacer name="horizontalSpacer_20">
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                    <property name="sizeHint" stdset="0">
                     <size>
@@ -7257,7 +7257,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     <string>Y</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
+                    <set>Qt::AlignCenter</set>
                    </property>
                   </widget>
                  </item>
@@ -7272,7 +7272,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     <string>R</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
+                    <set>Qt::AlignCenter</set>
                    </property>
                   </widget>
                  </item>
@@ -7287,7 +7287,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     <string>G</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
+                    <set>Qt::AlignCenter</set>
                    </property>
                   </widget>
                  </item>
@@ -7302,7 +7302,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     <string>B</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
+                    <set>Qt::AlignCenter</set>
                    </property>
                   </widget>
                  </item>
@@ -7317,7 +7317,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     <string>0.00</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
+                    <set>Qt::AlignCenter</set>
                    </property>
                   </widget>
                  </item>
@@ -7332,7 +7332,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     <string>0.00</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
+                    <set>Qt::AlignCenter</set>
                    </property>
                   </widget>
                  </item>
@@ -7347,7 +7347,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     <string>0.00</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
+                    <set>Qt::AlignCenter</set>
                    </property>
                   </widget>
                  </item>
@@ -7362,7 +7362,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     <string>0.00</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
+                    <set>Qt::AlignCenter</set>
                    </property>
                   </widget>
                  </item>
@@ -7379,7 +7379,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  <item>
                   <widget class="Line" name="line_51">
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                   </widget>
                  </item>
@@ -7402,7 +7402,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  <item>
                   <spacer name="horizontalSpacer_23">
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                    <property name="sizeHint" stdset="0">
                     <size>
@@ -7436,14 +7436,14 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     <string>ColorWheel</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
+                    <set>Qt::AlignCenter</set>
                    </property>
                   </widget>
                  </item>
                  <item>
                   <spacer name="horizontalSpacer_22">
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                    <property name="sizeHint" stdset="0">
                     <size>
@@ -7468,7 +7468,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     <string>Y</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
+                    <set>Qt::AlignCenter</set>
                    </property>
                   </widget>
                  </item>
@@ -7483,7 +7483,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     <string>R</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
+                    <set>Qt::AlignCenter</set>
                    </property>
                   </widget>
                  </item>
@@ -7498,7 +7498,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     <string>G</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
+                    <set>Qt::AlignCenter</set>
                    </property>
                   </widget>
                  </item>
@@ -7513,7 +7513,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     <string>B</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
+                    <set>Qt::AlignCenter</set>
                    </property>
                   </widget>
                  </item>
@@ -7528,7 +7528,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     <string>0.00</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
+                    <set>Qt::AlignCenter</set>
                    </property>
                   </widget>
                  </item>
@@ -7543,7 +7543,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     <string>0.00</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
+                    <set>Qt::AlignCenter</set>
                    </property>
                   </widget>
                  </item>
@@ -7558,7 +7558,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     <string>0.00</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
+                    <set>Qt::AlignCenter</set>
                    </property>
                   </widget>
                  </item>
@@ -7573,7 +7573,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     <string>0.00</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
+                    <set>Qt::AlignCenter</set>
                    </property>
                   </widget>
                  </item>
@@ -7590,7 +7590,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  <item>
                   <widget class="Line" name="line_52">
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                   </widget>
                  </item>
@@ -7613,7 +7613,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  <item>
                   <spacer name="horizontalSpacer_25">
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                    <property name="sizeHint" stdset="0">
                     <size>
@@ -7647,14 +7647,14 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     <string>ColorWheel</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
+                    <set>Qt::AlignCenter</set>
                    </property>
                   </widget>
                  </item>
                  <item>
                   <spacer name="horizontalSpacer_24">
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                    <property name="sizeHint" stdset="0">
                     <size>
@@ -7679,7 +7679,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     <string>Y</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
+                    <set>Qt::AlignCenter</set>
                    </property>
                   </widget>
                  </item>
@@ -7694,7 +7694,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     <string>R</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
+                    <set>Qt::AlignCenter</set>
                    </property>
                   </widget>
                  </item>
@@ -7709,7 +7709,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     <string>G</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
+                    <set>Qt::AlignCenter</set>
                    </property>
                   </widget>
                  </item>
@@ -7724,7 +7724,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     <string>B</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
+                    <set>Qt::AlignCenter</set>
                    </property>
                   </widget>
                  </item>
@@ -7739,7 +7739,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     <string>0.00</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
+                    <set>Qt::AlignCenter</set>
                    </property>
                   </widget>
                  </item>
@@ -7754,7 +7754,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     <string>0.00</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
+                    <set>Qt::AlignCenter</set>
                    </property>
                   </widget>
                  </item>
@@ -7769,7 +7769,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     <string>0.00</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
+                    <set>Qt::AlignCenter</set>
                    </property>
                   </widget>
                  </item>
@@ -7784,7 +7784,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     <string>0.00</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
+                    <set>Qt::AlignCenter</set>
                    </property>
                   </widget>
                  </item>
@@ -7852,7 +7852,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  <item>
                   <spacer name="horizontalSpacer_14">
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                    <property name="sizeHint" stdset="0">
                     <size>
@@ -7920,10 +7920,10 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       </font>
                      </property>
                      <property name="focusPolicy">
-                      <enum>Qt::FocusPolicy::ClickFocus</enum>
+                      <enum>Qt::ClickFocus</enum>
                      </property>
                      <property name="alignment">
-                      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                      </property>
                      <property name="minimum">
                       <number>-1000</number>
@@ -7963,10 +7963,10 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       </font>
                      </property>
                      <property name="focusPolicy">
-                      <enum>Qt::FocusPolicy::ClickFocus</enum>
+                      <enum>Qt::ClickFocus</enum>
                      </property>
                      <property name="alignment">
-                      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                      </property>
                      <property name="minimum">
                       <number>-1000</number>
@@ -8069,10 +8069,10 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       </font>
                      </property>
                      <property name="focusPolicy">
-                      <enum>Qt::FocusPolicy::ClickFocus</enum>
+                      <enum>Qt::ClickFocus</enum>
                      </property>
                      <property name="alignment">
-                      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                      </property>
                      <property name="minimum">
                       <number>1</number>
@@ -8097,7 +8097,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  <item>
                   <widget class="Line" name="line_5">
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                   </widget>
                  </item>
@@ -8119,10 +8119,10 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    <item row="0" column="1">
                     <spacer name="horizontalSpacer_12">
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                      <property name="sizeType">
-                      <enum>QSizePolicy::Policy::Maximum</enum>
+                      <enum>QSizePolicy::Maximum</enum>
                      </property>
                      <property name="sizeHint" stdset="0">
                       <size>
@@ -8155,7 +8155,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <string>0.00</string>
                      </property>
                      <property name="alignment">
-                      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                      </property>
                     </widget>
                    </item>
@@ -8180,7 +8180,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <number>0</number>
                      </property>
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                     </widget>
                    </item>
@@ -8209,17 +8209,17 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <number>0</number>
                      </property>
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                     </widget>
                    </item>
                    <item row="0" column="1">
                     <spacer name="horizontalSpacer_33">
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                      <property name="sizeType">
-                      <enum>QSizePolicy::Policy::Maximum</enum>
+                      <enum>QSizePolicy::Maximum</enum>
                      </property>
                      <property name="sizeHint" stdset="0">
                       <size>
@@ -8249,13 +8249,13 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       </font>
                      </property>
                      <property name="layoutDirection">
-                      <enum>Qt::LayoutDirection::RightToLeft</enum>
+                      <enum>Qt::RightToLeft</enum>
                      </property>
                      <property name="text">
                       <string>0</string>
                      </property>
                      <property name="alignment">
-                      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                      </property>
                     </widget>
                    </item>
@@ -8380,7 +8380,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       </size>
                      </property>
                      <property name="arrowType">
-                      <enum>Qt::ArrowType::LeftArrow</enum>
+                      <enum>Qt::LeftArrow</enum>
                      </property>
                     </widget>
                    </item>
@@ -8408,7 +8408,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <bool>false</bool>
                      </property>
                      <property name="arrowType">
-                      <enum>Qt::ArrowType::RightArrow</enum>
+                      <enum>Qt::RightArrow</enum>
                      </property>
                     </widget>
                    </item>
@@ -8436,10 +8436,10 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  <item row="0" column="1">
                   <spacer name="horizontalSpacer_34">
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                    <property name="sizeType">
-                    <enum>QSizePolicy::Policy::Maximum</enum>
+                    <enum>QSizePolicy::Maximum</enum>
                    </property>
                    <property name="sizeHint" stdset="0">
                     <size>
@@ -8457,16 +8457,16 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     </font>
                    </property>
                    <property name="contextMenuPolicy">
-                    <enum>Qt::ContextMenuPolicy::CustomContextMenu</enum>
+                    <enum>Qt::CustomContextMenu</enum>
                    </property>
                    <property name="layoutDirection">
-                    <enum>Qt::LayoutDirection::RightToLeft</enum>
+                    <enum>Qt::RightToLeft</enum>
                    </property>
                    <property name="text">
                     <string>100</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                    </property>
                   </widget>
                  </item>
@@ -8488,7 +8488,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     <number>100</number>
                    </property>
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                   </widget>
                  </item>
@@ -8628,10 +8628,10 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  <item row="0" column="1">
                   <spacer name="horizontalSpacer_15">
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                    <property name="sizeType">
-                    <enum>QSizePolicy::Policy::Maximum</enum>
+                    <enum>QSizePolicy::Maximum</enum>
                    </property>
                    <property name="sizeHint" stdset="0">
                     <size>
@@ -8649,16 +8649,16 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     </font>
                    </property>
                    <property name="contextMenuPolicy">
-                    <enum>Qt::ContextMenuPolicy::CustomContextMenu</enum>
+                    <enum>Qt::CustomContextMenu</enum>
                    </property>
                    <property name="layoutDirection">
-                    <enum>Qt::LayoutDirection::RightToLeft</enum>
+                    <enum>Qt::RightToLeft</enum>
                    </property>
                    <property name="text">
                     <string>100</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                    </property>
                   </widget>
                  </item>
@@ -8680,7 +8680,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     <number>100</number>
                    </property>
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                   </widget>
                  </item>
@@ -8756,10 +8756,10 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    <item row="0" column="1">
                     <spacer name="horizontalSpacer_39">
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                      <property name="sizeType">
-                      <enum>QSizePolicy::Policy::Maximum</enum>
+                      <enum>QSizePolicy::Maximum</enum>
                      </property>
                      <property name="sizeHint" stdset="0">
                       <size>
@@ -8777,16 +8777,16 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       </font>
                      </property>
                      <property name="contextMenuPolicy">
-                      <enum>Qt::ContextMenuPolicy::CustomContextMenu</enum>
+                      <enum>Qt::CustomContextMenu</enum>
                      </property>
                      <property name="layoutDirection">
-                      <enum>Qt::LayoutDirection::RightToLeft</enum>
+                      <enum>Qt::RightToLeft</enum>
                      </property>
                      <property name="text">
                       <string>0</string>
                      </property>
                      <property name="alignment">
-                      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                      </property>
                     </widget>
                    </item>
@@ -8808,7 +8808,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <number>0</number>
                      </property>
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                     </widget>
                    </item>
@@ -8822,10 +8822,10 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    <item row="0" column="1">
                     <spacer name="horizontalSpacer_43">
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                      <property name="sizeType">
-                      <enum>QSizePolicy::Policy::Maximum</enum>
+                      <enum>QSizePolicy::Maximum</enum>
                      </property>
                      <property name="sizeHint" stdset="0">
                       <size>
@@ -8853,7 +8853,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <number>20</number>
                      </property>
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                     </widget>
                    </item>
@@ -8865,16 +8865,16 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       </font>
                      </property>
                      <property name="contextMenuPolicy">
-                      <enum>Qt::ContextMenuPolicy::CustomContextMenu</enum>
+                      <enum>Qt::CustomContextMenu</enum>
                      </property>
                      <property name="layoutDirection">
-                      <enum>Qt::LayoutDirection::RightToLeft</enum>
+                      <enum>Qt::RightToLeft</enum>
                      </property>
                      <property name="text">
                       <string>20</string>
                      </property>
                      <property name="alignment">
-                      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                      </property>
                     </widget>
                    </item>
@@ -8900,10 +8900,10 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    <item row="0" column="1">
                     <spacer name="horizontalSpacer_56">
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                      <property name="sizeType">
-                      <enum>QSizePolicy::Policy::Maximum</enum>
+                      <enum>QSizePolicy::Maximum</enum>
                      </property>
                      <property name="sizeHint" stdset="0">
                       <size>
@@ -8931,7 +8931,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <number>0</number>
                      </property>
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                     </widget>
                    </item>
@@ -8943,16 +8943,16 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       </font>
                      </property>
                      <property name="contextMenuPolicy">
-                      <enum>Qt::ContextMenuPolicy::CustomContextMenu</enum>
+                      <enum>Qt::CustomContextMenu</enum>
                      </property>
                      <property name="layoutDirection">
-                      <enum>Qt::LayoutDirection::RightToLeft</enum>
+                      <enum>Qt::RightToLeft</enum>
                      </property>
                      <property name="text">
                       <string>0</string>
                      </property>
                      <property name="alignment">
-                      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                      </property>
                     </widget>
                    </item>
@@ -8983,7 +8983,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  <item>
                   <widget class="Line" name="line_6">
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                   </widget>
                  </item>
@@ -9002,10 +9002,10 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    <item row="0" column="1">
                     <spacer name="horizontalSpacer_55">
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                      <property name="sizeType">
-                      <enum>QSizePolicy::Policy::Maximum</enum>
+                      <enum>QSizePolicy::Maximum</enum>
                      </property>
                      <property name="sizeHint" stdset="0">
                       <size>
@@ -9023,16 +9023,16 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       </font>
                      </property>
                      <property name="contextMenuPolicy">
-                      <enum>Qt::ContextMenuPolicy::CustomContextMenu</enum>
+                      <enum>Qt::CustomContextMenu</enum>
                      </property>
                      <property name="layoutDirection">
-                      <enum>Qt::LayoutDirection::RightToLeft</enum>
+                      <enum>Qt::RightToLeft</enum>
                      </property>
                      <property name="text">
                       <string>0.0</string>
                      </property>
                      <property name="alignment">
-                      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                      </property>
                     </widget>
                    </item>
@@ -9054,7 +9054,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <number>0</number>
                      </property>
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                     </widget>
                    </item>
@@ -9092,10 +9092,10 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    <item row="0" column="1">
                     <spacer name="horizontalSpacer_54">
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                      <property name="sizeType">
-                      <enum>QSizePolicy::Policy::Maximum</enum>
+                      <enum>QSizePolicy::Maximum</enum>
                      </property>
                      <property name="sizeHint" stdset="0">
                       <size>
@@ -9113,16 +9113,16 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       </font>
                      </property>
                      <property name="contextMenuPolicy">
-                      <enum>Qt::ContextMenuPolicy::CustomContextMenu</enum>
+                      <enum>Qt::CustomContextMenu</enum>
                      </property>
                      <property name="layoutDirection">
-                      <enum>Qt::LayoutDirection::RightToLeft</enum>
+                      <enum>Qt::RightToLeft</enum>
                      </property>
                      <property name="text">
                       <string>0.0</string>
                      </property>
                      <property name="alignment">
-                      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                      </property>
                     </widget>
                    </item>
@@ -9144,7 +9144,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <number>0</number>
                      </property>
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                     </widget>
                    </item>
@@ -9163,7 +9163,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  <item>
                   <widget class="Line" name="line_8">
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                   </widget>
                  </item>
@@ -9194,10 +9194,10 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    <item row="0" column="1">
                     <spacer name="horizontalSpacer_60">
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                      <property name="sizeType">
-                      <enum>QSizePolicy::Policy::Maximum</enum>
+                      <enum>QSizePolicy::Maximum</enum>
                      </property>
                      <property name="sizeHint" stdset="0">
                       <size>
@@ -9215,16 +9215,16 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       </font>
                      </property>
                      <property name="contextMenuPolicy">
-                      <enum>Qt::ContextMenuPolicy::CustomContextMenu</enum>
+                      <enum>Qt::CustomContextMenu</enum>
                      </property>
                      <property name="layoutDirection">
-                      <enum>Qt::LayoutDirection::RightToLeft</enum>
+                      <enum>Qt::RightToLeft</enum>
                      </property>
                      <property name="text">
                       <string>0</string>
                      </property>
                      <property name="alignment">
-                      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                      </property>
                     </widget>
                    </item>
@@ -9246,7 +9246,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <number>0</number>
                      </property>
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                     </widget>
                    </item>
@@ -9272,10 +9272,10 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    <item row="0" column="1">
                     <spacer name="horizontalSpacer_61">
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                      <property name="sizeType">
-                      <enum>QSizePolicy::Policy::Maximum</enum>
+                      <enum>QSizePolicy::Maximum</enum>
                      </property>
                      <property name="sizeHint" stdset="0">
                       <size>
@@ -9293,16 +9293,16 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       </font>
                      </property>
                      <property name="contextMenuPolicy">
-                      <enum>Qt::ContextMenuPolicy::CustomContextMenu</enum>
+                      <enum>Qt::CustomContextMenu</enum>
                      </property>
                      <property name="layoutDirection">
-                      <enum>Qt::LayoutDirection::RightToLeft</enum>
+                      <enum>Qt::RightToLeft</enum>
                      </property>
                      <property name="text">
                       <string>1</string>
                      </property>
                      <property name="alignment">
-                      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                      </property>
                     </widget>
                    </item>
@@ -9324,7 +9324,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <number>1</number>
                      </property>
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                     </widget>
                    </item>
@@ -9470,7 +9470,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     </font>
                    </property>
                    <property name="layoutDirection">
-                    <enum>Qt::LayoutDirection::LeftToRight</enum>
+                    <enum>Qt::LeftToRight</enum>
                    </property>
                    <item>
                     <property name="text">
@@ -9515,7 +9515,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     <string>→</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                    </property>
                   </widget>
                  </item>
@@ -9548,7 +9548,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  <item>
                   <widget class="Line" name="line_12">
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                   </widget>
                  </item>
@@ -9656,7 +9656,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  <item>
                   <widget class="Line" name="line_16">
                    <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
+                    <enum>Qt::Horizontal</enum>
                    </property>
                   </widget>
                  </item>
@@ -9695,16 +9695,16 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       </font>
                      </property>
                      <property name="contextMenuPolicy">
-                      <enum>Qt::ContextMenuPolicy::CustomContextMenu</enum>
+                      <enum>Qt::CustomContextMenu</enum>
                      </property>
                      <property name="layoutDirection">
-                      <enum>Qt::LayoutDirection::RightToLeft</enum>
+                      <enum>Qt::RightToLeft</enum>
                      </property>
                      <property name="text">
                       <string>32</string>
                      </property>
                      <property name="alignment">
-                      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                      </property>
                     </widget>
                    </item>
@@ -9726,17 +9726,17 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <number>32</number>
                      </property>
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                     </widget>
                    </item>
                    <item row="0" column="1">
                     <spacer name="horizontalSpacer_49">
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                      <property name="sizeType">
-                      <enum>QSizePolicy::Policy::Maximum</enum>
+                      <enum>QSizePolicy::Maximum</enum>
                      </property>
                      <property name="sizeHint" stdset="0">
                       <size>
@@ -9783,17 +9783,17 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <number>10</number>
                      </property>
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                     </widget>
                    </item>
                    <item row="0" column="1">
                     <spacer name="horizontalSpacer_50">
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                      <property name="sizeType">
-                      <enum>QSizePolicy::Policy::Maximum</enum>
+                      <enum>QSizePolicy::Maximum</enum>
                      </property>
                      <property name="sizeHint" stdset="0">
                       <size>
@@ -9823,16 +9823,16 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       </font>
                      </property>
                      <property name="contextMenuPolicy">
-                      <enum>Qt::ContextMenuPolicy::CustomContextMenu</enum>
+                      <enum>Qt::CustomContextMenu</enum>
                      </property>
                      <property name="layoutDirection">
-                      <enum>Qt::LayoutDirection::RightToLeft</enum>
+                      <enum>Qt::RightToLeft</enum>
                      </property>
                      <property name="text">
                       <string>10</string>
                      </property>
                      <property name="alignment">
-                      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                      </property>
                     </widget>
                    </item>
@@ -9851,16 +9851,16 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       </font>
                      </property>
                      <property name="contextMenuPolicy">
-                      <enum>Qt::ContextMenuPolicy::CustomContextMenu</enum>
+                      <enum>Qt::CustomContextMenu</enum>
                      </property>
                      <property name="layoutDirection">
-                      <enum>Qt::LayoutDirection::RightToLeft</enum>
+                      <enum>Qt::RightToLeft</enum>
                      </property>
                      <property name="text">
                       <string>10</string>
                      </property>
                      <property name="alignment">
-                      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                      </property>
                     </widget>
                    </item>
@@ -9882,17 +9882,17 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <number>10</number>
                      </property>
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                     </widget>
                    </item>
                    <item row="0" column="1">
                     <spacer name="horizontalSpacer_51">
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                      <property name="sizeType">
-                      <enum>QSizePolicy::Policy::Maximum</enum>
+                      <enum>QSizePolicy::Maximum</enum>
                      </property>
                      <property name="sizeHint" stdset="0">
                       <size>
@@ -9929,16 +9929,16 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       </font>
                      </property>
                      <property name="contextMenuPolicy">
-                      <enum>Qt::ContextMenuPolicy::CustomContextMenu</enum>
+                      <enum>Qt::CustomContextMenu</enum>
                      </property>
                      <property name="layoutDirection">
-                      <enum>Qt::LayoutDirection::RightToLeft</enum>
+                      <enum>Qt::RightToLeft</enum>
                      </property>
                      <property name="text">
                       <string>0</string>
                      </property>
                      <property name="alignment">
-                      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                      </property>
                     </widget>
                    </item>
@@ -9960,17 +9960,17 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <number>0</number>
                      </property>
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                     </widget>
                    </item>
                    <item row="0" column="1">
                     <spacer name="horizontalSpacer_52">
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                      <property name="sizeType">
-                      <enum>QSizePolicy::Policy::Maximum</enum>
+                      <enum>QSizePolicy::Maximum</enum>
                      </property>
                      <property name="sizeHint" stdset="0">
                       <size>
@@ -10029,17 +10029,17 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <number>10</number>
                      </property>
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                     </widget>
                    </item>
                    <item row="0" column="1">
                     <spacer name="horizontalSpacer_53">
                      <property name="orientation">
-                      <enum>Qt::Orientation::Horizontal</enum>
+                      <enum>Qt::Horizontal</enum>
                      </property>
                      <property name="sizeType">
-                      <enum>QSizePolicy::Policy::Maximum</enum>
+                      <enum>QSizePolicy::Maximum</enum>
                      </property>
                      <property name="sizeHint" stdset="0">
                       <size>
@@ -10057,16 +10057,16 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       </font>
                      </property>
                      <property name="contextMenuPolicy">
-                      <enum>Qt::ContextMenuPolicy::CustomContextMenu</enum>
+                      <enum>Qt::CustomContextMenu</enum>
                      </property>
                      <property name="layoutDirection">
-                      <enum>Qt::LayoutDirection::RightToLeft</enum>
+                      <enum>Qt::RightToLeft</enum>
                      </property>
                      <property name="text">
                       <string>0</string>
                      </property>
                      <property name="alignment">
-                      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                      </property>
                     </widget>
                    </item>
@@ -10095,11 +10095,11 @@ QScrollBar::add-page, QScrollBar::sub-page {
          <item>
           <spacer name="verticalSpacer">
            <property name="orientation">
-            <enum>Qt::Orientation::Vertical</enum>
+            <enum>Qt::Vertical</enum>
            </property>
            <property name="sizeHint" stdset="0">
             <size>
-             <width>0</width>
+             <width>10</width>
              <height>0</height>
             </size>
            </property>
@@ -10114,10 +10114,10 @@ QScrollBar::add-page, QScrollBar::sub-page {
   </widget>
   <widget class="QDockWidget" name="dockWidgetSession">
    <property name="features">
-    <set>QDockWidget::DockWidgetFeature::DockWidgetClosable|QDockWidget::DockWidgetFeature::DockWidgetFloatable|QDockWidget::DockWidgetFeature::DockWidgetMovable</set>
+    <set>QDockWidget::DockWidgetClosable|QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
    </property>
    <property name="allowedAreas">
-    <set>Qt::DockWidgetArea::BottomDockWidgetArea|Qt::DockWidgetArea::LeftDockWidgetArea</set>
+    <set>Qt::BottomDockWidgetArea|Qt::LeftDockWidgetArea</set>
    </property>
    <property name="windowTitle">
     <string>Session</string>
@@ -10151,50 +10151,50 @@ QScrollBar::add-page, QScrollBar::sub-page {
      <item>
       <widget class="QListView" name="listViewSession">
        <property name="contextMenuPolicy">
-        <enum>Qt::ContextMenuPolicy::CustomContextMenu</enum>
+        <enum>Qt::CustomContextMenu</enum>
        </property>
        <property name="frameShape">
-        <enum>QFrame::Shape::NoFrame</enum>
+        <enum>QFrame::NoFrame</enum>
        </property>
        <property name="alternatingRowColors">
         <bool>true</bool>
        </property>
        <property name="selectionMode">
-        <enum>QAbstractItemView::SelectionMode::ExtendedSelection</enum>
+        <enum>QAbstractItemView::ExtendedSelection</enum>
        </property>
        <property name="movement">
-        <enum>QListView::Movement::Static</enum>
+        <enum>QListView::Static</enum>
        </property>
        <property name="flow">
-        <enum>QListView::Flow::TopToBottom</enum>
+        <enum>QListView::TopToBottom</enum>
        </property>
        <property name="isWrapping" stdset="0">
         <bool>false</bool>
        </property>
        <property name="viewMode">
-        <enum>QListView::ViewMode::ListMode</enum>
+        <enum>QListView::ListMode</enum>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QTableView" name="tableViewSession">
        <property name="contextMenuPolicy">
-        <enum>Qt::ContextMenuPolicy::CustomContextMenu</enum>
+        <enum>Qt::CustomContextMenu</enum>
        </property>
        <property name="frameShape">
-        <enum>QFrame::Shape::NoFrame</enum>
+        <enum>QFrame::NoFrame</enum>
        </property>
        <property name="editTriggers">
-        <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
+        <set>QAbstractItemView::NoEditTriggers</set>
        </property>
        <property name="alternatingRowColors">
         <bool>true</bool>
        </property>
        <property name="selectionMode">
-        <enum>QAbstractItemView::SelectionMode::ExtendedSelection</enum>
+        <enum>QAbstractItemView::ExtendedSelection</enum>
        </property>
        <property name="selectionBehavior">
-        <enum>QAbstractItemView::SelectionBehavior::SelectRows</enum>
+        <enum>QAbstractItemView::SelectRows</enum>
        </property>
        <property name="showGrid">
         <bool>false</bool>

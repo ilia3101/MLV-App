@@ -9,6 +9,7 @@
 #include <QPainter>
 #include <QDebug>
 #include <QMouseEvent>
+#include <cmath>
 #include "../../src/processing/interpolation/cosine_interpolation.h"
 
 #define SIZEW           this->width()

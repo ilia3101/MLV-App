@@ -9,6 +9,7 @@
 #include <QPainter>
 #include <QDebug>
 #include <QMouseEvent>
+#include <cmath>
 #include "../../src/processing/interpolation/spline_helper.h"
 
 

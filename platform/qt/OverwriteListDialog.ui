@@ -39,16 +39,16 @@
    <item>
     <widget class="QListWidget" name="listWidget">
      <property name="editTriggers">
-      <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
+      <set>QAbstractItemView::NoEditTriggers</set>
      </property>
      <property name="showDropIndicator" stdset="0">
       <bool>false</bool>
      </property>
      <property name="defaultDropAction">
-      <enum>Qt::DropAction::IgnoreAction</enum>
+      <enum>Qt::IgnoreAction</enum>
      </property>
      <property name="selectionMode">
-      <enum>QAbstractItemView::SelectionMode::NoSelection</enum>
+      <enum>QAbstractItemView::NoSelection</enum>
      </property>
     </widget>
    </item>
@@ -63,7 +63,7 @@
      <item>
       <spacer name="horizontalSpacer">
        <property name="orientation">
-        <enum>Qt::Orientation::Horizontal</enum>
+        <enum>Qt::Horizontal</enum>
        </property>
        <property name="sizeHint" stdset="0">
         <size>

@@ -105,7 +105,11 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     //Enable color management for macOS
     auto format = QSurfaceFormat::defaultFormat();
     format.setSwapInterval(0);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     format.setColorSpace( QColorSpace::SRgb );
+#else
+    format.setColorSpace( QSurfaceFormat::sRGBColorSpace );
+#endif
     QSurfaceFormat::setDefaultFormat(format);
 
     ui->setupUi(this);
@@ -8205,7 +8209,9 @@ void MainWindow::deleteFileFromSession( void )
     msg.setIcon( QMessageBox::Question );
     msg.setWindowTitle( tr( "%1 – Remove Clip" ).arg( APPNAME ) );
     msg.setText( tr( "Do you want to remove selected clip(s) from session, or delete from disk?" ) );
+#if QT_VERSION >= QT_VERSION_CHECK(6, 6, 0)
     msg.setOption( QMessageBox::Option::DontUseNativeDialog );
+#endif
     msg.addButton( tr("Remove"), QMessageBox::ApplyRole );
     QPushButton *deleteButton = msg.addButton( tr( "Delete from Disk" ), QMessageBox::ActionRole );
     QPushButton *cancelButton = msg.addButton( QMessageBox::Cancel );
@@ -11364,7 +11370,9 @@ void MainWindow::focusPixelCheckAndInstallation()
             QMessageBox msg;
             msg.setIcon( QMessageBox::Question );
             msg.setText( tr( "Download and install focus pixel map for this clip or install all focus pixel maps for %1?" ).arg( camName ) );
+#if QT_VERSION >= QT_VERSION_CHECK(6, 6, 0)
             msg.setOption( QMessageBox::Option::DontUseNativeDialog );
+#endif
             QPushButton *singleButton = msg.addButton(tr("Single Map"), QMessageBox::ApplyRole);
             QPushButton *allButton = msg.addButton(tr("All Maps"), QMessageBox::ActionRole);
             msg.addButton(tr("None"), QMessageBox::RejectRole);

@@ -492,7 +492,11 @@ void IconRecolorStyle::drawControl( ControlElement element, const QStyleOption *
 
     //qDebug() << element << widget;
 
-    if( !widget ) return;
+    if( !widget )
+    {
+        QProxyStyle::drawControl( element, option, painter, widget );
+        return;
+    }
 
     QIcon::Mode mode;
 

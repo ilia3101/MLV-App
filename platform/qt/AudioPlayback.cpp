@@ -10,7 +10,9 @@
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 #include <QAudioFormat>
 #endif
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 #include <QMediaDevices>
+#endif
 #include <QDebug>
 
 //Constructor
@@ -20,8 +22,10 @@ AudioPlayback::AudioPlayback( QObject *parent )
     m_audioEngineInitialized = false;
     m_audioEngineRunning = false;
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     QMediaDevices *mediaDevices = new QMediaDevices( this );
     connect( mediaDevices, &QMediaDevices::audioOutputsChanged, this, &AudioPlayback::outputDeviceChanged );
+#endif
 }
 
 //Destructor
@@ -78,6 +82,7 @@ void AudioPlayback::initAudioEngine( mlvObject_t *pMlvObject )
     m_audioEngineInitialized = true;
 }
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 void AudioPlayback::outputDeviceChanged()
 {
     if( !m_audioEngineInitialized ) return;
@@ -102,6 +107,7 @@ void AudioPlayback::outputDeviceChanged()
 
     if( wasPlaying ) play();
 }
+#endif
 
 //Unload the audio of a mlv
 void AudioPlayback::resetAudioEngine()

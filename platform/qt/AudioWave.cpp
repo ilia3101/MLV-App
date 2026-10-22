@@ -8,6 +8,7 @@
 #include <QDebug>
 #include <QLinearGradient>
 #include <QPainter>
+#include <cmath>
 #include "AudioWave.h"
 #include "math.h"
 
@@ -71,7 +72,7 @@ QImage AudioWave::getMonoWave(int16_t *pAudioTrack, uint64_t audioSize, uint16_t
 
             // Interpolate RGB
             float segmentT = ( t - start->t ) / ( end->t - start->t );
-            segmentT = std::clamp( segmentT, 0.0f, 1.0f );
+            segmentT = qBound( 0.0f, segmentT, 1.0f );
 
             colorLUT[y] = qRgb(
                 static_cast<int>( start->color.red()   + ( end->color.red()   - start->color.red() )   * segmentT ),
