@@ -19,3 +19,9 @@ InfoDialog::~InfoDialog()
 {
     delete ui;
 }
+
+void InfoDialog::showEvent(QShowEvent *event)
+{
+    QDialog::showEvent(event);
+    adjustSize();
+}

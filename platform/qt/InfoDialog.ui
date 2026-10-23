@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>399</width>
-    <height>541</height>
+    <height>540</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -36,6 +36,12 @@
    </item>
    <item row="0" column="0" colspan="2">
     <widget class="QTableWidget" name="tableWidget">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
      <property name="focusPolicy">
       <enum>Qt::NoFocus</enum>
      </property>
@@ -43,13 +49,19 @@
       <enum>Qt::NoContextMenu</enum>
      </property>
      <property name="verticalScrollBarPolicy">
-      <enum>Qt::ScrollBarAsNeeded</enum>
+      <enum>Qt::ScrollBarAlwaysOff</enum>
      </property>
      <property name="horizontalScrollBarPolicy">
-      <enum>Qt::ScrollBarAsNeeded</enum>
+      <enum>Qt::ScrollBarAlwaysOff</enum>
+     </property>
+     <property name="sizeAdjustPolicy">
+      <enum>QAbstractScrollArea::AdjustToContents</enum>
      </property>
      <property name="editTriggers">
       <set>QAbstractItemView::NoEditTriggers</set>
+     </property>
+     <property name="alternatingRowColors">
+      <bool>true</bool>
      </property>
      <property name="selectionMode">
       <enum>QAbstractItemView::NoSelection</enum>
@@ -160,6 +172,14 @@
       <property name="text">
        <string>Camera</string>
       </property>
+      <property name="font">
+       <font>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="textAlignment">
+       <set>AlignTrailing|AlignVCenter</set>
+      </property>
      </item>
      <item row="0" column="1">
       <property name="text">
@@ -169,6 +189,14 @@
      <item row="1" column="0">
       <property name="text">
        <string>Lens</string>
+      </property>
+      <property name="font">
+       <font>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="textAlignment">
+       <set>AlignTrailing|AlignVCenter</set>
       </property>
      </item>
      <item row="1" column="1">
@@ -180,6 +208,14 @@
       <property name="text">
        <string>Resolution</string>
       </property>
+      <property name="font">
+       <font>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="textAlignment">
+       <set>AlignTrailing|AlignVCenter</set>
+      </property>
      </item>
      <item row="2" column="1">
       <property name="text">
@@ -189,6 +225,14 @@
      <item row="3" column="0">
       <property name="text">
        <string>Duration</string>
+      </property>
+      <property name="font">
+       <font>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="textAlignment">
+       <set>AlignTrailing|AlignVCenter</set>
       </property>
      </item>
      <item row="3" column="1">
@@ -200,6 +244,14 @@
       <property name="text">
        <string>Frames</string>
       </property>
+      <property name="font">
+       <font>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="textAlignment">
+       <set>AlignTrailing|AlignVCenter</set>
+      </property>
      </item>
      <item row="4" column="1">
       <property name="text">
@@ -209,6 +261,14 @@
      <item row="5" column="0">
       <property name="text">
        <string>Frame Rate</string>
+      </property>
+      <property name="font">
+       <font>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="textAlignment">
+       <set>AlignTrailing|AlignVCenter</set>
       </property>
      </item>
      <item row="5" column="1">
@@ -220,6 +280,14 @@
       <property name="text">
        <string>Focal Length</string>
       </property>
+      <property name="font">
+       <font>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="textAlignment">
+       <set>AlignTrailing|AlignVCenter</set>
+      </property>
      </item>
      <item row="6" column="1">
       <property name="text">
@@ -229,6 +297,14 @@
      <item row="7" column="0">
       <property name="text">
        <string>Focus Distance</string>
+      </property>
+      <property name="font">
+       <font>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="textAlignment">
+       <set>AlignTrailing|AlignVCenter</set>
       </property>
      </item>
      <item row="7" column="1">
@@ -240,6 +316,14 @@
       <property name="text">
        <string>Shutter</string>
       </property>
+      <property name="font">
+       <font>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="textAlignment">
+       <set>AlignTrailing|AlignVCenter</set>
+      </property>
      </item>
      <item row="8" column="1">
       <property name="text">
@@ -249,6 +333,14 @@
      <item row="9" column="0">
       <property name="text">
        <string>Aperture</string>
+      </property>
+      <property name="font">
+       <font>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="textAlignment">
+       <set>AlignTrailing|AlignVCenter</set>
       </property>
      </item>
      <item row="9" column="1">
@@ -260,6 +352,14 @@
       <property name="text">
        <string>ISO</string>
       </property>
+      <property name="font">
+       <font>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="textAlignment">
+       <set>AlignTrailing|AlignVCenter</set>
+      </property>
      </item>
      <item row="10" column="1">
       <property name="text">
@@ -269,6 +369,14 @@
      <item row="11" column="0">
       <property name="text">
        <string>Bit Depth</string>
+      </property>
+      <property name="font">
+       <font>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="textAlignment">
+       <set>AlignTrailing|AlignVCenter</set>
       </property>
      </item>
      <item row="11" column="1">
@@ -280,6 +388,14 @@
       <property name="text">
        <string>Levels</string>
       </property>
+      <property name="font">
+       <font>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="textAlignment">
+       <set>AlignTrailing|AlignVCenter</set>
+      </property>
      </item>
      <item row="12" column="1">
       <property name="text">
@@ -289,6 +405,14 @@
      <item row="13" column="0">
       <property name="text">
        <string>Date / Time</string>
+      </property>
+      <property name="font">
+       <font>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="textAlignment">
+       <set>AlignTrailing|AlignVCenter</set>
       </property>
      </item>
      <item row="13" column="1">
@@ -300,6 +424,14 @@
       <property name="text">
        <string>Audio</string>
       </property>
+      <property name="font">
+       <font>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="textAlignment">
+       <set>AlignTrailing|AlignVCenter</set>
+      </property>
      </item>
      <item row="14" column="1">
       <property name="text">
@@ -309,6 +441,14 @@
      <item row="15" column="0">
       <property name="text">
        <string>Size / Data Rate</string>
+      </property>
+      <property name="font">
+       <font>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="textAlignment">
+       <set>AlignTrailing|AlignVCenter</set>
       </property>
      </item>
      <item row="15" column="1">
