@@ -9,6 +9,7 @@
 #include "ui_MainWindow.h"
 #include "math.h"
 #include <memory>
+#include <atomic>
 
 #include <QMessageBox>
 #include <QThread>
