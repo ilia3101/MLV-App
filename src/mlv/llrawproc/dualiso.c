@@ -1233,14 +1233,14 @@ static inline double * build_fullres_curve(int black)
 
 /* define edge directions for interpolation */
 struct xy { int x; int y; };
-const struct
+struct edge_direction
 {
     struct xy ack;      /* verification pixel near a */
     struct xy a;        /* interpolation pixel from the nearby line: normally (0,s) but also (1,s) or (-1,s) */
     struct xy b;        /* interpolation pixel from the other line: normally (0,-2s) but also (1,-2s), (-1,-2s), (2,-2s) or (-2,-2s) */
     struct xy bck;      /* verification pixel near b */
-}
-edge_directions[] = {       /* note: all y coords should be multiplied by s */
+};
+static const struct edge_direction edge_directions[] = {       /* note: all y coords should be multiplied by s */
     //~ { {-6,2}, {-3,1}, { 6,-2}, { 9,-3} },     /* almost horizontal (little or no improvement) */
     { {-4,2}, {-2,1}, { 4,-2}, { 6,-3} },
     { {-3,2}, {-1,1}, { 3,-2}, { 4,-3} },
@@ -1554,7 +1554,7 @@ static inline void interpolate_wrapper(struct raw_info raw_info, uint32_t * raw_
                 /* loop through all directions */
                 for (int d = dmin; d <= dmax; d++)
                 {
-                    const typeof(edge_directions[0]) *dir = &edge_directions[d];
+                    const struct edge_direction *dir = &edge_directions[d];
                     int e = 0;
 
                     int dy_ack = dir->ack.y * s;
