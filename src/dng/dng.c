@@ -570,8 +570,8 @@ static void dng_fill_header(mlvObject_t * mlv_data, dngObject_t * dng_data, uint
 
 
         /* Focal resolution stuff */
-        int32_t * focal_resolution_x = camid->focal_resolution_x;
-        int32_t * focal_resolution_y = camid->focal_resolution_y;
+        int32_t focal_resolution_x[2] = { camid->focal_resolution_x[0], camid->focal_resolution_x[1] };
+        int32_t focal_resolution_y[2] = { camid->focal_resolution_y[0], camid->focal_resolution_y[1] };
 
         /* Picture aspect ratio */
         int manual_ar = 0;
@@ -805,7 +805,82 @@ void dng_unpack_image_bits(uint16_t * output_buffer, uint16_t * input_buffer, in
 */
 void dng_pack_image_bits(uint16_t * output_buffer, uint16_t * input_buffer, int width, int height, uint32_t bpp, int big_endian)
 {
-    uint32_t pixel_count = width * height;
+    uint32_t pixel_count = (uint32_t)width * height;
+    if (pixel_count == 0) return;
+
+    if (bpp == 14)
+    {
+        uint32_t blocks = pixel_count / 8;
+        uint32_t rem = pixel_count % 8;
+        const uint16_t * in = input_buffer;
+        uint16_t * out = output_buffer;
+
+        for (uint32_t b = 0; b < blocks; b++)
+        {
+            uint32_t p0 = in[0], p1 = in[1], p2 = in[2], p3 = in[3];
+            uint32_t p4 = in[4], p5 = in[5], p6 = in[6], p7 = in[7];
+
+            uint16_t w0 = (uint16_t)((p0 << 2) | (p1 >> 12));
+            uint16_t w1 = (uint16_t)((p1 << 4) | (p2 >> 10));
+            uint16_t w2 = (uint16_t)((p2 << 6) | (p3 >> 8));
+            uint16_t w3 = (uint16_t)((p3 << 8) | (p4 >> 6));
+            uint16_t w4 = (uint16_t)((p4 << 10) | (p5 >> 4));
+            uint16_t w5 = (uint16_t)((p5 << 12) | (p6 >> 2));
+            uint16_t w6 = (uint16_t)((p6 << 14) | p7);
+
+            if (big_endian) {
+                out[0] = ROL16(w0, 8);
+                out[1] = ROL16(w1, 8);
+                out[2] = ROL16(w2, 8);
+                out[3] = ROL16(w3, 8);
+                out[4] = ROL16(w4, 8);
+                out[5] = ROL16(w5, 8);
+                out[6] = ROL16(w6, 8);
+            } else {
+                out[0] = w0; out[1] = w1; out[2] = w2; out[3] = w3;
+                out[4] = w4; out[5] = w5; out[6] = w6;
+            }
+            in += 8;
+            out += 7;
+        }
+
+        if (rem == 0) return;
+        input_buffer = (uint16_t *)in;
+        output_buffer = out;
+        pixel_count = rem;
+    }
+    else if (bpp == 12)
+    {
+        uint32_t blocks = pixel_count / 4;
+        uint32_t rem = pixel_count % 4;
+        const uint16_t * in = input_buffer;
+        uint16_t * out = output_buffer;
+
+        for (uint32_t b = 0; b < blocks; b++)
+        {
+            uint32_t p0 = in[0], p1 = in[1], p2 = in[2], p3 = in[3];
+
+            uint16_t w0 = (uint16_t)((p0 << 4) | (p1 >> 8));
+            uint16_t w1 = (uint16_t)((p1 << 8) | (p2 >> 4));
+            uint16_t w2 = (uint16_t)((p2 << 12) | p3);
+
+            if (big_endian) {
+                out[0] = ROL16(w0, 8);
+                out[1] = ROL16(w1, 8);
+                out[2] = ROL16(w2, 8);
+            } else {
+                out[0] = w0; out[1] = w1; out[2] = w2;
+            }
+            in += 4;
+            out += 3;
+        }
+
+        if (rem == 0) return;
+        input_buffer = (uint16_t *)in;
+        output_buffer = out;
+        pixel_count = rem;
+    }
+
     uint32_t bits_free = 16 - bpp;
     uint16_t *unpacked_bits = input_buffer;
     uint16_t *packed_bits = output_buffer;
@@ -911,7 +986,11 @@ static int dng_get_frame(mlvObject_t * mlv_data, dngObject_t * dng_data, uint32_
 {
     int ret = 0;
 
-    FILE *fd = mlv_data->file[mlv_data->video_index[frame_index].chunk_num];
+    uint16_t chunk = mlv_data->video_index[frame_index].chunk_num;
+
+    pthread_mutex_lock(mlv_data->main_file_mutex + chunk);
+
+    FILE *fd = mlv_data->file[chunk];
 
     if (isMcrawLoaded(mlv_data))
     {
@@ -925,13 +1004,23 @@ static int dng_get_frame(mlvObject_t * mlv_data, dngObject_t * dng_data, uint32_
 #ifndef STDOUT_SILENT
             printf("Can not read raw frame from %s\n", mlv_data->path);
 #endif
+            pthread_mutex_unlock(mlv_data->main_file_mutex + chunk);
             return -1;
         }
 
         size_t stored_size = item.size;
 
-        if (stored_size > dng_get_image_size(mlv_data, IMG_SIZE_UNPACKED, frame_index)) {
-            dng_data->image_buf2 = realloc(dng_data->image_buf2, stored_size);
+        if (stored_size > dng_get_image_size(mlv_data, IMG_SIZE_UNPACKED, frame_index))
+        {
+            void *tmp = realloc(dng_data->image_buf2, stored_size);
+
+            if (!tmp)
+            {
+                pthread_mutex_unlock(mlv_data->main_file_mutex + chunk);
+                return -1;
+            }
+
+            dng_data->image_buf2 = tmp;
         }
 
         if (fread(dng_data->image_buf2, stored_size, 1, fd) != 1)
@@ -939,8 +1028,11 @@ static int dng_get_frame(mlvObject_t * mlv_data, dngObject_t * dng_data, uint32_
 #ifndef STDOUT_SILENT
             printf("Can not read raw frame from %s\n", mlv_data->path);
 #endif
+            pthread_mutex_unlock(mlv_data->main_file_mutex + chunk);
             return -1;
         }
+
+        pthread_mutex_unlock(mlv_data->main_file_mutex + chunk);
 
         int64_t ret = mr_decode_video_frame((uint8_t*)dng_data->image_buf_unpacked,
                                             (uint8_t*)dng_data->image_buf2,
@@ -987,18 +1079,19 @@ static int dng_get_frame(mlvObject_t * mlv_data, dngObject_t * dng_data, uint32_
         if (dng_data->raw_input_state == COMPRESSED_RAW) /* If lossless, decompress or pass trough */
         {
             dng_data->image_size = dng_get_image_size(mlv_data, IMG_SIZE_LOSLESS, frame_index);
+
             if(fread(dng_data->image_buf, dng_data->image_size, 1, fd) != 1)
             {
 #ifndef STDOUT_SILENT
                 printf("Can not read raw frame from %s\n", mlv_data->path);
 #endif
+                pthread_mutex_unlock(mlv_data->main_file_mutex + chunk);
+                return -1;
             }
 
-            if(dng_data->raw_output_state == COMPRESSED_ORIG)
-            {
-                // do nothing, compressed raw data is ready to save unchanged
-            }
-            else
+            pthread_mutex_unlock(mlv_data->main_file_mutex + chunk);
+
+            if(dng_data->raw_output_state != COMPRESSED_ORIG)
             {
                 ret = dng_decompress_image(dng_data->image_buf_unpacked,
                                            dng_data->image_buf,
@@ -1042,12 +1135,17 @@ static int dng_get_frame(mlvObject_t * mlv_data, dngObject_t * dng_data, uint32_
         else /* If uncompressed, unpack to 16bit or pass trough */
         {
             dng_data->image_size = dng_get_image_size(mlv_data, IMG_SIZE_PACKED, frame_index);
+
             if(fread(dng_data->image_buf, dng_data->image_size, 1, fd) != 1)
             {
 #ifndef STDOUT_SILENT
                 printf("Can not read raw frame from %s\n", mlv_data->path);
 #endif
+                pthread_mutex_unlock(mlv_data->main_file_mutex + chunk);
+                return -1;
             }
+
+            pthread_mutex_unlock(mlv_data->main_file_mutex + chunk);
 
             if(dng_data->raw_output_state == UNCOMPRESSED_ORIG)
             {
@@ -1145,7 +1243,7 @@ int saveDngFrame(mlvObject_t * mlv_data, dngObject_t * dng_data, uint32_t frame_
         fclose(dngf);
         return 1;
     }
-    
+
     /* write DNG image data */
     if (fwrite(dng_data->image_buf, dng_data->image_size, 1, dngf) != 1)
     {
