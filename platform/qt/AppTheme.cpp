@@ -448,7 +448,9 @@ void IconRecolorStyle::drawPrimitive( PrimitiveElement element, const QStyleOpti
 {
     //qDebug() << option->state << element << widget;
 
-    if( !widget->inherits( "QMenu" ) )
+    if( element == PE_PanelMenu ) return;
+
+    if( !widget || !widget->inherits( "QMenu" ) )
     {
         QProxyStyle::drawPrimitive( element, option, painter, widget );
         return;
@@ -494,7 +496,7 @@ void IconRecolorStyle::drawControl( ControlElement element, const QStyleOption *
 
     if( !widget )
     {
-        if( element == CE_RubberBand ) QProxyStyle::drawControl( element, option, painter, widget );
+        if( element == CE_RubberBand || element == CE_MenuScroller ) QProxyStyle::drawControl( element, option, painter, widget );
         return;
     }
 
