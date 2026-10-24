@@ -494,7 +494,7 @@ void IconRecolorStyle::drawControl( ControlElement element, const QStyleOption *
 
     if( !widget )
     {
-        QProxyStyle::drawControl( element, option, painter, widget );
+        if( element == CE_RubberBand ) QProxyStyle::drawControl( element, option, painter, widget );
         return;
     }
 
