@@ -8885,86 +8885,9 @@ void MainWindow::exportHandler( void )
         setSliders( m_exportQueue.first(), false );
 
         // Get codec name for label in StatusDialog
-        QString codecName = "";
-
-        switch ( m_codecProfile )
-        {
-            case CODEC_PRORES422PROXY:
-                codecName = "Apple ProRes 422 Proxy";
-                break;
-            case CODEC_PRORES422LT:
-                codecName = "Apple ProRes 422 LT";
-                break;
-            case CODEC_PRORES422ST:
-                codecName = "Apple ProRes 422";
-                break;
-            case CODEC_PRORES422HQ:
-                codecName = "Apple ProRes 422 HQ";
-                break;
-            case CODEC_PRORES4444:
-                codecName = "Apple ProRes 4444";
-                break;
-            case CODEC_AVI:
-                codecName = "Uncompressed AVI";
-                break;
-            case CODEC_CDNG:
-                codecName = "CinemaDNG Uncompressed";
-                break;
-            case CODEC_CDNG_LOSSLESS:
-                codecName = "CinemaDNG Lossless";
-                break;
-            case CODEC_CDNG_FAST:
-                codecName = "CinemaDNG Fast Pass";
-                break;
-            case CODEC_H264:
-                codecName = "H.264";
-                break;
-            case CODEC_H265_8:
-                codecName = "H.265 8bit 4:2:0";
-                break;
-            case CODEC_H265_10:
-                codecName = "H.265 10bit 4:2:0";
-                break;
-            case CODEC_H265_12:
-                codecName = "H.265 12bit 4:4:4";
-                break;
-            case CODEC_TIFF:
-                codecName = "TIFF";
-                break;
-            case CODEC_PNG:
-                codecName = "PNG Sequence";
-                break;
-            case CODEC_JPG2K:
-                codecName = "JPEG2000";
-                break;
-            case CODEC_MJPEG:
-                codecName = "Motion JPEG";
-                break;
-            case CODEC_FFVHUFF:
-                codecName = "Huff YUV (FFVH)";
-                break;
-            case CODEC_MLV:
-                codecName = "MLV";
-                break;
-            case CODEC_DNXHR:
-                codecName = "DNxHD";
-                break;
-            case CODEC_DNXHD:
-                codecName = "DNxHR";
-                break;
-            case CODEC_CINEFORM_10:
-                codecName = "GoPro Cineform 10bit 4:2:2";
-                break;
-            case CODEC_CINEFORM_12:
-                codecName = "GoPro Cineform 12bit 4:4:4";
-                break;
-            case CODEC_VP9:
-                codecName = "VP9";
-                break;
-            case CODEC_AUDIO_ONLY:
-                codecName = "WAV (Audio Only)";
-                break;
-        }
+        ExportSettingsDialog *pExportSettings = new ExportSettingsDialog( this, m_pScripting );
+        QString codecName = pExportSettings->encoderSettingString( m_codecProfile );
+        delete pExportSettings;
 
         if( !codecName.isEmpty() )
         {
