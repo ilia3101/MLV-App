@@ -152,6 +152,18 @@ uint8_t ExportSettingsDialog::encoderSetting(void)
     return ui->comboBoxCodec->currentIndex();
 }
 
+//Get the current codec profile
+QString ExportSettingsDialog::encoderSettingString()
+{
+    return encoderSettingString( encoderSetting() );
+}
+
+//Get the codec profile name from the id
+QString ExportSettingsDialog::encoderSettingString(uint8_t encoder_id)
+{
+    return ui->comboBoxCodec->itemText( encoder_id );
+}
+
 //Get Codec Option
 uint8_t ExportSettingsDialog::encoderOption()
 {

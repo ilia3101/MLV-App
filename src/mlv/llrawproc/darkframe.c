@@ -83,8 +83,16 @@ static void df_unload( mlvObject_t* df_mlv )
 /* load dark frame from external averaged MLV file */
 static int df_load_ext(mlvObject_t * video, char * error_message)
 {
+    static char * dark_frame_filename = NULL;
+
     /* If file name is not set return error */
     if(!video->llrawproc->dark_frame_filename) return 1;
+
+    if(dark_frame_filename == video->llrawproc->dark_frame_filename && video->llrawproc->dark_frame_data)
+    {
+        return 0;
+    }
+
     /* Parse dark frame MLV */
     mlvObject_t df_mlv = { 0 };
     char err_msg[256] = { 0 };
@@ -192,6 +200,9 @@ static int df_load_ext(mlvObject_t * video, char * error_message)
 #ifndef STDOUT_SILENT
     printf("DF: initialized Ext mode\n");
 #endif
+
+    dark_frame_filename = video->llrawproc->dark_frame_filename;
+
     free(df_packed_buf);
 
     /* Close darkframe MLV */
@@ -203,6 +214,13 @@ static int df_load_ext(mlvObject_t * video, char * error_message)
 /* load dark frame from current MLVs internal DARK block header */
 static int df_load_int(mlvObject_t * video)
 {
+    static int loaded = 0;
+
+    if(loaded && video->llrawproc->dark_frame_data)
+    {
+        return 0;
+    }
+
     /* if DARK block is not found return error */
     if(!video->DARK.blockType[0]) return 1;
     /* Allocate dark frame data buffer */
@@ -236,6 +254,9 @@ static int df_load_int(mlvObject_t * video)
 #ifndef STDOUT_SILENT
     printf("DF: initialized Int mode\n");
 #endif
+
+    loaded = 1;
+
     free(df_packed_buf);
     return 0;
 }
