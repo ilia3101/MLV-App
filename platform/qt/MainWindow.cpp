@@ -5802,7 +5802,7 @@ uint8_t MainWindow::drawZebras()
             const int g = qGreen( pixel );
             const int b = qBlue( pixel );
 
-            const int lightness = ( qMax( r, qMax( g, b ) ) + qMin( r, qMin( g, b ) ) ) / 2;
+            const int lightness = ( qMax( r, qMax( g, b ) ) + qMin( r, qMin( g, b ) ) ) >> 1;
 
             if ( lightness >= 252 )
             {
