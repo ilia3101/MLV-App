@@ -8,6 +8,7 @@
 #include "MainWindow.h"
 #include "ui_MainWindow.h"
 #include <memory>
+#include <atomic>
 
 #include <QtGui>
 #include <QMessageBox>
@@ -5881,17 +5882,23 @@ void MainWindow::drawZebras()
     {
         QImage image = m_pGraphicsItem->pixmap().toImage();
 
-        for( int y = 0; y < image.height(); y++ )
+        const int width  = image.width();
+        const int height = image.height();
+
+        for( int y = 0; y < height; y++ )
         {
             QRgb *line = reinterpret_cast<QRgb*>( image.scanLine( y ) );
 
-            for( int x = 0; x < image.width(); x++ )
+            for( int x = 0; x < width; x++ )
             {
-                int r = qRed( line[x] );
-                int g = qGreen( line[x] );
-                int b = qBlue( line[x] );
+                const QRgb pixel = line[x];
 
-                int lightness = ( std::max( r, std::max( g, b ) ) + std::min( r, std::min( g, b ) ) + 1 ) >> 1;
+                //Same lightness definition as QColor::lightness()
+                const int r = qRed( pixel );
+                const int g = qGreen( pixel );
+                const int b = qBlue( pixel );
+
+                const int lightness = ( qMax( r, qMax( g, b ) ) + qMin( r, qMin( g, b ) ) + 1 ) >> 1;
 
                 if( lightness >= 252 )
                 {
@@ -6400,7 +6407,6 @@ void MainWindow::on_actionClipInfo_triggered()
 {
     if( !m_pInfoDialog->isVisible() )
     {
-        m_pInfoDialog->adjustSize();
         m_pInfoDialog->show();
     }
     else
@@ -8980,86 +8986,9 @@ void MainWindow::exportHandler( void )
         setSliders( m_exportQueue.first(), false );
 
         // Get codec name for label in StatusDialog
-        QString codecName = "";
-
-        switch ( m_codecProfile )
-        {
-            case CODEC_PRORES422PROXY:
-                codecName = "Apple ProRes 422 Proxy";
-                break;
-            case CODEC_PRORES422LT:
-                codecName = "Apple ProRes 422 LT";
-                break;
-            case CODEC_PRORES422ST:
-                codecName = "Apple ProRes 422";
-                break;
-            case CODEC_PRORES422HQ:
-                codecName = "Apple ProRes 422 HQ";
-                break;
-            case CODEC_PRORES4444:
-                codecName = "Apple ProRes 4444";
-                break;
-            case CODEC_AVI:
-                codecName = "Uncompressed AVI";
-                break;
-            case CODEC_CDNG:
-                codecName = "CinemaDNG Uncompressed";
-                break;
-            case CODEC_CDNG_LOSSLESS:
-                codecName = "CinemaDNG Lossless";
-                break;
-            case CODEC_CDNG_FAST:
-                codecName = "CinemaDNG Fast Pass";
-                break;
-            case CODEC_H264:
-                codecName = "H.264";
-                break;
-            case CODEC_H265_8:
-                codecName = "H.265 8bit 4:2:0";
-                break;
-            case CODEC_H265_10:
-                codecName = "H.265 10bit 4:2:0";
-                break;
-            case CODEC_H265_12:
-                codecName = "H.265 12bit 4:4:4";
-                break;
-            case CODEC_TIFF:
-                codecName = "TIFF";
-                break;
-            case CODEC_PNG:
-                codecName = "PNG Sequence";
-                break;
-            case CODEC_JPG2K:
-                codecName = "JPEG2000";
-                break;
-            case CODEC_MJPEG:
-                codecName = "Motion JPEG";
-                break;
-            case CODEC_FFVHUFF:
-                codecName = "Huff YUV (FFVH)";
-                break;
-            case CODEC_MLV:
-                codecName = "MLV";
-                break;
-            case CODEC_DNXHR:
-                codecName = "DNxHD";
-                break;
-            case CODEC_DNXHD:
-                codecName = "DNxHR";
-                break;
-            case CODEC_CINEFORM_10:
-                codecName = "GoPro Cineform 10bit 4:2:2";
-                break;
-            case CODEC_CINEFORM_12:
-                codecName = "GoPro Cineform 12bit 4:4:4";
-                break;
-            case CODEC_VP9:
-                codecName = "VP9";
-                break;
-            case CODEC_AUDIO_ONLY:
-                codecName = "WAV (Audio Only)";
-                break;
-        }
+        ExportSettingsDialog *pExportSettings = new ExportSettingsDialog( this, m_pScripting );
+        QString codecName = pExportSettings->encoderSettingString( m_codecProfile );
+        delete pExportSettings;
 
         if( !codecName.isEmpty() )
         {

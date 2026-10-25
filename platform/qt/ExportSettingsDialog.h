@@ -140,6 +140,8 @@ public:
                                   bool hdrBlending = false);
     ~ExportSettingsDialog();
     uint8_t encoderSetting(void);
+    QString encoderSettingString(void);
+    QString encoderSettingString(uint8_t encoder_id);
     uint8_t encoderOption(void);
     uint8_t debayerMode(void);
     bool isResizeEnabled(void);

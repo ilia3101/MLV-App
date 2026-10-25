@@ -148,6 +148,9 @@ You may notice a strange mixture of these styles:
 The rule I have used in the libraries is: public functions use the thisNameStyle, and private functions use this_one.
 Keep it in mind if you're going to be adding something major.
 
+#### Contributions & PRs
+Contributions are very welcome! If you'd like to contribute, please create pull requests that are as small as possible—one for each individual feature. This makes reviewing and testing easier and faster.
+
 ### Thanks for reading README.md
 
 :frog:

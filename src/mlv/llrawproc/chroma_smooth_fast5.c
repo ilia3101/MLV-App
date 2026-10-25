@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -13,8 +14,8 @@ typedef int v4i __attribute__((vector_size(16)));
 
 #if defined(__clang__) && __has_builtin(__builtin_elementwise_min) && __has_builtin(__builtin_elementwise_max)
 #define VSORT(a,b) { v4i _t = __builtin_elementwise_min((a),(b)); (b) = __builtin_elementwise_max((a),(b)); (a) = _t; }
-#elif defined(__GNUC__)
-#define VSORT(a,b) { v4i _min = ((a) < (b)) ? (a) : (b); v4i _max = ((a) > (b)) ? (a) : (b); (a) = _min; (b) = _max; }
+#else
+#define VSORT(a,b) { v4i _m = ((a) < (b)); v4i _min = ((a) & _m) | ((b) & ~_m); v4i _max = ((b) & _m) | ((a) & ~_m); (a) = _min; (b) = _max; }
 #endif
 
 static inline v4i vmed5(v4i * p)
