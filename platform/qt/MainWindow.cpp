@@ -5780,31 +5780,38 @@ void MainWindow::paintAudioTrack( void )
 //Draw Zebras, return: 1=under, 2=over, 3=under+over, 0=okay
 uint8_t MainWindow::drawZebras()
 {
+    if (!ui->actionShowZebras->isChecked())
+        return 0;
+
     uint8_t underOver = 0;
-
-    //If option not checked we do nothing
-    if( !ui->actionShowZebras->isChecked() ) return underOver;
-
-    //Get image
     QImage image = m_pGraphicsItem->pixmap().toImage();
-    //Each pixel
-    for( int y = 0; y < image.height(); y++ )
+
+    const int width  = image.width();
+    const int height = image.height();
+
+    for (int y = 0; y < height; ++y)
     {
-        for( int x = 0; x < image.width(); x++ )
+        auto *line = reinterpret_cast<QRgb *>( image.scanLine(y) );
+
+        for (int x = 0; x < width; ++x)
         {
-            QColor pixel = image.pixelColor( x, y );
-            //Overexposed
-            if( pixel.lightness() >= 252 )
+            const QRgb pixel = line[x];
+
+            //Same lightness definition as QColor::lightness()
+            const int r = qRed( pixel );
+            const int g = qGreen( pixel );
+            const int b = qBlue( pixel );
+
+            const int lightness = ( qMax( r, qMax( g, b ) ) + qMin( r, qMin( g, b ) ) ) / 2;
+
+            if ( lightness >= 252 )
             {
-                //Set color red
-                image.setPixelColor( x, y, Qt::red );
+                line[x] = qRgb( 255, 0, 0 );
                 underOver |= 0x02;
             }
-            //Underexposed
-            if( pixel.lightness() <= 3 )
+            else if ( lightness <= 3 )
             {
-                //Set color blue
-                image.setPixelColor( x, y, Qt::blue );
+                line[x] = qRgb( 0, 0, 255 );
                 underOver |= 0x01;
             }
         }

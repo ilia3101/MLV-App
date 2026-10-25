@@ -24,6 +24,8 @@ public:
     ~InfoDialog();
     Ui::InfoDialog *ui;
 
+protected:
+    void showEvent(QShowEvent *event) override;
 };
 
 #endif // INFODIALOG_H
