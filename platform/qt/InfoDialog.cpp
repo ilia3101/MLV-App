@@ -22,6 +22,6 @@ InfoDialog::~InfoDialog()
 
 void InfoDialog::showEvent(QShowEvent *event)
 {
-    QDialog::showEvent(event);
     adjustSize();
+    QDialog::showEvent(event);
 }
