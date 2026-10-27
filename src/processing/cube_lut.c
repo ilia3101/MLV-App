@@ -8,6 +8,15 @@
 #include "cube_lut.h"
 #include <stdlib.h>
 #include <stdio.h>
+#ifdef __APPLE__
+#include <dispatch/dispatch.h>
+#endif
+
+#if defined(__clang__)
+#pragma clang fp contract(off)
+#elif defined(__GNUC__)
+#pragma GCC optimize("fp-contract=off")
+#endif
 
 #define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
 #define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
@@ -211,132 +220,218 @@ void apply_lut(lut_t *lut, int width, int height, uint16_t *image)
     if( lut->dimension <= 1 || !lut->cube ) return;
     if( lut->intensity > 100 ) lut->intensity = 100;
 
-    uint16_t * end = image + (width * height * 3);
     float factor1 = (float)lut->intensity / 100.0f;
     float factor2 = 1.0 - factor1;
 
     const uint32_t dim = lut->dimension;
     const uint32_t dim2 = dim * dim;
-    float *cube = lut->cube;
-    float factorA = ( lut->dimension - 1 ) / 65536.0 / ( lut->domain_max[0] - lut->domain_min[0] );
-    float factorB = ( lut->dimension - 1 ) / 65536.0 / ( lut->domain_max[1] - lut->domain_min[1] );
-    float factorC = ( lut->dimension - 1 ) / 65536.0 / ( lut->domain_max[2] - lut->domain_min[2] );
+    const float *cube = lut->cube;
+    const float factorA = ( lut->dimension - 1 ) / 65536.0 / ( lut->domain_max[0] - lut->domain_min[0] );
+    const float factorB = ( lut->dimension - 1 ) / 65536.0 / ( lut->domain_max[1] - lut->domain_min[1] );
+    const float factorC = ( lut->dimension - 1 ) / 65536.0 / ( lut->domain_max[2] - lut->domain_min[2] );
 
-    for (uint16_t * pix = image; pix < end; pix += 3)
+    const size_t stride_g = (size_t)dim * 3;
+    const size_t stride_b = (size_t)dim2 * 3;
+
+#ifdef __APPLE__
+    int workers = (height < 8) ? height : 8;
+    dispatch_apply(workers, dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0), ^(size_t chunk) {
+        int y_start = (chunk * height) / workers;
+        int y_end   = ((chunk + 1) * height) / workers;
+        for (int y = y_start; y < y_end; y++)
+#else
+#pragma omp parallel for schedule(static)
+    for (int y = 0; y < height; y++)
+#endif
     {
-        //x
-        float red   = ( pix[0] * factorA ) - lut->domain_min[0];
-        float green = ( pix[1] * factorB ) - lut->domain_min[1];
-        float blue  = ( pix[2] * factorC ) - lut->domain_min[2];
-
-        //x0
-        uint16_t r0 = (uint16_t)red;
-        uint16_t g0 = (uint16_t)green;
-        uint16_t b0 = (uint16_t)blue;
-        //x1
-        uint16_t r1 = r0 + 1;
-        uint16_t g1 = g0 + 1;
-        uint16_t b1 = b0 + 1;
-
-        //Limit
-        if( r0 >= lut->dimension ) r0 = lut->dimension - 1;
-        if( g0 >= lut->dimension ) g0 = lut->dimension - 1;
-        if( b0 >= lut->dimension ) b0 = lut->dimension - 1;
-        if( r1 >= lut->dimension ) r1 = lut->dimension - 1;
-        if( g1 >= lut->dimension ) g1 = lut->dimension - 1;
-        if( b1 >= lut->dimension ) b1 = lut->dimension - 1;
-
+        uint16_t *pix = image + ((size_t)y * width * 3);
         if( lut->is3d == 0 )
         {
-            //Linear Interpolation
-            //y0 & //y1
-            float pix00 = cube[r0 * 3 + 0];
-            float pix01 = cube[r1 * 3 + 0];
-            float pix10 = cube[g0 * 3 + 1];
-            float pix11 = cube[g1 * 3 + 1];
-            float pix20 = cube[b0 * 3 + 2];
-            float pix21 = cube[b1 * 3 + 2];
-            //3x Linear Interpolation
-            float a = lerp( red,   r0, r1, pix00, pix01 );
-            float b = lerp( green, g0, g1, pix10, pix11 );
-            float c = lerp( blue,  b0, b1, pix20, pix21 );
-            //Output
-            pix[0] = pix[0] * factor2 + LIMIT16( a * 65535.0 ) * factor1;
-            pix[1] = pix[1] * factor2 + LIMIT16( b * 65535.0 ) * factor1;
-            pix[2] = pix[2] * factor2 + LIMIT16( c * 65535.0 ) * factor1;
+            for (int x = 0; x < width; x++, pix += 3)
+            {
+                float red   = ( pix[0] * factorA ) - lut->domain_min[0];
+                float green = ( pix[1] * factorB ) - lut->domain_min[1];
+                float blue  = ( pix[2] * factorC ) - lut->domain_min[2];
+
+                uint16_t r0 = (uint16_t)red;
+                uint16_t g0 = (uint16_t)green;
+                uint16_t b0 = (uint16_t)blue;
+                uint16_t r1 = r0 + 1;
+                uint16_t g1 = g0 + 1;
+                uint16_t b1 = b0 + 1;
+
+                if( r0 >= lut->dimension ) r0 = lut->dimension - 1;
+                if( g0 >= lut->dimension ) g0 = lut->dimension - 1;
+                if( b0 >= lut->dimension ) b0 = lut->dimension - 1;
+                if( r1 >= lut->dimension ) r1 = lut->dimension - 1;
+                if( g1 >= lut->dimension ) g1 = lut->dimension - 1;
+                if( b1 >= lut->dimension ) b1 = lut->dimension - 1;
+
+                float pix00 = cube[r0 * 3 + 0];
+                float pix01 = cube[r1 * 3 + 0];
+                float pix10 = cube[g0 * 3 + 1];
+                float pix11 = cube[g1 * 3 + 1];
+                float pix20 = cube[b0 * 3 + 2];
+                float pix21 = cube[b1 * 3 + 2];
+
+                float a = lerp( red,   r0, r1, pix00, pix01 );
+                float b = lerp( green, g0, g1, pix10, pix11 );
+                float c = lerp( blue,  b0, b1, pix20, pix21 );
+
+                pix[0] = pix[0] * factor2 + LIMIT16( a * 65535.0 ) * factor1;
+                pix[1] = pix[1] * factor2 + LIMIT16( b * 65535.0 ) * factor1;
+                pix[2] = pix[2] * factor2 + LIMIT16( c * 65535.0 ) * factor1;
+            }
         }
         else
         {
 #ifdef USE_TRILIN_INT
-            //Trilinear Interpolation
-            for( int i = 0; i < 3; i++ )
+            for (int x = 0; x < width; x++, pix += 3)
             {
-                float q000 = cube[LUT3D_INDEX(r0, g0, b0, dim, dim2) + i];
-                float q001 = cube[LUT3D_INDEX(r0, g0, b1, dim, dim2) + i];
-                float q010 = cube[LUT3D_INDEX(r0, g1, b0, dim, dim2) + i];
-                float q011 = cube[LUT3D_INDEX(r0, g1, b1, dim, dim2) + i];
-                float q100 = cube[LUT3D_INDEX(r1, g0, b0, dim, dim2) + i];
-                float q101 = cube[LUT3D_INDEX(r1, g0, b1, dim, dim2) + i];
-                float q110 = cube[LUT3D_INDEX(r1, g1, b0, dim, dim2) + i];
-                float q111 = cube[LUT3D_INDEX(r1, g1, b1, dim, dim2) + i];
+                float red   = ( pix[0] * factorA ) - lut->domain_min[0];
+                float green = ( pix[1] * factorB ) - lut->domain_min[1];
+                float blue  = ( pix[2] * factorC ) - lut->domain_min[2];
 
-                float out = triLerp(red, green, blue, q000, q001, q010, q011, q100, q101, q110, q111, r0, r1, g0, g1, b0, b1);
+                uint16_t r0 = (uint16_t)red;
+                uint16_t g0 = (uint16_t)green;
+                uint16_t b0 = (uint16_t)blue;
+                uint16_t r1 = r0 + 1;
+                uint16_t g1 = g0 + 1;
+                uint16_t b1 = b0 + 1;
 
-                //Output
-                pix[i] = LIMIT16( out * 65535.0 );
+                if( r0 >= lut->dimension ) r0 = lut->dimension - 1;
+                if( g0 >= lut->dimension ) g0 = lut->dimension - 1;
+                if( b0 >= lut->dimension ) b0 = lut->dimension - 1;
+                if( r1 >= lut->dimension ) r1 = lut->dimension - 1;
+                if( g1 >= lut->dimension ) g1 = lut->dimension - 1;
+                if( b1 >= lut->dimension ) b1 = lut->dimension - 1;
+
+                for( int i = 0; i < 3; i++ )
+                {
+                    float q000 = cube[LUT3D_INDEX(r0, g0, b0, dim, dim2) + i];
+                    float q001 = cube[LUT3D_INDEX(r0, g0, b1, dim, dim2) + i];
+                    float q010 = cube[LUT3D_INDEX(r0, g1, b0, dim, dim2) + i];
+                    float q011 = cube[LUT3D_INDEX(r0, g1, b1, dim, dim2) + i];
+                    float q100 = cube[LUT3D_INDEX(r1, g0, b0, dim, dim2) + i];
+                    float q101 = cube[LUT3D_INDEX(r1, g0, b1, dim, dim2) + i];
+                    float q110 = cube[LUT3D_INDEX(r1, g1, b0, dim, dim2) + i];
+                    float q111 = cube[LUT3D_INDEX(r1, g1, b1, dim, dim2) + i];
+
+                    float out = triLerp(red, green, blue, q000, q001, q010, q011, q100, q101, q110, q111, r0, r1, g0, g1, b0, b1);
+                    pix[i] = LIMIT16( out * 65535.0 );
+                }
             }
 #else
-            //Tetrahedral Interpolation
-            red = red - r0;
-            blue = blue - b0;
-            green = green - g0;
-
-            for( uint8_t i = 0; i < 3; i++ )
+            for (int x = 0; x < width; x++, pix += 3)
             {
-                float q000 = cube[LUT3D_INDEX(r0, g0, b0, dim, dim2) + i];
-                float q001 = cube[LUT3D_INDEX(r0, g0, b1, dim, dim2) + i];
-                float q010 = cube[LUT3D_INDEX(r0, g1, b0, dim, dim2) + i];
-                float q011 = cube[LUT3D_INDEX(r0, g1, b1, dim, dim2) + i];
-                float q100 = cube[LUT3D_INDEX(r1, g0, b0, dim, dim2) + i];
-                float q101 = cube[LUT3D_INDEX(r1, g0, b1, dim, dim2) + i];
-                float q110 = cube[LUT3D_INDEX(r1, g1, b0, dim, dim2) + i];
-                float q111 = cube[LUT3D_INDEX(r1, g1, b1, dim, dim2) + i];
+                float red   = ( pix[0] * factorA ) - lut->domain_min[0];
+                float green = ( pix[1] * factorB ) - lut->domain_min[1];
+                float blue  = ( pix[2] * factorC ) - lut->domain_min[2];
 
-                float out;
+                uint16_t r0 = (uint16_t)red;
+                uint16_t g0 = (uint16_t)green;
+                uint16_t b0 = (uint16_t)blue;
+                uint16_t r1 = r0 + 1;
+                uint16_t g1 = g0 + 1;
+                uint16_t b1 = b0 + 1;
+
+                if( r0 >= lut->dimension ) r0 = lut->dimension - 1;
+                if( g0 >= lut->dimension ) g0 = lut->dimension - 1;
+                if( b0 >= lut->dimension ) b0 = lut->dimension - 1;
+                if( r1 >= lut->dimension ) r1 = lut->dimension - 1;
+                if( g1 >= lut->dimension ) g1 = lut->dimension - 1;
+                if( b1 >= lut->dimension ) b1 = lut->dimension - 1;
+
+                red   -= (float)r0;
+                blue  -= (float)b0;
+                green -= (float)g0;
+
+                size_t base = ((size_t)r0 + (size_t)g0 * dim + (size_t)b0 * dim2) * 3;
+                size_t dr = ((size_t)r1 - (size_t)r0) * 3;
+                size_t dg = ((size_t)g1 - (size_t)g0) * stride_g;
+                size_t db = ((size_t)b1 - (size_t)b0) * stride_b;
+
+                const float *v0, *v1, *v2, *v3;
+                double w0;
+                float w1, w2, w3;
+
                 if( green >= blue && blue >= red ) //T1
                 {
-                    out = ( (1.0 - green) * q000 ) + ( ( green - blue ) * q010 )
-                                + ( ( blue - red ) * q011 ) + ( red * q111 );
+                    v0 = cube + base;
+                    v1 = cube + base + dg;
+                    v2 = cube + base + dg + db;
+                    v3 = cube + base + dr + dg + db;
+                    w0 = 1.0 - green;
+                    w1 = green - blue;
+                    w2 = blue - red;
+                    w3 = red;
                 }
                 else if( blue > red && red > green ) //T2
                 {
-                    out = ( (1.0 - blue) * q000 ) + ( ( blue - red ) * q001 )
-                                + ( ( red - green ) * q101 ) + ( green * q111 );
+                    v0 = cube + base;
+                    v1 = cube + base + db;
+                    v2 = cube + base + dr + db;
+                    v3 = cube + base + dr + dg + db;
+                    w0 = 1.0 - blue;
+                    w1 = blue - red;
+                    w2 = red - green;
+                    w3 = green;
                 }
                 else if( blue > green && green >= red ) //T3
                 {
-                    out = ( (1.0 - blue) * q000 ) + ( ( blue - green ) * q001 )
-                                + ( ( green - red ) * q011 ) + ( red * q111 );
+                    v0 = cube + base;
+                    v1 = cube + base + db;
+                    v2 = cube + base + dg + db;
+                    v3 = cube + base + dr + dg + db;
+                    w0 = 1.0 - blue;
+                    w1 = blue - green;
+                    w2 = green - red;
+                    w3 = red;
                 }
                 else if( red >= green && green > blue ) //T4
                 {
-                    out = ( (1.0 - red) * q000 ) + ( ( red - green ) * q100 )
-                                + ( ( green - blue ) * q110 ) + ( blue * q111 );
+                    v0 = cube + base;
+                    v1 = cube + base + dr;
+                    v2 = cube + base + dr + dg;
+                    v3 = cube + base + dr + dg + db;
+                    w0 = 1.0 - red;
+                    w1 = red - green;
+                    w2 = green - blue;
+                    w3 = blue;
                 }
                 else if( green > red && red >= blue ) //T5
                 {
-                    out = ( (1.0 - green) * q000 ) + ( ( green - red ) * q010 )
-                                + ( ( red - blue ) * q110 ) + ( blue * q111 );
+                    v0 = cube + base;
+                    v1 = cube + base + dg;
+                    v2 = cube + base + dr + dg;
+                    v3 = cube + base + dr + dg + db;
+                    w0 = 1.0 - green;
+                    w1 = green - red;
+                    w2 = red - blue;
+                    w3 = blue;
                 }
                 else //T6
                 {
-                    out = ( (1.0 - red) * q000 ) + ( ( red - blue ) * q100 )
-                                + ( ( blue - green ) * q101 ) + ( green * q111 );
+                    v0 = cube + base;
+                    v1 = cube + base + dr;
+                    v2 = cube + base + dr + db;
+                    v3 = cube + base + dr + dg + db;
+                    w0 = 1.0 - red;
+                    w1 = red - blue;
+                    w2 = blue - green;
+                    w3 = green;
                 }
-                //Output
-                pix[i] = pix[i] * factor2 + LIMIT16( out * 65535.0 ) * factor1;
+
+                for( uint8_t i = 0; i < 3; i++ )
+                {
+                    float out = (float)((w0 * v0[i]) + (w1 * v1[i]) + (w2 * v2[i]) + (w3 * v3[i]));
+                    pix[i] = pix[i] * factor2 + LIMIT16( out * 65535.0 ) * factor1;
+                }
             }
 #endif
         }
     }
+#ifdef __APPLE__
+    });
+#endif
 }
