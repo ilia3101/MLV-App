@@ -2,45 +2,46 @@
 <ui version="4.0">
  <class>InfoDialog</class>
  <widget class="QDialog" name="InfoDialog">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>399</width>
-    <height>540</height>
-   </rect>
-  </property>
   <property name="windowTitle">
    <string>Clip Information</string>
   </property>
-  <layout class="QGridLayout" name="gridLayout">
-   <item row="1" column="1">
-    <widget class="QPushButton" name="pushButtonClose">
-     <property name="text">
-      <string>Close</string>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="0">
-    <spacer name="horizontalSpacer">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>297</width>
-       <height>20</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
-   <item row="0" column="0" colspan="2">
+  <property name="styleSheet">
+   <string notr="true">QTableWidget {
+	border: none;
+}
+QTableWidget::item {
+	padding: 0 5px;
+}</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <property name="spacing">
+    <number>0</number>
+   </property>
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
+    <number>0</number>
+   </property>
+   <item>
     <widget class="QTableWidget" name="tableWidget">
      <property name="sizePolicy">
-      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+      <sizepolicy hsizetype="Ignored" vsizetype="Expanding">
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>400</width>
+       <height>0</height>
+      </size>
      </property>
      <property name="focusPolicy">
       <enum>Qt::NoFocus</enum>
@@ -48,11 +49,8 @@
      <property name="contextMenuPolicy">
       <enum>Qt::NoContextMenu</enum>
      </property>
-     <property name="verticalScrollBarPolicy">
-      <enum>Qt::ScrollBarAlwaysOff</enum>
-     </property>
-     <property name="horizontalScrollBarPolicy">
-      <enum>Qt::ScrollBarAlwaysOff</enum>
+     <property name="frameShape">
+      <enum>QFrame::NoFrame</enum>
      </property>
      <property name="sizeAdjustPolicy">
       <enum>QAbstractScrollArea::AdjustToContents</enum>
@@ -66,11 +64,14 @@
      <property name="selectionMode">
       <enum>QAbstractItemView::NoSelection</enum>
      </property>
+     <property name="showGrid">
+      <bool>false</bool>
+     </property>
      <attribute name="horizontalHeaderVisible">
       <bool>false</bool>
      </attribute>
-     <attribute name="horizontalHeaderDefaultSectionSize">
-      <number>110</number>
+     <attribute name="horizontalHeaderMinimumSectionSize">
+      <number>150</number>
      </attribute>
      <attribute name="horizontalHeaderStretchLastSection">
       <bool>true</bool>
@@ -78,86 +79,22 @@
      <attribute name="verticalHeaderVisible">
       <bool>false</bool>
      </attribute>
-     <row>
-      <property name="text">
-       <string>1</string>
-      </property>
-     </row>
-     <row>
-      <property name="text">
-       <string>2</string>
-      </property>
-     </row>
-     <row>
-      <property name="text">
-       <string>3</string>
-      </property>
-     </row>
-     <row>
-      <property name="text">
-       <string>4</string>
-      </property>
-     </row>
-     <row>
-      <property name="text">
-       <string>5</string>
-      </property>
-     </row>
-     <row>
-      <property name="text">
-       <string>6</string>
-      </property>
-     </row>
-     <row>
-      <property name="text">
-       <string>7</string>
-      </property>
-     </row>
-     <row>
-      <property name="text">
-       <string>8</string>
-      </property>
-     </row>
-     <row>
-      <property name="text">
-       <string>9</string>
-      </property>
-     </row>
-     <row>
-      <property name="text">
-       <string>10</string>
-      </property>
-     </row>
-     <row>
-      <property name="text">
-       <string>11</string>
-      </property>
-     </row>
-     <row>
-      <property name="text">
-       <string>12</string>
-      </property>
-     </row>
-     <row>
-      <property name="text">
-       <string>13</string>
-      </property>
-     </row>
-     <row>
-      <property name="text">
-       <string>14</string>
-      </property>
-     </row>
-     <row>
-      <property name="text">
-       <string>15</string>
-      </property>
-     </row>
-     <row>
-      <property name="text">
-       <string>16</string>
-      </property>
-     </row>
+     <row/>
+     <row/>
+     <row/>
+     <row/>
+     <row/>
+     <row/>
+     <row/>
+     <row/>
+     <row/>
+     <row/>
+     <row/>
+     <row/>
+     <row/>
+     <row/>
+     <row/>
+     <row/>
      <column>
       <property name="text">
        <string>Category</string>
@@ -170,7 +107,7 @@
      </column>
      <item row="0" column="0">
       <property name="text">
-       <string>Camera</string>
+       <string>Camera:</string>
       </property>
       <property name="font">
        <font>
@@ -188,7 +125,7 @@
      </item>
      <item row="1" column="0">
       <property name="text">
-       <string>Lens</string>
+       <string>Lens:</string>
       </property>
       <property name="font">
        <font>
@@ -206,7 +143,7 @@
      </item>
      <item row="2" column="0">
       <property name="text">
-       <string>Resolution</string>
+       <string>Resolution:</string>
       </property>
       <property name="font">
        <font>
@@ -224,7 +161,7 @@
      </item>
      <item row="3" column="0">
       <property name="text">
-       <string>Duration</string>
+       <string>Duration:</string>
       </property>
       <property name="font">
        <font>
@@ -242,7 +179,7 @@
      </item>
      <item row="4" column="0">
       <property name="text">
-       <string>Frames</string>
+       <string>Frames:</string>
       </property>
       <property name="font">
        <font>
@@ -260,7 +197,7 @@
      </item>
      <item row="5" column="0">
       <property name="text">
-       <string>Frame Rate</string>
+       <string>Frame Rate:</string>
       </property>
       <property name="font">
        <font>
@@ -278,7 +215,7 @@
      </item>
      <item row="6" column="0">
       <property name="text">
-       <string>Focal Length</string>
+       <string>Focal Length:</string>
       </property>
       <property name="font">
        <font>
@@ -296,7 +233,7 @@
      </item>
      <item row="7" column="0">
       <property name="text">
-       <string>Focus Distance</string>
+       <string>Focus Distance:</string>
       </property>
       <property name="font">
        <font>
@@ -314,7 +251,7 @@
      </item>
      <item row="8" column="0">
       <property name="text">
-       <string>Shutter</string>
+       <string>Shutter:</string>
       </property>
       <property name="font">
        <font>
@@ -332,7 +269,7 @@
      </item>
      <item row="9" column="0">
       <property name="text">
-       <string>Aperture</string>
+       <string>Aperture:</string>
       </property>
       <property name="font">
        <font>
@@ -350,7 +287,7 @@
      </item>
      <item row="10" column="0">
       <property name="text">
-       <string>ISO</string>
+       <string>ISO:</string>
       </property>
       <property name="font">
        <font>
@@ -368,7 +305,7 @@
      </item>
      <item row="11" column="0">
       <property name="text">
-       <string>Bit Depth</string>
+       <string>Bit Depth:</string>
       </property>
       <property name="font">
        <font>
@@ -386,7 +323,7 @@
      </item>
      <item row="12" column="0">
       <property name="text">
-       <string>Levels</string>
+       <string>Levels:</string>
       </property>
       <property name="font">
        <font>
@@ -404,7 +341,7 @@
      </item>
      <item row="13" column="0">
       <property name="text">
-       <string>Date / Time</string>
+       <string>Date / Time:</string>
       </property>
       <property name="font">
        <font>
@@ -422,7 +359,7 @@
      </item>
      <item row="14" column="0">
       <property name="text">
-       <string>Audio</string>
+       <string>Audio:</string>
       </property>
       <property name="font">
        <font>
@@ -440,7 +377,7 @@
      </item>
      <item row="15" column="0">
       <property name="text">
-       <string>Size / Data Rate</string>
+       <string>Size / Data Rate:</string>
       </property>
       <property name="font">
        <font>
@@ -461,22 +398,5 @@
   </layout>
  </widget>
  <resources/>
- <connections>
-  <connection>
-   <sender>pushButtonClose</sender>
-   <signal>clicked()</signal>
-   <receiver>InfoDialog</receiver>
-   <slot>hide()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>358</x>
-     <y>368</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>201</x>
-     <y>194</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
 </ui>

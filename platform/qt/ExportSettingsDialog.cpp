@@ -14,6 +14,7 @@
 #include <QList>
 #include <QDataStream>
 #include <QDebug>
+#include <AppTheme.h>
 
 //From here for Preset Saving
 struct ExportPreset {
@@ -84,7 +85,7 @@ ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, Scripting *scripting
     ui(new Ui::ExportSettingsDialog)
 {
     ui->setupUi(this);
-    setWindowFlags( Qt::Dialog | Qt::WindowTitleHint | Qt::WindowCloseButtonHint );
+    setWindowFlags( Qt::Dialog | Qt::WindowTitleHint | Qt::WindowCloseButtonHint | Qt::CustomizeWindowHint );
     m_blockOnce = true;
     ui->comboBoxCodec->setCurrentIndex( currentCodecProfile );
     on_comboBoxCodec_currentIndexChanged( currentCodecProfile );
@@ -108,7 +109,7 @@ ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, Scripting *scripting
         on_comboBoxOption_currentTextChanged( QString( "Apple AVFoundation" ) );
     }
 
-#ifndef Q_OS_OSX
+#ifndef Q_OS_MACOS
     //No scriptsupport for Windows and Linux
     ui->groupBoxScripting->setVisible( false );
 #else
@@ -126,7 +127,7 @@ ExportSettingsDialog::ExportSettingsDialog(QWidget *parent, Scripting *scripting
 #else
     QVariant::fromValue<QList<ExportPreset>>(QList<ExportPreset>{}); // Dummy call for Qt6 https://stackoverflow.com/questions/70974383/qvariantvaluet-fails-to-convert-unless-qvariantfromvaluet-has-been-c
 #endif
-    QSettings set( QSettings::UserScope, "magiclantern.MLVApp", "MLVApp" );
+    QSettings set( QSettings::UserScope, "magiclantern", "MLVApp" );
     QList<ExportPreset> presetList = set.value( "ExportPresets" ).value<QList<ExportPreset> >();
     ui->listWidget->blockSignals( true );
     for( int i = 0; i < presetList.count(); i++ )
@@ -252,7 +253,7 @@ void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
         ui->comboBoxOption->setEnabled( true );
         ui->comboBoxOption->addItem( QString( "ffmpeg Kostya" ) );
         ui->comboBoxOption->addItem( QString( "ffmpeg Anatolyi" ) );
-#ifdef Q_OS_MACX
+#ifdef Q_OS_MACOS
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 101300
         if( index == CODEC_PRORES422ST || index == CODEC_PRORES4444 )
         {
@@ -303,7 +304,7 @@ void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
         ui->comboBoxOption->addItem( QString( "ffmpeg Movie (*.mov) Medium Quality" ) );
         ui->comboBoxOption->addItem( QString( "ffmpeg MPEG-4 (*.mp4) Medium Quality" ) );
         ui->comboBoxOption->addItem( QString( "ffmpeg Matroska (*.mkv) Medium Quality" ) );
-#ifdef Q_OS_MACX
+#ifdef Q_OS_MACOS
         if( index == CODEC_H264 )
         {
             ui->comboBoxOption->addItem( QString( "Apple AVFoundation" ) );
@@ -377,9 +378,7 @@ void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
         ui->comboBoxOption->addItem( QString( "720p 10bit" ) );
         ui->comboBoxOption->addItem( QString( "720p 8bit" ) );
         enableResize = false;
-        QPixmap pic = QPixmap( ":/RetinaIMG/RetinaIMG/Status-dialog-warning-icon.png" ).scaled( 24 * devicePixelRatio(), 24 * devicePixelRatio() );
-        pic.setDevicePixelRatio( devicePixelRatio() );
-        ui->label_Info->setPixmap( pic );
+        ui->label_Info->setPixmap( AppTheme::tintPixmap( QPixmap( ":/fontawesome/fontawesome/svgs-full/solid/warning.svg" ) ) );
         ui->label_Info->setToolTip( tr( "Note: DNxHD can only be exported @ 23.976, 25, 29.97, 50, 59.94 fps.\r\nPlease manually force to one of these, if your clips have diffent framerates!" ) );
     }
     else if( index == CODEC_DNXHR )
@@ -536,12 +535,8 @@ void ExportSettingsDialog::on_comboBoxOption_currentTextChanged(const QString &a
 //Toggle height lock
 void ExportSettingsDialog::on_toolButtonLockHeight_toggled(bool checked)
 {
-    if( checked ) ui->toolButtonLockHeight->setIcon( QIcon( ":/RetinaIMG/RetinaIMG/Actions-document-encrypt-icon.png" ) );
-    else ui->toolButtonLockHeight->setIcon( QIcon( ":/RetinaIMG/RetinaIMG/Actions-document-decrypt-icon.png" ) );
-
     if( !checked && ui->checkBoxResize->isChecked() ) ui->spinBoxHeight->setEnabled( true );
     else ui->spinBoxHeight->setEnabled( false );
-
 }
 
 //Post export script chosen
@@ -572,7 +567,7 @@ void ExportSettingsDialog::on_comboBoxSmoothing_currentIndexChanged(int index)
     {
         ui->checkBoxHdrBlending->setEnabled( false );
         ui->checkBoxHdrBlending->setChecked( false );
-        QMessageBox::warning( this, "MLVApp", tr( "This option is very slow and runs when export progressbar is at 100%!\nIt won't bring good results in shots with much movement and much detail." ) );
+        if( isVisible() ) QMessageBox::warning( this, "MLVApp", tr( "This option is very slow and runs when export progressbar is at 100%!\n\nIt won't bring good results in shots with much movement and much detail." ) );
     }
 }
 
@@ -586,7 +581,7 @@ void ExportSettingsDialog::on_toolButtonAddPreset_clicked()
     qRegisterMetaTypeStreamOperators<QList<ExportPreset> >("QList<ExportPreset>");
 #endif
     //Get existing list
-    QSettings set( QSettings::UserScope, "magiclantern.MLVApp", "MLVApp" );
+    QSettings set( QSettings::UserScope, "magiclantern", "MLVApp" );
     QList<ExportPreset> presetList = set.value( "ExportPresets" ).value<QList<ExportPreset> >();
     //Build new item
     ExportPreset preset;
@@ -617,7 +612,7 @@ void ExportSettingsDialog::on_toolButtonDeletePreset_clicked()
     qRegisterMetaTypeStreamOperators<QList<ExportPreset> >("QList<ExportPreset>");
 #endif
     //Get existing list
-    QSettings set( QSettings::UserScope, "magiclantern.MLVApp", "MLVApp" );
+    QSettings set( QSettings::UserScope, "magiclantern", "MLVApp" );
     QList<ExportPreset> presetList = set.value( "ExportPresets" ).value<QList<ExportPreset> >();
 
     int currentItem = ui->listWidget->currentRow();
@@ -636,7 +631,7 @@ void ExportSettingsDialog::on_listWidget_itemChanged(QListWidgetItem *item)
     qRegisterMetaTypeStreamOperators<QList<ExportPreset> >("QList<ExportPreset>");
 #endif
     //Get existing list
-    QSettings set( QSettings::UserScope, "magiclantern.MLVApp", "MLVApp" );
+    QSettings set( QSettings::UserScope, "magiclantern", "MLVApp" );
     QList<ExportPreset> presetList = set.value( "ExportPresets" ).value<QList<ExportPreset> >();
 
     int currentItem = ui->listWidget->currentRow();
@@ -659,7 +654,7 @@ void ExportSettingsDialog::on_listWidget_itemClicked(QListWidgetItem *item)
     qRegisterMetaTypeStreamOperators<QList<ExportPreset> >("QList<ExportPreset>");
 #endif
     //Get existing list
-    QSettings set( QSettings::UserScope, "magiclantern.MLVApp", "MLVApp" );
+    QSettings set( QSettings::UserScope, "magiclantern", "MLVApp" );
     QList<ExportPreset> presetList = set.value( "ExportPresets" ).value<QList<ExportPreset> >();
 
     int currentItem = ui->listWidget->currentRow();

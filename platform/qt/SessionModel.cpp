@@ -6,7 +6,10 @@
  */
 
 #include "SessionModel.h"
+#include <QApplication>
+#include <QPalette>
 #include <QColor>
+#include <QFont>
 #include <QDebug>
 #include <QFile>
 
@@ -28,10 +31,30 @@ QVariant SessionModel::data(const QModelIndex &index, int role) const
     {
         return m_dataBase.at( index.row() )->getBackgroundColor();
     }
+    /*
     if( role == Qt::ForegroundRole )
     {
-        if( index.row() == m_activeRow ) return QColor( 255, 154, 50, 255 );
-        return QVariant();
+        if( index.row() == m_activeRow )
+        {
+            QPalette palette = QApplication::palette();
+
+            QColor highlight = palette.color( QPalette::Highlight );
+            QColor text = palette.color( QPalette::Text );
+            double lightness = 0.5 - (0.5 * text.lightness() / 255);
+            // QColor inverted = QColor::fromHsl( (highlight.hslHue() + 180) % 360, highlight.hslSaturation(), (1.0 - lightness) * highlight.lightness() + lightness * text.lightness() );
+
+            return QColor::fromHsl( highlight.hslHue(), highlight.hslSaturation(), (1.0 - lightness) * highlight.lightness() + lightness * text.lightness() );
+        }
+    }
+    */
+    if( role == Qt::FontRole )
+    {
+        if( index.row() == m_activeRow )
+        {
+            QFont font;
+            font.setBold( true );
+            return font;
+        }
     }
     if( role == Qt::ToolTipRole )
     {
@@ -121,7 +144,7 @@ bool SessionModel::setData(const QModelIndex &index, const QVariant &value, int 
     }
     if( role == Qt::DecorationRole )
     {
-        m_dataBase.at( index.row() )->setPreview( value.value<QIcon>() );
+        m_dataBase.at( index.row() )->setPreview( value.value<QPixmap>() );
         return true;
     }
     return false;

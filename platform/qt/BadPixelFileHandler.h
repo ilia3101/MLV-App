@@ -24,6 +24,7 @@ public:
     static int deleteCurrentMap( mlvObject_t *pMlvObject );
     static bool isPixelIncluded( mlvObject_t *pMlvObject, uint32_t x, uint32_t y );
     //Graphics Scene OPs
+    static void crossesClearAll(QVector<CrossElement *> *pCrossVector, GraphicsPickerScene *pScene);
     static void crossesPrepareAll(mlvObject_t *pMlvObject, QVector<CrossElement *> *pCrossVector, GraphicsPickerScene *pScene);
     static void crossesShowAll( QVector<CrossElement*> *pCrossVector );
     static void crossesHideAll( QVector<CrossElement*> *pCrossVector );

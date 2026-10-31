@@ -5,112 +5,95 @@
  * \brief Draws a RGB WaveForm Monitor for an image
  */
 
+#include <cmath>
 #include "WaveFormMonitor.h"
 
-//The higher this values, the higher the performance
-//The lower this values, the higher the quality
-//We skip only columns, because it is really ugly if not...
-#define MERGE 8 //must be 2^x
-
-//Constructor
-WaveFormMonitor::WaveFormMonitor( uint16_t width )
+QImage WaveFormMonitor::getWaveFormMonitorFromRaw( const uint8_t *m_pRawImage, uint16_t width, uint16_t height, uint16_t labelWidth, uint16_t labelHeight, bool parade )
 {
-    uint16_t imgX = width / MERGE;
-    if( width % MERGE > 0 ) imgX++;
-    m_pWaveForm = new QImage( imgX, 256, QImage::Format_RGB888 );
-}
+    QImage image( std::min( labelWidth, width ), 256, QImage::Format_RGB32 );
 
-//Destructor
-WaveFormMonitor::~WaveFormMonitor()
-{
-    delete m_pWaveForm;
-}
+    float waveWidth = parade ? image.width() / 3.0f : image.width();
+    float widthFactor = waveWidth / width;
 
-//Make waveform monitor from Raw Image (8bit R, 8bit G, 8bit B,...)
-QImage WaveFormMonitor::getWaveFormMonitorFromRaw(uint8_t *m_pRawImage, uint16_t width, uint16_t height)
-{
-    double factor = 10.0; //Intensity Factor, maybe make it a parameter one day...
+    // Skipping lines for performance
+    int skipX = width / waveWidth;
+    int skipY = std::max( height / 1024.0 + 0.5, 1.0 );
 
-    uint32_t tableR[256] = {0};
-    uint32_t tableG[256] = {0};
-    uint32_t tableB[256] = {0};
+    float tableR[256] = {0};
+    float tableG[256] = {0};
+    float tableB[256] = {0};
 
-    for( int x = 0; x < width; x = x + MERGE )
+    float logFactor = 0.25f;
+    float lightnessFactor = 0.75f;
+
+    // Intensity factor, maybe make it a parameter one day…
+    float intensity = skipY;
+    if( parade ) intensity *= ( 0.5f + 1 - lightnessFactor ) / 2;
+
+    for( uint16_t x = 0; x < width; x += skipX )
     {
-        //Sum the columns
-        for( int y = 0; y < height; y++ )
+        uint16_t x1 = x & 1 ? x - 1 : x;
+
+        // float rMax = 0;
+        // float gMax = 0;
+        // float bMax = 0;
+
+        // Sum the columns
+        for( uint16_t y = 0; y < height; y += skipY )
         {
-            //Merging and skipping lines for performance
-            tableR[ m_pRawImage[ ( ( x + ( width * y ) ) * 3 ) + 0 ] ]++;
-            tableG[ m_pRawImage[ ( ( x + ( width * y ) ) * 3 ) + 1 ] ]++;
-            tableB[ m_pRawImage[ ( ( x + ( width * y ) ) * 3 ) + 2 ] ]++;
+            std::size_t i = ( x1 + width * y ) * 3;
+
+            uint8_t r = m_pRawImage[ i ];
+            uint8_t g = m_pRawImage[ i + 1 ];
+            uint8_t b = m_pRawImage[ i + 2 ];
+
+            tableR[r] = std::min( tableR[r] + intensity, 64.0f );
+            tableG[g] = std::min( tableG[g] + intensity, 64.0f );
+            tableB[b] = std::min( tableB[b] + intensity, 64.0f );
+
+            // if( tableR[r] > rMax ) rMax = tableR[r];
+            // if( tableG[g] > gMax ) gMax = tableG[g];
+            // if( tableB[b] > bMax ) bMax = tableB[b];
         }
 
-        for( uint16_t y = 0; y <= 255; y++ )
-        {
-            //Paint
-            QColor color = QColor( Qt::black );
-            if( ( tableR[255 - y] * factor ) > 255 ) color.setRed( 255 );
-            else color.setRed( tableR[255 - y] * factor );
-            if( ( tableG[255 - y] * factor ) > 255 ) color.setGreen( 255 );
-            else color.setGreen( tableG[255 - y] * factor );
-            if( ( tableB[255 - y] * factor ) > 255 ) color.setBlue( 255 );
-            else color.setBlue( tableB[255 - y] * factor );
-            m_pWaveForm->setPixelColor( x / MERGE, y, color );
+        // float max = std::max({ rMax, gMax, bMax });
+        float max = 64.0f;
+        float scale = 255.0f / std::log1p( logFactor * max );
 
-            //Reset
-            tableR[255 - y] = 0;
-            tableG[255 - y] = 0;
-            tableB[255 - y] = 0;
+        // Normalize
+        for( int i = 0; i < 256; i++ )
+        {
+            tableR[i] = scale * std::log1p( logFactor * tableR[i] );
+            tableG[i] = scale * std::log1p( logFactor * tableG[i] );
+            tableB[i] = scale * std::log1p( logFactor * tableB[i] );
+        }
+
+        float x2 = x * widthFactor;
+
+        for( int y = 0; y <= 255; y++ )
+        {
+            QRgb *line = reinterpret_cast<QRgb*>( image.scanLine( y ) );
+
+            int i = 255 - y;
+
+            // Paint
+            if( parade )
+            {
+                line[int( x2 )] = QColor::fromHsl( 0, 255, tableR[i] * lightnessFactor ).rgb();
+                line[int( x2 + waveWidth )] = QColor::fromHsl( 120, 255, tableG[i] * lightnessFactor ).rgb();
+                line[int( x2 + waveWidth * 2 )] = QColor::fromHsl( 210, 255, tableB[i] * lightnessFactor ).rgb();
+            }
+            else
+            {
+                // QColor c( tableR[i], tableG[i], tableB[i] );
+                // line[int( x2 )] = QColor::fromHsl( c.hue(), c.saturation(), std::max({ float(c.lightness()), tableR[i] * lightnessFactor, tableG[i] * lightnessFactor, tableB[i] * lightnessFactor }) ).rgb();
+                line[int( x2 )] = qRgb( tableR[i], tableG[i], tableB[i] );
+            }
+
+            // Reset
+            tableR[i] = tableG[i] = tableB[i] = 0;
         }
     }
-    return *m_pWaveForm;
+
+    return image.scaled( labelWidth, labelHeight, Qt::IgnoreAspectRatio, Qt::SmoothTransformation );
 }
-
-//Make Parade from Raw Image (8bit R, 8bit G, 8bit B,...)
-QImage WaveFormMonitor::getParadeFromRaw(uint8_t *m_pRawImage, uint16_t width, uint16_t height)
-{
-    double factor = 10.0; //Intensity Factor, maybe make it a parameter one day...
-
-    uint32_t tableR[256] = {0};
-    uint32_t tableG[256] = {0};
-    uint32_t tableB[256] = {0};
-
-    for( int x = 0; x < width; x = x + MERGE + 3 )
-    {
-        //Sum the columns
-        for( int y = 0; y < height; y++ )
-        {
-            //Merging and skipping lines for performance
-            tableR[ m_pRawImage[ ( ( x + ( width * y ) ) * 3 ) + 0 ] ]++;
-            tableG[ m_pRawImage[ ( ( x + ( width * y ) ) * 3 ) + 1 ] ]++;
-            tableB[ m_pRawImage[ ( ( x + ( width * y ) ) * 3 ) + 2 ] ]++;
-        }
-
-        for( uint16_t y = 0; y <= 255; y++ )
-        {
-            //Paint
-            QColor color = QColor( Qt::black );
-            if( ( tableR[255 - y] * factor ) > 255 ) color.setRed( 255 );
-            else color.setRed( tableR[255 - y] * factor );
-            m_pWaveForm->setPixelColor( ( x / MERGE / 3 ), y, color );
-
-            color = QColor( Qt::black );
-            if( ( tableG[255 - y] * factor ) > 255 ) color.setGreen( 255 );
-            else color.setGreen( tableG[255 - y] * factor );
-            m_pWaveForm->setPixelColor( ( x / MERGE / 3 )+( width / MERGE / 3 ), y, color );
-
-            color = QColor( Qt::black );
-            if( ( tableB[255 - y] * factor ) > 255 ) color.setBlue( 255 );
-            else color.setBlue( tableB[255 - y] * factor );
-            m_pWaveForm->setPixelColor( ( x / MERGE / 3 )+( width * 2 / MERGE / 3 ), y, color );
-
-            //Reset
-            tableR[255 - y] = 0;
-            tableG[255 - y] = 0;
-            tableB[255 - y] = 0;
-        }
-    }
-    return *m_pWaveForm;
-}
-
