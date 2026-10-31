@@ -61,6 +61,11 @@ void CRBFilterPlain::reserveMemory(int max_width, int max_height, int channels)
     if(!(max_height >= 10 && max_height < 10000))return;
     if(!(channels >= 1 && channels <= 4))return;
 
+    if (m_reserve_width == max_width && m_reserve_height == max_height && m_reserve_channels == channels && m_left_pass_color)
+    {
+        return;
+    }
+
     releaseMemory();
 
     m_reserve_width = max_width;
@@ -383,6 +388,15 @@ void CRBFilterPlain::filter(uint16_t* img_src, uint16_t* img_dst,
         }
     }
 #endif
+
+    if (height > 1)
+    {
+        size_t tail_offset = (size_t)(width_height - height + 1);
+        memset(m_down_pass_color + tail_offset * channel, 0, (size_t)(height - 1) * channel * sizeof(float));
+        memset(m_down_pass_factor + tail_offset, 0, (size_t)(height - 1) * sizeof(float));
+        memset(m_up_pass_color, 0, (size_t)(height - 1) * channel * sizeof(float));
+        memset(m_up_pass_factor, 0, (size_t)(height - 1) * sizeof(float));
+    }
 
     // Vertical pass: Down pass and Up pass run concurrently
 #ifdef __APPLE__
