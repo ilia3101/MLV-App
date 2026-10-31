@@ -6,6 +6,8 @@
 #include <QStyleOption>
 #include <QAbstractButton>
 #include <QStylePainter>
+#include <QMenu>
+#include <QDebug>
 
 AppTheme::Theme AppTheme::m_theme = AppTheme::Dark;
 
@@ -185,6 +187,7 @@ void AppTheme::set( QMainWindow *MainWindow, Theme theme )
         QMenu {
             padding: 5px 0;
             border: none;
+            border-radius: 5px;
         }
         /*QMenu {
             background: palette(window);
@@ -217,7 +220,7 @@ void AppTheme::set( QMainWindow *MainWindow, Theme theme )
         QMenu::separator {
             background: hsla(0, 0%, 0%, 15%);
             height: 1px;
-            margin: 4px 14px;
+            margin: 5px 14px;
         }
 
         QComboBox QAbstractItemView {
@@ -231,6 +234,7 @@ void AppTheme::set( QMainWindow *MainWindow, Theme theme )
             padding: 1px 2px;
             margin: 0;
             border: none;
+            border-radius: 3px;
         }
 
         /* ==================================================== */
@@ -419,6 +423,9 @@ void AppTheme::set( QMainWindow *MainWindow, Theme theme )
 
     MainWindow->setStyleSheet( "" );
     qApp->setStyleSheet( styleSheet );
+
+    static CustomEventFilter customEventFilter;
+    qApp->installEventFilter( &customEventFilter );
 }
 
 AppTheme::Theme AppTheme::currentTheme( void )
@@ -448,6 +455,7 @@ void IconRecolorStyle::drawPrimitive( PrimitiveElement element, const QStyleOpti
 {
     //qDebug() << option->state << element << widget;
 
+    // Prevent drawing an ugly rectangle behind a QComboBox menu
     if( element == PE_PanelMenu ) return;
 
     if( !widget || !widget->inherits( "QMenu" ) )
@@ -668,4 +676,27 @@ void AccordionGroupBox::drawIndicator( QPainter *painter, const QStyleOptionGrou
 
     QPixmap tinted = AppTheme::tintPixmap( icon.pixmap( iconRect.size() ), color, painter->device()->devicePixelRatio() );
     painter->drawPixmap( iconRect.topLeft(), tinted );
+}
+
+bool CustomEventFilter::eventFilter( QObject *obj, QEvent *event )
+{
+    if ( event->type() == QEvent::Polish )
+    {
+        QWidget *widget = qobject_cast<QWidget*>( obj );
+
+        if ( widget )
+        {
+            // qDebug() << widget << widget->windowType();
+
+            // Fix QSS border-radius with QMenu and QToolTip
+            if ( qobject_cast<QMenu*>( widget ) || widget->windowType() == Qt::ToolTip )
+            {
+                widget->setAttribute( Qt::WA_TranslucentBackground );
+                widget->setWindowFlags( widget->windowFlags() | Qt::FramelessWindowHint );
+                // qDebug() << widget;
+            }
+        }
+    }
+
+    return QObject::eventFilter( obj, event );
 }

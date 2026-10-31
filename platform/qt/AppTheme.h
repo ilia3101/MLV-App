@@ -48,4 +48,13 @@ private:
     void drawIndicator( QPainter *painter, const QStyleOptionGroupBox &opt ) const;
 };
 
+class CustomEventFilter : public QObject
+{
+public:
+    using QObject::QObject;
+
+protected:
+    bool eventFilter( QObject *obj, QEvent *event ) override;
+};
+
 #endif  // APPTHEME_H
