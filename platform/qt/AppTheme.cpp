@@ -11,7 +11,7 @@
 
 AppTheme::Theme AppTheme::m_theme = AppTheme::Dark;
 
-void AppTheme::set( QMainWindow *MainWindow, Theme theme )
+void AppTheme::set( QMainWindow *mainWindow, Theme theme )
 {
     m_theme = theme;
 
@@ -421,20 +421,22 @@ void AppTheme::set( QMainWindow *MainWindow, Theme theme )
 
     qApp->setPalette( palette );
 
-    MainWindow->setStyleSheet( "" );
+    mainWindow->setStyleSheet( "" );
     qApp->setStyleSheet( styleSheet );
 
     static CustomEventFilter customEventFilter;
     qApp->installEventFilter( &customEventFilter );
 }
 
-AppTheme::Theme AppTheme::currentTheme( void )
+AppTheme::Theme AppTheme::currentTheme()
 {
     return m_theme;
 }
 
-QPixmap AppTheme::tintPixmap( const QPixmap &pixmap, QColor color, qreal pixelRatio )
+QPixmap AppTheme::tintPixmap( const QPixmap &pixmap, const QColor &color, qreal pixelRatio )
 {
+    const QColor tint = color.isValid() ? color : QApplication::palette().color( QPalette::Text );
+
     QPixmap tinted( pixmap.size() );
     tinted.setDevicePixelRatio( pixelRatio );
     tinted.fill( Qt::transparent );
@@ -442,11 +444,7 @@ QPixmap AppTheme::tintPixmap( const QPixmap &pixmap, QColor color, qreal pixelRa
     QPainter painter( &tinted );
     painter.drawPixmap( 0, 0, pixmap );
     painter.setCompositionMode( QPainter::CompositionMode_SourceIn );
-
-    if( !color.isValid() ) color = QApplication::palette().color( QPalette::Text );
-
-    painter.fillRect( tinted.rect(), color );
-    painter.end();
+    painter.fillRect( tinted.rect(), tint );
 
     return tinted;
 }
@@ -572,7 +570,7 @@ void IconRecolorStyle::drawControl( ControlElement element, const QStyleOption *
     {
         auto mi = qstyleoption_cast<const QStyleOptionMenuItem *>( option );
 
-        if ( !mi ) return;
+        if( !mi ) return;
 
         // Draw only background (no text, no icon)
         QStyleOptionMenuItem opt = *mi;
@@ -660,7 +658,7 @@ void AccordionGroupBox::drawIndicator( QPainter *painter, const QStyleOptionGrou
 {
     QRect textRect = style()->subControlRect( QStyle::CC_GroupBox, &opt, QStyle::SC_GroupBoxLabel, this );
 
-    int iconSize = std::max(textRect.height() * 0.75, 11.0);
+    int iconSize = std::max( textRect.height() * 0.75, 11.0 );
     int iconTop = textRect.top() + ( textRect.height() - iconSize ) / 2;
     int margin = 3;
 
@@ -680,16 +678,16 @@ void AccordionGroupBox::drawIndicator( QPainter *painter, const QStyleOptionGrou
 
 bool CustomEventFilter::eventFilter( QObject *obj, QEvent *event )
 {
-    if ( event->type() == QEvent::Polish )
+    if( event->type() == QEvent::Polish )
     {
         QWidget *widget = qobject_cast<QWidget*>( obj );
 
-        if ( widget )
+        if( widget )
         {
             // qDebug() << widget << widget->windowType();
 
             // Fix QSS border-radius with QMenu and QToolTip
-            if ( qobject_cast<QMenu*>( widget ) || widget->windowType() == Qt::ToolTip )
+            if( qobject_cast<QMenu*>( widget ) || widget->windowType() == Qt::ToolTip )
             {
                 widget->setAttribute( Qt::WA_TranslucentBackground );
                 widget->setWindowFlags( widget->windowFlags() | Qt::FramelessWindowHint );
