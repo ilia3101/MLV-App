@@ -601,11 +601,8 @@ void applyProcessingObject( processingObject_t * processing,
     if (processingGetSharpening(processing) > 0.005)
     {
         /* Use sobel filter to create a edge mask */
-        uint16_t *gray,
-             *sobel_h_res,
-             *sobel_v_res,
-             *contour_img;
-        if( processing->sh_masking > 0 ) sobelFilter( inputImage, &gray, &sobel_h_res, &sobel_v_res, &contour_img, imageX, imageY );
+        uint16_t *contour_img = NULL;
+        if( processing->sh_masking > 0 ) sobelFilter( inputImage, NULL, NULL, NULL, &contour_img, imageX, imageY );
 
         /* Avoid gaps in pixels if skipping pixels during sharpen */
         if (sharp_skip != 1) memcpy(outputImage, inputImage, img_s * sizeof(uint16_t));
@@ -686,9 +683,6 @@ void applyProcessingObject( processingObject_t * processing,
 
         if( processing->sh_masking > 0 )
         {
-            if( gray ) free( gray );
-            if( sobel_h_res ) free( sobel_h_res );
-            if( sobel_v_res ) free( sobel_v_res );
             if( contour_img ) free( contour_img );
         }
     }
@@ -1740,6 +1734,7 @@ void freeProcessingObject(processingObject_t * processing)
     for (int i = 6; i >= 0; --i) free(processing->cs_zone.pre_calc_rgb_to_YCbCr[i]);
     for (int i = 3; i >= 0; --i) free(processing->cs_zone.pre_calc_YCbCr_to_rgb[i]);
     free_image_buffer(processing->shadows_highlights.blur_image);
+    freeCACorrection();
     free(processing);
 }
 

@@ -613,13 +613,24 @@ void blur_image( uint16_t * __restrict in,
 
     /* Offset - do twice on channel '1' and '2' (Cb and Cr) */
     int limit_x = (width-radius-1)*3;
-#pragma omp parallel for
     for (int offset =0; offset < 3; ++offset)
     {
         if (channels[offset]) /* if this channel was requested */
         {
             /* Horizontal blur */
+#ifdef __APPLE__
+            size_t nworkers_h = (height < 8) ? (size_t)height : 8;
+            if (nworkers_h < 1) nworkers_h = 1;
+            size_t chunk_h = ((size_t)height + nworkers_h - 1) / nworkers_h;
+            dispatch_apply(nworkers_h, dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0), ^(size_t t) {
+                int y_start = (int)(t * chunk_h);
+                int y_end = (int)(y_start + chunk_h);
+                if (y_end > height) y_end = height;
+                for (int y = y_start; y < y_end; ++y)
+#else
+#pragma omp parallel for schedule(static)
             for (int y = 0; y < height; ++y) /* rows */
+#endif
             {
                 uint16_t * temp_row = temp + (y * rl)+offset; /* current row ouptut */
                 uint16_t * row = in + (y * rl)+offset; /* current row */
@@ -646,10 +657,25 @@ void blur_image( uint16_t * __restrict in,
                     temp_row[x] = sum / blur_diameter;
                 }
             }
+#ifdef __APPLE__
+            });
+#endif
 
             /* Vertical blur */
             int limit_y = height-radius-1;
+#ifdef __APPLE__
+            size_t nworkers_v = (width < 8) ? (size_t)width : 8;
+            if (nworkers_v < 1) nworkers_v = 1;
+            size_t chunk_v = ((size_t)width + nworkers_v - 1) / nworkers_v;
+            dispatch_apply(nworkers_v, dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0), ^(size_t t) {
+                int x_start = (int)(t * chunk_v);
+                int x_end = (int)(x_start + chunk_v);
+                if (x_end > width) x_end = width;
+                for (int x = x_start; x < x_end; ++x)
+#else
+#pragma omp parallel for schedule(static)
             for (int x = 0; x < width; ++x) /* columns */
+#endif
             {
                 uint16_t * temp_col = in + (x*3);
                 uint16_t * col = temp + (x*3);
@@ -662,19 +688,20 @@ void blur_image( uint16_t * __restrict in,
                     sum += col[(y+radius+1)*rl+offset];
                     temp_col[MAX(y, 0)*rl+offset] = sum / blur_diameter;
                 }
+                if (radius <= limit_y)
                 {
                     uint16_t * minus = col + (offset);
                     uint16_t * plus = col + ((radius*2+1)*rl + offset);
-                    uint16_t * temp = temp_col + (radius*rl + offset);
+                    uint16_t * tp = temp_col + (radius*rl + offset);
                     uint16_t * end = temp_col + (limit_y*rl + offset);
                     do {
                         sum -= *minus;
                         sum += *plus;
-                        *temp = sum / blur_diameter;
+                        *tp = sum / blur_diameter;
                         minus += rl;
                         plus += rl;
-                        temp += rl;
-                    } while (temp < end);
+                        tp += rl;
+                    } while (tp < end);
                 }
                 for (int y = limit_y; y < height; ++y)
                 {
@@ -683,6 +710,9 @@ void blur_image( uint16_t * __restrict in,
                     temp_col[y*rl+offset] = sum / blur_diameter;
                 }
             }
+#ifdef __APPLE__
+            });
+#endif
         }
     }
 }
