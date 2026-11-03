@@ -28,6 +28,7 @@ Optimized memory footprint and GCD parallelism (c) 2026
 
 #include "RBFilterPlain.h"
 #include <algorithm>
+#include <cstring>
 #include <math.h>
 #include <vector>
 #ifdef __APPLE__
