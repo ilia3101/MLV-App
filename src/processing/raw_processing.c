@@ -577,7 +577,9 @@ void applyProcessingObject( processingObject_t * processing,
     uint32_t sharp_skip = 1; /* Skip how many pixels when applying sharpening */
     uint32_t sharp_start = 0; /* How many pixels offset to start at */
     memcpy( inputImage, outputImage, img_s * sizeof(uint16_t) );
-    uint8_t doChromaSeperation = processingUsesChromaSeparation(processing);
+    uint8_t doChromaSeperation = processingUsesChromaSeparation(processing) &&
+                                 (processingGetSharpening(processing) > 0.005 ||
+                                  processingGetChromaBlurRadius(processing) > 0);
 
     /* enter YCbCr world - https://en.wikipedia.org/wiki/YCbCr (I used the 'JPEG Transform') */
     if (doChromaSeperation)
