@@ -630,7 +630,7 @@ void applyProcessingObject( processingObject_t * processing,
             else p_row = inputImage + ((y-1) * rl); /* previous */
 
             uint16_t * n_row;
-            if( y == y_max ) p_row = row;    /* minimize border artifact */
+            if( y == y_max ) n_row = row;    /* minimize border artifact */
             else n_row = inputImage + ((y+1) * rl); /* next */
 
             uint16_t * cont_row;
