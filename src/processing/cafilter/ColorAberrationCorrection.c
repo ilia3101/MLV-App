@@ -51,7 +51,7 @@ void rmCA(uint16_t* rVec, uint16_t* gVec, uint16_t* bVec, int width, int height,
         if (i_end > height) i_end = height;
         for (int i = i_start; i < i_end; ++i)
 #else
-#pragma omp parallel for
+#pragma omp parallel for schedule(static)
     for (int i = 0; i < height; ++i)
 #endif
 	{
@@ -147,7 +147,7 @@ static void transpose_plane(const uint16_t *src, uint16_t *dst, int width, int h
         }
     });
 #else
-#pragma omp parallel for
+#pragma omp parallel for schedule(static)
     for (int y0 = 0; y0 < height; y0 += TILE)
     {
         int y_max = (y0 + TILE < height) ? (y0 + TILE) : height;
@@ -188,7 +188,7 @@ void CACorrection(int imageX, int imageY,
     uint16_t *g2 = r2 + npix;
     uint16_t *b2 = g2 + npix;
 
-    //split the color image into individual color channel for convenient in calculation
+    // Split RGB
 #ifdef __APPLE__
     size_t nworkers = (npix < 8) ? npix : 8;
     if (nworkers < 1) nworkers = 1;
@@ -206,30 +206,30 @@ void CACorrection(int imageX, int imageY,
         }
     });
 #else
-#pragma omp parallel for
-    for( int i = 0; i < imageX*imageY; i++ )
+#pragma omp parallel for schedule(static)
+    for (size_t i = 0; i < npix; ++i)
     {
-        int j = i * 3;
-        r1[i] = inputImage[j+0];
-        g1[i] = inputImage[j+1];
-        b1[i] = inputImage[j+2];
+        size_t j = i * 3;
+        r1[i] = inputImage[j + 0];
+        g1[i] = inputImage[j + 1];
+        b1[i] = inputImage[j + 2];
     }
 #endif
 
     if( threshold < 1 ) threshold = 1;
 
-    //first run
+    // Horizontal pass
     rmCA(r1, g1, b1, imageX, imageY, threshold, radius);
 
-    //transpose the R,G B channel image to correct chromatic aberration in vertical direction
+    // Direct tiled transpose into r2, g2, b2
     transpose_plane(r1, r2, imageX, imageY);
     transpose_plane(g1, g2, imageX, imageY);
     transpose_plane(b1, b2, imageX, imageY);
 
-    //second run
+    // Vertical pass
     rmCA(r2, g2, b2, imageY, imageX, threshold, radius);
 
-    //rotate the image back to original position
+    // Direct tiled transpose back into r1, g1, b1
     transpose_plane(r2, r1, imageY, imageX);
     transpose_plane(g2, g1, imageY, imageX);
     transpose_plane(b2, b1, imageY, imageX);
@@ -249,13 +249,13 @@ void CACorrection(int imageX, int imageY,
         }
     });
 #else
-#pragma omp parallel for
-    for( int i = 0; i < imageX*imageY; i++ )
+#pragma omp parallel for schedule(static)
+    for (size_t i = 0; i < npix; ++i)
     {
-        int j = i * 3;
-        outputImage[j+0] = r1[i];
-        outputImage[j+1] = g1[i];
-        outputImage[j+2] = b1[i];
+        size_t j = i * 3;
+        outputImage[j + 0] = r1[i];
+        outputImage[j + 1] = g1[i];
+        outputImage[j + 2] = b1[i];
     }
 #endif
 }
