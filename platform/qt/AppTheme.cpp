@@ -17,7 +17,7 @@ void AppTheme::set( QMainWindow *mainWindow, Theme theme )
 
     qApp->setStyle( new IconRecolorStyle( QStyleFactory::create( "Fusion" ) ) );
 
-    QString styleSheet = R"(
+    QString styleSheet = QString(R"(
         QMainWindow::separator {
             background: hsla(0, 0%, 0%, 15%);
             width: 1px;
@@ -243,20 +243,20 @@ void AppTheme::set( QMainWindow *mainWindow, Theme theme )
         }
         QScrollBar:vertical {
             background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 hsla(0, 0%, 0%, 6%), stop:1 hsla(0, 0%, 0%, 0%));
-            width: 15px;
+            width: %1px;
             padding: 0 -5px;
             border-left: 1px solid hsla(0, 0%, 0%, 15%);
         }
         QScrollBar:horizontal {
             background: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 hsla(0, 0%, 0%, 6%), stop:1 hsla(0, 0%, 0%, 0%));
-            height: 15px;
+            height: %1px;
             border-top: 1px solid hsla(0, 0%, 0%, 15%);
         }
         QScrollBar::handle {
             background: hsla(0, 0%, 0%, 25%);
             margin: 3px;
             border: none;
-            border-radius: 4px;
+            border-radius: %2px;
         }
         QScrollBar::handle:vertical {
             min-height: 20px;
@@ -278,7 +278,7 @@ void AppTheme::set( QMainWindow *mainWindow, Theme theme )
         QScrollBar::add-page, QScrollBar::sub-page {
             background: none;
         }
-    )";
+    )").arg( getScrollBarExtent() ).arg( m_scrollBarHandleSize / 2 );
 
     QPalette palette;
 
@@ -431,6 +431,11 @@ void AppTheme::set( QMainWindow *mainWindow, Theme theme )
 AppTheme::Theme AppTheme::currentTheme()
 {
     return m_theme;
+}
+
+int AppTheme::getScrollBarExtent()
+{
+    return m_scrollBarHandleSize + 7;
 }
 
 QPixmap AppTheme::tintPixmap( const QPixmap &pixmap, const QColor &color, qreal pixelRatio )

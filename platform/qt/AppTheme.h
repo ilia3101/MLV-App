@@ -12,10 +12,12 @@ public:
     enum Theme { Light, Mid, Dark, Darker };
     static void set( QMainWindow *mainWindow, Theme theme );
     static Theme currentTheme();
+    static int getScrollBarExtent();
     static QPixmap tintPixmap( const QPixmap &pixmap, const QColor &color = QColor(), qreal pixelRatio = 1 );
 
 private:
     static Theme m_theme;
+    static const int m_scrollBarHandleSize = 8;
 };
 
 class IconRecolorStyle : public QProxyStyle

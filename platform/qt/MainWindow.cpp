@@ -5754,7 +5754,7 @@ void MainWindow::listViewUpdateGridSize()
     if( m_previewMode != 2 && m_previewMode != 3 ) return;
 
     //int scrollBarWidth = ui->listViewSession->style()->pixelMetric( QStyle::PM_ScrollBarExtent ) + 3;
-    int scrollBarWidth = 15;
+    int scrollBarWidth = AppTheme::getScrollBarExtent();
     int listViewWidth = ui->listViewSession->width() - scrollBarWidth;
 
     int minGridWidth = ClipInformation::getPreviewMinWidth() + 10;
