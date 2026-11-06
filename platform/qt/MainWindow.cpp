@@ -963,13 +963,13 @@ int MainWindow::openMlv( QString fileName )
     {
         isoInfo = QString( "%1/%2" ).arg( m_pMlvObject->llrawproc->diso1 ).arg( m_pMlvObject->llrawproc->diso2 );
         dualIso = QString( "Dual ISO" );
-        dualIsoInfo = QString( "%1, %2" ).arg( isoInfo ).arg( dualIso );
+        dualIsoInfo = QString( "%1, %2" ).arg( isoInfo ).arg( dualIso );
     }
 
     QString audioText;
     if( doesMlvHaveAudio( m_pMlvObject ) )
     {
-        audioText = QString( "%1 channel(s),  %2 kHz" )
+        audioText = QString( "%1 channel(s), %2 kHz" )
                 .arg( getMlvAudioChannels( m_pMlvObject ) )
                 .arg( getMlvSampleRate( m_pMlvObject ) );
     }
@@ -988,11 +988,11 @@ int MainWindow::openMlv( QString fileName )
                                  QString( "%1 fps" ).arg( getMlvFramerate( m_pMlvObject ) ),
                                  QString( "%1 mm" ).arg( getMlvFocalLength( m_pMlvObject ) ),
                                  QString( "%1" ).arg( focusDistStr ),
-                                 QString( "1/%1 s,  %2 deg,  %3 µs" ).arg( (uint16_t)(shutterSpeed + 0.5f) ).arg( (uint16_t)(shutterAngle + 0.5f) ).arg( getMlvShutter( m_pMlvObject ) ),
+                                 QString( "1/%1 s, %2 deg, %3 µs" ).arg( (uint16_t)(shutterSpeed + 0.5f) ).arg( (uint16_t)(shutterAngle + 0.5f) ).arg( getMlvShutter( m_pMlvObject ) ),
                                  QString( "ƒ/%1" ).arg( getMlvAperture( m_pMlvObject ) / 100.0, 0, 'f', 1 ),
                                  isoInfo,
                                  dualIso,
-                                 QString( "%1 bits,  %2" ).arg( getLosslessBpp( m_pMlvObject ) ).arg( getMlvCompression( m_pMlvObject ) ),
+                                 QString( "%1 bits, %2" ).arg( getLosslessBpp( m_pMlvObject ) ).arg( getMlvCompression( m_pMlvObject ) ),
                                  QString( "%1-%2-%3 / %4:%5:%6" )
                                            .arg( getMlvTmYear(m_pMlvObject) )
                                            .arg( getMlvTmMonth(m_pMlvObject), 2, 10, QChar('0') )
@@ -1015,10 +1015,10 @@ int MainWindow::openMlv( QString fileName )
     m_pInfoDialog->ui->tableWidget->item( 9, 1 )->setText( ACTIVE_CLIP->getElement( 11 ).toString() );
     m_pInfoDialog->ui->tableWidget->item( 10, 1 )->setText( dualIsoInfo );
     m_pInfoDialog->ui->tableWidget->item( 11, 1 )->setText( ACTIVE_CLIP->getElement( 14 ).toString() );
-    m_pInfoDialog->ui->tableWidget->item( 12, 1 )->setText( QString( "%1 black,  %2 white" ).arg( getMlvOriginalBlackLevel( m_pMlvObject ) ).arg( getMlvOriginalWhiteLevel( m_pMlvObject ) ) );
+    m_pInfoDialog->ui->tableWidget->item( 12, 1 )->setText( QString( "%1 black, %2 white" ).arg( getMlvOriginalBlackLevel( m_pMlvObject ) ).arg( getMlvOriginalWhiteLevel( m_pMlvObject ) ) );
     m_pInfoDialog->ui->tableWidget->item( 13, 1 )->setText( ACTIVE_CLIP->getElement( 15 ).toString() );
     m_pInfoDialog->ui->tableWidget->item( 14, 1 )->setText( ACTIVE_CLIP->getElement( 16 ).toString() );
-    m_pInfoDialog->ui->tableWidget->item( 15, 1 )->setText( ACTIVE_CLIP->getElement( 17 ).toString() + ",  " + ACTIVE_CLIP->getElement( 18 ).toString() );
+    m_pInfoDialog->ui->tableWidget->item( 15, 1 )->setText( ACTIVE_CLIP->getElement( 17 ).toString() + ", " + ACTIVE_CLIP->getElement( 18 ).toString() );
 
     resultingResolution();
 
