@@ -10,6 +10,9 @@
 #if defined(__linux) || defined(__APPLE__)
 #include <locale.h>
 #endif
+#ifdef __APPLE__
+#include <dispatch/dispatch.h>
+#endif
 
 #ifdef __SSE2__
   #include <emmintrin.h>
@@ -435,12 +438,13 @@ void applyProcessingObject( processingObject_t * processing,
     /* Resize image buffer to make sure its right size */
     if (imageChanged) buffer_set_size(processing->shadows_highlights.blur_image, imageX, imageY);
 
-    if (imageChanged) memcpy(get_buffer(processing->shadows_highlights.blur_image), inputImage, imageX * imageY * sizeof(uint16_t) * 3);
+    int needs_sh_blur = ( ( processing->shadows_highlights.shadows <= -0.01 || processing->shadows_highlights.shadows >= 0.01 )
+                       || ( processing->shadows_highlights.highlights <= -0.01 || processing->shadows_highlights.highlights >= 0.01 )
+                       || ( processing->clarity <= -0.01 || processing->clarity >= 0.01 ) );
+    if (imageChanged && !needs_sh_blur) memcpy(get_buffer(processing->shadows_highlights.blur_image), inputImage, imageX * imageY * sizeof(uint16_t) * 3);
 
     /* If shadows/highlights off don't do anything. Maybe this blurring bit could b multithreaded I need to think */
-    if( ( processing->shadows_highlights.shadows <= -0.01 || processing->shadows_highlights.shadows >= 0.01 )
-     || ( processing->shadows_highlights.highlights <= -0.01 || processing->shadows_highlights.highlights >= 0.01 )
-     || ( processing->clarity <= -0.01 || processing->clarity >= 0.01 ) )
+    if( needs_sh_blur )
     {
 
         /* Blur diameter depends on image diagonal */
@@ -531,13 +535,32 @@ void applyProcessingObject( processingObject_t * processing,
         convert_rgb_to_YCbCr_omp(inputImage, img_s, processing->cs_zone.pre_calc_rgb_to_YCbCr);
         convert_rgb_to_YCbCr_omp(outputImage, img_s, processing->cs_zone.pre_calc_rgb_to_YCbCr);
         /* Linear blend strengths */
-#pragma omp parallel for
+#ifdef __APPLE__
+        int num_pixels = img_s / 3;
+        size_t nthreads = 8;
+        if ((size_t)num_pixels < nthreads) nthreads = (size_t)num_pixels > 0 ? (size_t)num_pixels : 1;
+        size_t chunk = ((size_t)num_pixels + nthreads - 1) / nthreads;
+        dispatch_apply(nthreads, dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0), ^(size_t t) {
+            size_t start_p = t * chunk;
+            size_t end_p = start_p + chunk;
+            if (end_p > (size_t)num_pixels) end_p = (size_t)num_pixels;
+            for (size_t p = start_p; p < end_p; ++p)
+            {
+                size_t i = p * 3;
+                outputImage[i+0] = outputImage[i+0]*outL + inputImage[i+0]*inL;
+                outputImage[i+1] = outputImage[i+1]*outC + inputImage[i+1]*inC;
+                outputImage[i+2] = outputImage[i+2]*outC + inputImage[i+2]*inC;
+            }
+        });
+#else
+#pragma omp parallel for schedule(static)
         for( int i = 0; i < img_s; i+=3 )
         {
             outputImage[i+0] = outputImage[i+0]*outL + inputImage[i+0]*inL;
             outputImage[i+1] = outputImage[i+1]*outC + inputImage[i+1]*inC;
             outputImage[i+2] = outputImage[i+2]*outC + inputImage[i+2]*inC;
         }
+#endif
         convert_YCbCr_to_rgb_omp(outputImage, img_s, processing->cs_zone.pre_calc_YCbCr_to_rgb);
     }
     /* RGB CA&ColorMoiree Removal */
@@ -554,7 +577,9 @@ void applyProcessingObject( processingObject_t * processing,
     uint32_t sharp_skip = 1; /* Skip how many pixels when applying sharpening */
     uint32_t sharp_start = 0; /* How many pixels offset to start at */
     memcpy( inputImage, outputImage, img_s * sizeof(uint16_t) );
-    uint8_t doChromaSeperation = processingUsesChromaSeparation(processing);
+    uint8_t doChromaSeperation = processingUsesChromaSeparation(processing) &&
+                                 (processingGetSharpening(processing) > 0.005 ||
+                                  processingGetChromaBlurRadius(processing) > 0);
 
     /* enter YCbCr world - https://en.wikipedia.org/wiki/YCbCr (I used the 'JPEG Transform') */
     if (doChromaSeperation)
@@ -578,11 +603,8 @@ void applyProcessingObject( processingObject_t * processing,
     if (processingGetSharpening(processing) > 0.005)
     {
         /* Use sobel filter to create a edge mask */
-        uint16_t *gray,
-             *sobel_h_res,
-             *sobel_v_res,
-             *contour_img;
-        if( processing->sh_masking > 0 ) sobelFilter( inputImage, &gray, &sobel_h_res, &sobel_v_res, &contour_img, imageX, imageY );
+        uint16_t *contour_img = NULL;
+        if( processing->sh_masking > 0 ) sobelFilter( inputImage, NULL, NULL, NULL, &contour_img, imageX, imageY );
 
         /* Avoid gaps in pixels if skipping pixels during sharpen */
         if (sharp_skip != 1) memcpy(outputImage, inputImage, img_s * sizeof(uint16_t));
@@ -608,7 +630,7 @@ void applyProcessingObject( processingObject_t * processing,
             else p_row = inputImage + ((y-1) * rl); /* previous */
 
             uint16_t * n_row;
-            if( y == y_max ) p_row = row;    /* minimize border artifact */
+            if( y == y_max ) n_row = row;    /* minimize border artifact */
             else n_row = inputImage + ((y+1) * rl); /* next */
 
             uint16_t * cont_row;
@@ -663,9 +685,6 @@ void applyProcessingObject( processingObject_t * processing,
 
         if( processing->sh_masking > 0 )
         {
-            if( gray ) free( gray );
-            if( sobel_h_res ) free( sobel_h_res );
-            if( sobel_v_res ) free( sobel_v_res );
             if( contour_img ) free( contour_img );
         }
     }
@@ -1717,6 +1736,7 @@ void freeProcessingObject(processingObject_t * processing)
     for (int i = 6; i >= 0; --i) free(processing->cs_zone.pre_calc_rgb_to_YCbCr[i]);
     for (int i = 3; i >= 0; --i) free(processing->cs_zone.pre_calc_YCbCr_to_rgb[i]);
     free_image_buffer(processing->shadows_highlights.blur_image);
+    freeCACorrection();
     free(processing);
 }
 

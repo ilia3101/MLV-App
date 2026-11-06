@@ -9,4 +9,6 @@ extern void CACorrection(int imageX, int imageY,
                   uint16_t * __restrict outputImage,
                   uint16_t threshold, uint8_t radius);
 
+extern void freeCACorrection(void);
+
 #endif

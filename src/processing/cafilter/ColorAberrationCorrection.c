@@ -1,14 +1,53 @@
 #include <string.h>
+#include <stdlib.h>
 #include "ColorAberrationCorrection.h"
+
+#ifdef __APPLE__
+#include <dispatch/dispatch.h>
+#endif
+
+#if defined(__GNUC__) || defined(__clang__)
+#define CA_TLS __thread
+#elif defined(_MSC_VER)
+#define CA_TLS __declspec(thread)
+#elif __STDC_VERSION__ >= 201112L
+#define CA_TLS _Thread_local
+#else
+#define CA_TLS
+#endif
 
 #define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
 #define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
 #define LIMIT16(X) MAX(MIN(X, 65535), 0)
 
+static CA_TLS uint16_t *ca_buf = NULL;
+static CA_TLS size_t ca_buf_size = 0;
+
+void freeCACorrection(void)
+{
+    if (ca_buf)
+    {
+        free(ca_buf);
+        ca_buf = NULL;
+        ca_buf_size = 0;
+    }
+}
+
 void rmCA(uint16_t* rVec, uint16_t* gVec, uint16_t* bVec, int width, int height, int threshold, int radius)
 {
-#pragma omp parallel for
+#ifdef __APPLE__
+    size_t nworkers = (height < 8) ? (size_t)height : 8;
+    if (nworkers < 1) nworkers = 1;
+    size_t chunk = ((size_t)height + nworkers - 1) / nworkers;
+    dispatch_apply(nworkers, dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0), ^(size_t t) {
+        int i_start = (int)(t * chunk);
+        int i_end = (int)(i_start + chunk);
+        if (i_end > height) i_end = height;
+        for (int i = i_start; i < i_end; ++i)
+#else
+#pragma omp parallel for schedule(static)
     for (int i = 0; i < height; ++i)
+#endif
 	{
         uint16_t *bptr = &bVec[i*width];
         uint16_t *gptr = &gVec[i*width];
@@ -69,6 +108,56 @@ void rmCA(uint16_t* rVec, uint16_t* gVec, uint16_t* bVec, int width, int height,
 			}
 		}
 	}
+#ifdef __APPLE__
+    });
+#endif
+}
+
+static void transpose_plane(const uint16_t *src, uint16_t *dst, int width, int height)
+{
+    const int TILE = 32;
+#ifdef __APPLE__
+    size_t nworkers = (height < 8) ? (size_t)height : 8;
+    if (nworkers < 1) nworkers = 1;
+    size_t chunk = ((size_t)height + nworkers - 1) / nworkers;
+    dispatch_apply(nworkers, dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0), ^(size_t t) {
+        int y_start = (int)(t * chunk);
+        int y_end = (int)(y_start + chunk);
+        if (y_end > height) y_end = height;
+        for (int y0 = y_start; y0 < y_end; y0 += TILE)
+        {
+            int y_max = (y0 + TILE < y_end) ? (y0 + TILE) : y_end;
+            for (int x0 = 0; x0 < width; x0 += TILE)
+            {
+                int x_max = (x0 + TILE < width) ? (x0 + TILE) : width;
+                for (int y = y0; y < y_max; ++y)
+                {
+                    for (int x = x0; x < x_max; ++x)
+                    {
+                        dst[x * height + y] = src[y * width + x];
+                    }
+                }
+            }
+        }
+    });
+#else
+#pragma omp parallel for schedule(static)
+    for (int y0 = 0; y0 < height; y0 += TILE)
+    {
+        int y_max = (y0 + TILE < height) ? (y0 + TILE) : height;
+        for (int x0 = 0; x0 < width; x0 += TILE)
+        {
+            int x_max = (x0 + TILE < width) ? (x0 + TILE) : width;
+            for (int y = y0; y < y_max; ++y)
+            {
+                for (int x = x0; x < x_max; ++x)
+                {
+                    dst[x * height + y] = src[y * width + x];
+                }
+            }
+        }
+    }
+#endif
 }
 
 /* Filter CAs and ColorMoiree in RGB picture data */
@@ -77,79 +166,90 @@ void CACorrection(int imageX, int imageY,
                   uint16_t * __restrict outputImage,
                   uint16_t threshold, uint8_t radius)
 {
-    //getting working memory
-    uint16_t *bVec = malloc( imageX * imageY * sizeof( uint16_t ) );
-    uint16_t *gVec = malloc( imageX * imageY * sizeof( uint16_t ) );
-    uint16_t *rVec = malloc( imageX * imageY * sizeof( uint16_t ) );
-    uint16_t *temp = malloc( imageX * imageY * sizeof( uint16_t ) );
-
-	//split the color image into individual color channel for convenient in calculation
-#pragma omp parallel for
-    for( int i = 0; i < imageX*imageY; i++ )
+    size_t npix = (size_t)imageX * (size_t)imageY;
+    size_t needed = npix * 6;
+    if (ca_buf_size < needed)
     {
-        int j = i * 3;
-        rVec[i] = inputImage[j+0];
-        gVec[i] = inputImage[j+1];
-        bVec[i] = inputImage[j+2];
+        if (ca_buf) free(ca_buf);
+        ca_buf = (uint16_t *)malloc(needed * sizeof(uint16_t));
+        ca_buf_size = needed;
     }
 
-	//setting threshold to find the edge and correction range(in g channel)
-    //threshold = 7700;//30;
+    uint16_t *r1 = ca_buf;
+    uint16_t *g1 = r1 + npix;
+    uint16_t *b1 = g1 + npix;
+    uint16_t *r2 = b1 + npix;
+    uint16_t *g2 = r2 + npix;
+    uint16_t *b2 = g2 + npix;
+
+    // Split RGB
+#ifdef __APPLE__
+    size_t nworkers = (npix < 8) ? npix : 8;
+    if (nworkers < 1) nworkers = 1;
+    size_t chunk = (npix + nworkers - 1) / nworkers;
+    dispatch_apply(nworkers, dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0), ^(size_t t) {
+        size_t start = t * chunk;
+        size_t end = start + chunk;
+        if (end > npix) end = npix;
+        for (size_t i = start; i < end; ++i)
+        {
+            size_t j = i * 3;
+            r1[i] = inputImage[j + 0];
+            g1[i] = inputImage[j + 1];
+            b1[i] = inputImage[j + 2];
+        }
+    });
+#else
+#pragma omp parallel for schedule(static)
+    for (size_t i = 0; i < npix; ++i)
+    {
+        size_t j = i * 3;
+        r1[i] = inputImage[j + 0];
+        g1[i] = inputImage[j + 1];
+        b1[i] = inputImage[j + 2];
+    }
+#endif
+
     if( threshold < 1 ) threshold = 1;
 
-    //first run
-    rmCA(rVec, gVec, bVec, imageX, imageY, threshold, radius);
+    // Horizontal pass
+    rmCA(r1, g1, b1, imageX, imageY, threshold, radius);
 
-	//transpose the R,G B channel image to correct chromatic aberration in vertical direction 
-    memcpy( temp, rVec, imageX*imageY * sizeof(uint16_t) );
-#pragma omp parallel for
-    for( int y = 0; y < imageY; y++ )
-        for( int x = 0; x < imageX; x++ )
-            rVec[x*imageY+y] = temp[y*imageX+x];
-    memcpy( temp, gVec, imageX*imageY * sizeof(uint16_t) );
-#pragma omp parallel for
-    for( int y = 0; y < imageY; y++ )
-        for( int x = 0; x < imageX; x++ )
-            gVec[x*imageY+y] = temp[y*imageX+x];
-    memcpy( temp, bVec, imageX*imageY * sizeof(uint16_t) );
-#pragma omp parallel for
-    for( int y = 0; y < imageY; y++ )
-        for( int x = 0; x < imageX; x++ )
-            bVec[x*imageY+y] = temp[y*imageX+x];
+    // Direct tiled transpose into r2, g2, b2
+    transpose_plane(r1, r2, imageX, imageY);
+    transpose_plane(g1, g2, imageX, imageY);
+    transpose_plane(b1, b2, imageX, imageY);
 
-    //second run
-    rmCA(rVec, gVec, bVec, imageY, imageX, threshold, radius);
+    // Vertical pass
+    rmCA(r2, g2, b2, imageY, imageX, threshold, radius);
 
-    //rotate the image back to original position
-    memcpy( temp, rVec, imageX*imageY * sizeof(uint16_t) );
-#pragma omp parallel for
-    for( int y = 0; y < imageY; y++ )
-        for( int x = 0; x < imageX; x++ )
-            rVec[y*imageX+x] = temp[x*imageY+y];
-    memcpy( temp, gVec, imageX*imageY * sizeof(uint16_t) );
-#pragma omp parallel for
-    for( int y = 0; y < imageY; y++ )
-        for( int x = 0; x < imageX; x++ )
-            gVec[y*imageX+x] = temp[x*imageY+y];
-    memcpy( temp, bVec, imageX*imageY * sizeof(uint16_t) );
-#pragma omp parallel for
-    for( int y = 0; y < imageY; y++ )
-        for( int x = 0; x < imageX; x++ )
-            bVec[y*imageX+x] = temp[x*imageY+y];
+    // Direct tiled transpose back into r1, g1, b1
+    transpose_plane(r2, r1, imageY, imageX);
+    transpose_plane(g2, g1, imageY, imageX);
+    transpose_plane(b2, b1, imageY, imageX);
 
-    //merge channels into final image
-#pragma omp parallel for
-    for( int i = 0; i < imageX*imageY; i++ )
+    //Merge into outputImage
+#ifdef __APPLE__
+    dispatch_apply(nworkers, dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0), ^(size_t t) {
+        size_t start = t * chunk;
+        size_t end = start + chunk;
+        if (end > npix) end = npix;
+        for (size_t i = start; i < end; ++i)
+        {
+            size_t j = i * 3;
+            outputImage[j + 0] = r1[i];
+            outputImage[j + 1] = g1[i];
+            outputImage[j + 2] = b1[i];
+        }
+    });
+#else
+#pragma omp parallel for schedule(static)
+    for (size_t i = 0; i < npix; ++i)
     {
-        int j = i * 3;
-        outputImage[j+0] = rVec[i];
-        outputImage[j+1] = gVec[i];
-        outputImage[j+2] = bVec[i];
+        size_t j = i * 3;
+        outputImage[j + 0] = r1[i];
+        outputImage[j + 1] = g1[i];
+        outputImage[j + 2] = b1[i];
     }
-
-    //clean up
-    free( bVec );
-    free( gVec );
-    free( rVec );
-    free( temp );
+#endif
 }

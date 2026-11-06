@@ -6,6 +6,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <float.h>
+#ifdef __APPLE__
+#include <dispatch/dispatch.h>
+#endif
 #include "processing_object.h"
 #include "raw_processing.h"
 
@@ -610,13 +613,24 @@ void blur_image( uint16_t * __restrict in,
 
     /* Offset - do twice on channel '1' and '2' (Cb and Cr) */
     int limit_x = (width-radius-1)*3;
-#pragma omp parallel for
     for (int offset =0; offset < 3; ++offset)
     {
         if (channels[offset]) /* if this channel was requested */
         {
             /* Horizontal blur */
+#ifdef __APPLE__
+            size_t nworkers_h = (height < 8) ? (size_t)height : 8;
+            if (nworkers_h < 1) nworkers_h = 1;
+            size_t chunk_h = ((size_t)height + nworkers_h - 1) / nworkers_h;
+            dispatch_apply(nworkers_h, dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0), ^(size_t t) {
+                int y_start = (int)(t * chunk_h);
+                int y_end = (int)(y_start + chunk_h);
+                if (y_end > height) y_end = height;
+                for (int y = y_start; y < y_end; ++y)
+#else
+#pragma omp parallel for schedule(static)
             for (int y = 0; y < height; ++y) /* rows */
+#endif
             {
                 uint16_t * temp_row = temp + (y * rl)+offset; /* current row ouptut */
                 uint16_t * row = in + (y * rl)+offset; /* current row */
@@ -643,10 +657,25 @@ void blur_image( uint16_t * __restrict in,
                     temp_row[x] = sum / blur_diameter;
                 }
             }
+#ifdef __APPLE__
+            });
+#endif
 
             /* Vertical blur */
             int limit_y = height-radius-1;
+#ifdef __APPLE__
+            size_t nworkers_v = (width < 8) ? (size_t)width : 8;
+            if (nworkers_v < 1) nworkers_v = 1;
+            size_t chunk_v = ((size_t)width + nworkers_v - 1) / nworkers_v;
+            dispatch_apply(nworkers_v, dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0), ^(size_t t) {
+                int x_start = (int)(t * chunk_v);
+                int x_end = (int)(x_start + chunk_v);
+                if (x_end > width) x_end = width;
+                for (int x = x_start; x < x_end; ++x)
+#else
+#pragma omp parallel for schedule(static)
             for (int x = 0; x < width; ++x) /* columns */
+#endif
             {
                 uint16_t * temp_col = in + (x*3);
                 uint16_t * col = temp + (x*3);
@@ -659,19 +688,20 @@ void blur_image( uint16_t * __restrict in,
                     sum += col[(y+radius+1)*rl+offset];
                     temp_col[MAX(y, 0)*rl+offset] = sum / blur_diameter;
                 }
+                if (radius <= limit_y)
                 {
                     uint16_t * minus = col + (offset);
                     uint16_t * plus = col + ((radius*2+1)*rl + offset);
-                    uint16_t * temp = temp_col + (radius*rl + offset);
+                    uint16_t * tp = temp_col + (radius*rl + offset);
                     uint16_t * end = temp_col + (limit_y*rl + offset);
                     do {
                         sum -= *minus;
                         sum += *plus;
-                        *temp = sum / blur_diameter;
+                        *tp = sum / blur_diameter;
                         minus += rl;
                         plus += rl;
-                        temp += rl;
-                    } while (temp < end);
+                        tp += rl;
+                    } while (tp < end);
                 }
                 for (int y = limit_y; y < height; ++y)
                 {
@@ -680,6 +710,9 @@ void blur_image( uint16_t * __restrict in,
                     temp_col[y*rl+offset] = sum / blur_diameter;
                 }
             }
+#ifdef __APPLE__
+            });
+#endif
         }
     }
 }
@@ -687,11 +720,34 @@ void blur_image( uint16_t * __restrict in,
 void convert_rgb_to_YCbCr_omp(uint16_t * __restrict img, int32_t size, int32_t ** lut)
 {
     int32_t ** ry = lut;
-    uint16_t * end = img + size;
+    int32_t num_pixels = size / 3;
 
-#pragma omp parallel for
-    for (uint16_t * pix = img; pix < end; pix += 3)
+#ifdef __APPLE__
+    size_t nthreads = 8;
+    if ((size_t)num_pixels < nthreads) nthreads = (size_t)num_pixels > 0 ? (size_t)num_pixels : 1;
+    size_t chunk = ((size_t)num_pixels + nthreads - 1) / nthreads;
+    dispatch_apply(nthreads, dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0), ^(size_t t) {
+        size_t start_p = t * chunk;
+        size_t end_p = start_p + chunk;
+        if (end_p > (size_t)num_pixels) end_p = (size_t)num_pixels;
+        uint16_t * pix = img + start_p * 3;
+        for (size_t p = start_p; p < end_p; ++p, pix += 3)
+        {
+            /* RGB to YCbCr */
+            int32_t pix_Y  =         ry[0][pix[0]] + ry[1][pix[1]] + ry[2][pix[2]];
+            int32_t pix_Cb = 32768 + ry[3][pix[0]] + ry[4][pix[1]] + (pix[2] >> 1);
+            int32_t pix_Cr = 32768 + (pix[0] >> 1) + ry[5][pix[1]] + ry[6][pix[2]];
+
+            pix[0] = LIMIT16(pix_Y);
+            pix[1] = LIMIT16(pix_Cb);
+            pix[2] = LIMIT16(pix_Cr);
+        }
+    });
+#else
+#pragma omp parallel for schedule(static)
+    for (int32_t p = 0; p < num_pixels; ++p)
     {
+        uint16_t * pix = img + p * 3;
         /* RGB to YCbCr */
         int32_t pix_Y  =         ry[0][pix[0]] + ry[1][pix[1]] + ry[2][pix[2]];
         int32_t pix_Cb = 32768 + ry[3][pix[0]] + ry[4][pix[1]] + (pix[2] >> 1);
@@ -701,16 +757,39 @@ void convert_rgb_to_YCbCr_omp(uint16_t * __restrict img, int32_t size, int32_t *
         pix[1] = LIMIT16(pix_Cb);
         pix[2] = LIMIT16(pix_Cr);
     }
+#endif
 }
 
 void convert_YCbCr_to_rgb_omp(uint16_t * __restrict img, int32_t size, int32_t ** lut)
 {
     int32_t ** yr = lut;
-    uint16_t * end = img + size;
+    int32_t num_pixels = size / 3;
 
-#pragma omp parallel for
-    for (uint16_t * pix = img; pix < end; pix += 3)
+#ifdef __APPLE__
+    size_t nthreads = 8;
+    if ((size_t)num_pixels < nthreads) nthreads = (size_t)num_pixels > 0 ? (size_t)num_pixels : 1;
+    size_t chunk = ((size_t)num_pixels + nthreads - 1) / nthreads;
+    dispatch_apply(nthreads, dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0), ^(size_t t) {
+        size_t start_p = t * chunk;
+        size_t end_p = start_p + chunk;
+        if (end_p > (size_t)num_pixels) end_p = (size_t)num_pixels;
+        uint16_t * pix = img + start_p * 3;
+        for (size_t p = start_p; p < end_p; ++p, pix += 3)
+        {
+            int32_t pix_R = pix[0]                 + yr[0][pix[2]];
+            int32_t pix_G = pix[0] + yr[1][pix[1]] + yr[2][pix[2]];
+            int32_t pix_B = pix[0] + yr[3][pix[1]];
+
+            pix[0] = LIMIT16(pix_R);
+            pix[1] = LIMIT16(pix_G);
+            pix[2] = LIMIT16(pix_B);
+        }
+    });
+#else
+#pragma omp parallel for schedule(static)
+    for (int32_t p = 0; p < num_pixels; ++p)
     {
+        uint16_t * pix = img + p * 3;
         int32_t pix_R = pix[0]                 + yr[0][pix[2]];
         int32_t pix_G = pix[0] + yr[1][pix[1]] + yr[2][pix[2]];
         int32_t pix_B = pix[0] + yr[3][pix[1]];
@@ -719,6 +798,7 @@ void convert_YCbCr_to_rgb_omp(uint16_t * __restrict img, int32_t size, int32_t *
         pix[1] = LIMIT16(pix_G);
         pix[2] = LIMIT16(pix_B);
     }
+#endif
 }
 
 void convert_rgb_to_YCbCr(uint16_t * __restrict img, int32_t size, int32_t ** lut)

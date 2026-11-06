@@ -30,10 +30,9 @@ void recursive_bf_wrap(uint16_t * img_in,
     else
     {
         //Ming version with better right boarder
-        CRBFilterPlain rbf;
+        static thread_local CRBFilterPlain rbf;
         rbf.reserveMemory( width, height, channel );
         rbf.filter( img_in, img_out, sigma_spatial, sigma_range, width, height, channel );
-        rbf.releaseMemory();
     }
 }
 
