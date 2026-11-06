@@ -9,17 +9,17 @@
 #define CROSSELEMENT_H
 
 #include <QPoint>
-#include <QGraphicsPolygonItem>
+#include <QGraphicsPathItem>
 
 class CrossElement
 {
 public:
-    CrossElement( QPolygon polygon, QGraphicsItem *parent = 0 );
+    CrossElement( QPainterPath path, QGraphicsItem *parent = 0 );
     ~CrossElement();
     void setPosition( double x, double y );
     void reset();
 
-    QGraphicsPolygonItem* crossGraphicsElement( void );
+    QGraphicsPathItem* crossGraphicsElement( void );
     void redrawCrossElement( int sceneX, int sceneY, int picX, int picY );
 
 private:
@@ -27,7 +27,7 @@ private:
     void createCrossElement();
     double m_posX;
     double m_posY;
-    QGraphicsPolygonItem *m_pCrossGraphicsItem;
+    QGraphicsPathItem *m_pCrossGraphicsItem;
 };
 
 #endif // CROSSELEMENT_H

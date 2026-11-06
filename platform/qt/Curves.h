@@ -26,7 +26,7 @@ public:
     Curves(QWidget* parent = Q_NULLPTR);
     ~Curves();
     void setProcessingObject( processingObject_t *processing );
-    void paintElement(void);
+    void paintElement(bool frameChanged = true);
     void setActiveLine( uint8_t lineNr );
     void setFrameChangedPointer( bool *pFrameChanged );
     void resetLines( void );
@@ -35,9 +35,7 @@ public:
     QString configuration( void );
 
 private:
-    QImage *m_pImage;
     QPoint m_cursor;
-    uint16_t m_width;
     bool m_pointSelected;
     bool m_firstPoint;
     bool m_lastPoint;

@@ -7,125 +7,159 @@
 
 #include "ScopesLabel.h"
 #include <QPainter>
+#include <QTimer>
 
-#define SIZEW                (m_widthLabel * devicePixelRatio())
-#define SIZEH                (SIZEW * 160 / 511)
-#define HALFSIZEW            (SIZEW/2)
-#define HALFSIZEH            (SIZEH/2)
+#define RATIO 3
 
 //Constructor
-ScopesLabel::ScopesLabel(QWidget *parent)
+ScopesLabel::ScopesLabel( QWidget *parent )
     : QLabel(parent)
 {
-    m_pHistogram = new Histogram();
-    m_pVectorScope = new VectorScope( 511, 160 );
-    m_pWaveFormMonitor = new WaveFormMonitor( 200 );
-    m_widthLabel = size().width();
-    m_imageScope = QImage(1, 1, QImage::Format_RGB888);
-    m_imageScope.fill( Qt::black );
-    m_pImageLabel = new QImage( SIZEW, SIZEH, QImage::Format_RGBA8888 );
-    m_type = ScopeHistogram;
-    paintScope();
+    m_paintTimer = new QTimer( this );
+    m_paintTimer->setSingleShot( true );
+
+    connect( m_paintTimer, &QTimer::timeout, this, &ScopesLabel::paintScope );
 }
 
 //Destructor
 ScopesLabel::~ScopesLabel()
 {
-    delete m_pVectorScope;
-    delete m_pWaveFormMonitor;
-    delete m_pHistogram;
-    delete m_pImageLabel;
 }
 
 //Prepare and paint scope
-void ScopesLabel::setScope(uint8_t *pPicture, uint16_t width, uint16_t height, bool under, bool over, ScopeType type)
+void ScopesLabel::setScope( RenderFrameThread *pRenderThread, uint16_t width, uint16_t height, ScopeType type )
 {
-    static int w = -1;
-    static int h = -1;
+    m_pRenderThread = pRenderThread;
+    m_width = width;
+    m_height = height;
     m_type = type;
 
-    if( w != width || h != height )
+    if( m_pRenderThread )
     {
-        delete m_pWaveFormMonitor;
-        m_pWaveFormMonitor = new WaveFormMonitor( width );
-
-        w = width;
-        h = height;
-    }
-
-    if( type == ScopeType::None )
-    {
-        m_imageScope.fill( QColor( 0, 0, 0, 255 ) );
-    }
-    else if( type == ScopeType::ScopeHistogram )
-    {
-        m_imageScope = m_pHistogram->getHistogramFromRaw( pPicture, width, height, under, over );
-    }
-    else if( type == ScopeType::ScopeWaveForm )
-    {
-        m_imageScope = m_pWaveFormMonitor->getWaveFormMonitorFromRaw( pPicture, width, height );
-    }
-    else if( type == ScopeType::ScopeRgbParade )
-    {
-        m_imageScope = m_pWaveFormMonitor->getParadeFromRaw( pPicture, width, height );
+        // More efficient during playback
+        m_paintTimer->start( 0 );
     }
     else
     {
-        m_imageScope = m_pVectorScope->getVectorScopeFromRaw( pPicture, width, height );
+        paintScope();
     }
-    paintScope();
+}
+
+void ScopesLabel::setUnderOver( uint8_t underOver )
+{
+    m_underOver = underOver;
 }
 
 //Resize event for scaling the scope label
-void ScopesLabel::resizeEvent(QResizeEvent *event)
+void ScopesLabel::resizeEvent( QResizeEvent *event )
 {
-    m_widthLabel = size().width();
-    paintScope();
-    event->accept();
+    QLabel::resizeEvent( event );
+
+    int labelWidth = this->width() * devicePixelRatio();
+
+    // Quickly resize
+    QPixmap pic = QPixmap::fromImage( m_imageScope.scaled( labelWidth, labelWidth / RATIO, Qt::IgnoreAspectRatio, Qt::SmoothTransformation ) );
+    pic.setDevicePixelRatio( devicePixelRatio() );
+
+    drawLines( pic );
+    setPixmap( pic );
+
+    setMinimumWidth( 1 ); //Otherwise window won't be smaller than picture
+
+    // Debounce (repaint later)
+    m_paintTimer->start( 50 );
 }
 
 //Bring scope resized to label
 void ScopesLabel::paintScope()
 {
-    //Resize
-    delete m_pImageLabel;
-    m_pImageLabel = new QImage( m_imageScope.scaled( SIZEW, SIZEH, Qt::IgnoreAspectRatio, Qt::SmoothTransformation ) );
-    //Paint to label
-    QPixmap pic = QPixmap::fromImage( *m_pImageLabel );
+    int labelWidth = this->width() * devicePixelRatio();
+
+    QMutexLocker locker( m_pRenderThread ? m_pRenderThread->mutex() : nullptr );
+
+    if( !m_pRenderThread )
+    {
+        m_imageScope = QImage(labelWidth, labelWidth / RATIO, QImage::Format_RGB32);
+        m_imageScope.fill( Qt::black );
+    }
+    else if( m_type == ScopeHistogram )
+    {
+        bool under = false;
+        bool over = false;
+
+        if( ( m_underOver & 0x01 ) == 0x01 ) under = true;
+        if( ( m_underOver & 0x02 ) == 0x02 ) over = true;
+
+        m_imageScope = Histogram::getHistogramFromRaw( m_pRenderThread->currentFrame(), m_width, m_height, labelWidth, labelWidth / RATIO, under, over );
+    }
+    else if( m_type == ScopeWaveForm )
+    {
+        m_imageScope = WaveFormMonitor::getWaveFormMonitorFromRaw( m_pRenderThread->currentFrame(), m_width, m_height, labelWidth, labelWidth / RATIO );
+    }
+    else if( m_type == ScopeRgbParade )
+    {
+        m_imageScope = WaveFormMonitor::getWaveFormMonitorFromRaw( m_pRenderThread->currentFrame(), m_width, m_height, labelWidth, labelWidth / RATIO, true );
+    }
+    else
+    {
+        VectorScope vectorScope = VectorScope( labelWidth, labelWidth / RATIO );
+        m_imageScope = vectorScope.getVectorScopeFromRaw( m_pRenderThread->currentFrame(), m_width, m_height );
+    }
+
+    QPixmap pic = QPixmap::fromImage( m_imageScope );
     pic.setDevicePixelRatio( devicePixelRatio() );
 
-    drawLines( &pic );
-
+    drawLines( pic );
     setPixmap( pic );
 
-    //setMinimumSize( 1, 180 ); //Otherwise window won't be smaller than picture
-    setMinimumWidth( 1 );
+    setMinimumWidth( 1 ); //Otherwise window won't be smaller than picture
 }
 
 //Draw the grid lines onto the scopes
-void ScopesLabel::drawLines( QPixmap *pic )
+void ScopesLabel::drawLines( QPixmap &pic )
 {
-    QPainter pe( pic );
-    QPen pen;  // creates a default pen
-    pen.setStyle(Qt::DotLine);
-    pen.setWidth(1);
-    pen.setBrush( QColor( 200, 200, 200, 96 ) );
-    pe.setPen( pen );
+    QPainter painter( &pic );
 
-    if( m_type == ScopeType::ScopeHistogram )
+    QPen pen;
+    pen.setStyle( Qt::DotLine );
+    pen.setWidth( 1 );
+    pen.setBrush( QColor( 160, 160, 160, 128 ) );
+    painter.setPen( pen );
+
+    if( m_type == ScopeHistogram )
     {
-        pe.drawLine( m_widthLabel*0.1,  0, m_widthLabel*0.1, this->height()-1 );
-        pe.drawLine( m_widthLabel*0.25, 0, m_widthLabel*0.25, this->height()-1 );
-        pe.drawLine( m_widthLabel*0.5,  0, m_widthLabel*0.5, this->height()-1 );
-        pe.drawLine( m_widthLabel*0.75, 0, m_widthLabel*0.75, this->height()-1 );
-        pe.drawLine( m_widthLabel*0.9,  0, m_widthLabel*0.9, this->height()-1 );
+        painter.drawLine( this->width()*0.1,  0, this->width()*0.1, this->height()-1 );
+        painter.drawLine( this->width()*0.25, 0, this->width()*0.25, this->height()-1 );
+        painter.drawLine( this->width()*0.5,  0, this->width()*0.5, this->height()-1 );
+        painter.drawLine( this->width()*0.75, 0, this->width()*0.75, this->height()-1 );
+        painter.drawLine( this->width()*0.9,  0, this->width()*0.9, this->height()-1 );
     }
-    else if( m_type == ScopeType::ScopeWaveForm || m_type == ScopeType::ScopeRgbParade )
+    else if( m_type == ScopeWaveForm || m_type == ScopeRgbParade )
     {
-        pe.drawLine( 0, this->height()*0.1,  m_widthLabel, this->height()*0.1 );
-        pe.drawLine( 0, this->height()*0.25, m_widthLabel, this->height()*0.25 );
-        pe.drawLine( 0, this->height()*0.5,  m_widthLabel, this->height()*0.5 );
-        pe.drawLine( 0, this->height()*0.75, m_widthLabel, this->height()*0.75 );
-        pe.drawLine( 0, this->height()*0.9,  m_widthLabel, this->height()*0.9 );
+        painter.drawLine( 0, this->height()*0.1,  this->width(), this->height()*0.1 );
+        painter.drawLine( 0, this->height()*0.25, this->width(), this->height()*0.25 );
+        painter.drawLine( 0, this->height()*0.5,  this->width(), this->height()*0.5 );
+        painter.drawLine( 0, this->height()*0.75, this->width(), this->height()*0.75 );
+        painter.drawLine( 0, this->height()*0.9,  this->width(), this->height()*0.9 );
+    }
+    else
+    {
+        int middleX = this->width() / 2;
+        int middleY = this->height() / 2;
+
+        int x = middleX - middleY;
+
+        pen.setStyle( Qt::SolidLine );
+        pen.setCapStyle( Qt::FlatCap );
+        painter.setPen( pen );
+
+        painter.drawLine( middleX + 1, 2, middleX + 1, this->height() - 2 );
+        painter.drawLine( x + 3, middleY - 1,  x + this->height() - 1, middleY - 1 );
+
+        pen.setWidth( 2 );
+        painter.setPen( pen );
+        painter.setRenderHint( QPainter::Antialiasing );
+
+        painter.drawEllipse( x + 2, 1, this->height() - 2, this->height() - 2 );
     }
 }

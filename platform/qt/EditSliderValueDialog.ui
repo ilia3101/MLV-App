@@ -2,16 +2,8 @@
 <ui version="4.0">
  <class>EditSliderValueDialog</class>
  <widget class="QDialog" name="EditSliderValueDialog">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>81</width>
-    <height>24</height>
-   </rect>
-  </property>
-  <property name="windowTitle">
-   <string/>
+  <property name="styleSheet">
+   <string notr="true">QDialog { background: transparent; }</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <property name="leftMargin">
@@ -27,7 +19,26 @@
     <number>0</number>
    </property>
    <item row="0" column="0">
-    <widget class="QDoubleSpinBox" name="doubleSpinBox"/>
+    <widget class="QDoubleSpinBox" name="doubleSpinBox">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>75</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="frame">
+      <bool>true</bool>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>

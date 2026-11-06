@@ -13,15 +13,16 @@
 class TimeCodeLabel
 {
 public:
-    TimeCodeLabel();
+    TimeCodeLabel( int height, qreal pixelRatio );
     ~TimeCodeLabel();
     QImage getTimeCodeLabel( uint32_t frameNumber, float clipFps );
     QString getTimeCodeFromFps(uint32_t frameNumber, float clipFps, bool space = false);
     void setTimeDurationMode( bool mode );
 
 private:
-    QImage *m_tcImage;
     bool m_mode;
+    int m_height;
+    qreal m_devicePixelRatio;
 };
 
 #endif // TIMECODELABEL_H

@@ -27,7 +27,7 @@ SingleFrameExportDialog::SingleFrameExportDialog(QWidget *parent,
     ui(new Ui::SingleFrameExportDialog)
 {
     ui->setupUi(this);
-    setWindowFlags( Qt::Dialog | Qt::WindowTitleHint | Qt::WindowCloseButtonHint );
+    setWindowFlags( Qt::Dialog | Qt::WindowTitleHint | Qt::WindowCloseButtonHint | Qt::CustomizeWindowHint );
 
     m_pMlvObject = pMlvObject;
     m_fileName = fileName;
@@ -35,15 +35,17 @@ SingleFrameExportDialog::SingleFrameExportDialog(QWidget *parent,
     m_stretchX = stretchX;
     m_stretchY = stretchY;
 
-    QSettings set( QSettings::UserScope, "magiclantern.MLVApp", "MLVApp" );
+    QSettings set( QSettings::UserScope, "magiclantern", "MLVApp" );
     ui->comboBoxCodec->setCurrentIndex( set.value( "singleFrameExportCodec", 0 ).toUInt() );
     m_lastPath = set.value( "lastSingleFramePath", QDir::homePath() ).toString();
+
+    adjustSize();
 }
 
 //Destructor
 SingleFrameExportDialog::~SingleFrameExportDialog()
 {
-    QSettings set( QSettings::UserScope, "magiclantern.MLVApp", "MLVApp" );
+    QSettings set( QSettings::UserScope, "magiclantern", "MLVApp" );
     set.setValue( "singleFrameExportCodec", ui->comboBoxCodec->currentIndex() );
     set.setValue( "lastSingleFramePath", m_lastPath );
     delete ui;

@@ -16,7 +16,7 @@ class VectorScope
 public:
     VectorScope(uint16_t widthScope, uint16_t heightScope);
     ~VectorScope();
-    QImage getVectorScopeFromRaw(uint8_t *m_pRawImage, uint16_t width, uint16_t height);
+    QImage getVectorScopeFromRaw(const uint8_t *m_pRawImage, uint16_t width, uint16_t height);
 
 private:
     QImage *m_pScope;

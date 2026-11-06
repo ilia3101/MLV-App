@@ -14,10 +14,12 @@ EditSliderValueDialog::EditSliderValueDialog(QWidget *parent) :
 {
     ui->setupUi(this);
 #ifdef WIN32
-    setWindowFlags( Qt::Dialog | Qt::WindowCloseButtonHint | Qt::CustomizeWindowHint );
+    //setWindowFlags( Qt::Dialog | Qt::WindowCloseButtonHint | Qt::CustomizeWindowHint );
 #else
-    setWindowFlags( Qt::Tool | Qt::WindowCloseButtonHint | Qt::CustomizeWindowHint );
+    //setWindowFlags( Qt::Tool | Qt::WindowCloseButtonHint | Qt::CustomizeWindowHint );
 #endif
+    setWindowFlags( Qt::Tool | Qt::FramelessWindowHint );
+
     m_factor = 1.0;
 }
 
@@ -37,14 +39,14 @@ void EditSliderValueDialog::autoSetup(QSlider *slider, DoubleClickLabel *label, 
     ui->doubleSpinBox->setSingleStep( precision );
     ui->doubleSpinBox->setValue( label->text().toDouble() );
     ui->doubleSpinBox->selectAll();
-    QPoint pos;
-    pos.setX(0);
-    pos.setY(0);
-    pos = label->mapToGlobal( pos );
-    setGeometry( pos.x(), pos.y(), 80, 20 );
+
+    adjustSize();
+
+    QPoint pos = label->mapToGlobal( QPoint( label->width(), 0 ) );
+    setGeometry( pos.x() - width(), pos.y(), width(), height() );
 }
 
-//Get the value of the spinbox multimlied with factor
+//Get the value of the spinbox multiplied with factor
 double EditSliderValueDialog::getValue( void )
 {
     return ui->doubleSpinBox->value() * m_factor;

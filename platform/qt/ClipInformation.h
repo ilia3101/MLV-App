@@ -43,13 +43,23 @@ public:
         m_backgroundColor = color;
     }
 
+    static int getPreviewPaddingTop() {
+        return m_previewPaddingTop;
+    }
+
+    static int getPreviewMinWidth() {
+        return m_previewMinWidth;
+    }
+
+    static double getPreviewRatio() {
+        return m_previewRatio;
+    }
+
     QIcon getPreview() const {
         return m_preview;
     }
 
-    void setPreview( QIcon preview ) {
-        m_preview = preview;
-    }
+    void setPreview( const QPixmap &src );
 
     ReceiptSettings* getReceipt() const {
         return m_pReceipt;
@@ -78,7 +88,14 @@ private:
     QString m_dateTime;
     QString m_audio;
     QColor m_backgroundColor;
+
+    static const int m_previewPaddingTop = 4;
+    static const int m_previewMinWidth = 100;
+    static constexpr double m_previewRatio = 16.0 / 9.0;
+    const qreal m_radius = 4;
+
     QIcon m_preview;
+
     ReceiptSettings *m_pReceipt;
 };
 

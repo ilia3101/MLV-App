@@ -1002,7 +1002,7 @@ static void match_by_histogram(struct raw_info raw_info, uint32_t * raw_buffer_3
 
     int best_score = 0;
 
-    for (int i_ev = 0; i_ev <= 600; i_ev++)
+    for (int i_ev = 0; i_ev <= 650; i_ev++)
     {
         double ev = i_ev * 0.01;
 
@@ -1086,7 +1086,7 @@ static int match_exposures(struct raw_info raw_info, uint32_t * raw_buffer_32, i
         _black_delta = *black_delta * 64;
     }
 
-    _ev_correction = COERCE(_ev_correction, 0, 6.0);
+    _ev_correction = COERCE(_ev_correction, 0, 6.5);
     _black_delta = COERCE(_black_delta, 0, 100 * 64);
 
     *ev_correction = -_ev_correction;

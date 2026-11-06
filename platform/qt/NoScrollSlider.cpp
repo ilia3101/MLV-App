@@ -6,17 +6,24 @@
  */
 
 #include "NoScrollSlider.h"
+#include <QStyleOption>
 
 NoScrollSlider::NoScrollSlider(QWidget *parent)
     : QSlider(parent) {
 
 }
 
-void NoScrollSlider::wheelEvent(QWheelEvent *)
+void NoScrollSlider::wheelEvent(QWheelEvent *event)
 {
-    //Do nothing!!!
+    // Propagate to the parent
+    event->ignore();
 }
 
-void NoScrollSlider::mouseDoubleClickEvent(QMouseEvent*) {
-    emit doubleClicked();
+void NoScrollSlider::mouseDoubleClickEvent(QMouseEvent *event) {
+    QStyleOptionSlider option;
+    initStyleOption( &option );
+
+    QRect handleRect = style()->subControlRect( QStyle::CC_Slider, &option, QStyle::SC_SliderHandle, this );
+
+    if( handleRect.contains(event->pos()) ) emit doubleClicked();
 }
