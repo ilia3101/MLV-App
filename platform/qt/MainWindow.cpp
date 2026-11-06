@@ -7303,7 +7303,7 @@ void MainWindow::on_actionExport_triggered()
     //if multiple files selected or >= 1 sequence
     else
     {
-        QString sequence = QString( "/######%1" ).arg( fileEnding );
+        QString sequence = QString( "######%1" ).arg( fileEnding );
 
         //Folder Dialog
         QString folderName = QFileDialog::getExistingDirectory(this, tr("Choose Export Folder"),
@@ -7326,15 +7326,15 @@ void MainWindow::on_actionExport_triggered()
             if( isExportSequence() )
             {
                 QString fileName = GET_CLIP( row )->getName().replace( ".mlv", "", Qt::CaseInsensitive );
-                fileName.prepend( "/" ).prepend( folderName );
+                fileName = QDir( folderName ).filePath( fileName );
 
-                if( QDir( fileName ).exists() ) overwriteList.append( fileName.append( sequence ) );
+                if( QDir( fileName ).exists() ) overwriteList.append( QDir( fileName ).filePath( sequence ) );
             }
             //Clips
             else
             {
                 QString fileName = GET_CLIP( row )->getName().replace( ".mlv", fileEnding, Qt::CaseInsensitive );
-                fileName.prepend( "/" ).prepend( folderName );
+                fileName = QDir( folderName ).filePath( fileName );
 
                 if( QFileInfo( fileName ).exists() ) overwriteList.append( fileName );
             }
@@ -7376,18 +7376,17 @@ void MainWindow::on_actionExport_triggered()
 
             //Create Path+Name
             QString fileName = GET_CLIP( row )->getName().replace( ".mlv", fileEnding, Qt::CaseInsensitive );
-            fileName.prepend( "/" );
-            fileName.prepend( folderName );
+            fileName = QDir( folderName ).filePath( fileName );
 
             //Skip if wanted
             foreach( QString fileOverwriteName, overwriteList )
             {
                 QString fileNameCompare = fileName;
 
-                if( isExportSequence() ) fileNameCompare = GET_CLIP( row )->getName().replace( ".mlv", "", Qt::CaseInsensitive ).prepend( "/" ).prepend( folderName ).append( sequence );
+                if( isExportSequence() ) fileNameCompare = QDir( folderName ).filePath( GET_CLIP( row )->getName().replace( ".mlv", "", Qt::CaseInsensitive ) + "/" + sequence );
 
                 //qDebug() << skip << fileOverwriteName << fileNameCompare;
-                if( skip == true && fileOverwriteName == fileNameCompare )
+                if( skip && fileOverwriteName == fileNameCompare )
                 {
                     skipFile = true;
                     continue;
