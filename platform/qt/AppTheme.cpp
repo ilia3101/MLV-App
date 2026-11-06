@@ -6,6 +6,7 @@
 #include <QStyleOption>
 #include <QAbstractButton>
 #include <QStylePainter>
+#include <QToolButton>
 #include <QMenu>
 #include <QDebug>
 
@@ -156,7 +157,7 @@ void AppTheme::set( QMainWindow *mainWindow, Theme theme )
             border-radius: 2px;
         }
         QSlider::add-page:horizontal {
-            background: qlineargradient(spread:pad, x0:0, y0:0, x2:0, y2:1, stop:0 hsla(0, 0%, 0%, 15%), stop:1 hsla(0, 0%, 0%, 0%));
+            background: qlineargradient(spread:pad, x0:0, y0:0, x2:0, y2:1, stop:0 hsla(0, 0%, 0%, 15%), stop:1 hsla(0, 0%, 100%, 9%));
             border: 1px solid hsla(0, 0%, 0%, 24%);
             border-radius: 2px;
         }
@@ -165,12 +166,19 @@ void AppTheme::set( QMainWindow *mainWindow, Theme theme )
             border: 1px solid hsl(210, 100%, 38%);
             border-radius: 2px;
         }
+        QSlider::sub-page:horizontal:disabled {
+            background: hsla(0, 0%, 0%, 15%);
+            border-color: hsla(0, 0%, 0%, 24%);
+        }
         QSlider::handle:horizontal {
             background: qlineargradient(spread:pad, x0:0, y0:0, x2:0, y2:1, stop:0 hsl(0, 0%, 100%), stop:1 hsl(0, 0%, 91%));
-            border: 1px solid hsla(0, 0%, 0%, 24%);
+            border: 1px solid hsl(0, 0%, 62%);
             width: 11px;
             margin: -4px 0;
             border-radius: 2px;
+        }
+        QSlider::handle:horizontal:disabled {
+            background: hsl(0, 0%, 91%);
         }
         #horizontalSliderTemperature::sub-page:horizontal, #horizontalSliderTemperature::add-page:horizontal, #horizontalSliderTint::sub-page:horizontal, #horizontalSliderTint::add-page:horizontal {
             background: none;
@@ -354,10 +362,18 @@ void AppTheme::set( QMainWindow *mainWindow, Theme theme )
             QSlider::sub-page:horizontal {
                 border-color: hsl(210, 100%, 15%);
             }
+            QSlider::sub-page:horizontal:disabled {
+                background: hsla(0, 0%, 100%, 24%);
+                border-color: hsla(0, 0%, 0%, 62%);
+            }
             QSlider::handle:horizontal {
-                background: qlineargradient(spread:pad, x0:0, y0:0, x2:0, y2:1, stop:0 hsl(0, 0%, 100%), stop:1 hsl(0, 0%, 85%));
+                background: qlineargradient(spread:pad, x0:0, y0:0, x2:0, y2:1, stop:0 hsl(0, 0%, 100%), stop:1 hsl(0, 0%, 76%));
                 border-color: hsla(0, 0%, 0%, 76%);
                 /*margin: -3px 0;*/
+            }
+            QSlider::handle:horizontal:disabled {
+                background: hsl(0, 0%, 62%);
+                border-color: hsla(0, 0%, 0%, 62%);
             }
             #horizontalSliderTemperature::sub-page:horizontal, #horizontalSliderTemperature::add-page:horizontal, #horizontalSliderTint::sub-page:horizontal, #horizontalSliderTint::add-page:horizontal {
                 border-color: hsla(0, 0%, 0%, 76%);
@@ -698,6 +714,37 @@ bool CustomEventFilter::eventFilter( QObject *obj, QEvent *event )
                 widget->setWindowFlags( widget->windowFlags() | Qt::FramelessWindowHint );
                 // qDebug() << widget;
             }
+        }
+    }
+
+    if( event->type() == QEvent::Paint )
+    {
+        QToolButton *button = qobject_cast<QToolButton*>( obj );
+
+        if( button && button->isCheckable() )
+        {
+            QPalette palette = QPalette();
+
+            if( button->isChecked() )
+            {
+                QColor buttonColor = QApplication::palette().color( QPalette::Button );
+
+                if( AppTheme::currentTheme() > AppTheme::Light )
+                {
+                    // if( button->isEnabled() )
+                    // {
+                    //     QColor highlightColor = QApplication::palette().color( QPalette::Highlight );
+                    //     palette.setColor( QPalette::Button, QColor::fromHsl( highlightColor.hslHue(), highlightColor.hslSaturation(), ( buttonColor.lightness() + highlightColor.lightness() - 32 ) / 2 ) );
+                    // }
+                    // else
+                    // {
+                        palette.setColor( QPalette::Button, QColor::fromHsl( buttonColor.hslHue(), buttonColor.hslSaturation(), buttonColor.lightness() + 48 ) );
+                    // }
+                }
+
+            }
+
+            button->setPalette( palette );
         }
     }
 
