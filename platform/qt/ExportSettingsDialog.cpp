@@ -378,7 +378,7 @@ void ExportSettingsDialog::on_comboBoxCodec_currentIndexChanged(int index)
         ui->comboBoxOption->addItem( QString( "720p 10bit" ) );
         ui->comboBoxOption->addItem( QString( "720p 8bit" ) );
         enableResize = false;
-        ui->label_Info->setPixmap( AppTheme::tintPixmap( QPixmap( ":/fontawesome/fontawesome/svgs-full/solid/warning.svg" ) ) );
+        ui->label_Info->setPixmap( AppTheme::tintPixmap( QIcon( ":/fontawesome/fontawesome/svgs-full/solid/warning.svg" ).pixmap( ui->label_Info->height() ), QColor(), devicePixelRatio() ) );
         ui->label_Info->setToolTip( tr( "Note: DNxHD can only be exported @ 23.976, 25, 29.97, 50, 59.94 fps.\r\nPlease manually force to one of these, if your clips have diffent framerates!" ) );
     }
     else if( index == CODEC_DNXHR )
