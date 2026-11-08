@@ -1086,7 +1086,6 @@ int MainWindow::openMlv( QString fileName )
     ui->actionPreviousFrame->setEnabled( true );
     ui->actionPlay->setEnabled( true );
     ui->actionNextFrame->setEnabled( true );
-    ui->actionLoop->setEnabled( true );
     ui->horizontalSliderPosition->setEnabled( true );
 
     ui->actionClipInfo->setEnabled( true );
@@ -1317,7 +1316,6 @@ void MainWindow::initGui( void )
     ui->actionPreviousFrame->setEnabled( false );
     ui->actionPlay->setEnabled( false );
     ui->actionNextFrame->setEnabled( false );
-    ui->actionLoop->setEnabled( false );
     ui->horizontalSliderPosition->setEnabled( false );
 
     ui->actionClipInfo->setEnabled( false );
@@ -1588,6 +1586,7 @@ void MainWindow::readSettings()
 
     if( set.value( "dragFrameMode", true ).toBool() ) ui->actionDropFrameMode->setChecked( true );
     if( set.value( "audioOutput", true ).toBool() ) ui->actionAudioOutput->setChecked( true );
+    ui->actionLoop->setChecked( set.value( "loopPlayback", false ).toBool() );
 
     switch( set.value( "scopeType", 0 ).toUInt() )
     {
@@ -1728,6 +1727,7 @@ void MainWindow::writeSettings()
 
     set.setValue( "dragFrameMode", ui->actionDropFrameMode->isChecked() );
     set.setValue( "audioOutput", ui->actionAudioOutput->isChecked() );
+    set.setValue( "loopPlayback", ui->actionLoop->isChecked() );
     set.setValue( "showAudioTrack", ui->actionShowAudioTrack->isChecked() );
     set.setValue( "scopeType", getSelectedScopeType() );
     set.setValue( "zebras", ui->actionShowZebras->isChecked() );
@@ -4826,7 +4826,6 @@ void MainWindow::deleteSession()
     ui->actionPreviousFrame->setEnabled( false );
     ui->actionPlay->setEnabled( false );
     ui->actionNextFrame->setEnabled( false );
-    ui->actionLoop->setEnabled( false );
     ui->horizontalSliderPosition->setEnabled( false );
 
     ui->actionClipInfo->setEnabled( false );
