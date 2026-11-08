@@ -913,6 +913,12 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </item>
                  <item>
                   <widget class="QWidget" name="toolButtonDarkFrameSubtraction" native="true">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
                    <layout class="QHBoxLayout" name="horizontalLayout_23">
                     <property name="spacing">
                      <number>0</number>
@@ -3593,6 +3599,12 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </item>
                  <item>
                   <widget class="QWidget" name="toolButtonWbMode" native="true">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
                    <layout class="QHBoxLayout" name="horizontalLayout_54">
                     <property name="spacing">
                      <number>0</number>
