@@ -4389,6 +4389,11 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
             receipt->setDualIso( Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "dualIsoAutoCorrected" ) )
+        {
+            receipt->setDualIsoAutoCorrected( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
         else if( Rxml->isStartElement() && Rxml->name() == QString( "dualIsoPattern" ) )
         {
             receipt->setDualIsoPattern( Rxml->readElementText().toInt() );
@@ -4662,6 +4667,7 @@ void MainWindow::writeXmlElementsToFile(QXmlStreamWriter *xmlWriter, ReceiptSett
     xmlWriter->writeTextElement( "deflickerTarget",         QString( "%1" ).arg( receipt->deflickerTarget() ) );
     xmlWriter->writeTextElement( "dualIsoForced",           QString( "%1" ).arg( receipt->dualIsoForced() ) );
     xmlWriter->writeTextElement( "dualIso",                 QString( "%1" ).arg( receipt->dualIso() ) );
+    xmlWriter->writeTextElement( "dualIsoAutoCorrected",    QString( "%1" ).arg( receipt->dualIsoAutoCorrected() ) );
     xmlWriter->writeTextElement( "dualIsoPattern",          QString( "%1" ).arg( receipt->dualIsoPattern() ) );
     xmlWriter->writeTextElement( "dualIsoEvCorrection",     QString( "%1" ).arg( receipt->dualIsoEvCorrection() ) );
     xmlWriter->writeTextElement( "dualIsoBlackDelta",       QString( "%1" ).arg( receipt->dualIsoBlackDelta() ) );
