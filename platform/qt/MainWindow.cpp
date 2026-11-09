@@ -3793,8 +3793,17 @@ void MainWindow::openSession(QString fileNameSession)
                         SESSION_LAST_CLIP->setMark( mark );
 
                         readXmlElementsFromFile( &Rxml, SESSION_LAST_CLIP, versionMasxml );
+
+                        // Exposure correction for Dual ISO previews
+                        const int exposure = SESSION_LAST_CLIP->exposure();
+                        if( SESSION_LAST_CLIP->dualIso() ) SESSION_LAST_CLIP->setExposure( exposure + SESSION_LAST_CLIP->dualIsoEvCorrection() / 4 );
+
                         setSliders( SESSION_LAST_CLIP, false );
                         previewPicture( SESSION_CLIP_COUNT - 1 );
+
+                        // Restore exposure
+                        SESSION_LAST_CLIP->setExposure( exposure );
+
                         setMarkColor( SESSION_CLIP_COUNT - 1, mark );
                         m_pModel->setActiveRow( SESSION_CLIP_COUNT - 1 );
                     }
