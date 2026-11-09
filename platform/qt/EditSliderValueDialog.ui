@@ -48,7 +48,7 @@
    <sender>doubleSpinBox</sender>
    <signal>editingFinished()</signal>
    <receiver>EditSliderValueDialog</receiver>
-   <slot>accept()</slot>
+   <slot>hide()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>40</x>

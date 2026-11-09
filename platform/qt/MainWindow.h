@@ -42,6 +42,7 @@
 #include "ReceiptCopyMaskDialog.h"
 #include "QRecentFilesMenu.h"
 #include "ScopesLabel.h"
+#include "EditSliderValueDialog.h"
 
 namespace Ui {
 class MainWindow;
@@ -416,6 +417,7 @@ private:
     PixelMapListDialog *m_pFpmListDialog;
     PixelMapListDialog *m_pBpmListDialog;
     UserManualDialog *m_pHelpDialog;
+    EditSliderValueDialog m_editSlider;
     AudioWave *m_pAudioWave;
     AudioPlayback *m_pAudioPlayback;
     RenderFrameThread *m_pRenderThread;

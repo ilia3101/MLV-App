@@ -45,7 +45,6 @@
 #include "SystemMemory.h"
 #include "AppTheme.h"
 #include "ExportSettingsDialog.h"
-#include "EditSliderValueDialog.h"
 #include "Updater/updaterUI/cupdaterdialog.h"
 #include "Updater/Updater.h"
 #include "FcpxmlAssistantDialog.h"
@@ -1294,6 +1293,7 @@ void MainWindow::initGui( void )
     m_pBpmListDialog = new PixelMapListDialog( this, PixelMapListDialog::BPM );
     m_pCopyMask = new ReceiptCopyMaskDialog( this );
     m_pHelpDialog = new UserManualDialog( this );
+    EditSliderValueDialog m_editSlider;
 
     ui->actionShowHistogram->setChecked( true );
 
@@ -8455,246 +8455,190 @@ void MainWindow::on_labelScope_customContextMenuRequested(const QPoint &pos)
 //DoubleClick on Gamma Label
 void MainWindow::on_label_GammaVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderGamma, ui->label_GammaVal, 0.01, 2, 100.0 );
-    editSlider.exec();
-    ui->horizontalSliderGamma->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderGamma, ui->label_GammaVal, 0.01, 2, 100.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on Exposure Label
 void MainWindow::on_label_ExposureVal_doubleClicked( void )
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderExposure, ui->label_ExposureVal, 0.01, 2, 100.0 );
-    editSlider.exec();
-    ui->horizontalSliderExposure->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderExposure, ui->label_ExposureVal, 0.01, 2, 100.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on Exposure Gradient Label
 void MainWindow::on_label_ExposureGradient_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderExposureGradient, ui->label_ExposureGradient, 0.01, 2, 100.0 );
-    editSlider.exec();
-    ui->horizontalSliderExposureGradient->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderExposureGradient, ui->label_ExposureGradient, 0.01, 2, 100.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on Contrast Label
 void MainWindow::on_label_ContrastVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderContrast, ui->label_ContrastVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderContrast->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderContrast, ui->label_ContrastVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on Pivot Label
 void MainWindow::on_label_PivotVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderPivot, ui->label_PivotVal, 0.01, 2, 100.0 );
-    editSlider.exec();
-    ui->horizontalSliderPivot->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderPivot, ui->label_PivotVal, 0.01, 2, 100.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on Contrast Gradient Label
 void MainWindow::on_label_ContrastGradientVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderContrastGradient, ui->label_ContrastGradientVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderContrastGradient->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderContrastGradient, ui->label_ContrastGradientVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on Temperature Label
 void MainWindow::on_label_TemperatureVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderTemperature, ui->label_TemperatureVal, 1.0, 0, 1.0 );
-    editSlider.ui->doubleSpinBox->setValue( ui->label_TemperatureVal->text().left(5).toInt() );
-    editSlider.ui->doubleSpinBox->selectAll();
-    editSlider.exec();
-    ui->horizontalSliderTemperature->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderTemperature, ui->label_TemperatureVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on Tint Label
 void MainWindow::on_label_TintVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderTint, ui->label_TintVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderTint->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderTint, ui->label_TintVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on Clarity Label
 void MainWindow::on_label_ClarityVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderClarity, ui->label_ClarityVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderClarity->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderClarity, ui->label_ClarityVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on Vibrance Label
 void MainWindow::on_label_VibranceVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderVibrance, ui->label_VibranceVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderVibrance->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderVibrance, ui->label_VibranceVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on Saturation Label
 void MainWindow::on_label_SaturationVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderSaturation, ui->label_SaturationVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderSaturation->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderSaturation, ui->label_SaturationVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on Dr Label
 void MainWindow::on_label_DrVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderDR, ui->label_DrVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderDR->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderDR, ui->label_DrVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on Ds Label
 void MainWindow::on_label_DsVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderDS, ui->label_DsVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderDS->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderDS, ui->label_DsVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on Lr Label
 void MainWindow::on_label_LrVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderLR, ui->label_LrVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderLR->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderLR, ui->label_LrVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on Ls Label
 void MainWindow::on_label_LsVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderLS, ui->label_LsVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderLS->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderLS, ui->label_LsVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on Lighten Label
 void MainWindow::on_label_LightenVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderLighten, ui->label_LightenVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderLighten->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderLighten, ui->label_LightenVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on Shadows Label
 void MainWindow::on_label_ShadowsVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderShadows, ui->label_ShadowsVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderShadows->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderShadows, ui->label_ShadowsVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on Highlights Label
 void MainWindow::on_label_HighlightsVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderHighlights, ui->label_HighlightsVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderHighlights->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderHighlights, ui->label_HighlightsVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on Sharpen Label
 void MainWindow::on_label_Sharpen_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderSharpen, ui->label_Sharpen, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderSharpen->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderSharpen, ui->label_Sharpen, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on Sharpen Masking Label
 void MainWindow::on_label_ShMasking_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderShMasking, ui->label_ShMasking, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderShMasking->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderShMasking, ui->label_ShMasking, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on ChromaBlur Label
 void MainWindow::on_label_ChromaBlur_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderChromaBlur, ui->label_ChromaBlur, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderChromaBlur->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderChromaBlur, ui->label_ChromaBlur, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on DenoiseStrength Label
 void MainWindow::on_label_DenoiseStrength_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderDenoiseStrength, ui->label_DenoiseStrength, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderDenoiseStrength->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderDenoiseStrength, ui->label_DenoiseStrength, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on RbfDenoiseLuma Label
 void MainWindow::on_label_RbfDenoiseLuma_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderRbfDenoiseLuma, ui->label_RbfDenoiseLuma, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderRbfDenoiseLuma->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderRbfDenoiseLuma, ui->label_RbfDenoiseLuma, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on RbfDenoiseChroma Label
 void MainWindow::on_label_RbfDenoiseChroma_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderRbfDenoiseChroma, ui->label_RbfDenoiseChroma, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderRbfDenoiseChroma->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderRbfDenoiseChroma, ui->label_RbfDenoiseChroma, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on RbfDenoiseRange Label
 void MainWindow::on_label_RbfDenoiseRange_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderRbfDenoiseRange, ui->label_RbfDenoiseRange, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderRbfDenoiseRange->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderRbfDenoiseRange, ui->label_RbfDenoiseRange, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on GrainStrength Label
 void MainWindow::on_label_GrainStrength_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderGrainStrength, ui->label_GrainStrength, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderGrainStrength->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderGrainStrength, ui->label_GrainStrength, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on GrainLumaWeight Label
 void MainWindow::on_label_GrainLumaWeight_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderGrainLumaWeight, ui->label_GrainLumaWeight, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderGrainLumaWeight->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderGrainLumaWeight, ui->label_GrainLumaWeight, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //Repaint audio if its size changed
@@ -8706,170 +8650,130 @@ void MainWindow::on_labelAudioTrack_sizeChanged()
 //DoubleClick on Lut Strength Label
 void MainWindow::on_label_LutStrengthVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderLutStrength, ui->label_LutStrengthVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderLutStrength->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderLutStrength, ui->label_LutStrengthVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on Filter Strength Label
 void MainWindow::on_label_FilterStrengthVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderFilterStrength, ui->label_FilterStrengthVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderFilterStrength->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderFilterStrength, ui->label_FilterStrengthVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on Vignette Strength Label
 void MainWindow::on_label_VignetteStrengthVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderVignetteStrength, ui->label_VignetteStrengthVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderVignetteStrength->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderVignetteStrength, ui->label_VignetteStrengthVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on Vignette Radius Label
 void MainWindow::on_label_VignetteRadiusVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderVignetteRadius, ui->label_VignetteRadiusVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderVignetteRadius->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderVignetteRadius, ui->label_VignetteRadiusVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on Vignette Shape Label
 void MainWindow::on_label_VignetteShapeVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderVignetteShape, ui->label_VignetteShapeVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderVignetteShape->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderVignetteShape, ui->label_VignetteShapeVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on CA red Label
 void MainWindow::on_label_CaRedVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderCaRed, ui->label_CaRedVal, 10.0, 1, 10.0 );
-    editSlider.exec();
-    ui->horizontalSliderCaRed->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderCaRed, ui->label_CaRedVal, 10.0, 1, 10.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on CA blue Label
 void MainWindow::on_label_CaBlueVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderCaBlue, ui->label_CaBlueVal, 10.0, 1, 10.0 );
-    editSlider.exec();
-    ui->horizontalSliderCaBlue->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderCaBlue, ui->label_CaBlueVal, 10.0, 1, 10.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on CA desaturate Label
 void MainWindow::on_label_CaDesaturateVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderCaDesaturate, ui->label_CaDesaturateVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderCaDesaturate->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderCaDesaturate, ui->label_CaDesaturateVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on CA radius Label
 void MainWindow::on_label_CaRadiusVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderCaRadius, ui->label_CaRadiusVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderCaRadius->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderCaRadius, ui->label_CaRadiusVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 void MainWindow::on_label_RawWhiteVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderRawWhite, ui->label_RawWhiteVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderRawWhite->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderRawWhite, ui->label_RawWhiteVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 void MainWindow::on_label_RawBlackVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderRawBlack, ui->label_RawBlackVal, 1.0, 1, 10.0 );
-    editSlider.exec();
-    ui->horizontalSliderRawBlack->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderRawBlack, ui->label_RawBlackVal, 1.0, 1, 10.0 );
+    m_editSlider.show();
 }
 
 void MainWindow::on_DualIsoEvCorrectionVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderDualIsoEvCorrection, ui->DualIsoEvCorrectionVal, 0.05, 2, 200.0 );
-    editSlider.exec();
-    ui->horizontalSliderDualIsoEvCorrection->setValue( editSlider.getValue() - 0.5 );
+    m_editSlider.autoSetup( ui->horizontalSliderDualIsoEvCorrection, ui->DualIsoEvCorrectionVal, 0.05, 2, 200.0 );
+    m_editSlider.show();
 }
 
 void MainWindow::on_DualIsoBlackDeltaVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderDualIsoBlackDelta, ui->DualIsoBlackDeltaVal, 5.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderDualIsoBlackDelta->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderDualIsoBlackDelta, ui->DualIsoBlackDeltaVal, 5.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 void MainWindow::on_label_ToneVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderTone, ui->label_ToneVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderTone->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderTone, ui->label_ToneVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 void MainWindow::on_label_ToningStrengthVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderToningStrength, ui->label_ToningStrengthVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderToningStrength->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderToningStrength, ui->label_ToningStrengthVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 void MainWindow::on_label_VidstabStepsizeVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderVidstabStepsize, ui->label_VidstabStepsizeVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderVidstabStepsize->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderVidstabStepsize, ui->label_VidstabStepsizeVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 void MainWindow::on_label_VidstabShakinessVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderVidstabShakiness, ui->label_VidstabShakinessVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderVidstabShakiness->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderVidstabShakiness, ui->label_VidstabShakinessVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 void MainWindow::on_label_VidstabAccuracyVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderVidstabAccuracy, ui->label_VidstabAccuracyVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderVidstabAccuracy->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderVidstabAccuracy, ui->label_VidstabAccuracyVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 void MainWindow::on_label_VidstabZoomVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderVidstabZoom, ui->label_VidstabZoomVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderVidstabZoom->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderVidstabZoom, ui->label_VidstabZoomVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 void MainWindow::on_label_VidstabSmoothingVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderVidstabSmoothing, ui->label_VidstabSmoothingVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderVidstabSmoothing->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderVidstabSmoothing, ui->label_VidstabSmoothingVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //Fullscreen Mode
@@ -10150,22 +10054,14 @@ void MainWindow::on_spinBoxGradientLength_valueChanged(int arg1)
 //The gradient angle label was doubleclicked
 void MainWindow::on_labelGradientAngle_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.ui->doubleSpinBox->setMinimum( -179.9 );
-    editSlider.ui->doubleSpinBox->setMaximum( 180.0 );
-    editSlider.ui->doubleSpinBox->setDecimals( 1 );
-    editSlider.ui->doubleSpinBox->setSingleStep( 0.1 );
-    QString valString = ui->labelGradientAngle->text();
-    valString.chop(1);
-    editSlider.ui->doubleSpinBox->setValue( valString.toDouble() );
-    editSlider.ui->doubleSpinBox->selectAll();
-    QPoint pos;
-    pos.setX(0);
-    pos.setY(0);
-    pos = ui->labelGradientAngle->mapToGlobal( pos );
-    editSlider.setGeometry( pos.x(), pos.y(), 80, 20 );
-    editSlider.exec();
-    ui->dialGradientAngle->setValue( editSlider.getValue() * 10.0 );
+    m_editSlider.ui->doubleSpinBox->setMinimum( -179.9 );
+    m_editSlider.ui->doubleSpinBox->setMaximum( 180.0 );
+
+    m_editSlider.autoSetup(nullptr, ui->labelGradientAngle, 0.1, 1, 10.0, [this]() {
+        ui->dialGradientAngle->setValue( m_editSlider.getValue() );
+    });
+
+    m_editSlider.show();
 }
 
 //The gradient angle dial was turned

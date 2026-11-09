@@ -8044,7 +8044,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       </font>
                      </property>
                      <property name="text">
-                      <string>-180.0°</string>
+                      <string>0.0°</string>
                      </property>
                     </widget>
                    </item>
