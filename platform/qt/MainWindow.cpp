@@ -9426,6 +9426,9 @@ void MainWindow::on_checkBoxRawFixEnable_clicked(bool checked)
 {
     //Set llrawproc en-/disable here
     llrpSetFixRawMode( m_pMlvObject, (int)checked );
+    //Ensure some processing inside raw_processing.c is also disabled for Dual ISO when unchecked
+    llrpSetDualIsoMode( m_pMlvObject, (int)( checked && toolButtonDualIsoCurrentIndex() ) );
+
     resetMlvCache( m_pMlvObject );
     resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
