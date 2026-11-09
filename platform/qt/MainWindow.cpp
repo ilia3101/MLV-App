@@ -3044,7 +3044,7 @@ void MainWindow::startExportCdng(QString fileName)
      * balancing in case some frames occasionally take longer
      * to process or some CPU cores are not fully available.
      */
-    bool isDualIsoClip = (m_pMlvObject && m_pMlvObject->llrawproc && m_pMlvObject->llrawproc->dual_iso != 0);
+    bool dualIsoProcessing = m_pMlvObject->llrawproc->fix_raw && m_pMlvObject->llrawproc->dual_iso > 0;
     int idealThreads = QThread::idealThreadCount();
     if (idealThreads < 1) idealThreads = 4;
 
@@ -3052,7 +3052,7 @@ void MainWindow::startExportCdng(QString fileName)
     size_t exportRamBudgetMB = systemRamMB / 4; // allow export workers up to 25% of total RAM
 
     size_t pixels = (size_t)getMlvWidth(m_pMlvObject) * (size_t)getMlvHeight(m_pMlvObject);
-    size_t frameMemMB = isDualIsoClip
+    size_t frameMemMB = dualIsoProcessing
         ? ((pixels * 48) / (1024 * 1024) + 16)
         : ((pixels * 6) / (1024 * 1024) + 8);
 
@@ -3061,7 +3061,7 @@ void MainWindow::startExportCdng(QString fileName)
     if (cDngThreads > idealThreads) cDngThreads = idealThreads;
     if (cDngThreads < 1) cDngThreads = 1;
 
-    if (isDualIsoClip)
+    if (dualIsoProcessing)
     {
         // Cap outer Dual ISO frame workers at 8 (or 4 on <= 8GB RAM machines) to avoid
         // N x N nested-thread oversubscription with inner amaze/GCD worker threads
