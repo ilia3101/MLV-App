@@ -51,8 +51,8 @@ typedef struct
                           // 2 = valid (DISO block is found, means this is real dual iso clip)
 
     int dual_iso;         // use dualiso processing, 0 = do not use, 1 = full 20 bit processing
-    int diso1;
-    int diso2;
+    uint32_t diso1;
+    uint32_t diso2;
     int diso_pattern;
 
     int diso_auto_correction; // 1 = match by ISO

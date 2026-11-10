@@ -2081,7 +2081,7 @@ QGroupBox::indicator:checked:disabled {
                    <item row="1" column="0" colspan="3">
                     <widget class="NoScrollSlider" name="horizontalSliderDualIsoEvCorrection">
                      <property name="minimum">
-                      <number>-1200</number>
+                      <number>-1300</number>
                      </property>
                      <property name="maximum">
                       <number>0</number>
