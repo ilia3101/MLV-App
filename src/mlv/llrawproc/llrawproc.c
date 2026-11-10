@@ -32,6 +32,7 @@
 #include "hist.h"
 #include "darkframe.h"
 #include "../../processing/raw_processing.h"
+#include "../camid/camera_id.h"
 
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
@@ -114,17 +115,12 @@ static void _scale_restricted_range(struct raw_info * raw_info, uint16_t * image
 }
 
 /* rescale restricted to imaginary 10-12bit levels of lossless raw data to about real 14bit range */
-static void scale_restricted_range(struct raw_info * raw_info, uint16_t * image_data, int low_iso, int high_iso)
+static void scale_restricted_range(struct raw_info * raw_info, uint16_t * image_data, int is_digital_gain)
 {
     int32_t bd = ceil(log2(raw_info->white_level - raw_info->black_level));
 
     // Digital gain? Add 1 bit…
-    int32_t add_bit = 0;
-
-    if (low_iso != high_iso && high_iso >= 6400)
-    {
-        add_bit = 1;
-    }
+    int32_t add_bit = is_digital_gain ? 1 : 0;
 
     int32_t actual_white_level = raw_info->black_level + ((1 << (bd + add_bit)) - 1);
     int32_t scaled_white_level = (raw_info->white_level - raw_info->black_level) * (1 << (14 - bd));
@@ -321,6 +317,11 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
         raw_info.active_area.x2 = raw_info.width;
         raw_info.active_area.y2 = raw_info.height;
 
+        uint32_t low_iso = MIN(video->llrawproc->diso1, video->llrawproc->diso2);
+        uint32_t high_iso = MAX(video->llrawproc->diso1, video->llrawproc->diso2);
+
+        int is_digital_gain = low_iso != high_iso && high_iso > camidGetMaxAnalogIso(video->IDNT.cameraModel);
+
         /* detect if raw data is restricted to imaginary 8-12bit levels */
         if (raw_info.white_level < raw_info.black_level + (1<<13))
         {
@@ -328,10 +329,7 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
             printf("\nScaling raw data range...\n");
             printf("Raw_Black = %d, Raw_White = %d <= BEFORE SCALING\n", raw_info.black_level, raw_info.white_level);
 #endif
-            int low_iso = MIN(video->llrawproc->diso1, video->llrawproc->diso2);
-            int high_iso = MAX(video->llrawproc->diso1, video->llrawproc->diso2);
-
-            scale_restricted_range(&raw_info, raw_image_buff, low_iso, high_iso);
+            scale_restricted_range(&raw_info, raw_image_buff, is_digital_gain);
 
 #ifndef STDOUT_SILENT
             printf("Raw_Black = %d, Raw_White = %d <= AFTER SCALING\n", raw_info.black_level, raw_info.white_level);
@@ -352,6 +350,7 @@ void applyLLRawProcObject(mlvObject_t * video, uint16_t * raw_image_buff, size_t
                                video->llrawproc->dark_frame,
                                video->llrawproc->diso1,
                                video->llrawproc->diso2,
+                               is_digital_gain,
                                &video->llrawproc->diso_pattern,
                                &video->llrawproc->diso_auto_correction,
                                &video->llrawproc->diso_ev_correction,
