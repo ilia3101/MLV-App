@@ -1040,7 +1040,7 @@ static void match_by_histogram(struct raw_info raw_info, uint32_t * raw_buffer_3
     *black_delta = b * 16;
 }
 
-static int match_exposures(struct raw_info raw_info, uint32_t * raw_buffer_32, int dark_frame, int iso1, int iso2, int * auto_correction, double * ev_correction, int * black_delta, int * white_darkened, int * is_bright)
+static int match_exposures(struct raw_info raw_info, uint32_t * raw_buffer_32, int dark_frame, uint32_t iso1, uint32_t iso2, int is_digital_gain, int * auto_correction, double * ev_correction, int * black_delta, int * white_darkened, int * is_bright)
 {
     int black = raw_info.black_level;
     int white = MIN(raw_info.white_level, *white_darkened);
@@ -1053,14 +1053,12 @@ static int match_exposures(struct raw_info raw_info, uint32_t * raw_buffer_32, i
 
     if (*auto_correction == -1)
     {
-        int low_iso = MIN(iso1, iso2);
-        int high_iso = MAX(iso1, iso2);
+        uint32_t low_iso = MIN(iso1, iso2);
+        uint32_t high_iso = MAX(iso1, iso2);
 
         _ev_correction = log2(high_iso / low_iso);
 
-        // ISO 6400 having the same brightness as ISO 3200 on 650D. Not sure about other cameras.
-        // Anyway, ISO 6400 and higher is considerred useless.
-        if (high_iso >= 6400 && _ev_correction > 0)
+        if (is_digital_gain && _ev_correction > 0)
         {
             high_iso /= 2;
             _ev_correction -= 1;
@@ -2298,7 +2296,7 @@ static inline void convert_20_to_16bit(struct raw_info raw_info, uint16_t * imag
             raw_set_pixel_20to16_rand(x, y, raw_buffer_32[x + y*w]);
 }
 
-int diso_get_full20bit(struct raw_info raw_info, uint16_t * image_data, int dark_frame, int iso1, int iso2, int * iso_pattern, int * auto_correction, double * ev_correction, int * black_delta, int interp_method, int use_alias_map, int use_fullres, int chroma_smooth_method, int threads)
+int diso_get_full20bit(struct raw_info raw_info, uint16_t * image_data, int dark_frame, uint32_t iso1, uint32_t iso2, int is_digital_gain, int * iso_pattern, int * auto_correction, double * ev_correction, int * black_delta, int interp_method, int use_alias_map, int use_fullres, int chroma_smooth_method, int threads)
 {
     int w = raw_info.width;
     int h = raw_info.height;
@@ -2414,7 +2412,7 @@ int diso_get_full20bit(struct raw_info raw_info, uint16_t * image_data, int dark
     //~ printf("Exposure matching...\n");
     /* estimate ISO difference between bright and dark exposures */
     int white_darkened = white_bright;
-    int expo_matched = match_exposures(raw_info, raw_buffer_32, dark_frame, iso1, iso2, auto_correction, ev_correction, black_delta, &white_darkened, is_bright);
+    int expo_matched = match_exposures(raw_info, raw_buffer_32, dark_frame, iso1, iso2, is_digital_gain, auto_correction, ev_correction, black_delta, &white_darkened, is_bright);
     double corr_ev = ABS(*ev_correction);
 
 #ifndef STDOUT_SILENT

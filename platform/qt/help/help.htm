@@ -117,7 +117,14 @@ Cameras like EOS 100D, 700D,... have wrong colored focus dots in the image. Thes
 <p>Some cameras record vertical stripes. Use this option to remove them.</p>
 <p><img src=":/help/help/virtstripes.png" alt="bildschirmfoto 2018-09-23 um 13 41 59"></p>
 <h3 id="dual-iso">Dual ISO</h3>
-<p>Use this &quot;On / Force&quot; to switch Dual ISO processing on. Matching exposures by histogram requires you to select a scene/frame with a wide (ideally full) dynamic range for accurate results. For best results, try using dark-frame subtraction with the same dual ISO and bit depth settings. For faster preview and processing use mean, for better quality use AMaZE interpolation.</p>
+<p>Make sure the correct &quot;Horizontal Pattern&quot; is detected, or Dual ISO processing will fail.</p>
+<p>If you see incorrect frames appearing randomly, try selecting &quot;Frame-by-Frame Detection&quot;.</p>
+<p>The ISO-based correction method provides a good starting point during the initial file load if Dual ISO metadata are present and the clip contains either a dark scene with no highlights or a bright scene with no shadows. In such cases, the histogram-based method may fail or produce an incorrect calculation because there are no complete histograms to match properly.</p>
+<p>The histogram-based correction method requires you to select an appropriate frame with a wide (ideally full) dynamic range to achieve accurate results.</p>
+<p>These two methods are used only to calculate the &quot;Exposure Correction&quot; and &quot;Black Delta&quot; values. Once calculated during the initial file load, these values are saved and remain unchanged. You can reset and recalculate them at any time by clicking &quot;ISO&quot; or &quot;Histogram&quot;.</p>
+<p>For best results, try using dark-frame subtraction with the same Dual ISO and bit depth settings, as this eliminates the need for &quot;Black Delta&quot; correction. With a properly matched dark frame, &quot;Black Delta&quot; should always be 0.</p>
+<p>You can also try manually adjusting &quot;Exposure Correction&quot; by 0.05 (up or down) until the horizontal lines disappear. If that doesn't help, try adjusting &quot;Black Delta&quot;.</p>
+<p>For the best quality, use &quot;AMaZE&quot; or &quot;RCD&quot; interpolation. For faster previews and playback, use &quot;Mean&quot; interpolation.</p>
 <h3 id="pattern-noise">Pattern Noise</h3>
 <p>This is the pattern noise reduction algorithm by a1ex.</p>
 <h3 id="raw-black-level">RAW Black Level</h3>

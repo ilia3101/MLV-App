@@ -2148,6 +2148,9 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    <pointsize>10</pointsize>
                   </font>
                  </property>
+                 <property name="toolTip">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p style=&quot;margin-top:5px; margin-bottom:5px;&quot;&gt;Make sure the correct &quot;Horizontal Pattern&quot; is detected, or Dual ISO processing will fail.&lt;/p&gt;&lt;p style=&quot;margin-top:5px; margin-bottom:5px;&quot;&gt;If you see incorrect frames appearing randomly, try selecting &quot;Frame‑by‑Frame Detection&quot;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
                  <property name="currentText">
                   <string>(Auto Detect)</string>
                  </property>
@@ -2201,7 +2204,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
                <item>
                 <widget class="QWidget" name="toolButtonDualIsoMatchExposures" native="true">
                  <property name="toolTip">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p style=&quot; margin-top:5px; margin-bottom:5px;&quot;&gt;Matching exposures by histogram requires you to select a scene/frame with a wide (ideally full) dynamic range for accurate results.&lt;/p&gt;&lt;p style=&quot; margin-top:5px; margin-bottom:5px;&quot;&gt;For best results, try using dark-frame subtraction with the same dual ISO and bit depth settings.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p style=&quot;margin-top:5px; margin-bottom:5px;&quot;&gt;The ISO-based correction method provides a good starting point during the initial file load if Dual ISO metadata are present and the clip contains either a dark scene with no highlights or a bright scene with no shadows. In such cases, the histogram-based method may fail or produce an incorrect calculation because there are no complete histograms to match properly.&lt;/p&gt;&lt;p style=&quot;margin-top:5px; margin-bottom:5px;&quot;&gt;The histogram-based correction method requires you to select an appropriate frame with a wide (ideally full) dynamic range to achieve accurate results.&lt;/p&gt;&lt;p style=&quot;margin-top:5px; margin-bottom:5px;&quot;&gt;These two methods are used only to calculate the &quot;Exposure Correction&quot; and &quot;Black Delta&quot; values. Once calculated during the initial file load, these values are saved and remain unchanged. You can reset and recalculate them at any time by clicking &quot;ISO&quot; or &quot;Histogram&quot;.&lt;/p&gt;&lt;p style=&quot;margin-top:5px; margin-bottom:5px;&quot;&gt;For best results, try using dark-frame subtraction with the same Dual ISO and bit depth settings, as this eliminates the need for &quot;Black Delta&quot; correction. With a properly matched dark frame, &quot;Black Delta&quot; should always be 0.&lt;/p&gt;&lt;p style=&quot;margin-top:5px; margin-bottom:5px;&quot;&gt;You can also try manually adjusting &quot;Exposure Correction&quot; by 0.05 (up or down) until the horizontal lines disappear. If that doesn't help, try adjusting &quot;Black Delta&quot;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
                  <layout class="QHBoxLayout" name="horizontalLayout_3">
                   <property name="spacing">
@@ -2409,6 +2412,9 @@ QScrollBar::add-page, QScrollBar::sub-page {
                </item>
                <item>
                 <widget class="QWidget" name="toolButtonDualIsoInterpolation" native="true">
+                 <property name="toolTip">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p style=&quot;margin-top:5px; margin-bottom:5px;&quot;&gt;For the best quality, use &quot;AMaZE&quot; or &quot;RCD&quot;.&lt;/p&gt;&lt;p style=&quot;margin-top:5px; margin-bottom:5px;&quot;&gt;For faster previews and playback, use &quot;Mean&quot;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
                  <layout class="QHBoxLayout" name="horizontalLayout_14">
                   <property name="spacing">
                    <number>0</number>
