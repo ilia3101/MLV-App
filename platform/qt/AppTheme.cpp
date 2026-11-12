@@ -6,7 +6,9 @@
 #include <QStyleOption>
 #include <QAbstractButton>
 #include <QStylePainter>
+#include <QPushButton>
 #include <QToolButton>
+#include <QComboBox>
 #include <QMenu>
 #include <QDebug>
 
@@ -25,17 +27,28 @@ void AppTheme::set( QMainWindow *mainWindow, Theme theme )
             height: 1px;
         }
 
-        #menuBar, #mainToolBar {
+        #menuBar,
+        #mainToolBar {
             border: none;
             border-bottom: 1px solid hsla(0, 0%, 0%, 15%);
         }
-        QListView, QTreeView, QTableView {
+
+        QListView,
+        QTreeView,
+        QTableView {
             border: 1px solid hsla(0, 0%, 0%, 15%);
         }
-        #listViewSession, #tableViewSession, #horizontalSliderPositionLayout, #scrollArea, QStatusBar, QFrame[frameShape="4"] {
+
+        #listViewSession,
+        #tableViewSession,
+        #horizontalSliderPositionLayout,
+        #scrollArea,
+        QStatusBar,
+        QFrame[frameShape="4"] {
             border: none;
             border-top: 1px solid hsla(0, 0%, 0%, 15%);
         }
+
         /*QListView::item {
             padding: 4px 0;
         }
@@ -49,19 +62,23 @@ void AppTheme::set( QMainWindow *mainWindow, Theme theme )
             padding: 2px;
             spacing: 2px;
         }
+
         QToolBar QToolButton {
             padding: 1px 0 0 1px;
         }
+
         QToolBar::separator {
             background: hsla(0, 0%, 0%, 15%);
             width: 1px;
             height: 1px;
             margin: 4px 1px;
         }
+
         #mainToolBarPlayback.QToolBar::separator {
             background: hsla(0, 0%, 0%, 0%);
             margin-right: 0;
         }
+
         QToolBar QToolButton#qt_toolbar_ext_button {
             margin: 0;
             qproperty-icon: url(:/fontawesome/fontawesome/svgs-full/solid/angles-right.svg);
@@ -73,13 +90,16 @@ void AppTheme::set( QMainWindow *mainWindow, Theme theme )
             titlebar-close-icon: url(:/fontawesome/fontawesome/svgs-full/solid/close.svg);
             titlebar-normal-icon: url(:/fontawesome/fontawesome/svgs-full/regular/window-restore.svg);
         }
+
         QDockWidget::title {
             background: none;
             text-align: left;
             padding: 0 6px;
             border: none;
         }
-        QDockWidget::close-button, QDockWidget::float-button {
+
+        QDockWidget::close-button,
+        QDockWidget::float-button {
             subcontrol-position: center right;
             subcontrol-origin: margin;
             width: 23px;
@@ -89,15 +109,19 @@ void AppTheme::set( QMainWindow *mainWindow, Theme theme )
             margin: 0px;
             position: absolute;
         }
+
         QDockWidget::close-button {
             right: 6px;
         }
+
         QDockWidget::float-button {
             right: 24px;
         }
 
         /* ==================================================== */
-        #graphicsView, #labelAudioTrack, #labelScope {
+        #graphicsView,
+        #labelAudioTrack,
+        #labelScope {
             background: hsl(0, 0%, 0%);
         }
 
@@ -109,11 +133,13 @@ void AppTheme::set( QMainWindow *mainWindow, Theme theme )
             border: 1px solid hsla(0, 0%, 0%, 15%);
             border-radius: 4px;
         }
+
         QGroupBox::title {
             subcontrol-origin: margin;
             subcontrol-position: top left;
             margin: 0;
         }
+
         #dockWidgetEdit QGroupBox {
             font-size: 11px;
             font-weight: bold;
@@ -123,29 +149,36 @@ void AppTheme::set( QMainWindow *mainWindow, Theme theme )
             border-right: none;
             border-radius: 0;
         }
+
         #dockWidgetEdit QGroupBox::title {
             subcontrol-origin: margin;
             subcontrol-position: top left;
             margin: 13px 0 0 5px;
         }
+
         #dockWidgetEdit QGroupBox::indicator {
             width: 12px;
             height: 12px;
             margin-right: -3px;
         }
+
         #dockWidgetEdit QGroupBox::indicator {
             image: none;
         }
+
         /*
         #dockWidgetEdit QGroupBox::indicator:unchecked {
             image: url(:/fontawesome/fontawesome/svgs-full/solid/chevron-right.svg);
         }
+
         #dockWidgetEdit QGroupBox::indicator:checked {
             image: url(:/fontawesome/fontawesome/svgs-full/solid/chevron-down.svg);
         }
+
         #dockWidgetEdit QGroupBox::indicator:unchecked:disabled {
             image: url(:/fontawesome/fontawesome/svgs-full/solid/chevron-right.svg);
         }
+
         #dockWidgetEdit QGroupBox::indicator:checked:disabled {
             image: url(:/fontawesome/fontawesome/svgs-full/solid/chevron-down.svg);
         }
@@ -156,20 +189,24 @@ void AppTheme::set( QMainWindow *mainWindow, Theme theme )
             height: 5px;
             border-radius: 2px;
         }
+
         QSlider::add-page:horizontal {
             background: qlineargradient(spread:pad, x0:0, y0:0, x2:0, y2:1, stop:0 hsla(0, 0%, 0%, 15%), stop:1 hsla(0, 0%, 100%, 9%));
-            border: 1px solid hsla(0, 0%, 0%, 24%);
+            border: 1px solid hsla(0, 0%, 15%, 24%);
             border-radius: 2px;
         }
+
         QSlider::sub-page:horizontal {
             background: palette(highlight);
             border: 1px solid hsl(210, 100%, 38%);
             border-radius: 2px;
         }
+
         QSlider::sub-page:horizontal:disabled {
             background: hsla(0, 0%, 0%, 15%);
             border-color: hsla(0, 0%, 0%, 24%);
         }
+
         QSlider::handle:horizontal {
             background: qlineargradient(spread:pad, x0:0, y0:0, x2:0, y2:1, stop:0 hsl(0, 0%, 100%), stop:1 hsl(0, 0%, 91%));
             border: 1px solid hsl(0, 0%, 62%);
@@ -177,16 +214,24 @@ void AppTheme::set( QMainWindow *mainWindow, Theme theme )
             margin: -4px 0;
             border-radius: 2px;
         }
+
         QSlider::handle:horizontal:disabled {
             background: hsl(0, 0%, 91%);
+            border-color: hsla(0, 0%, 62%, 76%);
         }
-        #horizontalSliderTemperature::sub-page:horizontal, #horizontalSliderTemperature::add-page:horizontal, #horizontalSliderTint::sub-page:horizontal, #horizontalSliderTint::add-page:horizontal {
+
+        #horizontalSliderTemperature::sub-page:horizontal,
+            #horizontalSliderTemperature::add-page:horizontal,
+            #horizontalSliderTint::sub-page:horizontal,
+            #horizontalSliderTint::add-page:horizontal {
             background: none;
             border: 1px solid hsla(0, 0%, 0%, 38%);
         }
+
         #horizontalSliderTemperature::groove:horizontal {
             background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 hsl(210, 100%, 50%), stop:1 hsl(30, 100%, 50%));
         }
+
         #horizontalSliderTint::groove:horizontal {
             background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 hsl(120, 100%, 50%), stop:1 hsl(300, 100%, 50%));
         }
@@ -197,34 +242,41 @@ void AppTheme::set( QMainWindow *mainWindow, Theme theme )
             border: none;
             border-radius: 5px;
         }
+
         /*QMenu {
             background: palette(window);
             padding: 5px 0;
             border: none;
             icon-size: 0;
         }
+
         QMenu::item {
             padding: 2px 32px 3px 26px;
         }
+
         QMenu::item:selected {
             background: palette(highlight);
             color: palette(highlighted-text);
         }
+
         QMenu::indicator {
             width: 14px;
             height: 14px;
             margin: 0 -24px 0 5px;
         }
+
         QMenu::indicator:checked {
             image: url(:/fontawesome/fontawesome/svgs-full/solid/check.svg);
             margin: 0 -24px 0 5px;
         }
+
         QMenu::right-arrow {
             image: url(:/fontawesome/fontawesome/svgs-full/solid/chevron-right.svg);
             width: 14px;
             height: 14px;
             margin-right: 10px;
         }*/
+
         QMenu::separator {
             background: hsla(0, 0%, 0%, 15%);
             height: 1px;
@@ -249,53 +301,63 @@ void AppTheme::set( QMainWindow *mainWindow, Theme theme )
         QScrollBar {
             border: none
         }
+
         QScrollBar:vertical {
             background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 hsla(0, 0%, 0%, 6%), stop:1 hsla(0, 0%, 0%, 0%));
             width: %1px;
             padding: 0 -5px;
             border-left: 1px solid hsla(0, 0%, 0%, 15%);
         }
+
         QScrollBar:horizontal {
             background: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 hsla(0, 0%, 0%, 6%), stop:1 hsla(0, 0%, 0%, 0%));
             height: %1px;
             border-top: 1px solid hsla(0, 0%, 0%, 15%);
         }
+
         QScrollBar::handle {
             background: hsla(0, 0%, 0%, 25%);
             margin: 3px;
             border: none;
             border-radius: %2px;
         }
+
         QScrollBar::handle:vertical {
             min-height: 20px;
             margin: 3px 8px;
         }
+
         QScrollBar::handle:horizontal {
             min-width: 20px;
         }
+
         QScrollBar::handle:hover {
             background: hsla(0, 0%, 0%, 50%);
             border: none;
         }
-        QScrollBar::add-line, QScrollBar::sub-line {
+
+        QScrollBar::add-line,
+        QScrollBar::sub-line {
             background: none;
             width: 0;
             height: 0;
             border: none;
         }
-        QScrollBar::add-page, QScrollBar::sub-page {
+
+        QScrollBar::add-page,
+        QScrollBar::sub-page {
             background: none;
         }
     )").arg( getScrollBarExtent() ).arg( m_scrollBarHandleSize / 2 );
 
-    QPalette palette;
+    const int textContrast = 255 * 0.75;
 
     QColor window = QColor::fromHsl(0, 0, 232);
     QColor base = window;
-    QColor alternateBase = QColor::fromHsl(0, 0, 0, 16);
-    QColor text = QColor::fromHsl(0, 0, 32);
+    QColor alternateBase = QColor::fromHsl(0, 0, std::max(base.lightness() - 12, 0));
+    QColor text = QColor::fromHsl(0, 0, std::max(window.lightness() - textContrast, 0));
     QColor highlight = QColor::fromHsl(210, 255, 160);
-    QColor disabled = QColor::fromHsl(0, 0, 128, 192);
+    QColor disabled = QColor::fromHsl(0, 0, text.lightness(), 96);
 
     if( m_theme > Light )
     {
@@ -305,98 +367,130 @@ void AppTheme::set( QMainWindow *mainWindow, Theme theme )
         {
             case Mid:
                 window = QColor::fromHsl(0, 0, 64);
-                text = QColor::fromHsl(0, 0, 255);
-                disabled = QColor::fromHsl(0, 0, 160, 192);
                 break;
             case Dark:
                 window = QColor::fromHsl(0, 0, 48);
-                text = QColor::fromHsl(0, 0, 248);
-                disabled = QColor::fromHsl(0, 0, 144, 192);
                 borderColor = "hsla(0, 0%, 0%, 50%)";
                 break;
             case Darker:
                 window = QColor::fromHsl(0, 0, 32);
-                text = QColor::fromHsl(0, 0, 240);
-                disabled = QColor::fromHsl(0, 0, 128, 192);
                 borderColor = "hsla(0, 0%, 0%, 76%)";
                 break;
         }
 
+        text = QColor::fromHsl(0, 0, std::min(window.lightness() + textContrast, 255));
+        disabled = QColor::fromHsl(0, 0, text.lightness(), 96);
+
         base = window;
-        alternateBase = QColor::fromHsl(0, 0, 255, 16);
+        alternateBase = QColor::fromHsl(0, 0, std::min(base.lightness() + 12, 255));
         highlight = QColor::fromHsl(210, 255, 144, 255-32);
 
         styleSheet += QString(R"(
             QMainWindow::separator {
                 background: %1;
             }
+
             QMenu::separator {
                 background: hsla(0, 0%, 100%, 15%);
             }
-            #menuBar, #mainToolBar {
+
+            #menuBar,
+            #mainToolBar {
                 border-bottom-color: %1;
             }
-            QListView, QTreeView, QTableView {
+
+            QListView,
+            QTreeView,
+            QTableView {
                 border-color: %1;
             }
-            #listViewSession, #tableViewSession, #horizontalSliderPositionLayout, #scrollArea, QStatusBar {
+
+            #listViewSession,
+            #tableViewSession,
+            #horizontalSliderPositionLayout,
+            #scrollArea,
+            QStatusBar {
                 border-top-color: %1;
             }
+
             QFrame[frameShape="4"]  {
                 border-top-color: hsla(0, 0%, 100%, 15%);
             }
+
             QToolBar::separator {
                 background: hsla(0, 0%, 100%, 15%);
             }
+
             QGroupBox {
                 background: hsla(0, 0%, 100%, 6%);
                 border-color: %1;
             }
+
             /*QSlider::groove:horizontal {
                 height: 7px;
             }*/
+
             QSlider::add-page:horizontal {
                 background: qlineargradient(spread:pad, x0:0, y0:0, x2:0, y2:1, stop:0 hsla(0, 0%, 0%, 38%), stop:1 hsla(0, 0%, 0%, 15%));
                 border-color: hsla(0, 0%, 0%, 50%);
             }
+
             QSlider::sub-page:horizontal {
                 border-color: hsl(210, 100%, 15%);
             }
+
             QSlider::sub-page:horizontal:disabled {
                 background: hsla(0, 0%, 100%, 24%);
                 border-color: hsla(0, 0%, 0%, 62%);
             }
+
             QSlider::handle:horizontal {
                 background: qlineargradient(spread:pad, x0:0, y0:0, x2:0, y2:1, stop:0 hsl(0, 0%, 100%), stop:1 hsl(0, 0%, 76%));
                 border-color: hsla(0, 0%, 0%, 76%);
                 /*margin: -3px 0;*/
             }
+
             QSlider::handle:horizontal:disabled {
                 background: hsl(0, 0%, 62%);
                 border-color: hsla(0, 0%, 0%, 62%);
             }
-            #horizontalSliderTemperature::sub-page:horizontal, #horizontalSliderTemperature::add-page:horizontal, #horizontalSliderTint::sub-page:horizontal, #horizontalSliderTint::add-page:horizontal {
+
+            #horizontalSliderTemperature::sub-page:horizontal,
+            #horizontalSliderTemperature::add-page:horizontal,
+            #horizontalSliderTint::sub-page:horizontal,
+            #horizontalSliderTint::add-page:horizontal {
                 border-color: hsla(0, 0%, 0%, 76%);
             }
+
             QScrollBar:vertical {
                 background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 hsla(0, 0%, 0%, 9%), stop:1 hsla(0, 0%, 0%, 0%));
                 border-left-color: %1;
             }
+
             QScrollBar:horizontal {
                 background: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 hsla(0, 0%, 0%, 9%), stop:1 hsla(0, 0%, 0%, 0%));
                 border-top-color: %1;
             }
+
             QScrollBar::handle {
                 background: hsla(0, 0%, 100%, 25%);
             }
+
             QScrollBar::handle:hover {
                 background: hsla(0, 0%, 100%, 50%);
             }
         )").arg( borderColor );
     }
 
-    double lightness = 0.5 - (0.5 * text.lightness() / 255);
-    QColor link = QColor::fromHsl( highlight.hslHue(), highlight.hslSaturation(), (1.0 - lightness) * highlight.lightness() + lightness * text.lightness() );
+    const qreal alpha = 0.5 - ( 0.5 * text.lightness() / 255 );
+
+    QColor link = QColor::fromHsl(
+        highlight.hslHue(),
+        highlight.hslSaturation(),
+        qBound( 0.0, ( 1.0 - alpha ) * highlight.lightness() + alpha * text.lightness(), 255.0 )
+    );
+
+    QPalette palette;
 
     palette.setColor(QPalette::WindowText, text);
     palette.setColor(QPalette::Disabled, QPalette::WindowText, disabled);
@@ -488,28 +582,28 @@ void IconRecolorStyle::drawPrimitive( PrimitiveElement element, const QStyleOpti
     QColor enabled = m_state & State_Selected ? palette.color( QPalette::HighlightedText ) : palette.color( QPalette::Text );
     QColor color = option->state & State_Enabled ? enabled : palette.color( QPalette::Disabled, QPalette::Text );
 
-    QRect r = option->rect;
+    QRectF r = option->rect;
 
     if( element == PE_IndicatorCheckBox )
     {
         if( !(option->state & State_On) ) return;
 
-        int size = r.height();
+        const qreal size = r.height();
 
         QIcon icon( ":/fontawesome/fontawesome/svgs-full/solid/check.svg" );
-        QRect iconRect( r.center().x() - size / 2 + 1, r.center().y() - size / 2 + 1, size, size );
+        QRectF iconRect( r.center().x() - size / 2.0, r.center().y() - size / 2.0, size, size );
 
-        QPixmap tinted = AppTheme::tintPixmap( icon.pixmap( iconRect.size() ), color, painter->device()->devicePixelRatio() );
+        QPixmap tinted = AppTheme::tintPixmap( icon.pixmap( iconRect.size().toSize() ), color, painter->device()->devicePixelRatio() );
         painter->drawPixmap( iconRect.topLeft(), tinted );
     }
     else if( element == PE_IndicatorArrowRight )
     {
-        int size = r.height() + 2;
+        const qreal size = r.height() + 2;
 
         QIcon icon( ":/fontawesome/fontawesome/svgs-full/solid/chevron-right.svg" );
-        QRect iconRect( r.center().x() - size / 2 - 3, r.center().y() - size / 2 + 1, size, size );
+        QRectF iconRect( r.center().x() - size / 2.0 - 4, r.center().y() - size / 2.0, size, size );
 
-        QPixmap tinted = AppTheme::tintPixmap( icon.pixmap( iconRect.size() ), color, painter->device()->devicePixelRatio() );
+        QPixmap tinted = AppTheme::tintPixmap( icon.pixmap( iconRect.size().toSize() ), color, painter->device()->devicePixelRatio() );
         painter->drawPixmap( iconRect.topLeft(), tinted );
     }
 }
@@ -541,9 +635,9 @@ void IconRecolorStyle::drawControl( ControlElement element, const QStyleOption *
     QPalette palette = QApplication::palette();
 
     QColor enabled = palette.color( QPalette::Text );
-    enabled.setAlpha( enabled.alpha() - 32 );
+    enabled.setAlpha( std::max( enabled.alpha() - 32, 0 ) );
     QColor disabled = enabled;
-    disabled.setAlpha( disabled.alpha() - 128 );
+    disabled.setAlpha( std::max( disabled.alpha() - 128, 0 ) );
 
     QColor color = mode == QIcon::Disabled ? disabled : enabled;
 
@@ -567,18 +661,18 @@ void IconRecolorStyle::drawControl( ControlElement element, const QStyleOption *
                     return;
                 }
 
-                int iconSize = btn->iconSize().width();
-                int spacing = 4;
+                const qreal iconSize = btn->iconSize().width();
+                const qreal spacing = 4.0;
 
-                QFontMetrics fm( painter->font() );
-                int textWidth = fm.horizontalAdvance( btn->text() );
-                int totalWidth = iconSize + spacing + textWidth;
-                int startX = btn->rect().center().x() - totalWidth / 2;
+                QFontMetricsF fm( painter->font() );
+                const qreal textWidth = fm.horizontalAdvance( btn->text() );
+                const qreal totalWidth = iconSize + spacing + textWidth;
+                const qreal startX = btn->rect().center().x() - totalWidth / 2.0;
 
-                QRect iconRect( startX, btn->rect().center().y() - iconSize / 2 + 1, iconSize, iconSize );
+                QRectF iconRect( startX, btn->rect().center().y() - iconSize / 2.0 + 1, iconSize, iconSize );
                 painter->drawPixmap( iconRect.topLeft(), tinted );
 
-                QRect textRect( startX + iconSize + spacing, btn->rect().top(), textWidth, btn->rect().height() );
+                QRectF textRect( startX + iconSize + spacing, btn->rect().top(), textWidth, btn->rect().height() );
                 painter->drawText( textRect, Qt::AlignVCenter | Qt::AlignLeft, btn->text() );
 
                 return;
@@ -603,8 +697,8 @@ void IconRecolorStyle::drawControl( ControlElement element, const QStyleOption *
 
         QProxyStyle::drawControl( element, &opt, painter, widget );
 
-        int iconSize = pixelMetric( PM_SmallIconSize, option, widget );
-        int spacing = 7;
+        const qreal iconSize = pixelMetric( PM_SmallIconSize, option, widget );
+        const qreal spacing = 7.0;
 
         QColor iconEnabled = mi->state & State_Selected ? palette.color( QPalette::HighlightedText ) : enabled;
         QColor iconColor = mode == QIcon::Disabled ? disabled : iconEnabled;
@@ -619,15 +713,15 @@ void IconRecolorStyle::drawControl( ControlElement element, const QStyleOption *
             QPixmap pixmap = mi->icon.pixmap( iconSize, iconSize, mode, state );
             QPixmap tinted = AppTheme::tintPixmap( pixmap, iconColor, painter->device()->devicePixelRatio() );
 
-            QRect iconRect( mi->rect.left() + spacing, mi->rect.center().y() - iconSize / 2 + 1, iconSize, iconSize );
-            painter->drawPixmap( iconRect, tinted );
+            QRectF iconRect( mi->rect.left() + spacing, mi->rect.center().y() - iconSize / 2.0 + 1, iconSize, iconSize );
+            painter->drawPixmap( iconRect.topLeft(), tinted );
         }
 
-        QRect textRect = mi->rect.adjusted( spacing, 0, 0, 0 );
+        QRectF textRect = mi->rect.adjusted( spacing, 0, 0, 0 );
 
         if( !mi->icon.isNull() || widget->inherits( "QMenu" ) )
         {
-            textRect = mi->rect.adjusted( iconSize + spacing * 2 - 2, 0, 0, 0 );
+            textRect = mi->rect.adjusted( iconSize + spacing * 2.0 - 2, 0, 0, 0 );
         }
 
         painter->setPen( textColor );
@@ -677,11 +771,11 @@ void AccordionGroupBox::paintEvent( QPaintEvent* )
 
 void AccordionGroupBox::drawIndicator( QPainter *painter, const QStyleOptionGroupBox &opt ) const
 {
-    QRect textRect = style()->subControlRect( QStyle::CC_GroupBox, &opt, QStyle::SC_GroupBoxLabel, this );
+    QRectF textRect = style()->subControlRect( QStyle::CC_GroupBox, &opt, QStyle::SC_GroupBoxLabel, this );
 
-    int iconSize = std::max( textRect.height() * 0.75, 11.0 );
-    int iconTop = textRect.top() + ( textRect.height() - iconSize ) / 2;
-    int margin = 3;
+    const qreal iconSize = std::max( textRect.height() - 4.0, 12.0 );
+    const qreal iconTop = textRect.center().y() - iconSize / 2.0;
+    const qreal margin = 3.0;
 
     QString svgPath = ":/fontawesome/fontawesome/svgs-full/solid/chevron-";
     svgPath += isChecked() ? "down.svg" : "right.svg";
@@ -691,9 +785,9 @@ void AccordionGroupBox::drawIndicator( QPainter *painter, const QStyleOptionGrou
     QColor color = palette().color( QPalette::Text );
     color.setAlpha( color.alpha() - 96 ) ;
 
-    QRect iconRect( textRect.left() - iconSize - margin, iconTop, iconSize, iconSize );
+    QRectF iconRect( textRect.left() - iconSize - margin, iconTop, iconSize, iconSize );
 
-    QPixmap tinted = AppTheme::tintPixmap( icon.pixmap( iconRect.size() ), color, painter->device()->devicePixelRatio() );
+    QPixmap tinted = AppTheme::tintPixmap( icon.pixmap( iconRect.size().toSize() ), color, painter->device()->devicePixelRatio() );
     painter->drawPixmap( iconRect.topLeft(), tinted );
 }
 
@@ -719,32 +813,63 @@ bool CustomEventFilter::eventFilter( QObject *obj, QEvent *event )
 
     if( event->type() == QEvent::Paint )
     {
-        QToolButton *button = qobject_cast<QToolButton*>( obj );
+        QPushButton *pushButton = qobject_cast<QPushButton*>( obj );
+        QToolButton *toolButton = qobject_cast<QToolButton*>( obj );
+        QComboBox *comboBox = qobject_cast<QComboBox*>( obj );
 
-        if( button && button->isCheckable() )
+        QWidget *widget = pushButton ? static_cast<QWidget*>( pushButton )
+                        : toolButton ? static_cast<QWidget*>( toolButton )
+                                     : static_cast<QWidget*>( comboBox );
+
+        if( widget )
         {
             QPalette palette = QPalette();
+            QColor windowColor = QApplication::palette().color( QPalette::Window );
 
-            if( button->isChecked() )
+            if( AppTheme::currentTheme() > AppTheme::Light )
             {
-                QColor buttonColor = QApplication::palette().color( QPalette::Button );
+                palette.setColor( QPalette::Window, QColor::fromHsl( 0, 0, std::max( windowColor.lightness() - 32, 0 ), 128 ) );
+            }
+            else
+            {
+                palette.setColor( QPalette::Window, QColor::fromHsl( 0, 0, 0, 56 ) );
+            }
 
+            if( toolButton && toolButton->isCheckable() && toolButton->isChecked() )
+            {
                 if( AppTheme::currentTheme() > AppTheme::Light )
                 {
-                    // if( button->isEnabled() )
+                    QColor buttonColor = QApplication::palette().color( QPalette::Button );
+
+                    // if( toolButton->isEnabled() )
                     // {
                     //     QColor highlightColor = QApplication::palette().color( QPalette::Highlight );
-                    //     palette.setColor( QPalette::Button, QColor::fromHsl( highlightColor.hslHue(), highlightColor.hslSaturation(), ( buttonColor.lightness() + highlightColor.lightness() - 32 ) / 2 ) );
+
+                    //     palette.setColor( QPalette::Button, QColor::fromHsl(
+                    //         highlightColor.hslHue(),
+                    //         highlightColor.hslSaturation(),
+                    //         ( buttonColor.lightness() + highlightColor.lightness() - 32 ) / 2
+                    //     ));
                     // }
                     // else
                     // {
-                        palette.setColor( QPalette::Button, QColor::fromHsl( buttonColor.hslHue(), buttonColor.hslSaturation(), buttonColor.lightness() + 48 ) );
+                        palette.setColor( QPalette::Window, QColor::fromHsl( 0, 0, std::max( windowColor.lightness() - 32, 0 ), 160 ) );
+
+                        palette.setColor( QPalette::Button, QColor::fromHsl(
+                            buttonColor.hslHue(),
+                            buttonColor.hslSaturation(),
+                            std::min( buttonColor.lightness() + 48, 255 )
+                        ));
                     // }
+                }
+                else
+                {
+                    palette.setColor( QPalette::Window, QColor::fromHsl( 0, 0, 0, 40 ) );
                 }
 
             }
 
-            button->setPalette( palette );
+            widget->setPalette( palette );
         }
     }
 

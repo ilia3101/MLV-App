@@ -8,9 +8,6 @@
   <property name="styleSheet">
    <string notr="true">QTableWidget {
 	border: none;
-}
-QTableWidget::item {
-	padding: 0 5px;
 }</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
