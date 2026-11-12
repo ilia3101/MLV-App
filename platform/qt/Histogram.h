@@ -13,15 +13,9 @@
 
 class Histogram
 {
-
 public:
-    Histogram();
-    ~Histogram();
-    QImage getHistogramFromImg( QImage *img );
-    QImage getHistogramFromRaw( uint8_t *raw, uint16_t width, uint16_t height , bool under, bool over );
-
-private:
-    QImage *m_pHistogram;
+    //QImage getHistogramFromImg( QImage *img );
+    static QImage getHistogramFromRaw( const uint8_t *raw, uint16_t width, uint16_t height, uint16_t labelWidth, uint16_t labelHeight, bool under, bool over );
 };
 
 #endif // HISTOGRAM_H

@@ -10,10 +10,11 @@
 
 #include <QLabel>
 #include <QResizeEvent>
-#include <Qt>
+#include <QTimer>
 #include "Histogram.h"
 #include "WaveFormMonitor.h"
 #include "VectorScope.h"
+#include "RenderFrameThread.h"
 
 class ScopesLabel : public QLabel
 {
@@ -22,23 +23,22 @@ public:
     explicit ScopesLabel(QWidget *parent = nullptr);
     ~ScopesLabel();
     enum ScopeType{ ScopeHistogram, ScopeWaveForm, ScopeRgbParade, ScopeVectorScope, None };
-    void setScope(uint8_t *pPicture, uint16_t width, uint16_t height, bool under, bool over, ScopeType type );
+    void setScope( RenderFrameThread *pRenderThread, uint16_t width, uint16_t height, ScopeType type );
+    void setUnderOver( uint8_t underOver );
 
 private:
     QImage m_imageScope;
-    uint16_t m_widthScope;
-    uint16_t m_heightScope;
-    QImage *m_pImageLabel;
-    uint16_t m_widthLabel;
-    Histogram *m_pHistogram;
-    WaveFormMonitor *m_pWaveFormMonitor;
-    VectorScope *m_pVectorScope;
-    ScopeType m_type;
+    RenderFrameThread *m_pRenderThread = nullptr;
+    uint16_t m_width;
+    uint16_t m_height;
+    uint8_t m_underOver = 0;
+    ScopeType m_type = ScopeHistogram;
+    QTimer *m_paintTimer;
 
 protected:
-    void resizeEvent(QResizeEvent* event);
+    void resizeEvent(QResizeEvent *event);
     void paintScope( void );
-    void drawLines( QPixmap *pic );
+    void drawLines( QPixmap &pic );
 };
 
 #endif // SCOPESLABEL_H

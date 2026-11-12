@@ -23,6 +23,7 @@ public:
     enum MapType{FPM, BPM};
     explicit PixelMapListDialog(QWidget *parent = 0, MapType mapType = FPM);
     ~PixelMapListDialog();
+    void update();
     void showCurrentMap( mlvObject_t *pMlvObject );
 
 private:

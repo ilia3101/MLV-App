@@ -54,8 +54,8 @@ void StatusDialog::exportStart(int numberOfJobs, uint32_t totalFrames)
     ui->pushButtonPause->setText( tr( "Pause" ) );
     ui->pushButtonPause->hide();
 
-    this->layout()->activate();
-    this->adjustSize();
+    layout()->activate();
+    adjustSize();
 }
 
 //Set job/clip frames

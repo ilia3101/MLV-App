@@ -14,13 +14,7 @@
 class WaveFormMonitor
 {
 public:
-    WaveFormMonitor( uint16_t width );
-    ~WaveFormMonitor();
-    QImage getWaveFormMonitorFromRaw( uint8_t *m_pRawImage, uint16_t width, uint16_t height );
-    QImage getParadeFromRaw( uint8_t *m_pRawImage, uint16_t width, uint16_t height );
-
-private:
-    QImage *m_pWaveForm;
+    static QImage getWaveFormMonitorFromRaw( const uint8_t *m_pRawImage, uint16_t width, uint16_t height, uint16_t labelWidth, uint16_t labelHeight, bool parade = false );
 };
 
 #endif // WAVEFORMMONITOR_H

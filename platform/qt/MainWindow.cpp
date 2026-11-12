@@ -7,10 +7,10 @@
 
 #include "MainWindow.h"
 #include "ui_MainWindow.h"
-#include "math.h"
 #include <memory>
 #include <atomic>
 
+#include <QtGui>
 #include <QMessageBox>
 #include <QThread>
 #include <QTime>
@@ -38,29 +38,23 @@
 #include <omp.h>
 #endif
 
-#ifdef Q_OS_MACX
+#ifdef Q_OS_MACOS
 #include "AvfLibWrapper.h"
-#include "MainWindow.h"
 #endif
 
 #include "SystemMemory.h"
+#include "AppTheme.h"
 #include "ExportSettingsDialog.h"
-#include "EditSliderValueDialog.h"
-#include "DarkStyle.h"
-#include "DarkStyleModern.h"
 #include "Updater/updaterUI/cupdaterdialog.h"
 #include "Updater/Updater.h"
 #include "FcpxmlAssistantDialog.h"
 #include "FcpxmlSelectDialog.h"
-#include "UserManualDialog.h"
 #include "StretchFactors.h"
 #include "SingleFrameExportDialog.h"
 #include "FpmInstaller.h"
-#include "ScopesLabel.h"
 #include "avir/avirthreadpool.h"
 #include "MoveToTrash.h"
 #include "OverwriteListDialog.h"
-#include "PixelMapListDialog.h"
 #include "TranscodeDialog.h"
 #include "BadPixelFileHandler.h"
 #include "FocusPixelMapManager.h"
@@ -111,7 +105,11 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     //Enable color management for macOS
     auto format = QSurfaceFormat::defaultFormat();
     format.setSwapInterval(0);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    format.setColorSpace( QColorSpace::SRgb );
+#else
     format.setColorSpace( QSurfaceFormat::sRGBColorSpace );
+#endif
     QSurfaceFormat::setDefaultFormat(format);
 
     ui->setupUi(this);
@@ -139,9 +137,8 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
 
     //Set Render Thread
     m_pRenderThread = new RenderFrameThread();
+    connect( m_pRenderThread, &RenderFrameThread::frameReady, this, &MainWindow::drawFrameReady );
     m_pRenderThread->start();
-    connect( m_pRenderThread, SIGNAL(frameReady()), this, SLOT(drawFrameReady()) );
-    while( !m_pRenderThread->isRunning() ) {}
 
     //Init scripting engine
     m_pScripting = new Scripting( this );
@@ -166,7 +163,7 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     m_timerCacheId = startTimer( 1000 ); //1fps
 
     //Connect Export Handler
-    connect( this, SIGNAL(exportReady()), this, SLOT(exportHandler()) );
+    connect( this, &MainWindow::exportReady, this, &MainWindow::exportHandler );
 
     m_pExportedFramesArray = NULL;
 
@@ -174,6 +171,7 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     if( argc > 1 )
     {
         QString fileName = QString( "%1" ).arg( argv[1] );
+
         //Exit if not an MLV file or aborted
         if( QFile(fileName).exists() && fileName.endsWith( ".mlv", Qt::CaseInsensitive ) )
         {
@@ -206,21 +204,12 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     }
 
     //Update check, if autocheck enabled, once a day
-    QSettings set( QSettings::UserScope, "magiclantern.MLVApp", "MLVApp" );
+    QSettings set( QSettings::UserScope, "magiclantern", "MLVApp" );
     QString date = set.value( "lastUpdateCheck", QString( "" ) ).toString();
     if( ui->actionAutoCheckForUpdates->isChecked() && date != QDate::currentDate().toString() )
     {
-        QTimer::singleShot( 1000, this, SLOT( updateCheck() ) );
+        QTimer::singleShot( 1000, this, &MainWindow::updateCheck );
     }
-
-    //Temp invisible
-    ui->label_GammaText->setVisible( false );
-    ui->label_GammaVal->setVisible( false );
-    ui->horizontalSliderGamma->setVisible( false );
-    //ui->label_Gamut->setVisible( false );
-    //ui->comboBoxProcessingGamut->setVisible( false );
-    ui->label_TonemappingFunction->setVisible( false );
-    ui->comboBoxTonemapFct->setVisible( false );
 }
 
 //Destructor
@@ -231,13 +220,8 @@ MainWindow::~MainWindow()
 
     //End Render Thread
     m_frameStillDrawing = false;
-    disconnect( m_pRenderThread, SIGNAL(frameReady()), this, SLOT(drawFrameReady()) );
-    m_pRenderThread->stop();
-    while( !m_pRenderThread->isFinished() ) {}
-    delete m_pRenderThread;
 
-    //Save settings
-    writeSettings();
+    delete m_pRenderThread;
     delete m_pScripting;
     delete m_pReceiptClipboard;
     delete m_pCopyMask;
@@ -246,6 +230,9 @@ MainWindow::~MainWindow()
     delete m_pGradientElement;
     delete m_pStatusDialog;
     delete m_pInfoDialog;
+    delete m_pFpmListDialog;
+    delete m_pBpmListDialog;
+    delete m_pHelpDialog;
     delete ui;
 }
 
@@ -263,13 +250,13 @@ void MainWindow::timerFrameEvent( void )
             return;
         }
         //else fast playback priority -> frame n+1 will be calculated as soon as frame n is ready
-        connect( this, SIGNAL(frameReady()), this, SLOT(timerFrameEvent()) );
+        connect( this, &MainWindow::frameReady, this, &MainWindow::timerFrameEvent );
         return;
     }
     else
     {
         //disconnect the link from above again
-        disconnect( this, SIGNAL(frameReady()), this, SLOT(timerFrameEvent()) );
+        disconnect( this, &MainWindow::frameReady, this, &MainWindow::timerFrameEvent );
     }
     if( !m_exportQueue.empty() ) return;
 
@@ -289,16 +276,33 @@ void MainWindow::timerFrameEvent( void )
         setMlvCpuCores( m_pMlvObject, cores );
     }
 
+    static int played;
+    static double fps;
+
     //Trigger Drawing
-    if( m_frameChanged && !m_dontDraw && !m_inOpeningProcess )
+    if( (m_rawProcessingChanged || m_frameChanged) && !m_dontDraw && !m_inOpeningProcess )
     {
         m_frameChanged = false; //first do this, if there are changes between rendering
+
+        if( m_rawProcessingChanged )
+        {
+            m_rawProcessingChanged = false;
+
+            llrpResetFpmStatus(m_pMlvObject);
+            llrpResetBpmStatus(m_pMlvObject);
+            resetMlvCache( m_pMlvObject );
+        }
+
         drawFrame();
         //Allow interaction while playback
         //qApp->processEvents();
 
         //fps measurement
-        if( timeDiff != 0 ) m_pFpsStatus->setText( tr( "Playback: %1 fps" ).arg( (int)( 1000 / lastTime.msecsTo( nowTime ) ) ) );
+        int td = lastTime.msecsTo( nowTime );
+        fps = played++ < 2 ? 1000.0 / td : fps + 1000.0 / td;
+
+        if( ui->actionPlay->isChecked() && played > 1 ) m_pFpsStatus->setText( tr( "Playback: %1 fps" ).arg( fps / ( played - 1 ), 0, 'f', 2 ) );
+
         lastTime = nowTime;
 
         //When playback is off, the timeDiff is set to 0 for DropFrameMode
@@ -306,6 +310,7 @@ void MainWindow::timerFrameEvent( void )
     }
     else
     {
+        played = 0;
         m_pFpsStatus->setText( tr( "Playback: 0 fps" ) );
         lastTime = QTime::currentTime(); //do that for calculation of timeDiff for DropFrameMode;
 
@@ -341,35 +346,6 @@ void MainWindow::timerEvent(QTimerEvent *t)
             if( m_countTimeDown >= 0 ) m_countTimeDown--;
         }
     }
-}
-
-//Window resized -> scale picture
-void MainWindow::resizeEvent(QResizeEvent *event)
-{
-    //If opening files just quit here
-    if( m_inOpeningProcess )
-    {
-        event->accept();
-        return;
-    }
-
-    //Stop playback if active
-    ui->actionPlay->setChecked( false );
-    m_pAudioPlayback->stop(); //Stop audio explicitely
-
-    if( m_fileLoaded )
-    {
-        drawFrame();
-        if( ui->checkBoxGradientEnable->isChecked() && ui->groupBoxLinearGradient->isChecked() )
-        {
-            while( m_frameStillDrawing ) qApp->processEvents();
-            m_pGradientElement->redrawGradientElement( m_pScene->width(),
-                                                       m_pScene->height(),
-                                                       getMlvWidth( m_pMlvObject ),
-                                                       getMlvHeight( m_pMlvObject ) );
-        }
-    }
-    event->accept();
 }
 
 // Intercept FileOpen events
@@ -549,14 +525,15 @@ void MainWindow::closeEvent(QCloseEvent *event)
         }
     }
 
-    qApp->quit();
-    event->accept();
+    //Save settings
+    writeSettings();
+
+    QMainWindow::closeEvent( event );
 }
 
 //Disable WBPicker if picture is left and if mouse is clicked somewhere else
 bool MainWindow::eventFilter(QObject *watched, QEvent *event)
 {
-    Q_UNUSED( watched );
     if( event->type() == QEvent::MouseMove )
     {
         static bool graphicsViewReached = false;
@@ -573,6 +550,7 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
     {
         if( !ui->graphicsView->underMouse()
          && !ui->toolButtonWb->underMouse()
+         && !ui->toolButtonWbMode->underMouse()
          && ui->actionWhiteBalancePicker->isChecked() )
         {
             ui->toolButtonWb->setChecked( false );
@@ -585,16 +563,60 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
             ui->toolButtonBadPixelsSearchMethodEdit->setChecked( false );
         }
     }
-    else if( event->type() == QEvent::Resize
-          && ( watched == ui->dockWidgetEdit || watched == ui->dockWidgetSession ) )
+    else if( event->type() == QEvent::Resize )
     {
-        /*QResizeEvent *resizeEvent = static_cast<QResizeEvent*>(event);
-        qDebug("Dock Resized (New Size) - Width: %d Height: %d",
-               resizeEvent->size().width(),
-               resizeEvent->size().height());*/
-        //setPreviewMode();
-        m_frameChanged = true;
+        if( watched == ui->graphicsView && ui->actionZoomFit->isChecked() )
+        {
+            m_zoomModeChanged = true;
+            drawPicture();
+        }
+
+        if( watched == ui->listViewSession )
+        {
+            listViewUpdateGridSize();
+        }
     }
+    else if( event->type() == QEvent::LayoutRequest )
+    {
+        if( watched == ui->dockWidgetSession )
+        {
+            Qt::DockWidgetArea area = dockWidgetArea( ui->dockWidgetSession );
+
+            // Detect docking and change preview mode if needed
+            if( area == Qt::LeftDockWidgetArea )
+            {
+                switch( m_previewMode )
+                {
+                    case 3:
+                        m_previewMode = 2;
+                        ui->actionPreviewPicture->setChecked( true );
+                        setPreviewMode();
+                        break;
+                    case 4:
+                        m_previewMode = 1;
+                        ui->actionPreviewList->setChecked( true );
+                        setPreviewMode();
+                }
+            }
+            else if( area == Qt::BottomDockWidgetArea )
+            {
+                switch( m_previewMode )
+                {
+                    case 0:
+                    case 1:
+                        m_previewMode = 4;
+                        ui->actionPreviewTableModeBottom->setChecked( true );
+                        setPreviewMode();
+                        break;
+                    case 2:
+                        m_previewMode = 3;
+                        ui->actionPreviewPictureBottom->setChecked( true );
+                        setPreviewMode();
+                }
+            }
+        }
+    }
+
     return QWidget::eventFilter(watched, event);
 }
 
@@ -615,11 +637,9 @@ void MainWindow::drawFrame( void )
         //Draw TimeCode
         if( !m_tcModeDuration )
         {
-            QPixmap pic = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( m_newPosDropMode, getFramerate() ).scaled( 200 * devicePixelRatio(),
-                                                                                              30 * devicePixelRatio(),
-                                                                                              Qt::IgnoreAspectRatio, Qt::SmoothTransformation) );
+            QPixmap pic = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( m_newPosDropMode, getFramerate() ) );
 
-            pic.setDevicePixelRatio( devicePixelRatio() );
+            pic.setDevicePixelRatio( devicePixelRatioF() );
             m_pTcLabel->setPixmap( pic );
         }
     }
@@ -631,10 +651,8 @@ void MainWindow::drawFrame( void )
         //Draw TimeCode
         if( !m_tcModeDuration )
         {
-            QPixmap pic = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( ui->horizontalSliderPosition->value(), getFramerate() ).scaled( 200 * devicePixelRatio(),
-                                                                                              30 * devicePixelRatio(),
-                                                                                              Qt::IgnoreAspectRatio, Qt::SmoothTransformation) );
-            pic.setDevicePixelRatio( devicePixelRatio() );
+            QPixmap pic = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( ui->horizontalSliderPosition->value(), getFramerate() ) );
+            pic.setDevicePixelRatio( devicePixelRatioF() );
             m_pTcLabel->setPixmap( pic );
         }
     }
@@ -718,9 +736,7 @@ int MainWindow::openMlvForPreview(QString fileName)
     m_dontDraw = true;
 
     //Waiting for thread being idle for not freeing used memory
-    while( !m_pRenderThread->isIdle() ) {}
-    //Waiting for frame ready because it works with m_pMlvObject
-    while( m_frameStillDrawing ) {qApp->processEvents();}
+    m_pRenderThread->waitUntilIdle();
 
     //Reset audio playback engine
     //m_pAudioPlayback->resetAudioEngine();
@@ -742,8 +758,10 @@ int MainWindow::openMlvForPreview(QString fileName)
     setMlvRawCacheLimitMegaBytes( m_pMlvObject, m_cacheSizeMB );
     /* Tell it how many cores we have so it can be optimal */
     setMlvCpuCores( m_pMlvObject, QThread::idealThreadCount() );
+    // Dual ISO validity is not set in MLV_OPEN_PREVIEW mode, so set it
+    llrpSetDualIsoValidity( m_pMlvObject, 0 );
 
-    int imageSize = getMlvWidth( m_pMlvObject ) * getMlvHeight( m_pMlvObject ) * 3;
+    size_t imageSize = (size_t)getMlvWidth( m_pMlvObject ) * (size_t)getMlvHeight( m_pMlvObject ) * 3;
     if( m_pRawImage ) free( m_pRawImage );
     m_pRawImage = ( uint8_t* )malloc( imageSize );
 
@@ -758,6 +776,9 @@ int MainWindow::openMlvForPreview(QString fileName)
 //Open MLV Dialog
 void MainWindow::on_actionOpen_triggered()
 {
+    // To immediately hide context menu
+    qApp->processEvents();
+
     //Stop playback if active
     ui->actionPlay->setChecked( false );
 
@@ -889,9 +910,15 @@ int MainWindow::openMlv( QString fileName )
     m_dontDraw = true;
 
     //Waiting for thread being idle for not freeing used memory
-    while( !m_pRenderThread->isIdle() ) {}
+    m_pRenderThread->waitUntilIdle();
+
     //Waiting for frame ready because it works with m_pMlvObject
-    while( m_frameStillDrawing ) {qApp->processEvents();}
+    if( m_frameStillDrawing )
+    {
+        QEventLoop loop;
+        connect( this, &MainWindow::frameReady, &loop, &QEventLoop::quit );
+        loop.exec();
+    }
 
     //Reset audio engine
     m_pAudioPlayback->resetAudioEngine();
@@ -915,12 +942,12 @@ int MainWindow::openMlv( QString fileName )
     setMlvCpuCores( m_pMlvObject, QThread::idealThreadCount() );
 
     //Adapt the RawImage to actual size
-    int imageSize = getMlvWidth( m_pMlvObject ) * getMlvHeight( m_pMlvObject ) * 3;
+    size_t imageSize = (size_t)getMlvWidth( m_pMlvObject ) * (size_t)getMlvHeight( m_pMlvObject ) * 3;
     if( m_pRawImage ) free( m_pRawImage );
     m_pRawImage = ( uint8_t* )malloc( imageSize );
 
     //Init Render Thread
-    m_pRenderThread->init( m_pMlvObject, m_pRawImage );
+    m_pRenderThread->init( m_pMlvObject );
 
     //Calculate shutter flavors :)
     float shutterSpeed = 1000000.0f / (float)(getMlvShutter( m_pMlvObject ));
@@ -928,30 +955,26 @@ int MainWindow::openMlv( QString fileName )
 
     //Form ISO info string.
     QString isoInfo = QString( "%1" ).arg( (int)getMlvIso( m_pMlvObject ) );
-    QString dualIso = QString( "-" );
+    QString dualIso;
     QString dualIsoInfo = isoInfo;
 
     if( llrpGetDualIsoValidity( m_pMlvObject ) == DISO_VALID )
     {
         isoInfo = QString( "%1/%2" ).arg( m_pMlvObject->llrawproc->diso1 ).arg( m_pMlvObject->llrawproc->diso2 );
         dualIso = QString( "Dual ISO" );
-        dualIsoInfo = QString( "%1, %2" ).arg( isoInfo ).arg( dualIso );
+        dualIsoInfo = QString( "%1, %2" ).arg( isoInfo ).arg( dualIso );
     }
 
     QString audioText;
     if( doesMlvHaveAudio( m_pMlvObject ) )
     {
-        audioText = QString( "%1 channel(s),  %2 kHz" )
+        audioText = QString( "%1 channel(s), %2 kHz" )
                 .arg( getMlvAudioChannels( m_pMlvObject ) )
                 .arg( getMlvSampleRate( m_pMlvObject ) );
     }
-    else
-    {
-        audioText = QString( "-" );
-    }
 
     //Focus distance from LENS block. Magic Lantern stores it in cm (0 = not reported, 65535 = infinity)
-    QString focusDistStr = QString( "-" );
+    QString focusDistStr;
     uint16_t focusDist = getMlvFocalDist( m_pMlvObject );
     if( focusDist == 65535 ) focusDistStr = QString( "Infinity" );
     else if( focusDist > 0 ) focusDistStr = QString( "%1 cm" ).arg( focusDist );
@@ -964,11 +987,11 @@ int MainWindow::openMlv( QString fileName )
                                  QString( "%1 fps" ).arg( getMlvFramerate( m_pMlvObject ) ),
                                  QString( "%1 mm" ).arg( getMlvFocalLength( m_pMlvObject ) ),
                                  QString( "%1" ).arg( focusDistStr ),
-                                 QString( "1/%1 s,  %2 deg,  %3 µs" ).arg( (uint16_t)(shutterSpeed + 0.5f) ).arg( (uint16_t)(shutterAngle + 0.5f) ).arg( getMlvShutter( m_pMlvObject ) ),
+                                 QString( "1/%1 s, %2 deg, %3 µs" ).arg( (uint16_t)(shutterSpeed + 0.5f) ).arg( (uint16_t)(shutterAngle + 0.5f) ).arg( getMlvShutter( m_pMlvObject ) ),
                                  QString( "ƒ/%1" ).arg( getMlvAperture( m_pMlvObject ) / 100.0, 0, 'f', 1 ),
                                  isoInfo,
                                  dualIso,
-                                 QString( "%1 bits,  %2" ).arg( getLosslessBpp( m_pMlvObject ) ).arg( getMlvCompression( m_pMlvObject ) ),
+                                 QString( "%1 bits, %2" ).arg( getLosslessBpp( m_pMlvObject ) ).arg( getMlvCompression( m_pMlvObject ) ),
                                  QString( "%1-%2-%3 / %4:%5:%6" )
                                            .arg( getMlvTmYear(m_pMlvObject) )
                                            .arg( getMlvTmMonth(m_pMlvObject), 2, 10, QChar('0') )
@@ -977,7 +1000,6 @@ int MainWindow::openMlv( QString fileName )
                                            .arg( getMlvTmMin(m_pMlvObject), 2, 10, QChar('0') )
                                            .arg( getMlvTmSec(m_pMlvObject), 2, 10, QChar('0') ),
                                  audioText );
-
 
     //Set Clip Info to Dialog
     m_pInfoDialog->ui->tableWidget->item( 0, 1 )->setText( ACTIVE_CLIP->getElement( 2 ).toString() );
@@ -992,10 +1014,10 @@ int MainWindow::openMlv( QString fileName )
     m_pInfoDialog->ui->tableWidget->item( 9, 1 )->setText( ACTIVE_CLIP->getElement( 11 ).toString() );
     m_pInfoDialog->ui->tableWidget->item( 10, 1 )->setText( dualIsoInfo );
     m_pInfoDialog->ui->tableWidget->item( 11, 1 )->setText( ACTIVE_CLIP->getElement( 14 ).toString() );
-    m_pInfoDialog->ui->tableWidget->item( 12, 1 )->setText( QString( "%1 black,  %2 white" ).arg( getMlvOriginalBlackLevel( m_pMlvObject ) ).arg( getMlvOriginalWhiteLevel( m_pMlvObject ) ) );
+    m_pInfoDialog->ui->tableWidget->item( 12, 1 )->setText( QString( "%1 black, %2 white" ).arg( getMlvOriginalBlackLevel( m_pMlvObject ) ).arg( getMlvOriginalWhiteLevel( m_pMlvObject ) ) );
     m_pInfoDialog->ui->tableWidget->item( 13, 1 )->setText( ACTIVE_CLIP->getElement( 15 ).toString() );
     m_pInfoDialog->ui->tableWidget->item( 14, 1 )->setText( ACTIVE_CLIP->getElement( 16 ).toString() );
-    m_pInfoDialog->ui->tableWidget->item( 15, 1 )->setText( ACTIVE_CLIP->getElement( 17 ).toString() + ",  " + ACTIVE_CLIP->getElement( 18 ).toString() );
+    m_pInfoDialog->ui->tableWidget->item( 15, 1 )->setText( ACTIVE_CLIP->getElement( 17 ).toString() + ", " + ACTIVE_CLIP->getElement( 18 ).toString() );
 
     resultingResolution();
 
@@ -1058,6 +1080,16 @@ int MainWindow::openMlv( QString fileName )
     ui->actionExport->setEnabled( true );
     ui->actionExportCurrentFrame->setEnabled( true );
 
+    //ui->mainToolBarPlayback->setEnabled( true );
+    ui->actionGoto_First_Frame->setEnabled( true );
+    ui->actionPreviousFrame->setEnabled( true );
+    ui->actionPlay->setEnabled( true );
+    ui->actionNextFrame->setEnabled( true );
+    ui->horizontalSliderPosition->setEnabled( true );
+
+    ui->actionClipInfo->setEnabled( true );
+    ui->actionRenameClip->setEnabled( true );
+    ui->actionCopyReceipt->setEnabled( true );
     //If clip loaded, import receipt is enabled
     ui->actionImportReceipt->setEnabled( true );
     ui->actionExportReceipt->setEnabled( true );
@@ -1103,6 +1135,9 @@ int MainWindow::openMlv( QString fileName )
     ui->labelHueVsSat->setProcessingObject( m_pProcessingObject );
     ui->labelHueVsLuma->setProcessingObject( m_pProcessingObject );
     ui->labelLumaVsSat->setProcessingObject( m_pProcessingObject );
+
+    m_pFpmListDialog->showCurrentMap( m_pMlvObject );
+    m_pBpmListDialog->showCurrentMap( m_pMlvObject );
 
     //Prepare crosses for bad pixel map
     BadPixelFileHandler::crossesPrepareAll( m_pMlvObject, &m_pBadPixelCrosses, m_pScene );
@@ -1189,12 +1224,14 @@ void MainWindow::initGui( void )
     //We dont want a context menu which could disable the menu bar
     setContextMenuPolicy(Qt::NoContextMenu);
 
-    //Darktheme menu
-    m_darkFrameGroup = new QActionGroup( this );
-    m_darkFrameGroup->setExclusive( true );
-    m_darkFrameGroup->addAction( ui->actionDarkThemeStandard );
-    m_darkFrameGroup->addAction( ui->actionDarkThemeModern );
-    ui->actionDarkThemeStandard->setChecked( true );
+    //Theme menu
+    m_themeGroup = new QActionGroup( this );
+    m_themeGroup->setExclusive( true );
+    m_themeGroup->addAction( ui->actionTheme1 );
+    m_themeGroup->addAction( ui->actionTheme2 );
+    m_themeGroup->addAction( ui->actionTheme3 );
+    m_themeGroup->addAction( ui->actionTheme4 );
+    ui->actionTheme1->setChecked( true );
 
     //Preview debayer as group
     m_previewDebayerGroup = new QActionGroup( this );
@@ -1231,15 +1268,16 @@ void MainWindow::initGui( void )
     m_sessionListGroup->addAction( ui->actionPreviewTableModeBottom );
 
     //Playback element as group
-    m_playbackElementGroup = new QActionGroup( this );
-    m_playbackElementGroup->setExclusive( true );
-    m_playbackElementGroup->addAction( ui->actionTimecodePositionMiddle );
-    m_playbackElementGroup->addAction( ui->actionTimecodePositionRight );
+    // m_playbackElementGroup = new QActionGroup( this );
+    // m_playbackElementGroup->setExclusive( true );
+    // m_playbackElementGroup->addAction( ui->actionTimecodePositionMiddle );
+    // m_playbackElementGroup->addAction( ui->actionTimecodePositionRight );
 
 #ifdef Q_OS_LINUX
     //if not doing this, some elements are covered by the scrollbar on Linux only
-    ui->dockWidgetEdit->setMinimumWidth( 240 );
-    ui->dockWidgetContents->setMinimumWidth( 240 );
+    //probably not needed anymore
+    //ui->dockWidgetEdit->setMinimumWidth( 240 );
+    //ui->dockWidgetContents->setMinimumWidth( 240 );
 #endif
 
     //Dock area behavior
@@ -1251,26 +1289,38 @@ void MainWindow::initGui( void )
     //Init the Dialogs
     m_pInfoDialog = new InfoDialog( this );
     m_pStatusDialog = new StatusDialog( this );
+    m_pFpmListDialog = new PixelMapListDialog( this, PixelMapListDialog::FPM );
+    m_pBpmListDialog = new PixelMapListDialog( this, PixelMapListDialog::BPM );
     m_pCopyMask = new ReceiptCopyMaskDialog( this );
+    m_pHelpDialog = new UserManualDialog( this );
+    EditSliderValueDialog m_editSlider;
+
     ui->actionShowHistogram->setChecked( true );
 
     //Export abort connection
-    connect( m_pStatusDialog, SIGNAL(abortPressed()), this, SLOT(exportAbortPressed()) );
+    connect( m_pStatusDialog, &StatusDialog::abortPressed, this, &MainWindow::exportAbortPressed );
 
     //AudioTrackWave
     m_pAudioWave = new AudioWave();
-    QPixmap pic = QPixmap::fromImage( m_pAudioWave->getMonoWave( NULL, 0, 100, devicePixelRatio() ) );
-    pic.setDevicePixelRatio( devicePixelRatio() );
+    QPixmap pic = QPixmap::fromImage( m_pAudioWave->getMonoWave( NULL, 0, 1, ui->labelAudioTrack->height(), devicePixelRatioF() ) );
+    pic.setDevicePixelRatio( devicePixelRatioF() );
     ui->labelAudioTrack->setPixmap( pic );
     //Fullscreen does not work well, so disable
-    ui->actionFullscreen->setVisible( false );
-    //Disable caching by default to avoid crashes
-    //ui->actionCaching->setVisible( false );
+    //ui->actionFullscreen->setVisible( false );
     //Hide deflicker target - no one knows what it does...
     ui->spinBoxDeflickerTarget->setVisible( false );
     ui->DeflickerTargetLabel->setVisible( false );
-    ui->line_11->setVisible( false );
-    //Disable unused (for now) actions
+
+    //ui->mainToolBarPlayback->setEnabled( false );
+    ui->actionGoto_First_Frame->setEnabled( false );
+    ui->actionPreviousFrame->setEnabled( false );
+    ui->actionPlay->setEnabled( false );
+    ui->actionNextFrame->setEnabled( false );
+    ui->horizontalSliderPosition->setEnabled( false );
+
+    ui->actionClipInfo->setEnabled( false );
+    ui->actionRenameClip->setEnabled( false );
+    ui->actionCopyReceipt->setEnabled( false );
     ui->actionPasteReceipt->setEnabled( false );
     //Disable export until file opened!
     ui->actionExport->setEnabled( false );
@@ -1284,12 +1334,6 @@ void MainWindow::initGui( void )
     ui->actionSaveSession->setEnabled( false );
     ui->actionSaveAsSession->setEnabled( false );
     ui->actionSaveSessionMetadata->setEnabled( false );
-    //Set tooltips
-    ui->toolButtonCutIn->setToolTip( tr( "Set Cut In    %1" ).arg( ui->toolButtonCutIn->shortcut().toString() ) );
-    ui->toolButtonCutOut->setToolTip( tr( "Set Cut Out    %1" ).arg( ui->toolButtonCutOut->shortcut().toString() ) );
-    ui->toolButtonBadPixelsSearchMethodEdit->setToolTip( tr( "%1    %2" )
-                                                         .arg( ui->toolButtonBadPixelsSearchMethodEdit->toolTip() )
-                                                         .arg( ui->toolButtonBadPixelsSearchMethodEdit->shortcut().toString() ) );
     //Set disabled select all and delete clip
     ui->actionDeleteSelectedClips->setEnabled( false );
     ui->actionSelectAllClips->setEnabled( false );
@@ -1314,26 +1358,25 @@ void MainWindow::initGui( void )
     ui->toolButtonDualIsoFullresBlendingOn->setVisible( false );
 
     //Set up image in GUI
-    QImage image(":/IMG/IMG/histogram.png");
-    ui->labelScope->setScope( NULL, 0, 0, false, false, ScopesLabel::None );
-    m_pGraphicsItem = new QGraphicsPixmapItem( QPixmap::fromImage(image) );
+    ui->labelScope->setScope( NULL, 0, 0, getSelectedScopeType() );
+    m_pGraphicsItem = new QGraphicsPixmapItem( QPixmap() );
     m_pScene = new GraphicsPickerScene( this );
     m_pScene->addItem( m_pGraphicsItem );
     ui->graphicsView->setScene( m_pScene );
-    ui->graphicsView->show();
-    connect( ui->graphicsView, SIGNAL( customContextMenuRequested(QPoint) ), this, SLOT( pictureCustomContextMenuRequested(QPoint) ) );
-    connect( m_pScene, SIGNAL( wbPicked(int,int) ), this, SLOT( whiteBalancePicked(int,int) ) );
-    connect( m_pScene, SIGNAL( bpPicked(int,int) ), this, SLOT( badPixelPicked(int,int) ) );
-    connect( m_pScene, SIGNAL( filesDropped(QStringList) ), this, SLOT( openMlvSet(QStringList) ) );
+
+    connect( ui->graphicsView, &GraphicsZoomView::customContextMenuRequested, this, &MainWindow::pictureCustomContextMenuRequested );
+    connect( m_pScene, &GraphicsPickerScene::wbPicked, this, &MainWindow::whiteBalancePicked );
+    connect( m_pScene, &GraphicsPickerScene::bpPicked, this, &MainWindow::badPixelPicked );
+    connect( m_pScene, &GraphicsPickerScene::filesDropped, this, &MainWindow::openMlvSet );
 
     //Prepare gradient elements
     QPolygon polygon;
     m_pGradientElement = new GradientElement( polygon );
     m_pScene->addItem( m_pGradientElement->gradientGraphicsElement() );
-    connect( m_pScene, SIGNAL( gradientAnchor(int,int) ), this, SLOT( gradientAnchorPicked(int,int) ) );
-    connect( m_pScene, SIGNAL( gradientFinalPos(int,int,bool) ), this, SLOT( gradientFinalPosPicked(int,int,bool) ) );
-    connect( m_pGradientElement->gradientGraphicsElement(), SIGNAL( itemMoved(int,int) ), this, SLOT( gradientGraphicElementMoved(int,int) ) );
-    connect( m_pGradientElement->gradientGraphicsElement(), SIGNAL( itemHovered(bool) ), this, SLOT( gradientGraphicElementHovered(bool) ) );
+    connect( m_pScene, &GraphicsPickerScene::gradientAnchor, this, &MainWindow::gradientAnchorPicked );
+    connect( m_pScene, &GraphicsPickerScene::gradientFinalPos, this, &MainWindow::gradientFinalPosPicked );
+    connect( m_pGradientElement->gradientGraphicsElement(), &GraphicsPolygonMoveItem::itemMoved, this, &MainWindow::gradientGraphicElementMoved );
+    connect( m_pGradientElement->gradientGraphicsElement(), &GraphicsPolygonMoveItem::itemHovered, this, &MainWindow::gradientGraphicElementHovered );
     //Disable Gradient while no file loaded
     ui->checkBoxGradientEnable->setChecked( false );
     ui->checkBoxGradientEnable->setEnabled( false );
@@ -1342,48 +1385,45 @@ void MainWindow::initGui( void )
     //Cut In & Out
     initCutInOut( -1 );
 
-    //Set up caching status label
-    m_pCachingStatus = new QLabel( statusBar() );
-    m_pCachingStatus->setMaximumWidth( 100 );
-    m_pCachingStatus->setMinimumWidth( 100 );
-    m_pCachingStatus->setText( tr( "Caching: idle" ) );
-    //m_pCachingStatus->setFrameStyle(QFrame::Panel | QFrame::Sunken);
-    statusBar()->addWidget( m_pCachingStatus );
-    m_pCachingStatus->hide(); //delete this line, if caching is available again one day
+    QWidget *container = new QWidget();
+    QHBoxLayout *layout = new QHBoxLayout( container );
+    layout->setSpacing( 20 );
+    layout->setContentsMargins( 10, 0, 10, 0 );
+    statusBar()->addWidget( container );
 
     //Set up fps status label
-    m_pFpsStatus = new QLabel( statusBar() );
-    m_pFpsStatus->setMaximumWidth( 110 );
-    m_pFpsStatus->setMinimumWidth( 110 );
-    m_pFpsStatus->setText( tr( "Playback: 0 fps" ) );
-    //m_pFpsStatus->setFrameStyle(QFrame::Panel | QFrame::Sunken);
-    statusBar()->addWidget( m_pFpsStatus );
+    m_pSessionStatus = new QLabel( statusBar() );
+    m_pSessionStatus->setText( tr( "Session: (empty)" ) );
+    layout->addWidget( m_pSessionStatus );
 
-    //Set up frame number status label
-    m_pFrameNumber = new QLabel( statusBar() );
-    m_pFrameNumber->setMaximumWidth( 120 );
-    m_pFrameNumber->setMinimumWidth( 120 );
-    drawFrameNumberLabel();
-    //m_pFpsStatus->setFrameStyle(QFrame::Panel | QFrame::Sunken);
-    statusBar()->addWidget( m_pFrameNumber );
+    //Set up caching status label
+    m_pCachingStatus = new QLabel( statusBar() );
+    m_pCachingStatus->setText( tr( "Caching: idle" ) );
+    layout->addWidget( m_pCachingStatus );
+    m_pCachingStatus->hide(); //delete this line, if caching is available again one day
 
     //Set up chosen debayer status label
     m_pChosenDebayer = new QLabel( statusBar() );
-    m_pChosenDebayer->setMaximumWidth( 120 );
-    m_pChosenDebayer->setMinimumWidth( 120 );
-    m_pChosenDebayer->setText( tr( "AMaZE" ) );
-    m_pChosenDebayer->setToolTip( tr( "Current debayer algorithm." ) );
-    statusBar()->addWidget( m_pChosenDebayer );
+    m_pChosenDebayer->setToolTip( tr( "Current debayer algorithm" ) );
+    layout->addWidget( m_pChosenDebayer );
+
+    //Set up fps status label
+    m_pFpsStatus = new QLabel( statusBar() );
+    m_pFpsStatus->setText( tr( "Playback: 0 fps" ) );
+    layout->addWidget( m_pFpsStatus );
+
+    //Set up frame number status label
+    m_pFrameNumber = new QLabel( statusBar() );
+    drawFrameNumberLabel();
+    layout->addWidget( m_pFrameNumber );
 
     //Recent sessions menu
     m_pRecentFilesMenu = new QRecentFilesMenu(tr("Recent Sessions"), ui->menuFile);
-
-    //Read Settings
-    readSettings();
+    m_pRecentFilesMenu->setFormat( "%s" );
 
     //Add recent sessions to filemenu
     ui->menuFile->insertMenu( ui->actionSaveSession, m_pRecentFilesMenu );
-    connect( m_pRecentFilesMenu, SIGNAL(recentFileTriggered(const QString &)), this, SLOT(openRecentSession(const QString &)) );
+    connect( m_pRecentFilesMenu, &QRecentFilesMenu::recentFileTriggered, this, &MainWindow::openRecentSession );
 
     //Init clipboard
     m_pReceiptClipboard = new ReceiptSettings();
@@ -1407,55 +1447,24 @@ void MainWindow::initGui( void )
 
     //TimeCode Label
     m_pTcLabel = new DoubleClickLabel( this );
-    m_pTcLabel->setToolTip( tr( "Timecode/Duration(edited) h:m:s.frame - change by doubleclicking" ) );
+    m_pTcLabel->setToolTip( tr( "HH:MM:SS.FF – double click to toggle between timecode and duration (edited)" ) );
     m_pTcLabel->setContextMenuPolicy( Qt::CustomContextMenu );
-    connect( m_pTcLabel, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(mpTcLabel_customContextMenuRequested(QPoint)) );
-    connect( m_pTcLabel, SIGNAL(doubleClicked()), this, SLOT(tcLabelDoubleClicked()) );
+    connect( m_pTcLabel, &DoubleClickLabel::customContextMenuRequested, this, &MainWindow::mpTcLabel_customContextMenuRequested );
+    connect( m_pTcLabel, &DoubleClickLabel::doubleClicked, this, &MainWindow::tcLabelDoubleClicked );
     m_tcModeDuration = false;
-    if( m_timeCodePosition == 1 )
-    {
-        //TC between buttons
-        QWidget* spacer1 = new QWidget();
-        spacer1->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-        spacer1->setMaximumWidth( 5 );
-        ui->mainToolBar->insertWidget( ui->actionGoto_First_Frame, spacer1 );
-        ui->mainToolBar->insertWidget( ui->actionGoto_First_Frame, m_pTcLabel );
-        QWidget* spacer2 = new QWidget();
-        spacer2->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-        spacer2->setMaximumWidth( 5 );
-        ui->mainToolBar->insertWidget( ui->actionGoto_First_Frame, spacer2 );
-        ui->actionTimecodePositionMiddle->setChecked( true );
-    }
-    else
-    {
-        //TC total right
-        QWidget* spacer1 = new QWidget();
-        spacer1->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-        ui->mainToolBar->insertWidget( ui->actionGoto_First_Frame, spacer1 );
-        QWidget* spacer2 = new QWidget();
-        spacer2->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-        spacer2->setMaximumWidth( 5 );
-        ui->mainToolBar->addWidget( spacer2 );
-        ui->mainToolBar->addWidget( m_pTcLabel );
-        QWidget* spacer3 = new QWidget();
-        spacer3->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-        spacer3->setMaximumWidth( 5 );
-        ui->mainToolBar->addWidget( spacer3 );
-        ui->actionTimecodePositionRight->setChecked( true );
-    }
 
-    m_pTimeCodeImage = new TimeCodeLabel();
-    QPixmap picTc = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( 0, 25 ).scaled( 200 * devicePixelRatio(),
-                                                                                          30 * devicePixelRatio(),
-                                                                                          Qt::IgnoreAspectRatio, Qt::SmoothTransformation) );
-    picTc.setDevicePixelRatio( devicePixelRatio() );
+    ui->mainToolBarPlayback->addWidget( m_pTcLabel );
+
+    m_pTimeCodeImage = new TimeCodeLabel( ui->mainToolBarPlayback->height(), devicePixelRatioF() );
+    QPixmap picTc = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( 0, 25 ) );
+    picTc.setDevicePixelRatio( devicePixelRatioF() );
     m_pTcLabel->setPixmap( picTc );
 
     //ColorWheels
-    ui->labelColorWheelMaster->paintElement();
-    ui->labelColorWheelShadows->paintElement();
-    ui->labelColorWheelMidtones->paintElement();
-    ui->labelColorWheelHighlights->paintElement();
+    // ui->labelColorWheelMaster->paintElement();
+    // ui->labelColorWheelShadows->paintElement();
+    // ui->labelColorWheelMidtones->paintElement();
+    // ui->labelColorWheelHighlights->paintElement();
     ui->groupBoxColorWheels->setVisible( false );
 
     //CurvesElement
@@ -1482,16 +1491,8 @@ void MainWindow::initGui( void )
     ui->labelLumaVsSat->setDiagramType( HueVsDiagram::LuminanceVsSaturation );
     ui->labelLumaVsSat->paintElement();
 
-    //Call temp sliders once for stylesheet
-    on_horizontalSliderTemperature_valueChanged( ui->horizontalSliderTemperature->value() );
-    on_horizontalSliderTint_valueChanged( ui->horizontalSliderTint->value() );
-
     //WB Picker Mode
     m_wbMode = 0;
-    ui->toolButtonWbMode->setToolTip( tr( "Chose between WB picker on grey or on skin" ) );
-
-    //DualIso Button by default invisible
-    //ui->toolButtonDualIsoForce->setVisible( false );
 
     //Vidstab
     on_checkBoxVidstabEnable_toggled( false );
@@ -1530,9 +1531,13 @@ void MainWindow::initGui( void )
         ui->actionTranscodeAndImport->setVisible( true );
 #endif
 
-    //Rename selected clip (only one! selected clip)
-    connect( ui->actionRename, SIGNAL( triggered() ), this, SLOT( renameActiveClip() ) );
-    addAction( ui->actionRename );
+    //Temp invisible
+    ui->groupBoxGamma->hide();
+    ui->label_TonemappingFunction->setVisible( false );
+    ui->comboBoxTonemapFct->setVisible( false );
+
+    //Read Settings
+    readSettings();
 }
 
 //Initialize the library
@@ -1575,12 +1580,35 @@ void MainWindow::initLib( void )
 //Read some settings from registry
 void MainWindow::readSettings()
 {
-    QSettings set( QSettings::UserScope, "magiclantern.MLVApp", "MLVApp" );
+    QSettings set( QSettings::UserScope, "magiclantern", "MLVApp" );
+
     restoreGeometry( set.value( "mainWindowGeometry" ).toByteArray() );
-    //restoreState( set.value( "mainWindowState" ).toByteArray() ); // create docks, toolbars, etc...
+
     if( set.value( "dragFrameMode", true ).toBool() ) ui->actionDropFrameMode->setChecked( true );
     if( set.value( "audioOutput", true ).toBool() ) ui->actionAudioOutput->setChecked( true );
+    ui->actionLoop->setChecked( set.value( "loopPlayback", false ).toBool() );
+
+    switch( set.value( "scopeType", 0 ).toUInt() )
+    {
+    case ScopesLabel::ScopeHistogram:
+        ui->actionShowHistogram->setChecked( true );
+        on_actionShowHistogram_triggered();
+        break;
+    case ScopesLabel::ScopeWaveForm:
+        ui->actionShowWaveFormMonitor->setChecked( true );
+        on_actionShowWaveFormMonitor_triggered();
+        break;
+    case ScopesLabel::ScopeRgbParade:
+        ui->actionShowParade->setChecked( true );
+        on_actionShowParade_triggered();
+        break;
+    case ScopesLabel::ScopeVectorScope:
+        ui->actionShowVectorScope->setChecked( true );
+        on_actionShowVectorScope_triggered();
+    }
+
     if( set.value( "zebras", false ).toBool() ) ui->actionShowZebras->setChecked( true );
+
     ui->actionFastOpen->setChecked( set.value( "fastOpen", true ).toBool() );
     m_lastExportPath = set.value( "lastExportPath", QDir::homePath() ).toString();
     m_lastMlvOpenFileName = set.value( "lastMlvFileName", QDir::homePath() ).toString();
@@ -1592,7 +1620,8 @@ void MainWindow::readSettings()
     m_codecProfile = set.value( "codecProfile", 4 ).toUInt();
     m_codecOption = set.value( "codecOption", 0 ).toUInt();
     m_exportDebayerMode = set.value( "exportDebayerMode", 4 ).toUInt();
-    m_previewMode = set.value( "previewMode", 1 ).toUInt();
+
+    m_previewMode = set.value( "previewMode", 2 ).toUInt();
     switch( m_previewMode )
     {
     case 0:
@@ -1616,6 +1645,7 @@ void MainWindow::readSettings()
         on_actionPreviewTableModeBottom_triggered();
         break;
     }
+
     ui->actionCaching->setChecked( false );
     m_resizeFilterEnabled = set.value( "resizeEnable", false ).toBool();
     m_resizeWidth = set.value( "resizeWidth", 1920 ).toUInt();
@@ -1626,7 +1656,8 @@ void MainWindow::readSettings()
     m_fpsOverride = set.value( "fpsOverride", false ).toBool();
     m_frameRate = set.value( "frameRate", 25 ).toDouble();
     m_audioExportEnabled = set.value( "audioExportEnabled", true ).toBool();
-    ui->groupBoxRawCorrection->setChecked( set.value( "expandedRawCorrection", false ).toBool() );
+    ui->actionShowAudioTrack->setChecked( set.value( "showAudioTrack", true ).toBool() );
+    ui->groupBoxRawCorrection->setChecked( set.value( "expandedRawCorrection", true ).toBool() );
     ui->groupBoxCutInOut->setChecked( set.value( "expandedCutInOut", false ).toBool() );
     ui->groupBoxDebayer->setChecked( set.value( "expandedDebayer", true ).toBool() );
     ui->groupBoxProfiles->setChecked( set.value( "expandedProfiles", true ).toBool() );
@@ -1641,42 +1672,64 @@ void MainWindow::readSettings()
     ui->groupBoxLinearGradient->setChecked( set.value( "expandedLinGradient", false ).toBool() );
     ui->groupBoxTransformation->setChecked( set.value( "expandedTransformation", false ).toBool() );
     ui->actionCreateMappFiles->setChecked( set.value( "createMappFiles", false ).toBool() );
-    m_timeCodePosition = set.value( "tcPos", 1 ).toUInt();
     ui->actionAutoCheckForUpdates->setChecked( set.value( "autoUpdateCheck", true ).toBool() );
     ui->actionPlaybackPosition->setChecked( set.value( "rememberPlaybackPos", false ).toBool() );
-    resizeDocks({ui->dockWidgetEdit}, {set.value( "dockEditSize", 212 ).toInt()}, Qt::Horizontal);
-    resizeDocks({ui->dockWidgetSession}, {set.value( "dockSessionSize", 170 ).toInt()}, Qt::Horizontal);
-    resizeDocks({ui->dockWidgetSession}, {set.value( "dockSessionSize", 130 ).toInt()}, Qt::Vertical);
     m_pRecentFilesMenu->restoreState( set.value("recentSessions").toByteArray() );
     ui->actionAskForSavingOnQuit->setChecked( set.value( "askForSavingOnQuit", true ).toBool() );
     ui->actionNotificationExportFinished->setChecked( set.value( "notificationExportFinished", true ).toBool() );
     ui->actionBetterResizer->setChecked( set.value( "betterResizerViewer", false ).toBool() );
     m_defaultReceiptFileName = set.value( "defaultReceiptFileName", QDir::homePath() ).toString();
     ui->actionUseDefaultReceipt->setChecked( set.value( "defaultReceiptEnabled", false ).toBool() );
-    int themeId = set.value( "themeId", 0 ).toInt();
-    if( themeId == 0 )
+
+    switch( static_cast<AppTheme::Theme>( set.value( "themeId", AppTheme::currentTheme() ).toInt() ) )
     {
-        ui->actionDarkThemeStandard->setChecked( true );
-        on_actionDarkThemeStandard_triggered( true );
+    case AppTheme::Light:
+        ui->actionTheme1->setChecked( true );
+        on_actionTheme1_triggered( true );
+        break;
+    case AppTheme::Mid:
+        ui->actionTheme2->setChecked( true );
+        on_actionTheme2_triggered( true );
+        break;
+    case AppTheme::Dark:
+        ui->actionTheme3->setChecked( true );
+        on_actionTheme3_triggered( true );
+        break;
+    case AppTheme::Darker:
+        ui->actionTheme4->setChecked( true );
+        on_actionTheme4_triggered( true );
     }
-    else
-    {
-        ui->actionDarkThemeModern->setChecked( true );
-        on_actionDarkThemeModern_triggered( true );
-    }
+
     ui->graphicsView->setBackgroundBrush( QBrush( QColor( set.value( "backgroundcolorR", 0 ).toUInt(),
                                                           set.value( "backgroundcolorG", 0 ).toUInt(),
                                                           set.value( "backgroundcolorB", 0 ).toUInt() ), Qt::SolidPattern ) );
+
+    if( set.contains("mainWindowState") )
+    {
+        // Activate layout changes so restoreState() can work safely, otherwise the app might crash.
+        layout()->activate();
+        restoreState( set.value( "mainWindowState" ).toByteArray() );
+    }
+    else
+    {
+        // First run: set default dock sizes
+        resizeDocks( { ui->dockWidgetSession, ui->dockWidgetEdit }, { 235, 200 }, Qt::Horizontal );
+    }
 }
 
 //Save some settings to registry
 void MainWindow::writeSettings()
 {
-    QSettings set( QSettings::UserScope, "magiclantern.MLVApp", "MLVApp" );
+    QSettings set( QSettings::UserScope, "magiclantern", "MLVApp" );
+
     set.setValue( "mainWindowGeometry", saveGeometry() );
-    //set.setValue( "mainWindowState", saveState() ); // docks, toolbars, etc...
+    set.setValue( "mainWindowState", saveState() ); // docks, toolbars, etc...
+
     set.setValue( "dragFrameMode", ui->actionDropFrameMode->isChecked() );
     set.setValue( "audioOutput", ui->actionAudioOutput->isChecked() );
+    set.setValue( "loopPlayback", ui->actionLoop->isChecked() );
+    set.setValue( "showAudioTrack", ui->actionShowAudioTrack->isChecked() );
+    set.setValue( "scopeType", getSelectedScopeType() );
     set.setValue( "zebras", ui->actionShowZebras->isChecked() );
     set.setValue( "fastOpen", ui->actionFastOpen->isChecked() );
     set.setValue( "lastExportPath", m_lastExportPath );
@@ -1715,20 +1768,15 @@ void MainWindow::writeSettings()
     set.setValue( "expandedLinGradient", ui->groupBoxLinearGradient->isChecked() );
     set.setValue( "expandedTransformation", ui->groupBoxTransformation->isChecked() );
     set.setValue( "createMappFiles", ui->actionCreateMappFiles->isChecked() );
-    set.setValue( "tcPos", m_timeCodePosition );
     set.setValue( "autoUpdateCheck", ui->actionAutoCheckForUpdates->isChecked() );
     set.setValue( "rememberPlaybackPos", ui->actionPlaybackPosition->isChecked() );
-    set.setValue( "dockEditSize", ui->dockWidgetEdit->width() );
     set.setValue( "defaultReceiptFileName", m_defaultReceiptFileName );
     set.setValue( "defaultReceiptEnabled", ui->actionUseDefaultReceipt->isChecked() );
-    if( m_previewMode == 3 || m_previewMode == 4 ) set.setValue( "dockSessionSize", ui->dockWidgetSession->height() );
-    else set.setValue( "dockSessionSize", ui->dockWidgetSession->width() );
     set.setValue( "recentSessions", m_pRecentFilesMenu->saveState() );
     set.setValue( "askForSavingOnQuit", ui->actionAskForSavingOnQuit->isChecked() );
     set.setValue( "notificationExportFinished", ui->actionNotificationExportFinished->isChecked() );
     set.setValue( "betterResizerViewer", ui->actionBetterResizer->isChecked() );
-    if( ui->actionDarkThemeStandard->isChecked() ) set.setValue( "themeId", 0 );
-    else set.setValue( "themeId", 1 );
+    set.setValue( "themeId", AppTheme::currentTheme() );
     QColor backgroundColor = ui->graphicsView->backgroundBrush().color();
     set.setValue( "backgroundcolorR", backgroundColor.red() );
     set.setValue( "backgroundcolorG", backgroundColor.green() );
@@ -1953,16 +2001,18 @@ void MainWindow::startExportPipe(QString fileName)
         uint8_t frameNum = getMlvFrames( m_pMlvObject ) / 2 - 1;
 
         //Get 1st picture, and lock render thread... there can only be one!
-        m_pRenderThread->lock();
-        getMlvProcessedFrame16( m_pMlvObject, frameNum, imgBuffer, QThread::idealThreadCount() );
-        m_pRenderThread->unlock();
+        {
+            QMutexLocker locker( m_pRenderThread->mutex() );
+            getMlvProcessedFrame16( m_pMlvObject, frameNum, imgBuffer, QThread::idealThreadCount() );
+        }
         double average1 = 0;
         for( uint32_t i = 0; i < frameSize; i++ ) average1 += imgBuffer[i];
 
         //Get 2nd picture, and lock render thread... there can only be one!
-        m_pRenderThread->lock();
-        getMlvProcessedFrame16( m_pMlvObject, frameNum+1, imgBuffer, QThread::idealThreadCount() );
-        m_pRenderThread->unlock();
+        {
+            QMutexLocker locker( m_pRenderThread->mutex() );
+            getMlvProcessedFrame16( m_pMlvObject, frameNum+1, imgBuffer, QThread::idealThreadCount() );
+        }
         double average2 = 0;
         for( uint32_t i = 0; i < frameSize; i++ ) average2 += imgBuffer[i];
 
@@ -2203,9 +2253,10 @@ void MainWindow::startExportPipe(QString fileName)
                 if( scaled )
                 {
                     //Get picture, and lock render thread... there can only be one!
-                    m_pRenderThread->lock();
-                    getMlvProcessedFrame16( m_pMlvObject, i, imgBuffer, QThread::idealThreadCount() );
-                    m_pRenderThread->unlock();
+                    {
+                        QMutexLocker locker( m_pRenderThread->mutex() );
+                        getMlvProcessedFrame16( m_pMlvObject, i, imgBuffer, QThread::idealThreadCount() );
+                    }
 
                     avir_scale_thread_pool scaling_pool;
                     avir::CImageResizerVars vars; vars.ThreadPool = &scaling_pool;
@@ -2226,9 +2277,10 @@ void MainWindow::startExportPipe(QString fileName)
                 else
                 {
                     //Get picture, and lock render thread... there can only be one!
-                    m_pRenderThread->lock();
-                    getMlvProcessedFrame16( m_pMlvObject, i, imgBuffer, QThread::idealThreadCount() );
-                    m_pRenderThread->unlock();
+                    {
+                        QMutexLocker locker( m_pRenderThread->mutex() );
+                        getMlvProcessedFrame16( m_pMlvObject, i, imgBuffer, QThread::idealThreadCount() );
+                    }
 
                     //Write to pipe
                     fwrite(imgBuffer, sizeof( uint16_t ), frameSize, pPipeStab);
@@ -2760,9 +2812,10 @@ void MainWindow::startExportPipe(QString fileName)
                 if( scaled )
                 {
                     //Get picture, and lock render thread... there can only be one!
-                    m_pRenderThread->lock();
-                    getMlvProcessedFrame16( m_pMlvObject, i, imgBuffer, QThread::idealThreadCount() );
-                    m_pRenderThread->unlock();
+                    {
+                        QMutexLocker locker( m_pRenderThread->mutex() );
+                        getMlvProcessedFrame16( m_pMlvObject, i, imgBuffer, QThread::idealThreadCount() );
+                    }
 
                     p_image_resizer->resizeImage( imgBuffer,
                                                getMlvWidth(m_pMlvObject),
@@ -2778,9 +2831,10 @@ void MainWindow::startExportPipe(QString fileName)
                 else
                 {
                     //Get picture, and lock render thread... there can only be one!
-                    m_pRenderThread->lock();
-                    getMlvProcessedFrame16( m_pMlvObject, i, imgBuffer, QThread::idealThreadCount() );
-                    m_pRenderThread->unlock();
+                    {
+                        QMutexLocker locker( m_pRenderThread->mutex() );
+                        getMlvProcessedFrame16( m_pMlvObject, i, imgBuffer, QThread::idealThreadCount() );
+                    }
 
                     //Write to pipe
                     fwrite(imgBuffer, sizeof( uint16_t ), frameSize, pPipe);
@@ -3302,7 +3356,7 @@ void MainWindow::startExportMlv(QString fileName)
 }
 
 //Export via AVFoundation
-#ifdef Q_OS_MACX
+#ifdef Q_OS_MACOS
 void MainWindow::startExportAVFoundation(QString fileName)
 {
     //Disable GUI drawing
@@ -3648,8 +3702,10 @@ void MainWindow::addFileToSession(QString fileName)
     if( ui->actionUseDefaultReceipt->isChecked() ) resetReceiptWithDefault( ACTIVE_RECEIPT );
     ACTIVE_RECEIPT->setDualIsoForced( DISO_FORCED );
 
-    //Update App
-    listViewSessionUpdate();
+    m_pSessionStatus->setText( tr( "Session: %1 %2" )
+                               .arg( SESSION_CLIP_COUNT )
+                               .arg( SESSION_CLIP_COUNT == 1 ? tr( "clip" ) : tr( "clips" ) ) );
+
     qApp->processEvents();
 }
 
@@ -3977,6 +4033,7 @@ void MainWindow::on_actionImportReceipt_triggered()
     }
     file.close();
 
+    m_pCopyMask->adjustSize();
     m_pCopyMask->exec();
     ui->actionPasteReceipt->setEnabled( true );
     on_actionPasteReceipt_triggered();
@@ -4733,9 +4790,11 @@ void MainWindow::deleteSession()
     m_dontDraw = true;
 
     //Set Labels black
-    ui->labelScope->setScope( NULL, 0, 0, false, false, ScopesLabel::None );
-    m_pGraphicsItem->setPixmap( QPixmap( ":/IMG/IMG/TransDummy.png" ) );
+    ui->labelScope->setScope( NULL, 0, 0, getSelectedScopeType() );
+    m_pGraphicsItem->setPixmap( QPixmap() );
     m_pScene->setSceneRect( 0, 0, 10, 10 );
+
+    BadPixelFileHandler::crossesClearAll( &m_pBadPixelCrosses, m_pScene );
 
     //Fake no audio track
     paintAudioTrack();
@@ -4762,6 +4821,16 @@ void MainWindow::deleteSession()
     //Set label
     drawFrameNumberLabel();
 
+    //ui->mainToolBarPlayback->setEnabled( false );
+    ui->actionGoto_First_Frame->setEnabled( false );
+    ui->actionPreviousFrame->setEnabled( false );
+    ui->actionPlay->setEnabled( false );
+    ui->actionNextFrame->setEnabled( false );
+    ui->horizontalSliderPosition->setEnabled( false );
+
+    ui->actionClipInfo->setEnabled( false );
+    ui->actionRenameClip->setEnabled( false );
+    ui->actionCopyReceipt->setEnabled( false );
     //If no clip loaded, import receipt is disabled
     ui->actionImportReceipt->setEnabled( false );
     ui->actionExportReceipt->setEnabled( false );
@@ -4782,14 +4851,14 @@ void MainWindow::deleteSession()
     initCutInOut( -1 );
 
     //Draw TimeCode
-    QPixmap pic = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( 0, 25 ).scaled( 200 * devicePixelRatio(),
-                                                                                          30 * devicePixelRatio(),
-                                                                                          Qt::IgnoreAspectRatio, Qt::SmoothTransformation) );
-    pic.setDevicePixelRatio( devicePixelRatio() );
+    QPixmap pic = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( 0, 25 ) );
+    pic.setDevicePixelRatio( devicePixelRatioF() );
     m_pTcLabel->setPixmap( pic );
 
     //Reset session name
     m_sessionFileName.clear();
+
+    m_pSessionStatus->setText( tr( "Session: (empty)" ) );
 }
 
 //returns true if file is already in session
@@ -4966,9 +5035,6 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     {
         receipt->setDualIsoForced( DISO_FORCED );
     }
-    //ui->toolButtonDualIsoForce->setVisible( receipt->dualIsoForced() != DISO_VALID );
-    //ui->toolButtonDualIsoForce->setChecked( receipt->dualIsoForced() == DISO_FORCED );
-    //on_toolButtonDualIsoForce_toggled( receipt->dualIsoForced() == DISO_FORCED );
 
     if( receipt->dualIsoForced() == DISO_FORCED )
     {
@@ -5637,40 +5703,38 @@ void MainWindow::previewPicture( int row )
     //disable low level raw fixes for preview
     m_pMlvObject->llrawproc->fix_raw = 0;
 
-    // Get proper image size
-    int raw_w = m_pMlvObject->RAWI.xRes;
-    int raw_h = m_pMlvObject->RAWI.yRes;
-    int downscaled_factor = 1;
+    int stretchedWidth = m_pMlvObject->RAWI.xRes * getHorizontalStretchFactor(true);
+    int previewMinWidth = ClipInformation::getPreviewMinWidth() * 2 * devicePixelRatioF();
+    int downscaleFactor = stretchedWidth > previewMinWidth ? stretchedWidth / previewMinWidth : 1;
 
-    if (raw_w > 2000 && raw_h > 1500) downscaled_factor = 9;
-    else if (raw_w < 2000 && raw_h < 1500) downscaled_factor = 5;
-    else downscaled_factor = 7;
+    int width = m_pMlvObject->RAWI.xRes / downscaleFactor;
+    int height = m_pMlvObject->RAWI.yRes / downscaleFactor;
 
-    // For get_area_average_downscale_thumnail only: other factors for dualiso hiding the horizontal lines
-    if (m_pMlvObject->llrawproc->dual_iso > 0)
+    if( ( m_pMlvObject->llrawproc->dual_iso > 0 || m_pMlvObject->llrawproc->diso_validity == DISO_VALID ) && downscaleFactor > 1 )
     {
-        if (downscaled_factor > 5) downscaled_factor = 8;
-        else downscaled_factor = 4;
+        // Prevent horizontal lines
+        if( downscaleFactor & 1 ) downscaleFactor++;
+        // Avoid factor 2 for creating color tint
+        if( downscaleFactor == 2 ) downscaleFactor += 2;
     }
 
-
-    int width = raw_w / downscaled_factor;
-    int height = raw_h / downscaled_factor;
+    int rawWidth = m_pMlvObject->RAWI.xRes / downscaleFactor;
+    int rawHeight = m_pMlvObject->RAWI.yRes / downscaleFactor;
 
     //Get frame from library, temp disable linear gradient and vignette, because not compatible with shrinked resolutions
     auto vstr = m_pMlvObject->processing->vignette_strength;
     auto gren = m_pMlvObject->processing->gradient_enable;
     m_pMlvObject->processing->vignette_strength = 0;
     m_pMlvObject->processing->gradient_enable = 0;
-    //create_thumbnail( m_pMlvObject, m_pRawImage, downscaled_factor, width, height, QThread::idealThreadCount() );
-    get_area_average_downscale_thumnail(m_pMlvObject, 0, downscaled_factor, QThread::idealThreadCount(), m_pRawImage);
+    //create_thumbnail( m_pMlvObject, m_pRawImage, downscaleFactor, width, height, QThread::idealThreadCount() );
+    get_area_average_downscale_thumnail(m_pMlvObject, 0, downscaleFactor, QThread::idealThreadCount(), m_pRawImage);
     m_pMlvObject->processing->vignette_strength = vstr;
     m_pMlvObject->processing->gradient_enable = gren;
 
     QImage img( m_pRawImage,
-                width,
-                height,
-                width * 3,
+                rawWidth,
+                rawHeight,
+                rawWidth * 3,
                 QImage::Format_RGB888 );
 
     QPixmap pic = QPixmap::fromImage( img.scaled(
@@ -5680,15 +5744,41 @@ void MainWindow::previewPicture( int row )
                         Qt::SmoothTransformation)
                     );
 
-    pic.setDevicePixelRatio( devicePixelRatio() );
-    m_pModel->setData( m_pModel->index( row, 0, QModelIndex() ), QIcon( pic ), Qt::DecorationRole );
+    pic.setDevicePixelRatio( devicePixelRatioF() );
+    m_pModel->setData( m_pModel->index( row, 0, QModelIndex() ), pic, Qt::DecorationRole );
+}
 
-    setPreviewMode();
+void MainWindow::listViewUpdateGridSize()
+{
+    if( m_previewMode != 2 && m_previewMode != 3 ) return;
+
+    //int scrollBarWidth = ui->listViewSession->style()->pixelMetric( QStyle::PM_ScrollBarExtent ) + 3;
+    int scrollBarWidth = AppTheme::getScrollBarExtent();
+    int listViewWidth = ui->listViewSession->width() - scrollBarWidth;
+
+    int minGridWidth = ClipInformation::getPreviewMinWidth() + 10;
+
+    int gridWidth = minGridWidth;
+    int columns = listViewWidth / gridWidth;
+
+    if( columns ) gridWidth += ( listViewWidth % gridWidth ) / columns ;
+
+    int imgWidth = gridWidth - 10;
+    int imgHeight = ClipInformation::getPreviewPaddingTop() + ( imgWidth / ClipInformation::getPreviewRatio() );
+
+    int gridHeight = imgHeight + 18;
+
+    ui->listViewSession->setIconSize( QSize( imgWidth, imgHeight ) );
+    ui->listViewSession->setGridSize( QSize( gridWidth, gridHeight ) );
+    ui->listViewSession->setMinimumSize( QSize( minGridWidth + scrollBarWidth, gridHeight + 6 ) );
+    ui->listViewSession->verticalScrollBar()->setSingleStep( gridHeight );
 }
 
 //Sets the preview mode
 void MainWindow::setPreviewMode( void )
 {
+    QSize iconSize = QSize( 50, 30 );
+
     if( m_previewMode == 0 )
     {
         ui->listViewSession->setVisible( true );
@@ -5708,7 +5798,7 @@ void MainWindow::setPreviewMode( void )
         ui->tableViewSession->setVisible( false );
         m_pSelectionModel = ui->listViewSession->selectionModel();
         ui->listViewSession->setViewMode( QListView::ListMode );
-        ui->listViewSession->setIconSize( QSize( 50, 30 ) );
+        ui->listViewSession->setIconSize( iconSize );
         ui->listViewSession->setGridSize( QSize( -1, -1 ) );
         ui->listViewSession->setAlternatingRowColors( true );
         ui->listViewSession->setResizeMode( QListView::Fixed );
@@ -5721,25 +5811,20 @@ void MainWindow::setPreviewMode( void )
         ui->tableViewSession->setVisible( false );
         m_pSelectionModel = ui->listViewSession->selectionModel();
         ui->listViewSession->setViewMode( QListView::IconMode );
-        ui->listViewSession->setIconSize( QSize( 130, 80 ) );
-        ui->listViewSession->setGridSize( QSize( 140, 100 ) );
         ui->listViewSession->setAlternatingRowColors( false );
         ui->listViewSession->setResizeMode( QListView::Adjust );
         ui->listViewSession->setFlow( QListView::LeftToRight );
         ui->listViewSession->setWrapping( true );
+
+        layout()->activate();
+        listViewUpdateGridSize();
     }
     else //Table mode
     {
         ui->listViewSession->setVisible( false );
         ui->tableViewSession->setVisible( true );
         m_pSelectionModel = ui->tableViewSession->selectionModel();
-        ui->listViewSession->setViewMode( QListView::ListMode );
-        ui->listViewSession->setIconSize( QSize( 0, 0 ) );
-        ui->listViewSession->setGridSize( QSize( -1, -1 ) );
-        ui->listViewSession->setAlternatingRowColors( true );
-        ui->listViewSession->setResizeMode( QListView::Fixed );
-        ui->listViewSession->setFlow( QListView::TopToBottom );
-        ui->listViewSession->setWrapping( false );
+        ui->tableViewSession->setIconSize( iconSize );
     }
 }
 
@@ -5757,12 +5842,10 @@ void MainWindow::paintAudioTrack( void )
     //Fake graphic if nothing is loaded
     if( !m_fileLoaded )
     {
-        pic = QPixmap::fromImage( m_pAudioWave->getMonoWave( NULL, 0, ui->labelAudioTrack->width(), devicePixelRatio() ) );
-        pic.setDevicePixelRatio( devicePixelRatio() );
+        pic = QPixmap::fromImage( m_pAudioWave->getMonoWave( NULL, 0, 1, ui->labelAudioTrack->height(), devicePixelRatioF() ) );
+        pic.setDevicePixelRatio( devicePixelRatioF() );
         ui->labelAudioTrack->setPixmap( pic );
         ui->labelAudioTrack->setEnabled( false );
-        ui->labelAudioTrack->setMinimumSize( 1, 1 ); //Otherwise window won't be smaller than picture
-        ui->labelAudioTrack->setAlignment( Qt::AlignCenter ); //Always in the middle
         return;
     }
     //Make it disabled if clip has no audio
@@ -5770,8 +5853,8 @@ void MainWindow::paintAudioTrack( void )
     //Also fake graphic if no audio in clip
     if( !doesMlvHaveAudio( m_pMlvObject ) )
     {
-        pic = QPixmap::fromImage( m_pAudioWave->getMonoWave( NULL, 0, ui->labelAudioTrack->width(), devicePixelRatio() ) );
-        pic.setDevicePixelRatio( devicePixelRatio() );
+        pic = QPixmap::fromImage( m_pAudioWave->getMonoWave( NULL, 0, 1, ui->labelAudioTrack->height(), devicePixelRatioF() ) );
+        pic.setDevicePixelRatio( devicePixelRatioF() );
         ui->labelAudioTrack->setPixmap( pic );
     }
     //Load audio data and paint
@@ -5781,60 +5864,58 @@ void MainWindow::paintAudioTrack( void )
         int16_t* audio_data = (int16_t*)getMlvAudioData( m_pMlvObject );
         uint64_t audio_size = getMlvAudioSize( m_pMlvObject );
         //paint
-        pic = QPixmap::fromImage( m_pAudioWave->getMonoWave( audio_data, audio_size, ui->labelAudioTrack->width(), devicePixelRatio() ) );
-        pic.setDevicePixelRatio( devicePixelRatio() );
+        pic = QPixmap::fromImage( m_pAudioWave->getMonoWave( audio_data, audio_size, ui->labelAudioTrack->width(), ui->labelAudioTrack->height(), devicePixelRatioF() ) );
+        pic.setDevicePixelRatio( devicePixelRatioF() );
         ui->labelAudioTrack->setPixmap( pic );
     }
-    ui->labelAudioTrack->setMinimumSize( 1, 1 ); //Otherwise window won't be smaller than picture
-    ui->labelAudioTrack->setAlignment( Qt::AlignCenter ); //Always in the middle
-    ui->labelAudioTrack->setSizePolicy( QSizePolicy::Preferred, QSizePolicy::Fixed );
-    ui->labelAudioTrack->setMinimumHeight( 32 );
-    ui->labelAudioTrack->setMaximumHeight( 32 );
+
+    ui->labelAudioTrack->setMinimumWidth( 1 ); //Otherwise window won't be smaller than picture
 }
 
 //Draw Zebras, return: 1=under, 2=over, 3=under+over, 0=okay
-uint8_t MainWindow::drawZebras()
+void MainWindow::drawZebras()
 {
-    if (!ui->actionShowZebras->isChecked())
-        return 0;
-
     uint8_t underOver = 0;
-    QImage image = m_pGraphicsItem->pixmap().toImage();
 
-    const int width  = image.width();
-    const int height = image.height();
-
-    for (int y = 0; y < height; ++y)
+    if( ui->actionShowZebras->isChecked() )
     {
-        auto *line = reinterpret_cast<QRgb *>( image.scanLine(y) );
+        QImage image = m_pGraphicsItem->pixmap().toImage();
 
-        for (int x = 0; x < width; ++x)
+        const int width  = image.width();
+        const int height = image.height();
+
+        for( int y = 0; y < height; y++ )
         {
-            const QRgb pixel = line[x];
+            QRgb *line = reinterpret_cast<QRgb*>( image.scanLine( y ) );
 
-            //Same lightness definition as QColor::lightness()
-            const int r = qRed( pixel );
-            const int g = qGreen( pixel );
-            const int b = qBlue( pixel );
-
-            const int lightness = ( qMax( r, qMax( g, b ) ) + qMin( r, qMin( g, b ) ) + 1 ) >> 1;
-
-            if ( lightness >= 252 )
+            for( int x = 0; x < width; x++ )
             {
-                line[x] = qRgb( 255, 0, 0 );
-                underOver |= 0x02;
-            }
-            else if ( lightness <= 3 )
-            {
-                line[x] = qRgb( 0, 0, 255 );
-                underOver |= 0x01;
+                const QRgb pixel = line[x];
+
+                //Same lightness definition as QColor::lightness()
+                const int r = qRed( pixel );
+                const int g = qGreen( pixel );
+                const int b = qBlue( pixel );
+
+                const int lightness = ( qMax( r, qMax( g, b ) ) + qMin( r, qMin( g, b ) ) + 1 ) >> 1;
+
+                if( lightness >= 252 )
+                {
+                    /*if ( ((x + y) % 4) < 2 )*/ line[x] = qRgb( 255, 0, 0 );
+                    underOver |= 0x02;
+                }
+                else if( lightness <= 3 )
+                {
+                    /*if ( ((x + y) % 4) < 2 )*/ line[x] = qRgb( 0, 0, 255 );
+                    underOver |= 0x01;
+                }
             }
         }
-    }
-    //Set image with zebras to viewer
-    m_pGraphicsItem->setPixmap( QPixmap::fromImage( image ) );
 
-    return underOver;
+        m_pGraphicsItem->setPixmap( QPixmap::fromImage( image ) );
+    }
+
+    ui->labelScope->setUnderOver( underOver );
 }
 
 //Write the frame number into the label
@@ -5842,13 +5923,13 @@ void MainWindow::drawFrameNumberLabel( void )
 {
     if( m_fileLoaded )
     {
-        m_pFrameNumber->setText( tr( "Frame %1/%2" )
+        m_pFrameNumber->setText( tr( "Frame: %1/%2" )
                                  .arg( ui->horizontalSliderPosition->value() + 1 )
                                  .arg( ui->horizontalSliderPosition->maximum() + 1 ) );
     }
     else
     {
-        m_pFrameNumber->setText( tr( "Frame 0/0" ) );
+        m_pFrameNumber->setText( tr( "Frame: 0/0" ) );
     }
 }
 
@@ -6257,9 +6338,9 @@ int MainWindow::toolButtonGCurvesCurrentIndex()
 void MainWindow::on_actionAbout_triggered()
 {
     QPixmap pixmap = QPixmap( ":/IMG/IMG/Magic_Lantern_logo.png" )
-                .scaled( 128 * devicePixelRatio(), 112 * devicePixelRatio(),
+                .scaled( 128 * devicePixelRatioF(), 112 * devicePixelRatioF(),
                          Qt::KeepAspectRatio, Qt::SmoothTransformation );
-        pixmap.setDevicePixelRatio( devicePixelRatio() );
+        pixmap.setDevicePixelRatio( devicePixelRatioF() );
         QByteArray byteArray;
         QBuffer buffer(&byteArray);
         pixmap.save(&buffer, "PNG");
@@ -6321,10 +6402,16 @@ void MainWindow::on_horizontalSliderPosition_valueChanged(int position)
 }
 
 //Show Info Dialog
-void MainWindow::on_actionClip_Information_triggered()
+void MainWindow::on_actionClipInfo_triggered()
 {
-    if( !m_pInfoDialog->isVisible() ) m_pInfoDialog->show();
-    else m_pInfoDialog->hide();
+    if( !m_pInfoDialog->isVisible() )
+    {
+        m_pInfoDialog->show();
+    }
+    else
+    {
+        m_pInfoDialog->hide();
+    }
 }
 
 void MainWindow::on_horizontalSliderGamma_valueChanged(int position)
@@ -6377,14 +6464,6 @@ void MainWindow::on_horizontalSliderContrastGradient_valueChanged(int position)
 
 void MainWindow::on_horizontalSliderTemperature_valueChanged(int position)
 {
-    int value = ( 218 - 42 ) * ( ui->horizontalSliderTemperature->value() - ui->horizontalSliderTemperature->minimum() ) / ( ui->horizontalSliderTemperature->maximum() - ui->horizontalSliderTemperature->minimum() );
-    ui->horizontalSliderTemperature->setStyleSheet(
-        QString( "QSlider::add-page:horizontal{background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(%1, 130, %2, 255), stop:1 rgba(218, 130, 42, 255));}"
-                 "QSlider::sub-page:horizontal{background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(42, 130, 218, 255), stop:1 rgba(%1, 130, %2, 255));}"
-                 "QSlider::add-page:horizontal:disabled{background:rgb(80,80,80);}"
-                 "QSlider::sub-page:horizontal:disabled{background:rgb(80,80,80);}" ).arg( value+42 ).arg( 218-value )
-    );
-
     ui->label_TemperatureVal->setText( QString("%1 K").arg( position ) );
 
     if( !m_fileLoaded ) return;
@@ -6394,14 +6473,6 @@ void MainWindow::on_horizontalSliderTemperature_valueChanged(int position)
 
 void MainWindow::on_horizontalSliderTint_valueChanged(int position)
 {
-    int value = ( 218 - 42 ) * ( ui->horizontalSliderTint->value() - ui->horizontalSliderTint->minimum() ) / ( ui->horizontalSliderTint->maximum() - ui->horizontalSliderTint->minimum() );
-    ui->horizontalSliderTint->setStyleSheet(
-        QString( "QSlider::add-page:horizontal{background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(%1, %2, %1, 255), stop:1 rgba(218, 42, 218, 255));}"
-                 "QSlider::sub-page:horizontal{background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(42, 218, 42, 255), stop:1 rgba(%1, %2, %1, 255));}"
-                 "QSlider::add-page:horizontal:disabled{background:rgb(80,80,80);}"
-                 "QSlider::sub-page:horizontal:disabled{background:rgb(80,80,80);}" ).arg( value+42 ).arg( 218-value )
-    );
-
     ui->label_TintVal->setText( QString("%1").arg( position ) );
 
     if( !m_fileLoaded ) return;
@@ -6601,7 +6672,6 @@ void MainWindow::on_horizontalSliderCaRed_valueChanged(int position)
     ui->label_CaRedVal->setText( QString("%1").arg( position / 10.0, 0, 'f', 1 ) );
 
     resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
 }
 
@@ -6611,7 +6681,6 @@ void MainWindow::on_horizontalSliderCaBlue_valueChanged(int position)
     ui->label_CaBlueVal->setText( QString("%1").arg( position / 10.0, 0, 'f', 1 ) );
 
     resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
 }
 
@@ -6647,18 +6716,12 @@ void MainWindow::on_horizontalSliderRawWhite_valueChanged(int position)
         ui->horizontalSliderRawWhite->setValue( position );
     }
 
-    while( !m_pRenderThread->isIdle() ) QThread::msleep(1);
-
     /* Set mlv raw white level to the slider value */
     setMlvWhiteLevel( m_pMlvObject, position );
     /* Set processing white level with correction */
     processingSetWhiteLevel( m_pProcessingObject, position, getMlvBitdepth( m_pMlvObject ) );
 
-    llrpResetFpmStatus(m_pMlvObject);
-    llrpResetBpmStatus(m_pMlvObject);
-    resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
-    m_frameChanged = true;
+    m_rawProcessingChanged = true;
 }
 
 void MainWindow::on_horizontalSliderRawBlack_valueChanged(int position)
@@ -6680,18 +6743,12 @@ void MainWindow::on_horizontalSliderRawBlack_valueChanged(int position)
         ui->horizontalSliderRawBlack->setValue( rawBlack * 10 );
     }
 
-    while( !m_pRenderThread->isIdle() ) QThread::msleep(1);
-
     /* Set mlv raw white level to the slider value */
     setMlvBlackLevel( m_pMlvObject, rawBlack );
     /* Set processing white level with correction */
     processingSetBlackLevel( m_pProcessingObject, rawBlack, getMlvBitdepth( m_pMlvObject ) );
 
-    llrpResetFpmStatus(m_pMlvObject);
-    llrpResetBpmStatus(m_pMlvObject);
-    resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
-    m_frameChanged = true;
+    m_rawProcessingChanged = true;
 }
 
 void MainWindow::on_horizontalSliderDualIsoEvCorrection_valueChanged(int position)
@@ -6700,8 +6757,6 @@ void MainWindow::on_horizontalSliderDualIsoEvCorrection_valueChanged(int positio
 
     if( position != 1 )
     {
-        if( !m_pRenderThread->isIdle() ) return;
-
         ev /= 200.0;
         ui->DualIsoEvCorrectionVal->setText( QString("%1").arg( ev, 0, 'f', 2 ) );
     }
@@ -6715,18 +6770,13 @@ void MainWindow::on_horizontalSliderDualIsoEvCorrection_valueChanged(int positio
 
     m_pMlvObject->llrawproc->diso_ev_correction = ev;
 
-    llrpResetFpmStatus(m_pMlvObject);
-    llrpResetBpmStatus(m_pMlvObject);
-    resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
-    m_frameChanged = true;
+    m_rawProcessingChanged = true;
 }
 
 void MainWindow::on_horizontalSliderDualIsoBlackDelta_valueChanged(int position)
 {
     if( position != -1 )
     {
-        if( !m_pRenderThread->isIdle() ) return;
         ui->DualIsoBlackDeltaVal->setText( QString("%1").arg( position ) );
     }
     else
@@ -6739,11 +6789,7 @@ void MainWindow::on_horizontalSliderDualIsoBlackDelta_valueChanged(int position)
 
     m_pMlvObject->llrawproc->diso_black_delta = position;
 
-    llrpResetFpmStatus(m_pMlvObject);
-    llrpResetBpmStatus(m_pMlvObject);
-    resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
-    m_frameChanged = true;
+    m_rawProcessingChanged = true;
 }
 
 void MainWindow::on_horizontalSliderTone_valueChanged(int position)
@@ -7184,6 +7230,12 @@ void MainWindow::on_actionExport_triggered()
         fileType = tr("TIFF (*.tif)");
         fileEnding = ".tif";
     }
+    else if( m_codecProfile == CODEC_PNG )
+    {
+        saveFileName.append( ".png" );
+        fileType = tr("PNG (*.png)");
+        fileEnding = ".png";
+    }
     else if( m_codecProfile == CODEC_JPG2K )
     {
         saveFileName.append( ".jp2" );
@@ -7250,6 +7302,8 @@ void MainWindow::on_actionExport_triggered()
     //if multiple files selected or >= 1 sequence
     else
     {
+        QString sequence = QString( "######%1" ).arg( fileEnding );
+
         //Folder Dialog
         QString folderName = QFileDialog::getExistingDirectory(this, tr("Choose Export Folder"),
                                                           QFileInfo( saveFileName ).absolutePath(),
@@ -7271,17 +7325,15 @@ void MainWindow::on_actionExport_triggered()
             if( isExportSequence() )
             {
                 QString fileName = GET_CLIP( row )->getName().replace( ".mlv", "", Qt::CaseInsensitive );
-                fileName.prepend( "/" );
-                fileName.prepend( folderName );
+                fileName = QDir( folderName ).filePath( fileName );
 
-                if( QDir( fileName ).exists() ) overwriteList.append( fileName.append( "/…" ) );
+                if( QDir( fileName ).exists() ) overwriteList.append( QDir( fileName ).filePath( sequence ) );
             }
             //Clips
             else
             {
                 QString fileName = GET_CLIP( row )->getName().replace( ".mlv", fileEnding, Qt::CaseInsensitive );
-                fileName.prepend( "/" );
-                fileName.prepend( folderName );
+                fileName = QDir( folderName ).filePath( fileName );
 
                 if( QFileInfo( fileName ).exists() ) overwriteList.append( fileName );
             }
@@ -7323,14 +7375,17 @@ void MainWindow::on_actionExport_triggered()
 
             //Create Path+Name
             QString fileName = GET_CLIP( row )->getName().replace( ".mlv", fileEnding, Qt::CaseInsensitive );
-            fileName.prepend( "/" );
-            fileName.prepend( folderName );
+            fileName = QDir( folderName ).filePath( fileName );
 
             //Skip if wanted
             foreach( QString fileOverwriteName, overwriteList )
             {
-                //qDebug() << skip << fileOverwriteName << fileName;
-                if( skip == true && fileOverwriteName == fileName )
+                QString fileNameCompare = fileName;
+
+                if( isExportSequence() ) fileNameCompare = QDir( folderName ).filePath( GET_CLIP( row )->getName().replace( ".mlv", "", Qt::CaseInsensitive ) + "/" + sequence );
+
+                //qDebug() << skip << fileOverwriteName << fileNameCompare;
+                if( skip && fileOverwriteName == fileNameCompare )
                 {
                     skipFile = true;
                     continue;
@@ -7554,8 +7609,8 @@ void MainWindow::enableCreativeAdjustments( bool enable )
     ui->label_highlights->setEnabled( enable );
     ui->label_shadows->setEnabled( enable );
     ui->label_contrast_gradient->setEnabled( enable );
-    ui->groupBoxHsl->setEnabled( enable );
-    ui->groupBoxToning->setEnabled( enable );
+    ui->frameHsl->setEnabled( enable );
+    ui->frameToning->setEnabled( enable );
     ui->label_gradationcurves->setEnabled( enable );
     ui->toolButtonGCurvesY->setEnabled( enable );
     ui->toolButtonGCurvesR->setEnabled( enable );
@@ -7634,30 +7689,67 @@ void MainWindow::on_actionZoom100_triggered()
         m_zoomTo100Center = true;
     }
     m_frameChanged = true;
+    m_zoomModeChanged = true;
+}
+
+ScopesLabel::ScopeType MainWindow::getSelectedScopeType()
+{
+    if( ui->actionShowHistogram->isChecked() )
+    {
+        return ScopesLabel::ScopeHistogram;
+    }
+    else if( ui->actionShowWaveFormMonitor->isChecked() )
+    {
+        return ScopesLabel::ScopeWaveForm;
+    }
+    else if( ui->actionShowParade->isChecked() )
+    {
+        return ScopesLabel::ScopeRgbParade;
+    }
+    else if( ui->actionShowVectorScope->isChecked() )
+    {
+        return ScopesLabel::ScopeVectorScope;
+    }
+
+    return ScopesLabel::None;
+}
+
+void MainWindow::setSelectedScopeType()
+{
+    if( SESSION_EMPTY || m_inOpeningProcess )
+    {
+        ui->labelScope->setScope( NULL, 0, 0, getSelectedScopeType() );
+        return;
+    }
+
+    if( ui->actionShowEditArea->isChecked() )
+    {
+        ui->labelScope->setScope( m_pRenderThread, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), getSelectedScopeType() );
+    }
 }
 
 //Show Histogram
-void MainWindow::on_actionShowHistogram_triggered(void)
+void MainWindow::on_actionShowHistogram_triggered()
 {
-    m_frameChanged = true;
+    setSelectedScopeType();
 }
 
 //Show Waveform
-void MainWindow::on_actionShowWaveFormMonitor_triggered(void)
+void MainWindow::on_actionShowWaveFormMonitor_triggered()
 {
-    m_frameChanged = true;
+    setSelectedScopeType();
 }
 
 //Show Parade
 void MainWindow::on_actionShowParade_triggered()
 {
-    m_frameChanged = true;
+    setSelectedScopeType();
 }
 
 //Show VectorScope
 void MainWindow::on_actionShowVectorScope_triggered()
 {
-    m_frameChanged = true;
+    setSelectedScopeType();
 }
 
 //Use none debayer (speedy B&W)
@@ -7788,18 +7880,14 @@ void MainWindow::on_actionExportSettings_triggered()
         //Refresh Timecode Label
         if( m_tcModeDuration )
         {
-            QPixmap pic = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( ui->spinBoxCutOut->value() - ui->spinBoxCutIn->value() + 1, getFramerate() ).scaled( 200 * devicePixelRatio(),
-                                                                                              30 * devicePixelRatio(),
-                                                                                              Qt::IgnoreAspectRatio, Qt::SmoothTransformation) );
-            pic.setDevicePixelRatio( devicePixelRatio() );
+            QPixmap pic = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( ui->spinBoxCutOut->value() - ui->spinBoxCutIn->value() + 1, getFramerate() ) );
+            pic.setDevicePixelRatio( devicePixelRatioF() );
             m_pTcLabel->setPixmap( pic );
         }
         else
         {
-            QPixmap pic = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( ui->horizontalSliderPosition->value(), getFramerate() ).scaled( 200 * devicePixelRatio(),
-                                                                                              30 * devicePixelRatio(),
-                                                                                              Qt::IgnoreAspectRatio, Qt::SmoothTransformation) );
-            pic.setDevicePixelRatio( devicePixelRatio() );
+            QPixmap pic = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( ui->horizontalSliderPosition->value(), getFramerate() ) );
+            pic.setDevicePixelRatio( devicePixelRatioF() );
             m_pTcLabel->setPixmap( pic );
         }
 
@@ -7821,7 +7909,7 @@ void MainWindow::on_actionResetReceipt_triggered()
 }
 
 //Copy receipt to clipboard
-void MainWindow::on_actionCopyRecept_triggered()
+void MainWindow::on_actionCopyReceipt_triggered()
 {
     if( SESSION_CLIP_COUNT <= 0 ) return;
     QModelIndexList list = selectedClipsList();
@@ -7838,6 +7926,7 @@ void MainWindow::on_actionCopyRecept_triggered()
     //Save slider receipt
     setReceipt( ACTIVE_RECEIPT );
     //Copy mask
+    m_pCopyMask->adjustSize();
     m_pCopyMask->exec();
     //Save selected to clipboard
     replaceReceipt( m_pReceiptClipboard, GET_RECEIPT( clipToCopy ), true );
@@ -7875,6 +7964,9 @@ void MainWindow::on_actionNewSession_triggered()
 //Open Session
 void MainWindow::on_actionOpenSession_triggered()
 {
+    // To immediately hide context menu
+    qApp->processEvents();
+
     //Stop playback if active
     ui->actionPlay->setChecked( false );
 
@@ -7990,7 +8082,6 @@ void MainWindow::on_actionDeleteSelectedClips_triggered()
     if( SESSION_CLIP_COUNT > 0 )
     {
         deleteFileFromSession();
-        ui->actionDeleteSelectedClips->setEnabled( false );
     }
 }
 
@@ -8006,25 +8097,19 @@ void MainWindow::on_tableViewSession_activated(const QModelIndex &index)
     showFileInEditor( index.data( ROLE_REALINDEX ).toInt() );
 }
 
-//Sessionlist visibility changed -> redraw picture
+//Sessionlist visibility changed
 void MainWindow::on_dockWidgetSession_visibilityChanged(bool visible)
 {
-    if( !isMinimized() )
-    {
-        ui->actionShowSessionArea->setChecked( visible );
-        qApp->processEvents();
-        m_frameChanged = true;
-    }
+    if( !isMinimized() ) ui->actionShowSessionArea->setChecked( visible );
 }
 
-//Edit area visibility changed -> redraw picture
+//Edit area visibility changed
 void MainWindow::on_dockWidgetEdit_visibilityChanged(bool visible)
 {
     if( !isMinimized() )
     {
         ui->actionShowEditArea->setChecked( visible );
-        qApp->processEvents();
-        m_frameChanged = true;
+        if( visible) setSelectedScopeType();
     }
 }
 
@@ -8032,100 +8117,89 @@ void MainWindow::on_dockWidgetEdit_visibilityChanged(bool visible)
 void MainWindow::on_actionShowAudioTrack_toggled(bool checked)
 {
     ui->labelAudioTrack->setVisible( checked );
-    qApp->processEvents();
-    m_frameChanged = true;
+}
+
+//Rightclick on SessionList
+void MainWindow::sessionCustomContextMenu(QPoint globalPos)
+{
+    // Create mark menu
+    QMenu markMenu;
+    markMenu.addAction( ui->actionMarkRed );
+    markMenu.addAction( ui->actionMarkYellow );
+    markMenu.addAction( ui->actionMarkGreen );
+    markMenu.addAction( ui->actionUnmark );
+
+    // Create menu and insert some actions
+    QMenu myMenu;
+    QModelIndexList list = selectedClipsList();
+
+    if( SESSION_CLIP_COUNT > 0 )
+    {
+        if( list.size() == 1 )
+        {
+            myMenu.addAction( "Show in Editor",  this, &MainWindow::rightClickShowFile );
+            myMenu.addSeparator();
+            myMenu.addAction( ui->actionCopyReceipt );
+            myMenu.addAction( ui->actionPasteReceipt );
+            myMenu.addSeparator();
+            myMenu.addAction( ui->actionSelectAllClips );
+            myMenu.addAction( ui->actionDeleteSelectedClips );
+            myMenu.addSeparator();
+            markMenu.setTitle( "Mark Clip" );
+            myMenu.addMenu( &markMenu );
+            myMenu.addSeparator();
+            myMenu.addAction( ui->actionRenameClip );
+            myMenu.addAction( ui->actionShowInFinder );
+            myMenu.addAction( ui->actionOpenWithExternalApplication );
+            myMenu.addAction( ui->actionSelectExternalApplication );
+            myMenu.addSeparator();
+        }
+        else if( list.size() > 1 )
+        {
+            myMenu.addAction( ui->actionPasteReceipt );
+            myMenu.addSeparator();
+            if( list.size() < SESSION_CLIP_COUNT ) myMenu.addAction( ui->actionSelectAllClips );
+            myMenu.addAction( ui->actionDeleteSelectedClips );
+            myMenu.addSeparator();
+            markMenu.setTitle( "Mark Clips" );
+            myMenu.addMenu( &markMenu );
+            myMenu.addSeparator();
+        }
+    }
+
+    if( !list.size() )
+    {
+        myMenu.addAction( ui->actionNewSession );
+        myMenu.addAction( ui->actionOpenSession );
+        myMenu.addMenu( m_pRecentFilesMenu );
+
+        if( SESSION_CLIP_COUNT && list.size() < SESSION_CLIP_COUNT )
+        {
+            myMenu.addSeparator();
+            myMenu.addAction( ui->actionSelectAllClips );
+        }
+
+        myMenu.addSeparator();
+        myMenu.addAction( ui->actionOpen );
+        myMenu.addAction( ui->actionTranscodeAndImport );
+        myMenu.addSeparator();
+    }
+
+    myMenu.addMenu( ui->menuSessionListPreview );
+    // Show context menu at handling position
+    myMenu.exec( globalPos );
 }
 
 //Rightclick on SessionList
 void MainWindow::on_listViewSession_customContextMenuRequested(const QPoint &pos)
 {
-    // Handle global position
-    QPoint globalPos = ui->listViewSession->mapToGlobal( pos );
-
-    // Create mark menu
-    QMenu markMenu;
-    markMenu.addAction( ui->actionMarkRed );
-    markMenu.addAction( ui->actionMarkYellow );
-    markMenu.addAction( ui->actionMarkGreen );
-    markMenu.addAction( ui->actionUnmark );
-
-    // Create menu and insert some actions
-    QMenu myMenu;
-    QModelIndexList list = selectedClipsList();
-    if( SESSION_CLIP_COUNT > 0 )
-    {
-        if( list.size() == 1 )
-        {
-            myMenu.addAction( ui->actionSelectAllClips );
-            myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Image-icon.png" ), "Show in Editor",  this, SLOT( rightClickShowFile() ) );
-            myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Delete-icon.png" ), "Delete Selected File from Session",  this, SLOT( deleteFileFromSession() ) );
-            myMenu.addAction( ui->actionRename );
-            markMenu.setTitle( "Mark Clip" );
-            myMenu.addMenu( &markMenu );
-            myMenu.addSeparator();
-            myMenu.addAction( ui->actionShowInFinder );
-            myMenu.addAction( ui->actionOpenWithExternalApplication );
-            myMenu.addAction( ui->actionSelectExternalApplication );
-            myMenu.addSeparator();
-        }
-        else if( list.size() > 1 )
-        {
-            myMenu.addAction( ui->actionPasteReceipt );
-            myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Delete-icon.png" ), "Delete Selected Files from Session",  this, SLOT( deleteFileFromSession() ) );
-            markMenu.setTitle( "Mark Clips" );
-            myMenu.addMenu( &markMenu );
-            myMenu.addSeparator();
-        }
-    }
-    myMenu.addMenu( ui->menuSessionListPreview );
-    // Show context menu at handling position
-    myMenu.exec( globalPos );
+    sessionCustomContextMenu( ui->listViewSession->mapToGlobal( pos ) );
 }
 
 //Rightclick on SessionTable
 void MainWindow::on_tableViewSession_customContextMenuRequested(const QPoint &pos)
 {
-    // Handle global position
-    QPoint globalPos = ui->listViewSession->mapToGlobal( pos );
-
-    // Create mark menu
-    QMenu markMenu;
-    markMenu.addAction( ui->actionMarkRed );
-    markMenu.addAction( ui->actionMarkYellow );
-    markMenu.addAction( ui->actionMarkGreen );
-    markMenu.addAction( ui->actionUnmark );
-
-    // Create menu and insert some actions
-    QMenu myMenu;
-    QModelIndexList list = selectedClipsList();
-    if( SESSION_CLIP_COUNT > 0 )
-    {
-        if( list.size() == 1 )
-        {
-            myMenu.addAction( ui->actionSelectAllClips );
-            myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Image-icon.png" ), "Show in Editor",  this, SLOT( rightClickShowFile() ) );
-            myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Delete-icon.png" ), "Delete Selected File from Session",  this, SLOT( deleteFileFromSession() ) );
-            myMenu.addAction( "Rename", this, SLOT( renameActiveClip() ) );
-            markMenu.setTitle( "Mark Clip" );
-            myMenu.addMenu( &markMenu );
-            myMenu.addSeparator();
-            myMenu.addAction( ui->actionShowInFinder );
-            myMenu.addAction( ui->actionOpenWithExternalApplication );
-            myMenu.addAction( ui->actionSelectExternalApplication );
-            myMenu.addSeparator();
-        }
-        else if( list.size() > 1 )
-        {
-            myMenu.addAction( ui->actionPasteReceipt );
-            myMenu.addAction( QIcon( ":/RetinaIMG/RetinaIMG/Delete-icon.png" ), "Delete Selected Files from Session",  this, SLOT( deleteFileFromSession() ) );
-            markMenu.setTitle( "Mark Clips" );
-            myMenu.addMenu( &markMenu );
-            myMenu.addSeparator();
-        }
-    }
-    myMenu.addMenu( ui->menuSessionListPreview );
-    // Show context menu at handling position
-    myMenu.exec( globalPos );
+    sessionCustomContextMenu( ui->tableViewSession->mapToGlobal( pos ) );
 }
 
 //Delete selected files from session
@@ -8137,14 +8211,17 @@ void MainWindow::deleteFileFromSession( void )
     //Ask for options
     QMessageBox msg;
     msg.setIcon( QMessageBox::Question );
-    msg.setWindowTitle( tr( "%1 – Remove clip" ).arg( APPNAME ) );
-    msg.setText( tr( "Remove clip from session, or delete clip from disk?" ) );
-    msg.addButton(tr("Remove"), QMessageBox::ApplyRole);
-    QPushButton *deleteButton = msg.addButton(tr("Delete from Disk"), QMessageBox::ActionRole);
-    QPushButton *abortButton = msg.addButton(tr("Abort"), QMessageBox::RejectRole);
-    msg.setDefaultButton( abortButton );
+    msg.setWindowTitle( tr( "%1 – Remove Clip" ).arg( APPNAME ) );
+    msg.setText( tr( "Do you want to remove selected clip(s) from session, or delete from disk?" ) );
+#if QT_VERSION >= QT_VERSION_CHECK(6, 6, 0)
+    msg.setOption( QMessageBox::Option::DontUseNativeDialog );
+#endif
+    msg.addButton( tr("Remove"), QMessageBox::ApplyRole );
+    QPushButton *deleteButton = msg.addButton( tr( "Delete from Disk" ), QMessageBox::ActionRole );
+    QPushButton *cancelButton = msg.addButton( QMessageBox::Cancel );
+    msg.setDefaultButton( cancelButton );
     msg.exec();
-    if( msg.clickedButton() == abortButton ) return;
+    if( msg.clickedButton() == cancelButton ) return;
 
     //begin clip delete process
     m_inClipDeleteProcess = true;
@@ -8217,6 +8294,10 @@ void MainWindow::deleteFileFromSession( void )
 
         //Caching is in which state? Set it!
         if( ui->actionCaching->isChecked() ) on_actionCaching_triggered();
+
+        m_pSessionStatus->setText( tr( "Session: %1 %2" )
+                                   .arg( SESSION_CLIP_COUNT )
+                                   .arg( SESSION_CLIP_COUNT == 1 ? tr( "clip" ) : tr( "clips" ) ) );
     }
     else
     {
@@ -8229,7 +8310,7 @@ void MainWindow::deleteFileFromSession( void )
 }
 
 //Rename the selected clip
-void MainWindow::renameActiveClip( void )
+void MainWindow::on_actionRenameClip_triggered()
 {
     //Catch all invalid cases to not crash the app or damage clips
     if( !m_pModel || SESSION_EMPTY || m_pModel->activeRow() < 0 ) return;
@@ -8312,7 +8393,9 @@ void MainWindow::renameActiveClip( void )
 //Shows the file, which is selected via contextmenu
 void MainWindow::rightClickShowFile( void )
 {
-    showFileInEditor( selectedClipsList().first().row() );
+    // To immediately hide context menu
+    qApp->processEvents();
+    showFileInEditor( selectedClipsList().first().data( ROLE_REALINDEX ).toInt() );
 }
 
 //Select all files in SessionList
@@ -8332,12 +8415,14 @@ void MainWindow::pictureCustomContextMenuRequested(const QPoint &pos)
     QMenu myMenu;
     myMenu.addAction( ui->actionZoomFit );
     myMenu.addAction( ui->actionZoom100 );
+    myMenu.addAction( ui->actionFullscreen );
     myMenu.addSeparator();
     myMenu.addMenu( ui->menuDemosaicForPlayback );
     myMenu.addAction( ui->actionBetterResizer );
     myMenu.addAction( ui->actionViewerBackgroundColor );
     myMenu.addSeparator();
     myMenu.addAction( ui->actionShowZebras );
+
     if( ui->actionFullscreen->isChecked() )
     {
         myMenu.addSeparator();
@@ -8346,8 +8431,6 @@ void MainWindow::pictureCustomContextMenuRequested(const QPoint &pos)
         myMenu.addAction( ui->actionPlay );
         myMenu.addAction( ui->actionNextFrame );
         myMenu.addAction( ui->actionLoop );
-        myMenu.addSeparator();
-        myMenu.addAction( ui->actionFullscreen );
     }
     // Show context menu at handling position
     myMenu.exec( globalPos );
@@ -8372,246 +8455,190 @@ void MainWindow::on_labelScope_customContextMenuRequested(const QPoint &pos)
 //DoubleClick on Gamma Label
 void MainWindow::on_label_GammaVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderGamma, ui->label_GammaVal, 0.01, 2, 100.0 );
-    editSlider.exec();
-    ui->horizontalSliderGamma->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderGamma, ui->label_GammaVal, 0.01, 2, 100.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on Exposure Label
 void MainWindow::on_label_ExposureVal_doubleClicked( void )
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderExposure, ui->label_ExposureVal, 0.01, 2, 100.0 );
-    editSlider.exec();
-    ui->horizontalSliderExposure->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderExposure, ui->label_ExposureVal, 0.01, 2, 100.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on Exposure Gradient Label
 void MainWindow::on_label_ExposureGradient_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderExposureGradient, ui->label_ExposureGradient, 0.01, 2, 100.0 );
-    editSlider.exec();
-    ui->horizontalSliderExposureGradient->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderExposureGradient, ui->label_ExposureGradient, 0.01, 2, 100.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on Contrast Label
 void MainWindow::on_label_ContrastVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderContrast, ui->label_ContrastVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderContrast->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderContrast, ui->label_ContrastVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on Pivot Label
 void MainWindow::on_label_PivotVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderPivot, ui->label_PivotVal, 0.01, 2, 100.0 );
-    editSlider.exec();
-    ui->horizontalSliderPivot->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderPivot, ui->label_PivotVal, 0.01, 2, 100.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on Contrast Gradient Label
 void MainWindow::on_label_ContrastGradientVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderContrastGradient, ui->label_ContrastGradientVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderContrastGradient->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderContrastGradient, ui->label_ContrastGradientVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on Temperature Label
 void MainWindow::on_label_TemperatureVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderTemperature, ui->label_TemperatureVal, 1.0, 0, 1.0 );
-    editSlider.ui->doubleSpinBox->setValue( ui->label_TemperatureVal->text().left(5).toInt() );
-    editSlider.ui->doubleSpinBox->selectAll();
-    editSlider.exec();
-    ui->horizontalSliderTemperature->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderTemperature, ui->label_TemperatureVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on Tint Label
 void MainWindow::on_label_TintVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderTint, ui->label_TintVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderTint->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderTint, ui->label_TintVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on Clarity Label
 void MainWindow::on_label_ClarityVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderClarity, ui->label_ClarityVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderClarity->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderClarity, ui->label_ClarityVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on Vibrance Label
 void MainWindow::on_label_VibranceVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderVibrance, ui->label_VibranceVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderVibrance->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderVibrance, ui->label_VibranceVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on Saturation Label
 void MainWindow::on_label_SaturationVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderSaturation, ui->label_SaturationVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderSaturation->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderSaturation, ui->label_SaturationVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on Dr Label
 void MainWindow::on_label_DrVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderDR, ui->label_DrVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderDR->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderDR, ui->label_DrVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on Ds Label
 void MainWindow::on_label_DsVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderDS, ui->label_DsVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderDS->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderDS, ui->label_DsVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on Lr Label
 void MainWindow::on_label_LrVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderLR, ui->label_LrVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderLR->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderLR, ui->label_LrVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on Ls Label
 void MainWindow::on_label_LsVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderLS, ui->label_LsVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderLS->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderLS, ui->label_LsVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on Lighten Label
 void MainWindow::on_label_LightenVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderLighten, ui->label_LightenVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderLighten->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderLighten, ui->label_LightenVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on Shadows Label
 void MainWindow::on_label_ShadowsVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderShadows, ui->label_ShadowsVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderShadows->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderShadows, ui->label_ShadowsVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on Highlights Label
 void MainWindow::on_label_HighlightsVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderHighlights, ui->label_HighlightsVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderHighlights->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderHighlights, ui->label_HighlightsVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on Sharpen Label
 void MainWindow::on_label_Sharpen_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderSharpen, ui->label_Sharpen, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderSharpen->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderSharpen, ui->label_Sharpen, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on Sharpen Masking Label
 void MainWindow::on_label_ShMasking_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderShMasking, ui->label_ShMasking, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderShMasking->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderShMasking, ui->label_ShMasking, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on ChromaBlur Label
 void MainWindow::on_label_ChromaBlur_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderChromaBlur, ui->label_ChromaBlur, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderChromaBlur->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderChromaBlur, ui->label_ChromaBlur, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on DenoiseStrength Label
 void MainWindow::on_label_DenoiseStrength_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderDenoiseStrength, ui->label_DenoiseStrength, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderDenoiseStrength->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderDenoiseStrength, ui->label_DenoiseStrength, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on RbfDenoiseLuma Label
 void MainWindow::on_label_RbfDenoiseLuma_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderRbfDenoiseLuma, ui->label_RbfDenoiseLuma, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderRbfDenoiseLuma->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderRbfDenoiseLuma, ui->label_RbfDenoiseLuma, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on RbfDenoiseChroma Label
 void MainWindow::on_label_RbfDenoiseChroma_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderRbfDenoiseChroma, ui->label_RbfDenoiseChroma, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderRbfDenoiseChroma->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderRbfDenoiseChroma, ui->label_RbfDenoiseChroma, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on RbfDenoiseRange Label
 void MainWindow::on_label_RbfDenoiseRange_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderRbfDenoiseRange, ui->label_RbfDenoiseRange, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderRbfDenoiseRange->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderRbfDenoiseRange, ui->label_RbfDenoiseRange, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on GrainStrength Label
 void MainWindow::on_label_GrainStrength_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderGrainStrength, ui->label_GrainStrength, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderGrainStrength->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderGrainStrength, ui->label_GrainStrength, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on GrainLumaWeight Label
 void MainWindow::on_label_GrainLumaWeight_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderGrainLumaWeight, ui->label_GrainLumaWeight, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderGrainLumaWeight->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderGrainLumaWeight, ui->label_GrainLumaWeight, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //Repaint audio if its size changed
@@ -8623,186 +8650,148 @@ void MainWindow::on_labelAudioTrack_sizeChanged()
 //DoubleClick on Lut Strength Label
 void MainWindow::on_label_LutStrengthVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderLutStrength, ui->label_LutStrengthVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderLutStrength->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderLutStrength, ui->label_LutStrengthVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on Filter Strength Label
 void MainWindow::on_label_FilterStrengthVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderFilterStrength, ui->label_FilterStrengthVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderFilterStrength->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderFilterStrength, ui->label_FilterStrengthVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on Vignette Strength Label
 void MainWindow::on_label_VignetteStrengthVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderVignetteStrength, ui->label_VignetteStrengthVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderVignetteStrength->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderVignetteStrength, ui->label_VignetteStrengthVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on Vignette Radius Label
 void MainWindow::on_label_VignetteRadiusVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderVignetteRadius, ui->label_VignetteRadiusVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderVignetteRadius->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderVignetteRadius, ui->label_VignetteRadiusVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on Vignette Shape Label
 void MainWindow::on_label_VignetteShapeVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderVignetteShape, ui->label_VignetteShapeVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderVignetteShape->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderVignetteShape, ui->label_VignetteShapeVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on CA red Label
 void MainWindow::on_label_CaRedVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderCaRed, ui->label_CaRedVal, 10.0, 1, 10.0 );
-    editSlider.exec();
-    ui->horizontalSliderCaRed->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderCaRed, ui->label_CaRedVal, 10.0, 1, 10.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on CA blue Label
 void MainWindow::on_label_CaBlueVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderCaBlue, ui->label_CaBlueVal, 10.0, 1, 10.0 );
-    editSlider.exec();
-    ui->horizontalSliderCaBlue->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderCaBlue, ui->label_CaBlueVal, 10.0, 1, 10.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on CA desaturate Label
 void MainWindow::on_label_CaDesaturateVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderCaDesaturate, ui->label_CaDesaturateVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderCaDesaturate->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderCaDesaturate, ui->label_CaDesaturateVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //DoubleClick on CA radius Label
 void MainWindow::on_label_CaRadiusVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderCaRadius, ui->label_CaRadiusVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderCaRadius->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderCaRadius, ui->label_CaRadiusVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 void MainWindow::on_label_RawWhiteVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderRawWhite, ui->label_RawWhiteVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderRawWhite->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderRawWhite, ui->label_RawWhiteVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 void MainWindow::on_label_RawBlackVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderRawBlack, ui->label_RawBlackVal, 1.0, 1, 10.0 );
-    editSlider.exec();
-    ui->horizontalSliderRawBlack->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderRawBlack, ui->label_RawBlackVal, 1.0, 1, 10.0 );
+    m_editSlider.show();
 }
 
 void MainWindow::on_DualIsoEvCorrectionVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderDualIsoEvCorrection, ui->DualIsoEvCorrectionVal, 0.05, 2, 200.0 );
-    editSlider.exec();
-    ui->horizontalSliderDualIsoEvCorrection->setValue( editSlider.getValue() - 0.5 );
+    m_editSlider.autoSetup( ui->horizontalSliderDualIsoEvCorrection, ui->DualIsoEvCorrectionVal, 0.05, 2, 200.0 );
+    m_editSlider.show();
 }
 
 void MainWindow::on_DualIsoBlackDeltaVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderDualIsoBlackDelta, ui->DualIsoBlackDeltaVal, 5.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderDualIsoBlackDelta->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderDualIsoBlackDelta, ui->DualIsoBlackDeltaVal, 5.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 void MainWindow::on_label_ToneVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderTone, ui->label_ToneVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderTone->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderTone, ui->label_ToneVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 void MainWindow::on_label_ToningStrengthVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderToningStrength, ui->label_ToningStrengthVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderToningStrength->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderToningStrength, ui->label_ToningStrengthVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 void MainWindow::on_label_VidstabStepsizeVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderVidstabStepsize, ui->label_VidstabStepsizeVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderVidstabStepsize->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderVidstabStepsize, ui->label_VidstabStepsizeVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 void MainWindow::on_label_VidstabShakinessVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderVidstabShakiness, ui->label_VidstabShakinessVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderVidstabShakiness->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderVidstabShakiness, ui->label_VidstabShakinessVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 void MainWindow::on_label_VidstabAccuracyVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderVidstabAccuracy, ui->label_VidstabAccuracyVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderVidstabAccuracy->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderVidstabAccuracy, ui->label_VidstabAccuracyVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 void MainWindow::on_label_VidstabZoomVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderVidstabZoom, ui->label_VidstabZoomVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderVidstabZoom->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderVidstabZoom, ui->label_VidstabZoomVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 void MainWindow::on_label_VidstabSmoothingVal_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.autoSetup( ui->horizontalSliderVidstabSmoothing, ui->label_VidstabSmoothingVal, 1.0, 0, 1.0 );
-    editSlider.exec();
-    ui->horizontalSliderVidstabSmoothing->setValue( editSlider.getValue() );
+    m_editSlider.autoSetup( ui->horizontalSliderVidstabSmoothing, ui->label_VidstabSmoothingVal, 1.0, 0, 1.0 );
+    m_editSlider.show();
 }
 
 //Fullscreen Mode
 void MainWindow::on_actionFullscreen_triggered( bool checked )
 {
+    static bool wasMaximized;
     static bool editWasActive;
     static bool sessionWasActive;
     static bool audioWasActive;
 
     if( checked )
     {
+        wasMaximized = isMaximized();
+
         ui->statusBar->hide();
         ui->mainToolBar->hide();
         ui->menuBar->hide();
-        ui->horizontalSliderPosition->hide();
-        ui->gridLayoutMain->setContentsMargins( 0, 0, 0, 0 );
+        ui->horizontalSliderPositionLayout->hide();
         editWasActive = ui->actionShowEditArea->isChecked();
         sessionWasActive = ui->actionShowSessionArea->isChecked();
         audioWasActive = ui->actionShowAudioTrack->isChecked();
@@ -8812,16 +8801,17 @@ void MainWindow::on_actionFullscreen_triggered( bool checked )
         ui->actionShowEditArea->setEnabled( false );
         ui->actionShowSessionArea->setEnabled( false );
         ui->actionShowAudioTrack->setEnabled( false );
-        this->showFullScreen();
+
+        showFullScreen();
     }
     else
     {
-        this->showNormal();
+        if( wasMaximized ) showMaximized(); else showNormal();
+
         ui->statusBar->show();
         ui->mainToolBar->show();
         ui->menuBar->show();
-        ui->horizontalSliderPosition->show();
-        ui->gridLayoutMain->setContentsMargins( 0, 5, 0, 5 );
+        ui->horizontalSliderPositionLayout->show();
         if( !ui->actionShowEditArea->isChecked() && editWasActive ) ui->actionShowEditArea->setChecked( true );
         if( !ui->actionShowSessionArea->isChecked() && sessionWasActive ) ui->actionShowSessionArea->setChecked( true );
         if( !ui->actionShowAudioTrack->isChecked() && audioWasActive ) ui->actionShowAudioTrack->setChecked( true );
@@ -8829,8 +8819,6 @@ void MainWindow::on_actionFullscreen_triggered( bool checked )
         ui->actionShowSessionArea->setEnabled( true );
         ui->actionShowAudioTrack->setEnabled( true );
     }
-    qApp->processEvents();
-    m_frameChanged = true;
 }
 
 //Handles all export tasks, for batch export
@@ -8941,7 +8929,7 @@ void MainWindow::exportHandler( void )
             //raw output
             startExportCdng( m_exportQueue.first()->exportFileName() );
         }
-#ifdef Q_OS_MACX
+#ifdef Q_OS_MACOS
         else if( ( m_codecProfile <= CODEC_PRORES4444 && m_codecOption == CODEC_PRORES_AVFOUNDATION )
               || ( m_codecProfile == CODEC_H264 && m_codecOption == CODEC_H264_AVFOUNDATION )
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 101300
@@ -9054,7 +9042,8 @@ void MainWindow::on_actionPlay_toggled(bool checked)
 //Zebras en-/disabled -> redraw
 void MainWindow::on_actionShowZebras_triggered()
 {
-    m_frameChanged = true;
+    drawPicture();
+    setSelectedScopeType();
 }
 
 //Focus Pixel changed
@@ -9064,7 +9053,6 @@ void MainWindow::toolButtonFocusPixelsChanged( void )
     llrpResetFpmStatus(m_pMlvObject);
     llrpResetBpmStatus(m_pMlvObject);
     resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
 }
 
@@ -9073,7 +9061,6 @@ void MainWindow::toolButtonFocusPixelsIntMethodChanged( void )
 {
     llrpSetFocusPixelInterpolationMethod( m_pMlvObject, toolButtonFocusPixelsIntMethodCurrentIndex() );
     resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
 }
 
@@ -9091,12 +9078,10 @@ void MainWindow::toolButtonBadPixelsChanged( void )
     ui->toolButtonBadPixelsCrosshairEnable->setVisible( index >= 3 );
     ui->toolButtonBadPixelsSearchMethodNormal->setVisible( index < 3 );
     ui->toolButtonBadPixelsSearchMethodAggressive->setVisible( index < 3 );
-    if( index < 3 ) ui->FocusPixelsInterpolationMethodLabel_2->setText( tr( "Search Method" ) );
-    else ui->FocusPixelsInterpolationMethodLabel_2->setText( tr( "Edit" ) );
+    ui->BadPixelsSearchMethodLabel->setVisible( index < 3 );
 
     llrpResetBpmStatus(m_pMlvObject);
     resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
 }
 
@@ -9106,7 +9091,6 @@ void MainWindow::toolButtonBadPixelsSearchMethodChanged()
     llrpSetBadPixelSearchMethod( m_pMlvObject, toolButtonBadPixelsSearchMethodCurrentIndex() );
     llrpResetBpmStatus(m_pMlvObject);
     resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
 }
 
@@ -9115,7 +9099,6 @@ void MainWindow::toolButtonBadPixelsIntMethodChanged( void )
 {
     llrpSetBadPixelInterpolationMethod( m_pMlvObject, toolButtonBadPixelsIntMethodCurrentIndex() );
     resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
 }
 
@@ -9140,7 +9123,6 @@ void MainWindow::toolButtonChromaSmoothChanged( void )
         llrpSetChromaSmoothMode(m_pMlvObject, CS_OFF);
     }
     resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
 }
 
@@ -9149,7 +9131,6 @@ void MainWindow::toolButtonPatternNoiseChanged( void )
 {
     llrpSetPatternNoiseMode( m_pMlvObject, toolButtonPatternNoiseCurrentIndex() );
     resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
 }
 
@@ -9168,7 +9149,6 @@ void MainWindow::toolButtonVerticalStripesChanged( void )
     llrpResetFpmStatus(m_pMlvObject);
     llrpResetBpmStatus(m_pMlvObject);
     resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
 }
 
@@ -9177,7 +9157,6 @@ void MainWindow::on_spinBoxDeflickerTarget_valueChanged(int arg1)
 {
     llrpSetDeflickerTarget(m_pMlvObject, arg1);
     resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
 }
 
@@ -9238,7 +9217,6 @@ void MainWindow::toolButtonDualIsoChanged( void )
     //Reset diso levels to mlv raw levels
     llrpResetDngBWLevels( m_pMlvObject );
     resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
 }
 
@@ -9258,7 +9236,6 @@ void MainWindow::on_DualIsoPatternComboBox_currentIndexChanged(int index)
     llrpResetFpmStatus(m_pMlvObject);
     llrpResetBpmStatus(m_pMlvObject);
     resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
 }
 
@@ -9273,7 +9250,6 @@ void MainWindow::on_toolButtonDualIsoMatchExposures1_clicked()
     llrpResetFpmStatus(m_pMlvObject);
     llrpResetBpmStatus(m_pMlvObject);
     resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
 }
 
@@ -9288,7 +9264,6 @@ void MainWindow::on_toolButtonDualIsoMatchExposures2_clicked()
     llrpResetFpmStatus(m_pMlvObject);
     llrpResetBpmStatus(m_pMlvObject);
     resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
 }
 
@@ -9297,7 +9272,6 @@ void MainWindow::toolButtonDualIsoInterpolationChanged( void )
 {
     llrpSetDualIsoInterpolationMethod( m_pMlvObject, toolButtonDualIsoInterpolationCurrentIndex() );
     resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
 }
 
@@ -9306,7 +9280,6 @@ void MainWindow::toolButtonDualIsoAliasMapChanged( void )
 {
     llrpSetDualIsoAliasMapMode( m_pMlvObject, toolButtonDualIsoAliasMapCurrentIndex() );
     resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
 }
 
@@ -9315,7 +9288,6 @@ void MainWindow::toolButtonDualIsoFullresBlendingChanged( void )
 {
     llrpSetDualIsoFullResBlendingMode( m_pMlvObject, toolButtonDualIsoFullresBlendingCurrentIndex() );
     resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
 }
 
@@ -9348,7 +9320,6 @@ void MainWindow::toolButtonDarkFrameSubtractionChanged( bool checked )
     llrpResetBpmStatus(m_pMlvObject);
     llrpComputeStripesOn(m_pMlvObject);
     resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
 }
 
@@ -9445,7 +9416,6 @@ void MainWindow::on_checkBoxRawFixEnable_clicked(bool checked)
     llrpSetDualIsoMode( m_pMlvObject, (int)( checked && toolButtonDualIsoCurrentIndex() ) );
 
     resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
 
     //Set GUI elements
@@ -9471,7 +9441,7 @@ void MainWindow::on_checkBoxRawFixEnable_clicked(bool checked)
     ui->DualISOInterpolationLabel->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() == 1 ) );
     ui->DualISOAliasMapLabel->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() == 1 ) );
     ui->DualISOFullresBlendingLabel->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() == 1 ) );
-    ui->FocusPixelsInterpolationMethodLabel_2->setEnabled( checked );
+    ui->BadPixelsSearchMethodLabel->setEnabled( checked );
 
     ui->toolButtonFocusDots->setEnabled( checked );
     ui->toolButtonFocusDotInterpolation->setEnabled( checked && ( toolButtonDualIsoCurrentIndex() != 1 ) );
@@ -9586,7 +9556,7 @@ void MainWindow::on_checkBoxVidstabTripod_toggled(bool checked)
 void MainWindow::on_toolButtonDeleteBpm_clicked()
 {
     if( !m_fileLoaded ) return;
-    if( QMessageBox::warning( this, tr( "%1 – Remove bad pixel map" ).arg( APPNAME ), tr( "Delete bad pixel map from disk?" ), tr( "Delete from Disk" ), tr( "Abort" ) ) )
+    if( QMessageBox::warning( this, tr( "%1 – Remove bad pixel map" ).arg( APPNAME ), tr( "Delete bad pixel map from disk?" ), tr( "Delete from Disk" ), tr( "Cancel" ), 0, 1 ) )
     {
         return;
     }
@@ -9600,7 +9570,6 @@ void MainWindow::on_toolButtonDeleteBpm_clicked()
     //Refresh
     llrpResetBpmStatus(m_pMlvObject);
     resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
 }
 
@@ -9669,7 +9638,6 @@ void MainWindow::badPixelPicked( int x, int y )
     //Refresh
     llrpResetBpmStatus(m_pMlvObject);
     resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
 }
 
@@ -9718,20 +9686,18 @@ void MainWindow::whiteBalancePicked( int x, int y )
 }
 
 //WB Picker Type change
-void MainWindow::on_toolButtonWbMode_clicked()
+void MainWindow::on_toolButtonWbModeGrey_toggled(bool checked)
 {
-    if( m_wbMode )
+    if( checked )
     {
         m_wbMode = 0;
-        ui->toolButtonWbMode->setIcon( QIcon( ":/IMG/IMG/Grey-Ball-icon.png" ) );
-        ui->toolButtonWbMode->setToolTip( tr( "WB picker on grey" ) );
     }
     else
     {
         m_wbMode = 1;
-        ui->toolButtonWbMode->setIcon( QIcon( ":/RetinaIMG/RetinaIMG/face.png" ) );
-        ui->toolButtonWbMode->setToolTip( tr( "WB picker on skin" ) );
     }
+
+    ui->actionWhiteBalancePicker->setChecked( true );
 }
 
 //Gradient anchor was selected by user
@@ -9785,123 +9751,16 @@ void MainWindow::gradientFinalPosPicked(int x, int y, bool isFinished)
     setGradientMask();
 }
 
-//Collapse & Expand Raw Correction
-void MainWindow::on_groupBoxRawCorrection_toggled(bool arg1)
+void MainWindow::on_groupBoxLinearGradient_toggled(bool checked)
 {
-    ui->frameRawCorrection->setVisible( arg1 );
-    if( !arg1 ) ui->groupBoxRawCorrection->setMaximumHeight( 30 );
-    else ui->groupBoxRawCorrection->setMaximumHeight( 16777215 );
-}
-
-//Collapse & Expand Cut In Out
-void MainWindow::on_groupBoxCutInOut_toggled(bool arg1)
-{
-    ui->frameCutInOut->setVisible( arg1 );
-    if( !arg1 ) ui->groupBoxCutInOut->setMaximumHeight( 30 );
-    else ui->groupBoxCutInOut->setMaximumHeight( 16777215 );
-}
-
-//Collapse & Expand Debayer
-void MainWindow::on_groupBoxDebayer_toggled(bool arg1)
-{
-    ui->frameDebayer->setVisible( arg1 );
-    if( !arg1 ) ui->groupBoxDebayer->setMaximumHeight( 30 );
-    else ui->groupBoxDebayer->setMaximumHeight( 16777215 );
-}
-
-void MainWindow::on_groupBoxProfiles_toggled(bool arg1)
-{
-    ui->frameProfiles->setVisible( arg1 );
-    if( !arg1 ) ui->groupBoxProfiles->setMaximumHeight( 30 );
-    else ui->groupBoxProfiles->setMaximumHeight( 16777215 );
-}
-
-//Collapse & Expand Processing
-void MainWindow::on_groupBoxProcessing_toggled(bool arg1)
-{
-    ui->frameProcessing->setVisible( arg1 );
-    if( !arg1 ) ui->groupBoxProcessing->setMaximumHeight( 30 );
-    else ui->groupBoxProcessing->setMaximumHeight( 16777215 );
-}
-
-//Collapse & Expand Details
-void MainWindow::on_groupBoxDetails_toggled(bool arg1)
-{
-    ui->frameDetails->setVisible( arg1 );
-    if( !arg1 ) ui->groupBoxDetails->setMaximumHeight( 30 );
-    else ui->groupBoxDetails->setMaximumHeight( 16777215 );
-}
-
-//Collapse & Expand HSL box
-void MainWindow::on_groupBoxHsl_toggled(bool arg1)
-{
-    ui->frameHsl->setVisible( arg1 );
-    if( !arg1 ) ui->groupBoxHsl->setMaximumHeight( 30 );
-    else ui->groupBoxHsl->setMaximumHeight( 16777215 );
-}
-
-//Collapse & Expand Toning
-void MainWindow::on_groupBoxToning_toggled(bool arg1)
-{
-    ui->frameToning->setVisible( arg1 );
-    if( !arg1 ) ui->groupBoxToning->setMaximumHeight( 30 );
-    else ui->groupBoxToning->setMaximumHeight( 16777215 );
-}
-
-//Collapse & Expand Color Wheels
-void MainWindow::on_groupBoxColorWheels_toggled(bool arg1)
-{
-    ui->frameColorWheels->setVisible( arg1 );
-    if( !arg1 ) ui->groupBoxColorWheels->setMaximumHeight( 30 );
-    else ui->groupBoxColorWheels->setMaximumHeight( 16777215 );
-}
-
-//Collapse & Expand LUT
-void MainWindow::on_groupBoxLut_toggled(bool arg1)
-{
-    ui->frameLut->setVisible( arg1 );
-    if( !arg1 ) ui->groupBoxLut->setMaximumHeight( 30 );
-    else ui->groupBoxLut->setMaximumHeight( 16777215 );
-}
-
-//Collapse & Expand Filter
-void MainWindow::on_groupBoxFilter_toggled(bool arg1)
-{
-    ui->frameFilter->setVisible( arg1 );
-    if( !arg1 ) ui->groupBoxFilter->setMaximumHeight( 30 );
-    else ui->groupBoxFilter->setMaximumHeight( 16777215 );
-}
-
-//Collapse & Expand Vignette
-void MainWindow::on_groupBoxVignette_toggled(bool arg1)
-{
-    ui->frameVignette->setVisible( arg1 );
-    if( !arg1 ) ui->groupBoxVignette->setMaximumHeight( 30 );
-    else ui->groupBoxVignette->setMaximumHeight( 16777215 );
-}
-
-//Collapse & Expand Linear Gradient
-void MainWindow::on_groupBoxLinearGradient_toggled(bool arg1)
-{
-    ui->frameGradient->setVisible( arg1 );
-    if( !arg1 )
+    if( !checked )
     {
-        ui->groupBoxLinearGradient->setMaximumHeight( 30 );
         m_pGradientElement->gradientGraphicsElement()->hide();
     }
     else
     {
         if( ui->checkBoxGradientEnable->isChecked() ) m_pGradientElement->gradientGraphicsElement()->show();
-        ui->groupBoxLinearGradient->setMaximumHeight( 16777215 );
     }
-}
-
-//Collapse & Expand Viewer
-void MainWindow::on_groupBoxTransformation_toggled(bool arg1)
-{
-    ui->frameAspectRatio->setVisible( arg1 );
-    if( !arg1 ) ui->groupBoxTransformation->setMaximumHeight( 30 );
-    else ui->groupBoxTransformation->setMaximumHeight( 16777215 );
 }
 
 //Abort pressed while exporting
@@ -9922,10 +9781,12 @@ void MainWindow::exportAbort( void )
     m_exportQueue.clear();
 }
 
-//Draw the frame when render thread is ready
-void MainWindow::drawFrameReady()
+void MainWindow::drawPicture()
 {
+    if( !m_fileLoaded || m_inOpeningProcess ) return;
+
     Qt::TransformationMode mode = Qt::FastTransformation;
+
     if( !ui->actionPlay->isChecked()
      || ui->actionUseNoneDebayer->isChecked()
      || ui->actionCaching->isChecked() )
@@ -9933,23 +9794,16 @@ void MainWindow::drawFrameReady()
         mode = Qt::SmoothTransformation;
     }
 
+    QMutexLocker locker( m_pRenderThread->mutex() );
+
     if( ui->actionZoomFit->isChecked() )
     {
         //Some math to have the picture exactly in the frame
-        int actWidth;
-        int actHeight;
-        if( ui->actionFullscreen->isChecked() )
-        {
-            actWidth = QApplication::primaryScreen()->size().width();
-            actHeight = QApplication::primaryScreen()->size().height();
-        }
-        else
-        {
-            actWidth = ui->graphicsView->width();
-            actHeight = ui->graphicsView->height();
-        }
+        int actWidth = ui->graphicsView->width();
+        int actHeight = ui->graphicsView->height();
         int desWidth = actWidth;
         int desHeight = actWidth * getMlvHeight(m_pMlvObject) / getMlvWidth(m_pMlvObject) * getVerticalStretchFactor(false) / getHorizontalStretchFactor(false);
+
         if( desHeight > actHeight )
         {
             desHeight = actHeight;
@@ -9957,14 +9811,12 @@ void MainWindow::drawFrameReady()
         }
 
         //Get Picture
-
-
-        QPixmap pic = QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
-                                          .scaled( desWidth * devicePixelRatio(),
-                                                   desHeight * devicePixelRatio(),
+        QPixmap pic = QPixmap::fromImage( QImage( m_pRenderThread->currentFrame(), getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
+                                          .scaled( desWidth * devicePixelRatioF(),
+                                                   desHeight * devicePixelRatioF(),
                                                    Qt::IgnoreAspectRatio, mode) );
         //Set Picture to Retina
-        pic.setDevicePixelRatio( devicePixelRatio() );
+        pic.setDevicePixelRatio( devicePixelRatioF() );
         //Bring frame to GUI (fit to window)
         m_pGraphicsItem->setPixmap( pic );
         //Set Scene
@@ -9976,7 +9828,7 @@ void MainWindow::drawFrameReady()
         if( getVerticalStretchFactor(false) == 1.0
          && getHorizontalStretchFactor(false) == 1.0 ) //Fast mode for 1.0 stretch factor
         {
-            m_pGraphicsItem->setPixmap( QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 ) ) );
+            m_pGraphicsItem->setPixmap( QPixmap::fromImage( QImage( m_pRenderThread->currentFrame(), getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 ) ) );
             m_pScene->setSceneRect( 0, 0, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject) );
         }
         else
@@ -9992,14 +9844,14 @@ void MainWindow::drawFrameReady()
                 avir::CImageResizerVars vars; vars.ThreadPool = &scaling_pool;
                 avir::CImageResizerParamsUltra roptions;
                 avir::CImageResizer<> image_resizer( 8, 0, roptions );
-                image_resizer.resizeImage( m_pRawImage,
+                image_resizer.resizeImage( m_pRenderThread->currentFrame(),
                                            getMlvWidth(m_pMlvObject),
                                            getMlvHeight(m_pMlvObject), 0,
                                            scaledPic,
                                            getMlvWidth(m_pMlvObject) * getHorizontalStretchFactor(false),
                                            getMlvHeight(m_pMlvObject) * getVerticalStretchFactor(false),
                                            3, 0, &vars );
-                pixmap = QPixmap::fromImage( QImage( ( unsigned char *) scaledPic,
+                pixmap = QPixmap::fromImage( QImage( scaledPic,
                                                      getMlvWidth(m_pMlvObject) * getHorizontalStretchFactor(false),
                                                      getMlvHeight(m_pMlvObject) * getVerticalStretchFactor(false),
                                                      QImage::Format_RGB888 ) );
@@ -10008,7 +9860,7 @@ void MainWindow::drawFrameReady()
             //Qt resize
             else
             {
-                pixmap = QPixmap::fromImage( QImage( ( unsigned char *) m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
+                pixmap = QPixmap::fromImage( QImage( m_pRenderThread->currentFrame(), getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
                                              .scaled( getMlvWidth(m_pMlvObject) * getHorizontalStretchFactor(false),
                                                       getMlvHeight(m_pMlvObject) * getVerticalStretchFactor(false),
                                                       Qt::IgnoreAspectRatio, mode) );
@@ -10017,6 +9869,48 @@ void MainWindow::drawFrameReady()
             m_pScene->setSceneRect( 0, 0, getMlvWidth(m_pMlvObject) * getHorizontalStretchFactor(false), getMlvHeight(m_pMlvObject) * getVerticalStretchFactor(false) );
         }
     }
+
+    locker.unlock();
+
+    drawZebras();
+
+    //Set frame to the middle
+    if( m_zoomTo100Center )
+    {
+        m_zoomTo100Center = false;
+        ui->graphicsView->horizontalScrollBar()->setValue( ( getMlvWidth(m_pMlvObject) * getHorizontalStretchFactor(false) - ui->graphicsView->width() ) / 2 );
+        ui->graphicsView->verticalScrollBar()->setValue( ( getMlvHeight(m_pMlvObject) * getVerticalStretchFactor(false) - ui->graphicsView->height() ) / 2 );
+    }
+
+    //If zoom mode changed, redraw gradient element to the new size
+    if( m_zoomModeChanged )
+    {
+        m_zoomModeChanged = false;
+        m_pGradientElement->redrawGradientElement( m_pScene->width(),
+                                                   m_pScene->height(),
+                                                   getMlvWidth( m_pMlvObject ),
+                                                   getMlvHeight( m_pMlvObject ) );
+    }
+
+    //Bad Pixel crosses in viewer
+    if( ui->toolButtonBadPixelsCrosshairEnable->isChecked()
+     && toolButtonBadPixelsCurrentIndex() >= 3
+     && ui->checkBoxRawFixEnable->isChecked() )
+    {
+        BadPixelFileHandler::crossesRedrawAll( m_pMlvObject, &m_pBadPixelCrosses, m_pScene );
+        BadPixelFileHandler::crossesShowAll( &m_pBadPixelCrosses );
+    }
+    else
+    {
+        BadPixelFileHandler::crossesHideAll( &m_pBadPixelCrosses );
+    }
+}
+
+//Draw the frame when render thread is ready
+void MainWindow::drawFrameReady()
+{
+    drawPicture();
+    setSelectedScopeType();
 
     // Set sliders after dual ISO processing
     if( toolButtonDualIsoCurrentIndex() == 1 )
@@ -10057,39 +9951,6 @@ void MainWindow::drawFrameReady()
         }
     }
 
-    //Add zebras on the image
-    uint8_t underOver = drawZebras();
-
-    if( ui->actionShowEditArea->isChecked() )
-    {
-        //Bring over/under to histogram
-        bool under = false;
-        bool over = false;
-        if( ( underOver & 0x01 ) == 0x01 ) under = true;
-        if( ( underOver & 0x02 ) == 0x02 ) over = true;
-
-        //GetHistogram
-        if( ui->actionShowHistogram->isChecked() )
-        {
-            ui->labelScope->setScope( m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), under, over, ScopesLabel::ScopeHistogram );
-        }
-        //Waveform
-        else if( ui->actionShowWaveFormMonitor->isChecked() )
-        {
-            ui->labelScope->setScope( m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), under, over, ScopesLabel::ScopeWaveForm );
-        }
-        //Parade
-        else if( ui->actionShowParade->isChecked() )
-        {
-            ui->labelScope->setScope( m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), under, over, ScopesLabel::ScopeRgbParade);
-        }
-        //VectorScope
-        else if( ui->actionShowVectorScope->isChecked() )
-        {
-            ui->labelScope->setScope( m_pRawImage, getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), under, over, ScopesLabel::ScopeVectorScope );
-        }
-    }
-
     //Drawing ready, next frame can be rendered
     m_frameStillDrawing = false;
 
@@ -10104,37 +9965,6 @@ void MainWindow::drawFrameReady()
 
     //And show the user which frame we show
     drawFrameNumberLabel();
-
-    //Set frame to the middle
-    if( m_zoomTo100Center )
-    {
-        m_zoomTo100Center = false;
-        ui->graphicsView->horizontalScrollBar()->setValue( ( getMlvWidth(m_pMlvObject) * getHorizontalStretchFactor(false) - ui->graphicsView->width() ) / 2 );
-        ui->graphicsView->verticalScrollBar()->setValue( ( getMlvHeight(m_pMlvObject) * getVerticalStretchFactor(false) - ui->graphicsView->height() ) / 2 );
-    }
-
-    //If zoom mode changed, redraw gradient element to the new size
-    if( m_zoomModeChanged )
-    {
-        m_zoomModeChanged = false;
-        m_pGradientElement->redrawGradientElement( m_pScene->width(),
-                                                   m_pScene->height(),
-                                                   getMlvWidth( m_pMlvObject ),
-                                                   getMlvHeight( m_pMlvObject ) );
-    }
-
-    //Bad Pixel crosses in viewer
-    if( ui->toolButtonBadPixelsCrosshairEnable->isChecked()
-     && toolButtonBadPixelsCurrentIndex() >= 3
-     && ui->checkBoxRawFixEnable->isChecked() )
-    {
-        BadPixelFileHandler::crossesRedrawAll( m_pMlvObject, &m_pBadPixelCrosses, m_pScene );
-        BadPixelFileHandler::crossesShowAll( &m_pBadPixelCrosses );
-    }
-    else
-    {
-        BadPixelFileHandler::crossesHideAll( &m_pBadPixelCrosses );
-    }
 
     //One more frame if stopped
     if( m_playbackStopped == true )
@@ -10227,22 +10057,14 @@ void MainWindow::on_spinBoxGradientLength_valueChanged(int arg1)
 //The gradient angle label was doubleclicked
 void MainWindow::on_labelGradientAngle_doubleClicked()
 {
-    EditSliderValueDialog editSlider;
-    editSlider.ui->doubleSpinBox->setMinimum( -179.9 );
-    editSlider.ui->doubleSpinBox->setMaximum( 180.0 );
-    editSlider.ui->doubleSpinBox->setDecimals( 1 );
-    editSlider.ui->doubleSpinBox->setSingleStep( 0.1 );
-    QString valString = ui->labelGradientAngle->text();
-    valString.chop(1);
-    editSlider.ui->doubleSpinBox->setValue( valString.toDouble() );
-    editSlider.ui->doubleSpinBox->selectAll();
-    QPoint pos;
-    pos.setX(0);
-    pos.setY(0);
-    pos = ui->labelGradientAngle->mapToGlobal( pos );
-    editSlider.setGeometry( pos.x(), pos.y(), 80, 20 );
-    editSlider.exec();
-    ui->dialGradientAngle->setValue( editSlider.getValue() * 10.0 );
+    m_editSlider.ui->doubleSpinBox->setMinimum( -179.9 );
+    m_editSlider.ui->doubleSpinBox->setMaximum( 180.0 );
+
+    m_editSlider.autoSetup(nullptr, ui->labelGradientAngle, 0.1, 1, 10.0, [this]() {
+        ui->dialGradientAngle->setValue( m_editSlider.getValue() );
+    });
+
+    m_editSlider.show();
 }
 
 //The gradient angle dial was turned
@@ -10524,10 +10346,8 @@ void MainWindow::on_spinBoxCutIn_valueChanged(int arg1)
     //Refresh Timecode Label
     if( m_fileLoaded && m_tcModeDuration )
     {
-        QPixmap pic = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( ui->spinBoxCutOut->value() - ui->spinBoxCutIn->value() + 1, getFramerate() ).scaled( 200 * devicePixelRatio(),
-                                                                                          30 * devicePixelRatio(),
-                                                                                          Qt::IgnoreAspectRatio, Qt::SmoothTransformation) );
-        pic.setDevicePixelRatio( devicePixelRatio() );
+        QPixmap pic = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( ui->spinBoxCutOut->value() - ui->spinBoxCutIn->value() + 1, getFramerate() ) );
+        pic.setDevicePixelRatio( devicePixelRatioF() );
         m_pTcLabel->setPixmap( pic );
     }
 }
@@ -10540,10 +10360,8 @@ void MainWindow::on_spinBoxCutOut_valueChanged(int arg1)
     //Refresh Timecode Label
     if( m_fileLoaded && m_tcModeDuration )
     {
-        QPixmap pic = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( ui->spinBoxCutOut->value() - ui->spinBoxCutIn->value() + 1, getFramerate() ).scaled( 200 * devicePixelRatio(),
-                                                                                          30 * devicePixelRatio(),
-                                                                                          Qt::IgnoreAspectRatio, Qt::SmoothTransformation) );
-        pic.setDevicePixelRatio( devicePixelRatio() );
+        QPixmap pic = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( ui->spinBoxCutOut->value() - ui->spinBoxCutIn->value() + 1, getFramerate() ) );
+        pic.setDevicePixelRatio( devicePixelRatioF() );
         m_pTcLabel->setPixmap( pic );
     }
 }
@@ -10551,45 +10369,41 @@ void MainWindow::on_spinBoxCutOut_valueChanged(int arg1)
 //Session Preview Disabled
 void MainWindow::on_actionPreviewDisabled_triggered()
 {
+    addDockWidget( Qt::LeftDockWidgetArea, ui->dockWidgetSession );
     m_previewMode = 0;
     setPreviewMode();
-    addDockWidget( Qt::LeftDockWidgetArea, ui->dockWidgetSession );
-    ui->listViewSession->verticalScrollBar()->setSingleStep( 1 );
 }
 
 //Session Preview  List
 void MainWindow::on_actionPreviewList_triggered()
 {
+    addDockWidget( Qt::LeftDockWidgetArea, ui->dockWidgetSession );
     m_previewMode = 1;
     setPreviewMode();
-    addDockWidget( Qt::LeftDockWidgetArea, ui->dockWidgetSession );
-    ui->listViewSession->verticalScrollBar()->setSingleStep( 1 );
 }
 
 //Session Preview Picture Left
 void MainWindow::on_actionPreviewPicture_triggered()
 {
+    addDockWidget( Qt::LeftDockWidgetArea, ui->dockWidgetSession );
     m_previewMode = 2;
     setPreviewMode();
-    addDockWidget( Qt::LeftDockWidgetArea, ui->dockWidgetSession );
-    ui->listViewSession->verticalScrollBar()->setSingleStep( 82 );
 }
 
 //Session Preview Picture Bottom
 void MainWindow::on_actionPreviewPictureBottom_triggered()
 {
+    addDockWidget( Qt::BottomDockWidgetArea, ui->dockWidgetSession );
     m_previewMode = 3;
     setPreviewMode();
-    addDockWidget( Qt::BottomDockWidgetArea, ui->dockWidgetSession );
-    ui->listViewSession->verticalScrollBar()->setSingleStep( 82 );
 }
 
 //Session Preview Picture Bottom
 void MainWindow::on_actionPreviewTableModeBottom_triggered()
 {
+    addDockWidget( Qt::BottomDockWidgetArea, ui->dockWidgetSession );
     m_previewMode = 4;
     setPreviewMode();
-    addDockWidget( Qt::BottomDockWidgetArea, ui->dockWidgetSession );
 }
 
 //Input of Stretch Width (horizontal) Factor
@@ -10622,26 +10436,12 @@ void MainWindow::mpTcLabel_customContextMenuRequested(const QPoint &pos)
 
     // Create menu and insert some actions
     QMenu myMenu;
-    myMenu.addAction( ui->actionTimecodePositionMiddle );
-    myMenu.addAction( ui->actionTimecodePositionRight );
+    // myMenu.addAction( ui->actionTimecodePositionMiddle );
+    // myMenu.addAction( ui->actionTimecodePositionRight );
     myMenu.addSeparator();
     myMenu.addAction( ui->actionToggleTimecodeDisplay );
     // Show context menu at handling position
     myMenu.exec( globalPos );
-}
-
-//Move Timecode label between icons
-void MainWindow::on_actionTimecodePositionMiddle_triggered()
-{
-    m_timeCodePosition = 1;
-    QMessageBox::information( this, QString( "MLV App" ), tr( "Please restart MLV App." ) );
-}
-
-//Move Timecode label right
-void MainWindow::on_actionTimecodePositionRight_triggered()
-{
-    m_timeCodePosition = 0;
-    QMessageBox::information( this, QString( "MLV App" ), tr( "Please restart MLV App." ) );
 }
 
 //TimeCode label doubleclicked
@@ -10652,10 +10452,8 @@ void MainWindow::tcLabelDoubleClicked()
 
     if( !m_fileLoaded )
     {
-        QPixmap pic = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( 0, 25 ).scaled( 200 * devicePixelRatio(),
-                                                                                          30 * devicePixelRatio(),
-                                                                                          Qt::IgnoreAspectRatio, Qt::SmoothTransformation) );
-        pic.setDevicePixelRatio( devicePixelRatio() );
+        QPixmap pic = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( 0, 25 ) );
+        pic.setDevicePixelRatio( devicePixelRatioF() );
         m_pTcLabel->setPixmap( pic );
         return;
     }
@@ -10663,18 +10461,14 @@ void MainWindow::tcLabelDoubleClicked()
     //Refresh Timecode Label
     if( m_tcModeDuration )
     {
-        QPixmap pic = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( ui->spinBoxCutOut->value() - ui->spinBoxCutIn->value() + 1, getFramerate() ).scaled( 200 * devicePixelRatio(),
-                                                                                          30 * devicePixelRatio(),
-                                                                                          Qt::IgnoreAspectRatio, Qt::SmoothTransformation) );
-        pic.setDevicePixelRatio( devicePixelRatio() );
+        QPixmap pic = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( ui->spinBoxCutOut->value() - ui->spinBoxCutIn->value() + 1, getFramerate() ) );
+        pic.setDevicePixelRatio( devicePixelRatioF() );
         m_pTcLabel->setPixmap( pic );
     }
     else
     {
-        QPixmap pic = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( ui->horizontalSliderPosition->value(), getFramerate() ).scaled( 200 * devicePixelRatio(),
-                                                                                          30 * devicePixelRatio(),
-                                                                                          Qt::IgnoreAspectRatio, Qt::SmoothTransformation) );
-        pic.setDevicePixelRatio( devicePixelRatio() );
+        QPixmap pic = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( ui->horizontalSliderPosition->value(), getFramerate() ) );
+        pic.setDevicePixelRatio( devicePixelRatioF() );
         m_pTcLabel->setPixmap( pic );
     }
 }
@@ -10745,7 +10539,7 @@ void MainWindow::on_actionCheckForUpdates_triggered( void )
     CUpdaterDialog dialog( this, QString( "https://api.github.com/repos/ilia3101/MLV-App/releases" ), GITVERSION, false );
     dialog.exec();
 
-    QSettings set( QSettings::UserScope, "magiclantern.MLVApp", "MLVApp" );
+    QSettings set( QSettings::UserScope, "magiclantern", "MLVApp" );
     set.setValue( "lastUpdateCheck", QDate::currentDate().toString() );
 
     checkFocusPixelUpdate();
@@ -10759,7 +10553,7 @@ void MainWindow::updateCheck(void)
     else checkFocusPixelUpdate();
     delete pUpdater;
 
-    QSettings set( QSettings::UserScope, "magiclantern.MLVApp", "MLVApp" );
+    QSettings set( QSettings::UserScope, "magiclantern", "MLVApp" );
     set.setValue( "lastUpdateCheck", QDate::currentDate().toString() );
 }
 
@@ -10891,9 +10685,7 @@ void MainWindow::on_toolButtonRawBlackAutoCorrect_clicked()
 //Open UserManualDialog
 void MainWindow::on_actionHelp_triggered()
 {
-    UserManualDialog *help = new UserManualDialog( this );
-    help->exec();
-    delete help;
+    m_pHelpDialog->show();
 }
 
 //"one of the most important features": creating batch MAPP files
@@ -10943,6 +10735,9 @@ void MainWindow::on_actionShowInFinder_triggered( void )
 {
     if( SESSION_CLIP_COUNT == 0 ) return;
 
+    // To immediately hide context menu
+    qApp->processEvents();
+
     QString path = GET_RECEIPT( m_pProxyModel->mapToSource( m_pSelectionModel->currentIndex() ).row() )->fileName();
 
 #ifdef _WIN32    //Code for Windows
@@ -10960,7 +10755,10 @@ void MainWindow::on_actionOpenWithExternalApplication_triggered( void )
 {
     if( SESSION_CLIP_COUNT == 0 ) return;
 
-#ifdef Q_OS_OSX     //Code for OSX
+    // To immediately hide context menu
+    qApp->processEvents();
+
+#ifdef Q_OS_MACOS     //Code for OSX
     //First check -> select app if fail
     if( !QDir( m_externalApplicationName ).exists() || m_externalApplicationName.size() == 0 )
     {
@@ -11006,7 +10804,7 @@ void MainWindow::on_actionSelectExternalApplication_triggered()
                  tr("Application (*)") );
     if( path.size() == 0 ) return;
 #endif
-#ifdef Q_OS_OSX
+#ifdef Q_OS_MACOS
     path = "/Applications/";
     path = QFileDialog::getOpenFileName( this,
                  tr("Select external application"), path,
@@ -11037,16 +10835,24 @@ void MainWindow::openRecentSession(QString fileName)
     selectDebayerAlgorithm();
 }
 
-//Darktheme standard
-void MainWindow::on_actionDarkThemeStandard_triggered(bool checked)
+void MainWindow::on_actionTheme1_triggered(bool checked)
 {
-    if( checked ) CDarkStyle::assign();
+    if( checked ) AppTheme::set( this, AppTheme::Light );
 }
 
-//Darktheme by bouncyball
-void MainWindow::on_actionDarkThemeModern_triggered(bool checked)
+void MainWindow::on_actionTheme2_triggered(bool checked)
 {
-    if( checked ) DarkStyleModern::assign();
+    if( checked ) AppTheme::set( this, AppTheme::Mid );
+}
+
+void MainWindow::on_actionTheme3_triggered(bool checked)
+{
+    if( checked ) AppTheme::set( this, AppTheme::Dark );
+}
+
+void MainWindow::on_actionTheme4_triggered(bool checked)
+{
+    if( checked ) AppTheme::set( this, AppTheme::Darker );
 }
 
 //Debayer algorithm selection per clip
@@ -11061,6 +10867,8 @@ void MainWindow::selectDebayerAlgorithm()
 {
     //Do nothing while preview pics are rendered when importing
     if( m_inOpeningProcess ) return;
+
+    QString label = QString( "Debayer" );
 
     //If no playback active change debayer to receipt settings
     if( !ui->actionPlay->isChecked() || ui->actionDontSwitchDebayerForPlayback->isChecked() )
@@ -11097,7 +10905,8 @@ void MainWindow::selectDebayerAlgorithm()
         default:
             break;
         }
-        m_pChosenDebayer->setText( ui->comboBoxDebayer->currentText() );
+
+        m_pChosenDebayer->setText( QString( "%1: %2" ).arg( label ).arg( ui->comboBoxDebayer->currentText() ) );
         disableMlvCaching( m_pMlvObject );
     }
     //Else change debayer to the selected one from preview menu
@@ -11107,65 +10916,67 @@ void MainWindow::selectDebayerAlgorithm()
         {
             setMlvUseNoneDebayer( m_pMlvObject );
             disableMlvCaching( m_pMlvObject );
-            m_pChosenDebayer->setText( tr( "None" ) );
+            m_pChosenDebayer->setText( QString( "%1: %2" ).arg( label ).arg( ui->actionUseNoneDebayer->text() ) );
         }
         else if( ui->actionUseSimpleDebayer->isChecked() )
         {
             setMlvUseSimpleDebayer( m_pMlvObject );
             disableMlvCaching( m_pMlvObject );
-            m_pChosenDebayer->setText( tr( "Simple" ) );
+            m_pChosenDebayer->setText( QString( "%1: %2" ).arg( label ).arg( ui->actionUseSimpleDebayer->text() ) );
         }
         else if( ui->actionUseBilinear->isChecked() )
         {
             setMlvDontAlwaysUseAmaze( m_pMlvObject );
             disableMlvCaching( m_pMlvObject );
-            m_pChosenDebayer->setText( tr( "Bilinear" ) );
+            m_pChosenDebayer->setText( QString( "%1: %2" ).arg( label ).arg( ui->actionUseBilinear->text() ) );
         }
         else if( ui->actionUseLmmseDebayer->isChecked() )
         {
             setMlvUseLmmseDebayer( m_pMlvObject );
             disableMlvCaching( m_pMlvObject );
-            m_pChosenDebayer->setText( tr( "LMMSE" ) );
+            m_pChosenDebayer->setText( QString( "%1: %2" ).arg( label ).arg( ui->actionUseLmmseDebayer->text() ) );
         }
         else if( ui->actionUseIgvDebayer->isChecked() )
         {
             setMlvUseIgvDebayer( m_pMlvObject );
             disableMlvCaching( m_pMlvObject );
-            m_pChosenDebayer->setText( tr( "IGV" ) );
+            m_pChosenDebayer->setText( QString( "%1: %2" ).arg( label ).arg( ui->actionUseIgvDebayer->text() ) );
         }
         else if( ui->actionUseAhdDebayer->isChecked() )
         {
             setMlvUseAhdDebayer( m_pMlvObject );
             disableMlvCaching( m_pMlvObject );
-            m_pChosenDebayer->setText( tr( "AHD" ) );
+            m_pChosenDebayer->setText( QString( "%1: %2" ).arg( label ).arg( ui->actionUseAhdDebayer->text() ) );
         }
         else if( ui->actionUseRcdDebayer->isChecked() )
         {
             setMlvUseRcdDebayer( m_pMlvObject );
             disableMlvCaching( m_pMlvObject );
-            m_pChosenDebayer->setText( tr( "RCD" ) );
+            m_pChosenDebayer->setText( QString( "%1: %2" ).arg( label ).arg( ui->actionUseRcdDebayer->text() ) );
         }
         else if( ui->actionUseDcbDebayer->isChecked() )
         {
             setMlvUseDcbDebayer( m_pMlvObject );
             disableMlvCaching( m_pMlvObject );
-            m_pChosenDebayer->setText( tr( "DCB" ) );
+            m_pChosenDebayer->setText( QString( "%1: %2" ).arg( label ).arg( ui->actionUseDcbDebayer->text() ) );
         }
         else if( ui->actionAlwaysUseAMaZE->isChecked() )
         {
             setMlvAlwaysUseAmaze( m_pMlvObject );
             disableMlvCaching( m_pMlvObject );
-            m_pChosenDebayer->setText( tr( "AMaZE" ) );
+            m_pChosenDebayer->setText( QString( "%1: %2" ).arg( label ).arg( ui->actionAlwaysUseAMaZE->text() ) );
         }
         else if( ui->actionCaching->isChecked() )
         {
             setMlvAlwaysUseAmaze( m_pMlvObject );
             enableMlvCaching( m_pMlvObject );
-            m_pChosenDebayer->setText( tr( "AMaZE" ) );
+            m_pChosenDebayer->setText( QString( "%1: AMaZE" ).arg( label ) );
         }
         ///@todo: ADD HERE OTHER CACHED DEBAYERS! AND ADD SOME SPECIAL TRICK FOR CACHING
     }
-    while( !m_pRenderThread->isIdle() ) QThread::msleep(1);
+
+    m_pRenderThread->waitUntilIdle();
+
     llrpResetFpmStatus(m_pMlvObject);
     llrpResetBpmStatus(m_pMlvObject);
     llrpComputeStripesOn(m_pMlvObject);
@@ -11181,25 +10992,13 @@ void MainWindow::on_actionBetterResizer_triggered()
 //Show a list of installed fpm files
 void MainWindow::on_actionShowInstalledFocusPixelMaps_triggered()
 {
-    PixelMapListDialog *fpmDialog = new PixelMapListDialog( this, PixelMapListDialog::FPM );
-    if( m_fileLoaded )
-    {
-        fpmDialog->showCurrentMap( m_pMlvObject );
-    }
-    fpmDialog->exec();
-    delete fpmDialog;
+    m_pFpmListDialog->show();
 }
 
 //Show a list of installed bpm files
 void MainWindow::on_actionShowInstalledBadPixelMaps_triggered()
 {
-    PixelMapListDialog *bpmDialog = new PixelMapListDialog( this, PixelMapListDialog::BPM );
-    if( m_fileLoaded )
-    {
-        bpmDialog->showCurrentMap( m_pMlvObject );
-    }
-    bpmDialog->exec();
-    delete bpmDialog;
+    m_pBpmListDialog->show();
 }
 
 //Open a window which uses raw2mlv binary
@@ -11356,19 +11155,19 @@ void MainWindow::setMarkColor(int clipNr, uint8_t mark)
 
     if( mark == 1 )
     {
-        GET_CLIP(clipNr)->setBackgroundColor( QColor( 255, 0, 0, 80 ) );
+        GET_CLIP(clipNr)->setBackgroundColor( QColor( 255, 0, 0, 128 ) );
         ui->listViewSession->setRowHidden( listOrTableRow, !ui->actionShowRedClips->isChecked() );
         ui->tableViewSession->setRowHidden( listOrTableRow, !ui->actionShowRedClips->isChecked() );
     }
     else if( mark == 2 )
     {
-        GET_CLIP(clipNr)->setBackgroundColor( QColor( 255, 255, 0, 80 ) );
+        GET_CLIP(clipNr)->setBackgroundColor( QColor( 255, 255, 0, 128 ) );
         ui->listViewSession->setRowHidden( listOrTableRow, !ui->actionShowYellowClips->isChecked() );
         ui->tableViewSession->setRowHidden( listOrTableRow, !ui->actionShowYellowClips->isChecked() );
     }
     else if( mark == 3 )
     {
-        GET_CLIP(clipNr)->setBackgroundColor( QColor( 0, 255, 0, 80 ) );
+        GET_CLIP(clipNr)->setBackgroundColor( QColor( 0, 255, 0, 128 ) );
         ui->listViewSession->setRowHidden( listOrTableRow, !ui->actionShowGreenClips->isChecked() );
         ui->tableViewSession->setRowHidden( listOrTableRow, !ui->actionShowGreenClips->isChecked() );
     }
@@ -11397,6 +11196,9 @@ void MainWindow::focusPixelCheckAndInstallation()
             QMessageBox msg;
             msg.setIcon( QMessageBox::Question );
             msg.setText( tr( "Download and install focus pixel map for this clip or install all focus pixel maps for %1?" ).arg( camName ) );
+#if QT_VERSION >= QT_VERSION_CHECK(6, 6, 0)
+            msg.setOption( QMessageBox::Option::DontUseNativeDialog );
+#endif
             QPushButton *singleButton = msg.addButton(tr("Single Map"), QMessageBox::ApplyRole);
             QPushButton *allButton = msg.addButton(tr("All Maps"), QMessageBox::ActionRole);
             msg.addButton(tr("None"), QMessageBox::RejectRole);
@@ -11411,6 +11213,8 @@ void MainWindow::focusPixelCheckAndInstallation()
                 {
                     //QMessageBox::information( this, APPNAME, tr( "Download and installation of focus pixel map successful." ) );
                     status->close();
+
+                    m_pFpmListDialog->update();
                     showFileInEditor( SESSION_ACTIVE_CLIP_ROW );
                 }
                 else
@@ -11426,6 +11230,8 @@ void MainWindow::focusPixelCheckAndInstallation()
                 {
                     //QMessageBox::information( this, APPNAME, tr( "Download and installation of focus pixel maps successful." ) );
                     status->close();
+
+                    m_pFpmListDialog->update();
                     showFileInEditor( SESSION_ACTIVE_CLIP_ROW );
                 }
                 else
@@ -11470,15 +11276,6 @@ QModelIndexList MainWindow::selectedClipsList()
         list.append( m_pSelectionModel->selectedIndexes().at(i) );
     }
     return list;
-}
-
-//Stupid workaround, to make the listViewSession showing clips while importing
-void MainWindow::listViewSessionUpdate()
-{
-    if( !ui->listViewSession->isVisible() ) return;
-    ui->listViewSession->setVisible( false );
-    ui->listViewSession->update();
-    ui->listViewSession->setVisible( true );
 }
 
 //Check if disk nearly full

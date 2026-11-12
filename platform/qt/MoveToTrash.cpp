@@ -18,7 +18,7 @@
 int MoveToTrash( QString fileName )
 {
     //########################## OSX ##########################
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
     QString command = QString( "osascript -e 'set theFile to POSIX file \"%1\"' "
                       "-e 'tell application \"Finder\"' "
                       "-e 'delete theFile' "

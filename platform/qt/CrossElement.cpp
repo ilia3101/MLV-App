@@ -11,9 +11,9 @@
 #define CROSS_LENGTH 3
 
 //Constructor
-CrossElement::CrossElement(QPolygon polygon, QGraphicsItem *parent)
+CrossElement::CrossElement(QPainterPath path, QGraphicsItem *parent)
 {
-    m_pCrossGraphicsItem = new QGraphicsPolygonItem( polygon, parent );
+    m_pCrossGraphicsItem = new QGraphicsPathItem( path, parent );
     QPen pen = QPen( Qt::white );
     pen.setWidth( 0 );
     m_pCrossGraphicsItem->setPen( pen );
@@ -44,7 +44,7 @@ void CrossElement::reset()
 }
 
 //Get the cross graphics element
-QGraphicsPolygonItem *CrossElement::crossGraphicsElement()
+QGraphicsPathItem *CrossElement::crossGraphicsElement()
 {
     return m_pCrossGraphicsItem;
 }
@@ -60,13 +60,11 @@ void CrossElement::redrawCrossElement(int sceneX, int sceneY, int picX, int picY
 //Create the graphical cross element
 void CrossElement::createCrossElement()
 {
-    QPolygon polygon;
-    polygon << QPoint(0, 0)
-            << QPoint(CROSS_LENGTH, 0)
-            << QPoint(-CROSS_LENGTH, 0)
-            << QPoint(0, 0)
-            << QPoint(0, CROSS_LENGTH)
-            << QPoint(0, -CROSS_LENGTH)
-            << QPoint(0, 0);
-    m_pCrossGraphicsItem->setPolygon( polygon );
+    QPainterPath path;
+    path.moveTo(-CROSS_LENGTH, 0);
+    path.lineTo(CROSS_LENGTH, 0);
+    path.moveTo(0, -CROSS_LENGTH);
+    path.lineTo(0, CROSS_LENGTH);
+
+    m_pCrossGraphicsItem->setPath(path);
 }

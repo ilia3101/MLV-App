@@ -8,16 +8,18 @@
 #include "VectorScope.h"
 #include "math.h"
 
+#define BASE_SIZE 500.0
+
 //Transformation
-#define CALC_POINT_X( r, g, b ) ( ( -0.299*r - 0.587*g + 0.886*b ) * 0.493 * 0.4 ) //0.4 is scaling to 80% * retina
-#define CALC_POINT_Y( r, g, b ) ( (  0.701*r - 0.587*g - 0.114*b ) * 0.877 * 0.4 ) //0.4 is scaling to 80% * retina
+#define CALC_POINT_X( r, g, b ) ( ( -0.299*r - 0.587*g + 0.886*b ) * 0.493 * 0.4 * ( m_pScope->width() / BASE_SIZE ) ) //0.4 is scaling to 80% * retina
+#define CALC_POINT_Y( r, g, b ) ( (  0.701*r - 0.587*g - 0.114*b ) * 0.877 * 0.4 * ( m_pScope->width() / BASE_SIZE ) ) //0.4 is scaling to 80% * retina
 
 //Constructor
 VectorScope::VectorScope( uint16_t widthScope, uint16_t heightScope )
 {
-    m_pScope = new QImage( widthScope, heightScope, QImage::Format_RGB888 );
-    m_middleX = widthScope / 2.0;
-    m_middleY = heightScope / 2.0;
+    m_pScope = new QImage( widthScope, heightScope, QImage::Format_ARGB32_Premultiplied );
+    m_middleX = widthScope / 2;
+    m_middleY = heightScope / 2;
 }
 
 //Destructor
@@ -27,7 +29,7 @@ VectorScope::~VectorScope()
 }
 
 //Calc VectorScope
-QImage VectorScope::getVectorScopeFromRaw(uint8_t *m_pRawImage, uint16_t width, uint16_t height)
+QImage VectorScope::getVectorScopeFromRaw(const uint8_t *m_pRawImage, uint16_t width, uint16_t height)
 {
     m_pScope->fill( Qt::black );
 
@@ -56,7 +58,7 @@ QImage VectorScope::getVectorScopeFromRaw(uint8_t *m_pRawImage, uint16_t width, 
         }
     }
 
-    paintLines();
+    //paintLines();
 
     paintCross( CALC_POINT_X( 255, 0, 0 ), CALC_POINT_Y( 255, 0, 0 ) );
     paintCross( CALC_POINT_X( 255, 255, 0 ), CALC_POINT_Y( 255, 255, 0 ) );
@@ -72,13 +74,13 @@ QImage VectorScope::getVectorScopeFromRaw(uint8_t *m_pRawImage, uint16_t width, 
 void VectorScope::paintLines()
 {
     //Lines
-    for( int y = 0; y < m_pScope->size().height(); y++ )
+    for( int y = 0; y < m_pScope->height(); y++ )
     {
         //line vert
-        m_pScope->setPixelColor( m_middleX, y, Qt::darkGray );
+        m_pScope->setPixelColor( m_middleX, y, QColor( 160, 160, 160, 128 ) );
 
         //line hori
-        m_pScope->setPixelColor( y + m_middleX - m_middleY, m_middleY, Qt::darkGray );
+        m_pScope->setPixelColor( y + m_middleX - m_middleY, m_middleY, QColor( 160, 160, 160, 128 ) );
     }
 
     //Circle
@@ -90,7 +92,7 @@ void VectorScope::paintLines()
             float distance_to_centre = sqrt((i - circle_radius)*(i - circle_radius) + (j - circle_radius)*(j - circle_radius));
             if (distance_to_centre > circle_radius-1.5 && distance_to_centre < circle_radius+0.5)
             {
-                 m_pScope->setPixelColor( i + m_middleX - m_middleY, j, Qt::darkGray );
+                 m_pScope->setPixelColor( i + m_middleX - m_middleY, j, QColor( 160, 160, 160, 128 ) );
             }
         }
     }
@@ -99,9 +101,12 @@ void VectorScope::paintLines()
 //Paint a cross at x,y
 void VectorScope::paintCross(int x, int y)
 {
-    for( int i = -4; i < 5; i++ )
+    int size = 5 * ( m_pScope->width() / BASE_SIZE ) + 0.5;
+    if( size < 3 ) size = 3;
+
+    for( int i = -( size - 1 ); i < size; i++ )
     {
-        m_pScope->setPixelColor( x + i + m_middleX, -y + m_middleY, Qt::darkGray );
-        m_pScope->setPixelColor( x + m_middleX, -y + i + m_middleY, Qt::darkGray );
+        m_pScope->setPixelColor( x + i + m_middleX, -y + m_middleY, QColor( 160, 160, 160, 128 ) );
+        m_pScope->setPixelColor( x + m_middleX, -y + i + m_middleY, QColor( 160, 160, 160, 128 ) );
     }
 }
