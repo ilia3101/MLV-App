@@ -55,11 +55,11 @@ void ScopesLabel::resizeEvent( QResizeEvent *event )
 {
     QLabel::resizeEvent( event );
 
-    int labelWidth = this->width() * devicePixelRatio();
+    int labelWidth = this->width() * devicePixelRatioF();
 
     // Quickly resize
     QPixmap pic = QPixmap::fromImage( m_imageScope.scaled( labelWidth, labelWidth / RATIO, Qt::IgnoreAspectRatio, Qt::SmoothTransformation ) );
-    pic.setDevicePixelRatio( devicePixelRatio() );
+    pic.setDevicePixelRatio( devicePixelRatioF() );
 
     drawLines( pic );
     setPixmap( pic );
@@ -73,7 +73,7 @@ void ScopesLabel::resizeEvent( QResizeEvent *event )
 //Bring scope resized to label
 void ScopesLabel::paintScope()
 {
-    int labelWidth = this->width() * devicePixelRatio();
+    int labelWidth = this->width() * devicePixelRatioF();
 
     QMutexLocker locker( m_pRenderThread ? m_pRenderThread->mutex() : nullptr );
 
@@ -107,7 +107,7 @@ void ScopesLabel::paintScope()
     }
 
     QPixmap pic = QPixmap::fromImage( m_imageScope );
-    pic.setDevicePixelRatio( devicePixelRatio() );
+    pic.setDevicePixelRatio( devicePixelRatioF() );
 
     drawLines( pic );
     setPixmap( pic );

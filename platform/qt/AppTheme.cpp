@@ -593,7 +593,7 @@ void IconRecolorStyle::drawPrimitive( PrimitiveElement element, const QStyleOpti
         QIcon icon( ":/fontawesome/fontawesome/svgs-full/solid/check.svg" );
         QRectF iconRect( r.center().x() - size / 2.0, r.center().y() - size / 2.0, size, size );
 
-        QPixmap tinted = AppTheme::tintPixmap( icon.pixmap( iconRect.size().toSize() ), color, painter->device()->devicePixelRatio() );
+        QPixmap tinted = AppTheme::tintPixmap( icon.pixmap( iconRect.size().toSize() ), color, painter->device()->devicePixelRatioF() );
         painter->drawPixmap( iconRect.topLeft(), tinted );
     }
     else if( element == PE_IndicatorArrowRight )
@@ -603,7 +603,7 @@ void IconRecolorStyle::drawPrimitive( PrimitiveElement element, const QStyleOpti
         QIcon icon( ":/fontawesome/fontawesome/svgs-full/solid/chevron-right.svg" );
         QRectF iconRect( r.center().x() - size / 2.0 - 4, r.center().y() - size / 2.0, size, size );
 
-        QPixmap tinted = AppTheme::tintPixmap( icon.pixmap( iconRect.size().toSize() ), color, painter->device()->devicePixelRatio() );
+        QPixmap tinted = AppTheme::tintPixmap( icon.pixmap( iconRect.size().toSize() ), color, painter->device()->devicePixelRatioF() );
         painter->drawPixmap( iconRect.topLeft(), tinted );
     }
 }
@@ -653,7 +653,7 @@ void IconRecolorStyle::drawControl( ControlElement element, const QStyleOption *
                 QIcon::State state = option->state & State_On ? QIcon::On : QIcon::Off;
 
                 QPixmap pixmap = btn->icon().pixmap( btn->iconSize(), mode, state );
-                QPixmap tinted = AppTheme::tintPixmap( pixmap, color, painter->device()->devicePixelRatio() );
+                QPixmap tinted = AppTheme::tintPixmap( pixmap, color, painter->device()->devicePixelRatioF() );
 
                 if( btn->text().isEmpty() )
                 {
@@ -711,7 +711,7 @@ void IconRecolorStyle::drawControl( ControlElement element, const QStyleOption *
             QIcon::State state = mi->checked ? QIcon::On : QIcon::Off;
 
             QPixmap pixmap = mi->icon.pixmap( iconSize, iconSize, mode, state );
-            QPixmap tinted = AppTheme::tintPixmap( pixmap, iconColor, painter->device()->devicePixelRatio() );
+            QPixmap tinted = AppTheme::tintPixmap( pixmap, iconColor, painter->device()->devicePixelRatioF() );
 
             QRectF iconRect( mi->rect.left() + spacing, mi->rect.center().y() - iconSize / 2.0 + 1, iconSize, iconSize );
             painter->drawPixmap( iconRect.topLeft(), tinted );
@@ -736,7 +736,7 @@ void IconRecolorStyle::drawControl( ControlElement element, const QStyleOption *
 void IconRecolorStyle::drawItemPixmap( QPainter *painter, const QRect &rect, int alignment, const QPixmap &pixmap ) const
 {
     QPixmap tinted = pixmap;
-    if( m_recolor.isValid() ) tinted = AppTheme::tintPixmap( pixmap, m_recolor, painter->device()->devicePixelRatio() );
+    if( m_recolor.isValid() ) tinted = AppTheme::tintPixmap( pixmap, m_recolor, painter->device()->devicePixelRatioF() );
     QProxyStyle::drawItemPixmap( painter, rect, alignment, tinted );
 }
 
@@ -787,7 +787,7 @@ void AccordionGroupBox::drawIndicator( QPainter *painter, const QStyleOptionGrou
 
     QRectF iconRect( textRect.left() - iconSize - margin, iconTop, iconSize, iconSize );
 
-    QPixmap tinted = AppTheme::tintPixmap( icon.pixmap( iconRect.size().toSize() ), color, painter->device()->devicePixelRatio() );
+    QPixmap tinted = AppTheme::tintPixmap( icon.pixmap( iconRect.size().toSize() ), color, painter->device()->devicePixelRatioF() );
     painter->drawPixmap( iconRect.topLeft(), tinted );
 }
 

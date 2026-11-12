@@ -639,7 +639,7 @@ void MainWindow::drawFrame( void )
         {
             QPixmap pic = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( m_newPosDropMode, getFramerate() ) );
 
-            pic.setDevicePixelRatio( devicePixelRatio() );
+            pic.setDevicePixelRatio( devicePixelRatioF() );
             m_pTcLabel->setPixmap( pic );
         }
     }
@@ -652,7 +652,7 @@ void MainWindow::drawFrame( void )
         if( !m_tcModeDuration )
         {
             QPixmap pic = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( ui->horizontalSliderPosition->value(), getFramerate() ) );
-            pic.setDevicePixelRatio( devicePixelRatio() );
+            pic.setDevicePixelRatio( devicePixelRatioF() );
             m_pTcLabel->setPixmap( pic );
         }
     }
@@ -1302,8 +1302,8 @@ void MainWindow::initGui( void )
 
     //AudioTrackWave
     m_pAudioWave = new AudioWave();
-    QPixmap pic = QPixmap::fromImage( m_pAudioWave->getMonoWave( NULL, 0, 1, ui->labelAudioTrack->height(), devicePixelRatio() ) );
-    pic.setDevicePixelRatio( devicePixelRatio() );
+    QPixmap pic = QPixmap::fromImage( m_pAudioWave->getMonoWave( NULL, 0, 1, ui->labelAudioTrack->height(), devicePixelRatioF() ) );
+    pic.setDevicePixelRatio( devicePixelRatioF() );
     ui->labelAudioTrack->setPixmap( pic );
     //Fullscreen does not work well, so disable
     //ui->actionFullscreen->setVisible( false );
@@ -1455,9 +1455,9 @@ void MainWindow::initGui( void )
 
     ui->mainToolBarPlayback->addWidget( m_pTcLabel );
 
-    m_pTimeCodeImage = new TimeCodeLabel( ui->mainToolBarPlayback->height(), devicePixelRatio() );
+    m_pTimeCodeImage = new TimeCodeLabel( ui->mainToolBarPlayback->height(), devicePixelRatioF() );
     QPixmap picTc = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( 0, 25 ) );
-    picTc.setDevicePixelRatio( devicePixelRatio() );
+    picTc.setDevicePixelRatio( devicePixelRatioF() );
     m_pTcLabel->setPixmap( picTc );
 
     //ColorWheels
@@ -4852,7 +4852,7 @@ void MainWindow::deleteSession()
 
     //Draw TimeCode
     QPixmap pic = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( 0, 25 ) );
-    pic.setDevicePixelRatio( devicePixelRatio() );
+    pic.setDevicePixelRatio( devicePixelRatioF() );
     m_pTcLabel->setPixmap( pic );
 
     //Reset session name
@@ -5704,7 +5704,7 @@ void MainWindow::previewPicture( int row )
     m_pMlvObject->llrawproc->fix_raw = 0;
 
     int stretchedWidth = m_pMlvObject->RAWI.xRes * getHorizontalStretchFactor(true);
-    int previewMinWidth = ClipInformation::getPreviewMinWidth() * 2 * devicePixelRatio();
+    int previewMinWidth = ClipInformation::getPreviewMinWidth() * 2 * devicePixelRatioF();
     int downscaleFactor = stretchedWidth > previewMinWidth ? stretchedWidth / previewMinWidth : 1;
 
     int width = m_pMlvObject->RAWI.xRes / downscaleFactor;
@@ -5744,7 +5744,7 @@ void MainWindow::previewPicture( int row )
                         Qt::SmoothTransformation)
                     );
 
-    pic.setDevicePixelRatio( devicePixelRatio() );
+    pic.setDevicePixelRatio( devicePixelRatioF() );
     m_pModel->setData( m_pModel->index( row, 0, QModelIndex() ), pic, Qt::DecorationRole );
 }
 
@@ -5842,8 +5842,8 @@ void MainWindow::paintAudioTrack( void )
     //Fake graphic if nothing is loaded
     if( !m_fileLoaded )
     {
-        pic = QPixmap::fromImage( m_pAudioWave->getMonoWave( NULL, 0, 1, ui->labelAudioTrack->height(), devicePixelRatio() ) );
-        pic.setDevicePixelRatio( devicePixelRatio() );
+        pic = QPixmap::fromImage( m_pAudioWave->getMonoWave( NULL, 0, 1, ui->labelAudioTrack->height(), devicePixelRatioF() ) );
+        pic.setDevicePixelRatio( devicePixelRatioF() );
         ui->labelAudioTrack->setPixmap( pic );
         ui->labelAudioTrack->setEnabled( false );
         return;
@@ -5853,8 +5853,8 @@ void MainWindow::paintAudioTrack( void )
     //Also fake graphic if no audio in clip
     if( !doesMlvHaveAudio( m_pMlvObject ) )
     {
-        pic = QPixmap::fromImage( m_pAudioWave->getMonoWave( NULL, 0, 1, ui->labelAudioTrack->height(), devicePixelRatio() ) );
-        pic.setDevicePixelRatio( devicePixelRatio() );
+        pic = QPixmap::fromImage( m_pAudioWave->getMonoWave( NULL, 0, 1, ui->labelAudioTrack->height(), devicePixelRatioF() ) );
+        pic.setDevicePixelRatio( devicePixelRatioF() );
         ui->labelAudioTrack->setPixmap( pic );
     }
     //Load audio data and paint
@@ -5864,8 +5864,8 @@ void MainWindow::paintAudioTrack( void )
         int16_t* audio_data = (int16_t*)getMlvAudioData( m_pMlvObject );
         uint64_t audio_size = getMlvAudioSize( m_pMlvObject );
         //paint
-        pic = QPixmap::fromImage( m_pAudioWave->getMonoWave( audio_data, audio_size, ui->labelAudioTrack->width(), ui->labelAudioTrack->height(), devicePixelRatio() ) );
-        pic.setDevicePixelRatio( devicePixelRatio() );
+        pic = QPixmap::fromImage( m_pAudioWave->getMonoWave( audio_data, audio_size, ui->labelAudioTrack->width(), ui->labelAudioTrack->height(), devicePixelRatioF() ) );
+        pic.setDevicePixelRatio( devicePixelRatioF() );
         ui->labelAudioTrack->setPixmap( pic );
     }
 
@@ -6338,9 +6338,9 @@ int MainWindow::toolButtonGCurvesCurrentIndex()
 void MainWindow::on_actionAbout_triggered()
 {
     QPixmap pixmap = QPixmap( ":/IMG/IMG/Magic_Lantern_logo.png" )
-                .scaled( 128 * devicePixelRatio(), 112 * devicePixelRatio(),
+                .scaled( 128 * devicePixelRatioF(), 112 * devicePixelRatioF(),
                          Qt::KeepAspectRatio, Qt::SmoothTransformation );
-        pixmap.setDevicePixelRatio( devicePixelRatio() );
+        pixmap.setDevicePixelRatio( devicePixelRatioF() );
         QByteArray byteArray;
         QBuffer buffer(&byteArray);
         pixmap.save(&buffer, "PNG");
@@ -7881,13 +7881,13 @@ void MainWindow::on_actionExportSettings_triggered()
         if( m_tcModeDuration )
         {
             QPixmap pic = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( ui->spinBoxCutOut->value() - ui->spinBoxCutIn->value() + 1, getFramerate() ) );
-            pic.setDevicePixelRatio( devicePixelRatio() );
+            pic.setDevicePixelRatio( devicePixelRatioF() );
             m_pTcLabel->setPixmap( pic );
         }
         else
         {
             QPixmap pic = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( ui->horizontalSliderPosition->value(), getFramerate() ) );
-            pic.setDevicePixelRatio( devicePixelRatio() );
+            pic.setDevicePixelRatio( devicePixelRatioF() );
             m_pTcLabel->setPixmap( pic );
         }
 
@@ -9812,11 +9812,11 @@ void MainWindow::drawPicture()
 
         //Get Picture
         QPixmap pic = QPixmap::fromImage( QImage( m_pRenderThread->currentFrame(), getMlvWidth(m_pMlvObject), getMlvHeight(m_pMlvObject), QImage::Format_RGB888 )
-                                          .scaled( desWidth * devicePixelRatio(),
-                                                   desHeight * devicePixelRatio(),
+                                          .scaled( desWidth * devicePixelRatioF(),
+                                                   desHeight * devicePixelRatioF(),
                                                    Qt::IgnoreAspectRatio, mode) );
         //Set Picture to Retina
-        pic.setDevicePixelRatio( devicePixelRatio() );
+        pic.setDevicePixelRatio( devicePixelRatioF() );
         //Bring frame to GUI (fit to window)
         m_pGraphicsItem->setPixmap( pic );
         //Set Scene
@@ -10347,7 +10347,7 @@ void MainWindow::on_spinBoxCutIn_valueChanged(int arg1)
     if( m_fileLoaded && m_tcModeDuration )
     {
         QPixmap pic = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( ui->spinBoxCutOut->value() - ui->spinBoxCutIn->value() + 1, getFramerate() ) );
-        pic.setDevicePixelRatio( devicePixelRatio() );
+        pic.setDevicePixelRatio( devicePixelRatioF() );
         m_pTcLabel->setPixmap( pic );
     }
 }
@@ -10361,7 +10361,7 @@ void MainWindow::on_spinBoxCutOut_valueChanged(int arg1)
     if( m_fileLoaded && m_tcModeDuration )
     {
         QPixmap pic = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( ui->spinBoxCutOut->value() - ui->spinBoxCutIn->value() + 1, getFramerate() ) );
-        pic.setDevicePixelRatio( devicePixelRatio() );
+        pic.setDevicePixelRatio( devicePixelRatioF() );
         m_pTcLabel->setPixmap( pic );
     }
 }
@@ -10453,7 +10453,7 @@ void MainWindow::tcLabelDoubleClicked()
     if( !m_fileLoaded )
     {
         QPixmap pic = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( 0, 25 ) );
-        pic.setDevicePixelRatio( devicePixelRatio() );
+        pic.setDevicePixelRatio( devicePixelRatioF() );
         m_pTcLabel->setPixmap( pic );
         return;
     }
@@ -10462,13 +10462,13 @@ void MainWindow::tcLabelDoubleClicked()
     if( m_tcModeDuration )
     {
         QPixmap pic = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( ui->spinBoxCutOut->value() - ui->spinBoxCutIn->value() + 1, getFramerate() ) );
-        pic.setDevicePixelRatio( devicePixelRatio() );
+        pic.setDevicePixelRatio( devicePixelRatioF() );
         m_pTcLabel->setPixmap( pic );
     }
     else
     {
         QPixmap pic = QPixmap::fromImage( m_pTimeCodeImage->getTimeCodeLabel( ui->horizontalSliderPosition->value(), getFramerate() ) );
-        pic.setDevicePixelRatio( devicePixelRatio() );
+        pic.setDevicePixelRatio( devicePixelRatioF() );
         m_pTcLabel->setPixmap( pic );
     }
 }

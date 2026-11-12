@@ -54,8 +54,8 @@ void HueVsDiagram::setFrameChangedPointer(bool *pFrameChanged)
 //Draw the HueVsSat object on a label
 void HueVsDiagram::paintElement(bool frameChanged)
 {
-    QImage image = QImage( SIZEW * devicePixelRatio(), SIZEH * devicePixelRatio(), QImage::Format_RGB32 );
-    image.setDevicePixelRatio( devicePixelRatio() );
+    QImage image = QImage( SIZEW * devicePixelRatioF(), SIZEH * devicePixelRatioF(), QImage::Format_RGB32 );
+    image.setDevicePixelRatio( devicePixelRatioF() );
 
     image.fill( QColor( 0, 0, 0, 255 ) );
     QPainter painterTc( &image );
