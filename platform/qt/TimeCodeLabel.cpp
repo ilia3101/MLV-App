@@ -34,47 +34,48 @@ TimeCodeLabel::~TimeCodeLabel()
 QImage TimeCodeLabel::getTimeCodeLabel(uint32_t frameNumber, float clipFps)
 {
     // Measure real font size
-    const QString em = "M";
-    QFontMetrics fm( QFont( "Arial", 16 ) );
-    const double factor = fm.horizontalAdvance( em ) / 16.0;
-    const int fontSize = ( m_height - ( m_height / 3 ) ) * factor;
+    QFontMetricsF fm( QFont( "Arial", 16 ) );
+    const qreal factor = fm.horizontalAdvance( "M" ) / 16.0;
+    const qreal fontSize = ( m_height * 2.0 / 3.0 ) * factor - 1;
 
-    QFont font1 = QFont( "DSEG7 Modern", fontSize, QFont::Bold );
-    QFont font2 = QFont( "Arial", fontSize / 2, QFont::Bold );
+    QFont font1 = QFont( "DSEG7 Modern", fontSize + 0.5, QFont::Bold );
+    QFont font2 = QFont( "Arial", fontSize / 2.0 + 0.5, QFont::Bold );
 
     QString text1 = "88 : 88 : 88 . 88";
 
-    QFontMetrics fm1( font1 );
-    const int fm1W = fm1.horizontalAdvance( text1 );
-    const int fm1H = fm1.height();
+    QFontMetricsF fm1( font1 );
+    const qreal fm1W = fm1.horizontalAdvance( text1 );
+    const qreal fm1H = fm1.height();
 
     QString text2 = "TC";
 
-    QFontMetrics fm2( font2 );
-    const int fm2W = fm2.horizontalAdvance( text2 );
-    const int fm2H = fm2.height();
+    QFontMetricsF fm2( font2 );
+    const qreal fm2W = fm2.horizontalAdvance( text2 );
+    const qreal fm2H = fm2.height();
 
     // QString text3 = "[<–>]";
 
-    // QFontMetrics fm3( font2 );
-    // int fm3W = fm3.horizontalAdvance( text3 );
-    // int fm3H = fm3.height();
+    // QFontMetricsF fm3( font2 );
+    // const qreal fm3W = fm3.horizontalAdvance( text3 );
+    // const qreal fm3H = fm3.height();
 
-    const int padding = m_height / 2;
+    const qreal padding = m_height / 2.0;
 
-    const int x1 = padding;
-    const int y1 = ( m_height - fm1H ) / 2;
+    const qreal x1 = padding;
+    const qreal y1 = ( m_height - fm1H ) / 2.0;
 
-    const int x2 = x1 + fm1W + font2.pointSize() / 2;
-    const int y2 = y1 - 1;
+    const qreal spacing = font2.pointSize() / 2.0;
 
-    const int x3 = x1 + fm1W + font2.pointSize() / 2;
-    const int y3 = y1 + 1 + fm1H - fm2H;
+    const qreal x2 = x1 + fm1W + spacing + 1;
+    const qreal y2 = y1 - 1;
+
+    const qreal x3 = x1 + fm1W + spacing;
+    const qreal y3 = y1 + 1 + fm1H - fm2H;
 
     QIcon icon( ":/fontawesome/fontawesome/svgs-full/solid/arrow-right-to-bracket.svg" );
-    QRect iconRect( x3, y3, fm2H, fm2H );
+    QRectF iconRect( x3, y3, fm2H, fm2H );
 
-    QImage tcImage = QImage( fm1W + font2.pointSize() / 2 + iconRect.width() * 2 - 1 + padding * 2, m_height, QImage::Format_ARGB32_Premultiplied );
+    QImage tcImage = QImage( fm1W + spacing + iconRect.width() * 2.0 + padding * 2.0, m_height, QImage::Format_ARGB32_Premultiplied );
 
     QColor background = QColor::fromHsl( 0, 0, 16, 208 );
     QColor active = QColor::fromHsl( 0, 0, 255, 208 );
@@ -86,7 +87,8 @@ QImage TimeCodeLabel::getTimeCodeLabel(uint32_t frameNumber, float clipFps)
     QPainter painterTc( &tcImage );
     painterTc.setRenderHint( QPainter::Antialiasing );
 
-    const qreal radius = 4 * m_devicePixelRatio;
+    const qreal radius = 4.0 * m_devicePixelRatio;
+    const qreal borderWidth = 2.0 * m_devicePixelRatio;
 
     QPainterPath path;
     path.addRoundedRect( tcImage.rect(), radius, radius );
@@ -94,12 +96,12 @@ QImage TimeCodeLabel::getTimeCodeLabel(uint32_t frameNumber, float clipFps)
     painterTc.fillPath( path, background );
 
     //Border
-    QRectF r = tcImage.rect().adjusted( m_devicePixelRatio, m_devicePixelRatio, -m_devicePixelRatio, -m_devicePixelRatio );
-    QLinearGradient gradient( r.topLeft(), r.bottomLeft() );
+    QRectF borderRect = tcImage.rect().adjusted( borderWidth / 2.0, borderWidth / 2.0, -borderWidth / 2.0, -borderWidth / 2.0 );
+    QLinearGradient gradient( borderRect.topLeft(), borderRect.bottomLeft() );
     gradient.setColorAt( 0.0, QColor::fromHsl( 0, 0, 255, 0 ) );
     gradient.setColorAt( 1.0, QColor::fromHsl( 0, 0, 255, 80 ) );
 
-    QPen pen( QBrush( gradient ), 2 * m_devicePixelRatio );
+    QPen pen( QBrush( gradient ), borderWidth );
     painterTc.setPen( pen );
     painterTc.setBrush( Qt::NoBrush );
     painterTc.drawPath( path );
@@ -121,7 +123,7 @@ QImage TimeCodeLabel::getTimeCodeLabel(uint32_t frameNumber, float clipFps)
         // painterTc.drawText( x3, y3, fm3W, fm3H, 0, text3 );
     }
 
-    QPixmap tinted = AppTheme::tintPixmap( icon.pixmap( iconRect.size() ), m_mode ? active : inactive, m_devicePixelRatio );
+    QPixmap tinted = AppTheme::tintPixmap( icon.pixmap( iconRect.size().toSize() ), m_mode ? active : inactive, m_devicePixelRatio );
     QTransform transform;
     transform.scale( -1, 1 );
     QPixmap flipped = tinted.transformed( transform );

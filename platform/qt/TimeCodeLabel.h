@@ -21,7 +21,7 @@ public:
 
 private:
     bool m_mode;
-    int m_height;
+    qreal m_height;
     qreal m_devicePixelRatio;
 };
 
