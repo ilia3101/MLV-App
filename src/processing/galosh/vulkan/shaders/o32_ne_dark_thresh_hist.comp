@@ -1,0 +1,45 @@
+#version 450
+/* Transcribed from galosh.cl §7.2c galosh_o32_ne_dark_thresh_hist (line 6746).
+ * Histogram-based dark refinement pass 1: multi-WG atomic-increment global
+ * histogram of half-res raw values (sub-sample stride 3 per CFA channel,
+ * 4 channels per WI).  Range [0,1) → 4096 bins.
+ * Literal transcription (V2.0 Phase B2). */
+
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+
+layout(std430, binding = 0) readonly buffer Buf0 { float raw[]; };
+layout(std430, binding = 1)          buffer Buf1 { int dark_thresh_hist[]; };
+
+layout(push_constant) uniform PC {
+  int width;
+  int height;
+} pc;
+
+const int O32_DARK_HIST_BINS = 4096;   /* galosh.cl line 6743 */
+
+void main()
+{
+  const int gid_x = int(gl_GlobalInvocationID.x);
+  const int gid_y = int(gl_GlobalInvocationID.y);
+  const int halfwidth  = (pc.width  + 1) / 2;
+  const int halfheight = (pc.height + 1) / 2;
+  /* Sub-sample stride=3 per CFA channel; iterate 4 channels per WI. */
+  if(gid_x * 3 >= halfwidth || gid_y * 3 >= halfheight) return;
+
+  const float scale = float(O32_DARK_HIST_BINS);   /* range [0,1) → bin */
+  for(int ch = 0; ch < 4; ch++)
+  {
+    const int dy0 = (ch >> 1) & 1, dx0 = ch & 1;
+    const int hr = gid_y * 3;
+    const int hc = gid_x * 3;
+    if(hr >= halfheight || hc >= halfwidth) continue;
+    const int fr = 2 * hr + dy0;
+    const int fc = 2 * hc + dx0;
+    if(fr >= pc.height || fc >= pc.width) continue;
+    const float v = raw[fr * pc.width + fc];
+    int bin = int(v * scale);
+    if(bin < 0) bin = 0;
+    if(bin >= O32_DARK_HIST_BINS) bin = O32_DARK_HIST_BINS - 1;
+    atomicAdd(dark_thresh_hist[bin], 1);
+  }
+}

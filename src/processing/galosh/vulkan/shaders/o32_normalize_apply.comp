@@ -1,0 +1,35 @@
+#version 450
+/* Transcribed from galosh.cl §7.7 galosh_o32_normalize_apply (line 7237).
+ * Phase 1 (4/4): in-place multiply of in_gat_full by params[P_INV_SG].
+ * Literal transcription (V2.0 Phase B2).
+ * [deviation vs galosh.cl, V2.0 B7f] dead ch0..3 RMWs removed (never
+ * read on the o32 path — blueprint trap #7); outputs bit-identical,
+ * bindings kept.  (日) 死に RMW 除去、出力ビット同一。 */
+
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+
+layout(std430, binding = 0) buffer Buf0 { float in_gat_full[]; };
+layout(std430, binding = 1) buffer Buf1 { float ch0[]; };
+layout(std430, binding = 2) buffer Buf2 { float ch1[]; };
+layout(std430, binding = 3) buffer Buf3 { float ch2[]; };
+layout(std430, binding = 4) buffer Buf4 { float ch3[]; };
+layout(std430, binding = 5) readonly buffer Buf5 { float params[]; };
+
+layout(push_constant) uniform PC {
+  int width;
+  int height;
+} pc;
+
+/* params[] slot indices (galosh.cl lines 6346-6367) */
+const int P_INV_SG = 5;
+
+void main()
+{
+  const int fx = int(gl_GlobalInvocationID.x);
+  const int fy = int(gl_GlobalInvocationID.y);
+  if(fx >= pc.width || fy >= pc.height) return;
+
+  const float inv_sg = params[P_INV_SG];
+  const int p = fy * pc.width + fx;
+  in_gat_full[p] *= inv_sg;
+}

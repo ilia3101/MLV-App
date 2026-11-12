@@ -1,0 +1,79 @@
+#version 450
+/* Transcribed from galosh.cl §7.2e galosh_o32_ne_dark_lap_hist (line 6800).
+ * Histogram-based dark refinement pass 2: multi-WG atomic-increment global
+ * histogram of |H/V Laplacians| for triplets where all 3 samples are
+ * <= dark_max.  Range [0, O32_DARK_LAP_MAX] → 4096 bins.  4 CFA channels
+ * per WI, stride 1 (= match CPU).  Literal transcription (V2.0 Phase B2). */
+
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+
+layout(std430, binding = 0) readonly buffer Buf0 { float raw[]; };
+layout(std430, binding = 1) readonly buffer Buf1 { float params[]; };
+layout(std430, binding = 2)          buffer Buf2 { int dark_lap_hist[]; };
+
+layout(push_constant) uniform PC {
+  int width;
+  int height;
+  int dark_thresh_slot;
+} pc;
+
+const int   O32_DARK_HIST_BINS = 4096;   /* galosh.cl line 6743 */
+const float O32_DARK_LAP_MAX   = 0.1;    /* galosh.cl line 6744 */
+
+void main()
+{
+  const int gid_x = int(gl_GlobalInvocationID.x);
+  const int gid_y = int(gl_GlobalInvocationID.y);
+  const int halfwidth  = (pc.width  + 1) / 2;
+  const int halfheight = (pc.height + 1) / 2;
+  if(gid_x >= halfwidth || gid_y >= halfheight) return;
+
+  const float dark_max = params[pc.dark_thresh_slot] + 0.02;
+  const float scale = float(O32_DARK_HIST_BINS) / O32_DARK_LAP_MAX;
+
+  /* Process 4 channels per WI; stride=1 (= match CPU). */
+  for(int ch = 0; ch < 4; ch++)
+  {
+    const int dy0 = (ch >> 1) & 1, dx0 = ch & 1;
+    const int hr = gid_y;
+    const int hc = gid_x;
+    /* Horizontal Laplacian: x in [0, halfwidth-2). */
+    if(hc < halfwidth - 2)
+    {
+      const int fr = 2 * hr + dy0;
+      if(fr < pc.height)
+      {
+        const float v0 = raw[fr * pc.width + (2 *  hc      + dx0)];
+        const float v1 = raw[fr * pc.width + (2 * (hc + 1) + dx0)];
+        const float v2 = raw[fr * pc.width + (2 * (hc + 2) + dx0)];
+        if(!(v0 > dark_max || v1 > dark_max || v2 > dark_max))
+        {
+          const float lap = abs(v0 - 2.0 * v1 + v2);
+          int bin = int(lap * scale);
+          if(bin < 0) bin = 0;
+          if(bin >= O32_DARK_HIST_BINS) bin = O32_DARK_HIST_BINS - 1;
+          atomicAdd(dark_lap_hist[bin], 1);
+        }
+      }
+    }
+    /* Vertical Laplacian: y in [0, halfheight-2). */
+    if(hr < halfheight - 2)
+    {
+      const int fc = 2 * hc + dx0;
+      if(fc < pc.width)
+      {
+        const float v0 = raw[(2 *  hr      + dy0) * pc.width + fc];
+        const float v1 = raw[(2 * (hr + 1) + dy0) * pc.width + fc];
+        const float v2 = raw[(2 * (hr + 2) + dy0) * pc.width + fc];
+        if(!(v0 > dark_max || v1 > dark_max || v2 > dark_max))
+        {
+          const float lap = abs(v0 - 2.0 * v1 + v2);
+          int bin = int(lap * scale);
+          if(bin < 0) bin = 0;
+          if(bin >= O32_DARK_HIST_BINS) bin = O32_DARK_HIST_BINS - 1;
+          atomicAdd(dark_lap_hist[bin], 1);
+        }
+      }
+    }
+  }
+}

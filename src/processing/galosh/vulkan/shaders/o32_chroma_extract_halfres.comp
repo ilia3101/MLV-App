@@ -1,0 +1,47 @@
+#version 450
+/* Transcribed from galosh.cl kernel galosh_o32_chroma_extract_halfres (§6.3,
+ * line 4995).  Literal port per PORT_CONVENTIONS.md.
+ * Host dispatch: align_up(hw,16) x align_up(hh,16), local 16x16
+ * (galosh_raw_gpu.c:1362-1364 "K_O32_3 chroma_extract"). */
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+
+layout(std430, binding = 0) restrict readonly  buffer Buf0 { float in_gat_full[]; };
+layout(std430, binding = 1) restrict writeonly buffer Buf1 { float C1_h[]; };
+layout(std430, binding = 2) restrict writeonly buffer Buf2 { float C2_h[]; };
+layout(std430, binding = 3) restrict writeonly buffer Buf3 { float C3_h[]; };
+
+layout(push_constant) uniform PC {
+  int width;
+  int height;
+  int halfwidth;
+  int halfheight;
+} pc;
+
+void main()
+{
+  const int hx = int(gl_GlobalInvocationID.x);
+  const int hy = int(gl_GlobalInvocationID.y);
+  if(hx >= pc.halfwidth || hy >= pc.halfheight) return;
+
+  const int fr = 2 * hy;
+  const int fc = 2 * hx;
+  const int hp = hy * pc.halfwidth + hx;
+
+  if(fr + 1 >= pc.height || fc + 1 >= pc.width)
+  {
+    C1_h[hp] = 0.0f;
+    C2_h[hp] = 0.0f;
+    C3_h[hp] = 0.0f;
+    return;
+  }
+
+  /* OpenCL used (size_t) 64-bit index; GLSL uses 32-bit int (no INT64). */
+  const float R  = in_gat_full[fr       * pc.width + fc      ];
+  const float Gb = in_gat_full[(fr + 1) * pc.width + fc      ];
+  const float Gr = in_gat_full[fr       * pc.width + (fc + 1)];
+  const float B  = in_gat_full[(fr + 1) * pc.width + (fc + 1)];
+
+  C1_h[hp] = 0.5f * (R - Gb + Gr - B);
+  C2_h[hp] = 0.5f * (R + Gb - Gr - B);
+  C3_h[hp] = 0.5f * (R - Gb - Gr + B);
+}

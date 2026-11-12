@@ -188,6 +188,11 @@ Cameras like EOS 100D, 700D,... have wrong colored focus dots in the image. Thes
 <p>This is a very simple 2D median denoiser. Window size and Strength can be adjusted.</p>
 <h3 id="denoiser-rbf">Denoiser RBF</h3>
 <p>This is a denoiser which works via recursive bilateral filtering. MLVApp separates the filter to luma and chroma. The filter radius can be defined.</p>
+<h3 id="denoiser-galosh">Denoiser GALOSH</h3>
+<p>GALOSH is a blind, training-free RAW Bayer denoiser. It estimates the sensor noise model from each frame and applies local shrinkage in a transform domain. Strength 0 disables it; 100 is the canonical strength. Luma and Chroma controls adjust the two paths independently. Fast Mode uses a smaller luma transform and a faster chroma upsample.</p>
+<p>The GPU backend uses Vulkan and is selected by default when the build and the system provide a usable Vulkan device; otherwise the CPU backend is used. On macOS the optional Vulkan build uses MoltenVK.</p>
+<p>GALOSH runs after MLV-App's low-level raw corrections, including dual-ISO deinterleaving when enabled, so it always receives a corrected Bayer frame.</p>
+<p>For 1x3 anamorphic footage, set the height stretch to 0.33x (some Magic Lantern builds do not store the metadata needed for automatic detection). GALOSH then denoises on a 3x horizontally upsampled Bayer grid, so its square blocks stay square after the 3x display stretch. This is slower than normal 1x1/3x3 denoising but avoids the heavy horizontal smearing.</p>
 <h3 id="grain">Grain</h3>
 <p>Use the grain strength slider to add some very simple generated film grain. Use the grain luma weight slider to apply more grain to highlights and less grain to shadows.</p>
 <h2 id="4-6-hsl-hue-saturation-luminance-">4.6 HSL (Hue Saturation Luminance)</h2>

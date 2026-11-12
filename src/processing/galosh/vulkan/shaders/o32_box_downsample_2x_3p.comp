@@ -1,0 +1,40 @@
+#version 450
+/* Transcribed from galosh.cl kernel galosh_o32_box_downsample_2x_3p (§6.9,
+ * line 5665).  Literal port per PORT_CONVENTIONS.md.
+ * Host dispatch (2 call sites, chroma pyramid): align_up(dw,16) x
+ * align_up(dh,16) with dw=sw>>1, dh=sh>>1, local 16x16
+ * (galosh_raw_gpu.c:1460-1462 "K_O32_7c C_q" / 1471-1473 "K_O32_7d C_e"). */
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+
+layout(std430, binding = 0) restrict readonly  buffer Buf0 { float src1[]; };
+layout(std430, binding = 1) restrict readonly  buffer Buf1 { float src2[]; };
+layout(std430, binding = 2) restrict readonly  buffer Buf2 { float src3[]; };
+layout(std430, binding = 3) restrict writeonly buffer Buf3 { float dst1[]; };
+layout(std430, binding = 4) restrict writeonly buffer Buf4 { float dst2[]; };
+layout(std430, binding = 5) restrict writeonly buffer Buf5 { float dst3[]; };
+
+layout(push_constant) uniform PC {
+  int sw;
+  int sh;
+} pc;
+
+void main()
+{
+  const int dw = pc.sw >> 1;
+  const int dh = pc.sh >> 1;
+  const int dx = int(gl_GlobalInvocationID.x);
+  const int dy = int(gl_GlobalInvocationID.y);
+  if(dx >= dw || dy >= dh) return;
+
+  const int sx = 2 * dx;
+  const int sy = 2 * dy;
+  /* OpenCL used (size_t) 64-bit indices; GLSL uses 32-bit int (no INT64). */
+  const int p00 = sy       * pc.sw + sx;
+  const int p01 = sy       * pc.sw + (sx + 1);
+  const int p10 = (sy + 1) * pc.sw + sx;
+  const int p11 = (sy + 1) * pc.sw + (sx + 1);
+  const int dp = dy * dw + dx;
+  dst1[dp] = 0.25f * (src1[p00] + src1[p01] + src1[p10] + src1[p11]);
+  dst2[dp] = 0.25f * (src2[p00] + src2[p01] + src2[p10] + src2[p11]);
+  dst3[dp] = 0.25f * (src3[p00] + src3[p01] + src3[p10] + src3[p11]);
+}

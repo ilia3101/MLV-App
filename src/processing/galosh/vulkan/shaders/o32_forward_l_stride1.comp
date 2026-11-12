@@ -1,0 +1,45 @@
+#version 450
+/* Transcribed from galosh.cl kernel galosh_o32_forward_l_stride1 (§6.2,
+ * line 4945).  Literal port per PORT_CONVENTIONS.md.
+ * Host dispatch: align_up(width,16) x align_up(height,16), local 16x16
+ * (galosh_raw_gpu.c:1349-1351 "K_O32_2 fwd_L_cs").
+ *
+ * [V2.0 FP16 storage contract v1, dataflow_spec.md §4] L_cs is a contract
+ * buffer: stored as binary16 (RNE on the f16 store), compute stays f32.
+ * Mirrors CPU oracle GALOSH_F16_STAGE(L_cs) — rounds BEFORE P5 pass1.
+ * (日) L_cs は FP16 ストレージ契約点。演算は f32 のまま、格納のみ f16。 */
+#extension GL_EXT_shader_16bit_storage : require
+#extension GL_EXT_shader_explicit_arithmetic_types_float16 : require
+#extension GL_GOOGLE_include_directive : enable
+#include "galosh_f16_rne.glsl"
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+
+layout(std430, binding = 0) restrict readonly  buffer Buf0 { float in_gat_full[]; };
+layout(std430, binding = 1) restrict writeonly buffer Buf1 { float16_t L_cs[]; };
+
+layout(push_constant) uniform PC {
+  int width;
+  int height;
+} pc;
+
+void main()
+{
+  const int x = int(gl_GlobalInvocationID.x);
+  const int y = int(gl_GlobalInvocationID.y);
+  if(x >= pc.width || y >= pc.height) return;
+
+  int yb = y + 1;
+  if(yb >= pc.height) yb = pc.height - 2;
+  if(yb < 0)          yb = 0;
+  int xb = x + 1;
+  if(xb >= pc.width)  xb = pc.width - 2;
+  if(xb < 0)          xb = 0;
+
+  /* OpenCL used (size_t) 64-bit index; GLSL uses 32-bit int (no INT64). */
+  const float a  = in_gat_full[y  * pc.width + x ];
+  const float b  = in_gat_full[yb * pc.width + x ];
+  const float cc = in_gat_full[y  * pc.width + xb];
+  const float d  = in_gat_full[yb * pc.width + xb];
+  /* explicit RNE (AMD OpFConvert is RTZ — see galosh_f16_rne.glsl) */
+  L_cs[y * pc.width + x] = float16_t(galosh_f16_rne(0.5f * (a + b + cc + d)));
+}

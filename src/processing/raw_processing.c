@@ -177,6 +177,14 @@ processingObject_t * initProcessingObject()
     processingSetRbfDenoiserLuma(processing, 0);
     processingSetRbfDenoiserChroma(processing, 0);
     processingSetRbfDenoiserRange(processing, 40);
+    processingSetGaloshStrength(processing, 0);
+    processingSetGaloshLuma(processing, 100);
+    processingSetGaloshChroma(processing, 100);
+    processingSetGaloshBackend(processing, 0);
+    processingSetGaloshFast(processing, 0);
+    processingSetGaloshAnamorphicX(processing, 0);
+    processingSetGaloshNoiseMode(processing, 0);
+    processingResetGaloshNoise(processing);
     processingUseCamMatrix(processing);
     processingAllowCreativeAdjustments(processing);
     processingSetGCurve(processing, 0, NULL, NULL, 0);

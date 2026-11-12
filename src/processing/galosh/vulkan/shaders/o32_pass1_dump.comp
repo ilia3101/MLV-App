@@ -1,0 +1,260 @@
+#version 450
+/* o32_pass1_dump.comp — [V2.0 Phase B2, group P5] literal transcription of
+ * OpenCL kernel `galosh_pass1_o32_dump` (standalone/galosh.cl §6.5d, l.5343).
+ *
+ * DEBUG-ONLY Pass1 extractor.  Bit-identical to galosh_pass12_o32
+ * Steps 1-4 (= load tile, zero accumulators, BayesShrink-per-block with
+ * validity filter, finalize pilot from numer/denom), but writes the
+ * per-tile pilot to a GLOBAL buffer instead of consuming it via
+ * in-kernel Pass2.  Production pipeline does NOT use this kernel; the
+ * host invokes it only when GALOSH_DUMP_DIR is set (phase-verification
+ * harness verify_o32_phases.py).
+ *
+ * LDS/shared: tile_in + numer + denom = 3 x 1600 x 4 B = 19.2 KB.
+ *
+ * (日) デバッグ専用 Pass1 pilot 抽出。 逐語 GLSL 転写、演算順は
+ *   OpenCL ソースと同一 (mul+add 分離のまま、fma 不導入)。
+ *
+ * Transcription deltas (mechanical only, bit-identical values):
+ *  - `wht8_f(block + r*8)` pointer-offset call → row copy-in/copy-out.
+ *  - `(size_t)gy * width` global index cast dropped → int (npix < 2^31).
+ *  NOTE (faithful to source): unlike galosh_pass12_o32, the source has
+ *  NO barrier between the tile load loop and the accumulator-zero loop
+ *  (both write disjoint arrays; single barrier after both) — preserved.
+ *
+ * [V2.0 FP16 storage contract v1, dataflow_spec.md §4] input = L_cs
+ * contract buffer → float16_t SSBO.  pilot_global stays an f32 dump
+ * buffer (dump format unchanged), but the written VALUE is rounded
+ * through f16 so it equals the oracle's dumped p5_pilot (the CPU dumps
+ * L_cs_pilot AFTER GALOSH_F16_STAGE rounds it).
+ * (日) 出力バッファ形式は f32 のまま、値のみ f16 丸め = オラクルの
+ *   丸め後ダンプと一致。 */
+#extension GL_EXT_shader_16bit_storage : require
+#extension GL_EXT_shader_explicit_arithmetic_types_float16 : require
+#extension GL_GOOGLE_include_directive : enable
+#include "galosh_f16_rne.glsl"
+layout(local_size_x = 8, local_size_y = 8) in;   /* host l2 = {8, 8} (g_tile_wg_dim) */
+
+/* ---- compile-time constants (galosh.cl §"Compile-time constants") ---- */
+#define GALOSH_BS      8
+#define GALOSH_BP     64    /* BS*BS */
+#define GALOSH_STRIDE  2
+#define PHASE_MOD  (GALOSH_BS / GALOSH_STRIDE)   /* 4 for stride=2 */
+#define N_PHASES   (PHASE_MOD * PHASE_MOD)        /* 16 */
+#define HALO       (GALOSH_BS - GALOSH_STRIDE)    /* 6: ensures stride-aligned blocks */
+
+#define O32_TILE_SIZE 28
+#define O32_TILE_W      (O32_TILE_SIZE + 2 * HALO)          /* 40 */
+#define O32_TILE_PIXELS (O32_TILE_W * O32_TILE_W)           /* 1600 */
+
+/* ---- Kaiser window (beta=2.0, N=8, precomputed) ---- */
+const float kaiser_1d[8] = float[8](
+  0.34012f, 0.59885f, 0.84123f, 0.97659f,
+  0.97659f, 0.84123f, 0.59885f, 0.34012f
+);
+
+/* ---- OpenCL args: pointer args → SSBOs, scalars → push constants ---- */
+/* arg0: global const float *restrict input   (`input` is a GLSL reserved word)
+ * [FP16 v1] = L_cs, f16 storage */
+layout(std430, binding = 0) readonly  buffer Buf0 { float16_t input_buf[]; };
+/* arg1: global       float *restrict pilot_global */
+layout(std430, binding = 1) writeonly buffer Buf1 { float pilot_global[]; };
+layout(push_constant) uniform PC {
+  int   width;          /* arg2 */
+  int   height;         /* arg3 */
+  float sigma_strength; /* arg4 */
+} pc;
+
+/* ---- shared (OpenCL __local) tile arrays ---- */
+shared float tile_in[O32_TILE_PIXELS];
+shared float numer  [O32_TILE_PIXELS];
+shared float denom  [O32_TILE_PIXELS];
+
+/* ================================================================
+ * wht8_f — 3-stage 8-point Hadamard butterfly (galosh.cl §1 wht8_f).
+ * ================================================================ */
+void wht8_f(inout float x[8])
+{
+  float a0 = x[0]+x[1], a1 = x[0]-x[1];
+  float a2 = x[2]+x[3], a3 = x[2]-x[3];
+  float a4 = x[4]+x[5], a5 = x[4]-x[5];
+  float a6 = x[6]+x[7], a7 = x[6]-x[7];
+  float b0 = a0+a2, b1 = a1+a3;
+  float b2 = a0-a2, b3 = a1-a3;
+  float b4 = a4+a6, b5 = a5+a7;
+  float b6 = a4-a6, b7 = a5-a7;
+  x[0] = b0+b4; x[1] = b1+b5; x[2] = b2+b6; x[3] = b3+b7;
+  x[4] = b0-b4; x[5] = b1-b5; x[6] = b2-b6; x[7] = b3-b7;
+}
+
+/* wht2d_8x8_f: rows use copy-in/out instead of `wht8_f(block + r*8)`
+ * (no pointer arithmetic in GLSL) — pure data movement, bit-identical. */
+void wht2d_8x8_f(inout float block[GALOSH_BP], const int normalize)
+{
+  for(int r = 0; r < 8; r++)
+  {
+    float row[8];
+    for(int c = 0; c < 8; c++) row[c] = block[r * 8 + c];
+    wht8_f(row);
+    for(int c = 0; c < 8; c++) block[r * 8 + c] = row[c];
+  }
+  for(int c = 0; c < 8; c++)
+  {
+    float col[8];
+    for(int r = 0; r < 8; r++) col[r] = block[r * 8 + c];
+    wht8_f(col);
+    for(int r = 0; r < 8; r++) block[r * 8 + c] = col[r];
+  }
+  if(normalize != 0)
+  {
+    const float inv = (1.0f / 64.0f);
+    for(int i = 0; i < 64; i++) block[i] *= inv;
+  }
+}
+
+/* mad_sigma_y_sq_f: MAD of the 63 AC coefficients via partial
+ * selection sort — exact transcription. */
+float mad_sigma_y_sq_f(const float block[GALOSH_BP])
+{
+    float abs_ac[GALOSH_BP - 1];
+    for(int i = 1; i < GALOSH_BP; i++)
+        abs_ac[i - 1] = abs(block[i]);
+    const int target = (GALOSH_BP - 1) / 2;
+    for(int k = 0; k <= target; k++)
+    {
+        int min_idx = k;
+        float min_val = abs_ac[k];
+        for(int j = k + 1; j < GALOSH_BP - 1; j++)
+        {
+            if(abs_ac[j] < min_val) { min_val = abs_ac[j]; min_idx = j; }
+        }
+        abs_ac[min_idx] = abs_ac[k];
+        abs_ac[k] = min_val;
+    }
+    const float mad = abs_ac[target];
+    const float sy = mad / 0.6745f;
+    return (sy * sy) / float(GALOSH_BP);
+}
+
+void main()
+{
+  const int tile_x = int(gl_WorkGroupID.x) * O32_TILE_SIZE;
+  const int tile_y = int(gl_WorkGroupID.y) * O32_TILE_SIZE;
+  const int lid = int(gl_LocalInvocationID.y) * 8 + int(gl_LocalInvocationID.x);  /* get_local_size(0)=8 */
+  const int wg_size = 8 * 8;   /* get_local_size(0)*get_local_size(1) = 64 */
+
+  const int img_rmax = pc.height - GALOSH_BS;
+  const int img_cmax = pc.width  - GALOSH_BS;
+
+  for(int i = lid; i < O32_TILE_PIXELS; i += wg_size)
+  {
+    const int lx = i % O32_TILE_W;
+    const int ly = i / O32_TILE_W;
+    const int gx = tile_x - HALO + lx;
+    const int gy = tile_y - HALO + ly;
+    tile_in[i] = (gx >= 0 && gx < pc.width && gy >= 0 && gy < pc.height)
+                 ? float(input_buf[gy * pc.width + gx]) : 0.0f;
+  }
+  for(int i = lid; i < O32_TILE_PIXELS; i += wg_size)
+  {
+    numer[i] = 0.0f;
+    denom[i] = 0.0f;
+  }
+  memoryBarrierShared(); barrier();
+
+  {
+    const int n_blocks_dim = (O32_TILE_W - GALOSH_BS) / GALOSH_STRIDE + 1;
+    const float sigma_sq = pc.sigma_strength * pc.sigma_strength;
+    const float lambda_max_base = pc.sigma_strength * sqrt(2.0f * log(float(GALOSH_BP)));
+
+    for(int phase = 0; phase < N_PHASES; phase++)
+    {
+      const int px = phase % PHASE_MOD;
+      const int py = phase / PHASE_MOD;
+      const int bpd   = (n_blocks_dim - px + PHASE_MOD - 1) / PHASE_MOD;
+      const int bpd_y = (n_blocks_dim - py + PHASE_MOD - 1) / PHASE_MOD;
+      const int n_blocks = bpd * bpd_y;
+
+      for(int bi = lid; bi < n_blocks; bi += wg_size)
+      {
+        const int pbx = bi % bpd;
+        const int pby = bi / bpd;
+        const int bx = pbx * PHASE_MOD + px;
+        const int by = pby * PHASE_MOD + py;
+        if(bx >= n_blocks_dim || by >= n_blocks_dim) continue;
+
+        const int ref_c = bx * GALOSH_STRIDE;
+        const int ref_r = by * GALOSH_STRIDE;
+
+        const int img_ref_r = tile_y - HALO + ref_r;
+        const int img_ref_c = tile_x - HALO + ref_c;
+        if(img_ref_r < 0 || img_ref_r > img_rmax) continue;
+        if(img_ref_c < 0 || img_ref_c > img_cmax) continue;
+
+        float block[GALOSH_BP];
+        for(int dy = 0; dy < GALOSH_BS; dy++)
+          for(int dx = 0; dx < GALOSH_BS; dx++)
+            block[dy * GALOSH_BS + dx] = tile_in[(ref_r + dy) * O32_TILE_W + (ref_c + dx)];
+
+        wht2d_8x8_f(block, 0);
+
+        const float sigma_y_sq = mad_sigma_y_sq_f(block);
+        const float sigma_x_sq = max(sigma_y_sq - sigma_sq, 0.0f);
+
+        float lambda;
+        if(sigma_x_sq < 1e-10f)
+          lambda = 1e30f;
+        else
+        {
+          lambda = (sigma_sq / sqrt(sigma_x_sq)) * sqrt(float(GALOSH_BP));
+          const float lambda_max_unorm = lambda_max_base * sqrt(float(GALOSH_BP));
+          if(lambda > lambda_max_unorm) lambda = lambda_max_unorm;
+        }
+
+        /* Hard threshold (= CPU O semantic, galosh_cpu.h pass1_blocked
+         * line 2107).  Same fix as production galosh_pass12_o32. */
+        int n_nonzero = 1;
+        for(int i = 1; i < GALOSH_BP; i++)
+        {
+          if(abs(block[i]) < lambda)
+            block[i] = 0.0f;
+          else
+            n_nonzero++;
+        }
+
+        wht2d_8x8_f(block, 1);
+
+        const float weight = 1.0f / float(n_nonzero);
+
+        for(int dy = 0; dy < GALOSH_BS; dy++)
+          for(int dx = 0; dx < GALOSH_BS; dx++)
+          {
+            const float kw = kaiser_1d[dy] * kaiser_1d[dx];
+            const float wkw = weight * kw;
+            const int pos = (ref_r + dy) * O32_TILE_W + (ref_c + dx);
+            numer[pos] += wkw * block[dy * GALOSH_BS + dx];
+            denom[pos] += wkw;
+          }
+      }
+      memoryBarrierShared(); barrier();
+    }
+  }
+
+  /* Write tile interior pilot to GLOBAL pilot_global (debug). */
+  for(int i = lid; i < O32_TILE_SIZE * O32_TILE_SIZE; i += wg_size)
+  {
+    const int lx = i % O32_TILE_SIZE + HALO;
+    const int ly = i / O32_TILE_SIZE + HALO;
+    const int idx = ly * O32_TILE_W + lx;
+    const int gx = tile_x + (i % O32_TILE_SIZE);
+    const int gy = tile_y + (i / O32_TILE_SIZE);
+    if(gx < pc.width && gy < pc.height)
+    {
+      const float d = denom[idx];
+      /* [FP16 v1] value rounded to f16 with explicit RNE (buffer stays f32
+       * for the dump format) = CPU's post-GALOSH_F16_STAGE p5_pilot dump. */
+      pilot_global[gy * pc.width + gx] =
+          galosh_f16_rne((d > 1e-10f) ? (numer[idx] / d) : tile_in[idx]);
+    }
+  }
+}

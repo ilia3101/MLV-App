@@ -1,0 +1,46 @@
+#version 450
+/* Transcribed from galosh.cl §7.2f galosh_o32_ne_dark_finalize (line 6864).
+ * Single-WI cumsum scan of the dark Laplacian histogram: median = MAD,
+ * σ² = (MAD/0.6745)²/6 - α·dark_thresh/2, write params[P_SIGMA_SQ].
+ * Literal transcription (V2.0 Phase B2). */
+
+/* Host passes NULL local size with global = 1; per PORT_CONVENTIONS we
+ * choose 256x1 — the gid!=0 guard idles the other invocations. */
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+layout(std430, binding = 0) readonly buffer Buf0 { int dark_lap_hist[]; };
+layout(std430, binding = 1)          buffer Buf1 { float params[]; };  /* read α + dark_thresh, write σ² */
+
+layout(push_constant) uniform PC {
+  int dark_thresh_slot;
+} pc;
+
+const int   O32_DARK_HIST_BINS = 4096;   /* galosh.cl line 6743 */
+const float O32_DARK_LAP_MAX   = 0.1;    /* galosh.cl line 6744 */
+const int   P_ALPHA            = 13;
+const int   P_SIGMA_SQ         = 14;
+
+void main()
+{
+  if(gl_GlobalInvocationID.x != 0u) return;
+  int total = 0;
+  for(int i = 0; i < O32_DARK_HIST_BINS; i++) total += dark_lap_hist[i];
+  if(total < 100) return;   /* keep alpha-only sigma_sq_est = 0 */
+
+  const int target = total / 2;
+  int cum = 0, med_bin = 0;
+  for(int i = 0; i < O32_DARK_HIST_BINS; i++)
+  {
+    cum += dark_lap_hist[i];
+    if(cum >= target) { med_bin = i; break; }
+  }
+  const float bin_scale = float(O32_DARK_HIST_BINS) / O32_DARK_LAP_MAX;
+  const float mad = (float(med_bin) + 0.5) / bin_scale;
+  const float sigma_lap = mad / 0.6745;
+  const float dark_var = (sigma_lap * sigma_lap) / 6.0;
+  const float dark_thresh = params[pc.dark_thresh_slot];
+  const float dark_mean = dark_thresh * 0.5;
+  const float alpha = params[P_ALPHA];
+  const float sigma_sq = max(dark_var - alpha * dark_mean, 0.0);
+  params[P_SIGMA_SQ] = sigma_sq;
+}

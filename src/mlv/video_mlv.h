@@ -68,6 +68,12 @@ void getMlvProcessedFrame16(mlvObject_t * video, uint64_t frameIndex, uint16_t *
 int getMlvRawFrameUint16(mlvObject_t * video, uint64_t frameIndex, uint16_t * unpackedFrame);
 void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outputFrame);
 
+/* Black/white levels that match the DNG export and the raw float frame
+ * produced by getMlvRawFrameFloat().  Used by the GALOSH bridge so its
+ * normalization matches the reference GALOSH DNG tool. */
+void getMlvGaloshRawLevels(mlvObject_t * video, float * black_level,
+                           float * white_level);
+
 /* Gets a debayered 16 bit frame */
 void getMlvRawFrameDebayered(mlvObject_t * video, uint64_t frameIndex, uint16_t * outputFrame);
 

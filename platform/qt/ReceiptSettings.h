@@ -55,6 +55,12 @@ public:
     void setRbfDenoiserLuma( int value )      {m_rbfDenoiserLuma = value;}
     void setRbfDenoiserChroma( int value )    {m_rbfDenoiserChroma = value;}
     void setRbfDenoiserRange( int value )     {m_rbfDenoiserRange = value;}
+    void setGaloshStrength( int value )       {m_galoshStrength = value;}
+    void setGaloshLuma( int value )           {m_galoshLuma = value;}
+    void setGaloshChroma( int value )         {m_galoshChroma = value;}
+    void setGaloshBackend( int value )        {m_galoshBackend = value;}
+    void setGaloshNoiseMode( int value )      {m_galoshNoiseMode = value;}
+    void setGaloshFast( bool value )          {m_galoshFast = value;}
     void setGrainStrength( int value )        {m_grainStrength = value;}
     void setGrainLumaWeight( int  on )        {m_grainLumaWeight = on;}
     void setHighlightReconstruction( bool on ){m_highlightReconstruction = on;}
@@ -165,6 +171,12 @@ public:
     int rbfDenoiserLuma( void ){return m_rbfDenoiserLuma;}
     int rbfDenoiserChroma( void ){return m_rbfDenoiserChroma;}
     int rbfDenoiserRange( void ){return m_rbfDenoiserRange;}
+    int galoshStrength( void ){return m_galoshStrength;}
+    int galoshLuma( void ){return m_galoshLuma;}
+    int galoshChroma( void ){return m_galoshChroma;}
+    int galoshBackend( void ){return m_galoshBackend;}
+    int galoshNoiseMode( void ){return m_galoshNoiseMode;}
+    bool galoshFast( void ){return m_galoshFast;}
     int grainStrength( void ){return m_grainStrength;}
     int grainLumaWeight( void ){return m_grainLumaWeight;}
     bool isHighlightReconstruction( void ){return m_highlightReconstruction;}
@@ -284,6 +296,12 @@ private:
     int m_rbfDenoiserLuma;
     int m_rbfDenoiserChroma;
     int m_rbfDenoiserRange;
+    int m_galoshStrength;
+    int m_galoshLuma;
+    int m_galoshChroma;
+    int m_galoshBackend;
+    int m_galoshNoiseMode;
+    bool m_galoshFast;
     int m_grainStrength;
     int m_grainLumaWeight;
     bool m_highlightReconstruction;

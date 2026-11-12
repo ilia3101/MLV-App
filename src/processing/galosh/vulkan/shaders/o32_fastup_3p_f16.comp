@@ -1,0 +1,91 @@
+#version 450
+/* o32_fastup_3p_f16.comp — [V2.0 FP16 storage contract v1,
+ * dataflow_spec.md §4] site variant of o32_fastup_3p for the FINAL
+ * upsample site K_O32_9 ONLY (--upsample=fast sibling of
+ * o32_k16_jbu_3p_f16): c1/2/3_h = C1/2/3_h_den (contract, f16),
+ * L_pixel guide (contract, f16), c1/2/3_full = C1/2/3_aligned
+ * (contract, f16 RNE store).  Pyramid sites 7i/7l/7n keep the original
+ * f32 shader.  Same bindings / push layout — the host only swaps the
+ * pipeline at the final site.  Compute stays f32; body identical to
+ * o32_fastup_3p otherwise (see its header for the algorithm notes).
+ * (日) --upsample=fast の最終段専用サイト変種。契約バッファのみ f16。 */
+#extension GL_EXT_shader_16bit_storage : require
+#extension GL_EXT_shader_explicit_arithmetic_types_float16 : require
+#extension GL_GOOGLE_include_directive : enable
+#include "galosh_f16_rne.glsl"
+layout(local_size_x = 16, local_size_y = 16) in;
+
+layout(std430, binding = 0) readonly  buffer B0 { float16_t c1_h[]; };     /* [FP16 v1] C1_h_den */
+layout(std430, binding = 1) readonly  buffer B1 { float16_t c2_h[]; };
+layout(std430, binding = 2) readonly  buffer B2 { float16_t c3_h[]; };
+layout(std430, binding = 3) readonly  buffer B3 { float16_t L_pixel[]; };  /* [FP16 v1] L guide */
+layout(std430, binding = 4) writeonly buffer B4 { float16_t c1_full[]; };  /* [FP16 v1] C1_aligned */
+layout(std430, binding = 5) writeonly buffer B5 { float16_t c2_full[]; };
+layout(std430, binding = 6) writeonly buffer B6 { float16_t c3_full[]; };
+layout(push_constant) uniform PC {
+  int   in_w;
+  int   in_h;
+  float bw;
+} pc;
+
+void main()
+{
+  const int fw = 2 * pc.in_w;
+  const int fh = 2 * pc.in_h;
+  const int fc = int(gl_GlobalInvocationID.x);
+  const int fr = int(gl_GlobalInvocationID.y);
+  if(fc >= fw || fr >= fh) return;
+
+  const float inv_2sigma_sq = 1.0f / (2.0f * pc.bw * pc.bw);
+  const int hy = fr >> 1, hx = fc >> 1;
+  const int sub_dy = fr & 1, sub_dx = fc & 1;
+
+  const float L_c = float(L_pixel[fr * fw + fc]);
+  /* bilinear tap weights per sub-pixel phase (0 -> single tap, 0.5 -> half) */
+  const float wy0 = (sub_dy != 0) ? 0.5f : 1.0f;
+  const float wx0 = (sub_dx != 0) ? 0.5f : 1.0f;
+
+  float sum_w = 0.0f, s1 = 0.0f, s2 = 0.0f, s3 = 0.0f;
+  for(int dy = 0; dy <= sub_dy; dy++)
+  {
+    int hyi = hy + dy;
+    if(hyi >= pc.in_h) hyi = pc.in_h - 1;
+    const float wyv = (dy == 0) ? wy0 : 0.5f;
+    for(int dx = 0; dx <= sub_dx; dx++)
+    {
+      int hxi = hx + dx;
+      if(hxi >= pc.in_w) hxi = pc.in_w - 1;
+      const float wxv = (dx == 0) ? wx0 : 0.5f;
+
+      const int fri = 2 * hyi;
+      const int fci = 2 * hxi;
+      const float L_i = float(L_pixel[((fri < fh) ? fri : fh - 1) * fw
+                                      + ((fci < fw) ? fci : fw - 1)]);
+      const float dL = L_i - L_c;
+      const float w = wyv * wxv * exp(-dL * dL * inv_2sigma_sq);
+
+      const int hp = hyi * pc.in_w + hxi;
+      sum_w += w;
+      s1 += w * float(c1_h[hp]);
+      s2 += w * float(c2_h[hp]);
+      s3 += w * float(c3_h[hp]);
+    }
+  }
+
+  const int fp = fr * fw + fc;
+  if(sum_w > 1e-12f)
+  {
+    const float inv = 1.0f / sum_w;
+    /* [FP16 v1] contract store, explicit RNE (galosh_f16_rne.glsl) */
+    c1_full[fp] = float16_t(galosh_f16_rne(s1 * inv));
+    c2_full[fp] = float16_t(galosh_f16_rne(s2 * inv));
+    c3_full[fp] = float16_t(galosh_f16_rne(s3 * inv));
+  }
+  else
+  {
+    const int hp = hy * pc.in_w + hx;
+    c1_full[fp] = c1_h[hp];   /* f16→f16 copy, lossless */
+    c2_full[fp] = c2_h[hp];
+    c3_full[fp] = c3_h[hp];
+  }
+}

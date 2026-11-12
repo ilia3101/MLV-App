@@ -1,0 +1,65 @@
+#version 450
+/* Transcribed from galosh.cl §7.4 galosh_o32_gat_forward_full (line 7040).
+ * Phase 1 (1/4): GAT forward transform on the full CFA frame.
+ * Literal transcription (V2.0 Phase B2).
+ *
+ * [deviation vs galosh.cl, V2.0 B7f] dead ch0..3 stores removed: on the
+ * o32 path NOTHING reads the per-CFA half-res views (HOST_BLUEPRINT.md
+ * trap #7 — they existed for the K7-K10 dark-anchor compat of older
+ * variants).  Dropping the stores saves one full-frame write here (and
+ * one RMW each in normalize/dark_sub) = ~20 B/px of pure bandwidth,
+ * outputs bit-identical.  Bindings kept so the host layout is unchanged.
+ * (日) ch0..3 は o32 経路で読み手ゼロの死に書き込み → 除去。出力は
+ * ビット同一、バインディングはホスト不変のため温存。 */
+
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+
+layout(std430, binding = 0) readonly  buffer Buf0 { float raw[]; };
+layout(std430, binding = 1) writeonly buffer Buf1 { float in_gat_full[]; };
+layout(std430, binding = 2) writeonly buffer Buf2 { float ch0[]; };
+layout(std430, binding = 3) writeonly buffer Buf3 { float ch1[]; };
+layout(std430, binding = 4) writeonly buffer Buf4 { float ch2[]; };
+layout(std430, binding = 5) writeonly buffer Buf5 { float ch3[]; };
+layout(std430, binding = 6) readonly  buffer Buf6 { float params[]; };
+
+layout(push_constant) uniform PC {
+  int width;
+  int height;
+} pc;
+
+/* params[] slot indices (galosh.cl lines 6346-6367) */
+const int P_ALPHA    = 13;
+const int P_SIGMA_SQ = 14;
+
+void main()
+{
+  const int fx = int(gl_GlobalInvocationID.x);
+  const int fy = int(gl_GlobalInvocationID.y);
+  if(fx >= pc.width || fy >= pc.height) return;
+
+  const float a  = params[P_ALPHA];
+  const float sq = params[P_SIGMA_SQ];
+  const float sigma_raw = sqrt(max(sq, 1e-20));
+  const float y_break = -0.375 * a;
+  const float t_break = 2.0 * sigma_raw / a;
+
+  const float x = raw[fy * pc.width + fx];
+  /* NaN guard, no clamping.  (x == x) is false iff x is NaN — relies on
+   * IEEE ordered compare (SPIR-V FOrdEqual, glslc default = no fast math). */
+  const float x_safe = (x == x) ? x : 0.0;
+
+  float T;
+  if(x_safe >= y_break)
+  {
+    /* Foi sqrt branch */
+    const float arg = a * x_safe + 0.375 * a * a + sq;
+    T = (2.0 / a) * sqrt(max(arg, 0.0));
+  }
+  else
+  {
+    /* C¹ linear branch */
+    T = t_break + (x_safe - y_break) / sigma_raw;
+  }
+
+  in_gat_full[fy * pc.width + fx] = T;
+}

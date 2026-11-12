@@ -1,0 +1,91 @@
+#version 450
+/* Transcribed from galosh.cl kernel galosh_o32_smoothstep_blend_3p (§6.14,
+ * line 6169).  Literal port per PORT_CONVENTIONS.md.
+ * Host dispatch: align_up(hw,16) x align_up(hh,16), local 16x16
+ * (galosh_raw_gpu.c:1657-1659 "K_O32_8 smoothstep").
+ *
+ * [V2.0 FP16 storage contract v1, dataflow_spec.md §4] outputs are the
+ * C1/2/3_h_den contract buffers → float16_t stores (RNE); all 12 input
+ * anchors stay f32 (pyramid internals + C*_h are f32 in contract v1). */
+#extension GL_EXT_shader_16bit_storage : require
+#extension GL_EXT_shader_explicit_arithmetic_types_float16 : require
+#extension GL_GOOGLE_include_directive : enable
+#include "galosh_f16_rne.glsl"
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+
+layout(std430, binding =  0) restrict readonly  buffer Buf0  { float c1_h[]; };        /* anchor 0: noisy */
+layout(std430, binding =  1) restrict readonly  buffer Buf1  { float c2_h[]; };
+layout(std430, binding =  2) restrict readonly  buffer Buf2  { float c3_h[]; };
+layout(std430, binding =  3) restrict readonly  buffer Buf3  { float c1_loess_h[]; };  /* anchor 1: L baseline */
+layout(std430, binding =  4) restrict readonly  buffer Buf4  { float c2_loess_h[]; };
+layout(std430, binding =  5) restrict readonly  buffer Buf5  { float c3_loess_h[]; };
+layout(std430, binding =  6) restrict readonly  buffer Buf6  { float c1_q_up[]; };     /* anchor 2: 60 raw px */
+layout(std430, binding =  7) restrict readonly  buffer Buf7  { float c2_q_up[]; };
+layout(std430, binding =  8) restrict readonly  buffer Buf8  { float c3_q_up[]; };
+layout(std430, binding =  9) restrict readonly  buffer Buf9  { float c1_e_up[]; };     /* anchor 3: 120 raw px */
+layout(std430, binding = 10) restrict readonly  buffer Buf10 { float c2_e_up[]; };
+layout(std430, binding = 11) restrict readonly  buffer Buf11 { float c3_e_up[]; };
+layout(std430, binding = 12) restrict writeonly buffer Buf12 { float16_t c1_out[]; };  /* [FP16 v1] C1_h_den */
+layout(std430, binding = 13) restrict writeonly buffer Buf13 { float16_t c2_out[]; };  /* [FP16 v1] C2_h_den */
+layout(std430, binding = 14) restrict writeonly buffer Buf14 { float16_t c3_out[]; };  /* [FP16 v1] C3_h_den */
+
+layout(push_constant) uniform PC {
+  int width;
+  int height;
+  float slider;
+} pc;
+
+void main()
+{
+  const int x = int(gl_GlobalInvocationID.x);
+  const int y = int(gl_GlobalInvocationID.y);
+  if(x >= pc.width || y >= pc.height) return;
+
+  const int p = y * pc.width + x;
+  const float a1 = c1_h[p],       a2 = c2_h[p],       a3 = c3_h[p];
+  const float b1 = c1_loess_h[p], b2 = c2_loess_h[p], b3 = c3_loess_h[p];
+  const float cc1 = c1_q_up[p],   cc2 = c2_q_up[p],   cc3 = c3_q_up[p];
+  const float d1 = c1_e_up[p],    d2 = c2_e_up[p],    d3 = c3_e_up[p];
+
+  float o1, o2, o3;
+  if(pc.slider <= 0.0f)
+  {
+    o1 = a1; o2 = a2; o3 = a3;
+  }
+  else if(pc.slider >= 3.0f)
+  {
+    o1 = d1; o2 = d2; o3 = d3;
+  }
+  else
+  {
+    float lo1, lo2, lo3, hi1, hi2, hi3, t_raw;
+    if(pc.slider <= 1.0f)
+    {
+      t_raw = pc.slider;
+      lo1 = a1;  lo2 = a2;  lo3 = a3;
+      hi1 = b1;  hi2 = b2;  hi3 = b3;
+    }
+    else if(pc.slider <= 2.0f)
+    {
+      t_raw = pc.slider - 1.0f;
+      lo1 = b1;  lo2 = b2;  lo3 = b3;
+      hi1 = cc1; hi2 = cc2; hi3 = cc3;
+    }
+    else
+    {
+      t_raw = pc.slider - 2.0f;
+      lo1 = cc1; lo2 = cc2; lo3 = cc3;
+      hi1 = d1;  hi2 = d2;  hi3 = d3;
+    }
+    const float t = t_raw * t_raw * (3.0f - 2.0f * t_raw);
+    const float oneMt = 1.0f - t;
+    o1 = oneMt * lo1 + t * hi1;
+    o2 = oneMt * lo2 + t * hi2;
+    o3 = oneMt * lo3 + t * hi3;
+  }
+
+  /* explicit RNE (AMD OpFConvert is RTZ — see galosh_f16_rne.glsl) */
+  c1_out[p] = float16_t(galosh_f16_rne(o1));
+  c2_out[p] = float16_t(galosh_f16_rne(o2));
+  c3_out[p] = float16_t(galosh_f16_rne(o3));
+}

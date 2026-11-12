@@ -1,0 +1,22 @@
+#version 450
+/* Transcribed from galosh.cl §7.3b galosh_o32_lut_finalize (line 7007).
+ * Writes d_min = lut_d[0] and d_max = lut_d[GAT_LUT_SIZE-1] into
+ * lut_params after build_inv_lut has filled lut_d[].  (Carries the
+ * 2026-05-09 d_max bug fix — both entries written.)
+ * Literal transcription (V2.0 Phase B2). */
+
+/* Host passes NULL local size with global = 1; per PORT_CONVENTIONS we
+ * choose 256x1 — the gid!=0 guard idles the other invocations. */
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+layout(std430, binding = 0) readonly  buffer Buf0 { float lut_d[]; };
+layout(std430, binding = 1) writeonly buffer Buf1 { float lut_params[]; };
+
+const int GAT_LUT_SIZE = 4096;   /* galosh.cl line 1125 */
+
+void main()
+{
+  if(gl_GlobalInvocationID.x != 0u) return;
+  lut_params[0] = lut_d[0];                          /* d_min */
+  lut_params[1] = lut_d[GAT_LUT_SIZE - 1];           /* d_max */
+}

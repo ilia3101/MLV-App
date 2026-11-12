@@ -1,0 +1,247 @@
+#version 450
+/* Transcribed from galosh.cl §7.2 galosh_o32_ne_finalize (line 6489).
+ * Phase 0 (2/3): single-WG finalize — bin envelope (5-20%ile per-bin var
+ * histogram) → WLS Huber 5 iter.  Mirrors CPU galosh_estimate_noise
+ * Steps 3-5.  Launched as ONE workgroup of 256 WIs: tpb = 256/32 = 8
+ * threads cooperate per mean-bin; WLS Huber is sequential on WI 0.
+ * Writes params[P_ALPHA]; params[P_SIGMA_SQ] = 0 placeholder (overwritten
+ * by §7.2f dark_finalize).  Literal transcription (V2.0 Phase B2). */
+
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+layout(std430, binding = 0) readonly  buffer Buf0 { float blk_mean[]; };
+layout(std430, binding = 1) readonly  buffer Buf1 { float blk_var[]; };
+/* raw is declared but UNUSED in the kernel body (dark refine moved to
+ * §7.2c-§7.2f); binding kept for OpenCL arg-order parity. */
+layout(std430, binding = 2) readonly  buffer Buf2 { float raw[]; };
+layout(std430, binding = 3) writeonly buffer Buf3 { float params[]; };
+
+layout(push_constant) uniform PC {
+  int width;           /* unused in body (parity with OpenCL arg list) */
+  int height;          /* unused in body (parity with OpenCL arg list) */
+  int total_blocks;
+} pc;
+
+const int O32_NE_NBINS    = 32;    /* galosh.cl line 6341 */
+const int NE_FIN_VAR_BINS = 128;   /* galosh.cl line 6487 */
+const int P_ALPHA         = 13;
+const int P_SIGMA_SQ      = 14;
+const float FLT_MAX       = 3.402823466e+38;
+
+/* Per-bin shared state (galosh.cl lines 6502-6523). ~21.5 KB total shared —
+ * requires maxComputeSharedMemorySize >= 22 KB (OK on desktop GPUs). */
+shared float bin_mean_arr[O32_NE_NBINS];
+shared float bin_var_arr [O32_NE_NBINS];
+shared int   bin_cnt_arr [O32_NE_NBINS];
+shared int   bin_valid   [O32_NE_NBINS];
+shared float global_min, global_max;
+shared int   n_total_valid;
+shared int   lds_var_hist[O32_NE_NBINS * NE_FIN_VAR_BINS];   /* 16 KB */
+shared float l_msum[O32_NE_NBINS], l_vmin[O32_NE_NBINS], l_vmax[O32_NE_NBINS];
+shared int   l_cnt [O32_NE_NBINS];
+shared int   r_cnt[256];
+shared float r_a[256], r_b[256], r_c[256];   /* reduction scratch (msum/vmin/vmax) */
+
+void main()
+{
+  const int lid = int(gl_LocalInvocationID.x);
+  const int wg  = int(gl_WorkGroupSize.x);   /* = 256, matches host local size */
+
+  /* PARALLELIZED 2026-06-21 (see galosh.cl comment lines 6509-6516):
+   * launch 256×256, tpb = 256/32 = 8 threads cooperate per mean-bin. */
+  const int tpb = wg / O32_NE_NBINS;     /* threads per bin (= 8 at lws 256) */
+  const int bin = lid / tpb;             /* 0..O32_NE_NBINS-1 */
+  const int sub = lid % tpb;             /* 0..tpb-1 */
+
+  /* ---- global min/max/nvalid via full-WG reduction ---- */
+  {
+    float gmin = FLT_MAX, gmax = 0.0; int nv = 0;
+    for(int i = lid; i < pc.total_blocks; i += wg)
+    {
+      const float bm = blk_mean[i], bv = blk_var[i];
+      if(bm > 0.003 && bm < 0.97 && bv < 1e9)
+      { gmin = min(gmin, bm); gmax = max(gmax, bm); nv++; }
+    }
+    r_b[lid] = gmin; r_c[lid] = gmax; r_cnt[lid] = nv;
+    memoryBarrierShared(); barrier();
+    for(int s = wg >> 1; s > 0; s >>= 1)
+    {
+      if(lid < s)
+      { r_b[lid] = min(r_b[lid], r_b[lid + s]); r_c[lid] = max(r_c[lid], r_c[lid + s]);
+        r_cnt[lid] += r_cnt[lid + s]; }
+      memoryBarrierShared(); barrier();
+    }
+    if(lid == 0) { global_min = r_b[0]; global_max = r_c[0]; n_total_valid = r_cnt[0]; }
+    memoryBarrierShared(); barrier();
+  }
+
+  /* Early bail: nothing usable.  (Workgroup-uniform branch — all WIs read
+   * the same shared values, so the return before later barriers is safe.) */
+  if(global_max - global_min < 1e-10)
+  {
+    if(lid == 0) { params[P_ALPHA] = 1e-4; params[P_SIGMA_SQ] = 1e-6; }
+    return;
+  }
+
+  const float bw     = (global_max - global_min) / float(O32_NE_NBINS);
+  const float bin_lo = global_min + float(bin) * bw;
+  const float bin_hi = bin_lo + bw;
+
+  /* ---- Pass1: per-bin cnt/msum/vmin/vmax (tpb threads cooperate per bin) ---- */
+  {
+    float msum = 0.0, vmin = FLT_MAX, vmax = 0.0; int cnt = 0;
+    for(int i = sub; i < pc.total_blocks; i += tpb)
+    {
+      const float bm = blk_mean[i], bv = blk_var[i];
+      if(bm >= bin_lo && bm < bin_hi && bm > 0.003 && bm < 0.97 && bv < 1e9)
+      { msum += bm; cnt++; vmin = min(vmin, bv); vmax = max(vmax, bv); }
+    }
+    r_cnt[lid] = cnt; r_a[lid] = msum; r_b[lid] = vmin; r_c[lid] = vmax;
+    memoryBarrierShared(); barrier();
+    for(int s = tpb >> 1; s > 0; s >>= 1)
+    {
+      if(sub < s)
+      { const int o = lid + s; r_cnt[lid] += r_cnt[o]; r_a[lid] += r_a[o];
+        r_b[lid] = min(r_b[lid], r_b[o]); r_c[lid] = max(r_c[lid], r_c[o]); }
+      memoryBarrierShared(); barrier();
+    }
+    if(sub == 0)
+    { l_cnt[bin] = r_cnt[lid]; l_msum[bin] = r_a[lid]; l_vmin[bin] = r_b[lid]; l_vmax[bin] = r_c[lid]; }
+    memoryBarrierShared(); barrier();
+  }
+  const int   cnt  = l_cnt[bin];
+  const float msum = l_msum[bin];
+  const float vmin = l_vmin[bin];
+  const float vmax = l_vmax[bin];
+  const float vrange = max(vmax - vmin, 1e-12);
+  const float vscale = float(NE_FIN_VAR_BINS) / vrange;
+
+  /* clear this bin's var-histogram (tpb threads) */
+  for(int i = sub; i < NE_FIN_VAR_BINS; i += tpb)
+    lds_var_hist[bin * NE_FIN_VAR_BINS + i] = 0;
+  memoryBarrierShared(); barrier();
+
+  /* ---- Pass2: per-bin var histogram (tpb threads, atomic_inc → atomicAdd).
+   * OpenCL used a `volatile local int *vhist` pointer; GLSL has no pointers,
+   * so the base offset is folded into the index. ---- */
+  if(cnt >= 20)
+  {
+    for(int i = sub; i < pc.total_blocks; i += tpb)
+    {
+      const float bm = blk_mean[i], bv = blk_var[i];
+      if(bm >= bin_lo && bm < bin_hi && bm > 0.003 && bm < 0.97 && bv < 1e9)
+      {
+        int vbin = int((bv - vmin) * vscale);
+        if(vbin < 0) vbin = 0;
+        if(vbin >= NE_FIN_VAR_BINS) vbin = NE_FIN_VAR_BINS - 1;
+        atomicAdd(lds_var_hist[bin * NE_FIN_VAR_BINS + vbin], 1);
+      }
+    }
+  }
+  memoryBarrierShared(); barrier();
+
+  /* ---- percentile + bin_mean/var (sub==0 owns each bin) ---- */
+  if(sub == 0)
+  {
+    if(cnt < 20) { bin_valid[bin] = 0; }
+    else
+    {
+      const int p5_target  = cnt / 20;
+      const int p20_target = cnt / 5;
+      int cum = 0, p5_bin = 0, p20_bin = NE_FIN_VAR_BINS - 1, found_p5 = 0;
+      for(int i = 0; i < NE_FIN_VAR_BINS; i++)
+      {
+        cum += lds_var_hist[bin * NE_FIN_VAR_BINS + i];
+        if(found_p5 == 0 && cum >= p5_target) { p5_bin = i; found_p5 = 1; }
+        if(cum >= p20_target) { p20_bin = i; break; }
+      }
+      float vsum = 0.0; int vcnt = 0;
+      for(int i = p5_bin; i <= p20_bin; i++)
+      {
+        const float bin_center = vmin + (float(i) + 0.5) / vscale;
+        const int n = lds_var_hist[bin * NE_FIN_VAR_BINS + i];
+        vsum += bin_center * float(n); vcnt += n;
+      }
+      bin_var_arr[bin]  = (vcnt > 0) ? (vsum / float(vcnt)) : (vmin + 0.5 / vscale);
+      bin_mean_arr[bin] = msum / float(cnt);
+      bin_cnt_arr[bin]  = (vcnt > 0) ? vcnt : 1;
+      bin_valid[bin]    = 1;
+    }
+  }
+  memoryBarrierShared(); barrier();
+
+  /* WLS Huber regression (5 iterations) — single-WI sequential. */
+  if(lid != 0) return;
+
+  int n_valid = 0;
+  for(int b = 0; b < O32_NE_NBINS; b++) if(bin_valid[b] != 0) n_valid++;
+
+  if(n_valid < 4)
+  {
+    params[P_ALPHA]    = 1e-4;
+    params[P_SIGMA_SQ] = 1e-6;
+    return;
+  }
+
+  float alpha_est    = 0.01;
+  float sigma_sq_est = 0.0;
+
+  for(int iter = 0; iter < 5; iter++)
+  {
+    float huber_k = 1e10;
+    if(iter > 0)
+    {
+      /* Compute residual MAD (= per-bin |bv - (alpha*bm + sq)|). */
+      float resids[O32_NE_NBINS];
+      int nr = 0;
+      for(int b = 0; b < O32_NE_NBINS; b++)
+      {
+        if(bin_valid[b] == 0) continue;
+        resids[nr++] = abs(bin_var_arr[b] - (alpha_est * bin_mean_arr[b] + sigma_sq_est));
+      }
+      /* Median via partial selection. */
+      const int target_r = nr / 2;
+      for(int k = 0; k <= target_r; k++)
+      {
+        int min_idx = k;
+        float min_val = resids[k];
+        for(int j = k + 1; j < nr; j++)
+          if(resids[j] < min_val) { min_val = resids[j]; min_idx = j; }
+        resids[min_idx] = resids[k];
+        resids[k] = min_val;
+      }
+      const float resid_mad = resids[target_r] / 0.6745;
+      huber_k = 1.345 * max(resid_mad, 1e-12);
+    }
+
+    /* WLS accumulators. */
+    float Sw = 0.0, Sx = 0.0, Sy = 0.0, Sxx = 0.0, Sxy = 0.0;
+    for(int b = 0; b < O32_NE_NBINS; b++)
+    {
+      if(bin_valid[b] == 0) continue;
+      float w = float(bin_cnt_arr[b]);
+      if(iter > 0)
+      {
+        const float pred  = alpha_est * bin_mean_arr[b] + sigma_sq_est;
+        const float resid = abs(bin_var_arr[b] - pred);
+        if(resid > huber_k) w *= huber_k / resid;
+      }
+      const float x = bin_mean_arr[b], y = bin_var_arr[b];
+      Sw += w; Sx += w * x; Sy += w * y; Sxx += w * x * x; Sxy += w * x * y;
+    }
+    const float det = Sw * Sxx - Sx * Sx;
+    if(abs(det) > 1e-30)
+    {
+      const float new_alpha = (Sw * Sxy - Sx * Sy) / det;
+      const float new_sq    = (Sxx * Sy - Sx * Sxy) / det;
+      if(new_alpha > 0.0)  alpha_est    = new_alpha;
+      if(new_sq    >= 0.0) sigma_sq_est = new_sq;
+    }
+  }
+  alpha_est = max(alpha_est, 1e-8);
+
+  /* Step 5 (dark refinement) is in §7.2c-§7.2f histogram-based kernels.
+   * This kernel only writes alpha_est; sigma_sq_est is set by §7.2f. */
+  params[P_ALPHA]    = alpha_est;
+  params[P_SIGMA_SQ] = 0.0;   /* placeholder — overwritten by §7.2f */
+}

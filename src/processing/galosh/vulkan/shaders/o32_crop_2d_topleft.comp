@@ -1,0 +1,26 @@
+#version 450
+/* Transcribed from galosh.cl §6.13 galosh_o32_crop_2d_topleft (line 6128).
+ * 2D top-left crop: takes upper-left dw × dh of src at stride sw, writes
+ * to dst at stride dw.  (sh is unused in the kernel body — kept in the
+ * push-constant block to preserve the OpenCL argument order.)
+ * Literal transcription (V2.0 Phase B2). */
+
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+
+layout(std430, binding = 0) readonly  buffer Buf0 { float src[]; };
+layout(std430, binding = 1) writeonly buffer Buf1 { float dst[]; };
+
+layout(push_constant) uniform PC {
+  int sw;
+  int sh;   /* unused (OpenCL kernel has "(void)sh;") */
+  int dw;
+  int dh;
+} pc;
+
+void main()
+{
+  const int dx = int(gl_GlobalInvocationID.x);
+  const int dy = int(gl_GlobalInvocationID.y);
+  if(dx >= pc.dw || dy >= pc.dh) return;
+  dst[dy * pc.dw + dx] = src[dy * pc.sw + dx];
+}

@@ -1,0 +1,141 @@
+#version 450
+/* Transcribed from galosh.cl §7.8d galosh_o32_dark_resid_reduce_mwg (line 7649).
+ * Multi-WG residual-std reduce for the dark IRLS s_scale update: each WI
+ * scans a slice of 2x2 blocks, WG tree-reduces sum_w·resid²·0.25 + sum_w,
+ * writes 2 Kahan (sum, comp) float pairs per WG to partial_resid_buf.
+ *
+ * FP64→COMPENSATED-FP32 REWRITE (V2.0 cross-vendor, 2026-07-10): same
+ * treatment as §7.8b — per-WI Kahan (Neumaier) accumulation, Kahan-aware
+ * shared tree combine, `precise` to pin the TwoSum error terms.  Per-block
+ * weight/residual math in FLOAT (inputs were float; only the ACCUMULATION
+ * was double).  No shaderFloat64 needed → runs on Intel Arc.
+ * JP: §7.8bと同じKahan補償FP32化。ブロック内数式はfloatのまま厳密保存。
+ * Host dispatch: 64 WGs (O32_DR_MWG_NWG) × 256 WIs (O32_DR_MWG_WGSIZE),
+ * called 2× (iterations 0 and 1). */
+
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+layout(std430, binding = 0) readonly  buffer Buf0 { float in_gat_full[]; };
+layout(std430, binding = 1) readonly  buffer Buf1 { float raw[]; };
+layout(std430, binding = 2) readonly  buffer Buf2 { float params[]; };
+layout(std430, binding = 3) writeonly buffer Buf3 { float partial_resid_buf[]; };  /* [n_wg * 2 * 2] floats: (sum,comp) per quantity */
+
+layout(push_constant) uniform PC {
+  int width;
+  int height;
+} pc;
+
+/* params[] slot indices (galosh.cl lines 6346-6367 + 7297-7302) */
+const int P_DARK_REF0 = 6;
+const int P_S_SCALE   = 10;
+
+const float GALOSH_ACHROMATIC_RANGE_O32 = 4.0;   /* matches CPU galosh_cpu.h:364 */
+const int O32_DR_MWG_WGSIZE = 256;
+
+/* WG-level tree reduction: (sum, comp) float pairs.  LDS: 2 × 2 floats ×
+ * WGSIZE × 4B = 256 × 4 × 4 = 4 KB (same as the former double version),
+ * well under 32 KB ISP budget. */
+shared float lds_s[O32_DR_MWG_WGSIZE * 2];
+shared float lds_c[O32_DR_MWG_WGSIZE * 2];
+
+/* Neumaier/Kahan accumulate: (s, c) += v — see §7.8b. */
+void kacc(inout float s, inout float c, float v)
+{
+  precise float t  = s + v;
+  precise float vp = t - s;
+  precise float sp = t - vp;
+  precise float e  = (v - vp) + (s - sp);
+  s = t;
+  c = c + e;
+}
+
+/* Kahan-aware pair combine: (s,c) += (s2,c2) — see §7.8b. */
+void kcombine(inout float s, inout float c, float s2, float c2)
+{
+  precise float t  = s + s2;
+  precise float vp = t - s;
+  precise float sp = t - vp;
+  precise float e  = (s2 - vp) + (s - sp);
+  s = t;
+  c = c + c2 + e;
+}
+
+void main()
+{
+  const int gid = int(gl_GlobalInvocationID.x);
+  const int lid = int(gl_LocalInvocationID.x);
+  const int wgid = int(gl_WorkGroupID.x);
+  const int wgsize = O32_DR_MWG_WGSIZE;   /* get_local_size(0) → constant */
+  const int total_wis = int(gl_NumWorkGroups.x) * O32_DR_MWG_WGSIZE;  /* get_global_size(0) */
+
+  const float s_scale = params[P_S_SCALE];
+  const float inv_s = 1.0 / max(s_scale, 1e-20);
+  const float dr0 = params[P_DARK_REF0 + 0];
+  const float dr1 = params[P_DARK_REF0 + 1];
+  const float dr2 = params[P_DARK_REF0 + 2];
+  const float dr3 = params[P_DARK_REF0 + 3];
+
+  /* height/2 · width/2 blocks (matches CPU; even-dim off-by-one fixed). */
+  const int n_block_rows = pc.height / 2;
+  const int n_block_cols = pc.width  / 2;
+  const int total_blocks = n_block_rows * n_block_cols;
+
+  /* Per-WI Kahan accumulators (sum, comp). */
+  float swr_s = 0.0, swr_c = 0.0;
+  float sww_s = 0.0, sww_c = 0.0;
+
+  for(int bi = gid; bi < total_blocks; bi += total_wis)
+  {
+    const int br_idx = bi / n_block_cols;
+    const int bc_idx = bi - br_idx * n_block_cols;
+    const int br = 2 * br_idx;
+    const int bc = 2 * bc_idx;
+
+    const float g0 = in_gat_full[br       * pc.width + bc      ];
+    const float g1 = in_gat_full[(br + 1) * pc.width + bc      ];
+    const float g2 = in_gat_full[br       * pc.width + (bc + 1)];
+    const float g3 = in_gat_full[(br + 1) * pc.width + (bc + 1)];
+    const float ch_max = max(max(g0, g1), max(g2, g3));
+    const float ch_min = min(min(g0, g1), min(g2, g3));
+    if(ch_max - ch_min > GALOSH_ACHROMATIC_RANGE_O32) continue;
+
+    const float iv0 = raw[br       * pc.width + bc      ];
+    const float iv1 = raw[(br + 1) * pc.width + bc      ];
+    const float iv2 = raw[br       * pc.width + (bc + 1)];
+    const float iv3 = raw[(br + 1) * pc.width + (bc + 1)];
+    const float L_raw = (iv0 + iv1 + iv2 + iv3) * 0.25;
+    const float r  = L_raw * inv_s;
+    const float r2 = r * r;
+    const float w  = 1.0 / (1.0 + r2 * r2);
+    const float d0 = g0 - dr0, d1 = g1 - dr1;
+    const float d2 = g2 - dr2, d3 = g3 - dr3;
+    const float resid2 = d0*d0 + d1*d1 + d2*d2 + d3*d3;
+    kacc(sww_s, sww_c, w);
+    kacc(swr_s, swr_c, w * resid2 * 0.25);
+  }
+
+  lds_s[lid * 2 + 0] = swr_s; lds_c[lid * 2 + 0] = swr_c;
+  lds_s[lid * 2 + 1] = sww_s; lds_c[lid * 2 + 1] = sww_c;
+  memoryBarrierShared(); barrier();
+  for(int s = wgsize / 2; s > 0; s >>= 1)
+  {
+    if(lid < s)
+    {
+      for(int q = 0; q < 2; q++)
+      {
+        float as = lds_s[lid * 2 + q], ac = lds_c[lid * 2 + q];
+        kcombine(as, ac, lds_s[(lid + s) * 2 + q], lds_c[(lid + s) * 2 + q]);
+        lds_s[lid * 2 + q] = as; lds_c[lid * 2 + q] = ac;
+      }
+    }
+    memoryBarrierShared(); barrier();
+  }
+  if(lid == 0)
+  {
+    /* Write (sum, comp) pairs so §7.8e can finish the compensated sum. */
+    partial_resid_buf[wgid * 4 + 0] = lds_s[0];
+    partial_resid_buf[wgid * 4 + 1] = lds_c[0];
+    partial_resid_buf[wgid * 4 + 2] = lds_s[1];
+    partial_resid_buf[wgid * 4 + 3] = lds_c[1];
+  }
+}

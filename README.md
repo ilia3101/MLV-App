@@ -68,6 +68,7 @@ What is MLV App? Lightroom, but for Magic Lantern MLV Video (and open source and
 - Smooth artifacts filter (minimizes moiree) for all ffmpeg export codecs, realized by ffmpeg filter combination
 - 2D median denoiser (don't expect wonders!)
 - Recursive bilateral filter (works as denoiser) with Luminance, Chroma and Range parameter
+- GALOSH blind, training-free RAW Bayer denoiser (CPU)
 - Vignette effect / correction with variable shape and chromatic abberation correction
 - Post export scripting on macOS (thx @dannephoto)
 - Zoom: fit to screen, 100% and free zoom, scroll through picture
@@ -78,6 +79,17 @@ What is MLV App? Lightroom, but for Magic Lantern MLV Video (and open source and
 - Update checker
 
 ## Compiling :collision:
+#### Optional GALOSH Vulkan backend
+The GALOSH denoiser is always built with its CPU backend. To enable the
+optional Vulkan backend, add `CONFIG+=galosh_vulkan` to the qmake invocation.
+Vulkan headers and a loader are required. On macOS install `molten-vk`,
+`vulkan-headers` and `vulkan-loader` from Homebrew, or point `VULKAN_SDK` at
+the LunarG SDK; launcher builds may need
+`VK_ICD_FILENAMES=/opt/homebrew/etc/vulkan/icd.d/MoltenVK_icd.json`.
+
+The build copies the precompiled shaders to `galosh_shaders/` next to the
+executable (inside `MLV App.app/Contents/MacOS` on macOS).
+
 #### Qt App macOS (Intel based)
 - install XCode depending on your OSX, or llvm via brew for multithreading
 - install Qt5 (5.6 .. 5.15.2) or Qt6 (6.4 or later)
