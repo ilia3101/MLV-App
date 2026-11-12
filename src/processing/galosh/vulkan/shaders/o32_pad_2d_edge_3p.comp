@@ -1,0 +1,39 @@
+#version 450
+/* o32_pad_2d_edge_3p.comp — [V2.0 B7f fusion pack] 3-plane sibling of
+ * o32_pad_2d_edge: the o32 pyramid pads its three chroma planes with
+ * IDENTICAL geometry at each site (7j/7m/7o), so one dispatch replaces
+ * three (9 -> 3 per frame).  Per-plane logic is byte-for-byte the
+ * original edge-replicate pad: dst[y,x] = src[min(y,sh-1), min(x,sw-1)]
+ * — outputs bit-identical, pure dispatch-overhead saving.
+ * (日) 3 面同時パッド。面ごとの数式は単面版と同一 → ビット同一。
+ * ディスパッチ 9→3 の削減（WDDM iGPU のカーネル起動費対策）。 */
+
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+
+layout(std430, binding = 0) readonly  buffer Buf0 { float src1[]; };
+layout(std430, binding = 1) readonly  buffer Buf1 { float src2[]; };
+layout(std430, binding = 2) readonly  buffer Buf2 { float src3[]; };
+layout(std430, binding = 3) writeonly buffer Buf3 { float dst1[]; };
+layout(std430, binding = 4) writeonly buffer Buf4 { float dst2[]; };
+layout(std430, binding = 5) writeonly buffer Buf5 { float dst3[]; };
+
+layout(push_constant) uniform PC {
+  int sw;
+  int sh;
+  int dw;
+  int dh;
+} pc;
+
+void main()
+{
+  const int dx = int(gl_GlobalInvocationID.x);
+  const int dy = int(gl_GlobalInvocationID.y);
+  if(dx >= pc.dw || dy >= pc.dh) return;
+  const int sx = (dx < pc.sw) ? dx : pc.sw - 1;
+  const int sy = (dy < pc.sh) ? dy : pc.sh - 1;
+  const int sp = sy * pc.sw + sx;
+  const int dp = dy * pc.dw + dx;
+  dst1[dp] = src1[sp];
+  dst2[dp] = src2[sp];
+  dst3[dp] = src3[sp];
+}

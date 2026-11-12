@@ -1,0 +1,27 @@
+#version 450
+/* Transcribed from galosh.cl §6.12 galosh_o32_pad_2d_edge (line 6101).
+ * 2D top-left pad with edge replication: dst[y,x] = src[min(y,sh-1),
+ * min(x,sw-1)].  Caller guarantees dw >= sw and dh >= sh.
+ * Literal transcription (V2.0 Phase B2). */
+
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+
+layout(std430, binding = 0) readonly  buffer Buf0 { float src[]; };
+layout(std430, binding = 1) writeonly buffer Buf1 { float dst[]; };
+
+layout(push_constant) uniform PC {
+  int sw;
+  int sh;
+  int dw;
+  int dh;
+} pc;
+
+void main()
+{
+  const int dx = int(gl_GlobalInvocationID.x);
+  const int dy = int(gl_GlobalInvocationID.y);
+  if(dx >= pc.dw || dy >= pc.dh) return;
+  const int sx = (dx < pc.sw) ? dx : pc.sw - 1;
+  const int sy = (dy < pc.sh) ? dy : pc.sh - 1;
+  dst[dy * pc.dw + dx] = src[sy * pc.sw + sx];
+}

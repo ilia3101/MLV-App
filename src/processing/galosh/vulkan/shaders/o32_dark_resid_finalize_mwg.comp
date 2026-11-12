@@ -1,0 +1,59 @@
+#version 450
+/* Transcribed from galosh.cl §7.8e galosh_o32_dark_resid_finalize_mwg (line 7740).
+ * Aggregates §7.8d residual partials, updates params[P_S_SCALE]
+ * (clamped to [s_min, s_max]).  Single WI.
+ *
+ * FP64→COMPENSATED-FP32 REWRITE (V2.0 cross-vendor, 2026-07-10): reads
+ * 64 × 2 Kahan (sum, comp) float pairs, combines Kahan-aware, collapses to
+ * sum + comp, then the same sqrt/ratio/clamp math in float.  No
+ * shaderFloat64 needed → runs on Intel Arc.
+ * JP: Kahanペア合算→float最終演算。数式は不変。
+ * Host dispatches global=1 with NULL local size; per conventions
+ * local_size_x = 256 — the get_global_id(0)!=0 guard makes the extra
+ * invocations no-ops (vkCmdDispatch(1,1,1)). */
+
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+layout(std430, binding = 0) readonly buffer Buf0 { float partial_resid_buf[]; };  /* [n_wg * 2 * 2] (sum,comp) */
+layout(std430, binding = 1) buffer Buf1 { float params[]; };
+
+layout(push_constant) uniform PC {
+  int n_wg;
+  float s_min;
+  float s_max;
+} pc;
+
+/* params[] slot indices (galosh.cl lines 7297-7302) */
+const int P_S_SCALE = 10;
+
+/* Kahan-aware pair combine: (s,c) += (s2,c2) — see §7.8b. */
+void kcombine(inout float s, inout float c, float s2, float c2)
+{
+  precise float t  = s + s2;
+  precise float vp = t - s;
+  precise float sp = t - vp;
+  precise float e  = (s2 - vp) + (s - sp);
+  s = t;
+  c = c + c2 + e;
+}
+
+void main()
+{
+  if(gl_GlobalInvocationID.x != 0u) return;
+  float swr_s = 0.0, swr_c = 0.0;
+  float sww_s = 0.0, sww_c = 0.0;
+  for(int i = 0; i < pc.n_wg; i++)
+  {
+    kcombine(swr_s, swr_c, partial_resid_buf[i * 4 + 0], partial_resid_buf[i * 4 + 1]);
+    kcombine(sww_s, sww_c, partial_resid_buf[i * 4 + 2], partial_resid_buf[i * 4 + 3]);
+  }
+  const float swr = swr_s + swr_c;
+  const float sww = sww_s + sww_c;
+  const float inv_sw2 = 1.0 / max(sww, 1e-20);
+  const float measured_std = sqrt(max(swr * inv_sw2, 1e-20));
+  const float ratio = 1.0 / measured_std;
+  float new_s = params[P_S_SCALE] * sqrt(ratio);
+  if(new_s < pc.s_min) new_s = pc.s_min;
+  if(new_s > pc.s_max) new_s = pc.s_max;
+  params[P_S_SCALE] = new_s;
+}

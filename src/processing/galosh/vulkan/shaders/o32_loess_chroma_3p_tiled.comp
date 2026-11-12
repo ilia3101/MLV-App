@@ -1,0 +1,170 @@
+#version 450
+/* o32_loess_chroma_3p_tiled.comp — [V2.0 Phase B2] literal transcription of
+ * galosh.cl §6.10b galosh_o32_loess_chroma_3p_tiled (OpenCL kernel, line 5845).
+ *
+ * Phase 7 LDS-tiled FP32 LOESS variant.  Mirrors §4
+ * galosh_o_loess_chroma_3p_fp16_tiled but FP32 throughout (= no prescale
+ * needed since FP32 sum_YY doesn't overflow on bright scenes).
+ *
+ * Algorithm: TILE_DIM² work-group cooperatively loads a
+ * (TILE_DIM+2R)² tile of (Y, C1, C2, C3) into shared memory, then each
+ * invocation does its R=7 sweep reading from shared memory (no global
+ * memory reads in inner loop).
+ *
+ * Constraints (macros from galosh.cl lines 4089-4094 / 4205-4212 — the
+ * §6.10b header comment claiming "16×16 WG / 30² tile / 14.4 KB" is
+ * STALE; the effective values are the macros below, and the host
+ * dispatches with local size 24×24):
+ *   R = GALOSH_O_LOESS_R = 7 (fixed, matches CPU GALOSH_LOESS_RADIUS)
+ *   BW = GALOSH_O_LOESS_BW = 3.0f (fixed)
+ *   TILE_DIM = 24 → TILE_W = 38, TILE_PIX = 1444
+ *   shared mem: 4 buffers × 1444 floats × 4 bytes = 23,104 bytes (22.6 KB)
+ *
+ * Reflective boundary handled at tile load (= matches CPU reflect_idx).
+ *
+ * (日) §6.10 の LDS タイル版。 R=7 fixed、 FP32 throughout (= prescale 不要)。
+ *   per-WI 225 global reads → tile load ~11 reads/WI に削減、 4MP scaling 改善。
+ *   転写は逐語 (GALOSH_CHROMA_CLAMP の full-window clamp を含む)。 */
+
+#define GALOSH_O_LOESS_R          7    /* LOESS half-window radius (matches CPU GALOSH_LOESS_RADIUS) */
+#define GALOSH_O_LOESS_BW         3.0f /* LOESS bilateral bandwidth on Y guide */
+/* Tile DIM 24 maximizes interior/halo ratio within 28 KB LDS:
+ *   24 + 2×7 = 38 (TILE_W), 38² = 1444, × 4 bufs × 4 bytes = 23.1 KB ✓ */
+#define GALOSH_O_LOESS_TILE_DIM   24
+#define GALOSH_O_LOESS_TILE_W     (GALOSH_O_LOESS_TILE_DIM + 2 * GALOSH_O_LOESS_R)
+#define GALOSH_O_LOESS_TILE_PIX   (GALOSH_O_LOESS_TILE_W * GALOSH_O_LOESS_TILE_W)
+
+layout(local_size_x = 24, local_size_y = 24) in;
+
+layout(std430, binding = 0) readonly  buffer Buf0 { float y_guide[]; };
+layout(std430, binding = 1) readonly  buffer Buf1 { float c1_in[];   };
+layout(std430, binding = 2) readonly  buffer Buf2 { float c2_in[];   };
+layout(std430, binding = 3) readonly  buffer Buf3 { float c3_in[];   };
+layout(std430, binding = 4) writeonly buffer Buf4 { float c1_out[];  };
+layout(std430, binding = 5) writeonly buffer Buf5 { float c2_out[];  };
+layout(std430, binding = 6) writeonly buffer Buf6 { float c3_out[];  };
+
+layout(push_constant) uniform PC {
+  int   width;
+  int   height;
+  float strength_c;
+} pc;
+
+/* Reuse §4 tile size constants (= same R=7, TILE_DIM, TILE_W). */
+shared float t_Y [GALOSH_O_LOESS_TILE_PIX];
+shared float t_C1[GALOSH_O_LOESS_TILE_PIX];
+shared float t_C2[GALOSH_O_LOESS_TILE_PIX];
+shared float t_C3[GALOSH_O_LOESS_TILE_PIX];
+
+void main()
+{
+  const int tile_x = int(gl_WorkGroupID.x) * GALOSH_O_LOESS_TILE_DIM;
+  const int tile_y = int(gl_WorkGroupID.y) * GALOSH_O_LOESS_TILE_DIM;
+  const int lx = int(gl_LocalInvocationID.x);
+  const int ly = int(gl_LocalInvocationID.y);
+  const int lid = ly * GALOSH_O_LOESS_TILE_DIM + lx;
+  const int wg_size = GALOSH_O_LOESS_TILE_DIM * GALOSH_O_LOESS_TILE_DIM;
+
+  /* Cooperative tile load with R-halo + reflective boundary.  No prescale. */
+  for(int i = lid; i < GALOSH_O_LOESS_TILE_PIX; i += wg_size)
+  {
+    const int tx = i % GALOSH_O_LOESS_TILE_W;
+    const int ty = i / GALOSH_O_LOESS_TILE_W;
+    int gx = tile_x - GALOSH_O_LOESS_R + tx;
+    int gy = tile_y - GALOSH_O_LOESS_R + ty;
+    if(gx < 0)           gx = -gx;
+    if(gx >= pc.width)   gx = 2 * pc.width - gx - 2;
+    if(gx < 0)           gx = 0;
+    if(gx >= pc.width)   gx = pc.width - 1;
+    if(gy < 0)           gy = -gy;
+    if(gy >= pc.height)  gy = 2 * pc.height - gy - 2;
+    if(gy < 0)           gy = 0;
+    if(gy >= pc.height)  gy = pc.height - 1;
+    const uint gp = uint(gy) * uint(pc.width) + uint(gx);
+    t_Y [i] = y_guide[gp];
+    t_C1[i] = c1_in[gp];
+    t_C2[i] = c2_in[gp];
+    t_C3[i] = c3_in[gp];
+  }
+  memoryBarrierShared(); barrier();
+
+  const int ox = tile_x + lx;
+  const int oy = tile_y + ly;
+  if(ox >= pc.width || oy >= pc.height) return;
+
+  const int cx_lds = GALOSH_O_LOESS_R + lx;
+  const int cy_lds = GALOSH_O_LOESS_R + ly;
+  const float Y_c = t_Y[cy_lds * GALOSH_O_LOESS_TILE_W + cx_lds];
+  const float inv_2sigma_sq = 1.0f / (2.0f * GALOSH_O_LOESS_BW * GALOSH_O_LOESS_BW);
+
+  float sumW = 0.0f, sumY = 0.0f, sumYY = 0.0f;
+  float sumC1 = 0.0f, sumC2 = 0.0f, sumC3 = 0.0f;
+  float sumYC1 = 0.0f, sumYC2 = 0.0f, sumYC3 = 0.0f;
+  /* GALOSH_CHROMA_CLAMP mirror (= CPU galosh_loess_chroma_3ch_r): full-window
+   * input chroma range to clamp the degree-1 regression extrapolation below. */
+  float cmin1= 1e30f, cmin2= 1e30f, cmin3= 1e30f;
+  float cmax1=-1e30f, cmax2=-1e30f, cmax3=-1e30f;
+
+  for(int dy = -GALOSH_O_LOESS_R; dy <= GALOSH_O_LOESS_R; dy++)
+  {
+    const int ty_lds = cy_lds + dy;
+    for(int dx = -GALOSH_O_LOESS_R; dx <= GALOSH_O_LOESS_R; dx++)
+    {
+      const int tx_lds = cx_lds + dx;
+      const int p = ty_lds * GALOSH_O_LOESS_TILE_W + tx_lds;
+      const float Yi  = t_Y [p];
+      const float C1i = t_C1[p];
+      const float C2i = t_C2[p];
+      const float C3i = t_C3[p];
+      cmin1=min(cmin1,C1i); cmax1=max(cmax1,C1i);
+      cmin2=min(cmin2,C2i); cmax2=max(cmax2,C2i);
+      cmin3=min(cmin3,C3i); cmax3=max(cmax3,C3i);
+      const float dY  = Yi - Y_c;
+      /* Use spec-compliant exp instead of native_exp (= matches CPU expf). */
+      const float w = exp(-dY * dY * inv_2sigma_sq);
+      sumW   += w;
+      sumY   += w * Yi;
+      sumYY  += w * Yi * Yi;
+      sumC1  += w * C1i;
+      sumC2  += w * C2i;
+      sumC3  += w * C3i;
+      sumYC1 += w * Yi * C1i;
+      sumYC2 += w * Yi * C2i;
+      sumYC3 += w * Yi * C3i;
+    }
+  }
+
+  const float invW = 1.0f / max(sumW, 1e-10f);
+  const float mean_Y   = sumY  * invW;
+  const float mean_YY  = sumYY * invW;
+  const float mean_C1  = sumC1 * invW;
+  const float mean_C2  = sumC2 * invW;
+  const float mean_C3  = sumC3 * invW;
+  const float mean_YC1 = sumYC1 * invW;
+  const float mean_YC2 = sumYC2 * invW;
+  const float mean_YC3 = sumYC3 * invW;
+
+  const float var_Y = max(mean_YY - mean_Y * mean_Y, 0.0f);
+  const float eps   = pc.strength_c * pc.strength_c;   /* GALOSH_LOESS_TAU_SQ_INV = 1.0 */
+  const float denom = max(var_Y + eps, 1e-6f);
+  const float inv_denom = 1.0f / denom;
+
+  const float a_c1 = (mean_YC1 - mean_Y * mean_C1) * inv_denom;
+  const float a_c2 = (mean_YC2 - mean_Y * mean_C2) * inv_denom;
+  const float a_c3 = (mean_YC3 - mean_Y * mean_C3) * inv_denom;
+  const float b_c1 = mean_C1 - a_c1 * mean_Y;
+  const float b_c2 = mean_C2 - a_c2 * mean_Y;
+  const float b_c3 = mean_C3 - a_c3 * mean_Y;
+
+  float oc1 = a_c1 * Y_c + b_c1;
+  float oc2 = a_c2 * Y_c + b_c2;
+  float oc3 = a_c3 * Y_c + b_c3;
+  /* clamp degree-1 regression extrapolation to the local input chroma band */
+  if(cmax1>=cmin1) oc1 = clamp(oc1, cmin1, cmax1);
+  if(cmax2>=cmin2) oc2 = clamp(oc2, cmin2, cmax2);
+  if(cmax3>=cmin3) oc3 = clamp(oc3, cmin3, cmax3);
+  const uint op = uint(oy) * uint(pc.width) + uint(ox);
+  c1_out[op] = oc1;
+  c2_out[op] = oc2;
+  c3_out[op] = oc3;
+}

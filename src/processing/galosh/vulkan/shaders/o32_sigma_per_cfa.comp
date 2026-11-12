@@ -1,0 +1,92 @@
+#version 450
+/* Transcribed from galosh.cl §7.5 galosh_o32_sigma_per_cfa (line 7121).
+ * Phase 1 (2/4): per-CFA σ estimation via histogram-MAD of the 3-tap
+ * horizontal |Laplacian| in each half-res CFA view.
+ * Host dispatch = 4 WGs × 256 WIs (one WG per CFA channel); NOTE the
+ * kernel-side O32_SIGMA_WG=64 comment is superseded by the host's 256
+ * (kernel adapts via get_local_size → constant 256 here).
+ * Literal transcription (V2.0 Phase B2). */
+
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+layout(std430, binding = 0) readonly buffer Buf0 { float in_gat_full[]; };
+layout(std430, binding = 1) buffer Buf1 { float params[]; };
+
+layout(push_constant) uniform PC {
+  int width;
+  int height;
+} pc;
+
+/* params[] slot indices (galosh.cl lines 6346-6367) */
+const int P_SIGMA_CH0 = 0;
+
+const int   O32_SIGMA_NBINS   = 4096;
+const float O32_SIGMA_LAP_MAX = 16.0;   /* clip range for histogram */
+
+shared int hist[O32_SIGMA_NBINS];
+shared int total_count;
+
+void main()
+{
+  const int ch  = int(gl_WorkGroupID.x);   /* 0..3, one WG per channel */
+  const int lid = int(gl_LocalInvocationID.x);
+  const int wg  = 256;                     /* get_local_size(0) → constant */
+
+  /* CFA slot encoding (matches CPU offsets[][] = {{0,0},{0,1},{1,0},{1,1}}):
+   *   ch=0 → (dy0=0, dx0=0)   even row, even col
+   *   ch=1 → (dy0=0, dx0=1)   even row, odd col
+   *   ch=2 → (dy0=1, dx0=0)   odd row,  even col
+   *   ch=3 → (dy0=1, dx0=1)   odd row,  odd col */
+  const int dy0 = ch & 1;
+  const int dx0 = (ch >> 1) & 1;
+  const int hw  = (pc.width  - dx0 + 1) / 2;
+  const int hh  = (pc.height - dy0 + 1) / 2;
+
+  /* Zero histogram. */
+  for(int i = lid; i < O32_SIGMA_NBINS; i += wg) hist[i] = 0;
+  if(lid == 0) total_count = 0;
+  memoryBarrierShared(); barrier();
+
+  /* Each WI scans a row stripe.  3-tap stride=1 |Laplacian| in half-res. */
+  const float bin_scale = float(O32_SIGMA_NBINS) / O32_SIGMA_LAP_MAX;
+  int my_count = 0;
+  for(int hr = lid; hr < hh; hr += wg)
+  {
+    const int fr = 2 * hr + dy0;
+    if(fr >= pc.height) continue;
+    /* Half-res sampling: x_h ∈ [0, hw-2), 3-tap on (x_h, x_h+1, x_h+2). */
+    for(int hc = 0; hc < hw - 2; hc += 3)   /* CPU uses x += 3 stride */
+    {
+      const int fc0 = 2 * hc       + dx0;
+      const int fc1 = 2 * (hc + 1) + dx0;
+      const int fc2 = 2 * (hc + 2) + dx0;
+      if(fc2 >= pc.width) break;
+      const float a = in_gat_full[fr * pc.width + fc0];
+      const float b = in_gat_full[fr * pc.width + fc1];
+      const float c = in_gat_full[fr * pc.width + fc2];
+      const float lap = abs(a - 2.0 * b + c);
+      int bin = int(lap * bin_scale);
+      if(bin >= O32_SIGMA_NBINS) bin = O32_SIGMA_NBINS - 1;
+      atomicAdd(hist[bin], 1);
+      my_count++;
+    }
+  }
+  atomicAdd(total_count, my_count);
+  memoryBarrierShared(); barrier();
+
+  /* WI 0: cumsum-scan to find median bin → MAD → σ. */
+  if(lid == 0)
+  {
+    const int median_target = total_count / 2;
+    int cum = 0, median_bin = 0;
+    for(int i = 0; i < O32_SIGMA_NBINS; i++)
+    {
+      cum += hist[i];
+      if(cum >= median_target) { median_bin = i; break; }
+    }
+    const float mad = (float(median_bin) + 0.5) / bin_scale;
+    /* 3-tap iid noise: Var(Lap) = 6σ² → σ = MAD / (0.6745 · sqrt(6)) = MAD / 1.6521. */
+    const float sigma = max(mad / 1.6521, 0.01);
+    params[P_SIGMA_CH0 + ch] = sigma;
+  }
+}

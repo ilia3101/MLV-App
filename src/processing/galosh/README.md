@@ -64,10 +64,42 @@ the frame untouched rather than silently switching backends.
   oracle.
 - `galosh_cpu.h`: SSE includes are guarded for non-x86 builds.
 - `galosh_cpu.h`: per-call diagnostic prints were removed.
+- `galosh_vk_host.c`: the adaptive pass12 banding enforces at least eight
+  queue submissions, so a probe underestimate cannot submit one
+  watchdog-tripping dispatch on slow integrated GPUs.
+- `galosh_vk_host.c`: portability enumeration/subset support and MoltenVK ICD
+  probing were added for the optional macOS Vulkan backend.
 
-## Backend API
+## Vulkan backend
 
-This change builds the CPU FP32 reference only.  The Vulkan host is maintained
-as a separate change; the bridge keeps the small `galosh_vulkan_*` API and a
-no-op stub so the GPU implementation can be added without changing the UI or
-the cache integration.
+The Vulkan host is in `galosh_vk_host.c`, with shader sources and precompiled
+SPIR-V in `vulkan/shaders/`.  The backend is off by default.  Enable it with:
+
+```sh
+qmake CONFIG+=galosh_vulkan path/to/MLVApp.pro
+```
+
+Requirements: Vulkan headers and a loader (`-lvulkan` on Linux, `vulkan-1` on
+Windows, MoltenVK on macOS).  Vulkan headers are not vendored; use the system
+headers or the LunarG SDK (`VULKAN_SDK`).  On macOS, Homebrew provides:
+
+```sh
+brew install molten-vk vulkan-headers vulkan-loader
+export VK_ICD_FILENAMES=/opt/homebrew/etc/vulkan/icd.d/MoltenVK_icd.json
+```
+
+The build copies the `.spv` files to `<build>/galosh_shaders`; on macOS they
+are copied into `MLV App.app/Contents/MacOS/galosh_shaders`.  The host uses the
+subgroup-32 `pass12_sg` kernel when the device advertises
+`VK_EXT_subgroup_size_control`; otherwise it uses the classic pass12 kernel.
+Set `GALOSH_VK_FORCE_CLASSIC=1` to force the classic path for troubleshooting.
+Timestamp profiling runs only with `GALOSH_VERBOSE=1`.
+
+Regenerate SPIR-V with:
+
+```sh
+cd src/processing/galosh/vulkan
+for k in shaders/*.comp; do
+  glslc -O --target-env=vulkan1.2 "$k" -o "${k%.comp}.spv"
+done
+```

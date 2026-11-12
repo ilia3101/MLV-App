@@ -1,0 +1,31 @@
+#version 450
+/* o32_crop_2d_topleft_h16.comp — [V2.0 FP16 storage contract v1,
+ * dataflow_spec.md §4] site variant of o32_crop_2d_topleft for dispatch
+ * site 7h ONLY (src = L_h_den, contract buffer → f16 storage; dst =
+ * L_for_q, pyramid-internal → stays f32).  Site 7k (L_q → L_for_e, all
+ * f32) keeps the original shader.  Same bindings / push layout — the
+ * host only swaps the pipeline at 7h.  Pure copy: the f16→f32 widen is
+ * exact, so L_for_q holds the identical (f16-representable) values the
+ * CPU oracle sees.
+ * (日) 7h 専用のサイト変種：f16→f32 拡張コピー（無損失）。 */
+#extension GL_EXT_shader_16bit_storage : require
+#extension GL_EXT_shader_explicit_arithmetic_types_float16 : require
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+
+layout(std430, binding = 0) readonly  buffer Buf0 { float16_t src[]; };
+layout(std430, binding = 1) writeonly buffer Buf1 { float dst[]; };
+
+layout(push_constant) uniform PC {
+  int sw;
+  int sh;   /* unused (OpenCL kernel has "(void)sh;") */
+  int dw;
+  int dh;
+} pc;
+
+void main()
+{
+  const int dx = int(gl_GlobalInvocationID.x);
+  const int dy = int(gl_GlobalInvocationID.y);
+  if(dx >= pc.dw || dy >= pc.dh) return;
+  dst[dy * pc.dw + dx] = float(src[dy * pc.sw + dx]);
+}

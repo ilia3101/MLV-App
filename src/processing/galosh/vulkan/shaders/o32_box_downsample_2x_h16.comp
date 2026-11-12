@@ -1,0 +1,38 @@
+#version 450
+/* o32_box_downsample_2x_h16.comp — [V2.0 FP16 storage contract v1,
+ * dataflow_spec.md §4] site variant of o32_box_downsample_2x for
+ * dispatch site 7a ONLY (src = L_h_den, contract buffer → f16 storage;
+ * dst = L_q, pyramid-internal → stays f32).  Site 7b (L_q → L_e, all
+ * f32) keeps the original shader.  Same bindings / push layout / local
+ * size — the host only swaps the pipeline at 7a.  Compute stays f32.
+ * (日) 7a 専用のサイト変種：入力のみ f16、出力はピラミッド内部なので
+ *   f32 のまま。ベンダー分岐なし（サイト分岐のみ）。 */
+#extension GL_EXT_shader_16bit_storage : require
+#extension GL_EXT_shader_explicit_arithmetic_types_float16 : require
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+
+layout(std430, binding = 0) restrict readonly  buffer Buf0 { float16_t src[]; };
+layout(std430, binding = 1) restrict writeonly buffer Buf1 { float dst[]; };
+
+layout(push_constant) uniform PC {
+  int sw;
+  int sh;
+} pc;
+
+void main()
+{
+  const int dw = pc.sw >> 1;
+  const int dh = pc.sh >> 1;
+  const int dx = int(gl_GlobalInvocationID.x);
+  const int dy = int(gl_GlobalInvocationID.y);
+  if(dx >= dw || dy >= dh) return;
+
+  const int sx = 2 * dx;
+  const int sy = 2 * dy;
+  /* OpenCL used (size_t) 64-bit index; GLSL uses 32-bit int (no INT64). */
+  const float a = float(src[sy       * pc.sw + sx      ]);
+  const float b = float(src[sy       * pc.sw + (sx + 1)]);
+  const float c = float(src[(sy + 1) * pc.sw + sx      ]);
+  const float d = float(src[(sy + 1) * pc.sw + (sx + 1)]);
+  dst[dy * dw + dx] = 0.25f * (a + b + c + d);
+}

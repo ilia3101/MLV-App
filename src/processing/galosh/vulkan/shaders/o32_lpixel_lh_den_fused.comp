@@ -1,0 +1,66 @@
+#version 450
+/* Transcribed from galosh.cl kernel galosh_o32_lpixel_lh_den_fused (§6.6+7,
+ * line 5577).  Literal port per PORT_CONVENTIONS.md.
+ * Host dispatch: align_up(width,16) x align_up(height,16), local 16x16
+ * (galosh_raw_gpu.c:1406-1408 "K_O32_6 L_pixel+L_h_den_fused").
+ *
+ * [V2.0 FP16 storage contract v1, dataflow_spec.md §4] all three buffers
+ * are contract points: L_cs_den (in, f16), L_pixel + L_h_den (out, f16).
+ * Compute (2x2 overlap average) stays f32.  L_h_den copies an f16 value
+ * unchanged — re-store is lossless, matching the oracle's idempotent
+ * GALOSH_F16_STAGE(L_h_den). */
+#extension GL_EXT_shader_16bit_storage : require
+#extension GL_EXT_shader_explicit_arithmetic_types_float16 : require
+#extension GL_GOOGLE_include_directive : enable
+#include "galosh_f16_rne.glsl"
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+
+layout(std430, binding = 0) restrict readonly  buffer Buf0 { float16_t L_cs_den[]; };
+layout(std430, binding = 1) restrict writeonly buffer Buf1 { float16_t L_pixel[]; };
+layout(std430, binding = 2) restrict writeonly buffer Buf2 { float16_t L_h_den[]; };
+
+layout(push_constant) uniform PC {
+  int width;
+  int height;
+  int halfwidth;
+} pc;
+
+void main()
+{
+  const int fx = int(gl_GlobalInvocationID.x);
+  const int fy = int(gl_GlobalInvocationID.y);
+  if(fx >= pc.width || fy >= pc.height) return;
+
+  /* Read own + neighbors once; reuse for L_pixel + L_h_den.
+   * OpenCL used (size_t) 64-bit index; GLSL uses 32-bit int (no INT64). */
+  const float own = float(L_cs_den[fy * pc.width + fx]);
+
+  float sum = own;
+  int count = 1;
+  if(fy > 0)
+  {
+    sum += float(L_cs_den[(fy - 1) * pc.width + fx]);
+    count++;
+  }
+  if(fx > 0)
+  {
+    sum += float(L_cs_den[fy * pc.width + (fx - 1)]);
+    count++;
+  }
+  if(fy > 0 && fx > 0)
+  {
+    sum += float(L_cs_den[(fy - 1) * pc.width + (fx - 1)]);
+    count++;
+  }
+  /* explicit RNE on the computed average (AMD OpFConvert is RTZ) */
+  L_pixel[fy * pc.width + fx] = float16_t(galosh_f16_rne(sum / float(count)));
+
+  /* L_h_den write only for TL of each 2x2 (= matches §6.7 stride=2 sample);
+   * reuses 'own' which was already loaded above (= no extra global read).
+   * 'own' came from an f16 read → exactly representable → the plain
+   * conversion is lossless under any rounding mode. */
+  if((fy & 1) == 0 && (fx & 1) == 0)
+  {
+    L_h_den[(fy >> 1) * pc.halfwidth + (fx >> 1)] = float16_t(own);
+  }
+}

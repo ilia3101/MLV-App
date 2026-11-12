@@ -1,0 +1,114 @@
+#version 450
+/* Transcribed from galosh.cl kernel galosh_o32_inverse_wht_dark_gat (§6.15,
+ * line 6266).  Literal port per PORT_CONVENTIONS.md.
+ * Host dispatch: align_up(width,16) x align_up(height,16), local 16x16
+ * (galosh_raw_gpu.c:1690-1692 "K_O32_10 inverse_final").
+ *
+ * Helpers transcribed from galosh.cl:
+ *   - gat_inv_lut (line 2300)               — LUT bisection inverse GAT.
+ *     GLSL functions cannot take SSBO pointers, so lut_d[]/lut_x[] are
+ *     accessed as globals from within the function (bindings 5/6);
+ *     the two pointer params of the OpenCL helper are dropped, all other
+ *     params kept in order.
+ *   - galosh_chromaup_signs (line 2466)     — __constant → const array.
+ *   - GAT_LUT_SIZE 4096 (galosh.cl line 1125).
+ * RENAME: OpenCL arg `output` → `output_` (`output` is a GLSL reserved word).
+ *
+ * [V2.0 FP16 storage contract v1, dataflow_spec.md §4] L_pixel and
+ * C1/2/3_aligned are contract buffers → float16_t SSBOs (read side);
+ * LUT / params / output stay f32.  Compute stays f32. */
+#extension GL_EXT_shader_16bit_storage : require
+#extension GL_EXT_shader_explicit_arithmetic_types_float16 : require
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+
+#define GAT_LUT_SIZE 4096
+
+layout(std430, binding = 0) restrict readonly  buffer Buf0 { float16_t L_pixel[]; };
+layout(std430, binding = 1) restrict readonly  buffer Buf1 { float16_t C1_aligned[]; };
+layout(std430, binding = 2) restrict readonly  buffer Buf2 { float16_t C2_aligned[]; };
+layout(std430, binding = 3) restrict readonly  buffer Buf3 { float16_t C3_aligned[]; };
+layout(std430, binding = 4) restrict writeonly buffer Buf4 { float output_[]; };
+layout(std430, binding = 5) restrict readonly  buffer Buf5 { float lut_d[]; };
+layout(std430, binding = 6) restrict readonly  buffer Buf6 { float lut_x[]; };
+layout(std430, binding = 7) restrict readonly  buffer Buf7 { float lut_params[]; };
+layout(std430, binding = 8) restrict readonly  buffer Buf8 { float params[]; };   /* [4]=unified_sigma, [6..9]=ch_dark_ref */
+
+layout(push_constant) uniform PC {
+  int width;
+  int height;
+} pc;
+
+/* Inverse 2x2 WHT signs in canonical (R, Gb, Gr, B) order. SIGNS[ch*3+i]
+ * for i = 0..2 → (s1, s2, s3) so val = (L + s1·C1 + s2·C2 + s3·C3) / 2.
+ * (galosh.cl __constant galosh_chromaup_signs, line 2466) */
+const float galosh_chromaup_signs[12] = float[12](
+  +1.0f, +1.0f, +1.0f,  /* R  */
+  -1.0f, +1.0f, -1.0f,  /* Gb */
+  +1.0f, -1.0f, -1.0f,  /* Gr */
+  -1.0f, -1.0f, +1.0f   /* B  */
+);
+
+/* gat_inv_lut (galosh.cl line 2300): bisection search for the LUT bin
+ * [lo, lo+1] containing D, then linear interpolation.  alpha / sigma_sq
+ * are unused in the OpenCL body too; kept for signature fidelity. */
+float gat_inv_lut(
+    const float D,
+    const float d_min,
+    const float d_max,
+    const float y_break,
+    const float t_break,
+    const float sigma_raw,
+    const float alpha,
+    const float sigma_sq)
+{
+  if(D <= d_min)
+    return y_break + sigma_raw * (D - t_break);
+  if(D >= d_max)
+    return 1.0f;
+
+  int lo = 0, hi = GAT_LUT_SIZE - 1;
+  while(lo + 1 < hi){
+    const int mid = (lo + hi) >> 1;
+    if(lut_d[mid] <= D) lo = mid; else hi = mid;
+  }
+  const float d0 = lut_d[lo], d1 = lut_d[lo + 1];
+  const float t = (D - d0) / max(d1 - d0, 1e-10f);
+  return lut_x[lo] + t * (lut_x[lo + 1] - lut_x[lo]);
+}
+
+void main()
+{
+  const int fx = int(gl_GlobalInvocationID.x);
+  const int fy = int(gl_GlobalInvocationID.y);
+  if(fx >= pc.width || fy >= pc.height) return;
+
+  const int slot_r = fy & 1;
+  const int slot_c = fx & 1;
+  const int slot = slot_r | (slot_c << 1);
+
+  /* OpenCL used (size_t) 64-bit index; GLSL uses 32-bit int (no INT64). */
+  const int p = fy * pc.width + fx;
+  const float L  = float(L_pixel[p]);
+  const float C1 = float(C1_aligned[p]);
+  const float C2 = float(C2_aligned[p]);
+  const float C3 = float(C3_aligned[p]);
+
+  /* BUG FIX 2026-05-10 (carried over from OpenCL): use inline SIGNS[slot][k]
+   * directly, NO ch remapping via galosh_chromaup_ch_by_si (CPU
+   * gat_galosh_denoise_rawlc_o Phase 10 parity). */
+  const float s1 = galosh_chromaup_signs[slot * 3 + 0];
+  const float s2 = galosh_chromaup_signs[slot * 3 + 1];
+  const float s3 = galosh_chromaup_signs[slot * 3 + 2];
+
+  const float dark_ref = params[6 + slot];
+  const float val = 0.5f * (L + s1 * C1 + s2 * C2 + s3 * C3) + dark_ref;
+
+  const float sg = params[4];                /* unified_sigma */
+  const float dm = lut_params[0], dx_ = lut_params[1];
+  const float yb = lut_params[2], tb_ = lut_params[3], sr = lut_params[4];
+  const float al = lut_params[5], sq = lut_params[6];
+
+  output_[p] = clamp(
+      gat_inv_lut(val * sg, dm, dx_, yb, tb_, sr, al, sq),
+      0.0f, 1.0f);
+}

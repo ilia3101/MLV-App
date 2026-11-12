@@ -1,0 +1,96 @@
+#version 450
+/* Transcribed from galosh.cl §7.1 galosh_o32_ne_block_stats (line 6404).
+ * Phase 0 (1/3): per-block statistics — blk_mean = mean of 64 pixels in an
+ * 8x8 half-res block (CFA-aware stride 2), blk_var = (MAD(|Lap|)/0.6745)²/6
+ * over 96 Laplacians (48 H + 48 V).  1 WI = 1 block.
+ * Literal transcription (V2.0 Phase B2). */
+
+layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+
+layout(std430, binding = 0) readonly  buffer Buf0 { float raw[]; };
+layout(std430, binding = 1) writeonly buffer Buf1 { float blk_mean[]; };
+layout(std430, binding = 2) writeonly buffer Buf2 { float blk_var[]; };
+
+layout(push_constant) uniform PC {
+  int width;
+  int height;          /* unused in body (parity with OpenCL arg list) */
+  int n_bx;
+  int n_by;            /* unused in body (parity with OpenCL arg list) */
+  int n_blocks_per_ch;
+} pc;
+
+const int O32_NE_BLOCK_SZ = 8;   /* galosh.cl line 6340 */
+
+/* galosh.cl line 6388 partial_select_median_o32_ne: rank n/2 (lower median)
+ * via partial selection sort.  GLSL has no pointers; the caller's laps[]
+ * array is always exactly 96 elements (48 H + 48 V), so the parameter is a
+ * fixed-size inout array. */
+float partial_select_median_o32_ne(inout float arr[96], int n)
+{
+  const int target = n / 2;
+  for(int k = 0; k <= target; k++)
+  {
+    int min_idx = k;
+    float min_val = arr[k];
+    for(int j = k + 1; j < n; j++)
+      if(arr[j] < min_val) { min_val = arr[j]; min_idx = j; }
+    arr[min_idx] = arr[k];
+    arr[k] = min_val;
+  }
+  return arr[target];
+}
+
+void main()
+{
+  const int bi_global = int(gl_GlobalInvocationID.x);
+  const int total_blocks = 4 * pc.n_blocks_per_ch;
+  if(bi_global >= total_blocks) return;
+
+  /* Decode (ch, by, bx). */
+  const int ch       = bi_global / pc.n_blocks_per_ch;
+  const int bi_in_ch = bi_global - ch * pc.n_blocks_per_ch;
+  const int by       = bi_in_ch / pc.n_bx;
+  const int bx       = bi_in_ch - by * pc.n_bx;
+  /* CFA offsets {{0,0},{0,1},{1,0},{1,1}}. */
+  const int dy0 = (ch >> 1) & 1;
+  const int dx0 = ch & 1;
+
+  const int y0 = by * O32_NE_BLOCK_SZ;
+  const int x0 = bx * O32_NE_BLOCK_SZ;
+
+  /* Step 1: block mean of 64 pixels. */
+  float sum = 0.0;
+  for(int y = y0; y < y0 + O32_NE_BLOCK_SZ; y++)
+    for(int x = x0; x < x0 + O32_NE_BLOCK_SZ; x++)
+      sum += raw[(2 * y + dy0) * pc.width + (2 * x + dx0)];
+  const float bm = sum / float(O32_NE_BLOCK_SZ * O32_NE_BLOCK_SZ);
+
+  /* Step 2: collect 96 Laplacians (48 H + 48 V) within the block. */
+  float laps[96];
+  int nl = 0;
+  /* Horizontal: 8 rows × 6 (= BS-2) per row. */
+  for(int y = y0; y < y0 + O32_NE_BLOCK_SZ; y++)
+    for(int x = x0; x < x0 + O32_NE_BLOCK_SZ - 2; x++)
+    {
+      const float v0 = raw[(2 * y + dy0) * pc.width + (2 *  x      + dx0)];
+      const float v1 = raw[(2 * y + dy0) * pc.width + (2 * (x + 1) + dx0)];
+      const float v2 = raw[(2 * y + dy0) * pc.width + (2 * (x + 2) + dx0)];
+      laps[nl++] = abs(v0 - 2.0 * v1 + v2);
+    }
+  /* Vertical: 6 (= BS-2) rows × 8 per row. */
+  for(int y = y0; y < y0 + O32_NE_BLOCK_SZ - 2; y++)
+    for(int x = x0; x < x0 + O32_NE_BLOCK_SZ; x++)
+    {
+      const float v0 = raw[(2 *  y      + dy0) * pc.width + (2 * x + dx0)];
+      const float v1 = raw[(2 * (y + 1) + dy0) * pc.width + (2 * x + dx0)];
+      const float v2 = raw[(2 * (y + 2) + dy0) * pc.width + (2 * x + dx0)];
+      laps[nl++] = abs(v0 - 2.0 * v1 + v2);
+    }
+
+  /* MAD via partial-selection median, then sigma_lap = MAD / 0.6745,
+   * blk_var = sigma_lap² / 6 (Var of 3-tap Laplacian on iid noise = 6σ²). */
+  const float med = partial_select_median_o32_ne(laps, nl);
+  const float sigma_lap = med / 0.6745;
+  blk_var[bi_global]  = (sigma_lap * sigma_lap) / 6.0;
+  blk_mean[bi_global] = bm;
+}

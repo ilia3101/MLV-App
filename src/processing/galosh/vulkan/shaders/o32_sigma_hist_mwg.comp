@@ -1,0 +1,83 @@
+#version 450
+/* o32_sigma_hist_mwg.comp — [V2.0 iGPU-opt] stage 1 of the two-stage
+ * sigma_per_cfa: many-workgroup histogram build.
+ *
+ * EN: The original kernel used ONE workgroup per CFA channel (4 x 256 =
+ *     1024 threads scanning the whole frame) — grossly under-parallel on
+ *     every GPU and the #4 kernel on the iGPU profile.  This stage builds
+ *     the SAME 4 x 4096 histogram with n_wg workgroups per channel using
+ *     global atomics.  Histogram counts are order-independent integers, so
+ *     the two-stage result is BIT-IDENTICAL to the single-WG original.
+ * JP: ヒストグラムは整数カウントなので多 WG 化しても bit 同一。
+ *     4 WG 過少並列の解消（全 GPU 共通の勝ち、iGPU で最大）。
+ */
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+layout(std430, binding = 0) readonly buffer Buf0 { float in_gat_full[]; };
+layout(std430, binding = 1) buffer Buf1 { int hist[]; };   /* 4 x 4096, host-zeroed */
+
+layout(push_constant) uniform PC {
+  int width;
+  int height;
+  int n_wg_per_ch;
+} pc;
+
+const int   O32_SIGMA_NBINS   = 4096;
+const float O32_SIGMA_LAP_MAX = 16.0;
+
+/* [iGPU-fix] accumulate into a SHARED histogram and flush once per WG:
+ * per-sample GLOBAL atomics measured 2x slower than the old single-WG
+ * kernel on the iGPU (DDR atomics).  Shared-then-flush keeps the global
+ * atomic count at 4096/WG while preserving bit-identical counts. */
+shared int lds_hist[O32_SIGMA_NBINS];
+
+void main()
+{
+  const int wg_global = int(gl_WorkGroupID.x);
+  const int ch        = wg_global / pc.n_wg_per_ch;      /* 0..3 */
+  const int wg_in_ch  = wg_global % pc.n_wg_per_ch;
+  const int lid       = int(gl_LocalInvocationID.x);
+  const int stride    = pc.n_wg_per_ch * 256;            /* row stride per channel */
+  const int tid       = wg_in_ch * 256 + lid;
+
+  const int dy0 = ch & 1;
+  const int dx0 = (ch >> 1) & 1;
+  const int hw  = (pc.width  - dx0 + 1) / 2;
+  const int hh  = (pc.height - dy0 + 1) / 2;
+
+  const float bin_scale = float(O32_SIGMA_NBINS) / O32_SIGMA_LAP_MAX;
+  const int hbase = ch * O32_SIGMA_NBINS;
+
+  for(int i = lid; i < O32_SIGMA_NBINS; i += 256) lds_hist[i] = 0;
+  memoryBarrierShared(); barrier();
+
+  /* Same row-stripe scan as the original (hr strided over all threads of
+   * the channel); identical Laplacian sites, identical binning. */
+  for(int hr = tid; hr < hh; hr += stride)
+  {
+    const int fr = 2 * hr + dy0;
+    if(fr >= pc.height) continue;
+    for(int hc = 0; hc < hw - 2; hc += 3)
+    {
+      const int fc0 = 2 * hc       + dx0;
+      const int fc1 = 2 * (hc + 1) + dx0;
+      const int fc2 = 2 * (hc + 2) + dx0;
+      if(fc2 >= pc.width) break;
+      const float a = in_gat_full[fr * pc.width + fc0];
+      const float b = in_gat_full[fr * pc.width + fc1];
+      const float c = in_gat_full[fr * pc.width + fc2];
+      const float lap = abs(a - 2.0 * b + c);
+      int bin = int(lap * bin_scale);
+      if(bin >= O32_SIGMA_NBINS) bin = O32_SIGMA_NBINS - 1;
+      atomicAdd(lds_hist[bin], 1);
+    }
+  }
+  memoryBarrierShared(); barrier();
+
+  /* flush: one global atomic per nonzero bin per WG */
+  for(int i = lid; i < O32_SIGMA_NBINS; i += 256)
+  {
+    const int v = lds_hist[i];
+    if(v != 0) atomicAdd(hist[hbase + i], v);
+  }
+}

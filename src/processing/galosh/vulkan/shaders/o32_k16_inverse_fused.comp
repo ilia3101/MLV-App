@@ -1,0 +1,191 @@
+#version 450
+/* o32_k16_inverse_fused.comp — [V2.0 B7f fusion pack] K_O32_9 (final K16
+ * joint-bilateral upsample, o32_k16_jbu_3p_f16) + K_O32_10 (inverse WHT +
+ * dark restore + inverse-GAT LUT, o32_inverse_wht_dark_gat) fused into ONE
+ * per-pixel kernel.  Both parents are per-full-res-pixel with identical
+ * dispatch geometry and the inverse consumes exactly this pixel's chroma,
+ * so the fusion is direct: the C1/2/3_aligned full-res f16 planes are
+ * never materialized — saves a write+read of 3 full-res planes per frame
+ * (~100 MB of traffic at 4K; the iGPU/Arc win).
+ *
+ * NUMERIC CONTRACT: the [FP16 v1] Cal store is part of the precision
+ * contract (dataflow_spec.md §4), so the chroma is still rounded through
+ * binary16 IN-REGISTER (galosh_f16_rne + float16_t round-trip) before the
+ * inverse — bit-identical to the unfused two-kernel path.
+ * Bodies below are verbatim from the two parents (see their headers for
+ * the algorithm notes); only the store/load pair became a register.
+ * (日) 最終アップサンプルと逆変換の融合。f16 契約丸めはレジスタ内で
+ * 厳密に再現 → 非融合経路とビット同一。Cal 3 面の実体化を丸ごと削除。 */
+#extension GL_EXT_shader_16bit_storage : require
+#extension GL_EXT_shader_explicit_arithmetic_types_float16 : require
+#extension GL_GOOGLE_include_directive : enable
+#include "galosh_f16_rne.glsl"
+layout(local_size_x = 16, local_size_y = 16) in;
+
+#define GAT_LUT_SIZE 4096
+
+layout(std430, binding = 0) readonly  buffer Buf0 { float16_t c1_in[];   };  /* [FP16 v1] C1_h_den */
+layout(std430, binding = 1) readonly  buffer Buf1 { float16_t c2_in[];   };
+layout(std430, binding = 2) readonly  buffer Buf2 { float16_t c3_in[];   };
+layout(std430, binding = 3) readonly  buffer Buf3 { float16_t L_pixel[]; };  /* [FP16 v1] full-res L */
+layout(std430, binding = 4) writeonly buffer Buf4 { float output_[];     };  /* final raw-domain out */
+layout(std430, binding = 5) readonly  buffer Buf5 { float lut_d[];       };
+layout(std430, binding = 6) readonly  buffer Buf6 { float lut_x[];       };
+layout(std430, binding = 7) readonly  buffer Buf7 { float lut_params[];  };
+layout(std430, binding = 8) readonly  buffer Buf8 { float params[];      };  /* [4]=unified_sigma, [6..9]=dark_ref */
+
+layout(push_constant) uniform PC {
+  int   in_w;   /* half-res chroma dims; full = 2x (W,H even by CLI guard) */
+  int   in_h;
+  float bw;
+} pc;
+
+/* ---- verbatim from o32_k16_jbu_3p_f16.comp ---- */
+const float galosh_o32_k16_jbu_w[100] = float[100](
+  /* si=0 (oy=0.00, ox=0.00) */
+  +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f,
+  +0.0000000000e+00f, +1.3804738955e-02f, -3.6724216895e-02f, +1.3804738955e-02f, +0.0000000000e+00f,
+  +0.0000000000e+00f, -3.6724216895e-02f, +1.0000000000e+00f, -3.6724216895e-02f, +0.0000000000e+00f,
+  +0.0000000000e+00f, +1.3804738955e-02f, -3.6724216895e-02f, +1.3804738955e-02f, +0.0000000000e+00f,
+  +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f,
+  /* si=1 (oy=0.00, ox=0.50) */
+  +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f,
+  +0.0000000000e+00f, +0.0000000000e+00f, +3.5811194091e-04f, +3.5811194091e-04f, +0.0000000000e+00f,
+  +0.0000000000e+00f, +0.0000000000e+00f, +1.5746368940e-01f, +1.5746368940e-01f, +0.0000000000e+00f,
+  +0.0000000000e+00f, +0.0000000000e+00f, +3.5811194091e-04f, +3.5811194091e-04f, +0.0000000000e+00f,
+  +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f,
+  /* si=2 (oy=0.50, ox=0.00) */
+  +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f,
+  +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f,
+  +0.0000000000e+00f, +3.5811194091e-04f, +1.5746368940e-01f, +3.5811194091e-04f, +0.0000000000e+00f,
+  +0.0000000000e+00f, +3.5811194091e-04f, +1.5746368940e-01f, +3.5811194091e-04f, +0.0000000000e+00f,
+  +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f,
+  /* si=3 (oy=0.50, ox=0.50) */
+  +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f,
+  +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f,
+  +0.0000000000e+00f, +0.0000000000e+00f, -7.2646353170e-02f, -7.2646353170e-02f, +0.0000000000e+00f,
+  +0.0000000000e+00f, +0.0000000000e+00f, -7.2646353170e-02f, -7.2646353170e-02f, +0.0000000000e+00f,
+  +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f
+);
+
+/* ---- verbatim from o32_inverse_wht_dark_gat.comp ---- */
+const float galosh_chromaup_signs[12] = float[12](
+  +1.0f, +1.0f, +1.0f,  /* R  */
+  -1.0f, +1.0f, -1.0f,  /* Gb */
+  +1.0f, -1.0f, -1.0f,  /* Gr */
+  -1.0f, -1.0f, +1.0f   /* B  */
+);
+
+float gat_inv_lut(
+    const float D,
+    const float d_min,
+    const float d_max,
+    const float y_break,
+    const float t_break,
+    const float sigma_raw,
+    const float alpha,
+    const float sigma_sq)
+{
+  if(D <= d_min)
+    return y_break + sigma_raw * (D - t_break);
+  if(D >= d_max)
+    return 1.0f;
+
+  int lo = 0, hi = GAT_LUT_SIZE - 1;
+  while(lo + 1 < hi){
+    const int mid = (lo + hi) >> 1;
+    if(lut_d[mid] <= D) lo = mid; else hi = mid;
+  }
+  const float d0 = lut_d[lo], d1 = lut_d[lo + 1];
+  const float t = (D - d0) / max(d1 - d0, 1e-10f);
+  return lut_x[lo] + t * (lut_x[lo + 1] - lut_x[lo]);
+}
+
+void main()
+{
+  const int out_w = 2 * pc.in_w;
+  const int out_h = 2 * pc.in_h;
+  const int fx = int(gl_GlobalInvocationID.x);
+  const int fy = int(gl_GlobalInvocationID.y);
+  if(fx >= out_w || fy >= out_h) return;
+
+  const int hx = fx >> 1;
+  const int hy = fy >> 1;
+  const int sub_x = fx & 1;
+  const int sub_y = fy & 1;
+  const int si = sub_y * 2 + sub_x;
+
+  const float L_c = float(L_pixel[uint(fy) * uint(out_w) + uint(fx)]);
+  const float inv_2bw_sq = 1.0f / (2.0f * pc.bw * pc.bw);
+
+  float sum_w  = 0.0f;
+  float sum_c1 = 0.0f, sum_c2 = 0.0f, sum_c3 = 0.0f;
+  float cmin1= 1e30f, cmin2= 1e30f, cmin3= 1e30f;
+  float cmax1=-1e30f, cmax2=-1e30f, cmax3=-1e30f;
+
+  for(int dy = -2; dy <= 2; dy++)
+  {
+    int hyi = hy + dy;
+    hyi = clamp(hyi, 0, pc.in_h - 1);
+    for(int dx = -2; dx <= 2; dx++)
+    {
+      int hxi = hx + dx;
+      hxi = clamp(hxi, 0, pc.in_w - 1);
+      const int hi = hyi * pc.in_w + hxi;
+      if(((dy==0)||(sub_y != 0 && dy==1)) && ((dx==0)||(sub_x != 0 && dx==1))) {
+        const float iv1=float(c1_in[hi]), iv2=float(c2_in[hi]), iv3=float(c3_in[hi]);
+        cmin1=min(cmin1,iv1); cmax1=max(cmax1,iv1);
+        cmin2=min(cmin2,iv2); cmax2=max(cmax2,iv2);
+        cmin3=min(cmin3,iv3); cmax3=max(cmax3,iv3);
+      }
+      const float w_jinc = galosh_o32_k16_jbu_w[si * 25 + (dy + 2) * 5 + (dx + 2)];
+      if(w_jinc == 0.0f) continue;
+
+      int fri = 2 * hyi;
+      int fci = 2 * hxi;
+      if(fri >= out_h) fri = out_h - 1;
+      if(fci >= out_w) fci = out_w - 1;
+      const float L_i = float(L_pixel[uint(fri) * uint(out_w) + uint(fci)]);
+      const float dL = L_i - L_c;
+      const float w_bilat = exp(-dL * dL * inv_2bw_sq);
+      const float w = w_jinc * w_bilat;
+
+      sum_w  += w;
+      sum_c1 += w * float(c1_in[hi]);
+      sum_c2 += w * float(c2_in[hi]);
+      sum_c3 += w * float(c3_in[hi]);
+    }
+  }
+
+  const float safe_w = (abs(sum_w) > 1e-6f) ? sum_w : ((sum_w < 0.0f) ? -1e-6f : 1e-6f);
+  const float inv_w = 1.0f / safe_w;
+  float oc1 = sum_c1 * inv_w, oc2 = sum_c2 * inv_w, oc3 = sum_c3 * inv_w;
+  if(cmax1>=cmin1) oc1 = clamp(oc1, cmin1, cmax1);
+  if(cmax2>=cmin2) oc2 = clamp(oc2, cmin2, cmax2);
+  if(cmax3>=cmin3) oc3 = clamp(oc3, cmin3, cmax3);
+
+  /* [FP16 v1] Cal contract round — IN REGISTER (replaces the f16 store +
+   * reload of the unfused path; value-identical by construction). */
+  const float C1 = float(float16_t(galosh_f16_rne(oc1)));
+  const float C2 = float(float16_t(galosh_f16_rne(oc2)));
+  const float C3 = float(float16_t(galosh_f16_rne(oc3)));
+
+  /* ---- inverse WHT + dark restore + inverse GAT (verbatim parent) ----
+   * slot = (fy&1) | ((fx&1)<<1); L = this pixel's L_pixel = L_c above. */
+  const int slot = sub_y | (sub_x << 1);
+  const float s1 = galosh_chromaup_signs[slot * 3 + 0];
+  const float s2 = galosh_chromaup_signs[slot * 3 + 1];
+  const float s3 = galosh_chromaup_signs[slot * 3 + 2];
+
+  const float dark_ref = params[6 + slot];
+  const float val = 0.5f * (L_c + s1 * C1 + s2 * C2 + s3 * C3) + dark_ref;
+
+  const float sg = params[4];                /* unified_sigma */
+  const float dm = lut_params[0], dx_ = lut_params[1];
+  const float yb = lut_params[2], tb_ = lut_params[3], sr = lut_params[4];
+  const float al = lut_params[5], sq = lut_params[6];
+
+  output_[uint(fy) * uint(out_w) + uint(fx)] = clamp(
+      gat_inv_lut(val * sg, dm, dx_, yb, tb_, sr, al, sq),
+      0.0f, 1.0f);
+}
