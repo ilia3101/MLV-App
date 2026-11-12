@@ -188,6 +188,24 @@ typedef struct {
     uint8_t    rbfDenoiserChroma;
     uint8_t    rbfDenoiserRange;
 
+    /* GALOSH RAW Bayer denoiser (0 strength = off) */
+    uint8_t    galoshStrength;   /* 0..200, 100 = canonical */
+    uint8_t    galoshLuma;       /* 0..100 */
+    uint8_t    galoshChroma;     /* 0..100 */
+    uint8_t    galoshBackend;    /* 0 = GPU, 1 = CPU */
+    uint8_t    galoshFast;       /* 0 = quality, 1 = fast */
+    uint8_t    galoshAnamorphicX;/* 0 = auto, 1 = normal, 3 = 1x3 x-upsample */
+    uint8_t    galoshNoiseMode;  /* 0 = fit every frame, 1 = hold, 2 = EMA */
+    float      galoshAlpha;
+    float      galoshSigmaSq;
+    uint64_t   galoshNoiseFrame;
+    uint8_t    galoshNoiseValid;
+    float      galoshLastBlack;
+    float      galoshLastWhite;
+    uint32_t   galoshLastCfa;
+    uint16_t   galoshLastWidth;
+    uint16_t   galoshLastHeight;
+
     /* Grain Generator */
     uint8_t    grainStrength;
     uint8_t    grainLumaWeight;

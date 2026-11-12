@@ -9,6 +9,7 @@
 #include "../debayer/debayer.h"
 #include "../ca_correct/CA_correct_RT.h"
 #include "../debayer/wb_conversion.h"
+#include "../processing/galosh/galosh_bridge.h"
 
 #include "librtprocesswrapper.h"
 
@@ -21,6 +22,50 @@
 #else
 #define DEBUG(CODE)
 #endif
+
+/* 1x3 MLV files store a horizontally squeezed Bayer grid: one raw pixel is
+ * three display pixels wide.  Denoise on a horizontally upsampled grid so
+ * GALOSH's square blocks/windows stay square after the display stretch.
+ *
+ * Some Magic Lantern builds do not write the crop/skipping information that
+ * MLV-App uses to auto-detect 1x3.  The Qt UI therefore sets this factor from
+ * the manual "0.33x" height-stretch selection; getMlvAspectRatio() remains a
+ * fallback for files that do carry the metadata. */
+static int galosh_anamorphic_factor(mlvObject_t * video)
+{
+    if (!video || !video->processing) return 1;
+
+    int factor = video->processing->galoshAnamorphicX;
+    if (factor >= 3 && (factor & 1)) return factor;
+
+    const float ratio = getMlvAspectRatio(video);
+    if (ratio > 0.30f && ratio < 0.37f) return 3;
+
+    return 1;
+}
+
+/* GALOSH works in the linear Bayer domain, before white balance and debayer.
+ * getMlvRawFrameFloat() has already applied applyLLRawProcObject(), so
+ * dual-ISO deinterleaving, pattern-noise and stripe corrections happen before
+ * this point.  GALOSH always sees a corrected Bayer mosaic, never the raw
+ * alternating-ISO lines.  A no-op when strength is 0. */
+static void apply_galosh_raw_denoise(mlvObject_t * video, float * frame,
+                                     int width, int height,
+                                     uint64_t frame_index)
+{
+    if (!video->processing) return;
+
+    /* Use the native DNG-export levels, not processing->white_level (which
+     * carries MLV-App's 0.993 highlight bias).  This matches galosh-dng. */
+    float galosh_black, galosh_white;
+    getMlvGaloshRawLevels(video, &galosh_black, &galosh_white);
+
+    galosh_bayer_denoise_ex(video->processing, frame, width, height,
+                            video->RAWI.raw_info.cfa_pattern,
+                            galosh_black, galosh_white,
+                            frame_index,
+                            galosh_anamorphic_factor(video));
+}
 
 void resetMlvCache(mlvObject_t * video)
 {
@@ -257,6 +302,8 @@ void an_mlv_cache_thread(mlvObject_t * video)
         getMlvRawFrameFloat(video, cache_frame, imagefloat1d);
         pthread_mutex_unlock( &video->cache_mutex );
 
+        apply_galosh_raw_denoise(video, imagefloat1d, width, height, cache_frame);
+
         /* Single thread AMaZE */
         demosaic(&amaze_params);
 
@@ -303,6 +350,8 @@ void get_mlv_raw_frame_debayered( mlvObject_t * video,
 
     /* Get the raw data in B&W */
     getMlvRawFrameFloat(video, frame_index, temp_memory);
+
+    apply_galosh_raw_denoise(video, temp_memory, width, height, frame_index);
 
     wb_convert_info_t wb_info;
 
