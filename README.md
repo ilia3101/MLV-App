@@ -68,6 +68,7 @@ What is MLV App? Lightroom, but for Magic Lantern MLV Video (and open source and
 - Smooth artifacts filter (minimizes moiree) for all ffmpeg export codecs, realized by ffmpeg filter combination
 - 2D median denoiser (don't expect wonders!)
 - Recursive bilateral filter (works as denoiser) with Luminance, Chroma and Range parameter
+- GALOSH blind, training-free RAW Bayer denoiser (CPU)
 - Vignette effect / correction with variable shape and chromatic abberation correction
 - Post export scripting on macOS (thx @dannephoto)
 - Zoom: fit to screen, 100% and free zoom, scroll through picture

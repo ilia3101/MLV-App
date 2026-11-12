@@ -49,6 +49,12 @@ ReceiptSettings::ReceiptSettings()
     m_rbfDenoiserLuma = 0;
     m_rbfDenoiserChroma = 0;
     m_rbfDenoiserRange = 40;
+    m_galoshStrength = 0;
+    m_galoshLuma = 100;
+    m_galoshChroma = 100;
+    m_galoshBackend = 0; /* GPU; falls back to CPU when unavailable */
+    m_galoshNoiseMode = 0;
+    m_galoshFast = false;
     m_grainStrength = 0;
     m_grainLumaWeight = 0;
     m_highlightReconstruction = false;

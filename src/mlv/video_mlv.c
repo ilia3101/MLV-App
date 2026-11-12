@@ -553,6 +553,49 @@ void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outpu
     free(unpacked_frame);
 }
 
+/* Levels for the GALOSH bridge.  The DNG writer stores the native sensor
+ * levels in llrawproc->dng_black_level/white_level and the corresponding bit
+ * depth in dng_bit_depth; getMlvRawFrameFloat() shifts the raw image to
+ * 16-bit.  Use the same pair so GALOSH sees exactly the normalization the
+ * reference DNG tool uses (no processing->white_level 0.993 highlight bias). */
+void getMlvGaloshRawLevels(mlvObject_t * video, float * black_level,
+                           float * white_level)
+{
+    float black = 0.0f;
+    float white = 1.0f;
+
+    if (video && video->llrawproc)
+    {
+        int bits = video->llrawproc->dng_bit_depth;
+        if (bits <= 0 || bits > 16) bits = video->RAWI.raw_info.bits_per_pixel;
+        if (bits <= 0 || bits > 16) bits = 16;
+
+        const int shift = 16 - bits;
+        black = (float)(video->llrawproc->dng_black_level << shift);
+        white = (float)(video->llrawproc->dng_white_level << shift);
+
+        if (!(white > black) && video->processing)
+        {
+            black = video->processing->black_level;
+            white = video->processing->white_level;
+        }
+    }
+    else if (video && video->processing)
+    {
+        black = video->processing->black_level;
+        white = video->processing->white_level;
+    }
+
+    if (!(white > black))
+    {
+        black = 0.0f;
+        white = 1.0f;
+    }
+
+    *black_level = black;
+    *white_level = white;
+}
+
 void setMlvProcessing(mlvObject_t * video, processingObject_t * processing)
 {
     //double camera_matrix[9]; commented for now, not used
@@ -562,6 +605,15 @@ void setMlvProcessing(mlvObject_t * video, processingObject_t * processing)
 
     /* Link dual_iso value, because it is needed */
     video->processing->dual_iso = &video->llrawproc->dual_iso;
+
+    /* Ensure the DNG-export levels are available to the GALOSH bridge even
+     * before the UI applies its first receipt. */
+    llrpResetDngBWLevels(video);
+
+    /* A new clip invalidates any held GALOSH noise model and the previous
+     * clip's manual anamorphic hint (0 = derive from MLV metadata / UI). */
+    processingResetGaloshNoise(video->processing);
+    processingSetGaloshAnamorphicX(video->processing, 0);
 
     /* explicitely switch whitebalance find flag off to get right matrix values */
     video->processing->wbFindActive = 0;

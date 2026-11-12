@@ -176,6 +176,26 @@ void processingSet3WayCorrection( processingObject_t * processing,
 #define processingSetRbfDenoiserRange(processing, strength) (processing)->rbfDenoiserRange = (strength)
 #define processingGetRbfDenoiserRange(processing) (processing)->rbfDenoiserRange
 
+/* GALOSH RAW Bayer denoiser */
+#define processingSetGaloshStrength(processing, value) (processing)->galoshStrength = (value)
+#define processingGetGaloshStrength(processing) (processing)->galoshStrength
+#define processingSetGaloshLuma(processing, value) (processing)->galoshLuma = (value)
+#define processingGetGaloshLuma(processing) (processing)->galoshLuma
+#define processingSetGaloshChroma(processing, value) (processing)->galoshChroma = (value)
+#define processingGetGaloshChroma(processing) (processing)->galoshChroma
+#define processingSetGaloshBackend(processing, value) (processing)->galoshBackend = (value)
+#define processingGetGaloshBackend(processing) (processing)->galoshBackend
+#define processingSetGaloshFast(processing, value) (processing)->galoshFast = (value)
+#define processingGetGaloshFast(processing) (processing)->galoshFast
+#define processingSetGaloshAnamorphicX(processing, value) (processing)->galoshAnamorphicX = (value)
+#define processingGetGaloshAnamorphicX(processing) (processing)->galoshAnamorphicX
+#define processingSetGaloshNoiseMode(processing, value) (processing)->galoshNoiseMode = (value)
+#define processingGetGaloshNoiseMode(processing) (processing)->galoshNoiseMode
+#define processingResetGaloshNoise(processing) do { \
+    (processing)->galoshNoiseValid = 0; \
+    (processing)->galoshNoiseFrame = 0; \
+} while(0)
+
 /* Grain */
 #define processingSetGrainStrength(processing, strength) (processing)->grainStrength = (strength)
 #define processingSetGrainLumaWeight(processing, strength) (processing)->grainLumaWeight = (strength)
