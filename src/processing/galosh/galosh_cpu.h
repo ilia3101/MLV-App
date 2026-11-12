@@ -129,7 +129,10 @@
 #include <stdint.h>
 #include <omp.h>
 #include <time.h>
-#if defined(__SSE__) || defined(__SSE2__) || defined(_M_X64) || defined(__x86_64__)
+#if defined(__APPLE__) && defined(__aarch64__)
+/* Apple Silicon: the project's sse2neon shim provides the SSE intrinsics. */
+#include "sse2neon.h"
+#elif defined(__SSE__) || defined(__SSE2__) || defined(_M_X64) || defined(__x86_64__)
 #include <xmmintrin.h>  /* SSE  */
 #include <emmintrin.h>  /* SSE2 */
 #include <pmmintrin.h>  /* SSE3: _mm_hadd_ps */
