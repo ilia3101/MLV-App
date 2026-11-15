@@ -1573,11 +1573,18 @@ static void galosh_pass2(const float *restrict noisy,
                          const int stride);
 /* libm has double j1(double); UCRT64 mingw lacks the float variant j1f.
  * The jinc kernel evaluates at small x values where double precision is
- * well within float range, so casting is harmless.  MinGW's math.h already
- * declares j1 (dllimport) — re-declaring it there only produced a warning,
- * so the fallback prototype is for strict-ISO toolchains that hide POSIX j1. */
-#if !defined(__MINGW32__) && !defined(__MINGW64__)
+ * well within float range, so casting is harmless.
+ *
+ * MinGW hides the POSIX j1 prototype in strict C99 mode (the Qt build uses
+ * -std=c99).  The CRT symbol is _j1; use it directly on MinGW. */
+#if defined(__MINGW32__) || defined(__MINGW64__)
+#if defined(__STRICT_ANSI__)
+extern double __cdecl _j1(double x);
+#endif
+static inline double galosh_bessel_j1(double x) { return _j1(x); }
+#else
 extern double j1(double x);
+static inline double galosh_bessel_j1(double x) { return j1(x); }
 #endif
 
 /* ================================================================
@@ -2020,7 +2027,7 @@ static inline float galosh_jinc(float x)
     /* Limit at x->0: 2*J1(pi*x)/(pi*x) -> 1.  Taylor series for stability. */
     if(fabsf(x) < 1e-5f) return 1.0f;
     const double pix = M_PI * (double)x;
-    return (float)(2.0 * j1(pix) / pix);
+    return (float)(2.0 * galosh_bessel_j1(pix) / pix);
 }
 
 /* galosh_compute_L_fullres_ewajl3 (RAW-specific variant C alternative
