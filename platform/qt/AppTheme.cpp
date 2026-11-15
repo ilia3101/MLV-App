@@ -202,7 +202,11 @@ void AppTheme::set( QMainWindow *mainWindow, Theme theme )
             border-radius: 2px;
         }
 
-        QSlider::sub-page:horizontal:disabled {
+        QSlider::sub-page:horizontal:disabled,
+        #horizontalSliderTemperature::sub-page:horizontal:disabled,
+        #horizontalSliderTemperature::add-page:horizontal:disabled,
+        #horizontalSliderTint::sub-page:horizontal:disabled,
+        #horizontalSliderTint::add-page:horizontal:disabled {
             background: hsla(0, 0%, 0%, 15%);
             border-color: hsla(0, 0%, 0%, 24%);
         }
@@ -221,19 +225,24 @@ void AppTheme::set( QMainWindow *mainWindow, Theme theme )
         }
 
         #horizontalSliderTemperature::sub-page:horizontal,
-            #horizontalSliderTemperature::add-page:horizontal,
-            #horizontalSliderTint::sub-page:horizontal,
-            #horizontalSliderTint::add-page:horizontal {
+        #horizontalSliderTemperature::add-page:horizontal,
+        #horizontalSliderTint::sub-page:horizontal,
+        #horizontalSliderTint::add-page:horizontal {
             background: none;
             border: 1px solid hsla(0, 0%, 0%, 38%);
         }
 
         #horizontalSliderTemperature::groove:horizontal {
-            background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 hsl(210, 100%, 50%), stop:1 hsl(30, 100%, 50%));
+            background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 hsl(210, 100%, 50%), stop:1 hsl(30, 100%, 50%));
         }
 
         #horizontalSliderTint::groove:horizontal {
-            background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 hsl(120, 100%, 50%), stop:1 hsl(300, 100%, 50%));
+            background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 hsl(120, 100%, 50%), stop:1 hsl(300, 100%, 50%));
+        }
+
+        #horizontalSliderTemperature::groove:horizontal:disabled,
+        #horizontalSliderTint::groove:horizontal:disabled {
+            background: none;
         }
 
         /* ==================================================== */
@@ -357,7 +366,7 @@ void AppTheme::set( QMainWindow *mainWindow, Theme theme )
     QColor alternateBase = QColor::fromHsl(0, 0, std::max(base.lightness() - 12, 0));
     QColor text = QColor::fromHsl(0, 0, std::max(window.lightness() - textContrast, 0));
     QColor highlight = QColor::fromHsl(210, 255, 160);
-    QColor disabled = QColor::fromHsl(0, 0, text.lightness(), 96);
+    QColor disabled = QColor::fromHsl(0, 0, window.lightness() * 0.6 + text.lightness() * 0.4);
 
     if( m_theme > Light )
     {
@@ -379,7 +388,7 @@ void AppTheme::set( QMainWindow *mainWindow, Theme theme )
         }
 
         text = QColor::fromHsl(0, 0, std::min(window.lightness() + textContrast, 255));
-        disabled = QColor::fromHsl(0, 0, text.lightness(), 96);
+        disabled = QColor::fromHsl(0, 0, window.lightness() * 0.6 + text.lightness() * 0.4);
 
         base = window;
         alternateBase = QColor::fromHsl(0, 0, std::min(base.lightness() + 12, 255));
@@ -439,7 +448,11 @@ void AppTheme::set( QMainWindow *mainWindow, Theme theme )
                 border-color: hsl(210, 100%, 15%);
             }
 
-            QSlider::sub-page:horizontal:disabled {
+            QSlider::sub-page:horizontal:disabled,
+            #horizontalSliderTemperature::sub-page:horizontal:disabled,
+            #horizontalSliderTemperature::add-page:horizontal:disabled,
+            #horizontalSliderTint::sub-page:horizontal:disabled,
+            #horizontalSliderTint::add-page:horizontal:disabled {
                 background: hsla(0, 0%, 100%, 24%);
                 border-color: hsla(0, 0%, 0%, 62%);
             }
@@ -839,6 +852,7 @@ bool CustomEventFilter::eventFilter( QObject *obj, QEvent *event )
             {
                 if( AppTheme::currentTheme() > AppTheme::Light )
                 {
+                    QColor textColor = QApplication::palette().color( QPalette::Text );
                     QColor buttonColor = QApplication::palette().color( QPalette::Button );
 
                     // if( toolButton->isEnabled() )
@@ -853,20 +867,24 @@ bool CustomEventFilter::eventFilter( QObject *obj, QEvent *event )
                     // }
                     // else
                     // {
-                        palette.setColor( QPalette::Window, QColor::fromHsl( 0, 0, std::max( windowColor.lightness() - 32, 0 ), 160 ) );
-
-                        palette.setColor( QPalette::Button, QColor::fromHsl(
+                        buttonColor = QColor::fromHsl(
                             buttonColor.hslHue(),
                             buttonColor.hslSaturation(),
                             std::min( buttonColor.lightness() + 48, 255 )
-                        ));
+                        );
+
+                        palette.setColor( QPalette::Window, QColor::fromHsl( 0, 0, std::max( windowColor.lightness() - 32, 0 ), 160 ) );
+                        palette.setColor( QPalette::Button, buttonColor );
                     // }
+
+                    palette.setColor( QPalette::Disabled, QPalette::ButtonText, QColor::fromHsl(
+                        0, 0, buttonColor.lightness() * 0.6 + textColor.lightness() * 0.4
+                    ));
                 }
                 else
                 {
                     palette.setColor( QPalette::Window, QColor::fromHsl( 0, 0, 0, 40 ) );
                 }
-
             }
 
             widget->setPalette( palette );
