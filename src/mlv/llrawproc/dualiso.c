@@ -2043,48 +2043,44 @@ static inline int mix_images(struct raw_info raw_info, uint32_t* fullres, uint32
 #ifndef STDOUT_SILENT
     printf("Half-res blending...\n");
 #endif
-    /* mixing curve: cached per-thread keyed by exact equality of (black, white, corr_ev, overlap) */
-    static DUALISO_TLS double * s_cached_mix_curve = NULL;
-    static DUALISO_TLS uint32_t s_cached_black = 0xFFFFFFFF;
-    static DUALISO_TLS uint32_t s_cached_white = 0xFFFFFFFF;
-    static DUALISO_TLS double s_cached_corr_ev = -99999.0;
-    static DUALISO_TLS double s_cached_overlap = -99999.0;
+    /* mixing curve: single shared LUT protected by mutex, matching fullres_curve and raw2ev */
+    static double s_shared_mix_curve[1<<20];
+    static uint32_t s_cached_black = 0xFFFFFFFF;
+    static uint32_t s_cached_white = 0xFFFFFFFF;
+    static double s_cached_corr_ev = -99999.0;
+    static double s_cached_overlap = -99999.0;
+    static int s_mix_curve_valid = 0;
 
-    int need_free_mix_curve = 0;
-    if (!s_cached_mix_curve)
-    {
-        s_cached_mix_curve = (double *)malloc((1<<20) * sizeof(double));
-    }
-
-    double * mix_curve = s_cached_mix_curve;
-    if (!mix_curve)
-    {
-        mix_curve = (double *)malloc((1<<20) * sizeof(double));
-        need_free_mix_curve = 1;
-        if (!mix_curve) return 0;
-    }
-
-    if (need_free_mix_curve ||
+    if (!s_mix_curve_valid ||
         black != s_cached_black || white != s_cached_white ||
         corr_ev != s_cached_corr_ev || overlap != s_cached_overlap)
     {
-        double max_ev = log2(white/64 - black/64);
-        #pragma omp parallel for if(USE_OMP) schedule(static)
-        for (int i = 0; i < 1<<20; i++)
+        LOCK(mix_curve_mutex)
         {
-            double ev = log2(MAX(i/64.0 - black/64.0, 1)) + corr_ev;
-            double c = -cos(MAX(MIN(ev-(max_ev-overlap),overlap),0)*M_PI/overlap);
-            double k = (c+1) / 2;
-            mix_curve[i] = k;
+            if (!s_mix_curve_valid ||
+                black != s_cached_black || white != s_cached_white ||
+                corr_ev != s_cached_corr_ev || overlap != s_cached_overlap)
+            {
+                double max_ev = log2(white/64 - black/64);
+                #pragma omp parallel for if(USE_OMP) schedule(static)
+                for (int i = 0; i < 1<<20; i++)
+                {
+                    double ev = log2(MAX(i/64.0 - black/64.0, 1)) + corr_ev;
+                    double c = -cos(MAX(MIN(ev-(max_ev-overlap),overlap),0)*M_PI/overlap);
+                    double k = (c+1) / 2;
+                    s_shared_mix_curve[i] = k;
+                }
+                s_cached_black = black;
+                s_cached_white = white;
+                s_cached_corr_ev = corr_ev;
+                s_cached_overlap = overlap;
+                s_mix_curve_valid = 1;
+            }
         }
-        if (!need_free_mix_curve)
-        {
-            s_cached_black = black;
-            s_cached_white = white;
-            s_cached_corr_ev = corr_ev;
-            s_cached_overlap = overlap;
-        }
+        UNLOCK(mix_curve_mutex)
     }
+
+    const double * mix_curve = s_shared_mix_curve;
 
 
     /* for fast EV - raw conversion */
@@ -2199,7 +2195,6 @@ static inline int mix_images(struct raw_info raw_info, uint32_t* fullres, uint32
     }
 
     free(over_aux); over_aux = 0;
-    if (need_free_mix_curve) free(mix_curve);
 
     return 1;
 }
