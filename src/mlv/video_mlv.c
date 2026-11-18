@@ -41,7 +41,7 @@
 
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
-#define ROR32(v,a) ((v) >> (a) | (v) << (32-(a)))
+#define ROR32(v,a) (((a) & 31) ? (((v) >> ((a) & 31)) | ((v) << (32 - ((a) & 31)))) : (v))
 
 static uint64_t file_set_pos(FILE *stream, uint64_t offset, int whence)
 {
@@ -214,6 +214,11 @@ int getMlvRawFrameUint16(mlvObject_t * video, uint64_t frameIndex, uint16_t * un
     int raw_frame_size = (width * height * bitdepth) / 8;
     /* Memory buffer for original RAW data */
     uint8_t * raw_frame = (uint8_t *)malloc(raw_frame_size + 4); // additional 4 bytes for safety
+    if (!raw_frame)
+    {
+        DEBUG( printf("Could not allocate raw_frame buffer\n"); )
+        return 1;
+    }
 
     FILE * file = video->file[chunk];
 
@@ -490,18 +495,119 @@ int getMlvRawFrameUint16(mlvObject_t * video, uint64_t frameIndex, uint16_t * un
 
             pthread_mutex_unlock(video->main_file_mutex + chunk);
 
-            uint32_t mask = (1 << bitdepth) - 1;
-            uint32_t base_rot = 48 - bitdepth;
-            #pragma omp parallel for schedule(guided)
-            for (int i = 0; i < pixels_count; ++i)
+            if (bitdepth == 14)
             {
-                uint32_t bits_offset = i * bitdepth;
-                uint32_t bits_address = bits_offset >> 4;
-                uint32_t bits_shift = bits_offset & 15;
-                uint32_t rotate_value = base_rot - bits_shift;
-                uint32_t uncorrected_data = *((uint32_t *)&((uint16_t *)raw_frame)[bits_address]);
-                uint32_t data = ROR32(uncorrected_data, rotate_value);
-                unpackedFrame[i] = ((uint16_t)(data & mask));
+                int n_groups = pixels_count / 8;
+                const uint16_t * w = (const uint16_t *)raw_frame;
+                #pragma omp parallel for schedule(static)
+                for (int g = 0; g < n_groups; ++g)
+                {
+                    uint16_t w0 = w[g * 7 + 0];
+                    uint16_t w1 = w[g * 7 + 1];
+                    uint16_t w2 = w[g * 7 + 2];
+                    uint16_t w3 = w[g * 7 + 3];
+                    uint16_t w4 = w[g * 7 + 4];
+                    uint16_t w5 = w[g * 7 + 5];
+                    uint16_t w6 = w[g * 7 + 6];
+
+                    unpackedFrame[g * 8 + 0] = w0 >> 2;
+                    unpackedFrame[g * 8 + 1] = ((w0 & 3) << 12) | (w1 >> 4);
+                    unpackedFrame[g * 8 + 2] = ((w1 & 15) << 10) | (w2 >> 6);
+                    unpackedFrame[g * 8 + 3] = ((w2 & 63) << 8) | (w3 >> 8);
+                    unpackedFrame[g * 8 + 4] = ((w3 & 255) << 6) | (w4 >> 10);
+                    unpackedFrame[g * 8 + 5] = ((w4 & 1023) << 4) | (w5 >> 12);
+                    unpackedFrame[g * 8 + 6] = ((w5 & 4095) << 2) | (w6 >> 14);
+                    unpackedFrame[g * 8 + 7] = w6 & 0x3FFF;
+                }
+                /* Tail */
+                for (int i = n_groups * 8; i < pixels_count; ++i)
+                {
+                    uint32_t bits_offset = i * 14;
+                    uint32_t bits_address = bits_offset >> 4;
+                    uint32_t bits_shift = bits_offset & 15;
+                    uint32_t rotate_value = 34 - bits_shift;
+                    uint32_t uncorrected_data = *((uint32_t *)&((uint16_t *)raw_frame)[bits_address]);
+                    uint32_t data = ROR32(uncorrected_data, rotate_value);
+                    unpackedFrame[i] = ((uint16_t)(data & 0x3FFF));
+                }
+            }
+            else if (bitdepth == 12)
+            {
+                int n_groups = pixels_count / 4;
+                const uint16_t * w = (const uint16_t *)raw_frame;
+                #pragma omp parallel for schedule(static)
+                for (int g = 0; g < n_groups; ++g)
+                {
+                    uint16_t w0 = w[g * 3 + 0];
+                    uint16_t w1 = w[g * 3 + 1];
+                    uint16_t w2 = w[g * 3 + 2];
+
+                    unpackedFrame[g * 4 + 0] = w0 >> 4;
+                    unpackedFrame[g * 4 + 1] = ((w0 & 15) << 8) | (w1 >> 8);
+                    unpackedFrame[g * 4 + 2] = ((w1 & 255) << 4) | (w2 >> 12);
+                    unpackedFrame[g * 4 + 3] = w2 & 0xFFF;
+                }
+                /* Tail */
+                for (int i = n_groups * 4; i < pixels_count; ++i)
+                {
+                    uint32_t bits_offset = i * 12;
+                    uint32_t bits_address = bits_offset >> 4;
+                    uint32_t bits_shift = bits_offset & 15;
+                    uint32_t rotate_value = 36 - bits_shift;
+                    uint32_t uncorrected_data = *((uint32_t *)&((uint16_t *)raw_frame)[bits_address]);
+                    uint32_t data = ROR32(uncorrected_data, rotate_value);
+                    unpackedFrame[i] = ((uint16_t)(data & 0xFFF));
+                }
+            }
+            else if (bitdepth == 10)
+            {
+                int n_groups = pixels_count / 8;
+                const uint16_t * w = (const uint16_t *)raw_frame;
+                #pragma omp parallel for schedule(static)
+                for (int g = 0; g < n_groups; ++g)
+                {
+                    uint16_t w0 = w[g * 5 + 0];
+                    uint16_t w1 = w[g * 5 + 1];
+                    uint16_t w2 = w[g * 5 + 2];
+                    uint16_t w3 = w[g * 5 + 3];
+                    uint16_t w4 = w[g * 5 + 4];
+
+                    unpackedFrame[g * 8 + 0] = w0 >> 6;
+                    unpackedFrame[g * 8 + 1] = ((w0 & 63) << 4) | (w1 >> 12);
+                    unpackedFrame[g * 8 + 2] = (w1 >> 2) & 1023;
+                    unpackedFrame[g * 8 + 3] = ((w1 & 3) << 8) | (w2 >> 8);
+                    unpackedFrame[g * 8 + 4] = ((w2 & 255) << 2) | (w3 >> 14);
+                    unpackedFrame[g * 8 + 5] = (w3 >> 4) & 1023;
+                    unpackedFrame[g * 8 + 6] = ((w3 & 15) << 6) | (w4 >> 10);
+                    unpackedFrame[g * 8 + 7] = w4 & 1023;
+                }
+                /* Tail */
+                for (int i = n_groups * 8; i < pixels_count; ++i)
+                {
+                    uint32_t bits_offset = i * 10;
+                    uint32_t bits_address = bits_offset >> 4;
+                    uint32_t bits_shift = bits_offset & 15;
+                    uint32_t rotate_value = 38 - bits_shift;
+                    uint32_t uncorrected_data = *((uint32_t *)&((uint16_t *)raw_frame)[bits_address]);
+                    uint32_t data = ROR32(uncorrected_data, rotate_value);
+                    unpackedFrame[i] = ((uint16_t)(data & 1023));
+                }
+            }
+            else /* Fallback for any other bitdepth */
+            {
+                uint32_t mask = (1 << bitdepth) - 1;
+                uint32_t base_rot = 48 - bitdepth;
+                #pragma omp parallel for schedule(guided)
+                for (int i = 0; i < pixels_count; ++i)
+                {
+                    uint32_t bits_offset = i * bitdepth;
+                    uint32_t bits_address = bits_offset >> 4;
+                    uint32_t bits_shift = bits_offset & 15;
+                    uint32_t rotate_value = base_rot - bits_shift;
+                    uint32_t uncorrected_data = *((uint32_t *)&((uint16_t *)raw_frame)[bits_address]);
+                    uint32_t data = ROR32(uncorrected_data, rotate_value);
+                    unpackedFrame[i] = ((uint16_t)(data & mask));
+                }
             }
         }
     }
@@ -529,6 +635,11 @@ void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outpu
     /* Memory buffer for decompressed or bit unpacked RAW data */
     size_t unpacked_frame_size = pixels_count * 2;
     uint16_t * unpacked_frame = (uint16_t *)malloc( unpacked_frame_size );
+    if (!unpacked_frame)
+    {
+        memset(outputFrame, 0, pixels_count * sizeof(float));
+        return;
+    }
 
     if(getMlvRawFrameUint16(video, frameIndex, unpacked_frame))
     {
@@ -669,6 +780,11 @@ void getMlvRawFrameDebayered(mlvObject_t * video, uint64_t frameIndex, uint16_t 
             else
             {
                 float * raw_frame = malloc(width * height * sizeof(float));
+                if (!raw_frame)
+                {
+                    memset(outputFrame, 0, frame_size);
+                    break;
+                }
                 get_mlv_raw_frame_debayered(video, frameIndex, raw_frame, video->rgb_raw_current_frame, doesMlvAlwaysUseAmaze(video));
                 free(raw_frame);
                 memcpy(outputFrame, video->rgb_raw_current_frame, frame_size);
@@ -693,6 +809,11 @@ void getMlvProcessedFrame16(mlvObject_t * video, uint64_t frameIndex, uint16_t *
 
     /* Unprocessed debayered frame (RGB) */
     uint16_t * unprocessed_frame = malloc( rgb_frame_size * sizeof(uint16_t) );
+    if (!unprocessed_frame)
+    {
+        memset(outputFrame, 0, rgb_frame_size * sizeof(uint16_t));
+        return;
+    }
 
     /* Get the raw data in B&W */
     getMlvRawFrameDebayered(video, frameIndex, unprocessed_frame);
@@ -715,6 +836,11 @@ void getMlvProcessedFrame8(mlvObject_t * video, uint64_t frameIndex, uint8_t * o
 
     /* Processed frame (RGB) */
     uint16_t * processed_frame = malloc( rgb_frame_size * sizeof(uint16_t) );
+    if (!processed_frame)
+    {
+        memset(outputFrame, 0, rgb_frame_size * sizeof(uint8_t));
+        return;
+    }
 
     getMlvProcessedFrame16(video, frameIndex, processed_frame, threads);
 
@@ -2685,6 +2811,7 @@ void findMlvWhiteBalance(mlvObject_t *video, uint64_t frameIndex, int posX, int 
 
     /* Unprocessed debayered frame (RGB) */
     uint16_t * unprocessed_frame = malloc( rgb_frame_size * sizeof(uint16_t) );
+    if (!unprocessed_frame) return;
 
     /* Get the raw data in B&W */
     getMlvRawFrameDebayered(video, frameIndex, unprocessed_frame);
