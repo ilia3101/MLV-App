@@ -23,6 +23,12 @@
 #include <string.h>
 #include <math.h>
 #include <limits.h>
+
+#if defined(_MSC_VER)
+#define DUALISO_TLS __declspec(thread)
+#else
+#define DUALISO_TLS __thread
+#endif
 #include "hist.h"
 #include "dualiso.h"
 #include "opt_med.h"
@@ -2037,17 +2043,47 @@ static inline int mix_images(struct raw_info raw_info, uint32_t* fullres, uint32
 #ifndef STDOUT_SILENT
     printf("Half-res blending...\n");
 #endif
-    /* mixing curve */
-    double max_ev = log2(white/64 - black/64);
-    double * mix_curve = malloc((1<<20) * sizeof(double));
+    /* mixing curve: cached per-thread keyed by exact equality of (black, white, corr_ev, overlap) */
+    static DUALISO_TLS double * s_cached_mix_curve = NULL;
+    static DUALISO_TLS uint32_t s_cached_black = 0xFFFFFFFF;
+    static DUALISO_TLS uint32_t s_cached_white = 0xFFFFFFFF;
+    static DUALISO_TLS double s_cached_corr_ev = -99999.0;
+    static DUALISO_TLS double s_cached_overlap = -99999.0;
 
-    #pragma omp parallel for if(USE_OMP) schedule(static)
-    for (int i = 0; i < 1<<20; i++)
+    int need_free_mix_curve = 0;
+    if (!s_cached_mix_curve)
     {
-        double ev = log2(MAX(i/64.0 - black/64.0, 1)) + corr_ev;
-        double c = -cos(MAX(MIN(ev-(max_ev-overlap),overlap),0)*M_PI/overlap);
-        double k = (c+1) / 2;
-        mix_curve[i] = k;
+        s_cached_mix_curve = (double *)malloc((1<<20) * sizeof(double));
+    }
+
+    double * mix_curve = s_cached_mix_curve;
+    if (!mix_curve)
+    {
+        mix_curve = (double *)malloc((1<<20) * sizeof(double));
+        need_free_mix_curve = 1;
+        if (!mix_curve) return 0;
+    }
+
+    if (need_free_mix_curve ||
+        black != s_cached_black || white != s_cached_white ||
+        corr_ev != s_cached_corr_ev || overlap != s_cached_overlap)
+    {
+        double max_ev = log2(white/64 - black/64);
+        #pragma omp parallel for if(USE_OMP) schedule(static)
+        for (int i = 0; i < 1<<20; i++)
+        {
+            double ev = log2(MAX(i/64.0 - black/64.0, 1)) + corr_ev;
+            double c = -cos(MAX(MIN(ev-(max_ev-overlap),overlap),0)*M_PI/overlap);
+            double k = (c+1) / 2;
+            mix_curve[i] = k;
+        }
+        if (!need_free_mix_curve)
+        {
+            s_cached_black = black;
+            s_cached_white = white;
+            s_cached_corr_ev = corr_ev;
+            s_cached_overlap = overlap;
+        }
     }
 
 
@@ -2163,7 +2199,7 @@ static inline int mix_images(struct raw_info raw_info, uint32_t* fullres, uint32
     }
 
     free(over_aux); over_aux = 0;
-    free(mix_curve);
+    if (need_free_mix_curve) free(mix_curve);
 
     return 1;
 }
