@@ -177,13 +177,12 @@ processingObject_t * initProcessingObject()
     processingSetRbfDenoiserLuma(processing, 0);
     processingSetRbfDenoiserChroma(processing, 0);
     processingSetRbfDenoiserRange(processing, 40);
-    processingSetGaloshStrength(processing, 0);
-    processingSetGaloshLuma(processing, 100);
+    processingSetGaloshLuma(processing, 0);
     processingSetGaloshChroma(processing, 100);
+    processingSetGaloshChromaPreserve(processing, 25);
     processingSetGaloshBackend(processing, 0);
     processingSetGaloshFast(processing, 0);
     processingSetGaloshAnamorphicX(processing, 0);
-    processingSetGaloshNoiseMode(processing, 0);
     processingResetGaloshNoise(processing);
     processingUseCamMatrix(processing);
     processingAllowCreativeAdjustments(processing);
@@ -271,6 +270,18 @@ void processingSetImageProfile(processingObject_t * processing, int imageProfile
 }
 
 /* Takes those matrices I learned about on the forum */
+void processingSetGaloshNoiseModel(processingObject_t * processing,
+                                   float alpha, float sigma_sq)
+{
+    if( !processing ) return;
+    if( !isfinite( alpha ) || !( alpha > 0.0f ) ) return;
+    if( !isfinite( sigma_sq ) || sigma_sq < 0.0f ) return;
+
+    processing->galoshAlpha = alpha;
+    processing->galoshSigmaSq = sigma_sq;
+    processing->galoshNoiseValid = 1;
+}
+
 void processingSetCamMatrix(processingObject_t * processing, double * camMatrix, double * camMatrixA)
 {
     memcpy(processing->cam_matrix, camMatrix, sizeof(double) * 9);
@@ -1674,6 +1685,8 @@ void processingSetBlackAndWhiteLevel(processingObject_t * processing,
                                       float mlvBlackLevel, int mlvWhiteLevel, int mlvBitDepth )
 {
     /* Convert levels to 16bit */
+    const float old_black = processing->black_level;
+    const int old_white = processing->white_level;
     int bits_shift = 16 - mlvBitDepth;
     if( mlvBlackLevel >= 0 )
     {
@@ -1686,6 +1699,11 @@ void processingSetBlackAndWhiteLevel(processingObject_t * processing,
         /* Lowering white level a bit avoids pink grain in highlihgt reconstruction */
         processing->white_level = (int)((double)(mlvWhiteLevel << bits_shift) * 0.993);
     }
+
+    /* GALOSH normalizes with these levels, so a change invalidates its clip
+     * noise model.  Unchanged calls (export, repeated setup) keep the model. */
+    if (processing->black_level != old_black || processing->white_level != old_white)
+        processingResetGaloshNoise(processing);
 
     /* How much it needs to be stretched */
     double stretch = 65535.0 / (double)(processing->white_level - processing->black_level);

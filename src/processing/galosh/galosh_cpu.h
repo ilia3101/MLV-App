@@ -4,7 +4,7 @@
  * where a single .c file is dropped into an IOP and can't share symbols).
  *
  * ##############################################################
- * # [LATEST] used by GALOSH_RAW_H / GALOSH_YUV_G canonical pipelines
+ * # [LATEST] used by the full-resolution RAW and YUV pipelines
  * ##############################################################
  *   Phase 0 (noise est)  : galosh_estimate_noise + estimate_gat_sigma_mosaic
  *                          (RAW), estimate_sigma_plane (YUV per-plane MAD)
@@ -19,9 +19,9 @@
  *   Phase 5 luma (RAW_H/YUV_G)   : galosh_pass12_multiorient_blocked
  *                          (= pass1_blocked + pass2_blocked, with
  *                           use_robust_shrink=1 = MAD-based σ_Y)
- *   Phase 5 chroma (RAW_H/YUV_G) : galosh_loess_chroma (Y-guided
- *                          bilateral LOESS, R=GALOSH_LOESS_RADIUS,
- *                          BW=GALOSH_LOESS_BW)
+ *   Phase 5 chroma (RAW)         : fixed full-res 3-anchor ladder:
+ *                          A1 full R=11, A2 half R=11->K16, A3 half R=22->K16;
+ *                          LOESS uses the user-supplied BW (Chroma preserve)
  *   Phase 7 (inverse WHT, RAW_H) : gat_h_inverse_overlap_add (4-block
  *                          per-pixel overlap-add inverse 2x2 WHT)
  *   YUV Y plane LOSH     : galosh_pass12_multiorient_blocked
@@ -29,33 +29,6 @@
  *   Kaiser windows       : init_galosh_kaiser, galosh_kaiser_1d/2d/half_2d
  *   WHT primitives       : wht2d_8x8 (sequency 8x8), wht1d_8 helpers
  *   Helper sort          : compare_floats_galosh, partial_select_sort
- *
- * ##############################################################
- * # [PREVIOUS: GALOSH_RAW_G] kept for bench reproduction (--variant=g)
- * ##############################################################
- *   Phase 4(b) K14 box   : compute_L_fullres (lives in galosh_raw_cpu.c)
- *                          half-res L+C → full-res L via 4-tap box
- *   Phase 4(c) K15 P2    : galosh_pass2_multiorient w/ n_orient=1 (= plain
- *                          galosh_pass2 on K14-reconstructed L_fullres)
- *   Phase 4(d) K16 chrup : galosh_upsample_2x_ewajl3 + galosh_jinc
- *                          (half-res C → full-res C via EWA Jinc-Lanczos-3)
- *   These three (K14/K15/K16) are no longer reached when --variant=h.
- *
- * ##############################################################
- * # [ARCHIVED] kept for bench reproduction; never called by default
- * ##############################################################
- *   galosh_pass1, galosh_pass2     : single-orient flat-buffer pass1/pass2
- *                                    (called only by [ARCHIVED] legacy
- *                                    stride=4 raw GALOSH path in
- *                                    galosh_raw_cpu.c #ifdef GALOSH_LEGACY)
- *   galosh_rotate_bilinear         : variant B (n_orient=4) helper.
- *                                    Called only when n_orient>1; default
- *                                    n_orient=1 skips it (identity rotation).
- *   galosh_pass2_ex                : pass2 variant w/ Wiener-floor override
- *                                    (was needed for chroma archived paths)
- *   galosh_pass12_multiorient (NON-blocked) : superseded by *_blocked
- *   WHT 4x4 primitives             : used only by archived k13_block=4
- *                                    grain-scale-matched experiment
  *
  * Sections (search "Section:" to navigate):
  *   1. Runtime infrastructure (alloc shim, OMP macros, prof helpers,
@@ -66,10 +39,10 @@
  *   4. Kaiser windows (8x8 + 4x4 overlap-add weights).
  *   5. GALOSH passes (block-size-parameterized BayesShrink Pass1 +
  *      empirical Wiener Pass2 + multi-orientation wrapper).  Pass1
- *      supports MAD-based robust sigma_Y for noise-cluster killing
- *      (= [LATEST] GALOSH_RAW_G / YUV_G core).
- *   6. LOESS chroma denoise (luma-guided locally-weighted regression).
- *   7. EWA Jinc-Lanczos-3 generic 2x upsample (used by Phase 4(d) K16).
+ *      supports MAD-based robust sigma_Y for noise-cluster killing.
+ *   6. Full-resolution LOESS chroma ladder (luma-guided locally-weighted
+ *      regression, R=11/22).
+ *   7. EWA Jinc-Lanczos-3 / guided upsample helpers used by the A2/A3 K16.
  *
  * RAW-specific orchestration (Phase 0..4 main pipeline) lives in
  * galosh_raw_cpu.c.  YUV-specific orchestration (sRGB <-> linear,
@@ -3427,99 +3400,6 @@ static void gat_h_forward_wht_stride1(const float *restrict in,
   }
 }
 
-/* [LATEST: GALOSH_RAW_J] gat_h_forward_l_only_stride1 — forward 2x2 WHT
- * at every pixel position, computing ONLY the L plane (not C1/C2/C3).
- *
- * Used by GALOSH_RAW_J Phase 3: J's chroma path operates at half-res
- * (intrinsic CFA chroma Nyquist limit), so the cycle-spun full-res
- * C planes that gat_h_forward_wht_stride1 would compute are immediately
- * sub-sampled and discarded.  This L-only variant skips the C compute
- * entirely (~75% of forward WHT cost saved + 3 × full-res buffers
- * (= ~150 MB at 16 MP) eliminated) and is mathematically equivalent
- * to gat_h_forward_wht_stride1's L output.
- *
- * The half-res C planes for J are computed separately by extracting
- * the 2x2 block at every-other-pixel positions of in_gat directly
- * (a stride=2 forward 2x2 WHT, mathematically identical to the
- * sub-sample of the would-be full-res C_cs at even (r,c) positions). */
-static void gat_h_forward_l_only_stride1(const float *restrict in,
-                                         float *restrict L,
-                                         const int width, const int height)
-{
-  DT_OMP_FOR()
-  for(int r = 0; r < height; r++)
-  {
-    const int rb = galosh_h_mirror_idx(r + 1, height);
-    const float *row_a = in + (size_t)r  * width;
-    const float *row_b = in + (size_t)rb * width;
-    const size_t out_off = (size_t)r * width;
-    for(int c = 0; c < width; c++)
-    {
-      const int cb = galosh_h_mirror_idx(c + 1, width);
-      const float a  = row_a[c];
-      const float b  = row_b[c];
-      const float cc = row_a[cb];
-      const float d  = row_b[cb];
-      L[out_off + c] = (a + b + cc + d) * 0.5f;
-    }
-  }
-}
-
-/* [LATEST: GALOSH_RAW_J] gat_j_forward_c_halfres — half-res 2x2 forward
- * WHT extracting ONLY the chroma planes from the full-res GAT-domain
- * raw, at every-other-pixel (stride=2) positions.
- *
- * For RGGB at half-res position (hr, hc), reads in_gat at full-res
- * positions (2hr, 2hc) [TL=R], (2hr+1, 2hc) [BL=Gb], (2hr, 2hc+1)
- * [TR=Gr], (2hr+1, 2hc+1) [BR=B] and computes:
- *   C1[hr,hc] = (R - Gb + Gr - B) / 2
- *   C2[hr,hc] = (R + Gb - Gr - B) / 2
- *   C3[hr,hc] = (R - Gb - Gr + B) / 2
- *
- * This is mathematically identical to (a) running gat_h_forward_wht_stride1
- * to get full-res cycle-spun C, then (b) sub-sampling at even positions.
- * The direct half-res computation is ~4× cheaper and avoids the
- * intermediate full-res C buffers (~150 MB saved at 16 MP).
- *
- * CFA-aligned at every-other-pixel → no sign flips needed (= G's half-res
- * 2x2 WHT convention).  Boundary pixels skipped if (2hr+1, 2hc+1) would
- * land outside the input image.
- *
- * (日) full-res GAT raw から半解像度 C を直接抽出 (stride=2 forward
- *   2x2 WHT)。J Phase 3 の full-res C 経由 sub-sample (Phase 4) を
- *   1 ステップ化。CFA 偶数位置整列なので符号反転不要。 */
-static void gat_j_forward_c_halfres(const float *restrict in,
-                                    float *restrict C1_h,
-                                    float *restrict C2_h,
-                                    float *restrict C3_h,
-                                    const int width, const int height,
-                                    const int halfwidth, const int halfheight)
-{
-  DT_OMP_FOR()
-  for(int hr = 0; hr < halfheight; hr++)
-  {
-    const int fr0 = 2 * hr;
-    const int fr1 = fr0 + 1;
-    if(fr1 >= height) continue;  /* skip last row if odd-sized */
-    const float *row_a = in + (size_t)fr0 * width;
-    const float *row_b = in + (size_t)fr1 * width;
-    const size_t hp_off = (size_t)hr * halfwidth;
-    for(int hc = 0; hc < halfwidth; hc++)
-    {
-      const int fc0 = 2 * hc;
-      const int fc1 = fc0 + 1;
-      if(fc1 >= width) continue;
-      const float a  = row_a[fc0];
-      const float b  = row_b[fc0];
-      const float cc = row_a[fc1];
-      const float d  = row_b[fc1];
-      C1_h[hp_off + hc] = (a - b + cc - d) * 0.5f;
-      C2_h[hp_off + hc] = (a + b - cc - d) * 0.5f;
-      C3_h[hp_off + hc] = (a - b - cc + d) * 0.5f;
-    }
-  }
-}
-
 /* [LATEST: GALOSH_RAW_H] gat_h_demodulate_chroma — apply CFA-periodic
  * sign flips to C1/C2/C3 in-place.  Self-inverse (call twice = identity).
  *   Phase 4: forward demodulate (raw cycle-spun WHT → smooth chroma)
@@ -4013,63 +3893,6 @@ static void gat_k16_joint_bilateral_upsample(
  *   だけ。L はその逆で、4ch 全てが luma に寄与 → full-res cycle-spinning
  *   の恩恵を享受できる。
  * ================================================================= */
-
-/* [LATEST: GALOSH_RAW_I] gat_i_lpixel_overlap_avg — derive per-pixel L
- * from cycle-spun L plane via 2x2 overlap average.
- *
- * Cycle-spun L_cs[r,c] = ((a+b+c+d)/2) where (a,b,c,d) are the 2x2 block
- * pixels with TL at (r,c).  L_cs represents the "block luma at half-pixel
- * shifted center (r+0.5, c+0.5)".  To get a pixel-centered luma
- * estimate at (fr,fc), average the 4 cycle-shifted blocks containing
- * (fr,fc) (TL@(fr,fc), BL@(fr-1,fc), TR@(fr,fc-1), BR@(fr-1,fc-1)).
- * The 4-block average covers a 3x3 weighted area centered on (fr,fc)
- * with weights (1,2,1; 2,4,2; 1,2,1)/16 — = the L kernel obtained from
- * 2x2 block overlap, mathematically equivalent to a separable [1,2,1]/4
- * box-tent self-convolution.
- *
- * Boundary: top-left corner has only TL (1 contribution); top edge has
- * TL+TR (2); left edge has TL+BL (2); interior has all 4.
- *
- * (日) cycle-spun L から per-pixel L 推定。L_cs[r,c] は半画素ずれた
- *   block 中心の L なので、(fr,fc) に整合する 4 つの cycle-shifted
- *   block の平均を取ると 3x3 重み付き平均 (1,2,1;2,4,2;1,2,1)/16 に
- *   相当 → 半画素ずれが消えて pixel-centered になる。
- *
- * G's K14 box reconstruct uses 4-tap box on half-res L+C and produces
- * 2x2 stair on diagonals.  This helper uses 4-tap box on FULL-RES
- * cycle-spun L (different grid!) and produces no stair because the
- * input grid is already at full resolution. */
-static void gat_i_lpixel_overlap_avg(const float *restrict L_cs,
-                                     float *restrict L_pixel,
-                                     const int width, const int height)
-{
-  DT_OMP_FOR()
-  for(int fr = 0; fr < height; fr++)
-  {
-    for(int fc = 0; fc < width; fc++)
-    {
-      const size_t p_tl = (size_t)fr * width + fc;
-      float sum = L_cs[p_tl];
-      int count = 1;
-      if(fr > 0)
-      {
-        sum += L_cs[(size_t)(fr - 1) * width + fc];
-        count++;
-      }
-      if(fc > 0)
-      {
-        sum += L_cs[(size_t)fr * width + (fc - 1)];
-        count++;
-      }
-      if(fr > 0 && fc > 0)
-      {
-        sum += L_cs[(size_t)(fr - 1) * width + (fc - 1)];
-        count++;
-      }
-      L_pixel[p_tl] = sum / (float)count;
-    }
-  }
-}
 
 /* =================================================================
  * [DEPRECATED: GALOSH_RAW_N] N pipeline helpers — Laplacian pyramid

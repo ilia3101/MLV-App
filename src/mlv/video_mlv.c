@@ -27,6 +27,7 @@
 #include "../debayer/debayer.h"
 /* Processing module */
 #include "../processing/raw_processing.h"
+#include "../processing/galosh/galosh_bridge.h"
 
 /* Lossless decompression */
 #include "liblj92/lj92.h"
@@ -594,6 +595,123 @@ void getMlvGaloshRawLevels(mlvObject_t * video, float * black_level,
 
     *black_level = black;
     *white_level = white;
+}
+
+/* 1x3 MLV files store a horizontally squeezed Bayer grid: one raw pixel is
+ * three display pixels wide.  GALOSH denoises on a horizontally upsampled grid
+ * so its square blocks/windows stay square after the display stretch.
+ *
+ * Some Magic Lantern builds do not write the crop/skipping information that
+ * MLV-App uses to auto-detect 1x3.  The Qt UI therefore sets this factor from
+ * the manual "0.33x" height-stretch selection; getMlvAspectRatio() remains a
+ * fallback for files that do carry the metadata. */
+int getMlvGaloshAnamorphicFactor(mlvObject_t * video)
+{
+    if (!video || !video->processing) return 1;
+
+    int factor = video->processing->galoshAnamorphicX;
+    if (factor >= 3 && (factor & 1)) return factor;
+
+    const float ratio = getMlvAspectRatio(video);
+    if (ratio > 0.30f && ratio < 0.37f) return 3;
+
+    return 1;
+}
+
+/* Estimate the per-clip GALOSH noise model from one frame.
+ *
+ * The model is Var(x) = alpha*x + sigma_sq.  This is the only estimation
+ * entry point: the render path never estimates a model on its own.  The UI
+ * calls it for the user-selected noise frame (the button), and after
+ * raw/dual-ISO/1x3 changes when a model was already valid.
+ *
+ * For 1x3 clips the estimate is made AFTER the horizontal Bayer upsample, so
+ * the model matches the grid the denoiser actually processes.  Estimation
+ * always runs on the CPU, even with the Vulkan backend, so both backends
+ * consume exactly the same model. */
+int galoshEstimateNoiseModelFromFrame(mlvObject_t * video, uint64_t frame_index)
+{
+    static pthread_mutex_t model_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+    if (!video || !video->processing) return 1;
+
+    const int width = getMlvWidth(video);
+    const int height = getMlvHeight(video);
+    const uint64_t frames = getMlvFrames(video);
+    if (width <= 0 || height <= 0 || frames == 0) return 1;
+    if (frame_index >= frames) frame_index = frames - 1;
+
+    processingObject_t *p = video->processing;
+    float black, white;
+    getMlvGaloshRawLevels(video, &black, &white);
+    const int factor = getMlvGaloshAnamorphicFactor(video);
+    const int padded_width = (width + 1) & ~1;
+    const int padded_height = (height + 1) & ~1;
+    const int up_width = padded_width * factor;
+
+    const size_t raw_count = (size_t)width * height;
+    const size_t norm_count = (size_t)padded_width * padded_height;
+    const size_t est_count = (size_t)up_width * padded_height;
+    float *raw = (float *)malloc(raw_count * sizeof(float));
+    float *norm = (float *)malloc(norm_count * sizeof(float));
+    float *up = (factor > 1) ? (float *)malloc(est_count * sizeof(float)) : NULL;
+    if (!raw || !norm || (factor > 1 && !up))
+    {
+        free(raw); free(norm); free(up);
+        return 1;
+    }
+
+    pthread_mutex_lock(&model_mutex);
+    pthread_mutex_lock(&video->cache_mutex);
+    getMlvRawFrameFloat(video, frame_index, raw);
+    pthread_mutex_unlock(&video->cache_mutex);
+
+    /* Normalize into the same padded grid the bridge denoises. */
+    galosh_normalize_frame(raw, norm, width, height, padded_width, black, white);
+    if (padded_width != width)
+    {
+        const int src_x = (width >= 2) ? width - 2 : width - 1;
+        for (int y = 0; y < height; ++y)
+        {
+            float *row = norm + (size_t)y * padded_width;
+            row[width] = row[src_x];
+        }
+    }
+    if (padded_height != height)
+    {
+        const int src_y = (height >= 2) ? height - 2 : height - 1;
+        for (int y = height; y < padded_height; ++y)
+            memcpy(norm + (size_t)y * padded_width,
+                   norm + (size_t)src_y * padded_width,
+                   (size_t)padded_width * sizeof(float));
+    }
+
+    const float *est_buf = norm;
+    int est_w = padded_width;
+    if (factor > 1)
+    {
+        galosh_upsample_frame_horizontal_cfa(norm, up, padded_width,
+                                             padded_height, factor);
+        est_buf = up;
+        est_w = up_width;
+    }
+
+    float alpha, sigma_sq;
+    const int rc = galosh_estimate_noise_frame(est_buf, est_w, padded_height,
+                                               &alpha, &sigma_sq);
+    free(raw);
+    free(norm);
+    free(up);
+
+    if (rc != 0)
+    {
+        pthread_mutex_unlock(&model_mutex);
+        return 1;
+    }
+
+    processingSetGaloshNoiseModel(p, alpha, sigma_sq);
+    pthread_mutex_unlock(&model_mutex);
+    return 0;
 }
 
 void setMlvProcessing(mlvObject_t * video, processingObject_t * processing)

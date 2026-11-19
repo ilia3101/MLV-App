@@ -12,6 +12,7 @@
 #include <QFileDialog>
 #include <QDebug>
 #include <QTimerEvent>
+#include <QTimer>
 #include <QResizeEvent>
 #include <QFileOpenEvent>
 #include <QThreadPool>
@@ -100,12 +101,16 @@ private slots:
     void on_horizontalSliderRbfDenoiseLuma_valueChanged(int position);
     void on_horizontalSliderRbfDenoiseChroma_valueChanged(int position);
     void on_horizontalSliderRbfDenoiseRange_valueChanged(int position);
-    void on_horizontalSliderGaloshStrength_valueChanged(int position);
     void on_horizontalSliderGaloshLuma_valueChanged(int position);
     void on_horizontalSliderGaloshChroma_valueChanged(int position);
+    void on_horizontalSliderGaloshChromaPreserve_valueChanged(int position);
     void on_comboBoxGaloshBackend_currentIndexChanged(int index);
-    void on_comboBoxGaloshNoise_currentIndexChanged(int index);
     void on_checkBoxGaloshFast_clicked(bool checked);
+    void on_pushButtonGaloshNoiseFrame_clicked();
+    void on_lineEditGaloshAlpha_editingFinished();
+    void on_lineEditGaloshSigma_editingFinished();
+    void onGaloshNoiseTimerTimeout();
+    void updateGaloshUiState( void );
     void on_horizontalSliderGrainStrength_valueChanged(int position);
     void on_horizontalSliderGrainLumaWeight_valueChanged(int position);
     void on_horizontalSliderLutStrength_valueChanged(int position);
@@ -153,9 +158,9 @@ private slots:
     void on_horizontalSliderRbfDenoiseLuma_doubleClicked();
     void on_horizontalSliderRbfDenoiseChroma_doubleClicked();
     void on_horizontalSliderRbfDenoiseRange_doubleClicked();
-    void on_horizontalSliderGaloshStrength_doubleClicked();
     void on_horizontalSliderGaloshLuma_doubleClicked();
     void on_horizontalSliderGaloshChroma_doubleClicked();
+    void on_horizontalSliderGaloshChromaPreserve_doubleClicked();
     void on_horizontalSliderGrainStrength_doubleClicked();
     void on_horizontalSliderGrainLumaWeight_doubleClicked();
     void on_horizontalSliderLutStrength_doubleClicked();
@@ -273,9 +278,9 @@ private slots:
     void on_label_RbfDenoiseLuma_doubleClicked( void );
     void on_label_RbfDenoiseChroma_doubleClicked( void );
     void on_label_RbfDenoiseRange_doubleClicked( void );
-    void on_label_GaloshStrength_doubleClicked( void );
     void on_label_GaloshLuma_doubleClicked( void );
     void on_label_GaloshChroma_doubleClicked( void );
+    void on_label_GaloshChromaPreserve_doubleClicked( void );
     void on_label_GrainStrength_doubleClicked( void );
     void on_label_GrainLumaWeight_doubleClicked( void );
     void on_labelAudioTrack_sizeChanged( void );
@@ -474,6 +479,8 @@ private:
     bool m_fileLoaded;
     bool m_inOpeningProcess;
     bool m_setSliders;
+    bool m_galoshNoiseWasValid;
+    QTimer *m_galoshNoiseTimer;
     int m_timerId;
     int m_timerCacheId;
     int8_t m_countTimeDown;
@@ -536,6 +543,13 @@ private:
     void setReceipt( ReceiptSettings *sliders );
     void replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings *receiptSource , bool paste);
     void galoshSettingsChanged( void );
+    void galoshEstimateNoiseModel( int frameIndex, ReceiptSettings *receipt );
+    void galoshMaybeEstimateNoiseModel( int frameIndex, ReceiptSettings *receipt );
+    void galoshRawDataChanged( bool debounce );
+    void galoshRawDataChanged( bool debounce, bool wasValidBefore );
+    void galoshNoiseEditsChanged( void );
+    void galoshStoreModelInReceipt( ReceiptSettings *receipt );
+    int galoshCurrentNoiseFrame( void );
     void resetReceiptWithDefault( ReceiptSettings *receipt );
     int showFileInEditor(int row);
     void addClipToExportQueue( int row, QString fileName );

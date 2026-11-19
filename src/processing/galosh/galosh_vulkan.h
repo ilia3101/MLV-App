@@ -23,7 +23,7 @@ int galosh_vulkan_available(void);
 int galosh_vulkan_denoise(const float *in, float *out,
                           int width, int height,
                           float luma_strength, float chroma_strength,
-                          int fast,
+                          float chroma_bw, int fast,
                           float alpha, float sigma_sq,
                           int have_noise_model);
 

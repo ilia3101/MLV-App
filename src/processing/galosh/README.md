@@ -2,7 +2,7 @@
 
 Vendored from <https://github.com/luxgrain/GALOSH> (Apache-2.0).  The upstream
 CPU FP32 RAW reference (`galosh_cpu.h`, `galosh_raw_cpu.c`) is the canonical
-implementation; the Vulkan host is an optional backend.
+implementation.
 
 The denoiser runs on linear Bayer data in `[0,1]` after MLV raw corrections
 and before white balance/debayer.  `getMlvRawFrameFloat()` has already called
@@ -18,6 +18,60 @@ aligned with the reference implementation.  On the 3x3 test frames the
 normalized input matches the DNG input to float precision and the denoised
 output differs from the reference DNG by roughly 1e-4 (DNG quantization).
 
+## Noise model
+
+GALOSH is blind, but MLV-App uses one model per clip instead of one per frame.
+The model is the two-scalar relation `Var(x) = alpha*x + sigma_sq`:
+
+- `alpha`: shot-noise gain
+- `sigma_sq`: Gaussian read-noise variance
+
+The GAT transform and its inverse LUT are derived from these two values, so
+exposing and editing them is enough to tune the model.
+
+The model is never estimated on import, clip open, preview, thumbnail or
+export.  It is estimated from exactly one frame:
+
+- when the user presses **Set current frame for noise estimation** (the frame
+  currently shown in the viewer becomes the clip's stored noise frame), or
+- when GALOSH luma > 0 and no valid model exists, including a recipe paste
+  with luma > 0 but no **GALOSH Noise Model** payload.
+
+`alpha` and `sigma_sq` are exposed as editable fields after the first estimate
+or a recipe paste.  Editing them re-renders but keeps the model valid.
+
+A valid model is invalidated and re-estimated from the stored noise frame when
+raw black/white levels, raw fixes, dual-ISO settings or the 1x3 anamorphic
+factor change.  If no model existed, those changes leave it unset.  The stored
+noise frame is per clip and session-only; `alpha`/`sigma_sq` are stored per clip
+in the session and copied by recipes only with the separate **GALOSH Noise
+Model** checkbox.
+
+Estimation runs on the CPU, so the denoiser always consumes the same model.
+
+## Full-resolution chroma
+
+The RAW path now uses full-resolution chroma only.  Phase 3 runs the stride-1
+4-plane WHT (`L, C1, C2, C3` at W x H), demodulates the CFA sign flips, and the
+chroma ladder operates on the full-res lattice:
+
+- A1 = full-res LOESS R=11
+- A2 = half-res LOESS R=11 -> K16
+- A3 = half-res LOESS R=22 -> K16
+- `c < 1`: raw <-> A1; `1 < c < 2`: A1 <-> A2; `2 < c < 3`: A2 <-> A3;
+  `c >= 3`: saturate at A3.
+- Reconstruction uses the exact 4-block overlap-add inverse; there is no K16
+  final upsample and no `L_pixel` tent.
+
+The UI maps:
+
+- Luma `0..800` -> `luma = value/100`; 0 disables GALOSH, 100 = reference l=1.
+- Chroma `0..300` -> `chroma = value/100`; 100 = c=1, 300 = c=3.
+- Chroma preserve `0..100` -> `bw = 1.0 - 0.99*(value/100)`; 1.0 gives maximum
+  detail (`chroma-bw=0.01`), 0.0 gives minimum (`chroma-bw=1.0`).
+
+The half-res chroma path and its archived variants have been removed.
+
 ## 1x3 anamorphic clips
 
 For 1x3 MLV footage one raw pixel is three display pixels wide.  Running GALOSH
@@ -31,12 +85,12 @@ grid:
 - the mosaic is upsampled by 3 along x with a CFA-aware 1D interpolation;
 - only odd factors are accepted, because `parity(3*x) == parity(x)` preserves
   the 2x2 CFA pattern and its phase;
-- the existing CPU/Vulkan backend runs unchanged on the larger grid;
+- the existing CPU backend runs unchanged on the larger grid;
 - the result is sampled back at the original pixel positions.
 
-The noise model is always estimated on the original grid.  Re-estimating it on
-the upsampled grid lowers `alpha` by roughly an order of magnitude, which makes
-the inverse-GAT table build dramatically slower.
+The noise model is estimated **after** the 3x horizontal Bayer upsample, so it
+matches the grid the denoiser actually processes.  Changing the 1x3 factor
+therefore invalidates and re-estimates the model.
 
 Some Magic Lantern builds occasionally do not write the crop/skipping metadata needed to
 auto-detect 1x3.  In the Qt UI the factor is therefore driven by the manual
@@ -44,13 +98,6 @@ auto-detect 1x3.  In the Qt UI the factor is therefore driven by the manual
 by 3x); `getMlvAspectRatio()` remains a fallback for files that do carry the
 metadata.  The 3x path is slower and is not used for filmstrip thumbnails.
 
-The Vulkan host splits the long luma pass into at least eight queue
-submissions.  The adaptive probe can underestimate the per-row rate on slow
-integrated GPUs, and a single oversized submission trips the GPU watchdog; the
-minimum band count keeps every submission bounded without a resolution-based
-backend switch.  CPU is used only when the Vulkan backend is not compiled in or
-no usable Vulkan device is available; a GPU call that reports an error leaves
-the frame untouched rather than silently switching backends.
 
 ## Local changes to upstream sources
 
@@ -58,16 +105,18 @@ the frame untouched rather than silently switching backends.
 - `galosh_raw_cpu.c`: archived x86 SSE helpers are guarded for non-x86 builds.
 - `galosh_raw_cpu.c`: `galosh_raw_denoise()` accepts a CFA phase so RGGB,
   GRBG, GBRG and BGGR MLV files are handled without resampling.
+- `galosh_raw_cpu.c`: full-resolution chroma only (stride-1 WHT + fixed
+  R=11/R=22 ladder); the half-res chroma branch and archived variants were
+  removed.
+- `galosh_bridge.c` / `video_mlv.c`: add the single-frame per-clip noise model
+  estimator used by the UI button and by invalidation re-estimation; the bridge
+  and render paths never estimate the model per frame.  For 1x3 clips the model
+  is estimated after the horizontal Bayer upsample.
+- `galosh_bridge.c`: expose the per-clip `chroma_bw` from the UI's inverse
+  "Chroma preserve" slider.
 - `galosh_cpu.h`: allocator stubs use `posix_memalign` / `_aligned_malloc`
   (MLV-App is built as C99, where `aligned_alloc` is not declared).
 - `galosh_cpu.h`: `_Float16` is optional; MLV-App does not use the FP16-storage
   oracle.
 - `galosh_cpu.h`: SSE includes are guarded for non-x86 builds.
 - `galosh_cpu.h`: per-call diagnostic prints were removed.
-
-## Backend API
-
-This change builds the CPU FP32 reference only.  The Vulkan host is maintained
-as a separate change; the bridge keeps the small `galosh_vulkan_*` API and a
-no-op stub so the GPU implementation can be added without changing the UI or
-the cache integration.

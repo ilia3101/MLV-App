@@ -115,13 +115,19 @@ void get_area_average_downscale_thumnail(mlvObject_t *video, int frame_index, in
     if (video->processing)
     {
         /* Thumbnails intentionally stay on the original grid: the 3x
-         * anamorphic path is reserved for the main preview/export cache. */
-        float galosh_black, galosh_white;
-        getMlvGaloshRawLevels(video, &galosh_black, &galosh_white);
-        galosh_bayer_denoise(video->processing, raw_frame, raw_w, raw_h,
-                             video->RAWI.raw_info.cfa_pattern,
-                             galosh_black, galosh_white,
-                             (uint64_t)frame_index);
+         * anamorphic path is reserved for the main preview/export cache.
+         * They share the clip-level noise model with the main preview and
+         * never trigger estimation themselves. */
+        if (video->processing->galoshLuma > 0
+         && video->processing->galoshNoiseValid)
+        {
+            float galosh_black, galosh_white;
+            getMlvGaloshRawLevels(video, &galosh_black, &galosh_white);
+            galosh_bayer_denoise(video->processing, raw_frame, raw_w, raw_h,
+                                 video->RAWI.raw_info.cfa_pattern,
+                                 galosh_black, galosh_white,
+                                 (uint64_t)frame_index);
+        }
     }
 
     uint16_t *debayered_raw_frame = (uint16_t *) malloc(

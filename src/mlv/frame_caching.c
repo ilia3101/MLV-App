@@ -23,37 +23,21 @@
 #define DEBUG(CODE)
 #endif
 
-/* 1x3 MLV files store a horizontally squeezed Bayer grid: one raw pixel is
- * three display pixels wide.  Denoise on a horizontally upsampled grid so
- * GALOSH's square blocks/windows stay square after the display stretch.
- *
- * Some Magic Lantern builds do not write the crop/skipping information that
- * MLV-App uses to auto-detect 1x3.  The Qt UI therefore sets this factor from
- * the manual "0.33x" height-stretch selection; getMlvAspectRatio() remains a
- * fallback for files that do carry the metadata. */
-static int galosh_anamorphic_factor(mlvObject_t * video)
-{
-    if (!video || !video->processing) return 1;
-
-    int factor = video->processing->galoshAnamorphicX;
-    if (factor >= 3 && (factor & 1)) return factor;
-
-    const float ratio = getMlvAspectRatio(video);
-    if (ratio > 0.30f && ratio < 0.37f) return 3;
-
-    return 1;
-}
-
 /* GALOSH works in the linear Bayer domain, before white balance and debayer.
  * getMlvRawFrameFloat() has already applied applyLLRawProcObject(), so
  * dual-ISO deinterleaving, pattern-noise and stripe corrections happen before
  * this point.  GALOSH always sees a corrected Bayer mosaic, never the raw
- * alternating-ISO lines.  A no-op when strength is 0. */
+ * alternating-ISO lines.  A no-op when luma is 0. */
 static void apply_galosh_raw_denoise(mlvObject_t * video, float * frame,
                                      int width, int height,
                                      uint64_t frame_index)
 {
     if (!video->processing) return;
+
+    /* Luma 0 disables GALOSH.  A missing model means the user has not
+     * estimated one yet; never estimate from the render path. */
+    if (video->processing->galoshLuma == 0) return;
+    if (!video->processing->galoshNoiseValid) return;
 
     /* Use the native DNG-export levels, not processing->white_level (which
      * carries MLV-App's 0.993 highlight bias).  This matches galosh-dng. */
@@ -64,13 +48,23 @@ static void apply_galosh_raw_denoise(mlvObject_t * video, float * frame,
                             video->RAWI.raw_info.cfa_pattern,
                             galosh_black, galosh_white,
                             frame_index,
-                            galosh_anamorphic_factor(video));
+                            getMlvGaloshAnamorphicFactor(video));
+}
+
+void resetMlvRenderCache(mlvObject_t * video)
+{
+    resetMlvCachedFrame(video);
+    mark_mlv_uncached(video);
 }
 
 void resetMlvCache(mlvObject_t * video)
 {
-    resetMlvCachedFrame(video);
-    mark_mlv_uncached(video);
+    resetMlvRenderCache(video);
+
+    /* Anything that reaches here changes the raw Bayer data or its
+     * normalization, so the clip noise model is stale.  Render-only GALOSH
+     * changes use resetMlvRenderCache() instead. */
+    if (video->processing) processingResetGaloshNoise(video->processing);
 }
 
 void disableMlvCaching(mlvObject_t * video)

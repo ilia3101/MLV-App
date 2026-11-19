@@ -5928,33 +5928,6 @@ QGroupBox::indicator:checked:disabled {
                      </item>
                     </widget>
                    </item>
-                   <item row="0" column="2">
-                    <widget class="NoScrollComboBox" name="comboBoxGaloshNoise">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
-                     <property name="toolTip">
-                      <string>Blind noise model update policy. Hold is faster for video; EMA adapts slowly.</string>
-                     </property>
-                     <item>
-                      <property name="text">
-                       <string>Blind</string>
-                      </property>
-                     </item>
-                     <item>
-                      <property name="text">
-                       <string>Hold</string>
-                      </property>
-                     </item>
-                     <item>
-                      <property name="text">
-                       <string>EMA</string>
-                      </property>
-                     </item>
-                    </widget>
-                   </item>
                   </layout>
                  </item>
                  <item>
@@ -5972,76 +5945,7 @@ QGroupBox::indicator:checked:disabled {
                    </property>
                   </widget>
                  </item>
-                 <item>
-                  <layout class="QGridLayout" name="gridLayout_GaloshStrength">
-                   <property name="spacing">
-                    <number>0</number>
-                   </property>
-                   <item row="0" column="0">
-                    <widget class="QLabel" name="label_GaloshStrengthText">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
-                     <property name="toolTip">
-                      <string>Blind, training-free RAW Bayer denoiser. 0 disables it.</string>
-                     </property>
-                     <property name="text">
-                      <string>GALOSH Denoise Strength</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="0" column="1">
-                    <spacer name="horizontalSpacer_GaloshStrength">
-                     <property name="orientation">
-                      <enum>Qt::Horizontal</enum>
-                     </property>
-                     <property name="sizeType">
-                      <enum>QSizePolicy::Maximum</enum>
-                     </property>
-                     <property name="sizeHint" stdset="0">
-                      <size>
-                       <width>40</width>
-                       <height>20</height>
-                      </size>
-                     </property>
-                    </spacer>
-                   </item>
-                   <item row="0" column="2">
-                    <widget class="DoubleClickLabel" name="label_GaloshStrength">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
-                     <property name="text">
-                      <string>0</string>
-                     </property>
-                     <property name="alignment">
-                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="1" column="0" colspan="3">
-                    <widget class="NoScrollSlider" name="horizontalSliderGaloshStrength">
-                     <property name="maximum">
-                      <number>200</number>
-                     </property>
-                     <property name="value">
-                      <number>0</number>
-                     </property>
-                     <property name="sliderPosition">
-                      <number>0</number>
-                     </property>
-                     <property name="orientation">
-                      <enum>Qt::Horizontal</enum>
-                     </property>
-                    </widget>
-                   </item>
-                  </layout>
-                 </item>
-                 <item>
+                                  <item>
                   <layout class="QGridLayout" name="gridLayout_GaloshLuma">
                    <property name="spacing">
                     <number>0</number>
@@ -6082,7 +5986,7 @@ QGroupBox::indicator:checked:disabled {
                       </font>
                      </property>
                      <property name="text">
-                      <string>100</string>
+                      <string>0</string>
                      </property>
                      <property name="alignment">
                       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -6092,16 +5996,16 @@ QGroupBox::indicator:checked:disabled {
                    <item row="1" column="0" colspan="3">
                     <widget class="NoScrollSlider" name="horizontalSliderGaloshLuma">
                      <property name="minimum">
-                      <number>1</number>
+                      <number>0</number>
                      </property>
                      <property name="maximum">
-                      <number>100</number>
+                      <number>800</number>
                      </property>
                      <property name="value">
-                      <number>100</number>
+                      <number>0</number>
                      </property>
                      <property name="sliderPosition">
-                      <number>100</number>
+                      <number>0</number>
                      </property>
                      <property name="orientation">
                       <enum>Qt::Horizontal</enum>
@@ -6117,6 +6021,9 @@ QGroupBox::indicator:checked:disabled {
                    </property>
                    <item row="0" column="0">
                     <widget class="QLabel" name="label_GaloshChromaText">
+                     <property name="enabled">
+                      <bool>false</bool>
+                     </property>
                      <property name="font">
                       <font>
                        <pointsize>10</pointsize>
@@ -6145,6 +6052,9 @@ QGroupBox::indicator:checked:disabled {
                    </item>
                    <item row="0" column="2">
                     <widget class="DoubleClickLabel" name="label_GaloshChroma">
+                     <property name="enabled">
+                      <bool>false</bool>
+                     </property>
                      <property name="font">
                       <font>
                        <pointsize>10</pointsize>
@@ -6160,11 +6070,14 @@ QGroupBox::indicator:checked:disabled {
                    </item>
                    <item row="1" column="0" colspan="3">
                     <widget class="NoScrollSlider" name="horizontalSliderGaloshChroma">
+                     <property name="enabled">
+                      <bool>false</bool>
+                     </property>
                      <property name="minimum">
-                      <number>1</number>
+                      <number>0</number>
                      </property>
                      <property name="maximum">
-                      <number>100</number>
+                      <number>300</number>
                      </property>
                      <property name="value">
                       <number>100</number>
@@ -6174,6 +6087,217 @@ QGroupBox::indicator:checked:disabled {
                      </property>
                      <property name="orientation">
                       <enum>Qt::Horizontal</enum>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </item>
+                 <item>
+                  <layout class="QGridLayout" name="gridLayout_GaloshChromaPreserve">
+                   <property name="spacing">
+                    <number>0</number>
+                   </property>
+                   <item row="0" column="0">
+                    <widget class="QLabel" name="label_GaloshChromaPreserveText">
+                     <property name="enabled">
+                      <bool>false</bool>
+                     </property>
+                     <property name="font">
+                      <font>
+                       <pointsize>10</pointsize>
+                      </font>
+                     </property>
+                     <property name="toolTip">
+                      <string>Chroma detail: 0.00 = minimum, 1.00 = maximum.</string>
+                     </property>
+                     <property name="text">
+                      <string>GALOSH Chroma preserve</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="0" column="1">
+                    <spacer name="horizontalSpacer_GaloshChromaPreserve">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                     <property name="sizeType">
+                      <enum>QSizePolicy::Maximum</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>40</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                   <item row="0" column="2">
+                    <widget class="DoubleClickLabel" name="label_GaloshChromaPreserve">
+                     <property name="enabled">
+                      <bool>false</bool>
+                     </property>
+                     <property name="font">
+                      <font>
+                       <pointsize>10</pointsize>
+                      </font>
+                     </property>
+                     <property name="text">
+                      <string>0.25</string>
+                     </property>
+                     <property name="alignment">
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="1" column="0" colspan="3">
+                    <widget class="NoScrollSlider" name="horizontalSliderGaloshChromaPreserve">
+                     <property name="enabled">
+                      <bool>false</bool>
+                     </property>
+                     <property name="maximum">
+                      <number>100</number>
+                     </property>
+                     <property name="value">
+                      <number>25</number>
+                     </property>
+                     <property name="sliderPosition">
+                      <number>25</number>
+                     </property>
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </item>
+<item>
+                  <widget class="Line" name="line_GaloshNoiseModel">
+                   <property name="styleSheet">
+                    <string notr="true">background-color: rgb(115, 115, 115);</string>
+                   </property>
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <layout class="QGridLayout" name="gridLayout_GaloshNoiseModel">
+                   <property name="spacing">
+                    <number>0</number>
+                   </property>
+                   <item row="0" column="0" colspan="2">
+                    <widget class="QLabel" name="label_GaloshNoiseModelText">
+                     <property name="font">
+                      <font>
+                       <pointsize>10</pointsize>
+                       <weight>75</weight>
+                       <bold>true</bold>
+                      </font>
+                     </property>
+                     <property name="text">
+                      <string>GALOSH Noise Model</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="1" column="0">
+                    <widget class="QLabel" name="label_GaloshAlphaText">
+                     <property name="font">
+                      <font>
+                       <pointsize>10</pointsize>
+                      </font>
+                     </property>
+                     <property name="toolTip">
+                      <string>Shot-noise gain in Var(x) = alpha*x + sigma.</string>
+                     </property>
+                     <property name="text">
+                      <string>Alpha: shot-noise gain</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="1" column="1">
+                    <widget class="QLineEdit" name="lineEditGaloshAlpha">
+                     <property name="enabled">
+                      <bool>false</bool>
+                     </property>
+                     <property name="font">
+                      <font>
+                       <pointsize>10</pointsize>
+                      </font>
+                     </property>
+                     <property name="toolTip">
+                      <string>Estimated shot-noise gain. Edit and press Enter to tune the model.</string>
+                     </property>
+                     <property name="alignment">
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                     </property>
+                     <property name="placeholderText">
+                      <string>Not estimated</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="2" column="0">
+                    <widget class="QLabel" name="label_GaloshSigmaText">
+                     <property name="font">
+                      <font>
+                       <pointsize>10</pointsize>
+                      </font>
+                     </property>
+                     <property name="toolTip">
+                      <string>Gaussian read-noise variance in Var(x) = alpha*x + sigma.</string>
+                     </property>
+                     <property name="text">
+                      <string>Sigma: Gaussian read-noise variance</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="2" column="1">
+                    <widget class="QLineEdit" name="lineEditGaloshSigma">
+                     <property name="enabled">
+                      <bool>false</bool>
+                     </property>
+                     <property name="font">
+                      <font>
+                       <pointsize>10</pointsize>
+                      </font>
+                     </property>
+                     <property name="toolTip">
+                      <string>Estimated read-noise variance. Edit and press Enter to tune the model.</string>
+                     </property>
+                     <property name="alignment">
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                     </property>
+                     <property name="placeholderText">
+                      <string>Not estimated</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="3" column="0" colspan="2">
+                    <widget class="QPushButton" name="pushButtonGaloshNoiseFrame">
+                     <property name="font">
+                      <font>
+                       <pointsize>10</pointsize>
+                      </font>
+                     </property>
+                     <property name="toolTip">
+                      <string>Estimate the noise model from the frame currently shown in the viewer.</string>
+                     </property>
+                     <property name="text">
+                      <string>Set current frame for noise estimation</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="4" column="0" colspan="2">
+                    <widget class="QLabel" name="label_GaloshNoiseFrame">
+                     <property name="font">
+                      <font>
+                       <pointsize>10</pointsize>
+                      </font>
+                     </property>
+                     <property name="text">
+                      <string>Noise frame: 0</string>
+                     </property>
+                     <property name="alignment">
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                      </property>
                     </widget>
                    </item>

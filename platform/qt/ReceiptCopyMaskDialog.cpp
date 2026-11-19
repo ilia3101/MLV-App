@@ -144,6 +144,7 @@ void ReceiptCopyMaskDialog::checkBoxDetailsState()
     if( ui->checkBoxSharpen->isChecked()
      && ui->checkBoxChromaBlur->isChecked()
      && ui->checkBoxDenoise->isChecked()
+     && ui->checkBoxGaloshNoiseModel->isChecked()
      && ui->checkBoxGrain->isChecked() )
     {
         ui->checkBoxDetails->setTristate( false );
@@ -152,6 +153,7 @@ void ReceiptCopyMaskDialog::checkBoxDetailsState()
     else if( !ui->checkBoxSharpen->isChecked()
           && !ui->checkBoxChromaBlur->isChecked()
           && !ui->checkBoxDenoise->isChecked()
+          && !ui->checkBoxGaloshNoiseModel->isChecked()
           && !ui->checkBoxGrain->isChecked() )
     {
         ui->checkBoxDetails->setTristate( false );
@@ -207,6 +209,7 @@ void ReceiptCopyMaskDialog::on_checkBoxDetails_clicked(bool checked)
     ui->checkBoxSharpen->setChecked( checked );
     ui->checkBoxChromaBlur->setChecked( checked );
     ui->checkBoxDenoise->setChecked( checked );
+    ui->checkBoxGaloshNoiseModel->setChecked( checked );
     ui->checkBoxGrain->setChecked( checked );
 }
 

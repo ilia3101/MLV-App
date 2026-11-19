@@ -95,10 +95,42 @@ static void galosh_normalized_to_float(const float *src, float *dst,
     }
 }
 
+void galosh_normalize_frame(const float *src, float *dst,
+                            int width, int height, int dst_stride,
+                            float black_level, float white_level)
+{
+    galosh_float_to_normalized(src, dst, width, height, dst_stride,
+                               black_level, white_level);
+}
+
+int galosh_estimate_noise_frame(const float *normalized,
+                                int width, int height,
+                                float *alpha, float *sigma_sq)
+{
+    if (!normalized || !alpha || !sigma_sq || width <= 0 || height <= 0)
+        return 1;
+
+    /* Serialize with the backend call: the estimator consumes the same
+     * override globals that galosh_bayer_denoise_ex sets for the pipeline. */
+    pthread_mutex_lock(&galosh_mutex);
+    g_galosh_alpha_override = 0.0f;
+    g_galosh_sigma_sq_override = 0.0f;
+    const galosh_noise_params_t est =
+        galosh_estimate_noise(normalized, width, height);
+    pthread_mutex_unlock(&galosh_mutex);
+
+    if (!isfinite(est.alpha) || !(est.alpha > 0.0f)) return 1;
+    if (!isfinite(est.sigma_sq) || est.sigma_sq < 0.0f) return 1;
+
+    *alpha = est.alpha;
+    *sigma_sq = est.sigma_sq;
+    return 0;
+}
+
 static int galosh_run_cpu(const float *in, float *out, int width, int height,
                           int cfa_row, int cfa_col,
                           float luma_strength, float chroma_strength,
-                          int fast)
+                          float chroma_bw, int fast)
 {
     dt_iop_roi_t roi = { .width = width, .height = height };
     static int kaiser_ready = 0;
@@ -112,6 +144,7 @@ static int galosh_run_cpu(const float *in, float *out, int width, int height,
     g_galosh_wht_block = fast ? 4 : 8;
     g_galosh_upsample_fast = fast ? 1 : 0;
     g_galosh_super_clean_threshold = 0.0f;
+    g_galosh_chroma_full_bw = chroma_bw;
 
     galosh_raw_denoise(in, out, &roi, luma_strength, chroma_strength,
                        0, cfa_row, cfa_col);
@@ -123,19 +156,20 @@ static int galosh_run_backend(processingObject_t *processing,
                               const float *in, float *out,
                               int width, int height,
                               int cfa_row, int cfa_col,
-                              float luma, float chroma)
+                              float luma, float chroma, float chroma_bw)
 {
     if (processing->galoshBackend == GALOSH_BACKEND_GPU
      && galosh_vulkan_available())
     {
         return galosh_vulkan_denoise(in, out, width, height,
-                                     luma, chroma, processing->galoshFast,
+                                     luma, chroma, chroma_bw,
+                                     processing->galoshFast,
                                      processing->galoshAlpha,
                                      processing->galoshSigmaSq, 1);
     }
 
     return galosh_run_cpu(in, out, width, height,
-                          cfa_row, cfa_col, luma, chroma,
+                          cfa_row, cfa_col, luma, chroma, chroma_bw,
                           processing->galoshFast);
 }
 
@@ -215,6 +249,12 @@ static void galosh_downsample_horizontal_cfa(const float *src, float *dst,
     }
 }
 
+void galosh_upsample_frame_horizontal_cfa(const float *src, float *dst,
+                                          int width, int height, int factor)
+{
+    galosh_upsample_horizontal_cfa(src, dst, width, height, factor);
+}
+
 int galosh_bayer_denoise_ex(processingObject_t *processing,
                             float *frame,
                             int width, int height,
@@ -225,19 +265,23 @@ int galosh_bayer_denoise_ex(processingObject_t *processing,
                             int anamorphic_x)
 {
     if (!processing || !frame || width <= 0 || height <= 0) return 1;
-    if (processing->galoshStrength == 0) return 1;
-    if (processing->galoshLuma == 0 && processing->galoshChroma == 0) return 1;
     if (width < GALOSH_BLOCK_SIZE * 2 || height < GALOSH_BLOCK_SIZE * 2) return 1;
     if (!(white_level > black_level)) return 1;
 
-    const float strength = processing->galoshStrength / 100.0f;
-    const float luma = strength * (processing->galoshLuma / 100.0f);
-    const float chroma = strength * (processing->galoshChroma / 100.0f);
+    const float luma = processing->galoshLuma / 100.0f;
+    const float chroma = processing->galoshChroma / 100.0f;
+    const float chroma_bw = 1.0f
+        - 0.99f * (processing->galoshChromaPreserve / 100.0f);
 
-    /* The GALOSH pipeline's luma path is the structural driver.  With luma 0
-     * the CPU reference bypasses everything; do the same on every backend so
-     * the Vulkan path cannot run a degenerate luma stage. */
+    /* The GALOSH pipeline's luma path is the structural driver.  Luma 0
+     * disables the whole denoiser, including chroma. */
     if (luma <= 0.0f) return 1;
+
+    /* The clip-level model is owned by the caller (video_mlv.c).  Never
+     * estimate it per frame here: a missing model means the user has not
+     * estimated one yet, so leave the frame untouched. */
+    if (!processing->galoshNoiseValid) return 1;
+    (void)frame_index;
 
     /* Only odd factors preserve the 2x2 CFA parity. */
     if (anamorphic_x < 1 || anamorphic_x > 5 || (anamorphic_x & 1) == 0)
@@ -284,60 +328,10 @@ int galosh_bayer_denoise_ex(processingObject_t *processing,
         }
     }
 
-    /* Reset the held noise model if anything that changes its meaning changed. */
-    if (processing->galoshNoiseValid
-     && (processing->galoshLastBlack != black_level
-      || processing->galoshLastWhite != white_level
-      || processing->galoshLastCfa != cfa_pattern
-      || processing->galoshLastWidth != (uint16_t)width
-      || processing->galoshLastHeight != (uint16_t)height))
-    {
-        processing->galoshNoiseValid = 0;
-    }
-
-    /* Determine the noise model used for this frame. */
-    g_galosh_alpha_override = 0.0f;
-    g_galosh_sigma_sq_override = 0.0f;
-
-    if (processing->galoshNoiseMode == 1 && processing->galoshNoiseValid)
-    {
-        /* hold */
-    }
-    else
-    {
-        galosh_noise_params_t est = galosh_estimate_noise(in, padded_width, padded_height);
-
-        /* The reference CLI feeds the blind estimate through unchanged.
-         * Keep only a finite/positive sanity guard so invalid data cannot
-         * poison the GAT lookup tables. */
-        if (!isfinite(est.alpha) || !(est.alpha > 0.0f)) est.alpha = 1e-4f;
-        if (!isfinite(est.sigma_sq) || est.sigma_sq < 0.0f) est.sigma_sq = 0.0f;
-
-        if (processing->galoshNoiseMode == 2 && processing->galoshNoiseValid)
-        {
-            const float beta = 0.1f;
-            processing->galoshAlpha = beta * est.alpha
-                                    + (1.0f - beta) * processing->galoshAlpha;
-            processing->galoshSigmaSq = beta * est.sigma_sq
-                                      + (1.0f - beta) * processing->galoshSigmaSq;
-        }
-        else
-        {
-            processing->galoshAlpha = est.alpha;
-            processing->galoshSigmaSq = est.sigma_sq;
-        }
-        processing->galoshNoiseValid = 1;
-        processing->galoshNoiseFrame = frame_index;
-    }
-
+    /* The clip model is authoritative for every frame until the caller
+     * invalidates it (clip load, raw levels, dual-ISO, raw fixes). */
     g_galosh_alpha_override = processing->galoshAlpha;
     g_galosh_sigma_sq_override = processing->galoshSigmaSq;
-
-    processing->galoshLastBlack = black_level;
-    processing->galoshLastWhite = white_level;
-    processing->galoshLastCfa = cfa_pattern;
-    processing->galoshLastWidth = (uint16_t)width;
-    processing->galoshLastHeight = (uint16_t)height;
 
     int result = 1;
 
@@ -348,7 +342,8 @@ int galosh_bayer_denoise_ex(processingObject_t *processing,
         {
             result = galosh_run_backend(processing, in, out,
                                         padded_width, padded_height,
-                                        cfa_row, cfa_col, luma, chroma);
+                                        cfa_row, cfa_col, luma, chroma,
+                                        chroma_bw);
             if (result == 0)
             {
                 galosh_normalized_to_float(out, frame, width, height,
@@ -373,7 +368,8 @@ int galosh_bayer_denoise_ex(processingObject_t *processing,
 
             result = galosh_run_backend(processing, up_in, up_out,
                                         up_width, up_height,
-                                        cfa_row, cfa_col, luma, chroma);
+                                        cfa_row, cfa_col, luma, chroma,
+                                        chroma_bw);
             if (result == 0)
             {
                 float *out = (float *)malloc(padded_count * sizeof(float));
