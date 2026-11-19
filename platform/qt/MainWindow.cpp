@@ -2248,9 +2248,11 @@ void MainWindow::startExportPipe(QString fileName)
                 checkDiskFull( fileName );
 
                 //Check for allocation failure / error
-                if( mlv_get_last_error()[0] != '\0' )
+                char errBuf[512] = {0};
+                mlv_get_last_error_copy( errBuf, sizeof(errBuf) );
+                if( errBuf[0] != '\0' )
                 {
-                    QMessageBox::critical( this, tr( "Export Failed" ), tr( "Memory allocation error:\n\n%1" ).arg( QString::fromUtf8( mlv_get_last_error() ) ) );
+                    QMessageBox::critical( this, tr( "Export Failed" ), tr( "Memory allocation error:\n\n%1" ).arg( QString::fromUtf8( errBuf ) ) );
                     mlv_clear_last_error();
                     exportAbort();
                     break;
@@ -2825,9 +2827,11 @@ void MainWindow::startExportPipe(QString fileName)
                 }
 
                 //Check for allocation failure / error
-                if( mlv_get_last_error()[0] != '\0' )
+                char errBuf[512] = {0};
+                mlv_get_last_error_copy( errBuf, sizeof(errBuf) );
+                if( errBuf[0] != '\0' )
                 {
-                    QMessageBox::critical( this, tr( "Export Failed" ), tr( "Memory allocation error:\n\n%1" ).arg( QString::fromUtf8( mlv_get_last_error() ) ) );
+                    QMessageBox::critical( this, tr( "Export Failed" ), tr( "Memory allocation error:\n\n%1" ).arg( QString::fromUtf8( errBuf ) ) );
                     mlv_clear_last_error();
                     exportAbort();
                     break;
@@ -3131,7 +3135,9 @@ void MainWindow::startExportCdng(QString fileName)
         int error = saveDngFrame( m_pMlvObject, cinemaDng, frame, filePathNr.toLatin1().data(), properties_fn.toLatin1().data() );
 #endif
 
-        if( error || mlv_get_last_error()[0] != '\0' )
+        char errBuf[512] = {0};
+        mlv_get_last_error_copy( errBuf, sizeof(errBuf) );
+        if( error || errBuf[0] != '\0' )
         {
             exportError = 1;
             errorFrame = getMlvFrameNumber( m_pMlvObject, frame );
@@ -3186,7 +3192,9 @@ void MainWindow::startExportCdng(QString fileName)
         // Pause time
         m_pStatusDialog->togglePauseResume( 0 );
 
-        QString errDetail = QString::fromUtf8( mlv_get_last_error() );
+        char errDetailBuf[512] = {0};
+        mlv_get_last_error_copy( errDetailBuf, sizeof(errDetailBuf) );
+        QString errDetail = QString::fromUtf8( errDetailBuf );
         QString errText = errDetail.isEmpty()
             ? tr( "Error exporting frame %1 from %2 clip.\nHow do you like to proceed?" )
                 .arg( errorFrame.load() )
@@ -3583,9 +3591,11 @@ void MainWindow::startExportAVFoundation(QString fileName)
         }
 
         //Check for allocation failure / error
-        if( mlv_get_last_error()[0] != '\0' )
+        char errBuf[512] = {0};
+        mlv_get_last_error_copy( errBuf, sizeof(errBuf) );
+        if( errBuf[0] != '\0' )
         {
-            QMessageBox::critical( this, tr( "Export Failed" ), tr( "Memory allocation error:\n\n%1" ).arg( QString::fromUtf8( mlv_get_last_error() ) ) );
+            QMessageBox::critical( this, tr( "Export Failed" ), tr( "Memory allocation error:\n\n%1" ).arg( QString::fromUtf8( errBuf ) ) );
             mlv_clear_last_error();
             exportAbort();
             break;
