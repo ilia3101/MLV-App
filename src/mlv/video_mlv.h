@@ -33,6 +33,7 @@ enum open_mode { MLV_OPEN_FULL, MLV_OPEN_MAPP, MLV_OPEN_PREVIEW };
 
 /* Error reporting functions */
 const char * mlv_get_last_error(void);
+void mlv_get_last_error_copy(char *dest, size_t max_len);
 void mlv_set_last_error(const char *msg);
 void mlv_clear_last_error(void);
 
