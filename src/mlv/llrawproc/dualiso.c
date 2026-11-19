@@ -2459,9 +2459,9 @@ int diso_get_full20bit(struct raw_info raw_info, uint16_t * image_data, int dark
 
         if (!*iso_pattern) return 0;
     }
-    else if (*iso_pattern > 0 && *iso_pattern <= 4)
+    else if (abs(*iso_pattern) >= 1 && abs(*iso_pattern) <= 4)
     {
-        memcpy(is_bright, iso_patterns[*iso_pattern - 1], sizeof(is_bright));
+        memcpy(is_bright, iso_patterns[abs(*iso_pattern) - 1], sizeof(is_bright));
     }
     else if (*iso_pattern == 5)
     {

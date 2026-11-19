@@ -61,28 +61,49 @@ static uint64_t file_get_pos(FILE *stream)
 #endif
 }
 
+#if defined(_MSC_VER)
+#define MLV_THREAD_LOCAL __declspec(thread)
+#elif defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L
+#define MLV_THREAD_LOCAL _Thread_local
+#else
+#define MLV_THREAD_LOCAL __thread
+#endif
+
+static MLV_THREAD_LOCAL char tls_mlv_last_error[512] = {0};
 static char g_mlv_last_error[512] = {0};
 static pthread_mutex_t g_mlv_error_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 const char * mlv_get_last_error(void)
 {
+    if (tls_mlv_last_error[0] != '\0') {
+        return tls_mlv_last_error;
+    }
     return g_mlv_last_error;
 }
 
 void mlv_set_last_error(const char *msg)
 {
-    pthread_mutex_lock(&g_mlv_error_mutex);
     if (msg) {
-        strncpy(g_mlv_last_error, msg, sizeof(g_mlv_last_error) - 1);
-        g_mlv_last_error[sizeof(g_mlv_last_error) - 1] = '\0';
+        strncpy(tls_mlv_last_error, msg, sizeof(tls_mlv_last_error) - 1);
+        tls_mlv_last_error[sizeof(tls_mlv_last_error) - 1] = '\0';
+
+        pthread_mutex_lock(&g_mlv_error_mutex);
+        if (g_mlv_last_error[0] == '\0') {
+            strncpy(g_mlv_last_error, msg, sizeof(g_mlv_last_error) - 1);
+            g_mlv_last_error[sizeof(g_mlv_last_error) - 1] = '\0';
+        }
+        pthread_mutex_unlock(&g_mlv_error_mutex);
     } else {
+        tls_mlv_last_error[0] = '\0';
+        pthread_mutex_lock(&g_mlv_error_mutex);
         g_mlv_last_error[0] = '\0';
+        pthread_mutex_unlock(&g_mlv_error_mutex);
     }
-    pthread_mutex_unlock(&g_mlv_error_mutex);
 }
 
 void mlv_clear_last_error(void)
 {
+    tls_mlv_last_error[0] = '\0';
     pthread_mutex_lock(&g_mlv_error_mutex);
     g_mlv_last_error[0] = '\0';
     pthread_mutex_unlock(&g_mlv_error_mutex);
