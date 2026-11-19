@@ -29,6 +29,10 @@
 #else
 #define DUALISO_TLS __thread
 #endif
+
+#ifdef __APPLE__
+#include <dispatch/dispatch.h>
+#endif
 #include "hist.h"
 #include "dualiso.h"
 #include "opt_med.h"
@@ -1316,8 +1320,11 @@ static void* amaze_wrapper(void* arg)
 
 static inline void amaze_interpolate(float** rawData, float** red, float** green, float** blue, int w, int h, int threads)
 {
-    int* startchunk_y = malloc(threads * sizeof(int));
-    int* endchunk_y = malloc(threads * sizeof(int));
+    if (threads > 64) threads = 64;
+    if (threads < 1) threads = 1;
+
+    int startchunk_y[64];
+    int endchunk_y[64];
 
     int chunk_height = h / threads;
     chunk_height -= chunk_height % 2;
@@ -1328,15 +1335,28 @@ static inline void amaze_interpolate(float** rawData, float** red, float** green
         chunk_height -= chunk_height % 2;
     }
 
+    if (threads <= 1) {
+        amazeinfo_t amaze_arg = {
+            rawData,
+            red,
+            green,
+            blue,
+            0, 0,
+            w, h,
+            0,
+            0
+        };
+        demosaic(&amaze_arg);
+        return;
+    }
+
     for (int thread = 0; thread < threads; ++thread) {
         startchunk_y[thread] = chunk_height * thread;
         endchunk_y[thread] = chunk_height * (thread + 1);
     }
     endchunk_y[threads-1] = h;
 
-    pthread_t* thread_id = malloc(threads * sizeof(pthread_t));
-    amazeinfo_t* amaze_arguments = malloc(threads * sizeof(amazeinfo_t));
-
+    amazeinfo_t amaze_arguments[64];
     for (int thread = 0; thread < threads; ++thread) {
         amaze_arguments[thread] = (amazeinfo_t) {
             rawData,
@@ -1348,18 +1368,19 @@ static inline void amaze_interpolate(float** rawData, float** red, float** green
             0,
             0
         };
-
-        pthread_create(&thread_id[thread], NULL, amaze_wrapper, &amaze_arguments[thread]);
     }
 
+#ifdef __APPLE__
+    amazeinfo_t * args = amaze_arguments;
+    dispatch_apply(threads, dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0), ^(size_t t) {
+        demosaic(&args[t]);
+    });
+#else
+    #pragma omp parallel for schedule(static) num_threads(threads)
     for (int thread = 0; thread < threads; ++thread) {
-        pthread_join(thread_id[thread], NULL);
+        demosaic(&amaze_arguments[thread]);
     }
-
-    free(startchunk_y);
-    free(endchunk_y);
-    free(thread_id);
-    free(amaze_arguments);
+#endif
 }
 
 static inline int edge_interp(float ** plane, int * squeezed, int * raw2ev, int dir, int x, int y, int s)
@@ -1887,6 +1908,46 @@ static inline void fullres_reconstruction(struct raw_info raw_info, uint32_t * f
     }
 }
 
+static inline int kth_smallest_37_5_fast(const int a[37])
+{
+    int m0 = a[0], m1 = a[1], m2 = a[2], m3 = a[3], m4 = a[4], m5 = a[5];
+    int arr[6] = {m0, m1, m2, m3, m4, m5};
+    for (int i = 1; i < 6; ++i) {
+        int v = arr[i];
+        int j = i - 1;
+        while (j >= 0 && arr[j] > v) {
+            arr[j + 1] = arr[j];
+            j--;
+        }
+        arr[j + 1] = v;
+    }
+    m0 = arr[0]; m1 = arr[1]; m2 = arr[2]; m3 = arr[3]; m4 = arr[4]; m5 = arr[5];
+
+    for (int i = 6; i < 37; ++i) {
+        int v = a[i];
+        if (v < m5) {
+            if (v < m2) {
+                if (v < m0) {
+                    m5 = m4; m4 = m3; m3 = m2; m2 = m1; m1 = m0; m0 = v;
+                } else if (v < m1) {
+                    m5 = m4; m4 = m3; m3 = m2; m2 = m1; m1 = v;
+                } else {
+                    m5 = m4; m4 = m3; m3 = m2; m2 = v;
+                }
+            } else {
+                if (v < m3) {
+                    m5 = m4; m4 = m3; m3 = v;
+                } else if (v < m4) {
+                    m5 = m4; m4 = v;
+                } else {
+                    m5 = v;
+                }
+            }
+        }
+    }
+    return m5;
+}
+
 static inline void build_alias_map(struct raw_info raw_info, uint16_t* alias_map, uint32_t* fullres_smooth, uint32_t* halfres_smooth, uint32_t* bright, int dark_noise, int black, int * raw2ev)
 {
     if(!alias_map) return;
@@ -1946,7 +2007,7 @@ static inline void build_alias_map(struct raw_info raw_info, uint16_t* alias_map
                                                  -alias_map[x-4 + (y+4) * w], -alias_map[x-2 + (y+4) * w], -alias_map[x+0 + (y+4) * w], -alias_map[x+2 + (y+4) * w], -alias_map[x+4 + (y+4) * w],
                                                                               -alias_map[x-2 + (y+6) * w], -alias_map[x+0 + (y+6) * w], -alias_map[x+2 + (y+6) * w],
             };
-            alias_aux[x + y * w] = -kth_smallest_int(neighbours, COUNT(neighbours), 5);
+            alias_aux[x + y * w] = -kth_smallest_37_5_fast(neighbours);
         }
     }
 #ifndef STDOUT_SILENT
