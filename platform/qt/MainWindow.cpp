@@ -106,7 +106,7 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     //Change working directory for C part
-    chdir( QCoreApplication::applicationDirPath().toLatin1().data() );
+    if( chdir( QCoreApplication::applicationDirPath().toLatin1().data() ) != 0 ) {}
 
     //Enable color management for macOS
     auto format = QSurfaceFormat::defaultFormat();

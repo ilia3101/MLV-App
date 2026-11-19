@@ -257,9 +257,6 @@ void debayerAmaze(uint16_t * __restrict debayerto, float * __restrict bayerdata,
         });
     }
     else
-#else
-    #pragma omp parallel for schedule(static) if(threads > 1) num_threads(threads)
-#endif
     {
         for (int i = 0; i < pixelsize; i++)
         {
@@ -269,6 +266,16 @@ void debayerAmaze(uint16_t * __restrict debayerto, float * __restrict bayerdata,
             debayerto[j+2] = LIMIT16((uint32_t)blue1d[i]);
         }
     }
+#else
+    #pragma omp parallel for schedule(static) if(threads > 1) num_threads(threads)
+    for (int i = 0; i < pixelsize; i++)
+    {
+        int j = i * 3;
+        debayerto[ j ] = LIMIT16((uint32_t)red1d[i]);
+        debayerto[j+1] = LIMIT16((uint32_t)green1d[i]);
+        debayerto[j+2] = LIMIT16((uint32_t)blue1d[i]);
+    }
+#endif
 
     if (!use_tls)
     {
