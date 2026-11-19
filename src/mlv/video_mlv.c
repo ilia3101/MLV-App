@@ -61,6 +61,33 @@ static uint64_t file_get_pos(FILE *stream)
 #endif
 }
 
+static char g_mlv_last_error[512] = {0};
+static pthread_mutex_t g_mlv_error_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+const char * mlv_get_last_error(void)
+{
+    return g_mlv_last_error;
+}
+
+void mlv_set_last_error(const char *msg)
+{
+    pthread_mutex_lock(&g_mlv_error_mutex);
+    if (msg) {
+        strncpy(g_mlv_last_error, msg, sizeof(g_mlv_last_error) - 1);
+        g_mlv_last_error[sizeof(g_mlv_last_error) - 1] = '\0';
+    } else {
+        g_mlv_last_error[0] = '\0';
+    }
+    pthread_mutex_unlock(&g_mlv_error_mutex);
+}
+
+void mlv_clear_last_error(void)
+{
+    pthread_mutex_lock(&g_mlv_error_mutex);
+    g_mlv_last_error[0] = '\0';
+    pthread_mutex_unlock(&g_mlv_error_mutex);
+}
+
 #ifndef STDOUT_SILENT
 #define DEBUG(CODE) CODE
 #else
@@ -216,7 +243,10 @@ int getMlvRawFrameUint16(mlvObject_t * video, uint64_t frameIndex, uint16_t * un
     uint8_t * raw_frame = (uint8_t *)malloc(raw_frame_size + 4); // additional 4 bytes for safety
     if (!raw_frame)
     {
-        fprintf(stderr, "MLV App Error: Out of memory allocating raw_frame (%d bytes) for frame %llu\n", raw_frame_size, (unsigned long long)frameIndex);
+        char err_msg[256];
+        snprintf(err_msg, sizeof(err_msg), "Out of memory allocating raw_frame (%llu bytes) for frame %llu", (unsigned long long)raw_frame_size, (unsigned long long)frameIndex);
+        mlv_set_last_error(err_msg);
+        fprintf(stderr, "MLV App Error: %s\n", err_msg);
         return 1;
     }
 
@@ -637,7 +667,10 @@ void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outpu
     uint16_t * unpacked_frame = (uint16_t *)malloc( unpacked_frame_size );
     if (!unpacked_frame)
     {
-        fprintf(stderr, "MLV App Error: Out of memory allocating unpacked_frame (%zu bytes) for frame %llu\n", unpacked_frame_size, (unsigned long long)frameIndex);
+        char err_msg[256];
+        snprintf(err_msg, sizeof(err_msg), "Out of memory allocating unpacked_frame (%llu bytes) for frame %llu", (unsigned long long)unpacked_frame_size, (unsigned long long)frameIndex);
+        mlv_set_last_error(err_msg);
+        fprintf(stderr, "MLV App Error: %s\n", err_msg);
         memset(outputFrame, 0, pixels_count * sizeof(float));
         return;
     }
@@ -783,7 +816,10 @@ void getMlvRawFrameDebayered(mlvObject_t * video, uint64_t frameIndex, uint16_t 
                 float * raw_frame = malloc(width * height * sizeof(float));
                 if (!raw_frame)
                 {
-                    fprintf(stderr, "MLV App Error: Out of memory allocating raw_frame float buffer (%zu bytes) for frame %llu\n", width * height * sizeof(float), (unsigned long long)frameIndex);
+                    char err_msg[256];
+                    snprintf(err_msg, sizeof(err_msg), "Out of memory allocating raw_frame float buffer (%llu bytes) for frame %llu", (unsigned long long)(width * height * sizeof(float)), (unsigned long long)frameIndex);
+                    mlv_set_last_error(err_msg);
+                    fprintf(stderr, "MLV App Error: %s\n", err_msg);
                     memset(outputFrame, 0, frame_size);
                     break;
                 }
@@ -813,7 +849,10 @@ void getMlvProcessedFrame16(mlvObject_t * video, uint64_t frameIndex, uint16_t *
     uint16_t * unprocessed_frame = malloc( rgb_frame_size * sizeof(uint16_t) );
     if (!unprocessed_frame)
     {
-        fprintf(stderr, "MLV App Error: Out of memory allocating unprocessed_frame (%zu bytes) for frame %llu\n", rgb_frame_size * sizeof(uint16_t), (unsigned long long)frameIndex);
+        char err_msg[256];
+        snprintf(err_msg, sizeof(err_msg), "Out of memory allocating unprocessed_frame (%llu bytes) for frame %llu", (unsigned long long)(rgb_frame_size * sizeof(uint16_t)), (unsigned long long)frameIndex);
+        mlv_set_last_error(err_msg);
+        fprintf(stderr, "MLV App Error: %s\n", err_msg);
         memset(outputFrame, 0, rgb_frame_size * sizeof(uint16_t));
         return;
     }
@@ -841,7 +880,10 @@ void getMlvProcessedFrame8(mlvObject_t * video, uint64_t frameIndex, uint8_t * o
     uint16_t * processed_frame = malloc( rgb_frame_size * sizeof(uint16_t) );
     if (!processed_frame)
     {
-        fprintf(stderr, "MLV App Error: Out of memory allocating processed_frame (%zu bytes) for frame %llu\n", rgb_frame_size * sizeof(uint16_t), (unsigned long long)frameIndex);
+        char err_msg[256];
+        snprintf(err_msg, sizeof(err_msg), "Out of memory allocating processed_frame (%llu bytes) for frame %llu", (unsigned long long)(rgb_frame_size * sizeof(uint16_t)), (unsigned long long)frameIndex);
+        mlv_set_last_error(err_msg);
+        fprintf(stderr, "MLV App Error: %s\n", err_msg);
         memset(outputFrame, 0, rgb_frame_size * sizeof(uint8_t));
         return;
     }
@@ -2817,7 +2859,10 @@ void findMlvWhiteBalance(mlvObject_t *video, uint64_t frameIndex, int posX, int 
     uint16_t * unprocessed_frame = malloc( rgb_frame_size * sizeof(uint16_t) );
     if (!unprocessed_frame)
     {
-        fprintf(stderr, "MLV App Error: Out of memory allocating unprocessed_frame (%zu bytes) for white balance\n", rgb_frame_size * sizeof(uint16_t));
+        char err_msg[256];
+        snprintf(err_msg, sizeof(err_msg), "Out of memory allocating unprocessed_frame (%llu bytes) for white balance", (unsigned long long)(rgb_frame_size * sizeof(uint16_t)));
+        mlv_set_last_error(err_msg);
+        fprintf(stderr, "MLV App Error: %s\n", err_msg);
         return;
     }
 

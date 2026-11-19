@@ -191,6 +191,7 @@ void freeLLRawProcObject(mlvObject_t * video)
     df_free(video);
     free_luts(video->llrawproc->raw2ev, video->llrawproc->ev2raw);
     free_pixel_maps(&(video->llrawproc->focus_pixel_map), &(video->llrawproc->bad_pixel_map));
+    dualiso_cleanup_mix_curve();
     free(video->llrawproc);
 }
 

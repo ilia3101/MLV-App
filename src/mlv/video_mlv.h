@@ -31,6 +31,11 @@ int openMcrawClip(mlvObject_t * video, char * mcrawPath, int open_mode, char * e
 enum mlv_err { MLV_ERR_NONE, MLV_ERR_OPEN, MLV_ERR_IO, MLV_ERR_CORRUPTED, MLV_ERR_INVALID };
 enum open_mode { MLV_OPEN_FULL, MLV_OPEN_MAPP, MLV_OPEN_PREVIEW };
 
+/* Error reporting functions */
+const char * mlv_get_last_error(void);
+void mlv_set_last_error(const char *msg);
+void mlv_clear_last_error(void);
+
 /* Functions for saving cut or averaged MLV */
 int saveMlvHeaders(mlvObject_t * video, FILE * output_mlv, int export_audio, int export_mode, uint32_t frame_start, uint32_t frame_end, const char * version, char * error_message);
 int saveMlvAVFrame(mlvObject_t * video, FILE * output_mlv, int export_audio, int export_mode, uint32_t frame_start, uint32_t frame_end, uint32_t frame_index, uint64_t * avg_buf, char * error_message);

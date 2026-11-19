@@ -28,4 +28,8 @@
 int diso_get_preview(uint16_t * image_data, uint16_t width, uint16_t height, int32_t black, int32_t white, int diso_check);
 int diso_get_full20bit(struct raw_info raw_info, uint16_t * image_data, int dark_frame, uint32_t iso1, uint32_t iso2, int is_digital_gain, int * iso_pattern, int * auto_correction, double * ev_correction, int * black_delta, int interp_method, int use_alias_map, int use_fullres, int chroma_smooth_method, int threads);
 
+void dualiso_get_mix_curve_stats(uint64_t *hits, uint64_t *misses);
+void dualiso_reset_mix_curve_stats(void);
+void dualiso_cleanup_mix_curve(void);
+
 #endif

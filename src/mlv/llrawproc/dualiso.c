@@ -52,6 +52,51 @@
 
 static int USE_OMP = 1;
 
+typedef struct mix_curve_entry {
+    uint32_t black;
+    uint32_t white;
+    double corr_ev;
+    double overlap;
+    int ref_count;
+    double curve[1<<20];
+} mix_curve_entry_t;
+
+static mix_curve_entry_t * g_active_mix_curve = NULL;
+static pthread_mutex_t g_mix_curve_mutex = PTHREAD_MUTEX_INITIALIZER;
+static uint64_t g_mix_curve_hits = 0;
+static uint64_t g_mix_curve_misses = 0;
+
+void dualiso_get_mix_curve_stats(uint64_t *hits, uint64_t *misses)
+{
+    pthread_mutex_lock(&g_mix_curve_mutex);
+    if (hits) *hits = g_mix_curve_hits;
+    if (misses) *misses = g_mix_curve_misses;
+    pthread_mutex_unlock(&g_mix_curve_mutex);
+}
+
+void dualiso_reset_mix_curve_stats(void)
+{
+    pthread_mutex_lock(&g_mix_curve_mutex);
+    g_mix_curve_hits = 0;
+    g_mix_curve_misses = 0;
+    pthread_mutex_unlock(&g_mix_curve_mutex);
+}
+
+void dualiso_cleanup_mix_curve(void)
+{
+    pthread_mutex_lock(&g_mix_curve_mutex);
+    if (g_active_mix_curve)
+    {
+        g_active_mix_curve->ref_count--;
+        if (g_active_mix_curve->ref_count <= 0)
+        {
+            free(g_active_mix_curve);
+        }
+        g_active_mix_curve = NULL;
+    }
+    pthread_mutex_unlock(&g_mix_curve_mutex);
+}
+
 //this is just meant to be fast
 int diso_get_preview(uint16_t * image_data, uint16_t width, uint16_t height, int32_t black, int32_t white, int diso_check)
 {
@@ -2043,44 +2088,83 @@ static inline int mix_images(struct raw_info raw_info, uint32_t* fullres, uint32
 #ifndef STDOUT_SILENT
     printf("Half-res blending...\n");
 #endif
-    /* mixing curve: single shared LUT protected by mutex, matching fullres_curve and raw2ev */
-    static double s_shared_mix_curve[1<<20];
-    static uint32_t s_cached_black = 0xFFFFFFFF;
-    static uint32_t s_cached_white = 0xFFFFFFFF;
-    static double s_cached_corr_ev = -99999.0;
-    static double s_cached_overlap = -99999.0;
-    static int s_mix_curve_valid = 0;
+    /* mixing curve: immutable and refcounted, zero races, zero tearing */
+    mix_curve_entry_t * current_entry = NULL;
 
-    if (!s_mix_curve_valid ||
-        black != s_cached_black || white != s_cached_white ||
-        corr_ev != s_cached_corr_ev || overlap != s_cached_overlap)
+    pthread_mutex_lock(&g_mix_curve_mutex);
+    if (g_active_mix_curve &&
+        g_active_mix_curve->black == black &&
+        g_active_mix_curve->white == white &&
+        g_active_mix_curve->corr_ev == corr_ev &&
+        g_active_mix_curve->overlap == overlap)
     {
-        LOCK(mix_curve_mutex)
+        current_entry = g_active_mix_curve;
+        current_entry->ref_count++;
+        g_mix_curve_hits++;
+        pthread_mutex_unlock(&g_mix_curve_mutex);
+    }
+    else
+    {
+        g_mix_curve_misses++;
+        pthread_mutex_unlock(&g_mix_curve_mutex);
+
+        /* allocate new immutable table OUTSIDE mutex */
+        mix_curve_entry_t * new_entry = (mix_curve_entry_t *)malloc(sizeof(mix_curve_entry_t));
+        if (!new_entry)
         {
-            if (!s_mix_curve_valid ||
-                black != s_cached_black || white != s_cached_white ||
-                corr_ev != s_cached_corr_ev || overlap != s_cached_overlap)
-            {
-                double max_ev = log2(white/64 - black/64);
-                #pragma omp parallel for if(USE_OMP) schedule(static)
-                for (int i = 0; i < 1<<20; i++)
-                {
-                    double ev = log2(MAX(i/64.0 - black/64.0, 1)) + corr_ev;
-                    double c = -cos(MAX(MIN(ev-(max_ev-overlap),overlap),0)*M_PI/overlap);
-                    double k = (c+1) / 2;
-                    s_shared_mix_curve[i] = k;
-                }
-                s_cached_black = black;
-                s_cached_white = white;
-                s_cached_corr_ev = corr_ev;
-                s_cached_overlap = overlap;
-                s_mix_curve_valid = 1;
-            }
+            fprintf(stderr, "MLV App Error: Out of memory allocating mix_curve entry (%llu bytes)\n", (unsigned long long)sizeof(mix_curve_entry_t));
+            return 0;
         }
-        UNLOCK(mix_curve_mutex)
+        new_entry->black = black;
+        new_entry->white = white;
+        new_entry->corr_ev = corr_ev;
+        new_entry->overlap = overlap;
+        new_entry->ref_count = 1; /* 1 for the caller */
+
+        double max_ev = log2(white/64.0 - black/64.0);
+        #pragma omp parallel for if(USE_OMP) schedule(static)
+        for (int i = 0; i < (1<<20); i++)
+        {
+            double ev = log2(MAX(i/64.0 - black/64.0, 1.0)) + corr_ev;
+            double c = -cos(MAX(MIN(ev-(max_ev-overlap),overlap),0)*M_PI/overlap);
+            double k = (c+1) / 2.0;
+            new_entry->curve[i] = k;
+        }
+
+        /* Swap into g_active_mix_curve under mutex */
+        pthread_mutex_lock(&g_mix_curve_mutex);
+        if (g_active_mix_curve &&
+            g_active_mix_curve->black == black &&
+            g_active_mix_curve->white == white &&
+            g_active_mix_curve->corr_ev == corr_ev &&
+            g_active_mix_curve->overlap == overlap)
+        {
+            /* another thread already built the matching table; use theirs */
+            current_entry = g_active_mix_curve;
+            current_entry->ref_count++;
+            pthread_mutex_unlock(&g_mix_curve_mutex);
+            free(new_entry);
+        }
+        else
+        {
+            mix_curve_entry_t * old_entry = g_active_mix_curve;
+            new_entry->ref_count++; /* +1 for g_active_mix_curve pointer */
+            g_active_mix_curve = new_entry;
+            current_entry = new_entry;
+
+            if (old_entry)
+            {
+                old_entry->ref_count--;
+                if (old_entry->ref_count <= 0)
+                {
+                    free(old_entry);
+                }
+            }
+            pthread_mutex_unlock(&g_mix_curve_mutex);
+        }
     }
 
-    const double * mix_curve = s_shared_mix_curve;
+    const double * mix_curve = current_entry->curve;
 
 
     /* for fast EV - raw conversion */
@@ -2195,6 +2279,15 @@ static inline int mix_images(struct raw_info raw_info, uint32_t* fullres, uint32
     }
 
     free(over_aux); over_aux = 0;
+
+    /* release reader reference */
+    pthread_mutex_lock(&g_mix_curve_mutex);
+    current_entry->ref_count--;
+    if (current_entry->ref_count <= 0 && current_entry != g_active_mix_curve)
+    {
+        free(current_entry);
+    }
+    pthread_mutex_unlock(&g_mix_curve_mutex);
 
     return 1;
 }
