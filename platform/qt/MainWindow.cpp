@@ -1769,6 +1769,7 @@ int MainWindow::confirmAbort( void )
 //Start Export via Pipe
 void MainWindow::startExportPipe(QString fileName)
 {
+    mlv_clear_last_error();
     bool staberr = false;
     //ffmpeg existing?
     {
@@ -2245,6 +2246,15 @@ void MainWindow::startExportPipe(QString fileName)
 
                 //Check disk space
                 checkDiskFull( fileName );
+
+                //Check for allocation failure / error
+                if( mlv_get_last_error()[0] != '\0' )
+                {
+                    QMessageBox::critical( this, tr( "Export Failed" ), tr( "Memory allocation error:\n\n%1" ).arg( QString::fromUtf8( mlv_get_last_error() ) ) );
+                    mlv_clear_last_error();
+                    exportAbort();
+                    break;
+                }
 
                 //Abort pressed? -> End the loop
                 if( m_exportAbortPressed && confirmAbort() ) break;
@@ -2814,6 +2824,15 @@ void MainWindow::startExportPipe(QString fileName)
                     checkDiskFull( fileName );
                 }
 
+                //Check for allocation failure / error
+                if( mlv_get_last_error()[0] != '\0' )
+                {
+                    QMessageBox::critical( this, tr( "Export Failed" ), tr( "Memory allocation error:\n\n%1" ).arg( QString::fromUtf8( mlv_get_last_error() ) ) );
+                    mlv_clear_last_error();
+                    exportAbort();
+                    break;
+                }
+
                 //Abort pressed? -> End the loop
                 if( m_exportAbortPressed && confirmAbort() ) break;
             }
@@ -2860,6 +2879,7 @@ void MainWindow::startExportPipe(QString fileName)
 //CDNG output
 void MainWindow::startExportCdng(QString fileName)
 {
+    mlv_clear_last_error();
     // Prevents resuming (double-clicks on the pause button) while the parallel loop is still running
     if( m_pStatusDialog->m_isLoopRunning ) return;
     m_pStatusDialog->m_isLoopRunning = true;
@@ -3111,7 +3131,7 @@ void MainWindow::startExportCdng(QString fileName)
         int error = saveDngFrame( m_pMlvObject, cinemaDng, frame, filePathNr.toLatin1().data(), properties_fn.toLatin1().data() );
 #endif
 
-        if( error )
+        if( error || mlv_get_last_error()[0] != '\0' )
         {
             exportError = 1;
             errorFrame = getMlvFrameNumber( m_pMlvObject, frame );
@@ -3166,14 +3186,20 @@ void MainWindow::startExportCdng(QString fileName)
         // Pause time
         m_pStatusDialog->togglePauseResume( 0 );
 
+        QString errDetail = QString::fromUtf8( mlv_get_last_error() );
+        QString errText = errDetail.isEmpty()
+            ? tr( "Error exporting frame %1 from %2 clip.\nHow do you like to proceed?" )
+                .arg( errorFrame.load() )
+                .arg( fileName )
+            : tr( "Error exporting frame %1 from %2 clip:\n%3\n\nHow do you like to proceed?" )
+                .arg( errorFrame.load() )
+                .arg( fileName )
+                .arg( errDetail );
+
         int abortBatch = QMessageBox::critical(
             this,
             tr( "%1 – Export file error" ).arg( APPNAME ),
-
-            tr( "Error exporting frame %1 from %2 clip.\nHow do you like to proceed?" )
-                .arg( errorFrame.load() )
-                .arg( fileName ),
-
+            errText,
             tr( "Abort current export" ),
             tr( "Abort batch export" ),
             0, 0
@@ -3305,6 +3331,7 @@ void MainWindow::startExportMlv(QString fileName)
 #ifdef Q_OS_MACX
 void MainWindow::startExportAVFoundation(QString fileName)
 {
+    mlv_clear_last_error();
     //Disable GUI drawing
     m_dontDraw = true;
 
@@ -3553,6 +3580,15 @@ void MainWindow::startExportAVFoundation(QString fileName)
 
             //Check disk space
             checkDiskFull( fileName );
+        }
+
+        //Check for allocation failure / error
+        if( mlv_get_last_error()[0] != '\0' )
+        {
+            QMessageBox::critical( this, tr( "Export Failed" ), tr( "Memory allocation error:\n\n%1" ).arg( QString::fromUtf8( mlv_get_last_error() ) ) );
+            mlv_clear_last_error();
+            exportAbort();
+            break;
         }
 
         //Abort pressed? -> End the loop
