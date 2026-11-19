@@ -67,26 +67,6 @@ typedef struct mix_curve_entry {
 
 static mix_curve_entry_t * g_active_mix_curve = NULL;
 static pthread_mutex_t g_mix_curve_mutex = PTHREAD_MUTEX_INITIALIZER;
-#ifdef DEBUG_MIX_CURVE
-static uint64_t g_mix_curve_hits = 0;
-static uint64_t g_mix_curve_misses = 0;
-
-void dualiso_get_mix_curve_stats(uint64_t *hits, uint64_t *misses)
-{
-    pthread_mutex_lock(&g_mix_curve_mutex);
-    if (hits) *hits = g_mix_curve_hits;
-    if (misses) *misses = g_mix_curve_misses;
-    pthread_mutex_unlock(&g_mix_curve_mutex);
-}
-
-void dualiso_reset_mix_curve_stats(void)
-{
-    pthread_mutex_lock(&g_mix_curve_mutex);
-    g_mix_curve_hits = 0;
-    g_mix_curve_misses = 0;
-    pthread_mutex_unlock(&g_mix_curve_mutex);
-}
-#endif
 
 void dualiso_cleanup_mix_curve(void)
 {
@@ -1311,13 +1291,6 @@ static const struct edge_direction edge_directions[] = {       /* note: all y co
     //~ { { 6,2}, { 3,1}, {-6,-2}, {-9,-3} },     /* almost horizontal */
 };
 
-static void* amaze_wrapper(void* arg)
-{
-    amazeinfo_t* info = (amazeinfo_t*)arg;
-    demosaic(info);
-    return NULL;
-}
-
 static inline void amaze_interpolate(float** rawData, float** red, float** green, float** blue, int w, int h, int threads)
 {
     if (threads > 64) threads = 64;
@@ -2163,16 +2136,10 @@ static inline int mix_images(struct raw_info raw_info, uint32_t* fullres, uint32
     {
         current_entry = g_active_mix_curve;
         current_entry->ref_count++;
-#ifdef DEBUG_MIX_CURVE
-        g_mix_curve_hits++;
-#endif
         pthread_mutex_unlock(&g_mix_curve_mutex);
     }
     else
     {
-#ifdef DEBUG_MIX_CURVE
-        g_mix_curve_misses++;
-#endif
         pthread_mutex_unlock(&g_mix_curve_mutex);
 
         /* allocate new immutable table OUTSIDE mutex */
