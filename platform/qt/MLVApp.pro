@@ -222,6 +222,8 @@ SOURCES += \
     FcpxmlAssistantDialog.cpp \
     FcpxmlSelectDialog.cpp \
     ../../src/processing/denoiser/denoiser_2d_median.c \
+    ../../src/processing/galosh/galosh_bridge.c \
+    ../../src/processing/galosh/galosh_vulkan.c \
     ReceiptCopyMaskDialog.cpp \
     UserManualDialog.cpp \
     QRecentFilesMenu.cpp \
@@ -350,6 +352,9 @@ HEADERS += MainWindow.h \
     ../../src/processing/image_profile.h \
     ../../src/processing/cube_lut.h \
     ../../src/processing/denoiser/denoiser_2d_median.h \
+    ../../src/processing/galosh/galosh_bridge.h \
+    ../../src/processing/galosh/galosh_vulkan.h \
+    ../../src/processing/galosh/galosh_cpu.h \
     ClipInformation.h \
     InfoDialog.h \
     MyApplication.h \

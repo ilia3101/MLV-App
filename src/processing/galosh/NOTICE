@@ -1,0 +1,16 @@
+GALOSH — blind, training-free denoising of raw Bayer and sRGB/YUV images
+Copyright 2026 luxgrain
+
+Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+This product includes original algorithms and implementations developed by
+the GALOSH project (https://github.com/luxgrain/GALOSH).
+
+If you use GALOSH — in a product, a service, or research — or if GALOSH
+served as a reference or inspiration for your own implementation or design,
+we would love to hear about it. Please consider opening an issue at
+https://github.com/luxgrain/GALOSH (or a pull request adding yourself to
+ADOPTERS.md). This is a friendly request, not a license condition.
+
+The optional Vulkan backend uses headers from the Khronos Vulkan-Headers
+project (Apache-2.0 / MIT); see vulkan/LICENSE-Vulkan-Headers.md.

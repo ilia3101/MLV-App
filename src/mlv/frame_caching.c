@@ -9,6 +9,7 @@
 #include "../debayer/debayer.h"
 #include "../ca_correct/CA_correct_RT.h"
 #include "../debayer/wb_conversion.h"
+#include "../processing/galosh/galosh_bridge.h"
 
 #include "librtprocesswrapper.h"
 
@@ -22,10 +23,48 @@
 #define DEBUG(CODE)
 #endif
 
-void resetMlvCache(mlvObject_t * video)
+/* GALOSH works in the linear Bayer domain, before white balance and debayer.
+ * getMlvRawFrameFloat() has already applied applyLLRawProcObject(), so
+ * dual-ISO deinterleaving, pattern-noise and stripe corrections happen before
+ * this point.  GALOSH always sees a corrected Bayer mosaic, never the raw
+ * alternating-ISO lines.  A no-op when luma is 0. */
+static void apply_galosh_raw_denoise(mlvObject_t * video, float * frame,
+                                     int width, int height,
+                                     uint64_t frame_index)
+{
+    if (!video->processing) return;
+
+    /* Luma 0 disables GALOSH.  A missing model means the user has not
+     * estimated one yet; never estimate from the render path. */
+    if (video->processing->galoshLuma == 0) return;
+    if (!video->processing->galoshNoiseValid) return;
+
+    /* Use the native DNG-export levels, not processing->white_level (which
+     * carries MLV-App's 0.993 highlight bias).  This matches galosh-dng. */
+    float galosh_black, galosh_white;
+    getMlvGaloshRawLevels(video, &galosh_black, &galosh_white);
+
+    galosh_bayer_denoise_ex(video->processing, frame, width, height,
+                            video->RAWI.raw_info.cfa_pattern,
+                            galosh_black, galosh_white,
+                            frame_index,
+                            getMlvGaloshAnamorphicFactor(video));
+}
+
+void resetMlvRenderCache(mlvObject_t * video)
 {
     resetMlvCachedFrame(video);
     mark_mlv_uncached(video);
+}
+
+void resetMlvCache(mlvObject_t * video)
+{
+    resetMlvRenderCache(video);
+
+    /* Anything that reaches here changes the raw Bayer data or its
+     * normalization, so the clip noise model is stale.  Render-only GALOSH
+     * changes use resetMlvRenderCache() instead. */
+    if (video->processing) processingResetGaloshNoise(video->processing);
 }
 
 void disableMlvCaching(mlvObject_t * video)
@@ -257,6 +296,8 @@ void an_mlv_cache_thread(mlvObject_t * video)
         getMlvRawFrameFloat(video, cache_frame, imagefloat1d);
         pthread_mutex_unlock( &video->cache_mutex );
 
+        apply_galosh_raw_denoise(video, imagefloat1d, width, height, cache_frame);
+
         /* Single thread AMaZE */
         demosaic(&amaze_params);
 
@@ -303,6 +344,8 @@ void get_mlv_raw_frame_debayered( mlvObject_t * video,
 
     /* Get the raw data in B&W */
     getMlvRawFrameFloat(video, frame_index, temp_memory);
+
+    apply_galosh_raw_denoise(video, temp_memory, width, height, frame_index);
 
     wb_convert_info_t wb_info;
 

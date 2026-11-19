@@ -188,6 +188,17 @@ typedef struct {
     uint8_t    rbfDenoiserChroma;
     uint8_t    rbfDenoiserRange;
 
+    /* GALOSH RAW Bayer denoiser (luma 0 = off) */
+    uint16_t   galoshLuma;       /* 0..800, 100 = reference l=1 */
+    uint16_t   galoshChroma;     /* 0..300, 100 = reference c=1 */
+    uint8_t    galoshChromaPreserve; /* 0..100, 100 = max detail */
+    uint8_t    galoshBackend;    /* 0 = GPU, 1 = CPU */
+    uint8_t    galoshFast;       /* 0 = quality, 1 = fast */
+    uint8_t    galoshAnamorphicX;/* 0 = auto, 1 = normal, 3 = 1x3 x-upsample */
+    float      galoshAlpha;      /* per-clip shot-noise gain */
+    float      galoshSigmaSq;    /* per-clip read-noise variance */
+    uint8_t    galoshNoiseValid; /* clip model currently valid */
+
     /* Grain Generator */
     uint8_t    grainStrength;
     uint8_t    grainLumaWeight;

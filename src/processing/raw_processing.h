@@ -176,6 +176,29 @@ void processingSet3WayCorrection( processingObject_t * processing,
 #define processingSetRbfDenoiserRange(processing, strength) (processing)->rbfDenoiserRange = (strength)
 #define processingGetRbfDenoiserRange(processing) (processing)->rbfDenoiserRange
 
+/* GALOSH RAW Bayer denoiser */
+#define processingSetGaloshLuma(processing, value) (processing)->galoshLuma = (value)
+#define processingGetGaloshLuma(processing) (processing)->galoshLuma
+#define processingSetGaloshChroma(processing, value) (processing)->galoshChroma = (value)
+#define processingGetGaloshChroma(processing) (processing)->galoshChroma
+#define processingSetGaloshChromaPreserve(processing, value) (processing)->galoshChromaPreserve = (value)
+#define processingGetGaloshChromaPreserve(processing) (processing)->galoshChromaPreserve
+#define processingSetGaloshBackend(processing, value) (processing)->galoshBackend = (value)
+#define processingGetGaloshBackend(processing) (processing)->galoshBackend
+#define processingSetGaloshFast(processing, value) (processing)->galoshFast = (value)
+#define processingGetGaloshFast(processing) (processing)->galoshFast
+#define processingSetGaloshAnamorphicX(processing, value) (processing)->galoshAnamorphicX = (value)
+#define processingGetGaloshAnamorphicX(processing) (processing)->galoshAnamorphicX
+#define processingResetGaloshNoise(processing) do { \
+    (processing)->galoshNoiseValid = 0; \
+    (processing)->galoshAlpha = 0.0f; \
+    (processing)->galoshSigmaSq = 0.0f; \
+} while(0)
+/* Install a user-supplied or freshly estimated clip model.  Invalid values
+ * leave the current model untouched. */
+void processingSetGaloshNoiseModel( processingObject_t * processing,
+                                   float alpha, float sigma_sq );
+
 /* Grain */
 #define processingSetGrainStrength(processing, strength) (processing)->grainStrength = (strength)
 #define processingSetGrainLumaWeight(processing, strength) (processing)->grainLumaWeight = (strength)

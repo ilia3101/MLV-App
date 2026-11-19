@@ -44,8 +44,12 @@ void freeMlvObject(mlvObject_t * video);
 /* To enable and disable caching */
 void disableMlvCaching(mlvObject_t * video);
 void enableMlvCaching(mlvObject_t * video);
-/* Reset cache, to recache all frames, clears simgle frame cache too */
+/* Reset cache, to recache all frames, clears simgle frame cache too.
+ * Also invalidates the GALOSH clip noise model (raw data changed). */
 void resetMlvCache(mlvObject_t * video);
+/* Reset the rendered-frame cache without invalidating the GALOSH clip model.
+ * Use for render-only changes (strength, luma, chroma, backend, Fast, 1x3). */
+void resetMlvRenderCache(mlvObject_t * video);
 /* For setting how much can be cached - "MegaBytes" == MebiBytes (thanks dmilligan) */
 void setMlvRawCacheLimitMegaBytes(mlvObject_t * video, uint64_t megaByteLimit);
 void setMlvRawCacheLimitFrames(mlvObject_t * video, uint64_t frameLimit);
@@ -67,6 +71,24 @@ void getMlvProcessedFrame16(mlvObject_t * video, uint64_t frameIndex, uint16_t *
  * Output values will be in range 0-65535 (16 bit), float is only because AMAzE uses it */
 int getMlvRawFrameUint16(mlvObject_t * video, uint64_t frameIndex, uint16_t * unpackedFrame);
 void getMlvRawFrameFloat(mlvObject_t * video, uint64_t frameIndex, float * outputFrame);
+
+/* Black/white levels that match the DNG export and the raw float frame
+ * produced by getMlvRawFrameFloat().  Used by the GALOSH bridge so its
+ * normalization matches the reference GALOSH DNG tool. */
+void getMlvGaloshRawLevels(mlvObject_t * video, float * black_level,
+                           float * white_level);
+
+/* GALOSH horizontal processing factor: 1 normally, 3 for 1x3 anamorphic
+ * footage (manual "0.33x" stretch, or MLV metadata fallback). */
+int getMlvGaloshAnamorphicFactor(mlvObject_t * video);
+
+/* Estimate the per-clip GALOSH noise model (Var(x) = alpha*x + sigma_sq) from
+ * one frame.  The UI calls this for the user-selected noise frame and after
+ * raw/dual-ISO/1x3 changes when a model was valid.  For 1x3 clips the estimate
+ * is made after the horizontal Bayer upsample.  Always runs on the CPU.
+ * Returns 0 on success and installs the model in video->processing. */
+int galoshEstimateNoiseModelFromFrame(mlvObject_t * video,
+                                      uint64_t frame_index);
 
 /* Gets a debayered 16 bit frame */
 void getMlvRawFrameDebayered(mlvObject_t * video, uint64_t frameIndex, uint16_t * outputFrame);
