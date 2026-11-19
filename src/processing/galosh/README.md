@@ -2,7 +2,7 @@
 
 Vendored from <https://github.com/luxgrain/GALOSH> (Apache-2.0).  The upstream
 CPU FP32 RAW reference (`galosh_cpu.h`, `galosh_raw_cpu.c`) is the canonical
-implementation.
+implementation; the Vulkan host is an optional backend.
 
 The denoiser runs on linear Bayer data in `[0,1]` after MLV raw corrections
 and before white balance/debayer.  `getMlvRawFrameFloat()` has already called
@@ -47,7 +47,9 @@ noise frame is per clip and session-only; `alpha`/`sigma_sq` are stored per clip
 in the session and copied by recipes only with the separate **GALOSH Noise
 Model** checkbox.
 
-Estimation runs on the CPU, so the denoiser always consumes the same model.
+Estimation runs on the CPU even when the Vulkan backend is selected, so both
+backends consume exactly the same model.  The Vulkan host skips its own
+alpha/sigma fit when the bridge supplies one.
 
 ## Full-resolution chroma
 
@@ -70,7 +72,8 @@ The UI maps:
 - Chroma preserve `0..100` -> `bw = 1.0 - 0.99*(value/100)`; 1.0 gives maximum
   detail (`chroma-bw=0.01`), 0.0 gives minimum (`chroma-bw=1.0`).
 
-The half-res chroma path and its archived variants have been removed.
+The CPU and Vulkan implementations use the same ladder and parameters.  The
+half-res chroma path and its shaders have been removed.
 
 ## 1x3 anamorphic clips
 
@@ -85,7 +88,7 @@ grid:
 - the mosaic is upsampled by 3 along x with a CFA-aware 1D interpolation;
 - only odd factors are accepted, because `parity(3*x) == parity(x)` preserves
   the 2x2 CFA pattern and its phase;
-- the existing CPU backend runs unchanged on the larger grid;
+- the existing CPU/Vulkan backend runs unchanged on the larger grid;
 - the result is sampled back at the original pixel positions.
 
 The noise model is estimated **after** the 3x horizontal Bayer upsample, so it
@@ -98,6 +101,13 @@ auto-detect 1x3.  In the Qt UI the factor is therefore driven by the manual
 by 3x); `getMlvAspectRatio()` remains a fallback for files that do carry the
 metadata.  The 3x path is slower and is not used for filmstrip thumbnails.
 
+The Vulkan host splits the long luma pass into at least eight queue
+submissions.  The adaptive probe can underestimate the per-row rate on slow
+integrated GPUs, and a single oversized submission trips the GPU watchdog; the
+minimum band count keeps every submission bounded without a resolution-based
+backend switch.  CPU is used only when the Vulkan backend is not compiled in or
+no usable Vulkan device is available; a GPU call that reports an error leaves
+the frame untouched rather than silently switching backends.
 
 ## Local changes to upstream sources
 
@@ -114,9 +124,51 @@ metadata.  The 3x path is slower and is not used for filmstrip thumbnails.
   is estimated after the horizontal Bayer upsample.
 - `galosh_bridge.c`: expose the per-clip `chroma_bw` from the UI's inverse
   "Chroma preserve" slider.
+- `galosh_vk_host.c` (Vulkan branch): skip the duplicate alpha/sigma fit and
+  dark-Laplacian pass when the bridge supplies the clip model; keep the
+  per-frame dark-threshold pass and upload the supplied model before GAT/LUT.
 - `galosh_cpu.h`: allocator stubs use `posix_memalign` / `_aligned_malloc`
   (MLV-App is built as C99, where `aligned_alloc` is not declared).
 - `galosh_cpu.h`: `_Float16` is optional; MLV-App does not use the FP16-storage
   oracle.
 - `galosh_cpu.h`: SSE includes are guarded for non-x86 builds.
 - `galosh_cpu.h`: per-call diagnostic prints were removed.
+- `galosh_vk_host.c`: the adaptive pass12 banding enforces at least eight
+  queue submissions, so a probe underestimate cannot submit one
+  watchdog-tripping dispatch on slow integrated GPUs.
+- `galosh_vk_host.c`: portability enumeration/subset support and MoltenVK ICD
+  probing were added for the optional macOS Vulkan backend.
+
+## Vulkan backend
+
+The Vulkan host is in `galosh_vk_host.c`, with shader sources and precompiled
+SPIR-V in `vulkan/shaders/`.  The backend is off by default.  Enable it with:
+
+```sh
+qmake CONFIG+=galosh_vulkan path/to/MLVApp.pro
+```
+
+Requirements: Vulkan headers and a loader (`-lvulkan` on Linux, `vulkan-1` on
+Windows, MoltenVK on macOS).  Vulkan headers are not vendored; use the system
+headers or the LunarG SDK (`VULKAN_SDK`).  On macOS, Homebrew provides:
+
+```sh
+brew install molten-vk vulkan-headers vulkan-loader
+export VK_ICD_FILENAMES=/opt/homebrew/etc/vulkan/icd.d/MoltenVK_icd.json
+```
+
+The build copies the `.spv` files to `<build>/galosh_shaders`; on macOS they
+are copied into `MLV App.app/Contents/MacOS/galosh_shaders`.  The host uses the
+subgroup-32 `pass12_sg` kernel when the device advertises
+`VK_EXT_subgroup_size_control`; otherwise it uses the classic pass12 kernel.
+Set `GALOSH_VK_FORCE_CLASSIC=1` to force the classic path for troubleshooting.
+Timestamp profiling runs only with `GALOSH_VERBOSE=1`.
+
+Regenerate SPIR-V with:
+
+```sh
+cd src/processing/galosh/vulkan
+for k in shaders/*.comp; do
+  glslc -O --target-env=vulkan1.2 "$k" -o "${k%.comp}.spv"
+done
+```

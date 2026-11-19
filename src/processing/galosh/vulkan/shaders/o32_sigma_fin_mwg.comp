@@ -1,0 +1,36 @@
+#version 450
+/* o32_sigma_fin_mwg.comp — [V2.0 iGPU-opt] stage 2 of the two-stage
+ * sigma_per_cfa: per-channel median scan over the global histogram.
+ * One thread per CFA channel; identical median/MAD/sigma math to the
+ * original kernel's WI-0 epilogue (bit-identical result).
+ * JP: 元カーネルの WI0 エピローグと同一の median→MAD→σ。 */
+layout(local_size_x = 4, local_size_y = 1, local_size_z = 1) in;
+
+layout(std430, binding = 0) readonly buffer Buf0 { int hist[]; };   /* 4 x 4096 */
+layout(std430, binding = 1) buffer Buf1 { float params[]; };
+
+const int P_SIGMA_CH0 = 0;
+const int   O32_SIGMA_NBINS   = 4096;
+const float O32_SIGMA_LAP_MAX = 16.0;
+
+void main()
+{
+  const int ch = int(gl_LocalInvocationID.x);
+  if(ch >= 4) return;
+  const int hbase = ch * O32_SIGMA_NBINS;
+  const float bin_scale = float(O32_SIGMA_NBINS) / O32_SIGMA_LAP_MAX;
+
+  int total = 0;
+  for(int i = 0; i < O32_SIGMA_NBINS; i++) total += hist[hbase + i];
+
+  const int median_target = total / 2;
+  int cum = 0, median_bin = 0;
+  for(int i = 0; i < O32_SIGMA_NBINS; i++)
+  {
+    cum += hist[hbase + i];
+    if(cum >= median_target) { median_bin = i; break; }
+  }
+  const float mad = (float(median_bin) + 0.5) / bin_scale;
+  const float sigma = max(mad / 1.6521, 0.01);
+  params[P_SIGMA_CH0 + ch] = sigma;
+}

@@ -1,0 +1,28 @@
+#version 450
+/* o32_f16_to_f32_4p.comp — widen the four full-res contract planes
+ * (L_cs_den, C1, C2, C3) from binary16 storage to f32 working buffers.
+ * Conversion is exact; no rounding is introduced. */
+#extension GL_EXT_shader_16bit_storage : require
+#extension GL_EXT_shader_explicit_arithmetic_types_float16 : require
+layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+
+layout(std430, binding = 0) restrict readonly  buffer Buf0 { float16_t L_in[]; };
+layout(std430, binding = 1) restrict readonly  buffer Buf1 { float16_t C1_in[]; };
+layout(std430, binding = 2) restrict readonly  buffer Buf2 { float16_t C2_in[]; };
+layout(std430, binding = 3) restrict readonly  buffer Buf3 { float16_t C3_in[]; };
+layout(std430, binding = 4) restrict writeonly buffer Buf4 { float L_out[]; };
+layout(std430, binding = 5) restrict writeonly buffer Buf5 { float C1_out[]; };
+layout(std430, binding = 6) restrict writeonly buffer Buf6 { float C2_out[]; };
+layout(std430, binding = 7) restrict writeonly buffer Buf7 { float C3_out[]; };
+
+layout(push_constant) uniform PC { int n; } pc;
+
+void main()
+{
+  const int i = int(gl_GlobalInvocationID.x);
+  if(i >= pc.n) return;
+  L_out[i]  = float(L_in[i]);
+  C1_out[i] = float(C1_in[i]);
+  C2_out[i] = float(C2_in[i]);
+  C3_out[i] = float(C3_in[i]);
+}

@@ -1,0 +1,88 @@
+#version 450
+/* o32_fastup_3p.comp — [V2.0 B6] fast guided upsample, 3-plane.
+ *
+ * EN: GPU mirror of the CPU gat_fast_guided_upsample (A3, galosh_cpu.h):
+ *     guided BILINEAR 2x upsample — per output pixel only the nearest
+ *     2x2 low-res samples contribute (1/2/4 taps by sub-pixel phase),
+ *     weights = bilinear x the same bilateral L modulation as K16.
+ *     Convex combination => ring-free by construction.  Drop-in for
+ *     o32_k16_jbu_3p: SAME bindings and push layout, so the host swaps
+ *     the pipeline per --upsample=fast with unchanged descriptor sets.
+ * JP: CPU --upsample=fast の GPU ミラー。K16 とバインディング/push 完全
+ *     互換なのでホストはパイプライン差し替えのみ。
+ */
+layout(local_size_x = 16, local_size_y = 16) in;
+
+layout(std430, binding = 0) readonly  buffer B0 { float c1_h[]; };
+layout(std430, binding = 1) readonly  buffer B1 { float c2_h[]; };
+layout(std430, binding = 2) readonly  buffer B2 { float c3_h[]; };
+layout(std430, binding = 3) readonly  buffer B3 { float L_pixel[]; };
+layout(std430, binding = 4) writeonly buffer B4 { float c1_full[]; };
+layout(std430, binding = 5) writeonly buffer B5 { float c2_full[]; };
+layout(std430, binding = 6) writeonly buffer B6 { float c3_full[]; };
+layout(push_constant) uniform PC {
+  int   in_w;
+  int   in_h;
+  float bw;
+} pc;
+
+void main()
+{
+  const int fw = 2 * pc.in_w;
+  const int fh = 2 * pc.in_h;
+  const int fc = int(gl_GlobalInvocationID.x);
+  const int fr = int(gl_GlobalInvocationID.y);
+  if(fc >= fw || fr >= fh) return;
+
+  const float inv_2sigma_sq = 1.0f / (2.0f * pc.bw * pc.bw);
+  const int hy = fr >> 1, hx = fc >> 1;
+  const int sub_dy = fr & 1, sub_dx = fc & 1;
+
+  const float L_c = L_pixel[fr * fw + fc];
+  /* bilinear tap weights per sub-pixel phase (0 -> single tap, 0.5 -> half) */
+  const float wy0 = (sub_dy != 0) ? 0.5f : 1.0f;
+  const float wx0 = (sub_dx != 0) ? 0.5f : 1.0f;
+
+  float sum_w = 0.0f, s1 = 0.0f, s2 = 0.0f, s3 = 0.0f;
+  for(int dy = 0; dy <= sub_dy; dy++)
+  {
+    int hyi = hy + dy;
+    if(hyi >= pc.in_h) hyi = pc.in_h - 1;
+    const float wyv = (dy == 0) ? wy0 : 0.5f;
+    for(int dx = 0; dx <= sub_dx; dx++)
+    {
+      int hxi = hx + dx;
+      if(hxi >= pc.in_w) hxi = pc.in_w - 1;
+      const float wxv = (dx == 0) ? wx0 : 0.5f;
+
+      const int fri = 2 * hyi;
+      const int fci = 2 * hxi;
+      const float L_i = L_pixel[((fri < fh) ? fri : fh - 1) * fw
+                                + ((fci < fw) ? fci : fw - 1)];
+      const float dL = L_i - L_c;
+      const float w = wyv * wxv * exp(-dL * dL * inv_2sigma_sq);
+
+      const int hp = hyi * pc.in_w + hxi;
+      sum_w += w;
+      s1 += w * c1_h[hp];
+      s2 += w * c2_h[hp];
+      s3 += w * c3_h[hp];
+    }
+  }
+
+  const int fp = fr * fw + fc;
+  if(sum_w > 1e-12f)
+  {
+    const float inv = 1.0f / sum_w;
+    c1_full[fp] = s1 * inv;
+    c2_full[fp] = s2 * inv;
+    c3_full[fp] = s3 * inv;
+  }
+  else
+  {
+    const int hp = hy * pc.in_w + hx;
+    c1_full[fp] = c1_h[hp];
+    c2_full[fp] = c2_h[hp];
+    c3_full[fp] = c3_h[hp];
+  }
+}

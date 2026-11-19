@@ -1,0 +1,111 @@
+#version 450
+/* o32_loess_chroma_1ch_tiled_r22.comp — fixed-R=22 single-channel tiled
+ * LOESS for the high full-res ladder anchor.
+ *
+ * 3-pass strategy: the host dispatches this once per chroma channel with the
+ * same Y guide.  The tile holds only 2 planes (Y + one C), so R=22 fits the
+ * 32 KB LDS budget:
+ *   TILE_DIM = 16 -> TILE_W = 60, TILE_PIX = 3600
+ *   2 × 3600 × 4 B = 28,800 B (28.1 KB)
+ *
+ * Math mirrors CPU galosh_loess_chroma_3ch_r for one channel (degree-1
+ * regression + full-window GALOSH_CHROMA_CLAMP).  BW is user-controlled. */
+layout(local_size_x = 16, local_size_y = 16) in;
+
+#define GALOSH_R22_R       22
+#define GALOSH_R22_TILE    16
+#define GALOSH_R22_W       (GALOSH_R22_TILE + 2 * GALOSH_R22_R)
+#define GALOSH_R22_PIX     (GALOSH_R22_W * GALOSH_R22_W)
+
+layout(std430, binding = 0) readonly  buffer Buf0 { float y_guide[]; };
+layout(std430, binding = 1) readonly  buffer Buf1 { float c_in[];   };
+layout(std430, binding = 2) writeonly buffer Buf2 { float c_out[];  };
+
+layout(push_constant) uniform PC {
+  int   width;
+  int   height;
+  float strength_c;
+  float bw;
+} pc;
+
+shared float t_Y[GALOSH_R22_PIX];
+shared float t_C[GALOSH_R22_PIX];
+
+void main()
+{
+  const int tile_x = int(gl_WorkGroupID.x) * GALOSH_R22_TILE;
+  const int tile_y = int(gl_WorkGroupID.y) * GALOSH_R22_TILE;
+  const int lx = int(gl_LocalInvocationID.x);
+  const int ly = int(gl_LocalInvocationID.y);
+  const int lid = ly * GALOSH_R22_TILE + lx;
+  const int wg_size = GALOSH_R22_TILE * GALOSH_R22_TILE;
+
+  for(int i = lid; i < GALOSH_R22_PIX; i += wg_size)
+  {
+    const int tx = i % GALOSH_R22_W;
+    const int ty = i / GALOSH_R22_W;
+    int gx = tile_x - GALOSH_R22_R + tx;
+    int gy = tile_y - GALOSH_R22_R + ty;
+    if(gx < 0)          gx = -gx;
+    if(gx >= pc.width)  gx = 2 * pc.width - gx - 2;
+    if(gx < 0)          gx = 0;
+    if(gx >= pc.width)  gx = pc.width - 1;
+    if(gy < 0)          gy = -gy;
+    if(gy >= pc.height) gy = 2 * pc.height - gy - 2;
+    if(gy < 0)          gy = 0;
+    if(gy >= pc.height) gy = pc.height - 1;
+    const int p = gy * pc.width + gx;
+    t_Y[i] = y_guide[p];
+    t_C[i] = c_in[p];
+  }
+  memoryBarrierShared(); barrier();
+
+  const int ox = tile_x + lx;
+  const int oy = tile_y + ly;
+  if(ox >= pc.width || oy >= pc.height) return;
+
+  const int cx_lds = GALOSH_R22_R + lx;
+  const int cy_lds = GALOSH_R22_R + ly;
+  const float Y_c = t_Y[cy_lds * GALOSH_R22_W + cx_lds];
+  const float inv_2sigma_sq = 1.0f / (2.0f * pc.bw * pc.bw);
+
+  float sumW = 0.0f, sumY = 0.0f, sumYY = 0.0f;
+  float sumC = 0.0f, sumYC = 0.0f;
+  float cmin = 1e30f, cmax = -1e30f;
+
+  for(int dy = -GALOSH_R22_R; dy <= GALOSH_R22_R; dy++)
+  {
+    const int ty_lds = cy_lds + dy;
+    for(int dx = -GALOSH_R22_R; dx <= GALOSH_R22_R; dx++)
+    {
+      const int tx_lds = cx_lds + dx;
+      const int p = ty_lds * GALOSH_R22_W + tx_lds;
+      const float Yi = t_Y[p];
+      const float Ci = t_C[p];
+      cmin = min(cmin, Ci);
+      cmax = max(cmax, Ci);
+      const float dY = Yi - Y_c;
+      const float w = exp(-dY * dY * inv_2sigma_sq);
+      sumW  += w;
+      sumY  += w * Yi;
+      sumYY += w * Yi * Yi;
+      sumC  += w * Ci;
+      sumYC += w * Yi * Ci;
+    }
+  }
+
+  const float invW  = 1.0f / max(sumW, 1e-10f);
+  const float meanY = sumY * invW;
+  const float meanYY = sumYY * invW;
+  const float meanC = sumC * invW;
+  const float meanYC = sumYC * invW;
+  const float varY = max(meanYY - meanY * meanY, 0.0f);
+  const float eps = pc.strength_c * pc.strength_c;
+  const float a = (meanYC - meanY * meanC) / max(varY + eps, 1e-6f);
+  const float b = meanC - a * meanY;
+  float oc = a * Y_c + b;
+  if(cmax >= cmin) oc = clamp(oc, cmin, cmax);
+
+  const uint op = uint(oy) * uint(pc.width) + uint(ox);
+  c_out[op] = oc;
+}

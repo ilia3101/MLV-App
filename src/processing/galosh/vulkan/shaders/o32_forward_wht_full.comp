@@ -1,0 +1,68 @@
+#version 450
+/* o32_forward_wht_full.comp — full-res RAW chroma WHT (stride-1).
+ *
+ * Computes the four 2x2 WHT planes at every pixel TL (mirror padding at the
+ * right/bottom), applies the CFA sign-flip demodulation to C1/C2/C3, and
+ * stores L_cs + C1..C3 as the FP16 contract points (RNE).
+ *
+ * Mirrors CPU galosh_h_forward_wht_stride1 + gat_h_demodulate_chroma:
+ *   L  = (a+b+c+d)/2
+ *   C1 = (a-b+c-d)/2
+ *   C2 = (a+b-c-d)/2
+ *   C3 = (a-b-c+d)/2
+ *   C1 *= (-1)^r, C2 *= (-1)^c, C3 *= (-1)^(r+c)
+ */
+#extension GL_EXT_shader_16bit_storage : require
+#extension GL_EXT_shader_explicit_arithmetic_types_float16 : require
+#extension GL_GOOGLE_include_directive : enable
+#include "galosh_f16_rne.glsl"
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+
+layout(std430, binding = 0) restrict readonly  buffer Buf0 { float in_gat[]; };
+layout(std430, binding = 1) restrict writeonly buffer Buf1 { float16_t L_cs[]; };
+layout(std430, binding = 2) restrict writeonly buffer Buf2 { float16_t C1[]; };
+layout(std430, binding = 3) restrict writeonly buffer Buf3 { float16_t C2[]; };
+layout(std430, binding = 4) restrict writeonly buffer Buf4 { float16_t C3[]; };
+
+layout(push_constant) uniform PC { int width; int height; } pc;
+
+int mirror_idx(int i, int n)
+{
+  if(i < 0) return -i;
+  if(i >= n) return 2 * n - i - 2;
+  return i;
+}
+
+void main()
+{
+  const int x = int(gl_GlobalInvocationID.x);
+  const int y = int(gl_GlobalInvocationID.y);
+  if(x >= pc.width || y >= pc.height) return;
+
+  const int xb = mirror_idx(x + 1, pc.width);
+  const int yb = mirror_idx(y + 1, pc.height);
+  const int p  = y * pc.width + x;
+  const int pa = y * pc.width + x;
+  const int pb = yb * pc.width + x;
+  const int pc_ = y * pc.width + xb;
+  const int pd = yb * pc.width + xb;
+
+  const float a = in_gat[pa];
+  const float b = in_gat[pb];
+  const float c = in_gat[pc_];
+  const float d = in_gat[pd];
+
+  const float L  = 0.5f * (a + b + c + d);
+  float C1v = 0.5f * (a - b + c - d);
+  float C2v = 0.5f * (a + b - c - d);
+  float C3v = 0.5f * (a - b - c + d);
+
+  if((y & 1) != 0) C1v = -C1v;
+  if((x & 1) != 0) C2v = -C2v;
+  if(((x + y) & 1) != 0) C3v = -C3v;
+
+  L_cs[p] = float16_t(galosh_f16_rne(L));
+  C1[p]   = float16_t(galosh_f16_rne(C1v));
+  C2[p]   = float16_t(galosh_f16_rne(C2v));
+  C3[p]   = float16_t(galosh_f16_rne(C3v));
+}

@@ -1,0 +1,380 @@
+#version 450
+/* o32_pass12_sg.comp — [V2.0 B7g] SUBGROUP-COOPERATIVE rewrite of
+ * o32_pass12 (28px-tile two-pass 8x8 WHT-LOSH): ONE 8x8 block PER
+ * SUBGROUP, the 64 coefficients distributed 2-per-lane across a
+ * REQUIRED subgroup size of 32 (host pins it via
+ * VK_EXT_subgroup_size_control on every vendor — single code path).
+ *
+ * WHY: the per-thread `float block[64]` (pass2: 128 floats) of the
+ * literal transcription spills to local memory under the SPIR-V
+ * compilers (measured: NVIDIA 40.6 ms vs OpenCL-C 26.2 ms at 4K;
+ * iGPU 1.9 s / Arc 0.43 s at 1080p quality).  Lane-distributed
+ * coefficients live in registers by construction — no spill possible.
+ *
+ * NUMERIC CONTRACT vs o32_pass12 (the parity oracle chain CPU->CL->VK):
+ *  - 2D WHT: butterflies across flat-index bits via subgroupShuffleXor
+ *    (bits 0..4) and an in-lane register pair (bit 5).  Same add/sub
+ *    pairs, same stage order (bit0,1,2 = rows; 3,4,5 = cols) as
+ *    wht8_f/wht2d_8x8_f => BIT-IDENTICAL per element.
+ *  - MAD median: 64-element cross-lane bitonic sort with the DC slot
+ *    forced to +INF; sorted[31] = the exact 32nd-smallest |AC| — the
+ *    same VALUE the scalar partial-selection sort returns (ties do not
+ *    change the selected multiset element).  BIT-IDENTICAL.
+ *  - Pass1 is therefore bit-identical end-to-end (n_nonzero = integer
+ *    subgroupAdd, exact).
+ *  - SOLE DEVIATION: pass2 wiener_energy = subgroupAdd of w*w (tree
+ *    order) instead of the serial i=0..63 sum -> weight differs by
+ *    ~1 ulp relative 1e-7; largely erased by the f16 contract round at
+ *    the L_cs_den store.  Documented, gated by the >=69 dB CPU-parity
+ *    contract (measured on integration, see host).
+ * (日) 1 ブロック = 1 サブグループ (S=32 固定、係数 2 個/レーン)。
+ *   WHT はシャッフル・バタフライで演算順序ごと厳密再現、MAD 中央値は
+ *   bitonic 全ソートで選択ソートと同値。唯一の逸脱は pass2 の
+ *   wiener_energy 木和（相対 1e-7、f16 丸めでほぼ消滅）。
+ *
+ * [FP16 v1] I/O contract identical to o32_pass12: L_cs in / L_cs_den out
+ * = float16_t SSBOs, pilot rounded through f16 at its shared store.
+ *
+ * Host contract: local_size_x = 512 (16 subgroups), REQUIRED subgroup
+ * size 32 + full-subgroups flag; dispatch grid = ceil(W/28) x ceil(H/28)
+ * (same as o32_pass12; vkCmdDispatchBase banding works unchanged). */
+#extension GL_KHR_shader_subgroup_basic : require
+#extension GL_KHR_shader_subgroup_shuffle : require
+#extension GL_KHR_shader_subgroup_arithmetic : require
+#extension GL_EXT_shader_16bit_storage : require
+#extension GL_EXT_shader_explicit_arithmetic_types_float16 : require
+#extension GL_GOOGLE_include_directive : enable
+#include "galosh_f16_rne.glsl"
+layout(local_size_x = 512, local_size_y = 1) in;
+
+/* ---- compile-time constants (identical to o32_pass12) ---- */
+#define GALOSH_BS      8
+#define GALOSH_BP     64
+#define GALOSH_STRIDE  2
+#define PHASE_MOD  (GALOSH_BS / GALOSH_STRIDE)
+#define N_PHASES   (PHASE_MOD * PHASE_MOD)
+#define HALO       (GALOSH_BS - GALOSH_STRIDE)
+#define WIENER_FLOOR  0.125f
+
+#define O32_TILE_SIZE 28
+#define O32_TILE_W      (O32_TILE_SIZE + 2 * HALO)
+#define O32_TILE_PIXELS (O32_TILE_W * O32_TILE_W)
+
+#define SGS 32u   /* REQUIRED subgroup size (host-pinned) */
+
+const float kaiser_1d[8] = float[8](
+  0.34012f, 0.59885f, 0.84123f, 0.97659f,
+  0.97659f, 0.84123f, 0.59885f, 0.34012f
+);
+
+layout(std430, binding = 0) readonly  buffer Buf0 { float16_t input_buf[]; };
+layout(std430, binding = 1) writeonly buffer Buf1 { float16_t output_buf[]; };
+layout(push_constant) uniform PC {
+  int   width;
+  int   height;
+  float sigma_strength;
+  int   phase_stride;
+} pc;
+
+shared float tile_in[O32_TILE_PIXELS];
+shared float numer  [O32_TILE_PIXELS];
+shared float denom  [O32_TILE_PIXELS];
+shared float pilot  [O32_TILE_PIXELS];
+
+/* Butterfly across flat-index bit k.  Lane `lane` holds flat = lane
+ * (reg 0) and flat = lane+32 (reg 1).  out[clear] = in[clear]+in[set],
+ * out[set] = in[clear]-in[set] — the exact wht8_f stage pattern. */
+void wht_stage(inout float v0, inout float v1, const int k, const uint lane)
+{
+  if(k < 5)
+  {
+    const uint m = 1u << k;
+    const float o0 = subgroupShuffleXor(v0, m);
+    const float o1 = subgroupShuffleXor(v1, m);
+    if((lane & m) != 0u) { v0 = o0 - v0; v1 = o1 - v1; }
+    else                 { v0 = v0 + o0; v1 = v1 + o1; }
+  }
+  else   /* bit 5 = the register pair inside the lane */
+  {
+    const float t0 = v0 + v1;
+    const float t1 = v0 - v1;
+    v0 = t0; v1 = t1;
+  }
+}
+
+/* 2D 8x8 WHT: flat = r*8+c, so bits 0..2 = rows pass, 3..5 = cols pass
+ * — same stage ORDER as wht2d_8x8_f (all rows, then all cols). */
+void wht2d_sg(inout float v0, inout float v1, const int normalize, const uint lane)
+{
+  wht_stage(v0, v1, 0, lane);
+  wht_stage(v0, v1, 1, lane);
+  wht_stage(v0, v1, 2, lane);
+  wht_stage(v0, v1, 3, lane);
+  wht_stage(v0, v1, 4, lane);
+  wht_stage(v0, v1, 5, lane);
+  if(normalize != 0)
+  {
+    const float inv = (1.0f / 64.0f);
+    v0 *= inv; v1 *= inv;
+  }
+}
+
+/* MAD sigma^2: exact median of the 63 |AC| via full 64-element bitonic
+ * sort across the subgroup (DC slot = +INF sorts last), pick sorted[31]
+ * = 32nd smallest = scalar abs_ac[target] with target = 31. */
+float mad_sigma_y_sq_sg(const float b0, const float b1, const uint lane)
+{
+  float s0 = (lane == 0u) ? uintBitsToFloat(0x7F800000u) : abs(b0);
+  float s1 = abs(b1);
+  const uint f0 = lane;
+  const uint f1 = lane | 32u;
+  for(uint k = 2u; k <= 64u; k <<= 1)
+  {
+    for(uint j = k >> 1; j > 0u; j >>= 1)
+    {
+      if(j == 32u)
+      {
+        /* cross-register step (only at k=64: ascending everywhere) */
+        const float mn = min(s0, s1), mx = max(s0, s1);
+        s0 = mn; s1 = mx;
+      }
+      else
+      {
+        const float o0 = subgroupShuffleXor(s0, j);
+        const float o1 = subgroupShuffleXor(s1, j);
+        const bool keepmin0 = (((f0 & j) == 0u) == ((f0 & k) == 0u));
+        const bool keepmin1 = (((f1 & j) == 0u) == ((f1 & k) == 0u));
+        s0 = keepmin0 ? min(s0, o0) : max(s0, o0);
+        s1 = keepmin1 ? min(s1, o1) : max(s1, o1);
+      }
+    }
+  }
+  const float mad = subgroupShuffle(s0, 31u);
+  const float sy = mad / 0.6745f;
+  return (sy * sy) / float(GALOSH_BP);
+}
+
+void main()
+{
+  const int tile_x = int(gl_WorkGroupID.x) * O32_TILE_SIZE;
+  const int tile_y = int(gl_WorkGroupID.y) * O32_TILE_SIZE;
+  const int lid = int(gl_LocalInvocationIndex);
+  const int wg_size = 512;
+  const uint lane = gl_SubgroupInvocationID;
+  const int sgid = int(gl_SubgroupID);
+  const int n_sg = int(gl_NumSubgroups);   /* 16 (512/32, full subgroups) */
+
+  const int img_rmax = pc.height - GALOSH_BS;
+  const int img_cmax = pc.width  - GALOSH_BS;
+
+  /* per-lane coefficient coordinates inside the block (flat = lane, lane+32) */
+  const int dy0 = int(lane) >> 3, dx0 = int(lane) & 7;
+  const int dy1 = dy0 + 4;                      /* flat1 = flat0 + 32 = +4 rows */
+
+  /* ---- Step 1: load tile (+halo) ---- */
+  for(int i = lid; i < O32_TILE_PIXELS; i += wg_size)
+  {
+    const int lx = i % O32_TILE_W;
+    const int ly = i / O32_TILE_W;
+    const int gx = tile_x - HALO + lx;
+    const int gy = tile_y - HALO + ly;
+    tile_in[i] = (gx >= 0 && gx < pc.width && gy >= 0 && gy < pc.height)
+                 ? float(input_buf[gy * pc.width + gx]) : 0.0f;
+  }
+  memoryBarrierShared(); barrier();
+
+  /* ---- Step 2: zero accumulators ---- */
+  for(int i = lid; i < O32_TILE_PIXELS; i += wg_size)
+  {
+    numer[i] = 0.0f;
+    denom[i] = 0.0f;
+  }
+  memoryBarrierShared(); barrier();
+
+  /* ---- Step 3: Pass1 BayesShrink — one block per subgroup ---- */
+  {
+    const int n_blocks_dim = (O32_TILE_W - GALOSH_BS) / GALOSH_STRIDE + 1;
+    const float sigma_sq = pc.sigma_strength * pc.sigma_strength;
+    const float lambda_max_base = pc.sigma_strength * sqrt(2.0f * log(float(GALOSH_BP)));
+
+    for(int phase = 0; phase < N_PHASES; phase++)
+    {
+      const int px = phase % PHASE_MOD;
+      const int py = phase / PHASE_MOD;
+      if(pc.phase_stride > 1 &&
+         ((px % pc.phase_stride) != 0 || (py % pc.phase_stride) != 0)) continue;  /* WG-uniform: safe */
+      const int bpd   = (n_blocks_dim - px + PHASE_MOD - 1) / PHASE_MOD;
+      const int bpd_y = (n_blocks_dim - py + PHASE_MOD - 1) / PHASE_MOD;
+      const int n_blocks = bpd * bpd_y;
+
+      for(int bi = sgid; bi < n_blocks; bi += n_sg)
+      {
+        const int pbx = bi % bpd;
+        const int pby = bi / bpd;
+        const int bx = pbx * PHASE_MOD + px;
+        const int by = pby * PHASE_MOD + py;
+        if(bx >= n_blocks_dim || by >= n_blocks_dim) continue;
+
+        const int ref_c = bx * GALOSH_STRIDE;
+        const int ref_r = by * GALOSH_STRIDE;
+        const int img_ref_r = tile_y - HALO + ref_r;
+        const int img_ref_c = tile_x - HALO + ref_c;
+        if(img_ref_r < 0 || img_ref_r > img_rmax) continue;
+        if(img_ref_c < 0 || img_ref_c > img_cmax) continue;
+
+        /* block load: 2 coefficients per lane, registers only */
+        float b0 = tile_in[(ref_r + dy0) * O32_TILE_W + (ref_c + dx0)];
+        float b1 = tile_in[(ref_r + dy1) * O32_TILE_W + (ref_c + dx0)];
+
+        wht2d_sg(b0, b1, 0, lane);
+
+        const float sigma_y_sq = mad_sigma_y_sq_sg(b0, b1, lane);
+        const float sigma_x_sq = max(sigma_y_sq - sigma_sq, 0.0f);
+
+        float lambda;
+        if(sigma_x_sq < 1e-10f)
+          lambda = 1e30f;
+        else
+        {
+          lambda = (sigma_sq / sqrt(sigma_x_sq)) * sqrt(float(GALOSH_BP));
+          const float lambda_max_unorm = lambda_max_base * sqrt(float(GALOSH_BP));
+          if(lambda > lambda_max_unorm) lambda = lambda_max_unorm;
+        }
+
+        /* hard threshold (AC only; DC = lane 0 reg 0 untouched) */
+        int cnt = 0;
+        if(lane != 0u)
+        {
+          if(abs(b0) < lambda) b0 = 0.0f; else cnt++;
+        }
+        if(abs(b1) < lambda) b1 = 0.0f; else cnt++;
+        const int n_nonzero = 1 + subgroupAdd(cnt);   /* integer: exact */
+
+        wht2d_sg(b0, b1, 1, lane);
+
+        const float weight = 1.0f / float(n_nonzero);
+        {
+          const float kw0 = kaiser_1d[dy0] * kaiser_1d[dx0];
+          const float wkw0 = weight * kw0;
+          const int pos0 = (ref_r + dy0) * O32_TILE_W + (ref_c + dx0);
+          numer[pos0] += wkw0 * b0;
+          denom[pos0] += wkw0;
+          const float kw1 = kaiser_1d[dy1] * kaiser_1d[dx0];
+          const float wkw1 = weight * kw1;
+          const int pos1 = (ref_r + dy1) * O32_TILE_W + (ref_c + dx0);
+          numer[pos1] += wkw1 * b1;
+          denom[pos1] += wkw1;
+        }
+      }
+      memoryBarrierShared(); barrier();
+    }
+  }
+
+  /* ---- Step 4: finalize Pass1 -> pilot (f16 contract round) ---- */
+  for(int i = lid; i < O32_TILE_PIXELS; i += wg_size)
+  {
+    const float d = denom[i];
+    pilot[i] = galosh_f16_rne((d > 1e-10f) ? (numer[i] / d) : tile_in[i]);
+  }
+  memoryBarrierShared(); barrier();
+
+  /* ---- Step 5: zero accumulators for Pass2 ---- */
+  for(int i = lid; i < O32_TILE_PIXELS; i += wg_size)
+  {
+    numer[i] = 0.0f;
+    denom[i] = 0.0f;
+  }
+  memoryBarrierShared(); barrier();
+
+  /* ---- Step 6: Pass2 Wiener — one block per subgroup ---- */
+  {
+    const int n_blocks_dim = (O32_TILE_W - GALOSH_BS) / GALOSH_STRIDE + 1;
+    const float sigma_sq_unorm = pc.sigma_strength * pc.sigma_strength * float(GALOSH_BP);
+
+    for(int phase = 0; phase < N_PHASES; phase++)
+    {
+      const int px = phase % PHASE_MOD;
+      const int py = phase / PHASE_MOD;
+      if(pc.phase_stride > 1 &&
+         ((px % pc.phase_stride) != 0 || (py % pc.phase_stride) != 0)) continue;  /* WG-uniform: safe */
+      const int bpd   = (n_blocks_dim - px + PHASE_MOD - 1) / PHASE_MOD;
+      const int bpd_y = (n_blocks_dim - py + PHASE_MOD - 1) / PHASE_MOD;
+      const int n_blocks = bpd * bpd_y;
+
+      for(int bi = sgid; bi < n_blocks; bi += n_sg)
+      {
+        const int pbx = bi % bpd;
+        const int pby = bi / bpd;
+        const int bx = pbx * PHASE_MOD + px;
+        const int by = pby * PHASE_MOD + py;
+        if(bx >= n_blocks_dim || by >= n_blocks_dim) continue;
+
+        const int ref_c = bx * GALOSH_STRIDE;
+        const int ref_r = by * GALOSH_STRIDE;
+        const int img_ref_r = tile_y - HALO + ref_r;
+        const int img_ref_c = tile_x - HALO + ref_c;
+        if(img_ref_r < 0 || img_ref_r > img_rmax) continue;
+        if(img_ref_c < 0 || img_ref_c > img_cmax) continue;
+
+        const int pos0 = (ref_r + dy0) * O32_TILE_W + (ref_c + dx0);
+        const int pos1 = (ref_r + dy1) * O32_TILE_W + (ref_c + dx0);
+        float n0 = tile_in[pos0], n1 = tile_in[pos1];
+        float p0 = pilot[pos0],   p1 = pilot[pos1];
+
+        wht2d_sg(n0, n1, 0, lane);
+        wht2d_sg(p0, p1, 0, lane);
+
+        /* empirical Wiener per coefficient; DC (lane 0 reg 0) w = 1 */
+        float w0;
+        if(lane == 0u)
+          w0 = 1.0f;
+        else
+        {
+          const float s2 = p0 * p0;
+          w0 = s2 / (s2 + sigma_sq_unorm);
+          if(w0 < WIENER_FLOOR) w0 = WIENER_FLOOR;
+        }
+        float w1;
+        {
+          const float s2 = p1 * p1;
+          w1 = s2 / (s2 + sigma_sq_unorm);
+          if(w1 < WIENER_FLOOR) w1 = WIENER_FLOOR;
+        }
+        n0 *= w0; n1 *= w1;
+        /* [deviation] tree-order float reduction (see header) */
+        const float wiener_energy = subgroupAdd(w0 * w0 + w1 * w1);
+
+        wht2d_sg(n0, n1, 1, lane);
+
+        const float weight = 1.0f / max(wiener_energy, 1e-6f);
+        {
+          const float kw0 = kaiser_1d[dy0] * kaiser_1d[dx0];
+          const float wkw0 = weight * kw0;
+          numer[pos0] += wkw0 * n0;
+          denom[pos0] += wkw0;
+          const float kw1 = kaiser_1d[dy1] * kaiser_1d[dx0];
+          const float wkw1 = weight * kw1;
+          numer[pos1] += wkw1 * n1;
+          denom[pos1] += wkw1;
+        }
+      }
+      memoryBarrierShared(); barrier();
+    }
+  }
+
+  /* ---- Step 7: finalize Pass2 -> global (interior only) ---- */
+  for(int i = lid; i < O32_TILE_SIZE * O32_TILE_SIZE; i += wg_size)
+  {
+    const int lx = i % O32_TILE_SIZE + HALO;
+    const int ly = i / O32_TILE_SIZE + HALO;
+    const int idx = ly * O32_TILE_W + lx;
+    const int gx = tile_x + (i % O32_TILE_SIZE);
+    const int gy = tile_y + (i / O32_TILE_SIZE);
+    if(gx < pc.width && gy < pc.height)
+    {
+      const float d = denom[idx];
+      output_buf[gy * pc.width + gx] =
+          float16_t(galosh_f16_rne((d > 1e-10f) ? (numer[idx] / d) : tile_in[idx]));
+    }
+  }
+}

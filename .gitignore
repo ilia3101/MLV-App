@@ -37,4 +37,7 @@ osx_installer/create-dmg-master/builder/create-dmg.builder
 80000218_2040x1268.bpm
 platform/build-*
 *build*
+# GALOSH inverse-LUT shader: the broad *build* rule must not hide these assets
+!src/processing/galosh/vulkan/shaders/o32_build_inv_lut.comp
+!src/processing/galosh/vulkan/shaders/o32_build_inv_lut.spv
 .qtcreator

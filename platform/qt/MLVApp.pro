@@ -39,6 +39,59 @@ DEFINES += QT_DEPRECATED_WARNINGS
 DEFINES += STDOUT_SILENT
 
 ##############
+# GALOSH Vulkan backend (optional, off by default)
+# Enable with: qmake CONFIG+=galosh_vulkan ...
+# Requires Vulkan headers + loader.  On macOS install molten-vk, vulkan-headers
+# and vulkan-loader (or point VULKAN_SDK at the LunarG SDK).
+##############
+# CONFIG += galosh_vulkan
+galosh_vulkan {
+    DEFINES += GALOSH_VULKAN
+    SOURCES += ../../src/processing/galosh/galosh_vk_host.c
+    GALOSH_SHADERS = $$PWD/../../src/processing/galosh/vulkan/shaders
+    GALOSH_SHADERS_LIST = $$files($$GALOSH_SHADERS/*)
+
+    unix:!macx {
+        !isEmpty(VULKAN_SDK) {
+            INCLUDEPATH += $$VULKAN_SDK/include
+            LIBS += -L$$VULKAN_SDK/lib
+        } else {
+            CONFIG += link_pkgconfig
+            PKGCONFIG += vulkan
+        }
+        LIBS += -lvulkan
+    }
+    win32 {
+        !isEmpty(VULKAN_SDK) {
+            INCLUDEPATH += $$VULKAN_SDK/Include
+            LIBS += -L$$VULKAN_SDK/Lib
+        }
+        LIBS += -lvulkan-1
+    }
+    macx {
+        !isEmpty(VULKAN_SDK) {
+            INCLUDEPATH += $$VULKAN_SDK/include
+            LIBS += -L$$VULKAN_SDK/lib
+        } else {
+            INCLUDEPATH += /opt/homebrew/include /usr/local/include
+            LIBS += -L/opt/homebrew/lib -L/usr/local/lib
+        }
+        LIBS += -lvulkan
+        GALOSH_SHADER_FILES.files = $$GALOSH_SHADERS_LIST
+        GALOSH_SHADER_FILES.path = Contents/MacOS/galosh_shaders
+        QMAKE_BUNDLE_DATA += GALOSH_SHADER_FILES
+    }
+    !macx {
+        # Copy the shader files themselves.  Copying the directory into an
+        # existing galosh_shaders/ would create a stale nested shaders/ tree.
+        QMAKE_POST_LINK += $$QMAKE_MKDIR $$shell_path($$OUT_PWD/galosh_shaders) $$escape_expand(\n\t)
+        for(f, GALOSH_SHADERS_LIST) {
+            QMAKE_POST_LINK += $$QMAKE_COPY $$shell_path($$f) $$shell_path($$OUT_PWD/galosh_shaders) $$escape_expand(\n\t)
+        }
+    }
+}
+
+##############
 # Feature gates: comment out to disable
 ##############
 CONFIG += jpeg2k_enabled

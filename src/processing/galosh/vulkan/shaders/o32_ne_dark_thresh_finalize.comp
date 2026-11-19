@@ -1,0 +1,38 @@
+#version 450
+/* Transcribed from galosh.cl §7.2d galosh_o32_ne_dark_thresh_finalize
+ * (line 6777).  Single-WI cumsum scan of the dark_thresh histogram: find
+ * the 10th percentile = dark_thresh, write to params[dark_thresh_slot]
+ * (temp slot, not final).  Literal transcription (V2.0 Phase B2). */
+
+/* Host passes NULL local size with global = 1; per PORT_CONVENTIONS we
+ * choose 256x1 — the gid!=0 guard idles the other invocations. */
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+layout(std430, binding = 0) readonly  buffer Buf0 { int dark_thresh_hist[]; };
+layout(std430, binding = 1) writeonly buffer Buf1 { float params[]; };
+
+layout(push_constant) uniform PC {
+  int dark_thresh_slot;   /* index into params for storing dark_thresh */
+} pc;
+
+const int O32_DARK_HIST_BINS = 4096;   /* galosh.cl line 6743 */
+
+void main()
+{
+  if(gl_GlobalInvocationID.x != 0u) return;
+  /* Total count. */
+  int total = 0;
+  for(int i = 0; i < O32_DARK_HIST_BINS; i++) total += dark_thresh_hist[i];
+  if(total < 100) { params[pc.dark_thresh_slot] = 0.01; return; }
+
+  /* 10th percentile cumsum. */
+  const int target = total / 10;
+  int cum = 0, dark_bin = 0;
+  for(int i = 0; i < O32_DARK_HIST_BINS; i++)
+  {
+    cum += dark_thresh_hist[i];
+    if(cum >= target) { dark_bin = i; break; }
+  }
+  const float dark_thresh = (float(dark_bin) + 0.5) / float(O32_DARK_HIST_BINS);
+  params[pc.dark_thresh_slot] = dark_thresh;
+}
