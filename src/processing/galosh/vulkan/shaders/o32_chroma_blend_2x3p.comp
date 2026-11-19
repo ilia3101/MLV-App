@@ -1,0 +1,52 @@
+#version 450
+/* o32_chroma_blend_2x3p.comp — blend two full-res chroma anchors with a
+ * smoothstep parameter and write the remodulated FP16 contract plane.
+ *
+ * The host selects the lower/upper anchor for the current ladder segment:
+ *   c<1: raw C0 <-> A1
+ *   1-2: A1 <-> A2
+ *   2-3: A2 <-> A3
+ * A2/A2 and A3/A3 bindings handle the exact integer anchors.
+ *
+ * CFA remodulation is applied on output (the anchors are demodulated). */
+#extension GL_EXT_shader_16bit_storage : require
+#extension GL_EXT_shader_explicit_arithmetic_types_float16 : require
+#extension GL_GOOGLE_include_directive : enable
+#include "galosh_f16_rne.glsl"
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+
+layout(std430, binding = 0) restrict readonly  buffer Buf0 { float lo1[]; };
+layout(std430, binding = 1) restrict readonly  buffer Buf1 { float lo2[]; };
+layout(std430, binding = 2) restrict readonly  buffer Buf2 { float lo3[]; };
+layout(std430, binding = 3) restrict readonly  buffer Buf3 { float hi1[]; };
+layout(std430, binding = 4) restrict readonly  buffer Buf4 { float hi2[]; };
+layout(std430, binding = 5) restrict readonly  buffer Buf5 { float hi3[]; };
+layout(std430, binding = 6) restrict writeonly buffer Buf6 { float16_t out1[]; };
+layout(std430, binding = 7) restrict writeonly buffer Buf7 { float16_t out2[]; };
+layout(std430, binding = 8) restrict writeonly buffer Buf8 { float16_t out3[]; };
+
+layout(push_constant) uniform PC {
+  int   width;
+  int   height;
+  float t;
+} pc;
+
+void main()
+{
+  const int x = int(gl_GlobalInvocationID.x);
+  const int y = int(gl_GlobalInvocationID.y);
+  if(x >= pc.width || y >= pc.height) return;
+  const int p = y * pc.width + x;
+
+  float o1 = (1.0f - pc.t) * lo1[p] + pc.t * hi1[p];
+  float o2 = (1.0f - pc.t) * lo2[p] + pc.t * hi2[p];
+  float o3 = (1.0f - pc.t) * lo3[p] + pc.t * hi3[p];
+
+  if((y & 1) != 0) o1 = -o1;
+  if((x & 1) != 0) o2 = -o2;
+  if(((x + y) & 1) != 0) o3 = -o3;
+
+  out1[p] = float16_t(galosh_f16_rne(o1));
+  out2[p] = float16_t(galosh_f16_rne(o2));
+  out3[p] = float16_t(galosh_f16_rne(o3));
+}

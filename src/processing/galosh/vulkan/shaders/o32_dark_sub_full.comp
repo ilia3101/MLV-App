@@ -1,0 +1,39 @@
+#version 450
+/* Transcribed from galosh.cl §7.9 galosh_o32_dark_sub_full (line 7780).
+ * Phase 2 (2/2): per-pixel CFA-aware dark_ref subtraction on in_gat_full.
+ * Literal transcription (V2.0 Phase B2).
+ * [deviation vs galosh.cl, V2.0 B7f] dead ch0..3 RMWs removed (never
+ * read on the o32 path — blueprint trap #7); outputs bit-identical,
+ * bindings kept.  (日) 死に RMW 除去、出力ビット同一。 */
+
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+
+layout(std430, binding = 0) buffer Buf0 { float in_gat_full[]; };
+layout(std430, binding = 1) buffer Buf1 { float ch0[]; };
+layout(std430, binding = 2) buffer Buf2 { float ch1[]; };
+layout(std430, binding = 3) buffer Buf3 { float ch2[]; };
+layout(std430, binding = 4) buffer Buf4 { float ch3[]; };
+layout(std430, binding = 5) readonly buffer Buf5 { float params[]; };
+
+layout(push_constant) uniform PC {
+  int width;
+  int height;
+} pc;
+
+/* params[] slot indices (galosh.cl lines 7297-7302) */
+const int P_DARK_REF0 = 6;
+
+void main()
+{
+  const int fx = int(gl_GlobalInvocationID.x);
+  const int fy = int(gl_GlobalInvocationID.y);
+  if(fx >= pc.width || fy >= pc.height) return;
+
+  const int slot_r = fy & 1;
+  const int slot_c = fx & 1;
+  const int slot   = slot_r | (slot_c << 1);
+
+  const float dr = params[P_DARK_REF0 + slot];
+
+  in_gat_full[fy * pc.width + fx] -= dr;
+}

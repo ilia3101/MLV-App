@@ -28,6 +28,7 @@
 #include <QSpacerItem>
 #include <QDate>
 #include <QStorageInfo>
+#include <QStandardItemModel>
 #include <QColorDialog>
 #include <QElapsedTimer>
 #include <unistd.h>
@@ -37,6 +38,9 @@
 #ifdef _OPENMP
 #include <omp.h>
 #endif
+
+#include "../../src/processing/galosh/galosh_bridge.h"
+#include "../../src/processing/galosh/galosh_vulkan.h"
 
 #ifdef Q_OS_MACX
 #include "AvfLibWrapper.h"
@@ -107,6 +111,7 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
 {
     //Change working directory for C part
     chdir( QCoreApplication::applicationDirPath().toLatin1().data() );
+    galosh_vulkan_set_shader_dir( "galosh_shaders" );
 
     //Enable color management for macOS
     auto format = QSurfaceFormat::defaultFormat();
@@ -126,11 +131,17 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     m_fpsOverride = false;
     m_inOpeningProcess = false;
     m_setSliders = false;
+    m_galoshNoiseWasValid = false;
     m_zoomTo100Center = false;
     m_zoomModeChanged = false;
     m_tryToSyncAudio = false;
     m_playbackStopped = false;
     m_inClipDeleteProcess = false;
+
+    /* Debounces noise-model re-estimation while raw black/white sliders move. */
+    m_galoshNoiseTimer = new QTimer( this );
+    m_galoshNoiseTimer->setSingleShot( true );
+    connect( m_galoshNoiseTimer, SIGNAL(timeout()), this, SLOT(onGaloshNoiseTimerTimeout()) );
 
 #ifdef STDOUT_SILENT
     //QtNetwork: shut up please!
@@ -235,6 +246,8 @@ MainWindow::~MainWindow()
     m_pRenderThread->stop();
     while( !m_pRenderThread->isFinished() ) {}
     delete m_pRenderThread;
+
+    galosh_shutdown();
 
     //Save settings
     writeSettings();
@@ -682,6 +695,10 @@ void MainWindow::importNewMlv(QString fileName)
 //Short open MLV function, call only for making a preview!
 int MainWindow::openMlvForPreview(QString fileName)
 {
+    /* A pending debounced re-estimate belongs to the clip being replaced. */
+    if( m_galoshNoiseTimer ) m_galoshNoiseTimer->stop();
+    m_galoshNoiseWasValid = false;
+
     int mlvErr = MLV_ERR_NONE;
     char mlvErrMsg[256] = { 0 };
 
@@ -845,6 +862,10 @@ void MainWindow::on_actionFcpxmlSelectionAssistant_triggered()
 //Open MLV procedure
 int MainWindow::openMlv( QString fileName )
 {
+    /* A pending debounced re-estimate belongs to the clip being replaced. */
+    if( m_galoshNoiseTimer ) m_galoshNoiseTimer->stop();
+    m_galoshNoiseWasValid = false;
+
     //Select open mode
     int mlvOpenMode;
     if( ui->actionCreateMappFiles->isChecked() ) mlvOpenMode = MLV_OPEN_MAPP;
@@ -3779,6 +3800,11 @@ void MainWindow::openSession(QString fileNameSession)
                     {
                         mark = Rxml.attributes().value( "mark" ).toUShort();
                     }
+                    int galoshNoiseFrame = 0;
+                    if( Rxml.attributes().hasAttribute( "galoshNoiseFrame" ) )
+                    {
+                        galoshNoiseFrame = Rxml.attributes().value( "galoshNoiseFrame" ).toInt();
+                    }
 
                     if( QFile( fileName ).exists() )
                     {
@@ -3791,6 +3817,7 @@ void MainWindow::openSession(QString fileNameSession)
                         else openMlv( fileName );
                         SESSION_LAST_CLIP->setFileName( fileName );
                         SESSION_LAST_CLIP->setMark( mark );
+                        SESSION_LAST_CLIP->setGaloshNoiseFrame( galoshNoiseFrame );
 
                         readXmlElementsFromFile( &Rxml, SESSION_LAST_CLIP, versionMasxml );
 
@@ -3873,6 +3900,7 @@ void MainWindow::saveSession(QString fileName)
         xmlWriter.writeAttribute( "file", GET_CLIP(i)->getPath() );
         xmlWriter.writeAttribute( "relative", QDir( QFileInfo( fileName ).path() ).relativeFilePath( GET_CLIP(i)->getPath() ) );
         xmlWriter.writeAttribute( "mark", QString( "%1" ).arg( GET_RECEIPT(i)->mark() ) );
+        xmlWriter.writeAttribute( "galoshNoiseFrame", QString( "%1" ).arg( GET_RECEIPT(i)->galoshNoiseFrame() ) );
         writeXmlElementsToFile( &xmlWriter, GET_RECEIPT(i) );
         xmlWriter.writeEndElement();
     }
@@ -4042,6 +4070,13 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
     receipt->setDualIsoPattern( 0 );
     receipt->setDualIsoEvCorrection( 1 );
     receipt->setDualIsoBlackDelta( -1 );
+
+    /* Legacy receipts have no GALOSH model fields; do not inherit a stale
+     * model from a previously loaded receipt.  The noise frame is a clip
+     * attribute and is intentionally left untouched. */
+    receipt->setGaloshAlpha( 0.0f );
+    receipt->setGaloshSigmaSq( 0.0f );
+    receipt->setGaloshNoiseValid( false );
 
     //Read tags
     while( !Rxml->atEnd() && !Rxml->isEndElement() )
@@ -4326,6 +4361,46 @@ void MainWindow::readXmlElementsFromFile(QXmlStreamReader *Rxml, ReceiptSettings
         else if( Rxml->isStartElement() && Rxml->name() == QString( "rbfDenoiserRange" ) )
         {
             receipt->setRbfDenoiserRange( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "galoshLuma" ) )
+        {
+            receipt->setGaloshLuma( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "galoshChroma" ) )
+        {
+            receipt->setGaloshChroma( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "galoshChromaPreserve" ) )
+        {
+            receipt->setGaloshChromaPreserve( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "galoshBackend" ) )
+        {
+            receipt->setGaloshBackend( Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "galoshFast" ) )
+        {
+            receipt->setGaloshFast( (bool)Rxml->readElementText().toInt() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "galoshAlpha" ) )
+        {
+            receipt->setGaloshAlpha( Rxml->readElementText().toFloat() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "galoshSigmaSq" ) )
+        {
+            receipt->setGaloshSigmaSq( Rxml->readElementText().toFloat() );
+            Rxml->readNext();
+        }
+        else if( Rxml->isStartElement() && Rxml->name() == QString( "galoshNoiseValid" ) )
+        {
+            receipt->setGaloshNoiseValid( (bool)Rxml->readElementText().toInt() );
             Rxml->readNext();
         }
         else if( Rxml->isStartElement() && Rxml->name() == QString( "grainStrength" ) )
@@ -4662,6 +4737,14 @@ void MainWindow::writeXmlElementsToFile(QXmlStreamWriter *xmlWriter, ReceiptSett
     xmlWriter->writeTextElement( "rbfDenoiserLuma",         QString( "%1" ).arg( receipt->rbfDenoiserLuma() ) );
     xmlWriter->writeTextElement( "rbfDenoiserChroma",       QString( "%1" ).arg( receipt->rbfDenoiserChroma() ) );
     xmlWriter->writeTextElement( "rbfDenoiserRange",        QString( "%1" ).arg( receipt->rbfDenoiserRange() ) );
+    xmlWriter->writeTextElement( "galoshLuma",              QString( "%1" ).arg( receipt->galoshLuma() ) );
+    xmlWriter->writeTextElement( "galoshChroma",            QString( "%1" ).arg( receipt->galoshChroma() ) );
+    xmlWriter->writeTextElement( "galoshChromaPreserve",    QString( "%1" ).arg( receipt->galoshChromaPreserve() ) );
+    xmlWriter->writeTextElement( "galoshBackend",           QString( "%1" ).arg( receipt->galoshBackend() ) );
+    xmlWriter->writeTextElement( "galoshFast",              QString( "%1" ).arg( receipt->galoshFast() ) );
+    xmlWriter->writeTextElement( "galoshAlpha",             QString::number( receipt->galoshAlpha(), 'g', 9 ) );
+    xmlWriter->writeTextElement( "galoshSigmaSq",           QString::number( receipt->galoshSigmaSq(), 'g', 9 ) );
+    xmlWriter->writeTextElement( "galoshNoiseValid",        QString( "%1" ).arg( receipt->galoshNoiseValid() ? 1 : 0 ) );
     xmlWriter->writeTextElement( "grainStrength",           QString( "%1" ).arg( receipt->grainStrength() ) );
     xmlWriter->writeTextElement( "grainLumaWeight",         QString( "%1" ).arg( receipt->grainLumaWeight() ) );
     xmlWriter->writeTextElement( "rawFixesEnabled",         QString( "%1" ).arg( receipt->rawFixesEnabled() ) );
@@ -4722,6 +4805,9 @@ void MainWindow::writeXmlElementsToFile(QXmlStreamWriter *xmlWriter, ReceiptSett
 //Delete all clips from Session
 void MainWindow::deleteSession()
 {
+    if( m_galoshNoiseTimer ) m_galoshNoiseTimer->stop();
+    m_galoshNoiseWasValid = false;
+
     //Clear the memory
     m_pModel->clear();
 
@@ -4921,6 +5007,23 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     ui->horizontalSliderRbfDenoiseLuma->setValue( receipt->rbfDenoiserLuma() );
     ui->horizontalSliderRbfDenoiseChroma->setValue( receipt->rbfDenoiserChroma() );
     ui->horizontalSliderRbfDenoiseRange->setValue( receipt->rbfDenoiserRange() );
+
+    ui->horizontalSliderGaloshLuma->setValue( receipt->galoshLuma() );
+    ui->horizontalSliderGaloshChroma->setValue( receipt->galoshChroma() );
+    ui->horizontalSliderGaloshChromaPreserve->setValue( receipt->galoshChromaPreserve() );
+    updateGaloshUiState();
+    ui->comboBoxGaloshBackend->setCurrentIndex( receipt->galoshBackend() );
+    ui->checkBoxGaloshFast->setChecked( receipt->galoshFast() );
+    if( ui->comboBoxGaloshBackend->model() )
+    {
+        QStandardItemModel *model = qobject_cast<QStandardItemModel *>( ui->comboBoxGaloshBackend->model() );
+        if( model && model->item( 0 ) )
+        {
+            const bool gpu = galosh_vulkan_available() != 0;
+            model->item( 0 )->setEnabled( gpu );
+            if( !gpu ) ui->comboBoxGaloshBackend->setCurrentIndex( 1 );
+        }
+    }
 
     ui->horizontalSliderGrainStrength->setValue( receipt->grainStrength() );
     ui->horizontalSliderGrainLumaWeight->setValue( receipt->grainLumaWeight() );
@@ -5151,7 +5254,34 @@ void MainWindow::setSliders(ReceiptSettings *receipt, bool paste)
     ui->checkBoxVidstabTripod->setChecked( receipt->vidStabTripod() );
     on_checkBoxVidstabTripod_toggled( receipt->vidStabTripod() );
 
+    if( m_pMlvObject )
+    {
+        resetMlvCache( m_pMlvObject );
+        resetMlvCachedFrame( m_pMlvObject );
+    }
+
+    /* resetMlvCache() drops the GALOSH model.  A receipt/session may carry a
+     * valid model, so restore it after the cache reset.  A paste with luma > 0
+     * and no model is estimated below (but never during import/open). */
+    if( m_pProcessingObject )
+    {
+        if( receipt->galoshNoiseValid() )
+        {
+            processingSetGaloshNoiseModel( m_pProcessingObject,
+                                           receipt->galoshAlpha(),
+                                           receipt->galoshSigmaSq() );
+        }
+        else
+        {
+            processingResetGaloshNoise( m_pProcessingObject );
+        }
+    }
+
+    m_galoshNoiseWasValid = false;
+    if( m_galoshNoiseTimer ) m_galoshNoiseTimer->stop();
     m_setSliders = false;
+    updateGaloshUiState();
+    galoshMaybeEstimateNoiseModel( receipt->galoshNoiseFrame(), receipt );
 }
 
 void MainWindow::resetSliders( void )
@@ -5230,6 +5360,23 @@ void MainWindow::setReceipt( ReceiptSettings *receipt )
     receipt->setRbfDenoiserLuma( ui->horizontalSliderRbfDenoiseLuma->value() );
     receipt->setRbfDenoiserChroma( ui->horizontalSliderRbfDenoiseChroma->value() );
     receipt->setRbfDenoiserRange( ui->horizontalSliderRbfDenoiseRange->value() );
+    receipt->setGaloshLuma( ui->horizontalSliderGaloshLuma->value() );
+    receipt->setGaloshChroma( ui->horizontalSliderGaloshChroma->value() );
+    receipt->setGaloshChromaPreserve( ui->horizontalSliderGaloshChromaPreserve->value() );
+    receipt->setGaloshBackend( ui->comboBoxGaloshBackend->currentIndex() );
+    receipt->setGaloshFast( ui->checkBoxGaloshFast->isChecked() );
+    if( m_pProcessingObject && m_pProcessingObject->galoshNoiseValid )
+    {
+        receipt->setGaloshAlpha( m_pProcessingObject->galoshAlpha );
+        receipt->setGaloshSigmaSq( m_pProcessingObject->galoshSigmaSq );
+        receipt->setGaloshNoiseValid( true );
+    }
+    else
+    {
+        receipt->setGaloshAlpha( 0.0f );
+        receipt->setGaloshSigmaSq( 0.0f );
+        receipt->setGaloshNoiseValid( false );
+    }
     receipt->setGrainStrength( ui->horizontalSliderGrainStrength->value() );
     receipt->setGrainLumaWeight( ui->horizontalSliderGrainLumaWeight->value() );
 
@@ -5360,6 +5507,17 @@ void MainWindow::replaceReceipt(ReceiptSettings *receiptTarget, ReceiptSettings 
     if( paste && cdui->checkBoxDenoise->isChecked() )    receiptTarget->setRbfDenoiserLuma( receiptSource->rbfDenoiserLuma() );
     if( paste && cdui->checkBoxDenoise->isChecked() )    receiptTarget->setRbfDenoiserChroma( receiptSource->rbfDenoiserChroma() );
     if( paste && cdui->checkBoxDenoise->isChecked() )    receiptTarget->setRbfDenoiserRange( receiptSource->rbfDenoiserRange() );
+    if( paste && cdui->checkBoxDenoise->isChecked() )    receiptTarget->setGaloshLuma( receiptSource->galoshLuma() );
+    if( paste && cdui->checkBoxDenoise->isChecked() )    receiptTarget->setGaloshChroma( receiptSource->galoshChroma() );
+    if( paste && cdui->checkBoxDenoise->isChecked() )    receiptTarget->setGaloshChromaPreserve( receiptSource->galoshChromaPreserve() );
+    if( paste && cdui->checkBoxDenoise->isChecked() )    receiptTarget->setGaloshBackend( receiptSource->galoshBackend() );
+    if( paste && cdui->checkBoxDenoise->isChecked() )    receiptTarget->setGaloshFast( receiptSource->galoshFast() );
+    if( paste && cdui->checkBoxGaloshNoiseModel->isChecked() )
+    {
+        receiptTarget->setGaloshAlpha( receiptSource->galoshAlpha() );
+        receiptTarget->setGaloshSigmaSq( receiptSource->galoshSigmaSq() );
+        receiptTarget->setGaloshNoiseValid( receiptSource->galoshNoiseValid() );
+    }
     if( paste && cdui->checkBoxGrain->isChecked() )      receiptTarget->setGrainStrength( receiptSource->grainStrength() );
     if( paste && cdui->checkBoxGrain->isChecked() )      receiptTarget->setGrainLumaWeight( receiptSource->grainLumaWeight() );
 
@@ -5563,6 +5721,15 @@ void MainWindow::addClipToExportQueue(int row, QString fileName)
     receipt->setRbfDenoiserLuma( GET_RECEIPT( row )->rbfDenoiserLuma() );
     receipt->setRbfDenoiserChroma( GET_RECEIPT( row )->rbfDenoiserChroma() );
     receipt->setRbfDenoiserRange( GET_RECEIPT( row )->rbfDenoiserRange() );
+    receipt->setGaloshLuma( GET_RECEIPT( row )->galoshLuma() );
+    receipt->setGaloshChroma( GET_RECEIPT( row )->galoshChroma() );
+    receipt->setGaloshChromaPreserve( GET_RECEIPT( row )->galoshChromaPreserve() );
+    receipt->setGaloshBackend( GET_RECEIPT( row )->galoshBackend() );
+    receipt->setGaloshFast( GET_RECEIPT( row )->galoshFast() );
+    receipt->setGaloshAlpha( GET_RECEIPT( row )->galoshAlpha() );
+    receipt->setGaloshSigmaSq( GET_RECEIPT( row )->galoshSigmaSq() );
+    receipt->setGaloshNoiseValid( GET_RECEIPT( row )->galoshNoiseValid() );
+    receipt->setGaloshNoiseFrame( GET_RECEIPT( row )->galoshNoiseFrame() );
     receipt->setGrainStrength( GET_RECEIPT( row )->grainStrength() );
     receipt->setGrainLumaWeight( GET_RECEIPT( row )->grainLumaWeight() );
 
@@ -6536,6 +6703,257 @@ void MainWindow::on_horizontalSliderRbfDenoiseRange_valueChanged(int position)
     m_frameChanged = true;
 }
 
+void MainWindow::updateGaloshUiState( void )
+{
+    const bool valid = ( m_pProcessingObject && m_pProcessingObject->galoshNoiseValid );
+    const bool loaded = ( m_fileLoaded && m_pMlvObject );
+    const bool lumaOn = ui->horizontalSliderGaloshLuma->value() > 0;
+    const bool chromaOn = lumaOn && ui->horizontalSliderGaloshChroma->value() > 0;
+
+    ui->label_GaloshChromaText->setEnabled( lumaOn );
+    ui->horizontalSliderGaloshChroma->setEnabled( lumaOn );
+    ui->label_GaloshChroma->setEnabled( lumaOn );
+    ui->label_GaloshChromaPreserveText->setEnabled( chromaOn );
+    ui->horizontalSliderGaloshChromaPreserve->setEnabled( chromaOn );
+    ui->label_GaloshChromaPreserve->setEnabled( chromaOn );
+
+    /* Alpha/Sigma are None until a model is estimated or pasted. */
+    ui->label_GaloshAlphaText->setEnabled( valid );
+    ui->lineEditGaloshAlpha->setEnabled( valid );
+    ui->label_GaloshSigmaText->setEnabled( valid );
+    ui->lineEditGaloshSigma->setEnabled( valid );
+    if( valid )
+    {
+        if( !ui->lineEditGaloshAlpha->hasFocus() )
+            ui->lineEditGaloshAlpha->setText( QString::number( m_pProcessingObject->galoshAlpha, 'g', 9 ) );
+        if( !ui->lineEditGaloshSigma->hasFocus() )
+            ui->lineEditGaloshSigma->setText( QString::number( m_pProcessingObject->galoshSigmaSq, 'g', 9 ) );
+    }
+    else
+    {
+        ui->lineEditGaloshAlpha->clear();
+        ui->lineEditGaloshSigma->clear();
+    }
+
+    ui->pushButtonGaloshNoiseFrame->setEnabled( loaded );
+    ui->label_GaloshNoiseFrame->setEnabled( loaded );
+    ui->label_GaloshNoiseFrame->setText( tr( "Noise frame: %1" ).arg( galoshCurrentNoiseFrame() ) );
+}
+
+int MainWindow::galoshCurrentNoiseFrame( void )
+{
+    if( SESSION_CLIP_COUNT <= 0 || SESSION_ACTIVE_CLIP_ROW < 0 ) return 0;
+    return GET_RECEIPT( SESSION_ACTIVE_CLIP_ROW )->galoshNoiseFrame();
+}
+
+void MainWindow::galoshStoreModelInReceipt( ReceiptSettings *receipt )
+{
+    if( !receipt ) return;
+    if( m_pProcessingObject && m_pProcessingObject->galoshNoiseValid )
+    {
+        receipt->setGaloshAlpha( m_pProcessingObject->galoshAlpha );
+        receipt->setGaloshSigmaSq( m_pProcessingObject->galoshSigmaSq );
+        receipt->setGaloshNoiseValid( true );
+    }
+    else
+    {
+        receipt->setGaloshAlpha( 0.0f );
+        receipt->setGaloshSigmaSq( 0.0f );
+        receipt->setGaloshNoiseValid( false );
+    }
+}
+
+void MainWindow::galoshEstimateNoiseModel( int frameIndex, ReceiptSettings *receipt )
+{
+    if( !m_fileLoaded || !m_pMlvObject || !m_pProcessingObject ) return;
+    if( !receipt && SESSION_CLIP_COUNT <= 0 ) return;
+    if( frameIndex < 0 ) frameIndex = 0;
+    if( !receipt ) receipt = ACTIVE_RECEIPT;
+
+    /* A button press or luma change supersedes a debounced re-estimate. */
+    if( m_galoshNoiseTimer ) m_galoshNoiseTimer->stop();
+    m_galoshNoiseWasValid = false;
+
+    /* The estimator reads the raw frame through the same cache the render
+     * thread uses. */
+    ui->actionPlay->setChecked( false );
+    while( !m_pRenderThread->isIdle() ) QThread::msleep( 1 );
+
+    QApplication::setOverrideCursor( Qt::WaitCursor );
+    const int rc = galoshEstimateNoiseModelFromFrame( m_pMlvObject,
+                                                      (uint64_t)frameIndex );
+    QApplication::restoreOverrideCursor();
+
+    if( rc == 0 )
+    {
+        galoshStoreModelInReceipt( receipt );
+        resetMlvRenderCache( m_pMlvObject );
+        resetMlvCachedFrame( m_pMlvObject );
+        m_frameChanged = true;
+    }
+
+    updateGaloshUiState();
+}
+
+void MainWindow::galoshMaybeEstimateNoiseModel( int frameIndex, ReceiptSettings *receipt )
+{
+    if( !m_fileLoaded || !m_pMlvObject || !m_pProcessingObject ) return;
+    if( m_setSliders ) return;
+    if( m_pProcessingObject->galoshLuma == 0 ) return;
+    if( m_pProcessingObject->galoshNoiseValid ) return;
+    galoshEstimateNoiseModel( frameIndex, receipt );
+}
+
+void MainWindow::galoshRawDataChanged( bool debounce )
+{
+    const bool wasValid = ( m_pProcessingObject
+                         && m_pProcessingObject->galoshNoiseValid );
+    galoshRawDataChanged( debounce, wasValid );
+}
+
+void MainWindow::galoshRawDataChanged( bool debounce, bool wasValidBefore )
+{
+    if( !m_pMlvObject || SESSION_CLIP_COUNT <= 0 ) return;
+
+    const bool wasValid = wasValidBefore;
+    const bool canReact = ( !m_setSliders && !m_inOpeningProcess );
+    if( wasValid && canReact ) m_galoshNoiseWasValid = true;
+
+    resetMlvCache( m_pMlvObject );
+    resetMlvCachedFrame( m_pMlvObject );
+
+    if( wasValid && canReact )
+    {
+        galoshStoreModelInReceipt( ACTIVE_RECEIPT );
+        ACTIVE_RECEIPT->setGaloshNoiseValid( false );
+    }
+
+    updateGaloshUiState();
+    m_frameChanged = true;
+
+    /* Only re-estimate if a model existed before the raw data changed. */
+    if( !canReact || !m_galoshNoiseWasValid ) return;
+
+    if( debounce )
+    {
+        m_galoshNoiseTimer->start( 450 );
+    }
+    else
+    {
+        if( m_galoshNoiseTimer ) m_galoshNoiseTimer->stop();
+        onGaloshNoiseTimerTimeout();
+    }
+}
+
+void MainWindow::onGaloshNoiseTimerTimeout( void )
+{
+    if( !m_galoshNoiseWasValid ) return;
+    if( !m_fileLoaded || SESSION_CLIP_COUNT <= 0 ) return;
+    m_galoshNoiseWasValid = false;
+    galoshEstimateNoiseModel( ACTIVE_RECEIPT->galoshNoiseFrame(), ACTIVE_RECEIPT );
+}
+
+void MainWindow::on_pushButtonGaloshNoiseFrame_clicked()
+{
+    if( !m_fileLoaded || !m_pMlvObject || SESSION_CLIP_COUNT <= 0 ) return;
+
+    const int frame = ui->horizontalSliderPosition->value();
+    ACTIVE_RECEIPT->setGaloshNoiseFrame( frame );
+    updateGaloshUiState();
+    galoshEstimateNoiseModel( frame, ACTIVE_RECEIPT );
+}
+
+void MainWindow::galoshNoiseEditsChanged( void )
+{
+    if( !m_pProcessingObject || !m_pProcessingObject->galoshNoiseValid ) return;
+
+    bool okAlpha = false;
+    bool okSigma = false;
+    const double alpha = ui->lineEditGaloshAlpha->text().toDouble( &okAlpha );
+    const double sigma = ui->lineEditGaloshSigma->text().toDouble( &okSigma );
+    if( !okAlpha || !okSigma || alpha <= 0.0 || sigma < 0.0 )
+    {
+        ui->lineEditGaloshAlpha->setText( QString::number( m_pProcessingObject->galoshAlpha, 'g', 9 ) );
+        ui->lineEditGaloshSigma->setText( QString::number( m_pProcessingObject->galoshSigmaSq, 'g', 9 ) );
+        updateGaloshUiState();
+        return;
+    }
+
+    processingSetGaloshNoiseModel( m_pProcessingObject,
+                                   (float)alpha, (float)sigma );
+    galoshStoreModelInReceipt( ACTIVE_RECEIPT );
+    updateGaloshUiState();
+
+    if( m_pMlvObject )
+    {
+        resetMlvRenderCache( m_pMlvObject );
+        resetMlvCachedFrame( m_pMlvObject );
+        m_frameChanged = true;
+    }
+}
+
+void MainWindow::on_lineEditGaloshAlpha_editingFinished()
+{
+    galoshNoiseEditsChanged();
+}
+
+void MainWindow::on_lineEditGaloshSigma_editingFinished()
+{
+    galoshNoiseEditsChanged();
+}
+
+void MainWindow::galoshSettingsChanged( void )
+{
+    /* Luma/chroma/preserve/backend/Fast only change how the clip model is
+     * applied, not the model itself.  Keep the model and re-render. */
+    if( m_pMlvObject && !m_setSliders )
+    {
+        resetMlvRenderCache( m_pMlvObject );
+        resetMlvCachedFrame( m_pMlvObject );
+    }
+    m_frameChanged = true;
+}
+
+void MainWindow::on_horizontalSliderGaloshLuma_valueChanged(int position)
+{
+    processingSetGaloshLuma( m_pProcessingObject, position );
+    ui->label_GaloshLuma->setText( QString("%1").arg( position ) );
+    updateGaloshUiState();
+    if( position > 0 )
+    {
+        galoshMaybeEstimateNoiseModel( ACTIVE_RECEIPT->galoshNoiseFrame(),
+                                       ACTIVE_RECEIPT );
+    }
+    galoshSettingsChanged();
+}
+
+void MainWindow::on_horizontalSliderGaloshChroma_valueChanged(int position)
+{
+    processingSetGaloshChroma( m_pProcessingObject, position );
+    ui->label_GaloshChroma->setText( QString("%1").arg( position ) );
+    updateGaloshUiState();
+    galoshSettingsChanged();
+}
+
+void MainWindow::on_horizontalSliderGaloshChromaPreserve_valueChanged(int position)
+{
+    processingSetGaloshChromaPreserve( m_pProcessingObject, position );
+    ui->label_GaloshChromaPreserve->setText( QString::number( position / 100.0, 'f', 2 ) );
+    galoshSettingsChanged();
+}
+
+void MainWindow::on_comboBoxGaloshBackend_currentIndexChanged(int index)
+{
+    processingSetGaloshBackend( m_pProcessingObject, index == 0 ? GALOSH_BACKEND_GPU : GALOSH_BACKEND_CPU );
+    galoshSettingsChanged();
+}
+
+void MainWindow::on_checkBoxGaloshFast_clicked(bool checked)
+{
+    processingSetGaloshFast( m_pProcessingObject, checked ? 1 : 0 );
+    galoshSettingsChanged();
+}
+
 void MainWindow::on_horizontalSliderGrainStrength_valueChanged(int position)
 {
     processingSetGrainStrength( m_pProcessingObject, position );
@@ -6600,8 +7018,7 @@ void MainWindow::on_horizontalSliderCaRed_valueChanged(int position)
     setMlvCaCorrectionRed( m_pMlvObject, (position / 10.0) );
     ui->label_CaRedVal->setText( QString("%1").arg( position / 10.0, 0, 'f', 1 ) );
 
-    resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
+    galoshRawDataChanged( true );
     m_frameChanged = true;
 }
 
@@ -6610,8 +7027,7 @@ void MainWindow::on_horizontalSliderCaBlue_valueChanged(int position)
     setMlvCaCorrectionBlue( m_pMlvObject, (position / 10.0) );
     ui->label_CaBlueVal->setText( QString("%1").arg( position / 10.0, 0, 'f', 1 ) );
 
-    resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
+    galoshRawDataChanged( true );
     m_frameChanged = true;
 }
 
@@ -6631,6 +7047,11 @@ void MainWindow::on_horizontalSliderCaRadius_valueChanged(int position)
 
 void MainWindow::on_horizontalSliderRawWhite_valueChanged(int position)
 {
+    /* processingSet*Level() below invalidates the GALOSH model, so remember
+     * whether one existed before changing the normalization. */
+    const bool galoshModelValid = ( m_pProcessingObject
+                                 && m_pProcessingObject->galoshNoiseValid );
+
     ui->label_RawWhiteVal->setText( QString("%1").arg( position ) );
 
     if( !m_fileLoaded ) return;
@@ -6649,6 +7070,8 @@ void MainWindow::on_horizontalSliderRawWhite_valueChanged(int position)
 
     while( !m_pRenderThread->isIdle() ) QThread::msleep(1);
 
+    const int oldWhiteLevel = m_pProcessingObject->white_level;
+
     /* Set mlv raw white level to the slider value */
     setMlvWhiteLevel( m_pMlvObject, position );
     /* Set processing white level with correction */
@@ -6656,13 +7079,27 @@ void MainWindow::on_horizontalSliderRawWhite_valueChanged(int position)
 
     llrpResetFpmStatus(m_pMlvObject);
     llrpResetBpmStatus(m_pMlvObject);
-    resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
+    if( oldWhiteLevel != m_pProcessingObject->white_level )
+    {
+        galoshRawDataChanged( true, galoshModelValid );
+    }
+    else
+    {
+        /* Same level (e.g. a raw-fix toggle refreshing the sliders): the raw
+         * data did not change, so keep the current GALOSH model. */
+        resetMlvRenderCache( m_pMlvObject );
+        resetMlvCachedFrame( m_pMlvObject );
+    }
     m_frameChanged = true;
 }
 
 void MainWindow::on_horizontalSliderRawBlack_valueChanged(int position)
 {
+    /* processingSet*Level() below invalidates the GALOSH model, so remember
+     * whether one existed before changing the normalization. */
+    const bool galoshModelValid = ( m_pProcessingObject
+                                 && m_pProcessingObject->galoshNoiseValid );
+
     double rawBlack = position / 10.0;
     ui->label_RawBlackVal->setText( QString("%1").arg( rawBlack, 0, 'f', 1 ) );
 
@@ -6682,6 +7119,8 @@ void MainWindow::on_horizontalSliderRawBlack_valueChanged(int position)
 
     while( !m_pRenderThread->isIdle() ) QThread::msleep(1);
 
+    const float oldBlackLevel = m_pProcessingObject->black_level;
+
     /* Set mlv raw white level to the slider value */
     setMlvBlackLevel( m_pMlvObject, rawBlack );
     /* Set processing white level with correction */
@@ -6689,8 +7128,17 @@ void MainWindow::on_horizontalSliderRawBlack_valueChanged(int position)
 
     llrpResetFpmStatus(m_pMlvObject);
     llrpResetBpmStatus(m_pMlvObject);
-    resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
+    if( oldBlackLevel != m_pProcessingObject->black_level )
+    {
+        galoshRawDataChanged( true, galoshModelValid );
+    }
+    else
+    {
+        /* Same level (e.g. a raw-fix toggle refreshing the sliders): the raw
+         * data did not change, so keep the current GALOSH model. */
+        resetMlvRenderCache( m_pMlvObject );
+        resetMlvCachedFrame( m_pMlvObject );
+    }
     m_frameChanged = true;
 }
 
@@ -6717,8 +7165,7 @@ void MainWindow::on_horizontalSliderDualIsoEvCorrection_valueChanged(int positio
 
     llrpResetFpmStatus(m_pMlvObject);
     llrpResetBpmStatus(m_pMlvObject);
-    resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
+    galoshRawDataChanged( true );
     m_frameChanged = true;
 }
 
@@ -6741,8 +7188,7 @@ void MainWindow::on_horizontalSliderDualIsoBlackDelta_valueChanged(int position)
 
     llrpResetFpmStatus(m_pMlvObject);
     llrpResetBpmStatus(m_pMlvObject);
-    resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
+    galoshRawDataChanged( true );
     m_frameChanged = true;
 }
 
@@ -6962,6 +7408,27 @@ void MainWindow::on_horizontalSliderRbfDenoiseRange_doubleClicked()
 {
     ReceiptSettings *sliders = new ReceiptSettings(); //default
     ui->horizontalSliderRbfDenoiseRange->setValue( sliders->rbfDenoiserRange() );
+    delete sliders;
+}
+
+void MainWindow::on_horizontalSliderGaloshChromaPreserve_doubleClicked()
+{
+    ReceiptSettings *sliders = new ReceiptSettings(); //default
+    ui->horizontalSliderGaloshChromaPreserve->setValue( sliders->galoshChromaPreserve() );
+    delete sliders;
+}
+
+void MainWindow::on_horizontalSliderGaloshLuma_doubleClicked()
+{
+    ReceiptSettings *sliders = new ReceiptSettings(); //default
+    ui->horizontalSliderGaloshLuma->setValue( sliders->galoshLuma() );
+    delete sliders;
+}
+
+void MainWindow::on_horizontalSliderGaloshChroma_doubleClicked()
+{
+    ReceiptSettings *sliders = new ReceiptSettings(); //default
+    ui->horizontalSliderGaloshChroma->setValue( sliders->galoshChroma() );
     delete sliders;
 }
 
@@ -8596,6 +9063,31 @@ void MainWindow::on_label_RbfDenoiseRange_doubleClicked()
     ui->horizontalSliderRbfDenoiseRange->setValue( editSlider.getValue() );
 }
 
+void MainWindow::on_label_GaloshChromaPreserve_doubleClicked()
+{
+    EditSliderValueDialog editSlider;
+    editSlider.autoSetup( ui->horizontalSliderGaloshChromaPreserve,
+                          ui->label_GaloshChromaPreserve, 0.01, 2, 100.0 );
+    editSlider.exec();
+    ui->horizontalSliderGaloshChromaPreserve->setValue( editSlider.getValue() );
+}
+
+void MainWindow::on_label_GaloshLuma_doubleClicked()
+{
+    EditSliderValueDialog editSlider;
+    editSlider.autoSetup( ui->horizontalSliderGaloshLuma, ui->label_GaloshLuma, 1.0, 0, 1.0 );
+    editSlider.exec();
+    ui->horizontalSliderGaloshLuma->setValue( editSlider.getValue() );
+}
+
+void MainWindow::on_label_GaloshChroma_doubleClicked()
+{
+    EditSliderValueDialog editSlider;
+    editSlider.autoSetup( ui->horizontalSliderGaloshChroma, ui->label_GaloshChroma, 1.0, 0, 1.0 );
+    editSlider.exec();
+    ui->horizontalSliderGaloshChroma->setValue( editSlider.getValue() );
+}
+
 //DoubleClick on GrainStrength Label
 void MainWindow::on_label_GrainStrength_doubleClicked()
 {
@@ -9063,8 +9555,7 @@ void MainWindow::toolButtonFocusPixelsChanged( void )
     llrpSetFocusPixelMode( m_pMlvObject, toolButtonFocusPixelsCurrentIndex() );
     llrpResetFpmStatus(m_pMlvObject);
     llrpResetBpmStatus(m_pMlvObject);
-    resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
+    galoshRawDataChanged( false );
     m_frameChanged = true;
 }
 
@@ -9072,8 +9563,7 @@ void MainWindow::toolButtonFocusPixelsChanged( void )
 void MainWindow::toolButtonFocusPixelsIntMethodChanged( void )
 {
     llrpSetFocusPixelInterpolationMethod( m_pMlvObject, toolButtonFocusPixelsIntMethodCurrentIndex() );
-    resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
+    galoshRawDataChanged( false );
     m_frameChanged = true;
 }
 
@@ -9095,8 +9585,7 @@ void MainWindow::toolButtonBadPixelsChanged( void )
     else ui->FocusPixelsInterpolationMethodLabel_2->setText( tr( "Edit" ) );
 
     llrpResetBpmStatus(m_pMlvObject);
-    resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
+    galoshRawDataChanged( false );
     m_frameChanged = true;
 }
 
@@ -9105,8 +9594,7 @@ void MainWindow::toolButtonBadPixelsSearchMethodChanged()
 {
     llrpSetBadPixelSearchMethod( m_pMlvObject, toolButtonBadPixelsSearchMethodCurrentIndex() );
     llrpResetBpmStatus(m_pMlvObject);
-    resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
+    galoshRawDataChanged( false );
     m_frameChanged = true;
 }
 
@@ -9114,8 +9602,7 @@ void MainWindow::toolButtonBadPixelsSearchMethodChanged()
 void MainWindow::toolButtonBadPixelsIntMethodChanged( void )
 {
     llrpSetBadPixelInterpolationMethod( m_pMlvObject, toolButtonBadPixelsIntMethodCurrentIndex() );
-    resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
+    galoshRawDataChanged( false );
     m_frameChanged = true;
 }
 
@@ -9139,8 +9626,7 @@ void MainWindow::toolButtonChromaSmoothChanged( void )
     default:
         llrpSetChromaSmoothMode(m_pMlvObject, CS_OFF);
     }
-    resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
+    galoshRawDataChanged( false );
     m_frameChanged = true;
 }
 
@@ -9148,8 +9634,7 @@ void MainWindow::toolButtonChromaSmoothChanged( void )
 void MainWindow::toolButtonPatternNoiseChanged( void )
 {
     llrpSetPatternNoiseMode( m_pMlvObject, toolButtonPatternNoiseCurrentIndex() );
-    resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
+    galoshRawDataChanged( false );
     m_frameChanged = true;
 }
 
@@ -9167,8 +9652,7 @@ void MainWindow::toolButtonVerticalStripesChanged( void )
     llrpComputeStripesOn(m_pMlvObject);
     llrpResetFpmStatus(m_pMlvObject);
     llrpResetBpmStatus(m_pMlvObject);
-    resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
+    galoshRawDataChanged( false );
     m_frameChanged = true;
 }
 
@@ -9176,14 +9660,18 @@ void MainWindow::toolButtonVerticalStripesChanged( void )
 void MainWindow::on_spinBoxDeflickerTarget_valueChanged(int arg1)
 {
     llrpSetDeflickerTarget(m_pMlvObject, arg1);
-    resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
+    galoshRawDataChanged( false );
     m_frameChanged = true;
 }
 
 //DualISO changed
 void MainWindow::toolButtonDualIsoChanged( void )
 {
+    /* processingSetBlackAndWhiteLevel() below may invalidate the GALOSH
+     * model, so remember whether one existed before changing anything. */
+    const bool galoshModelValid = ( m_pProcessingObject
+                                 && m_pProcessingObject->galoshNoiseValid );
+
     if( toolButtonDualIsoCurrentIndex() && ui->checkBoxRawFixEnable->isChecked() )
     {
         ui->toolButtonFocusDotInterpolation->setEnabled( false );
@@ -9237,8 +9725,8 @@ void MainWindow::toolButtonDualIsoChanged( void )
     processingSetBlackAndWhiteLevel( m_pMlvObject->processing, getMlvBlackLevel( m_pMlvObject ), getMlvWhiteLevel( m_pMlvObject ), getMlvBitdepth( m_pMlvObject ) );
     //Reset diso levels to mlv raw levels
     llrpResetDngBWLevels( m_pMlvObject );
-    resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
+    /* Dual-ISO correction changes the Bayer data GALOSH sees. */
+    galoshRawDataChanged( false, galoshModelValid );
     m_frameChanged = true;
 }
 
@@ -9257,8 +9745,7 @@ void MainWindow::on_DualIsoPatternComboBox_currentIndexChanged(int index)
 
     llrpResetFpmStatus(m_pMlvObject);
     llrpResetBpmStatus(m_pMlvObject);
-    resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
+    galoshRawDataChanged( false );
     m_frameChanged = true;
 }
 
@@ -9272,8 +9759,7 @@ void MainWindow::on_toolButtonDualIsoMatchExposures1_clicked()
 
     llrpResetFpmStatus(m_pMlvObject);
     llrpResetBpmStatus(m_pMlvObject);
-    resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
+    galoshRawDataChanged( false );
     m_frameChanged = true;
 }
 
@@ -9287,8 +9773,7 @@ void MainWindow::on_toolButtonDualIsoMatchExposures2_clicked()
 
     llrpResetFpmStatus(m_pMlvObject);
     llrpResetBpmStatus(m_pMlvObject);
-    resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
+    galoshRawDataChanged( false );
     m_frameChanged = true;
 }
 
@@ -9296,8 +9781,7 @@ void MainWindow::on_toolButtonDualIsoMatchExposures2_clicked()
 void MainWindow::toolButtonDualIsoInterpolationChanged( void )
 {
     llrpSetDualIsoInterpolationMethod( m_pMlvObject, toolButtonDualIsoInterpolationCurrentIndex() );
-    resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
+    galoshRawDataChanged( false );
     m_frameChanged = true;
 }
 
@@ -9305,8 +9789,7 @@ void MainWindow::toolButtonDualIsoInterpolationChanged( void )
 void MainWindow::toolButtonDualIsoAliasMapChanged( void )
 {
     llrpSetDualIsoAliasMapMode( m_pMlvObject, toolButtonDualIsoAliasMapCurrentIndex() );
-    resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
+    galoshRawDataChanged( false );
     m_frameChanged = true;
 }
 
@@ -9314,8 +9797,7 @@ void MainWindow::toolButtonDualIsoAliasMapChanged( void )
 void MainWindow::toolButtonDualIsoFullresBlendingChanged( void )
 {
     llrpSetDualIsoFullResBlendingMode( m_pMlvObject, toolButtonDualIsoFullresBlendingCurrentIndex() );
-    resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
+    galoshRawDataChanged( false );
     m_frameChanged = true;
 }
 
@@ -9347,8 +9829,7 @@ void MainWindow::toolButtonDarkFrameSubtractionChanged( bool checked )
     //Force bad pixels and stripes calculation b/c dark frame processing happens before
     llrpResetBpmStatus(m_pMlvObject);
     llrpComputeStripesOn(m_pMlvObject);
-    resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
+    galoshRawDataChanged( false );
     m_frameChanged = true;
 }
 
@@ -9444,8 +9925,6 @@ void MainWindow::on_checkBoxRawFixEnable_clicked(bool checked)
     //Ensure some processing inside raw_processing.c is also disabled for Dual ISO when unchecked
     llrpSetDualIsoMode( m_pMlvObject, (int)( checked && toolButtonDualIsoCurrentIndex() ) );
 
-    resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
     m_frameChanged = true;
 
     //Set GUI elements
@@ -9506,6 +9985,10 @@ void MainWindow::on_checkBoxRawFixEnable_clicked(bool checked)
     ui->label_RawWhiteVal->setEnabled( checked );
     on_horizontalSliderRawBlack_valueChanged( ui->horizontalSliderRawBlack->value() );
     on_horizontalSliderRawWhite_valueChanged( ui->horizontalSliderRawWhite->value() );
+
+    /* Re-estimate after the level refresh so a raw-fix toggle performs a
+     * single synchronous estimate instead of a wasted one plus a debounce. */
+    galoshRawDataChanged( false );
 }
 
 //En-/disable all LUT processing
@@ -9599,8 +10082,7 @@ void MainWindow::on_toolButtonDeleteBpm_clicked()
     BadPixelFileHandler::crossesPrepareAll( m_pMlvObject, &m_pBadPixelCrosses, m_pScene );
     //Refresh
     llrpResetBpmStatus(m_pMlvObject);
-    resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
+    galoshRawDataChanged( false );
     m_frameChanged = true;
 }
 
@@ -9668,8 +10150,7 @@ void MainWindow::badPixelPicked( int x, int y )
 
     //Refresh
     llrpResetBpmStatus(m_pMlvObject);
-    resetMlvCache( m_pMlvObject );
-    resetMlvCachedFrame( m_pMlvObject );
+    galoshRawDataChanged( false );
     m_frameChanged = true;
 }
 
@@ -10606,7 +11087,23 @@ void MainWindow::on_comboBoxHStretch_currentIndexChanged(int index)
 //Input of Stretch Height (vertical) Factor
 void MainWindow::on_comboBoxVStretch_currentIndexChanged(int index)
 {
-    Q_UNUSED( index );
+    /* The "0.33x" height-stretch option is the manual 1x3 marker.  It makes
+     * the viewer scale horizontally by 3x, so run GALOSH on a 3x horizontally
+     * upsampled Bayer grid to keep its spatial model isotropic after stretch. */
+    const uint8_t anamorphicX = ( index == 3 ) ? 3 : 1;
+    if( m_pProcessingObject && m_pProcessingObject->galoshAnamorphicX != anamorphicX )
+    {
+        const bool modelValid = ( m_pProcessingObject->galoshNoiseValid != 0 );
+        processingSetGaloshAnamorphicX( m_pProcessingObject, anamorphicX );
+        if( modelValid && m_pMlvObject && !m_setSliders && !m_inOpeningProcess )
+        {
+            /* The 1x3 noise model is estimated after the horizontal Bayer
+             * upsample, so changing the factor invalidates and re-estimates
+             * it when a model already exists. */
+            galoshRawDataChanged( false );
+        }
+    }
+
     m_pGradientElement->setStrechFactorY( getVerticalStretchFactor(false) );
     if( !m_inOpeningProcess && !m_setSliders ) on_horizontalSliderVignetteRadius_valueChanged( ui->horizontalSliderVignetteRadius->value() );
     resultingResolution();

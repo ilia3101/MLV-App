@@ -1,0 +1,33 @@
+#version 450
+/* Transcribed from galosh.cl kernel galosh_o32_box_downsample_2x (§6.8,
+ * line 5632).  Literal port per PORT_CONVENTIONS.md.
+ * Host dispatch (2 call sites, L pyramid): align_up(dw,16) x align_up(dh,16)
+ * with dw=sw>>1, dh=sh>>1, local 16x16
+ * (galosh_raw_gpu.c:1440-1442 "K_O32_7a L_q" / 1447-1449 "K_O32_7b L_e"). */
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+
+layout(std430, binding = 0) restrict readonly  buffer Buf0 { float src[]; };
+layout(std430, binding = 1) restrict writeonly buffer Buf1 { float dst[]; };
+
+layout(push_constant) uniform PC {
+  int sw;
+  int sh;
+} pc;
+
+void main()
+{
+  const int dw = pc.sw >> 1;
+  const int dh = pc.sh >> 1;
+  const int dx = int(gl_GlobalInvocationID.x);
+  const int dy = int(gl_GlobalInvocationID.y);
+  if(dx >= dw || dy >= dh) return;
+
+  const int sx = 2 * dx;
+  const int sy = 2 * dy;
+  /* OpenCL used (size_t) 64-bit index; GLSL uses 32-bit int (no INT64). */
+  const float a = src[sy       * pc.sw + sx      ];
+  const float b = src[sy       * pc.sw + (sx + 1)];
+  const float c = src[(sy + 1) * pc.sw + sx      ];
+  const float d = src[(sy + 1) * pc.sw + (sx + 1)];
+  dst[dy * dw + dx] = 0.25f * (a + b + c + d);
+}

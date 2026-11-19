@@ -75,6 +75,16 @@
            </widget>
           </item>
           <item>
+           <widget class="QCheckBox" name="checkBoxGaloshNoiseModel">
+            <property name="toolTip">
+             <string>Copy the per-clip GALOSH alpha/sigma noise model. The noise frame stays with the clip.</string>
+            </property>
+            <property name="text">
+             <string>GALOSH Noise Model</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QCheckBox" name="checkBoxGrain">
             <property name="text">
              <string>Grain</string>

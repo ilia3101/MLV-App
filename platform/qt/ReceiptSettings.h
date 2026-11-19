@@ -55,6 +55,15 @@ public:
     void setRbfDenoiserLuma( int value )      {m_rbfDenoiserLuma = value;}
     void setRbfDenoiserChroma( int value )    {m_rbfDenoiserChroma = value;}
     void setRbfDenoiserRange( int value )     {m_rbfDenoiserRange = value;}
+    void setGaloshLuma( int value )           {m_galoshLuma = value;}
+    void setGaloshChroma( int value )         {m_galoshChroma = value;}
+    void setGaloshChromaPreserve( int value ) {m_galoshChromaPreserve = value;}
+    void setGaloshBackend( int value )        {m_galoshBackend = value;}
+    void setGaloshFast( bool value )          {m_galoshFast = value;}
+    void setGaloshAlpha( float value )        {m_galoshAlpha = value;}
+    void setGaloshSigmaSq( float value )      {m_galoshSigmaSq = value;}
+    void setGaloshNoiseValid( bool value )    {m_galoshNoiseValid = value;}
+    void setGaloshNoiseFrame( int value )     {m_galoshNoiseFrame = value;}
     void setGrainStrength( int value )        {m_grainStrength = value;}
     void setGrainLumaWeight( int  on )        {m_grainLumaWeight = on;}
     void setHighlightReconstruction( bool on ){m_highlightReconstruction = on;}
@@ -165,6 +174,15 @@ public:
     int rbfDenoiserLuma( void ){return m_rbfDenoiserLuma;}
     int rbfDenoiserChroma( void ){return m_rbfDenoiserChroma;}
     int rbfDenoiserRange( void ){return m_rbfDenoiserRange;}
+    int galoshLuma( void ){return m_galoshLuma;}
+    int galoshChroma( void ){return m_galoshChroma;}
+    int galoshChromaPreserve( void ){return m_galoshChromaPreserve;}
+    int galoshBackend( void ){return m_galoshBackend;}
+    bool galoshFast( void ){return m_galoshFast;}
+    float galoshAlpha( void ){return m_galoshAlpha;}
+    float galoshSigmaSq( void ){return m_galoshSigmaSq;}
+    bool galoshNoiseValid( void ){return m_galoshNoiseValid;}
+    int galoshNoiseFrame( void ){return m_galoshNoiseFrame;}
     int grainStrength( void ){return m_grainStrength;}
     int grainLumaWeight( void ){return m_grainLumaWeight;}
     bool isHighlightReconstruction( void ){return m_highlightReconstruction;}
@@ -284,6 +302,15 @@ private:
     int m_rbfDenoiserLuma;
     int m_rbfDenoiserChroma;
     int m_rbfDenoiserRange;
+    int m_galoshLuma;
+    int m_galoshChroma;
+    int m_galoshChromaPreserve;
+    int m_galoshBackend;
+    bool m_galoshFast;
+    float m_galoshAlpha;
+    float m_galoshSigmaSq;
+    bool m_galoshNoiseValid;
+    int m_galoshNoiseFrame;
     int m_grainStrength;
     int m_grainLumaWeight;
     bool m_highlightReconstruction;

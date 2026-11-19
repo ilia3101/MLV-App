@@ -1,0 +1,154 @@
+#version 450
+/* Transcribed from galosh.cl §7.3 galosh_o32_build_inv_lut (line 6925).
+ * Phase 0 (3/3): build inverse GAT LUT via Poisson summation + 10-point
+ * Gauss-Hermite quadrature, one WI per LUT entry (4096 entries).
+ * Mirrors CPU gat_build_inverse_table.
+ *
+ * FP64→COMPENSATED-FP32 REWRITE (V2.0 cross-vendor, 2026-07-10):
+ * the original transcription computed in GLSL double with hand-rolled
+ * log_d()/exp_d() (no double transcendentals in GLSL) and required
+ * shaderFloat64 — unavailable on Intel Arc.  Now FP32 throughout:
+ *   - native float log()/exp() (Vulkan spec precision: log 3 ulp on
+ *     [0.5,2], exp 3+2|x| ulp) replace the hand-rolled double versions;
+ *   - every RUNNING SUM is Neumaier/Kahan-compensated (float sum + float
+ *     comp): the log_prob Poisson recurrence, the 10-point Gauss-Hermite
+ *     inner sum eg, and the expected_gat outer sum — so summation adds
+ *     essentially no error on top of the per-term log/exp ulp error;
+ *   - `precise` qualifiers pin the TwoSum error terms against FMA
+ *     contraction / reassociation.
+ * LOOP-BREAK CUTOFF: prob < 1e-15 is KEPT — 1e-15 is a perfectly normal
+ * float (min normal ≈ 1.18e-38), so the truncation point of the Poisson
+ * series is semantically identical to the double version.
+ * i = 0 EDGE CASE (x = 0 → lambda = 0): the double version relied on
+ * log(0) = -inf → exp(-inf) = 0.  Replicated explicitly WITHOUT inf math:
+ * log_s(x<=0) returns the finite sentinel -1e30 (k_max = 28 accumulations
+ * of -1e30 stay ≪ FLT_MAX, no overflow-to-inf) and exp_s(x < -87.0)
+ * returns exactly 0.0 (e^-87.3 underflows float; the double path's
+ * -690 cutoff guarded e^-690 ~ 1e-300 — everything between e^-87 and
+ * e^-690 was < 1e-38, i.e. 23 orders below the 1e-15 series cutoff, so
+ * zeroing it changes nothing observable).  Hence entry 0 still yields
+ * exactly prob(k=0)=exp(-0)=1, all k>0 terms 0 — bit-identical intent.
+ * JP: FP64全廃。総和はKahan補償、超越関数はネイティブfloat精度、
+ *     lambda=0はinfに頼らず有限センチネルで厳密再現。 */
+
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+layout(std430, binding = 0) readonly  buffer Buf0 { float params[]; };
+layout(std430, binding = 1) writeonly buffer Buf1 { float lut_d[]; };
+layout(std430, binding = 2) writeonly buffer Buf2 { float lut_x[]; };
+layout(std430, binding = 3) writeonly buffer Buf3 { float lut_params[]; };
+
+/* No scalar args in the OpenCL kernel → no push constants. */
+
+const int GAT_LUT_SIZE = 4096;   /* galosh.cl line 1125 */
+const int P_ALPHA      = 13;
+const int P_SIGMA_SQ   = 14;
+
+/* galosh.cl lines 6914-6923: 10-point Gauss-Hermite nodes/weights
+ * (float __constant arrays — used at native float precision). */
+const float gh_nodes_o32[10] = float[10](
+  -3.436159, -2.532732, -1.756684, -1.036611, -0.342901,
+   0.342901,  1.036611,  1.756684,  2.532732,  3.436159
+);
+const float gh_weights_o32[10] = float[10](
+  7.640432855232641e-06, 1.343645746781232e-03, 3.387439445548111e-02,
+  2.401386110823147e-01, 6.108626337353258e-01,
+  6.108626337353258e-01, 2.401386110823147e-01, 3.387439445548111e-02,
+  1.343645746781232e-03, 7.640432855232641e-06
+);
+
+/* Neumaier/Kahan accumulate: (s, c) += v with true value ≈ s + c.
+ * Knuth TwoSum (branch-free, magnitude-order-free); error into comp. */
+void kacc(inout float s, inout float c, float v)
+{
+  precise float t  = s + v;
+  precise float vp = t - s;
+  precise float sp = t - vp;
+  precise float e  = (v - vp) + (s - sp);
+  s = t;
+  c = c + e;
+}
+
+/* log with the x<=0 → "-inf" edge replaced by a finite sentinel (GLSL
+ * log(x<=0) is UNDEFINED, not -inf — must not rely on it). */
+const float LOG_ZERO_SENTINEL = -1e30;
+float log_s(float x)
+{
+  return (x <= 0.0) ? LOG_ZERO_SENTINEL : log(x);
+}
+
+/* exp with explicit underflow-to-zero: float exp underflows below
+ * ≈ -87.3; anything under -87 (incl. the -1e30 sentinel chain) is hard
+ * zero.  Mirrors the double version's -690 guard at float scale. */
+float exp_s(float x)
+{
+  return (x < -87.0) ? 0.0 : exp(x);
+}
+
+void main()
+{
+  const int i = int(gl_GlobalInvocationID.x);
+  if(i >= GAT_LUT_SIZE) return;
+
+  const float a   = params[P_ALPHA];
+  const float sq  = params[P_SIGMA_SQ];
+  const float sig = sqrt(max(sq, 1e-20));
+  const float y_break = -0.375 * a;
+  const float t_break = 2.0 * sig / a;
+
+  const float x_val  = float(i) / float(GAT_LUT_SIZE - 1);
+  const float lambda = x_val / a;
+
+  /* Poisson summation: log_prob recurrence avoids underflow.  log_prob,
+   * eg and expected_gat are Kahan pairs (sum, comp). */
+  float eg_s = 0.0, eg_c = 0.0;              /* reused per k below */
+  float exg_s = 0.0, exg_c = 0.0;            /* expected_gat */
+  const int k_max = int(lambda + 8.0 * sqrt(max(lambda, 1.0))) + 20;
+  float lp_s = -lambda, lp_c = 0.0;          /* log_prob */
+  const float log_lambda = log_s(lambda);    /* loop-invariant */
+
+  for(int k = 0; k <= k_max; k++)
+  {
+    if(k > 0) kacc(lp_s, lp_c, log_lambda - log(float(k)));
+    const float prob = exp_s(lp_s + lp_c);
+    if(prob < 1e-15 && k > int(lambda) + 1) break;
+
+    /* 10-point Gauss-Hermite quadrature over Gaussian noise. */
+    eg_s = 0.0; eg_c = 0.0;
+    for(int g = 0; g < 10; g++)
+    {
+      const float z = 1.4142135623730951 * sig * gh_nodes_o32[g];
+      const float noisy_y = float(k) * a + z;
+      float T;
+      if(noisy_y >= y_break)
+      {
+        const float arg = a * noisy_y + 0.375 * a * a + sq;
+        T = (2.0 / a) * sqrt(max(arg, 0.0));
+      }
+      else
+      {
+        T = t_break + (noisy_y - y_break) / sig;
+      }
+      kacc(eg_s, eg_c, gh_weights_o32[g] * T);
+    }
+    const float eg = (eg_s + eg_c) * 0.5641895835477563;  /* 1 / sqrt(pi) */
+    kacc(exg_s, exg_c, prob * eg);
+  }
+
+  lut_d[i] = exg_s + exg_c;
+  lut_x[i] = x_val;
+
+  /* WI 0: write lut_params (= matches §1 K_LUT_FINALIZE layout):
+   *   [0]=d_min (deferred to §7.3b), [1]=d_max (deferred to §7.3b),
+   *   [2]=y_break, [3]=t_break, [4]=sigma_raw, [5]=alpha, [6]=sigma_sq. */
+  if(i == 0)
+  {
+    lut_params[2] = y_break;
+    lut_params[3] = t_break;
+    lut_params[4] = sig;
+    lut_params[5] = a;
+    lut_params[6] = sq;
+  }
+  /* d_min (= lut_d[0]) and d_max (= lut_d[LUT_SIZE-1]) finalized in §7.3b
+   * after all entries computed. */
+}

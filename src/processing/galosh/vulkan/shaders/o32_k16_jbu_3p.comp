@@ -1,0 +1,157 @@
+#version 450
+/* o32_k16_jbu_3p.comp — [V2.0 Phase B2] literal transcription of
+ * galosh.cl §6.11 galosh_o32_k16_joint_bilateral_upsample_3p (OpenCL
+ * kernel, line 5999) + its __constant weight table galosh_o32_k16_jbu_w
+ * (galosh.cl line 2483).
+ *
+ * Phase 7 + Phase 9: Joint bilateral K16 EWA-JL3 upsample, 3-channel,
+ * FP32.  Mirrors CPU `gat_k16_joint_bilateral_upsample`.
+ *
+ *   Per output pixel (fy, fx):
+ *     si = (fy & 1) * 2 + (fx & 1)        sub-pixel index 0..3
+ *     For each (dy, dx) in 5x5 (centred at corresponding half-res sample):
+ *       w_jinc = jinc(r_full) · jinc(r_full / 3)   (= K16 EWA-JL3)
+ *       w_bilat = exp(-(L_at_h - L_c)² / (2·BW²))
+ *       w = w_jinc · w_bilat
+ *     C_out[fy, fx] = Σ w · C_in[…] / Σ w
+ *
+ *   Stride correctness: caller MUST allocate L guide at exactly
+ *   (2·in_w × 2·in_h) (= matches the K16 internal stride).
+ *
+ * (日) FP32 K16。 jinc 重みはオフライン計算済み定数表 (galosh_o32_k16_jbu_w)。
+ *   Phase 7 の 3 段 K16 chain (q→h, e→q, q→h) と Phase 9 の最終
+ *   half→full upsample で使う。 転写は逐語 (anti-ringing hull clamp と
+ *   sign-preserving |sum_w| floor を厳守 — magenta artifact の実修正)。 */
+layout(local_size_x = 16, local_size_y = 16) in;
+
+layout(std430, binding = 0) readonly  buffer Buf0 { float c1_in[];   };  /* half-res input */
+layout(std430, binding = 1) readonly  buffer Buf1 { float c2_in[];   };
+layout(std430, binding = 2) readonly  buffer Buf2 { float c3_in[];   };
+layout(std430, binding = 3) readonly  buffer Buf3 { float L_pixel[]; };  /* full-res L guide (2·in_w × 2·in_h) */
+layout(std430, binding = 4) writeonly buffer Buf4 { float c1_out[];  };  /* full-res output */
+layout(std430, binding = 5) writeonly buffer Buf5 { float c2_out[];  };
+layout(std430, binding = 6) writeonly buffer Buf6 { float c3_out[];  };
+
+layout(push_constant) uniform PC {
+  int   in_w;   /* "halfwidth" relative to K16 step */
+  int   in_h;
+  float bw;
+} pc;
+
+/* o32 K16 joint bilateral upsample weights — matches CPU
+ * gat_k16_joint_bilateral_upsample's runtime-computed jw[][][] values
+ * (NOT galosh_ewajl3_w which is for K16 chromaup with different
+ * normalization).  Computed offline via:
+ *   jinc(x) = 2*J1(pi*x)/(pi*x)
+ *   for each si (oy, ox), each dy/dx in [-2,2]:
+ *     ry = dy-oy, rx = dx-ox, r_full = 2*sqrt(rx²+ry²)
+ *     w = jinc(r_full) * jinc(r_full/3) if r_full < 3 else 0
+ * Values include negative side-lobes; output normalisation by sum_w
+ * inside the kernel handles sign correctly. */
+const float galosh_o32_k16_jbu_w[100] = float[100](
+  /* si=0 (oy=0.00, ox=0.00) */
+  +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f,
+  +0.0000000000e+00f, +1.3804738955e-02f, -3.6724216895e-02f, +1.3804738955e-02f, +0.0000000000e+00f,
+  +0.0000000000e+00f, -3.6724216895e-02f, +1.0000000000e+00f, -3.6724216895e-02f, +0.0000000000e+00f,
+  +0.0000000000e+00f, +1.3804738955e-02f, -3.6724216895e-02f, +1.3804738955e-02f, +0.0000000000e+00f,
+  +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f,
+  /* si=1 (oy=0.00, ox=0.50) */
+  +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f,
+  +0.0000000000e+00f, +0.0000000000e+00f, +3.5811194091e-04f, +3.5811194091e-04f, +0.0000000000e+00f,
+  +0.0000000000e+00f, +0.0000000000e+00f, +1.5746368940e-01f, +1.5746368940e-01f, +0.0000000000e+00f,
+  +0.0000000000e+00f, +0.0000000000e+00f, +3.5811194091e-04f, +3.5811194091e-04f, +0.0000000000e+00f,
+  +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f,
+  /* si=2 (oy=0.50, ox=0.00) */
+  +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f,
+  +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f,
+  +0.0000000000e+00f, +3.5811194091e-04f, +1.5746368940e-01f, +3.5811194091e-04f, +0.0000000000e+00f,
+  +0.0000000000e+00f, +3.5811194091e-04f, +1.5746368940e-01f, +3.5811194091e-04f, +0.0000000000e+00f,
+  +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f,
+  /* si=3 (oy=0.50, ox=0.50) */
+  +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f,
+  +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f,
+  +0.0000000000e+00f, +0.0000000000e+00f, -7.2646353170e-02f, -7.2646353170e-02f, +0.0000000000e+00f,
+  +0.0000000000e+00f, +0.0000000000e+00f, -7.2646353170e-02f, -7.2646353170e-02f, +0.0000000000e+00f,
+  +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f, +0.0000000000e+00f
+);
+
+void main()
+{
+  const int out_w = 2 * pc.in_w;
+  const int out_h = 2 * pc.in_h;
+  const int fx = int(gl_GlobalInvocationID.x);
+  const int fy = int(gl_GlobalInvocationID.y);
+  if(fx >= out_w || fy >= out_h) return;
+
+  const int hx = fx >> 1;
+  const int hy = fy >> 1;
+  const int sub_x = fx & 1;
+  const int sub_y = fy & 1;
+  const int si = sub_y * 2 + sub_x;
+
+  const float L_c = L_pixel[uint(fy) * uint(out_w) + uint(fx)];
+  const float inv_2bw_sq = 1.0f / (2.0f * pc.bw * pc.bw);
+
+  float sum_w  = 0.0f;
+  float sum_c1 = 0.0f, sum_c2 = 0.0f, sum_c3 = 0.0f;
+  /* Anti-ringing (canonical, = CPU gat_k16_joint_bilateral_upsample): clamp the
+   * jinc side-lobe overshoot to the convex hull of the NEAREST 2x2 source chroma
+   * samples (ImageMagick/mpv "+clamp" antiring) -> removes the ring-magenta GALOSH
+   * made from clean input at high-contrast L edges while preserving jinc sharpness.
+   * Same nearest-2x2 mask as r32/i16 (sub_y=fy&1, sub_x=fx&1 = si). */
+  float cmin1= 1e30f, cmin2= 1e30f, cmin3= 1e30f;
+  float cmax1=-1e30f, cmax2=-1e30f, cmax3=-1e30f;
+
+  for(int dy = -2; dy <= 2; dy++)
+  {
+    int hyi = hy + dy;
+    hyi = clamp(hyi, 0, pc.in_h - 1);
+    for(int dx = -2; dx <= 2; dx++)
+    {
+      int hxi = hx + dx;
+      hxi = clamp(hxi, 0, pc.in_w - 1);
+      const int hi = hyi * pc.in_w + hxi;
+      /* nearest-2x2 source-sample hull (anti-ringing), before the zero-weight skip
+       * (OpenCL int-as-bool `sub_y && dy==1` → explicit `sub_y != 0 && dy == 1`) */
+      if(((dy==0)||(sub_y != 0 && dy==1)) && ((dx==0)||(sub_x != 0 && dx==1))) {
+        const float iv1=c1_in[hi], iv2=c2_in[hi], iv3=c3_in[hi];
+        cmin1=min(cmin1,iv1); cmax1=max(cmax1,iv1);
+        cmin2=min(cmin2,iv2); cmax2=max(cmax2,iv2);
+        cmin3=min(cmin3,iv3); cmax3=max(cmax3,iv3);
+      }
+      const float w_jinc = galosh_o32_k16_jbu_w[si * 25 + (dy + 2) * 5 + (dx + 2)];
+      if(w_jinc == 0.0f) continue;
+
+      /* Sample L at the half-res chroma sample's full-res TL position. */
+      int fri = 2 * hyi;
+      int fci = 2 * hxi;
+      if(fri >= out_h) fri = out_h - 1;
+      if(fci >= out_w) fci = out_w - 1;
+      const float L_i = L_pixel[uint(fri) * uint(out_w) + uint(fci)];
+      const float dL = L_i - L_c;
+      /* Use spec-compliant exp instead of native_exp (= matches CPU bilateral
+       * weight in gat_k16_joint_bilateral_upsample). */
+      const float w_bilat = exp(-dL * dL * inv_2bw_sq);
+      const float w = w_jinc * w_bilat;
+
+      sum_w  += w;
+      sum_c1 += w * c1_in[hi];
+      sum_c2 += w * c2_in[hi];
+      sum_c3 += w * c3_in[hi];
+    }
+  }
+
+  /* SIGN-PRESERVING |sum_w| floor (the old fmax-style positive floor flipped the
+   * chroma sign when the jinc negative lobes cancelled -> magenta spike). */
+  const float safe_w = (abs(sum_w) > 1e-6f) ? sum_w : ((sum_w < 0.0f) ? -1e-6f : 1e-6f);
+  const float inv_w = 1.0f / safe_w;
+  float oc1 = sum_c1 * inv_w, oc2 = sum_c2 * inv_w, oc3 = sum_c3 * inv_w;
+  /* clamp jinc-ringing overshoot to the local input chroma band */
+  if(cmax1>=cmin1) oc1 = clamp(oc1, cmin1, cmax1);
+  if(cmax2>=cmin2) oc2 = clamp(oc2, cmin2, cmax2);
+  if(cmax3>=cmin3) oc3 = clamp(oc3, cmin3, cmax3);
+  const uint op = uint(fy) * uint(out_w) + uint(fx);
+  c1_out[op] = oc1;
+  c2_out[op] = oc2;
+  c3_out[op] = oc3;
+}

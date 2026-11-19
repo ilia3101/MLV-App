@@ -1,0 +1,31 @@
+#version 450
+/* Transcribed from galosh.cl §7.6 galosh_o32_unified_sigma (line 7209).
+ * Phase 1 (3/4): unified_sigma = sqrt(max(0.25·Σσ_ch², 1e-12)), inv_sg = 1/unified.
+ * Host dispatches global=1 with NULL local size; per conventions local_size_x
+ * is set to 256 (vkCmdDispatch(1,1,1)) — the get_global_id(0)!=0 guard makes
+ * the 255 extra invocations no-ops.  Literal transcription (V2.0 Phase B2). */
+
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+layout(std430, binding = 0) buffer Buf0 { float params[]; };
+
+/* params[] slot indices (galosh.cl lines 6346-6367) */
+const int P_SIGMA_CH0    = 0;
+const int P_SIGMA_CH1    = 1;
+const int P_SIGMA_CH2    = 2;
+const int P_SIGMA_CH3    = 3;
+const int P_UNIFIED_SIGMA = 4;
+const int P_INV_SG       = 5;
+
+void main()
+{
+  if(gl_GlobalInvocationID.x != 0u) return;
+  const float s0 = params[P_SIGMA_CH0];
+  const float s1 = params[P_SIGMA_CH1];
+  const float s2 = params[P_SIGMA_CH2];
+  const float s3 = params[P_SIGMA_CH3];
+  const float mean_var = 0.25 * (s0*s0 + s1*s1 + s2*s2 + s3*s3);
+  const float unified = sqrt(max(mean_var, 1e-12));
+  params[P_UNIFIED_SIGMA] = unified;
+  params[P_INV_SG]        = 1.0 / unified;
+}

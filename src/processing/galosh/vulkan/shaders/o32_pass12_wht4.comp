@@ -1,0 +1,332 @@
+#version 450
+/* o32_pass12_wht4.comp — [V2.0 B6] WHT4 fast-mode sibling of o32_pass12.
+ *
+ * EN: Same fused two-pass LOSH structure with GALOSH_BS = 4 (the CPU
+ *     --wht=4 mode, galosh_pass1/2_blocked block_size=4): BP = 16,
+ *     PHASE_MOD = 2, N_PHASES = 4, HALO = 2, WIENER_FLOOR = 1/4, Kaiser =
+ *     pair-averaged halves of the 8-tap table (galosh_cpu.h
+ *     galosh_kaiser_half_2d construction), and the sequency-ordered
+ *     4-point butterfly transcribed from galosh_cpu.h wht4_inplace.
+ *     The 16-float private block fits registers (the 8x8 kernel's 64-float
+ *     array spills in the SPIR-V path — B3 finding), and the phase loop
+ *     shrinks 16 -> 4: this kernel is the 4K60 lever.
+ * JP: CPU --wht=4 の GPU ミラー。block[16] はレジスタに乗り（B3 で特定した
+ *     スピルが消える）、位相ループも 16→4。品質ラベルは Phase A ベンチ準拠
+ *     （高ノイズで -1.2dB の動画/速度優先モード）。
+ *
+ * [V2.0 FP16 storage contract v1, dataflow_spec.md §4] L_cs (in) /
+ * L_cs_den (out) = float16_t SSBOs, compute f32; SHARED pilot store
+ * rounded f32→f16→f32 (RNE) at the pass1→pass2 boundary — same contract
+ * points as o32_pass12 (see its header comment for the rationale).
+ */
+#extension GL_EXT_shader_16bit_storage : require
+#extension GL_EXT_shader_explicit_arithmetic_types_float16 : require
+#extension GL_GOOGLE_include_directive : enable
+#include "galosh_f16_rne.glsl"
+layout(local_size_x = 8, local_size_y = 8) in;
+
+#define GALOSH_BS      4
+#define GALOSH_BP     16
+#define GALOSH_STRIDE  2
+#define PHASE_MOD  (GALOSH_BS / GALOSH_STRIDE)    /* 2 */
+#define N_PHASES   (PHASE_MOD * PHASE_MOD)         /* 4 */
+#define HALO       (GALOSH_BS - GALOSH_STRIDE)     /* 2 */
+#define WIENER_FLOOR  0.25f                        /* 1/BS */
+
+#define O32_TILE_SIZE 28
+#define O32_TILE_W      (O32_TILE_SIZE + 2 * HALO)          /* 32 */
+#define O32_TILE_PIXELS (O32_TILE_W * O32_TILE_W)           /* 1024 */
+
+/* Kaiser half window: pair-averaged from the 8-tap table used by the 8x8
+ * kernel ((0.34012+0.59885)/2, (0.84123+0.97659)/2, mirrored) — mirrors
+ * the CPU construction kaiser_half_1d[i] = (k8[2i]+k8[2i+1])*0.5. */
+const float kaiser_1d[4] = float[4](0.469485f, 0.908910f, 0.908910f, 0.469485f);
+
+layout(std430, binding = 0) readonly  buffer Buf0 { float16_t input_buf[]; };   /* [FP16 v1] L_cs */
+layout(std430, binding = 1) writeonly buffer Buf1 { float16_t output_buf[]; };  /* [FP16 v1] L_cs_den */
+layout(push_constant) uniform PC {
+  int   width;
+  int   height;
+  float sigma_strength;
+  int   phase_stride;
+} pc;
+
+shared float tile_in[O32_TILE_PIXELS];
+shared float numer  [O32_TILE_PIXELS];
+shared float denom  [O32_TILE_PIXELS];
+shared float pilot  [O32_TILE_PIXELS];
+
+/* Sequency-ordered 4-point WHT (exact transcription of galosh_cpu.h
+ * wht4_inplace: DC, ++--, +--+, +-+-). */
+void wht4_f(inout float x[4])
+{
+  const float a0 = x[0] + x[1];
+  const float a1 = x[0] - x[1];
+  const float a2 = x[2] + x[3];
+  const float a3 = x[2] - x[3];
+  x[0] = a0 + a2;
+  x[1] = a0 - a2;
+  x[2] = a1 - a3;
+  x[3] = a1 + a3;
+}
+
+void wht2d_4x4_f(inout float block[GALOSH_BP], const int normalize)
+{
+  for(int r = 0; r < 4; r++)
+  {
+    float row[4];
+    for(int c = 0; c < 4; c++) row[c] = block[r * 4 + c];
+    wht4_f(row);
+    for(int c = 0; c < 4; c++) block[r * 4 + c] = row[c];
+  }
+  for(int c = 0; c < 4; c++)
+  {
+    float col[4];
+    for(int r = 0; r < 4; r++) col[r] = block[r * 4 + c];
+    wht4_f(col);
+    for(int r = 0; r < 4; r++) block[r * 4 + c] = col[r];
+  }
+  if(normalize != 0)
+  {
+    const float inv = (1.0f / 16.0f);
+    for(int i = 0; i < 16; i++) block[i] *= inv;
+  }
+}
+
+/* MAD of the 15 AC coefficients (same partial-selection form as the 8x8
+ * kernel; N = BP applies in the sigma scaling). */
+float mad_sigma_y_sq_f(const float block[GALOSH_BP])
+{
+    float abs_ac[GALOSH_BP - 1];
+    for(int i = 1; i < GALOSH_BP; i++)
+        abs_ac[i - 1] = abs(block[i]);
+    const int target = (GALOSH_BP - 1) / 2;
+    for(int k = 0; k <= target; k++)
+    {
+        int min_idx = k;
+        float min_val = abs_ac[k];
+        for(int j = k + 1; j < GALOSH_BP - 1; j++)
+        {
+            if(abs_ac[j] < min_val) { min_val = abs_ac[j]; min_idx = j; }
+        }
+        abs_ac[min_idx] = abs_ac[k];
+        abs_ac[k] = min_val;
+    }
+    const float mad = abs_ac[target];
+    const float sy = mad / 0.6745f;
+    return (sy * sy) / float(GALOSH_BP);
+}
+
+void main()
+{
+  const int tile_x = int(gl_WorkGroupID.x) * O32_TILE_SIZE;
+  const int tile_y = int(gl_WorkGroupID.y) * O32_TILE_SIZE;
+  const int lid = int(gl_LocalInvocationID.y) * 8 + int(gl_LocalInvocationID.x);
+  const int wg_size = 8 * 8;
+
+  const int img_rmax = pc.height - GALOSH_BS;
+  const int img_cmax = pc.width  - GALOSH_BS;
+
+  for(int i = lid; i < O32_TILE_PIXELS; i += wg_size)
+  {
+    const int lx = i % O32_TILE_W;
+    const int ly = i / O32_TILE_W;
+    const int gx = tile_x - HALO + lx;
+    const int gy = tile_y - HALO + ly;
+    tile_in[i] = (gx >= 0 && gx < pc.width && gy >= 0 && gy < pc.height)
+                 ? float(input_buf[gy * pc.width + gx]) : 0.0f;
+  }
+  memoryBarrierShared(); barrier();
+
+  for(int i = lid; i < O32_TILE_PIXELS; i += wg_size)
+  {
+    numer[i] = 0.0f;
+    denom[i] = 0.0f;
+  }
+  memoryBarrierShared(); barrier();
+
+  /* ---- Pass1 BayesShrink ---- */
+  {
+    const int n_blocks_dim = (O32_TILE_W - GALOSH_BS) / GALOSH_STRIDE + 1;
+    const float sigma_sq = pc.sigma_strength * pc.sigma_strength;
+    const float lambda_max_base = pc.sigma_strength * sqrt(2.0f * log(float(GALOSH_BP)));
+
+    for(int phase = 0; phase < N_PHASES; phase++)
+    {
+      const int px = phase % PHASE_MOD;
+      const int py = phase / PHASE_MOD;
+      if(pc.phase_stride > 1 &&
+         ((px % pc.phase_stride) != 0 || (py % pc.phase_stride) != 0)) continue;
+      const int bpd   = (n_blocks_dim - px + PHASE_MOD - 1) / PHASE_MOD;
+      const int bpd_y = (n_blocks_dim - py + PHASE_MOD - 1) / PHASE_MOD;
+      const int n_blocks = bpd * bpd_y;
+
+      for(int bi = lid; bi < n_blocks; bi += wg_size)
+      {
+        const int pbx = bi % bpd;
+        const int pby = bi / bpd;
+        const int bx = pbx * PHASE_MOD + px;
+        const int by = pby * PHASE_MOD + py;
+        if(bx >= n_blocks_dim || by >= n_blocks_dim) continue;
+
+        const int ref_c = bx * GALOSH_STRIDE;
+        const int ref_r = by * GALOSH_STRIDE;
+        const int img_ref_r = tile_y - HALO + ref_r;
+        const int img_ref_c = tile_x - HALO + ref_c;
+        if(img_ref_r < 0 || img_ref_r > img_rmax) continue;
+        if(img_ref_c < 0 || img_ref_c > img_cmax) continue;
+
+        float block[GALOSH_BP];
+        for(int dy = 0; dy < GALOSH_BS; dy++)
+          for(int dx = 0; dx < GALOSH_BS; dx++)
+            block[dy * GALOSH_BS + dx] = tile_in[(ref_r + dy) * O32_TILE_W + (ref_c + dx)];
+
+        wht2d_4x4_f(block, 0);
+
+        const float sigma_y_sq = mad_sigma_y_sq_f(block);
+        const float sigma_x_sq = max(sigma_y_sq - sigma_sq, 0.0f);
+
+        float lambda;
+        if(sigma_x_sq < 1e-10f)
+          lambda = 1e30f;
+        else
+        {
+          lambda = (sigma_sq / sqrt(sigma_x_sq)) * sqrt(float(GALOSH_BP));
+          const float lambda_max_unorm = lambda_max_base * sqrt(float(GALOSH_BP));
+          if(lambda > lambda_max_unorm) lambda = lambda_max_unorm;
+        }
+
+        int n_nonzero = 1;
+        for(int i = 1; i < GALOSH_BP; i++)
+        {
+          if(abs(block[i]) < lambda)
+            block[i] = 0.0f;
+          else
+            n_nonzero++;
+        }
+
+        wht2d_4x4_f(block, 1);
+
+        const float weight = 1.0f / float(n_nonzero);
+        for(int dy = 0; dy < GALOSH_BS; dy++)
+          for(int dx = 0; dx < GALOSH_BS; dx++)
+          {
+            const float kw = kaiser_1d[dy] * kaiser_1d[dx];
+            const float wkw = weight * kw;
+            const int pos = (ref_r + dy) * O32_TILE_W + (ref_c + dx);
+            numer[pos] += wkw * block[dy * GALOSH_BS + dx];
+            denom[pos] += wkw;
+          }
+      }
+      memoryBarrierShared(); barrier();
+    }
+  }
+
+  /* [FP16 v1] pilot store rounded to f16 (explicit RNE) = oracle rounding point. */
+  for(int i = lid; i < O32_TILE_PIXELS; i += wg_size)
+  {
+    const float d = denom[i];
+    pilot[i] = galosh_f16_rne((d > 1e-10f) ? (numer[i] / d) : tile_in[i]);
+  }
+  memoryBarrierShared(); barrier();
+
+  for(int i = lid; i < O32_TILE_PIXELS; i += wg_size)
+  {
+    numer[i] = 0.0f;
+    denom[i] = 0.0f;
+  }
+  memoryBarrierShared(); barrier();
+
+  /* ---- Pass2 Wiener ---- */
+  {
+    const int n_blocks_dim = (O32_TILE_W - GALOSH_BS) / GALOSH_STRIDE + 1;
+    const float sigma_sq_unorm = pc.sigma_strength * pc.sigma_strength * float(GALOSH_BP);
+
+    for(int phase = 0; phase < N_PHASES; phase++)
+    {
+      const int px = phase % PHASE_MOD;
+      const int py = phase / PHASE_MOD;
+      if(pc.phase_stride > 1 &&
+         ((px % pc.phase_stride) != 0 || (py % pc.phase_stride) != 0)) continue;
+      const int bpd   = (n_blocks_dim - px + PHASE_MOD - 1) / PHASE_MOD;
+      const int bpd_y = (n_blocks_dim - py + PHASE_MOD - 1) / PHASE_MOD;
+      const int n_blocks = bpd * bpd_y;
+
+      for(int bi = lid; bi < n_blocks; bi += wg_size)
+      {
+        const int pbx = bi % bpd;
+        const int pby = bi / bpd;
+        const int bx = pbx * PHASE_MOD + px;
+        const int by = pby * PHASE_MOD + py;
+        if(bx >= n_blocks_dim || by >= n_blocks_dim) continue;
+
+        const int ref_c = bx * GALOSH_STRIDE;
+        const int ref_r = by * GALOSH_STRIDE;
+        const int img_ref_r = tile_y - HALO + ref_r;
+        const int img_ref_c = tile_x - HALO + ref_c;
+        if(img_ref_r < 0 || img_ref_r > img_rmax) continue;
+        if(img_ref_c < 0 || img_ref_c > img_cmax) continue;
+
+        float blk_noisy[GALOSH_BP];
+        float blk_pilot[GALOSH_BP];
+        for(int dy = 0; dy < GALOSH_BS; dy++)
+          for(int dx = 0; dx < GALOSH_BS; dx++)
+          {
+            const int pos = (ref_r + dy) * O32_TILE_W + (ref_c + dx);
+            blk_noisy[dy * GALOSH_BS + dx] = tile_in[pos];
+            blk_pilot[dy * GALOSH_BS + dx] = pilot[pos];
+          }
+
+        wht2d_4x4_f(blk_noisy, 0);
+        wht2d_4x4_f(blk_pilot, 0);
+
+        float wiener_energy = 0.0f;
+        for(int i = 0; i < GALOSH_BP; i++)
+        {
+          float w;
+          if(i == 0)
+            w = 1.0f;
+          else
+          {
+            const float p = blk_pilot[i];
+            const float s2 = p * p;
+            w = s2 / (s2 + sigma_sq_unorm);
+            if(w < WIENER_FLOOR) w = WIENER_FLOOR;
+          }
+          blk_noisy[i] *= w;
+          wiener_energy += w * w;
+        }
+
+        wht2d_4x4_f(blk_noisy, 1);
+
+        const float weight = 1.0f / max(wiener_energy, 1e-6f);
+        for(int dy = 0; dy < GALOSH_BS; dy++)
+          for(int dx = 0; dx < GALOSH_BS; dx++)
+          {
+            const float kw = kaiser_1d[dy] * kaiser_1d[dx];
+            const float wkw = weight * kw;
+            const int pos = (ref_r + dy) * O32_TILE_W + (ref_c + dx);
+            numer[pos] += wkw * blk_noisy[dy * GALOSH_BS + dx];
+            denom[pos] += wkw;
+          }
+      }
+      memoryBarrierShared(); barrier();
+    }
+  }
+
+  for(int i = lid; i < O32_TILE_SIZE * O32_TILE_SIZE; i += wg_size)
+  {
+    const int lx = i % O32_TILE_SIZE + HALO;
+    const int ly = i / O32_TILE_SIZE + HALO;
+    const int idx = ly * O32_TILE_W + lx;
+    const int gx = tile_x + (i % O32_TILE_SIZE);
+    const int gy = tile_y + (i / O32_TILE_SIZE);
+    if(gx < pc.width && gy < pc.height)
+    {
+      const float d = denom[idx];
+      /* [FP16 v1] L_cs_den contract store: explicit RNE (galosh_f16_rne.glsl). */
+      output_buf[gy * pc.width + gx] =
+          float16_t(galosh_f16_rne((d > 1e-10f) ? (numer[idx] / d) : tile_in[idx]));
+    }
+  }
+}

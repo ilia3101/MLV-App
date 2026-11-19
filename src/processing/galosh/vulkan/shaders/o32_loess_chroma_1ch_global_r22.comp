@@ -1,0 +1,77 @@
+#version 450
+/* o32_loess_chroma_1ch_global_r22.comp — no-LDS fallback for the R=22
+ * single-channel anchor (devices whose maxComputeSharedMemorySize cannot
+ * hold the 28.8 KB 2-plane tile).  Same math and bindings as the tiled
+ * variant; only the memory strategy differs. */
+layout(local_size_x = 16, local_size_y = 16) in;
+
+#define GALOSH_R22_R 22
+
+layout(std430, binding = 0) readonly  buffer Buf0 { float y_guide[]; };
+layout(std430, binding = 1) readonly  buffer Buf1 { float c_in[];   };
+layout(std430, binding = 2) writeonly buffer Buf2 { float c_out[];  };
+
+layout(push_constant) uniform PC {
+  int   width;
+  int   height;
+  float strength_c;
+  float bw;
+} pc;
+
+void main()
+{
+  const int ox = int(gl_GlobalInvocationID.x);
+  const int oy = int(gl_GlobalInvocationID.y);
+  if(ox >= pc.width || oy >= pc.height) return;
+
+  const int p0 = oy * pc.width + ox;
+  const float Y_c = y_guide[p0];
+  const float inv_2sigma_sq = 1.0f / (2.0f * pc.bw * pc.bw);
+
+  float sumW = 0.0f, sumY = 0.0f, sumYY = 0.0f;
+  float sumC = 0.0f, sumYC = 0.0f;
+  float cmin = 1e30f, cmax = -1e30f;
+
+  for(int dy = -GALOSH_R22_R; dy <= GALOSH_R22_R; dy++)
+  {
+    int gy = oy + dy;
+    if(gy < 0)          gy = -gy;
+    if(gy >= pc.height) gy = 2 * pc.height - gy - 2;
+    if(gy < 0)          gy = 0;
+    if(gy >= pc.height) gy = pc.height - 1;
+    for(int dx = -GALOSH_R22_R; dx <= GALOSH_R22_R; dx++)
+    {
+      int gx = ox + dx;
+      if(gx < 0)         gx = -gx;
+      if(gx >= pc.width) gx = 2 * pc.width - gx - 2;
+      if(gx < 0)         gx = 0;
+      if(gx >= pc.width) gx = pc.width - 1;
+      const int p = gy * pc.width + gx;
+      const float Yi = y_guide[p];
+      const float Ci = c_in[p];
+      cmin = min(cmin, Ci);
+      cmax = max(cmax, Ci);
+      const float dY = Yi - Y_c;
+      const float w = exp(-dY * dY * inv_2sigma_sq);
+      sumW  += w;
+      sumY  += w * Yi;
+      sumYY += w * Yi * Yi;
+      sumC  += w * Ci;
+      sumYC += w * Yi * Ci;
+    }
+  }
+
+  const float invW  = 1.0f / max(sumW, 1e-10f);
+  const float meanY = sumY * invW;
+  const float meanYY = sumYY * invW;
+  const float meanC = sumC * invW;
+  const float meanYC = sumYC * invW;
+  const float varY = max(meanYY - meanY * meanY, 0.0f);
+  const float eps = pc.strength_c * pc.strength_c;
+  const float a = (meanYC - meanY * meanC) / max(varY + eps, 1e-6f);
+  const float b = meanC - a * meanY;
+  float oc = a * Y_c + b;
+  if(cmax >= cmin) oc = clamp(oc, cmin, cmax);
+
+  c_out[p0] = oc;
+}
