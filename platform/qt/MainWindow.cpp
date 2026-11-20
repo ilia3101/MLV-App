@@ -979,45 +979,47 @@ int MainWindow::openMlv( QString fileName )
     if( focusDist == 65535 ) focusDistStr = QString( "Infinity" );
     else if( focusDist > 0 ) focusDistStr = QString( "%1 cm" ).arg( focusDist );
 
-    ACTIVE_CLIP->updateMetadata( QString( "%1" ).arg( (char*)getMlvCamera( m_pMlvObject ) ),
-                                 QString( "%1" ).arg( (char*)getMlvLens( m_pMlvObject ) ),
-                                 QString( "%1 × %2 pixels" ).arg( (int)getMlvWidth( m_pMlvObject ) ).arg( (int)getMlvHeight( m_pMlvObject ) ),
-                                 QString( "%1" ).arg( m_pTimeCodeImage->getTimeCodeFromFps( (int)getMlvFrames( m_pMlvObject ), getMlvFramerate( m_pMlvObject ) ) ),
-                                 QString( "%1" ).arg( (int)getMlvFrames( m_pMlvObject ) ),
-                                 QString( "%1 fps" ).arg( getMlvFramerate( m_pMlvObject ) ),
-                                 QString( "%1 mm" ).arg( getMlvFocalLength( m_pMlvObject ) ),
-                                 QString( "%1" ).arg( focusDistStr ),
-                                 QString( "1/%1 s, %2 deg, %3 µs" ).arg( (uint16_t)(shutterSpeed + 0.5f) ).arg( (uint16_t)(shutterAngle + 0.5f) ).arg( getMlvShutter( m_pMlvObject ) ),
-                                 QString( "ƒ/%1" ).arg( getMlvAperture( m_pMlvObject ) / 100.0, 0, 'f', 1 ),
-                                 isoInfo,
-                                 dualIso,
-                                 QString( "%1 bits, %2" ).arg( getLosslessBpp( m_pMlvObject ) ).arg( getMlvCompression( m_pMlvObject ) ),
-                                 QString( "%1-%2-%3 / %4:%5:%6" )
-                                           .arg( getMlvTmYear(m_pMlvObject) )
-                                           .arg( getMlvTmMonth(m_pMlvObject), 2, 10, QChar('0') )
-                                           .arg( getMlvTmDay(m_pMlvObject), 2, 10, QChar('0') )
-                                           .arg( getMlvTmHour(m_pMlvObject), 2, 10, QChar('0') )
-                                           .arg( getMlvTmMin(m_pMlvObject), 2, 10, QChar('0') )
-                                           .arg( getMlvTmSec(m_pMlvObject), 2, 10, QChar('0') ),
-                                 audioText );
+    ACTIVE_CLIP->setElement( ClipInformation::Camera, QString( "%1" ).arg( (char*)getMlvCamera( m_pMlvObject ) ) );
+    ACTIVE_CLIP->setElement( ClipInformation::Lens, QString( "%1" ).arg( (char*)getMlvLens( m_pMlvObject ) ) );
+    ACTIVE_CLIP->setElement( ClipInformation::Resolution, QString( "%1 × %2 pixels" ).arg( (int)getMlvWidth( m_pMlvObject ) ).arg( (int)getMlvHeight( m_pMlvObject ) ) );
+    ACTIVE_CLIP->setElement( ClipInformation::Duration, QString( "%1" ).arg( m_pTimeCodeImage->getTimeCodeFromFps( (int)getMlvFrames( m_pMlvObject ), getMlvFramerate( m_pMlvObject ) ) ) );
+    ACTIVE_CLIP->setElement( ClipInformation::Frames, QString( "%1" ).arg( (int)getMlvFrames( m_pMlvObject ) ) );
+    ACTIVE_CLIP->setElement( ClipInformation::FrameRate, QString( "%1 fps" ).arg( getMlvFramerate( m_pMlvObject ) ) );
+    ACTIVE_CLIP->setElement( ClipInformation::FocalLength, QString( "%1 mm" ).arg( getMlvFocalLength( m_pMlvObject ) ) );
+    ACTIVE_CLIP->setElement( ClipInformation::FocusDistance, QString( "%1" ).arg( focusDistStr ) );
+    ACTIVE_CLIP->setElement( ClipInformation::Shutter, QString( "1/%1 s, %2 deg, %3 µs" ).arg( (uint16_t)(shutterSpeed + 0.5f) ).arg( (uint16_t)(shutterAngle + 0.5f) ).arg( getMlvShutter( m_pMlvObject ) ) );
+    ACTIVE_CLIP->setElement( ClipInformation::Aperture, QString( "ƒ/%1" ).arg( getMlvAperture( m_pMlvObject ) / 100.0, 0, 'f', 1 ) );
+    ACTIVE_CLIP->setElement( ClipInformation::Iso, isoInfo );
+    ACTIVE_CLIP->setElement( ClipInformation::DualIso, dualIso );
+    ACTIVE_CLIP->setElement( ClipInformation::BitDepth, QString( "%1 bits, %2" ).arg( getLosslessBpp( m_pMlvObject ) ).arg( getMlvCompression( m_pMlvObject ) ) );
+
+    ACTIVE_CLIP->setElement( ClipInformation::DateTime, QString( "%1-%2-%3 / %4:%5:%6" )
+                                                            .arg( getMlvTmYear(m_pMlvObject) )
+                                                            .arg( getMlvTmMonth(m_pMlvObject), 2, 10, QChar('0') )
+                                                            .arg( getMlvTmDay(m_pMlvObject), 2, 10, QChar('0') )
+                                                            .arg( getMlvTmHour(m_pMlvObject), 2, 10, QChar('0') )
+                                                            .arg( getMlvTmMin(m_pMlvObject), 2, 10, QChar('0') )
+                                                            .arg( getMlvTmSec(m_pMlvObject), 2, 10, QChar('0') ) );
+
+    ACTIVE_CLIP->setElement( ClipInformation::Audio, audioText );
 
     //Set Clip Info to Dialog
-    m_pInfoDialog->ui->tableWidget->item( 0, 1 )->setText( ACTIVE_CLIP->getElement( 2 ).toString() );
-    m_pInfoDialog->ui->tableWidget->item( 1, 1 )->setText( ACTIVE_CLIP->getElement( 3 ).toString() );
-    m_pInfoDialog->ui->tableWidget->item( 2, 1 )->setText( ACTIVE_CLIP->getElement( 4 ).toString() );
-    m_pInfoDialog->ui->tableWidget->item( 3, 1 )->setText( ACTIVE_CLIP->getElement( 5 ).toString() );
-    m_pInfoDialog->ui->tableWidget->item( 4, 1 )->setText( ACTIVE_CLIP->getElement( 6 ).toString() );
-    m_pInfoDialog->ui->tableWidget->item( 5, 1 )->setText( ACTIVE_CLIP->getElement( 7 ).toString() );
-    m_pInfoDialog->ui->tableWidget->item( 6, 1 )->setText( ACTIVE_CLIP->getElement( 8 ).toString() );
-    m_pInfoDialog->ui->tableWidget->item( 7, 1 )->setText( ACTIVE_CLIP->getElement( 9 ).toString() );
-    m_pInfoDialog->ui->tableWidget->item( 8, 1 )->setText( ACTIVE_CLIP->getElement( 10 ).toString() );
-    m_pInfoDialog->ui->tableWidget->item( 9, 1 )->setText( ACTIVE_CLIP->getElement( 11 ).toString() );
+    m_pInfoDialog->ui->tableWidget->item( 0, 1 )->setText( ACTIVE_CLIP->getElement( ClipInformation::Camera ).toString() );
+    m_pInfoDialog->ui->tableWidget->item( 1, 1 )->setText( ACTIVE_CLIP->getElement( ClipInformation::Lens ).toString() );
+    m_pInfoDialog->ui->tableWidget->item( 2, 1 )->setText( ACTIVE_CLIP->getElement( ClipInformation::Resolution ).toString() );
+    m_pInfoDialog->ui->tableWidget->item( 3, 1 )->setText( ACTIVE_CLIP->getElement( ClipInformation::Duration ).toString() );
+    m_pInfoDialog->ui->tableWidget->item( 4, 1 )->setText( ACTIVE_CLIP->getElement( ClipInformation::Frames ).toString() );
+    m_pInfoDialog->ui->tableWidget->item( 5, 1 )->setText( ACTIVE_CLIP->getElement( ClipInformation::FrameRate ).toString() );
+    m_pInfoDialog->ui->tableWidget->item( 6, 1 )->setText( ACTIVE_CLIP->getElement( ClipInformation::FocalLength ).toString() );
+    m_pInfoDialog->ui->tableWidget->item( 7, 1 )->setText( ACTIVE_CLIP->getElement( ClipInformation::FocusDistance ).toString() );
+    m_pInfoDialog->ui->tableWidget->item( 8, 1 )->setText( ACTIVE_CLIP->getElement( ClipInformation::Shutter ).toString() );
+    m_pInfoDialog->ui->tableWidget->item( 9, 1 )->setText( ACTIVE_CLIP->getElement( ClipInformation::Aperture ).toString() );
     m_pInfoDialog->ui->tableWidget->item( 10, 1 )->setText( dualIsoInfo );
-    m_pInfoDialog->ui->tableWidget->item( 11, 1 )->setText( ACTIVE_CLIP->getElement( 14 ).toString() );
+    m_pInfoDialog->ui->tableWidget->item( 11, 1 )->setText( ACTIVE_CLIP->getElement( ClipInformation::BitDepth ).toString() );
     m_pInfoDialog->ui->tableWidget->item( 12, 1 )->setText( QString( "%1 black, %2 white" ).arg( getMlvOriginalBlackLevel( m_pMlvObject ) ).arg( getMlvOriginalWhiteLevel( m_pMlvObject ) ) );
-    m_pInfoDialog->ui->tableWidget->item( 13, 1 )->setText( ACTIVE_CLIP->getElement( 15 ).toString() );
-    m_pInfoDialog->ui->tableWidget->item( 14, 1 )->setText( ACTIVE_CLIP->getElement( 16 ).toString() );
-    m_pInfoDialog->ui->tableWidget->item( 15, 1 )->setText( ACTIVE_CLIP->getElement( 17 ).toString() + ", " + ACTIVE_CLIP->getElement( 18 ).toString() );
+    m_pInfoDialog->ui->tableWidget->item( 13, 1 )->setText( ACTIVE_CLIP->getElement( ClipInformation::DateTime ).toString() );
+    m_pInfoDialog->ui->tableWidget->item( 14, 1 )->setText( ACTIVE_CLIP->getElement( ClipInformation::Audio ).toString() );
+    m_pInfoDialog->ui->tableWidget->item( 15, 1 )->setText( ACTIVE_CLIP->getElement( ClipInformation::Size ).toString() + ", " + ACTIVE_CLIP->getElement( ClipInformation::DataRate ).toString() );
 
     resultingResolution();
 
