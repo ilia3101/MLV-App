@@ -10,6 +10,7 @@
 
 #include <QThread>
 #include <QMutex>
+#include <QWaitCondition>
 #include "../../src/mlv_include.h"
 
 class RenderFrameThread : public QThread
@@ -19,30 +20,31 @@ class RenderFrameThread : public QThread
 public:
     RenderFrameThread();
     ~RenderFrameThread();
-    void init( mlvObject_t *pMlvObject,
-          uint8_t *pRawImage );
+    void init( mlvObject_t *pMlvObject );
     void renderFrame( uint32_t frameNumber );
-    bool isFrameReady( void );
-    bool isIdle( void );
-    void stop( void );
-    void lock( void ){ m_mutex.lock(); }
-    void unlock( void ){ m_mutex.unlock(); }
+    void waitUntilIdle();
+    void stop();
+    QMutex *mutex() { return &m_mutex; }
+
+    // Caller must hold mutex()
+    const uint8_t *currentFrame() { return m_rawImage.data(); }
 
 signals:
-    void frameReady( void );
+    void frameReady();
 
 private:
     QMutex m_mutex;
-    mlvObject_t *m_pMlvObject;
-    uint8_t *m_pRawImage;
-    bool m_initialized;
-    bool m_stop;
-    bool m_renderFrame;
-    bool m_frameReady;
-    uint32_t m_frameNumber;
+    QWaitCondition m_renderCondition;
+    QWaitCondition m_idleCondition;
+    mlvObject_t *m_pMlvObject = nullptr;
+    std::vector<uint8_t> m_rawBuffer;
+    std::vector<uint8_t> m_rawImage;
+    bool m_stop = false;
+    uint64_t m_requestID = 0;
+    uint64_t m_lastProcessedID = 0;
+    uint32_t m_frameNumber = 0;
 
-    void run( void );
-    void drawFrame( void );
+    void run() override;
 };
 
 #endif // RENDERFRAMETHREAD_H

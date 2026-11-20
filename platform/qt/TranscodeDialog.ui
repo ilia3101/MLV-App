@@ -2,90 +2,72 @@
 <ui version="4.0">
  <class>TranscodeDialog</class>
  <widget class="QDialog" name="TranscodeDialog">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>480</width>
-    <height>360</height>
-   </rect>
-  </property>
   <property name="windowTitle">
    <string>Transcode and Import RAW2MLV</string>
   </property>
-  <layout class="QGridLayout" name="gridLayout">
-   <item row="0" column="0">
-    <layout class="QHBoxLayout" name="horizontalLayout">
-     <item>
-      <widget class="QPushButton" name="pushButtonAddPics">
-       <property name="toolTip">
-        <string>Add Picture(s)</string>
-       </property>
-       <property name="text">
-        <string/>
-       </property>
-       <property name="icon">
-        <iconset resource="ressources.qrc">
-         <normaloff>:/RetinaIMG/RetinaIMG/Images-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Images-icon.png</iconset>
-       </property>
-       <property name="iconSize">
-        <size>
-         <width>24</width>
-         <height>24</height>
-        </size>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="pushButtonAddSequence">
-       <property name="toolTip">
-        <string>Add Sequence Folder</string>
-       </property>
-       <property name="text">
-        <string/>
-       </property>
-       <property name="icon">
-        <iconset resource="ressources.qrc">
-         <normaloff>:/RetinaIMG/RetinaIMG/Pic-Folder-Open-icon.png</normaloff>:/RetinaIMG/RetinaIMG/Pic-Folder-Open-icon.png</iconset>
-       </property>
-       <property name="iconSize">
-        <size>
-         <width>24</width>
-         <height>24</height>
-        </size>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <spacer name="horizontalSpacer">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-    </layout>
-   </item>
-   <item row="1" column="0">
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <property name="spacing">
+    <number>10</number>
+   </property>
+   <property name="leftMargin">
+    <number>20</number>
+   </property>
+   <property name="topMargin">
+    <number>20</number>
+   </property>
+   <property name="rightMargin">
+    <number>20</number>
+   </property>
+   <property name="bottomMargin">
+    <number>20</number>
+   </property>
+   <item>
     <layout class="QHBoxLayout" name="horizontalLayout_3">
+     <property name="spacing">
+      <number>10</number>
+     </property>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <property name="spacing">
+        <number>5</number>
+       </property>
+       <item>
+        <widget class="QPushButton" name="pushButtonAddPics">
+         <property name="toolTip">
+          <string>Add Picture(s)</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset resource="ressources.qrc">
+           <normaloff>:/fontawesome/fontawesome/svgs-full/solid/images.svg</normaloff>:/fontawesome/fontawesome/svgs-full/solid/images.svg</iconset>
+         </property>
+         <property name="default">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushButtonAddSequence">
+         <property name="toolTip">
+          <string>Add Sequence Folder</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset resource="ressources.qrc">
+           <normaloff>:/fontawesome/fontawesome/svgs-full/solid/folder-open.svg</normaloff>:/fontawesome/fontawesome/svgs-full/solid/folder-open.svg</iconset>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
      <item>
       <widget class="QComboBox" name="comboBoxBitDepth">
-       <property name="maximumSize">
-        <size>
-         <width>16777215</width>
-         <height>16777215</height>
-        </size>
-       </property>
        <property name="toolTip">
         <string>Use this bitdepth</string>
-       </property>
-       <property name="currentText">
-        <string>Original Bitdepth</string>
        </property>
        <item>
         <property name="text">
@@ -184,14 +166,14 @@
        <property name="sizeHint" stdset="0">
         <size>
          <width>40</width>
-         <height>20</height>
+         <height>0</height>
         </size>
        </property>
       </spacer>
      </item>
     </layout>
    </item>
-   <item row="2" column="0">
+   <item>
     <widget class="QTreeWidget" name="treeWidget">
      <attribute name="headerDefaultSectionSize">
       <number>200</number>
@@ -213,8 +195,14 @@
      </column>
     </widget>
    </item>
-   <item row="3" column="0">
+   <item>
     <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <property name="spacing">
+      <number>10</number>
+     </property>
+     <property name="topMargin">
+      <number>10</number>
+     </property>
      <item>
       <spacer name="horizontalSpacer_2">
        <property name="orientation">
@@ -222,16 +210,26 @@
        </property>
        <property name="sizeHint" stdset="0">
         <size>
-         <width>40</width>
-         <height>20</height>
+         <width>0</width>
+         <height>0</height>
         </size>
        </property>
       </spacer>
      </item>
      <item>
+      <widget class="QPushButton" name="pushButtonAbort">
+       <property name="text">
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="pushButtonTranscode">
        <property name="text">
         <string>Transcode and Import</string>
+       </property>
+       <property name="default">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
@@ -242,11 +240,32 @@
  <tabstops>
   <tabstop>pushButtonAddPics</tabstop>
   <tabstop>pushButtonAddSequence</tabstop>
+  <tabstop>comboBoxBitDepth</tabstop>
+  <tabstop>comboBoxFps</tabstop>
+  <tabstop>checkBoxCompress</tabstop>
   <tabstop>treeWidget</tabstop>
+  <tabstop>pushButtonAbort</tabstop>
   <tabstop>pushButtonTranscode</tabstop>
  </tabstops>
  <resources>
   <include location="ressources.qrc"/>
  </resources>
- <connections/>
+ <connections>
+  <connection>
+   <sender>pushButtonAbort</sender>
+   <signal>clicked()</signal>
+   <receiver>TranscodeDialog</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>333</x>
+     <y>292</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>280</x>
+     <y>164</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>

@@ -11,6 +11,7 @@
 #include <QDialog>
 #include <DoubleClickLabel.h>
 #include <QSlider>
+#include <functional>
 #include "ui_EditSliderValueDialog.h"
 
 namespace Ui {
@@ -25,11 +26,16 @@ public:
     explicit EditSliderValueDialog(QWidget *parent = 0);
     ~EditSliderValueDialog();
     Ui::EditSliderValueDialog *ui;
-    void autoSetup( QSlider *slider, DoubleClickLabel *label, double precision, int decimals, double factor );
-    double getValue( void );
+    void autoSetup( QSlider *slider, DoubleClickLabel *label, double precision, int decimals, double factor, std::function<void()> callback = nullptr );
+    double getValue();
+
+public slots:
+    void accept() override;
 
 private:
     double m_factor;
+    QSlider *m_pSlider;
+    std::function<void()> m_callback;
 };
 
 #endif // EDITSLIDERVALUEDIALOG_H

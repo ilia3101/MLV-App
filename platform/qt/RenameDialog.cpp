@@ -19,7 +19,12 @@ RenameDialog::RenameDialog(QWidget *parent, QString clipName) :
     ui(new Ui::RenameDialog)
 {
     ui->setupUi(this);
+    setWindowFlags( Qt::Dialog | Qt::WindowTitleHint | Qt::WindowCloseButtonHint | Qt::CustomizeWindowHint );
+
     ui->lineEdit->setText( clipName );
+    ui->lineEdit->setPlaceholderText( clipName );
+
+    adjustSize();
 }
 
 RenameDialog::~RenameDialog()
@@ -39,8 +44,7 @@ void RenameDialog::on_lineEdit_textChanged(const QString &arg1)
     rx.setPatternSyntax(QRegExp::Wildcard);
     ui->pushButtonRename->setEnabled( rx.exactMatch( arg1 ) );
 #else
-    QRegularExpression rx("*.MLV");
+    QRegularExpression rx( ".+\\.MLV$", QRegularExpression::CaseInsensitiveOption );
     ui->pushButtonRename->setEnabled( rx.match( arg1 ).hasMatch() );
 #endif
 }
-

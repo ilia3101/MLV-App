@@ -11,14 +11,36 @@
 #include <QObject>
 #include <QColor>
 #include <QIcon>
+#include <array>
 #include "ReceiptSettings.h"
 
 class ClipInformation
 {
 public:
-    ClipInformation(QString name, QString path, QString camera, QString lens, QString resolution, QString duration, QString frames, QString frameRate, QString focalLength, QString focusDistance, QString shutter, QString aperture, QString iso, QString dualIso, QString bitDepth, QString dateTime, QString audio, QColor backgroundColor);
-    ClipInformation(QString name, QString path);
+    enum Element {
+        Name,
+        Path,
+        Camera,
+        Lens,
+        Resolution,
+        Duration,
+        Frames,
+        FrameRate,
+        FocalLength,
+        FocusDistance,
+        Shutter,
+        Aperture,
+        Iso,
+        DualIso,
+        BitDepth,
+        DateTime,
+        Audio,
+        Size,
+        DataRate,
+        Count
+    };
 
+    ClipInformation( QString name, QString path );
     ~ClipInformation();
 
     void setPathName( QString name, QString path );
@@ -28,11 +50,11 @@ public:
     void setElement( int element, QVariant value );
 
     QString getName() const {
-        return m_name;
+        return m_elements[Name];
     }
 
     QString getPath() const {
-        return m_path;
+        return m_elements[Path];
     }
 
     QColor getBackgroundColor() const {
@@ -43,43 +65,49 @@ public:
         m_backgroundColor = color;
     }
 
+    static int getPreviewPaddingTop() {
+        return m_previewPaddingTop;
+    }
+
+    static int getPreviewMinWidth() {
+        return m_previewMinWidth;
+    }
+
+    static double getPreviewRatio() {
+        return m_previewRatio;
+    }
+
     QIcon getPreview() const {
         return m_preview;
     }
 
-    void setPreview( QIcon preview ) {
-        m_preview = preview;
+    void setPreview( const QPixmap &src );
+
+    ReceiptSettings* getReceipt() {
+        return &m_receipt;
     }
 
-    ReceiptSettings* getReceipt() const {
-        return m_pReceipt;
+    const ReceiptSettings* getReceipt() const {
+        return &m_receipt;
     }
-
-    void updateMetadata(QString camera, QString lens, QString resolution, QString duration, QString frames, QString frameRate, QString focalLength, QString focusDistance, QString shutter, QString aperture, QString iso, QString dualIso, QString bitDepth, QString dateTime, QString audio);
 
 private:
     quint64 clipSize() const;
 
-    QString m_name;
-    QString m_path;
-    QString m_camera;
-    QString m_lens;
-    QString m_resolution;
-    QString m_duration;
-    QString m_frames;
-    QString m_frameRate;
-    QString m_focalLength;
-    QString m_focusDistance;
-    QString m_shutter;
-    QString m_aperture;
-    QString m_iso;
-    QString m_dualIso;
-    QString m_bitDepth;
-    QString m_dateTime;
-    QString m_audio;
-    QColor m_backgroundColor;
+    const QString m_placeholderEmpty = "–";
+
+    std::array<QString, Count> m_elements{};
+
+    QColor m_backgroundColor = Qt::transparent;
+
+    static const int m_previewPaddingTop = 4;
+    static const int m_previewMinWidth = 100;
+    static constexpr double m_previewRatio = 16.0 / 9.0;
+    const qreal m_radius = 4;
+
     QIcon m_preview;
-    ReceiptSettings *m_pReceipt;
+
+    ReceiptSettings m_receipt;
 };
 
 #endif // CLIPINFORMATION_H

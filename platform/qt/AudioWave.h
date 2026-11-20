@@ -9,18 +9,12 @@
 #define AUDIOWAVE_H
 
 #include <QImage>
+#include <stdint.h>
 
 class AudioWave
 {
 public:
-    AudioWave();
-    ~AudioWave();
-    QImage getMonoWave(int16_t *pAudioTrack, uint64_t audioSize, uint16_t width, int pixelRatio );
-
-private:
-    QImage *m_pAudioWave;
-    int m_red[32];
-    int m_green[32];
+    QImage getMonoWave(int16_t *pAudioTrack, uint64_t audioSize, uint16_t width, uint16_t height, qreal pixelRatio );
 };
 
 #endif // AUDIOWAVE_H

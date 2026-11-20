@@ -1,72 +1,10 @@
 <RCC>
     <qresource prefix="/IMG">
-        <file>IMG/information-icon.png</file>
         <file>IMG/Magic_Lantern_logo.png</file>
-        <file>IMG/Magic_Lantern_logo_b.png</file>
-        <file>IMG/Histogram.png</file>
-        <file>IMG/Grey-Ball-icon.png</file>
-        <file>IMG/PixelSelector.png</file>
-        <file>IMG/DummyTrans.png</file>
     </qresource>
     <qresource prefix="/RetinaIMG">
-        <file>RetinaIMG/Export-To-File-icon.png</file>
-        <file>RetinaIMG/File-Copy-icon.png</file>
-        <file>RetinaIMG/File-New-icon.png</file>
-        <file>RetinaIMG/Folder-Open-icon.png</file>
-        <file>RetinaIMG/Paste-icon.png</file>
-        <file>RetinaIMG/Save-icon.png</file>
-        <file>RetinaIMG/Settings-icon.png</file>
-        <file>RetinaIMG/Actions-zoom-100-icon.png</file>
-        <file>RetinaIMG/Actions-zoom-fit-icon.png</file>
-        <file>RetinaIMG/Actions-zoom-in-icon.png</file>
-        <file>RetinaIMG/Actions-zoom-out-icon.png</file>
         <file>RetinaIMG/MLVAPP.png</file>
-        <file>RetinaIMG/Movie-icon.png</file>
-        <file>RetinaIMG/Recycle-Bin-icon.png</file>
-        <file>RetinaIMG/Actions-window-fullscreen-icon.png</file>
-        <file>RetinaIMG/speaker-icon.png</file>
-        <file>RetinaIMG/Actions-zoom-200-icon.png</file>
-        <file>RetinaIMG/Actions-zoom-400-icon.png</file>
-        <file>RetinaIMG/Delete-icon.png</file>
-        <file>RetinaIMG/Image-icon.png</file>
-        <file>RetinaIMG/Actions-color-picker-grey-icon.png</file>
         <file>RetinaIMG/Actions-color-picker-icon.png</file>
-        <file>RetinaIMG/Export-Image-icon.png</file>
-        <file>RetinaIMG/ExportReceipt-icon.png</file>
-        <file>RetinaIMG/ImportReceipt-icon.png</file>
-        <file>RetinaIMG/Pencil-icon.png</file>
-        <file>RetinaIMG/map-icon.png</file>
-        <file>RetinaIMG/Reload-icon.png</file>
-        <file>RetinaIMG/Point-icon.png</file>
-        <file>RetinaIMG/Actions-document-decrypt-icon.png</file>
-        <file>RetinaIMG/Actions-document-encrypt-icon.png</file>
-        <file>RetinaIMG/Status-dialog-warning-icon.png</file>
-        <file>RetinaIMG/face.png</file>
-        <file>RetinaIMG/Window-Enter-icon.png</file>
-        <file>RetinaIMG/Window-Left-Panel-icon.png</file>
-        <file>RetinaIMG/Reload-icon-1.png</file>
-        <file>RetinaIMG/Reload-icon-2.png</file>
-        <file>RetinaIMG/mapGo-icon.png</file>
-        <file>RetinaIMG/plus.png</file>
-        <file>RetinaIMG/minus.png</file>
-        <file>RetinaIMG/Movie-import-icon.png</file>
-        <file>RetinaIMG/Images-icon.png</file>
-        <file>RetinaIMG/Pic-Folder-Open-icon.png</file>
-        <file>RetinaIMG/Crosshair.png</file>
-        <file>RetinaIMG/Actions-flag-black-icon.png</file>
-        <file>RetinaIMG/Actions-flag-icon.png</file>
-        <file>RetinaIMG/Actions-flag-yellow-icon.png</file>
-        <file>RetinaIMG/Actions-flag-red-icon.png</file>
-        <file>RetinaIMG/next.png</file>
-        <file>RetinaIMG/previous.png</file>
-        <file>RetinaIMG/Database-Table-icon.png</file>
-    </qresource>
-    <qresource prefix="/AudioVideoIcons">
-        <file>AudioVideoIcons/FirstFrame.png</file>
-        <file>AudioVideoIcons/FrameBW.png</file>
-        <file>AudioVideoIcons/FrameFW.png</file>
-        <file>AudioVideoIcons/Loop.png</file>
-        <file>AudioVideoIcons/Play.png</file>
     </qresource>
     <qresource prefix="/Fonts">
         <file>Fonts/DSEG7Modern-Regular.ttf</file>
@@ -79,5 +17,49 @@
         <file>help/gradient.png</file>
         <file>help/virtstripes.png</file>
         <file>help/help.htm</file>
+    </qresource>
+    <qresource prefix="/fontawesome">
+        <file>fontawesome/svgs-full/regular/circle-dot.svg</file>
+        <file>fontawesome/svgs-full/regular/circle.svg</file>
+        <file>fontawesome/svgs-full/regular/square-check.svg</file>
+        <file>fontawesome/svgs-full/regular/square.svg</file>
+        <file>fontawesome/svgs-full/regular/window-restore.svg</file>
+        <file>fontawesome/svgs-full/solid/add.svg</file>
+        <file>fontawesome/svgs-full/solid/angles-right.svg</file>
+        <file>fontawesome/svgs-full/solid/arrow-left-to-bracket.svg</file>
+        <file>fontawesome/svgs-full/solid/arrow-right-to-bracket.svg</file>
+        <file>fontawesome/svgs-full/solid/backward-fast.svg</file>
+        <file>fontawesome/svgs-full/solid/backward-step.svg</file>
+        <file>fontawesome/svgs-full/solid/check.svg</file>
+        <file>fontawesome/svgs-full/solid/chess-board.svg</file>
+        <file>fontawesome/svgs-full/solid/chevron-down.svg</file>
+        <file>fontawesome/svgs-full/solid/chevron-right.svg</file>
+        <file>fontawesome/svgs-full/solid/close.svg</file>
+        <file>fontawesome/svgs-full/solid/copy.svg</file>
+        <file>fontawesome/svgs-full/solid/eye-dropper.svg</file>
+        <file>fontawesome/svgs-full/solid/eye.svg</file>
+        <file>fontawesome/svgs-full/solid/file-export.svg</file>
+        <file>fontawesome/svgs-full/solid/file-import.svg</file>
+        <file>fontawesome/svgs-full/solid/file.svg</file>
+        <file>fontawesome/svgs-full/solid/film.svg</file>
+        <file>fontawesome/svgs-full/solid/folder-open.svg</file>
+        <file>fontawesome/svgs-full/solid/forward-step.svg</file>
+        <file>fontawesome/svgs-full/solid/gear.svg</file>
+        <file>fontawesome/svgs-full/solid/images.svg</file>
+        <file>fontawesome/svgs-full/solid/info-circle.svg</file>
+        <file>fontawesome/svgs-full/solid/lock-open.svg</file>
+        <file>fontawesome/svgs-full/solid/lock.svg</file>
+        <file>fontawesome/svgs-full/solid/minus.svg</file>
+        <file>fontawesome/svgs-full/solid/paste.svg</file>
+        <file>fontawesome/svgs-full/solid/pencil.svg</file>
+        <file>fontawesome/svgs-full/solid/play.svg</file>
+        <file>fontawesome/svgs-full/solid/repeat.svg</file>
+        <file>fontawesome/svgs-full/solid/rotate-left.svg</file>
+        <file>fontawesome/svgs-full/solid/rotate.svg</file>
+        <file>fontawesome/svgs-full/solid/save.svg</file>
+        <file>fontawesome/svgs-full/solid/stop.svg</file>
+        <file>fontawesome/svgs-full/solid/trash-can.svg</file>
+        <file>fontawesome/svgs-full/solid/user.svg</file>
+        <file>fontawesome/svgs-full/solid/warning.svg</file>
     </qresource>
 </RCC>

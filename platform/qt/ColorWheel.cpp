@@ -19,7 +19,7 @@
 //Constructor
 ColorWheel::ColorWheel(QWidget* parent)
     : QLabel(parent) {
-    m_pImage = new QImage( SIZE, SIZE+BOARDERSIZE, QImage::Format_RGBA8888 );
+    m_pImage = new QImage( SIZE, SIZE+BOARDERSIZE, QImage::Format_ARGB32_Premultiplied );
     m_cursor = QPoint( 0, 0 );
     m_yaw = 0;
     m_cursorSelected = false;
@@ -75,14 +75,14 @@ void ColorWheel::paintElement()
     painterTc.drawLine( BOARDERSIZE, HALFSIZE, SIZE-BOARDERSIZE, HALFSIZE );
 
     //Marker
-    painterTc.drawPixmap( m_cursor.x() + HALFSIZE - HALFHANDLESIZE, m_cursor.y() + HALFSIZE - HALFHANDLESIZE,
-                          HANDLESIZE, HANDLESIZE,
-                          QPixmap( "://darkstyle/SliderHandle.png" ).scaled( HANDLESIZE, HANDLESIZE, Qt::KeepAspectRatio, Qt::SmoothTransformation ) );
+    // painterTc.drawPixmap( m_cursor.x() + HALFSIZE - HALFHANDLESIZE, m_cursor.y() + HALFSIZE - HALFHANDLESIZE,
+    //                       HANDLESIZE, HANDLESIZE,
+    //                       QPixmap( "://darkstyle/SliderHandle.png" ).scaled( HANDLESIZE, HANDLESIZE, Qt::KeepAspectRatio, Qt::SmoothTransformation ) );
 
     //Reset Icon
-    painterTc.drawPixmap( SIZE-32-1, 0,
-                          32, 32,
-                          QPixmap( ":/RetinaIMG/RetinaIMG/Reload-icon.png" ).scaled( 64, 64, Qt::KeepAspectRatio, Qt::SmoothTransformation ) );
+    // painterTc.drawPixmap( SIZE-32-1, 0,
+    //                       32, 32,
+    //                       QPixmap( ":/RetinaIMG/RetinaIMG/Reload-icon.png" ).scaled( 64, 64, Qt::KeepAspectRatio, Qt::SmoothTransformation ) );
 
     //Y wheel
     QLinearGradient gradient4( 0, 0, SIZE, 0 );

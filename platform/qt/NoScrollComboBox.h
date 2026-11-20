@@ -11,6 +11,7 @@
 #include <QComboBox>
 #include <QWidget>
 #include <Qt>
+#include <QWheelEvent>
 
 class NoScrollComboBox : public QComboBox
 {
@@ -19,7 +20,7 @@ public:
     explicit NoScrollComboBox(QWidget* parent = Q_NULLPTR);
 
 protected:
-    void wheelEvent(QWheelEvent*);
+    void wheelEvent(QWheelEvent *event) override;
 };
 
 #endif // NOSCROLLCOMBOBOX_H

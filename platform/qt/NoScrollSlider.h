@@ -11,6 +11,7 @@
 #include <QSlider>
 #include <QWidget>
 #include <Qt>
+#include <QWheelEvent>
 
 class NoScrollSlider : public QSlider
 {
@@ -22,8 +23,8 @@ signals:
     void doubleClicked();
 
 protected:
-    void wheelEvent(QWheelEvent*);
-    void mouseDoubleClickEvent(QMouseEvent*);
+    void wheelEvent(QWheelEvent *event) override;
+    void mouseDoubleClickEvent(QMouseEvent *event) override;
 };
 
 #endif // NOSCROLLSLIDER_H
