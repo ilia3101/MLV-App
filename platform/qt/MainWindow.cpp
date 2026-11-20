@@ -5768,7 +5768,8 @@ void MainWindow::listViewUpdateGridSize()
     int imgWidth = gridWidth - 10;
     int imgHeight = ClipInformation::getPreviewPaddingTop() + ( imgWidth / ClipInformation::getPreviewRatio() );
 
-    int gridHeight = imgHeight + 18;
+    QFontMetrics fm( ui->listViewSession->font() );
+    int gridHeight = imgHeight + fm.height() + 2;
 
     ui->listViewSession->setIconSize( QSize( imgWidth, imgHeight ) );
     ui->listViewSession->setGridSize( QSize( gridWidth, gridHeight ) );
@@ -5779,7 +5780,7 @@ void MainWindow::listViewUpdateGridSize()
 //Sets the preview mode
 void MainWindow::setPreviewMode( void )
 {
-    QSize iconSize = QSize( 50, 30 );
+    QSize iconSize( 0.5 + ClipInformation::getPreviewRatio() * 24, 24 );
 
     if( m_previewMode == 0 )
     {
@@ -5793,6 +5794,7 @@ void MainWindow::setPreviewMode( void )
         ui->listViewSession->setResizeMode( QListView::Fixed );
         ui->listViewSession->setFlow( QListView::TopToBottom );
         ui->listViewSession->setWrapping( false );
+        ui->listViewSession->setStyleSheet( "::item { padding: 3px 0; }" );
     }
     else if( m_previewMode == 1 )
     {
@@ -5806,6 +5808,7 @@ void MainWindow::setPreviewMode( void )
         ui->listViewSession->setResizeMode( QListView::Fixed );
         ui->listViewSession->setFlow( QListView::TopToBottom );
         ui->listViewSession->setWrapping( false );
+        ui->listViewSession->setStyleSheet( "::item { padding: 0 0 1px; }" );
     }
     else if( m_previewMode == 2 || m_previewMode == 3 )
     {
@@ -5817,6 +5820,7 @@ void MainWindow::setPreviewMode( void )
         ui->listViewSession->setResizeMode( QListView::Adjust );
         ui->listViewSession->setFlow( QListView::LeftToRight );
         ui->listViewSession->setWrapping( true );
+        ui->listViewSession->setStyleSheet( "" );
 
         layout()->activate();
         listViewUpdateGridSize();
@@ -10839,22 +10843,22 @@ void MainWindow::openRecentSession(QString fileName)
 
 void MainWindow::on_actionTheme1_triggered(bool checked)
 {
-    if( checked ) AppTheme::set( this, AppTheme::Light );
+    if( checked ) AppTheme::set( AppTheme::Light );
 }
 
 void MainWindow::on_actionTheme2_triggered(bool checked)
 {
-    if( checked ) AppTheme::set( this, AppTheme::Mid );
+    if( checked ) AppTheme::set( AppTheme::Mid );
 }
 
 void MainWindow::on_actionTheme3_triggered(bool checked)
 {
-    if( checked ) AppTheme::set( this, AppTheme::Dark );
+    if( checked ) AppTheme::set( AppTheme::Dark );
 }
 
 void MainWindow::on_actionTheme4_triggered(bool checked)
 {
-    if( checked ) AppTheme::set( this, AppTheme::Darker );
+    if( checked ) AppTheme::set( AppTheme::Darker );
 }
 
 //Debayer algorithm selection per clip

@@ -10,7 +10,7 @@ class AppTheme
 {
 public:
     enum Theme { Light, Mid, Dark, Darker };
-    static void set( QMainWindow *mainWindow, Theme theme );
+    static void set( Theme theme );
     static Theme currentTheme();
     static int getScrollBarExtent();
     static QPixmap tintPixmap( const QPixmap &pixmap, const QColor &color = QColor(), qreal pixelRatio = 1 );

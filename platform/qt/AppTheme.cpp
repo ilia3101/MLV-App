@@ -1,5 +1,6 @@
 #include <AppTheme.h>
 
+#include <QStyleHints>
 #include <QApplication>
 #include <QMainWindow>
 #include <QStyleFactory>
@@ -14,11 +15,15 @@
 
 AppTheme::Theme AppTheme::m_theme = AppTheme::Dark;
 
-void AppTheme::set( QMainWindow *mainWindow, Theme theme )
+void AppTheme::set( Theme theme )
 {
     m_theme = theme;
 
-    qApp->setStyle( new IconRecolorStyle( QStyleFactory::create( "Fusion" ) ) );
+#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+    int dockWidgetIconSize = 23;
+#else
+    int dockWidgetIconSize = 14;
+#endif
 
     QString styleSheet = QString(R"(
         QMainWindow::separator {
@@ -39,6 +44,19 @@ void AppTheme::set( QMainWindow *mainWindow, Theme theme )
             border: 1px solid hsla(0, 0%, 0%, 15%);
         }
 
+        QHeaderView::section {
+            background: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 hsla(0, 0%, 100%, 100%), stop:1 hsla(0, 0%, 0%, 0%));
+            font-size: 10pt;
+            padding: 0 7px;
+            border: none;
+            /*border-right: 1px solid hsla(0, 0%, 0%, 15%);*/
+            border-bottom: 1px solid hsla(0, 0%, 0%, 15%);
+        }
+
+        QHeaderView::section:last {
+            border-right: none;
+        }
+
         #listViewSession,
         #tableViewSession,
         #horizontalSliderPositionLayout,
@@ -47,6 +65,11 @@ void AppTheme::set( QMainWindow *mainWindow, Theme theme )
         QFrame[frameShape="4"] {
             border: none;
             border-top: 1px solid hsla(0, 0%, 0%, 15%);
+        }
+
+        #listViewSession,
+        #tableViewSession {
+            font-size: 11pt;
         }
 
         /*QListView::item {
@@ -104,7 +127,7 @@ void AppTheme::set( QMainWindow *mainWindow, Theme theme )
             subcontrol-origin: margin;
             width: 23px;
             height: 23px;
-            icon-size: 23px; /* maximum icon size */
+            icon-size: %3px; /* maximum icon size */
             padding: -5px;
             margin: 0px;
             position: absolute;
@@ -141,7 +164,7 @@ void AppTheme::set( QMainWindow *mainWindow, Theme theme )
         }
 
         #dockWidgetEdit QGroupBox {
-            font-size: 11px;
+            font-size: 11pt;
             font-weight: bold;
             text-transform: uppercase;
             margin-top: 32px;
@@ -183,6 +206,15 @@ void AppTheme::set( QMainWindow *mainWindow, Theme theme )
             image: url(:/fontawesome/fontawesome/svgs-full/solid/chevron-down.svg);
         }
         */
+
+        #dockWidgetEdit QLabel,
+        #dockWidgetEdit QAbstractButton,
+        #dockWidgetEdit QComboBox,
+        #dockWidgetEdit QCheckBox,
+        #dockWidgetEdit QLineEdit,
+        #dockWidgetEdit QAbstractSpinBox {
+            font-size: 10pt;
+        }
 
         /* ==================================================== */
         QSlider::groove:horizontal {
@@ -300,6 +332,7 @@ void AppTheme::set( QMainWindow *mainWindow, Theme theme )
 
         QToolTip {
             background: palette(window);
+            font-size: 11pt;
             padding: 1px 2px;
             margin: 0;
             border: none;
@@ -357,7 +390,7 @@ void AppTheme::set( QMainWindow *mainWindow, Theme theme )
         QScrollBar::sub-page {
             background: none;
         }
-    )").arg( getScrollBarExtent() ).arg( m_scrollBarHandleSize / 2 );
+    )").arg( getScrollBarExtent() ).arg( m_scrollBarHandleSize / 2 ).arg( dockWidgetIconSize );
 
     const int textContrast = 255 * 0.75;
 
@@ -399,6 +432,12 @@ void AppTheme::set( QMainWindow *mainWindow, Theme theme )
                 background: %1;
             }
 
+            QMenu,
+            QComboBox QAbstractItemView,
+            QToolTip {
+                border: 1px solid hsla(0, 0%, 100%, 15%);
+            }
+
             QMenu::separator {
                 background: hsla(0, 0%, 100%, 15%);
             }
@@ -412,6 +451,12 @@ void AppTheme::set( QMainWindow *mainWindow, Theme theme )
             QTreeView,
             QTableView {
                 border-color: %1;
+            }
+
+            QHeaderView::section {
+                background: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 hsla(0, 0%, 100%, 9%), stop:1 hsla(0, 0%, 0%, 0%));
+                /*border-right-color: %1;*/
+                border-bottom-color: %1;
             }
 
             #listViewSession,
@@ -493,14 +538,24 @@ void AppTheme::set( QMainWindow *mainWindow, Theme theme )
                 background: hsla(0, 0%, 100%, 50%);
             }
         )").arg( borderColor );
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 8, 0)
+        qApp->styleHints()->setColorScheme( Qt::ColorScheme::Dark );
+#endif
+    }
+    else
+    {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 8, 0)
+        qApp->styleHints()->setColorScheme( Qt::ColorScheme::Light );
+#endif
     }
 
-    const qreal alpha = 0.5 - ( 0.5 * text.lightness() / 255 );
+    const qreal alpha = 0.5 - ( 0.25 * text.lightness() / 255.0 );
 
     QColor link = QColor::fromHsl(
         highlight.hslHue(),
         highlight.hslSaturation(),
-        qBound( 0.0, ( 1.0 - alpha ) * highlight.lightness() + alpha * text.lightness(), 255.0 )
+        ( 1.0 - alpha ) * highlight.lightness() + alpha * text.lightness()
     );
 
     QPalette palette;
@@ -542,9 +597,31 @@ void AppTheme::set( QMainWindow *mainWindow, Theme theme )
     palette.setColor(QPalette::PlaceholderText, disabled);
     // palette.setColor(QPalette::Accent, highlight);
 
+    qApp->setStyle( new IconRecolorStyle( QStyleFactory::create( "Fusion" ) ) );
     qApp->setPalette( palette );
 
-    mainWindow->setStyleSheet( "" );
+    QFont font = QFont();
+
+    // Reset the StyleStrategy to fix some font rendering bugs
+    font.setStyleStrategy( QFont::StyleStrategy( QFont::PreferAntialias ) );
+    font.setPointSize( 13 );
+
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+    // Disable kerning to fix Qt 5 punctuation spacing issues
+    font.setKerning( false );
+#endif
+
+    qApp->setFont( font );
+
+    for( QWidget *widget : qApp->topLevelWidgets() )
+    {
+        // Reset the window stylesheet just in case
+        if( QMainWindow *mainWindow = qobject_cast<QMainWindow*>( widget ) )
+        {
+            mainWindow->setStyleSheet( "" );
+        }
+    }
+
     qApp->setStyleSheet( styleSheet );
 
     static CustomEventFilter customEventFilter;
@@ -784,11 +861,13 @@ void AccordionGroupBox::paintEvent( QPaintEvent* )
 
 void AccordionGroupBox::drawIndicator( QPainter *painter, const QStyleOptionGroupBox &opt ) const
 {
+    QFontMetricsF fm( this->font() );
+
     QRectF textRect = style()->subControlRect( QStyle::CC_GroupBox, &opt, QStyle::SC_GroupBoxLabel, this );
 
-    const qreal iconSize = std::max( textRect.height() - 4.0, 12.0 );
+    const qreal iconSize = std::max( fm.height() - 1.0, 0.0 );
     const qreal iconTop = textRect.center().y() - iconSize / 2.0;
-    const qreal margin = 3.0;
+    const qreal margin = ( textRect.left() * 0.86 - iconSize ) / 2.0;
 
     QString svgPath = ":/fontawesome/fontawesome/svgs-full/solid/chevron-";
     svgPath += isChecked() ? "down.svg" : "right.svg";
@@ -806,6 +885,19 @@ void AccordionGroupBox::drawIndicator( QPainter *painter, const QStyleOptionGrou
 
 bool CustomEventFilter::eventFilter( QObject *obj, QEvent *event )
 {
+    if( event->type() == QEvent::Show )
+    {
+        static bool startup = true;
+
+        if( startup && qobject_cast<QMainWindow*>( obj ) )
+        {
+            startup = false;
+
+            // Just to fix some rendering bugs
+            AppTheme::set( AppTheme::currentTheme() );
+        }
+    }
+
     if( event->type() == QEvent::Polish )
     {
         QWidget *widget = qobject_cast<QWidget*>( obj );

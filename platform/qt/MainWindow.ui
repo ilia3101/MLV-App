@@ -830,11 +830,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                </property>
                <item>
                 <widget class="QCheckBox" name="checkBoxRawFixEnable">
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
                  <property name="text">
                   <string>Enable RAW Correction</string>
                  </property>
@@ -862,11 +857,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                </item>
                <item>
                 <widget class="QLabel" name="labelDarkFrameSubtraction">
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
                  <property name="text">
                   <string>Dark-Frame Subtraction</string>
                  </property>
@@ -887,11 +877,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                      <horstretch>0</horstretch>
                      <verstretch>0</verstretch>
                     </sizepolicy>
-                   </property>
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
                    </property>
                    <property name="toolTip">
                     <string>Select dark-frame file…</string>
@@ -943,11 +928,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                         <verstretch>0</verstretch>
                        </sizepolicy>
                       </property>
-                      <property name="font">
-                       <font>
-                        <pointsize>10</pointsize>
-                       </font>
-                      </property>
                       <property name="text">
                        <string>Off</string>
                       </property>
@@ -973,11 +953,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                         <verstretch>0</verstretch>
                        </sizepolicy>
                       </property>
-                      <property name="font">
-                       <font>
-                        <pointsize>10</pointsize>
-                       </font>
-                      </property>
                       <property name="text">
                        <string>Ext</string>
                       </property>
@@ -1000,11 +975,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                         <verstretch>0</verstretch>
                        </sizepolicy>
                       </property>
-                      <property name="font">
-                       <font>
-                        <pointsize>10</pointsize>
-                       </font>
-                      </property>
                       <property name="text">
                        <string>Int</string>
                       </property>
@@ -1023,11 +993,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                </item>
                <item>
                 <widget class="QLineEdit" name="lineEditDarkFrameFile">
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
                  <property name="text">
                   <string>No file selected</string>
                  </property>
@@ -1055,11 +1020,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                </item>
                <item>
                 <widget class="QLabel" name="FocusPixelsLabel">
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
                  <property name="text">
                   <string>Fix Focus Dots</string>
                  </property>
@@ -1091,11 +1051,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <verstretch>0</verstretch>
                      </sizepolicy>
                     </property>
-                    <property name="font">
-                     <font>
-                      <pointsize>10</pointsize>
-                     </font>
-                    </property>
                     <property name="text">
                      <string>Off</string>
                     </property>
@@ -1118,11 +1073,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <verstretch>0</verstretch>
                      </sizepolicy>
                     </property>
-                    <property name="font">
-                     <font>
-                      <pointsize>10</pointsize>
-                     </font>
-                    </property>
                     <property name="text">
                      <string>On</string>
                     </property>
@@ -1141,11 +1091,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <horstretch>0</horstretch>
                       <verstretch>0</verstretch>
                      </sizepolicy>
-                    </property>
-                    <property name="font">
-                     <font>
-                      <pointsize>10</pointsize>
-                     </font>
                     </property>
                     <property name="text">
                      <string>CropRec</string>
@@ -1168,11 +1113,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </property>
                  <item>
                   <widget class="QLabel" name="FocusPixelsInterpolationMethodLabel">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>Interpolation Method</string>
                    </property>
@@ -1204,11 +1144,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                         <verstretch>0</verstretch>
                        </sizepolicy>
                       </property>
-                      <property name="font">
-                       <font>
-                        <pointsize>10</pointsize>
-                       </font>
-                      </property>
                       <property name="text">
                        <string>1</string>
                       </property>
@@ -1231,11 +1166,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                         <verstretch>0</verstretch>
                        </sizepolicy>
                       </property>
-                      <property name="font">
-                       <font>
-                        <pointsize>10</pointsize>
-                       </font>
-                      </property>
                       <property name="text">
                        <string>2</string>
                       </property>
@@ -1254,11 +1184,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                         <horstretch>0</horstretch>
                         <verstretch>0</verstretch>
                        </sizepolicy>
-                      </property>
-                      <property name="font">
-                       <font>
-                        <pointsize>10</pointsize>
-                       </font>
                       </property>
                       <property name="text">
                        <string>3</string>
@@ -1295,11 +1220,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                </item>
                <item>
                 <widget class="QLabel" name="BadPixelsLabel">
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
                  <property name="text">
                   <string>Fix Bad Pixels </string>
                  </property>
@@ -1334,11 +1254,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <verstretch>0</verstretch>
                      </sizepolicy>
                     </property>
-                    <property name="font">
-                     <font>
-                      <pointsize>10</pointsize>
-                     </font>
-                    </property>
                     <property name="text">
                      <string>Off</string>
                     </property>
@@ -1361,11 +1276,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <verstretch>0</verstretch>
                      </sizepolicy>
                     </property>
-                    <property name="font">
-                     <font>
-                      <pointsize>10</pointsize>
-                     </font>
-                    </property>
                     <property name="text">
                      <string>Auto</string>
                     </property>
@@ -1385,11 +1295,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <verstretch>0</verstretch>
                      </sizepolicy>
                     </property>
-                    <property name="font">
-                     <font>
-                      <pointsize>10</pointsize>
-                     </font>
-                    </property>
                     <property name="text">
                      <string>Force</string>
                     </property>
@@ -1408,11 +1313,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <horstretch>0</horstretch>
                       <verstretch>0</verstretch>
                      </sizepolicy>
-                    </property>
-                    <property name="font">
-                     <font>
-                      <pointsize>10</pointsize>
-                     </font>
                     </property>
                     <property name="toolTip">
                      <string>Use Bad Pixel Map</string>
@@ -1438,11 +1338,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </property>
                  <item>
                   <widget class="QLabel" name="BadPixelsSearchMethodLabel">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>Search Method</string>
                    </property>
@@ -1474,11 +1369,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                         <verstretch>0</verstretch>
                        </sizepolicy>
                       </property>
-                      <property name="font">
-                       <font>
-                        <pointsize>10</pointsize>
-                       </font>
-                      </property>
                       <property name="text">
                        <string>Norm</string>
                       </property>
@@ -1501,11 +1391,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                         <verstretch>0</verstretch>
                        </sizepolicy>
                       </property>
-                      <property name="font">
-                       <font>
-                        <pointsize>10</pointsize>
-                       </font>
-                      </property>
                       <property name="text">
                        <string>Aggr</string>
                       </property>
@@ -1527,11 +1412,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                         <horstretch>0</horstretch>
                         <verstretch>0</verstretch>
                        </sizepolicy>
-                      </property>
-                      <property name="font">
-                       <font>
-                        <pointsize>10</pointsize>
-                       </font>
                       </property>
                       <property name="toolTip">
                        <string>Edit bad pixels (M)</string>
@@ -1565,11 +1445,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                         <verstretch>0</verstretch>
                        </sizepolicy>
                       </property>
-                      <property name="font">
-                       <font>
-                        <pointsize>10</pointsize>
-                       </font>
-                      </property>
                       <property name="toolTip">
                        <string>Show/hide marked bad pixels</string>
                       </property>
@@ -1602,11 +1477,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                         <verstretch>0</verstretch>
                        </sizepolicy>
                       </property>
-                      <property name="font">
-                       <font>
-                        <pointsize>10</pointsize>
-                       </font>
-                      </property>
                       <property name="toolTip">
                        <string>Delete current bad pixel map</string>
                       </property>
@@ -1634,11 +1504,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </property>
                  <item>
                   <widget class="QLabel" name="BadPixelsInterpolationMethodLabel">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>Interpolation Method</string>
                    </property>
@@ -1670,11 +1535,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                         <verstretch>0</verstretch>
                        </sizepolicy>
                       </property>
-                      <property name="font">
-                       <font>
-                        <pointsize>10</pointsize>
-                       </font>
-                      </property>
                       <property name="text">
                        <string>1</string>
                       </property>
@@ -1697,11 +1557,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                         <verstretch>0</verstretch>
                        </sizepolicy>
                       </property>
-                      <property name="font">
-                       <font>
-                        <pointsize>10</pointsize>
-                       </font>
-                      </property>
                       <property name="text">
                        <string>2</string>
                       </property>
@@ -1720,11 +1575,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                         <horstretch>0</horstretch>
                         <verstretch>0</verstretch>
                        </sizepolicy>
-                      </property>
-                      <property name="font">
-                       <font>
-                        <pointsize>10</pointsize>
-                       </font>
                       </property>
                       <property name="text">
                        <string>3</string>
@@ -1761,11 +1611,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                </item>
                <item>
                 <widget class="QLabel" name="ChromaSmoothLabel">
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
                  <property name="text">
                   <string>Chroma Smooth</string>
                  </property>
@@ -1797,11 +1642,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <verstretch>0</verstretch>
                      </sizepolicy>
                     </property>
-                    <property name="font">
-                     <font>
-                      <pointsize>10</pointsize>
-                     </font>
-                    </property>
                     <property name="text">
                      <string>Off</string>
                     </property>
@@ -1824,11 +1664,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <verstretch>0</verstretch>
                      </sizepolicy>
                     </property>
-                    <property name="font">
-                     <font>
-                      <pointsize>10</pointsize>
-                     </font>
-                    </property>
                     <property name="text">
                      <string>2×2</string>
                     </property>
@@ -1848,11 +1683,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <verstretch>0</verstretch>
                      </sizepolicy>
                     </property>
-                    <property name="font">
-                     <font>
-                      <pointsize>10</pointsize>
-                     </font>
-                    </property>
                     <property name="text">
                      <string>3×3</string>
                     </property>
@@ -1871,11 +1701,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <horstretch>0</horstretch>
                       <verstretch>0</verstretch>
                      </sizepolicy>
-                    </property>
-                    <property name="font">
-                     <font>
-                      <pointsize>10</pointsize>
-                     </font>
                     </property>
                     <property name="text">
                      <string>5×5</string>
@@ -1910,11 +1735,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                </item>
                <item>
                 <widget class="QLabel" name="VerticalStripesLabel">
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
                  <property name="text">
                   <string>Vertical Stripes</string>
                  </property>
@@ -1946,11 +1766,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <verstretch>0</verstretch>
                      </sizepolicy>
                     </property>
-                    <property name="font">
-                     <font>
-                      <pointsize>10</pointsize>
-                     </font>
-                    </property>
                     <property name="text">
                      <string>Off</string>
                     </property>
@@ -1973,11 +1788,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <verstretch>0</verstretch>
                      </sizepolicy>
                     </property>
-                    <property name="font">
-                     <font>
-                      <pointsize>10</pointsize>
-                     </font>
-                    </property>
                     <property name="text">
                      <string>Normal</string>
                     </property>
@@ -1996,11 +1806,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <horstretch>0</horstretch>
                       <verstretch>0</verstretch>
                      </sizepolicy>
-                    </property>
-                    <property name="font">
-                     <font>
-                      <pointsize>10</pointsize>
-                     </font>
                     </property>
                     <property name="text">
                      <string>Force</string>
@@ -2047,11 +1852,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    <height>0</height>
                   </size>
                  </property>
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
                  <property name="text">
                   <string>Dual ISO</string>
                  </property>
@@ -2083,11 +1883,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <verstretch>0</verstretch>
                      </sizepolicy>
                     </property>
-                    <property name="font">
-                     <font>
-                      <pointsize>10</pointsize>
-                     </font>
-                    </property>
                     <property name="text">
                      <string>Off</string>
                     </property>
@@ -2110,11 +1905,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <verstretch>0</verstretch>
                      </sizepolicy>
                     </property>
-                    <property name="font">
-                     <font>
-                      <pointsize>10</pointsize>
-                     </font>
-                    </property>
                     <property name="text">
                      <string>On</string>
                     </property>
@@ -2131,11 +1921,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                </item>
                <item>
                 <widget class="QLabel" name="DualIsoPatternLabel">
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
                  <property name="text">
                   <string>Horizontal Pattern</string>
                  </property>
@@ -2143,11 +1928,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                </item>
                <item>
                 <widget class="NoScrollComboBox" name="DualIsoPatternComboBox">
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
                  <property name="toolTip">
                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p style=&quot;margin-top:5px; margin-bottom:5px;&quot;&gt;Make sure the correct &quot;Horizontal Pattern&quot; is detected, or Dual ISO processing will fail.&lt;/p&gt;&lt;p style=&quot;margin-top:5px; margin-bottom:5px;&quot;&gt;If you see incorrect frames appearing randomly, try selecting &quot;Frame‑by‑Frame Detection&quot;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
@@ -2191,11 +1971,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                </item>
                <item>
                 <widget class="QLabel" name="DualIsoMatchExposuresLabel">
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
                  <property name="text">
                   <string>Match Exposures By</string>
                  </property>
@@ -2230,11 +2005,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <verstretch>0</verstretch>
                      </sizepolicy>
                     </property>
-                    <property name="font">
-                     <font>
-                      <pointsize>10</pointsize>
-                     </font>
-                    </property>
                     <property name="text">
                      <string>ISO</string>
                     </property>
@@ -2257,11 +2027,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <verstretch>0</verstretch>
                      </sizepolicy>
                     </property>
-                    <property name="font">
-                     <font>
-                      <pointsize>10</pointsize>
-                     </font>
-                    </property>
                     <property name="text">
                      <string>Histogram</string>
                     </property>
@@ -2283,11 +2048,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </property>
                  <item row="2" column="2">
                   <widget class="DoubleClickLabel" name="DualIsoBlackDeltaVal">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>0</string>
                    </property>
@@ -2298,11 +2058,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </item>
                  <item row="0" column="0">
                   <widget class="QLabel" name="DualIsoEvCorrectionLabel">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>Exposure Correction</string>
                    </property>
@@ -2310,11 +2065,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </item>
                  <item row="2" column="0">
                   <widget class="QLabel" name="DualIsoBlackDeltaLabel">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>Black Delta</string>
                    </property>
@@ -2370,11 +2120,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </item>
                  <item row="0" column="2">
                   <widget class="DoubleClickLabel" name="DualIsoEvCorrectionVal">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>0.00</string>
                    </property>
@@ -2400,11 +2145,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                </item>
                <item>
                 <widget class="QLabel" name="DualISOInterpolationLabel">
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
                  <property name="text">
                   <string>Interpolation</string>
                  </property>
@@ -2439,11 +2179,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <verstretch>0</verstretch>
                      </sizepolicy>
                     </property>
-                    <property name="font">
-                     <font>
-                      <pointsize>10</pointsize>
-                     </font>
-                    </property>
                     <property name="text">
                      <string>AMaZE</string>
                     </property>
@@ -2466,11 +2201,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <verstretch>0</verstretch>
                      </sizepolicy>
                     </property>
-                    <property name="font">
-                     <font>
-                      <pointsize>10</pointsize>
-                     </font>
-                    </property>
                     <property name="text">
                      <string>RCD</string>
                     </property>
@@ -2490,11 +2220,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <verstretch>0</verstretch>
                      </sizepolicy>
                     </property>
-                    <property name="font">
-                     <font>
-                      <pointsize>10</pointsize>
-                     </font>
-                    </property>
                     <property name="text">
                      <string>Mean</string>
                     </property>
@@ -2511,11 +2236,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                </item>
                <item>
                 <widget class="QLabel" name="DualISOAliasMapLabel">
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
                  <property name="text">
                   <string>Alias Map</string>
                  </property>
@@ -2547,11 +2267,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <verstretch>0</verstretch>
                      </sizepolicy>
                     </property>
-                    <property name="font">
-                     <font>
-                      <pointsize>10</pointsize>
-                     </font>
-                    </property>
                     <property name="text">
                      <string>Off</string>
                     </property>
@@ -2574,11 +2289,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <verstretch>0</verstretch>
                      </sizepolicy>
                     </property>
-                    <property name="font">
-                     <font>
-                      <pointsize>10</pointsize>
-                     </font>
-                    </property>
                     <property name="text">
                      <string>On</string>
                     </property>
@@ -2600,11 +2310,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </property>
                  <item>
                   <widget class="QLabel" name="DualISOFullresBlendingLabel">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>Fullres Blending</string>
                    </property>
@@ -2636,11 +2341,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                         <verstretch>0</verstretch>
                        </sizepolicy>
                       </property>
-                      <property name="font">
-                       <font>
-                        <pointsize>10</pointsize>
-                       </font>
-                      </property>
                       <property name="text">
                        <string>Off</string>
                       </property>
@@ -2659,11 +2359,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                         <horstretch>0</horstretch>
                         <verstretch>0</verstretch>
                        </sizepolicy>
-                      </property>
-                      <property name="font">
-                       <font>
-                        <pointsize>10</pointsize>
-                       </font>
                       </property>
                       <property name="text">
                        <string>On</string>
@@ -2711,11 +2406,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </property>
                  <item>
                   <widget class="QLabel" name="DeflickerTargetLabel">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>Deflicker Target</string>
                    </property>
@@ -2723,11 +2413,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </item>
                  <item>
                   <widget class="NoScrollSpinBox" name="spinBoxDeflickerTarget">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="alignment">
                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                    </property>
@@ -2740,11 +2425,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                </item>
                <item>
                 <widget class="QLabel" name="PatternNoiseLabel">
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
                  <property name="text">
                   <string>Pattern Noise</string>
                  </property>
@@ -2776,11 +2456,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <verstretch>0</verstretch>
                      </sizepolicy>
                     </property>
-                    <property name="font">
-                     <font>
-                      <pointsize>10</pointsize>
-                     </font>
-                    </property>
                     <property name="text">
                      <string>Off</string>
                     </property>
@@ -2802,11 +2477,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                       <horstretch>0</horstretch>
                       <verstretch>0</verstretch>
                      </sizepolicy>
-                    </property>
-                    <property name="font">
-                     <font>
-                      <pointsize>10</pointsize>
-                     </font>
                     </property>
                     <property name="text">
                      <string>On</string>
@@ -2854,11 +2524,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </property>
                    <item row="0" column="0">
                     <widget class="QLabel" name="RawBlackLabel">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="text">
                       <string>RAW Black Level</string>
                      </property>
@@ -2882,11 +2547,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </item>
                    <item row="0" column="3">
                     <widget class="DoubleClickLabel" name="label_RawBlackVal">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="contextMenuPolicy">
                       <enum>Qt::CustomContextMenu</enum>
                      </property>
@@ -2942,11 +2602,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </property>
                    <item row="0" column="0">
                     <widget class="QLabel" name="RawWhiteLabel">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="text">
                       <string>RAW White Level</string>
                      </property>
@@ -2970,11 +2625,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </item>
                    <item row="0" column="2">
                     <widget class="DoubleClickLabel" name="label_RawWhiteVal">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="contextMenuPolicy">
                       <enum>Qt::CustomContextMenu</enum>
                      </property>
@@ -3085,11 +2735,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                </item>
                <item row="0" column="1">
                 <widget class="NoScrollSpinBox" name="spinBoxCutIn">
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
                  <property name="focusPolicy">
                   <enum>Qt::ClickFocus</enum>
                  </property>
@@ -3140,11 +2785,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                </item>
                <item row="1" column="1">
                 <widget class="NoScrollSpinBox" name="spinBoxCutOut">
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
                  <property name="focusPolicy">
                   <enum>Qt::ClickFocus</enum>
                  </property>
@@ -3217,11 +2857,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                </property>
                <item>
                 <widget class="NoScrollComboBox" name="comboBoxDebayer">
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
                  <property name="currentText">
                   <string>AMaZE</string>
                  </property>
@@ -3332,11 +2967,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </property>
                    <item row="0" column="0">
                     <widget class="QLabel" name="label">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="text">
                       <string>Exposure</string>
                      </property>
@@ -3360,11 +2990,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </item>
                    <item row="0" column="2">
                     <widget class="DoubleClickLabel" name="label_ExposureVal">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="contextMenuPolicy">
                       <enum>Qt::CustomContextMenu</enum>
                      </property>
@@ -3410,11 +3035,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </property>
                    <item row="0" column="0">
                     <widget class="QLabel" name="label_contrast">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="text">
                       <string>Contrast</string>
                      </property>
@@ -3438,11 +3058,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </item>
                    <item row="0" column="2">
                     <widget class="DoubleClickLabel" name="label_ContrastVal">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="layoutDirection">
                       <enum>Qt::RightToLeft</enum>
                      </property>
@@ -3485,11 +3100,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </property>
                    <item row="0" column="0">
                     <widget class="QLabel" name="label_pivot">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="text">
                       <string>Pivot</string>
                      </property>
@@ -3513,11 +3123,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </item>
                    <item row="0" column="2">
                     <widget class="DoubleClickLabel" name="label_PivotVal">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="layoutDirection">
                       <enum>Qt::RightToLeft</enum>
                      </property>
@@ -3705,11 +3310,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </property>
                    <item row="0" column="0">
                     <widget class="QLabel" name="label_2">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="text">
                       <string>Temperature</string>
                      </property>
@@ -3717,11 +3317,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </item>
                    <item row="0" column="2">
                     <widget class="DoubleClickLabel" name="label_TemperatureVal">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="layoutDirection">
                       <enum>Qt::RightToLeft</enum>
                      </property>
@@ -3783,11 +3378,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </property>
                    <item row="0" column="0">
                     <widget class="QLabel" name="label_3">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="text">
                       <string>Tint</string>
                      </property>
@@ -3811,11 +3401,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </item>
                    <item row="0" column="2">
                     <widget class="DoubleClickLabel" name="label_TintVal">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="layoutDirection">
                       <enum>Qt::RightToLeft</enum>
                      </property>
@@ -3882,11 +3467,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </property>
                    <item row="0" column="0">
                     <widget class="QLabel" name="label_clarity">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="text">
                       <string>Clarity</string>
                      </property>
@@ -3910,11 +3490,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </item>
                    <item row="0" column="2">
                     <widget class="DoubleClickLabel" name="label_ClarityVal">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="layoutDirection">
                       <enum>Qt::RightToLeft</enum>
                      </property>
@@ -3957,11 +3532,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </property>
                    <item row="0" column="0">
                     <widget class="QLabel" name="label_vibrance">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="text">
                       <string>Vibrance</string>
                      </property>
@@ -3985,11 +3555,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </item>
                    <item row="0" column="2">
                     <widget class="DoubleClickLabel" name="label_VibranceVal">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="layoutDirection">
                       <enum>Qt::RightToLeft</enum>
                      </property>
@@ -4032,11 +3597,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </property>
                    <item row="0" column="0">
                     <widget class="QLabel" name="label_saturation">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="text">
                       <string>Saturation</string>
                      </property>
@@ -4060,11 +3620,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </item>
                    <item row="0" column="2">
                     <widget class="DoubleClickLabel" name="label_SaturationVal">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="layoutDirection">
                       <enum>Qt::RightToLeft</enum>
                      </property>
@@ -4131,11 +3686,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </property>
                    <item row="0" column="0">
                     <widget class="QLabel" name="label_ds">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="text">
                       <string>Dark Strength</string>
                      </property>
@@ -4159,11 +3709,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </item>
                    <item row="0" column="2">
                     <widget class="DoubleClickLabel" name="label_DsVal">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="layoutDirection">
                       <enum>Qt::RightToLeft</enum>
                      </property>
@@ -4203,11 +3748,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </property>
                    <item row="0" column="0">
                     <widget class="QLabel" name="label_dr">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="text">
                       <string>Dark Range</string>
                      </property>
@@ -4231,11 +3771,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </item>
                    <item row="0" column="2">
                     <widget class="DoubleClickLabel" name="label_DrVal">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="layoutDirection">
                       <enum>Qt::RightToLeft</enum>
                      </property>
@@ -4275,11 +3810,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </property>
                    <item row="0" column="0">
                     <widget class="QLabel" name="label_ls">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="text">
                       <string>Light Strength</string>
                      </property>
@@ -4303,11 +3833,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </item>
                    <item row="0" column="2">
                     <widget class="DoubleClickLabel" name="label_LsVal">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="layoutDirection">
                       <enum>Qt::RightToLeft</enum>
                      </property>
@@ -4344,11 +3869,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </property>
                    <item row="0" column="0">
                     <widget class="QLabel" name="label_lr">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="text">
                       <string>Light Range</string>
                      </property>
@@ -4372,11 +3892,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </item>
                    <item row="0" column="2">
                     <widget class="DoubleClickLabel" name="label_LrVal">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="layoutDirection">
                       <enum>Qt::RightToLeft</enum>
                      </property>
@@ -4416,11 +3931,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </property>
                    <item row="0" column="0">
                     <widget class="QLabel" name="label_lighten">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="text">
                       <string>Lighten</string>
                      </property>
@@ -4444,11 +3954,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </item>
                    <item row="0" column="2">
                     <widget class="DoubleClickLabel" name="label_LightenVal">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="layoutDirection">
                       <enum>Qt::RightToLeft</enum>
                      </property>
@@ -4499,11 +4004,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                </item>
                <item>
                 <widget class="QCheckBox" name="checkBoxHighLightReconstruction">
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
                  <property name="text">
                   <string>Highlight Reconstruction</string>
                  </property>
@@ -4521,11 +4021,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </property>
                    <item row="0" column="0">
                     <widget class="QLabel" name="label_highlights">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="text">
                       <string>Highlights</string>
                      </property>
@@ -4549,11 +4044,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </item>
                    <item row="0" column="2">
                     <widget class="DoubleClickLabel" name="label_HighlightsVal">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="layoutDirection">
                       <enum>Qt::RightToLeft</enum>
                      </property>
@@ -4593,11 +4083,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </property>
                    <item row="0" column="0">
                     <widget class="QLabel" name="label_shadows">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="text">
                       <string>Shadows</string>
                      </property>
@@ -4621,11 +4106,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </item>
                    <item row="0" column="2">
                     <widget class="DoubleClickLabel" name="label_ShadowsVal">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="layoutDirection">
                       <enum>Qt::RightToLeft</enum>
                      </property>
@@ -4684,11 +4164,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </property>
                  <item>
                   <widget class="QLabel" name="label_gradationcurves">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>Gradation Curves</string>
                    </property>
@@ -4726,11 +4201,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </item>
                  <item>
                   <widget class="QToolButton" name="toolButtonGCurvesReset">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="toolTip">
                     <string>Reset all</string>
                    </property>
@@ -4793,7 +4263,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     </property>
                     <property name="font">
                      <font>
-                      <pointsize>10</pointsize>
                       <bold>true</bold>
                      </font>
                     </property>
@@ -4821,7 +4290,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     </property>
                     <property name="font">
                      <font>
-                      <pointsize>10</pointsize>
                       <bold>true</bold>
                      </font>
                     </property>
@@ -4849,7 +4317,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     </property>
                     <property name="font">
                      <font>
-                      <pointsize>10</pointsize>
                       <bold>true</bold>
                      </font>
                     </property>
@@ -4877,7 +4344,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     </property>
                     <property name="font">
                      <font>
-                      <pointsize>10</pointsize>
                       <bold>true</bold>
                      </font>
                     </property>
@@ -4945,11 +4411,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                </property>
                <item>
                 <widget class="QLabel" name="label_ProcessingProfile">
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
                  <property name="text">
                   <string>Profile Preset</string>
                  </property>
@@ -4962,11 +4423,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    <width>0</width>
                    <height>0</height>
                   </size>
-                 </property>
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
                  </property>
                  <property name="currentText">
                   <string>Select Preset...</string>
@@ -5062,11 +4518,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                </item>
                <item>
                 <widget class="QLabel" name="label_TonemappingFunction">
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
                  <property name="text">
                   <string>Tonemapping Function</string>
                  </property>
@@ -5079,11 +4530,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    <width>0</width>
                    <height>0</height>
                   </size>
-                 </property>
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
                  </property>
                  <property name="currentText">
                   <string>None</string>
@@ -5147,11 +4593,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                </item>
                <item>
                 <widget class="QLabel" name="label_Gamut">
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
                  <property name="text">
                   <string>Processing Gamut</string>
                  </property>
@@ -5164,11 +4605,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    <width>0</width>
                    <height>0</height>
                   </size>
-                 </property>
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
                  </property>
                  <property name="currentText">
                   <string>Rec. 709</string>
@@ -5255,11 +4691,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                   </property>
                   <item row="0" column="0">
                    <widget class="QLabel" name="label_GammaText">
-                    <property name="font">
-                     <font>
-                      <pointsize>10</pointsize>
-                     </font>
-                    </property>
                     <property name="text">
                      <string>Gamma</string>
                     </property>
@@ -5283,11 +4714,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                   </item>
                   <item row="0" column="2">
                    <widget class="DoubleClickLabel" name="label_GammaVal">
-                    <property name="font">
-                     <font>
-                      <pointsize>10</pointsize>
-                     </font>
-                    </property>
                     <property name="text">
                      <string>1.00</string>
                     </property>
@@ -5326,34 +4752,18 @@ QScrollBar::add-page, QScrollBar::sub-page {
                </item>
                <item>
                 <widget class="QLabel" name="label_TransferFunction">
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
                  <property name="text">
                   <string>Transfer Function</string>
                  </property>
                 </widget>
                </item>
                <item>
-                <widget class="QLineEdit" name="lineEditTransferFunction">
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
-                </widget>
+                <widget class="QLineEdit" name="lineEditTransferFunction"/>
                </item>
                <item>
                 <widget class="QCheckBox" name="checkBoxCreativeAdjustments">
                  <property name="enabled">
                   <bool>true</bool>
-                 </property>
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
                  </property>
                  <property name="toolTip">
                   <string>Warning: Having creative adjustments and log profile enabled may not give logarithmic output!</string>
@@ -5385,11 +4795,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                </item>
                <item>
                 <widget class="QLabel" name="label_39">
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
                  <property name="text">
                   <string>Camera Matrix</string>
                  </property>
@@ -5397,11 +4802,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                </item>
                <item>
                 <widget class="NoScrollComboBox" name="comboBoxUseCameraMatrix">
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
                  <property name="currentIndex">
                   <number>1</number>
                  </property>
@@ -5424,11 +4824,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                </item>
                <item>
                 <widget class="QCheckBox" name="checkBoxExrMode">
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
                  <property name="text">
                   <string>Cyan Highlight Fix</string>
                  </property>
@@ -5436,11 +4831,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                </item>
                <item>
                 <widget class="QCheckBox" name="checkBoxAgX">
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
                  <property name="text">
                   <string>AgX</string>
                  </property>
@@ -5493,11 +4883,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                </property>
                <item>
                 <widget class="QCheckBox" name="checkBoxChromaSeparation">
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
                  <property name="toolTip">
                   <string>Chroma Separation (YCbCR)</string>
                  </property>
@@ -5518,11 +4903,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </property>
                    <item row="0" column="0">
                     <widget class="QLabel" name="label_10">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="text">
                       <string>Sharpen</string>
                      </property>
@@ -5546,11 +4926,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </item>
                    <item row="0" column="2">
                     <widget class="DoubleClickLabel" name="label_Sharpen">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="text">
                       <string>0</string>
                      </property>
@@ -5590,11 +4965,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </property>
                    <item row="0" column="0">
                     <widget class="QLabel" name="label_ShMaskingText">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="text">
                       <string>Masking</string>
                      </property>
@@ -5618,11 +4988,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </item>
                    <item row="0" column="2">
                     <widget class="DoubleClickLabel" name="label_ShMasking">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="text">
                       <string>0</string>
                      </property>
@@ -5664,11 +5029,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                     <widget class="DoubleClickLabel" name="label_ChromaBlur">
                      <property name="enabled">
                       <bool>false</bool>
-                     </property>
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
                      </property>
                      <property name="text">
                       <string>0</string>
@@ -5721,11 +5081,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                      <property name="enabled">
                       <bool>false</bool>
                      </property>
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="text">
                       <string>Chroma Blur Radius</string>
                      </property>
@@ -5759,11 +5114,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </property>
                  <item>
                   <widget class="QLabel" name="label_32">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>Median Denoise Window</string>
                    </property>
@@ -5771,11 +5121,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </item>
                  <item>
                   <widget class="NoScrollComboBox" name="comboBoxDenoiseWindow">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="currentIndex">
                     <number>1</number>
                    </property>
@@ -5820,11 +5165,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </property>
                  <item row="0" column="0">
                   <widget class="QLabel" name="label_31">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>Median Denoise Strength</string>
                    </property>
@@ -5848,11 +5188,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </item>
                  <item row="0" column="2">
                   <widget class="DoubleClickLabel" name="label_DenoiseStrength">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>0</string>
                    </property>
@@ -5930,11 +5265,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </item>
                    <item row="0" column="2">
                     <widget class="DoubleClickLabel" name="label_RbfDenoiseLuma">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="text">
                       <string>0</string>
                      </property>
@@ -5945,11 +5275,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </item>
                    <item row="0" column="0">
                     <widget class="QLabel" name="label_35">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="toolTip">
                       <string>Recursive bilateral filtering</string>
                      </property>
@@ -5989,11 +5314,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </property>
                    <item row="0" column="0">
                     <widget class="QLabel" name="label_34">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="toolTip">
                       <string>Recursive bilateral filtering</string>
                      </property>
@@ -6004,11 +5324,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </item>
                    <item row="0" column="2">
                     <widget class="DoubleClickLabel" name="label_RbfDenoiseChroma">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="text">
                       <string>0</string>
                      </property>
@@ -6064,11 +5379,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </property>
                    <item row="0" column="2">
                     <widget class="DoubleClickLabel" name="label_RbfDenoiseRange">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="text">
                       <string>40</string>
                      </property>
@@ -6079,11 +5389,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </item>
                    <item row="0" column="0">
                     <widget class="QLabel" name="label_36">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="toolTip">
                       <string>Recursive bilateral filtering</string>
                      </property>
@@ -6163,11 +5468,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </property>
                    <item row="0" column="0">
                     <widget class="QLabel" name="label_37">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="text">
                       <string>Grain Strength</string>
                      </property>
@@ -6175,11 +5475,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </item>
                    <item row="0" column="2">
                     <widget class="DoubleClickLabel" name="label_GrainStrength">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="text">
                       <string>0</string>
                      </property>
@@ -6235,11 +5530,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </property>
                    <item row="0" column="0">
                     <widget class="QLabel" name="label_40">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="text">
                       <string>Grain Luma Weight</string>
                      </property>
@@ -6247,11 +5537,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </item>
                    <item row="0" column="2">
                     <widget class="DoubleClickLabel" name="label_GrainLumaWeight">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="text">
                       <string>0</string>
                      </property>
@@ -6354,11 +5639,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </property>
                  <item>
                   <widget class="QLabel" name="label_hueVsHue">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>Hue vs. Hue</string>
                    </property>
@@ -6451,11 +5731,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </property>
                  <item>
                   <widget class="QLabel" name="label_hueVsSat">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>Hue vs. Saturation</string>
                    </property>
@@ -6548,11 +5823,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </property>
                  <item>
                   <widget class="QLabel" name="label_hueVsLuma">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>Hue vs. Luminance</string>
                    </property>
@@ -6645,11 +5915,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </property>
                  <item>
                   <widget class="QLabel" name="label_lumaVsSat">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>Luminance vs. Saturation</string>
                    </property>
@@ -6753,11 +6018,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </property>
                  <item row="0" column="2">
                   <widget class="QLabel" name="label_ToningColor">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>Color</string>
                    </property>
@@ -6771,11 +6031,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </item>
                  <item row="0" column="4">
                   <widget class="DoubleClickLabel" name="label_ToneVal">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="contextMenuPolicy">
                     <enum>Qt::CustomContextMenu</enum>
                    </property>
@@ -6830,11 +6085,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </item>
                  <item row="0" column="0">
                   <widget class="QLabel" name="label_ToneText">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>Hue</string>
                    </property>
@@ -6865,11 +6115,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </property>
                  <item row="0" column="0">
                   <widget class="QLabel" name="label_ToningStrengthText">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>Strength</string>
                    </property>
@@ -6893,11 +6138,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </item>
                  <item row="0" column="2">
                   <widget class="DoubleClickLabel" name="label_ToningStrengthVal">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="contextMenuPolicy">
                     <enum>Qt::CustomContextMenu</enum>
                    </property>
@@ -6983,11 +6223,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                </property>
                <item>
                 <widget class="QLabel" name="label_9">
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
                  <property name="text">
                   <string>Master</string>
                  </property>
@@ -7055,11 +6290,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                 <layout class="QGridLayout" name="gridLayout_26">
                  <item row="0" column="0">
                   <widget class="QLabel" name="label_16">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>Y</string>
                    </property>
@@ -7070,11 +6300,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </item>
                  <item row="0" column="1">
                   <widget class="QLabel" name="label_15">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>R</string>
                    </property>
@@ -7085,11 +6310,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </item>
                  <item row="0" column="2">
                   <widget class="QLabel" name="label_17">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>G</string>
                    </property>
@@ -7100,11 +6320,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </item>
                  <item row="0" column="3">
                   <widget class="QLabel" name="label_18">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>B</string>
                    </property>
@@ -7115,11 +6330,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </item>
                  <item row="1" column="0">
                   <widget class="QLabel" name="labelYmaster">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>0.00</string>
                    </property>
@@ -7130,11 +6340,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </item>
                  <item row="1" column="1">
                   <widget class="QLabel" name="labelRmaster_2">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>0.00</string>
                    </property>
@@ -7145,11 +6350,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </item>
                  <item row="1" column="2">
                   <widget class="QLabel" name="labelGmaster">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>0.00</string>
                    </property>
@@ -7160,11 +6360,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </item>
                  <item row="1" column="3">
                   <widget class="QLabel" name="labelBmaster">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>0.00</string>
                    </property>
@@ -7194,11 +6389,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                </item>
                <item>
                 <widget class="QLabel" name="label_13">
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
                  <property name="text">
                   <string>Shadows</string>
                  </property>
@@ -7266,11 +6456,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                 <layout class="QGridLayout" name="gridLayout_27">
                  <item row="0" column="0">
                   <widget class="QLabel" name="label_19">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>Y</string>
                    </property>
@@ -7281,11 +6466,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </item>
                  <item row="0" column="1">
                   <widget class="QLabel" name="label_20">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>R</string>
                    </property>
@@ -7296,11 +6476,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </item>
                  <item row="0" column="2">
                   <widget class="QLabel" name="label_21">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>G</string>
                    </property>
@@ -7311,11 +6486,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </item>
                  <item row="0" column="3">
                   <widget class="QLabel" name="label_22">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>B</string>
                    </property>
@@ -7326,11 +6496,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </item>
                  <item row="1" column="0">
                   <widget class="QLabel" name="labelYshadows">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>0.00</string>
                    </property>
@@ -7341,11 +6506,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </item>
                  <item row="1" column="1">
                   <widget class="QLabel" name="labelRshadows">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>0.00</string>
                    </property>
@@ -7356,11 +6516,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </item>
                  <item row="1" column="2">
                   <widget class="QLabel" name="labelGshadows">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>0.00</string>
                    </property>
@@ -7371,11 +6526,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </item>
                  <item row="1" column="3">
                   <widget class="QLabel" name="labelBshadows">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>0.00</string>
                    </property>
@@ -7405,11 +6555,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                </item>
                <item>
                 <widget class="QLabel" name="label_14">
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
                  <property name="text">
                   <string>Midtones</string>
                  </property>
@@ -7477,11 +6622,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                 <layout class="QGridLayout" name="gridLayout_28">
                  <item row="0" column="0">
                   <widget class="QLabel" name="label_23">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>Y</string>
                    </property>
@@ -7492,11 +6632,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </item>
                  <item row="0" column="1">
                   <widget class="QLabel" name="label_24">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>R</string>
                    </property>
@@ -7507,11 +6642,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </item>
                  <item row="0" column="2">
                   <widget class="QLabel" name="label_25">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>G</string>
                    </property>
@@ -7522,11 +6652,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </item>
                  <item row="0" column="3">
                   <widget class="QLabel" name="label_26">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>B</string>
                    </property>
@@ -7537,11 +6662,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </item>
                  <item row="1" column="0">
                   <widget class="QLabel" name="labelYmids">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>0.00</string>
                    </property>
@@ -7552,11 +6672,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </item>
                  <item row="1" column="1">
                   <widget class="QLabel" name="labelRmids">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>0.00</string>
                    </property>
@@ -7567,11 +6682,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </item>
                  <item row="1" column="2">
                   <widget class="QLabel" name="labelGmids">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>0.00</string>
                    </property>
@@ -7582,11 +6692,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </item>
                  <item row="1" column="3">
                   <widget class="QLabel" name="labelBmids">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>0.00</string>
                    </property>
@@ -7616,11 +6721,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                </item>
                <item>
                 <widget class="QLabel" name="label_12">
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
                  <property name="text">
                   <string>Highlights</string>
                  </property>
@@ -7688,11 +6788,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                 <layout class="QGridLayout" name="gridLayout_29">
                  <item row="0" column="0">
                   <widget class="QLabel" name="label_27">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>Y</string>
                    </property>
@@ -7703,11 +6798,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </item>
                  <item row="0" column="1">
                   <widget class="QLabel" name="label_28">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>R</string>
                    </property>
@@ -7718,11 +6808,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </item>
                  <item row="0" column="2">
                   <widget class="QLabel" name="label_29">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>G</string>
                    </property>
@@ -7733,11 +6818,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </item>
                  <item row="0" column="3">
                   <widget class="QLabel" name="label_30">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>B</string>
                    </property>
@@ -7748,11 +6828,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </item>
                  <item row="1" column="0">
                   <widget class="QLabel" name="labelYhighlights">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>0.00</string>
                    </property>
@@ -7763,11 +6838,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </item>
                  <item row="1" column="1">
                   <widget class="QLabel" name="labelRhighlights">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>0.00</string>
                    </property>
@@ -7778,11 +6848,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </item>
                  <item row="1" column="2">
                   <widget class="QLabel" name="labelGhighlights">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>0.00</string>
                    </property>
@@ -7793,11 +6858,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </item>
                  <item row="1" column="3">
                   <widget class="QLabel" name="labelBhighlights">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>0.00</string>
                    </property>
@@ -7857,11 +6917,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                 <layout class="QHBoxLayout" name="horizontalLayout_20">
                  <item>
                   <widget class="QCheckBox" name="checkBoxGradientEnable">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>Enable</string>
                    </property>
@@ -7914,11 +6969,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </property>
                    <item>
                     <widget class="QLabel" name="label_4">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="text">
                       <string>X</string>
                      </property>
@@ -7931,11 +6981,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                        <horstretch>0</horstretch>
                        <verstretch>0</verstretch>
                       </sizepolicy>
-                     </property>
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
                      </property>
                      <property name="focusPolicy">
                       <enum>Qt::ClickFocus</enum>
@@ -7957,11 +7002,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </property>
                    <item>
                     <widget class="QLabel" name="label_5">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="text">
                       <string>Y</string>
                      </property>
@@ -7974,11 +7014,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                        <horstretch>0</horstretch>
                        <verstretch>0</verstretch>
                       </sizepolicy>
-                     </property>
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
                      </property>
                      <property name="focusPolicy">
                       <enum>Qt::ClickFocus</enum>
@@ -8044,11 +7079,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                        <verstretch>0</verstretch>
                       </sizepolicy>
                      </property>
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="text">
                       <string>0.0°</string>
                      </property>
@@ -8063,11 +7093,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </property>
                    <item>
                     <widget class="QLabel" name="label_6">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="text">
                       <string>Length</string>
                      </property>
@@ -8080,11 +7105,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                        <horstretch>0</horstretch>
                        <verstretch>0</verstretch>
                       </sizepolicy>
-                     </property>
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
                      </property>
                      <property name="focusPolicy">
                       <enum>Qt::ClickFocus</enum>
@@ -8152,11 +7172,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </item>
                    <item row="0" column="0">
                     <widget class="QLabel" name="label_11">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="text">
                       <string>Exposure</string>
                      </property>
@@ -8164,11 +7179,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </item>
                    <item row="0" column="2">
                     <widget class="DoubleClickLabel" name="label_ExposureGradient">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="text">
                       <string>0.00</string>
                      </property>
@@ -8249,11 +7259,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </item>
                    <item row="0" column="0">
                     <widget class="QLabel" name="label_contrast_gradient">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="text">
                       <string>Contrast</string>
                      </property>
@@ -8261,11 +7266,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </item>
                    <item row="0" column="2">
                     <widget class="DoubleClickLabel" name="label_ContrastGradientVal">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="layoutDirection">
                       <enum>Qt::RightToLeft</enum>
                      </property>
@@ -8328,11 +7328,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                </property>
                <item>
                 <widget class="QCheckBox" name="checkBoxLutEnable">
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
                  <property name="text">
                   <string>Enable LUT</string>
                  </property>
@@ -8367,11 +7362,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                   <widget class="QLineEdit" name="lineEditLutName">
                    <property name="enabled">
                     <bool>false</bool>
-                   </property>
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
                    </property>
                    <property name="readOnly">
                     <bool>true</bool>
@@ -8441,11 +7431,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </property>
                  <item row="0" column="0">
                   <widget class="QLabel" name="label_LutStrengthText">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>Strength</string>
                    </property>
@@ -8469,11 +7454,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </item>
                  <item row="0" column="2">
                   <widget class="DoubleClickLabel" name="label_LutStrengthVal">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="contextMenuPolicy">
                     <enum>Qt::CustomContextMenu</enum>
                    </property>
@@ -8559,11 +7539,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                </property>
                <item>
                 <widget class="QCheckBox" name="checkBoxFilterEnable">
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
                  <property name="text">
                   <string>Enable Filter</string>
                  </property>
@@ -8573,11 +7548,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                 <widget class="NoScrollComboBox" name="comboBoxFilterName">
                  <property name="enabled">
                   <bool>true</bool>
-                 </property>
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
                  </property>
                  <item>
                   <property name="text">
@@ -8633,11 +7603,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </property>
                  <item row="0" column="0">
                   <widget class="QLabel" name="label_FilterStrengthText">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>Strength</string>
                    </property>
@@ -8661,11 +7626,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </item>
                  <item row="0" column="2">
                   <widget class="DoubleClickLabel" name="label_FilterStrengthVal">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="contextMenuPolicy">
                     <enum>Qt::CustomContextMenu</enum>
                    </property>
@@ -8761,11 +7721,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </property>
                    <item row="0" column="0">
                     <widget class="QLabel" name="label_VignetteStrengthText">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="text">
                       <string>Vignette Strength</string>
                      </property>
@@ -8789,11 +7744,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </item>
                    <item row="0" column="2">
                     <widget class="DoubleClickLabel" name="label_VignetteStrengthVal">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="contextMenuPolicy">
                       <enum>Qt::CustomContextMenu</enum>
                      </property>
@@ -8877,11 +7827,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </item>
                    <item row="0" column="2">
                     <widget class="DoubleClickLabel" name="label_VignetteRadiusVal">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="contextMenuPolicy">
                       <enum>Qt::CustomContextMenu</enum>
                      </property>
@@ -8898,11 +7843,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </item>
                    <item row="0" column="0">
                     <widget class="QLabel" name="label_VignetteRadiusText">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="text">
                       <string>Vignette Radius</string>
                      </property>
@@ -8955,11 +7895,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </item>
                    <item row="0" column="2">
                     <widget class="DoubleClickLabel" name="label_VignetteShapeVal">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="contextMenuPolicy">
                       <enum>Qt::CustomContextMenu</enum>
                      </property>
@@ -8976,11 +7911,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </item>
                    <item row="0" column="0">
                     <widget class="QLabel" name="label_VignetteShapeText">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="text">
                       <string>Vignette Shape</string>
                      </property>
@@ -9035,11 +7965,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </item>
                    <item row="0" column="2">
                     <widget class="DoubleClickLabel" name="label_CaRedVal">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="contextMenuPolicy">
                       <enum>Qt::CustomContextMenu</enum>
                      </property>
@@ -9078,11 +8003,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </item>
                    <item row="0" column="0">
                     <widget class="QLabel" name="label_CaRedText">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="text">
                       <string>CA Correction Red</string>
                      </property>
@@ -9097,11 +8017,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </property>
                    <item row="0" column="0">
                     <widget class="QLabel" name="label_CaBlueText">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="text">
                       <string>CA Correction Blue</string>
                      </property>
@@ -9125,11 +8040,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </item>
                    <item row="0" column="2">
                     <widget class="DoubleClickLabel" name="label_CaBlueVal">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="contextMenuPolicy">
                       <enum>Qt::CustomContextMenu</enum>
                      </property>
@@ -9199,11 +8109,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </property>
                    <item row="0" column="0">
                     <widget class="QLabel" name="label_CaDesaturateText">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="text">
                       <string>CA Desaturate Threshold</string>
                      </property>
@@ -9227,11 +8132,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </item>
                    <item row="0" column="2">
                     <widget class="DoubleClickLabel" name="label_CaDesaturateVal">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="contextMenuPolicy">
                       <enum>Qt::CustomContextMenu</enum>
                      </property>
@@ -9277,11 +8177,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </property>
                    <item row="0" column="0">
                     <widget class="QLabel" name="label_CaRadiusText">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="text">
                       <string>CA Radius</string>
                      </property>
@@ -9305,11 +8200,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </item>
                    <item row="0" column="2">
                     <widget class="DoubleClickLabel" name="label_CaRadiusVal">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="contextMenuPolicy">
                       <enum>Qt::CustomContextMenu</enum>
                      </property>
@@ -9402,11 +8292,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </property>
                  <item>
                   <widget class="QLabel" name="label_8">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>Width Stretch</string>
                    </property>
@@ -9414,11 +8299,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </item>
                  <item>
                   <widget class="NoScrollComboBox" name="comboBoxHStretch">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <item>
                     <property name="text">
                      <string>1.0×</string>
@@ -9470,11 +8350,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </property>
                  <item>
                   <widget class="QLabel" name="label_7">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>Height Stretch</string>
                    </property>
@@ -9482,11 +8357,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </item>
                  <item>
                   <widget class="NoScrollComboBox" name="comboBoxVStretch">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="layoutDirection">
                     <enum>Qt::LeftToRight</enum>
                    </property>
@@ -9524,11 +8394,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    <property name="enabled">
                     <bool>false</bool>
                    </property>
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>→</string>
                    </property>
@@ -9544,7 +8409,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </property>
                    <property name="font">
                     <font>
-                     <pointsize>10</pointsize>
                      <italic>true</italic>
                     </font>
                    </property>
@@ -9579,11 +8443,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                  </property>
                  <item>
                   <widget class="QLabel" name="UpsideDownLabel">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
                    <property name="text">
                     <string>Upside Down</string>
                    </property>
@@ -9615,11 +8474,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                         <verstretch>0</verstretch>
                        </sizepolicy>
                       </property>
-                      <property name="font">
-                       <font>
-                        <pointsize>10</pointsize>
-                       </font>
-                      </property>
                       <property name="text">
                        <string>Off</string>
                       </property>
@@ -9641,11 +8495,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                         <horstretch>0</horstretch>
                         <verstretch>0</verstretch>
                        </sizepolicy>
-                      </property>
-                      <property name="font">
-                       <font>
-                        <pointsize>10</pointsize>
-                       </font>
                       </property>
                       <property name="text">
                        <string>On</string>
@@ -9682,11 +8531,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                </item>
                <item>
                 <widget class="QCheckBox" name="checkBoxVidstabEnable">
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
                  <property name="toolTip">
                   <string>Visible only after ffmpeg H.264 export!</string>
                  </property>
@@ -9707,11 +8551,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </property>
                    <item row="0" column="2">
                     <widget class="DoubleClickLabel" name="label_VidstabStepsizeVal">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="contextMenuPolicy">
                       <enum>Qt::CustomContextMenu</enum>
                      </property>
@@ -9766,11 +8605,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </item>
                    <item row="0" column="0">
                     <widget class="QLabel" name="label_VidstabStepsizeText">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="text">
                       <string>Stepsize</string>
                      </property>
@@ -9823,11 +8657,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </item>
                    <item row="0" column="0">
                     <widget class="QLabel" name="label_VidstabShakinessText">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="text">
                       <string>Shakiness</string>
                      </property>
@@ -9835,11 +8664,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </item>
                    <item row="0" column="2">
                     <widget class="DoubleClickLabel" name="label_VidstabShakinessVal">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="contextMenuPolicy">
                       <enum>Qt::CustomContextMenu</enum>
                      </property>
@@ -9863,11 +8687,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </property>
                    <item row="0" column="2">
                     <widget class="DoubleClickLabel" name="label_VidstabAccuracyVal">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="contextMenuPolicy">
                       <enum>Qt::CustomContextMenu</enum>
                      </property>
@@ -9922,11 +8741,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </item>
                    <item row="0" column="0">
                     <widget class="QLabel" name="label_VidstabAccuracyText">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="text">
                       <string>Accuracy</string>
                      </property>
@@ -9941,11 +8755,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </property>
                    <item row="0" column="2">
                     <widget class="DoubleClickLabel" name="label_VidstabZoomVal">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="contextMenuPolicy">
                       <enum>Qt::CustomContextMenu</enum>
                      </property>
@@ -10000,11 +8809,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </item>
                    <item row="0" column="0">
                     <widget class="QLabel" name="label_VidstabZoomText">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="text">
                       <string>Zoom</string>
                      </property>
@@ -10019,11 +8823,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </property>
                    <item row="0" column="0">
                     <widget class="QLabel" name="label_VidstabSmoothingText">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="text">
                       <string>Smoothing</string>
                      </property>
@@ -10069,11 +8868,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                    </item>
                    <item row="0" column="2">
                     <widget class="DoubleClickLabel" name="label_VidstabSmoothingVal">
-                     <property name="font">
-                      <font>
-                       <pointsize>10</pointsize>
-                      </font>
-                     </property>
                      <property name="contextMenuPolicy">
                       <enum>Qt::CustomContextMenu</enum>
                      </property>
@@ -10094,11 +8888,6 @@ QScrollBar::add-page, QScrollBar::sub-page {
                </item>
                <item>
                 <widget class="QCheckBox" name="checkBoxVidstabTripod">
-                 <property name="font">
-                  <font>
-                   <pointsize>10</pointsize>
-                  </font>
-                 </property>
                  <property name="text">
                   <string>Tripod Mode</string>
                  </property>
