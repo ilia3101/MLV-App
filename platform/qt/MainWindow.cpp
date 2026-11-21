@@ -25,6 +25,7 @@
 #include <QScreen>
 #include <QMimeData>
 #include <QDir>
+#include <QDebug>
 #include <QSpacerItem>
 #include <QDate>
 #include <QStorageInfo>
@@ -106,7 +107,10 @@ MainWindow::MainWindow(int &argc, char **argv, QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     //Change working directory for C part
-    if( chdir( QCoreApplication::applicationDirPath().toLatin1().data() ) != 0 ) {}
+    if( !QDir::setCurrent( QCoreApplication::applicationDirPath() ) )
+    {
+        qWarning() << "Failed to change working directory";
+    }
 
     //Enable color management for macOS
     auto format = QSurfaceFormat::defaultFormat();
