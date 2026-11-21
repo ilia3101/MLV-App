@@ -23,6 +23,16 @@
 #include <string.h>
 #include <math.h>
 #include <limits.h>
+
+#if defined(_MSC_VER)
+#define DUALISO_TLS __declspec(thread)
+#else
+#define DUALISO_TLS __thread
+#endif
+
+#ifdef __APPLE__
+#include <dispatch/dispatch.h>
+#endif
 #include "hist.h"
 #include "dualiso.h"
 #include "opt_med.h"
@@ -45,6 +55,33 @@
 #define UNLOCK(x) pthread_mutex_unlock(&(x));
 
 static int USE_OMP = 1;
+
+typedef struct mix_curve_entry {
+    uint32_t black;
+    uint32_t white;
+    double corr_ev;
+    double overlap;
+    int ref_count;
+    double curve[1<<20];
+} mix_curve_entry_t;
+
+static mix_curve_entry_t * g_active_mix_curve = NULL;
+static pthread_mutex_t g_mix_curve_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+void dualiso_cleanup_mix_curve(void)
+{
+    pthread_mutex_lock(&g_mix_curve_mutex);
+    if (g_active_mix_curve)
+    {
+        g_active_mix_curve->ref_count--;
+        if (g_active_mix_curve->ref_count <= 0)
+        {
+            free(g_active_mix_curve);
+        }
+        g_active_mix_curve = NULL;
+    }
+    pthread_mutex_unlock(&g_mix_curve_mutex);
+}
 
 //this is just meant to be fast
 int diso_get_preview(uint16_t * image_data, uint16_t width, uint16_t height, int32_t black, int32_t white, int diso_check)
@@ -1254,17 +1291,13 @@ static const struct edge_direction edge_directions[] = {       /* note: all y co
     //~ { { 6,2}, { 3,1}, {-6,-2}, {-9,-3} },     /* almost horizontal */
 };
 
-static void* amaze_wrapper(void* arg)
-{
-    amazeinfo_t* info = (amazeinfo_t*)arg;
-    demosaic(info);
-    return NULL;
-}
-
 static inline void amaze_interpolate(float** rawData, float** red, float** green, float** blue, int w, int h, int threads)
 {
-    int* startchunk_y = malloc(threads * sizeof(int));
-    int* endchunk_y = malloc(threads * sizeof(int));
+    if (threads > 64) threads = 64;
+    if (threads < 1) threads = 1;
+
+    int startchunk_y[64];
+    int endchunk_y[64];
 
     int chunk_height = h / threads;
     chunk_height -= chunk_height % 2;
@@ -1275,15 +1308,28 @@ static inline void amaze_interpolate(float** rawData, float** red, float** green
         chunk_height -= chunk_height % 2;
     }
 
+    if (threads <= 1) {
+        amazeinfo_t amaze_arg = {
+            rawData,
+            red,
+            green,
+            blue,
+            0, 0,
+            w, h,
+            0,
+            0
+        };
+        demosaic(&amaze_arg);
+        return;
+    }
+
     for (int thread = 0; thread < threads; ++thread) {
         startchunk_y[thread] = chunk_height * thread;
         endchunk_y[thread] = chunk_height * (thread + 1);
     }
     endchunk_y[threads-1] = h;
 
-    pthread_t* thread_id = malloc(threads * sizeof(pthread_t));
-    amazeinfo_t* amaze_arguments = malloc(threads * sizeof(amazeinfo_t));
-
+    amazeinfo_t amaze_arguments[64];
     for (int thread = 0; thread < threads; ++thread) {
         amaze_arguments[thread] = (amazeinfo_t) {
             rawData,
@@ -1295,18 +1341,19 @@ static inline void amaze_interpolate(float** rawData, float** red, float** green
             0,
             0
         };
-
-        pthread_create(&thread_id[thread], NULL, amaze_wrapper, &amaze_arguments[thread]);
     }
 
+#ifdef __APPLE__
+    amazeinfo_t * args = amaze_arguments;
+    dispatch_apply(threads, dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0), ^(size_t t) {
+        demosaic(&args[t]);
+    });
+#else
+    #pragma omp parallel for schedule(static) num_threads(threads)
     for (int thread = 0; thread < threads; ++thread) {
-        pthread_join(thread_id[thread], NULL);
+        demosaic(&amaze_arguments[thread]);
     }
-
-    free(startchunk_y);
-    free(endchunk_y);
-    free(thread_id);
-    free(amaze_arguments);
+#endif
 }
 
 static inline int edge_interp(float ** plane, int * squeezed, int * raw2ev, int dir, int x, int y, int s)
@@ -1834,6 +1881,46 @@ static inline void fullres_reconstruction(struct raw_info raw_info, uint32_t * f
     }
 }
 
+static inline int kth_smallest_37_5_fast(const int a[37])
+{
+    int m0 = a[0], m1 = a[1], m2 = a[2], m3 = a[3], m4 = a[4], m5 = a[5];
+    int arr[6] = {m0, m1, m2, m3, m4, m5};
+    for (int i = 1; i < 6; ++i) {
+        int v = arr[i];
+        int j = i - 1;
+        while (j >= 0 && arr[j] > v) {
+            arr[j + 1] = arr[j];
+            j--;
+        }
+        arr[j + 1] = v;
+    }
+    m0 = arr[0]; m1 = arr[1]; m2 = arr[2]; m3 = arr[3]; m4 = arr[4]; m5 = arr[5];
+
+    for (int i = 6; i < 37; ++i) {
+        int v = a[i];
+        if (v < m5) {
+            if (v < m2) {
+                if (v < m0) {
+                    m5 = m4; m4 = m3; m3 = m2; m2 = m1; m1 = m0; m0 = v;
+                } else if (v < m1) {
+                    m5 = m4; m4 = m3; m3 = m2; m2 = m1; m1 = v;
+                } else {
+                    m5 = m4; m4 = m3; m3 = m2; m2 = v;
+                }
+            } else {
+                if (v < m3) {
+                    m5 = m4; m4 = m3; m3 = v;
+                } else if (v < m4) {
+                    m5 = m4; m4 = v;
+                } else {
+                    m5 = v;
+                }
+            }
+        }
+    }
+    return m5;
+}
+
 static inline void build_alias_map(struct raw_info raw_info, uint16_t* alias_map, uint32_t* fullres_smooth, uint32_t* halfres_smooth, uint32_t* bright, int dark_noise, int black, int * raw2ev)
 {
     if(!alias_map) return;
@@ -1893,7 +1980,7 @@ static inline void build_alias_map(struct raw_info raw_info, uint16_t* alias_map
                                                  -alias_map[x-4 + (y+4) * w], -alias_map[x-2 + (y+4) * w], -alias_map[x+0 + (y+4) * w], -alias_map[x+2 + (y+4) * w], -alias_map[x+4 + (y+4) * w],
                                                                               -alias_map[x-2 + (y+6) * w], -alias_map[x+0 + (y+6) * w], -alias_map[x+2 + (y+6) * w],
             };
-            alias_aux[x + y * w] = -kth_smallest_int(neighbours, COUNT(neighbours), 5);
+            alias_aux[x + y * w] = -kth_smallest_37_5_fast(neighbours);
         }
     }
 #ifndef STDOUT_SILENT
@@ -2037,18 +2124,81 @@ static inline int mix_images(struct raw_info raw_info, uint32_t* fullres, uint32
 #ifndef STDOUT_SILENT
     printf("Half-res blending...\n");
 #endif
-    /* mixing curve */
-    double max_ev = log2(white/64 - black/64);
-    double * mix_curve = malloc((1<<20) * sizeof(double));
+    /* mixing curve: immutable and refcounted, zero races, zero tearing */
+    mix_curve_entry_t * current_entry = NULL;
 
-    #pragma omp parallel for if(USE_OMP) schedule(static)
-    for (int i = 0; i < 1<<20; i++)
+    pthread_mutex_lock(&g_mix_curve_mutex);
+    if (g_active_mix_curve &&
+        g_active_mix_curve->black == black &&
+        g_active_mix_curve->white == white &&
+        g_active_mix_curve->corr_ev == corr_ev &&
+        g_active_mix_curve->overlap == overlap)
     {
-        double ev = log2(MAX(i/64.0 - black/64.0, 1)) + corr_ev;
-        double c = -cos(MAX(MIN(ev-(max_ev-overlap),overlap),0)*M_PI/overlap);
-        double k = (c+1) / 2;
-        mix_curve[i] = k;
+        current_entry = g_active_mix_curve;
+        current_entry->ref_count++;
+        pthread_mutex_unlock(&g_mix_curve_mutex);
     }
+    else
+    {
+        pthread_mutex_unlock(&g_mix_curve_mutex);
+
+        /* allocate new immutable table OUTSIDE mutex */
+        mix_curve_entry_t * new_entry = (mix_curve_entry_t *)malloc(sizeof(mix_curve_entry_t));
+        if (!new_entry)
+        {
+            fprintf(stderr, "MLV App Error: Out of memory allocating mix_curve entry (%llu bytes)\n", (unsigned long long)sizeof(mix_curve_entry_t));
+            return 0;
+        }
+        new_entry->black = black;
+        new_entry->white = white;
+        new_entry->corr_ev = corr_ev;
+        new_entry->overlap = overlap;
+        new_entry->ref_count = 1; /* 1 for the caller */
+
+        double max_ev = log2(white/64.0 - black/64.0);
+        #pragma omp parallel for if(USE_OMP) schedule(static)
+        for (int i = 0; i < (1<<20); i++)
+        {
+            double ev = log2(MAX(i/64.0 - black/64.0, 1.0)) + corr_ev;
+            double c = -cos(MAX(MIN(ev-(max_ev-overlap),overlap),0)*M_PI/overlap);
+            double k = (c+1) / 2.0;
+            new_entry->curve[i] = k;
+        }
+
+        /* Swap into g_active_mix_curve under mutex */
+        pthread_mutex_lock(&g_mix_curve_mutex);
+        if (g_active_mix_curve &&
+            g_active_mix_curve->black == black &&
+            g_active_mix_curve->white == white &&
+            g_active_mix_curve->corr_ev == corr_ev &&
+            g_active_mix_curve->overlap == overlap)
+        {
+            /* another thread already built the matching table; use theirs */
+            current_entry = g_active_mix_curve;
+            current_entry->ref_count++;
+            pthread_mutex_unlock(&g_mix_curve_mutex);
+            free(new_entry);
+        }
+        else
+        {
+            mix_curve_entry_t * old_entry = g_active_mix_curve;
+            new_entry->ref_count++; /* +1 for g_active_mix_curve pointer */
+            g_active_mix_curve = new_entry;
+            current_entry = new_entry;
+
+            if (old_entry)
+            {
+                old_entry->ref_count--;
+                if (old_entry->ref_count <= 0)
+                {
+                    free(old_entry);
+                }
+            }
+            pthread_mutex_unlock(&g_mix_curve_mutex);
+        }
+    }
+
+    const double * mix_curve = current_entry->curve;
 
 
     /* for fast EV - raw conversion */
@@ -2163,7 +2313,15 @@ static inline int mix_images(struct raw_info raw_info, uint32_t* fullres, uint32
     }
 
     free(over_aux); over_aux = 0;
-    free(mix_curve);
+
+    /* release reader reference */
+    pthread_mutex_lock(&g_mix_curve_mutex);
+    current_entry->ref_count--;
+    if (current_entry->ref_count <= 0 && current_entry != g_active_mix_curve)
+    {
+        free(current_entry);
+    }
+    pthread_mutex_unlock(&g_mix_curve_mutex);
 
     return 1;
 }
@@ -2335,9 +2493,9 @@ int diso_get_full20bit(struct raw_info raw_info, uint16_t * image_data, int dark
 
         if (!*iso_pattern) return 0;
     }
-    else if (*iso_pattern > 0 && *iso_pattern <= 4)
+    else if (abs(*iso_pattern) >= 1 && abs(*iso_pattern) <= 4)
     {
-        memcpy(is_bright, iso_patterns[*iso_pattern - 1], sizeof(is_bright));
+        memcpy(is_bright, iso_patterns[abs(*iso_pattern) - 1], sizeof(is_bright));
     }
     else if (*iso_pattern == 5)
     {

@@ -4,12 +4,50 @@
 #include <string.h>
 #include <pthread.h>
 
+#ifdef __APPLE__
+#include <dispatch/dispatch.h>
+#endif
+
 #include "debayer.h"
 #include "librtprocesswrapper.h"
 
 #define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
 #define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
 #define LIMIT16(X) MAX(MIN(X, 65535), 0)
+
+#if defined(_MSC_VER)
+#define DEBAYER_TLS __declspec(thread)
+#else
+#define DEBAYER_TLS __thread
+#endif
+
+#define DEBAYER_TLS_CAP_BYTES (32 * 1024 * 1024) /* 32 MB cap per plane */
+
+typedef struct {
+    float * red1d;
+    float * green1d;
+    float * blue1d;
+    float ** red2d;
+    float ** green2d;
+    float ** blue2d;
+    float ** imagefloat2d;
+    size_t allocated_pixels;
+    int allocated_height;
+} debayer_tls_t;
+
+static DEBAYER_TLS debayer_tls_t g_debayer_tls = {0};
+
+void debayer_cleanup_tls(void)
+{
+    free(g_debayer_tls.red1d);
+    free(g_debayer_tls.green1d);
+    free(g_debayer_tls.blue1d);
+    free(g_debayer_tls.imagefloat2d);
+    free(g_debayer_tls.red2d);
+    free(g_debayer_tls.green2d);
+    free(g_debayer_tls.blue2d);
+    memset(&g_debayer_tls, 0, sizeof(g_debayer_tls));
+}
 
 void convert_to_log(void * data)
 {
@@ -20,21 +58,97 @@ void convert_to_log(void * data)
 void debayerAmaze(uint16_t * __restrict debayerto, float * __restrict bayerdata, int width, int height, int threads, int blacklevel)
 {
     int pixelsize = width * height;
+    size_t plane_bytes = (size_t)pixelsize * sizeof(float);
+    int use_tls = (plane_bytes <= DEBAYER_TLS_CAP_BYTES);
 
-    /* AmAZeMEmE wants an image as floating points and 2d arrey as well */
-    float ** __restrict imagefloat2d = (float **)malloc(height * sizeof(float *));
-    for (int y = 0; y < height; ++y) imagefloat2d[y] = (float *)(bayerdata+(y*width));
+    float * red1d = NULL;
+    float * green1d = NULL;
+    float * blue1d = NULL;
+    float ** imagefloat2d = NULL;
+    float ** red2d = NULL;
+    float ** green2d = NULL;
+    float ** blue2d = NULL;
 
-    /* AmAZe also wants to return floats, so heres memeory 4 it */
-    float  * __restrict red1d = (float *)malloc(pixelsize * sizeof(float));
-    float ** __restrict red2d = (float **)malloc(height * sizeof(float *));
-    for (int y = 0; y < height; ++y) red2d[y] = (float *)(red1d+(y*width));
-    float  * __restrict green1d = (float *)malloc(pixelsize * sizeof(float));
-    float ** __restrict green2d = (float **)malloc(height * sizeof(float *));
-    for (int y = 0; y < height; ++y) green2d[y] = (float *)(green1d+(y*width));
-    float  * __restrict blue1d = (float *)malloc(pixelsize * sizeof(float));
-    float ** __restrict blue2d = (float **)malloc(height * sizeof(float *));
-    for (int y = 0; y < height; ++y) blue2d[y] = (float *)(blue1d+(y*width));
+    if (use_tls)
+    {
+        if (g_debayer_tls.allocated_pixels < (size_t)pixelsize)
+        {
+            float * new_r = (float *)realloc(g_debayer_tls.red1d, (size_t)pixelsize * sizeof(float));
+            float * new_g = (float *)realloc(g_debayer_tls.green1d, (size_t)pixelsize * sizeof(float));
+            float * new_b = (float *)realloc(g_debayer_tls.blue1d, (size_t)pixelsize * sizeof(float));
+            if (!new_r || !new_g || !new_b)
+            {
+                if (new_r) g_debayer_tls.red1d = new_r;
+                if (new_g) g_debayer_tls.green1d = new_g;
+                if (new_b) g_debayer_tls.blue1d = new_b;
+                fprintf(stderr, "MLV App Error: Out of memory allocating debayer TLS float planes (%llu bytes)\n", (unsigned long long)(pixelsize * sizeof(float)));
+                return;
+            }
+            g_debayer_tls.red1d = new_r;
+            g_debayer_tls.green1d = new_g;
+            g_debayer_tls.blue1d = new_b;
+            g_debayer_tls.allocated_pixels = (size_t)pixelsize;
+        }
+
+        if (g_debayer_tls.allocated_height < height)
+        {
+            float ** new_im = (float **)realloc(g_debayer_tls.imagefloat2d, height * sizeof(float *));
+            float ** new_r2 = (float **)realloc(g_debayer_tls.red2d, height * sizeof(float *));
+            float ** new_g2 = (float **)realloc(g_debayer_tls.green2d, height * sizeof(float *));
+            float ** new_b2 = (float **)realloc(g_debayer_tls.blue2d, height * sizeof(float *));
+            if (!new_im || !new_r2 || !new_g2 || !new_b2)
+            {
+                if (new_im) g_debayer_tls.imagefloat2d = new_im;
+                if (new_r2) g_debayer_tls.red2d = new_r2;
+                if (new_g2) g_debayer_tls.green2d = new_g2;
+                if (new_b2) g_debayer_tls.blue2d = new_b2;
+                fprintf(stderr, "MLV App Error: Out of memory allocating debayer TLS pointer arrays (%llu bytes)\n", (unsigned long long)(height * sizeof(float *)));
+                return;
+            }
+            g_debayer_tls.imagefloat2d = new_im;
+            g_debayer_tls.red2d = new_r2;
+            g_debayer_tls.green2d = new_g2;
+            g_debayer_tls.blue2d = new_b2;
+            g_debayer_tls.allocated_height = height;
+        }
+
+        red1d = g_debayer_tls.red1d;
+        green1d = g_debayer_tls.green1d;
+        blue1d = g_debayer_tls.blue1d;
+        imagefloat2d = g_debayer_tls.imagefloat2d;
+        red2d = g_debayer_tls.red2d;
+        green2d = g_debayer_tls.green2d;
+        blue2d = g_debayer_tls.blue2d;
+    }
+    else
+    {
+        /* Buffer exceeds 32 MB cap (e.g. 5.4K) - clean up any idle TLS and allocate temporarily */
+        debayer_cleanup_tls();
+
+        red1d = (float *)malloc((size_t)pixelsize * sizeof(float));
+        green1d = (float *)malloc((size_t)pixelsize * sizeof(float));
+        blue1d = (float *)malloc((size_t)pixelsize * sizeof(float));
+        imagefloat2d = (float **)malloc(height * sizeof(float *));
+        red2d = (float **)malloc(height * sizeof(float *));
+        green2d = (float **)malloc(height * sizeof(float *));
+        blue2d = (float **)malloc(height * sizeof(float *));
+
+        if (!red1d || !green1d || !blue1d || !imagefloat2d || !red2d || !green2d || !blue2d)
+        {
+            free(red1d); free(green1d); free(blue1d);
+            free(imagefloat2d); free(red2d); free(green2d); free(blue2d);
+            fprintf(stderr, "MLV App Error: Out of memory allocating oversize debayer planes\n");
+            return;
+        }
+    }
+
+    for (int y = 0; y < height; ++y)
+    {
+        imagefloat2d[y] = (float *)(bayerdata + (y * width));
+        red2d[y]        = (float *)(red1d + (y * width));
+        green2d[y]      = (float *)(green1d + (y * width));
+        blue2d[y]       = (float *)(blue1d + (y * width));
+    }
 
     /* If threads is < 2 just do a normal amaze */
     if (threads < 2)
@@ -54,8 +168,9 @@ void debayerAmaze(uint16_t * __restrict debayerto, float * __restrict bayerdata,
     /* Else do multithreading */
     else
     {
-        int startchunk_y[threads];
-        int endchunk_y[threads];
+        if (threads > 64) threads = 64;
+        int startchunk_y[64];
+        int endchunk_y[64];
 
         /* How big each thread's chunk is, multiple of 2 - or debayer
          * would start on wrong pixel and magenta stripes appear */
@@ -71,49 +186,88 @@ void debayerAmaze(uint16_t * __restrict debayerto, float * __restrict bayerdata,
             chunk_height -= chunk_height % 2;
         }
 
-        /* Calculate chunks of image for each thread */
-        for (int thread = 0; thread < threads; ++thread)
+        if (threads <= 1)
         {
-            startchunk_y[thread] = chunk_height * thread;
-            endchunk_y[thread] = chunk_height * (thread + 1);
+            demosaic( & (amazeinfo_t) {
+                      imagefloat2d,
+                      red2d,
+                      green2d,
+                      blue2d,
+                      0, 0,
+                      width, height,
+                      0,
+                      blacklevel} );
         }
-
-        /* Last chunk must reach end of frame */
-        endchunk_y[threads-1] = height;
-
-        pthread_t thread_id[threads];
-        amazeinfo_t amaze_arguments[threads];
-
-        /* Create amaze pthreads */
-        for (int thread = 0; thread < threads; ++thread)
+        else
         {
-            /* Amaze arguments */
-            amaze_arguments[thread] = (amazeinfo_t) {
-                imagefloat2d,
-                red2d,
-                green2d,
-                blue2d,
-                /* Crop out a part for each thread */
-                0, startchunk_y[thread],    /* crop window for demosaicing */
-                width, (endchunk_y[thread] - startchunk_y[thread]),
-                0,
-                blacklevel };
+            /* Calculate chunks of image for each thread */
+            for (int thread = 0; thread < threads; ++thread)
+            {
+                startchunk_y[thread] = chunk_height * thread;
+                endchunk_y[thread] = chunk_height * (thread + 1);
+            }
 
-            /* Create pthread! */
-            pthread_create( &thread_id[thread], NULL, (void *)&demosaic, (void *)&amaze_arguments[thread] );
+            /* Last chunk must reach end of frame */
+            endchunk_y[threads-1] = height;
+
+            amazeinfo_t amaze_arguments[64];
+            for (int thread = 0; thread < threads; ++thread)
+            {
+                amaze_arguments[thread] = (amazeinfo_t) {
+                    imagefloat2d,
+                    red2d,
+                    green2d,
+                    blue2d,
+                    0, startchunk_y[thread],    /* crop window for demosaicing */
+                    width, (endchunk_y[thread] - startchunk_y[thread]),
+                    0,
+                    blacklevel };
+            }
+
+#ifdef __APPLE__
+            amazeinfo_t * args = amaze_arguments;
+            dispatch_apply(threads, dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0), ^(size_t thread) {
+                demosaic(&args[thread]);
+            });
+#else
+            #pragma omp parallel for schedule(static) num_threads(threads)
+            for (int thread = 0; thread < threads; ++thread)
+            {
+                demosaic(&amaze_arguments[thread]);
+            }
+#endif
         }
-
-        /* let all threads finish */
-        for (int thread = 0; thread < threads; ++thread)
-        {
-            pthread_join( thread_id[thread], NULL );
-        }
-
     }
 
-    //int rgb_pixels = pixelsize * 3;
-
-    /* Giv back as RGB, not separate channels */
+    /* Give back as RGB, not separate channels */
+#ifdef __APPLE__
+    if (threads > 1)
+    {
+        dispatch_apply(threads, dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0), ^(size_t t) {
+            int chunk = pixelsize / threads;
+            int start = (int)t * chunk;
+            int end = (t == (size_t)(threads - 1)) ? pixelsize : (start + chunk);
+            for (int i = start; i < end; ++i)
+            {
+                int j = i * 3;
+                debayerto[j]     = LIMIT16((uint32_t)red1d[i]);
+                debayerto[j + 1] = LIMIT16((uint32_t)green1d[i]);
+                debayerto[j + 2] = LIMIT16((uint32_t)blue1d[i]);
+            }
+        });
+    }
+    else
+    {
+        for (int i = 0; i < pixelsize; i++)
+        {
+            int j = i * 3;
+            debayerto[ j ] = LIMIT16((uint32_t)red1d[i]);
+            debayerto[j+1] = LIMIT16((uint32_t)green1d[i]);
+            debayerto[j+2] = LIMIT16((uint32_t)blue1d[i]);
+        }
+    }
+#else
+    #pragma omp parallel for schedule(static) if(threads > 1) num_threads(threads)
     for (int i = 0; i < pixelsize; i++)
     {
         int j = i * 3;
@@ -121,14 +275,18 @@ void debayerAmaze(uint16_t * __restrict debayerto, float * __restrict bayerdata,
         debayerto[j+1] = LIMIT16((uint32_t)green1d[i]);
         debayerto[j+2] = LIMIT16((uint32_t)blue1d[i]);
     }
+#endif
 
-    free(red1d);
-    free(red2d);
-    free(green1d);
-    free(green2d);
-    free(blue1d);
-    free(blue2d);
-    free(imagefloat2d);
+    if (!use_tls)
+    {
+        free(red1d);
+        free(green1d);
+        free(blue1d);
+        free(imagefloat2d);
+        free(red2d);
+        free(green2d);
+        free(blue2d);
+    }
 }
 
 
